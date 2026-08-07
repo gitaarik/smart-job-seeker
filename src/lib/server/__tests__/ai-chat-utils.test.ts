@@ -3,225 +3,215 @@
  * Tests variable replacement and prompt interpolation functionality
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getInterpolatedPrompts, interpolatePrompt } from "../ai-chat/utils";
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { getInterpolatedPrompts, interpolatePrompt } from '../ai-chat/utils';
 
 // Mock the Drizzle db module
-vi.mock("$lib/server/db", () => ({
-  db: {
-    query: {
-      ai_chats: {
-        findFirst: vi.fn(),
-      },
-      collected_data: {
-        findFirst: vi.fn(),
-      },
-    },
-  },
+vi.mock('$lib/server/db', () => ({
+	db: {
+		query: {
+			ai_chats: {
+				findFirst: vi.fn()
+			},
+			collected_data: {
+				findFirst: vi.fn()
+			}
+		}
+	}
 }));
 
-import { db } from "$lib/server/db";
+import { db } from '$lib/server/db';
 
-describe("interpolatePrompt", () => {
-  it("should replace single variable occurrence", () => {
-    const text = "Hello ${name}!";
-    const result = interpolatePrompt(text, { name: "World" });
-    expect(result).toBe("Hello World!");
-  });
+describe('interpolatePrompt', () => {
+	it('should replace single variable occurrence', () => {
+		const text = 'Hello ${name}!';
+		const result = interpolatePrompt(text, { name: 'World' });
+		expect(result).toBe('Hello World!');
+	});
 
-  it("should replace schema variable", () => {
-    const text = "Schema: ${schema}";
-    const result = interpolatePrompt(text, {
-      schema: '{"type": "object"}',
-    });
-    expect(result).toBe('Schema: {"type": "object"}');
-  });
+	it('should replace schema variable', () => {
+		const text = 'Schema: ${schema}';
+		const result = interpolatePrompt(text, {
+			schema: '{"type": "object"}'
+		});
+		expect(result).toBe('Schema: {"type": "object"}');
+	});
 
-  it("should replace data variable", () => {
-    const text = "Data: ${data}";
-    const result = interpolatePrompt(text, {
-      data: '{"name": "John"}',
-    });
-    expect(result).toBe('Data: {"name": "John"}');
-  });
+	it('should replace data variable', () => {
+		const text = 'Data: ${data}';
+		const result = interpolatePrompt(text, {
+			data: '{"name": "John"}'
+		});
+		expect(result).toBe('Data: {"name": "John"}');
+	});
 
-  it("should handle multiple variables", () => {
-    const text = "Schema: ${schema}, Data: ${data}";
-    const result = interpolatePrompt(text, {
-      schema: "SCHEMA",
-      data: "DATA",
-    });
-    expect(result).toBe("Schema: SCHEMA, Data: DATA");
-  });
+	it('should handle multiple variables', () => {
+		const text = 'Schema: ${schema}, Data: ${data}';
+		const result = interpolatePrompt(text, {
+			schema: 'SCHEMA',
+			data: 'DATA'
+		});
+		expect(result).toBe('Schema: SCHEMA, Data: DATA');
+	});
 
-  it("should handle JSON in replacement value", () => {
-    const text = "Data: ${data}";
-    const jsonData = '{"key": "value"}';
-    const result = interpolatePrompt(text, {
-      data: jsonData,
-    });
-    expect(result).toBe(`Data: ${jsonData}`);
-  });
+	it('should handle JSON in replacement value', () => {
+		const text = 'Data: ${data}';
+		const jsonData = '{"key": "value"}';
+		const result = interpolatePrompt(text, {
+			data: jsonData
+		});
+		expect(result).toBe(`Data: ${jsonData}`);
+	});
 
-  it("should handle custom variables", () => {
-    const text = "Job: ${jobDescription}, Question: ${question}";
-    const result = interpolatePrompt(text, {
-      jobDescription: "Software Engineer",
-      question: "Tell me about yourself",
-    });
-    expect(result).toBe(
-      "Job: Software Engineer, Question: Tell me about yourself",
-    );
-  });
+	it('should handle custom variables', () => {
+		const text = 'Job: ${jobDescription}, Question: ${question}';
+		const result = interpolatePrompt(text, {
+			jobDescription: 'Software Engineer',
+			question: 'Tell me about yourself'
+		});
+		expect(result).toBe('Job: Software Engineer, Question: Tell me about yourself');
+	});
 
-  it("should handle mix of standard and custom variables", () => {
-    const text = "Schema: ${schema}, Job: ${jobDescription}";
-    const result = interpolatePrompt(text, {
-      schema: "{}",
-      jobDescription: "Full Stack Developer",
-    });
-    expect(result).toBe("Schema: {}, Job: Full Stack Developer");
-  });
+	it('should handle mix of standard and custom variables', () => {
+		const text = 'Schema: ${schema}, Job: ${jobDescription}';
+		const result = interpolatePrompt(text, {
+			schema: '{}',
+			jobDescription: 'Full Stack Developer'
+		});
+		expect(result).toBe('Schema: {}, Job: Full Stack Developer');
+	});
 
-  it("should handle multiple occurrences of same variable", () => {
-    const text = "${name} is ${name}";
-    const result = interpolatePrompt(text, {
-      name: "test",
-    });
-    expect(result).toBe("test is test");
-  });
+	it('should handle multiple occurrences of same variable', () => {
+		const text = '${name} is ${name}';
+		const result = interpolatePrompt(text, {
+			name: 'test'
+		});
+		expect(result).toBe('test is test');
+	});
 
-  it("should leave unreplaced variables as-is", () => {
-    const text = "Hello ${name}, your ${age} is unknown";
-    const result = interpolatePrompt(text, {
-      name: "John",
-    });
-    expect(result).toBe("Hello John, your ${age} is unknown");
-  });
+	it('should leave unreplaced variables as-is', () => {
+		const text = 'Hello ${name}, your ${age} is unknown';
+		const result = interpolatePrompt(text, {
+			name: 'John'
+		});
+		expect(result).toBe('Hello John, your ${age} is unknown');
+	});
 });
 
-describe("getInterpolatedPrompts", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+describe('getInterpolatedPrompts', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
 
-  it("should return null if ai_chats not found", async () => {
-    (db.query.ai_chats.findFirst as any).mockResolvedValueOnce(null);
+	it('should return null if ai_chats not found', async () => {
+		(db.query.ai_chats.findFirst as any).mockResolvedValueOnce(null);
 
-    const result = await getInterpolatedPrompts(999);
+		const result = await getInterpolatedPrompts(999);
 
-    expect(result).toBeNull();
-    expect(db.query.ai_chats.findFirst).toHaveBeenCalled();
-  });
+		expect(result).toBeNull();
+		expect(db.query.ai_chats.findFirst).toHaveBeenCalled();
+	});
 
-  it("should interpolate prompts with schema and data from collected_data", async () => {
-    const mockAiChat = {
-      system_prompt: "System: ${schema} - ${data}",
-      user_prompt: "User: ${schema} - ${data}",
-      profile_id: 1,
-    };
+	it('should interpolate prompts with schema and data from collected_data', async () => {
+		const mockAiChat = {
+			system_prompt: 'System: ${schema} - ${data}',
+			user_prompt: 'User: ${schema} - ${data}',
+			profile_id: 1
+		};
 
-    const mockCollectedData = {
-      schema: '{"type": "object"}',
-      data: '{"name": "John"}',
-    };
+		const mockCollectedData = {
+			schema: '{"type": "object"}',
+			data: '{"name": "John"}'
+		};
 
-    (db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
-    (db.query.collected_data.findFirst as any).mockResolvedValueOnce(
-      mockCollectedData,
-    );
-    const result = await getInterpolatedPrompts(1);
+		(db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
+		(db.query.collected_data.findFirst as any).mockResolvedValueOnce(mockCollectedData);
+		const result = await getInterpolatedPrompts(1);
 
-    expect(result).toEqual({
-      systemPrompt: 'System: {"type": "object"} - {"name": "John"}',
-      userPrompt: 'User: {"type": "object"} - {"name": "John"}',
-    });
-  });
+		expect(result).toEqual({
+			systemPrompt: 'System: {"type": "object"} - {"name": "John"}',
+			userPrompt: 'User: {"type": "object"} - {"name": "John"}'
+		});
+	});
 
-  it("should use empty objects as defaults when collected_data not found", async () => {
-    const mockAiChat = {
-      system_prompt: "Schema: ${schema}\nData: ${data}",
-      user_prompt: "Show me ${schema} and ${data}",
-      profile_id: 1,
-    };
+	it('should use empty objects as defaults when collected_data not found', async () => {
+		const mockAiChat = {
+			system_prompt: 'Schema: ${schema}\nData: ${data}',
+			user_prompt: 'Show me ${schema} and ${data}',
+			profile_id: 1
+		};
 
-    (db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
-    (db.query.collected_data.findFirst as any).mockResolvedValueOnce(null);
-    const result = await getInterpolatedPrompts(1);
+		(db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
+		(db.query.collected_data.findFirst as any).mockResolvedValueOnce(null);
+		const result = await getInterpolatedPrompts(1);
 
-    expect(result).toEqual({
-      systemPrompt: "Schema: {}\nData: {}",
-      userPrompt: "Show me {} and {}",
-    });
-  });
+		expect(result).toEqual({
+			systemPrompt: 'Schema: {}\nData: {}',
+			userPrompt: 'Show me {} and {}'
+		});
+	});
 
-  it("should handle null schema and data with empty object defaults", async () => {
-    const mockAiChat = {
-      system_prompt: "${schema} ${data}",
-      user_prompt: "${schema} ${data}",
-      profile_id: 1,
-    };
+	it('should handle null schema and data with empty object defaults', async () => {
+		const mockAiChat = {
+			system_prompt: '${schema} ${data}',
+			user_prompt: '${schema} ${data}',
+			profile_id: 1
+		};
 
-    const mockCollectedData = {
-      schema: null,
-      data: null,
-    };
+		const mockCollectedData = {
+			schema: null,
+			data: null
+		};
 
-    (db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
-    (db.query.collected_data.findFirst as any).mockResolvedValueOnce(
-      mockCollectedData,
-    );
-    const result = await getInterpolatedPrompts(1);
+		(db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
+		(db.query.collected_data.findFirst as any).mockResolvedValueOnce(mockCollectedData);
+		const result = await getInterpolatedPrompts(1);
 
-    expect(result).toEqual({
-      systemPrompt: "{} {}",
-      userPrompt: "{} {}",
-    });
-  });
+		expect(result).toEqual({
+			systemPrompt: '{} {}',
+			userPrompt: '{} {}'
+		});
+	});
 
-  it("should call collected_data.findFirst with correct profile ID", async () => {
-    const profileId = 42;
+	it('should call collected_data.findFirst with correct profile ID', async () => {
+		const profileId = 42;
 
-    (db.query.ai_chats.findFirst as any).mockResolvedValueOnce({
-      system_prompt: "${schema}",
-      user_prompt: "${data}",
-      profile_id: profileId,
-    });
+		(db.query.ai_chats.findFirst as any).mockResolvedValueOnce({
+			system_prompt: '${schema}',
+			user_prompt: '${data}',
+			profile_id: profileId
+		});
 
-    (db.query.collected_data.findFirst as any).mockResolvedValueOnce({
-      schema: "{}",
-      data: "{}",
-    });
+		(db.query.collected_data.findFirst as any).mockResolvedValueOnce({
+			schema: '{}',
+			data: '{}'
+		});
 
-    await getInterpolatedPrompts(1);
+		await getInterpolatedPrompts(1);
 
-    expect(db.query.collected_data.findFirst).toHaveBeenCalled();
-  });
+		expect(db.query.collected_data.findFirst).toHaveBeenCalled();
+	});
 
-  it("should correctly replace multiple occurrences of both schema and data", async () => {
-    const mockAiChat = {
-      system_prompt:
-        "Use ${schema} to understand the structure of ${data}. The ${schema} is important for ${data}.",
-      user_prompt: "I have ${data} which matches ${schema}",
-      profile_id: 1,
-    };
+	it('should correctly replace multiple occurrences of both schema and data', async () => {
+		const mockAiChat = {
+			system_prompt:
+				'Use ${schema} to understand the structure of ${data}. The ${schema} is important for ${data}.',
+			user_prompt: 'I have ${data} which matches ${schema}',
+			profile_id: 1
+		};
 
-    const mockCollectedData = {
-      schema: "SCHEMA_VALUE",
-      data: "DATA_VALUE",
-    };
+		const mockCollectedData = {
+			schema: 'SCHEMA_VALUE',
+			data: 'DATA_VALUE'
+		};
 
-    (db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
-    (db.query.collected_data.findFirst as any).mockResolvedValueOnce(
-      mockCollectedData,
-    );
-    const result = await getInterpolatedPrompts(1);
+		(db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
+		(db.query.collected_data.findFirst as any).mockResolvedValueOnce(mockCollectedData);
+		const result = await getInterpolatedPrompts(1);
 
-    expect(result?.systemPrompt).toBe(
-      "Use SCHEMA_VALUE to understand the structure of DATA_VALUE. The SCHEMA_VALUE is important for DATA_VALUE.",
-    );
-    expect(result?.userPrompt).toBe(
-      "I have DATA_VALUE which matches SCHEMA_VALUE",
-    );
-  });
+		expect(result?.systemPrompt).toBe(
+			'Use SCHEMA_VALUE to understand the structure of DATA_VALUE. The SCHEMA_VALUE is important for DATA_VALUE.'
+		);
+		expect(result?.userPrompt).toBe('I have DATA_VALUE which matches SCHEMA_VALUE');
+	});
 });

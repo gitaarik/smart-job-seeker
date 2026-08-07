@@ -10,48 +10,46 @@
  * owning user's status, regardless of which profile is active.
  */
 
-import { and, eq } from "drizzle-orm";
-import { db } from "$lib/server/db";
-import { api_keys, device_shares, users } from "$lib/server/db/schema";
+import { and, eq } from 'drizzle-orm';
+import { db } from '$lib/server/db';
+import { api_keys, device_shares, users } from '$lib/server/db/schema';
 
 const TUNNEL_REQUEST_TIMEOUT_MS = 2000;
 
 export interface SjsBrowserDevice {
-  apiKeyId: number;
-  apiKeyName: string;
-  connectedAt: string;
-  lastHeartbeat: string;
-  clientVersion: string;
+	apiKeyId: number;
+	apiKeyName: string;
+	connectedAt: string;
+	lastHeartbeat: string;
+	clientVersion: string;
 }
 
 export interface SjsBrowserStatus {
-  connected: boolean;
-  devices: SjsBrowserDevice[];
-  status?: string;
+	connected: boolean;
+	devices: SjsBrowserDevice[];
+	status?: string;
 }
 
 export interface PreferredDevice extends SjsBrowserDevice {
-  isShared: boolean;
-  /** Owner display name when shared; null when owned by the requesting user */
-  ownerLabel: string | null;
+	isShared: boolean;
+	/** Owner display name when shared; null when owned by the requesting user */
+	ownerLabel: string | null;
 }
 
 /** Fetch live tunnel status for a user's own devices. */
-export async function fetchUserSjsBrowserStatus(
-  userId: string,
-): Promise<SjsBrowserStatus> {
-  try {
-    const sjsBrowserHost = process.env.SJS_TUNNEL_HOST || "127.0.0.1";
-    const sjsBrowserPort = process.env.SJS_TUNNEL_PORT || "9333";
-    const res = await fetch(
-      `http://${sjsBrowserHost}:${sjsBrowserPort}/status/${encodeURIComponent(userId)}`,
-      { signal: AbortSignal.timeout(TUNNEL_REQUEST_TIMEOUT_MS) },
-    );
-    if (res.ok) return await res.json();
-    return { connected: false, devices: [], status: "unavailable" };
-  } catch {
-    return { connected: false, devices: [], status: "unavailable" };
-  }
+export async function fetchUserSjsBrowserStatus(userId: string): Promise<SjsBrowserStatus> {
+	try {
+		const sjsBrowserHost = process.env.SJS_TUNNEL_HOST || '127.0.0.1';
+		const sjsBrowserPort = process.env.SJS_TUNNEL_PORT || '9333';
+		const res = await fetch(
+			`http://${sjsBrowserHost}:${sjsBrowserPort}/status/${encodeURIComponent(userId)}`,
+			{ signal: AbortSignal.timeout(TUNNEL_REQUEST_TIMEOUT_MS) }
+		);
+		if (res.ok) return await res.json();
+		return { connected: false, devices: [], status: 'unavailable' };
+	} catch {
+		return { connected: false, devices: [], status: 'unavailable' };
+	}
 }
 
 /**
@@ -65,74 +63,66 @@ export async function fetchUserSjsBrowserStatus(
  *
  * Returns null when no relevant device is connected.
  */
-export async function getPreferredDevice(
-  userId: string,
-): Promise<PreferredDevice | null> {
-  const ownStatus = await fetchUserSjsBrowserStatus(userId);
-  if (ownStatus.devices.length > 0) {
-    const ownedKeys = await db.query.api_keys.findMany({
-      where: eq(api_keys.user_id, userId),
-      columns: { id: true, date_created: true },
-    });
-    const dateMap = new Map(
-      ownedKeys.map((k) => [k.id, k.date_created?.getTime() ?? 0]),
-    );
-    const pick = [...ownStatus.devices].sort(
-      (a, b) => (dateMap.get(a.apiKeyId) ?? 0) - (dateMap.get(b.apiKeyId) ?? 0),
-    )[0];
-    return { ...pick, isShared: false, ownerLabel: null };
-  }
+export async function getPreferredDevice(userId: string): Promise<PreferredDevice | null> {
+	const ownStatus = await fetchUserSjsBrowserStatus(userId);
+	if (ownStatus.devices.length > 0) {
+		const ownedKeys = await db.query.api_keys.findMany({
+			where: eq(api_keys.user_id, userId),
+			columns: { id: true, date_created: true }
+		});
+		const dateMap = new Map(ownedKeys.map((k) => [k.id, k.date_created?.getTime() ?? 0]));
+		const pick = [...ownStatus.devices].sort(
+			(a, b) => (dateMap.get(a.apiKeyId) ?? 0) - (dateMap.get(b.apiKeyId) ?? 0)
+		)[0];
+		return { ...pick, isShared: false, ownerLabel: null };
+	}
 
-  const shares = await db.query.device_shares.findMany({
-    where: eq(device_shares.shared_with, userId),
-    columns: { id: true },
-    with: {
-      api_key: {
-        columns: {
-          id: true,
-          name: true,
-          user_id: true,
-          date_created: true,
-        },
-      },
-    },
-  });
-  if (shares.length === 0) return null;
+	const shares = await db.query.device_shares.findMany({
+		where: eq(device_shares.shared_with, userId),
+		columns: { id: true },
+		with: {
+			api_key: {
+				columns: {
+					id: true,
+					name: true,
+					user_id: true,
+					date_created: true
+				}
+			}
+		}
+	});
+	if (shares.length === 0) return null;
 
-  const ownerIds = [...new Set(shares.map((s) => s.api_key.user_id))];
-  const statuses = await Promise.all(
-    ownerIds.map(
-      async (uid) => [uid, await fetchUserSjsBrowserStatus(uid)] as const,
-    ),
-  );
-  const statusByOwner = new Map(statuses);
+	const ownerIds = [...new Set(shares.map((s) => s.api_key.user_id))];
+	const statuses = await Promise.all(
+		ownerIds.map(async (uid) => [uid, await fetchUserSjsBrowserStatus(uid)] as const)
+	);
+	const statusByOwner = new Map(statuses);
 
-  const candidates: Array<
-    { device: SjsBrowserDevice; ownerUserId: string; sortKey: number }
-  > = [];
-  for (const share of shares) {
-    const status = statusByOwner.get(share.api_key.user_id);
-    if (!status) continue;
-    const device = status.devices.find((d) => d.apiKeyId === share.api_key.id);
-    if (!device) continue;
-    candidates.push({
-      device,
-      ownerUserId: share.api_key.user_id,
-      sortKey: share.api_key.date_created?.getTime() ?? 0,
-    });
-  }
-  if (candidates.length === 0) return null;
+	const candidates: Array<{ device: SjsBrowserDevice; ownerUserId: string; sortKey: number }> = [];
+	for (const share of shares) {
+		const status = statusByOwner.get(share.api_key.user_id);
+		if (!status) continue;
+		const device = status.devices.find((d) => d.apiKeyId === share.api_key.id);
+		if (!device) continue;
+		candidates.push({
+			device,
+			ownerUserId: share.api_key.user_id,
+			sortKey: share.api_key.date_created?.getTime() ?? 0
+		});
+	}
+	if (candidates.length === 0) return null;
 
-  candidates.sort((a, b) => a.sortKey - b.sortKey);
-  const pick = candidates[0];
+	candidates.sort((a, b) => a.sortKey - b.sortKey);
+	const pick = candidates[0];
 
-  const owner = await db.query.users.findFirst({
-    where: eq(users.id, pick.ownerUserId),
-    columns: { name: true, email: true },
-  });
-  const ownerLabel = owner?.name || owner?.email || null;
+	const owner = await db.query.users.findFirst({
+		where: eq(users.id, pick.ownerUserId),
+		columns: { name: true, email: true }
+	});
+	const ownerLabel = owner?.name || owner?.email || null;
 
-  return { ...pick.device, isShared: true, ownerLabel };
+	return { ...pick.device, isShared: true, ownerLabel };
 }
 
 /**
@@ -144,20 +134,20 @@ export async function getPreferredDevice(
  *   2. Otherwise auto-pick via getPreferredDevice (own first, then shared).
  */
 export async function resolveTunnelDevice(
-  userId: string,
-  apiKeyIdRaw: string | null,
+	userId: string,
+	apiKeyIdRaw: string | null
 ): Promise<{ apiKeyId: number } | null> {
-  if (apiKeyIdRaw) {
-    const apiKeyId = Number.parseInt(apiKeyIdRaw, 10);
-    if (!Number.isFinite(apiKeyId)) return null;
-    const device = await getDeviceById(userId, apiKeyId);
-    if (!device) return null;
-    return { apiKeyId };
-  }
+	if (apiKeyIdRaw) {
+		const apiKeyId = Number.parseInt(apiKeyIdRaw, 10);
+		if (!Number.isFinite(apiKeyId)) return null;
+		const device = await getDeviceById(userId, apiKeyId);
+		if (!device) return null;
+		return { apiKeyId };
+	}
 
-  const preferred = await getPreferredDevice(userId);
-  if (!preferred) return null;
-  return { apiKeyId: preferred.apiKeyId };
+	const preferred = await getPreferredDevice(userId);
+	if (!preferred) return null;
+	return { apiKeyId: preferred.apiKeyId };
 }
 
 /**
@@ -170,41 +160,38 @@ export async function resolveTunnelDevice(
  * user.
  */
 export async function getDeviceById(
-  userId: string,
-  apiKeyId: number,
+	userId: string,
+	apiKeyId: number
 ): Promise<PreferredDevice | null> {
-  const apiKey = await db.query.api_keys.findFirst({
-    where: eq(api_keys.id, apiKeyId),
-    columns: { id: true, user_id: true },
-  });
-  if (!apiKey) return null;
+	const apiKey = await db.query.api_keys.findFirst({
+		where: eq(api_keys.id, apiKeyId),
+		columns: { id: true, user_id: true }
+	});
+	if (!apiKey) return null;
 
-  const ownerUserId = apiKey.user_id;
-  const ownedByUser = ownerUserId === userId;
+	const ownerUserId = apiKey.user_id;
+	const ownedByUser = ownerUserId === userId;
 
-  if (!ownedByUser) {
-    const share = await db.query.device_shares.findFirst({
-      where: and(
-        eq(device_shares.shared_with, userId),
-        eq(device_shares.api_key_id, apiKeyId),
-      ),
-      columns: { id: true },
-    });
-    if (!share) return null;
-  }
+	if (!ownedByUser) {
+		const share = await db.query.device_shares.findFirst({
+			where: and(eq(device_shares.shared_with, userId), eq(device_shares.api_key_id, apiKeyId)),
+			columns: { id: true }
+		});
+		if (!share) return null;
+	}
 
-  const status = await fetchUserSjsBrowserStatus(ownerUserId);
-  const device = status.devices.find((d) => d.apiKeyId === apiKeyId);
-  if (!device) return null;
+	const status = await fetchUserSjsBrowserStatus(ownerUserId);
+	const device = status.devices.find((d) => d.apiKeyId === apiKeyId);
+	if (!device) return null;
 
-  if (ownedByUser) {
-    return { ...device, isShared: false, ownerLabel: null };
-  }
+	if (ownedByUser) {
+		return { ...device, isShared: false, ownerLabel: null };
+	}
 
-  const owner = await db.query.users.findFirst({
-    where: eq(users.id, ownerUserId),
-    columns: { name: true, email: true },
-  });
-  const ownerLabel = owner?.name || owner?.email || null;
-  return { ...device, isShared: true, ownerLabel };
+	const owner = await db.query.users.findFirst({
+		where: eq(users.id, ownerUserId),
+		columns: { name: true, email: true }
+	});
+	const ownerLabel = owner?.name || owner?.email || null;
+	return { ...device, isShared: true, ownerLabel };
 }

@@ -1,124 +1,111 @@
 <script lang="ts">
-  import { track } from "$lib/tools/analytics";
-  import { faComments, faTimes } from "@fortawesome/free-solid-svg-icons";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { fade, slide } from "svelte/transition";
-  import ContactInfo from "./ContactInfo.svelte";
+	import { track } from '$lib/tools/analytics';
+	import { faComments, faTimes } from '@fortawesome/free-solid-svg-icons';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { fade, slide } from 'svelte/transition';
+	import ContactInfo from './ContactInfo.svelte';
 
-  interface Profile {
-    email_address?: string | null;
-    phone_number?: string | null;
-    location_timezone?: string | null;
-    signal_profile?: string | null;
-    whatsapp_number?: string | null;
-    telegram_username?: string | null;
-  }
+	interface Profile {
+		email_address?: string | null;
+		phone_number?: string | null;
+		location_timezone?: string | null;
+		signal_profile?: string | null;
+		whatsapp_number?: string | null;
+		telegram_username?: string | null;
+	}
 
-  interface Props {
-    contentClass?: string;
-    class?: string;
-    profile: Profile;
-  }
+	interface Props {
+		contentClass?: string;
+		class?: string;
+		profile: Profile;
+	}
 
-  let {
-    contentClass = "",
-    class: classNames = "",
-    profile,
-  }: Props = $props();
+	let { contentClass = '', class: classNames = '', profile }: Props = $props();
 
-  const animationSpeed = 250;
+	const animationSpeed = 250;
 
-  let containerEl: HTMLElement;
-  let expandButton = $state(false);
-  let expandContent = $state(false);
+	let containerEl: HTMLElement;
+	let expandButton = $state(false);
+	let expandContent = $state(false);
 
-  function handleGetInTouch() {
-    if (expandButton) return;
+	function handleGetInTouch() {
+		if (expandButton) return;
 
-    expandButton = true;
+		expandButton = true;
 
-    track("GetInTouch_open");
+		track('GetInTouch_open');
 
-    setTimeout(() => {
-      expandContent = true;
-    }, animationSpeed);
+		setTimeout(() => {
+			expandContent = true;
+		}, animationSpeed);
 
-    setTimeout(() => {
-      if (
-        containerEl.getBoundingClientRect().top > window.innerHeight / 2
-      ) {
-        containerEl.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
-      }
-    });
-  }
+		setTimeout(() => {
+			if (containerEl.getBoundingClientRect().top > window.innerHeight / 2) {
+				containerEl.scrollIntoView({
+					behavior: 'smooth',
+					block: 'center'
+				});
+			}
+		});
+	}
 
-  function handleCloseContactInfo() {
-    track("GetInTouch_close");
+	function handleCloseContactInfo() {
+		track('GetInTouch_close');
 
-    expandContent = false;
-    setTimeout(() => {
-      expandButton = false;
-    }, animationSpeed);
-  }
+		expandContent = false;
+		setTimeout(() => {
+			expandButton = false;
+		}, animationSpeed);
+	}
 
-  const containerStyle = $derived(
-    expandButton ? "max-w-[523px]" : "max-w-[220px]",
-  );
+	const containerStyle = $derived(expandButton ? 'max-w-[523px]' : 'max-w-[220px]');
 
-  const buttonStyle = $derived(expandButton ? "" : "cursor-pointer");
+	const buttonStyle = $derived(expandButton ? '' : 'cursor-pointer');
 
-  const buttonContainerStyle = $derived(
-    expandButton
-      ? "max-w-[523px] rounded-t-lg"
-      : "max-w-[220px] rounded-lg cursor-pointer hover:bg-aqua focus:bg-aqua hover:scale-105 focus:scale-105",
-  );
+	const buttonContainerStyle = $derived(
+		expandButton
+			? 'max-w-[523px] rounded-t-lg'
+			: 'max-w-[220px] rounded-lg cursor-pointer hover:bg-aqua focus:bg-aqua hover:scale-105 focus:scale-105'
+	);
 </script>
 
 <div
-  class="flex flex-col items-center rounded-xl relative w-full transition-all duration-{animationSpeed} {containerStyle} {classNames}"
-  bind:this={containerEl}
+	class="relative flex w-full flex-col items-center rounded-xl transition-all duration-{animationSpeed} {containerStyle} {classNames}"
+	bind:this={containerEl}
 >
-  <div
-    class="inline-flex items-center gap-2 bg-ocean text-white text-xl font-semibold text-pearl w-full scale-100 transition-all duration-{animationSpeed} {buttonContainerStyle}"
-  >
-    <button
-      class="py-4 px-8 block w-full {buttonStyle}"
-      onclick={handleGetInTouch}
-    >
-      <div class="inline-flex">
-        <FontAwesomeIcon icon={faComments} class="w-6 h-5 mr-3 mt-1" />
+	<div
+		class="bg-ocean text-pearl inline-flex w-full scale-100 items-center gap-2 text-xl font-semibold text-white transition-all duration-{animationSpeed} {buttonContainerStyle}"
+	>
+		<button class="block w-full px-8 py-4 {buttonStyle}" onclick={handleGetInTouch}>
+			<div class="inline-flex">
+				<FontAwesomeIcon icon={faComments} class="mt-1 mr-3 h-5 w-6" />
 
-        <span class="text-nowrap">
-          Get in Touch
-        </span>
-      </div>
-    </button>
+				<span class="text-nowrap"> Get in Touch </span>
+			</div>
+		</button>
 
-    {#if expandContent}
-      <button
-        class="absolute right-4 top-[14px] cursor-pointer text-2xl hover:rotate-90 transition"
-        onclick={handleCloseContactInfo}
-        transition:fade
-      >
-        <FontAwesomeIcon icon={faTimes} />
-      </button>
-    {/if}
-  </div>
+		{#if expandContent}
+			<button
+				class="absolute top-[14px] right-4 cursor-pointer text-2xl transition hover:rotate-90"
+				onclick={handleCloseContactInfo}
+				transition:fade
+			>
+				<FontAwesomeIcon icon={faTimes} />
+			</button>
+		{/if}
+	</div>
 
-  {#if expandContent}
-    <div
-      class="flex flex-col pb-4 w-full border-r-2 border-b-2 border-l-2 rounded-b-xl border-ocean transition-all duration-{animationSpeed} overflow-hidden {contentClass}"
-      transition:slide={{ duration: animationSpeed }}
-    >
-      <p class="p-6 self-center text-center max-w-[520px]">
-        I'd love to hear about your project and discuss how we can bring your
-        ideas to life together. Don't hesitate to reach out!
-      </p>
+	{#if expandContent}
+		<div
+			class="border-ocean flex w-full flex-col rounded-b-xl border-r-2 border-b-2 border-l-2 pb-4 transition-all duration-{animationSpeed} overflow-hidden {contentClass}"
+			transition:slide={{ duration: animationSpeed }}
+		>
+			<p class="max-w-[520px] self-center p-6 text-center">
+				I'd love to hear about your project and discuss how we can bring your ideas to life
+				together. Don't hesitate to reach out!
+			</p>
 
-      <ContactInfo {profile} />
-    </div>
-  {/if}
+			<ContactInfo {profile} />
+		</div>
+	{/if}
 </div>

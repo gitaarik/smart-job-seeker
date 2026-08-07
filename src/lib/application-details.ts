@@ -33,61 +33,60 @@
  */
 
 export const detailCategories = [
-  {
-    value: "requirement",
-    label: "Requirements",
-    hint: "A condition to satisfy: references, right to work, a certification, "
-      + "notice period, a mandatory way of working",
-  },
-  {
-    value: "compensation",
-    label: "Compensation talk",
-    hint: "Money and benefits discussed short of a formal offer — bands, "
-      + "expectations, what is negotiable",
-  },
-  {
-    value: "logistics",
-    label: "Process",
-    hint: "How this runs from here: the next step, who runs it, when, what to "
-      + "prepare",
-  },
-  {
-    value: "commitment",
-    label: "Promised",
-    hint: "What either side said they would do, and by when",
-  },
-  {
-    value: "role_detail",
-    label: "About the role",
-    hint: "Facts about the job or team that were not in the ad: stack, team "
-      + "size, reporting line, travel, on-call",
-  },
-  {
-    value: "other",
-    label: "Also worth knowing",
-    hint: "Anything else worth remembering that none of the above fits",
-  },
+	{
+		value: 'requirement',
+		label: 'Requirements',
+		hint:
+			'A condition to satisfy: references, right to work, a certification, ' +
+			'notice period, a mandatory way of working'
+	},
+	{
+		value: 'compensation',
+		label: 'Compensation talk',
+		hint:
+			'Money and benefits discussed short of a formal offer — bands, ' +
+			'expectations, what is negotiable'
+	},
+	{
+		value: 'logistics',
+		label: 'Process',
+		hint: 'How this runs from here: the next step, who runs it, when, what to ' + 'prepare'
+	},
+	{
+		value: 'commitment',
+		label: 'Promised',
+		hint: 'What either side said they would do, and by when'
+	},
+	{
+		value: 'role_detail',
+		label: 'About the role',
+		hint:
+			'Facts about the job or team that were not in the ad: stack, team ' +
+			'size, reporting line, travel, on-call'
+	},
+	{
+		value: 'other',
+		label: 'Also worth knowing',
+		hint: 'Anything else worth remembering that none of the above fits'
+	}
 ] as const;
 
-export type DetailCategory = (typeof detailCategories)[number]["value"];
+export type DetailCategory = (typeof detailCategories)[number]['value'];
 
-export const detailCategoryValues: string[] = detailCategories.map((c) =>
-  c.value
-);
+export const detailCategoryValues: string[] = detailCategories.map((c) => c.value);
 
 export function getDetailCategoryLabel(category: string | null): string {
-  return detailCategories.find((c) => c.value === category)?.label ??
-    "Also worth knowing";
+	return detailCategories.find((c) => c.value === category)?.label ?? 'Also worth knowing';
 }
 
 export interface ApplicationDetail {
-  category: DetailCategory;
-  /** A short noun phrase naming the thing: "Office days", "Notice period". */
-  label: string;
-  /** The fact itself: "Tuesdays and Thursdays, in Amsterdam". */
-  value: string;
-  /** The entry it came from, when the model named one that exists. */
-  record_id: number | null;
+	category: DetailCategory;
+	/** A short noun phrase naming the thing: "Office days", "Notice period". */
+	label: string;
+	/** The fact itself: "Tuesdays and Thursdays, in Amsterdam". */
+	value: string;
+	/** The entry it came from, when the model named one that exists. */
+	record_id: number | null;
 }
 
 /**
@@ -100,10 +99,10 @@ const MAX_LABEL_CHARS = 60;
 const MAX_VALUE_CHARS = 300;
 
 const asText = (v: unknown, max: number): string | null => {
-  if (typeof v !== "string") return null;
-  const trimmed = v.trim().replace(/\s+/g, " ");
-  if (!trimmed) return null;
-  return trimmed.length > max ? trimmed.slice(0, max).trimEnd() + "…" : trimmed;
+	if (typeof v !== 'string') return null;
+	const trimmed = v.trim().replace(/\s+/g, ' ');
+	if (!trimmed) return null;
+	return trimmed.length > max ? trimmed.slice(0, max).trimEnd() + '…' : trimmed;
 };
 
 /**
@@ -119,54 +118,50 @@ const asText = (v: unknown, max: number): string | null => {
  * linking to the wrong entry is worse than one linking to none: it invites
  * someone to verify a claim against text that does not contain it.
  */
-export function coerceDetails(
-  raw: unknown,
-  knownRecordIds: number[] = [],
-): ApplicationDetail[] {
-  if (!Array.isArray(raw)) return [];
+export function coerceDetails(raw: unknown, knownRecordIds: number[] = []): ApplicationDetail[] {
+	if (!Array.isArray(raw)) return [];
 
-  const known = new Set(knownRecordIds);
-  const seen = new Set<string>();
-  const details: ApplicationDetail[] = [];
+	const known = new Set(knownRecordIds);
+	const seen = new Set<string>();
+	const details: ApplicationDetail[] = [];
 
-  for (const entry of raw) {
-    if (!entry || typeof entry !== "object") continue;
-    const e = entry as Record<string, unknown>;
+	for (const entry of raw) {
+		if (!entry || typeof entry !== 'object') continue;
+		const e = entry as Record<string, unknown>;
 
-    const label = asText(e.label, MAX_LABEL_CHARS);
-    const value = asText(e.value, MAX_VALUE_CHARS);
-    // Both halves are load-bearing: a label with no value says a topic came up
-    // and refuses to say what was said, which reads as data loss rather than
-    // as an absence.
-    if (!label || !value) continue;
+		const label = asText(e.label, MAX_LABEL_CHARS);
+		const value = asText(e.value, MAX_VALUE_CHARS);
+		// Both halves are load-bearing: a label with no value says a topic came up
+		// and refuses to say what was said, which reads as data loss rather than
+		// as an absence.
+		if (!label || !value) continue;
 
-    const rawCategory = typeof e.category === "string"
-      ? e.category.trim().toLowerCase()
-      : null;
-    // An invented category would render under the fallback heading anyway, so
-    // it is normalised to `other` rather than dropping a real detail over it.
-    const category = (rawCategory && detailCategoryValues.includes(rawCategory)
-      ? rawCategory
-      : "other") as DetailCategory;
+		const rawCategory = typeof e.category === 'string' ? e.category.trim().toLowerCase() : null;
+		// An invented category would render under the fallback heading anyway, so
+		// it is normalised to `other` rather than dropping a real detail over it.
+		const category = (
+			rawCategory && detailCategoryValues.includes(rawCategory) ? rawCategory : 'other'
+		) as DetailCategory;
 
-    const rawId = typeof e.record_id === "number"
-      ? e.record_id
-      : typeof e.record_id === "string"
-      ? Number(e.record_id)
-      : NaN;
-    const record_id = Number.isInteger(rawId) && known.has(rawId) ? rawId : null;
+		const rawId =
+			typeof e.record_id === 'number'
+				? e.record_id
+				: typeof e.record_id === 'string'
+					? Number(e.record_id)
+					: NaN;
+		const record_id = Number.isInteger(rawId) && known.has(rawId) ? rawId : null;
 
-    // Same detail, two entries — a requirement repeated in an email and again
-    // in the offer. One row, and the earliest citation stands.
-    const key = `${category}:${label.toLowerCase()}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+		// Same detail, two entries — a requirement repeated in an email and again
+		// in the offer. One row, and the earliest citation stands.
+		const key = `${category}:${label.toLowerCase()}`;
+		if (seen.has(key)) continue;
+		seen.add(key);
 
-    details.push({ category, label, value, record_id });
-    if (details.length >= MAX_DETAILS) break;
-  }
+		details.push({ category, label, value, record_id });
+		if (details.length >= MAX_DETAILS) break;
+	}
 
-  return details;
+	return details;
 }
 
 /**
@@ -174,10 +169,10 @@ export function coerceDetails(
  * written by an older vocabulary outlive the constant that produced them.
  */
 export interface StoredDetail {
-  category: string;
-  label: string;
-  value: string;
-  record_id: number | null;
+	category: string;
+	label: string;
+	value: string;
+	record_id: number | null;
 }
 
 /**
@@ -189,17 +184,16 @@ export interface StoredDetail {
  * the database — the silent kind of loss, where nothing looks wrong.
  */
 export function groupDetails(
-  details: StoredDetail[],
+	details: StoredDetail[]
 ): Array<{ category: DetailCategory; label: string; items: StoredDetail[] }> {
-  const known = new Set(detailCategoryValues);
-  const bucketOf = (d: StoredDetail) =>
-    known.has(d.category) ? d.category : "other";
+	const known = new Set(detailCategoryValues);
+	const bucketOf = (d: StoredDetail) => (known.has(d.category) ? d.category : 'other');
 
-  return detailCategories
-    .map((c) => ({
-      category: c.value as DetailCategory,
-      label: c.label,
-      items: details.filter((d) => bucketOf(d) === c.value),
-    }))
-    .filter((g) => g.items.length > 0);
+	return detailCategories
+		.map((c) => ({
+			category: c.value as DetailCategory,
+			label: c.label,
+			items: details.filter((d) => bucketOf(d) === c.value)
+		}))
+		.filter((g) => g.items.length > 0);
 }

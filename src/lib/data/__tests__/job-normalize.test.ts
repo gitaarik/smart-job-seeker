@@ -12,53 +12,53 @@
  * half the jobs table look unclassifiable. "Worldwide" (804 rows on preview)
  * and "werk van thuis" (326) were exactly that.
  */
-import { describe, expect, it } from "vitest";
-import { normalizeWorkLocation } from "../job-normalize";
+import { describe, expect, it } from 'vitest';
+import { normalizeWorkLocation } from '../job-normalize';
 
-describe("normalizeWorkLocation", () => {
-  describe("recognises a work arrangement given as the location", () => {
-    it.each([
-      ["Remote"],
-      ["remote"],
-      ["Fully Remote"],
-      ["Worldwide"],
-      ["wereldwijd"],
-      ["Anywhere"],
-      ["Werk van thuis"],
-      ["Werken van thuis"],
-      ["Thuiswerk"],
-      ["Thuiswerk in Nederland"],
-      ["Work from home"],
-      ["Homeoffice"],
-      ["télétravail"],
-    ])("%s -> remote", (input) => {
-      expect(normalizeWorkLocation(input)).toEqual(["remote"]);
-    });
-  });
+describe('normalizeWorkLocation', () => {
+	describe('recognises a work arrangement given as the location', () => {
+		it.each([
+			['Remote'],
+			['remote'],
+			['Fully Remote'],
+			['Worldwide'],
+			['wereldwijd'],
+			['Anywhere'],
+			['Werk van thuis'],
+			['Werken van thuis'],
+			['Thuiswerk'],
+			['Thuiswerk in Nederland'],
+			['Work from home'],
+			['Homeoffice'],
+			['télétravail']
+		])('%s -> remote', (input) => {
+			expect(normalizeWorkLocation(input)).toEqual(['remote']);
+		});
+	});
 
-  // The consequence of a false positive here is losing a real location, so
-  // actual places must not normalize to anything.
-  describe("leaves real places alone", () => {
-    it.each([
-      ["Amsterdam"],
-      ["Nieuwegein"],
-      ["Austin, TX"],
-      ["Ramat Gan, Israel"],
-      ["2215 Voorhout"],
-      ["London, UK"],
-    ])("%s -> null", (input) => {
-      expect(normalizeWorkLocation(input)).toBeNull();
-    });
-  });
+	// The consequence of a false positive here is losing a real location, so
+	// actual places must not normalize to anything.
+	describe('leaves real places alone', () => {
+		it.each([
+			['Amsterdam'],
+			['Nieuwegein'],
+			['Austin, TX'],
+			['Ramat Gan, Israel'],
+			['2215 Voorhout'],
+			['London, UK']
+		])('%s -> null', (input) => {
+			expect(normalizeWorkLocation(input)).toBeNull();
+		});
+	});
 
-  it("returns null for empty input", () => {
-    expect(normalizeWorkLocation(null)).toBeNull();
-    expect(normalizeWorkLocation("")).toBeNull();
-    expect(normalizeWorkLocation("   ")).toBeNull();
-  });
+	it('returns null for empty input', () => {
+		expect(normalizeWorkLocation(null)).toBeNull();
+		expect(normalizeWorkLocation('')).toBeNull();
+		expect(normalizeWorkLocation('   ')).toBeNull();
+	});
 
-  it("still reads the hybrid and onsite arrangements", () => {
-    expect(normalizeWorkLocation("Hybrid")).toEqual(["hybrid"]);
-    expect(normalizeWorkLocation("On-site")).toEqual(["onsite"]);
-  });
+	it('still reads the hybrid and onsite arrangements', () => {
+		expect(normalizeWorkLocation('Hybrid')).toEqual(['hybrid']);
+		expect(normalizeWorkLocation('On-site')).toEqual(['onsite']);
+	});
 });

@@ -24,27 +24,24 @@
  * removed simply isn't regenerated.
  */
 export interface ContactFieldDef {
-  key: string;
-  label: string;
+	key: string;
+	label: string;
 }
 
 export const CONTACT_FIELDS: ContactFieldDef[] = [
-  { key: "email", label: "Email" },
-  { key: "phone", label: "Phone" },
-  { key: "location", label: "Location" },
-  { key: "website", label: "Website" },
-  { key: "linkedin", label: "LinkedIn" },
-  { key: "github", label: "GitHub" },
+	{ key: 'email', label: 'Email' },
+	{ key: 'phone', label: 'Phone' },
+	{ key: 'location', label: 'Location' },
+	{ key: 'website', label: 'Website' },
+	{ key: 'linkedin', label: 'LinkedIn' },
+	{ key: 'github', label: 'GitHub' }
 ];
 
 /**
  * Whether a contact field is hidden, given a version's aggregated toggles.
  */
-export function isContactHidden(
-  key: string,
-  toggles: string[] | unknown,
-): boolean {
-  return Array.isArray(toggles) && toggles.includes(`hide:${key}`);
+export function isContactHidden(key: string, toggles: string[] | unknown): boolean {
+	return Array.isArray(toggles) && toggles.includes(`hide:${key}`);
 }
 
 /**
@@ -55,16 +52,15 @@ export function isContactHidden(
  * preserved untouched.
  */
 export function buildToggles(
-  visibleContactKeys: Iterable<string>,
-  existingToggles: string[] | unknown,
+	visibleContactKeys: Iterable<string>,
+	existingToggles: string[] | unknown
 ): string[] {
-  const visible = new Set(visibleContactKeys);
-  // Keep everything that isn't a contact hide-token; the `hide:` prefix is ours
-  // alone, so dropping all of them here also garbage-collects orphans.
-  const preserved = (Array.isArray(existingToggles) ? existingToggles : [])
-    .filter((t): t is string => typeof t === "string" && !t.startsWith("hide:"));
-  const hidden = CONTACT_FIELDS
-    .filter((f) => !visible.has(f.key))
-    .map((f) => `hide:${f.key}`);
-  return [...preserved, ...hidden];
+	const visible = new Set(visibleContactKeys);
+	// Keep everything that isn't a contact hide-token; the `hide:` prefix is ours
+	// alone, so dropping all of them here also garbage-collects orphans.
+	const preserved = (Array.isArray(existingToggles) ? existingToggles : []).filter(
+		(t): t is string => typeof t === 'string' && !t.startsWith('hide:')
+	);
+	const hidden = CONTACT_FIELDS.filter((f) => !visible.has(f.key)).map((f) => `hide:${f.key}`);
+	return [...preserved, ...hidden];
 }

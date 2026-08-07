@@ -14,94 +14,89 @@
  * reused anywhere that matters.
  */
 
-import { auth } from "$lib/server/auth/better-auth";
-import { dbDirect as db } from "$lib/server/db";
-import { profiles, users } from "$lib/server/db/schema";
-import { eq } from "drizzle-orm";
+import { auth } from '$lib/server/auth/better-auth';
+import { dbDirect as db } from '$lib/server/db';
+import { profiles, users } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
 
 const DEV_USERS = [
-  {
-    email: "rik@rikwanders.tech",
-    password: process.env.SJS_DEV_SEED_PASSWORD ?? "waterpijp",
-    name: "Rik Wanders",
-    profileId: 1,
-  },
-  {
-    email: "alex.morgan@example.com",
-    password: process.env.SJS_TEST_USER_PASSWORD ?? "testpassword123",
-    name: "Alex Morgan",
-    profileId: 12,
-  },
+	{
+		email: 'rik@rikwanders.tech',
+		password: process.env.SJS_DEV_SEED_PASSWORD ?? 'waterpijp',
+		name: 'Rik Wanders',
+		profileId: 1
+	},
+	{
+		email: 'alex.morgan@example.com',
+		password: process.env.SJS_TEST_USER_PASSWORD ?? 'testpassword123',
+		name: 'Alex Morgan',
+		profileId: 12
+	}
 ];
 
 async function seedDevUsers() {
-  console.log("Creating dev users and linking to profiles...\n");
+	console.log('Creating dev users and linking to profiles...\n');
 
-  for (const user of DEV_USERS) {
-    const [profile] = await db
-      .select({ id: profiles.id, name: profiles.name })
-      .from(profiles)
-      .where(eq(profiles.id, user.profileId))
-      .limit(1);
+	for (const user of DEV_USERS) {
+		const [profile] = await db
+			.select({ id: profiles.id, name: profiles.name })
+			.from(profiles)
+			.where(eq(profiles.id, user.profileId))
+			.limit(1);
 
-    if (!profile) {
-      console.error(
-        `Profile ${user.profileId} not found, skipping ${user.email}`,
-      );
-      continue;
-    }
+		if (!profile) {
+			console.error(`Profile ${user.profileId} not found, skipping ${user.email}`);
+			continue;
+		}
 
-    const [existing] = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.email, user.email))
-      .limit(1);
+		const [existing] = await db
+			.select({ id: users.id })
+			.from(users)
+			.where(eq(users.email, user.email))
+			.limit(1);
 
-    let userId: string;
+		let userId: string;
 
-    if (existing) {
-      console.log(`User already exists: ${user.email}`);
-      userId = existing.id;
-    } else {
-      // Better Auth owns password hashing — go through its API rather than
-      // inserting into `users` directly.
-      console.log(`Creating user: ${user.email}`);
-      const ctx = await auth.api.signUpEmail({
-        body: {
-          email: user.email,
-          password: user.password,
-          name: user.name,
-        },
-      });
+		if (existing) {
+			console.log(`User already exists: ${user.email}`);
+			userId = existing.id;
+		} else {
+			// Better Auth owns password hashing — go through its API rather than
+			// inserting into `users` directly.
+			console.log(`Creating user: ${user.email}`);
+			const ctx = await auth.api.signUpEmail({
+				body: {
+					email: user.email,
+					password: user.password,
+					name: user.name
+				}
+			});
 
-      if (!ctx.user) {
-        console.error(`Failed to create user: ${user.email}`);
-        continue;
-      }
+			if (!ctx.user) {
+				console.error(`Failed to create user: ${user.email}`);
+				continue;
+			}
 
-      userId = ctx.user.id;
-      console.log(`  Created with ID: ${userId}`);
-    }
+			userId = ctx.user.id;
+			console.log(`  Created with ID: ${userId}`);
+		}
 
-    await db
-      .update(profiles)
-      .set({ user_id: userId })
-      .where(eq(profiles.id, user.profileId));
-    console.log(`  Linked to profile ${user.profileId} (${profile.name})`);
-  }
+		await db.update(profiles).set({ user_id: userId }).where(eq(profiles.id, user.profileId));
+		console.log(`  Linked to profile ${user.profileId} (${profile.name})`);
+	}
 
-  console.log("\nDev users created:");
-  for (const user of DEV_USERS) {
-    console.log(`  ${user.email} -> profile ${user.profileId}`);
-  }
+	console.log('\nDev users created:');
+	for (const user of DEV_USERS) {
+		console.log(`  ${user.email} -> profile ${user.profileId}`);
+	}
 }
 
 seedDevUsers()
-  .then(() => {
-    console.log("\nDone!");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("Failed to seed dev users:", error);
-    process.exit(1);
-  });
+	.then(() => {
+		console.log('\nDone!');
+		process.exit(0);
+	})
+	.catch((error) => {
+		console.error('Failed to seed dev users:', error);
+		process.exit(1);
+	});

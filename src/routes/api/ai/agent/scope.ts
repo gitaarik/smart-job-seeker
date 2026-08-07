@@ -14,8 +14,8 @@
  * and these routes should stay callable by something that isn't a browser.
  */
 
-import { error } from "@sveltejs/kit";
-import { requireProfileAccess } from "$lib/server/utils/api-helpers";
+import { error } from '@sveltejs/kit';
+import { requireProfileAccess } from '$lib/server/utils/api-helpers';
 
 /**
  * Read and authorize `?profile_id=`. Throws 400 when absent or unparseable and
@@ -24,15 +24,12 @@ import { requireProfileAccess } from "$lib/server/utils/api-helpers";
  * (first profile, cookie, most recent) is how a thread ends up answered from
  * the wrong person's history.
  */
-export async function requireConversationProfile(
-  url: URL,
-  userId: string,
-): Promise<number> {
-  const raw = url.searchParams.get("profile_id");
-  const profileId = Number(raw);
-  if (!raw || !Number.isInteger(profileId) || profileId <= 0) {
-    error(400, "A profile_id is required");
-  }
-  await requireProfileAccess(profileId, userId);
-  return profileId;
+export async function requireConversationProfile(url: URL, userId: string): Promise<number> {
+	const raw = url.searchParams.get('profile_id');
+	const profileId = Number(raw);
+	if (!raw || !Number.isInteger(profileId) || profileId <= 0) {
+		error(400, 'A profile_id is required');
+	}
+	await requireProfileAccess(profileId, userId);
+	return profileId;
 }

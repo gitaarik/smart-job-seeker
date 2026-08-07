@@ -8,22 +8,25 @@
  * @param profile - Object with profile_photo_path and/or profile_picture_id
  */
 export function getProfilePhotoUrl(
-  profile: {
-    profile_photo_path?: string | null;
-    profile_picture_id?: string | null;
-  } | null | undefined,
+	profile:
+		| {
+				profile_photo_path?: string | null;
+				profile_picture_id?: string | null;
+		  }
+		| null
+		| undefined
 ): string | null {
-  if (!profile) return null;
+	if (!profile) return null;
 
-  // Prefer local upload
-  if (profile.profile_photo_path) {
-    return `/uploads/${profile.profile_photo_path}`;
-  }
+	// Prefer local upload
+	if (profile.profile_photo_path) {
+		return `/uploads/${profile.profile_photo_path}`;
+	}
 
-  // Fall back to legacy file UUID
-  if (profile.profile_picture_id) {
-    return `/assets/${profile.profile_picture_id}`;
-  }
+	// Fall back to legacy file UUID
+	if (profile.profile_picture_id) {
+		return `/assets/${profile.profile_picture_id}`;
+	}
 
-  return null;
+	return null;
 }

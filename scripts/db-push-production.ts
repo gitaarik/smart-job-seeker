@@ -1,6 +1,6 @@
-import { execSync } from "child_process";
-import * as dotenvx from "@dotenvx/dotenvx";
-import path from "path";
+import { execSync } from 'child_process';
+import * as dotenvx from '@dotenvx/dotenvx';
+import path from 'path';
 
 /**
  * Pushes specified tables from dev database to production database.
@@ -30,119 +30,114 @@ import path from "path";
  */
 
 const TABLES_TO_SYNC = [
-  "application_questions",
-  "highlights",
-  "languages",
-  "profiles",
-  "tech_skill_categories",
-  "tech_skill_types",
-  "tech_skills",
-  "work_experience_achievements",
-  "work_experience_technologies",
-  "work_experiences",
+	'application_questions',
+	'highlights',
+	'languages',
+	'profiles',
+	'tech_skill_categories',
+	'tech_skill_types',
+	'tech_skills',
+	'work_experience_achievements',
+	'work_experience_technologies',
+	'work_experiences'
 ];
 
-console.log("📋 Tables to sync:", TABLES_TO_SYNC.join(", "));
+console.log('📋 Tables to sync:', TABLES_TO_SYNC.join(', '));
 
 // Load dev DB connection details from .env (using dotenvx)
-const DEV_DB_USER = dotenvx.get("SJS_DB_USER");
-const DEV_DB_PASSWORD = dotenvx.get("SJS_DB_PASSWORD");
-const DEV_DB_NAME = dotenvx.get("SJS_DB_DATABASE");
-const DEV_DB_CONTAINER = "database";
+const DEV_DB_USER = dotenvx.get('SJS_DB_USER');
+const DEV_DB_PASSWORD = dotenvx.get('SJS_DB_PASSWORD');
+const DEV_DB_NAME = dotenvx.get('SJS_DB_DATABASE');
+const DEV_DB_CONTAINER = 'database';
 
 if (!DEV_DB_USER || !DEV_DB_PASSWORD || !DEV_DB_NAME) {
-  console.error("❌ Error: Missing dev DB credentials in .env");
-  console.error("Required: SJS_DB_USER, SJS_DB_PASSWORD, SJS_DB_DATABASE");
-  process.exit(1);
+	console.error('❌ Error: Missing dev DB credentials in .env');
+	console.error('Required: SJS_DB_USER, SJS_DB_PASSWORD, SJS_DB_DATABASE');
+	process.exit(1);
 }
 
 // Load production database URL from .env.production with decryption
 // The DOTENV_PRIVATE_KEY_PRODUCTION env var must be set for decryption
-const prodEnvFile = path.resolve(process.cwd(), ".env.production");
+const prodEnvFile = path.resolve(process.cwd(), '.env.production');
 const prodConfig = dotenvx.config({ path: prodEnvFile });
 
 if (prodConfig.error) {
-  console.error("❌ Error loading .env.production:", prodConfig.error);
-  process.exit(1);
+	console.error('❌ Error loading .env.production:', prodConfig.error);
+	process.exit(1);
 }
 
 const prodDbUrl = prodConfig.parsed?.SJS_POSTGRES_URL;
 if (!prodDbUrl) {
-  console.error("❌ Error: SJS_POSTGRES_URL not found in .env.production");
-  console.error(
-    "Make sure DOTENV_PRIVATE_KEY_PRODUCTION is set to decrypt the values",
-  );
-  process.exit(1);
+	console.error('❌ Error: SJS_POSTGRES_URL not found in .env.production');
+	console.error('Make sure DOTENV_PRIVATE_KEY_PRODUCTION is set to decrypt the values');
+	process.exit(1);
 }
 
-console.log("✅ Dev DB credentials loaded from .env");
-console.log("✅ Production DB loaded and decrypted");
+console.log('✅ Dev DB credentials loaded from .env');
+console.log('✅ Production DB loaded and decrypted');
 
 // Create temporary dump file
 const tmpDumpFile = `/tmp/db-sync-${Date.now()}.sql`;
 
 try {
-  // Step 1: Dump tables from dev database via docker compose exec
-  console.log("\n📤 Dumping tables from dev database (via docker)...");
+	// Step 1: Dump tables from dev database via docker compose exec
+	console.log('\n📤 Dumping tables from dev database (via docker)...');
 
-  const dumpCmd = [
-    "docker",
-    "compose",
-    "exec",
-    "-T", // Disable pseudo-TTY allocation
-    DEV_DB_CONTAINER,
-    "pg_dump",
-    "-F",
-    "p", // Plain text format
-    "--no-privileges", // Exclude privilege commands
-    "--no-owner", // Exclude owner commands
-    "--clean", // Include DROP statements for clean restore
-    "-U",
-    DEV_DB_USER,
-    ...TABLES_TO_SYNC.map((table) => `--table=${table}`), // Specify which tables to dump
-    DEV_DB_NAME,
-  ];
+	const dumpCmd = [
+		'docker',
+		'compose',
+		'exec',
+		'-T', // Disable pseudo-TTY allocation
+		DEV_DB_CONTAINER,
+		'pg_dump',
+		'-F',
+		'p', // Plain text format
+		'--no-privileges', // Exclude privilege commands
+		'--no-owner', // Exclude owner commands
+		'--clean', // Include DROP statements for clean restore
+		'-U',
+		DEV_DB_USER,
+		...TABLES_TO_SYNC.map((table) => `--table=${table}`), // Specify which tables to dump
+		DEV_DB_NAME
+	];
 
-  const dumpCmdLine = dumpCmd.join(" ");
+	const dumpCmdLine = dumpCmd.join(' ');
 
-  console.log("executing docker dump...");
+	console.log('executing docker dump...');
 
-  execSync(`${dumpCmdLine} > "${tmpDumpFile}"`, {
-    stdio: ["pipe", "pipe", "inherit"],
-    env: { ...process.env, PGPASSWORD: DEV_DB_PASSWORD },
-  });
+	execSync(`${dumpCmdLine} > "${tmpDumpFile}"`, {
+		stdio: ['pipe', 'pipe', 'inherit'],
+		env: { ...process.env, PGPASSWORD: DEV_DB_PASSWORD }
+	});
 
-  console.log(`✅ Tables dumped to ${tmpDumpFile}`);
+	console.log(`✅ Tables dumped to ${tmpDumpFile}`);
 
-  // Step 2: Restore tables to production database
-  console.log("\n📥 Restoring tables to production database...");
-  console.log("⚠️  This will override existing data in these tables!");
+	// Step 2: Restore tables to production database
+	console.log('\n📥 Restoring tables to production database...');
+	console.log('⚠️  This will override existing data in these tables!');
 
-  // Restore the dump (--clean flag in dump handles dropping old tables)
-  execSync(`psql "${prodDbUrl}" < "${tmpDumpFile}"`, {
-    stdio: "inherit",
-    env: { ...process.env },
-  });
+	// Restore the dump (--clean flag in dump handles dropping old tables)
+	execSync(`psql "${prodDbUrl}" < "${tmpDumpFile}"`, {
+		stdio: 'inherit',
+		env: { ...process.env }
+	});
 
-  console.log("\n✅ Tables restored to production database");
+	console.log('\n✅ Tables restored to production database');
 
-  // Cleanup
-  execSync(`rm -f "${tmpDumpFile}"`);
-  console.log("✅ Temporary files cleaned up");
+	// Cleanup
+	execSync(`rm -f "${tmpDumpFile}"`);
+	console.log('✅ Temporary files cleaned up');
 
-  console.log("\n🎉 Sync complete!");
+	console.log('\n🎉 Sync complete!');
 } catch (error) {
-  console.error(
-    "\n❌ Error during sync:",
-    error instanceof Error ? error.message : String(error),
-  );
+	console.error('\n❌ Error during sync:', error instanceof Error ? error.message : String(error));
 
-  // Cleanup on error
-  try {
-    execSync(`rm -f "${tmpDumpFile}"`);
-  } catch {
-    // Ignore cleanup errors
-  }
+	// Cleanup on error
+	try {
+		execSync(`rm -f "${tmpDumpFile}"`);
+	} catch {
+		// Ignore cleanup errors
+	}
 
-  process.exit(1);
+	process.exit(1);
 }

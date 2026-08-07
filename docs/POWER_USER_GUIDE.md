@@ -63,17 +63,17 @@ services:
   sjs-browser:
     image: gitaarik036/sjs-browser:latest
     restart: unless-stopped
-    shm_size: "512m"
+    shm_size: '512m'
     volumes:
       - chrome_data:/data
     environment:
-      SJS_SERVER_URL: "wss://<your-sjs-host>/tunnel"
-      SJS_API_TOKEN: "sjs_..." # your device key
+      SJS_SERVER_URL: 'wss://<your-sjs-host>/tunnel'
+      SJS_API_TOKEN: 'sjs_...' # your device key
     deploy:
       resources:
         limits:
           memory: 2G
-          cpus: "2"
+          cpus: '2'
 
 volumes:
   chrome_data:

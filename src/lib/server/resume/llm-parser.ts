@@ -3,16 +3,15 @@
  * Extracts structured data from resume text using AI
  */
 
-import { z } from "zod";
-import { generateChatCompletionTracked } from "$lib/server/llm";
-import type { ChatMessage } from "$lib/server/llm";
-import { config } from "$lib/server/config";
-import type { ResumeData } from "./types";
-import { tokensToCost, chargeCredits } from "$lib/server/billing/credits";
-import { estimateProviderCostUsd } from "$lib/server/billing/provider-costs";
+import { z } from 'zod';
+import { generateChatCompletionTracked } from '$lib/server/llm';
+import type { ChatMessage } from '$lib/server/llm';
+import { config } from '$lib/server/config';
+import type { ResumeData } from './types';
+import { tokensToCost, chargeCredits } from '$lib/server/billing/credits';
+import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
 
-const SYSTEM_PROMPT =
-  `You are a resume parser that extracts structured information from resume text.
+const SYSTEM_PROMPT = `You are a resume parser that extracts structured information from resume text.
 
 Return a JSON object with this exact structure:
 {
@@ -87,228 +86,253 @@ Guidelines:
 - For education: if the resume only shows a single year (e.g. "MSc Computer Science, 2020"), treat it as the graduation year, NOT as a start or end date. Only use startDate/endDate when the resume explicitly provides date ranges for the education period.`;
 
 // Helper: accept string, null, or undefined → string | undefined
-const nullableString = z.string().nullable().optional().transform(
-  (v) => v ?? undefined,
-);
+const nullableString = z
+	.string()
+	.nullable()
+	.optional()
+	.transform((v) => v ?? undefined);
 
 // Zod schema for resume data
 const ResumeBasicsSchema = z.object({
-  name: z.string().min(1),
-  email: nullableString,
-  phone: nullableString,
-  title: nullableString,
-  summary: nullableString,
-  location: nullableString,
-  website: nullableString,
-  linkedin: nullableString,
-  github: nullableString,
-  stackoverflow: nullableString,
+	name: z.string().min(1),
+	email: nullableString,
+	phone: nullableString,
+	title: nullableString,
+	summary: nullableString,
+	location: nullableString,
+	website: nullableString,
+	linkedin: nullableString,
+	github: nullableString,
+	stackoverflow: nullableString
 });
 
 const WorkExperienceSchema = z.object({
-  name: nullableString,
-  position: nullableString,
-  location: nullableString,
-  website: nullableString,
-  startDate: nullableString,
-  endDate: nullableString,
-  summary: nullableString,
-  achievements: z.array(z.string()).nullable().optional().transform(
-    (v) => v ?? undefined,
-  ),
-  technologies: z.array(z.string()).nullable().optional().transform(
-    (v) => v ?? undefined,
-  ),
+	name: nullableString,
+	position: nullableString,
+	location: nullableString,
+	website: nullableString,
+	startDate: nullableString,
+	endDate: nullableString,
+	summary: nullableString,
+	achievements: z
+		.array(z.string())
+		.nullable()
+		.optional()
+		.transform((v) => v ?? undefined),
+	technologies: z
+		.array(z.string())
+		.nullable()
+		.optional()
+		.transform((v) => v ?? undefined)
 });
 
 const EducationSchema = z.object({
-  institution: nullableString,
-  area: nullableString,
-  studyType: nullableString,
-  location: nullableString,
-  url: nullableString,
-  startDate: nullableString,
-  endDate: nullableString,
-  graduationYear: z.union([z.number(), z.string().transform(Number)])
-    .nullable().optional().transform(
-      (v) => v ?? undefined,
-    ),
+	institution: nullableString,
+	area: nullableString,
+	studyType: nullableString,
+	location: nullableString,
+	url: nullableString,
+	startDate: nullableString,
+	endDate: nullableString,
+	graduationYear: z
+		.union([z.number(), z.string().transform(Number)])
+		.nullable()
+		.optional()
+		.transform((v) => v ?? undefined)
 });
 
-const validSkillLevels = ["expert", "proficient", "intermediate", "beginner"] as const;
+const validSkillLevels = ['expert', 'proficient', 'intermediate', 'beginner'] as const;
 const TechSkillSchema = z.object({
-  name: nullableString,
-  level: z.string().nullable().optional().transform(
-    (v) => v && (validSkillLevels as readonly string[]).includes(v)
-      ? (v as typeof validSkillLevels[number])
-      : undefined,
-  ),
-  yearsExperience: z.number().nullable().optional().transform(
-    (v) => v ?? undefined,
-  ),
+	name: nullableString,
+	level: z
+		.string()
+		.nullable()
+		.optional()
+		.transform((v) =>
+			v && (validSkillLevels as readonly string[]).includes(v)
+				? (v as (typeof validSkillLevels)[number])
+				: undefined
+		),
+	yearsExperience: z
+		.number()
+		.nullable()
+		.optional()
+		.transform((v) => v ?? undefined)
 });
 
 const SkillCategorySchema = z.object({
-  name: nullableString,
-  skills: z.array(TechSkillSchema),
+	name: nullableString,
+	skills: z.array(TechSkillSchema)
 });
 
-const validProficiencies = ["native", "fluent", "proficient", "conversational", "basic"] as const;
+const validProficiencies = ['native', 'fluent', 'proficient', 'conversational', 'basic'] as const;
 const LanguageSchema = z.object({
-  name: nullableString,
-  languageCode: nullableString,
-  proficiency: z.string().nullable().optional().transform(
-    (v) => v && (validProficiencies as readonly string[]).includes(v)
-      ? (v as typeof validProficiencies[number])
-      : undefined,
-  ),
+	name: nullableString,
+	languageCode: nullableString,
+	proficiency: z
+		.string()
+		.nullable()
+		.optional()
+		.transform((v) =>
+			v && (validProficiencies as readonly string[]).includes(v)
+				? (v as (typeof validProficiencies)[number])
+				: undefined
+		)
 });
 
 const SideProjectSchema = z.object({
-  name: nullableString,
-  url: nullableString,
-  summary: nullableString,
-  startDate: nullableString,
-  endDate: nullableString,
-  achievements: z.array(z.string()).nullable().optional().transform(
-    (v) => v ?? undefined,
-  ),
-  technologies: z.array(z.string()).nullable().optional().transform(
-    (v) => v ?? undefined,
-  ),
+	name: nullableString,
+	url: nullableString,
+	summary: nullableString,
+	startDate: nullableString,
+	endDate: nullableString,
+	achievements: z
+		.array(z.string())
+		.nullable()
+		.optional()
+		.transform((v) => v ?? undefined),
+	technologies: z
+		.array(z.string())
+		.nullable()
+		.optional()
+		.transform((v) => v ?? undefined)
 });
 
 const CertificateSchema = z.object({
-  name: nullableString,
-  issuer: nullableString,
-  date: nullableString,
-  url: nullableString,
+	name: nullableString,
+	issuer: nullableString,
+	date: nullableString,
+	url: nullableString
 });
 
 const ReferenceSchema = z.object({
-  author: nullableString,
-  authorPosition: nullableString,
-  text: nullableString,
+	author: nullableString,
+	authorPosition: nullableString,
+	text: nullableString
 });
 
 const nullableArray = <T extends z.ZodTypeAny>(schema: T) =>
-  z.array(schema).nullable().optional().transform((v) => v ?? undefined);
+	z
+		.array(schema)
+		.nullable()
+		.optional()
+		.transform((v) => v ?? undefined);
 
 const ResumeDataSchema = z.object({
-  basics: ResumeBasicsSchema,
-  work: nullableArray(WorkExperienceSchema),
-  education: nullableArray(EducationSchema),
-  skills: nullableArray(SkillCategorySchema),
-  languages: nullableArray(LanguageSchema),
-  projects: nullableArray(SideProjectSchema),
-  certificates: nullableArray(CertificateSchema),
-  references: nullableArray(ReferenceSchema),
+	basics: ResumeBasicsSchema,
+	work: nullableArray(WorkExperienceSchema),
+	education: nullableArray(EducationSchema),
+	skills: nullableArray(SkillCategorySchema),
+	languages: nullableArray(LanguageSchema),
+	projects: nullableArray(SideProjectSchema),
+	certificates: nullableArray(CertificateSchema),
+	references: nullableArray(ReferenceSchema)
 });
 
 /**
  * Parse resume text using LLM to extract structured data
  * @throws Error if parsing fails or name cannot be extracted
  */
-export async function parseResumeWithLLM(
-  resumeText: string,
-  userId?: string,
-): Promise<ResumeData> {
-  const userPrompt =
-    `Extract structured resume data from the following text:\n\n${resumeText}`;
+export async function parseResumeWithLLM(resumeText: string, userId?: string): Promise<ResumeData> {
+	const userPrompt = `Extract structured resume data from the following text:\n\n${resumeText}`;
 
-  const messages: ChatMessage[] = [
-    { role: "system", content: SYSTEM_PROMPT },
-    { role: "user", content: userPrompt },
-  ];
+	const messages: ChatMessage[] = [
+		{ role: 'system', content: SYSTEM_PROMPT },
+		{ role: 'user', content: userPrompt }
+	];
 
-  const result = await generateChatCompletionTracked(messages, {
-    model: "openai/gpt-oss-120b",
-    maxTokens: 8192,
-    temperature: 0.1,
-    structuredOutput: {
-      name: "resume_data",
-      schema: ResumeDataSchema,
-    },
-  });
+	const result = await generateChatCompletionTracked(messages, {
+		model: 'openai/gpt-oss-120b',
+		maxTokens: 8192,
+		temperature: 0.1,
+		structuredOutput: {
+			name: 'resume_data',
+			schema: ResumeDataSchema
+		}
+	});
 
-  // Charge credits for AI resume parsing
-  const usage = result.usage;
-  if (userId && usage) {
-    const creditsCost = tokensToCost(usage.totalTokens);
-    if (creditsCost > 0) {
-      const providerCostUsd = estimateProviderCostUsd(
-        config.llmProvider, config.llmModel,
-        usage.inputTokens, usage.outputTokens, usage.cachedInputTokens,
-      );
-      await chargeCredits(
-        userId,
-        creditsCost,
-        "resume_parse_ai",
-        `Resume AI parse (${usage.totalTokens} tokens)`,
-        {
-          tokens: usage,
-          provider: config.llmProvider, model: config.llmModel,
-          providerCostUsd,
-        },
-      );
-    }
-  }
+	// Charge credits for AI resume parsing
+	const usage = result.usage;
+	if (userId && usage) {
+		const creditsCost = tokensToCost(usage.totalTokens);
+		if (creditsCost > 0) {
+			const providerCostUsd = estimateProviderCostUsd(
+				config.llmProvider,
+				config.llmModel,
+				usage.inputTokens,
+				usage.outputTokens,
+				usage.cachedInputTokens
+			);
+			await chargeCredits(
+				userId,
+				creditsCost,
+				'resume_parse_ai',
+				`Resume AI parse (${usage.totalTokens} tokens)`,
+				{
+					tokens: usage,
+					provider: config.llmProvider,
+					model: config.llmModel,
+					providerCostUsd
+				}
+			);
+		}
+	}
 
-  let resumeData: ResumeData;
-  try {
-    resumeData = JSON.parse(result.content);
-  } catch {
-    throw new Error(`Failed to parse resume LLM response as JSON`);
-  }
+	let resumeData: ResumeData;
+	try {
+		resumeData = JSON.parse(result.content);
+	} catch {
+		throw new Error(`Failed to parse resume LLM response as JSON`);
+	}
 
-  if (!resumeData.basics || !resumeData.basics.name) {
-    console.error(
-      "[Resume Parser] Missing basics.name. Response keys:",
-      Object.keys(resumeData),
-      "basics:",
-      JSON.stringify(resumeData.basics)?.substring(0, 200),
-    );
-    throw new Error("Failed to extract profile name from resume");
-  }
+	if (!resumeData.basics || !resumeData.basics.name) {
+		console.error(
+			'[Resume Parser] Missing basics.name. Response keys:',
+			Object.keys(resumeData),
+			'basics:',
+			JSON.stringify(resumeData.basics)?.substring(0, 200)
+		);
+		throw new Error('Failed to extract profile name from resume');
+	}
 
-  // Filter out entries with missing identity fields and coerce required DB fields.
-  // After filtering, convert empty arrays to undefined so the diff engine
-  // treats absent sections as "not present" rather than "all deleted".
-  if (resumeData.work) {
-    resumeData.work = resumeData.work.filter((w) => w.name && w.position);
-    if (resumeData.work.length === 0) resumeData.work = undefined;
-  }
-  if (resumeData.education) {
-    resumeData.education = resumeData.education.filter((e) => e.institution);
-    if (resumeData.education.length === 0) resumeData.education = undefined;
-  }
-  if (resumeData.skills) {
-    resumeData.skills = resumeData.skills
-      .filter((c) => c.name)
-      .map((c) => ({
-        ...c,
-        skills: c.skills.filter((s) => s.name),
-      }));
-    if (resumeData.skills.length === 0) resumeData.skills = undefined;
-  }
-  if (resumeData.languages) {
-    resumeData.languages = resumeData.languages.filter((l) => l.name);
-    if (resumeData.languages.length === 0) resumeData.languages = undefined;
-  }
-  if (resumeData.projects) {
-    resumeData.projects = resumeData.projects.filter((p) => p.name);
-    if (resumeData.projects.length === 0) resumeData.projects = undefined;
-  }
-  if (resumeData.references) {
-    resumeData.references = resumeData.references
-      .filter((r) => r.author)
-      .map((r) => ({ ...r, text: r.text || "" }));
-    if (resumeData.references.length === 0) resumeData.references = undefined;
-  }
-  if (resumeData.certificates) {
-    resumeData.certificates = resumeData.certificates.filter((c) => c.name);
-    if (resumeData.certificates.length === 0) resumeData.certificates = undefined;
-  }
+	// Filter out entries with missing identity fields and coerce required DB fields.
+	// After filtering, convert empty arrays to undefined so the diff engine
+	// treats absent sections as "not present" rather than "all deleted".
+	if (resumeData.work) {
+		resumeData.work = resumeData.work.filter((w) => w.name && w.position);
+		if (resumeData.work.length === 0) resumeData.work = undefined;
+	}
+	if (resumeData.education) {
+		resumeData.education = resumeData.education.filter((e) => e.institution);
+		if (resumeData.education.length === 0) resumeData.education = undefined;
+	}
+	if (resumeData.skills) {
+		resumeData.skills = resumeData.skills
+			.filter((c) => c.name)
+			.map((c) => ({
+				...c,
+				skills: c.skills.filter((s) => s.name)
+			}));
+		if (resumeData.skills.length === 0) resumeData.skills = undefined;
+	}
+	if (resumeData.languages) {
+		resumeData.languages = resumeData.languages.filter((l) => l.name);
+		if (resumeData.languages.length === 0) resumeData.languages = undefined;
+	}
+	if (resumeData.projects) {
+		resumeData.projects = resumeData.projects.filter((p) => p.name);
+		if (resumeData.projects.length === 0) resumeData.projects = undefined;
+	}
+	if (resumeData.references) {
+		resumeData.references = resumeData.references
+			.filter((r) => r.author)
+			.map((r) => ({ ...r, text: r.text || '' }));
+		if (resumeData.references.length === 0) resumeData.references = undefined;
+	}
+	if (resumeData.certificates) {
+		resumeData.certificates = resumeData.certificates.filter((c) => c.name);
+		if (resumeData.certificates.length === 0) resumeData.certificates = undefined;
+	}
 
-  return resumeData as ResumeData;
+	return resumeData as ResumeData;
 }

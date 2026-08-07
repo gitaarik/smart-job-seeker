@@ -24,10 +24,10 @@
  * That turns a silent blind spot into "open that application and I can".
  */
 
-import { db } from "$lib/server/db";
-import { asc, eq } from "drizzle-orm";
-import { application_records, applications, jobs } from "$lib/server/db/schema";
-import { getRecordTypeLabel } from "$lib/application-records";
+import { db } from '$lib/server/db';
+import { asc, eq } from 'drizzle-orm';
+import { application_records, applications, jobs } from '$lib/server/db/schema';
+import { getRecordTypeLabel } from '$lib/application-records';
 
 /**
  * A ceiling, because this is an index of an unbounded thing. At ~85 chars a
@@ -39,21 +39,21 @@ export const MANIFEST_BUDGET_CHARS = 6000;
 
 /** The shape the formatter needs — kept narrow so tests need no DB row. */
 export interface ManifestEntry {
-  id: number;
-  record_type: string | null;
-  title: string | null;
-  event_date: string | null;
-  chars: number;
+	id: number;
+	record_type: string | null;
+	title: string | null;
+	event_date: string | null;
+	chars: number;
 }
 
 export interface ManifestApplication {
-  id: number;
-  company: string | null;
-  position: string | null;
-  status: string | null;
-  /** True for the application the current page is about, if any. */
-  isCurrent: boolean;
-  entries: ManifestEntry[];
+	id: number;
+	company: string | null;
+	position: string | null;
+	status: string | null;
+	/** True for the application the current page is about, if any. */
+	isCurrent: boolean;
+	entries: ManifestEntry[];
 }
 
 /**
@@ -62,17 +62,16 @@ export interface ManifestApplication {
  * be able to tell that. Two spellings of one application reads as two.
  */
 function heading(app: ManifestApplication): string {
-  const name = [app.position, app.company].filter(Boolean).join(" at ") ||
-    "Untitled application";
-  return `### ${name} (application ${app.id})${
-    app.isCurrent ? " — the one on screen, shown in full above" : ""
-  }`;
+	const name = [app.position, app.company].filter(Boolean).join(' at ') || 'Untitled application';
+	return `### ${name} (application ${app.id})${
+		app.isCurrent ? ' — the one on screen, shown in full above' : ''
+	}`;
 }
 
 function line(entry: ManifestEntry): string {
-  return `- #${entry.id} ${getRecordTypeLabel(entry.record_type)}: "${
-    entry.title?.trim() || "Untitled"
-  }"${entry.event_date ? ` · ${entry.event_date}` : ""} · ${entry.chars} chars`;
+	return `- #${entry.id} ${getRecordTypeLabel(entry.record_type)}: "${
+		entry.title?.trim() || 'Untitled'
+	}"${entry.event_date ? ` · ${entry.event_date}` : ''} · ${entry.chars} chars`;
 }
 
 /**
@@ -84,59 +83,59 @@ function line(entry: ManifestEntry): string {
  * truncated list still says the application is there.
  */
 export function formatActivityManifest(
-  apps: ManifestApplication[],
-  budgetChars = MANIFEST_BUDGET_CHARS,
+	apps: ManifestApplication[],
+	budgetChars = MANIFEST_BUDGET_CHARS
 ): string {
-  if (apps.length === 0) return "";
+	if (apps.length === 0) return '';
 
-  const working = apps.map((a) => ({ ...a, entries: [...a.entries] }));
-  const body = () =>
-    working.map((a) =>
-      [
-        heading(a),
-        ...(a.entries.length === 0
-          ? ["- nothing recorded yet"]
-          : a.entries.map(line)),
-      ].join("\n")
-    ).join("\n\n");
+	const working = apps.map((a) => ({ ...a, entries: [...a.entries] }));
+	const body = () =>
+		working
+			.map((a) =>
+				[
+					heading(a),
+					...(a.entries.length === 0 ? ['- nothing recorded yet'] : a.entries.map(line))
+				].join('\n')
+			)
+			.join('\n\n');
 
-  let trimmed = 0;
-  // Oldest-first within the currently-largest application, so what survives is
-  // the recent activity on every application rather than all of one and none
-  // of another.
-  while (body().length > budgetChars) {
-    const fattest = working
-      .filter((a) => a.entries.length > 1)
-      .sort((a, z) => z.entries.length - a.entries.length)[0];
-    if (!fattest) break;
-    fattest.entries.shift();
-    trimmed++;
-  }
+	let trimmed = 0;
+	// Oldest-first within the currently-largest application, so what survives is
+	// the recent activity on every application rather than all of one and none
+	// of another.
+	while (body().length > budgetChars) {
+		const fattest = working
+			.filter((a) => a.entries.length > 1)
+			.sort((a, z) => z.entries.length - a.entries.length)[0];
+		if (!fattest) break;
+		fattest.entries.shift();
+		trimmed++;
+	}
 
-  return [
-    // NOTE ON WRAPPING: joined with "\n", so a phrase split across two entries
-    // never appears contiguously in the output. The breaks are chosen so each
-    // load-bearing phrase stays whole and can be asserted on — same convention
-    // as the guidance block in application-activity.ts.
-    "## Everything on record, across all their applications",
-    "",
-    "An index, not the contents: it says what exists, so you can tell the",
-    "difference between something you cannot see and something that is not",
-    "there. Every entry listed here is real. If one of them holds the answer",
-    "and its text is not in this prompt, say so, and",
-    "offer to go through it on that application's own page —",
-    "rather than answering as though there were nothing to find.",
-    ...(trimmed > 0
-      ? [
-        "",
-        `NOTE: ${trimmed} older entry(s) are missing from this index to fit.`,
-        "Every application is listed; the oldest entries of the busiest ones",
-        "are not.",
-      ]
-      : []),
-    "",
-    body(),
-  ].join("\n");
+	return [
+		// NOTE ON WRAPPING: joined with "\n", so a phrase split across two entries
+		// never appears contiguously in the output. The breaks are chosen so each
+		// load-bearing phrase stays whole and can be asserted on — same convention
+		// as the guidance block in application-activity.ts.
+		'## Everything on record, across all their applications',
+		'',
+		'An index, not the contents: it says what exists, so you can tell the',
+		'difference between something you cannot see and something that is not',
+		'there. Every entry listed here is real. If one of them holds the answer',
+		'and its text is not in this prompt, say so, and',
+		"offer to go through it on that application's own page —",
+		'rather than answering as though there were nothing to find.',
+		...(trimmed > 0
+			? [
+					'',
+					`NOTE: ${trimmed} older entry(s) are missing from this index to fit.`,
+					'Every application is listed; the oldest entries of the busiest ones',
+					'are not.'
+				]
+			: []),
+		'',
+		body()
+	].join('\n');
 }
 
 /**
@@ -151,58 +150,55 @@ export function formatActivityManifest(
  * preserve for the model.
  */
 export async function loadActivityManifest(
-  profileId: number,
-  currentApplicationId?: number,
+	profileId: number,
+	currentApplicationId?: number
 ): Promise<ManifestApplication[]> {
-  const rows = await db
-    .select({
-      appId: applications.id,
-      status: applications.status,
-      company: jobs.company,
-      position: jobs.title,
-      recordId: application_records.id,
-      recordType: application_records.record_type,
-      title: application_records.title,
-      eventDate: application_records.event_date,
-      chars: application_records.content,
-    })
-    .from(applications)
-    .leftJoin(jobs, eq(jobs.id, applications.job_id))
-    .leftJoin(
-      application_records,
-      eq(application_records.application_id, applications.id),
-    )
-    .where(eq(applications.profile_id, profileId))
-    .orderBy(asc(applications.id), asc(application_records.event_date));
+	const rows = await db
+		.select({
+			appId: applications.id,
+			status: applications.status,
+			company: jobs.company,
+			position: jobs.title,
+			recordId: application_records.id,
+			recordType: application_records.record_type,
+			title: application_records.title,
+			eventDate: application_records.event_date,
+			chars: application_records.content
+		})
+		.from(applications)
+		.leftJoin(jobs, eq(jobs.id, applications.job_id))
+		.leftJoin(application_records, eq(application_records.application_id, applications.id))
+		.where(eq(applications.profile_id, profileId))
+		.orderBy(asc(applications.id), asc(application_records.event_date));
 
-  const byApp = new Map<number, ManifestApplication>();
-  for (const r of rows) {
-    let app = byApp.get(r.appId);
-    if (!app) {
-      app = {
-        id: r.appId,
-        company: r.company,
-        position: r.position,
-        status: r.status,
-        isCurrent: r.appId === currentApplicationId,
-        entries: [],
-      };
-      byApp.set(r.appId, app);
-    }
-    // An entry with no text yet (a file still extracting) is still worth
-    // listing: it exists, and saying so beats implying it does not.
-    if (r.recordId != null) {
-      app.entries.push({
-        id: r.recordId,
-        record_type: r.recordType,
-        title: r.title,
-        event_date: r.eventDate,
-        chars: (r.chars ?? "").length,
-      });
-    }
-  }
+	const byApp = new Map<number, ManifestApplication>();
+	for (const r of rows) {
+		let app = byApp.get(r.appId);
+		if (!app) {
+			app = {
+				id: r.appId,
+				company: r.company,
+				position: r.position,
+				status: r.status,
+				isCurrent: r.appId === currentApplicationId,
+				entries: []
+			};
+			byApp.set(r.appId, app);
+		}
+		// An entry with no text yet (a file still extracting) is still worth
+		// listing: it exists, and saying so beats implying it does not.
+		if (r.recordId != null) {
+			app.entries.push({
+				id: r.recordId,
+				record_type: r.recordType,
+				title: r.title,
+				event_date: r.eventDate,
+				chars: (r.chars ?? '').length
+			});
+		}
+	}
 
-  return [...byApp.values()];
+	return [...byApp.values()];
 }
 
 /**
@@ -210,15 +206,13 @@ export async function loadActivityManifest(
  * applications at all — callers interpolate it blindly.
  */
 export async function activityManifestText(
-  profileId: number,
-  currentApplicationId?: number,
+	profileId: number,
+	currentApplicationId?: number
 ): Promise<string> {
-  try {
-    return formatActivityManifest(
-      await loadActivityManifest(profileId, currentApplicationId),
-    );
-  } catch {
-    // Context is a bonus, never a reason to fail the generation.
-    return "";
-  }
+	try {
+		return formatActivityManifest(await loadActivityManifest(profileId, currentApplicationId));
+	} catch {
+		// Context is a bonus, never a reason to fail the generation.
+		return '';
+	}
 }

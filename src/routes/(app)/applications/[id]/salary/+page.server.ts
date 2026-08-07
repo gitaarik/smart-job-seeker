@@ -1,76 +1,84 @@
-import type { Actions, PageServerLoad } from "./$types";
-import { fail } from "@sveltejs/kit";
-import { dbDirect as db } from "$lib/server/db";
-import { eq, and } from "drizzle-orm";
-import { profiles, applications } from "$lib/server/db/schema";
-import { getSelectedProfileId } from "../../../profile/utils";
-import { getFxRates } from "$lib/server/salary/fx";
+import type { Actions, PageServerLoad } from './$types';
+import { fail } from '@sveltejs/kit';
+import { dbDirect as db } from '$lib/server/db';
+import { eq, and } from 'drizzle-orm';
+import { profiles, applications } from '$lib/server/db/schema';
+import { getSelectedProfileId } from '../../../profile/utils';
+import { getFxRates } from '$lib/server/salary/fx';
 
 export const load: PageServerLoad = async ({ parent }) => {
-  const layoutData = await parent();
-  const profileId = layoutData.profileId;
+	const layoutData = await parent();
+	const profileId = layoutData.profileId;
 
-  const [profile, fxRates] = await Promise.all([
-    db.query.profiles.findFirst({
-      where: eq(profiles.id, profileId),
-      columns: {
-        salary_base_rate: true,
-        salary_currency: true,
-        salary_adjustments: true,
-        salary_region_overrides: true,
-      },
-    }),
-    getFxRates(),
-  ]);
+	const [profile, fxRates] = await Promise.all([
+		db.query.profiles.findFirst({
+			where: eq(profiles.id, profileId),
+			columns: {
+				salary_base_rate: true,
+				salary_currency: true,
+				salary_adjustments: true,
+				salary_region_overrides: true
+			}
+		}),
+		getFxRates()
+	]);
 
-  return {
-    salarySettings: {
-      baseRate: profile?.salary_base_rate ?? null,
-      currency: profile?.salary_currency ?? "EUR",
-      adjustments: (profile?.salary_adjustments as Record<string, Record<string, number>> | null) ?? {},
-      regionOverrides: (profile?.salary_region_overrides as Record<string, { rate: number; currency: string }> | null) ?? {},
-    },
-    fxRates,
-  };
+	return {
+		salarySettings: {
+			baseRate: profile?.salary_base_rate ?? null,
+			currency: profile?.salary_currency ?? 'EUR',
+			adjustments:
+				(profile?.salary_adjustments as Record<string, Record<string, number>> | null) ?? {},
+			regionOverrides:
+				(profile?.salary_region_overrides as Record<
+					string,
+					{ rate: number; currency: string }
+				> | null) ?? {}
+		},
+		fxRates
+	};
 };
 
 export const actions: Actions = {
-  updateSalary: async ({ request, locals, cookies, params }) => {
-    const user = locals.user;
-    if (!user) return fail(401, { error: "Not authenticated" });
+	updateSalary: async ({ request, locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
 
-    const profileId = await getSelectedProfileId(cookies, user.id);
-    if (!profileId) return fail(400, { error: "No profile selected" });
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
 
-    const appId = parseInt(params.id);
-    if (isNaN(appId)) return fail(400, { error: "Invalid application ID" });
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
 
-    const existing = await db.query.applications.findFirst({
-      where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
-    });
-    if (!existing) return fail(404, { error: "Application not found" });
+		const existing = await db.query.applications.findFirst({
+			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId))
+		});
+		if (!existing) return fail(404, { error: 'Application not found' });
 
-    const formData = await request.formData();
-    const salary_expectation = formData.get("salary_expectation") as string;
-    const salary_currency = formData.get("salary_currency") as string;
-    const salary_period = formData.get("salary_period") as string;
+		const formData = await request.formData();
+		const salary_expectation = formData.get('salary_expectation') as string;
+		const salary_currency = formData.get('salary_currency') as string;
+		const salary_period = formData.get('salary_period') as string;
 
-    if (!salary_expectation || !salary_currency || !salary_period) {
-      return fail(400, { error: "All salary fields are required" });
-    }
+		if (!salary_expectation || !salary_currency || !salary_period) {
+			return fail(400, { error: 'All salary fields are required' });
+		}
 
-    const amount = parseFloat(salary_expectation);
-    if (isNaN(amount) || amount < 0) {
-      return fail(400, { error: "Invalid salary amount" });
-    }
+		const amount = parseFloat(salary_expectation);
+		if (isNaN(amount) || amount < 0) {
+			return fail(400, { error: 'Invalid salary amount' });
+		}
 
-    await db.update(applications).set({
-      salary_expectation: String(amount),
-      salary_currency,
-      salary_period,
-      date_updated: new Date(),
-    }).where(eq(applications.id, appId));
+		await db
+			.update(applications)
+			.set({
+				salary_expectation: String(amount),
+				salary_currency,
+				salary_period,
+				date_updated: new Date()
+			})
+			.where(eq(applications.id, appId));
 
-    return { success: true };
-  },
+		return { success: true };
+	}
 };

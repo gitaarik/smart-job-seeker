@@ -1,10 +1,10 @@
-import { json, error } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
-import { dbDirect as db } from "$lib/server/db";
-import { eq, and } from "drizzle-orm";
-import { profiles } from "$lib/server/db/schema";
-import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
-import { browserInfoSchema, parseBody } from "$lib/server/validation/api-schemas";
+import { json, error } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import { dbDirect as db } from '$lib/server/db';
+import { eq, and } from 'drizzle-orm';
+import { profiles } from '$lib/server/db/schema';
+import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
+import { browserInfoSchema, parseBody } from '$lib/server/validation/api-schemas';
 
 /**
  * PUT /api/profile/[id]/browser-info
@@ -14,39 +14,41 @@ import { browserInfoSchema, parseBody } from "$lib/server/validation/api-schemas
  * unless force=true is passed.
  */
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
-  const user = requireAuth(locals);
-  const profileId = parseIntParam(params.id, "profile");
+	const user = requireAuth(locals);
+	const profileId = parseIntParam(params.id, 'profile');
 
-  const profile = await db.query.profiles.findFirst({
-    where: and(eq(profiles.id, profileId), eq(profiles.user_id, user.id)),
-    columns: {
-      id: true,
-      browser_language: true,
-      browser_timezone: true,
-    },
-  });
+	const profile = await db.query.profiles.findFirst({
+		where: and(eq(profiles.id, profileId), eq(profiles.user_id, user.id)),
+		columns: {
+			id: true,
+			browser_language: true,
+			browser_timezone: true
+		}
+	});
 
-  if (!profile) {
-    throw error(403, "Access denied");
-  }
+	if (!profile) {
+		throw error(403, 'Access denied');
+	}
 
-  const body = parseBody(browserInfoSchema, await request.json());
-  const force = body.force === true;
+	const body = parseBody(browserInfoSchema, await request.json());
+	const force = body.force === true;
 
-  const updateData: Record<string, string> = {};
+	const updateData: Record<string, string> = {};
 
-  // browser_user_agent is intentionally not stored — GoLogin manages its own UA
-  if (body.browser_language && (force || !profile.browser_language)) {
-    updateData.browser_language = String(body.browser_language).substring(0, 50);
-  }
-  if (body.browser_timezone && (force || !profile.browser_timezone)) {
-    updateData.browser_timezone = String(body.browser_timezone).substring(0, 100);
-  }
+	// browser_user_agent is intentionally not stored — GoLogin manages its own UA
+	if (body.browser_language && (force || !profile.browser_language)) {
+		updateData.browser_language = String(body.browser_language).substring(0, 50);
+	}
+	if (body.browser_timezone && (force || !profile.browser_timezone)) {
+		updateData.browser_timezone = String(body.browser_timezone).substring(0, 100);
+	}
 
-  if (Object.keys(updateData).length > 0) {
-    await db.update(profiles).set({ ...updateData, date_updated: new Date() })
-      .where(eq(profiles.id, profileId));
-  }
+	if (Object.keys(updateData).length > 0) {
+		await db
+			.update(profiles)
+			.set({ ...updateData, date_updated: new Date() })
+			.where(eq(profiles.id, profileId));
+	}
 
-  return json({ success: true, updated: Object.keys(updateData) });
+	return json({ success: true, updated: Object.keys(updateData) });
 };

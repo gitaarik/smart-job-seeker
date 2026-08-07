@@ -3,36 +3,31 @@
  * Supports multiple providers: Groq, Gemini (Google Generative AI), OpenAI, DeepSeek, and Cerebras
  */
 
-import { ChatGroq } from "@langchain/groq";
-import { ChatCerebras } from "@langchain/cerebras";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import { ChatOpenAI } from "@langchain/openai";
-import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import {
-  AIMessage,
-  type BaseMessage,
-  HumanMessage,
-  SystemMessage,
-} from "@langchain/core/messages";
-import { z } from "zod";
-import { getEnv } from "$lib/tools/get-env";
-import { llmCache } from "./cache.js";
-import { isRetryableError, withRetry } from "$lib/server/utils/retry";
-import { errorTracker } from "$lib/server/monitoring/error-tracker";
-import { config } from "$lib/server/config";
+import { ChatGroq } from '@langchain/groq';
+import { ChatCerebras } from '@langchain/cerebras';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { ChatOpenAI } from '@langchain/openai';
+import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { AIMessage, type BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { z } from 'zod';
+import { getEnv } from '$lib/tools/get-env';
+import { llmCache } from './cache.js';
+import { isRetryableError, withRetry } from '$lib/server/utils/retry';
+import { errorTracker } from '$lib/server/monitoring/error-tracker';
+import { config } from '$lib/server/config';
 
 /**
  * Base class for LLM errors
  */
 export class LLMError extends Error {
-  constructor(
-    message: string,
-    public readonly provider: string,
-    public readonly model: string,
-  ) {
-    super(message);
-    this.name = "LLMError";
-  }
+	constructor(
+		message: string,
+		public readonly provider: string,
+		public readonly model: string
+	) {
+		super(message);
+		this.name = 'LLMError';
+	}
 }
 
 /**
@@ -40,10 +35,10 @@ export class LLMError extends Error {
  * This is a permanent error - scraping should stop immediately
  */
 export class LLMQuotaExceededError extends LLMError {
-  constructor(message: string, provider: string, model: string) {
-    super(message, provider, model);
-    this.name = "LLMQuotaExceededError";
-  }
+	constructor(message: string, provider: string, model: string) {
+		super(message, provider, model);
+		this.name = 'LLMQuotaExceededError';
+	}
 }
 
 /**
@@ -51,10 +46,10 @@ export class LLMQuotaExceededError extends LLMError {
  * This is a permanent error - scraping should stop immediately
  */
 export class LLMAuthenticationError extends LLMError {
-  constructor(message: string, provider: string, model: string) {
-    super(message, provider, model);
-    this.name = "LLMAuthenticationError";
-  }
+	constructor(message: string, provider: string, model: string) {
+		super(message, provider, model);
+		this.name = 'LLMAuthenticationError';
+	}
 }
 
 /**
@@ -62,20 +57,20 @@ export class LLMAuthenticationError extends LLMError {
  * This is potentially retryable after a delay
  */
 export class LLMRateLimitError extends LLMError {
-  /** HTTP status — lets generic retry logic (`isRetryableError`) recognize this
-   *  as a 429 without string-matching the message. Without it the error was
-   *  treated as non-retryable and the very first rate-limit blip killed the run. */
-  public readonly status = 429;
-  constructor(
-    message: string,
-    provider: string,
-    model: string,
-    /** Seconds the provider told us to wait before the quota window resets. */
-    public readonly retryAfter?: number,
-  ) {
-    super(message, provider, model);
-    this.name = "LLMRateLimitError";
-  }
+	/** HTTP status — lets generic retry logic (`isRetryableError`) recognize this
+	 *  as a 429 without string-matching the message. Without it the error was
+	 *  treated as non-retryable and the very first rate-limit blip killed the run. */
+	public readonly status = 429;
+	constructor(
+		message: string,
+		provider: string,
+		model: string,
+		/** Seconds the provider told us to wait before the quota window resets. */
+		public readonly retryAfter?: number
+	) {
+		super(message, provider, model);
+		this.name = 'LLMRateLimitError';
+	}
 }
 
 /**
@@ -84,10 +79,10 @@ export class LLMRateLimitError extends LLMError {
  * Per-request, content-driven — NOT fatal at the scraper level.
  */
 export class LLMOutputValidationError extends LLMError {
-  constructor(message: string, provider: string, model: string) {
-    super(message, provider, model);
-    this.name = "LLMOutputValidationError";
-  }
+	constructor(message: string, provider: string, model: string) {
+		super(message, provider, model);
+		this.name = 'LLMOutputValidationError';
+	}
 }
 
 /**
@@ -97,168 +92,154 @@ export class LLMOutputValidationError extends LLMError {
  * that re-wraps it as a plain Error.
  */
 export const LLM_OUTPUT_VALIDATION_PATTERNS = [
-  "json_validate_failed",
-  "max completion tokens reached",
-  "failed to generate json",
+	'json_validate_failed',
+	'max completion tokens reached',
+	'failed to generate json'
 ] as const;
 
 export function isLLMOutputValidationMessage(message: string): boolean {
-  const lower = message.toLowerCase();
-  return LLM_OUTPUT_VALIDATION_PATTERNS.some((p) => lower.includes(p));
+	const lower = message.toLowerCase();
+	return LLM_OUTPUT_VALIDATION_PATTERNS.some((p) => lower.includes(p));
 }
 
 /**
  * Parse API errors and throw appropriate LLM error types
  */
-function handleLLMError(
-  error: unknown,
-  provider: string,
-  model: string,
-): never {
-  const originalMessage = error instanceof Error
-    ? error.message
-    : String(error);
-  const messageLower = originalMessage.toLowerCase();
+function handleLLMError(error: unknown, provider: string, model: string): never {
+	const originalMessage = error instanceof Error ? error.message : String(error);
+	const messageLower = originalMessage.toLowerCase();
 
-  // Brief error log - full details are stored in ai_chat.error field
-  const truncatedMessage = originalMessage.length > 150
-    ? originalMessage.substring(0, 150) + "..."
-    : originalMessage;
-  console.error(`[LLM Error] ${provider}/${model}: ${truncatedMessage}`);
+	// Brief error log - full details are stored in ai_chat.error field
+	const truncatedMessage =
+		originalMessage.length > 150 ? originalMessage.substring(0, 150) + '...' : originalMessage;
+	console.error(`[LLM Error] ${provider}/${model}: ${truncatedMessage}`);
 
-  // Check for quota/balance errors (402, insufficient balance, quota exceeded)
-  if (
-    messageLower.includes("insufficient balance") ||
-    messageLower.includes("402") ||
-    messageLower.includes("quota exceeded") ||
-    messageLower.includes("out of credits")
-  ) {
-    const enhancedMessage =
-      `💳 Quota/balance exceeded for ${provider}/${model}. Please check your API credits and billing.`;
-    throw new LLMQuotaExceededError(enhancedMessage, provider, model);
-  }
+	// Check for quota/balance errors (402, insufficient balance, quota exceeded)
+	if (
+		messageLower.includes('insufficient balance') ||
+		messageLower.includes('402') ||
+		messageLower.includes('quota exceeded') ||
+		messageLower.includes('out of credits')
+	) {
+		const enhancedMessage = `💳 Quota/balance exceeded for ${provider}/${model}. Please check your API credits and billing.`;
+		throw new LLMQuotaExceededError(enhancedMessage, provider, model);
+	}
 
-  // Check for authentication errors (401, unauthorized, invalid API key)
-  if (
-    messageLower.includes("authentication fail") ||
-    messageLower.includes("401") ||
-    messageLower.includes("unauthorized") ||
-    messageLower.includes("invalid api key") ||
-    messageLower.includes("incorrect api key")
-  ) {
-    const enhancedMessage =
-      `🔐 Authentication failed for ${provider}/${model}. Please check your API key is valid and has the correct permissions.`;
-    throw new LLMAuthenticationError(enhancedMessage, provider, model);
-  }
+	// Check for authentication errors (401, unauthorized, invalid API key)
+	if (
+		messageLower.includes('authentication fail') ||
+		messageLower.includes('401') ||
+		messageLower.includes('unauthorized') ||
+		messageLower.includes('invalid api key') ||
+		messageLower.includes('incorrect api key')
+	) {
+		const enhancedMessage = `🔐 Authentication failed for ${provider}/${model}. Please check your API key is valid and has the correct permissions.`;
+		throw new LLMAuthenticationError(enhancedMessage, provider, model);
+	}
 
-  // Check for rate limit errors (429)
-  if (
-    messageLower.includes("rate limit") ||
-    messageLower.includes("429") ||
-    messageLower.includes("too many requests")
-  ) {
-    // Try to extract status code and additional error details
-    let statusCode = "";
-    let apiErrorDetails = "";
+	// Check for rate limit errors (429)
+	if (
+		messageLower.includes('rate limit') ||
+		messageLower.includes('429') ||
+		messageLower.includes('too many requests')
+	) {
+		// Try to extract status code and additional error details
+		let statusCode = '';
+		let apiErrorDetails = '';
 
-    // Check if error object has additional properties (from LangChain/API)
-    if (error && typeof error === "object") {
-      const errorObj = error as any;
+		// Check if error object has additional properties (from LangChain/API)
+		if (error && typeof error === 'object') {
+			const errorObj = error as any;
 
-      // Try to get status code
-      if (errorObj.status) {
-        statusCode = ` (HTTP ${errorObj.status})`;
-      } else if (errorObj.statusCode) {
-        statusCode = ` (HTTP ${errorObj.statusCode})`;
-      }
+			// Try to get status code
+			if (errorObj.status) {
+				statusCode = ` (HTTP ${errorObj.status})`;
+			} else if (errorObj.statusCode) {
+				statusCode = ` (HTTP ${errorObj.statusCode})`;
+			}
 
-      // Try to get response body or additional error info
-      if (errorObj.response?.data) {
-        try {
-          const responseData = typeof errorObj.response.data === "string"
-            ? errorObj.response.data
-            : JSON.stringify(errorObj.response.data);
-          apiErrorDetails = ` API response: ${responseData.substring(0, 200)}`;
-        } catch {
-          // Ignore JSON stringify errors
-        }
-      } else if (errorObj.error?.message) {
-        apiErrorDetails = ` Details: ${errorObj.error.message}`;
-      }
-    }
+			// Try to get response body or additional error info
+			if (errorObj.response?.data) {
+				try {
+					const responseData =
+						typeof errorObj.response.data === 'string'
+							? errorObj.response.data
+							: JSON.stringify(errorObj.response.data);
+					apiErrorDetails = ` API response: ${responseData.substring(0, 200)}`;
+				} catch {
+					// Ignore JSON stringify errors
+				}
+			} else if (errorObj.error?.message) {
+				apiErrorDetails = ` Details: ${errorObj.error.message}`;
+			}
+		}
 
-    // Try to extract retry time from error message
-    // Groq format: "Please try again in 5m19.3344s"
-    // OpenAI format: might include "Please try again in X seconds"
-    let retryAfter: number | undefined;
-    let retryMessage = "";
+		// Try to extract retry time from error message
+		// Groq format: "Please try again in 5m19.3344s"
+		// OpenAI format: might include "Please try again in X seconds"
+		let retryAfter: number | undefined;
+		let retryMessage = '';
 
-    // Match patterns like "5m19.3344s", "24m40.2048s", "30s", "2h15m"
-    const retryMatch = originalMessage.match(
-      /try again in (\d+h)?(\d+m)?(\d+(?:\.\d+)?s)/i,
-    );
-    if (retryMatch) {
-      const hours = retryMatch[1] ? parseInt(retryMatch[1]) : 0;
-      const minutes = retryMatch[2] ? parseInt(retryMatch[2]) : 0;
-      const seconds = retryMatch[3] ? parseFloat(retryMatch[3]) : 0;
+		// Match patterns like "5m19.3344s", "24m40.2048s", "30s", "2h15m"
+		const retryMatch = originalMessage.match(/try again in (\d+h)?(\d+m)?(\d+(?:\.\d+)?s)/i);
+		if (retryMatch) {
+			const hours = retryMatch[1] ? parseInt(retryMatch[1]) : 0;
+			const minutes = retryMatch[2] ? parseInt(retryMatch[2]) : 0;
+			const seconds = retryMatch[3] ? parseFloat(retryMatch[3]) : 0;
 
-      // Convert to total seconds
-      retryAfter = Math.ceil(hours * 3600 + minutes * 60 + seconds);
+			// Convert to total seconds
+			retryAfter = Math.ceil(hours * 3600 + minutes * 60 + seconds);
 
-      // Format user-friendly message
-      if (hours > 0) {
-        retryMessage = ` Retry in ${hours}h ${minutes}m.`;
-      } else if (minutes > 0) {
-        retryMessage = ` Retry in ${minutes}m ${Math.ceil(seconds)}s.`;
-      } else {
-        retryMessage = ` Retry in ${Math.ceil(seconds)}s.`;
-      }
-    }
+			// Format user-friendly message
+			if (hours > 0) {
+				retryMessage = ` Retry in ${hours}h ${minutes}m.`;
+			} else if (minutes > 0) {
+				retryMessage = ` Retry in ${minutes}m ${Math.ceil(seconds)}s.`;
+			} else {
+				retryMessage = ` Retry in ${Math.ceil(seconds)}s.`;
+			}
+		}
 
-    // Try to extract usage info (Groq format)
-    // "Limit 500000, Used 489308, Requested 12540"
-    const usageMatch = originalMessage.match(
-      /Limit (\d+),\s*Used (\d+),\s*Requested (\d+)/i,
-    );
-    let usageInfo = "";
-    if (usageMatch) {
-      const limit = parseInt(usageMatch[1]);
-      const used = parseInt(usageMatch[2]);
-      const requested = parseInt(usageMatch[3]);
-      const remaining = limit - used;
-      const percentUsed = ((used / limit) * 100).toFixed(1);
+		// Try to extract usage info (Groq format)
+		// "Limit 500000, Used 489308, Requested 12540"
+		const usageMatch = originalMessage.match(/Limit (\d+),\s*Used (\d+),\s*Requested (\d+)/i);
+		let usageInfo = '';
+		if (usageMatch) {
+			const limit = parseInt(usageMatch[1]);
+			const used = parseInt(usageMatch[2]);
+			const requested = parseInt(usageMatch[3]);
+			const remaining = limit - used;
+			const percentUsed = ((used / limit) * 100).toFixed(1);
 
-      usageInfo =
-        ` Used ${used.toLocaleString()}/${limit.toLocaleString()} tokens (${percentUsed}%, ${remaining.toLocaleString()} remaining).`;
-    }
+			usageInfo = ` Used ${used.toLocaleString()}/${limit.toLocaleString()} tokens (${percentUsed}%, ${remaining.toLocaleString()} remaining).`;
+		}
 
-    const enhancedMessage =
-      `🚫 Rate limit exceeded for ${provider}/${model}${statusCode}.${usageInfo}${retryMessage}${
-        apiErrorDetails ? "\n" + apiErrorDetails : ""
-      }\n\nOriginal error: ${originalMessage}`;
-    throw new LLMRateLimitError(enhancedMessage, provider, model, retryAfter);
-  }
+		const enhancedMessage = `🚫 Rate limit exceeded for ${provider}/${model}${statusCode}.${usageInfo}${retryMessage}${
+			apiErrorDetails ? '\n' + apiErrorDetails : ''
+		}\n\nOriginal error: ${originalMessage}`;
+		throw new LLMRateLimitError(enhancedMessage, provider, model, retryAfter);
+	}
 
-  // Per-request structured-output failures (e.g. Groq json_validate_failed
-  // when the model exhausts max_completion_tokens before closing the JSON).
-  // These are content-driven and must not be treated as fatal by callers.
-  if (isLLMOutputValidationMessage(originalMessage)) {
-    throw new LLMOutputValidationError(originalMessage, provider, model);
-  }
+	// Per-request structured-output failures (e.g. Groq json_validate_failed
+	// when the model exhausts max_completion_tokens before closing the JSON).
+	// These are content-driven and must not be treated as fatal by callers.
+	if (isLLMOutputValidationMessage(originalMessage)) {
+		throw new LLMOutputValidationError(originalMessage, provider, model);
+	}
 
-  // Re-throw original error if not recognized
-  if (error instanceof Error) {
-    throw error;
-  }
-  throw new Error(originalMessage);
+	// Re-throw original error if not recognized
+	if (error instanceof Error) {
+		throw error;
+	}
+	throw new Error(originalMessage);
 }
 
 /**
  * Chat message format for LLM requests
  */
 export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
+	role: 'system' | 'user' | 'assistant';
+	content: string;
 }
 
 /**
@@ -268,152 +249,152 @@ export interface ChatMessage {
  * Structured output configuration using Zod schema
  */
 export interface StructuredOutputConfig {
-  name: string;
-  schema: z.ZodType<any>;
+	name: string;
+	schema: z.ZodType<any>;
 }
 
 /**
  * Options for chat completion requests
  */
 export interface ChatCompletionOptions {
-  model?: string;
-  maxTokens?: number;
-  temperature?: number;
-  structuredOutput?: StructuredOutputConfig;
-  /** Override the LLM provider for this call (defaults to config.llmProvider). */
-  provider?: string;
+	model?: string;
+	maxTokens?: number;
+	temperature?: number;
+	structuredOutput?: StructuredOutputConfig;
+	/** Override the LLM provider for this call (defaults to config.llmProvider). */
+	provider?: string;
 }
 
 /**
  * Convert our ChatMessage format to LangChain BaseMessage format
  */
 function convertMessages(messages: ChatMessage[]): BaseMessage[] {
-  return messages.map((msg) => {
-    switch (msg.role) {
-      case "system":
-        return new SystemMessage(msg.content);
-      case "user":
-        return new HumanMessage(msg.content);
-      case "assistant":
-        return new AIMessage(msg.content);
-      default:
-        throw new Error(`Unknown message role: ${msg.role}`);
-    }
-  });
+	return messages.map((msg) => {
+		switch (msg.role) {
+			case 'system':
+				return new SystemMessage(msg.content);
+			case 'user':
+				return new HumanMessage(msg.content);
+			case 'assistant':
+				return new AIMessage(msg.content);
+			default:
+				throw new Error(`Unknown message role: ${msg.role}`);
+		}
+	});
 }
 
 /**
  * Create appropriate LangChain chat model based on provider
  */
 function createLangChainModel(
-  provider: string,
-  model: string,
-  temperature: number,
-  maxTokens: number,
+	provider: string,
+	model: string,
+	temperature: number,
+	maxTokens: number
 ): BaseChatModel {
-  switch (provider) {
-    case "groq": {
-      const apiKey = config.groqApiKey || getEnv("SJS_LLM_API_KEY_GROQ", "");
-      // GPT-OSS models are reasoning models: they emit reasoning tokens before
-      // the answer, all counted against max_completion_tokens. On our
-      // small-budget JSON calls (e.g. the 256-token filter-opener lookup) the
-      // reasoning can consume the whole budget, leaving an empty body that
-      // Groq rejects with `json_validate_failed` (failed_generation: "").
-      // Cap reasoning to "low" so a JSON answer always fits; it also cuts
-      // latency and cost. Only reasoning models accept this param, so gate it.
-      const isReasoningModel = /gpt-oss/i.test(model);
-      return new ChatGroq({
-        apiKey,
-        model,
-        temperature,
-        maxTokens,
-        ...(isReasoningModel ? { reasoningEffort: "low" } : {}),
-      });
-    }
+	switch (provider) {
+		case 'groq': {
+			const apiKey = config.groqApiKey || getEnv('SJS_LLM_API_KEY_GROQ', '');
+			// GPT-OSS models are reasoning models: they emit reasoning tokens before
+			// the answer, all counted against max_completion_tokens. On our
+			// small-budget JSON calls (e.g. the 256-token filter-opener lookup) the
+			// reasoning can consume the whole budget, leaving an empty body that
+			// Groq rejects with `json_validate_failed` (failed_generation: "").
+			// Cap reasoning to "low" so a JSON answer always fits; it also cuts
+			// latency and cost. Only reasoning models accept this param, so gate it.
+			const isReasoningModel = /gpt-oss/i.test(model);
+			return new ChatGroq({
+				apiKey,
+				model,
+				temperature,
+				maxTokens,
+				...(isReasoningModel ? { reasoningEffort: 'low' } : {})
+			});
+		}
 
-    case "gemini": {
-      const apiKey = config.geminiApiKey;
-      // Gemini 2.5 thinks before it answers, and the thoughts are billed as
-      // output AND charged against maxOutputTokens — the same shape as the
-      // gpt-oss reasoning problem handled above, on the provider where nothing
-      // bounded it. They appear in `total_tokens` and in neither of the other
-      // two counts, so the budget can be exhausted by tokens no log shows: a
-      // turn asking for a full job-description rewrite spent 7,219 thinking and
-      // had 958 left for the answer against a cap of 8,192. The JSON stopped
-      // mid-object, withStructuredOutput parsed it to null, and the user got an
-      // error for a turn that had cost real money. Identical prompt, other runs:
-      // ~3,800 thinking and a complete answer — which is why it presents as
-      // intermittent rather than as the systematic mis-sizing it is.
-      //
-      // `maxTokens` means "how long an answer may be" — it is what every
-      // non-thinking provider above gets, for the answer alone. So the thoughts
-      // are given their own room ON TOP of it rather than being made to share
-      // it. Sharing is the bug; halving the budget and hoping is the same bug
-      // with a smaller constant.
-      //
-      // The budget is a steer, not a ceiling: asked for 4,096 the model has
-      // still returned 5,571 (measured). That is exactly why the ceiling is the
-      // sum and not the max of the two — a soft budget inside a hard cap needs
-      // the slack to be somewhere, and here it is above the answer's share
-      // instead of inside it. 2.5 Pro cannot have thinking turned off and
-      // rejects a budget below 128.
-      //
-      // Only for models that have it: the field is an error on models that
-      // don't think, which is every Gemini before 2.5.
-      const thinks = /gemini-(2\.5|[3-9])/.test(model);
-      const thinkingBudget = Math.max(128, Math.floor(maxTokens / 2));
-      return new ChatGoogleGenerativeAI({
-        apiKey,
-        model,
-        temperature,
-        maxOutputTokens: thinks ? maxTokens + thinkingBudget : maxTokens,
-        ...(thinks ? { thinkingConfig: { thinkingBudget } } : {}),
-      });
-    }
+		case 'gemini': {
+			const apiKey = config.geminiApiKey;
+			// Gemini 2.5 thinks before it answers, and the thoughts are billed as
+			// output AND charged against maxOutputTokens — the same shape as the
+			// gpt-oss reasoning problem handled above, on the provider where nothing
+			// bounded it. They appear in `total_tokens` and in neither of the other
+			// two counts, so the budget can be exhausted by tokens no log shows: a
+			// turn asking for a full job-description rewrite spent 7,219 thinking and
+			// had 958 left for the answer against a cap of 8,192. The JSON stopped
+			// mid-object, withStructuredOutput parsed it to null, and the user got an
+			// error for a turn that had cost real money. Identical prompt, other runs:
+			// ~3,800 thinking and a complete answer — which is why it presents as
+			// intermittent rather than as the systematic mis-sizing it is.
+			//
+			// `maxTokens` means "how long an answer may be" — it is what every
+			// non-thinking provider above gets, for the answer alone. So the thoughts
+			// are given their own room ON TOP of it rather than being made to share
+			// it. Sharing is the bug; halving the budget and hoping is the same bug
+			// with a smaller constant.
+			//
+			// The budget is a steer, not a ceiling: asked for 4,096 the model has
+			// still returned 5,571 (measured). That is exactly why the ceiling is the
+			// sum and not the max of the two — a soft budget inside a hard cap needs
+			// the slack to be somewhere, and here it is above the answer's share
+			// instead of inside it. 2.5 Pro cannot have thinking turned off and
+			// rejects a budget below 128.
+			//
+			// Only for models that have it: the field is an error on models that
+			// don't think, which is every Gemini before 2.5.
+			const thinks = /gemini-(2\.5|[3-9])/.test(model);
+			const thinkingBudget = Math.max(128, Math.floor(maxTokens / 2));
+			return new ChatGoogleGenerativeAI({
+				apiKey,
+				model,
+				temperature,
+				maxOutputTokens: thinks ? maxTokens + thinkingBudget : maxTokens,
+				...(thinks ? { thinkingConfig: { thinkingBudget } } : {})
+			});
+		}
 
-    case "openai": {
-      const apiKey = config.openaiApiKey;
-      return new ChatOpenAI({
-        apiKey,
-        model,
-        temperature,
-        maxTokens,
-      });
-    }
+		case 'openai': {
+			const apiKey = config.openaiApiKey;
+			return new ChatOpenAI({
+				apiKey,
+				model,
+				temperature,
+				maxTokens
+			});
+		}
 
-    case "deepseek": {
-      const apiKey = config.deepseekApiKey;
-      return new ChatOpenAI({
-        apiKey,
-        model,
-        temperature,
-        maxTokens,
-        configuration: {
-          baseURL: "https://api.deepseek.com",
-        },
-      });
-    }
+		case 'deepseek': {
+			const apiKey = config.deepseekApiKey;
+			return new ChatOpenAI({
+				apiKey,
+				model,
+				temperature,
+				maxTokens,
+				configuration: {
+					baseURL: 'https://api.deepseek.com'
+				}
+			});
+		}
 
-    case "cerebras": {
-      const apiKey = config.cerebrasApiKey;
-      if (!apiKey) {
-        throw new LLMAuthenticationError(
-          "Cerebras API key not configured. Set SJS_LLM_API_KEY_CEREBRAS.",
-          "cerebras",
-          model,
-        );
-      }
-      return new ChatCerebras({
-        apiKey,
-        model,
-        temperature,
-        maxTokens,
-      });
-    }
+		case 'cerebras': {
+			const apiKey = config.cerebrasApiKey;
+			if (!apiKey) {
+				throw new LLMAuthenticationError(
+					'Cerebras API key not configured. Set SJS_LLM_API_KEY_CEREBRAS.',
+					'cerebras',
+					model
+				);
+			}
+			return new ChatCerebras({
+				apiKey,
+				model,
+				temperature,
+				maxTokens
+			});
+		}
 
-    default:
-      throw new Error(`Unknown LLM provider: ${provider}`);
-  }
+		default:
+			throw new Error(`Unknown LLM provider: ${provider}`);
+	}
 }
 
 /**
@@ -424,11 +405,8 @@ function createLangChainModel(
 /**
  * Generate a cache key from messages and options
  */
-function generateCacheKey(
-  messages: ChatMessage[],
-  options: ChatCompletionOptions,
-): string {
-  return JSON.stringify({ messages, options });
+function generateCacheKey(messages: ChatMessage[], options: ChatCompletionOptions): string {
+	return JSON.stringify({ messages, options });
 }
 
 /**
@@ -452,426 +430,406 @@ function generateCacheKey(
  * Token usage from an LLM call
  */
 export interface TokenUsage {
-  inputTokens: number;
-  outputTokens: number;
-  totalTokens: number;
-  /**
-   * The part of `inputTokens` the provider served from a cached prefix — a
-   * subset, not an addition.
-   *
-   * Gemini 2.5 caches implicitly, and measuring it was the point: two identical
-   * 13.4k-token prefixes back to back on gemini-2.5-pro, 2026-08-06, came back
-   *
-   *   call 1: in=13399 cached=0     out=17  $0.01692
-   *   call 2: in=13399 cached=12264 out=22  $0.00317
-   *
-   * — 91% of the prefix cached and 81% off, with nothing built to make it
-   * happen. It works because the prompt is already the right shape: the profile
-   * blob is the single largest block and sits first, so every turn of a thread
-   * shares a long stable prefix. Anything that puts varying content ahead of it
-   * would quietly cost most of that, which is the real reason to record this —
-   * a regression in prompt ORDER now shows up as a number instead of a bill.
-   *
-   * The discount has a TTL, so the first turn of a conversation pays full price
-   * and its successors don't.
-   *
-   * 0 when the provider reports nothing, which is also what a provider that
-   * doesn't cache looks like. The two are not distinguished, deliberately:
-   * pricing treats both as "bill at the full rate".
-   */
-  cachedInputTokens: number;
+	inputTokens: number;
+	outputTokens: number;
+	totalTokens: number;
+	/**
+	 * The part of `inputTokens` the provider served from a cached prefix — a
+	 * subset, not an addition.
+	 *
+	 * Gemini 2.5 caches implicitly, and measuring it was the point: two identical
+	 * 13.4k-token prefixes back to back on gemini-2.5-pro, 2026-08-06, came back
+	 *
+	 *   call 1: in=13399 cached=0     out=17  $0.01692
+	 *   call 2: in=13399 cached=12264 out=22  $0.00317
+	 *
+	 * — 91% of the prefix cached and 81% off, with nothing built to make it
+	 * happen. It works because the prompt is already the right shape: the profile
+	 * blob is the single largest block and sits first, so every turn of a thread
+	 * shares a long stable prefix. Anything that puts varying content ahead of it
+	 * would quietly cost most of that, which is the real reason to record this —
+	 * a regression in prompt ORDER now shows up as a number instead of a bill.
+	 *
+	 * The discount has a TTL, so the first turn of a conversation pays full price
+	 * and its successors don't.
+	 *
+	 * 0 when the provider reports nothing, which is also what a provider that
+	 * doesn't cache looks like. The two are not distinguished, deliberately:
+	 * pricing treats both as "bill at the full rate".
+	 */
+	cachedInputTokens: number;
 }
 
 /**
  * Result from an LLM call including content and token usage
  */
 export interface CompletionResult {
-  content: string;
-  usage: TokenUsage | null;
+	content: string;
+	usage: TokenUsage | null;
 }
 
 /** Extract token usage from a LangChain AIMessage response */
 function extractTokenUsage(result: any): TokenUsage | null {
-  // LangChain stores usage in usage_metadata (standard) or response_metadata
-  const usage = result?.usage_metadata;
-  if (usage) {
-    return {
-      inputTokens: usage.input_tokens ?? 0,
-      outputTokens: usage.output_tokens ?? 0,
-      totalTokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
-      // Standard LangChain shape. Providers that don't cache omit the whole
-      // `input_token_details` object rather than reporting a zero.
-      cachedInputTokens: usage.input_token_details?.cache_read ?? 0,
-    };
-  }
+	// LangChain stores usage in usage_metadata (standard) or response_metadata
+	const usage = result?.usage_metadata;
+	if (usage) {
+		return {
+			inputTokens: usage.input_tokens ?? 0,
+			outputTokens: usage.output_tokens ?? 0,
+			totalTokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
+			// Standard LangChain shape. Providers that don't cache omit the whole
+			// `input_token_details` object rather than reporting a zero.
+			cachedInputTokens: usage.input_token_details?.cache_read ?? 0
+		};
+	}
 
-  // Fallback: some providers put it in response_metadata
-  const respMeta = result?.response_metadata;
-  if (respMeta?.tokenUsage) {
-    const tu = respMeta.tokenUsage;
-    return {
-      inputTokens: tu.promptTokens ?? tu.input_tokens ?? 0,
-      outputTokens: tu.completionTokens ?? tu.output_tokens ?? 0,
-      totalTokens: tu.totalTokens ?? tu.total_tokens ?? 0,
-      // No standard place for it on this path; the providers that land here
-      // are the ones not reporting the standard shape in the first place.
-      cachedInputTokens: 0,
-    };
-  }
+	// Fallback: some providers put it in response_metadata
+	const respMeta = result?.response_metadata;
+	if (respMeta?.tokenUsage) {
+		const tu = respMeta.tokenUsage;
+		return {
+			inputTokens: tu.promptTokens ?? tu.input_tokens ?? 0,
+			outputTokens: tu.completionTokens ?? tu.output_tokens ?? 0,
+			totalTokens: tu.totalTokens ?? tu.total_tokens ?? 0,
+			// No standard place for it on this path; the providers that land here
+			// are the ones not reporting the standard shape in the first place.
+			cachedInputTokens: 0
+		};
+	}
 
-  return null;
+	return null;
 }
 
 /**
  * Generate chat completion using LangChain
  */
 async function generateWithLangChain(
-  messages: ChatMessage[],
-  model: string,
-  maxTokens: number,
-  temperature: number,
-  structuredOutput?: StructuredOutputConfig,
-  providerOverride?: string,
+	messages: ChatMessage[],
+	model: string,
+	maxTokens: number,
+	temperature: number,
+	structuredOutput?: StructuredOutputConfig,
+	providerOverride?: string
 ): Promise<CompletionResult> {
-  const provider = providerOverride || config.llmProvider;
+	const provider = providerOverride || config.llmProvider;
 
-  try {
-    // Create the appropriate LangChain model
-    const chatModel = createLangChainModel(
-      provider,
-      model,
-      temperature,
-      maxTokens,
-    );
+	try {
+		// Create the appropriate LangChain model
+		const chatModel = createLangChainModel(provider, model, temperature, maxTokens);
 
-    // Convert messages to LangChain format
-    const langChainMessages = convertMessages(messages);
+		// Convert messages to LangChain format
+		const langChainMessages = convertMessages(messages);
 
-    // Handle structured output if structuredOutput is provided
-    if (structuredOutput) {
-      // Use Zod schema directly (no conversion needed)
-      const zodSchema = structuredOutput.schema;
+		// Handle structured output if structuredOutput is provided
+		if (structuredOutput) {
+			// Use Zod schema directly (no conversion needed)
+			const zodSchema = structuredOutput.schema;
 
-      // For Groq and Cerebras, use JSON mode instead of structured output (tool calling)
-      // These providers' tool calling has strict validation that conflicts with our schemas
-      //
-      // ⚠️ That claim is about Llama 4 and no longer holds for the configured
-      // Groq model. Probed 2026-08-04 against openai/gpt-oss-120b with
-      // `scripts/probe-groq-tools.ts`: bound tools, argument extraction, a
-      // two-step loop feeding a tool result back, and the loose proposal schema
-      // (enums, optional fields, array-of-objects) all worked — 4/4.
-      //
-      // It is left in place anyway, because "tool calling works" is not a
-      // reason to change a JSON-mode path that works: the win would be nil and
-      // the blast radius is every structured prompt in the app. What it DOES
-      // settle is the question that made anyone ask — an agent/tool loop, which
-      // cannot avoid tool calls, is not blocked on this provider.
-      if (provider === "groq" || provider === "cerebras") {
-        // IMPORTANT: Do NOT use zodToJsonSchema here - Llama 4 tends to echo JSON schema definitions
-        // Instead, we rely on the system prompt already describing the expected output format
-        // The structuredOutput.name tells us what type of response we expect
+			// For Groq and Cerebras, use JSON mode instead of structured output (tool calling)
+			// These providers' tool calling has strict validation that conflicts with our schemas
+			//
+			// ⚠️ That claim is about Llama 4 and no longer holds for the configured
+			// Groq model. Probed 2026-08-04 against openai/gpt-oss-120b with
+			// `scripts/probe-groq-tools.ts`: bound tools, argument extraction, a
+			// two-step loop feeding a tool result back, and the loose proposal schema
+			// (enums, optional fields, array-of-objects) all worked — 4/4.
+			//
+			// It is left in place anyway, because "tool calling works" is not a
+			// reason to change a JSON-mode path that works: the win would be nil and
+			// the blast radius is every structured prompt in the app. What it DOES
+			// settle is the question that made anyone ask — an agent/tool loop, which
+			// cannot avoid tool calls, is not blocked on this provider.
+			if (provider === 'groq' || provider === 'cerebras') {
+				// IMPORTANT: Do NOT use zodToJsonSchema here - Llama 4 tends to echo JSON schema definitions
+				// Instead, we rely on the system prompt already describing the expected output format
+				// The structuredOutput.name tells us what type of response we expect
 
-        // Add a simple reminder to output JSON data (not schema)
-        const lastMessage = langChainMessages[langChainMessages.length - 1];
-        if (lastMessage instanceof HumanMessage) {
-          // For letter prompts, include the expected field names
-          const isLetterPrompt = structuredOutput.name.includes("write_") ||
-            structuredOutput.name.includes("followup_letter");
-          const fieldHint = isLetterPrompt
-            ? (structuredOutput.name === "followup_letter"
-              ? ' Use exactly these JSON keys: "letter" (the complete letter text) and "summary" (brief summary of changes).'
-              : ' Use exactly this JSON key: "letter" (the complete letter text).')
-            : "";
+				// Add a simple reminder to output JSON data (not schema)
+				const lastMessage = langChainMessages[langChainMessages.length - 1];
+				if (lastMessage instanceof HumanMessage) {
+					// For letter prompts, include the expected field names
+					const isLetterPrompt =
+						structuredOutput.name.includes('write_') ||
+						structuredOutput.name.includes('followup_letter');
+					const fieldHint = isLetterPrompt
+						? structuredOutput.name === 'followup_letter'
+							? ' Use exactly these JSON keys: "letter" (the complete letter text) and "summary" (brief summary of changes).'
+							: ' Use exactly this JSON key: "letter" (the complete letter text).'
+						: '';
 
-          lastMessage.content = lastMessage.content +
-            "\n\nIMPORTANT: Output ONLY a valid JSON object with actual DATA values. " +
-            "Do NOT output a JSON Schema definition. Do NOT include $ref, definitions, type declarations, or schema metadata. " +
-            "Just output the extracted data as JSON." + fieldHint;
-        }
+					lastMessage.content =
+						lastMessage.content +
+						'\n\nIMPORTANT: Output ONLY a valid JSON object with actual DATA values. ' +
+						'Do NOT output a JSON Schema definition. Do NOT include $ref, definitions, type declarations, or schema metadata. ' +
+						'Just output the extracted data as JSON.' +
+						fieldHint;
+				}
 
-        // Invoke with JSON mode enabled to ensure valid JSON output.
-        // `response_format` is an OpenAI-compatible passthrough that LangChain
-        // forwards to providers (Groq, OpenAI) but isn't in its base option type.
-        const result = await chatModel.invoke(
-          langChainMessages,
-          {
-            response_format: { type: "json_object" },
-          } as Parameters<typeof chatModel.invoke>[1],
-        );
-        const responseContent = typeof result.content === "string"
-          ? result.content
-          : String(result.content);
+				// Invoke with JSON mode enabled to ensure valid JSON output.
+				// `response_format` is an OpenAI-compatible passthrough that LangChain
+				// forwards to providers (Groq, OpenAI) but isn't in its base option type.
+				const result = await chatModel.invoke(langChainMessages, {
+					response_format: { type: 'json_object' }
+				} as Parameters<typeof chatModel.invoke>[1]);
+				const responseContent =
+					typeof result.content === 'string' ? result.content : String(result.content);
 
-        // Parse and validate JSON response
-        // Strip markdown code blocks if present (```json ... ``` or ``` ... ```)
-        let jsonContent = responseContent.trim();
-        const codeBlockMatch = jsonContent.match(
-          /```(?:json)?\s*\n([\s\S]*?)\n```/,
-        );
-        if (codeBlockMatch) {
-          jsonContent = codeBlockMatch[1].trim();
-        }
+				// Parse and validate JSON response
+				// Strip markdown code blocks if present (```json ... ``` or ``` ... ```)
+				let jsonContent = responseContent.trim();
+				const codeBlockMatch = jsonContent.match(/```(?:json)?\s*\n([\s\S]*?)\n```/);
+				if (codeBlockMatch) {
+					jsonContent = codeBlockMatch[1].trim();
+				}
 
-        // Try to parse JSON, with repair attempt for truncated responses
-        let parsed: unknown;
-        try {
-          parsed = JSON.parse(jsonContent);
-        } catch (jsonError) {
-          // Check if JSON appears truncated (missing closing braces/brackets)
-          const openBraces = (jsonContent.match(/{/g) || []).length;
-          const closeBraces = (jsonContent.match(/}/g) || []).length;
-          const openBrackets = (jsonContent.match(/\[/g) || []).length;
-          const closeBrackets = (jsonContent.match(/]/g) || []).length;
-          const isTruncated = openBraces > closeBraces ||
-            openBrackets > closeBrackets;
+				// Try to parse JSON, with repair attempt for truncated responses
+				let parsed: unknown;
+				try {
+					parsed = JSON.parse(jsonContent);
+				} catch (jsonError) {
+					// Check if JSON appears truncated (missing closing braces/brackets)
+					const openBraces = (jsonContent.match(/{/g) || []).length;
+					const closeBraces = (jsonContent.match(/}/g) || []).length;
+					const openBrackets = (jsonContent.match(/\[/g) || []).length;
+					const closeBrackets = (jsonContent.match(/]/g) || []).length;
+					const isTruncated = openBraces > closeBraces || openBrackets > closeBrackets;
 
-          if (isTruncated) {
-            // Try to repair truncated JSON by closing incomplete strings and adding missing brackets/braces
-            let repairedJson = jsonContent;
+					if (isTruncated) {
+						// Try to repair truncated JSON by closing incomplete strings and adding missing brackets/braces
+						let repairedJson = jsonContent;
 
-            // If we're inside a string (odd number of unescaped quotes after last complete value)
-            // Try to close it
-            const lastQuoteIndex = repairedJson.lastIndexOf('"');
-            const afterLastQuote = repairedJson.substring(lastQuoteIndex + 1);
-            if (
-              lastQuoteIndex > 0 && !afterLastQuote.includes('"') &&
-              !afterLastQuote.match(/[}\],:]/)
-            ) {
-              // We're likely inside an unclosed string - close it with null
-              // Find the last complete key-value and truncate there
-              const lastCompleteMatch = repairedJson.match(
-                /^([\s\S]*[}\],])\s*"[^"]*"?\s*:?\s*"?[^"]*$/,
-              );
-              if (lastCompleteMatch) {
-                repairedJson = lastCompleteMatch[1];
-              }
-            }
+						// If we're inside a string (odd number of unescaped quotes after last complete value)
+						// Try to close it
+						const lastQuoteIndex = repairedJson.lastIndexOf('"');
+						const afterLastQuote = repairedJson.substring(lastQuoteIndex + 1);
+						if (
+							lastQuoteIndex > 0 &&
+							!afterLastQuote.includes('"') &&
+							!afterLastQuote.match(/[}\],:]/)
+						) {
+							// We're likely inside an unclosed string - close it with null
+							// Find the last complete key-value and truncate there
+							const lastCompleteMatch = repairedJson.match(
+								/^([\s\S]*[}\],])\s*"[^"]*"?\s*:?\s*"?[^"]*$/
+							);
+							if (lastCompleteMatch) {
+								repairedJson = lastCompleteMatch[1];
+							}
+						}
 
-            // Add missing closing brackets and braces
-            const missingBrackets = openBrackets -
-              (repairedJson.match(/]/g) || []).length;
-            const missingBraces = openBraces -
-              (repairedJson.match(/}/g) || []).length;
-            repairedJson += "]".repeat(missingBrackets) +
-              "}".repeat(missingBraces);
+						// Add missing closing brackets and braces
+						const missingBrackets = openBrackets - (repairedJson.match(/]/g) || []).length;
+						const missingBraces = openBraces - (repairedJson.match(/}/g) || []).length;
+						repairedJson += ']'.repeat(missingBrackets) + '}'.repeat(missingBraces);
 
-            try {
-              parsed = JSON.parse(repairedJson);
-              console.log(
-                `      ⚠️ Repaired truncated JSON (closed ${missingBrackets} brackets, ${missingBraces} braces)`,
-              );
-            } catch {
-              // Repair failed, throw original error with truncation details
-              throw new Error(
-                `${provider} JSON response appears truncated (output token limit likely exceeded). ` +
-                  `Missing ${openBraces - closeBraces} closing braces, ${
-                    openBrackets - closeBrackets
-                  } closing brackets. ` +
-                  `Response length: ${responseContent.length} chars. Last 200 chars: ...${
-                    responseContent.slice(-200)
-                  }`,
-              );
-            }
-          } else {
-            const errorMsg = jsonError instanceof Error
-              ? jsonError.message
-              : String(jsonError);
-            throw new Error(
-              `Failed to parse JSON response from ${provider}: ${errorMsg}\nResponse was: ${
-                responseContent.substring(0, 500)
-              }`,
-            );
-          }
-        }
+						try {
+							parsed = JSON.parse(repairedJson);
+							console.log(
+								`      ⚠️ Repaired truncated JSON (closed ${missingBrackets} brackets, ${missingBraces} braces)`
+							);
+						} catch {
+							// Repair failed, throw original error with truncation details
+							throw new Error(
+								`${provider} JSON response appears truncated (output token limit likely exceeded). ` +
+									`Missing ${openBraces - closeBraces} closing braces, ${
+										openBrackets - closeBrackets
+									} closing brackets. ` +
+									`Response length: ${responseContent.length} chars. Last 200 chars: ...${responseContent.slice(
+										-200
+									)}`
+							);
+						}
+					} else {
+						const errorMsg = jsonError instanceof Error ? jsonError.message : String(jsonError);
+						throw new Error(
+							`Failed to parse JSON response from ${provider}: ${errorMsg}\nResponse was: ${responseContent.substring(
+								0,
+								500
+							)}`
+						);
+					}
+				}
 
-        // Normalize response format before validation
-        // LLMs sometimes return unwrapped responses (single object or array instead of {jobs: [...]})
-        let normalizedParsed = parsed;
-        if (structuredOutput.name.includes("extract_jobs")) {
-          // For job extraction, ensure response has {jobs: [...]} wrapper
-          if (Array.isArray(parsed)) {
-            // LLM returned bare array - wrap it
-            normalizedParsed = { jobs: parsed };
-          } else if (
-            parsed && typeof parsed === "object" && !("jobs" in parsed)
-          ) {
-            // Check if LLM returned object with numeric keys (e.g. { "25": {...}, "27": {...} })
-            const values = Object.values(parsed);
-            if (
-              values.length > 0 &&
-              values.every(
-                (v) =>
-                  v && typeof v === "object" &&
-                  ("clickableId" in v || "title" in v),
-              )
-            ) {
-              normalizedParsed = { jobs: values };
-            } else if ("clickableId" in parsed || "title" in parsed) {
-              // LLM returned single job object - wrap in array
-              normalizedParsed = { jobs: [parsed] };
-            }
-          }
-        }
+				// Normalize response format before validation
+				// LLMs sometimes return unwrapped responses (single object or array instead of {jobs: [...]})
+				let normalizedParsed = parsed;
+				if (structuredOutput.name.includes('extract_jobs')) {
+					// For job extraction, ensure response has {jobs: [...]} wrapper
+					if (Array.isArray(parsed)) {
+						// LLM returned bare array - wrap it
+						normalizedParsed = { jobs: parsed };
+					} else if (parsed && typeof parsed === 'object' && !('jobs' in parsed)) {
+						// Check if LLM returned object with numeric keys (e.g. { "25": {...}, "27": {...} })
+						const values = Object.values(parsed);
+						if (
+							values.length > 0 &&
+							values.every(
+								(v) => v && typeof v === 'object' && ('clickableId' in v || 'title' in v)
+							)
+						) {
+							normalizedParsed = { jobs: values };
+						} else if ('clickableId' in parsed || 'title' in parsed) {
+							// LLM returned single job object - wrap in array
+							normalizedParsed = { jobs: [parsed] };
+						}
+					}
+				}
 
-        // Validate against Zod schema
-        const usage = extractTokenUsage(result);
-        try {
-          const validated = zodSchema.parse(normalizedParsed);
-          return { content: JSON.stringify(validated), usage };
-        } catch (zodError) {
-          // For job extraction, try per-item validation instead of rejecting everything.
-          // A single malformed job object from the LLM shouldn't discard all valid ones.
-          if (
-            structuredOutput.name.includes("extract_jobs") &&
-            normalizedParsed &&
-            typeof normalizedParsed === "object" &&
-            "jobs" in normalizedParsed &&
-            Array.isArray((normalizedParsed as any).jobs)
-          ) {
-            try {
-              const allJobs = (normalizedParsed as any).jobs as unknown[];
-              const jobSchema = (zodSchema as any).shape?.jobs?._def?.element;
-              if (jobSchema && allJobs.length > 0) {
-                const validJobs = allJobs.filter((job) => {
-                  try {
-                    jobSchema.parse(job);
-                    return true;
-                  } catch {
-                    return false;
-                  }
-                });
-                if (validJobs.length > 0) {
-                  console.log(
-                    `      ⚠️ ${
-                      allJobs.length - validJobs.length
-                    }/${allJobs.length} job objects failed validation, keeping ${validJobs.length} valid`,
-                  );
-                  const partial = {
-                    ...normalizedParsed as any,
-                    jobs: validJobs,
-                  };
-                  const validated = zodSchema.parse(partial);
-                  return { content: JSON.stringify(validated), usage };
-                }
-              }
-            } catch {
-              /* per-item fallback failed, fall through to original error */
-            }
-          }
+				// Validate against Zod schema
+				const usage = extractTokenUsage(result);
+				try {
+					const validated = zodSchema.parse(normalizedParsed);
+					return { content: JSON.stringify(validated), usage };
+				} catch (zodError) {
+					// For job extraction, try per-item validation instead of rejecting everything.
+					// A single malformed job object from the LLM shouldn't discard all valid ones.
+					if (
+						structuredOutput.name.includes('extract_jobs') &&
+						normalizedParsed &&
+						typeof normalizedParsed === 'object' &&
+						'jobs' in normalizedParsed &&
+						Array.isArray((normalizedParsed as any).jobs)
+					) {
+						try {
+							const allJobs = (normalizedParsed as any).jobs as unknown[];
+							const jobSchema = (zodSchema as any).shape?.jobs?._def?.element;
+							if (jobSchema && allJobs.length > 0) {
+								const validJobs = allJobs.filter((job) => {
+									try {
+										jobSchema.parse(job);
+										return true;
+									} catch {
+										return false;
+									}
+								});
+								if (validJobs.length > 0) {
+									console.log(
+										`      ⚠️ ${
+											allJobs.length - validJobs.length
+										}/${allJobs.length} job objects failed validation, keeping ${validJobs.length} valid`
+									);
+									const partial = {
+										...(normalizedParsed as any),
+										jobs: validJobs
+									};
+									const validated = zodSchema.parse(partial);
+									return { content: JSON.stringify(validated), usage };
+								}
+							}
+						} catch {
+							/* per-item fallback failed, fall through to original error */
+						}
+					}
 
-          const errorMsg = zodError instanceof Error
-            ? zodError.message
-            : String(zodError);
-          throw new Error(
-            `Failed to parse JSON response from ${provider}: ${errorMsg}\nResponse was: ${
-              responseContent.substring(0, 500)
-            }`,
-          );
-        }
-      }
+					const errorMsg = zodError instanceof Error ? zodError.message : String(zodError);
+					throw new Error(
+						`Failed to parse JSON response from ${provider}: ${errorMsg}\nResponse was: ${responseContent.substring(
+							0,
+							500
+						)}`
+					);
+				}
+			}
 
-      // For other providers, use withStructuredOutput (includeRaw for token usage)
-      const structuredModel = chatModel.withStructuredOutput(zodSchema, {
-        name: structuredOutput.name,
-        includeRaw: true,
-      });
+			// For other providers, use withStructuredOutput (includeRaw for token usage)
+			const structuredModel = chatModel.withStructuredOutput(zodSchema, {
+				name: structuredOutput.name,
+				includeRaw: true
+			});
 
-      const { raw, parsed: result } = await structuredModel.invoke(
-        langChainMessages,
-      );
-      const usage = extractTokenUsage(raw);
+			const { raw, parsed: result } = await structuredModel.invoke(langChainMessages);
+			const usage = extractTokenUsage(raw);
 
-      /**
-       * A null parse is a FAILED generation, and it used to be reported as a
-       * successful one: `JSON.stringify(null)` is the string "null", which was
-       * returned as content, saved to ai_chats with no error, and charged for.
-       * The caller then had a response that looked fine and wasn't — the
-       * assistant endpoint did `JSON.parse("null").reply` and 500'd, having
-       * already billed two credits for a turn that produced nothing.
-       *
-       * None of the schemas here are nullable, so a null parse never means
-       * "the model correctly answered null". It means the model returned no
-       * usable structured output — which is this error's whole subject.
-       *
-       * Usage rides along because the tokens were really spent (1783 output
-       * tokens on the turn that surfaced this) and the caller's error path is
-       * the only place left that can record them.
-       */
-      if (result === null || result === undefined) {
-        /**
-         * The finish reason belongs IN the message, because the message is all
-         * the log line and the `ai_chats.error` column will ever carry.
-         * Diagnosing the first occurrence without it took a replay harness and
-         * nine calls to reproduce; "MAX_TOKENS" would have said it outright.
-         *
-         * The output-token count is here for the same reason and reads as a
-         * contradiction without the explanation: a generation can stop at the
-         * cap having emitted a tenth of it, because Gemini's thinking tokens
-         * are charged against the same budget and counted in neither
-         * `output_tokens` nor anything else visible.
-         */
-        const finish =
-          (raw as { response_metadata?: { finishReason?: string } })
-            ?.response_metadata?.finishReason ?? "unknown";
-        const failure = new LLMOutputValidationError(
-          `Failed to generate JSON matching ${structuredOutput.name}: ` +
-            `${provider} returned no usable structured output ` +
-            `(finish reason: ${finish}, ${usage?.outputTokens ?? 0} output tokens).`,
-          provider,
-          model,
-        );
-        throw Object.assign(failure, { usage });
-      }
+			/**
+			 * A null parse is a FAILED generation, and it used to be reported as a
+			 * successful one: `JSON.stringify(null)` is the string "null", which was
+			 * returned as content, saved to ai_chats with no error, and charged for.
+			 * The caller then had a response that looked fine and wasn't — the
+			 * assistant endpoint did `JSON.parse("null").reply` and 500'd, having
+			 * already billed two credits for a turn that produced nothing.
+			 *
+			 * None of the schemas here are nullable, so a null parse never means
+			 * "the model correctly answered null". It means the model returned no
+			 * usable structured output — which is this error's whole subject.
+			 *
+			 * Usage rides along because the tokens were really spent (1783 output
+			 * tokens on the turn that surfaced this) and the caller's error path is
+			 * the only place left that can record them.
+			 */
+			if (result === null || result === undefined) {
+				/**
+				 * The finish reason belongs IN the message, because the message is all
+				 * the log line and the `ai_chats.error` column will ever carry.
+				 * Diagnosing the first occurrence without it took a replay harness and
+				 * nine calls to reproduce; "MAX_TOKENS" would have said it outright.
+				 *
+				 * The output-token count is here for the same reason and reads as a
+				 * contradiction without the explanation: a generation can stop at the
+				 * cap having emitted a tenth of it, because Gemini's thinking tokens
+				 * are charged against the same budget and counted in neither
+				 * `output_tokens` nor anything else visible.
+				 */
+				const finish =
+					(raw as { response_metadata?: { finishReason?: string } })?.response_metadata
+						?.finishReason ?? 'unknown';
+				const failure = new LLMOutputValidationError(
+					`Failed to generate JSON matching ${structuredOutput.name}: ` +
+						`${provider} returned no usable structured output ` +
+						`(finish reason: ${finish}, ${usage?.outputTokens ?? 0} output tokens).`,
+					provider,
+					model
+				);
+				throw Object.assign(failure, { usage });
+			}
 
-      try {
-        return { content: JSON.stringify(result), usage };
-      } catch (stringifyError) {
-        const errorMsg = stringifyError instanceof Error
-          ? stringifyError.message
-          : String(stringifyError);
-        // Try to show a safe representation of the result
-        let resultPreview = "[Unable to stringify result]";
-        try {
-          resultPreview = String(result).substring(0, 500);
-        } catch {
-          // If even String() fails, use generic message
-        }
-        throw new Error(
-          `Failed to parse JSON response from LLM (${provider}/${model}): ${errorMsg}\nResponse was: ${resultPreview}`,
-        );
-      }
-    }
+			try {
+				return { content: JSON.stringify(result), usage };
+			} catch (stringifyError) {
+				const errorMsg =
+					stringifyError instanceof Error ? stringifyError.message : String(stringifyError);
+				// Try to show a safe representation of the result
+				let resultPreview = '[Unable to stringify result]';
+				try {
+					resultPreview = String(result).substring(0, 500);
+				} catch {
+					// If even String() fails, use generic message
+				}
+				throw new Error(
+					`Failed to parse JSON response from LLM (${provider}/${model}): ${errorMsg}\nResponse was: ${resultPreview}`
+				);
+			}
+		}
 
-    // Regular text completion
-    const result = await chatModel.invoke(langChainMessages);
-    const responseContent = result.content;
-    const usage = extractTokenUsage(result);
+		// Regular text completion
+		const result = await chatModel.invoke(langChainMessages);
+		const responseContent = result.content;
+		const usage = extractTokenUsage(result);
 
-    if (typeof responseContent !== "string") {
-      throw new Error("Expected string response from LangChain model");
-    }
+		if (typeof responseContent !== 'string') {
+			throw new Error('Expected string response from LangChain model');
+		}
 
-    if (!responseContent) {
-      throw new Error(`No content returned from ${provider}`);
-    }
+		if (!responseContent) {
+			throw new Error(`No content returned from ${provider}`);
+		}
 
-    return { content: responseContent, usage };
-  } catch (error) {
-    // handleLLMError classifies by inspecting the message and throws a NEW
-    // typed error, which drops anything attached to the original. Token usage
-    // is the one thing worth carrying across that: the provider bills a failed
-    // call exactly like a successful one, and the caller's error path is the
-    // only place left that can record what it cost.
-    try {
-      handleLLMError(error, provider, model);
-    } catch (classified) {
-      const usage = (error as { usage?: TokenUsage })?.usage;
-      if (usage && typeof classified === "object" && classified !== null) {
-        Object.assign(classified, { usage });
-      }
-      throw classified;
-    }
-  }
+		return { content: responseContent, usage };
+	} catch (error) {
+		// handleLLMError classifies by inspecting the message and throws a NEW
+		// typed error, which drops anything attached to the original. Token usage
+		// is the one thing worth carrying across that: the provider bills a failed
+		// call exactly like a successful one, and the caller's error path is the
+		// only place left that can record what it cost.
+		try {
+			handleLLMError(error, provider, model);
+		} catch (classified) {
+			const usage = (error as { usage?: TokenUsage })?.usage;
+			if (usage && typeof classified === 'object' && classified !== null) {
+				Object.assign(classified, { usage });
+			}
+			throw classified;
+		}
+	}
 }
 
 /**
@@ -879,49 +837,49 @@ async function generateWithLangChain(
  * Returns both the content and token usage for credit billing.
  */
 export async function generateChatCompletionTracked(
-  messages: ChatMessage[],
-  options: ChatCompletionOptions = {},
+	messages: ChatMessage[],
+	options: ChatCompletionOptions = {}
 ): Promise<CompletionResult> {
-  const {
-    model = config.llmModel,
-    maxTokens = 8192,
-    temperature = 0.7,
-    structuredOutput,
-    provider,
-  } = options;
+	const {
+		model = config.llmModel,
+		maxTokens = 8192,
+		temperature = 0.7,
+		structuredOutput,
+		provider
+	} = options;
 
-  // Check cache first (cached = no usage, already billed)
-  const cacheKey = generateCacheKey(messages, options);
-  const cachedResponse = llmCache.get(cacheKey, model);
+	// Check cache first (cached = no usage, already billed)
+	const cacheKey = generateCacheKey(messages, options);
+	const cachedResponse = llmCache.get(cacheKey, model);
 
-  if (cachedResponse) {
-    return { content: cachedResponse, usage: null };
-  }
+	if (cachedResponse) {
+		return { content: cachedResponse, usage: null };
+	}
 
-  // Make completion request with retry logic
-  const result = await withRetry(
-    async () => {
-      return await generateWithLangChain(
-        messages,
-        model,
-        maxTokens,
-        temperature,
-        structuredOutput,
-        provider,
-      );
-    },
-    {
-      maxAttempts: config.retryMaxAttempts,
-      initialDelay: config.retryInitialDelay,
-      maxDelay: config.retryMaxDelay,
-      shouldRetry: isRetryableError,
-    },
-  );
+	// Make completion request with retry logic
+	const result = await withRetry(
+		async () => {
+			return await generateWithLangChain(
+				messages,
+				model,
+				maxTokens,
+				temperature,
+				structuredOutput,
+				provider
+			);
+		},
+		{
+			maxAttempts: config.retryMaxAttempts,
+			initialDelay: config.retryInitialDelay,
+			maxDelay: config.retryMaxDelay,
+			shouldRetry: isRetryableError
+		}
+	);
 
-  // Cache the raw content
-  llmCache.set(cacheKey, result.content, model, config.llmCacheTTL);
+	// Cache the raw content
+	llmCache.set(cacheKey, result.content, model, config.llmCacheTTL);
 
-  return result;
+	return result;
 }
 
 /**
@@ -929,8 +887,8 @@ export async function generateChatCompletionTracked(
  * When structuredOutput is provided, automatically parses the JSON response
  */
 export async function generateChatCompletion<T = any>(
-  messages: ChatMessage[],
-  options: ChatCompletionOptions & { structuredOutput: StructuredOutputConfig },
+	messages: ChatMessage[],
+	options: ChatCompletionOptions & { structuredOutput: StructuredOutputConfig }
 ): Promise<T>;
 
 /**
@@ -938,31 +896,31 @@ export async function generateChatCompletion<T = any>(
  * When structuredOutput is not provided, returns raw string
  */
 export async function generateChatCompletion(
-  messages: ChatMessage[],
-  options?: ChatCompletionOptions,
+	messages: ChatMessage[],
+	options?: ChatCompletionOptions
 ): Promise<string>;
 
 export async function generateChatCompletion(
-  messages: ChatMessage[],
-  options: ChatCompletionOptions = {},
+	messages: ChatMessage[],
+	options: ChatCompletionOptions = {}
 ): Promise<string> {
-  const result = await generateChatCompletionTracked(messages, options);
+	const result = await generateChatCompletionTracked(messages, options);
 
-  // Parse JSON if structuredOutput was provided
-  if (options.structuredOutput) {
-    try {
-      return JSON.parse(result.content);
-    } catch (error) {
-      const model = options.model ?? config.llmModel;
-      throw new Error(
-        `Failed to parse JSON response from LLM (${config.llmProvider}/${model}): ${
-          error instanceof Error ? error.message : String(error)
-        }\nResponse was: ${result.content.substring(0, 500)}${
-          result.content.length > 500 ? "..." : ""
-        }`,
-      );
-    }
-  }
+	// Parse JSON if structuredOutput was provided
+	if (options.structuredOutput) {
+		try {
+			return JSON.parse(result.content);
+		} catch (error) {
+			const model = options.model ?? config.llmModel;
+			throw new Error(
+				`Failed to parse JSON response from LLM (${config.llmProvider}/${model}): ${
+					error instanceof Error ? error.message : String(error)
+				}\nResponse was: ${result.content.substring(0, 500)}${
+					result.content.length > 500 ? '...' : ''
+				}`
+			);
+		}
+	}
 
-  return result.content;
+	return result.content;
 }

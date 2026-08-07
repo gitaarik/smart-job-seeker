@@ -3,7 +3,7 @@
  */
 
 // Link and URL extraction
-export { extractLinks, extractSourceUrlFromMeta } from "./extract.js";
+export { extractLinks, extractSourceUrlFromMeta } from './extract.js';
 
 // HTML stripping for LLM
-export { stripHtmlForLlm, type StripHtmlOptions } from "./strip.js";
+export { stripHtmlForLlm, type StripHtmlOptions } from './strip.js';

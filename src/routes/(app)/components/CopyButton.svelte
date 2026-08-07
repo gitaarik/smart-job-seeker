@@ -1,48 +1,53 @@
 <script lang="ts">
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faCheck, faCopy } from "@fortawesome/free-solid-svg-icons";
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faCheck, faCopy } from '@fortawesome/free-solid-svg-icons';
 
-  let {
-    text,
-    size = "md",
-    label = "",
-    title = "Copy",
-  }: {
-    text: string;
-    size?: "sm" | "md";
-    label?: string;
-    /** Tooltip — worth overriding when the label alone doesn't say what gets copied. */
-    title?: string;
-  } = $props();
+	let {
+		text,
+		size = 'md',
+		label = '',
+		title = 'Copy'
+	}: {
+		text: string;
+		size?: 'sm' | 'md';
+		label?: string;
+		/** Tooltip — worth overriding when the label alone doesn't say what gets copied. */
+		title?: string;
+	} = $props();
 
-  let copied = $state(false);
-  let timeout: ReturnType<typeof setTimeout> | null = null;
+	let copied = $state(false);
+	let timeout: ReturnType<typeof setTimeout> | null = null;
 
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-      if (timeout) clearTimeout(timeout);
-      timeout = setTimeout(() => { copied = false; }, 2000);
-    } catch {
-      // clipboard not available
-    }
-  }
+	async function copy() {
+		try {
+			await navigator.clipboard.writeText(text);
+			copied = true;
+			if (timeout) clearTimeout(timeout);
+			timeout = setTimeout(() => {
+				copied = false;
+			}, 2000);
+		} catch {
+			// clipboard not available
+		}
+	}
 </script>
 
 <button
-  type="button"
-  onclick={copy}
-  class="inline-flex items-center gap-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-  title={copied ? "Copied!" : title}
+	type="button"
+	onclick={copy}
+	class="inline-flex items-center gap-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-text)]"
+	title={copied ? 'Copied!' : title}
 >
-  <FontAwesomeIcon
-    icon={copied ? faCheck : faCopy}
-    class="{size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'} {copied ? 'text-[var(--dash-success)]' : ''}"
-  />
-  {#if label}
-    <span class="{size === 'sm' ? 'text-xs' : 'text-sm'} {copied ? 'text-[var(--dash-success)]' : ''}">{copied ? "Copied!" : label}</span>
-  {:else if copied}
-    <span class="{size === 'sm' ? 'text-xs' : 'text-sm'} text-[var(--dash-success)]">Copied!</span>
-  {/if}
+	<FontAwesomeIcon
+		icon={copied ? faCheck : faCopy}
+		class="{size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} {copied ? 'text-[var(--dash-success)]' : ''}"
+	/>
+	{#if label}
+		<span
+			class="{size === 'sm' ? 'text-xs' : 'text-sm'} {copied ? 'text-[var(--dash-success)]' : ''}"
+			>{copied ? 'Copied!' : label}</span
+		>
+	{:else if copied}
+		<span class="{size === 'sm' ? 'text-xs' : 'text-sm'} text-[var(--dash-success)]">Copied!</span>
+	{/if}
 </button>

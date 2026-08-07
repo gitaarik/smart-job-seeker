@@ -1,5 +1,5 @@
-import { redirect } from "@sveltejs/kit";
+import { redirect } from '@sveltejs/kit';
 
 export const load = () => {
-  redirect(301, "/data/profile-export");
+	redirect(301, '/data/profile-export');
 };

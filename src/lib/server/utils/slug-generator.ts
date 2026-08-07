@@ -1,64 +1,55 @@
-import { dbDirect as db } from "$lib/server/db";
-import { eq, and, ne } from "drizzle-orm";
-import { profiles } from "$lib/server/db/schema";
+import { dbDirect as db } from '$lib/server/db';
+import { eq, and, ne } from 'drizzle-orm';
+import { profiles } from '$lib/server/db/schema';
 
 export function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Remove accents
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_]+/g, "-")
-    .replace(/--+/g, "-")
-    .replace(/^-+|-+$/g, "");
+	return text
+		.toLowerCase()
+		.trim()
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '') // Remove accents
+		.replace(/[^\w\s-]/g, '')
+		.replace(/[\s_]+/g, '-')
+		.replace(/--+/g, '-')
+		.replace(/^-+|-+$/g, '');
 }
 
 export async function ensureUniqueSlug(
-  baseSlug: string,
-  excludeProfileId?: number,
+	baseSlug: string,
+	excludeProfileId?: number
 ): Promise<string> {
-  let slug = baseSlug;
-  let counter = 2;
+	let slug = baseSlug;
+	let counter = 2;
 
-  while (true) {
-    const whereClause = excludeProfileId
-      ? and(eq(profiles.slug, slug), ne(profiles.id, excludeProfileId))
-      : eq(profiles.slug, slug);
+	while (true) {
+		const whereClause = excludeProfileId
+			? and(eq(profiles.slug, slug), ne(profiles.id, excludeProfileId))
+			: eq(profiles.slug, slug);
 
-    const existing = await db.query.profiles.findFirst({
-      where: whereClause,
-    });
+		const existing = await db.query.profiles.findFirst({
+			where: whereClause
+		});
 
-    if (!existing) return slug;
+		if (!existing) return slug;
 
-    slug = `${baseSlug}-${counter}`;
-    counter++;
-  }
+		slug = `${baseSlug}-${counter}`;
+		counter++;
+	}
 }
 
-export async function generateUniqueSlug(
-  name: string | null,
-  profileId?: number,
-): Promise<string> {
-  if (!name?.trim()) {
-    return ensureUniqueSlug(
-      profileId ? `profile-${profileId}` : "profile",
-      profileId,
-    );
-  }
+export async function generateUniqueSlug(name: string | null, profileId?: number): Promise<string> {
+	if (!name?.trim()) {
+		return ensureUniqueSlug(profileId ? `profile-${profileId}` : 'profile', profileId);
+	}
 
-  let baseSlug = generateSlug(name);
-  if (!baseSlug) {
-    return ensureUniqueSlug(
-      profileId ? `profile-${profileId}` : "profile",
-      profileId,
-    );
-  }
+	let baseSlug = generateSlug(name);
+	if (!baseSlug) {
+		return ensureUniqueSlug(profileId ? `profile-${profileId}` : 'profile', profileId);
+	}
 
-  if (baseSlug.length > 240) {
-    baseSlug = baseSlug.substring(0, 240);
-  }
+	if (baseSlug.length > 240) {
+		baseSlug = baseSlug.substring(0, 240);
+	}
 
-  return ensureUniqueSlug(baseSlug, profileId);
+	return ensureUniqueSlug(baseSlug, profileId);
 }

@@ -18,75 +18,74 @@
  * wait for someone to visit a page, and it says how many rows it changed.
  */
 
-import { drizzle } from "drizzle-orm/node-postgres";
-import { eq } from "drizzle-orm";
-import pg from "pg";
-import { api_keys } from "../src/lib/server/db/schema.js";
-import {
-  decryptCredential,
-  encryptCredential,
-} from "../src/lib/server/auth/crypto.js";
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { eq } from 'drizzle-orm';
+import pg from 'pg';
+import { api_keys } from '../src/lib/server/db/schema.js';
+import { decryptCredential, encryptCredential } from '../src/lib/server/auth/crypto.js';
 
-const DATABASE_URL = process.env.SJS_POSTGRES_URL_HOST ||
-  process.env.SJS_DATABASE_URL ||
-  "postgres://postgres:postgres@localhost:5432/smartjobseeker";
-console.log(`Connecting to: ${DATABASE_URL.replace(/\/\/.*@/, "//<redacted>@")}`);
+const DATABASE_URL =
+	process.env.SJS_POSTGRES_URL_HOST ||
+	process.env.SJS_DATABASE_URL ||
+	'postgres://postgres:postgres@localhost:5432/smartjobseeker';
+console.log(`Connecting to: ${DATABASE_URL.replace(/\/\/.*@/, '//<redacted>@')}`);
 
 const pool = new pg.Pool({ connectionString: DATABASE_URL });
 const db = drizzle(pool);
 
 async function migrate() {
-  const rows = await db.select({
-    id: api_keys.id,
-    name: api_keys.name,
-    key_encrypted: api_keys.key_encrypted,
-  }).from(api_keys);
+	const rows = await db
+		.select({
+			id: api_keys.id,
+			name: api_keys.name,
+			key_encrypted: api_keys.key_encrypted
+		})
+		.from(api_keys);
 
-  console.log(`Found ${rows.length} api_keys rows`);
+	console.log(`Found ${rows.length} api_keys rows`);
 
-  let updated = 0;
-  let skipped = 0;
-  let unreadable = 0;
+	let updated = 0;
+	let skipped = 0;
+	let unreadable = 0;
 
-  for (const row of rows) {
-    const stored = row.key_encrypted;
-    if (stored == null) {
-      skipped++;
-      continue;
-    }
+	for (const row of rows) {
+		const stored = row.key_encrypted;
+		if (stored == null) {
+			skipped++;
+			continue;
+		}
 
-    // decryptCredential passes non-ciphertext through unchanged, so a value
-    // that survives the round trip was never encrypted. The prefix check is
-    // what separates that from a value this key cannot decrypt — both come
-    // back as the input, and only one of them is a key worth rewriting.
-    const decrypted = decryptCredential(stored);
-    if (decrypted !== stored) {
-      skipped++;
-      continue;
-    }
-    if (!decrypted.startsWith("sjs_")) {
-      console.log(
-        `  ! #${row.id} (${row.name}): not readable as a key — left alone`,
-      );
-      unreadable++;
-      continue;
-    }
+		// decryptCredential passes non-ciphertext through unchanged, so a value
+		// that survives the round trip was never encrypted. The prefix check is
+		// what separates that from a value this key cannot decrypt — both come
+		// back as the input, and only one of them is a key worth rewriting.
+		const decrypted = decryptCredential(stored);
+		if (decrypted !== stored) {
+			skipped++;
+			continue;
+		}
+		if (!decrypted.startsWith('sjs_')) {
+			console.log(`  ! #${row.id} (${row.name}): not readable as a key — left alone`);
+			unreadable++;
+			continue;
+		}
 
-    await db.update(api_keys)
-      .set({ key_encrypted: encryptCredential(decrypted) })
-      .where(eq(api_keys.id, row.id));
-    updated++;
-    console.log(`  Encrypted key for api_key #${row.id} (${row.name})`);
-  }
+		await db
+			.update(api_keys)
+			.set({ key_encrypted: encryptCredential(decrypted) })
+			.where(eq(api_keys.id, row.id));
+		updated++;
+		console.log(`  Encrypted key for api_key #${row.id} (${row.name})`);
+	}
 
-  console.log(
-    `\nDone: ${updated} encrypted, ${skipped} already encrypted/empty` +
-      (unreadable > 0 ? `, ${unreadable} unreadable` : ""),
-  );
-  await pool.end();
+	console.log(
+		`\nDone: ${updated} encrypted, ${skipped} already encrypted/empty` +
+			(unreadable > 0 ? `, ${unreadable} unreadable` : '')
+	);
+	await pool.end();
 }
 
 migrate().catch((err) => {
-  console.error("Migration failed:", err);
-  process.exit(1);
+	console.error('Migration failed:', err);
+	process.exit(1);
 });

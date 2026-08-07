@@ -3,10 +3,7 @@
  */
 
 // Job profile skill utilities
-export {
-  getProfileSkills,
-  getProfileSkillLevels,
-} from "./match-utils";
+export { getProfileSkills, getProfileSkillLevels } from './match-utils';
 
 // Job site configurations
-export { getSiteName } from "./site-configs";
+export { getSiteName } from './site-configs';

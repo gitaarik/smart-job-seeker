@@ -1,51 +1,48 @@
-import { json } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
-import { dbDirect as db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
-import { profiles, project_stories } from "$lib/server/db/schema";
-import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
-import {
-  parseBody,
-  storyGenerateSchema,
-} from "$lib/server/validation/api-schemas";
-import { generateProfileStory } from "$lib/server/ai-chat/profile-story";
-import { trackGeneration } from "$lib/server/ai-chat/ai-generation-status";
-import { requireCredits } from "$lib/server/billing/require-credits";
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import { dbDirect as db } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
+import { profiles, project_stories } from '$lib/server/db/schema';
+import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { parseBody, storyGenerateSchema } from '$lib/server/validation/api-schemas';
+import { generateProfileStory } from '$lib/server/ai-chat/profile-story';
+import { trackGeneration } from '$lib/server/ai-chat/ai-generation-status';
+import { requireCredits } from '$lib/server/billing/require-credits';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
-  const user = requireAuth(locals);
-  const storyId = parseIntParam(params.id, "story");
+	const user = requireAuth(locals);
+	const storyId = parseIntParam(params.id, 'story');
 
-  // Verify ownership: story -> profile -> user.
-  const story = await db.query.project_stories.findFirst({
-    where: eq(project_stories.id, storyId),
-    columns: { id: true, profile_id: true },
-  });
-  const profile = story
-    ? await db.query.profiles.findFirst({
-      where: eq(profiles.id, story.profile_id),
-      columns: { user_id: true },
-    })
-    : null;
-  if (!story || profile?.user_id !== user.id) {
-    return json({ success: false, message: "Story not found" }, {
-      status: 404,
-    });
-  }
+	// Verify ownership: story -> profile -> user.
+	const story = await db.query.project_stories.findFirst({
+		where: eq(project_stories.id, storyId),
+		columns: { id: true, profile_id: true }
+	});
+	const profile = story
+		? await db.query.profiles.findFirst({
+				where: eq(profiles.id, story.profile_id),
+				columns: { user_id: true }
+			})
+		: null;
+	if (!story || profile?.user_id !== user.id) {
+		return json(
+			{ success: false, message: 'Story not found' },
+			{
+				status: 404
+			}
+		);
+	}
 
-  const { mode, instructions } = parseBody(
-    storyGenerateSchema,
-    await request.json().catch(() => ({})),
-  );
+	const { mode, instructions } = parseBody(
+		storyGenerateSchema,
+		await request.json().catch(() => ({}))
+	);
 
-  await requireCredits(user.id, 5);
+	await requireCredits(user.id, 5);
 
-  const result = await trackGeneration(
-    "story",
-    storyId,
-    mode,
-    () => generateProfileStory(storyId, { mode, instructions }),
-  );
-  if (!result.success) return json(result, { status: 422 });
-  return json(result);
+	const result = await trackGeneration('story', storyId, mode, () =>
+		generateProfileStory(storyId, { mode, instructions })
+	);
+	if (!result.success) return json(result, { status: 422 });
+	return json(result);
 };

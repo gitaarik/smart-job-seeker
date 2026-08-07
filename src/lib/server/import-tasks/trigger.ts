@@ -11,15 +11,12 @@
  * pull none of that graph; the real module is loaded lazily inside.
  */
 export function triggerAutoImportReconcile(
-  profileId: number,
-  opts: { force?: boolean; skipTopUp?: boolean } = {},
+	profileId: number,
+	opts: { force?: boolean; skipTopUp?: boolean } = {}
 ): void {
-  void import("./reconcile")
-    .then((m) => m.triggerAutoImportReconcile(profileId, opts))
-    .catch((err) =>
-      console.error(
-        `[auto-import] reconcile trigger failed for profile ${profileId}:`,
-        err,
-      )
-    );
+	void import('./reconcile')
+		.then((m) => m.triggerAutoImportReconcile(profileId, opts))
+		.catch((err) =>
+			console.error(`[auto-import] reconcile trigger failed for profile ${profileId}:`, err)
+		);
 }

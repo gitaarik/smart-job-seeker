@@ -10,9 +10,9 @@
  * forms are strictly equal.
  */
 export function normalizeQuestion(s: string): string {
-  return s
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .replace(/[?.!:]+$/, "");
+	return s
+		.trim()
+		.toLowerCase()
+		.replace(/\s+/g, ' ')
+		.replace(/[?.!:]+$/, '');
 }

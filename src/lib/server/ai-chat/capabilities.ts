@@ -29,121 +29,111 @@
  *     failure mode of a confused model is proposing nothing, never wiping a row.
  */
 
-import { db } from "$lib/server/db";
-import { and, desc, eq } from "drizzle-orm";
-import { z } from "zod";
+import { db } from '$lib/server/db';
+import { and, desc, eq } from 'drizzle-orm';
+import { z } from 'zod';
+import { application_records, applications, jobs } from '$lib/server/db/schema';
+import type { ContextEntity } from './generation-context';
 import {
-  application_records,
-  applications,
-  jobs,
-} from "$lib/server/db/schema";
-import type { ContextEntity } from "./generation-context";
+	applyJobFields,
+	applyJobSkills,
+	applyJobTexts,
+	canEditJob,
+	type JobFieldValues,
+	validateJobFields
+} from '$lib/server/jobs/edit-job';
 import {
-  applyJobFields,
-  applyJobSkills,
-  applyJobTexts,
-  canEditJob,
-  type JobFieldValues,
-  validateJobFields,
-} from "$lib/server/jobs/edit-job";
-import {
-  clampRecordTitle,
-  deriveRecordTitle,
-  getRecordTypeLabel,
-  recordTypeValues,
-  today,
-} from "$lib/application-records";
-import { deriveRecordMetadata } from "./record-derivation";
-import { summarizeApplication } from "./application-summary";
+	clampRecordTitle,
+	deriveRecordTitle,
+	getRecordTypeLabel,
+	recordTypeValues,
+	today
+} from '$lib/application-records';
+import { deriveRecordMetadata } from './record-derivation';
+import { summarizeApplication } from './application-summary';
 
 export type Capability =
-  | "edit_job_details"
-  | "edit_job_description"
-  | "edit_job_skills"
-  | "edit_application_details"
-  | "add_activity_record";
+	| 'edit_job_details'
+	| 'edit_job_description'
+	| 'edit_job_skills'
+	| 'edit_application_details'
+	| 'add_activity_record';
 
 /** The concrete row a capability acts on, once resolved from the page entity. */
 export interface CapabilityTarget {
-  id: number;
-  /** Names the thing in the proposal card and in the prompt. */
-  label: string;
+	id: number;
+	/** Names the thing in the proposal card and in the prompt. */
+	label: string;
 }
 
 /** Who is asking. Passed to authorize; never taken from the client. */
 export interface CapabilityActor {
-  profileId: number;
-  isStaff: boolean;
+	profileId: number;
+	isStaff: boolean;
 }
 
 export interface CapabilityDef {
-  /** Shown in the prompt's capability list and on the proposal card. */
-  title: string;
-  /**
-   * The row this capability acts on for the given page entity, or null when the
-   * page has nothing for it to act on (an application with no job attached, a
-   * profile-only page).
-   */
-  resolve(
-    entity: ContextEntity | null,
-    actor: CapabilityActor,
-  ): Promise<CapabilityTarget | null>;
-  /** Re-asked at apply time. Returning false drops the capability silently. */
-  authorize(
-    target: CapabilityTarget,
-    actor: CapabilityActor,
-  ): Promise<boolean>;
-  /** Current values, so the model proposes a diff and the card can show one. */
-  current(target: CapabilityTarget): Promise<Record<string, unknown>>;
-  /**
-   * The fields this capability can change, by kind. One declaration drives
-   * both the wire schema (buildProposalSchema) and the coercion applied to
-   * what comes back (pickCapabilityFields), so the two cannot drift.
-   *
-   * Field names must not collide across capabilities: buildProposalSchema
-   * merges the live ones into a single object for the provider, and a
-   * collision would let one capability's value land in another's payload.
-   */
-  fields: Record<string, FieldKind>;
-  /**
-   * The prose contract for this capability — what its fields mean and what a
-   * valid value looks like.
-   *
-   * Prose, not just a schema: passing a schema is not enough with either
-   * provider here — gpt-oss returns bare arrays and lists where strings belong,
-   * and Gemini has silently dropped `.transform()`ed fields. Spelling out the
-   * JSON contract in words is what makes structured output hold.
-   *
-   * A plain string, and deliberately so: it holds nothing about the row being
-   * edited, so it can be rendered before a target exists. That is what an MCP
-   * server needs — `list_tools` answers with descriptions long before anyone
-   * has said which job they mean — and it is why this was split out of the
-   * function that used to render the whole block. Rules that hold for *every*
-   * capability don't belong here either; they live once in the preamble of
-   * renderCapabilityPrompt, not n times in the prompt.
-   */
-  contract: string;
-  /**
-   * This capability's current state, for the model to propose against.
-   *
-   * Defaults to `renderCurrent` — a list of the fields and their values, which
-   * is what a diff needs. Capabilities override it when what the model needs to
-   * see isn't that: the long texts show their lengths because the texts
-   * themselves arrive through a context source, and an entry log shows the
-   * chronology it is about to add to because there is no row to diff yet.
-   */
-  renderState?(current: Record<string, unknown>): string;
-  /** Checks the schema can't express. Runs before apply, and before storing a proposal. */
-  validate(
-    fields: Record<string, unknown>,
-    current: Record<string, unknown>,
-  ): { ok: true } | { ok: false; error: string };
-  /** Commit. Called only after authorize and validate have passed again. */
-  apply(
-    target: CapabilityTarget,
-    fields: Record<string, unknown>,
-    current: Record<string, unknown>,
-  ): Promise<void>;
+	/** Shown in the prompt's capability list and on the proposal card. */
+	title: string;
+	/**
+	 * The row this capability acts on for the given page entity, or null when the
+	 * page has nothing for it to act on (an application with no job attached, a
+	 * profile-only page).
+	 */
+	resolve(entity: ContextEntity | null, actor: CapabilityActor): Promise<CapabilityTarget | null>;
+	/** Re-asked at apply time. Returning false drops the capability silently. */
+	authorize(target: CapabilityTarget, actor: CapabilityActor): Promise<boolean>;
+	/** Current values, so the model proposes a diff and the card can show one. */
+	current(target: CapabilityTarget): Promise<Record<string, unknown>>;
+	/**
+	 * The fields this capability can change, by kind. One declaration drives
+	 * both the wire schema (buildProposalSchema) and the coercion applied to
+	 * what comes back (pickCapabilityFields), so the two cannot drift.
+	 *
+	 * Field names must not collide across capabilities: buildProposalSchema
+	 * merges the live ones into a single object for the provider, and a
+	 * collision would let one capability's value land in another's payload.
+	 */
+	fields: Record<string, FieldKind>;
+	/**
+	 * The prose contract for this capability — what its fields mean and what a
+	 * valid value looks like.
+	 *
+	 * Prose, not just a schema: passing a schema is not enough with either
+	 * provider here — gpt-oss returns bare arrays and lists where strings belong,
+	 * and Gemini has silently dropped `.transform()`ed fields. Spelling out the
+	 * JSON contract in words is what makes structured output hold.
+	 *
+	 * A plain string, and deliberately so: it holds nothing about the row being
+	 * edited, so it can be rendered before a target exists. That is what an MCP
+	 * server needs — `list_tools` answers with descriptions long before anyone
+	 * has said which job they mean — and it is why this was split out of the
+	 * function that used to render the whole block. Rules that hold for *every*
+	 * capability don't belong here either; they live once in the preamble of
+	 * renderCapabilityPrompt, not n times in the prompt.
+	 */
+	contract: string;
+	/**
+	 * This capability's current state, for the model to propose against.
+	 *
+	 * Defaults to `renderCurrent` — a list of the fields and their values, which
+	 * is what a diff needs. Capabilities override it when what the model needs to
+	 * see isn't that: the long texts show their lengths because the texts
+	 * themselves arrive through a context source, and an entry log shows the
+	 * chronology it is about to add to because there is no row to diff yet.
+	 */
+	renderState?(current: Record<string, unknown>): string;
+	/** Checks the schema can't express. Runs before apply, and before storing a proposal. */
+	validate(
+		fields: Record<string, unknown>,
+		current: Record<string, unknown>
+	): { ok: true } | { ok: false; error: string };
+	/** Commit. Called only after authorize and validate have passed again. */
+	apply(
+		target: CapabilityTarget,
+		fields: Record<string, unknown>,
+		current: Record<string, unknown>
+	): Promise<void>;
 }
 
 /* ------------------------------------------------------------------ *
@@ -161,38 +151,36 @@ export interface CapabilityDef {
  *    coerceValue, and is what gets those back to real types.
  * ------------------------------------------------------------------ */
 
-export type FieldKind = "string" | "int" | "stringArray";
+export type FieldKind = 'string' | 'int' | 'stringArray';
 
 /** Wire types. Unions and nullish survive JSON Schema; transforms do not. */
 const WIRE_TYPES: Record<string, z.ZodTypeAny> = {
-  string: z.union([z.string(), z.number()]).nullish(),
-  int: z.union([z.number(), z.string()]).nullish(),
-  stringArray: z.union([z.array(z.string()), z.string()]).nullish(),
+	string: z.union([z.string(), z.number()]).nullish(),
+	int: z.union([z.number(), z.string()]).nullish(),
+	stringArray: z.union([z.array(z.string()), z.string()]).nullish()
 };
 
 /** Normalize one field to the type apply() expects. Returns null for "clear it". */
 function coerceValue(kind: FieldKind, value: unknown): unknown {
-  if (value === null || value === undefined || value === "") return null;
+	if (value === null || value === undefined || value === '') return null;
 
-  if (kind === "int") {
-    // Models quote their numbers and add separators despite being told not to.
-    const n = typeof value === "string"
-      ? Number.parseFloat(value.replace(/[,\s]/g, ""))
-      : value;
-    if (typeof n !== "number" || !Number.isFinite(n)) return null;
-    return Math.round(n);
-  }
+	if (kind === 'int') {
+		// Models quote their numbers and add separators despite being told not to.
+		const n = typeof value === 'string' ? Number.parseFloat(value.replace(/[,\s]/g, '')) : value;
+		if (typeof n !== 'number' || !Number.isFinite(n)) return null;
+		return Math.round(n);
+	}
 
-  if (kind === "stringArray") {
-    // gpt-oss returns a bare value where a list belongs, and sometimes a
-    // comma-joined string instead of a list.
-    const list = Array.isArray(value) ? value : String(value).split(",");
-    const cleaned = list.map((item) => String(item).trim()).filter(Boolean);
-    return cleaned.length > 0 ? cleaned : null;
-  }
+	if (kind === 'stringArray') {
+		// gpt-oss returns a bare value where a list belongs, and sometimes a
+		// comma-joined string instead of a list.
+		const list = Array.isArray(value) ? value : String(value).split(',');
+		const cleaned = list.map((item) => String(item).trim()).filter(Boolean);
+		return cleaned.length > 0 ? cleaned : null;
+	}
 
-  const trimmed = String(value).trim();
-  return trimmed === "" ? null : trimmed;
+	const trimmed = String(value).trim();
+	return trimmed === '' ? null : trimmed;
 }
 
 /**
@@ -203,15 +191,16 @@ function coerceValue(kind: FieldKind, value: unknown): unknown {
  * capabilities that override this label theirs differently for the same reason.
  */
 function renderCurrent(current: Record<string, unknown>): string {
-  const lines = Object.entries(current).map(([key, value]) => {
-    const rendered = value === null || value === undefined || value === ""
-      ? "(not set)"
-      : Array.isArray(value)
-      ? value.join(", ")
-      : String(value);
-    return `  - ${key}: ${rendered}`;
-  });
-  return `Current values:\n\n${lines.join("\n")}`;
+	const lines = Object.entries(current).map(([key, value]) => {
+		const rendered =
+			value === null || value === undefined || value === ''
+				? '(not set)'
+				: Array.isArray(value)
+					? value.join(', ')
+					: String(value);
+		return `  - ${key}: ${rendered}`;
+	});
+	return `Current values:\n\n${lines.join('\n')}`;
 }
 
 /* ------------------------------------------------------------------ *
@@ -222,78 +211,75 @@ function renderCurrent(current: Record<string, unknown>): string {
  * The job a page is about: itself on /jobs/[id], the attached one on an
  * application page. Returns null for a page with neither.
  */
-async function resolveJobTarget(
-  entity: ContextEntity | null,
-): Promise<CapabilityTarget | null> {
-  if (!entity) return null;
+async function resolveJobTarget(entity: ContextEntity | null): Promise<CapabilityTarget | null> {
+	if (!entity) return null;
 
-  const jobId = entity.type === "job" ? entity.id : (await db.query.applications
-    .findFirst({
-      where: eq(applications.id, entity.id),
-      columns: { job_id: true },
-    }))?.job_id;
-  if (!jobId) return null;
+	const jobId =
+		entity.type === 'job'
+			? entity.id
+			: (
+					await db.query.applications.findFirst({
+						where: eq(applications.id, entity.id),
+						columns: { job_id: true }
+					})
+				)?.job_id;
+	if (!jobId) return null;
 
-  const job = await db.query.jobs.findFirst({
-    where: eq(jobs.id, jobId),
-    columns: { id: true, title: true, company: true },
-  });
-  if (!job) return null;
+	const job = await db.query.jobs.findFirst({
+		where: eq(jobs.id, jobId),
+		columns: { id: true, title: true, company: true }
+	});
+	if (!job) return null;
 
-  return {
-    id: job.id,
-    label: [job.title ?? "Untitled job", job.company]
-      .filter(Boolean)
-      .join(" at "),
-  };
+	return {
+		id: job.id,
+		label: [job.title ?? 'Untitled job', job.company].filter(Boolean).join(' at ')
+	};
 }
 
-async function currentJobFields(
-  target: CapabilityTarget,
-): Promise<Record<string, unknown>> {
-  const job = await db.query.jobs.findFirst({
-    where: eq(jobs.id, target.id),
-  });
-  if (!job) return {};
-  return {
-    title: job.title,
-    company: job.company,
-    job_poster: job.job_poster,
-    office_location: job.office_location,
-    source_url: job.source_url,
-    date_posted: job.date_posted,
-    salary_min: job.salary_min,
-    salary_max: job.salary_max,
-    salary_currency: job.salary_currency,
-    salary_period: job.salary_period,
-    work_location: job.work_location ?? null,
-    job_types: job.job_types ?? null,
-    experience_levels: job.experience_levels ?? null,
-  };
+async function currentJobFields(target: CapabilityTarget): Promise<Record<string, unknown>> {
+	const job = await db.query.jobs.findFirst({
+		where: eq(jobs.id, target.id)
+	});
+	if (!job) return {};
+	return {
+		title: job.title,
+		company: job.company,
+		job_poster: job.job_poster,
+		office_location: job.office_location,
+		source_url: job.source_url,
+		date_posted: job.date_posted,
+		salary_min: job.salary_min,
+		salary_max: job.salary_max,
+		salary_currency: job.salary_currency,
+		salary_period: job.salary_period,
+		work_location: job.work_location ?? null,
+		job_types: job.job_types ?? null,
+		experience_levels: job.experience_levels ?? null
+	};
 }
 
 const editJobDetails: CapabilityDef = {
-  title: "Edit the job's details",
-  resolve: (entity) => resolveJobTarget(entity),
-  authorize: (target, actor) =>
-    canEditJob(target.id, actor.profileId, actor.isStaff),
-  current: currentJobFields,
-  fields: {
-    title: "string",
-    company: "string",
-    job_poster: "string",
-    office_location: "string",
-    source_url: "string",
-    date_posted: "string",
-    salary_min: "int",
-    salary_max: "int",
-    salary_currency: "string",
-    salary_period: "string",
-    work_location: "stringArray",
-    job_types: "stringArray",
-    experience_levels: "stringArray",
-  },
-  contract: `You may propose corrections to this job's structured fields.
+	title: "Edit the job's details",
+	resolve: (entity) => resolveJobTarget(entity),
+	authorize: (target, actor) => canEditJob(target.id, actor.profileId, actor.isStaff),
+	current: currentJobFields,
+	fields: {
+		title: 'string',
+		company: 'string',
+		job_poster: 'string',
+		office_location: 'string',
+		source_url: 'string',
+		date_posted: 'string',
+		salary_min: 'int',
+		salary_max: 'int',
+		salary_currency: 'string',
+		salary_period: 'string',
+		work_location: 'stringArray',
+		job_types: 'stringArray',
+		experience_levels: 'stringArray'
+	},
+	contract: `You may propose corrections to this job's structured fields.
 
 Field rules, all of which are enforced after you answer:
 - "title" is a plain string and can never be empty or null.
@@ -315,20 +301,20 @@ Field rules, all of which are enforced after you answer:
   in "work_location" instead. Setting "work_location" to remote does NOT mean
   clearing "office_location" — a remote role can still be attached to an office,
   and the user did not ask you to forget which one.`,
-  validate: (fields, current) => {
-    const merged = { ...current, ...fields };
-    return validateJobFields({
-      ...(merged as unknown as JobFieldValues),
-      title: typeof merged.title === "string" ? merged.title : "",
-    });
-  },
-  apply: async (target, fields, current) => {
-    // applyJobFields is authoritative for every column it writes, so the
-    // partial proposal is merged over the current row rather than passed
-    // through — otherwise an omitted field would read as "clear it".
-    const merged = { ...current, ...fields } as unknown as JobFieldValues;
-    await applyJobFields(target.id, merged);
-  },
+	validate: (fields, current) => {
+		const merged = { ...current, ...fields };
+		return validateJobFields({
+			...(merged as unknown as JobFieldValues),
+			title: typeof merged.title === 'string' ? merged.title : ''
+		});
+	},
+	apply: async (target, fields, current) => {
+		// applyJobFields is authoritative for every column it writes, so the
+		// partial proposal is merged over the current row rather than passed
+		// through — otherwise an omitted field would read as "clear it".
+		const merged = { ...current, ...fields } as unknown as JobFieldValues;
+		await applyJobFields(target.id, merged);
+	}
 };
 
 /* ------------------------------------------------------------------ *
@@ -336,28 +322,27 @@ Field rules, all of which are enforced after you answer:
  * ------------------------------------------------------------------ */
 
 const editJobDescription: CapabilityDef = {
-  title: "Rewrite the job's description or company profile",
-  resolve: (entity) => resolveJobTarget(entity),
-  authorize: (target, actor) =>
-    canEditJob(target.id, actor.profileId, actor.isStaff),
-  current: async (target) => {
-    const job = await db.query.jobs.findFirst({
-      where: eq(jobs.id, target.id),
-      columns: { job_description: true, company_description: true },
-    });
-    return {
-      job_description: job?.job_description ?? null,
-      company_description: job?.company_description ?? null,
-    };
-  },
-  // Both long-form texts live on one capability because they are one editing
-  // job: the model is shown both in the job block and asked to keep them
-  // consistent. With only job_description here, a request to fix the "About the
-  // company" section had nowhere to go — the model wrote the company text into
-  // the posting instead, then insisted it had removed details that were still
-  // sitting in the field it could not reach.
-  fields: { job_description: "string", company_description: "string" },
-  contract: `You may propose replacements for this job's two long-form texts.
+	title: "Rewrite the job's description or company profile",
+	resolve: (entity) => resolveJobTarget(entity),
+	authorize: (target, actor) => canEditJob(target.id, actor.profileId, actor.isStaff),
+	current: async (target) => {
+		const job = await db.query.jobs.findFirst({
+			where: eq(jobs.id, target.id),
+			columns: { job_description: true, company_description: true }
+		});
+		return {
+			job_description: job?.job_description ?? null,
+			company_description: job?.company_description ?? null
+		};
+	},
+	// Both long-form texts live on one capability because they are one editing
+	// job: the model is shown both in the job block and asked to keep them
+	// consistent. With only job_description here, a request to fix the "About the
+	// company" section had nowhere to go — the model wrote the company text into
+	// the posting instead, then insisted it had removed details that were still
+	// sitting in the field it could not reach.
+	fields: { job_description: 'string', company_description: 'string' },
+	contract: `You may propose replacements for this job's two long-form texts.
 
 - "job_description" — the posting itself.
 - "company_description" — the "About the company" blurb.
@@ -385,47 +370,46 @@ text, so anything your rewrite changes is now stale in them. Correct the ones
 you have a capability for, in the same answer. For the ones you do not, say so
 in your reply: they stay wrong until the job is re-parsed, and the user is the
 only one who can decide to do that.`,
-  // Lengths, not the texts. The texts themselves reach the model through the
-  // `job` context source — which is why this says "shown in full above". A
-  // caller that makes this capability live without that source hands the model
-  // a rewrite button for something it cannot read; it then proposes nothing,
-  // which reads as the contract failing rather than as the context being
-  // absent.
-  renderState: (current) =>
-    `Both are shown in full in the job section above — currently ${
-      String(current.job_description ?? "").length
-    } characters of job_description and ${
-      String(current.company_description ?? "").length
-    } of company_description.`,
-  validate: (fields) => {
-    if (
-      fields.job_description !== undefined &&
-      (typeof fields.job_description !== "string" ||
-        fields.job_description.trim() === "")
-    ) {
-      return { ok: false, error: "The description cannot be empty" };
-    }
-    if (
-      fields.company_description !== undefined &&
-      fields.company_description !== null &&
-      typeof fields.company_description !== "string"
-    ) {
-      return { ok: false, error: "The company description must be text" };
-    }
-    return { ok: true };
-  },
-  apply: async (target, fields) => {
-    // Only the fields actually proposed — applyJobTexts leaves the rest alone,
-    // so rewriting one text never blanks the other.
-    await applyJobTexts(target.id, {
-      ...("job_description" in fields
-        ? { job_description: fields.job_description as string | null }
-        : {}),
-      ...("company_description" in fields
-        ? { company_description: fields.company_description as string | null }
-        : {}),
-    });
-  },
+	// Lengths, not the texts. The texts themselves reach the model through the
+	// `job` context source — which is why this says "shown in full above". A
+	// caller that makes this capability live without that source hands the model
+	// a rewrite button for something it cannot read; it then proposes nothing,
+	// which reads as the contract failing rather than as the context being
+	// absent.
+	renderState: (current) =>
+		`Both are shown in full in the job section above — currently ${
+			String(current.job_description ?? '').length
+		} characters of job_description and ${
+			String(current.company_description ?? '').length
+		} of company_description.`,
+	validate: (fields) => {
+		if (
+			fields.job_description !== undefined &&
+			(typeof fields.job_description !== 'string' || fields.job_description.trim() === '')
+		) {
+			return { ok: false, error: 'The description cannot be empty' };
+		}
+		if (
+			fields.company_description !== undefined &&
+			fields.company_description !== null &&
+			typeof fields.company_description !== 'string'
+		) {
+			return { ok: false, error: 'The company description must be text' };
+		}
+		return { ok: true };
+	},
+	apply: async (target, fields) => {
+		// Only the fields actually proposed — applyJobTexts leaves the rest alone,
+		// so rewriting one text never blanks the other.
+		await applyJobTexts(target.id, {
+			...('job_description' in fields
+				? { job_description: fields.job_description as string | null }
+				: {}),
+			...('company_description' in fields
+				? { company_description: fields.company_description as string | null }
+				: {})
+		});
+	}
 };
 
 /* ------------------------------------------------------------------ *
@@ -449,26 +433,25 @@ const MAX_SKILLS = 60;
  * card that only ever touches skills.
  */
 const editJobSkills: CapabilityDef = {
-  title: "Edit the job's required and preferred skills",
-  resolve: (entity) => resolveJobTarget(entity),
-  authorize: (target, actor) =>
-    canEditJob(target.id, actor.profileId, actor.isStaff),
-  current: async (target) => {
-    const job = await db.query.jobs.findFirst({
-      where: eq(jobs.id, target.id),
-      columns: { skills_required: true, skills_preferred: true },
-    });
-    return {
-      skills_required: (job?.skills_required as string[] | null) ?? null,
-      skills_preferred: (job?.skills_preferred as string[] | null) ?? null,
-    };
-  },
-  // Deliberately not `soft_skills` or `responsibilities`, which the parser also
-  // extracts: nothing reads them. They are on no page, in no email and in no
-  // match score, so exposing them would be asking the model to maintain fields
-  // whose only reader would be the next model.
-  fields: { skills_required: "stringArray", skills_preferred: "stringArray" },
-  contract: `You may propose changes to the two skill lists extracted from this
+	title: "Edit the job's required and preferred skills",
+	resolve: (entity) => resolveJobTarget(entity),
+	authorize: (target, actor) => canEditJob(target.id, actor.profileId, actor.isStaff),
+	current: async (target) => {
+		const job = await db.query.jobs.findFirst({
+			where: eq(jobs.id, target.id),
+			columns: { skills_required: true, skills_preferred: true }
+		});
+		return {
+			skills_required: (job?.skills_required as string[] | null) ?? null,
+			skills_preferred: (job?.skills_preferred as string[] | null) ?? null
+		};
+	},
+	// Deliberately not `soft_skills` or `responsibilities`, which the parser also
+	// extracts: nothing reads them. They are on no page, in no email and in no
+	// match score, so exposing them would be asking the model to maintain fields
+	// whose only reader would be the next model.
+	fields: { skills_required: 'stringArray', skills_preferred: 'stringArray' },
+	contract: `You may propose changes to the two skill lists extracted from this
 posting.
 
 - "skills_required" — what the posting presents as necessary.
@@ -492,46 +475,44 @@ expect the score to move.
 Do not add a skill nobody has mentioned. If the user tells you a skill does not
 belong, that is reason enough to remove it — you do not need to find it in the
 text first, because the reason it is wrong is usually that the text was wrong.`,
-  validate: (fields) => {
-    for (const key of ["skills_required", "skills_preferred"] as const) {
-      const value = fields[key];
-      // Absent means unchanged and null means clear; both are fine here.
-      if (value === undefined || value === null) continue;
+	validate: (fields) => {
+		for (const key of ['skills_required', 'skills_preferred'] as const) {
+			const value = fields[key];
+			// Absent means unchanged and null means clear; both are fine here.
+			if (value === undefined || value === null) continue;
 
-      if (!Array.isArray(value)) {
-        return { ok: false, error: "Skills must be a list" };
-      }
-      if (value.length > MAX_SKILLS) {
-        return {
-          ok: false,
-          error: `That is ${value.length} skills — more than a posting lists`,
-        };
-      }
-      const sentence = value.find((s) => String(s).length > MAX_SKILL_LENGTH);
-      if (sentence !== undefined) {
-        return {
-          ok: false,
-          error: `"${
-            String(sentence).slice(0, 40)
-          }…" is a requirement, not a skill`,
-        };
-      }
-    }
-    return { ok: true };
-  },
-  apply: async (target, fields) => {
-    // Only the lists actually proposed. This matters more here than it does for
-    // the two texts: each list is written whole, so a list that arrived as
-    // "unchanged" and got passed through as null would be silently emptied.
-    await applyJobSkills(target.id, {
-      ...("skills_required" in fields
-        ? { skills_required: fields.skills_required as string[] | null }
-        : {}),
-      ...("skills_preferred" in fields
-        ? { skills_preferred: fields.skills_preferred as string[] | null }
-        : {}),
-    });
-  },
+			if (!Array.isArray(value)) {
+				return { ok: false, error: 'Skills must be a list' };
+			}
+			if (value.length > MAX_SKILLS) {
+				return {
+					ok: false,
+					error: `That is ${value.length} skills — more than a posting lists`
+				};
+			}
+			const sentence = value.find((s) => String(s).length > MAX_SKILL_LENGTH);
+			if (sentence !== undefined) {
+				return {
+					ok: false,
+					error: `"${String(sentence).slice(0, 40)}…" is a requirement, not a skill`
+				};
+			}
+		}
+		return { ok: true };
+	},
+	apply: async (target, fields) => {
+		// Only the lists actually proposed. This matters more here than it does for
+		// the two texts: each list is written whole, so a list that arrived as
+		// "unchanged" and got passed through as null would be silently emptied.
+		await applyJobSkills(target.id, {
+			...('skills_required' in fields
+				? { skills_required: fields.skills_required as string[] | null }
+				: {}),
+			...('skills_preferred' in fields
+				? { skills_preferred: fields.skills_preferred as string[] | null }
+				: {})
+		});
+	}
 };
 
 /* ------------------------------------------------------------------ *
@@ -540,21 +521,19 @@ text first, because the reason it is wrong is usually that the text was wrong.`,
 
 /** The application a page is about, or null on a page that is about something else. */
 async function resolveApplicationTarget(
-  entity: ContextEntity | null,
+	entity: ContextEntity | null
 ): Promise<CapabilityTarget | null> {
-  if (entity?.type !== "application") return null;
-  const app = await db.query.applications.findFirst({
-    where: eq(applications.id, entity.id),
-    columns: { id: true },
-    with: { job: { columns: { title: true, company: true } } },
-  });
-  if (!app) return null;
-  return {
-    id: app.id,
-    label: [app.job?.title ?? "Application", app.job?.company]
-      .filter(Boolean)
-      .join(" at "),
-  };
+	if (entity?.type !== 'application') return null;
+	const app = await db.query.applications.findFirst({
+		where: eq(applications.id, entity.id),
+		columns: { id: true },
+		with: { job: { columns: { title: true, company: true } } }
+	});
+	if (!app) return null;
+	return {
+		id: app.id,
+		label: [app.job?.title ?? 'Application', app.job?.company].filter(Boolean).join(' at ')
+	};
 }
 
 /**
@@ -562,18 +541,12 @@ async function resolveApplicationTarget(
  * check, and resolveEntity already required it. Asked again anyway — this runs
  * at apply time too, when nothing else has.
  */
-async function ownsApplication(
-  target: CapabilityTarget,
-  actor: CapabilityActor,
-): Promise<boolean> {
-  const owned = await db.query.applications.findFirst({
-    where: and(
-      eq(applications.id, target.id),
-      eq(applications.profile_id, actor.profileId),
-    ),
-    columns: { id: true },
-  });
-  return !!owned;
+async function ownsApplication(target: CapabilityTarget, actor: CapabilityActor): Promise<boolean> {
+	const owned = await db.query.applications.findFirst({
+		where: and(eq(applications.id, target.id), eq(applications.profile_id, actor.profileId)),
+		columns: { id: true }
+	});
+	return !!owned;
 }
 
 /**
@@ -583,30 +556,30 @@ async function ownsApplication(
  * than riding along in a details edit.
  */
 const editApplicationDetails: CapabilityDef = {
-  title: "Edit the application's details",
-  resolve: resolveApplicationTarget,
-  authorize: ownsApplication,
-  current: async (target) => {
-    const app = await db.query.applications.findFirst({
-      where: eq(applications.id, target.id),
-      columns: {
-        cv_sent_through: true,
-        application_sent_date: true,
-        application_seen_date: true,
-      },
-    });
-    return {
-      cv_sent_through: app?.cv_sent_through ?? null,
-      application_sent_date: app?.application_sent_date ?? null,
-      application_seen_date: app?.application_seen_date ?? null,
-    };
-  },
-  fields: {
-    cv_sent_through: "string",
-    application_sent_date: "string",
-    application_seen_date: "string",
-  },
-  contract: `You may propose corrections to how and when this application was
+	title: "Edit the application's details",
+	resolve: resolveApplicationTarget,
+	authorize: ownsApplication,
+	current: async (target) => {
+		const app = await db.query.applications.findFirst({
+			where: eq(applications.id, target.id),
+			columns: {
+				cv_sent_through: true,
+				application_sent_date: true,
+				application_seen_date: true
+			}
+		});
+		return {
+			cv_sent_through: app?.cv_sent_through ?? null,
+			application_sent_date: app?.application_sent_date ?? null,
+			application_seen_date: app?.application_seen_date ?? null
+		};
+	},
+	fields: {
+		cv_sent_through: 'string',
+		application_sent_date: 'string',
+		application_seen_date: 'string'
+	},
+	contract: `You may propose corrections to how and when this application was
 sent.
 
 - "cv_sent_through" is free text naming the channel (e.g. "LinkedIn Easy Apply",
@@ -617,29 +590,27 @@ sent.
 
 You cannot change the application's status from here — if that is what they
 want, tell them to use the status control on the page.`,
-  validate: (fields) => {
-    for (const key of ["application_sent_date", "application_seen_date"]) {
-      const value = fields[key];
-      if (
-        value !== undefined && value !== null &&
-        !/^\d{4}-\d{2}-\d{2}$/.test(String(value))
-      ) {
-        return { ok: false, error: `${key} must be a YYYY-MM-DD date` };
-      }
-    }
-    return { ok: true };
-  },
-  apply: async (target, fields, current) => {
-    const merged = { ...current, ...fields };
-    await db.update(applications).set({
-      cv_sent_through: (merged.cv_sent_through as string | null) ?? null,
-      application_sent_date: (merged.application_sent_date as string | null) ??
-        null,
-      application_seen_date: (merged.application_seen_date as string | null) ??
-        null,
-      date_updated: new Date(),
-    }).where(eq(applications.id, target.id));
-  },
+	validate: (fields) => {
+		for (const key of ['application_sent_date', 'application_seen_date']) {
+			const value = fields[key];
+			if (value !== undefined && value !== null && !/^\d{4}-\d{2}-\d{2}$/.test(String(value))) {
+				return { ok: false, error: `${key} must be a YYYY-MM-DD date` };
+			}
+		}
+		return { ok: true };
+	},
+	apply: async (target, fields, current) => {
+		const merged = { ...current, ...fields };
+		await db
+			.update(applications)
+			.set({
+				cv_sent_through: (merged.cv_sent_through as string | null) ?? null,
+				application_sent_date: (merged.application_sent_date as string | null) ?? null,
+				application_seen_date: (merged.application_seen_date as string | null) ?? null,
+				date_updated: new Date()
+			})
+			.where(eq(applications.id, target.id));
+	}
 };
 
 /* ------------------------------------------------------------------ *
@@ -683,41 +654,36 @@ const RECENT_ENTRIES_SHOWN = 12;
  * traced to something the user vouched for.
  */
 const addActivityRecord: CapabilityDef = {
-  title: "Add an entry to the activity log",
-  resolve: resolveApplicationTarget,
-  authorize: ownsApplication,
-  // Not a diff — there is no row yet. What the model needs instead is the
-  // chronology it is about to add to, so it can tell "they told me something
-  // new" from "they are referring to the interview already logged on Tuesday".
-  current: async (target) => {
-    const recent = await db.query.application_records.findMany({
-      where: eq(application_records.application_id, target.id),
-      columns: { id: true, record_type: true, title: true, event_date: true },
-      orderBy: [
-        desc(application_records.event_date),
-        desc(application_records.date_created),
-      ],
-      limit: RECENT_ENTRIES_SHOWN,
-    });
-    return {
-      recent_entries: recent.map((r) =>
-        `${r.event_date ?? "undated"} — ${
-          getRecordTypeLabel(r.record_type)
-        }: ${r.title}`
-      ),
-    };
-  },
-  // Prefixed, because buildProposalSchema merges every live capability's fields
-  // into one object for the provider and a collision would land one
-  // capability's value in another's payload. `title` and `date_posted` are
-  // already taken by the job.
-  fields: {
-    entry_content: "string",
-    entry_type: "string",
-    entry_title: "string",
-    entry_date: "string",
-  },
-  contract: `The user sometimes tells you things about an application that are
+	title: 'Add an entry to the activity log',
+	resolve: resolveApplicationTarget,
+	authorize: ownsApplication,
+	// Not a diff — there is no row yet. What the model needs instead is the
+	// chronology it is about to add to, so it can tell "they told me something
+	// new" from "they are referring to the interview already logged on Tuesday".
+	current: async (target) => {
+		const recent = await db.query.application_records.findMany({
+			where: eq(application_records.application_id, target.id),
+			columns: { id: true, record_type: true, title: true, event_date: true },
+			orderBy: [desc(application_records.event_date), desc(application_records.date_created)],
+			limit: RECENT_ENTRIES_SHOWN
+		});
+		return {
+			recent_entries: recent.map(
+				(r) => `${r.event_date ?? 'undated'} — ${getRecordTypeLabel(r.record_type)}: ${r.title}`
+			)
+		};
+	},
+	// Prefixed, because buildProposalSchema merges every live capability's fields
+	// into one object for the provider and a collision would land one
+	// capability's value in another's payload. `title` and `date_posted` are
+	// already taken by the job.
+	fields: {
+		entry_content: 'string',
+		entry_type: 'string',
+		entry_title: 'string',
+		entry_date: 'string'
+	},
+	contract: `The user sometimes tells you things about an application that are
 nowhere in it yet — what a recruiter said on the phone, a number that came up, a
 condition mentioned in passing. You may propose writing that down as an entry on
 the activity log, which they review and apply.
@@ -731,7 +697,7 @@ Fields:
 - "entry_content" is the entry itself and is REQUIRED — a proposal without it is
   discarded. Write what the user told you, in their terms, as a short factual
   note. Not your advice about it, not a summary of your own reply.
-- "entry_type" is one of: ${recordTypeValues.join(", ")}. Pick "note" when the
+- "entry_type" is one of: ${recordTypeValues.join(', ')}. Pick "note" when the
   user is relaying something themselves, "message" or "feedback" when they are
   quoting the employer, "offer" only for actual offered terms.
 - "entry_title" is a short scannable line naming what happened, well under 120
@@ -760,78 +726,67 @@ When NOT to propose one:
 One entry per thing that happened. Two unrelated facts in one message are two
 proposals, not one entry with both in it — the user may want to keep one and
 drop the other, and an entry is also the unit the chronology is read in.`,
-  renderState: (current) => {
-    const recent = (current.recent_entries as string[] | undefined) ?? [];
-    return recent.length > 0
-      ? `Already logged, most recent first. Do not propose an entry that repeats one of these:\n\n${
-        recent.map((line) => `  - ${line}`).join("\n")
-      }`
-      : "Nothing is logged on this application yet.";
-  },
-  validate: (fields) => {
-    const content = fields.entry_content;
-    if (typeof content !== "string" || content.trim() === "") {
-      return { ok: false, error: "The entry has no content" };
-    }
-    const type = fields.entry_type;
-    if (
-      type !== undefined && type !== null &&
-      !recordTypeValues.includes(String(type))
-    ) {
-      return { ok: false, error: `"${String(type)}" is not an entry type` };
-    }
-    const date = fields.entry_date;
-    if (
-      date !== undefined && date !== null &&
-      !/^\d{4}-\d{2}-\d{2}$/.test(String(date))
-    ) {
-      return { ok: false, error: "entry_date must be a YYYY-MM-DD date" };
-    }
-    return { ok: true };
-  },
-  apply: async (target, fields) => {
-    // authorize() has already confirmed the row and its owner; this re-reads it
-    // for the two values the insert needs and the proposal cannot carry.
-    const app = await db.query.applications.findFirst({
-      where: eq(applications.id, target.id),
-      columns: { profile_id: true, status_step: true },
-    });
-    if (!app?.profile_id) throw new Error("Application has no profile");
+	renderState: (current) => {
+		const recent = (current.recent_entries as string[] | undefined) ?? [];
+		return recent.length > 0
+			? `Already logged, most recent first. Do not propose an entry that repeats one of these:\n\n${recent
+					.map((line) => `  - ${line}`)
+					.join('\n')}`
+			: 'Nothing is logged on this application yet.';
+	},
+	validate: (fields) => {
+		const content = fields.entry_content;
+		if (typeof content !== 'string' || content.trim() === '') {
+			return { ok: false, error: 'The entry has no content' };
+		}
+		const type = fields.entry_type;
+		if (type !== undefined && type !== null && !recordTypeValues.includes(String(type))) {
+			return { ok: false, error: `"${String(type)}" is not an entry type` };
+		}
+		const date = fields.entry_date;
+		if (date !== undefined && date !== null && !/^\d{4}-\d{2}-\d{2}$/.test(String(date))) {
+			return { ok: false, error: 'entry_date must be a YYYY-MM-DD date' };
+		}
+		return { ok: true };
+	},
+	apply: async (target, fields) => {
+		// authorize() has already confirmed the row and its owner; this re-reads it
+		// for the two values the insert needs and the proposal cannot carry.
+		const app = await db.query.applications.findFirst({
+			where: eq(applications.id, target.id),
+			columns: { profile_id: true, status_step: true }
+		});
+		if (!app?.profile_id) throw new Error('Application has no profile');
 
-    const content = String(fields.entry_content);
-    const proposedTitle = typeof fields.entry_title === "string"
-      ? fields.entry_title.trim()
-      : "";
+		const content = String(fields.entry_content);
+		const proposedTitle = typeof fields.entry_title === 'string' ? fields.entry_title.trim() : '';
 
-    const [created] = await db.insert(application_records).values({
-      application_id: target.id,
-      record_type: typeof fields.entry_type === "string"
-        ? fields.entry_type
-        : "note",
-      title: proposedTitle
-        ? clampRecordTitle(proposedTitle)
-        : deriveRecordTitle(content),
-      content,
-      // The stage the application is in now, same as the composer: things are
-      // logged as they happen, and this is free and right more often than a
-      // guess would be.
-      step: app.status_step,
-      event_date: typeof fields.entry_date === "string"
-        ? fields.entry_date
-        : today(),
-      extraction_status: "none",
-      date_created: new Date(),
-    }).returning({ id: application_records.id });
+		const [created] = await db
+			.insert(application_records)
+			.values({
+				application_id: target.id,
+				record_type: typeof fields.entry_type === 'string' ? fields.entry_type : 'note',
+				title: proposedTitle ? clampRecordTitle(proposedTitle) : deriveRecordTitle(content),
+				content,
+				// The stage the application is in now, same as the composer: things are
+				// logged as they happen, and this is free and right more often than a
+				// guess would be.
+				step: app.status_step,
+				event_date: typeof fields.entry_date === 'string' ? fields.entry_date : today(),
+				extraction_status: 'none',
+				date_created: new Date()
+			})
+			.returning({ id: application_records.id });
 
-    // The same two passes the composer runs, in the same order and for the same
-    // reasons: derivation fills only what is still empty (here, essentially the
-    // contacts — this proposal already carries a type and a title), and the
-    // summariser runs after it so the digest reads the derived entry rather than
-    // the write-time fallbacks. Both are best-effort by construction, so a
-    // failure in either leaves the entry written and visible.
-    await deriveRecordMetadata(created.id, app.profile_id);
-    await summarizeApplication(target.id, app.profile_id);
-  },
+		// The same two passes the composer runs, in the same order and for the same
+		// reasons: derivation fills only what is still empty (here, essentially the
+		// contacts — this proposal already carries a type and a title), and the
+		// summariser runs after it so the digest reads the derived entry rather than
+		// the write-time fallbacks. Both are best-effort by construction, so a
+		// failure in either leaves the entry written and visible.
+		await deriveRecordMetadata(created.id, app.profile_id);
+		await summarizeApplication(target.id, app.profile_id);
+	}
 };
 
 /**
@@ -839,18 +794,18 @@ drop the other, and an entry is also the unit the chronology is read in.`,
  * Add an entry here and every route scope that lists it can propose that edit.
  */
 export const CAPABILITIES: Record<Capability, CapabilityDef> = {
-  edit_job_details: editJobDetails,
-  edit_job_description: editJobDescription,
-  edit_job_skills: editJobSkills,
-  edit_application_details: editApplicationDetails,
-  add_activity_record: addActivityRecord,
+	edit_job_details: editJobDetails,
+	edit_job_description: editJobDescription,
+	edit_job_skills: editJobSkills,
+	edit_application_details: editApplicationDetails,
+	add_activity_record: addActivityRecord
 };
 
 /** A capability that resolved and authorized for this turn. */
 export interface LiveCapability {
-  capability: Capability;
-  target: CapabilityTarget;
-  current: Record<string, unknown>;
+	capability: Capability;
+	target: CapabilityTarget;
+	current: Record<string, unknown>;
 }
 
 /**
@@ -860,18 +815,20 @@ export interface LiveCapability {
  * simply never told it could do that, rather than offering an edit that fails.
  */
 export async function resolveCapabilities(
-  declared: Capability[],
-  entity: ContextEntity | null,
-  actor: CapabilityActor,
+	declared: Capability[],
+	entity: ContextEntity | null,
+	actor: CapabilityActor
 ): Promise<LiveCapability[]> {
-  const live = await Promise.all(declared.map(async (capability) => {
-    const def = CAPABILITIES[capability];
-    const target = await def.resolve(entity, actor);
-    if (!target) return null;
-    if (!await def.authorize(target, actor)) return null;
-    return { capability, target, current: await def.current(target) };
-  }));
-  return live.filter((c): c is LiveCapability => c !== null);
+	const live = await Promise.all(
+		declared.map(async (capability) => {
+			const def = CAPABILITIES[capability];
+			const target = await def.resolve(entity, actor);
+			if (!target) return null;
+			if (!(await def.authorize(target, actor))) return null;
+			return { capability, target, current: await def.current(target) };
+		})
+	);
+	return live.filter((c): c is LiveCapability => c !== null);
 }
 
 /**
@@ -889,15 +846,15 @@ export async function resolveCapabilities(
  *    reaching a column.
  */
 export function pickCapabilityFields(
-  capability: Capability,
-  fields: Record<string, unknown>,
+	capability: Capability,
+	fields: Record<string, unknown>
 ): Record<string, unknown> {
-  const kinds = CAPABILITIES[capability].fields;
-  return Object.fromEntries(
-    Object.entries(fields)
-      .filter(([key]) => key in kinds)
-      .map(([key, value]) => [key, coerceValue(kinds[key], value)]),
-  );
+	const kinds = CAPABILITIES[capability].fields;
+	return Object.fromEntries(
+		Object.entries(fields)
+			.filter(([key]) => key in kinds)
+			.map(([key, value]) => [key, coerceValue(kinds[key], value)])
+	);
 }
 
 /**
@@ -918,30 +875,31 @@ export function pickCapabilityFields(
  * some of its surfaces know about.
  */
 export function capabilityFieldSchema(capability: Capability) {
-  return z.object(
-    Object.fromEntries(
-      Object.entries(CAPABILITIES[capability].fields).map(
-        ([name, kind]) => [name, WIRE_TYPES[kind]],
-      ),
-    ),
-  );
+	return z.object(
+		Object.fromEntries(
+			Object.entries(CAPABILITIES[capability].fields).map(([name, kind]) => [
+				name,
+				WIRE_TYPES[kind]
+			])
+		)
+	);
 }
 
 /** Why a write was refused, for a caller to map onto its own error shape. */
-export type CapabilityRefusal = "unauthorized" | "empty" | "invalid";
+export type CapabilityRefusal = 'unauthorized' | 'empty' | 'invalid';
 
 export type CapabilityOutcome =
-  /**
-   * `previous` is what the written fields held immediately before, read inside
-   * the same call rather than by the caller beforehand — a caller reading it
-   * first would record a before-image from before its own authorize/validate
-   * round trip, which is exactly the window in which it can go stale.
-   *
-   * Only the fields being written appear in it, so it pairs one-for-one with
-   * what was proposed and can be replayed as an undo.
-   */
-  | { ok: true; previous: Record<string, unknown> }
-  | { ok: false; reason: CapabilityRefusal; error: string };
+	/**
+	 * `previous` is what the written fields held immediately before, read inside
+	 * the same call rather than by the caller beforehand — a caller reading it
+	 * first would record a before-image from before its own authorize/validate
+	 * round trip, which is exactly the window in which it can go stale.
+	 *
+	 * Only the fields being written appear in it, so it pairs one-for-one with
+	 * what was proposed and can be replayed as an undo.
+	 */
+	| { ok: true; previous: Record<string, unknown> }
+	| { ok: false; reason: CapabilityRefusal; error: string };
 
 /**
  * Authorize, re-read, coerce, validate, write — the whole of a capability's
@@ -962,50 +920,50 @@ export type CapabilityOutcome =
  * that window, not only outside it.
  */
 export async function executeCapability(
-  capability: Capability,
-  target: CapabilityTarget,
-  actor: CapabilityActor,
-  rawFields: Record<string, unknown>,
+	capability: Capability,
+	target: CapabilityTarget,
+	actor: CapabilityActor,
+	rawFields: Record<string, unknown>
 ): Promise<CapabilityOutcome> {
-  const def = CAPABILITIES[capability];
+	const def = CAPABILITIES[capability];
 
-  if (!await def.authorize(target, actor)) {
-    return {
-      ok: false,
-      reason: "unauthorized",
-      error: "You can no longer make this change.",
-    };
-  }
+	if (!(await def.authorize(target, actor))) {
+		return {
+			ok: false,
+			reason: 'unauthorized',
+			error: 'You can no longer make this change.'
+		};
+	}
 
-  // Current values re-read now, not as they were when this was proposed: a
-  // partial edit is merged over whatever is there, and merging stale values
-  // around the changed field would quietly revert anything that happened since.
-  const current = await def.current(target);
-  const fields = pickCapabilityFields(capability, rawFields);
-  if (Object.keys(fields).length === 0) {
-    return { ok: false, reason: "empty", error: "Nothing to change." };
-  }
+	// Current values re-read now, not as they were when this was proposed: a
+	// partial edit is merged over whatever is there, and merging stale values
+	// around the changed field would quietly revert anything that happened since.
+	const current = await def.current(target);
+	const fields = pickCapabilityFields(capability, rawFields);
+	if (Object.keys(fields).length === 0) {
+		return { ok: false, reason: 'empty', error: 'Nothing to change.' };
+	}
 
-  const valid = def.validate(fields, current);
-  if (!valid.ok) return { ok: false, reason: "invalid", error: valid.error };
+	const valid = def.validate(fields, current);
+	if (!valid.ok) return { ok: false, reason: 'invalid', error: valid.error };
 
-  // Narrowed to the fields actually being written, before apply() runs. A
-  // capability with no prior row for a field (add_activity_record has none at
-  // all) simply contributes nothing here, which reads correctly as "there was
-  // nothing there".
-  const previous = Object.fromEntries(
-    Object.keys(fields)
-      .filter((key) => key in current)
-      .map((key) => [key, current[key]]),
-  );
+	// Narrowed to the fields actually being written, before apply() runs. A
+	// capability with no prior row for a field (add_activity_record has none at
+	// all) simply contributes nothing here, which reads correctly as "there was
+	// nothing there".
+	const previous = Object.fromEntries(
+		Object.keys(fields)
+			.filter((key) => key in current)
+			.map((key) => [key, current[key]])
+	);
 
-  await def.apply(target, fields, current);
-  return { ok: true, previous };
+	await def.apply(target, fields, current);
+	return { ok: true, previous };
 }
 
 /** Every field name the live capabilities can address, for the `field` enum. */
 function fieldNamesFor(capabilities: Capability[]): string[] {
-  return capabilities.flatMap((c) => Object.keys(CAPABILITIES[c].fields));
+	return capabilities.flatMap((c) => Object.keys(CAPABILITIES[c].fields));
 }
 
 /**
@@ -1039,37 +997,39 @@ function fieldNamesFor(capabilities: Capability[]): string[] {
  * constrained at generation time rather than corrected afterwards.
  */
 export function buildProposalSchema(capabilities: Capability[]) {
-  const names = fieldNamesFor(capabilities);
+	const names = fieldNamesFor(capabilities);
 
-  return z.object({
-    reply: z.string().describe("The message shown to the user."),
-    proposals: z.array(z.object({
-      capability: z.enum(
-        capabilities as [Capability, ...Capability[]],
-      ),
-      rationale: z.string().describe(
-        "What you are changing and why, in proportion to the change: one " +
-          "sentence for a field correction, a short paragraph when you have " +
-          "replaced a long text. Cover every entry in `changes`.",
-      ),
-      changes: z.array(z.object({
-        field: z.enum(names as [string, ...string[]]),
-        // Loose on purpose: the wire schema has to survive conversion to JSON
-        // Schema, so it cannot coerce. coerceValue does that afterwards.
-        value: z.union([
-          z.string(),
-          z.number(),
-          z.array(z.string()),
-        ]).nullable().describe(
-          "The new value. null clears the field.",
-        ),
-      })).describe(
-        "Every field being changed. One entry per field.",
-      ),
-    })).nullish().describe(
-      "One entry per kind of change. Omit or leave empty when proposing nothing.",
-    ),
-  });
+	return z.object({
+		reply: z.string().describe('The message shown to the user.'),
+		proposals: z
+			.array(
+				z.object({
+					capability: z.enum(capabilities as [Capability, ...Capability[]]),
+					rationale: z
+						.string()
+						.describe(
+							'What you are changing and why, in proportion to the change: one ' +
+								'sentence for a field correction, a short paragraph when you have ' +
+								'replaced a long text. Cover every entry in `changes`.'
+						),
+					changes: z
+						.array(
+							z.object({
+								field: z.enum(names as [string, ...string[]]),
+								// Loose on purpose: the wire schema has to survive conversion to JSON
+								// Schema, so it cannot coerce. coerceValue does that afterwards.
+								value: z
+									.union([z.string(), z.number(), z.array(z.string())])
+									.nullable()
+									.describe('The new value. null clears the field.')
+							})
+						)
+						.describe('Every field being changed. One entry per field.')
+				})
+			)
+			.nullish()
+			.describe('One entry per kind of change. Omit or leave empty when proposing nothing.')
+	});
 }
 
 /**
@@ -1080,52 +1040,51 @@ export function buildProposalSchema(capabilities: Capability[]) {
  * model that listed one twice.
  */
 export function fieldsFromChanges(
-  capability: Capability,
-  changes: { field: string; value: unknown }[],
+	capability: Capability,
+	changes: { field: string; value: unknown }[]
 ): Record<string, unknown> {
-  return pickCapabilityFields(
-    capability,
-    Object.fromEntries(changes.map((c) => [c.field, c.value])),
-  );
+	return pickCapabilityFields(
+		capability,
+		Object.fromEntries(changes.map((c) => [c.field, c.value]))
+	);
 }
 
 /** One field of a proposal, paired with what it replaces. */
 export interface ProposedChange {
-  field: string;
-  label: string;
-  from: string;
-  to: string;
+	field: string;
+	label: string;
+	from: string;
+	to: string;
 }
 
 const FIELD_LABELS: Record<string, string> = {
-  job_poster: "Posted by",
-  office_location: "Location",
-  source_url: "Job URL",
-  date_posted: "Date posted",
-  work_location: "Work arrangement",
-  job_types: "Employment type",
-  experience_levels: "Experience level",
-  job_description: "Description",
-  skills_required: "Required skills",
-  skills_preferred: "Preferred skills",
-  cv_sent_through: "Sent through",
-  application_sent_date: "Sent on",
-  application_seen_date: "Seen on",
-  entry_content: "Entry",
-  entry_type: "Kind",
-  entry_title: "Title",
-  entry_date: "Happened on",
+	job_poster: 'Posted by',
+	office_location: 'Location',
+	source_url: 'Job URL',
+	date_posted: 'Date posted',
+	work_location: 'Work arrangement',
+	job_types: 'Employment type',
+	experience_levels: 'Experience level',
+	job_description: 'Description',
+	skills_required: 'Required skills',
+	skills_preferred: 'Preferred skills',
+	cv_sent_through: 'Sent through',
+	application_sent_date: 'Sent on',
+	application_seen_date: 'Seen on',
+	entry_content: 'Entry',
+	entry_type: 'Kind',
+	entry_title: 'Title',
+	entry_date: 'Happened on'
 };
 
 function labelFor(field: string): string {
-  return FIELD_LABELS[field] ??
-    field.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+	return FIELD_LABELS[field] ?? field.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 }
 
 function renderValue(value: unknown): string {
-  if (value === null || value === undefined || value === "") return "—";
-  if (Array.isArray(value)) return value.join(", ");
-  return String(value);
+	if (value === null || value === undefined || value === '') return '—';
+	if (Array.isArray(value)) return value.join(', ');
+	return String(value);
 }
 
 /**
@@ -1136,19 +1095,19 @@ function renderValue(value: unknown): string {
  * changes nothing is noise the user has to read past to find the real one.
  */
 export function describeProposalChanges(
-  capability: Capability,
-  fields: Record<string, unknown>,
-  current: Record<string, unknown>,
+	capability: Capability,
+	fields: Record<string, unknown>,
+	current: Record<string, unknown>
 ): ProposedChange[] {
-  return Object.keys(CAPABILITIES[capability].fields)
-    .filter((field) => field in fields)
-    .map((field) => ({
-      field,
-      label: labelFor(field),
-      from: renderValue(current[field]),
-      to: renderValue(fields[field]),
-    }))
-    .filter((change) => change.from !== change.to);
+	return Object.keys(CAPABILITIES[capability].fields)
+		.filter((field) => field in fields)
+		.map((field) => ({
+			field,
+			label: labelFor(field),
+			from: renderValue(current[field]),
+			to: renderValue(fields[field])
+		}))
+		.filter((change) => change.from !== change.to);
 }
 
 /**
@@ -1162,13 +1121,13 @@ export function describeProposalChanges(
  * this at all.
  */
 export function renderCapabilityBlock(
-  capability: Capability,
-  target: CapabilityTarget,
-  current: Record<string, unknown>,
+	capability: Capability,
+	target: CapabilityTarget,
+	current: Record<string, unknown>
 ): string {
-  const def = CAPABILITIES[capability];
-  const state = (def.renderState ?? renderCurrent)(current);
-  return `### Capability: ${capability} — ${target.label}
+	const def = CAPABILITIES[capability];
+	const state = (def.renderState ?? renderCurrent)(current);
+	return `### Capability: ${capability} — ${target.label}
 
 ${def.contract}
 
@@ -1177,13 +1136,11 @@ ${state}`;
 
 /** The capability block spliced into the system prompt, or "" when none are live. */
 export function renderCapabilityPrompt(live: LiveCapability[]): string {
-  if (live.length === 0) return "";
+	if (live.length === 0) return '';
 
-  const blocks = live.map((c) =>
-    renderCapabilityBlock(c.capability, c.target, c.current)
-  );
+	const blocks = live.map((c) => renderCapabilityBlock(c.capability, c.target, c.current));
 
-  return `## Changes you can propose
+	return `## Changes you can propose
 
 The user is on a page where you can propose edits, which they then review and
 apply themselves. You never change anything directly — proposing is the whole of
@@ -1245,5 +1202,5 @@ These hold for every kind of change below:
   correction seems to imply a second one, say so in your reply and let the user
   decide, rather than folding it into the same proposal.
 
-${blocks.join("\n\n")}`;
+${blocks.join('\n\n')}`;
 }

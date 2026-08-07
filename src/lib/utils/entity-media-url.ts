@@ -3,74 +3,68 @@
  * Handles both local storage paths and legacy file UUIDs
  */
 export function getEntityMediaUrl(
-  localPath: string | null | undefined,
-  legacyUuid?: string | null,
+	localPath: string | null | undefined,
+	legacyUuid?: string | null
 ): string | null {
-  // Prefer local path
-  if (localPath) {
-    return `/uploads/${localPath}`;
-  }
+	// Prefer local path
+	if (localPath) {
+		return `/uploads/${localPath}`;
+	}
 
-  // Fall back to legacy UUID
-  if (legacyUuid) {
-    return `/assets/${legacyUuid}`;
-  }
+	// Fall back to legacy UUID
+	if (legacyUuid) {
+		return `/assets/${legacyUuid}`;
+	}
 
-  return null;
+	return null;
 }
 
 /**
  * Get work experience logo URL
  */
 export function getWorkExperienceLogoUrl(workExp: {
-  logo_path?: string | null;
-  logo_id?: string | null;
+	logo_path?: string | null;
+	logo_id?: string | null;
 }): string | null {
-  return getEntityMediaUrl(workExp.logo_path, workExp.logo_id);
+	return getEntityMediaUrl(workExp.logo_path, workExp.logo_id);
 }
 
 /**
  * Get work experience banner URL
  */
 export function getWorkExperienceBannerUrl(workExp: {
-  banner_path?: string | null;
+	banner_path?: string | null;
 }): string | null {
-  return getEntityMediaUrl(workExp.banner_path);
+	return getEntityMediaUrl(workExp.banner_path);
 }
 
 /**
  * Get education logo URL
  */
 export function getEducationLogoUrl(edu: {
-  logo_path?: string | null;
-  logo_id?: string | null;
+	logo_path?: string | null;
+	logo_id?: string | null;
 }): string | null {
-  return getEntityMediaUrl(edu.logo_path, edu.logo_id);
+	return getEntityMediaUrl(edu.logo_path, edu.logo_id);
 }
 
 /**
  * Get education banner URL
  */
-export function getEducationBannerUrl(edu: {
-  banner_path?: string | null;
-}): string | null {
-  return getEntityMediaUrl(edu.banner_path);
+export function getEducationBannerUrl(edu: { banner_path?: string | null }): string | null {
+	return getEntityMediaUrl(edu.banner_path);
 }
 
 /**
  * Get side project image URL
  */
-export function getSideProjectImageUrl(project: {
-  image_path?: string | null;
-}): string | null {
-  return getEntityMediaUrl(project.image_path);
+export function getSideProjectImageUrl(project: { image_path?: string | null }): string | null {
+	return getEntityMediaUrl(project.image_path);
 }
 
 /**
  * Get side project banner URL
  */
-export function getSideProjectBannerUrl(project: {
-  banner_path?: string | null;
-}): string | null {
-  return getEntityMediaUrl(project.banner_path);
+export function getSideProjectBannerUrl(project: { banner_path?: string | null }): string | null {
+	return getEntityMediaUrl(project.banner_path);
 }

@@ -1,14 +1,14 @@
-import * as chrono from "chrono-node";
+import * as chrono from 'chrono-node';
 
 /**
  * Coerce a date-ish value to YYYY-MM-DD for Drizzle `date()` columns
  * (which use string mode). Returns null for null/undefined/invalid input.
  */
 export function toDateString(value: string | Date | null | undefined): string | null {
-  if (value == null) return null;
-  const d = typeof value === "string" ? new Date(value) : value;
-  if (isNaN(d.getTime())) return null;
-  return d.toISOString().split("T")[0];
+	if (value == null) return null;
+	const d = typeof value === 'string' ? new Date(value) : value;
+	if (isNaN(d.getTime())) return null;
+	return d.toISOString().split('T')[0];
 }
 
 /**
@@ -20,35 +20,35 @@ export function toDateString(value: string | Date | null | undefined): string | 
  * @returns Parsed Date object or null if invalid/unparseable
  */
 export function parseRelativeDate(
-  dateString: string | null | undefined | Date,
-  referenceDate: Date = new Date(),
+	dateString: string | null | undefined | Date,
+	referenceDate: Date = new Date()
 ): Date | null {
-  if (!dateString) return null;
+	if (!dateString) return null;
 
-  // Handle Date objects directly
-  if (dateString instanceof Date) {
-    return dateString;
-  }
+	// Handle Date objects directly
+	if (dateString instanceof Date) {
+		return dateString;
+	}
 
-  // Convert to string if not already
-  const strValue = String(dateString);
+	// Convert to string if not already
+	const strValue = String(dateString);
 
-  // Use Chrono to parse the date string
-  // Chrono handles many natural language formats:
-  // - "a month ago", "2 days ago", "three weeks ago"
-  // - "posted yesterday", "submitted last week"
-  // - "publicized 5 hours ago"
-  // - Absolute dates like "2024-01-15" or "Jan 15, 2024"
-  const parsed = chrono.parseDate(strValue, referenceDate, {
-    forwardDate: false, // Don't interpret ambiguous dates as future dates
-  });
+	// Use Chrono to parse the date string
+	// Chrono handles many natural language formats:
+	// - "a month ago", "2 days ago", "three weeks ago"
+	// - "posted yesterday", "submitted last week"
+	// - "publicized 5 hours ago"
+	// - Absolute dates like "2024-01-15" or "Jan 15, 2024"
+	const parsed = chrono.parseDate(strValue, referenceDate, {
+		forwardDate: false // Don't interpret ambiguous dates as future dates
+	});
 
-  if (parsed && !isNaN(parsed.getTime())) {
-    return parsed;
-  }
+	if (parsed && !isNaN(parsed.getTime())) {
+		return parsed;
+	}
 
-  // Unparseable
-  return null;
+	// Unparseable
+	return null;
 }
 
 /**
@@ -59,94 +59,94 @@ export function parseRelativeDate(
  * @returns true if valid, false otherwise
  */
 export function isValidJobPostingDate(
-  date: Date | null,
-  options: {
-    minYear?: number;
-    allowFuture?: boolean;
-  } = {},
+	date: Date | null,
+	options: {
+		minYear?: number;
+		allowFuture?: boolean;
+	} = {}
 ): boolean {
-  // Reject null or Invalid Date objects
-  if (!date || isNaN(date.getTime())) {
-    return false;
-  }
+	// Reject null or Invalid Date objects
+	if (!date || isNaN(date.getTime())) {
+		return false;
+	}
 
-  // Reject dates before minimum year (default: 2000)
-  const minYear = options.minYear ?? 2000;
-  if (date.getFullYear() < minYear) {
-    return false;
-  }
+	// Reject dates before minimum year (default: 2000)
+	const minYear = options.minYear ?? 2000;
+	if (date.getFullYear() < minYear) {
+		return false;
+	}
 
-  // Reject future dates (default behavior)
-  const allowFuture = options.allowFuture ?? false;
-  if (!allowFuture && date > new Date()) {
-    return false;
-  }
+	// Reject future dates (default behavior)
+	const allowFuture = options.allowFuture ?? false;
+	if (!allowFuture && date > new Date()) {
+		return false;
+	}
 
-  return true;
+	return true;
 }
 
 /** Coerce a Date or date string (e.g. "2024-01-15") into a Date object. */
 function toDate(value: Date | string): Date {
-  return value instanceof Date ? value : new Date(value);
+	return value instanceof Date ? value : new Date(value);
 }
 
 export function formatDateRangeVerbose(
-  startDate: Date | string | null,
-  endDate?: Date | string | null,
+	startDate: Date | string | null,
+	endDate?: Date | string | null
 ): string {
-  const formatDate = (date: Date | string) => {
-    const d = toDate(date);
-    const year = d.getFullYear();
-    const month = d.getMonth();
-    const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-    return `${monthNames[month]} ${year}`;
-  };
+	const formatDate = (date: Date | string) => {
+		const d = toDate(date);
+		const year = d.getFullYear();
+		const month = d.getMonth();
+		const monthNames = [
+			'Jan',
+			'Feb',
+			'Mar',
+			'Apr',
+			'May',
+			'Jun',
+			'Jul',
+			'Aug',
+			'Sep',
+			'Oct',
+			'Nov',
+			'Dec'
+		];
+		return `${monthNames[month]} ${year}`;
+	};
 
-  if (!startDate) return "";
-  const start = formatDate(startDate);
-  const end = endDate ? formatDate(endDate) : "Present";
-  return `${start} - ${end}`;
+	if (!startDate) return '';
+	const start = formatDate(startDate);
+	const end = endDate ? formatDate(endDate) : 'Present';
+	return `${start} - ${end}`;
 }
 
 export function formatDateRangeCompact(
-  startDate: Date | string | null,
-  endDate?: Date | string | null,
-  /** Label for an ongoing role; localized by the caller (default English). */
-  presentLabel = "Present",
+	startDate: Date | string | null,
+	endDate?: Date | string | null,
+	/** Label for an ongoing role; localized by the caller (default English). */
+	presentLabel = 'Present'
 ): string {
-  const formatDate = (date: Date | string) => {
-    const d = toDate(date);
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    return `${month}/${year}`;
-  };
+	const formatDate = (date: Date | string) => {
+		const d = toDate(date);
+		const month = String(d.getMonth() + 1).padStart(2, '0');
+		const year = d.getFullYear();
+		return `${month}/${year}`;
+	};
 
-  if (!startDate) return "";
-  const start = formatDate(startDate);
-  const end = endDate ? formatDate(endDate) : presentLabel;
-  return `${start} - ${end}`;
+	if (!startDate) return '';
+	const start = formatDate(startDate);
+	const end = endDate ? formatDate(endDate) : presentLabel;
+	return `${start} - ${end}`;
 }
 
 export function formatDateRangeYear(
-  startDate: Date | string | null,
-  endDate?: Date | string | null,
+	startDate: Date | string | null,
+	endDate?: Date | string | null
 ): string {
-  if (!startDate) return "";
-  const startYear = toDate(startDate).getFullYear();
-  const endYear = endDate ? toDate(endDate).getFullYear() : "Present";
+	if (!startDate) return '';
+	const startYear = toDate(startDate).getFullYear();
+	const endYear = endDate ? toDate(endDate).getFullYear() : 'Present';
 
-  return `${startYear} - ${endYear}`;
+	return `${startYear} - ${endYear}`;
 }

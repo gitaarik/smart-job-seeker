@@ -1,467 +1,452 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Ownership lookups and the ranking-terms lookup both go through db.query;
 // each test sets what the next findFirst calls resolve to.
 let applicationRow: unknown = null;
 let jobRow: unknown = null;
 
-vi.mock("$lib/server/db", () => ({
-  db: {
-    query: {
-      applications: { findFirst: () => Promise.resolve(applicationRow) },
-      jobs: { findFirst: () => Promise.resolve(jobRow) },
-    },
-  },
+vi.mock('$lib/server/db', () => ({
+	db: {
+		query: {
+			applications: { findFirst: () => Promise.resolve(applicationRow) },
+			jobs: { findFirst: () => Promise.resolve(jobRow) }
+		}
+	}
 }));
 
 // The registry has its own tests. What matters here is which capabilities a
 // route hands it and who it says is asking — the resolve/authorize behaviour
 // behind them is capabilities.test.ts's business.
 const mockResolveCapabilities = vi.fn().mockResolvedValue([]);
-vi.mock("../capabilities", () => ({
-  resolveCapabilities: (...a: unknown[]) => mockResolveCapabilities(...a),
+vi.mock('../capabilities', () => ({
+	resolveCapabilities: (...a: unknown[]) => mockResolveCapabilities(...a)
 }));
 
 import {
-  CHAT_BUDGET_CHARS,
-  normalizeRouteId,
-  resolveChatContext,
-  scopeForRoute,
-} from "../chat-context";
+	CHAT_BUDGET_CHARS,
+	normalizeRouteId,
+	resolveChatContext,
+	scopeForRoute
+} from '../chat-context';
 
 beforeEach(() => {
-  applicationRow = null;
-  jobRow = null;
-  mockResolveCapabilities.mockClear();
-  mockResolveCapabilities.mockResolvedValue([]);
+	applicationRow = null;
+	jobRow = null;
+	mockResolveCapabilities.mockClear();
+	mockResolveCapabilities.mockResolvedValue([]);
 });
 
-describe("normalizeRouteId", () => {
-  it("strips SvelteKit group segments", () => {
-    expect(normalizeRouteId("/(app)/applications/[id]/texts")).toBe(
-      "/applications/[id]/texts",
-    );
-    expect(normalizeRouteId("/(app)/profile/(data)/skills")).toBe(
-      "/profile/skills",
-    );
-  });
+describe('normalizeRouteId', () => {
+	it('strips SvelteKit group segments', () => {
+		expect(normalizeRouteId('/(app)/applications/[id]/texts')).toBe('/applications/[id]/texts');
+		expect(normalizeRouteId('/(app)/profile/(data)/skills')).toBe('/profile/skills');
+	});
 
-  it("treats a missing route as the empty route", () => {
-    expect(normalizeRouteId(null)).toBe("");
-    expect(normalizeRouteId(undefined)).toBe("");
-  });
+	it('treats a missing route as the empty route', () => {
+		expect(normalizeRouteId(null)).toBe('');
+		expect(normalizeRouteId(undefined)).toBe('');
+	});
 });
 
-describe("scopeForRoute", () => {
-  it("scopes an application page to that application", () => {
-    const scope = scopeForRoute("/(app)/applications/[id]");
-    expect(scope.entity).toBe("application");
-    expect(scope.sources).toContain("application_activity");
-  });
+describe('scopeForRoute', () => {
+	it('scopes an application page to that application', () => {
+		const scope = scopeForRoute('/(app)/applications/[id]');
+		expect(scope.entity).toBe('application');
+		expect(scope.sources).toContain('application_activity');
+	});
 
-  it("inherits the parent scope on a nested tab", () => {
-    // The whole point of prefix matching: /texts, /documents, /timeline and
-    // friends must not each need their own row.
-    for (const tab of ["texts", "documents", "timeline", "salary"]) {
-      const scope = scopeForRoute(`/(app)/applications/[id]/${tab}`);
-      expect(scope.entity).toBe("application");
-      expect(scope.sources).toContain("application_activity");
-    }
-  });
+	it('inherits the parent scope on a nested tab', () => {
+		// The whole point of prefix matching: /texts, /documents, /timeline and
+		// friends must not each need their own row.
+		for (const tab of ['texts', 'documents', 'timeline', 'salary']) {
+			const scope = scopeForRoute(`/(app)/applications/[id]/${tab}`);
+			expect(scope.entity).toBe('application');
+			expect(scope.sources).toContain('application_activity');
+		}
+	});
 
-  it("scopes a job page to the job, without application-only sources", () => {
-    const scope = scopeForRoute("/(app)/jobs/[id]");
-    expect(scope.entity).toBe("job");
-    expect(scope.sources).toContain("job");
-    expect(scope.sources).not.toContain("application_activity");
-  });
+	it('scopes a job page to the job, without application-only sources', () => {
+		const scope = scopeForRoute('/(app)/jobs/[id]');
+		expect(scope.entity).toBe('job');
+		expect(scope.sources).toContain('job');
+		expect(scope.sources).not.toContain('application_activity');
+	});
 
-  it("does not confuse a sibling route with a prefix match", () => {
-    // "/applications/interview" must not match "/applications/[id]".
-    expect(scopeForRoute("/(app)/applications/interview").entity).toBeNull();
-  });
+	it('does not confuse a sibling route with a prefix match', () => {
+		// "/applications/interview" must not match "/applications/[id]".
+		expect(scopeForRoute('/(app)/applications/interview').entity).toBeNull();
+	});
 
-  /**
-   * These pages fell through to profile-only, so the assistant could see the
-   * applicant's projects but not a single one of the applications the page was
-   * listing — and "compare these two", asked while looking at exactly those
-   * two, had nothing to answer from.
-   */
-  describe("pages that are ABOUT the pipeline", () => {
-    it("gives the applications list the pipeline, with no single entity", () => {
-      const scope = scopeForRoute("/(app)/applications");
-      expect(scope.entity).toBeNull();
-      expect(scope.sources).toContain("application_pipeline");
-      // No application is in front of the user, so nothing scoped to one.
-      expect(scope.sources).not.toContain("application_activity");
-      expect(scope.sources).not.toContain("job");
-    });
+	/**
+	 * These pages fell through to profile-only, so the assistant could see the
+	 * applicant's projects but not a single one of the applications the page was
+	 * listing — and "compare these two", asked while looking at exactly those
+	 * two, had nothing to answer from.
+	 */
+	describe('pages that are ABOUT the pipeline', () => {
+		it('gives the applications list the pipeline, with no single entity', () => {
+			const scope = scopeForRoute('/(app)/applications');
+			expect(scope.entity).toBeNull();
+			expect(scope.sources).toContain('application_pipeline');
+			// No application is in front of the user, so nothing scoped to one.
+			expect(scope.sources).not.toContain('application_activity');
+			expect(scope.sources).not.toContain('job');
+		});
 
-    it("extends to the sibling views, which are also across applications", () => {
-      for (const tab of ["active", "salary", "texts", "new"]) {
-        const scope = scopeForRoute(`/(app)/applications/${tab}`);
-        expect(scope.sources).toContain("application_pipeline");
-        expect(scope.entity).toBeNull();
-      }
-    });
+		it('extends to the sibling views, which are also across applications', () => {
+			for (const tab of ['active', 'salary', 'texts', 'new']) {
+				const scope = scopeForRoute(`/(app)/applications/${tab}`);
+				expect(scope.sources).toContain('application_pipeline');
+				expect(scope.entity).toBeNull();
+			}
+		});
 
-    // Longest-prefix, so the more specific rows still win.
-    it("does not swallow the routes that declare their own scope", () => {
-      expect(scopeForRoute("/(app)/applications/[id]").entity).toBe(
-        "application",
-      );
-      expect(scopeForRoute("/(app)/applications/interview").sources)
-        .not.toContain("application_pipeline");
-    });
+		// Longest-prefix, so the more specific rows still win.
+		it('does not swallow the routes that declare their own scope', () => {
+			expect(scopeForRoute('/(app)/applications/[id]').entity).toBe('application');
+			expect(scopeForRoute('/(app)/applications/interview').sources).not.toContain(
+				'application_pipeline'
+			);
+		});
 
-    // Nothing competes with it for room here, unlike on a detail page where
-    // the application's own history takes a third of the budget.
-    it("raises the pipeline's ceiling where the pipeline is the content", () => {
-      const list = scopeForRoute("/(app)/applications");
-      const detail = scopeForRoute("/(app)/applications/[id]");
-      expect(list.sourceOptions?.application_pipeline?.budgetChars)
-        .toBeGreaterThan(
-          detail.sourceOptions?.application_pipeline?.budgetChars ?? 12000,
-        );
-    });
-  });
+		// Nothing competes with it for room here, unlike on a detail page where
+		// the application's own history takes a third of the budget.
+		it("raises the pipeline's ceiling where the pipeline is the content", () => {
+			const list = scopeForRoute('/(app)/applications');
+			const detail = scopeForRoute('/(app)/applications/[id]');
+			expect(list.sourceOptions?.application_pipeline?.budgetChars).toBeGreaterThan(
+				detail.sourceOptions?.application_pipeline?.budgetChars ?? 12000
+			);
+		});
+	});
 
-  // /home used to be here. It has its own row now — a dashboard asking "how is
-  // my search going" needs the pipeline — which is the point of the table: a
-  // page graduates out of the fallback the moment anyone knows what it is for.
-  it("falls back to profile-only for unmapped and unknown routes", () => {
-    for (const route of ["/(app)/settings", "/(app)/nothing/here", null]) {
-      const scope = scopeForRoute(route);
-      expect(scope.entity).toBeNull();
-      expect(scope.sources).toEqual(["profile", "projects", "stories"]);
-      // Profile-only in what it can SEE, but never silent about where it is.
-      expect(scope.hint).toBeDefined();
-    }
-  });
+	// /home used to be here. It has its own row now — a dashboard asking "how is
+	// my search going" needs the pipeline — which is the point of the table: a
+	// page graduates out of the fallback the moment anyone knows what it is for.
+	it('falls back to profile-only for unmapped and unknown routes', () => {
+		for (const route of ['/(app)/settings', '/(app)/nothing/here', null]) {
+			const scope = scopeForRoute(route);
+			expect(scope.entity).toBeNull();
+			expect(scope.sources).toEqual(['profile', 'projects', 'stories']);
+			// Profile-only in what it can SEE, but never silent about where it is.
+			expect(scope.hint).toBeDefined();
+		}
+	});
 });
 
-describe("resolveChatContext", () => {
-  const base = {
-    profileId: 7,
-    isStaff: false,
-    message: "How should I answer this?",
-  };
+describe('resolveChatContext', () => {
+	const base = {
+		profileId: 7,
+		isStaff: false,
+		message: 'How should I answer this?'
+	};
 
-  it("assembles the full application scope for an owned application", async () => {
-    applicationRow = {
-      id: 42,
-      job: { title: "Staff Engineer", skills_required: ["Go"] },
-    };
+	it('assembles the full application scope for an owned application', async () => {
+		applicationRow = {
+			id: 42,
+			job: { title: 'Staff Engineer', skills_required: ['Go'] }
+		};
 
-    const { context: ctx } = await resolveChatContext({
-      ...base,
-      routeId: "/(app)/applications/[id]",
-      params: { id: "42" },
-    });
+		const { context: ctx } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/applications/[id]',
+			params: { id: '42' }
+		});
 
-    expect(ctx.entity).toEqual({ type: "application", id: 42 });
-    expect(ctx.sources).toContain("application_activity");
-    expect(ctx.budgetChars).toBe(CHAT_BUDGET_CHARS);
-  });
+		expect(ctx.entity).toEqual({ type: 'application', id: 42 });
+		expect(ctx.sources).toContain('application_activity');
+		expect(ctx.budgetChars).toBe(CHAT_BUDGET_CHARS);
+	});
 
-  it("ranks on the message plus the role title and its skills", async () => {
-    applicationRow = {
-      id: 42,
-      job: { title: "Staff Engineer", skills_required: ["Go"] },
-    };
+	it('ranks on the message plus the role title and its skills', async () => {
+		applicationRow = {
+			id: 42,
+			job: { title: 'Staff Engineer', skills_required: ['Go'] }
+		};
 
-    const { context: ctx } = await resolveChatContext({
-      ...base,
-      routeId: "/(app)/applications/[id]",
-      params: { id: "42" },
-    });
+		const { context: ctx } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/applications/[id]',
+			params: { id: '42' }
+		});
 
-    // The message leads — what they just asked is what they want evidence
-    // about — with the role folded in so a vague question still ranks.
-    expect(ctx.query?.text).toContain("How should I answer this?");
-    expect(ctx.query?.text).toContain("Staff Engineer");
-    expect(ctx.query?.skills).toEqual(["Go"]);
-  });
+		// The message leads — what they just asked is what they want evidence
+		// about — with the role folded in so a vague question still ranks.
+		expect(ctx.query?.text).toContain('How should I answer this?');
+		expect(ctx.query?.text).toContain('Staff Engineer');
+		expect(ctx.query?.skills).toEqual(['Go']);
+	});
 
-  it("drops entity sources when the application belongs to someone else", async () => {
-    // findFirst is filtered on profile_id, so a foreign application returns
-    // nothing — the chat degrades to profile-only rather than failing.
-    applicationRow = null;
+	it('drops entity sources when the application belongs to someone else', async () => {
+		// findFirst is filtered on profile_id, so a foreign application returns
+		// nothing — the chat degrades to profile-only rather than failing.
+		applicationRow = null;
 
-    const { context: ctx } = await resolveChatContext({
-      ...base,
-      routeId: "/(app)/applications/[id]",
-      params: { id: "9999" },
-    });
+		const { context: ctx } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/applications/[id]',
+			params: { id: '9999' }
+		});
 
-    expect(ctx.entity).toBeUndefined();
-    expect(ctx.sources).not.toContain("job");
-    expect(ctx.sources).not.toContain("application_activity");
-    expect(ctx.sources).not.toContain("application_activity");
-    expect(ctx.sources).toContain("profile");
-  });
+		expect(ctx.entity).toBeUndefined();
+		expect(ctx.sources).not.toContain('job');
+		expect(ctx.sources).not.toContain('application_activity');
+		expect(ctx.sources).not.toContain('application_activity');
+		expect(ctx.sources).toContain('profile');
+	});
 
-  it("drops entity sources when the route param isn't a usable id", async () => {
-    const { context: ctx } = await resolveChatContext({
-      ...base,
-      routeId: "/(app)/applications/[id]",
-      params: { id: "not-a-number" },
-    });
+	it("drops entity sources when the route param isn't a usable id", async () => {
+		const { context: ctx } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/applications/[id]',
+			params: { id: 'not-a-number' }
+		});
 
-    expect(ctx.entity).toBeUndefined();
-    expect(ctx.sources).not.toContain("application_activity");
-  });
+		expect(ctx.entity).toBeUndefined();
+		expect(ctx.sources).not.toContain('application_activity');
+	});
 
-  it("resolves a job page without requiring an application", async () => {
-    jobRow = { id: 5, title: "Backend Engineer", skills_required: ["Rust"] };
+	it('resolves a job page without requiring an application', async () => {
+		jobRow = { id: 5, title: 'Backend Engineer', skills_required: ['Rust'] };
 
-    const { context: ctx } = await resolveChatContext({
-      ...base,
-      routeId: "/(app)/jobs/[id]",
-      params: { id: "5" },
-    });
+		const { context: ctx } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/jobs/[id]',
+			params: { id: '5' }
+		});
 
-    expect(ctx.entity).toEqual({ type: "job", id: 5 });
-    expect(ctx.query?.skills).toEqual(["Rust"]);
-  });
+		expect(ctx.entity).toEqual({ type: 'job', id: 5 });
+		expect(ctx.query?.skills).toEqual(['Rust']);
+	});
 });
 
-describe("resolveChatContext — orientation blocks", () => {
-  const base = {
-    profileId: 7,
-    isStaff: false,
-    message: "How is it going?",
-  };
+describe('resolveChatContext — orientation blocks', () => {
+	const base = {
+		profileId: 7,
+		isStaff: false,
+		message: 'How is it going?'
+	};
 
-  // These two are the guarantee that a route cannot silently blind the
-  // assistant, so they are appended centrally rather than listed per scope.
-  // The test is over EVERY route in the table on purpose: a per-scope list is
-  // exactly the thing that gets forgotten, which is the bug they exist to kill.
-  const ROUTES = [
-    ["/(app)/applications", {}],
-    ["/(app)/applications/[id]", { id: "42" }],
-    ["/(app)/applications/active", {}],
-    ["/(app)/applications/interview", {}],
-    ["/(app)/jobs/[id]", { id: "9" }],
-    ["/(app)/profile", {}],
-    ["/(app)/some/page/nobody/scoped", {}],
-  ] as const;
+	// These two are the guarantee that a route cannot silently blind the
+	// assistant, so they are appended centrally rather than listed per scope.
+	// The test is over EVERY route in the table on purpose: a per-scope list is
+	// exactly the thing that gets forgotten, which is the bug they exist to kill.
+	const ROUTES = [
+		['/(app)/applications', {}],
+		['/(app)/applications/[id]', { id: '42' }],
+		['/(app)/applications/active', {}],
+		['/(app)/applications/interview', {}],
+		['/(app)/jobs/[id]', { id: '9' }],
+		['/(app)/profile', {}],
+		['/(app)/some/page/nobody/scoped', {}]
+	] as const;
 
-  // The scope block existed to stop the model inferring where it was. A route
-  // nobody listed used to get an empty one, which is the same silence in a
-  // different place — and /home and /jobs, both real pages, were exactly that.
-  it("tells even an unlisted route that it has not been told", async () => {
-    const { context: ctx } = await resolveChatContext({
-      ...base,
-      routeId: "/(app)/somewhere/nobody/scoped",
-      params: {},
-    });
+	// The scope block existed to stop the model inferring where it was. A route
+	// nobody listed used to get an empty one, which is the same silence in a
+	// different place — and /home and /jobs, both real pages, were exactly that.
+	it('tells even an unlisted route that it has not been told', async () => {
+		const { context: ctx } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/somewhere/nobody/scoped',
+			params: {}
+		});
 
-    expect(ctx.scopeHint).toBeDefined();
-    expect(ctx.scopeHint?.page).toContain("has not been described to you");
-    expect(ctx.scopeHint?.subject).toBeNull();
-  });
+		expect(ctx.scopeHint).toBeDefined();
+		expect(ctx.scopeHint?.page).toContain('has not been described to you');
+		expect(ctx.scopeHint?.subject).toBeNull();
+	});
 
-  it("declares the jobs list rather than letting it fall through", async () => {
-    // It had no entry at all, so "no job search in the chat" was an accident
-    // of the default rather than a decision anyone could read.
-    const scope = scopeForRoute("/(app)/jobs");
+	it('declares the jobs list rather than letting it fall through', async () => {
+		// It had no entry at all, so "no job search in the chat" was an accident
+		// of the default rather than a decision anyone could read.
+		const scope = scopeForRoute('/(app)/jobs');
 
-    expect(scope.hint?.page).toContain("filter controls");
-    expect(scope.sources).not.toContain("job");
-    // The list is not the detail page: /jobs/[id] still gets its job.
-    expect(scopeForRoute("/(app)/jobs/[id]").sources).toContain("job");
-  });
+		expect(scope.hint?.page).toContain('filter controls');
+		expect(scope.sources).not.toContain('job');
+		// The list is not the detail page: /jobs/[id] still gets its job.
+		expect(scopeForRoute('/(app)/jobs/[id]').sources).toContain('job');
+	});
 
-  it("gives the dashboard the pipeline, which is what it is for", async () => {
-    const scope = scopeForRoute("/(app)/home");
+	it('gives the dashboard the pipeline, which is what it is for', async () => {
+		const scope = scopeForRoute('/(app)/home');
 
-    expect(scope.sources).toContain("application_pipeline");
-    expect(scope.hint?.page).toContain("dashboard");
-  });
+		expect(scope.sources).toContain('application_pipeline');
+		expect(scope.hint?.page).toContain('dashboard');
+	});
 
-  it("gives every route the manifest and the scope block", async () => {
-    for (const [routeId, params] of ROUTES) {
-      applicationRow = { id: 42, job: { title: "Staff Engineer" } };
-      jobRow = { id: 9, title: "Staff Engineer" };
+	it('gives every route the manifest and the scope block', async () => {
+		for (const [routeId, params] of ROUTES) {
+			applicationRow = { id: 42, job: { title: 'Staff Engineer' } };
+			jobRow = { id: 9, title: 'Staff Engineer' };
 
-      const { context: ctx } = await resolveChatContext({
-        ...base,
-        routeId,
-        params: params as Record<string, string>,
-      });
+			const { context: ctx } = await resolveChatContext({
+				...base,
+				routeId,
+				params: params as Record<string, string>
+			});
 
-      expect(ctx.sources, routeId).toContain("activity_manifest");
-      expect(ctx.sources, routeId).toContain("page_scope");
-    }
-  });
+			expect(ctx.sources, routeId).toContain('activity_manifest');
+			expect(ctx.sources, routeId).toContain('page_scope');
+		}
+	});
 
-  it("tells the model a bare question means THIS application on a detail page", async () => {
-    applicationRow = { id: 42, job: { title: "Staff Engineer" } };
+	it('tells the model a bare question means THIS application on a detail page', async () => {
+		applicationRow = { id: 42, job: { title: 'Staff Engineer' } };
 
-    const { context: ctx } = await resolveChatContext({
-      ...base,
-      routeId: "/(app)/applications/[id]",
-      params: { id: "42" },
-    });
+		const { context: ctx } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/applications/[id]',
+			params: { id: '42' }
+		});
 
-    expect(ctx.scopeHint?.subject).toBe("that application");
-  });
+		expect(ctx.scopeHint?.subject).toBe('that application');
+	});
 
-  it("tells it a bare question means no single one on the list", async () => {
-    const { context: ctx } = await resolveChatContext({
-      ...base,
-      routeId: "/(app)/applications",
-      params: {},
-    });
+	it('tells it a bare question means no single one on the list', async () => {
+		const { context: ctx } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/applications',
+			params: {}
+		});
 
-    expect(ctx.scopeHint?.subject).toBeNull();
-    expect(ctx.scopeHint?.page).toContain("list");
-  });
+		expect(ctx.scopeHint?.subject).toBeNull();
+		expect(ctx.scopeHint?.page).toContain('list');
+	});
 
-  // Same scope object, different pages. If the hint lived on the scope these
-  // two would claim to be the same place.
-  it("distinguishes pages that share a scope", async () => {
-    const profile = await resolveChatContext({
-      ...base,
-      routeId: "/(app)/profile",
-      params: {},
-    });
-    const interview = await resolveChatContext({
-      ...base,
-      routeId: "/(app)/applications/interview",
-      params: {},
-    });
+	// Same scope object, different pages. If the hint lived on the scope these
+	// two would claim to be the same place.
+	it('distinguishes pages that share a scope', async () => {
+		const profile = await resolveChatContext({
+			...base,
+			routeId: '/(app)/profile',
+			params: {}
+		});
+		const interview = await resolveChatContext({
+			...base,
+			routeId: '/(app)/applications/interview',
+			params: {}
+		});
 
-    expect(profile.context.scopeHint?.page).not.toBe(
-      interview.context.scopeHint?.page,
-    );
-  });
+		expect(profile.context.scopeHint?.page).not.toBe(interview.context.scopeHint?.page);
+	});
 
-  // A hint saying "they are on one application's page" while the application
-  // block is missing would point the model at something it cannot see.
-  it("drops the hint when the entity failed to resolve", async () => {
-    applicationRow = null;
+	// A hint saying "they are on one application's page" while the application
+	// block is missing would point the model at something it cannot see.
+	it('drops the hint when the entity failed to resolve', async () => {
+		applicationRow = null;
 
-    const { context: ctx } = await resolveChatContext({
-      ...base,
-      routeId: "/(app)/applications/[id]",
-      params: { id: "42" },
-    });
+		const { context: ctx } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/applications/[id]',
+			params: { id: '42' }
+		});
 
-    expect(ctx.scopeHint).toBeUndefined();
-    // But the manifest still ships: what exists does not depend on what
-    // resolved.
-    expect(ctx.sources).toContain("activity_manifest");
-  });
+		expect(ctx.scopeHint).toBeUndefined();
+		// But the manifest still ships: what exists does not depend on what
+		// resolved.
+		expect(ctx.sources).toContain('activity_manifest');
+	});
 });
 
-describe("resolveChatContext — capabilities", () => {
-  const base = {
-    profileId: 7,
-    isStaff: false,
-    message: "Set the salary to 50-150 per hour",
-  };
+describe('resolveChatContext — capabilities', () => {
+	const base = {
+		profileId: 7,
+		isStaff: false,
+		message: 'Set the salary to 50-150 per hour'
+	};
 
-  it("offers the job edits on a job page", async () => {
-    jobRow = { id: 5, title: "Backend Engineer" };
+	it('offers the job edits on a job page', async () => {
+		jobRow = { id: 5, title: 'Backend Engineer' };
 
-    await resolveChatContext({
-      ...base,
-      routeId: "/(app)/jobs/[id]",
-      params: { id: "5" },
-    });
+		await resolveChatContext({
+			...base,
+			routeId: '/(app)/jobs/[id]',
+			params: { id: '5' }
+		});
 
-    expect(mockResolveCapabilities).toHaveBeenCalledWith(
-      ["edit_job_details", "edit_job_description", "edit_job_skills"],
-      { type: "job", id: 5 },
-      { profileId: 7, isStaff: false },
-    );
-  });
+		expect(mockResolveCapabilities).toHaveBeenCalledWith(
+			['edit_job_details', 'edit_job_description', 'edit_job_skills'],
+			{ type: 'job', id: 5 },
+			{ profileId: 7, isStaff: false }
+		);
+	});
 
-  it("offers the attached job's edits from an application page", async () => {
-    // The point of keying the registry by capability rather than by page: an
-    // application page reaches the job through application.job_id.
-    applicationRow = { id: 42, job: { title: "Staff Engineer" } };
+	it("offers the attached job's edits from an application page", async () => {
+		// The point of keying the registry by capability rather than by page: an
+		// application page reaches the job through application.job_id.
+		applicationRow = { id: 42, job: { title: 'Staff Engineer' } };
 
-    await resolveChatContext({
-      ...base,
-      routeId: "/(app)/applications/[id]",
-      params: { id: "42" },
-    });
+		await resolveChatContext({
+			...base,
+			routeId: '/(app)/applications/[id]',
+			params: { id: '42' }
+		});
 
-    const [declared] = mockResolveCapabilities.mock.calls[0];
-    expect(declared).toContain("edit_application_details");
-    expect(declared).toContain("edit_job_details");
-    expect(declared).toContain("edit_job_description");
-    expect(declared).toContain("edit_job_skills");
-  });
+		const [declared] = mockResolveCapabilities.mock.calls[0];
+		expect(declared).toContain('edit_application_details');
+		expect(declared).toContain('edit_job_details');
+		expect(declared).toContain('edit_job_description');
+		expect(declared).toContain('edit_job_skills');
+	});
 
-  it("inherits capabilities on a nested application tab", async () => {
-    applicationRow = { id: 42, job: { title: "Staff Engineer" } };
+	it('inherits capabilities on a nested application tab', async () => {
+		applicationRow = { id: 42, job: { title: 'Staff Engineer' } };
 
-    await resolveChatContext({
-      ...base,
-      routeId: "/(app)/applications/[id]/texts",
-      params: { id: "42" },
-    });
+		await resolveChatContext({
+			...base,
+			routeId: '/(app)/applications/[id]/texts',
+			params: { id: '42' }
+		});
 
-    expect(mockResolveCapabilities.mock.calls[0][0]).toContain(
-      "edit_application_details",
-    );
-  });
+		expect(mockResolveCapabilities.mock.calls[0][0]).toContain('edit_application_details');
+	});
 
-  it("offers nothing on a page with no capabilities declared", async () => {
-    const { capabilities } = await resolveChatContext({
-      ...base,
-      routeId: "/(app)/profile",
-      params: {},
-    });
+	it('offers nothing on a page with no capabilities declared', async () => {
+		const { capabilities } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/profile',
+			params: {}
+		});
 
-    expect(mockResolveCapabilities).toHaveBeenCalledWith(
-      [],
-      null,
-      expect.anything(),
-    );
-    expect(capabilities).toEqual([]);
-  });
+		expect(mockResolveCapabilities).toHaveBeenCalledWith([], null, expect.anything());
+		expect(capabilities).toEqual([]);
+	});
 
-  it("passes staff status through to the registry rather than assuming it", async () => {
-    // Staff can edit manual jobs they didn't import, so this flag decides real
-    // access. It comes from the session — never from the request body, which is
-    // where the route and params come from.
-    jobRow = { id: 5, title: "Backend Engineer" };
+	it('passes staff status through to the registry rather than assuming it', async () => {
+		// Staff can edit manual jobs they didn't import, so this flag decides real
+		// access. It comes from the session — never from the request body, which is
+		// where the route and params come from.
+		jobRow = { id: 5, title: 'Backend Engineer' };
 
-    await resolveChatContext({
-      ...base,
-      isStaff: true,
-      routeId: "/(app)/jobs/[id]",
-      params: { id: "5" },
-    });
+		await resolveChatContext({
+			...base,
+			isStaff: true,
+			routeId: '/(app)/jobs/[id]',
+			params: { id: '5' }
+		});
 
-    expect(mockResolveCapabilities).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      { profileId: 7, isStaff: true },
-    );
-  });
+		expect(mockResolveCapabilities).toHaveBeenCalledWith(expect.anything(), expect.anything(), {
+			profileId: 7,
+			isStaff: true
+		});
+	});
 
-  it("still resolves capabilities when the entity did not resolve", async () => {
-    // resolveCapabilities is what decides a null entity means nothing to act
-    // on — chat-context must not silently skip the call and let a stale
-    // capability list survive.
-    applicationRow = null;
+	it('still resolves capabilities when the entity did not resolve', async () => {
+		// resolveCapabilities is what decides a null entity means nothing to act
+		// on — chat-context must not silently skip the call and let a stale
+		// capability list survive.
+		applicationRow = null;
 
-    await resolveChatContext({
-      ...base,
-      routeId: "/(app)/applications/[id]",
-      params: { id: "9999" },
-    });
+		await resolveChatContext({
+			...base,
+			routeId: '/(app)/applications/[id]',
+			params: { id: '9999' }
+		});
 
-    expect(mockResolveCapabilities).toHaveBeenCalledWith(
-      expect.anything(),
-      null,
-      expect.anything(),
-    );
-  });
+		expect(mockResolveCapabilities).toHaveBeenCalledWith(
+			expect.anything(),
+			null,
+			expect.anything()
+		);
+	});
 });

@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from 'crypto';
 
 /**
  * Generate a random token string (lowercase alphanumeric)
@@ -6,11 +6,11 @@ import crypto from "crypto";
  * @returns Random token string
  */
 export function generateToken(length: number = 10): string {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  const randomBytes = crypto.randomBytes(length);
-  return Array.from(randomBytes)
-    .map((byte) => chars[byte % chars.length])
-    .join("");
+	const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+	const randomBytes = crypto.randomBytes(length);
+	return Array.from(randomBytes)
+		.map((byte) => chars[byte % chars.length])
+		.join('');
 }
 
 /**
@@ -19,5 +19,5 @@ export function generateToken(length: number = 10): string {
  * @returns SHA-256 hash of the token
  */
 export function hashToken(token: string): string {
-  return crypto.createHash("sha256").update(token).digest("hex");
+	return crypto.createHash('sha256').update(token).digest('hex');
 }

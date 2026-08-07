@@ -23,39 +23,39 @@
  * picked up automatically rather than silently shipping broken.
  */
 
-import * as esbuild from "esbuild";
-import fs from "node:fs";
-import path from "node:path";
+import * as esbuild from 'esbuild';
+import fs from 'node:fs';
+import path from 'node:path';
 
-const root = path.resolve(import.meta.dirname, "..");
-const scriptsDir = path.join(root, "scripts");
-const outDir = path.join(root, "dist-scripts");
+const root = path.resolve(import.meta.dirname, '..');
+const scriptsDir = path.join(root, 'scripts');
+const outDir = path.join(root, 'dist-scripts');
 
 const entryPoints = fs
-  .readdirSync(scriptsDir)
-  .filter((f) => f.endsWith(".ts"))
-  .filter((f) => /\$lib/.test(fs.readFileSync(path.join(scriptsDir, f), "utf8")))
-  .map((f) => path.join(scriptsDir, f))
-  .sort();
+	.readdirSync(scriptsDir)
+	.filter((f) => f.endsWith('.ts'))
+	.filter((f) => /\$lib/.test(fs.readFileSync(path.join(scriptsDir, f), 'utf8')))
+	.map((f) => path.join(scriptsDir, f))
+	.sort();
 
 if (entryPoints.length === 0) {
-  console.error("No scripts import $lib — that is almost certainly wrong.");
-  process.exit(1);
+	console.error('No scripts import $lib — that is almost certainly wrong.');
+	process.exit(1);
 }
 
 fs.rmSync(outDir, { recursive: true, force: true });
 
 await esbuild.build({
-  entryPoints,
-  outdir: outDir,
-  outExtension: { ".js": ".mjs" },
-  bundle: true,
-  platform: "node",
-  format: "esm",
-  target: "node22",
-  packages: "external",
-  alias: { $lib: path.join(root, "src/lib") },
-  logLevel: "warning",
+	entryPoints,
+	outdir: outDir,
+	outExtension: { '.js': '.mjs' },
+	bundle: true,
+	platform: 'node',
+	format: 'esm',
+	target: 'node22',
+	packages: 'external',
+	alias: { $lib: path.join(root, 'src/lib') },
+	logLevel: 'warning'
 });
 
 console.log(`Bundled ${entryPoints.length} ops scripts -> dist-scripts/`);

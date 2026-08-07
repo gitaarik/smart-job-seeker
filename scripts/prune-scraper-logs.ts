@@ -35,95 +35,101 @@
  * server and let autovacuum reuse the space instead. Note the screenshot files
  * are freed immediately either way — --vacuum only concerns the tables.
  */
-import { sql } from "drizzle-orm";
-import { dbDirect as db, queryRawDirect } from "$lib/server/db";
+import { sql } from 'drizzle-orm';
+import { dbDirect as db, queryRawDirect } from '$lib/server/db';
 import {
-  pruneScraperLogs,
-  pruneScraperScreenshots,
-  SCREENSHOTS_ROOT,
-} from "$lib/server/scraper-logs/retention";
-import { readdir, stat } from "node:fs/promises";
-import { join } from "node:path";
+	pruneScraperLogs,
+	pruneScraperScreenshots,
+	SCREENSHOTS_ROOT
+} from '$lib/server/scraper-logs/retention';
+import { readdir, stat } from 'node:fs/promises';
+import { join } from 'node:path';
 
 const args = process.argv.slice(2);
-const apply = args.includes("--apply");
-const doVacuum = args.includes("--vacuum");
-const daysArg = args.indexOf("--days");
+const apply = args.includes('--apply');
+const doVacuum = args.includes('--vacuum');
+const daysArg = args.indexOf('--days');
 const days = daysArg >= 0 ? parseInt(args[daysArg + 1], 10) : 30;
 
 if (!Number.isFinite(days) || days < 1) {
-  console.error(`Invalid --days value: ${args[daysArg + 1]}`);
-  process.exit(1);
+	console.error(`Invalid --days value: ${args[daysArg + 1]}`);
+	process.exit(1);
 }
 
 const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
 /** Count and size what the sweep would remove, without removing it. */
 async function surveyScreenshots(root: string) {
-  const cutoffMs = cutoff.getTime();
-  let dirs = 0, files = 0, bytes = 0;
-  let liveDirs = 0, liveFiles = 0, liveBytes = 0;
+	const cutoffMs = cutoff.getTime();
+	let dirs = 0,
+		files = 0,
+		bytes = 0;
+	let liveDirs = 0,
+		liveFiles = 0,
+		liveBytes = 0;
 
-  let taskDirs: string[];
-  try {
-    taskDirs = await readdir(root);
-  } catch {
-    return { dirs, files, bytes, liveDirs, liveFiles, liveBytes, missing: true };
-  }
+	let taskDirs: string[];
+	try {
+		taskDirs = await readdir(root);
+	} catch {
+		return { dirs, files, bytes, liveDirs, liveFiles, liveBytes, missing: true };
+	}
 
-  for (const task of taskDirs) {
-    const taskPath = join(root, task);
-    let runDirs: string[];
-    try {
-      runDirs = await readdir(taskPath);
-    } catch {
-      continue;
-    }
-    for (const run of runDirs) {
-      const runPath = join(taskPath, run);
-      let entries: string[];
-      try {
-        entries = await readdir(runPath);
-      } catch {
-        continue;
-      }
-      let newest = 0, size = 0, count = 0;
-      for (const e of entries) {
-        try {
-          const info = await stat(join(runPath, e));
-          newest = Math.max(newest, info.mtimeMs);
-          size += info.size;
-          count++;
-        } catch { /* vanished mid-scan */ }
-      }
-      if (newest < cutoffMs) {
-        dirs++;
-        files += count;
-        bytes += size;
-      } else {
-        liveDirs++;
-        liveFiles += count;
-        liveBytes += size;
-      }
-    }
-  }
-  return { dirs, files, bytes, liveDirs, liveFiles, liveBytes, missing: false };
+	for (const task of taskDirs) {
+		const taskPath = join(root, task);
+		let runDirs: string[];
+		try {
+			runDirs = await readdir(taskPath);
+		} catch {
+			continue;
+		}
+		for (const run of runDirs) {
+			const runPath = join(taskPath, run);
+			let entries: string[];
+			try {
+				entries = await readdir(runPath);
+			} catch {
+				continue;
+			}
+			let newest = 0,
+				size = 0,
+				count = 0;
+			for (const e of entries) {
+				try {
+					const info = await stat(join(runPath, e));
+					newest = Math.max(newest, info.mtimeMs);
+					size += info.size;
+					count++;
+				} catch {
+					/* vanished mid-scan */
+				}
+			}
+			if (newest < cutoffMs) {
+				dirs++;
+				files += count;
+				bytes += size;
+			} else {
+				liveDirs++;
+				liveFiles += count;
+				liveBytes += size;
+			}
+		}
+	}
+	return { dirs, files, bytes, liveDirs, liveFiles, liveBytes, missing: false };
 }
 
 async function main() {
-  console.log(`Pruning scraper telemetry older than ${days} days`);
-  console.log(`  cutoff:  ${cutoff.toISOString()}`);
-  console.log(
-    `  mode:    ${apply ? "APPLY" : "dry run (pass --apply to write)"}`,
-  );
-  console.log("");
+	console.log(`Pruning scraper telemetry older than ${days} days`);
+	console.log(`  cutoff:  ${cutoff.toISOString()}`);
+	console.log(`  mode:    ${apply ? 'APPLY' : 'dry run (pass --apply to write)'}`);
+	console.log('');
 
-  const [before] = await queryRawDirect<{
-    logs_total: string;
-    logs_prunable: string;
-    steps_total: string;
-    logs_bytes: string;
-  }>(sql`
+	const [before] = await queryRawDirect<{
+		logs_total: string;
+		logs_prunable: string;
+		steps_total: string;
+		logs_bytes: string;
+	}>(sql`
     SELECT
       (SELECT count(*) FROM scraper_logs)::text AS logs_total,
       (SELECT count(*) FROM scraper_logs WHERE timestamp < ${cutoff})::text
@@ -132,75 +138,76 @@ async function main() {
       pg_size_pretty(pg_total_relation_size('scraper_logs')) AS logs_bytes
   `);
 
-  console.log("scraper_logs");
-  console.log(`  rows total:     ${before.logs_total}`);
-  console.log(`  rows prunable:  ${before.logs_prunable}`);
-  console.log(`  table size:     ${before.logs_bytes}`);
-  console.log(`  steps total:    ${before.steps_total}`);
+	console.log('scraper_logs');
+	console.log(`  rows total:     ${before.logs_total}`);
+	console.log(`  rows prunable:  ${before.logs_prunable}`);
+	console.log(`  table size:     ${before.logs_bytes}`);
+	console.log(`  steps total:    ${before.steps_total}`);
 
-  const shots = await surveyScreenshots(SCREENSHOTS_ROOT);
-  console.log("");
-  console.log(`screenshots (${SCREENSHOTS_ROOT})`);
-  if (shots.missing) {
-    console.log("  volume not mounted here — nothing to sweep");
-  } else {
-    console.log(
-      `  keeping:        ${shots.liveFiles} file(s) in ${shots.liveDirs} run ` +
-        `dir(s), ${(shots.liveBytes / 1e6).toFixed(1)} MB`,
-    );
-    console.log(
-      `  sweeping:       ${shots.files} file(s) in ${shots.dirs} run dir(s), ` +
-        `${(shots.bytes / 1e6).toFixed(1)} MB`,
-    );
-  }
+	const shots = await surveyScreenshots(SCREENSHOTS_ROOT);
+	console.log('');
+	console.log(`screenshots (${SCREENSHOTS_ROOT})`);
+	if (shots.missing) {
+		console.log('  volume not mounted here — nothing to sweep');
+	} else {
+		console.log(
+			`  keeping:        ${shots.liveFiles} file(s) in ${shots.liveDirs} run ` +
+				`dir(s), ${(shots.liveBytes / 1e6).toFixed(1)} MB`
+		);
+		console.log(
+			`  sweeping:       ${shots.files} file(s) in ${shots.dirs} run dir(s), ` +
+				`${(shots.bytes / 1e6).toFixed(1)} MB`
+		);
+	}
 
-  if (!apply) {
-    console.log("\nDry run — no changes written.");
-    return;
-  }
+	if (!apply) {
+		console.log('\nDry run — no changes written.');
+		return;
+	}
 
-  // Same code path the worker runs on a schedule, looped until drained — the
-  // manual run is expected to clear the whole backlog in one go.
-  console.log("\nDeleting log rows…");
-  let logs = 0, steps = 0;
-  for (;;) {
-    const r = await pruneScraperLogs({ days });
-    logs += r.logsDeleted;
-    steps += r.stepsDeleted;
-    if (!r.moreRemaining) break;
-    console.log(`  …${logs} rows so far`);
-  }
-  console.log(`  deleted ${logs} log row(s), ${steps} step row(s)`);
+	// Same code path the worker runs on a schedule, looped until drained — the
+	// manual run is expected to clear the whole backlog in one go.
+	console.log('\nDeleting log rows…');
+	let logs = 0,
+		steps = 0;
+	for (;;) {
+		const r = await pruneScraperLogs({ days });
+		logs += r.logsDeleted;
+		steps += r.stepsDeleted;
+		if (!r.moreRemaining) break;
+		console.log(`  …${logs} rows so far`);
+	}
+	console.log(`  deleted ${logs} log row(s), ${steps} step row(s)`);
 
-  console.log("\nSweeping screenshots…");
-  const swept = await pruneScraperScreenshots({ days });
-  console.log(
-    `  removed ${swept.filesRemoved} file(s) in ${swept.dirsRemoved} run ` +
-      `dir(s), ${(swept.bytesFreed / 1e6).toFixed(1)} MB freed`,
-  );
+	console.log('\nSweeping screenshots…');
+	const swept = await pruneScraperScreenshots({ days });
+	console.log(
+		`  removed ${swept.filesRemoved} file(s) in ${swept.dirsRemoved} run ` +
+			`dir(s), ${(swept.bytesFreed / 1e6).toFixed(1)} MB freed`
+	);
 
-  if (doVacuum) {
-    // VACUUM FULL cannot run inside a transaction block.
-    console.log("\nVACUUM FULL scraper_logs — this locks the table…");
-    await db.execute(sql`VACUUM FULL scraper_logs`);
-    console.log("  done");
-  } else {
-    console.log(
-      "\nSkipped VACUUM FULL — table space is marked reusable but the file " +
-        "has not shrunk. Re-run with --vacuum to reclaim it. (Screenshot " +
-        "space was freed immediately.)",
-    );
-  }
+	if (doVacuum) {
+		// VACUUM FULL cannot run inside a transaction block.
+		console.log('\nVACUUM FULL scraper_logs — this locks the table…');
+		await db.execute(sql`VACUUM FULL scraper_logs`);
+		console.log('  done');
+	} else {
+		console.log(
+			'\nSkipped VACUUM FULL — table space is marked reusable but the file ' +
+				'has not shrunk. Re-run with --vacuum to reclaim it. (Screenshot ' +
+				'space was freed immediately.)'
+		);
+	}
 
-  const [after] = await queryRawDirect<{ bytes: string }>(sql`
+	const [after] = await queryRawDirect<{ bytes: string }>(sql`
     SELECT pg_size_pretty(pg_total_relation_size('scraper_logs')) AS bytes
   `);
-  console.log(`\n  scraper_logs size now: ${after.bytes}`);
+	console.log(`\n  scraper_logs size now: ${after.bytes}`);
 }
 
 main()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+	.then(() => process.exit(0))
+	.catch((err) => {
+		console.error(err);
+		process.exit(1);
+	});

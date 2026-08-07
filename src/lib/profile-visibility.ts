@@ -18,7 +18,7 @@
  */
 
 /** Tags naming a base template rather than a user-defined version. */
-export const BASE_TEMPLATE_TAGS = ["resume", "cv"];
+export const BASE_TEMPLATE_TAGS = ['resume', 'cv'];
 
 /**
  * Field marking a held-back skill inside the `collected_data` AI snapshot.
@@ -28,7 +28,7 @@ export const BASE_TEMPLATE_TAGS = ["resume", "cv"];
  * also hid them from job matching, which is the one thing they exist to do.
  * Consumers strip the flag — or the whole entry — on the way into a prompt.
  */
-export const PROFILE_ONLY_FLAG = "profile_only";
+export const PROFILE_ONLY_FLAG = 'profile_only';
 
 /**
  * What a profile holds for one skill, in the terms this module defines. Lives
@@ -36,28 +36,28 @@ export const PROFILE_ONLY_FLAG = "profile_only";
  * type without importing a server-only module.
  */
 export interface ProfileSkillRef {
-  id: number;
-  name: string;
-  level: string | null;
-  categoryId: number;
-  /** Held back from every base template — kept for matching, off documents. */
-  profileOnly: boolean;
-  /** Versions it is re-admitted on despite that. */
-  versions: string[];
+	id: number;
+	name: string;
+	level: string | null;
+	categoryId: number;
+	/** Held back from every base template — kept for matching, off documents. */
+	profileOnly: boolean;
+	/** Versions it is re-admitted on despite that. */
+	versions: string[];
 }
 
 /** The version/template slug of a tag, ignoring a leading "!" negation marker. */
 export function tagSlug(tag: string): string {
-  return tag.trim().replace(/^!/, "").trim().toLowerCase();
+	return tag.trim().replace(/^!/, '').trim().toLowerCase();
 }
 
 /** Whether a tag is an exclusion (`!slug`) rather than an include. */
 export function isNegated(tag: string): boolean {
-  return tag.trim().startsWith("!");
+	return tag.trim().startsWith('!');
 }
 
 function asTagList(tags: string[] | null | undefined): string[] {
-  return Array.isArray(tags) ? tags.filter((t) => typeof t === "string") : [];
+	return Array.isArray(tags) ? tags.filter((t) => typeof t === 'string') : [];
 }
 
 /**
@@ -65,8 +65,8 @@ function asTagList(tags: string[] | null | undefined): string[] {
  * matching but off all documents (barring a per-version re-admit).
  */
 export function isProfileOnly(tags: string[] | null | undefined): boolean {
-  const negated = new Set(asTagList(tags).filter(isNegated).map(tagSlug));
-  return BASE_TEMPLATE_TAGS.every((t) => negated.has(t));
+	const negated = new Set(asTagList(tags).filter(isNegated).map(tagSlug));
+	return BASE_TEMPLATE_TAGS.every((t) => negated.has(t));
 }
 
 /**
@@ -77,20 +77,14 @@ export function isProfileOnly(tags: string[] | null | undefined): boolean {
  * degrades to "shown, but only on the senior version" rather than losing that
  * restriction. Returns a plain array — callers normalise empty to null.
  */
-export function setProfileOnly(
-  tags: string[] | null | undefined,
-  profileOnly: boolean,
-): string[] {
-  const list = asTagList(tags);
-  const isBase = (t: string) => BASE_TEMPLATE_TAGS.includes(tagSlug(t));
+export function setProfileOnly(tags: string[] | null | undefined, profileOnly: boolean): string[] {
+	const list = asTagList(tags);
+	const isBase = (t: string) => BASE_TEMPLATE_TAGS.includes(tagSlug(t));
 
-  if (!profileOnly) {
-    return list.filter((t) => !(isNegated(t) && isBase(t)));
-  }
-  return [
-    ...BASE_TEMPLATE_TAGS.map((t) => `!${t}`),
-    ...list.filter((t) => !isBase(t)),
-  ];
+	if (!profileOnly) {
+		return list.filter((t) => !(isNegated(t) && isBase(t)));
+	}
+	return [...BASE_TEMPLATE_TAGS.map((t) => `!${t}`), ...list.filter((t) => !isBase(t))];
 }
 
 /**
@@ -98,9 +92,9 @@ export function setProfileOnly(
  * user-defined version rather than a base template.
  */
 export function versionsOf(tags: string[] | null | undefined): string[] {
-  return asTagList(tags)
-    .filter((t) => !isNegated(t) && !BASE_TEMPLATE_TAGS.includes(tagSlug(t)))
-    .map((t) => t.trim());
+	return asTagList(tags)
+		.filter((t) => !isNegated(t) && !BASE_TEMPLATE_TAGS.includes(tagSlug(t)))
+		.map((t) => t.trim());
 }
 
 /**
@@ -108,18 +102,15 @@ export function versionsOf(tags: string[] | null | undefined): string[] {
  * `!version` exclusions alone — those answer a different question and an editor
  * changing which versions an item appears on shouldn't silently drop them.
  */
-export function setVersions(
-  tags: string[] | null | undefined,
-  versions: string[],
-): string[] {
-  const kept = asTagList(tags).filter(
-    (t) => isNegated(t) || BASE_TEMPLATE_TAGS.includes(tagSlug(t)),
-  );
-  return [...kept, ...versions.map((v) => v.trim()).filter(Boolean)];
+export function setVersions(tags: string[] | null | undefined, versions: string[]): string[] {
+	const kept = asTagList(tags).filter(
+		(t) => isNegated(t) || BASE_TEMPLATE_TAGS.includes(tagSlug(t))
+	);
+	return [...kept, ...versions.map((v) => v.trim()).filter(Boolean)];
 }
 
 /** Where a held-back item is being lifted to: every document, or one version. */
-export const SHOW_ON_ALL = "all";
+export const SHOW_ON_ALL = 'all';
 
 /**
  * Tags for "put this item on `target`" — either `SHOW_ON_ALL` or a version slug.
@@ -133,15 +124,12 @@ export const SHOW_ON_ALL = "all";
  * request to "on that one version". Explicit `!version` excludes survive: those
  * say "never here" regardless.
  */
-export function tagsForShowOn(
-  tags: string[] | null | undefined,
-  target: string,
-): string[] {
-  const list = asTagList(tags);
+export function tagsForShowOn(tags: string[] | null | undefined, target: string): string[] {
+	const list = asTagList(tags);
 
-  if (target === SHOW_ON_ALL) {
-    return setProfileOnly(list, false).filter(isNegated);
-  }
-  const slug = target.trim().toLowerCase();
-  return list.some((t) => tagSlug(t) === slug) ? list : [...list, target];
+	if (target === SHOW_ON_ALL) {
+		return setProfileOnly(list, false).filter(isNegated);
+	}
+	const slug = target.trim().toLowerCase();
+	return list.some((t) => tagSlug(t) === slug) ? list : [...list, target];
 }

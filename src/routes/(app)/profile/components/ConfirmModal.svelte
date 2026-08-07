@@ -1,109 +1,97 @@
 <script lang="ts">
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faExclamationTriangle, faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
-  import { portalToBody } from "$lib/actions/portal";
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faExclamationTriangle, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
+	import { portalToBody } from '$lib/actions/portal';
 
-  interface Props {
-    isOpen: boolean;
-    title?: string;
-    message?: string;
-    confirmLabel?: string;
-    cancelLabel?: string;
-    variant?: "destructive" | "primary";
-    onConfirm: () => void;
-    onCancel: () => void;
-  }
+	interface Props {
+		isOpen: boolean;
+		title?: string;
+		message?: string;
+		confirmLabel?: string;
+		cancelLabel?: string;
+		variant?: 'destructive' | 'primary';
+		onConfirm: () => void;
+		onCancel: () => void;
+	}
 
-  let {
-    isOpen,
-    title = "Confirm",
-    message = "Are you sure?",
-    confirmLabel = "Confirm",
-    cancelLabel = "Cancel",
-    variant = "destructive",
-    onConfirm,
-    onCancel,
-  }: Props = $props();
+	let {
+		isOpen,
+		title = 'Confirm',
+		message = 'Are you sure?',
+		confirmLabel = 'Confirm',
+		cancelLabel = 'Cancel',
+		variant = 'destructive',
+		onConfirm,
+		onCancel
+	}: Props = $props();
 
-  const iconBg = $derived(
-    variant === "destructive"
-      ? "bg-[var(--dash-error-light)]"
-      : "bg-[var(--dash-primary)]/10"
-  );
-  const iconColor = $derived(
-    variant === "destructive"
-      ? "text-[var(--dash-error)]"
-      : "text-[var(--dash-primary)]"
-  );
-  const icon = $derived(
-    variant === "destructive" ? faExclamationTriangle : faQuestionCircle
-  );
-  const btnClass = $derived(
-    variant === "destructive"
-      ? "bg-[var(--dash-error)] text-white"
-      : "bg-[var(--dash-primary)] text-white"
-  );
+	const iconBg = $derived(
+		variant === 'destructive' ? 'bg-[var(--dash-error-light)]' : 'bg-[var(--dash-primary)]/10'
+	);
+	const iconColor = $derived(
+		variant === 'destructive' ? 'text-[var(--dash-error)]' : 'text-[var(--dash-primary)]'
+	);
+	const icon = $derived(variant === 'destructive' ? faExclamationTriangle : faQuestionCircle);
+	const btnClass = $derived(
+		variant === 'destructive'
+			? 'bg-[var(--dash-error)] text-white'
+			: 'bg-[var(--dash-primary)] text-white'
+	);
 </script>
 
 {#if isOpen}
-  <!-- Backdrop -->
-  <div
-    use:portalToBody
-    class="fixed inset-0 bg-black/50 z-40"
-    onclick={onCancel}
-    role="button"
-    tabindex="-1"
-    aria-label="Close modal"
-  >
-  </div>
+	<!-- Backdrop -->
+	<div
+		use:portalToBody
+		class="fixed inset-0 z-40 bg-black/50"
+		onclick={onCancel}
+		role="button"
+		tabindex="-1"
+		aria-label="Close modal"
+	></div>
 
-  <!-- Modal -->
-  <div
-    use:portalToBody={{ onClose: onCancel }}
-    class="fixed inset-0 z-50 flex items-center justify-center p-4"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-title"
-  >
-    <div
-      class="bg-[var(--dash-card)] rounded-xl shadow-xl max-w-md w-full p-6"
-      onclick={(e) => e.stopPropagation()}
-      onkeydown={() => {}}
-      role="document"
-    >
-      <div class="flex items-start gap-4">
-        <div
-          class="w-10 h-10 rounded-full {iconBg} flex items-center justify-center flex-shrink-0"
-        >
-          <FontAwesomeIcon
-            {icon}
-            class="w-5 h-5 {iconColor}"
-          />
-        </div>
-        <div>
-          <h3 id="modal-title" class="text-lg font-semibold text-[var(--dash-text)] mb-2">
-            {title}
-          </h3>
-          <p class="text-[var(--dash-text-secondary)] text-sm whitespace-pre-line">{message}</p>
-        </div>
-      </div>
+	<!-- Modal -->
+	<div
+		use:portalToBody={{ onClose: onCancel }}
+		class="fixed inset-0 z-50 flex items-center justify-center p-4"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="modal-title"
+	>
+		<div
+			class="w-full max-w-md rounded-xl bg-[var(--dash-card)] p-6 shadow-xl"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={() => {}}
+			role="document"
+		>
+			<div class="flex items-start gap-4">
+				<div class="h-10 w-10 rounded-full {iconBg} flex flex-shrink-0 items-center justify-center">
+					<FontAwesomeIcon {icon} class="h-5 w-5 {iconColor}" />
+				</div>
+				<div>
+					<h3 id="modal-title" class="mb-2 text-lg font-semibold text-[var(--dash-text)]">
+						{title}
+					</h3>
+					<p class="text-sm whitespace-pre-line text-[var(--dash-text-secondary)]">{message}</p>
+				</div>
+			</div>
 
-      <div class="flex justify-end gap-3 mt-6">
-        <button
-          type="button"
-          onclick={onCancel}
-          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-        >
-          {cancelLabel}
-        </button>
-        <button
-          type="button"
-          onclick={onConfirm}
-          class="px-4 py-2 {btnClass} rounded-lg hover:opacity-90 transition-colors"
-        >
-          {confirmLabel}
-        </button>
-      </div>
-    </div>
-  </div>
+			<div class="mt-6 flex justify-end gap-3">
+				<button
+					type="button"
+					onclick={onCancel}
+					class="rounded-lg border border-[var(--dash-border)] px-4 py-2 text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
+				>
+					{cancelLabel}
+				</button>
+				<button
+					type="button"
+					onclick={onConfirm}
+					class="px-4 py-2 {btnClass} rounded-lg transition-colors hover:opacity-90"
+				>
+					{confirmLabel}
+				</button>
+			</div>
+		</div>
+	</div>
 {/if}

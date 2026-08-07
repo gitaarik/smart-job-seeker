@@ -25,28 +25,28 @@ export function getEnv(envVar: string): string;
 export function getEnv(envVar: string, defaultValue: string): string;
 export function getEnv(envVar: string, options: GetEnvOptions): string | undefined;
 export function getEnv(
-  envVar: string,
-  defaultOrOptions?: string | GetEnvOptions,
+	envVar: string,
+	defaultOrOptions?: string | GetEnvOptions
 ): string | undefined {
-  // Option 1: Default value provided - return env var or default
-  if (typeof defaultOrOptions === "string") {
-    return process.env[envVar] ?? defaultOrOptions;
-  }
+	// Option 1: Default value provided - return env var or default
+	if (typeof defaultOrOptions === 'string') {
+		return process.env[envVar] ?? defaultOrOptions;
+	}
 
-  // Option 2: allowEmpty option - return undefined if not set
-  if (defaultOrOptions?.allowEmpty) {
-    return process.env[envVar] || undefined;
-  }
+	// Option 2: allowEmpty option - return undefined if not set
+	if (defaultOrOptions?.allowEmpty) {
+		return process.env[envVar] || undefined;
+	}
 
-  // Option 3: Required (default behavior) - throw if missing/empty
-  const value = process.env[envVar];
-  if (!value) {
-    // During SvelteKit's postbuild analysis, all server modules are imported
-    // to analyse routes. Return a placeholder instead of crashing the build.
-    if (process.env.SJS_BUILDING === "true") {
-      return `__build_placeholder_${envVar}__`;
-    }
-    throw new Error(`Environment variable ${envVar} is not set`);
-  }
-  return value;
+	// Option 3: Required (default behavior) - throw if missing/empty
+	const value = process.env[envVar];
+	if (!value) {
+		// During SvelteKit's postbuild analysis, all server modules are imported
+		// to analyse routes. Return a placeholder instead of crashing the build.
+		if (process.env.SJS_BUILDING === 'true') {
+			return `__build_placeholder_${envVar}__`;
+		}
+		throw new Error(`Environment variable ${envVar} is not set`);
+	}
+	return value;
 }

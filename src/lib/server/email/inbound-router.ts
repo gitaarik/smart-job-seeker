@@ -6,26 +6,23 @@
  * All emails are stored in the inbound_emails table for debugging/admin review.
  */
 
-import { db } from "$lib/server/db";
-import { inbound_emails } from "$lib/server/db/schema";
-import {
-  extractTokenFromRecipient,
-  processInboundEmail,
-} from "./verification-relay";
+import { db } from '$lib/server/db';
+import { inbound_emails } from '$lib/server/db/schema';
+import { extractTokenFromRecipient, processInboundEmail } from './verification-relay';
 
 export interface InboundEmail {
-  recipient: string;
-  fromAddress: string;
-  subject: string | null;
-  bodyText: string | null;
-  bodyHtml: string | null;
+	recipient: string;
+	fromAddress: string;
+	subject: string | null;
+	bodyText: string | null;
+	bodyHtml: string | null;
 }
 
 export interface RouteResult {
-  success: boolean;
-  handler: string;
-  message: string;
-  [key: string]: unknown;
+	success: boolean;
+	handler: string;
+	message: string;
+	[key: string]: unknown;
 }
 
 /**
@@ -37,63 +34,65 @@ export interface RouteResult {
  *   *                 → stored and dropped (unknown recipient)
  */
 export async function routeInboundEmail(email: InboundEmail): Promise<RouteResult> {
-  const localPart = email.recipient.split("@")[0]?.toLowerCase() || "";
+	const localPart = email.recipient.split('@')[0]?.toLowerCase() || '';
 
-  // --- verify-{token}@ → verification relay ---
-  // (stores its own record in inbound_emails)
-  const verifyToken = extractTokenFromRecipient(email.recipient);
-  if (verifyToken) {
-    const result = await processInboundEmail({
-      recipientToken: verifyToken,
-      fromAddress: email.fromAddress,
-      subject: email.subject,
-      bodyText: email.bodyText,
-      bodyHtml: email.bodyHtml,
-    });
+	// --- verify-{token}@ → verification relay ---
+	// (stores its own record in inbound_emails)
+	const verifyToken = extractTokenFromRecipient(email.recipient);
+	if (verifyToken) {
+		const result = await processInboundEmail({
+			recipientToken: verifyToken,
+			fromAddress: email.fromAddress,
+			subject: email.subject,
+			bodyText: email.bodyText,
+			bodyHtml: email.bodyHtml
+		});
 
-    return {
-      success: result.success,
-      handler: "verification-relay",
-      message: result.message,
-      profileId: result.profileId,
-      runId: result.runId,
-      extractedCode: result.extractedCode ? "***" : undefined,
-      hasLink: !!result.extractedLink,
-    };
-  }
+		return {
+			success: result.success,
+			handler: 'verification-relay',
+			message: result.message,
+			profileId: result.profileId,
+			runId: result.runId,
+			extractedCode: result.extractedCode ? '***' : undefined,
+			hasLink: !!result.extractedLink
+		};
+	}
 
-  // --- noreply@ → store and drop ---
-  if (localPart === "noreply" || localPart === "no-reply") {
-    await storeEmail(email, "noreply", "dropped");
-    console.log(`[email/router] Dropping email to noreply: from=${email.fromAddress}`);
-    return {
-      success: true,
-      handler: "noreply",
-      message: "Email dropped (noreply address)",
-    };
-  }
+	// --- noreply@ → store and drop ---
+	if (localPart === 'noreply' || localPart === 'no-reply') {
+		await storeEmail(email, 'noreply', 'dropped');
+		console.log(`[email/router] Dropping email to noreply: from=${email.fromAddress}`);
+		return {
+			success: true,
+			handler: 'noreply',
+			message: 'Email dropped (noreply address)'
+		};
+	}
 
-  // --- Unknown recipient → store and drop ---
-  await storeEmail(email, "unhandled", "received");
-  console.log(`[email/router] Unhandled recipient: ${email.recipient} from=${email.fromAddress} subject="${email.subject || ""}"`);
-  return {
-    success: true,
-    handler: "unhandled",
-    message: `No handler for recipient: ${localPart}@...`,
-  };
+	// --- Unknown recipient → store and drop ---
+	await storeEmail(email, 'unhandled', 'received');
+	console.log(
+		`[email/router] Unhandled recipient: ${email.recipient} from=${email.fromAddress} subject="${email.subject || ''}"`
+	);
+	return {
+		success: true,
+		handler: 'unhandled',
+		message: `No handler for recipient: ${localPart}@...`
+	};
 }
 
 /**
  * Store an inbound email in the database for admin review.
  */
 async function storeEmail(email: InboundEmail, handler: string, status: string) {
-  await db.insert(inbound_emails).values({
-    recipient: email.recipient,
-    handler,
-    from_address: email.fromAddress,
-    subject: email.subject?.slice(0, 500) || null,
-    body_text: email.bodyText,
-    body_html: email.bodyHtml,
-    status,
-  });
+	await db.insert(inbound_emails).values({
+		recipient: email.recipient,
+		handler,
+		from_address: email.fromAddress,
+		subject: email.subject?.slice(0, 500) || null,
+		body_text: email.bodyText,
+		body_html: email.bodyHtml,
+		status
+	});
 }

@@ -13,21 +13,21 @@
  * Run via: npx tsx scripts/migrate-deploy.ts
  */
 
-import { drizzle } from "drizzle-orm/node-postgres";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
-import pg from "pg";
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import pg from 'pg';
 
 const url = process.env.SJS_DATABASE_URL;
 if (!url) {
-  console.error("SJS_DATABASE_URL is required");
-  process.exit(2);
+	console.error('SJS_DATABASE_URL is required');
+	process.exit(2);
 }
 
 const client = new pg.Client({ connectionString: url });
 await client.connect();
 try {
-  await migrate(drizzle(client), { migrationsFolder: "./drizzle" });
-  console.log("migrate: OK");
+	await migrate(drizzle(client), { migrationsFolder: './drizzle' });
+	console.log('migrate: OK');
 } finally {
-  await client.end();
+	await client.end();
 }

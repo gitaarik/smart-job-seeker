@@ -3,47 +3,44 @@
  * Handles generating and updating full prompts for AI chats by combining system and user prompts
  */
 
-import { db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
-import { ai_chats } from "$lib/server/db/schema";
-import { getInterpolatedPrompts, makeFullPrompt } from "./utils";
+import { db } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
+import { ai_chats } from '$lib/server/db/schema';
+import { getInterpolatedPrompts, makeFullPrompt } from './utils';
 
 /**
  * Generate full prompt for a single AI chat
  */
 export async function generateAiChatFullPrompt(aiChatId: number): Promise<{
-  success: boolean;
-  message: string;
+	success: boolean;
+	message: string;
 }> {
-  try {
-    // Get interpolated prompts with variables replaced
-    const prompts = await getInterpolatedPrompts(aiChatId);
+	try {
+		// Get interpolated prompts with variables replaced
+		const prompts = await getInterpolatedPrompts(aiChatId);
 
-    if (!prompts) {
-      return {
-        success: false,
-        message: `AI chat with ID ${aiChatId} not found`,
-      };
-    }
+		if (!prompts) {
+			return {
+				success: false,
+				message: `AI chat with ID ${aiChatId} not found`
+			};
+		}
 
-    // Make full prompt
-    const fullPrompt = makeFullPrompt(prompts.systemPrompt, prompts.userPrompt);
+		// Make full prompt
+		const fullPrompt = makeFullPrompt(prompts.systemPrompt, prompts.userPrompt);
 
-    // Update the full_prompt field
-    await db.update(ai_chats).set({ full_prompt: fullPrompt })
-      .where(eq(ai_chats.id, aiChatId));
+		// Update the full_prompt field
+		await db.update(ai_chats).set({ full_prompt: fullPrompt }).where(eq(ai_chats.id, aiChatId));
 
-    return {
-      success: true,
-      message: `Full prompt generated for AI chat ID ${aiChatId}`,
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error
-      ? error.message
-      : "Unknown error";
-    return {
-      success: false,
-      message: `Error generating full prompt: ${errorMessage}`,
-    };
-  }
+		return {
+			success: true,
+			message: `Full prompt generated for AI chat ID ${aiChatId}`
+		};
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+		return {
+			success: false,
+			message: `Error generating full prompt: ${errorMessage}`
+		};
+	}
 }

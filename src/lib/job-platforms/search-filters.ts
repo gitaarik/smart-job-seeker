@@ -16,110 +16,105 @@
  */
 
 export type SearchFilterName =
-  | "sort_by"
-  | "time_posted"
-  | "work_location"
-  | "hours_commitment"
-  | "employment_type"
-  | "experience_level";
+	| 'sort_by'
+	| 'time_posted'
+	| 'work_location'
+	| 'hours_commitment'
+	| 'employment_type'
+	| 'experience_level';
 
 /**
  * Legacy filter names we still accept on read (jsonb data persisted by older
  * builds). Translated to the new axes via {@link normalizeFilters}.
  */
-export type LegacySearchFilterName = "job_type";
+export type LegacySearchFilterName = 'job_type';
 
-export const LEGACY_SEARCH_FILTER_NAMES: LegacySearchFilterName[] = ["job_type"];
+export const LEGACY_SEARCH_FILTER_NAMES: LegacySearchFilterName[] = ['job_type'];
 
 /** Per-filter configuration carried on `job_platform_search_presets.params`. */
 export type PresetFilterConfig =
-  | { multi: false; options: Record<string, string> }
-  | {
-    multi: true;
-    /** Query-param name (e.g. "f_WT" for LinkedIn work location). */
-    param: string;
-    /** Separator joining the chosen values (e.g. "," for LinkedIn). */
-    sep: string;
-    /** value_key → raw value emitted into the joined URL fragment. */
-    options: Record<string, string>;
-  };
+	| { multi: false; options: Record<string, string> }
+	| {
+			multi: true;
+			/** Query-param name (e.g. "f_WT" for LinkedIn work location). */
+			param: string;
+			/** Separator joining the chosen values (e.g. "," for LinkedIn). */
+			sep: string;
+			/** value_key → raw value emitted into the joined URL fragment. */
+			options: Record<string, string>;
+	  };
 
 /** User selections stored on `search_tasks.search_filters`. */
 export type SearchFilterValue = string | string[];
 
 export interface SearchFilterDefinition {
-  label: string;
-  /** Insertion order matters: the FIRST entry is the default (no fragment). */
-  values: Record<string, string>;
+	label: string;
+	/** Insertion order matters: the FIRST entry is the default (no fragment). */
+	values: Record<string, string>;
 }
 
-export const SEARCH_FILTER_DEFINITIONS: Record<
-  SearchFilterName,
-  SearchFilterDefinition
-> = {
-  sort_by: {
-    label: "Sort by",
-    values: {
-      relevance: "Relevance",
-      newest: "Newest first",
-    },
-  },
-  time_posted: {
-    label: "Posted",
-    values: {
-      any: "Any time",
-      "24h": "Last 24 hours",
-      week: "Last week",
-      month: "Last month",
-    },
-  },
-  work_location: {
-    label: "Work location",
-    values: {
-      any: "Any",
-      remote: "Remote",
-      hybrid: "Hybrid",
-      onsite: "On-site",
-    },
-  },
-  hours_commitment: {
-    label: "Hours",
-    values: {
-      any: "Any",
-      fulltime: "Full-time",
-      parttime: "Part-time",
-    },
-  },
-  employment_type: {
-    label: "Employment type",
-    values: {
-      any: "Any",
-      permanent: "Permanent",
-      contract: "Contract",
-      internship: "Internship",
-      temporary: "Temporary",
-    },
-  },
-  experience_level: {
-    label: "Experience level",
-    values: {
-      any: "Any",
-      entry: "Entry-level",
-      mid: "Mid-level",
-      senior: "Senior",
-      lead: "Lead",
-      executive: "Executive",
-    },
-  },
+export const SEARCH_FILTER_DEFINITIONS: Record<SearchFilterName, SearchFilterDefinition> = {
+	sort_by: {
+		label: 'Sort by',
+		values: {
+			relevance: 'Relevance',
+			newest: 'Newest first'
+		}
+	},
+	time_posted: {
+		label: 'Posted',
+		values: {
+			any: 'Any time',
+			'24h': 'Last 24 hours',
+			week: 'Last week',
+			month: 'Last month'
+		}
+	},
+	work_location: {
+		label: 'Work location',
+		values: {
+			any: 'Any',
+			remote: 'Remote',
+			hybrid: 'Hybrid',
+			onsite: 'On-site'
+		}
+	},
+	hours_commitment: {
+		label: 'Hours',
+		values: {
+			any: 'Any',
+			fulltime: 'Full-time',
+			parttime: 'Part-time'
+		}
+	},
+	employment_type: {
+		label: 'Employment type',
+		values: {
+			any: 'Any',
+			permanent: 'Permanent',
+			contract: 'Contract',
+			internship: 'Internship',
+			temporary: 'Temporary'
+		}
+	},
+	experience_level: {
+		label: 'Experience level',
+		values: {
+			any: 'Any',
+			entry: 'Entry-level',
+			mid: 'Mid-level',
+			senior: 'Senior',
+			lead: 'Lead',
+			executive: 'Executive'
+		}
+	}
 };
 
-export const SEARCH_FILTER_NAMES = Object.keys(
-  SEARCH_FILTER_DEFINITIONS,
-) as SearchFilterName[];
+export const SEARCH_FILTER_NAMES = Object.keys(SEARCH_FILTER_DEFINITIONS) as SearchFilterName[];
 
 /** Default value_key for a filter (first entry in its values map). */
 export function defaultValueKey(name: SearchFilterName): string {
-  return Object.keys(SEARCH_FILTER_DEFINITIONS[name].values)[0];
+	return Object.keys(SEARCH_FILTER_DEFINITIONS[name].values)[0];
 }
 
 /**
@@ -138,73 +133,73 @@ export function defaultValueKey(name: SearchFilterName): string {
  * either confirms the filter or returns nothing).
  */
 export const SEARCH_FILTER_ALIASES: Record<SearchFilterName, string[]> = {
-  sort_by: ["sort by", "sort", "order by", "newest", "most recent", "relevance"],
-  time_posted: [
-    "date posted",
-    "posted",
-    "time posted",
-    "past 24",
-    "past day",
-    "last 24",
-    "past week",
-    "last week",
-    "past month",
-    "last month",
-    "any time",
-  ],
-  work_location: [
-    "workplace",
-    "workplace type",
-    "work type",
-    "work mode",
-    "work location",
-    "on-site",
-    "onsite",
-    "in person",
-    "in-person",
-    "remote",
-    "hybrid",
-  ],
-  hours_commitment: [
-    "hours",
-    "weekly hours",
-    "time commitment",
-    "full-time",
-    "fulltime",
-    "part-time",
-    "parttime",
-  ],
-  employment_type: [
-    "employment type",
-    "type of employment",
-    "job type",
-    "permanent",
-    "contract",
-    "contractor",
-    "freelance",
-    "temporary",
-    "temp",
-    "internship",
-    "intern",
-  ],
-  experience_level: [
-    "experience level",
-    "experience",
-    "seniority",
-    "seniority level",
-    "career level",
-    "entry-level",
-    "entry level",
-    "junior",
-    "mid-level",
-    "mid level",
-    "senior",
-    "lead",
-    "principal",
-    "staff",
-    "executive",
-    "director",
-  ],
+	sort_by: ['sort by', 'sort', 'order by', 'newest', 'most recent', 'relevance'],
+	time_posted: [
+		'date posted',
+		'posted',
+		'time posted',
+		'past 24',
+		'past day',
+		'last 24',
+		'past week',
+		'last week',
+		'past month',
+		'last month',
+		'any time'
+	],
+	work_location: [
+		'workplace',
+		'workplace type',
+		'work type',
+		'work mode',
+		'work location',
+		'on-site',
+		'onsite',
+		'in person',
+		'in-person',
+		'remote',
+		'hybrid'
+	],
+	hours_commitment: [
+		'hours',
+		'weekly hours',
+		'time commitment',
+		'full-time',
+		'fulltime',
+		'part-time',
+		'parttime'
+	],
+	employment_type: [
+		'employment type',
+		'type of employment',
+		'job type',
+		'permanent',
+		'contract',
+		'contractor',
+		'freelance',
+		'temporary',
+		'temp',
+		'internship',
+		'intern'
+	],
+	experience_level: [
+		'experience level',
+		'experience',
+		'seniority',
+		'seniority level',
+		'career level',
+		'entry-level',
+		'entry level',
+		'junior',
+		'mid-level',
+		'mid level',
+		'senior',
+		'lead',
+		'principal',
+		'staff',
+		'executive',
+		'director'
+	]
 };
 
 /**
@@ -245,35 +240,25 @@ export const SEARCH_FILTER_ALIASES: Record<SearchFilterName, string[]> = {
  * for the post-expand checkbox-match fallback.
  */
 export const SEARCH_FILTER_CATEGORY_ALIASES: Record<SearchFilterName, string[]> = {
-  sort_by: ["sort by", "order by"],
-  time_posted: ["date posted", "time posted"],
-  work_location: [
-    "workplace type",
-    "work type",
-    "work mode",
-    "work location",
-  ],
-  // LinkedIn (and several other boards) puts fulltime/parttime inside an
-  // "Employment type" / "Job type" popup alongside contract/internship.
-  // Listing those aliases here lets the heuristic find the right opener
-  // directly — without them, hours_commitment falls through to the LLM
-  // identifier which has picked "Filter by Jobs" / "Filter by Company" in
-  // the past (run 805). The harvest mechanism handles the co-location.
-  hours_commitment: [
-    "hours",
-    "weekly hours",
-    "time commitment",
-    "employment type",
-    "type of employment",
-    "job type",
-  ],
-  employment_type: ["employment type", "type of employment", "job type"],
-  experience_level: [
-    "experience level",
-    "seniority",
-    "seniority level",
-    "career level",
-  ],
+	sort_by: ['sort by', 'order by'],
+	time_posted: ['date posted', 'time posted'],
+	work_location: ['workplace type', 'work type', 'work mode', 'work location'],
+	// LinkedIn (and several other boards) puts fulltime/parttime inside an
+	// "Employment type" / "Job type" popup alongside contract/internship.
+	// Listing those aliases here lets the heuristic find the right opener
+	// directly — without them, hours_commitment falls through to the LLM
+	// identifier which has picked "Filter by Jobs" / "Filter by Company" in
+	// the past (run 805). The harvest mechanism handles the co-location.
+	hours_commitment: [
+		'hours',
+		'weekly hours',
+		'time commitment',
+		'employment type',
+		'type of employment',
+		'job type'
+	],
+	employment_type: ['employment type', 'type of employment', 'job type'],
+	experience_level: ['experience level', 'seniority', 'seniority level', 'career level']
 };
 
 /**
@@ -281,53 +266,51 @@ export const SEARCH_FILTER_CATEGORY_ALIASES: Record<SearchFilterName, string[]> 
  * Helps when a platform labels e.g. work_location.onsite as "On site"
  * (with space) or "In office" instead of our canonical "On-site".
  */
-export const OPTION_LABEL_ALIASES: Partial<
-  Record<SearchFilterName, Record<string, string[]>>
-> = {
-  work_location: {
-    remote: ["remote"],
-    hybrid: ["hybrid"],
-    onsite: ["on-site", "on site", "onsite", "in person", "in-person", "in office"],
-  },
-  hours_commitment: {
-    fulltime: ["full-time", "fulltime", "full time"],
-    parttime: ["part-time", "parttime", "part time"],
-  },
-  employment_type: {
-    // Most boards label W2/payroll roles as "Full-time"; the LLM/heuristic
-    // resolves this contextually (a "Full-time" checkbox in a job-type
-    // dropdown usually means permanent FTE). On Upwork there's no permanent
-    // role concept at all — handled via `unsupported_filters`.
-    permanent: ["permanent", "full-time", "fte", "w2"],
-    contract: ["contract", "contractor", "freelance"],
-    internship: ["internship", "intern"],
-    temporary: ["temporary", "temp", "fixed-term", "fixed term"],
-  },
-  time_posted: {
-    "24h": ["past 24 hours", "last 24 hours", "past day"],
-    week: ["past week", "last week"],
-    month: ["past month", "last month"],
-  },
-  sort_by: {
-    newest: ["newest", "most recent", "date"],
-    relevance: ["relevance", "most relevant"],
-  },
-  experience_level: {
-    entry: ["entry-level", "entry level", "junior", "associate", "internship"],
-    // "Mid-Senior level" / "Mid-Senior" covers platforms whose tier
-    // collapses mid + senior into one band. Inventory-side dedup is by
-    // accessible name, so if `senior` lands on the same node first this
-    // alias won't toggle it back off.
-    mid: ["mid-level", "mid level", "intermediate", "mid-senior", "mid-senior level"],
-    // "Expert" covers Upwork (3-tier scale: Entry / Intermediate / Expert) —
-    // listed last so platforms with a real "Senior" label match it first.
-    senior: ["senior", "senior-level", "sr.", "expert"],
-    // Upwork has no Lead tier; "Expert" is its top tier. Dedup in the apply
-    // pass prevents toggling the same checkbox off when the user requests
-    // both senior+lead.
-    lead: ["lead", "principal", "staff", "expert"],
-    executive: ["executive", "director", "vp", "head of"],
-  },
+export const OPTION_LABEL_ALIASES: Partial<Record<SearchFilterName, Record<string, string[]>>> = {
+	work_location: {
+		remote: ['remote'],
+		hybrid: ['hybrid'],
+		onsite: ['on-site', 'on site', 'onsite', 'in person', 'in-person', 'in office']
+	},
+	hours_commitment: {
+		fulltime: ['full-time', 'fulltime', 'full time'],
+		parttime: ['part-time', 'parttime', 'part time']
+	},
+	employment_type: {
+		// Most boards label W2/payroll roles as "Full-time"; the LLM/heuristic
+		// resolves this contextually (a "Full-time" checkbox in a job-type
+		// dropdown usually means permanent FTE). On Upwork there's no permanent
+		// role concept at all — handled via `unsupported_filters`.
+		permanent: ['permanent', 'full-time', 'fte', 'w2'],
+		contract: ['contract', 'contractor', 'freelance'],
+		internship: ['internship', 'intern'],
+		temporary: ['temporary', 'temp', 'fixed-term', 'fixed term']
+	},
+	time_posted: {
+		'24h': ['past 24 hours', 'last 24 hours', 'past day'],
+		week: ['past week', 'last week'],
+		month: ['past month', 'last month']
+	},
+	sort_by: {
+		newest: ['newest', 'most recent', 'date'],
+		relevance: ['relevance', 'most relevant']
+	},
+	experience_level: {
+		entry: ['entry-level', 'entry level', 'junior', 'associate', 'internship'],
+		// "Mid-Senior level" / "Mid-Senior" covers platforms whose tier
+		// collapses mid + senior into one band. Inventory-side dedup is by
+		// accessible name, so if `senior` lands on the same node first this
+		// alias won't toggle it back off.
+		mid: ['mid-level', 'mid level', 'intermediate', 'mid-senior', 'mid-senior level'],
+		// "Expert" covers Upwork (3-tier scale: Entry / Intermediate / Expert) —
+		// listed last so platforms with a real "Senior" label match it first.
+		senior: ['senior', 'senior-level', 'sr.', 'expert'],
+		// Upwork has no Lead tier; "Expert" is its top tier. Dedup in the apply
+		// pass prevents toggling the same checkbox off when the user requests
+		// both senior+lead.
+		lead: ['lead', 'principal', 'staff', 'expert'],
+		executive: ['executive', 'director', 'vp', 'head of']
+	}
 };
 
 /**
@@ -338,18 +321,11 @@ export const OPTION_LABEL_ALIASES: Partial<
  * filtering and local eligibility collapse onto these five buckets to stay
  * consistent with each other.
  */
-export const EXPERIENCE_LEVEL_BUCKETS = [
-  "entry",
-  "mid",
-  "senior",
-  "lead",
-  "executive",
-] as const;
+export const EXPERIENCE_LEVEL_BUCKETS = ['entry', 'mid', 'senior', 'lead', 'executive'] as const;
 
 // Case- and separator-insensitive key, matching the normalization the
 // eligibility SQL applies: regexp_replace(lower(elem), '[-_ ]', '', 'g').
-const normalizeExpTerm = (v: string): string =>
-  v.toLowerCase().replace(/[-_\s]/g, "");
+const normalizeExpTerm = (v: string): string => v.toLowerCase().replace(/[-_\s]/g, '');
 
 /**
  * normalized term → bucket value_keys it belongs to. Built from the bucket
@@ -359,21 +335,21 @@ const normalizeExpTerm = (v: string): string =>
  * director→executive, internship→entry) map identically at source and locally.
  */
 const EXPERIENCE_TERM_TO_BUCKETS: Map<string, string[]> = (() => {
-  const map = new Map<string, string[]>();
-  const add = (term: string, bucket: string) => {
-    const key = normalizeExpTerm(term);
-    const arr = map.get(key) ?? [];
-    if (!arr.includes(bucket)) arr.push(bucket);
-    map.set(key, arr);
-  };
-  for (const bucket of EXPERIENCE_LEVEL_BUCKETS) {
-    add(bucket, bucket);
-    add(SEARCH_FILTER_DEFINITIONS.experience_level.values[bucket], bucket);
-    for (const alias of OPTION_LABEL_ALIASES.experience_level?.[bucket] ?? []) {
-      add(alias, bucket);
-    }
-  }
-  return map;
+	const map = new Map<string, string[]>();
+	const add = (term: string, bucket: string) => {
+		const key = normalizeExpTerm(term);
+		const arr = map.get(key) ?? [];
+		if (!arr.includes(bucket)) arr.push(bucket);
+		map.set(key, arr);
+	};
+	for (const bucket of EXPERIENCE_LEVEL_BUCKETS) {
+		add(bucket, bucket);
+		add(SEARCH_FILTER_DEFINITIONS.experience_level.values[bucket], bucket);
+		for (const alias of OPTION_LABEL_ALIASES.experience_level?.[bucket] ?? []) {
+			add(alias, bucket);
+		}
+	}
+	return map;
 })();
 
 /**
@@ -382,18 +358,18 @@ const EXPERIENCE_TERM_TO_BUCKETS: Map<string, string[]> = (() => {
  * ("Senior") — to the buckets it falls under. Unknown terms → [].
  */
 export function experienceLevelBuckets(value: string): string[] {
-  return EXPERIENCE_TERM_TO_BUCKETS.get(normalizeExpTerm(value)) ?? [];
+	return EXPERIENCE_TERM_TO_BUCKETS.get(normalizeExpTerm(value)) ?? [];
 }
 
 /** Collapse a list of experience-level terms to the unique set of buckets. */
 export function toExperienceBuckets(values: string[]): string[] {
-  const out: string[] = [];
-  for (const v of values) {
-    for (const b of experienceLevelBuckets(v)) {
-      if (!out.includes(b)) out.push(b);
-    }
-  }
-  return out;
+	const out: string[] = [];
+	for (const v of values) {
+		for (const b of experienceLevelBuckets(v)) {
+			if (!out.includes(b)) out.push(b);
+		}
+	}
+	return out;
 }
 
 /**
@@ -402,12 +378,12 @@ export function toExperienceBuckets(values: string[]): string[] {
  * against a job's stored `experience_levels`.
  */
 export function expandExperienceBuckets(buckets: string[]): string[] {
-  const wanted = new Set(buckets);
-  const out: string[] = [];
-  for (const [term, termBuckets] of EXPERIENCE_TERM_TO_BUCKETS) {
-    if (termBuckets.some((b) => wanted.has(b))) out.push(term);
-  }
-  return out;
+	const wanted = new Set(buckets);
+	const out: string[] = [];
+	for (const [term, termBuckets] of EXPERIENCE_TERM_TO_BUCKETS) {
+		if (termBuckets.some((b) => wanted.has(b))) out.push(term);
+	}
+	return out;
 }
 
 /**
@@ -418,13 +394,13 @@ export function expandExperienceBuckets(buckets: string[]): string[] {
  * commitments, `contract`/`internship` are pure employment types.
  */
 const LEGACY_JOB_TYPE_TO_NEW_AXES: Record<
-  string,
-  { hours_commitment?: string; employment_type?: string }
+	string,
+	{ hours_commitment?: string; employment_type?: string }
 > = {
-  fulltime: { hours_commitment: "fulltime" },
-  parttime: { hours_commitment: "parttime" },
-  contract: { employment_type: "contract" },
-  internship: { employment_type: "internship" },
+	fulltime: { hours_commitment: 'fulltime' },
+	parttime: { hours_commitment: 'parttime' },
+	contract: { employment_type: 'contract' },
+	internship: { employment_type: 'internship' }
 };
 
 /**
@@ -436,42 +412,42 @@ const LEGACY_JOB_TYPE_TO_NEW_AXES: Record<
  * Defensive — never throws. Unknown keys are dropped silently.
  */
 export function normalizeFilters(
-  raw: Record<string, unknown> | null | undefined,
+	raw: Record<string, unknown> | null | undefined
 ): Partial<Record<SearchFilterName, string[]>> {
-  const out: Partial<Record<SearchFilterName, string[]>> = {};
-  if (!raw || typeof raw !== "object") return out;
+	const out: Partial<Record<SearchFilterName, string[]>> = {};
+	if (!raw || typeof raw !== 'object') return out;
 
-  const push = (name: SearchFilterName, value: string) => {
-    const valid = SEARCH_FILTER_DEFINITIONS[name].values;
-    if (!(value in valid)) return;
-    const existing = out[name] ?? [];
-    if (!existing.includes(value)) existing.push(value);
-    out[name] = existing;
-  };
+	const push = (name: SearchFilterName, value: string) => {
+		const valid = SEARCH_FILTER_DEFINITIONS[name].values;
+		if (!(value in valid)) return;
+		const existing = out[name] ?? [];
+		if (!existing.includes(value)) existing.push(value);
+		out[name] = existing;
+	};
 
-  for (const [name, rawValue] of Object.entries(raw)) {
-    const values = Array.isArray(rawValue)
-      ? rawValue.filter((v): v is string => typeof v === "string")
-      : typeof rawValue === "string"
-      ? [rawValue]
-      : [];
-    if (values.length === 0) continue;
+	for (const [name, rawValue] of Object.entries(raw)) {
+		const values = Array.isArray(rawValue)
+			? rawValue.filter((v): v is string => typeof v === 'string')
+			: typeof rawValue === 'string'
+				? [rawValue]
+				: [];
+		if (values.length === 0) continue;
 
-    if (name === "job_type") {
-      for (const v of values) {
-        const mapped = LEGACY_JOB_TYPE_TO_NEW_AXES[v];
-        if (!mapped) continue;
-        if (mapped.hours_commitment) push("hours_commitment", mapped.hours_commitment);
-        if (mapped.employment_type) push("employment_type", mapped.employment_type);
-      }
-      continue;
-    }
+		if (name === 'job_type') {
+			for (const v of values) {
+				const mapped = LEGACY_JOB_TYPE_TO_NEW_AXES[v];
+				if (!mapped) continue;
+				if (mapped.hours_commitment) push('hours_commitment', mapped.hours_commitment);
+				if (mapped.employment_type) push('employment_type', mapped.employment_type);
+			}
+			continue;
+		}
 
-    if (!(name in SEARCH_FILTER_DEFINITIONS)) continue;
-    for (const v of values) push(name as SearchFilterName, v);
-  }
+		if (!(name in SEARCH_FILTER_DEFINITIONS)) continue;
+		for (const v of values) push(name as SearchFilterName, v);
+	}
 
-  return out;
+	return out;
 }
 
 /**
@@ -494,9 +470,9 @@ export function normalizeFilters(
  *    form widget is an expensive popup.
  */
 export const SOURCE_APPLIED_FILTER_NAMES: SearchFilterName[] = [
-  "sort_by",
-  "time_posted",
-  "work_location",
+	'sort_by',
+	'time_posted',
+	'work_location'
 ];
 
 /**
@@ -505,14 +481,11 @@ export const SOURCE_APPLIED_FILTER_NAMES: SearchFilterName[] = [
  * selection (user intent), but the scraper drives only this subset into the
  * form — the rest are enforced locally.
  */
-export function sourceApplicableFilters<T>(
-  filters: Record<string, T>,
-): Record<string, T> {
-  const allow = new Set<string>(SOURCE_APPLIED_FILTER_NAMES);
-  const out: Record<string, T> = {};
-  for (const [name, value] of Object.entries(filters)) {
-    if (allow.has(name)) out[name] = value;
-  }
-  return out;
+export function sourceApplicableFilters<T>(filters: Record<string, T>): Record<string, T> {
+	const allow = new Set<string>(SOURCE_APPLIED_FILTER_NAMES);
+	const out: Record<string, T> = {};
+	for (const [name, value] of Object.entries(filters)) {
+		if (allow.has(name)) out[name] = value;
+	}
+	return out;
 }
-

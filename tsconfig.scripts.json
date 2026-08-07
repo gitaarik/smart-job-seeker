@@ -1,34 +1,34 @@
 {
-  // Type-check the CLI scripts.
-  //
-  // The main tsconfig cannot do this: its `include` comes from SvelteKit's
-  // generated .svelte-kit/tsconfig.json, which lists src/, test/ and tests/
-  // and nothing else. TypeScript does not merge `include` from an extended
-  // config, so adding scripts/ there means copying the generated list and
-  // re-copying it every time SvelteKit changes it.
-  //
-  // Nothing had ever type-checked scripts/, and it showed: the Prisma → Drizzle
-  // migration passed 11 of them by entirely, and generate-profile-slugs.ts
-  // imported $lib/server/slug-generator — a path that has never existed — for
-  // however long, with no error anywhere.
-  //
-  // Extending the generated config inherits the $lib path aliases, which the
-  // scripts rely on; only `include` is replaced.
-  "extends": "./.svelte-kit/tsconfig.json",
-  "compilerOptions": {
-    "allowJs": true,
-    "checkJs": false,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "moduleResolution": "bundler",
-    "noEmit": true,
-    "types": ["node"]
-  },
-  // scripts/ only. Whatever they import from $lib is pulled in transitively;
-  // listing src/ as roots as well just re-reports the app's own backlog here.
-  "include": ["scripts/**/*.ts"],
-  "exclude": ["node_modules/**"]
+	// Type-check the CLI scripts.
+	//
+	// The main tsconfig cannot do this: its `include` comes from SvelteKit's
+	// generated .svelte-kit/tsconfig.json, which lists src/, test/ and tests/
+	// and nothing else. TypeScript does not merge `include` from an extended
+	// config, so adding scripts/ there means copying the generated list and
+	// re-copying it every time SvelteKit changes it.
+	//
+	// Nothing had ever type-checked scripts/, and it showed: the Prisma → Drizzle
+	// migration passed 11 of them by entirely, and generate-profile-slugs.ts
+	// imported $lib/server/slug-generator — a path that has never existed — for
+	// however long, with no error anywhere.
+	//
+	// Extending the generated config inherits the $lib path aliases, which the
+	// scripts rely on; only `include` is replaced.
+	"extends": "./.svelte-kit/tsconfig.json",
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": false,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"moduleResolution": "bundler",
+		"noEmit": true,
+		"types": ["node"]
+	},
+	// scripts/ only. Whatever they import from $lib is pulled in transitively;
+	// listing src/ as roots as well just re-reports the app's own backlog here.
+	"include": ["scripts/**/*.ts"],
+	"exclude": ["node_modules/**"]
 }

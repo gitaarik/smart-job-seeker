@@ -1,5 +1,5 @@
-import { redirect } from "@sveltejs/kit";
-import type { PageLoad } from "./$types";
+import { redirect } from '@sveltejs/kit';
+import type { PageLoad } from './$types';
 
 /**
  * Gone in the Activity unification — records CRUD, replaced by the Activity composer.
@@ -8,5 +8,5 @@ import type { PageLoad } from "./$types";
  * See planning/APPLICATION-ACTIVITY.md.
  */
 export const load: PageLoad = ({ params }) => {
-  redirect(308, `/applications/${params.id}/activity`);
+	redirect(308, `/applications/${params.id}/activity`);
 };

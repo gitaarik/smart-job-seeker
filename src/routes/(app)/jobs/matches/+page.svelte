@@ -1,3 +1,3 @@
 <script lang="ts">
-  // Redirects to /jobs?filter=matches
+	// Redirects to /jobs?filter=matches
 </script>

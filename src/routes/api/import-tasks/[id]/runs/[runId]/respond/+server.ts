@@ -1,14 +1,14 @@
-import { json, error } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
-import { dbDirect as db } from "$lib/server/db";
-import { eq, and } from "drizzle-orm";
-import { search_tasks, search_task_runs } from "$lib/server/db/schema";
-import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
+import { json, error } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import { dbDirect as db } from '$lib/server/db';
+import { eq, and } from 'drizzle-orm';
+import { search_tasks, search_task_runs } from '$lib/server/db/schema';
+import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
 
 /**
  * Valid user responses for scraper feedback
  */
-const VALID_RESPONSES = ["continue", "skip", "cancel"] as const;
+const VALID_RESPONSES = ['continue', 'skip', 'cancel'] as const;
 type UserResponse = (typeof VALID_RESPONSES)[number];
 
 /**
@@ -24,76 +24,80 @@ type UserResponse = (typeof VALID_RESPONSES)[number];
  * - cancel: Cancel the entire scraping run
  */
 export const POST: RequestHandler = async ({ params, locals, request }) => {
-  const user = requireAuth(locals);
-  const searchTaskId = parseIntParam(params.id, "job search");
-  const runId = parseIntParam(params.runId, "run");
+	const user = requireAuth(locals);
+	const searchTaskId = parseIntParam(params.id, 'job search');
+	const runId = parseIntParam(params.runId, 'run');
 
-  // Parse and validate request body
-  let body: { response?: string };
-  try {
-    body = await request.json();
-  } catch {
-    throw error(400, "Invalid JSON body");
-  }
+	// Parse and validate request body
+	let body: { response?: string };
+	try {
+		body = await request.json();
+	} catch {
+		throw error(400, 'Invalid JSON body');
+	}
 
-  const response = body.response;
-  if (!response || !VALID_RESPONSES.includes(response as UserResponse)) {
-    throw error(400, `Invalid response. Must be one of: ${VALID_RESPONSES.join(", ")}`);
-  }
+	const response = body.response;
+	if (!response || !VALID_RESPONSES.includes(response as UserResponse)) {
+		throw error(400, `Invalid response. Must be one of: ${VALID_RESPONSES.join(', ')}`);
+	}
 
-  // Get the job search and verify ownership
-  const searchTask = await db.query.search_tasks.findFirst({
-    where: eq(search_tasks.id, searchTaskId),
-    with: {
-      profile: true,
-    },
-  });
+	// Get the job search and verify ownership
+	const searchTask = await db.query.search_tasks.findFirst({
+		where: eq(search_tasks.id, searchTaskId),
+		with: {
+			profile: true
+		}
+	});
 
-  if (!searchTask) {
-    throw error(404, "Job search not found");
-  }
+	if (!searchTask) {
+		throw error(404, 'Job search not found');
+	}
 
-  if (searchTask.profile.user_id !== user.id) {
-    throw error(403, "Not authorized");
-  }
+	if (searchTask.profile.user_id !== user.id) {
+		throw error(403, 'Not authorized');
+	}
 
-  // Get the run and verify it belongs to this job search
-  const run = await db.query.search_task_runs.findFirst({
-    where: and(
-      eq(search_task_runs.id, runId),
-      eq(search_task_runs.search_task_id, searchTaskId),
-    ),
-  });
+	// Get the run and verify it belongs to this job search
+	const run = await db.query.search_task_runs.findFirst({
+		where: and(eq(search_task_runs.id, runId), eq(search_task_runs.search_task_id, searchTaskId))
+	});
 
-  if (!run) {
-    throw error(404, "Run not found");
-  }
+	if (!run) {
+		throw error(404, 'Run not found');
+	}
 
-  // Check if run is in a state that accepts feedback
-  if (!["running", "blocked"].includes(run.status)) {
-    throw error(400, `Run is not active (status: ${run.status})`);
-  }
+	// Check if run is in a state that accepts feedback
+	if (!['running', 'blocked'].includes(run.status)) {
+		throw error(400, `Run is not active (status: ${run.status})`);
+	}
 
-  // Update the run with the user's response
-  await db.update(search_task_runs).set({
-    user_response: response,
-    // If cancelling, also update status immediately
-    ...(response === "cancel" ? { status: "cancelled" } : {}),
-  }).where(eq(search_task_runs.id, runId));
+	// Update the run with the user's response
+	await db
+		.update(search_task_runs)
+		.set({
+			user_response: response,
+			// If cancelling, also update status immediately
+			...(response === 'cancel' ? { status: 'cancelled' } : {})
+		})
+		.where(eq(search_task_runs.id, runId));
 
-  // If cancelling, also update the search_tasks table
-  if (response === "cancel") {
-    await db.update(search_tasks).set({
-      status: "cancelled",
-      status_message: "Cancelled by user",
-    }).where(eq(search_tasks.id, searchTaskId));
-  }
+	// If cancelling, also update the search_tasks table
+	if (response === 'cancel') {
+		await db
+			.update(search_tasks)
+			.set({
+				status: 'cancelled',
+				status_message: 'Cancelled by user'
+			})
+			.where(eq(search_tasks.id, searchTaskId));
+	}
 
-  return json({
-    success: true,
-    response,
-    message: response === "cancel"
-      ? "Run cancelled"
-      : `Response "${response}" recorded. The scraper will pick it up shortly.`,
-  });
+	return json({
+		success: true,
+		response,
+		message:
+			response === 'cancel'
+				? 'Run cancelled'
+				: `Response "${response}" recorded. The scraper will pick it up shortly.`
+	});
 };

@@ -6,12 +6,9 @@
  * for paths like /.env, /wp-admin/install.php, /.git/config, etc.
  */
 
-const FRAMEWORK_CLIENT_ERROR_PATTERNS = [
-  /^Not found: /,
-  /^POST method not allowed\./,
-];
+const FRAMEWORK_CLIENT_ERROR_PATTERNS = [/^Not found: /, /^POST method not allowed\./];
 
 export function isFrameworkClientError(value: string | undefined): boolean {
-  if (!value) return false;
-  return FRAMEWORK_CLIENT_ERROR_PATTERNS.some((re) => re.test(value));
+	if (!value) return false;
+	return FRAMEWORK_CLIENT_ERROR_PATTERNS.some((re) => re.test(value));
 }

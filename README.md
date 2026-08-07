@@ -13,13 +13,13 @@ the actual job-scraping engine is a separate, closed-source component (see
 
 Smart Job Seeker is built from several components. This repo is the open one:
 
-| Component | Open? | What it does |
-| --- | --- | --- |
-| **Web app** (this repository) | ✅ open source (GPLv3) | SvelteKit app + PostgreSQL: profiles & portfolio, job and application management, AI writing features, profile↔job **matching**, and the dashboard that schedules and queues scraping runs. |
-| **Device client** | ✅ open source — [`sjs-browser`](https://github.com/gitaarik/sjs-browser), [`sjs-desktop`](https://github.com/gitaarik/sjs-desktop) | Runs a real browser on **your own device** and connects to the SJS servers to receive navigation instructions, which it executes locally against the job sites (CDP bridge, stealth, live view). `sjs-browser` is a headless/Docker build; `sjs-desktop` is a Tauri desktop app. Both are separate public repos. |
-| **Scraping / extraction worker** | 🔒 closed source | Runs on the SJS servers. Decides how to navigate each job site, streams those instructions to your device client, and performs the **LLM-based job extraction** on the pages it returns. |
+| Component                        | Open?                                                                                                                               | What it does                                                                                                                                                                                                                                                                                                     |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Web app** (this repository)    | ✅ open source (GPLv3)                                                                                                              | SvelteKit app + PostgreSQL: profiles & portfolio, job and application management, AI writing features, profile↔job **matching**, and the dashboard that schedules and queues scraping runs.                                                                                                                      |
+| **Device client**                | ✅ open source — [`sjs-browser`](https://github.com/gitaarik/sjs-browser), [`sjs-desktop`](https://github.com/gitaarik/sjs-desktop) | Runs a real browser on **your own device** and connects to the SJS servers to receive navigation instructions, which it executes locally against the job sites (CDP bridge, stealth, live view). `sjs-browser` is a headless/Docker build; `sjs-desktop` is a Tauri desktop app. Both are separate public repos. |
+| **Scraping / extraction worker** | 🔒 closed source                                                                                                                    | Runs on the SJS servers. Decides how to navigate each job site, streams those instructions to your device client, and performs the **LLM-based job extraction** on the pages it returns.                                                                                                                         |
 
-In other words: this app *orchestrates* scraping — it manages search tasks,
+In other words: this app _orchestrates_ scraping — it manages search tasks,
 enqueues runs, ingests results, and matches them against profiles. The browser
 that actually visits job sites runs on **your own device** via the open-source
 [`sjs-browser`](https://github.com/gitaarik/sjs-browser) /

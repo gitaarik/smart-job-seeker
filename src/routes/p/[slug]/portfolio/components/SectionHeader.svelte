@@ -1,18 +1,18 @@
 <script lang="ts">
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import type { IconProp } from "@fortawesome/fontawesome-svg-core";
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 
-  interface Props {
-    title: string;
-    icon: IconProp;
-  }
+	interface Props {
+		title: string;
+		icon: IconProp;
+	}
 
-  let { title, icon }: Props = $props();
+	let { title, icon }: Props = $props();
 </script>
 
-<h2 class="relative border-b-2 border-ocean pb-1 mb-5">
-  <span class="text-xl font-semibold pr-12 print:text-lg">{title}</span>
-  <div class="absolute right-1 top-1">
-    <FontAwesomeIcon {icon} size="lg" />
-  </div>
+<h2 class="border-ocean relative mb-5 border-b-2 pb-1">
+	<span class="pr-12 text-xl font-semibold print:text-lg">{title}</span>
+	<div class="absolute top-1 right-1">
+		<FontAwesomeIcon {icon} size="lg" />
+	</div>
 </h2>

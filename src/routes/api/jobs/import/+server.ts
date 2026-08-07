@@ -6,188 +6,183 @@
  * Requires API key authentication via X-API-Key header.
  */
 
-import { json } from "@sveltejs/kit";
-import type { RequestHandler } from "@sveltejs/kit";
-import { db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
-import { jobs, job_importers } from "$lib/server/db/schema";
-import { normalizeJobUrl } from "$lib/server/job/normalize-url";
-import { getProfileIdFromApiKey, findExistingJob } from "$lib/server/job/import-utils";
-import { triggerMatchForImport } from "$lib/server/job/match-trigger";
-import { getErrorMessage } from "$lib/server/utils/errors";
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from '@sveltejs/kit';
+import { db } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
+import { jobs, job_importers } from '$lib/server/db/schema';
+import { normalizeJobUrl } from '$lib/server/job/normalize-url';
+import { getProfileIdFromApiKey, findExistingJob } from '$lib/server/job/import-utils';
+import { triggerMatchForImport } from '$lib/server/job/match-trigger';
+import { getErrorMessage } from '$lib/server/utils/errors';
 import {
-  formatValidationError,
-  type JobImportResponse,
-  safeValidateJobImport,
-} from "$lib/server/job/validation";
-import { toDateString } from "$lib/tools/date-utils";
+	formatValidationError,
+	type JobImportResponse,
+	safeValidateJobImport
+} from '$lib/server/job/validation';
+import { toDateString } from '$lib/tools/date-utils';
 
 /**
  * Import a single job
  */
 export const POST: RequestHandler = async (event) => {
-  // Step 1: Authenticate
-  const { profileId, error: authError } = await getProfileIdFromApiKey(event.request);
+	// Step 1: Authenticate
+	const { profileId, error: authError } = await getProfileIdFromApiKey(event.request);
 
-  if (!profileId) {
-    return json(
-      {
-        success: false,
-        action: "skipped" as const,
-        message: authError || "Authentication required",
-      } satisfies JobImportResponse,
-      { status: 401 },
-    );
-  }
+	if (!profileId) {
+		return json(
+			{
+				success: false,
+				action: 'skipped' as const,
+				message: authError || 'Authentication required'
+			} satisfies JobImportResponse,
+			{ status: 401 }
+		);
+	}
 
-  // Step 2: Parse and validate request body
-  let body: unknown;
-  try {
-    body = await event.request.json();
-  } catch {
-    return json(
-      {
-        success: false,
-        action: "skipped" as const,
-        message: "Invalid JSON in request body",
-      } satisfies JobImportResponse,
-      { status: 400 },
-    );
-  }
+	// Step 2: Parse and validate request body
+	let body: unknown;
+	try {
+		body = await event.request.json();
+	} catch {
+		return json(
+			{
+				success: false,
+				action: 'skipped' as const,
+				message: 'Invalid JSON in request body'
+			} satisfies JobImportResponse,
+			{ status: 400 }
+		);
+	}
 
-  const validation = safeValidateJobImport(body);
-  if (!validation.success || !validation.data) {
-    return json(
-      {
-        success: false,
-        action: "skipped" as const,
-        message: formatValidationError(validation.error!),
-      } satisfies JobImportResponse,
-      { status: 400 },
-    );
-  }
+	const validation = safeValidateJobImport(body);
+	if (!validation.success || !validation.data) {
+		return json(
+			{
+				success: false,
+				action: 'skipped' as const,
+				message: formatValidationError(validation.error!)
+			} satisfies JobImportResponse,
+			{ status: 400 }
+		);
+	}
 
-  const jobData = validation.data;
+	const jobData = validation.data;
 
-  // Step 3: Normalize URL for deduplication
-  const normalizedUrl = normalizeJobUrl(jobData.sourceUrl);
+	// Step 3: Normalize URL for deduplication
+	const normalizedUrl = normalizeJobUrl(jobData.sourceUrl);
 
-  // Step 4: Check for existing job
-  const existing = await findExistingJob(normalizedUrl);
+	// Step 4: Check for existing job
+	const existing = await findExistingJob(normalizedUrl);
 
-  if (existing) {
-    // Check if data has changed
-    const hasChanges = jobData.description &&
-      jobData.description !== existing.job_description;
+	if (existing) {
+		// Check if data has changed
+		const hasChanges = jobData.description && jobData.description !== existing.job_description;
 
-    if (hasChanges) {
-      // Update existing job
-      await db.update(jobs).set({
-        title: jobData.title,
-        job_poster: jobData.company,
-        job_description: jobData.description,
-        office_location: jobData.location,
-        salary_min: jobData.salaryMin,
-        salary_max: jobData.salaryMax,
-        salary_currency: jobData.salaryCurrency,
-        salary_period: jobData.salaryPeriod,
-        salary_duration_weeks: jobData.salaryDurationWeeks,
-        work_location: jobData.remote ? [jobData.remote] : undefined,
-        job_types: jobData.jobType ? [jobData.jobType] : undefined,
-        experience_levels: jobData.experienceLevel
-          ? [jobData.experienceLevel]
-          : undefined,
-        skills_required: jobData.skills,
-        date_posted: toDateString(jobData.postedAt),
-        job_platform_id: jobData.platformId,
-        date_updated: new Date(),
-      }).where(eq(jobs.id, existing.id));
+		if (hasChanges) {
+			// Update existing job
+			await db
+				.update(jobs)
+				.set({
+					title: jobData.title,
+					job_poster: jobData.company,
+					job_description: jobData.description,
+					office_location: jobData.location,
+					salary_min: jobData.salaryMin,
+					salary_max: jobData.salaryMax,
+					salary_currency: jobData.salaryCurrency,
+					salary_period: jobData.salaryPeriod,
+					salary_duration_weeks: jobData.salaryDurationWeeks,
+					work_location: jobData.remote ? [jobData.remote] : undefined,
+					job_types: jobData.jobType ? [jobData.jobType] : undefined,
+					experience_levels: jobData.experienceLevel ? [jobData.experienceLevel] : undefined,
+					skills_required: jobData.skills,
+					date_posted: toDateString(jobData.postedAt),
+					job_platform_id: jobData.platformId,
+					date_updated: new Date()
+				})
+				.where(eq(jobs.id, existing.id));
 
-      // Record who imported this job (upsert)
-      const existingImporter = await db.query.job_importers.findFirst({
-        where: (t, { and, eq }) => and(eq(t.job_id, existing.id), eq(t.profile_id, profileId)),
-      });
-      if (!existingImporter) {
-        await db.insert(job_importers).values({ job_id: existing.id, profile_id: profileId });
-      }
-      await triggerMatchForImport(profileId, existing.id);
+			// Record who imported this job (upsert)
+			const existingImporter = await db.query.job_importers.findFirst({
+				where: (t, { and, eq }) => and(eq(t.job_id, existing.id), eq(t.profile_id, profileId))
+			});
+			if (!existingImporter) {
+				await db.insert(job_importers).values({ job_id: existing.id, profile_id: profileId });
+			}
+			await triggerMatchForImport(profileId, existing.id);
 
-      return json(
-        {
-          success: true,
-          jobId: existing.id,
-          action: "updated",
-          message: "Job updated successfully",
-        } satisfies JobImportResponse,
-      );
-    }
+			return json({
+				success: true,
+				jobId: existing.id,
+				action: 'updated',
+				message: 'Job updated successfully'
+			} satisfies JobImportResponse);
+		}
 
-    // No changes — still record the importer (upsert)
-    const existingImporter2 = await db.query.job_importers.findFirst({
-      where: (t, { and, eq }) => and(eq(t.job_id, existing.id), eq(t.profile_id, profileId)),
-    });
-    if (!existingImporter2) {
-      await db.insert(job_importers).values({ job_id: existing.id, profile_id: profileId });
-    }
-    await triggerMatchForImport(profileId, existing.id);
+		// No changes — still record the importer (upsert)
+		const existingImporter2 = await db.query.job_importers.findFirst({
+			where: (t, { and, eq }) => and(eq(t.job_id, existing.id), eq(t.profile_id, profileId))
+		});
+		if (!existingImporter2) {
+			await db.insert(job_importers).values({ job_id: existing.id, profile_id: profileId });
+		}
+		await triggerMatchForImport(profileId, existing.id);
 
-    return json(
-      {
-        success: true,
-        jobId: existing.id,
-        action: "skipped",
-        message: "Job already exists with same data",
-        duplicateOf: existing.id,
-      } satisfies JobImportResponse,
-    );
-  }
+		return json({
+			success: true,
+			jobId: existing.id,
+			action: 'skipped',
+			message: 'Job already exists with same data',
+			duplicateOf: existing.id
+		} satisfies JobImportResponse);
+	}
 
-  // Step 5: Create new job
-  try {
-    const [newJob] = await db.insert(jobs).values({
-      title: jobData.title,
-      job_poster: jobData.company,
-      source_url: normalizedUrl,
-      job_description: jobData.description,
-      office_location: jobData.location,
-      salary_min: jobData.salaryMin,
-      salary_max: jobData.salaryMax,
-      salary_currency: jobData.salaryCurrency,
-      salary_period: jobData.salaryPeriod,
-      salary_duration_weeks: jobData.salaryDurationWeeks,
-      work_location: jobData.remote ? [jobData.remote] : null,
-      job_types: jobData.jobType ? [jobData.jobType] : null,
-      experience_levels: jobData.experienceLevel
-        ? [jobData.experienceLevel]
-        : null,
-      skills_required: jobData.skills,
-      date_posted: toDateString(jobData.postedAt),
-      job_platform_id: jobData.platformId,
-      status: "hiring",
-      date_created: new Date(),
-      date_updated: new Date(),
-    }).returning();
+	// Step 5: Create new job
+	try {
+		const [newJob] = await db
+			.insert(jobs)
+			.values({
+				title: jobData.title,
+				job_poster: jobData.company,
+				source_url: normalizedUrl,
+				job_description: jobData.description,
+				office_location: jobData.location,
+				salary_min: jobData.salaryMin,
+				salary_max: jobData.salaryMax,
+				salary_currency: jobData.salaryCurrency,
+				salary_period: jobData.salaryPeriod,
+				salary_duration_weeks: jobData.salaryDurationWeeks,
+				work_location: jobData.remote ? [jobData.remote] : null,
+				job_types: jobData.jobType ? [jobData.jobType] : null,
+				experience_levels: jobData.experienceLevel ? [jobData.experienceLevel] : null,
+				skills_required: jobData.skills,
+				date_posted: toDateString(jobData.postedAt),
+				job_platform_id: jobData.platformId,
+				status: 'hiring',
+				date_created: new Date(),
+				date_updated: new Date()
+			})
+			.returning();
 
-    // Record who imported this job
-    await db.insert(job_importers).values({ job_id: newJob.id, profile_id: profileId });
-    await triggerMatchForImport(profileId, newJob.id);
+		// Record who imported this job
+		await db.insert(job_importers).values({ job_id: newJob.id, profile_id: profileId });
+		await triggerMatchForImport(profileId, newJob.id);
 
-    return json(
-      {
-        success: true,
-        jobId: newJob.id,
-        action: "created",
-        message: "Job imported successfully",
-      } satisfies JobImportResponse,
-    );
-  } catch (error) {
-    return json(
-      {
-        success: false,
-        action: "skipped",
-        message: getErrorMessage(error, "Failed to create job"),
-      } satisfies JobImportResponse,
-      { status: 500 },
-    );
-  }
+		return json({
+			success: true,
+			jobId: newJob.id,
+			action: 'created',
+			message: 'Job imported successfully'
+		} satisfies JobImportResponse);
+	} catch (error) {
+		return json(
+			{
+				success: false,
+				action: 'skipped',
+				message: getErrorMessage(error, 'Failed to create job')
+			} satisfies JobImportResponse,
+			{ status: 500 }
+		);
+	}
 };

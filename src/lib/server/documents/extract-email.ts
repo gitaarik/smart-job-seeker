@@ -9,39 +9,33 @@
  * when, and about what.
  */
 
-import { Buffer } from "node:buffer";
-import PostalMime from "postal-mime";
-import { extractTextFromFile } from "../resume/text-extractor";
+import { Buffer } from 'node:buffer';
+import PostalMime from 'postal-mime';
+import { extractTextFromFile } from '../resume/text-extractor';
 
 export async function parseEmailToText(bytes: Uint8Array): Promise<string> {
-  const email = await PostalMime.parse(bytes);
+	const email = await PostalMime.parse(bytes);
 
-  const headers: string[] = [];
-  if (email.subject?.trim()) headers.push(`Subject: ${email.subject.trim()}`);
-  if (email.from) {
-    const who = [email.from.name, email.from.address]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
-    if (who) headers.push(`From: ${who}`);
-  }
-  if (email.date) headers.push(`Date: ${email.date}`);
+	const headers: string[] = [];
+	if (email.subject?.trim()) headers.push(`Subject: ${email.subject.trim()}`);
+	if (email.from) {
+		const who = [email.from.name, email.from.address].filter(Boolean).join(' ').trim();
+		if (who) headers.push(`From: ${who}`);
+	}
+	if (email.date) headers.push(`Date: ${email.date}`);
 
-  let body = email.text?.trim() ?? "";
-  if (!body && email.html?.trim()) {
-    // No plain-text part — strip the HTML alternative with the shared stripper.
-    try {
-      body = await extractTextFromFile(
-        Buffer.from(email.html, "utf8"),
-        "text/html",
-      );
-    } catch {
-      body = "";
-    }
-  }
+	let body = email.text?.trim() ?? '';
+	if (!body && email.html?.trim()) {
+		// No plain-text part — strip the HTML alternative with the shared stripper.
+		try {
+			body = await extractTextFromFile(Buffer.from(email.html, 'utf8'), 'text/html');
+		} catch {
+			body = '';
+		}
+	}
 
-  return [headers.join("\n"), body]
-    .filter((s) => s.trim())
-    .join("\n\n")
-    .trim();
+	return [headers.join('\n'), body]
+		.filter((s) => s.trim())
+		.join('\n\n')
+		.trim();
 }

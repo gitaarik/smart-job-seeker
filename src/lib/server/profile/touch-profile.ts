@@ -1,6 +1,6 @@
-import { dbDirect as db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
-import { profiles } from "$lib/server/db/schema";
+import { dbDirect as db } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
+import { profiles } from '$lib/server/db/schema';
 
 /**
  * Bump the profile's `date_updated` so downstream consumers know the profile
@@ -12,8 +12,5 @@ import { profiles } from "$lib/server/db/schema";
  * child-record mutation.
  */
 export async function touchProfile(profileId: number): Promise<void> {
-  await db
-    .update(profiles)
-    .set({ date_updated: new Date() })
-    .where(eq(profiles.id, profileId));
+	await db.update(profiles).set({ date_updated: new Date() }).where(eq(profiles.id, profileId));
 }

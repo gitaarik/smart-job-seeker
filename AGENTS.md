@@ -36,16 +36,16 @@ npm run check   # typecheck — svelte-check, NOT raw tsc
 The repo carries three mutually contradictory formatter configs, and none of
 them describes the tree:
 
-| Config | Claims | Reality |
-|---|---|---|
-| `deno.json` `fmt` | deno is the formatter | deno isn't installed; the tree *is* in its style (2-space, double quotes) |
-| `.prettierrc` | tabs, single quotes | SvelteKit scaffold leftover; disagrees with every file |
-| `npm run format` | `prettier --write .` | would rewrite **881 files** |
+| Config            | Claims                | Reality                                                                   |
+| ----------------- | --------------------- | ------------------------------------------------------------------------- |
+| `deno.json` `fmt` | deno is the formatter | deno isn't installed; the tree _is_ in its style (2-space, double quotes) |
+| `.prettierrc`     | tabs, single quotes   | SvelteKit scaffold leftover; disagrees with every file                    |
+| `npm run format`  | `prettier --write .`  | would rewrite **881 files**                                               |
 
 So: running `prettier --write` on a file you touched rewrites the whole file and
 buries the real diff — a 59-line edit once became 211 changed lines. Running
 `deno fmt --unstable-component` on a `.svelte` file de-indents the entire
-`<script>` block to column 0, on *every* file including untouched ones. Both end
+`<script>` block to column 0, on _every_ file including untouched ones. Both end
 in `git checkout` and re-applying by hand.
 
 `npm run lint` (`prettier --check . && eslint .`) is in no workflow and fails
@@ -56,8 +56,8 @@ errors — 68 of them in vendored `static/vnc/**` that shouldn't be linted at al
 (`BASELINE=33`, may only ever go down). New type errors fail a PR; the existing
 backlog is tolerated. Lint and format are not gated.
 
-*Cleanup pending — pick one formatter, reformat once, delete the other two
-configs, then gate it. Until then, hand-match.*
+_Cleanup pending — pick one formatter, reformat once, delete the other two
+configs, then gate it. Until then, hand-match._
 
 ## Testing with Playwright MCP
 

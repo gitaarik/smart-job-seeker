@@ -29,88 +29,83 @@
  *   … --apply --limit 20        # cap the spend on a first run
  */
 
-import { dbDirect as db } from "$lib/server/db";
-import { asc, isNull, not, or, sql } from "drizzle-orm";
-import { application_records, applications } from "$lib/server/db/schema";
-import {
-  CONTRACT_PREFIX,
-  summarizeApplication,
-} from "$lib/server/ai-chat/application-summary";
-import { isFinishedStatus } from "$lib/application-status";
-import { MIN_ENTRIES_FOR_SUMMARY } from "$lib/application-records";
+import { dbDirect as db } from '$lib/server/db';
+import { asc, isNull, not, or, sql } from 'drizzle-orm';
+import { application_records, applications } from '$lib/server/db/schema';
+import { CONTRACT_PREFIX, summarizeApplication } from '$lib/server/ai-chat/application-summary';
+import { isFinishedStatus } from '$lib/application-status';
+import { MIN_ENTRIES_FOR_SUMMARY } from '$lib/application-records';
 
-const APPLY = process.argv.includes("--apply");
+const APPLY = process.argv.includes('--apply');
 const LIMIT = (() => {
-  const i = process.argv.indexOf("--limit");
-  const n = i === -1 ? NaN : Number(process.argv[i + 1]);
-  return Number.isFinite(n) && n > 0 ? n : Infinity;
+	const i = process.argv.indexOf('--limit');
+	const n = i === -1 ? NaN : Number(process.argv[i + 1]);
+	return Number.isFinite(n) && n > 0 ? n : Infinity;
 })();
 
 async function main() {
-  const rows = await db
-    .select({
-      id: applications.id,
-      profileId: applications.profile_id,
-      status: applications.status,
-      entries: sql<number>`count(${application_records.id})`.as("entries"),
-    })
-    .from(applications)
-    .leftJoin(
-      application_records,
-      sql`${application_records.application_id} = ${applications.id}
-          AND coalesce(btrim(${application_records.content}), '') <> ''`,
-    )
-    .where(or(
-      isNull(applications.context_summary_hash),
-      not(sql`${applications.context_summary_hash} LIKE ${
-        CONTRACT_PREFIX + "%"
-      }`),
-    ))
-    .groupBy(applications.id, applications.profile_id, applications.status)
-    .orderBy(asc(applications.id));
+	const rows = await db
+		.select({
+			id: applications.id,
+			profileId: applications.profile_id,
+			status: applications.status,
+			entries: sql<number>`count(${application_records.id})`.as('entries')
+		})
+		.from(applications)
+		.leftJoin(
+			application_records,
+			sql`${application_records.application_id} = ${applications.id}
+          AND coalesce(btrim(${application_records.content}), '') <> ''`
+		)
+		.where(
+			or(
+				isNull(applications.context_summary_hash),
+				not(sql`${applications.context_summary_hash} LIKE ${CONTRACT_PREFIX + '%'}`)
+			)
+		)
+		.groupBy(applications.id, applications.profile_id, applications.status)
+		.orderBy(asc(applications.id));
 
-  // Finished applications are excluded from the spine, so summarising them
-  // would be paying for a line nothing renders.
-  const eligible = rows.filter((r) =>
-    Number(r.entries) >= MIN_ENTRIES_FOR_SUMMARY && !isFinishedStatus(r.status)
-  );
+	// Finished applications are excluded from the spine, so summarising them
+	// would be paying for a line nothing renders.
+	const eligible = rows.filter(
+		(r) => Number(r.entries) >= MIN_ENTRIES_FOR_SUMMARY && !isFinishedStatus(r.status)
+	);
 
-  console.log(
-    `${rows.length} application(s) not on the current extraction (${CONTRACT_PREFIX}); ` +
-      `${eligible.length} eligible (>= ${MIN_ENTRIES_FOR_SUMMARY} entries, not finished).`,
-  );
+	console.log(
+		`${rows.length} application(s) not on the current extraction (${CONTRACT_PREFIX}); ` +
+			`${eligible.length} eligible (>= ${MIN_ENTRIES_FOR_SUMMARY} entries, not finished).`
+	);
 
-  if (!APPLY) {
-    for (const r of eligible.slice(0, 20)) {
-      console.log(`  would summarise #${r.id} (${r.entries} entries)`);
-    }
-    if (eligible.length > 20) {
-      console.log(`  … and ${eligible.length - 20} more`);
-    }
-    console.log("\nDry run. Re-run with --apply to spend the LLM calls.");
-    return;
-  }
+	if (!APPLY) {
+		for (const r of eligible.slice(0, 20)) {
+			console.log(`  would summarise #${r.id} (${r.entries} entries)`);
+		}
+		if (eligible.length > 20) {
+			console.log(`  … and ${eligible.length - 20} more`);
+		}
+		console.log('\nDry run. Re-run with --apply to spend the LLM calls.');
+		return;
+	}
 
-  const targets = eligible.slice(0, LIMIT === Infinity ? undefined : LIMIT);
-  let done = 0;
-  let skipped = 0;
-  for (const r of targets) {
-    const wrote = await summarizeApplication(r.id, r.profileId);
-    if (wrote) done++;
-    else skipped++;
-    console.log(
-      `  #${r.id} (${r.entries} entries) → ${wrote ? "summarised" : "no-op"}`,
-    );
-  }
-  console.log(`\nSummarised ${done}, no-op ${skipped}, of ${targets.length}.`);
-  if (targets.length < eligible.length) {
-    console.log(
-      `${eligible.length - targets.length} left — re-run to continue.`,
-    );
-  }
+	const targets = eligible.slice(0, LIMIT === Infinity ? undefined : LIMIT);
+	let done = 0;
+	let skipped = 0;
+	for (const r of targets) {
+		const wrote = await summarizeApplication(r.id, r.profileId);
+		if (wrote) done++;
+		else skipped++;
+		console.log(`  #${r.id} (${r.entries} entries) → ${wrote ? 'summarised' : 'no-op'}`);
+	}
+	console.log(`\nSummarised ${done}, no-op ${skipped}, of ${targets.length}.`);
+	if (targets.length < eligible.length) {
+		console.log(`${eligible.length - targets.length} left — re-run to continue.`);
+	}
 }
 
-main().then(() => process.exit(0)).catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+main()
+	.then(() => process.exit(0))
+	.catch((e) => {
+		console.error(e);
+		process.exit(1);
+	});

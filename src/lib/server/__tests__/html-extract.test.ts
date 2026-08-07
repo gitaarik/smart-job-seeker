@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { extractLinks } from "../html/extract";
+import { describe, expect, it } from 'vitest';
+import { extractLinks } from '../html/extract';
 
-describe("extractLinks", () => {
-  it("should extract all links from HTML", () => {
-    const html = `
+describe('extractLinks', () => {
+	it('should extract all links from HTML', () => {
+		const html = `
       <html>
         <body>
           <a href="https://example.com">Link 1</a>
@@ -13,17 +13,13 @@ describe("extractLinks", () => {
       </html>
     `;
 
-    const links = extractLinks(html);
+		const links = extractLinks(html);
 
-    expect(links).toEqual([
-      "https://example.com",
-      "https://test.com",
-      "/relative",
-    ]);
-  });
+		expect(links).toEqual(['https://example.com', 'https://test.com', '/relative']);
+	});
 
-  it("should filter links by pattern", () => {
-    const html = `
+	it('should filter links by pattern', () => {
+		const html = `
       <html>
         <body>
           <a href="https://example.com/job/123">Job 1</a>
@@ -33,16 +29,13 @@ describe("extractLinks", () => {
       </html>
     `;
 
-    const links = extractLinks(html, /\/job\//);
+		const links = extractLinks(html, /\/job\//);
 
-    expect(links).toEqual([
-      "https://example.com/job/123",
-      "https://example.com/job/456",
-    ]);
-  });
+		expect(links).toEqual(['https://example.com/job/123', 'https://example.com/job/456']);
+	});
 
-  it("should return unique links only", () => {
-    const html = `
+	it('should return unique links only', () => {
+		const html = `
       <html>
         <body>
           <a href="https://example.com">Link 1</a>
@@ -52,13 +45,13 @@ describe("extractLinks", () => {
       </html>
     `;
 
-    const links = extractLinks(html);
+		const links = extractLinks(html);
 
-    expect(links).toEqual(["https://example.com", "https://test.com"]);
-  });
+		expect(links).toEqual(['https://example.com', 'https://test.com']);
+	});
 
-  it("should skip anchors without href", () => {
-    const html = `
+	it('should skip anchors without href', () => {
+		const html = `
       <html>
         <body>
           <a>No href</a>
@@ -68,13 +61,13 @@ describe("extractLinks", () => {
       </html>
     `;
 
-    const links = extractLinks(html);
+		const links = extractLinks(html);
 
-    expect(links).toEqual(["https://example.com"]);
-  });
+		expect(links).toEqual(['https://example.com']);
+	});
 
-  it("should return empty array for HTML with no links", () => {
-    const html = `
+	it('should return empty array for HTML with no links', () => {
+		const html = `
       <html>
         <body>
           <p>No links here</p>
@@ -82,26 +75,26 @@ describe("extractLinks", () => {
       </html>
     `;
 
-    const links = extractLinks(html);
+		const links = extractLinks(html);
 
-    expect(links).toEqual([]);
-  });
+		expect(links).toEqual([]);
+	});
 
-  it("should handle malformed HTML gracefully", () => {
-    const html = `
+	it('should handle malformed HTML gracefully', () => {
+		const html = `
       <div>
         <a href="https://example.com">Link
         <p>Some text</p>
       </div>
     `;
 
-    const links = extractLinks(html);
+		const links = extractLinks(html);
 
-    expect(links).toEqual(["https://example.com"]);
-  });
+		expect(links).toEqual(['https://example.com']);
+	});
 
-  it("should extract links with query parameters", () => {
-    const html = `
+	it('should extract links with query parameters', () => {
+		const html = `
       <html>
         <body>
           <a href="https://example.com?page=1&sort=date">Link 1</a>
@@ -110,11 +103,11 @@ describe("extractLinks", () => {
       </html>
     `;
 
-    const links = extractLinks(html);
+		const links = extractLinks(html);
 
-    expect(links).toEqual([
-      "https://example.com?page=1&sort=date",
-      "https://example.com?id=123#section",
-    ]);
-  });
+		expect(links).toEqual([
+			'https://example.com?page=1&sort=date',
+			'https://example.com?id=123#section'
+		]);
+	});
 });

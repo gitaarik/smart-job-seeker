@@ -1,13 +1,13 @@
-import { db } from "$lib/server/db";
-import { eq, sql } from "drizzle-orm";
-import { profile_tokens, profile_versions } from "$lib/server/db/schema";
-import { hashToken } from "./token-generator";
+import { db } from '$lib/server/db';
+import { eq, sql } from 'drizzle-orm';
+import { profile_tokens, profile_versions } from '$lib/server/db/schema';
+import { hashToken } from './token-generator';
 
 export interface TokenValidationResult {
-  valid: boolean;
-  profileVersionId?: number;
-  error?: string;
-  tokenId?: number;
+	valid: boolean;
+	profileVersionId?: number;
+	error?: string;
+	tokenId?: number;
 }
 
 /**
@@ -17,64 +17,61 @@ export interface TokenValidationResult {
  * @returns Validation result with version ID if valid
  */
 export async function validateToken(
-  tokenString: string,
-  profileId: number,
+	tokenString: string,
+	profileId: number
 ): Promise<TokenValidationResult> {
-  const tokenHash = hashToken(tokenString);
+	const tokenHash = hashToken(tokenString);
 
-  const token = await db.query.profile_tokens.findFirst({
-    where: eq(profile_tokens.token_hash, tokenHash),
-  });
+	const token = await db.query.profile_tokens.findFirst({
+		where: eq(profile_tokens.token_hash, tokenHash)
+	});
 
-  if (!token) {
-    return {
-      valid: false,
-      error: "Invalid or expired access token",
-    };
-  }
+	if (!token) {
+		return {
+			valid: false,
+			error: 'Invalid or expired access token'
+		};
+	}
 
-  if (token.status !== "published") {
-    return {
-      valid: false,
-      error: "Access token is no longer valid",
-    };
-  }
+	if (token.status !== 'published') {
+		return {
+			valid: false,
+			error: 'Access token is no longer valid'
+		};
+	}
 
-  // Look up the profile_version to verify profile ownership
-  const profileVersion = await db.query.profile_versions.findFirst({
-    where: eq(profile_versions.id, token.profile_version),
-    columns: { profile_id: true },
-  });
+	// Look up the profile_version to verify profile ownership
+	const profileVersion = await db.query.profile_versions.findFirst({
+		where: eq(profile_versions.id, token.profile_version),
+		columns: { profile_id: true }
+	});
 
-  if (!profileVersion || profileVersion.profile_id !== profileId) {
-    return {
-      valid: false,
-      error: "Access token is not valid for this profile",
-    };
-  }
+	if (!profileVersion || profileVersion.profile_id !== profileId) {
+		return {
+			valid: false,
+			error: 'Access token is not valid for this profile'
+		};
+	}
 
-  if (token.expires_at && token.expires_at < new Date()) {
-    return {
-      valid: false,
-      error: "Access token has expired",
-    };
-  }
+	if (token.expires_at && token.expires_at < new Date()) {
+		return {
+			valid: false,
+			error: 'Access token has expired'
+		};
+	}
 
-  if (
-    token.visit_limit !== null &&
-    token.visit_count >= token.visit_limit
-  ) {
-    return {
-      valid: false,
-      error: "Access token visit limit exceeded",
-    };
-  }
+	if (token.visit_limit !== null && token.visit_count >= token.visit_limit) {
+		return {
+			valid: false,
+			error: 'Access token visit limit exceeded'
+		};
+	}
 
-  return {
-    valid: true,
-    profileVersionId: token.profile_version,
-    tokenId: token.id,
-  };
+	return {
+		valid: true,
+		profileVersionId: token.profile_version,
+		tokenId: token.id
+	};
 }
 
 /**
@@ -82,13 +79,13 @@ export async function validateToken(
  * @param tokenId The token ID to increment
  * @param ipAddress Optional IP address to log
  */
-export async function incrementTokenVisit(
-  tokenId: number,
-  ipAddress?: string,
-): Promise<void> {
-  await db.update(profile_tokens).set({
-    visit_count: sql`${profile_tokens.visit_count} + 1`,
-    last_accessed_at: new Date(),
-    last_accessed_ip: ipAddress || null,
-  }).where(eq(profile_tokens.id, tokenId));
+export async function incrementTokenVisit(tokenId: number, ipAddress?: string): Promise<void> {
+	await db
+		.update(profile_tokens)
+		.set({
+			visit_count: sql`${profile_tokens.visit_count} + 1`,
+			last_accessed_at: new Date(),
+			last_accessed_ip: ipAddress || null
+		})
+		.where(eq(profile_tokens.id, tokenId));
 }

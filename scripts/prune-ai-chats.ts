@@ -33,37 +33,35 @@
  * needs free disk roughly equal to the current table size. Skip it on a busy
  * server and let autovacuum reuse the space instead.
  */
-import { sql } from "drizzle-orm";
-import { dbDirect as db, queryRawDirect } from "$lib/server/db";
-import { pruneAiChatPayloads } from "$lib/server/ai-chats/retention";
+import { sql } from 'drizzle-orm';
+import { dbDirect as db, queryRawDirect } from '$lib/server/db';
+import { pruneAiChatPayloads } from '$lib/server/ai-chats/retention';
 
 const args = process.argv.slice(2);
-const apply = args.includes("--apply");
-const doVacuum = args.includes("--vacuum");
-const daysArg = args.indexOf("--days");
+const apply = args.includes('--apply');
+const doVacuum = args.includes('--vacuum');
+const daysArg = args.indexOf('--days');
 const days = daysArg >= 0 ? parseInt(args[daysArg + 1], 10) : 30;
 
 if (!Number.isFinite(days) || days < 1) {
-  console.error(`Invalid --days value: ${args[daysArg + 1]}`);
-  process.exit(1);
+	console.error(`Invalid --days value: ${args[daysArg + 1]}`);
+	process.exit(1);
 }
 
 /** Rows older than this keep only their small analytics columns. */
 const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
 async function main() {
-  console.log(`Pruning ai_chats payloads older than ${days} days`);
-  console.log(`  cutoff:  ${cutoff.toISOString()}`);
-  console.log(
-    `  mode:    ${apply ? "APPLY" : "dry run (pass --apply to write)"}`,
-  );
-  console.log("");
+	console.log(`Pruning ai_chats payloads older than ${days} days`);
+	console.log(`  cutoff:  ${cutoff.toISOString()}`);
+	console.log(`  mode:    ${apply ? 'APPLY' : 'dry run (pass --apply to write)'}`);
+	console.log('');
 
-  const [before] = await queryRawDirect<{
-    total: string;
-    prunable: string;
-    bytes: string;
-  }>(sql`
+	const [before] = await queryRawDirect<{
+		total: string;
+		prunable: string;
+		bytes: string;
+	}>(sql`
     SELECT
       (SELECT count(*) FROM ai_chats)::text AS total,
       (SELECT count(*) FROM ai_chats
@@ -72,18 +70,18 @@ async function main() {
       pg_size_pretty(pg_total_relation_size('ai_chats')) AS bytes
   `);
 
-  console.log(`  rows total:     ${before.total}`);
-  console.log(`  rows prunable:  ${before.prunable}`);
-  console.log(`  table size:     ${before.bytes}`);
+	console.log(`  rows total:     ${before.total}`);
+	console.log(`  rows prunable:  ${before.prunable}`);
+	console.log(`  table size:     ${before.bytes}`);
 
-  if (before.prunable === "0") {
-    console.log("\nNothing to prune.");
-    return;
-  }
+	if (before.prunable === '0') {
+		console.log('\nNothing to prune.');
+		return;
+	}
 
-  // Estimate the reclaim from a sample rather than scanning every row — on a
-  // multi-GB table the full pg_column_size() sum takes minutes.
-  const [sample] = await queryRawDirect<{ avg_payload: string }>(sql`
+	// Estimate the reclaim from a sample rather than scanning every row — on a
+	// multi-GB table the full pg_column_size() sum takes minutes.
+	const [sample] = await queryRawDirect<{ avg_payload: string }>(sql`
     SELECT COALESCE(avg(
       pg_column_size(full_prompt) + pg_column_size(context)
     ), 0)::bigint::text AS avg_payload
@@ -94,47 +92,47 @@ async function main() {
       ORDER BY id DESC LIMIT 2000
     ) s
   `);
-  const estimate = Number(sample.avg_payload) * Number(before.prunable);
-  console.log(`  est. reclaim:   ~${(estimate / 1e9).toFixed(1)} GB`);
+	const estimate = Number(sample.avg_payload) * Number(before.prunable);
+	console.log(`  est. reclaim:   ~${(estimate / 1e9).toFixed(1)} GB`);
 
-  if (!apply) {
-    console.log("\nDry run — no changes written.");
-    return;
-  }
+	if (!apply) {
+		console.log('\nDry run — no changes written.');
+		return;
+	}
 
-  // Same code path the worker runs on a schedule, looped until drained — the
-  // manual run is expected to clear the whole backlog in one go.
-  console.log("\nNulling full_prompt and context…");
-  let pruned = 0;
-  for (;;) {
-    const r = await pruneAiChatPayloads({ days });
-    pruned += r.rowsPruned;
-    if (!r.moreRemaining) break;
-    console.log(`  …${pruned} rows so far`);
-  }
-  console.log(`  updated ${pruned} rows`);
+	// Same code path the worker runs on a schedule, looped until drained — the
+	// manual run is expected to clear the whole backlog in one go.
+	console.log('\nNulling full_prompt and context…');
+	let pruned = 0;
+	for (;;) {
+		const r = await pruneAiChatPayloads({ days });
+		pruned += r.rowsPruned;
+		if (!r.moreRemaining) break;
+		console.log(`  …${pruned} rows so far`);
+	}
+	console.log(`  updated ${pruned} rows`);
 
-  if (doVacuum) {
-    // VACUUM FULL cannot run inside a transaction block.
-    console.log("\nVACUUM FULL ai_chats — this locks the table…");
-    await db.execute(sql`VACUUM FULL ai_chats`);
-    console.log("  done");
-  } else {
-    console.log(
-      "\nSkipped VACUUM FULL — space is marked reusable but the table file " +
-        "has not shrunk. Re-run with --vacuum to reclaim disk.",
-    );
-  }
+	if (doVacuum) {
+		// VACUUM FULL cannot run inside a transaction block.
+		console.log('\nVACUUM FULL ai_chats — this locks the table…');
+		await db.execute(sql`VACUUM FULL ai_chats`);
+		console.log('  done');
+	} else {
+		console.log(
+			'\nSkipped VACUUM FULL — space is marked reusable but the table file ' +
+				'has not shrunk. Re-run with --vacuum to reclaim disk.'
+		);
+	}
 
-  const [after] = await queryRawDirect<{ bytes: string }>(sql`
+	const [after] = await queryRawDirect<{ bytes: string }>(sql`
     SELECT pg_size_pretty(pg_total_relation_size('ai_chats')) AS bytes
   `);
-  console.log(`\n  table size now: ${after.bytes}`);
+	console.log(`\n  table size now: ${after.bytes}`);
 }
 
 main()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+	.then(() => process.exit(0))
+	.catch((err) => {
+		console.error(err);
+		process.exit(1);
+	});

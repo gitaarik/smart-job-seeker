@@ -6,7 +6,7 @@ Smart Job Seeker is a SvelteKit application that helps users manage their job
 search process. It uses Drizzle ORM for data management and LangChain with
 multiple LLM providers for generating personalized content.
 
-This repository is the open-source web app. It *orchestrates* job scraping —
+This repository is the open-source web app. It _orchestrates_ job scraping —
 managing search tasks, enqueueing runs, and ingesting results — but the actual
 scraping worker (browser-driven extraction) runs as a separate component and is
 not part of this repo. The modules below (`browser/`, `scraper/`, `html/`) are
@@ -132,14 +132,11 @@ cached using SHA-256 hashes of prompts with configurable TTL.
 External API calls use exponential backoff with jitter:
 
 ```typescript
-await withRetry(
-  async () => apiCall(),
-  {
-    maxAttempts: 3,
-    initialDelay: 1000,
-    shouldRetry: isRetryableError,
-  },
-);
+await withRetry(async () => apiCall(), {
+	maxAttempts: 3,
+	initialDelay: 1000,
+	shouldRetry: isRetryableError
+});
 ```
 
 #### Rate Limiting

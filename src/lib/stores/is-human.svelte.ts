@@ -3,10 +3,10 @@
 let value = $state(false);
 
 export const isHumanState = {
-  get value() {
-    return value;
-  },
-  set value(newValue: boolean) {
-    value = newValue;
-  },
+	get value() {
+		return value;
+	},
+	set value(newValue: boolean) {
+		value = newValue;
+	}
 };

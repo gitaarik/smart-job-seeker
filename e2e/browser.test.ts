@@ -11,911 +11,894 @@
  * Run: npm run test:e2e
  */
 
-import { describe, expect, it } from "vitest";
-import { loginViaUI, useBrowser } from "./browser";
+import { describe, expect, it } from 'vitest';
+import { loginViaUI, useBrowser } from './browser';
 
 // ============================================================================
 // Login flow
 // ============================================================================
 
-describe("login flow", () => {
-  const b = useBrowser();
+describe('login flow', () => {
+	const b = useBrowser();
 
-  it("shows the login page with form fields", async () => {
-    await b.page.goto("/login");
-    await b.page.waitForLoadState("networkidle");
-    const heading = await b.page.locator("h2").textContent();
-    expect(heading?.toLowerCase()).toContain("sign in");
-    expect(await b.page.locator("#email").isVisible()).toBe(true);
-    expect(await b.page.locator("#password").isVisible()).toBe(true);
-  });
+	it('shows the login page with form fields', async () => {
+		await b.page.goto('/login');
+		await b.page.waitForLoadState('networkidle');
+		const heading = await b.page.locator('h2').textContent();
+		expect(heading?.toLowerCase()).toContain('sign in');
+		expect(await b.page.locator('#email').isVisible()).toBe(true);
+		expect(await b.page.locator('#password').isVisible()).toBe(true);
+	});
 
-  it("rejects invalid credentials", async () => {
-    await b.page.goto("/login");
-    await b.page.locator("#email").fill("wrong@example.com");
-    await b.page.locator("#password").fill("wrongpassword");
-    await b.page.getByRole("button", { name: "Sign in" }).click();
-    await b.page.waitForTimeout(1000);
-    expect(b.page.url()).toContain("/login");
-  });
+	it('rejects invalid credentials', async () => {
+		await b.page.goto('/login');
+		await b.page.locator('#email').fill('wrong@example.com');
+		await b.page.locator('#password').fill('wrongpassword');
+		await b.page.getByRole('button', { name: 'Sign in' }).click();
+		await b.page.waitForTimeout(1000);
+		expect(b.page.url()).toContain('/login');
+	});
 
-  it("logs in with valid credentials and lands on dashboard", async () => {
-    await loginViaUI(b.page);
-    expect(b.page.url()).toContain("/home");
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Dashboard");
-  });
+	it('logs in with valid credentials and lands on dashboard', async () => {
+		await loginViaUI(b.page);
+		expect(b.page.url()).toContain('/home');
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Dashboard');
+	});
 });
 
 // ============================================================================
 // Dashboard
 // ============================================================================
 
-describe("dashboard", () => {
-  const b = useBrowser();
+describe('dashboard', () => {
+	const b = useBrowser();
 
-  it("shows dashboard heading and sidebar navigation", async () => {
-    await loginViaUI(b.page);
-    await b.page.waitForLoadState("networkidle");
+	it('shows dashboard heading and sidebar navigation', async () => {
+		await loginViaUI(b.page);
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Dashboard");
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Dashboard');
 
-    // Sidebar has the main nav sections
-    const sidebarText = await b.page.locator("aside, nav").first()
-      .textContent();
-    expect(sidebarText).toContain("Job Search");
-    expect(sidebarText).toContain("Profile");
-  });
+		// Sidebar has the main nav sections
+		const sidebarText = await b.page.locator('aside, nav').first().textContent();
+		expect(sidebarText).toContain('Job Search');
+		expect(sidebarText).toContain('Profile');
+	});
 
-  it("shows billing plan info in sidebar", async () => {
-    const planLink = b.page.locator('a[href="/billing"]').first();
-    expect(await planLink.isVisible()).toBe(true);
-    const planText = await planLink.textContent();
-    expect(planText?.toLowerCase()).toContain("plan");
-  });
+	it('shows billing plan info in sidebar', async () => {
+		const planLink = b.page.locator('a[href="/billing"]').first();
+		expect(await planLink.isVisible()).toBe(true);
+		const planText = await planLink.textContent();
+		expect(planText?.toLowerCase()).toContain('plan');
+	});
 });
 
 // ============================================================================
 // Profile creation
 // ============================================================================
 
-describe("profile creation page", () => {
-  const b = useBrowser();
+describe('profile creation page', () => {
+	const b = useBrowser();
 
-  it("shows create profile heading and upload form", async () => {
-    await loginViaUI(b.page);
-    await b.page.goto("/profile/create");
-    await b.page.waitForLoadState("networkidle");
+	it('shows create profile heading and upload form', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto('/profile/create');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Create Your Profile");
-  });
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Create Your Profile');
+	});
 
-  it("has file upload area and manual entry option", async () => {
-    const uploadBtn = b.page.getByRole("button", { name: /upload.*parse/i });
-    expect(await uploadBtn.isVisible()).toBe(true);
+	it('has file upload area and manual entry option', async () => {
+		const uploadBtn = b.page.getByRole('button', { name: /upload.*parse/i });
+		expect(await uploadBtn.isVisible()).toBe(true);
 
-    const manualBtn = b.page.getByRole("button", { name: /skip to manual/i });
-    expect(await manualBtn.isVisible()).toBe(true);
-  });
+		const manualBtn = b.page.getByRole('button', { name: /skip to manual/i });
+		expect(await manualBtn.isVisible()).toBe(true);
+	});
 
-  it("shows profile form when clicking skip to manual", async () => {
-    await b.page.getByRole("button", { name: /skip to manual/i }).click();
-    await b.page.waitForTimeout(500);
+	it('shows profile form when clicking skip to manual', async () => {
+		await b.page.getByRole('button', { name: /skip to manual/i }).click();
+		await b.page.waitForTimeout(500);
 
-    // Should show full profile form with create button
-    const createBtn = b.page.getByRole("button", { name: /create profile/i });
-    expect(await createBtn.isVisible()).toBe(true);
-    // Should have form sections
-    const basicInfo = b.page.getByRole("button", {
-      name: /basic information/i,
-    });
-    expect(await basicInfo.isVisible()).toBe(true);
-  });
+		// Should show full profile form with create button
+		const createBtn = b.page.getByRole('button', { name: /create profile/i });
+		expect(await createBtn.isVisible()).toBe(true);
+		// Should have form sections
+		const basicInfo = b.page.getByRole('button', {
+			name: /basic information/i
+		});
+		expect(await basicInfo.isVisible()).toBe(true);
+	});
 });
 
 // ============================================================================
 // Profile creation flow (create → verify → edit → sub-pages → delete)
 // ============================================================================
 
-describe("profile creation flow", () => {
-  const b = useBrowser();
-  const profileName = `E2E Test ${Date.now()}`;
-  let profileId: string | null = null;
+describe('profile creation flow', () => {
+	const b = useBrowser();
+	const profileName = `E2E Test ${Date.now()}`;
+	let profileId: string | null = null;
 
-  it("creates a profile via manual entry", async () => {
-    await loginViaUI(b.page);
-    await b.page.goto("/profile/create");
-    await b.page.waitForLoadState("networkidle");
+	it('creates a profile via manual entry', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto('/profile/create');
+		await b.page.waitForLoadState('networkidle');
 
-    // Switch to manual entry form (basic info section is already expanded)
-    await b.page.getByRole("button", { name: /skip to manual/i }).click();
-    await b.page.waitForTimeout(1000);
+		// Switch to manual entry form (basic info section is already expanded)
+		await b.page.getByRole('button', { name: /skip to manual/i }).click();
+		await b.page.waitForTimeout(1000);
 
-    // Fill required field: Full Name (first text input)
-    await b.page.locator('input[type="text"]').first().fill(profileName);
+		// Fill required field: Full Name (first text input)
+		await b.page.locator('input[type="text"]').first().fill(profileName);
 
-    // Fill optional: Professional Title (second text input)
-    await b.page.locator('input[type="text"]').nth(1).fill(
-      "Senior QA Engineer",
-    );
+		// Fill optional: Professional Title (second text input)
+		await b.page.locator('input[type="text"]').nth(1).fill('Senior QA Engineer');
 
-    // Submit and wait for redirect to /home?profile=<id>
-    await b.page.getByRole("button", { name: /create profile/i }).click();
-    await b.page.waitForURL(/\/home\?profile=\d+/, { timeout: 15000 });
+		// Submit and wait for redirect to /home?profile=<id>
+		await b.page.getByRole('button', { name: /create profile/i }).click();
+		await b.page.waitForURL(/\/home\?profile=\d+/, { timeout: 15000 });
 
-    // Extract profile ID from redirect URL
-    const match = b.page.url().match(/profile=(\d+)/);
-    profileId = match?.[1] ?? null;
-    expect(profileId).toBeTruthy();
+		// Extract profile ID from redirect URL
+		const match = b.page.url().match(/profile=(\d+)/);
+		profileId = match?.[1] ?? null;
+		expect(profileId).toBeTruthy();
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Dashboard");
-  });
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Dashboard');
+	});
 
-  it("shows the new profile in the edit page", async () => {
-    // First ensure the new profile is selected via URL param
-    await b.page.goto(`/home?profile=${profileId}`);
-    await b.page.waitForLoadState("networkidle");
+	it('shows the new profile in the edit page', async () => {
+		// First ensure the new profile is selected via URL param
+		await b.page.goto(`/home?profile=${profileId}`);
+		await b.page.waitForLoadState('networkidle');
 
-    await b.page.goto("/profile/edit");
-    await b.page.waitForLoadState("networkidle");
+		await b.page.goto('/profile/edit');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Basic Info");
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Basic Info');
 
-    // Verify saved name (first text input on edit page)
-    const nameValue = await b.page.locator('input[type="text"]').first()
-      .inputValue();
-    expect(nameValue).toBe(profileName);
-  });
+		// Verify saved name (first text input on edit page)
+		const nameValue = await b.page.locator('input[type="text"]').first().inputValue();
+		expect(nameValue).toBe(profileName);
+	});
 
-  it("shows work experience page with add button", async () => {
-    await b.page.goto("/profile/work-experience");
-    await b.page.waitForLoadState("networkidle");
+	it('shows work experience page with add button', async () => {
+		await b.page.goto('/profile/work-experience');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Work Experience");
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Work Experience');
 
-    const addBtn = b.page.getByRole("button", { name: /add.*experience/i });
-    expect(await addBtn.isVisible()).toBe(true);
-  });
+		const addBtn = b.page.getByRole('button', { name: /add.*experience/i });
+		expect(await addBtn.isVisible()).toBe(true);
+	});
 
-  it("shows education page with add button", async () => {
-    await b.page.goto("/profile/education");
-    await b.page.waitForLoadState("networkidle");
+	it('shows education page with add button', async () => {
+		await b.page.goto('/profile/education');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Education");
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Education');
 
-    const addBtn = b.page.getByRole("button", { name: /add.*education/i });
-    expect(await addBtn.isVisible()).toBe(true);
-  });
+		const addBtn = b.page.getByRole('button', { name: /add.*education/i });
+		expect(await addBtn.isVisible()).toBe(true);
+	});
 
-  it("shows skills page with add categories", async () => {
-    await b.page.goto("/profile/skills");
-    await b.page.waitForLoadState("networkidle");
+	it('shows skills page with add categories', async () => {
+		await b.page.goto('/profile/skills');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Skills");
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Skills');
 
-    const addBtn = b.page.getByRole("button", { name: /add category/i });
-    expect(await addBtn.isVisible()).toBe(true);
-  });
+		const addBtn = b.page.getByRole('button', { name: /add category/i });
+		expect(await addBtn.isVisible()).toBe(true);
+	});
 
-  it("shows languages page", async () => {
-    await b.page.goto("/profile/languages");
-    await b.page.waitForLoadState("networkidle");
+	it('shows languages page', async () => {
+		await b.page.goto('/profile/languages');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Languages");
-  });
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Languages');
+	});
 
-  it("deletes the test profile via settings danger zone", async () => {
-    // First ensure the test profile is selected
-    await b.page.goto(`/home?profile=${profileId}`);
-    await b.page.waitForLoadState("networkidle");
+	it('deletes the test profile via settings danger zone', async () => {
+		// First ensure the test profile is selected
+		await b.page.goto(`/home?profile=${profileId}`);
+		await b.page.waitForLoadState('networkidle');
 
-    await b.page.goto("/export/settings");
-    await b.page.waitForLoadState("networkidle");
+		await b.page.goto('/export/settings');
+		await b.page.waitForLoadState('networkidle');
 
-    // Type the profile name in the confirmation input
-    const confirmInput = b.page.locator(
-      'input[placeholder="Enter profile name to confirm"]',
-    );
-    await confirmInput.fill(profileName);
+		// Type the profile name in the confirmation input
+		const confirmInput = b.page.locator('input[placeholder="Enter profile name to confirm"]');
+		await confirmInput.fill(profileName);
 
-    // Click "Delete this profile" (enabled after name matches)
-    await b.page.getByRole("button", { name: /delete this profile/i }).click();
-    await b.page.waitForTimeout(500);
+		// Click "Delete this profile" (enabled after name matches)
+		await b.page.getByRole('button', { name: /delete this profile/i }).click();
+		await b.page.waitForTimeout(500);
 
-    // Click "Yes, delete permanently" in the final confirmation
-    const finalDelete = b.page.getByRole("button", {
-      name: /yes.*delete permanently/i,
-    });
-    await finalDelete.click();
+		// Click "Yes, delete permanently" in the final confirmation
+		const finalDelete = b.page.getByRole('button', {
+			name: /yes.*delete permanently/i
+		});
+		await finalDelete.click();
 
-    // Should redirect to home after deletion
-    await b.page.waitForURL("**/home**", { timeout: 10000 });
-    expect(b.page.url()).toContain("/home");
-  });
+		// Should redirect to home after deletion
+		await b.page.waitForURL('**/home**', { timeout: 10000 });
+		expect(b.page.url()).toContain('/home');
+	});
 });
 
 // ============================================================================
 // Jobs page
 // ============================================================================
 
-describe("jobs page", () => {
-  const b = useBrowser();
+describe('jobs page', () => {
+	const b = useBrowser();
 
-  it("shows jobs heading and search bar", async () => {
-    await loginViaUI(b.page);
-    await b.page.goto("/jobs");
-    await b.page.waitForLoadState("networkidle");
+	it('shows jobs heading and search bar', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto('/jobs');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toContain("Jobs");
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toContain('Jobs');
 
-    const searchInput = b.page.locator('input[placeholder*="earch"]');
-    expect(await searchInput.isVisible()).toBe(true);
-  });
+		const searchInput = b.page.locator('input[placeholder*="earch"]');
+		expect(await searchInput.isVisible()).toBe(true);
+	});
 
-  it("can type in search bar", async () => {
-    const searchInput = b.page.locator('input[placeholder*="earch"]');
-    await searchInput.fill("software engineer");
-    expect(await searchInput.inputValue()).toBe("software engineer");
-  });
+	it('can type in search bar', async () => {
+		const searchInput = b.page.locator('input[placeholder*="earch"]');
+		await searchInput.fill('software engineer');
+		expect(await searchInput.inputValue()).toBe('software engineer');
+	});
 
-  it("can clear search bar", async () => {
-    const searchInput = b.page.locator('input[placeholder*="earch"]');
-    await searchInput.fill("test query");
+	it('can clear search bar', async () => {
+		const searchInput = b.page.locator('input[placeholder*="earch"]');
+		await searchInput.fill('test query');
 
-    // Clear button should appear
-    const clearBtn = b.page.locator(
-      'input[placeholder*="earch"] + button, input[placeholder*="earch"] ~ button',
-    ).first();
-    if (await clearBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await clearBtn.click();
-      expect(await searchInput.inputValue()).toBe("");
-    }
-  });
+		// Clear button should appear
+		const clearBtn = b.page
+			.locator('input[placeholder*="earch"] + button, input[placeholder*="earch"] ~ button')
+			.first();
+		if (await clearBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+			await clearBtn.click();
+			expect(await searchInput.inputValue()).toBe('');
+		}
+	});
 });
 
 // ============================================================================
 // Billing page
 // ============================================================================
 
-describe("billing page", () => {
-  const b = useBrowser();
+describe('billing page', () => {
+	const b = useBrowser();
 
-  it("shows plan and usage heading", async () => {
-    await loginViaUI(b.page);
-    await b.page.goto("/billing");
-    await b.page.waitForLoadState("networkidle");
+	it('shows plan and usage heading', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto('/billing');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toContain("Plan");
-  });
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toContain('Plan');
+	});
 
-  it("displays current plan info", async () => {
-    const pageText = await b.page.textContent("main");
-    // Should show some plan-related content
-    expect(pageText?.toLowerCase()).toMatch(
-      /explorer|seeker|hunter|contractor|free/,
-    );
-  });
+	it('displays current plan info', async () => {
+		const pageText = await b.page.textContent('main');
+		// Should show some plan-related content
+		expect(pageText?.toLowerCase()).toMatch(/explorer|seeker|hunter|contractor|free/);
+	});
 
-  it("shows available plans", async () => {
-    // Look for plan upgrade/downgrade buttons or plan names
-    const pageText = await b.page.textContent("main");
-    expect(pageText).toContain("Explorer");
-  });
+	it('shows available plans', async () => {
+		// Look for plan upgrade/downgrade buttons or plan names
+		const pageText = await b.page.textContent('main');
+		expect(pageText).toContain('Explorer');
+	});
 });
 
 // ============================================================================
 // Contacts page
 // ============================================================================
 
-describe("contacts page", () => {
-  const b = useBrowser();
+describe('contacts page', () => {
+	const b = useBrowser();
 
-  it("shows contacts heading", async () => {
-    await loginViaUI(b.page);
-    await b.page.goto("/contacts");
-    await b.page.waitForLoadState("networkidle");
+	it('shows contacts heading', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto('/contacts');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Contacts");
-  });
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Contacts');
+	});
 
-  it("has add contact button", async () => {
-    const addBtn = b.page.getByRole("button", { name: /add contact/i });
-    expect(await addBtn.isVisible()).toBe(true);
-  });
+	it('has add contact button', async () => {
+		const addBtn = b.page.getByRole('button', { name: /add contact/i });
+		expect(await addBtn.isVisible()).toBe(true);
+	});
 
-  it("shows email input when clicking add contact", async () => {
-    await b.page.getByRole("button", { name: /add contact/i }).click();
-    await b.page.waitForTimeout(500);
+	it('shows email input when clicking add contact', async () => {
+		await b.page.getByRole('button', { name: /add contact/i }).click();
+		await b.page.waitForTimeout(500);
 
-    const emailInput = b.page.locator('input[type="email"]');
-    expect(await emailInput.isVisible()).toBe(true);
-  });
+		const emailInput = b.page.locator('input[type="email"]');
+		expect(await emailInput.isVisible()).toBe(true);
+	});
 
-  it("can close the add contact form", async () => {
-    // "Add Contact" becomes "Cancel" when form is open
-    await b.page.getByRole("button", { name: /cancel/i }).click();
-    await b.page.waitForTimeout(500);
+	it('can close the add contact form', async () => {
+		// "Add Contact" becomes "Cancel" when form is open
+		await b.page.getByRole('button', { name: /cancel/i }).click();
+		await b.page.waitForTimeout(500);
 
-    const emailInput = b.page.locator('input[type="email"]');
-    expect(await emailInput.isVisible()).toBe(false);
-  });
+		const emailInput = b.page.locator('input[type="email"]');
+		expect(await emailInput.isVisible()).toBe(false);
+	});
 });
 
 // ============================================================================
 // Export / Import page
 // ============================================================================
 
-describe("export/import page", () => {
-  const b = useBrowser();
+describe('export/import page', () => {
+	const b = useBrowser();
 
-  it("shows import & export heading", async () => {
-    await loginViaUI(b.page);
-    await b.page.goto("/export/import");
-    await b.page.waitForLoadState("networkidle");
+	it('shows import & export heading', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto('/export/import');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toContain("Import");
-  });
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toContain('Import');
+	});
 });
 
 // ============================================================================
 // Settings page
 // ============================================================================
 
-describe("settings page", () => {
-  const b = useBrowser();
+describe('settings page', () => {
+	const b = useBrowser();
 
-  it("shows settings heading", async () => {
-    await loginViaUI(b.page);
-    // /export/settings is a 301 to /data/settings, which titles itself
-    // "Profile Settings".
-    await b.page.goto("/export/settings");
-    await b.page.waitForLoadState("networkidle");
+	it('shows settings heading', async () => {
+		await loginViaUI(b.page);
+		// /export/settings is a 301 to /data/settings, which titles itself
+		// "Profile Settings".
+		await b.page.goto('/export/settings');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Profile Settings");
-  });
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Profile Settings');
+	});
 });
 
 // ============================================================================
 // Sidebar navigation via clicks
 // ============================================================================
 
-describe("sidebar navigation", () => {
-  const b = useBrowser();
+describe('sidebar navigation', () => {
+	const b = useBrowser();
 
-  it("navigates via sidebar section links", async () => {
-    await loginViaUI(b.page);
-    await b.page.goto("/jobs");
-    await b.page.waitForLoadState("networkidle");
+	it('navigates via sidebar section links', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto('/jobs');
+		await b.page.waitForLoadState('networkidle');
 
-    // Navigate back to Overview
-    await b.page.locator("aside a").filter({ hasText: "Overview" }).click();
-    await b.page.waitForURL("**/home", { timeout: 5000 });
-    expect(b.page.url()).toMatch(/\/home$/);
+		// Navigate back to Overview
+		await b.page.locator('aside a').filter({ hasText: 'Overview' }).click();
+		await b.page.waitForURL('**/home', { timeout: 5000 });
+		expect(b.page.url()).toMatch(/\/home$/);
 
-    // Navigate to billing via plan link
-    await b.page.locator('aside a[href="/billing"]').first().click();
-    await b.page.waitForURL("**/billing", { timeout: 5000 });
-    expect(b.page.url()).toContain("/billing");
-  });
+		// Navigate to billing via plan link
+		await b.page.locator('aside a[href="/billing"]').first().click();
+		await b.page.waitForURL('**/billing', { timeout: 5000 });
+		expect(b.page.url()).toContain('/billing');
+	});
 
-  it("expands Job Search and navigates to sub-pages", async () => {
-    // Ensure Job Search section is expanded (click if "All Jobs" link not visible)
-    const allJobsLink = b.page.locator("aside a").filter({
-      hasText: "All Jobs",
-    });
-    if (!(await allJobsLink.isVisible({ timeout: 500 }).catch(() => false))) {
-      await b.page.locator("aside button").filter({ hasText: "Job Search" })
-        .click();
-      await b.page.waitForTimeout(300);
-    }
+	it('expands Job Search and navigates to sub-pages', async () => {
+		// Ensure Job Search section is expanded (click if "All Jobs" link not visible)
+		const allJobsLink = b.page.locator('aside a').filter({
+			hasText: 'All Jobs'
+		});
+		if (!(await allJobsLink.isVisible({ timeout: 500 }).catch(() => false))) {
+			await b.page.locator('aside button').filter({ hasText: 'Job Search' }).click();
+			await b.page.waitForTimeout(300);
+		}
 
-    await allJobsLink.click();
-    await b.page.waitForURL("**/jobs", { timeout: 5000 });
-    expect(b.page.url()).toContain("/jobs");
-  });
+		await allJobsLink.click();
+		await b.page.waitForURL('**/jobs', { timeout: 5000 });
+		expect(b.page.url()).toContain('/jobs');
+	});
 
-  it("expands Applying and navigates to applications", async () => {
-    const appLink = b.page.locator("aside a").filter({
-      hasText: "Applications",
-    });
-    if (!(await appLink.isVisible({ timeout: 500 }).catch(() => false))) {
-      await b.page.locator("aside button").filter({ hasText: "Applying" })
-        .click();
-      await b.page.waitForTimeout(300);
-    }
+	it('expands Applying and navigates to applications', async () => {
+		const appLink = b.page.locator('aside a').filter({
+			hasText: 'Applications'
+		});
+		if (!(await appLink.isVisible({ timeout: 500 }).catch(() => false))) {
+			await b.page.locator('aside button').filter({ hasText: 'Applying' }).click();
+			await b.page.waitForTimeout(300);
+		}
 
-    await appLink.click();
-    await b.page.waitForURL("**/applications/**", { timeout: 5000 });
-    expect(b.page.url()).toContain("/applications");
-  });
+		await appLink.click();
+		await b.page.waitForURL('**/applications/**', { timeout: 5000 });
+		expect(b.page.url()).toContain('/applications');
+	});
 
-  it("expands Profile and navigates to profile data", async () => {
-    const profileLink = b.page.locator("aside a").filter({
-      hasText: "Profile Data",
-    });
-    if (!(await profileLink.isVisible({ timeout: 500 }).catch(() => false))) {
-      await b.page.locator("aside button").filter({ hasText: "Profile" })
-        .click();
-      await b.page.waitForTimeout(300);
-    }
+	it('expands Profile and navigates to profile data', async () => {
+		const profileLink = b.page.locator('aside a').filter({
+			hasText: 'Profile Data'
+		});
+		if (!(await profileLink.isVisible({ timeout: 500 }).catch(() => false))) {
+			await b.page.locator('aside button').filter({ hasText: 'Profile' }).click();
+			await b.page.waitForTimeout(300);
+		}
 
-    await profileLink.click();
-    await b.page.waitForURL("**/profile/edit", { timeout: 5000 });
-    expect(b.page.url()).toContain("/profile/edit");
-  });
+		await profileLink.click();
+		await b.page.waitForURL('**/profile/edit', { timeout: 5000 });
+		expect(b.page.url()).toContain('/profile/edit');
+	});
 
-  it("expands Data & Settings and navigates to import", async () => {
-    const importLink = b.page.locator("aside a").filter({
-      hasText: "Import & Export",
-    });
-    if (!(await importLink.isVisible({ timeout: 500 }).catch(() => false))) {
-      await b.page.locator("aside button").filter({
-        hasText: "Data & Settings",
-      }).click();
-      await b.page.waitForTimeout(300);
-    }
+	it('expands Data & Settings and navigates to import', async () => {
+		const importLink = b.page.locator('aside a').filter({
+			hasText: 'Import & Export'
+		});
+		if (!(await importLink.isVisible({ timeout: 500 }).catch(() => false))) {
+			await b.page
+				.locator('aside button')
+				.filter({
+					hasText: 'Data & Settings'
+				})
+				.click();
+			await b.page.waitForTimeout(300);
+		}
 
-    await importLink.click();
-    await b.page.waitForURL("**/data/profile-import", { timeout: 5000 });
-    expect(b.page.url()).toContain("/data/profile-import");
-  });
+		await importLink.click();
+		await b.page.waitForURL('**/data/profile-import', { timeout: 5000 });
+		expect(b.page.url()).toContain('/data/profile-import');
+	});
 });
 
 // ============================================================================
 // Feedback form
 // ============================================================================
 
-describe("feedback form", () => {
-  const b = useBrowser();
+describe('feedback form', () => {
+	const b = useBrowser();
 
-  it("opens feedback widget from sidebar", async () => {
-    await loginViaUI(b.page);
-    await b.page.waitForLoadState("networkidle");
+	it('opens feedback widget from sidebar', async () => {
+		await loginViaUI(b.page);
+		await b.page.waitForLoadState('networkidle');
 
-    await b.page.getByRole("button", { name: /send feedback/i }).click();
-    await b.page.waitForTimeout(500);
+		await b.page.getByRole('button', { name: /send feedback/i }).click();
+		await b.page.waitForTimeout(500);
 
-    // Feedback widget should appear with textarea
-    const textarea = b.page.locator('textarea[placeholder*="mind"]');
-    expect(await textarea.isVisible()).toBe(true);
-  });
+		// Feedback widget should appear with textarea
+		const textarea = b.page.locator('textarea[placeholder*="mind"]');
+		expect(await textarea.isVisible()).toBe(true);
+	});
 
-  it("shows category buttons", async () => {
-    for (const category of ["Bug", "Feature", "Question"]) {
-      const btn = b.page.getByRole("button", { name: category });
-      expect(await btn.isVisible(), `${category} button`).toBe(true);
-    }
-  });
+	it('shows category buttons', async () => {
+		for (const category of ['Bug', 'Feature', 'Question']) {
+			const btn = b.page.getByRole('button', { name: category });
+			expect(await btn.isVisible(), `${category} button`).toBe(true);
+		}
+	});
 
-  it("can select a category and type a message", async () => {
-    await b.page.getByRole("button", { name: "Bug" }).click();
-    await b.page.locator('textarea[placeholder*="mind"]').fill(
-      "E2E test feedback",
-    );
+	it('can select a category and type a message', async () => {
+		await b.page.getByRole('button', { name: 'Bug' }).click();
+		await b.page.locator('textarea[placeholder*="mind"]').fill('E2E test feedback');
 
-    // Send button should be visible
-    const sendBtn = b.page.getByRole("button", { name: /^send$/i });
-    expect(await sendBtn.isVisible()).toBe(true);
-  });
+		// Send button should be visible
+		const sendBtn = b.page.getByRole('button', { name: /^send$/i });
+		expect(await sendBtn.isVisible()).toBe(true);
+	});
 
-  it("submits feedback and shows success", async () => {
-    await b.page.getByRole("button", { name: /^send$/i }).click();
-    await b.page.waitForTimeout(2000);
+	it('submits feedback and shows success', async () => {
+		await b.page.getByRole('button', { name: /^send$/i }).click();
+		await b.page.waitForTimeout(2000);
 
-    // Should show success message
-    const successText = b.page.locator("text=Thanks for your feedback");
-    expect(await successText.isVisible({ timeout: 5000 })).toBe(true);
-  });
+		// Should show success message
+		const successText = b.page.locator('text=Thanks for your feedback');
+		expect(await successText.isVisible({ timeout: 5000 })).toBe(true);
+	});
 });
 
 // ============================================================================
 // Theme switching
 // ============================================================================
 
-describe("theme switching", () => {
-  const b = useBrowser();
+describe('theme switching', () => {
+	const b = useBrowser();
 
-  it("opens user menu and shows theme toggle", async () => {
-    await loginViaUI(b.page);
-    await b.page.waitForLoadState("networkidle");
+	it('opens user menu and shows theme toggle', async () => {
+		await loginViaUI(b.page);
+		await b.page.waitForLoadState('networkidle');
 
-    // Click the avatar button (last button in header)
-    await b.page.locator("header button").last().click();
-    await b.page.waitForTimeout(300);
+		// Click the avatar button (last button in header)
+		await b.page.locator('header button').last().click();
+		await b.page.waitForTimeout(300);
 
-    // Theme button should be visible in dropdown
-    const themeBtn = b.page.getByRole("button", { name: /^theme/i });
-    expect(await themeBtn.isVisible()).toBe(true);
-  });
+		// Theme button should be visible in dropdown
+		const themeBtn = b.page.getByRole('button', { name: /^theme/i });
+		expect(await themeBtn.isVisible()).toBe(true);
+	});
 
-  it("cycles through all three themes", async () => {
-    const themes: string[] = [];
+	it('cycles through all three themes', async () => {
+		const themes: string[] = [];
 
-    // Click theme 3 times to cycle through all states
-    for (let i = 0; i < 3; i++) {
-      // Open dropdown if closed
-      const themeBtn = b.page.getByRole("button", { name: /^theme/i });
-      if (!(await themeBtn.isVisible({ timeout: 500 }).catch(() => false))) {
-        await b.page.locator("header button").last().click();
-        await b.page.waitForTimeout(300);
-      }
+		// Click theme 3 times to cycle through all states
+		for (let i = 0; i < 3; i++) {
+			// Open dropdown if closed
+			const themeBtn = b.page.getByRole('button', { name: /^theme/i });
+			if (!(await themeBtn.isVisible({ timeout: 500 }).catch(() => false))) {
+				await b.page.locator('header button').last().click();
+				await b.page.waitForTimeout(300);
+			}
 
-      await b.page.getByRole("button", { name: /^theme/i }).click();
-      await b.page.waitForTimeout(300);
+			await b.page.getByRole('button', { name: /^theme/i }).click();
+			await b.page.waitForTimeout(300);
 
-      const cookies = await b.context.cookies();
-      const theme = cookies.find((c) => c.name === "theme")?.value ?? "";
-      themes.push(theme);
-    }
+			const cookies = await b.context.cookies();
+			const theme = cookies.find((c) => c.name === 'theme')?.value ?? '';
+			themes.push(theme);
+		}
 
-    // Should have cycled through 3 distinct values (light, dark, auto in some order)
-    expect(new Set(themes).size).toBe(3);
-    expect(themes).toContain("light");
-    expect(themes).toContain("dark");
-    expect(themes).toContain("auto");
-  });
+		// Should have cycled through 3 distinct values (light, dark, auto in some order)
+		expect(new Set(themes).size).toBe(3);
+		expect(themes).toContain('light');
+		expect(themes).toContain('dark');
+		expect(themes).toContain('auto');
+	});
 
-  it("persists theme after page reload", async () => {
-    // Get current theme class
-    const classBefore = await b.page.locator("html").getAttribute("class");
+	it('persists theme after page reload', async () => {
+		// Get current theme class
+		const classBefore = await b.page.locator('html').getAttribute('class');
 
-    await b.page.reload();
-    await b.page.waitForLoadState("networkidle");
+		await b.page.reload();
+		await b.page.waitForLoadState('networkidle');
 
-    const classAfter = await b.page.locator("html").getAttribute("class");
-    expect(classAfter).toBe(classBefore);
-  });
+		const classAfter = await b.page.locator('html').getAttribute('class');
+		expect(classAfter).toBe(classBefore);
+	});
 });
 
 // ============================================================================
 // Applications pages
 // ============================================================================
 
-describe("applications pages", () => {
-  const b = useBrowser();
+describe('applications pages', () => {
+	const b = useBrowser();
 
-  it("shows all applications heading", async () => {
-    await loginViaUI(b.page);
-    await b.page.goto("/applications/active");
-    await b.page.waitForLoadState("networkidle");
+	it('shows all applications heading', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto('/applications/active');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("All Applications");
-  });
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('All Applications');
+	});
 
-  it("shows salary prep page", async () => {
-    await b.page.goto("/applications/salary");
-    await b.page.waitForLoadState("networkidle");
+	it('shows salary prep page', async () => {
+		await b.page.goto('/applications/salary');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Salary Prep");
-  });
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Salary Prep');
+	});
 });
 
 // ============================================================================
 // Job detail page
 // ============================================================================
 
-describe("job detail page", () => {
-  const b = useBrowser();
+describe('job detail page', () => {
+	const b = useBrowser();
 
-  it("navigates to a job detail from the jobs list", async () => {
-    await loginViaUI(b.page);
-    await b.page.goto("/jobs");
-    await b.page.waitForLoadState("networkidle");
+	it('navigates to a job detail from the jobs list', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto('/jobs');
+		await b.page.waitForLoadState('networkidle');
 
-    // Click the first job card link
-    const jobLink = b.page.locator('main a[href*="/jobs/"]').first();
-    expect(await jobLink.isVisible()).toBe(true);
+		// Click the first job card link
+		const jobLink = b.page.locator('main a[href*="/jobs/"]').first();
+		expect(await jobLink.isVisible()).toBe(true);
 
-    const href = await jobLink.getAttribute("href");
-    await jobLink.click();
-    await b.page.waitForURL(`**${href}`, { timeout: 5000 });
+		const href = await jobLink.getAttribute('href');
+		await jobLink.click();
+		await b.page.waitForURL(`**${href}`, { timeout: 5000 });
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(["Saved Job", "Job Match", "Job Details"]).toContain(
-      heading?.trim(),
-    );
-  });
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(['Saved Job', 'Job Match', 'Job Details']).toContain(heading?.trim());
+	});
 
-  it("shows save button and job content", async () => {
-    const saveBtn = b.page.getByRole("button", { name: /^save$/i });
-    expect(await saveBtn.isVisible()).toBe(true);
+	it('shows save button and job content', async () => {
+		const saveBtn = b.page.getByRole('button', { name: /^save$/i });
+		expect(await saveBtn.isVisible()).toBe(true);
 
-    // Job detail should have substantial content
-    const mainText = await b.page.locator("main").textContent();
-    expect(mainText!.length).toBeGreaterThan(500);
-  });
+		// Job detail should have substantial content
+		const mainText = await b.page.locator('main').textContent();
+		expect(mainText!.length).toBeGreaterThan(500);
+	});
 });
 
 // ============================================================================
 // Profile edit and save
 // ============================================================================
 
-describe("profile edit and save", () => {
-  const b = useBrowser();
-  const testTitle = `E2E Title ${Date.now()}`;
-  let originalTitle = "";
+describe('profile edit and save', () => {
+	const b = useBrowser();
+	const testTitle = `E2E Title ${Date.now()}`;
+	let originalTitle = '';
 
-  // Professional Title renders via TranslatableField, which labels itself with a
-  // plain <span> (no `for`/`id`), so there is nothing to match by role or label.
-  // The placeholder is the only stable hook.
-  const titleInput = () =>
-    b.page.locator('input[placeholder="e.g., Senior Software Engineer"]');
+	// Professional Title renders via TranslatableField, which labels itself with a
+	// plain <span> (no `for`/`id`), so there is nothing to match by role or label.
+	// The placeholder is the only stable hook.
+	const titleInput = () => b.page.locator('input[placeholder="e.g., Senior Software Engineer"]');
 
-  /**
-   * Basic Info auto-saves on a 700ms debounce — there is no Save button. Blur to
-   * flush the pending save, then wait for the indicator to settle.
-   */
-  async function saveAndReload() {
-    await titleInput().blur();
-    await b.page.getByText("Saved", { exact: true }).first().waitFor({
-      timeout: 10000,
-    });
-    await b.page.reload();
-    await b.page.waitForLoadState("networkidle");
-  }
+	/**
+	 * Basic Info auto-saves on a 700ms debounce — there is no Save button. Blur to
+	 * flush the pending save, then wait for the indicator to settle.
+	 */
+	async function saveAndReload() {
+		await titleInput().blur();
+		await b.page.getByText('Saved', { exact: true }).first().waitFor({
+			timeout: 10000
+		});
+		await b.page.reload();
+		await b.page.waitForLoadState('networkidle');
+	}
 
-  it("loads the edit page with profile data", async () => {
-    await loginViaUI(b.page);
-    await b.page.goto("/profile/edit");
-    await b.page.waitForLoadState("networkidle");
+	it('loads the edit page with profile data', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto('/profile/edit');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toBe("Basic Info");
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toBe('Basic Info');
 
-    // Name should be filled
-    const nameValue = await b.page.locator("#name").inputValue();
-    expect(nameValue).toBeTruthy();
-  });
+		// Name should be filled
+		const nameValue = await b.page.locator('#name').inputValue();
+		expect(nameValue).toBeTruthy();
+	});
 
-  it("can edit and save the professional title", async () => {
-    originalTitle = await titleInput().inputValue();
+	it('can edit and save the professional title', async () => {
+		originalTitle = await titleInput().inputValue();
 
-    await titleInput().fill(testTitle);
-    await saveAndReload();
+		await titleInput().fill(testTitle);
+		await saveAndReload();
 
-    expect(await titleInput().inputValue()).toBe(testTitle);
-  });
+		expect(await titleInput().inputValue()).toBe(testTitle);
+	});
 
-  it("restores the original title", async () => {
-    await titleInput().fill(originalTitle);
-    await saveAndReload();
+	it('restores the original title', async () => {
+		await titleInput().fill(originalTitle);
+		await saveAndReload();
 
-    expect(await titleInput().inputValue()).toBe(originalTitle);
-  });
+		expect(await titleInput().inputValue()).toBe(originalTitle);
+	});
 });
 
 // ============================================================================
 // Navigation between pages
 // ============================================================================
 
-describe("cross-page navigation", () => {
-  const b = useBrowser();
+describe('cross-page navigation', () => {
+	const b = useBrowser();
 
-  it("can navigate through all main sections", async () => {
-    await loginViaUI(b.page);
+	it('can navigate through all main sections', async () => {
+		await loginViaUI(b.page);
 
-    const routes = [
-      { path: "/home", heading: "Dashboard" },
-      { path: "/jobs", heading: "Jobs" },
-      { path: "/applications/active", heading: "Applications" },
-      { path: "/billing", heading: "Plan" },
-      { path: "/contacts", heading: "Contacts" },
-      { path: "/export/import", heading: "Import" },
-      { path: "/export/settings", heading: "Settings" },
-      { path: "/profile/create", heading: "Create" },
-    ];
+		const routes = [
+			{ path: '/home', heading: 'Dashboard' },
+			{ path: '/jobs', heading: 'Jobs' },
+			{ path: '/applications/active', heading: 'Applications' },
+			{ path: '/billing', heading: 'Plan' },
+			{ path: '/contacts', heading: 'Contacts' },
+			{ path: '/export/import', heading: 'Import' },
+			{ path: '/export/settings', heading: 'Settings' },
+			{ path: '/profile/create', heading: 'Create' }
+		];
 
-    for (const route of routes) {
-      await b.page.goto(route.path);
-      await b.page.waitForLoadState("networkidle");
-      const heading = await b.page.locator("h1").first().textContent();
-      expect(heading?.trim().toLowerCase(), `${route.path} heading`).toContain(
-        route.heading.toLowerCase(),
-      );
-    }
-  });
+		for (const route of routes) {
+			await b.page.goto(route.path);
+			await b.page.waitForLoadState('networkidle');
+			const heading = await b.page.locator('h1').first().textContent();
+			expect(heading?.trim().toLowerCase(), `${route.path} heading`).toContain(
+				route.heading.toLowerCase()
+			);
+		}
+	});
 });
 
 // ============================================================================
 // Password reset (forgot password)
 // ============================================================================
 
-describe("password reset", () => {
-  const b = useBrowser();
+describe('password reset', () => {
+	const b = useBrowser();
 
-  it("shows the reset password form", async () => {
-    await b.page.goto("/forgot-password");
-    await b.page.waitForLoadState("networkidle");
+	it('shows the reset password form', async () => {
+		await b.page.goto('/forgot-password');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h2").first().textContent();
-    expect(heading?.toLowerCase()).toContain("reset");
+		const heading = await b.page.locator('h2').first().textContent();
+		expect(heading?.toLowerCase()).toContain('reset');
 
-    expect(await b.page.locator("#email").isVisible()).toBe(true);
-    const submitBtn = b.page.getByRole("button", { name: /send reset link/i });
-    expect(await submitBtn.isVisible()).toBe(true);
-  });
+		expect(await b.page.locator('#email').isVisible()).toBe(true);
+		const submitBtn = b.page.getByRole('button', { name: /send reset link/i });
+		expect(await submitBtn.isVisible()).toBe(true);
+	});
 
-  it("has a back to sign in link", async () => {
-    const backLink = b.page.locator("a").filter({ hasText: /sign in/i });
-    expect(await backLink.isVisible()).toBe(true);
-    const href = await backLink.getAttribute("href");
-    expect(href).toContain("/login");
-  });
+	it('has a back to sign in link', async () => {
+		const backLink = b.page.locator('a').filter({ hasText: /sign in/i });
+		expect(await backLink.isVisible()).toBe(true);
+		const href = await backLink.getAttribute('href');
+		expect(href).toContain('/login');
+	});
 
-  it("submits and shows confirmation message", async () => {
-    await b.page.locator("#email").fill("alex.morgan@example.com");
-    await b.page.getByRole("button", { name: /send reset link/i }).click();
+	it('submits and shows confirmation message', async () => {
+		await b.page.locator('#email').fill('alex.morgan@example.com');
+		await b.page.getByRole('button', { name: /send reset link/i }).click();
 
-    // Wait for "Check your inbox" confirmation (email sending may take a few seconds)
-    await b.page.getByText("Check your inbox").waitFor({ timeout: 15000 });
-  });
+		// Wait for "Check your inbox" confirmation (email sending may take a few seconds)
+		await b.page.getByText('Check your inbox').waitFor({ timeout: 15000 });
+	});
 });
 
 // ============================================================================
 // Signup redirect
 // ============================================================================
 
-describe("signup redirect", () => {
-  const b = useBrowser();
+describe('signup redirect', () => {
+	const b = useBrowser();
 
-  it("redirects /signup to /login", async () => {
-    await b.page.goto("/signup");
-    await b.page.waitForLoadState("networkidle");
+	it('redirects /signup to /login', async () => {
+		await b.page.goto('/signup');
+		await b.page.waitForLoadState('networkidle');
 
-    expect(b.page.url()).toContain("/login");
-    const heading = await b.page.locator("h2").first().textContent();
-    expect(heading?.toLowerCase()).toContain("sign in");
-  });
+		expect(b.page.url()).toContain('/login');
+		const heading = await b.page.locator('h2').first().textContent();
+		expect(heading?.toLowerCase()).toContain('sign in');
+	});
 });
 
 // ============================================================================
 // Export page
 // ============================================================================
 
-describe("export page", () => {
-  const b = useBrowser();
+describe('export page', () => {
+	const b = useBrowser();
 
-  it("shows export options with scope selection", async () => {
-    await loginViaUI(b.page);
-    await b.page.goto("/export/data");
-    await b.page.waitForLoadState("networkidle");
+	it('shows export options with scope selection', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto('/export/data');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toContain("Import");
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toContain('Import');
 
-    // Scope buttons
-    const profileBtn = b.page.getByRole("button", { name: /profile only/i });
-    expect(await profileBtn.isVisible()).toBe(true);
+		// Scope buttons
+		const profileBtn = b.page.getByRole('button', { name: /profile only/i });
+		expect(await profileBtn.isVisible()).toBe(true);
 
-    const fullBtn = b.page.getByRole("button", { name: /full account/i });
-    expect(await fullBtn.isVisible()).toBe(true);
-  });
+		const fullBtn = b.page.getByRole('button', { name: /full account/i });
+		expect(await fullBtn.isVisible()).toBe(true);
+	});
 
-  it("has media files checkbox and export button", async () => {
-    const mediaCheckbox = b.page.locator('input[type="checkbox"]');
-    expect(await mediaCheckbox.isVisible()).toBe(true);
+	it('has media files checkbox and export button', async () => {
+		const mediaCheckbox = b.page.locator('input[type="checkbox"]');
+		expect(await mediaCheckbox.isVisible()).toBe(true);
 
-    const exportBtn = b.page.getByRole("button", { name: /export.*json/i });
-    expect(await exportBtn.isVisible()).toBe(true);
-  });
+		const exportBtn = b.page.getByRole('button', { name: /export.*json/i });
+		expect(await exportBtn.isVisible()).toBe(true);
+	});
 
-  it("triggers export and shows result", async () => {
-    // Submit export with "Profile Only" (default selection)
-    const exportBtn = b.page.getByRole("button", { name: /export.*json/i });
-    await exportBtn.click();
-    await b.page.waitForTimeout(5000);
+	it('triggers export and shows result', async () => {
+		// Submit export with "Profile Only" (default selection)
+		const exportBtn = b.page.getByRole('button', { name: /export.*json/i });
+		await exportBtn.click();
+		await b.page.waitForTimeout(5000);
 
-    // After export, should show the export in the list or success
-    const mainText = await b.page.locator("main").textContent();
-    const hasResult = mainText.includes("Download") ||
-      mainText.includes("JSON") ||
-      mainText.includes("Profile") || mainText.includes("ago");
-    expect(hasResult).toBe(true);
-  });
+		// After export, should show the export in the list or success
+		const mainText = await b.page.locator('main').textContent();
+		const hasResult =
+			mainText.includes('Download') ||
+			mainText.includes('JSON') ||
+			mainText.includes('Profile') ||
+			mainText.includes('ago');
+		expect(hasResult).toBe(true);
+	});
 });
 
 // ============================================================================
 // Import page
 // ============================================================================
 
-describe("import page", () => {
-  const b = useBrowser();
+describe('import page', () => {
+	const b = useBrowser();
 
-  it("shows import area with file upload", async () => {
-    await loginViaUI(b.page);
-    await b.page.goto("/export/import");
-    await b.page.waitForLoadState("networkidle");
+	it('shows import area with file upload', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto('/export/import');
+		await b.page.waitForLoadState('networkidle');
 
-    const heading = await b.page.locator("h1").first().textContent();
-    expect(heading?.trim()).toContain("Import");
+		const heading = await b.page.locator('h1').first().textContent();
+		expect(heading?.trim()).toContain('Import');
 
-    // File input should exist (may be hidden, attached to drag-drop area)
-    const fileInput = b.page.locator('input[type="file"]');
-    expect(await fileInput.count()).toBeGreaterThan(0);
-  });
+		// File input should exist (may be hidden, attached to drag-drop area)
+		const fileInput = b.page.locator('input[type="file"]');
+		expect(await fileInput.count()).toBeGreaterThan(0);
+	});
 
-  it("shows supported file formats", async () => {
-    const mainText = await b.page.locator("main").textContent();
-    expect(mainText).toContain("PDF");
-    expect(mainText).toContain("DOCX");
-    expect(mainText).toContain("JSON");
-  });
+	it('shows supported file formats', async () => {
+		const mainText = await b.page.locator('main').textContent();
+		expect(mainText).toContain('PDF');
+		expect(mainText).toContain('DOCX');
+		expect(mainText).toContain('JSON');
+	});
 
-  it("has import/export tab navigation", async () => {
-    const importTab = b.page.locator("main a").filter({
-      hasText: "Profile Import",
-    });
-    const exportTab = b.page.locator("main a").filter({
-      hasText: "Profile Export",
-    });
+	it('has import/export tab navigation', async () => {
+		const importTab = b.page.locator('main a').filter({
+			hasText: 'Profile Import'
+		});
+		const exportTab = b.page.locator('main a').filter({
+			hasText: 'Profile Export'
+		});
 
-    expect(await importTab.isVisible()).toBe(true);
-    expect(await exportTab.isVisible()).toBe(true);
+		expect(await importTab.isVisible()).toBe(true);
+		expect(await exportTab.isVisible()).toBe(true);
 
-    // Click export tab and verify navigation
-    const exportHref = await exportTab.getAttribute("href");
-    await exportTab.click();
-    await b.page.waitForURL(`**${exportHref}`, { timeout: 5000 });
-    expect(b.page.url()).toContain("/data/profile-export");
+		// Click export tab and verify navigation
+		const exportHref = await exportTab.getAttribute('href');
+		await exportTab.click();
+		await b.page.waitForURL(`**${exportHref}`, { timeout: 5000 });
+		expect(b.page.url()).toContain('/data/profile-export');
 
-    // Click import tab back
-    await b.page.locator("main a").filter({ hasText: "Profile Import" })
-      .click();
-    await b.page.waitForURL("**/data/profile-import", { timeout: 5000 });
-    expect(b.page.url()).toContain("/data/profile-import");
-  });
+		// Click import tab back
+		await b.page.locator('main a').filter({ hasText: 'Profile Import' }).click();
+		await b.page.waitForURL('**/data/profile-import', { timeout: 5000 });
+		expect(b.page.url()).toContain('/data/profile-import');
+	});
 });
 
 // ============================================================================
 // Unauthenticated access
 // ============================================================================
 
-describe("unauthenticated access", () => {
-  const b = useBrowser();
+describe('unauthenticated access', () => {
+	const b = useBrowser();
 
-  it("redirects all dashboard routes to login", async () => {
-    const routes = [
-      "/home",
-      "/jobs",
-      "/billing",
-      "/contacts",
-    ];
+	it('redirects all dashboard routes to login', async () => {
+		const routes = ['/home', '/jobs', '/billing', '/contacts'];
 
-    for (const route of routes) {
-      await b.page.goto(route);
-      await b.page.waitForTimeout(500);
-      expect(b.page.url(), `${route} should redirect`).toContain("/login");
-    }
-  });
+		for (const route of routes) {
+			await b.page.goto(route);
+			await b.page.waitForTimeout(500);
+			expect(b.page.url(), `${route} should redirect`).toContain('/login');
+		}
+	});
 });
 
 // ============================================================================
 // Logout
 // ============================================================================
 
-describe("logout", () => {
-  const b = useBrowser();
+describe('logout', () => {
+	const b = useBrowser();
 
-  it("clearing cookies removes access to dashboard", async () => {
-    await loginViaUI(b.page);
-    await b.context.clearCookies();
-    await b.page.goto("/home");
-    await b.page.waitForTimeout(1000);
-    expect(b.page.url()).toContain("/login");
-  });
+	it('clearing cookies removes access to dashboard', async () => {
+		await loginViaUI(b.page);
+		await b.context.clearCookies();
+		await b.page.goto('/home');
+		await b.page.waitForTimeout(1000);
+		expect(b.page.url()).toContain('/login');
+	});
 });

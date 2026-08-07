@@ -15,54 +15,54 @@
  * designed for machine-to-machine access from the ops machine.
  */
 
-import { error, json } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
-import { queryRawDirect, sql } from "$lib/server/db";
+import { error, json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import { queryRawDirect, sql } from '$lib/server/db';
 
 function requireDebugAuth(request: Request): void {
-  const key = process.env.DEBUG_API_KEY;
-  if (!key) throw error(503, "Debug API not configured");
-  const auth = request.headers.get("authorization");
-  if (!auth || auth !== `Bearer ${key}`) {
-    throw error(401, "Invalid or missing debug API key");
-  }
+	const key = process.env.DEBUG_API_KEY;
+	if (!key) throw error(503, 'Debug API not configured');
+	const auth = request.headers.get('authorization');
+	if (!auth || auth !== `Bearer ${key}`) {
+		throw error(401, 'Invalid or missing debug API key');
+	}
 }
 
 function detectEnvironment(): string {
-  const origin = process.env.ORIGIN || "";
-  if (origin.includes("preview.")) return "preview";
-  if (origin.includes("www.")) return "production";
-  if (origin.includes("dev.")) return "development";
-  return "development";
+	const origin = process.env.ORIGIN || '';
+	if (origin.includes('preview.')) return 'preview';
+	if (origin.includes('www.')) return 'production';
+	if (origin.includes('dev.')) return 'development';
+	return 'development';
 }
 
 // Shared age expression — keep in sync with the Top Matches query.
 const AGE_DAYS = sql`GREATEST(0, EXTRACT(epoch FROM now() - COALESCE(j.date_posted::timestamptz, j.date_created)) / 86400.0)`;
 
 export const GET: RequestHandler = async ({ request, url }) => {
-  requireDebugAuth(request);
+	requireDebugAuth(request);
 
-  const minScore = Number(url.searchParams.get("minScore") ?? "70");
-  const profileIdParam = url.searchParams.get("profileId");
-  const profileId = profileIdParam != null ? Number(profileIdParam) : null;
+	const minScore = Number(url.searchParams.get('minScore') ?? '70');
+	const profileIdParam = url.searchParams.get('profileId');
+	const profileId = profileIdParam != null ? Number(profileIdParam) : null;
 
-  if (!Number.isFinite(minScore)) throw error(400, "minScore must be a number");
-  if (profileIdParam != null && !Number.isFinite(profileId)) {
-    throw error(400, "profileId must be a number");
-  }
+	if (!Number.isFinite(minScore)) throw error(400, 'minScore must be a number');
+	if (profileIdParam != null && !Number.isFinite(profileId)) {
+		throw error(400, 'profileId must be a number');
+	}
 
-  // Optional per-profile scoping; absent → across all profiles.
-  const profileClause = profileId != null ? sql`AND jm.profile_id = ${profileId}` : sql``;
+	// Optional per-profile scoping; absent → across all profiles.
+	const profileClause = profileId != null ? sql`AND jm.profile_id = ${profileId}` : sql``;
 
-  // Age distribution: how matches spread across age buckets, with avg score
-  // per bucket. Flat avg_score across buckets ⇒ score is independent of age
-  // (the thing the decay fixes).
-  const ageBuckets = await queryRawDirect<{
-    bucket: string;
-    sort: number;
-    matches: number;
-    avg_score: number;
-  }>(sql`
+	// Age distribution: how matches spread across age buckets, with avg score
+	// per bucket. Flat avg_score across buckets ⇒ score is independent of age
+	// (the thing the decay fixes).
+	const ageBuckets = await queryRawDirect<{
+		bucket: string;
+		sort: number;
+		matches: number;
+		avg_score: number;
+	}>(sql`
     SELECT bucket, MIN(age_days) AS sort, COUNT(*)::int AS matches, ROUND(AVG(score)) AS avg_score
     FROM (
       SELECT jm.score AS score,
@@ -84,13 +84,13 @@ export const GET: RequestHandler = async ({ request, url }) => {
     ORDER BY sort
   `);
 
-  // Score distribution: matches per score band, with avg age per band. Flat
-  // avg_age_days across bands is the same independence from the other angle.
-  const scoreBuckets = await queryRawDirect<{
-    bucket: string;
-    matches: number;
-    avg_age_days: number;
-  }>(sql`
+	// Score distribution: matches per score band, with avg age per band. Flat
+	// avg_age_days across bands is the same independence from the other angle.
+	const scoreBuckets = await queryRawDirect<{
+		bucket: string;
+		matches: number;
+		avg_age_days: number;
+	}>(sql`
     SELECT
       CASE
         WHEN jm.score >= 90 THEN '90-100'
@@ -107,17 +107,17 @@ export const GET: RequestHandler = async ({ request, url }) => {
     ORDER BY bucket DESC
   `);
 
-  // Coverage: how trustworthy date_posted is, plus the date range. A non-zero
-  // posted_null or an absurd oldest_posted (parse artifacts) justifies the
-  // COALESCE fallback and the hard age floor.
-  const [coverage] = await queryRawDirect<{
-    total_matches: number;
-    profiles: number;
-    posted_null: number;
-    newest_posted: string | null;
-    oldest_posted: string | null;
-    matches_over_floor: number;
-  }>(sql`
+	// Coverage: how trustworthy date_posted is, plus the date range. A non-zero
+	// posted_null or an absurd oldest_posted (parse artifacts) justifies the
+	// COALESCE fallback and the hard age floor.
+	const [coverage] = await queryRawDirect<{
+		total_matches: number;
+		profiles: number;
+		posted_null: number;
+		newest_posted: string | null;
+		oldest_posted: string | null;
+		matches_over_floor: number;
+	}>(sql`
     SELECT
       COUNT(*)::int AS total_matches,
       COUNT(DISTINCT jm.profile_id)::int AS profiles,
@@ -130,12 +130,12 @@ export const GET: RequestHandler = async ({ request, url }) => {
     WHERE jm.score >= ${minScore} ${profileClause}
   `);
 
-  return json({
-    environment: detectEnvironment(),
-    timestamp: new Date().toISOString(),
-    filters: { minScore, profileId },
-    coverage,
-    ageBuckets,
-    scoreBuckets,
-  });
+	return json({
+		environment: detectEnvironment(),
+		timestamp: new Date().toISOString(),
+		filters: { minScore, profileId },
+		coverage,
+		ageBuckets,
+		scoreBuckets
+	});
 };

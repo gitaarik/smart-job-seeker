@@ -26,85 +26,85 @@
  */
 
 export const recordTypes = [
-  {
-    value: "message",
-    label: "Message",
-    hint: "An email, a LinkedIn message, any thread worth keeping",
-  },
-  {
-    value: "interview_recap",
-    label: "Interview recap",
-    hint: "How a round went, while it's fresh",
-  },
-  {
-    value: "feedback",
-    label: "Feedback",
-    hint: "What the interviewer or recruiter told you",
-  },
-  {
-    value: "assessment",
-    label: "Assessment / assignment",
-    hint: "The brief, and how you approached it",
-  },
-  {
-    value: "transcript",
-    label: "Transcript",
-    hint: "Verbatim notes or a recording transcript",
-  },
-  {
-    value: "offer",
-    label: "Offer",
-    hint: "What they offered, and the terms",
-  },
-  {
-    value: "contract",
-    label: "Contract",
-    hint: "The agreement itself",
-  },
-  {
-    value: "research",
-    label: "Research",
-    hint: "What you dug up about the company or the team",
-  },
-  {
-    // NOT "other". This is the authorship kind — the applicant's own writing —
-    // and it is the one distinction here invisible to a content reader, because
-    // it only shows up in aggregate: several entries all written by you and
-    // nothing received means no employer contact yet on this application.
-    //
-    // It doubles as the fallback when derivation cannot classify something,
-    // which is safe ONLY because that aggregate keys on `contacts` being empty
-    // rather than on this type. Anything reading it off the type instead will
-    // be subtly wrong.
-    value: "note",
-    label: "Note / update",
-    hint: "Something you jotted down yourself",
-  },
+	{
+		value: 'message',
+		label: 'Message',
+		hint: 'An email, a LinkedIn message, any thread worth keeping'
+	},
+	{
+		value: 'interview_recap',
+		label: 'Interview recap',
+		hint: "How a round went, while it's fresh"
+	},
+	{
+		value: 'feedback',
+		label: 'Feedback',
+		hint: 'What the interviewer or recruiter told you'
+	},
+	{
+		value: 'assessment',
+		label: 'Assessment / assignment',
+		hint: 'The brief, and how you approached it'
+	},
+	{
+		value: 'transcript',
+		label: 'Transcript',
+		hint: 'Verbatim notes or a recording transcript'
+	},
+	{
+		value: 'offer',
+		label: 'Offer',
+		hint: 'What they offered, and the terms'
+	},
+	{
+		value: 'contract',
+		label: 'Contract',
+		hint: 'The agreement itself'
+	},
+	{
+		value: 'research',
+		label: 'Research',
+		hint: 'What you dug up about the company or the team'
+	},
+	{
+		// NOT "other". This is the authorship kind — the applicant's own writing —
+		// and it is the one distinction here invisible to a content reader, because
+		// it only shows up in aggregate: several entries all written by you and
+		// nothing received means no employer contact yet on this application.
+		//
+		// It doubles as the fallback when derivation cannot classify something,
+		// which is safe ONLY because that aggregate keys on `contacts` being empty
+		// rather than on this type. Anything reading it off the type instead will
+		// be subtly wrong.
+		value: 'note',
+		label: 'Note / update',
+		hint: 'Something you jotted down yourself'
+	}
 ] as const;
 
-export type RecordType = (typeof recordTypes)[number]["value"];
+export type RecordType = (typeof recordTypes)[number]['value'];
 
 export const recordTypeValues: string[] = recordTypes.map((t) => t.value);
 
 export function getRecordTypeLabel(type: string | null): string {
-  return recordTypes.find((t) => t.value === type)?.label || "Note / update";
+	return recordTypes.find((t) => t.value === type)?.label || 'Note / update';
 }
 
 /** Tailwind classes per type, mirroring the status-pill treatment elsewhere. */
 export const recordTypeColors: Record<string, string> = {
-  message: "bg-teal-100 text-teal-700",
-  interview_recap: "bg-blue-100 text-blue-700",
-  feedback: "bg-amber-100 text-amber-700",
-  assessment: "bg-indigo-100 text-indigo-700",
-  transcript: "bg-purple-100 text-purple-700",
-  offer: "bg-emerald-100 text-emerald-700",
-  contract: "bg-green-100 text-green-800",
-  research: "bg-slate-100 text-slate-700",
-  note: "bg-gray-100 text-gray-700",
+	message: 'bg-teal-100 text-teal-700',
+	interview_recap: 'bg-blue-100 text-blue-700',
+	feedback: 'bg-amber-100 text-amber-700',
+	assessment: 'bg-indigo-100 text-indigo-700',
+	transcript: 'bg-purple-100 text-purple-700',
+	offer: 'bg-emerald-100 text-emerald-700',
+	contract: 'bg-green-100 text-green-800',
+	research: 'bg-slate-100 text-slate-700',
+	note: 'bg-gray-100 text-gray-700'
 };
 
 export function getRecordTypeColor(type: string | null): string {
-  return recordTypeColors[type || "note"] || recordTypeColors.note;
+	return recordTypeColors[type || 'note'] || recordTypeColors.note;
 }
 
 /**
@@ -116,7 +116,7 @@ export function getRecordTypeColor(type: string | null): string {
  * timezone nobody tested.
  */
 export function today(): string {
-  return new Date().toISOString().slice(0, 10);
+	return new Date().toISOString().slice(0, 10);
 }
 
 /**
@@ -143,27 +143,27 @@ export const MIN_ENTRIES_FOR_SUMMARY = 2;
  * attach to the *person*: notes, a profile URL, history across applications.
  */
 export const contactRoles = [
-  { value: "recruiter", label: "Recruiter" },
-  { value: "hiring_manager", label: "Hiring manager" },
-  { value: "technical_interviewer", label: "Technical interviewer" },
-  { value: "hr", label: "HR" },
-  { value: "agency", label: "Agency" },
-  { value: "referral", label: "Referral" },
-  { value: "other", label: "Other" },
+	{ value: 'recruiter', label: 'Recruiter' },
+	{ value: 'hiring_manager', label: 'Hiring manager' },
+	{ value: 'technical_interviewer', label: 'Technical interviewer' },
+	{ value: 'hr', label: 'HR' },
+	{ value: 'agency', label: 'Agency' },
+	{ value: 'referral', label: 'Referral' },
+	{ value: 'other', label: 'Other' }
 ] as const;
 
-export type ContactRole = (typeof contactRoles)[number]["value"];
+export type ContactRole = (typeof contactRoles)[number]['value'];
 
 export const contactRoleValues: string[] = contactRoles.map((r) => r.value);
 
 /** A person involved in a record. Shape of one `contacts` jsonb entry. */
 export interface RecordContact {
-  name: string;
-  role: ContactRole | null;
+	name: string;
+	role: ContactRole | null;
 }
 
 export function getContactRoleLabel(role: string | null): string {
-  return contactRoles.find((r) => r.value === role)?.label || "";
+	return contactRoles.find((r) => r.value === role)?.label || '';
 }
 
 /** Titles longer than this stop being scannable in a stream. */
@@ -177,10 +177,8 @@ const TITLE_MAX = 120;
  * truncation, so every writer has to clamp and this is the one that does it.
  */
 export function clampRecordTitle(title: string): string {
-  const cleaned = title.trim();
-  return cleaned.length > TITLE_MAX
-    ? cleaned.slice(0, TITLE_MAX).trimEnd() + "…"
-    : cleaned;
+	const cleaned = title.trim();
+	return cleaned.length > TITLE_MAX ? cleaned.slice(0, TITLE_MAX).trimEnd() + '…' : cleaned;
 }
 
 /**
@@ -196,10 +194,13 @@ export function clampRecordTitle(title: string): string {
  * unit test that does not need a request.
  */
 export function deriveRecordTitle(content: string): string {
-  const firstLine = content.split("\n").map((l) => l.trim()).find(Boolean) ??
-    "";
-  // Strip a leading "Subject:" so a pasted email doesn't title itself with it.
-  const cleaned = firstLine.replace(/^(subject|onderwerp)\s*:\s*/i, "").trim();
-  if (!cleaned) return "Untitled";
-  return clampRecordTitle(cleaned);
+	const firstLine =
+		content
+			.split('\n')
+			.map((l) => l.trim())
+			.find(Boolean) ?? '';
+	// Strip a leading "Subject:" so a pasted email doesn't title itself with it.
+	const cleaned = firstLine.replace(/^(subject|onderwerp)\s*:\s*/i, '').trim();
+	if (!cleaned) return 'Untitled';
+	return clampRecordTitle(cleaned);
 }

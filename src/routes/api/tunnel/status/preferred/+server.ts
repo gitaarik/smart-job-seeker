@@ -1,10 +1,7 @@
-import { json } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
-import { parseIntParam, requireAuth } from "$lib/server/utils/api-helpers";
-import {
-  getDeviceById,
-  getPreferredDevice,
-} from "$lib/server/sjs-browser-status";
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { getDeviceById, getPreferredDevice } from '$lib/server/sjs-browser-status';
 
 /**
  * GET /api/tunnel/status/preferred — the device that would be used when scraping.
@@ -18,11 +15,11 @@ import {
  * Returns `{ device: null }` when nothing matches/is connected.
  */
 export const GET: RequestHandler = async ({ locals, url }) => {
-  const user = requireAuth(locals);
+	const user = requireAuth(locals);
 
-  const apiKeyIdStr = url.searchParams.get("apiKeyId");
-  const device = apiKeyIdStr
-    ? await getDeviceById(user.id, parseIntParam(apiKeyIdStr, "apiKey"))
-    : await getPreferredDevice(user.id);
-  return json({ device });
+	const apiKeyIdStr = url.searchParams.get('apiKeyId');
+	const device = apiKeyIdStr
+		? await getDeviceById(user.id, parseIntParam(apiKeyIdStr, 'apiKey'))
+		: await getPreferredDevice(user.id);
+	return json({ device });
 };

@@ -1,3 +1,3 @@
 <script lang="ts">
-  // Redirects to /applications/active
+	// Redirects to /applications/active
 </script>

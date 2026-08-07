@@ -6,18 +6,18 @@
  * Uses the same visibility scope (match_community_jobs) as the matcher itself.
  */
 
-import type { SQL } from "drizzle-orm";
-import { dbDirect as db, queryRaw, sql, sqlJoin } from "$lib/server/db";
-import { buildEligibilityFilter } from "$lib/server/job/eligibility";
-import { getExpandedProfileSkills } from "$lib/server/job/match-utils";
+import type { SQL } from 'drizzle-orm';
+import { dbDirect as db, queryRaw, sql, sqlJoin } from '$lib/server/db';
+import { buildEligibilityFilter } from '$lib/server/job/eligibility';
+import { getExpandedProfileSkills } from '$lib/server/job/match-utils';
 
 export interface MatchCounts {
-  totalJobs: number;
-  matchedCount: number;       // score > 0 (LLM evaluated, any positive score)
-  noMatchCount: number;       // score = 0 with a job_matches row (not recommended + ineligible)
-  notRecommendedCount: number; // subset of noMatch: LLM said not recommended
-  ineligibleCount: number;     // subset of noMatch: failed eligibility filter
-  unmatchedCount: number;      // no job_matches row yet
+	totalJobs: number;
+	matchedCount: number; // score > 0 (LLM evaluated, any positive score)
+	noMatchCount: number; // score = 0 with a job_matches row (not recommended + ineligible)
+	notRecommendedCount: number; // subset of noMatch: LLM said not recommended
+	ineligibleCount: number; // subset of noMatch: failed eligibility filter
+	unmatchedCount: number; // no job_matches row yet
 }
 
 /**
@@ -27,30 +27,29 @@ export interface MatchCounts {
  * (own-imported jobs are always included regardless of age).
  */
 export function buildVisibilityScope(
-  profileId: number,
-  matchCommunityJobs: boolean,
-  communityMaxAgeDays?: number | null,
+	profileId: number,
+	matchCommunityJobs: boolean,
+	communityMaxAgeDays?: number | null
 ) {
-  const ownershipFilter = matchCommunityJobs
-    ? sql``
-    : sql`AND ji.id IS NOT NULL`;
+	const ownershipFilter = matchCommunityJobs ? sql`` : sql`AND ji.id IS NOT NULL`;
 
-  // When community matching is on with an age limit, with:
-  // - all own-imported jobs (ji.id IS NOT NULL), regardless of age
-  // - community jobs only if created within the age window
-  const ageFilter = matchCommunityJobs && communityMaxAgeDays
-    ? sql`AND (ji.id IS NOT NULL OR j.date_created >= NOW() - MAKE_INTERVAL(days => ${communityMaxAgeDays}))`
-    : sql``;
+	// When community matching is on with an age limit, with:
+	// - all own-imported jobs (ji.id IS NOT NULL), regardless of age
+	// - community jobs only if created within the age window
+	const ageFilter =
+		matchCommunityJobs && communityMaxAgeDays
+			? sql`AND (ji.id IS NOT NULL OR j.date_created >= NOW() - MAKE_INTERVAL(days => ${communityMaxAgeDays}))`
+			: sql``;
 
-  return {
-    from: sql`
+	return {
+		from: sql`
       FROM jobs j
       LEFT JOIN job_importers ji ON j.id = ji.job_id AND ji.profile_id = ${profileId}`,
-    where: sql`
+		where: sql`
       WHERE j.status != 'archived'
       ${ownershipFilter}
-      ${ageFilter}`,
-  };
+      ${ageFilter}`
+	};
 }
 
 /**
@@ -58,20 +57,20 @@ export function buildVisibilityScope(
  * Returns totals for matched, not recommended, ineligible, and unmatched jobs.
  */
 export async function getMatchCounts(
-  profileId: number,
-  matchCommunityJobs: boolean,
-  communityMaxAgeDays?: number | null,
+	profileId: number,
+	matchCommunityJobs: boolean,
+	communityMaxAgeDays?: number | null
 ): Promise<MatchCounts> {
-  const { from, where } = buildVisibilityScope(profileId, matchCommunityJobs, communityMaxAgeDays);
+	const { from, where } = buildVisibilityScope(profileId, matchCommunityJobs, communityMaxAgeDays);
 
-  const result = await queryRaw<{
-    total: number;
-    matched: number;
-    no_match: number;
-    not_recommended: number;
-    ineligible: number;
-    unmatched: number;
-  }>(sql`
+	const result = await queryRaw<{
+		total: number;
+		matched: number;
+		no_match: number;
+		not_recommended: number;
+		ineligible: number;
+		unmatched: number;
+	}>(sql`
     SELECT
       COUNT(DISTINCT j.id)::int AS total,
       COUNT(DISTINCT j.id) FILTER (WHERE jm.score > 0)::int AS matched,
@@ -84,15 +83,15 @@ export async function getMatchCounts(
     ${where}
   `);
 
-  const row = result[0];
-  return {
-    totalJobs: row.total,
-    matchedCount: row.matched,
-    noMatchCount: row.no_match,
-    notRecommendedCount: row.not_recommended,
-    ineligibleCount: row.ineligible,
-    unmatchedCount: row.unmatched,
-  };
+	const row = result[0];
+	return {
+		totalJobs: row.total,
+		matchedCount: row.matched,
+		noMatchCount: row.no_match,
+		notRecommendedCount: row.not_recommended,
+		ineligibleCount: row.ineligible,
+		unmatchedCount: row.unmatched
+	};
 }
 
 /**
@@ -101,26 +100,35 @@ export async function getMatchCounts(
  * Returns 0 if match config is incomplete (no work locations, job types, or skills).
  */
 export async function getEligibleUnmatchedCount(
-  profileId: number,
-  matchCommunityJobs: boolean,
-  matchConfig: { work_location: unknown; job_types: unknown; experience_levels?: unknown; community_max_age_days?: number | null } | null,
+	profileId: number,
+	matchCommunityJobs: boolean,
+	matchConfig: {
+		work_location: unknown;
+		job_types: unknown;
+		experience_levels?: unknown;
+		community_max_age_days?: number | null;
+	} | null
 ): Promise<number> {
-  const workLocations = matchConfig?.work_location as string[] | null;
-  const jobTypes = matchConfig?.job_types as string[] | null;
-  const experienceLevels = matchConfig?.experience_levels as string[] | null;
-  const profileSkills = await getExpandedProfileSkills(profileId);
+	const workLocations = matchConfig?.work_location as string[] | null;
+	const jobTypes = matchConfig?.job_types as string[] | null;
+	const experienceLevels = matchConfig?.experience_levels as string[] | null;
+	const profileSkills = await getExpandedProfileSkills(profileId);
 
-  if (!workLocations?.length || !jobTypes?.length || profileSkills.length === 0) {
-    return 0;
-  }
+	if (!workLocations?.length || !jobTypes?.length || profileSkills.length === 0) {
+		return 0;
+	}
 
-  const { from, where } = buildVisibilityScope(profileId, matchCommunityJobs, matchConfig?.community_max_age_days);
-  const eligibilityFilter = buildEligibilityFilter(
-    { work_location: workLocations, job_types: jobTypes, experience_levels: experienceLevels },
-    profileSkills,
-  );
+	const { from, where } = buildVisibilityScope(
+		profileId,
+		matchCommunityJobs,
+		matchConfig?.community_max_age_days
+	);
+	const eligibilityFilter = buildEligibilityFilter(
+		{ work_location: workLocations, job_types: jobTypes, experience_levels: experienceLevels },
+		profileSkills
+	);
 
-  const result = await queryRaw<{ cnt: number }>(sql`
+	const result = await queryRaw<{ cnt: number }>(sql`
     SELECT COUNT(*)::int as cnt
     ${from}
     LEFT JOIN job_matches jm ON j.id = jm.job_id AND jm.profile_id = ${profileId}
@@ -129,7 +137,7 @@ export async function getEligibleUnmatchedCount(
     AND ${eligibilityFilter}
   `);
 
-  return result[0]?.cnt ?? 0;
+	return result[0]?.cnt ?? 0;
 }
 
 /**
@@ -138,10 +146,10 @@ export async function getEligibleUnmatchedCount(
  * Only counts community jobs (excludes own-imported jobs from the count).
  */
 export async function getCommunityJobCountsByWindow(
-  profileId: number,
-  windows: (number | null)[],
+	profileId: number,
+	windows: (number | null)[]
 ): Promise<Map<number | null, number>> {
-  const result = await queryRaw<{ days: number | null; cnt: number }>(sql`
+	const result = await queryRaw<{ days: number | null; cnt: number }>(sql`
     SELECT
       w.days,
       COUNT(DISTINCT j.id)::int AS cnt
@@ -155,10 +163,10 @@ export async function getCommunityJobCountsByWindow(
     ORDER BY w.days
   `);
 
-  const map = new Map<number | null, number>();
-  for (const row of result) {
-    const key = row.days === -1 ? null : row.days;
-    map.set(key, row.cnt);
-  }
-  return map;
+	const map = new Map<number | null, number>();
+	for (const row of result) {
+		const key = row.days === -1 ? null : row.days;
+		map.set(key, row.cnt);
+	}
+	return map;
 }

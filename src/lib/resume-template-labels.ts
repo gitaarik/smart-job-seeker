@@ -9,55 +9,48 @@
  */
 
 export type TemplateLabelKey =
-  | "skills"
-  | "contactDetails"
-  | "education"
-  | "workExperience"
-  | "present";
+	'skills' | 'contactDetails' | 'education' | 'workExperience' | 'present';
 
 const LABELS: Record<TemplateLabelKey, Record<string, string>> = {
-  skills: {
-    en: "Skills",
-    nl: "Vaardigheden",
-    de: "Kenntnisse",
-    fr: "Compétences",
-    es: "Habilidades",
-  },
-  contactDetails: {
-    en: "Contact details",
-    nl: "Contactgegevens",
-    de: "Kontaktdaten",
-    fr: "Coordonnées",
-    es: "Datos de contacto",
-  },
-  education: {
-    en: "Education",
-    nl: "Opleidingen",
-    de: "Ausbildung",
-    fr: "Formation",
-    es: "Formación",
-  },
-  workExperience: {
-    en: "Work experience",
-    nl: "Werkervaring",
-    de: "Berufserfahrung",
-    fr: "Expérience professionnelle",
-    es: "Experiencia laboral",
-  },
-  present: {
-    en: "Present",
-    nl: "Heden",
-    de: "Heute",
-    fr: "Présent",
-    es: "Actualidad",
-  },
+	skills: {
+		en: 'Skills',
+		nl: 'Vaardigheden',
+		de: 'Kenntnisse',
+		fr: 'Compétences',
+		es: 'Habilidades'
+	},
+	contactDetails: {
+		en: 'Contact details',
+		nl: 'Contactgegevens',
+		de: 'Kontaktdaten',
+		fr: 'Coordonnées',
+		es: 'Datos de contacto'
+	},
+	education: {
+		en: 'Education',
+		nl: 'Opleidingen',
+		de: 'Ausbildung',
+		fr: 'Formation',
+		es: 'Formación'
+	},
+	workExperience: {
+		en: 'Work experience',
+		nl: 'Werkervaring',
+		de: 'Berufserfahrung',
+		fr: 'Expérience professionnelle',
+		es: 'Experiencia laboral'
+	},
+	present: {
+		en: 'Present',
+		nl: 'Heden',
+		de: 'Heute',
+		fr: 'Présent',
+		es: 'Actualidad'
+	}
 };
 
 /** Localized template label for `key`, falling back to English. */
-export function templateLabel(
-  key: TemplateLabelKey,
-  locale: string | null | undefined,
-): string {
-  const entry = LABELS[key];
-  return entry[locale ?? "en"] ?? entry.en;
+export function templateLabel(key: TemplateLabelKey, locale: string | null | undefined): string {
+	const entry = LABELS[key];
+	return entry[locale ?? 'en'] ?? entry.en;
 }

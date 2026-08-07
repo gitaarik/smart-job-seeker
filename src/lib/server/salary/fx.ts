@@ -1,7 +1,7 @@
-import { dbDirect as db } from "$lib/server/db";
-import { fx_rates } from "$lib/server/db/schema";
-import { eq } from "drizzle-orm";
-import type { FxRates } from "$lib/salary/conversion";
+import { dbDirect as db } from '$lib/server/db';
+import { fx_rates } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
+import type { FxRates } from '$lib/salary/conversion';
 
 /**
  * Load the latest currency exchange rates from the DB.
@@ -13,8 +13,8 @@ import type { FxRates } from "$lib/salary/conversion";
  * guessing. Same-currency comparisons still work without any rates.
  */
 export async function getFxRates(): Promise<FxRates> {
-  const row = await db.query.fx_rates.findFirst({
-    where: eq(fx_rates.id, 1),
-  });
-  return (row?.rates as FxRates | undefined) ?? {};
+	const row = await db.query.fx_rates.findFirst({
+		where: eq(fx_rates.id, 1)
+	});
+	return (row?.rates as FxRates | undefined) ?? {};
 }

@@ -3,4 +3,4 @@
  */
 
 // Browser utilities
-export { type BrowserLaunchOptions, launchBrowser } from "./utils";
+export { type BrowserLaunchOptions, launchBrowser } from './utils';

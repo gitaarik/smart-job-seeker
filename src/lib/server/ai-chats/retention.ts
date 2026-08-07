@@ -26,56 +26,59 @@
  * --vacuum` exists for the deliberate, one-off reclaim during maintenance.
  */
 
-import { and, inArray, isNotNull, lt, or } from "drizzle-orm";
-import { dbDirect as db } from "$lib/server/db";
-import { ai_chats } from "$lib/server/db/schema";
+import { and, inArray, isNotNull, lt, or } from 'drizzle-orm';
+import { dbDirect as db } from '$lib/server/db';
+import { ai_chats } from '$lib/server/db/schema';
 
 export interface AiChatRetentionResult {
-  rowsPruned: number;
-  /** True when the batch limit was hit, so rows older than the window remain. */
-  moreRemaining: boolean;
+	rowsPruned: number;
+	/** True when the batch limit was hit, so rows older than the window remain. */
+	moreRemaining: boolean;
 }
 
 export interface AiChatRetentionOptions {
-  /** Rows older than this keep only their small analytics columns. */
-  days: number;
-  /**
-   * Cap on rows per pass. A first run against a large backlog would otherwise
-   * rewrite millions of rows in a single statement; the caller's schedule
-   * catches up over subsequent passes.
-   */
-  limit?: number;
+	/** Rows older than this keep only their small analytics columns. */
+	days: number;
+	/**
+	 * Cap on rows per pass. A first run against a large backlog would otherwise
+	 * rewrite millions of rows in a single statement; the caller's schedule
+	 * catches up over subsequent passes.
+	 */
+	limit?: number;
 }
 
 export const DEFAULT_RETENTION_DAYS = 30;
 export const DEFAULT_BATCH_LIMIT = 50_000;
 
 export async function pruneAiChatPayloads(
-  opts: AiChatRetentionOptions,
+	opts: AiChatRetentionOptions
 ): Promise<AiChatRetentionResult> {
-  const limit = opts.limit ?? DEFAULT_BATCH_LIMIT;
-  const cutoff = new Date(Date.now() - opts.days * 24 * 60 * 60 * 1000);
+	const limit = opts.limit ?? DEFAULT_BATCH_LIMIT;
+	const cutoff = new Date(Date.now() - opts.days * 24 * 60 * 60 * 1000);
 
-  // Select the batch by primary key first, then update those ids. Postgres has
-  // no UPDATE ... LIMIT, and this keeps the row set stable and index-driven.
-  const batch = await db
-    .select({ id: ai_chats.id })
-    .from(ai_chats)
-    .where(and(
-      lt(ai_chats.date_created, cutoff),
-      or(isNotNull(ai_chats.full_prompt), isNotNull(ai_chats.context)),
-    ))
-    .limit(limit);
+	// Select the batch by primary key first, then update those ids. Postgres has
+	// no UPDATE ... LIMIT, and this keeps the row set stable and index-driven.
+	const batch = await db
+		.select({ id: ai_chats.id })
+		.from(ai_chats)
+		.where(
+			and(
+				lt(ai_chats.date_created, cutoff),
+				or(isNotNull(ai_chats.full_prompt), isNotNull(ai_chats.context))
+			)
+		)
+		.limit(limit);
 
-  if (batch.length === 0) return { rowsPruned: 0, moreRemaining: false };
+	if (batch.length === 0) return { rowsPruned: 0, moreRemaining: false };
 
-  const ids = batch.map((r) => r.id);
-  const res = await db.update(ai_chats)
-    .set({ full_prompt: null, context: null })
-    .where(inArray(ai_chats.id, ids));
+	const ids = batch.map((r) => r.id);
+	const res = await db
+		.update(ai_chats)
+		.set({ full_prompt: null, context: null })
+		.where(inArray(ai_chats.id, ids));
 
-  return {
-    rowsPruned: res.rowCount ?? ids.length,
-    moreRemaining: batch.length === limit,
-  };
+	return {
+		rowsPruned: res.rowCount ?? ids.length,
+		moreRemaining: batch.length === limit
+	};
 }

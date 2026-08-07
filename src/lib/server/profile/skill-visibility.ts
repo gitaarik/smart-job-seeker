@@ -9,50 +9,43 @@
  * they are free text from a listing, not references.
  */
 
-import { dbDirect as db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
-import { tech_skill_categories, tech_skills } from "$lib/server/db/schema";
-import {
-  isProfileOnly,
-  type ProfileSkillRef,
-  versionsOf,
-} from "$lib/profile-visibility";
+import { dbDirect as db } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
+import { tech_skill_categories, tech_skills } from '$lib/server/db/schema';
+import { isProfileOnly, type ProfileSkillRef, versionsOf } from '$lib/profile-visibility';
 
 export type { ProfileSkillRef };
 
 /** Lowercased skill name → what the profile holds for it. */
 export async function getProfileSkillIndex(
-  profileId: number,
+	profileId: number
 ): Promise<Record<string, ProfileSkillRef>> {
-  const rows = await db
-    .select({
-      id: tech_skills.id,
-      name: tech_skills.name,
-      level: tech_skills.level,
-      categoryId: tech_skills.category_id,
-      tags: tech_skills.tags,
-    })
-    .from(tech_skills)
-    .innerJoin(
-      tech_skill_categories,
-      eq(tech_skills.category_id, tech_skill_categories.id),
-    )
-    .where(eq(tech_skill_categories.profile_id, profileId));
+	const rows = await db
+		.select({
+			id: tech_skills.id,
+			name: tech_skills.name,
+			level: tech_skills.level,
+			categoryId: tech_skills.category_id,
+			tags: tech_skills.tags
+		})
+		.from(tech_skills)
+		.innerJoin(tech_skill_categories, eq(tech_skills.category_id, tech_skill_categories.id))
+		.where(eq(tech_skill_categories.profile_id, profileId));
 
-  const result: Record<string, ProfileSkillRef> = {};
-  for (const row of rows) {
-    const key = row.name?.trim().toLowerCase();
-    // First one wins, matching how the rest of the app resolves a duplicate.
-    if (!key || result[key]) continue;
-    const tags = row.tags as string[] | null;
-    result[key] = {
-      id: row.id,
-      name: row.name!,
-      level: row.level,
-      categoryId: row.categoryId!,
-      profileOnly: isProfileOnly(tags),
-      versions: versionsOf(tags),
-    };
-  }
-  return result;
+	const result: Record<string, ProfileSkillRef> = {};
+	for (const row of rows) {
+		const key = row.name?.trim().toLowerCase();
+		// First one wins, matching how the rest of the app resolves a duplicate.
+		if (!key || result[key]) continue;
+		const tags = row.tags as string[] | null;
+		result[key] = {
+			id: row.id,
+			name: row.name!,
+			level: row.level,
+			categoryId: row.categoryId!,
+			profileOnly: isProfileOnly(tags),
+			versions: versionsOf(tags)
+		};
+	}
+	return result;
 }

@@ -5,8 +5,8 @@ Two files build the whole database. That is deliberate, and recent.
 ## Why there are only two
 
 Until 2026-08-04 this folder held 77 migrations, and `0000` was a 130-byte
-comment: *"Initial introspection migration (no-op) — the database schema already
-exists."* The set had been baselined against the pre-Drizzle (Prisma) database,
+comment: _"Initial introspection migration (no-op) — the database schema already
+exists."_ The set had been baselined against the pre-Drizzle (Prisma) database,
 so it carried every change since April 2026 and **nothing that created what came
 before** — 72 of the 100 tables were created by no migration at all.
 
@@ -17,10 +17,10 @@ preview, a real production, a restore from anything other than a dump.
 
 So the history was squashed:
 
-| file | what it is |
-|---|---|
+| file                        | what it is                                                        |
+| --------------------------- | ----------------------------------------------------------------- |
 | `0000_sturdy_nighthawk.sql` | the whole schema as of the old `0075`, generated from `schema.ts` |
-| `0001_white_king_cobra.sql` | `applications.context_details` — the old `0076` |
+| `0001_white_king_cobra.sql` | `applications.context_details` — the old `0076`                   |
 
 **Older migration numbers referenced elsewhere no longer exist as files.**
 Planning docs and commit messages mention things like "migration 0043" or

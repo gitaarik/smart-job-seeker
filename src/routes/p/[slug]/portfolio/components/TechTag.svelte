@@ -1,13 +1,13 @@
 <script lang="ts">
-  interface Props {
-    tech: Record<string, string>;
-  }
+	interface Props {
+		tech: Record<string, string>;
+	}
 
-  let { tech }: Props = $props();
+	let { tech }: Props = $props();
 </script>
 
 <li
-  class="px-2 print:px-[6px] py-1 print:py-[4px] text-sm border border-aqua rounded bg-mist hover:bg-ice"
+	class="border-aqua bg-mist hover:bg-ice rounded border px-2 py-1 text-sm print:px-[6px] print:py-[4px]"
 >
-  {tech}
+	{tech}
 </li>

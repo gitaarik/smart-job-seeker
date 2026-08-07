@@ -1,24 +1,27 @@
-import * as Sentry from "@sentry/sveltekit";
-import { isFrameworkClientError } from "$lib/monitoring/sentry-filters";
+import * as Sentry from '@sentry/sveltekit';
+import { isFrameworkClientError } from '$lib/monitoring/sentry-filters';
 
 const dsn = import.meta.env.PUBLIC_SENTRY_DSN;
 
 if (dsn) {
-  const host = window.location.hostname;
-  const environment = host.includes("preview.") ? "preview"
-    : host.includes("dev.") ? "development"
-    : host.includes("www.") ? "production"
-    : "development";
+	const host = window.location.hostname;
+	const environment = host.includes('preview.')
+		? 'preview'
+		: host.includes('dev.')
+			? 'development'
+			: host.includes('www.')
+				? 'production'
+				: 'development';
 
-  Sentry.init({
-    dsn,
-    environment,
-    tracesSampleRate: 0,
-    beforeSend(event) {
-      const value = event.exception?.values?.[0]?.value;
-      return isFrameworkClientError(value) ? null : event;
-    },
-  });
+	Sentry.init({
+		dsn,
+		environment,
+		tracesSampleRate: 0,
+		beforeSend(event) {
+			const value = event.exception?.values?.[0]?.value;
+			return isFrameworkClientError(value) ? null : event;
+		}
+	});
 }
 
 export const handleError = dsn ? Sentry.handleErrorWithSentry() : undefined;

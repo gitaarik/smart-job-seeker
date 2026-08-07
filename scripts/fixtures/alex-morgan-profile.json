@@ -1,794 +1,794 @@
 {
-  "profile": {
-    "name": "Alex Morgan",
-    "title": "Full Stack Software Engineer",
-    "slug": "test-alex-morgan",
-    "location": "San Francisco, CA, US",
-    "phone_number": "+1 (555) 234-5678",
-    "email_address": "alex.morgan@email.com",
-    "personal_website": "https://alexmorgan.dev",
-    "linkedin_profile": "https://www.linkedin.com/in/alexmorgan",
-    "github_profile": "https://github.com/alexmorgan-dev",
-    "stackoverflow_profile": "https://stackoverflow.com/users/123456/alex-morgan",
-    "subtitle": "Building scalable web applications with modern JavaScript",
-    "core_stack": "React, TypeScript, Node.js, PostgreSQL, AWS",
-    "headline": "Full stack engineer passionate about clean code and user experience",
-    "summary": "Full stack software engineer with 5 years of experience building scalable web applications. Passionate about clean code, user experience, and continuous learning. Experienced in React, TypeScript, Node.js, and cloud platforms. Enjoys collaborating with cross-functional teams to deliver high-quality software solutions that solve real-world problems.",
-    "dev_start_year": null,
-    "python_js_start_year": null,
-    "remote_start_year": null,
-    "profile_versions": [
-      {
-        "status": "published",
-        "sort": null,
-        "name": "base",
-        "description": "yozhozzoz",
-        "toggles": null
-      }
-    ],
-    "highlights": [],
-    "tech_skill_categories": [
-      {
-        "status": "published",
-        "sort": 1,
-        "name": "Frontend Development",
-        "fa_icon": "fa-code",
-        "tech_skills": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "React",
-            "years_experience": 5,
-            "level": "expert",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "TypeScript",
-            "years_experience": 4,
-            "level": "expert",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "JavaScript",
-            "years_experience": 6,
-            "level": "expert",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "Next.js",
-            "years_experience": 3,
-            "level": "proficient",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "HTML5",
-            "years_experience": 6,
-            "level": "expert",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "CSS3",
-            "years_experience": 6,
-            "level": "expert",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 7,
-            "name": "Tailwind CSS",
-            "years_experience": 3,
-            "level": "proficient",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 8,
-            "name": "Redux",
-            "years_experience": 4,
-            "level": "proficient",
-            "tech_type": null
-          }
-        ]
-      },
-      {
-        "status": "published",
-        "sort": 2,
-        "name": "Backend Development",
-        "fa_icon": "fa-server",
-        "tech_skills": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Node.js",
-            "years_experience": 5,
-            "level": "expert",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Express",
-            "years_experience": 5,
-            "level": "expert",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "NestJS",
-            "years_experience": 2,
-            "level": "intermediate",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "PostgreSQL",
-            "years_experience": 4,
-            "level": "proficient",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "MongoDB",
-            "years_experience": 3,
-            "level": "intermediate",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "Redis",
-            "years_experience": 2,
-            "level": "intermediate",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 7,
-            "name": "REST API",
-            "years_experience": 5,
-            "level": "expert",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 8,
-            "name": "GraphQL",
-            "years_experience": 2,
-            "level": "intermediate",
-            "tech_type": null
-          }
-        ]
-      },
-      {
-        "status": "published",
-        "sort": 3,
-        "name": "DevOps & Cloud",
-        "fa_icon": "fa-cloud",
-        "tech_skills": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "AWS",
-            "years_experience": 3,
-            "level": "intermediate",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Docker",
-            "years_experience": 4,
-            "level": "proficient",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "GitHub Actions",
-            "years_experience": 3,
-            "level": "proficient",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "CI/CD",
-            "years_experience": 3,
-            "level": "proficient",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "Kubernetes",
-            "years_experience": 1,
-            "level": "beginner",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "Nginx",
-            "years_experience": 2,
-            "level": "intermediate",
-            "tech_type": null
-          }
-        ]
-      },
-      {
-        "status": "published",
-        "sort": 4,
-        "name": "Testing & Quality",
-        "fa_icon": "fa-check-circle",
-        "tech_skills": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Jest",
-            "years_experience": 4,
-            "level": "proficient",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "React Testing Library",
-            "years_experience": 3,
-            "level": "proficient",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "Cypress",
-            "years_experience": 2,
-            "level": "intermediate",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "Unit Testing",
-            "years_experience": 4,
-            "level": "proficient",
-            "tech_type": null
-          }
-        ]
-      },
-      {
-        "status": "published",
-        "sort": 5,
-        "name": "Tools & Practices",
-        "fa_icon": "fa-tools",
-        "tech_skills": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Git",
-            "years_experience": 6,
-            "level": "expert",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "GitHub",
-            "years_experience": 6,
-            "level": "expert",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "Agile/Scrum",
-            "years_experience": 5,
-            "level": "proficient",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "Jira",
-            "years_experience": 4,
-            "level": "proficient",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "VS Code",
-            "years_experience": 6,
-            "level": "expert",
-            "tech_type": null
-          }
-        ]
-      }
-    ],
-    "work_experiences": [
-      {
-        "name": "TechCorp Solutions",
-        "location": "San Francisco, CA",
-        "description": "Mid-size B2B SaaS company providing project management tools",
-        "position": "Senior Software Engineer",
-        "summary": "Lead development of the company's main web application serving 50,000+ users. Work closely with product managers and designers to implement new features and improve user experience.",
-        "status": "published",
-        "sort": 1,
-        "start_date": "2022-06-01T00:00:00.000Z",
-        "end_date": null,
-        "website": "https://techcorpsolutions.com",
-        "tags": null,
-        "achievements": [
-          {
-            "status": "published",
-            "sort": 1,
-            "title": "TypeScript Migration",
-            "description": "Led migration from JavaScript to TypeScript, improving code quality and reducing bugs by 35%",
-            "fa_icon": null,
-            "tags": null
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "title": "Real-time Collaboration",
-            "description": "Implemented real-time collaboration features using WebSockets, increasing user engagement by 40%",
-            "fa_icon": null,
-            "tags": null
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "title": "Performance Optimization",
-            "description": "Optimized database queries and API endpoints, reducing average page load time from 3.2s to 1.1s",
-            "fa_icon": null,
-            "tags": null
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "title": "Mentorship",
-            "description": "Mentored 2 junior developers and conducted regular code reviews",
-            "fa_icon": null,
-            "tags": null
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "title": "Testing Standards",
-            "description": "Established automated testing practices, achieving 80% code coverage",
-            "fa_icon": null,
-            "tags": null
-          }
-        ],
-        "technologies": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "React"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "TypeScript"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "Node.js"
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "PostgreSQL"
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "Redis"
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "WebSockets"
-          },
-          {
-            "status": "published",
-            "sort": 7,
-            "name": "AWS"
-          },
-          {
-            "status": "published",
-            "sort": 8,
-            "name": "Docker"
-          }
-        ],
-        "projects": []
-      },
-      {
-        "name": "StartupHub Inc",
-        "location": "Remote",
-        "description": "Early-stage startup building a developer tools platform",
-        "position": "Full Stack Developer",
-        "summary": "Founding engineer responsible for building the initial product from scratch. Worked across the entire stack and collaborated directly with founders on product decisions.",
-        "status": "published",
-        "sort": 2,
-        "start_date": "2020-03-01T00:00:00.000Z",
-        "end_date": "2022-05-31T00:00:00.000Z",
-        "website": "https://startuphub.io",
-        "tags": null,
-        "achievements": [
-          {
-            "status": "published",
-            "sort": 1,
-            "title": "MVP Development",
-            "description": "Built MVP in 4 months using React, Node.js, and PostgreSQL",
-            "fa_icon": null,
-            "tags": null
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "title": "Authentication System",
-            "description": "Implemented authentication system with OAuth2 and JWT",
-            "fa_icon": null,
-            "tags": null
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "title": "REST API",
-            "description": "Developed REST API serving 10,000+ requests per day",
-            "fa_icon": null,
-            "tags": null
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "title": "CI/CD Pipeline",
-            "description": "Set up CI/CD pipeline using GitHub Actions and Docker",
-            "fa_icon": null,
-            "tags": null
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "title": "User Growth",
-            "description": "Grew application from 0 to 5,000 active users",
-            "fa_icon": null,
-            "tags": null
-          }
-        ],
-        "technologies": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "React"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Node.js"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "Express"
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "PostgreSQL"
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "OAuth2"
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "JWT"
-          },
-          {
-            "status": "published",
-            "sort": 7,
-            "name": "GitHub Actions"
-          },
-          {
-            "status": "published",
-            "sort": 8,
-            "name": "Docker"
-          }
-        ],
-        "projects": []
-      },
-      {
-        "name": "Digital Innovations LLC",
-        "location": "Boston, MA",
-        "description": "Digital agency creating custom web solutions for clients",
-        "position": "Junior Web Developer",
-        "summary": "Developed client websites and web applications using modern JavaScript frameworks. Collaborated with designers to implement pixel-perfect responsive designs.",
-        "status": "published",
-        "sort": 3,
-        "start_date": "2019-07-01T00:00:00.000Z",
-        "end_date": "2020-02-28T00:00:00.000Z",
-        "website": "https://digitalinnovations.com",
-        "tags": null,
-        "achievements": [
-          {
-            "status": "published",
-            "sort": 1,
-            "title": "Client Projects",
-            "description": "Built 8 client websites using React and Next.js",
-            "fa_icon": null,
-            "tags": null
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "title": "API Integration",
-            "description": "Integrated third-party APIs including Stripe, SendGrid, and Google Maps",
-            "fa_icon": null,
-            "tags": null
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "title": "Responsive Design",
-            "description": "Implemented responsive designs achieving 100% mobile compatibility",
-            "fa_icon": null,
-            "tags": null
-          }
-        ],
-        "technologies": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "React"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Next.js"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "JavaScript"
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "Stripe API"
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "SendGrid"
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "Google Maps API"
-          }
-        ],
-        "projects": []
-      }
-    ],
-    "side_projects": [
-      {
-        "status": "published",
-        "sort": 1,
-        "name": "DevTools Dashboard",
-        "start_date": "2021-03-15T00:00:00.000Z",
-        "end_date": null,
-        "url": "https://github.com/alexmorgan-dev/devtools-dashboard",
-        "stars": 1200,
-        "summary": "Open-source developer productivity dashboard with customizable widgets. Integrates with GitHub, Jira, and other developer tools via APIs. Gained significant traction in the developer community.",
-        "tags": null,
-        "achievements": [
-          {
-            "description": "Built with React, TypeScript, and Recharts",
-            "sort": 1
-          },
-          {
-            "description": "Integrates with GitHub, Jira, and other developer tools via APIs",
-            "sort": 2
-          },
-          {
-            "description": "Gained 1,200+ GitHub stars and 50+ contributors",
-            "sort": 3
-          },
-          {
-            "description": "Featured on Product Hunt and Hacker News",
-            "sort": 4
-          }
-        ],
-        "technologies": [
-          {
-            "sort": 1,
-            "name": "React"
-          },
-          {
-            "sort": 2,
-            "name": "TypeScript"
-          },
-          {
-            "sort": 3,
-            "name": "Recharts"
-          },
-          {
-            "sort": 4,
-            "name": "API Integration"
-          },
-          {
-            "sort": 5,
-            "name": "GitHub API"
-          }
-        ]
-      },
-      {
-        "status": "published",
-        "sort": 2,
-        "name": "Task Timer CLI",
-        "start_date": "2020-08-01T00:00:00.000Z",
-        "end_date": "2021-01-15T00:00:00.000Z",
-        "url": "https://github.com/alexmorgan-dev/task-timer",
-        "stars": null,
-        "summary": "Command-line time tracking tool for developers. Written in Node.js with TypeScript. Supports multiple projects and generates detailed reports. Downloaded 5,000+ times from npm.",
-        "tags": null,
-        "achievements": [
-          {
-            "description": "Written in Node.js with TypeScript",
-            "sort": 1
-          },
-          {
-            "description": "Supports multiple projects and generates reports",
-            "sort": 2
-          },
-          {
-            "description": "Downloaded 5,000+ times from npm",
-            "sort": 3
-          },
-          {
-            "description": "Simple, fast, and works offline",
-            "sort": 4
-          }
-        ],
-        "technologies": [
-          {
-            "sort": 1,
-            "name": "Node.js"
-          },
-          {
-            "sort": 2,
-            "name": "TypeScript"
-          },
-          {
-            "sort": 3,
-            "name": "CLI"
-          },
-          {
-            "sort": 4,
-            "name": "npm"
-          }
-        ]
-      },
-      {
-        "status": "published",
-        "sort": 3,
-        "name": "Recipe Finder App",
-        "start_date": "2022-11-01T00:00:00.000Z",
-        "end_date": null,
-        "url": "https://recipefinder.alexmorgan.dev",
-        "stars": null,
-        "summary": "Mobile-friendly web app for finding recipes based on available ingredients. Built with Next.js and React, implements server-side rendering for SEO. Uses Spoonacular API for recipe data.",
-        "repo_url": "https://github.com/alexmorgan-dev/recipe-finder",
-        "tags": null,
-        "achievements": [
-          {
-            "description": "Built with Next.js, React, and Spoonacular API",
-            "sort": 1
-          },
-          {
-            "description": "Implements server-side rendering for SEO",
-            "sort": 2
-          },
-          {
-            "description": "Responsive design works on all devices",
-            "sort": 3
-          },
-          {
-            "description": "Deployed on Vercel with automatic deployments",
-            "sort": 4
-          }
-        ],
-        "technologies": [
-          {
-            "sort": 1,
-            "name": "Next.js"
-          },
-          {
-            "sort": 2,
-            "name": "React"
-          },
-          {
-            "sort": 3,
-            "name": "Spoonacular API"
-          },
-          {
-            "sort": 4,
-            "name": "SSR"
-          },
-          {
-            "sort": 5,
-            "name": "Vercel"
-          }
-        ]
-      }
-    ],
-    "education": [
-      {
-        "status": "published",
-        "sort": 1,
-        "institution": "University of California, Berkeley",
-        "location": "Berkeley, CA",
-        "url": "https://www.berkeley.edu/",
-        "area": "Computer Science",
-        "study_type": "Bachelor of Science",
-        "graduation_year": 2019,
-        "start_date": "2015-09-01T00:00:00.000Z",
-        "end_date": "2019-05-31T00:00:00.000Z",
-        "summary": "Graduated with honors. Relevant coursework included Data Structures and Algorithms, Web Development, Database Systems, Software Engineering, Computer Networks, and Operating Systems. Participated in hackathons and was an active member of the Computer Science Student Association.",
-        "tags": null
-      }
-    ],
-    "languages": [
-      {
-        "status": "published",
-        "sort": 1,
-        "name": "English",
-        "language_code": "en",
-        "proficiency": "native"
-      },
-      {
-        "status": "published",
-        "sort": 2,
-        "name": "Spanish",
-        "language_code": "es",
-        "proficiency": "conversational"
-      }
-    ],
-    "references": [
-      {
-        "status": "published",
-        "sort": 1,
-        "author": "Sarah Chen",
-        "author_position": "Engineering Manager at TechCorp Solutions",
-        "text": "I had the pleasure of managing Alex for two years at TechCorp Solutions. Alex consistently delivered high-quality code and showed great initiative in improving our development processes. Their ability to mentor junior developers while maintaining their own productivity was impressive. Alex would be a valuable asset to any engineering team."
-      },
-      {
-        "status": "published",
-        "sort": 2,
-        "author": "Michael Rodriguez",
-        "author_position": "Co-Founder & CTO at StartupHub Inc",
-        "text": "Alex was one of our founding engineers at StartupHub and played a crucial role in getting our product off the ground. They have a rare combination of technical skills and product sense. Alex can work independently, make good technical decisions, and isn't afraid to ask questions when needed. Highly recommended."
-      }
-    ],
-    "project_stories": [],
-    "cheat_sheets": [],
-    "salary_expectations": []
-  }
+	"profile": {
+		"name": "Alex Morgan",
+		"title": "Full Stack Software Engineer",
+		"slug": "test-alex-morgan",
+		"location": "San Francisco, CA, US",
+		"phone_number": "+1 (555) 234-5678",
+		"email_address": "alex.morgan@email.com",
+		"personal_website": "https://alexmorgan.dev",
+		"linkedin_profile": "https://www.linkedin.com/in/alexmorgan",
+		"github_profile": "https://github.com/alexmorgan-dev",
+		"stackoverflow_profile": "https://stackoverflow.com/users/123456/alex-morgan",
+		"subtitle": "Building scalable web applications with modern JavaScript",
+		"core_stack": "React, TypeScript, Node.js, PostgreSQL, AWS",
+		"headline": "Full stack engineer passionate about clean code and user experience",
+		"summary": "Full stack software engineer with 5 years of experience building scalable web applications. Passionate about clean code, user experience, and continuous learning. Experienced in React, TypeScript, Node.js, and cloud platforms. Enjoys collaborating with cross-functional teams to deliver high-quality software solutions that solve real-world problems.",
+		"dev_start_year": null,
+		"python_js_start_year": null,
+		"remote_start_year": null,
+		"profile_versions": [
+			{
+				"status": "published",
+				"sort": null,
+				"name": "base",
+				"description": "yozhozzoz",
+				"toggles": null
+			}
+		],
+		"highlights": [],
+		"tech_skill_categories": [
+			{
+				"status": "published",
+				"sort": 1,
+				"name": "Frontend Development",
+				"fa_icon": "fa-code",
+				"tech_skills": [
+					{
+						"status": "published",
+						"sort": 1,
+						"name": "React",
+						"years_experience": 5,
+						"level": "expert",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 2,
+						"name": "TypeScript",
+						"years_experience": 4,
+						"level": "expert",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 3,
+						"name": "JavaScript",
+						"years_experience": 6,
+						"level": "expert",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 4,
+						"name": "Next.js",
+						"years_experience": 3,
+						"level": "proficient",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 5,
+						"name": "HTML5",
+						"years_experience": 6,
+						"level": "expert",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 6,
+						"name": "CSS3",
+						"years_experience": 6,
+						"level": "expert",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 7,
+						"name": "Tailwind CSS",
+						"years_experience": 3,
+						"level": "proficient",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 8,
+						"name": "Redux",
+						"years_experience": 4,
+						"level": "proficient",
+						"tech_type": null
+					}
+				]
+			},
+			{
+				"status": "published",
+				"sort": 2,
+				"name": "Backend Development",
+				"fa_icon": "fa-server",
+				"tech_skills": [
+					{
+						"status": "published",
+						"sort": 1,
+						"name": "Node.js",
+						"years_experience": 5,
+						"level": "expert",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 2,
+						"name": "Express",
+						"years_experience": 5,
+						"level": "expert",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 3,
+						"name": "NestJS",
+						"years_experience": 2,
+						"level": "intermediate",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 4,
+						"name": "PostgreSQL",
+						"years_experience": 4,
+						"level": "proficient",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 5,
+						"name": "MongoDB",
+						"years_experience": 3,
+						"level": "intermediate",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 6,
+						"name": "Redis",
+						"years_experience": 2,
+						"level": "intermediate",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 7,
+						"name": "REST API",
+						"years_experience": 5,
+						"level": "expert",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 8,
+						"name": "GraphQL",
+						"years_experience": 2,
+						"level": "intermediate",
+						"tech_type": null
+					}
+				]
+			},
+			{
+				"status": "published",
+				"sort": 3,
+				"name": "DevOps & Cloud",
+				"fa_icon": "fa-cloud",
+				"tech_skills": [
+					{
+						"status": "published",
+						"sort": 1,
+						"name": "AWS",
+						"years_experience": 3,
+						"level": "intermediate",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 2,
+						"name": "Docker",
+						"years_experience": 4,
+						"level": "proficient",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 3,
+						"name": "GitHub Actions",
+						"years_experience": 3,
+						"level": "proficient",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 4,
+						"name": "CI/CD",
+						"years_experience": 3,
+						"level": "proficient",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 5,
+						"name": "Kubernetes",
+						"years_experience": 1,
+						"level": "beginner",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 6,
+						"name": "Nginx",
+						"years_experience": 2,
+						"level": "intermediate",
+						"tech_type": null
+					}
+				]
+			},
+			{
+				"status": "published",
+				"sort": 4,
+				"name": "Testing & Quality",
+				"fa_icon": "fa-check-circle",
+				"tech_skills": [
+					{
+						"status": "published",
+						"sort": 1,
+						"name": "Jest",
+						"years_experience": 4,
+						"level": "proficient",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 2,
+						"name": "React Testing Library",
+						"years_experience": 3,
+						"level": "proficient",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 3,
+						"name": "Cypress",
+						"years_experience": 2,
+						"level": "intermediate",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 4,
+						"name": "Unit Testing",
+						"years_experience": 4,
+						"level": "proficient",
+						"tech_type": null
+					}
+				]
+			},
+			{
+				"status": "published",
+				"sort": 5,
+				"name": "Tools & Practices",
+				"fa_icon": "fa-tools",
+				"tech_skills": [
+					{
+						"status": "published",
+						"sort": 1,
+						"name": "Git",
+						"years_experience": 6,
+						"level": "expert",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 2,
+						"name": "GitHub",
+						"years_experience": 6,
+						"level": "expert",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 3,
+						"name": "Agile/Scrum",
+						"years_experience": 5,
+						"level": "proficient",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 4,
+						"name": "Jira",
+						"years_experience": 4,
+						"level": "proficient",
+						"tech_type": null
+					},
+					{
+						"status": "published",
+						"sort": 5,
+						"name": "VS Code",
+						"years_experience": 6,
+						"level": "expert",
+						"tech_type": null
+					}
+				]
+			}
+		],
+		"work_experiences": [
+			{
+				"name": "TechCorp Solutions",
+				"location": "San Francisco, CA",
+				"description": "Mid-size B2B SaaS company providing project management tools",
+				"position": "Senior Software Engineer",
+				"summary": "Lead development of the company's main web application serving 50,000+ users. Work closely with product managers and designers to implement new features and improve user experience.",
+				"status": "published",
+				"sort": 1,
+				"start_date": "2022-06-01T00:00:00.000Z",
+				"end_date": null,
+				"website": "https://techcorpsolutions.com",
+				"tags": null,
+				"achievements": [
+					{
+						"status": "published",
+						"sort": 1,
+						"title": "TypeScript Migration",
+						"description": "Led migration from JavaScript to TypeScript, improving code quality and reducing bugs by 35%",
+						"fa_icon": null,
+						"tags": null
+					},
+					{
+						"status": "published",
+						"sort": 2,
+						"title": "Real-time Collaboration",
+						"description": "Implemented real-time collaboration features using WebSockets, increasing user engagement by 40%",
+						"fa_icon": null,
+						"tags": null
+					},
+					{
+						"status": "published",
+						"sort": 3,
+						"title": "Performance Optimization",
+						"description": "Optimized database queries and API endpoints, reducing average page load time from 3.2s to 1.1s",
+						"fa_icon": null,
+						"tags": null
+					},
+					{
+						"status": "published",
+						"sort": 4,
+						"title": "Mentorship",
+						"description": "Mentored 2 junior developers and conducted regular code reviews",
+						"fa_icon": null,
+						"tags": null
+					},
+					{
+						"status": "published",
+						"sort": 5,
+						"title": "Testing Standards",
+						"description": "Established automated testing practices, achieving 80% code coverage",
+						"fa_icon": null,
+						"tags": null
+					}
+				],
+				"technologies": [
+					{
+						"status": "published",
+						"sort": 1,
+						"name": "React"
+					},
+					{
+						"status": "published",
+						"sort": 2,
+						"name": "TypeScript"
+					},
+					{
+						"status": "published",
+						"sort": 3,
+						"name": "Node.js"
+					},
+					{
+						"status": "published",
+						"sort": 4,
+						"name": "PostgreSQL"
+					},
+					{
+						"status": "published",
+						"sort": 5,
+						"name": "Redis"
+					},
+					{
+						"status": "published",
+						"sort": 6,
+						"name": "WebSockets"
+					},
+					{
+						"status": "published",
+						"sort": 7,
+						"name": "AWS"
+					},
+					{
+						"status": "published",
+						"sort": 8,
+						"name": "Docker"
+					}
+				],
+				"projects": []
+			},
+			{
+				"name": "StartupHub Inc",
+				"location": "Remote",
+				"description": "Early-stage startup building a developer tools platform",
+				"position": "Full Stack Developer",
+				"summary": "Founding engineer responsible for building the initial product from scratch. Worked across the entire stack and collaborated directly with founders on product decisions.",
+				"status": "published",
+				"sort": 2,
+				"start_date": "2020-03-01T00:00:00.000Z",
+				"end_date": "2022-05-31T00:00:00.000Z",
+				"website": "https://startuphub.io",
+				"tags": null,
+				"achievements": [
+					{
+						"status": "published",
+						"sort": 1,
+						"title": "MVP Development",
+						"description": "Built MVP in 4 months using React, Node.js, and PostgreSQL",
+						"fa_icon": null,
+						"tags": null
+					},
+					{
+						"status": "published",
+						"sort": 2,
+						"title": "Authentication System",
+						"description": "Implemented authentication system with OAuth2 and JWT",
+						"fa_icon": null,
+						"tags": null
+					},
+					{
+						"status": "published",
+						"sort": 3,
+						"title": "REST API",
+						"description": "Developed REST API serving 10,000+ requests per day",
+						"fa_icon": null,
+						"tags": null
+					},
+					{
+						"status": "published",
+						"sort": 4,
+						"title": "CI/CD Pipeline",
+						"description": "Set up CI/CD pipeline using GitHub Actions and Docker",
+						"fa_icon": null,
+						"tags": null
+					},
+					{
+						"status": "published",
+						"sort": 5,
+						"title": "User Growth",
+						"description": "Grew application from 0 to 5,000 active users",
+						"fa_icon": null,
+						"tags": null
+					}
+				],
+				"technologies": [
+					{
+						"status": "published",
+						"sort": 1,
+						"name": "React"
+					},
+					{
+						"status": "published",
+						"sort": 2,
+						"name": "Node.js"
+					},
+					{
+						"status": "published",
+						"sort": 3,
+						"name": "Express"
+					},
+					{
+						"status": "published",
+						"sort": 4,
+						"name": "PostgreSQL"
+					},
+					{
+						"status": "published",
+						"sort": 5,
+						"name": "OAuth2"
+					},
+					{
+						"status": "published",
+						"sort": 6,
+						"name": "JWT"
+					},
+					{
+						"status": "published",
+						"sort": 7,
+						"name": "GitHub Actions"
+					},
+					{
+						"status": "published",
+						"sort": 8,
+						"name": "Docker"
+					}
+				],
+				"projects": []
+			},
+			{
+				"name": "Digital Innovations LLC",
+				"location": "Boston, MA",
+				"description": "Digital agency creating custom web solutions for clients",
+				"position": "Junior Web Developer",
+				"summary": "Developed client websites and web applications using modern JavaScript frameworks. Collaborated with designers to implement pixel-perfect responsive designs.",
+				"status": "published",
+				"sort": 3,
+				"start_date": "2019-07-01T00:00:00.000Z",
+				"end_date": "2020-02-28T00:00:00.000Z",
+				"website": "https://digitalinnovations.com",
+				"tags": null,
+				"achievements": [
+					{
+						"status": "published",
+						"sort": 1,
+						"title": "Client Projects",
+						"description": "Built 8 client websites using React and Next.js",
+						"fa_icon": null,
+						"tags": null
+					},
+					{
+						"status": "published",
+						"sort": 2,
+						"title": "API Integration",
+						"description": "Integrated third-party APIs including Stripe, SendGrid, and Google Maps",
+						"fa_icon": null,
+						"tags": null
+					},
+					{
+						"status": "published",
+						"sort": 3,
+						"title": "Responsive Design",
+						"description": "Implemented responsive designs achieving 100% mobile compatibility",
+						"fa_icon": null,
+						"tags": null
+					}
+				],
+				"technologies": [
+					{
+						"status": "published",
+						"sort": 1,
+						"name": "React"
+					},
+					{
+						"status": "published",
+						"sort": 2,
+						"name": "Next.js"
+					},
+					{
+						"status": "published",
+						"sort": 3,
+						"name": "JavaScript"
+					},
+					{
+						"status": "published",
+						"sort": 4,
+						"name": "Stripe API"
+					},
+					{
+						"status": "published",
+						"sort": 5,
+						"name": "SendGrid"
+					},
+					{
+						"status": "published",
+						"sort": 6,
+						"name": "Google Maps API"
+					}
+				],
+				"projects": []
+			}
+		],
+		"side_projects": [
+			{
+				"status": "published",
+				"sort": 1,
+				"name": "DevTools Dashboard",
+				"start_date": "2021-03-15T00:00:00.000Z",
+				"end_date": null,
+				"url": "https://github.com/alexmorgan-dev/devtools-dashboard",
+				"stars": 1200,
+				"summary": "Open-source developer productivity dashboard with customizable widgets. Integrates with GitHub, Jira, and other developer tools via APIs. Gained significant traction in the developer community.",
+				"tags": null,
+				"achievements": [
+					{
+						"description": "Built with React, TypeScript, and Recharts",
+						"sort": 1
+					},
+					{
+						"description": "Integrates with GitHub, Jira, and other developer tools via APIs",
+						"sort": 2
+					},
+					{
+						"description": "Gained 1,200+ GitHub stars and 50+ contributors",
+						"sort": 3
+					},
+					{
+						"description": "Featured on Product Hunt and Hacker News",
+						"sort": 4
+					}
+				],
+				"technologies": [
+					{
+						"sort": 1,
+						"name": "React"
+					},
+					{
+						"sort": 2,
+						"name": "TypeScript"
+					},
+					{
+						"sort": 3,
+						"name": "Recharts"
+					},
+					{
+						"sort": 4,
+						"name": "API Integration"
+					},
+					{
+						"sort": 5,
+						"name": "GitHub API"
+					}
+				]
+			},
+			{
+				"status": "published",
+				"sort": 2,
+				"name": "Task Timer CLI",
+				"start_date": "2020-08-01T00:00:00.000Z",
+				"end_date": "2021-01-15T00:00:00.000Z",
+				"url": "https://github.com/alexmorgan-dev/task-timer",
+				"stars": null,
+				"summary": "Command-line time tracking tool for developers. Written in Node.js with TypeScript. Supports multiple projects and generates detailed reports. Downloaded 5,000+ times from npm.",
+				"tags": null,
+				"achievements": [
+					{
+						"description": "Written in Node.js with TypeScript",
+						"sort": 1
+					},
+					{
+						"description": "Supports multiple projects and generates reports",
+						"sort": 2
+					},
+					{
+						"description": "Downloaded 5,000+ times from npm",
+						"sort": 3
+					},
+					{
+						"description": "Simple, fast, and works offline",
+						"sort": 4
+					}
+				],
+				"technologies": [
+					{
+						"sort": 1,
+						"name": "Node.js"
+					},
+					{
+						"sort": 2,
+						"name": "TypeScript"
+					},
+					{
+						"sort": 3,
+						"name": "CLI"
+					},
+					{
+						"sort": 4,
+						"name": "npm"
+					}
+				]
+			},
+			{
+				"status": "published",
+				"sort": 3,
+				"name": "Recipe Finder App",
+				"start_date": "2022-11-01T00:00:00.000Z",
+				"end_date": null,
+				"url": "https://recipefinder.alexmorgan.dev",
+				"stars": null,
+				"summary": "Mobile-friendly web app for finding recipes based on available ingredients. Built with Next.js and React, implements server-side rendering for SEO. Uses Spoonacular API for recipe data.",
+				"repo_url": "https://github.com/alexmorgan-dev/recipe-finder",
+				"tags": null,
+				"achievements": [
+					{
+						"description": "Built with Next.js, React, and Spoonacular API",
+						"sort": 1
+					},
+					{
+						"description": "Implements server-side rendering for SEO",
+						"sort": 2
+					},
+					{
+						"description": "Responsive design works on all devices",
+						"sort": 3
+					},
+					{
+						"description": "Deployed on Vercel with automatic deployments",
+						"sort": 4
+					}
+				],
+				"technologies": [
+					{
+						"sort": 1,
+						"name": "Next.js"
+					},
+					{
+						"sort": 2,
+						"name": "React"
+					},
+					{
+						"sort": 3,
+						"name": "Spoonacular API"
+					},
+					{
+						"sort": 4,
+						"name": "SSR"
+					},
+					{
+						"sort": 5,
+						"name": "Vercel"
+					}
+				]
+			}
+		],
+		"education": [
+			{
+				"status": "published",
+				"sort": 1,
+				"institution": "University of California, Berkeley",
+				"location": "Berkeley, CA",
+				"url": "https://www.berkeley.edu/",
+				"area": "Computer Science",
+				"study_type": "Bachelor of Science",
+				"graduation_year": 2019,
+				"start_date": "2015-09-01T00:00:00.000Z",
+				"end_date": "2019-05-31T00:00:00.000Z",
+				"summary": "Graduated with honors. Relevant coursework included Data Structures and Algorithms, Web Development, Database Systems, Software Engineering, Computer Networks, and Operating Systems. Participated in hackathons and was an active member of the Computer Science Student Association.",
+				"tags": null
+			}
+		],
+		"languages": [
+			{
+				"status": "published",
+				"sort": 1,
+				"name": "English",
+				"language_code": "en",
+				"proficiency": "native"
+			},
+			{
+				"status": "published",
+				"sort": 2,
+				"name": "Spanish",
+				"language_code": "es",
+				"proficiency": "conversational"
+			}
+		],
+		"references": [
+			{
+				"status": "published",
+				"sort": 1,
+				"author": "Sarah Chen",
+				"author_position": "Engineering Manager at TechCorp Solutions",
+				"text": "I had the pleasure of managing Alex for two years at TechCorp Solutions. Alex consistently delivered high-quality code and showed great initiative in improving our development processes. Their ability to mentor junior developers while maintaining their own productivity was impressive. Alex would be a valuable asset to any engineering team."
+			},
+			{
+				"status": "published",
+				"sort": 2,
+				"author": "Michael Rodriguez",
+				"author_position": "Co-Founder & CTO at StartupHub Inc",
+				"text": "Alex was one of our founding engineers at StartupHub and played a crucial role in getting our product off the ground. They have a rare combination of technical skills and product sense. Alex can work independently, make good technical decisions, and isn't afraid to ask questions when needed. Highly recommended."
+			}
+		],
+		"project_stories": [],
+		"cheat_sheets": [],
+		"salary_expectations": []
+	}
 }

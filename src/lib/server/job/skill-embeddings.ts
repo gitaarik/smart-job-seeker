@@ -16,16 +16,16 @@
  * their input back unchanged and matching falls back to exact comparison.
  */
 
-import { eq } from "drizzle-orm";
-import { dbDirect as db } from "$lib/server/db";
-import { skill_embeddings } from "$lib/server/db/schema";
-import { config } from "$lib/server/config";
+import { eq } from 'drizzle-orm';
+import { dbDirect as db } from '$lib/server/db';
+import { skill_embeddings } from '$lib/server/db/schema';
+import { config } from '$lib/server/config';
 import {
-  cosineSimilarity,
-  embedBatch,
-  isEmbeddingConfigured,
-  truncateVector,
-} from "$lib/server/llm/embeddings";
+	cosineSimilarity,
+	embedBatch,
+	isEmbeddingConfigured,
+	truncateVector
+} from '$lib/server/llm/embeddings';
 
 /**
  * Normalize a skill for use as the vocabulary key.
@@ -35,15 +35,15 @@ import {
  * normalization must agree.
  */
 function normalizeSkill(skill: string): string {
-  return skill
-    .toLowerCase()
-    .replace(/[^a-z0-9+#]/g, "")
-    .trim();
+	return skill
+		.toLowerCase()
+		.replace(/[^a-z0-9+#]/g, '')
+		.trim();
 }
 
 interface VocabEntry {
-  label: string;
-  vector: number[];
+	label: string;
+	vector: number[];
 }
 
 // In-memory vocabulary for the current embedding model. Loaded lazily on first
@@ -59,28 +59,31 @@ const EXPANSION_TTL_MS = 5 * 60 * 1000;
 const expansionCache = new Map<string, { ts: number; result: string[] }>();
 
 function expansionKey(skills: string[]): string {
-  return skills.map((s) => s.trim().toLowerCase()).sort().join("|");
+	return skills
+		.map((s) => s.trim().toLowerCase())
+		.sort()
+		.join('|');
 }
 
 async function ensureVocabLoaded(): Promise<Map<string, VocabEntry>> {
-  if (vocab) return vocab;
-  const rows = await db
-    .select()
-    .from(skill_embeddings)
-    .where(eq(skill_embeddings.model, config.embeddingModel));
-  // Vectors are stored at native dim; truncate to the working dim once, here,
-  // so the cache and every downstream cosine run at the smaller size.
-  const dims = config.embeddingWorkingDimensions;
-  vocab = new Map(
-    rows.map((r) => [
-      r.skill,
-      {
-        label: r.label,
-        vector: truncateVector(r.embedding as number[], dims),
-      },
-    ]),
-  );
-  return vocab;
+	if (vocab) return vocab;
+	const rows = await db
+		.select()
+		.from(skill_embeddings)
+		.where(eq(skill_embeddings.model, config.embeddingModel));
+	// Vectors are stored at native dim; truncate to the working dim once, here,
+	// so the cache and every downstream cosine run at the smaller size.
+	const dims = config.embeddingWorkingDimensions;
+	vocab = new Map(
+		rows.map((r) => [
+			r.skill,
+			{
+				label: r.label,
+				vector: truncateVector(r.embedding as number[], dims)
+			}
+		])
+	);
+	return vocab;
 }
 
 /**
@@ -88,78 +91,76 @@ async function ensureVocabLoaded(): Promise<Map<string, VocabEntry>> {
  * return a Map of normalized-key -> vector for all requested skills.
  * Uses the first-seen original spelling as the stored `label`.
  */
-async function getOrCreateVectors(
-  skills: string[],
-): Promise<Map<string, number[]>> {
-  const cache = await ensureVocabLoaded();
-  const result = new Map<string, number[]>();
+async function getOrCreateVectors(skills: string[]): Promise<Map<string, number[]>> {
+	const cache = await ensureVocabLoaded();
+	const result = new Map<string, number[]>();
 
-  // Dedupe by normalized key, remembering a representative label.
-  const missing = new Map<string, string>(); // key -> label
-  for (const raw of skills) {
-    const key = normalizeSkill(raw);
-    if (!key) continue;
-    const hit = cache.get(key);
-    if (hit) {
-      result.set(key, hit.vector);
-    } else if (!missing.has(key)) {
-      missing.set(key, raw.trim());
-    }
-  }
+	// Dedupe by normalized key, remembering a representative label.
+	const missing = new Map<string, string>(); // key -> label
+	for (const raw of skills) {
+		const key = normalizeSkill(raw);
+		if (!key) continue;
+		const hit = cache.get(key);
+		if (hit) {
+			result.set(key, hit.vector);
+		} else if (!missing.has(key)) {
+			missing.set(key, raw.trim());
+		}
+	}
 
-  if (missing.size === 0) return result;
+	if (missing.size === 0) return result;
 
-  const keys = [...missing.keys()];
-  const labels = keys.map((k) => missing.get(k)!);
-  const vectors = await embedBatch(labels);
+	const keys = [...missing.keys()];
+	const labels = keys.map((k) => missing.get(k)!);
+	const vectors = await embedBatch(labels);
 
-  // A provider failure (rate limit, decommissioned model, bad key) does NOT
-  // always throw: embedDocuments() can resolve with empty vectors where
-  // embedQuery() would reject. Persisting those is unrecoverable — the
-  // onConflictDoNothing below means a poisoned row is never re-embedded, and
-  // cosineSimilarity() returns 0 for a zero-length vector, so the skill
-  // silently stops matching forever. Only persist vectors we can verify.
-  const valid: number[] = [];
-  const invalid: string[] = [];
-  for (let i = 0; i < keys.length; i++) {
-    if (vectors[i]?.length > 0) valid.push(i);
-    else invalid.push(labels[i]);
-  }
+	// A provider failure (rate limit, decommissioned model, bad key) does NOT
+	// always throw: embedDocuments() can resolve with empty vectors where
+	// embedQuery() would reject. Persisting those is unrecoverable — the
+	// onConflictDoNothing below means a poisoned row is never re-embedded, and
+	// cosineSimilarity() returns 0 for a zero-length vector, so the skill
+	// silently stops matching forever. Only persist vectors we can verify.
+	const valid: number[] = [];
+	const invalid: string[] = [];
+	for (let i = 0; i < keys.length; i++) {
+		if (vectors[i]?.length > 0) valid.push(i);
+		else invalid.push(labels[i]);
+	}
 
-  if (valid.length > 0) {
-    const now = new Date();
-    const rows = valid.map((i) => ({
-      skill: keys[i],
-      label: labels[i],
-      embedding: vectors[i],
-      model: config.embeddingModel,
-      created_at: now,
-    }));
-    // Persist the NATIVE vectors; ignore conflicts (another process may have
-    // inserted the same key).
-    await db.insert(skill_embeddings).values(rows).onConflictDoNothing();
+	if (valid.length > 0) {
+		const now = new Date();
+		const rows = valid.map((i) => ({
+			skill: keys[i],
+			label: labels[i],
+			embedding: vectors[i],
+			model: config.embeddingModel,
+			created_at: now
+		}));
+		// Persist the NATIVE vectors; ignore conflicts (another process may have
+		// inserted the same key).
+		await db.insert(skill_embeddings).values(rows).onConflictDoNothing();
 
-    // Cache + return at the WORKING dim so freshly-embedded skills compare on
-    // the same footing as vocab loaded via ensureVocabLoaded().
-    const dims = config.embeddingWorkingDimensions;
-    for (const i of valid) {
-      const working = truncateVector(vectors[i], dims);
-      cache.set(keys[i], { label: labels[i], vector: working });
-      result.set(keys[i], working);
-    }
-  }
+		// Cache + return at the WORKING dim so freshly-embedded skills compare on
+		// the same footing as vocab loaded via ensureVocabLoaded().
+		const dims = config.embeddingWorkingDimensions;
+		for (const i of valid) {
+			const working = truncateVector(vectors[i], dims);
+			cache.set(keys[i], { label: labels[i], vector: working });
+			result.set(keys[i], working);
+		}
+	}
 
-  if (invalid.length > 0) {
-    // Surface loudly. Callers on the matching path catch this and fall back to
-    // exact skills; the backfill path must not report success on a bad batch.
-    throw new Error(
-      `Embedding provider returned ${invalid.length}/${keys.length} empty vectors ` +
-        `(model=${config.embeddingModel}). Not persisted. ` +
-        `First few: ${invalid.slice(0, 3).join(", ")}`,
-    );
-  }
+	if (invalid.length > 0) {
+		// Surface loudly. Callers on the matching path catch this and fall back to
+		// exact skills; the backfill path must not report success on a bad batch.
+		throw new Error(
+			`Embedding provider returned ${invalid.length}/${keys.length} empty vectors ` +
+				`(model=${config.embeddingModel}). Not persisted. ` +
+				`First few: ${invalid.slice(0, 3).join(', ')}`
+		);
+	}
 
-  return result;
+	return result;
 }
 
 /**
@@ -173,42 +174,37 @@ async function getOrCreateVectors(
  * Never throws — any failure logs and returns the original skills so matching
  * proceeds on exact comparison.
  */
-export async function expandProfileSkills(
-  profileSkills: string[],
-): Promise<string[]> {
-  if (!isEmbeddingConfigured() || profileSkills.length === 0) {
-    return profileSkills;
-  }
+export async function expandProfileSkills(profileSkills: string[]): Promise<string[]> {
+	if (!isEmbeddingConfigured() || profileSkills.length === 0) {
+		return profileSkills;
+	}
 
-  const key = expansionKey(profileSkills);
-  const cached = expansionCache.get(key);
-  if (cached && Date.now() - cached.ts < EXPANSION_TTL_MS) {
-    return cached.result;
-  }
+	const key = expansionKey(profileSkills);
+	const cached = expansionCache.get(key);
+	if (cached && Date.now() - cached.ts < EXPANSION_TTL_MS) {
+		return cached.result;
+	}
 
-  try {
-    const cache = await ensureVocabLoaded();
-    const profileVectors = await getOrCreateVectors(profileSkills);
-    const threshold = config.embeddingSkillThreshold;
+	try {
+		const cache = await ensureVocabLoaded();
+		const profileVectors = await getOrCreateVectors(profileSkills);
+		const threshold = config.embeddingSkillThreshold;
 
-    const expanded = new Set(profileSkills);
-    for (const pvec of profileVectors.values()) {
-      for (const entry of cache.values()) {
-        if (cosineSimilarity(pvec, entry.vector) >= threshold) {
-          expanded.add(entry.label);
-        }
-      }
-    }
-    const result = [...expanded];
-    expansionCache.set(key, { ts: Date.now(), result });
-    return result;
-  } catch (err) {
-    console.warn(
-      "[skill-embeddings] expansion failed, falling back to exact skills:",
-      err,
-    );
-    return profileSkills;
-  }
+		const expanded = new Set(profileSkills);
+		for (const pvec of profileVectors.values()) {
+			for (const entry of cache.values()) {
+				if (cosineSimilarity(pvec, entry.vector) >= threshold) {
+					expanded.add(entry.label);
+				}
+			}
+		}
+		const result = [...expanded];
+		expansionCache.set(key, { ts: Date.now(), result });
+		return result;
+	} catch (err) {
+		console.warn('[skill-embeddings] expansion failed, falling back to exact skills:', err);
+		return profileSkills;
+	}
 }
 
 /**
@@ -217,18 +213,16 @@ export async function expandProfileSkills(
  * scrape) so profile expansion has job terms to match against.
  * No-op when embeddings are unconfigured. Returns the number newly embedded.
  */
-export async function backfillSkillVocabulary(
-  skills: string[],
-): Promise<number> {
-  if (!isEmbeddingConfigured() || skills.length === 0) return 0;
-  const cache = await ensureVocabLoaded();
-  const before = cache.size;
-  await getOrCreateVectors(skills);
-  return cache.size - before;
+export async function backfillSkillVocabulary(skills: string[]): Promise<number> {
+	if (!isEmbeddingConfigured() || skills.length === 0) return 0;
+	const cache = await ensureVocabLoaded();
+	const before = cache.size;
+	await getOrCreateVectors(skills);
+	return cache.size - before;
 }
 
 /** Test/maintenance hook: drop the in-memory vocabulary + expansion caches. */
 export function _resetVocabCache(): void {
-  vocab = null;
-  expansionCache.clear();
+	vocab = null;
+	expansionCache.clear();
 }

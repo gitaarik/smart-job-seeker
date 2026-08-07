@@ -1,3 +1,3 @@
 export function getImg(uuid: string): string {
-  return "/assets/" + uuid;
+	return '/assets/' + uuid;
 }

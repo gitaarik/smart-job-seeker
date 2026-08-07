@@ -4,31 +4,27 @@
 
 // Profile access control
 export {
-  type AccessControlOptions,
-  type AccessControlResult,
-  checkProfileAccess,
-} from "./access-control";
+	type AccessControlOptions,
+	type AccessControlResult,
+	checkProfileAccess
+} from './access-control';
 
 // Profile defaults
 export {
-  getDefaultProfile,
-  getDefaultProfileId,
-  getProfileByIdentifier,
-  getProfileOrDefault,
-  PROFILE_INCLUDE,
-  type ProfileWithRelations,
-  setDefaultProfile,
-} from "./default";
+	getDefaultProfile,
+	getDefaultProfileId,
+	getProfileByIdentifier,
+	getProfileOrDefault,
+	PROFILE_INCLUDE,
+	type ProfileWithRelations,
+	setDefaultProfile
+} from './default';
 
 // Profile export utilities
-export { exportProfile } from "./export";
+export { exportProfile } from './export';
 
 // Profile export files
-export {
-  getExportFileBuffer,
-  getLatestExport,
-  getLatestExportWithFile,
-} from "./export-files";
+export { getExportFileBuffer, getLatestExport, getLatestExportWithFile } from './export-files';
 
 // Profile exports management
-export { createProfileExport } from "./exports";
+export { createProfileExport } from './exports';

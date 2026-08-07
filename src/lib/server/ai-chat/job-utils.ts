@@ -5,19 +5,19 @@
  * specifically designed for job scraping and matching operations.
  */
 
-import { createAndGenerateAiChat } from "./utils.js";
-import { dbDirect } from "$lib/server/db";
-import { eq } from "drizzle-orm";
-import { search_tasks } from "$lib/server/db/schema";
+import { createAndGenerateAiChat } from './utils.js';
+import { dbDirect } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
+import { search_tasks } from '$lib/server/db/schema';
 
 /**
  * Result type for job scraping AI chat operations
  */
 export interface JobScrapingAiChatResult<T> {
-  success: boolean;
-  message: string;
-  response: T | null;
-  aiChatId: number | null;
+	success: boolean;
+	message: string;
+	response: T | null;
+	aiChatId: number | null;
 }
 
 /**
@@ -26,14 +26,12 @@ export interface JobScrapingAiChatResult<T> {
  * @param searchTaskId - ID of the job search
  * @returns The profile ID, or null if the search or its profile is missing
  */
-export async function getProfileIdForSearchTask(
-  searchTaskId: number,
-): Promise<number | null> {
-  const searchTask = await dbDirect.query.search_tasks.findFirst({
-    where: eq(search_tasks.id, searchTaskId),
-    columns: { profile_id: true },
-  });
-  return searchTask?.profile_id ?? null;
+export async function getProfileIdForSearchTask(searchTaskId: number): Promise<number | null> {
+	const searchTask = await dbDirect.query.search_tasks.findFirst({
+		where: eq(search_tasks.id, searchTaskId),
+		columns: { profile_id: true }
+	});
+	return searchTask?.profile_id ?? null;
 }
 
 /**
@@ -49,58 +47,51 @@ export async function getProfileIdForSearchTask(
  * @returns Result with parsed response and aiChatId for database linking
  */
 export async function runProfileAiChat<T>(
-  profileId: number,
-  promptKey: string,
-  customVariables: Record<string, unknown>,
+	profileId: number,
+	promptKey: string,
+	customVariables: Record<string, unknown>
 ): Promise<JobScrapingAiChatResult<T>> {
-  try {
-    const result = await createAndGenerateAiChat(
-      profileId,
-      promptKey,
-      customVariables,
-    );
+	try {
+		const result = await createAndGenerateAiChat(profileId, promptKey, customVariables);
 
-    if (!result.success || !result.aiChat) {
-      return {
-        success: false,
-        message: result.message,
-        response: null,
-        aiChatId: null,
-      };
-    }
+		if (!result.success || !result.aiChat) {
+			return {
+				success: false,
+				message: result.message,
+				response: null,
+				aiChatId: null
+			};
+		}
 
-    // Parse JSON response
-    let parsedResponse: T | null = null;
-    if (result.aiChat.response) {
-      try {
-        parsedResponse = JSON.parse(result.aiChat.response) as T;
-      } catch (_parseError) {
-        return {
-          success: false,
-          message:
-            `Failed to parse AI response as JSON (ai_chat ID: ${result.aiChat.id})`,
-          response: null,
-          aiChatId: result.aiChat.id,
-        };
-      }
-    }
+		// Parse JSON response
+		let parsedResponse: T | null = null;
+		if (result.aiChat.response) {
+			try {
+				parsedResponse = JSON.parse(result.aiChat.response) as T;
+			} catch (_parseError) {
+				return {
+					success: false,
+					message: `Failed to parse AI response as JSON (ai_chat ID: ${result.aiChat.id})`,
+					response: null,
+					aiChatId: result.aiChat.id
+				};
+			}
+		}
 
-    return {
-      success: true,
-      message: result.message,
-      response: parsedResponse,
-      aiChatId: result.aiChat.id,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: `AI chat creation failed: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-      response: null,
-      aiChatId: null,
-    };
-  }
+		return {
+			success: true,
+			message: result.message,
+			response: parsedResponse,
+			aiChatId: result.aiChat.id
+		};
+	} catch (error) {
+		return {
+			success: false,
+			message: `AI chat creation failed: ${error instanceof Error ? error.message : String(error)}`,
+			response: null,
+			aiChatId: null
+		};
+	}
 }
 
 /**
@@ -126,20 +117,20 @@ export async function runProfileAiChat<T>(
  * }
  */
 export async function createJobScrapingAiChat<T>(
-  searchTaskId: number,
-  promptKey: string,
-  customVariables: Record<string, unknown>,
+	searchTaskId: number,
+	promptKey: string,
+	customVariables: Record<string, unknown>
 ): Promise<JobScrapingAiChatResult<T>> {
-  const profileId = await getProfileIdForSearchTask(searchTaskId);
-  if (profileId === null) {
-    return {
-      success: false,
-      message: `Job search ${searchTaskId} not found or has no profile assigned`,
-      response: null,
-      aiChatId: null,
-    };
-  }
-  return runProfileAiChat<T>(profileId, promptKey, customVariables);
+	const profileId = await getProfileIdForSearchTask(searchTaskId);
+	if (profileId === null) {
+		return {
+			success: false,
+			message: `Job search ${searchTaskId} not found or has no profile assigned`,
+			response: null,
+			aiChatId: null
+		};
+	}
+	return runProfileAiChat<T>(profileId, promptKey, customVariables);
 }
 
 /**
@@ -155,9 +146,9 @@ export async function createJobScrapingAiChat<T>(
  * @returns Result with parsed response and aiChatId for database linking
  */
 export async function createJobMatchingAiChat<T>(
-  profileId: number,
-  promptKey: string,
-  customVariables: Record<string, unknown>,
+	profileId: number,
+	promptKey: string,
+	customVariables: Record<string, unknown>
 ): Promise<JobScrapingAiChatResult<T>> {
-  return runProfileAiChat<T>(profileId, promptKey, customVariables);
+	return runProfileAiChat<T>(profileId, promptKey, customVariables);
 }

@@ -10,13 +10,13 @@
  * platform in its ranking.
  */
 
-import { dbDirect as db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
-import { job_platforms } from "$lib/server/db/schema";
+import { dbDirect as db } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
+import { job_platforms } from '$lib/server/db/schema';
 import {
-  SEARCH_FILTER_DEFINITIONS,
-  type SearchFilterName,
-} from "$lib/job-platforms/search-filters";
+	SEARCH_FILTER_DEFINITIONS,
+	type SearchFilterName
+} from '$lib/job-platforms/search-filters';
 
 export type UnsupportedFilters = Partial<Record<SearchFilterName, string[]>>;
 
@@ -38,44 +38,40 @@ export type UnsupportedFilters = Partial<Record<SearchFilterName, string[]>>;
  * popup.
  */
 export function diffRequestedAgainstObserved(
-  requested: Record<string, string[] | string | undefined>,
-  observed: Record<string, { options: Record<string, unknown> } | undefined>,
-  appliedViaFallback: Record<string, string[]> = {},
+	requested: Record<string, string[] | string | undefined>,
+	observed: Record<string, { options: Record<string, unknown> } | undefined>,
+	appliedViaFallback: Record<string, string[]> = {}
 ): UnsupportedFilters {
-  const out: UnsupportedFilters = {};
-  for (const [name, rawValues] of Object.entries(requested)) {
-    if (!(name in SEARCH_FILTER_DEFINITIONS)) continue;
-    const canonicalName = name as SearchFilterName;
-    const def = SEARCH_FILTER_DEFINITIONS[canonicalName];
-    const values = Array.isArray(rawValues)
-      ? rawValues
-      : rawValues
-      ? [rawValues]
-      : [];
-    const validValues = values.filter((v) => v in def.values);
-    if (validValues.length === 0) continue;
+	const out: UnsupportedFilters = {};
+	for (const [name, rawValues] of Object.entries(requested)) {
+		if (!(name in SEARCH_FILTER_DEFINITIONS)) continue;
+		const canonicalName = name as SearchFilterName;
+		const def = SEARCH_FILTER_DEFINITIONS[canonicalName];
+		const values = Array.isArray(rawValues) ? rawValues : rawValues ? [rawValues] : [];
+		const validValues = values.filter((v) => v in def.values);
+		if (validValues.length === 0) continue;
 
-    const widget = observed[name];
-    const fallbackApplied = appliedViaFallback[name] ?? [];
-    if (!widget && fallbackApplied.length === 0) {
-      // Whole filter widget missing AND no fallback ever applied a key —
-      // every requested value is unsupported.
-      out[canonicalName] = validValues;
-      continue;
-    }
-    // Widget identified OR a fallback succeeded for at least one key →
-    // don't record per-value misses. The LLM only emits keys it explicitly
-    // mapped — values applied via the heuristic-label-match fallback in
-    // configure.ts (e.g. Upwork's mid → "Intermediate", senior → "Expert"
-    // via OPTION_LABEL_ALIASES) won't appear in `widget.options` even
-    // though they succeed. Diffing per-key here would falsely flag those
-    // as unsupported, and the next run would skip them at apply time —
-    // silently dropping filters that worked before (run 769 hit this with
-    // experience_level=[mid,senior]). Granular per-value unsupported
-    // entries should come from explicit seed migrations, not from this
-    // auto-recorder.
-  }
-  return out;
+		const widget = observed[name];
+		const fallbackApplied = appliedViaFallback[name] ?? [];
+		if (!widget && fallbackApplied.length === 0) {
+			// Whole filter widget missing AND no fallback ever applied a key —
+			// every requested value is unsupported.
+			out[canonicalName] = validValues;
+			continue;
+		}
+		// Widget identified OR a fallback succeeded for at least one key →
+		// don't record per-value misses. The LLM only emits keys it explicitly
+		// mapped — values applied via the heuristic-label-match fallback in
+		// configure.ts (e.g. Upwork's mid → "Intermediate", senior → "Expert"
+		// via OPTION_LABEL_ALIASES) won't appear in `widget.options` even
+		// though they succeed. Diffing per-key here would falsely flag those
+		// as unsupported, and the next run would skip them at apply time —
+		// silently dropping filters that worked before (run 769 hit this with
+		// experience_level=[mid,senior]). Granular per-value unsupported
+		// entries should come from explicit seed migrations, not from this
+		// auto-recorder.
+	}
+	return out;
 }
 
 /**
@@ -85,40 +81,33 @@ export function diffRequestedAgainstObserved(
  * is empty so we don't touch the timestamp on filter-less runs.
  */
 export async function recordUnsupportedFilters(
-  platformId: number,
-  newlyMissing: UnsupportedFilters,
+	platformId: number,
+	newlyMissing: UnsupportedFilters
 ): Promise<void> {
-  if (Object.keys(newlyMissing).length === 0) return;
+	if (Object.keys(newlyMissing).length === 0) return;
 
-  const row = await db.query.job_platforms.findFirst({
-    where: eq(job_platforms.id, platformId),
-    columns: { unsupported_filters: true },
-  });
-  const existing = (row?.unsupported_filters ?? {}) as UnsupportedFilters;
-  const merged = mergeUnsupported(existing, newlyMissing);
+	const row = await db.query.job_platforms.findFirst({
+		where: eq(job_platforms.id, platformId),
+		columns: { unsupported_filters: true }
+	});
+	const existing = (row?.unsupported_filters ?? {}) as UnsupportedFilters;
+	const merged = mergeUnsupported(existing, newlyMissing);
 
-  await db
-    .update(job_platforms)
-    .set({
-      unsupported_filters: merged,
-      unsupported_filters_at: new Date(),
-    })
-    .where(eq(job_platforms.id, platformId));
+	await db
+		.update(job_platforms)
+		.set({
+			unsupported_filters: merged,
+			unsupported_filters_at: new Date()
+		})
+		.where(eq(job_platforms.id, platformId));
 }
 
 /** Union of two unsupported-filter maps. */
-export function mergeUnsupported(
-  a: UnsupportedFilters,
-  b: UnsupportedFilters,
-): UnsupportedFilters {
-  const out: UnsupportedFilters = { ...a };
-  for (
-    const [name, keys] of Object.entries(b) as Array<
-      [SearchFilterName, string[]]
-    >
-  ) {
-    const existing = out[name] ?? [];
-    out[name] = Array.from(new Set([...existing, ...keys]));
-  }
-  return out;
+export function mergeUnsupported(a: UnsupportedFilters, b: UnsupportedFilters): UnsupportedFilters {
+	const out: UnsupportedFilters = { ...a };
+	for (const [name, keys] of Object.entries(b) as Array<[SearchFilterName, string[]]>) {
+		const existing = out[name] ?? [];
+		out[name] = Array.from(new Set([...existing, ...keys]));
+	}
+	return out;
 }

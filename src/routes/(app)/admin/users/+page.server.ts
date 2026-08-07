@@ -1,264 +1,265 @@
-import type { Actions, PageServerLoad } from "./$types";
-import { fail, redirect } from "@sveltejs/kit";
-import { dbDirect as db } from "$lib/server/db";
-import { eq, and, gt, like, inArray, desc, count } from "drizzle-orm";
-import { users as usersTable, profiles, verifications, subscriptions, api_keys } from "$lib/server/db/schema";
-import { auth } from "$lib/server/auth/better-auth";
-import { sendEmail } from "$lib/server/email";
-import { getEnv } from "$lib/tools/get-env";
-import { PLAN_LIMITS, type PlanId } from "$lib/server/billing/plans";
+import type { Actions, PageServerLoad } from './$types';
+import { fail, redirect } from '@sveltejs/kit';
+import { dbDirect as db } from '$lib/server/db';
+import { eq, and, gt, like, inArray, desc, count } from 'drizzle-orm';
 import {
-  applyInviteGrants,
-  PLAN_DURATION_MONTHS,
-  parseInviteGrants,
-} from "$lib/server/auth/invite-grants";
-import crypto from "crypto";
+	users as usersTable,
+	profiles,
+	verifications,
+	subscriptions,
+	api_keys
+} from '$lib/server/db/schema';
+import { auth } from '$lib/server/auth/better-auth';
+import { sendEmail } from '$lib/server/email';
+import { getEnv } from '$lib/tools/get-env';
+import { PLAN_LIMITS, type PlanId } from '$lib/server/billing/plans';
+import {
+	applyInviteGrants,
+	PLAN_DURATION_MONTHS,
+	parseInviteGrants
+} from '$lib/server/auth/invite-grants';
+import crypto from 'crypto';
 
 /** Escape a value being dropped into the invite email's HTML body. */
 function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;');
 }
 
 export const load: PageServerLoad = async ({ parent, locals }) => {
-  await parent();
+	await parent();
 
-  const users = await db.query.users.findMany({
-    orderBy: desc(usersTable.createdAt),
-  });
+	const users = await db.query.users.findMany({
+		orderBy: desc(usersTable.createdAt)
+	});
 
-  // The admin's own devices — what an invite can hand out (see invite-grants).
-  const myDevices = locals.user
-    ? await db.query.api_keys.findMany({
-      where: and(
-        eq(api_keys.user_id, locals.user.id),
-        eq(api_keys.revoked, false),
-      ),
-      columns: { id: true, name: true },
-    })
-    : [];
-  const deviceNameMap = new Map(
-    myDevices.map((d) => [d.id, d.name ?? `Device ${d.id}`]),
-  );
+	// The admin's own devices — what an invite can hand out (see invite-grants).
+	const myDevices = locals.user
+		? await db.query.api_keys.findMany({
+				where: and(eq(api_keys.user_id, locals.user.id), eq(api_keys.revoked, false)),
+				columns: { id: true, name: true }
+			})
+		: [];
+	const deviceNameMap = new Map(myDevices.map((d) => [d.id, d.name ?? `Device ${d.id}`]));
 
-  const profileCounts = await db.select({ user_id: profiles.user_id, count: count() })
-    .from(profiles)
-    .groupBy(profiles.user_id);
+	const profileCounts = await db
+		.select({ user_id: profiles.user_id, count: count() })
+		.from(profiles)
+		.groupBy(profiles.user_id);
 
-  const profileCountMap = new Map(
-    profileCounts.map((p) => [p.user_id, p.count]),
-  );
+	const profileCountMap = new Map(profileCounts.map((p) => [p.user_id, p.count]));
 
-  // Fetch pending invites to show invite status per user
-  const pendingInvites = await db.query.verifications.findMany({
-    where: and(like(verifications.identifier, "invite:%"), gt(verifications.expiresAt, new Date())),
-    columns: { identifier: true, value: true, expiresAt: true, createdAt: true },
-  });
+	// Fetch pending invites to show invite status per user
+	const pendingInvites = await db.query.verifications.findMany({
+		where: and(like(verifications.identifier, 'invite:%'), gt(verifications.expiresAt, new Date())),
+		columns: { identifier: true, value: true, expiresAt: true, createdAt: true }
+	});
 
-  const invitedEmails = new Set(
-    pendingInvites.map((v) => v.identifier.replace("invite:", "")),
-  );
+	const invitedEmails = new Set(pendingInvites.map((v) => v.identifier.replace('invite:', '')));
 
-  // Fetch active subscriptions to show plan per user
-  const activeSubs = await db.query.subscriptions.findMany({
-    where: inArray(subscriptions.status, ["active", "trialing", "past_due"]),
-    orderBy: desc(subscriptions.date_created),
-    columns: { user_id: true, plan: true },
-  });
+	// Fetch active subscriptions to show plan per user
+	const activeSubs = await db.query.subscriptions.findMany({
+		where: inArray(subscriptions.status, ['active', 'trialing', 'past_due']),
+		orderBy: desc(subscriptions.date_created),
+		columns: { user_id: true, plan: true }
+	});
 
-  const userPlanMap = new Map<string, string>();
-  for (const sub of activeSubs) {
-    if (!userPlanMap.has(sub.user_id)) {
-      userPlanMap.set(sub.user_id, sub.plan);
-    }
-  }
+	const userPlanMap = new Map<string, string>();
+	for (const sub of activeSubs) {
+		if (!userPlanMap.has(sub.user_id)) {
+			userPlanMap.set(sub.user_id, sub.plan);
+		}
+	}
 
-  const usersWithProfiles = users.map((u) => ({
-    ...u,
-    profileCount: profileCountMap.get(u.id) ?? 0,
-    hasInvite: invitedEmails.has(u.email),
-    plan: userPlanMap.get(u.id) ?? "free",
-  }));
+	const usersWithProfiles = users.map((u) => ({
+		...u,
+		profileCount: profileCountMap.get(u.id) ?? 0,
+		hasInvite: invitedEmails.has(u.email),
+		plan: userPlanMap.get(u.id) ?? 'free'
+	}));
 
-  // Build list of pending invitations that haven't been accepted yet
-  const existingEmails = new Set(users.map((u) => u.email));
-  const pendingInvitations = pendingInvites
-    .filter((v) => !existingEmails.has(v.identifier.replace("invite:", "")))
-    .map((v) => {
-      const email = v.identifier.replace("invite:", "");
-      let name = "";
-      let is_approved = false;
-      let is_staff = false;
-      let is_admin = false;
-      let plan: string | null = null;
-      let planMonths: number | null = null;
-      let deviceNames: string[] = [];
-      try {
-        const data = JSON.parse(v.value);
-        name = data.name || "";
-        is_approved = data.is_approved || false;
-        is_staff = data.is_staff || false;
-        is_admin = data.is_admin || false;
-        plan = data.plan || null;
-        planMonths = data.planMonths ?? null;
-        // Only the viewing admin's own devices resolve to a name; devices on
-        // another admin's invite fall back to their id.
-        deviceNames = (data.deviceIds ?? []).map(
-          (id: number) => deviceNameMap.get(id) ?? `Device ${id}`,
-        );
-      } catch {}
-      return {
-        email,
-        name,
-        is_approved,
-        is_staff,
-        is_admin,
-        plan,
-        planMonths,
-        deviceNames,
-        expiresAt: v.expiresAt,
-        createdAt: v.createdAt,
-      };
-    });
+	// Build list of pending invitations that haven't been accepted yet
+	const existingEmails = new Set(users.map((u) => u.email));
+	const pendingInvitations = pendingInvites
+		.filter((v) => !existingEmails.has(v.identifier.replace('invite:', '')))
+		.map((v) => {
+			const email = v.identifier.replace('invite:', '');
+			let name = '';
+			let is_approved = false;
+			let is_staff = false;
+			let is_admin = false;
+			let plan: string | null = null;
+			let planMonths: number | null = null;
+			let deviceNames: string[] = [];
+			try {
+				const data = JSON.parse(v.value);
+				name = data.name || '';
+				is_approved = data.is_approved || false;
+				is_staff = data.is_staff || false;
+				is_admin = data.is_admin || false;
+				plan = data.plan || null;
+				planMonths = data.planMonths ?? null;
+				// Only the viewing admin's own devices resolve to a name; devices on
+				// another admin's invite fall back to their id.
+				deviceNames = (data.deviceIds ?? []).map(
+					(id: number) => deviceNameMap.get(id) ?? `Device ${id}`
+				);
+			} catch {}
+			return {
+				email,
+				name,
+				is_approved,
+				is_staff,
+				is_admin,
+				plan,
+				planMonths,
+				deviceNames,
+				expiresAt: v.expiresAt,
+				createdAt: v.createdAt
+			};
+		});
 
-  return {
-    users: usersWithProfiles,
-    pendingInvitations,
-    devices: myDevices.map((d) => ({
-      id: d.id,
-      name: d.name ?? `Device ${d.id}`,
-    })),
-    planOptions: Object.keys(PLAN_LIMITS) as PlanId[],
-    planDurations: [...PLAN_DURATION_MONTHS],
-  };
+	return {
+		users: usersWithProfiles,
+		pendingInvitations,
+		devices: myDevices.map((d) => ({
+			id: d.id,
+			name: d.name ?? `Device ${d.id}`
+		})),
+		planOptions: Object.keys(PLAN_LIMITS) as PlanId[],
+		planDurations: [...PLAN_DURATION_MONTHS]
+	};
 };
 
 export const actions: Actions = {
-  create: async ({ request, locals }) => {
-    if (!locals.user?.is_admin) {
-      return fail(403, { error: "Admin access required" });
-    }
+	create: async ({ request, locals }) => {
+		if (!locals.user?.is_admin) {
+			return fail(403, { error: 'Admin access required' });
+		}
 
-    const formData = await request.formData();
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const is_approved = formData.get("is_approved") === "on";
-    const is_staff = formData.get("is_staff") === "on";
-    const is_admin = formData.get("is_admin") === "on";
+		const formData = await request.formData();
+		const name = formData.get('name') as string;
+		const email = formData.get('email') as string;
+		const password = formData.get('password') as string;
+		const is_approved = formData.get('is_approved') === 'on';
+		const is_staff = formData.get('is_staff') === 'on';
+		const is_admin = formData.get('is_admin') === 'on';
 
-    if (!email?.trim()) {
-      return fail(400, { error: "Email is required" });
-    }
-    if (!password || password.length < 8) {
-      return fail(400, { error: "Password must be at least 8 characters" });
-    }
+		if (!email?.trim()) {
+			return fail(400, { error: 'Email is required' });
+		}
+		if (!password || password.length < 8) {
+			return fail(400, { error: 'Password must be at least 8 characters' });
+		}
 
-    // Same plan/device fields as the invite path. Here the account exists
-    // immediately, so the grants are applied straight away rather than stored.
-    const parsed = await parseInviteGrants(formData, locals.user.id);
-    if ("error" in parsed) {
-      return fail(400, { error: parsed.error });
-    }
+		// Same plan/device fields as the invite path. Here the account exists
+		// immediately, so the grants are applied straight away rather than stored.
+		const parsed = await parseInviteGrants(formData, locals.user.id);
+		if ('error' in parsed) {
+			return fail(400, { error: parsed.error });
+		}
 
-    let userId: string;
-    try {
-      const result = await auth.api.signUpEmail({
-        body: {
-          email: email.trim(),
-          password,
-          name: name?.trim() || "",
-        },
-      });
+		let userId: string;
+		try {
+			const result = await auth.api.signUpEmail({
+				body: {
+					email: email.trim(),
+					password,
+					name: name?.trim() || ''
+				}
+			});
 
-      if (!result.user) {
-        return fail(400, { error: "Failed to create user" });
-      }
-      userId = result.user.id;
-      await db.update(usersTable).set({ is_approved, is_staff, is_admin }).where(eq(usersTable.id, userId));
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : "Failed to create user";
-      return fail(400, { error: message });
-    }
+			if (!result.user) {
+				return fail(400, { error: 'Failed to create user' });
+			}
+			userId = result.user.id;
+			await db
+				.update(usersTable)
+				.set({ is_approved, is_staff, is_admin })
+				.where(eq(usersTable.id, userId));
+		} catch (e: unknown) {
+			const message = e instanceof Error ? e.message : 'Failed to create user';
+			return fail(400, { error: message });
+		}
 
-    const warnings = await applyInviteGrants(userId, parsed.grants);
-    if (warnings.length > 0) {
-      return { success: true, warning: warnings.join(" ") };
-    }
+		const warnings = await applyInviteGrants(userId, parsed.grants);
+		if (warnings.length > 0) {
+			return { success: true, warning: warnings.join(' ') };
+		}
 
-    return { success: true };
-  },
+		return { success: true };
+	},
 
-  invite: async ({ request, locals }) => {
-    if (!locals.user?.is_admin) {
-      return fail(403, { error: "Admin access required" });
-    }
+	invite: async ({ request, locals }) => {
+		if (!locals.user?.is_admin) {
+			return fail(403, { error: 'Admin access required' });
+		}
 
-    const formData = await request.formData();
-    const name = formData.get("name") as string;
-    const email = formData.get("email") as string;
-    const is_approved = formData.get("is_approved") === "on";
-    const is_staff = formData.get("is_staff") === "on";
-    const is_admin = formData.get("is_admin") === "on";
+		const formData = await request.formData();
+		const name = formData.get('name') as string;
+		const email = formData.get('email') as string;
+		const is_approved = formData.get('is_approved') === 'on';
+		const is_staff = formData.get('is_staff') === 'on';
+		const is_admin = formData.get('is_admin') === 'on';
 
-    if (!email?.trim()) {
-      return fail(400, { error: "Email is required" });
-    }
+		if (!email?.trim()) {
+			return fail(400, { error: 'Email is required' });
+		}
 
-    const existing = await db.query.users.findFirst({
-      where: eq(usersTable.email, email.trim()),
-    });
-    if (existing) {
-      return fail(400, { error: "A user with this email already exists" });
-    }
+		const existing = await db.query.users.findFirst({
+			where: eq(usersTable.email, email.trim())
+		});
+		if (existing) {
+			return fail(400, { error: 'A user with this email already exists' });
+		}
 
-    // Plan + device grants travel in the payload and are applied when the
-    // invite is accepted — see auth/invite-grants.ts for why not now.
-    const parsed = await parseInviteGrants(formData, locals.user.id);
-    if ("error" in parsed) {
-      return fail(400, { error: parsed.error });
-    }
+		// Plan + device grants travel in the payload and are applied when the
+		// invite is accepted — see auth/invite-grants.ts for why not now.
+		const parsed = await parseInviteGrants(formData, locals.user.id);
+		if ('error' in parsed) {
+			return fail(400, { error: parsed.error });
+		}
 
-    // Delete any existing invite for this email
-    await db.delete(verifications).where(eq(verifications.identifier, `invite:${email.trim()}`));
+		// Delete any existing invite for this email
+		await db.delete(verifications).where(eq(verifications.identifier, `invite:${email.trim()}`));
 
-    const token = crypto.randomUUID();
-    const inviteData = JSON.stringify({
-      token,
-      name: name?.trim() || "",
-      is_approved,
-      is_staff,
-      is_admin,
-      ...parsed.grants,
-    });
+		const token = crypto.randomUUID();
+		const inviteData = JSON.stringify({
+			token,
+			name: name?.trim() || '',
+			is_approved,
+			is_staff,
+			is_admin,
+			...parsed.grants
+		});
 
-    await db.insert(verifications).values({
-      id: crypto.randomUUID(),
-      identifier: `invite:${email.trim()}`,
-      value: inviteData,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      createdAt: new Date(),
-    });
+		await db.insert(verifications).values({
+			id: crypto.randomUUID(),
+			identifier: `invite:${email.trim()}`,
+			value: inviteData,
+			expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+			createdAt: new Date()
+		});
 
-    const deviceCount = parsed.grants.deviceIds?.length ?? 0;
-    const grantLines = [
-      parsed.grants.plan
-        ? `<p>Your account comes with the <strong>${parsed.grants.plan}</strong> plan for ${parsed.grants.planMonths} months.</p>`
-        : "",
-      deviceCount > 0
-        ? `<p>${escapeHtml(locals.user.name || "Your host")} is also sharing ${deviceCount} ${deviceCount === 1 ? "device" : "devices"} with you, so job imports work straight away.</p>`
-        : "",
-    ].join("");
+		const deviceCount = parsed.grants.deviceIds?.length ?? 0;
+		const grantLines = [
+			parsed.grants.plan
+				? `<p>Your account comes with the <strong>${parsed.grants.plan}</strong> plan for ${parsed.grants.planMonths} months.</p>`
+				: '',
+			deviceCount > 0
+				? `<p>${escapeHtml(locals.user.name || 'Your host')} is also sharing ${deviceCount} ${deviceCount === 1 ? 'device' : 'devices'} with you, so job imports work straight away.</p>`
+				: ''
+		].join('');
 
-    const baseUrl = getEnv("SJS_APP_URL_HOST", "http://localhost:5173");
-    try {
-      await sendEmail({
-        to: email.trim(),
-        subject: "You're invited to Smart Job Seeker",
-        html: `
+		const baseUrl = getEnv('SJS_APP_URL_HOST', 'http://localhost:5173');
+		try {
+			await sendEmail({
+				to: email.trim(),
+				subject: "You're invited to Smart Job Seeker",
+				html: `
           <h2>You've been invited!</h2>
           <p>You've been invited to join Smart Job Seeker.</p>
           ${grantLines}
@@ -266,72 +267,77 @@ export const actions: Actions = {
           <p><a href="${baseUrl}/signup/invite?token=${token}">Accept Invitation & Set Password</a></p>
           <p>This invitation expires in 30 days.</p>
         `,
-        type: "invite",
-      });
-    } catch (e: unknown) {
-      // Clean up the verification record if email fails
-      await db.delete(verifications).where(eq(verifications.identifier, `invite:${email.trim()}`));
-      const message = e instanceof Error ? e.message : "Failed to send email";
-      return fail(500, { error: `Invite email failed: ${message}` });
-    }
+				type: 'invite'
+			});
+		} catch (e: unknown) {
+			// Clean up the verification record if email fails
+			await db.delete(verifications).where(eq(verifications.identifier, `invite:${email.trim()}`));
+			const message = e instanceof Error ? e.message : 'Failed to send email';
+			return fail(500, { error: `Invite email failed: ${message}` });
+		}
 
-    return { success: true };
-  },
+		return { success: true };
+	},
 
-  revoke_invite: async ({ request, locals }) => {
-    if (!locals.user?.is_admin) {
-      return fail(403, { error: "Admin access required" });
-    }
+	revoke_invite: async ({ request, locals }) => {
+		if (!locals.user?.is_admin) {
+			return fail(403, { error: 'Admin access required' });
+		}
 
-    const formData = await request.formData();
-    const email = formData.get("email") as string;
+		const formData = await request.formData();
+		const email = formData.get('email') as string;
 
-    if (!email?.trim()) {
-      return fail(400, { error: "Email is required" });
-    }
+		if (!email?.trim()) {
+			return fail(400, { error: 'Email is required' });
+		}
 
-    const deleted = await db.delete(verifications).where(eq(verifications.identifier, `invite:${email.trim()}`));
+		const deleted = await db
+			.delete(verifications)
+			.where(eq(verifications.identifier, `invite:${email.trim()}`));
 
-    if ((deleted.rowCount ?? 0) === 0) {
-      return fail(404, { error: "Invitation not found" });
-    }
+		if ((deleted.rowCount ?? 0) === 0) {
+			return fail(404, { error: 'Invitation not found' });
+		}
 
-    return { success: true };
-  },
+		return { success: true };
+	},
 
-  update_invite_expiry: async ({ request, locals }) => {
-    if (!locals.user?.is_admin) {
-      return fail(403, { error: "Admin access required" });
-    }
+	update_invite_expiry: async ({ request, locals }) => {
+		if (!locals.user?.is_admin) {
+			return fail(403, { error: 'Admin access required' });
+		}
 
-    const formData = await request.formData();
-    const email = formData.get("email") as string;
-    const expiresAt = formData.get("expiresAt") as string;
+		const formData = await request.formData();
+		const email = formData.get('email') as string;
+		const expiresAt = formData.get('expiresAt') as string;
 
-    if (!email?.trim() || !expiresAt) {
-      return fail(400, { error: "Email and expiry date are required" });
-    }
+		if (!email?.trim() || !expiresAt) {
+			return fail(400, { error: 'Email and expiry date are required' });
+		}
 
-    const newExpiry = new Date(expiresAt);
-    if (isNaN(newExpiry.getTime())) {
-      return fail(400, { error: "Invalid date" });
-    }
+		const newExpiry = new Date(expiresAt);
+		if (isNaN(newExpiry.getTime())) {
+			return fail(400, { error: 'Invalid date' });
+		}
 
-    const updated = await db.update(verifications).set({ expiresAt: newExpiry }).where(eq(verifications.identifier, `invite:${email.trim()}`));
+		const updated = await db
+			.update(verifications)
+			.set({ expiresAt: newExpiry })
+			.where(eq(verifications.identifier, `invite:${email.trim()}`));
 
-    if ((updated.rowCount ?? 0) === 0) {
-      return fail(404, { error: "Invitation not found" });
-    }
+		if ((updated.rowCount ?? 0) === 0) {
+			return fail(404, { error: 'Invitation not found' });
+		}
 
-    return { success: true };
-  },
+		return { success: true };
+	},
 
-  stop_impersonate: async ({ locals, cookies }) => {
-    if (!locals.user?.is_admin && !locals.adminUser?.is_admin) {
-      return fail(403, { error: "Admin access required" });
-    }
+	stop_impersonate: async ({ locals, cookies }) => {
+		if (!locals.user?.is_admin && !locals.adminUser?.is_admin) {
+			return fail(403, { error: 'Admin access required' });
+		}
 
-    cookies.delete("sjs_impersonate", { path: "/" });
-    redirect(302, "/admin/users");
-  },
+		cookies.delete('sjs_impersonate', { path: '/' });
+		redirect(302, '/admin/users');
+	}
 };

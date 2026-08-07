@@ -1,4 +1,4 @@
-import { sqlJoin, sql } from "$lib/server/db";
+import { sqlJoin, sql } from '$lib/server/db';
 /**
  * Shared eligibility filter for job matching SQL queries.
  *
@@ -12,23 +12,16 @@ import { sqlJoin, sql } from "$lib/server/db";
  * that produces human-readable failure reasons).
  */
 
-import { type SQL } from "drizzle-orm";
-import {
-  JOB_TYPES,
-  WORK_LOCATIONS,
-  buildFamilyMap,
-} from "$lib/data/job-taxonomy";
-import {
-  expandExperienceBuckets,
-  toExperienceBuckets,
-} from "$lib/job-platforms/search-filters";
+import { type SQL } from 'drizzle-orm';
+import { JOB_TYPES, WORK_LOCATIONS, buildFamilyMap } from '$lib/data/job-taxonomy';
+import { expandExperienceBuckets, toExperienceBuckets } from '$lib/job-platforms/search-filters';
 
 export interface EligibilityConfig {
-  work_location: string[] | null;
-  job_types: string[] | null;
-  // Optional: when set (and non-empty), jobs must overlap one of the requested
-  // experience-level buckets. Unset = no experience filter (any level).
-  experience_levels?: string[] | null;
+	work_location: string[] | null;
+	job_types: string[] | null;
+	// Optional: when set (and non-empty), jobs must overlap one of the requested
+	// experience-level buckets. Unset = no experience filter (any level).
+	experience_levels?: string[] | null;
 }
 
 // Taxonomy-derived family expansion maps (built once at module load)
@@ -46,56 +39,53 @@ const jobTypeFamilies = buildFamilyMap(JOB_TYPES);
  * - skills overlap in required OR preferred (NULL/json-null = any)
  * - experience_level bucket overlap (only when config.experience_levels is set)
  */
-export function buildEligibilityFilter(
-  config: EligibilityConfig,
-  profileSkills: string[],
-): SQL {
-  if (!config.work_location || config.work_location.length === 0) {
-    throw new Error("Work location config is required for job matching");
-  }
-  if (!config.job_types || config.job_types.length === 0) {
-    throw new Error("Job types config is required for job matching");
-  }
-  if (!profileSkills || profileSkills.length === 0) {
-    throw new Error("Profile must have at least one skill for job matching");
-  }
+export function buildEligibilityFilter(config: EligibilityConfig, profileSkills: string[]): SQL {
+	if (!config.work_location || config.work_location.length === 0) {
+		throw new Error('Work location config is required for job matching');
+	}
+	if (!config.job_types || config.job_types.length === 0) {
+		throw new Error('Job types config is required for job matching');
+	}
+	if (!profileSkills || profileSkills.length === 0) {
+		throw new Error('Profile must have at least one skill for job matching');
+	}
 
-  // Normalize config values: lowercase + strip hyphens/underscores/spaces
-  // This ensures "Full-time" matches "full_time", "fulltime", etc.
-  const normalizeValue = (v: string) =>
-    v.toLowerCase().replace(/[-_\s]/g, "");
+	// Normalize config values: lowercase + strip hyphens/underscores/spaces
+	// This ensures "Full-time" matches "full_time", "fulltime", etc.
+	const normalizeValue = (v: string) => v.toLowerCase().replace(/[-_\s]/g, '');
 
-  // Expand work locations to include multilingual variants from the taxonomy
-  // e.g. "hybrid" also matches "in overleg" (Dutch), "nach absprache" (German), etc.
-  const expandedWorkLocations = new Set(config.work_location.map(normalizeValue));
-  workLocationFamilies.forEach((family, canonical) => {
-    if (expandedWorkLocations.has(canonical)) {
-      family.forEach((v) => expandedWorkLocations.add(v));
-    }
-  });
-  const workLocations = Array.from(expandedWorkLocations);
+	// Expand work locations to include multilingual variants from the taxonomy
+	// e.g. "hybrid" also matches "in overleg" (Dutch), "nach absprache" (German), etc.
+	const expandedWorkLocations = new Set(config.work_location.map(normalizeValue));
+	workLocationFamilies.forEach((family, canonical) => {
+		if (expandedWorkLocations.has(canonical)) {
+			family.forEach((v) => expandedWorkLocations.add(v));
+		}
+	});
+	const workLocations = Array.from(expandedWorkLocations);
 
-  // Expand job types to include related scraped variants from the taxonomy
-  // e.g. "contract" also matches "one-time project", "freelance", "contractor", etc.
-  const expandedJobTypes = new Set(config.job_types.map(normalizeValue));
-  jobTypeFamilies.forEach((family, canonical) => {
-    if (expandedJobTypes.has(canonical)) {
-      family.forEach((v) => expandedJobTypes.add(v));
-    }
-  });
-  const jobTypes = Array.from(expandedJobTypes);
+	// Expand job types to include related scraped variants from the taxonomy
+	// e.g. "contract" also matches "one-time project", "freelance", "contractor", etc.
+	const expandedJobTypes = new Set(config.job_types.map(normalizeValue));
+	jobTypeFamilies.forEach((family, canonical) => {
+		if (expandedJobTypes.has(canonical)) {
+			family.forEach((v) => expandedJobTypes.add(v));
+		}
+	});
+	const jobTypes = Array.from(expandedJobTypes);
 
-  // Experience level overlap — only constrains when the user set a preference.
-  // Job rows store fine-grained taxonomy levels (junior, mid_senior, staff…);
-  // expandExperienceBuckets() turns the user's bucket selection into the full
-  // set of taxonomy terms that map into those buckets, so the membership check
-  // mirrors the source-side filter exactly.
-  const experienceBuckets = config.experience_levels
-    ? toExperienceBuckets(config.experience_levels)
-    : [];
-  const experienceTerms = expandExperienceBuckets(experienceBuckets);
-  const experienceClause = experienceTerms.length > 0
-    ? sql`
+	// Experience level overlap — only constrains when the user set a preference.
+	// Job rows store fine-grained taxonomy levels (junior, mid_senior, staff…);
+	// expandExperienceBuckets() turns the user's bucket selection into the full
+	// set of taxonomy terms that map into those buckets, so the membership check
+	// mirrors the source-side filter exactly.
+	const experienceBuckets = config.experience_levels
+		? toExperienceBuckets(config.experience_levels)
+		: [];
+	const experienceTerms = expandExperienceBuckets(experienceBuckets);
+	const experienceClause =
+		experienceTerms.length > 0
+			? sql`
     AND (
       j.experience_levels IS NULL
       OR j.experience_levels::text = 'null'
@@ -104,9 +94,9 @@ export function buildEligibilityFilter(
         WHERE regexp_replace(lower(elem), '[-_ ]', '', 'g') = ANY(array[${sqlJoin(experienceTerms)}]::text[])
       )
     )`
-    : sql``;
+			: sql``;
 
-  return sql`
+	return sql`
     -- Minimum data: job must have a description OR at least one skill
     (
       (j.job_description IS NOT NULL AND TRIM(j.job_description) != '')
@@ -121,7 +111,7 @@ export function buildEligibilityFilter(
       OR j.work_location::text = 'null'
       OR EXISTS (
         SELECT 1 FROM jsonb_array_elements_text(j.work_location::jsonb) AS elem
-        WHERE regexp_replace(lower(elem), '[-_ ]', '', 'g') LIKE ANY(array[${sqlJoin(workLocations.map(wl => "%" + wl + "%"))}]::text[])
+        WHERE regexp_replace(lower(elem), '[-_ ]', '', 'g') LIKE ANY(array[${sqlJoin(workLocations.map((wl) => '%' + wl + '%'))}]::text[])
       )
     )
     -- Job types overlap — normalized (case + separator insensitive)
@@ -142,12 +132,8 @@ export function buildEligibilityFilter(
       OR j.skills_preferred::text = 'null'
       OR jsonb_array_length(j.skills_required::jsonb) = 0
       OR jsonb_array_length(j.skills_preferred::jsonb) = 0
-      OR j.skills_required::jsonb ?| array[${
-    sqlJoin(profileSkills)
-  }]::text[]
-      OR j.skills_preferred::jsonb ?| array[${
-    sqlJoin(profileSkills)
-  }]::text[]
+      OR j.skills_required::jsonb ?| array[${sqlJoin(profileSkills)}]::text[]
+      OR j.skills_preferred::jsonb ?| array[${sqlJoin(profileSkills)}]::text[]
     )
     ${experienceClause}
   `;

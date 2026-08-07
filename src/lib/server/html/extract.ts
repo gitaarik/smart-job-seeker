@@ -2,8 +2,8 @@
  * HTML extraction utilities using Cheerio-based parsing
  */
 
-import * as cheerio from "cheerio";
-import type { Element } from "domhandler";
+import * as cheerio from 'cheerio';
+import type { Element } from 'domhandler';
 
 /**
  * Extract all links matching a pattern from HTML
@@ -11,26 +11,23 @@ import type { Element } from "domhandler";
  * @param pattern Optional regex pattern to filter links
  * @returns Array of URLs found in the HTML
  */
-export function extractLinks(
-  html: string,
-  pattern?: RegExp,
-): string[] {
-  const links: string[] = [];
-  const $ = cheerio.load(html);
+export function extractLinks(html: string, pattern?: RegExp): string[] {
+	const links: string[] = [];
+	const $ = cheerio.load(html);
 
-  $("a[href]").each((_: number, elem: Element) => {
-    const url = $(elem).attr("href");
+	$('a[href]').each((_: number, elem: Element) => {
+		const url = $(elem).attr('href');
 
-    if (!url) return;
+		if (!url) return;
 
-    if (pattern && !pattern.test(url)) return;
+		if (pattern && !pattern.test(url)) return;
 
-    if (!links.includes(url)) {
-      links.push(url);
-    }
-  });
+		if (!links.includes(url)) {
+			links.push(url);
+		}
+	});
 
-  return links;
+	return links;
 }
 
 /**
@@ -44,27 +41,27 @@ export function extractLinks(
  * @returns The source URL if found, null otherwise
  */
 export function extractSourceUrlFromMeta(html: string): string | null {
-  const $ = cheerio.load(html);
+	const $ = cheerio.load(html);
 
-  // 1. Check <meta property="og:url"> - usually contains the full URL with params
-  const ogUrl = $('meta[property="og:url"]').attr("content");
-  if (ogUrl && isValidUrl(ogUrl)) {
-    return ogUrl;
-  }
+	// 1. Check <meta property="og:url"> - usually contains the full URL with params
+	const ogUrl = $('meta[property="og:url"]').attr('content');
+	if (ogUrl && isValidUrl(ogUrl)) {
+		return ogUrl;
+	}
 
-  // 2. Check <link rel="canonical">
-  const canonical = $('link[rel="canonical"]').attr("href");
-  if (canonical && isValidUrl(canonical)) {
-    return canonical;
-  }
+	// 2. Check <link rel="canonical">
+	const canonical = $('link[rel="canonical"]').attr('href');
+	if (canonical && isValidUrl(canonical)) {
+		return canonical;
+	}
 
-  // 3. Check JSON-LD structured data for JobPosting URL
-  const jsonLdUrl = extractUrlFromJsonLd($);
-  if (jsonLdUrl) {
-    return jsonLdUrl;
-  }
+	// 3. Check JSON-LD structured data for JobPosting URL
+	const jsonLdUrl = extractUrlFromJsonLd($);
+	if (jsonLdUrl) {
+		return jsonLdUrl;
+	}
 
-  return null;
+	return null;
 }
 
 /**
@@ -72,55 +69,50 @@ export function extractSourceUrlFromMeta(html: string): string | null {
  * Looks for @type: JobPosting and extracts the url field.
  */
 function extractUrlFromJsonLd($: cheerio.CheerioAPI): string | null {
-  const scripts = $('script[type="application/ld+json"]');
+	const scripts = $('script[type="application/ld+json"]');
 
-  for (let i = 0; i < scripts.length; i++) {
-    const scriptContent = $(scripts[i]).html();
-    if (!scriptContent) continue;
+	for (let i = 0; i < scripts.length; i++) {
+		const scriptContent = $(scripts[i]).html();
+		if (!scriptContent) continue;
 
-    try {
-      const data = JSON.parse(scriptContent);
+		try {
+			const data = JSON.parse(scriptContent);
 
-      // Handle single object or array of objects
-      const items = Array.isArray(data) ? data : [data];
+			// Handle single object or array of objects
+			const items = Array.isArray(data) ? data : [data];
 
-      for (const item of items) {
-        // Check if this is a JobPosting
-        if (
-          item["@type"] === "JobPosting" && item.url && isValidUrl(item.url)
-        ) {
-          return item.url;
-        }
+			for (const item of items) {
+				// Check if this is a JobPosting
+				if (item['@type'] === 'JobPosting' && item.url && isValidUrl(item.url)) {
+					return item.url;
+				}
 
-        // Check @graph array (common in schema.org structured data)
-        if (Array.isArray(item["@graph"])) {
-          for (const graphItem of item["@graph"]) {
-            if (
-              graphItem["@type"] === "JobPosting" && graphItem.url &&
-              isValidUrl(graphItem.url)
-            ) {
-              return graphItem.url;
-            }
-          }
-        }
-      }
-    } catch {
-      // Invalid JSON, skip this script tag
-      continue;
-    }
-  }
+				// Check @graph array (common in schema.org structured data)
+				if (Array.isArray(item['@graph'])) {
+					for (const graphItem of item['@graph']) {
+						if (graphItem['@type'] === 'JobPosting' && graphItem.url && isValidUrl(graphItem.url)) {
+							return graphItem.url;
+						}
+					}
+				}
+			}
+		} catch {
+			// Invalid JSON, skip this script tag
+			continue;
+		}
+	}
 
-  return null;
+	return null;
 }
 
 /**
  * Check if a string looks like a valid HTTP(S) URL.
  */
 function isValidUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
+	try {
+		const parsed = new URL(url);
+		return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+	} catch {
+		return false;
+	}
 }

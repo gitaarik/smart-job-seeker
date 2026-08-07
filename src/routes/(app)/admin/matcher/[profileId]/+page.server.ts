@@ -1,7 +1,7 @@
-import type { PageServerLoad } from "./$types";
+import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
-  return {
-    profileId: parseInt(params.profileId),
-  };
+	return {
+		profileId: parseInt(params.profileId)
+	};
 };

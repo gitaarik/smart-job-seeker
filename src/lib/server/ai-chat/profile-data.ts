@@ -9,15 +9,15 @@
  * trim the smaller retrieval blocks around it.
  */
 
-import { db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
-import { collected_data } from "$lib/server/db/schema";
-import { exportProfile } from "$lib/server/profile/export";
-import { PROFILE_ONLY_FLAG } from "$lib/profile-visibility";
+import { db } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
+import { collected_data } from '$lib/server/db/schema';
+import { exportProfile } from '$lib/server/profile/export';
+import { PROFILE_ONLY_FLAG } from '$lib/profile-visibility';
 
 export interface ProfileData {
-  data: Record<string, unknown>;
-  schema: Record<string, unknown>;
+	data: Record<string, unknown>;
+	schema: Record<string, unknown>;
 }
 
 /**
@@ -34,38 +34,31 @@ export interface ProfileData {
  * it.
  */
 export function applySkillVisibility(
-  data: Record<string, unknown>,
-  documentSafe: boolean,
+	data: Record<string, unknown>,
+	documentSafe: boolean
 ): Record<string, unknown> {
-  const categories = data.tech_skill_categories;
-  if (!Array.isArray(categories)) return data;
+	const categories = data.tech_skill_categories;
+	if (!Array.isArray(categories)) return data;
 
-  return {
-    ...data,
-    tech_skill_categories: categories.map((category) => {
-      const skills = (category as Record<string, unknown>)?.tech_skills;
-      if (!Array.isArray(skills)) return category;
+	return {
+		...data,
+		tech_skill_categories: categories.map((category) => {
+			const skills = (category as Record<string, unknown>)?.tech_skills;
+			if (!Array.isArray(skills)) return category;
 
-      const kept = documentSafe
-        ? skills.filter((s) =>
-          !(s as Record<string, unknown>)?.[
-            PROFILE_ONLY_FLAG
-          ]
-        )
-        : skills;
+			const kept = documentSafe
+				? skills.filter((s) => !(s as Record<string, unknown>)?.[PROFILE_ONLY_FLAG])
+				: skills;
 
-      return {
-        ...(category as Record<string, unknown>),
-        tech_skills: kept.map((skill) => {
-          const { [PROFILE_ONLY_FLAG]: _flag, ...rest } = skill as Record<
-            string,
-            unknown
-          >;
-          return rest;
-        }),
-      };
-    }),
-  };
+			return {
+				...(category as Record<string, unknown>),
+				tech_skills: kept.map((skill) => {
+					const { [PROFILE_ONLY_FLAG]: _flag, ...rest } = skill as Record<string, unknown>;
+					return rest;
+				})
+			};
+		})
+	};
 }
 
 /**
@@ -83,68 +76,68 @@ export function applySkillVisibility(
  * not, or it reasons about a profile smaller than the real one.
  */
 export async function loadProfileData(
-  profileId: number,
-  fields?: string[],
-  options?: { documentSafe?: boolean },
+	profileId: number,
+	fields?: string[],
+	options?: { documentSafe?: boolean }
 ): Promise<ProfileData> {
-  let record = await db.query.collected_data.findFirst({
-    where: eq(collected_data.profile_id, profileId),
-    columns: { schema: true, data: true },
-  });
+	let record = await db.query.collected_data.findFirst({
+		where: eq(collected_data.profile_id, profileId),
+		columns: { schema: true, data: true }
+	});
 
-  if (!record) {
-    await exportProfile(profileId);
-    record = await db.query.collected_data.findFirst({
-      where: eq(collected_data.profile_id, profileId),
-      columns: { schema: true, data: true },
-    });
-  }
+	if (!record) {
+		await exportProfile(profileId);
+		record = await db.query.collected_data.findFirst({
+			where: eq(collected_data.profile_id, profileId),
+			columns: { schema: true, data: true }
+		});
+	}
 
-  let schemaJson = record?.schema ? JSON.parse(record.schema) : {};
-  let dataJson = applySkillVisibility(
-    record?.data ? JSON.parse(record.data) : {},
-    options?.documentSafe ?? false,
-  );
+	let schemaJson = record?.schema ? JSON.parse(record.schema) : {};
+	let dataJson = applySkillVisibility(
+		record?.data ? JSON.parse(record.data) : {},
+		options?.documentSafe ?? false
+	);
 
-  if (fields) {
-    if (fields.length === 0) {
-      return { data: {}, schema: {} };
-    }
+	if (fields) {
+		if (fields.length === 0) {
+			return { data: {}, schema: {} };
+		}
 
-    const fieldSet = new Set(fields);
+		const fieldSet = new Set(fields);
 
-    // Filter data: keep only requested top-level keys.
-    const filteredData: Record<string, unknown> = {};
-    for (const key of fields) {
-      if (key in dataJson) filteredData[key] = dataJson[key];
-    }
-    dataJson = filteredData;
+		// Filter data: keep only requested top-level keys.
+		const filteredData: Record<string, unknown> = {};
+		for (const key of fields) {
+			if (key in dataJson) filteredData[key] = dataJson[key];
+		}
+		dataJson = filteredData;
 
-    // Filter schema: keep only matching fields and relations.
-    if (schemaJson.fields || schemaJson.relations) {
-      const filteredSchema: Record<string, unknown> = { ...schemaJson };
-      if (schemaJson.fields) {
-        filteredSchema.fields = Object.fromEntries(
-          Object.entries(schemaJson.fields).filter(([k]) => fieldSet.has(k)),
-        );
-      }
-      if (schemaJson.relations) {
-        filteredSchema.relations = Object.fromEntries(
-          Object.entries(schemaJson.relations).filter(([k]) => fieldSet.has(k)),
-        );
-      }
-      schemaJson = filteredSchema;
-    }
-  }
+		// Filter schema: keep only matching fields and relations.
+		if (schemaJson.fields || schemaJson.relations) {
+			const filteredSchema: Record<string, unknown> = { ...schemaJson };
+			if (schemaJson.fields) {
+				filteredSchema.fields = Object.fromEntries(
+					Object.entries(schemaJson.fields).filter(([k]) => fieldSet.has(k))
+				);
+			}
+			if (schemaJson.relations) {
+				filteredSchema.relations = Object.fromEntries(
+					Object.entries(schemaJson.relations).filter(([k]) => fieldSet.has(k))
+				);
+			}
+			schemaJson = filteredSchema;
+		}
+	}
 
-  return { data: dataJson, schema: schemaJson };
+	return { data: dataJson, schema: schemaJson };
 }
 
 /** What a trim pass removed, for the note appended to the rendered blob. */
 export interface ProfileTrim {
-  data: Record<string, unknown>;
-  /** field → how many entries survived out of how many there were. */
-  dropped: Record<string, { kept: number; total: number }>;
+	data: Record<string, unknown>;
+	/** field → how many entries survived out of how many there were. */
+	dropped: Record<string, { kept: number; total: number }>;
 }
 
 /**
@@ -160,39 +153,39 @@ export interface ProfileTrim {
  * work_experiences alone is 22k of a 34k blob.
  */
 export function fitProfileToBudget(
-  data: Record<string, unknown>,
-  budgetChars: number,
+	data: Record<string, unknown>,
+	budgetChars: number
 ): ProfileTrim {
-  const trimmed: Record<string, unknown> = { ...data };
-  const totals = new Map<string, number>();
-  for (const [key, value] of Object.entries(trimmed)) {
-    if (Array.isArray(value)) totals.set(key, value.length);
-  }
+	const trimmed: Record<string, unknown> = { ...data };
+	const totals = new Map<string, number>();
+	for (const [key, value] of Object.entries(trimmed)) {
+		if (Array.isArray(value)) totals.set(key, value.length);
+	}
 
-  while (JSON.stringify(trimmed).length > budgetChars) {
-    // The biggest list with something left to give.
-    let victim: string | null = null;
-    let victimSize = 0;
-    for (const [key, value] of Object.entries(trimmed)) {
-      if (!Array.isArray(value) || value.length <= 1) continue;
-      const size = JSON.stringify(value).length;
-      if (size > victimSize) {
-        victim = key;
-        victimSize = size;
-      }
-    }
-    // Nothing left to drop — the scalars alone exceed the budget. Better an
-    // over-budget prompt than a profile with no identity in it.
-    if (!victim) break;
-    trimmed[victim] = (trimmed[victim] as unknown[]).slice(0, -1);
-  }
+	while (JSON.stringify(trimmed).length > budgetChars) {
+		// The biggest list with something left to give.
+		let victim: string | null = null;
+		let victimSize = 0;
+		for (const [key, value] of Object.entries(trimmed)) {
+			if (!Array.isArray(value) || value.length <= 1) continue;
+			const size = JSON.stringify(value).length;
+			if (size > victimSize) {
+				victim = key;
+				victimSize = size;
+			}
+		}
+		// Nothing left to drop — the scalars alone exceed the budget. Better an
+		// over-budget prompt than a profile with no identity in it.
+		if (!victim) break;
+		trimmed[victim] = (trimmed[victim] as unknown[]).slice(0, -1);
+	}
 
-  const dropped: Record<string, { kept: number; total: number }> = {};
-  for (const [key, total] of totals) {
-    const kept = (trimmed[key] as unknown[]).length;
-    if (kept < total) dropped[key] = { kept, total };
-  }
-  return { data: trimmed, dropped };
+	const dropped: Record<string, { kept: number; total: number }> = {};
+	for (const [key, total] of totals) {
+		const kept = (trimmed[key] as unknown[]).length;
+		if (kept < total) dropped[key] = { kept, total };
+	}
+	return { data: trimmed, dropped };
 }
 
 /**
@@ -200,15 +193,14 @@ export function fitProfileToBudget(
  * the applicant simply has no earlier jobs. Mirrors the "NOTE: N further
  * record(s) exist" wording in application-records.ts.
  */
-export function formatTrimNote(dropped: ProfileTrim["dropped"]): string {
-  const parts = Object.entries(dropped).map(
-    ([field, { kept, total }]) =>
-      `${field}: showing ${kept} of ${total} (most relevant first)`,
-  );
-  if (!parts.length) return "";
-  return `\n\nNOTE: this profile was trimmed to fit — ${
-    parts.join("; ")
-  }. Treat it as partial rather than complete.`;
+export function formatTrimNote(dropped: ProfileTrim['dropped']): string {
+	const parts = Object.entries(dropped).map(
+		([field, { kept, total }]) => `${field}: showing ${kept} of ${total} (most relevant first)`
+	);
+	if (!parts.length) return '';
+	return `\n\nNOTE: this profile was trimmed to fit — ${parts.join(
+		'; '
+	)}. Treat it as partial rather than complete.`;
 }
 
 /**
@@ -224,5 +216,5 @@ export function formatTrimNote(dropped: ProfileTrim["dropped"]): string {
  * territory rather than something to fold into an unrelated commit.
  */
 export function renderProfileData(data: Record<string, unknown>): string {
-  return JSON.stringify(data);
+	return JSON.stringify(data);
 }

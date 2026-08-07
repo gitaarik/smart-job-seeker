@@ -2,8 +2,8 @@
  * Test script for Cheerio-based HTML utilities
  */
 
-import { stripHtmlForLlm } from "../src/lib/server/html-strip.js";
-import { extractLinks } from "../src/lib/server/html-extract.js";
+import { stripHtmlForLlm } from '../src/lib/server/html-strip.js';
+import { extractLinks } from '../src/lib/server/html-extract.js';
 
 // Test HTML with various elements
 const testHtml = `
@@ -33,84 +33,82 @@ const testHtml = `
 </html>
 `;
 
-console.log("=== Testing stripHtmlForLlm() ===\n");
+console.log('=== Testing stripHtmlForLlm() ===\n');
 
 try {
-  const stripped = stripHtmlForLlm(testHtml);
-  console.log("✓ stripHtmlForLlm() executed successfully\n");
-  console.log("Stripped HTML:");
-  console.log(stripped);
-  console.log(
-    "\nLength: original=" + testHtml.length + " stripped=" + stripped.length,
-  );
+	const stripped = stripHtmlForLlm(testHtml);
+	console.log('✓ stripHtmlForLlm() executed successfully\n');
+	console.log('Stripped HTML:');
+	console.log(stripped);
+	console.log('\nLength: original=' + testHtml.length + ' stripped=' + stripped.length);
 
-  // Verify key features
-  const checks = [
-    { name: "Scripts removed", pass: !stripped.includes("<script>") },
-    { name: "Styles removed", pass: !stripped.includes("<style>") },
-    { name: "Comments removed", pass: !stripped.includes("<!--") },
-    { name: "SVG removed", pass: !stripped.includes("<svg>") },
-    {
-      name: "href attributes kept",
-      pass: stripped.includes('href="/jobs/123"'),
-    },
-    {
-      name: "alt attributes kept",
-      pass: stripped.includes('alt="Company Logo"'),
-    },
-    {
-      name: "Unnecessary attributes removed",
-      pass: !stripped.includes("data-tracking") && !stripped.includes("class="),
-    },
-    { name: "Empty divs removed", pass: !stripped.includes("<div></div>") },
-  ];
+	// Verify key features
+	const checks = [
+		{ name: 'Scripts removed', pass: !stripped.includes('<script>') },
+		{ name: 'Styles removed', pass: !stripped.includes('<style>') },
+		{ name: 'Comments removed', pass: !stripped.includes('<!--') },
+		{ name: 'SVG removed', pass: !stripped.includes('<svg>') },
+		{
+			name: 'href attributes kept',
+			pass: stripped.includes('href="/jobs/123"')
+		},
+		{
+			name: 'alt attributes kept',
+			pass: stripped.includes('alt="Company Logo"')
+		},
+		{
+			name: 'Unnecessary attributes removed',
+			pass: !stripped.includes('data-tracking') && !stripped.includes('class=')
+		},
+		{ name: 'Empty divs removed', pass: !stripped.includes('<div></div>') }
+	];
 
-  console.log("\n=== Verification Checks ===");
-  checks.forEach((check) => {
-    console.log(check.pass ? "✓" : "✗", check.name);
-  });
+	console.log('\n=== Verification Checks ===');
+	checks.forEach((check) => {
+		console.log(check.pass ? '✓' : '✗', check.name);
+	});
 
-  const allPassed = checks.every((c) => c.pass);
-  if (!allPassed) {
-    console.log("\n⚠ Some checks failed!");
-  }
+	const allPassed = checks.every((c) => c.pass);
+	if (!allPassed) {
+		console.log('\n⚠ Some checks failed!');
+	}
 } catch (error) {
-  console.error("✗ stripHtmlForLlm() failed:", error);
-  process.exit(1);
+	console.error('✗ stripHtmlForLlm() failed:', error);
+	process.exit(1);
 }
 
-console.log("\n=== Testing extractLinks() ===\n");
+console.log('\n=== Testing extractLinks() ===\n');
 
 try {
-  const allLinks = extractLinks(testHtml);
-  console.log("✓ extractLinks() executed successfully");
-  console.log("All links found:", allLinks);
+	const allLinks = extractLinks(testHtml);
+	console.log('✓ extractLinks() executed successfully');
+	console.log('All links found:', allLinks);
 
-  const jobLinks = extractLinks(testHtml, /\/jobs\//);
-  console.log("Job links only:", jobLinks);
+	const jobLinks = extractLinks(testHtml, /\/jobs\//);
+	console.log('Job links only:', jobLinks);
 
-  const linkChecks = [
-    { name: "Found all 3 links", pass: allLinks.length === 3 },
-    { name: "Pattern filtering works", pass: jobLinks.length === 3 }, // All 3 contain /jobs/
-    { name: "Includes relative link", pass: allLinks.includes("/jobs/123") },
-    {
-      name: "Includes external link",
-      pass: allLinks.includes("https://external.com/jobs/789"),
-    },
-  ];
+	const linkChecks = [
+		{ name: 'Found all 3 links', pass: allLinks.length === 3 },
+		{ name: 'Pattern filtering works', pass: jobLinks.length === 3 }, // All 3 contain /jobs/
+		{ name: 'Includes relative link', pass: allLinks.includes('/jobs/123') },
+		{
+			name: 'Includes external link',
+			pass: allLinks.includes('https://external.com/jobs/789')
+		}
+	];
 
-  console.log("\n=== Link Extraction Checks ===");
-  linkChecks.forEach((check) => {
-    console.log(check.pass ? "✓" : "✗", check.name);
-  });
+	console.log('\n=== Link Extraction Checks ===');
+	linkChecks.forEach((check) => {
+		console.log(check.pass ? '✓' : '✗', check.name);
+	});
 
-  const allPassed = linkChecks.every((c) => c.pass);
-  if (!allPassed) {
-    console.log("\n⚠ Some checks failed!");
-  }
+	const allPassed = linkChecks.every((c) => c.pass);
+	if (!allPassed) {
+		console.log('\n⚠ Some checks failed!');
+	}
 } catch (error) {
-  console.error("✗ extractLinks() failed:", error);
-  process.exit(1);
+	console.error('✗ extractLinks() failed:', error);
+	process.exit(1);
 }
 
-console.log("\n=== All Tests Passed ✓ ===");
+console.log('\n=== All Tests Passed ✓ ===');

@@ -13,40 +13,42 @@
  * like `app`, which would force HTTPS on an HTTP-only service.
  */
 
-import { chromium, type Browser, type BrowserContext, type Page } from "patchright";
-import { execSync } from "child_process";
-import { beforeAll, afterAll, afterEach } from "vitest";
+import { chromium, type Browser, type BrowserContext, type Page } from 'patchright';
+import { execSync } from 'child_process';
+import { beforeAll, afterAll, afterEach } from 'vitest';
 
-const CDP_URL = process.env.SJS_CDP_URL || "http://localhost:9222";
+const CDP_URL = process.env.SJS_CDP_URL || 'http://localhost:9222';
 
 /** Resolve the app container's Docker IP so Chrome can reach it over HTTP. */
 function resolveAppUrl(): string {
-  if (process.env.SJS_BROWSER_URL) return process.env.SJS_BROWSER_URL;
+	if (process.env.SJS_BROWSER_URL) return process.env.SJS_BROWSER_URL;
 
-  try {
-    const ip = execSync(
-      "docker compose exec -T chrome getent hosts app | awk '{print $1}'",
-      { cwd: process.env.SJS_CLOUD_DIR || `${process.cwd()}/..`, encoding: "utf-8" },
-    ).trim();
-    if (ip) return `http://${ip}:5173`;
-  } catch { /* fall through */ }
+	try {
+		const ip = execSync("docker compose exec -T chrome getent hosts app | awk '{print $1}'", {
+			cwd: process.env.SJS_CLOUD_DIR || `${process.cwd()}/..`,
+			encoding: 'utf-8'
+		}).trim();
+		if (ip) return `http://${ip}:5173`;
+	} catch {
+		/* fall through */
+	}
 
-  return "http://app:5173";
+	return 'http://app:5173';
 }
 
 let browser: Browser | null = null;
 let appUrl: string | null = null;
 
 async function connectBrowser(): Promise<Browser> {
-  if (browser) return browser;
-  browser = await chromium.connectOverCDP(CDP_URL);
-  return browser;
+	if (browser) return browser;
+	browser = await chromium.connectOverCDP(CDP_URL);
+	return browser;
 }
 
 /** Get the resolved app URL (available after first useBrowser() beforeAll runs). */
 export function getAppUrl(): string {
-  if (!appUrl) appUrl = resolveAppUrl();
-  return appUrl;
+	if (!appUrl) appUrl = resolveAppUrl();
+	return appUrl;
 }
 
 /**
@@ -54,31 +56,35 @@ export function getAppUrl(): string {
  * Call at the top level of a describe() block.
  */
 export function useBrowser() {
-  let context: BrowserContext;
-  let page: Page;
+	let context: BrowserContext;
+	let page: Page;
 
-  beforeAll(async () => {
-    const url = getAppUrl();
-    const b = await connectBrowser();
-    context = await b.newContext({
-      baseURL: url,
-      viewport: { width: 1280, height: 720 },
-    });
-    page = await context.newPage();
-  });
+	beforeAll(async () => {
+		const url = getAppUrl();
+		const b = await connectBrowser();
+		context = await b.newContext({
+			baseURL: url,
+			viewport: { width: 1280, height: 720 }
+		});
+		page = await context.newPage();
+	});
 
-  afterEach(async () => {
-    page.removeAllListeners("dialog");
-  });
+	afterEach(async () => {
+		page.removeAllListeners('dialog');
+	});
 
-  afterAll(async () => {
-    await context?.close();
-  });
+	afterAll(async () => {
+		await context?.close();
+	});
 
-  return {
-    get page() { return page; },
-    get context() { return context; },
-  };
+	return {
+		get page() {
+			return page;
+		},
+		get context() {
+			return context;
+		}
+	};
 }
 
 /**
@@ -95,26 +101,26 @@ export function useBrowser() {
  * transforming modules on demand.
  */
 export async function loginViaUI(
-  page: Page,
-  email = "alex.morgan@example.com",
-  password = "testpassword123",
+	page: Page,
+	email = 'alex.morgan@example.com',
+	password = 'testpassword123'
 ) {
-  const ATTEMPTS = 3;
-  for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
-    await page.goto("/login");
-    await page.locator("#email").fill(email);
-    await page.locator("#password").fill(password);
-    await page.getByRole("button", { name: "Sign in" }).click();
-    try {
-      await page.waitForURL("**/home**", { timeout: 10000 });
-      return;
-    } catch (err) {
-      if (attempt === ATTEMPTS) {
-        throw new Error(
-          `Login did not reach the dashboard after ${ATTEMPTS} attempts ` +
-            `(still at ${page.url()}). Original error: ${err}`,
-        );
-      }
-    }
-  }
+	const ATTEMPTS = 3;
+	for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
+		await page.goto('/login');
+		await page.locator('#email').fill(email);
+		await page.locator('#password').fill(password);
+		await page.getByRole('button', { name: 'Sign in' }).click();
+		try {
+			await page.waitForURL('**/home**', { timeout: 10000 });
+			return;
+		} catch (err) {
+			if (attempt === ATTEMPTS) {
+				throw new Error(
+					`Login did not reach the dashboard after ${ATTEMPTS} attempts ` +
+						`(still at ${page.url()}). Original error: ${err}`
+				);
+			}
+		}
+	}
 }

@@ -1,3 +1,3 @@
 <script lang="ts">
-  // Redirects to /jobs
+	// Redirects to /jobs
 </script>

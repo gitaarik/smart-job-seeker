@@ -22,17 +22,17 @@
  * inviter rather than thrown.
  */
 
-import { dbDirect as db } from "$lib/server/db";
-import { and, eq, inArray } from "drizzle-orm";
-import { api_keys, subscriptions } from "$lib/server/db/schema";
-import { PLAN_LIMITS, type PlanId } from "$lib/server/billing/plans";
-import { ensureAcceptedContact } from "$lib/server/contacts";
-import { insertDeviceShare } from "$lib/server/device-shares";
-import { createNotification } from "$lib/server/notifications";
-import crypto from "crypto";
+import { dbDirect as db } from '$lib/server/db';
+import { and, eq, inArray } from 'drizzle-orm';
+import { api_keys, subscriptions } from '$lib/server/db/schema';
+import { PLAN_LIMITS, type PlanId } from '$lib/server/billing/plans';
+import { ensureAcceptedContact } from '$lib/server/contacts';
+import { insertDeviceShare } from '$lib/server/device-shares';
+import { createNotification } from '$lib/server/notifications';
+import crypto from 'crypto';
 
 /** Subscription statuses that count as "the user already has a plan". */
-const LIVE_STATUSES = ["active", "trialing", "past_due"];
+const LIVE_STATUSES = ['active', 'trialing', 'past_due'];
 
 /** Durations offered in the invite form, in months. */
 export const PLAN_DURATION_MONTHS = [1, 3, 6, 12, 24] as const;
@@ -41,38 +41,36 @@ export const PLAN_DURATION_MONTHS = [1, 3, 6, 12, 24] as const;
 export const DEFAULT_PLAN_MONTHS = 12;
 
 export interface InviteGrants {
-  /** Admin who sent the invite — the owner of any devices being shared. */
-  inviterId?: string;
-  /** Plan to grant on acceptance. `explorer` is the free tier: no grant. */
-  plan?: PlanId;
-  /** Subscription length in months, counted from acceptance (see above). */
-  planMonths?: number;
-  /** Devices belonging to `inviterId` to share on acceptance. */
-  deviceIds?: number[];
+	/** Admin who sent the invite — the owner of any devices being shared. */
+	inviterId?: string;
+	/** Plan to grant on acceptance. `explorer` is the free tier: no grant. */
+	plan?: PlanId;
+	/** Subscription length in months, counted from acceptance (see above). */
+	planMonths?: number;
+	/** Devices belonging to `inviterId` to share on acceptance. */
+	deviceIds?: number[];
 }
 
 function errMsg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
+	return e instanceof Error ? e.message : String(e);
 }
 
 /** `from` plus `months`, matching the day-rollover behaviour of `setMonth`. */
 export function addMonths(from: Date, months: number): Date {
-  const d = new Date(from);
-  d.setMonth(d.getMonth() + months);
-  return d;
+	const d = new Date(from);
+	d.setMonth(d.getMonth() + months);
+	return d;
 }
 
 /** Cancel every live subscription a user has. */
 export async function cancelActiveSubscriptions(userId: string): Promise<void> {
-  await db.update(subscriptions).set({
-    status: "canceled",
-    date_updated: new Date(),
-  }).where(
-    and(
-      eq(subscriptions.user_id, userId),
-      inArray(subscriptions.status, LIVE_STATUSES),
-    ),
-  );
+	await db
+		.update(subscriptions)
+		.set({
+			status: 'canceled',
+			date_updated: new Date()
+		})
+		.where(and(eq(subscriptions.user_id, userId), inArray(subscriptions.status, LIVE_STATUSES)));
 }
 
 /**
@@ -84,14 +82,11 @@ export async function cancelActiveSubscriptions(userId: string): Promise<void> {
  * would make every caller of this a no-op in the OSS tree.
  */
 export async function hasLiveSubscription(userId: string): Promise<boolean> {
-  const sub = await db.query.subscriptions.findFirst({
-    where: and(
-      eq(subscriptions.user_id, userId),
-      inArray(subscriptions.status, LIVE_STATUSES),
-    ),
-    columns: { id: true },
-  });
-  return !!sub;
+	const sub = await db.query.subscriptions.findFirst({
+		where: and(eq(subscriptions.user_id, userId), inArray(subscriptions.status, LIVE_STATUSES)),
+		columns: { id: true }
+	});
+	return !!sub;
 }
 
 /**
@@ -100,21 +95,21 @@ export async function hasLiveSubscription(userId: string): Promise<boolean> {
  * currently arrives by; Stripe is not wired up in any environment yet.
  */
 export async function insertAdminGrant(
-  userId: string,
-  plan: string,
-  periodEnd: Date,
+	userId: string,
+	plan: string,
+	periodEnd: Date
 ): Promise<void> {
-  await db.insert(subscriptions).values({
-    user_id: userId,
-    stripe_subscription_id: `admin_grant_${crypto.randomUUID()}`,
-    stripe_price_id: "admin_grant",
-    plan,
-    status: "active",
-    current_period_start: new Date(),
-    current_period_end: periodEnd,
-    cancel_at_period_end: false,
-    date_created: new Date(),
-  });
+	await db.insert(subscriptions).values({
+		user_id: userId,
+		stripe_subscription_id: `admin_grant_${crypto.randomUUID()}`,
+		stripe_price_id: 'admin_grant',
+		plan,
+		status: 'active',
+		current_period_start: new Date(),
+		current_period_end: periodEnd,
+		cancel_at_period_end: false,
+		date_created: new Date()
+	});
 }
 
 /**
@@ -126,47 +121,47 @@ export async function insertAdminGrant(
  * no-op when the invitee eventually accepts.
  */
 export async function parseInviteGrants(
-  formData: FormData,
-  inviterId: string,
+	formData: FormData,
+	inviterId: string
 ): Promise<{ grants: InviteGrants } | { error: string }> {
-  const grants: InviteGrants = { inviterId };
+	const grants: InviteGrants = { inviterId };
 
-  const plan = ((formData.get("plan") as string | null) ?? "").trim();
-  if (plan && plan !== "explorer") {
-    if (!(plan in PLAN_LIMITS)) {
-      return { error: "Invalid plan" };
-    }
-    grants.plan = plan as PlanId;
+	const plan = ((formData.get('plan') as string | null) ?? '').trim();
+	if (plan && plan !== 'explorer') {
+		if (!(plan in PLAN_LIMITS)) {
+			return { error: 'Invalid plan' };
+		}
+		grants.plan = plan as PlanId;
 
-    const monthsRaw = ((formData.get("plan_months") as string | null) ?? "")
-      .trim();
-    const months = monthsRaw ? parseInt(monthsRaw, 10) : DEFAULT_PLAN_MONTHS;
-    if (!Number.isFinite(months) || months <= 0 || months > 120) {
-      return { error: "Plan duration must be between 1 and 120 months" };
-    }
-    grants.planMonths = months;
-  }
+		const monthsRaw = ((formData.get('plan_months') as string | null) ?? '').trim();
+		const months = monthsRaw ? parseInt(monthsRaw, 10) : DEFAULT_PLAN_MONTHS;
+		if (!Number.isFinite(months) || months <= 0 || months > 120) {
+			return { error: 'Plan duration must be between 1 and 120 months' };
+		}
+		grants.planMonths = months;
+	}
 
-  const deviceIds = formData.getAll("device_ids")
-    .map((v) => parseInt(v as string, 10))
-    .filter((n) => Number.isFinite(n));
+	const deviceIds = formData
+		.getAll('device_ids')
+		.map((v) => parseInt(v as string, 10))
+		.filter((n) => Number.isFinite(n));
 
-  if (deviceIds.length > 0) {
-    const owned = await db.query.api_keys.findMany({
-      where: and(
-        eq(api_keys.user_id, inviterId),
-        eq(api_keys.revoked, false),
-        inArray(api_keys.id, deviceIds),
-      ),
-      columns: { id: true },
-    });
-    if (owned.length !== deviceIds.length) {
-      return { error: "One or more selected devices aren't yours" };
-    }
-    grants.deviceIds = deviceIds;
-  }
+	if (deviceIds.length > 0) {
+		const owned = await db.query.api_keys.findMany({
+			where: and(
+				eq(api_keys.user_id, inviterId),
+				eq(api_keys.revoked, false),
+				inArray(api_keys.id, deviceIds)
+			),
+			columns: { id: true }
+		});
+		if (owned.length !== deviceIds.length) {
+			return { error: "One or more selected devices aren't yours" };
+		}
+		grants.deviceIds = deviceIds;
+	}
 
-  return { grants };
+	return { grants };
 }
 
 /**
@@ -174,27 +169,24 @@ export async function parseInviteGrants(
  * before grants existed (and any hand-edited row) by simply finding nothing.
  */
 export function grantsFromInvitePayload(
-  data: Record<string, unknown> | null | undefined,
+	data: Record<string, unknown> | null | undefined
 ): InviteGrants {
-  if (!data) return {};
-  const deviceIds = Array.isArray(data.deviceIds)
-    ? data.deviceIds.filter((n): n is number => typeof n === "number")
-    : undefined;
-  return {
-    inviterId: typeof data.inviterId === "string" ? data.inviterId : undefined,
-    plan: typeof data.plan === "string" && data.plan in PLAN_LIMITS
-      ? data.plan as PlanId
-      : undefined,
-    planMonths: typeof data.planMonths === "number"
-      ? data.planMonths
-      : undefined,
-    deviceIds: deviceIds?.length ? deviceIds : undefined,
-  };
+	if (!data) return {};
+	const deviceIds = Array.isArray(data.deviceIds)
+		? data.deviceIds.filter((n): n is number => typeof n === 'number')
+		: undefined;
+	return {
+		inviterId: typeof data.inviterId === 'string' ? data.inviterId : undefined,
+		plan:
+			typeof data.plan === 'string' && data.plan in PLAN_LIMITS ? (data.plan as PlanId) : undefined,
+		planMonths: typeof data.planMonths === 'number' ? data.planMonths : undefined,
+		deviceIds: deviceIds?.length ? deviceIds : undefined
+	};
 }
 
 /** True if there is anything for `applyInviteGrants` to do. */
 export function hasGrants(grants: InviteGrants): boolean {
-  return !!grants.plan || !!grants.deviceIds?.length;
+	return !!grants.plan || !!grants.deviceIds?.length;
 }
 
 /**
@@ -206,80 +198,71 @@ export function hasGrants(grants: InviteGrants): boolean {
  * promised never arrived.
  */
 export async function applyInviteGrants(
-  userId: string,
-  grants: InviteGrants | null | undefined,
+	userId: string,
+	grants: InviteGrants | null | undefined
 ): Promise<string[]> {
-  if (!grants) return [];
-  const warnings: string[] = [];
+	if (!grants) return [];
+	const warnings: string[] = [];
 
-  if (grants.plan && grants.plan !== "explorer") {
-    try {
-      // Don't clobber a plan the account already has. An invite can be sent to
-      // an existing user (`/admin/users/[id]` → send_invite), and an admin
-      // grant landing on top of a real subscription would be a downgrade
-      // nobody asked for.
-      if (await hasLiveSubscription(userId)) {
-        warnings.push(
-          `Plan "${grants.plan}" not granted: the account already has an active subscription.`,
-        );
-      } else {
-        await insertAdminGrant(
-          userId,
-          grants.plan,
-          addMonths(new Date(), grants.planMonths ?? DEFAULT_PLAN_MONTHS),
-        );
-      }
-    } catch (e) {
-      warnings.push(`Plan "${grants.plan}" not granted: ${errMsg(e)}`);
-    }
-  }
+	if (grants.plan && grants.plan !== 'explorer') {
+		try {
+			// Don't clobber a plan the account already has. An invite can be sent to
+			// an existing user (`/admin/users/[id]` → send_invite), and an admin
+			// grant landing on top of a real subscription would be a downgrade
+			// nobody asked for.
+			if (await hasLiveSubscription(userId)) {
+				warnings.push(
+					`Plan "${grants.plan}" not granted: the account already has an active subscription.`
+				);
+			} else {
+				await insertAdminGrant(
+					userId,
+					grants.plan,
+					addMonths(new Date(), grants.planMonths ?? DEFAULT_PLAN_MONTHS)
+				);
+			}
+		} catch (e) {
+			warnings.push(`Plan "${grants.plan}" not granted: ${errMsg(e)}`);
+		}
+	}
 
-  const deviceIds = grants.deviceIds ?? [];
-  if (deviceIds.length > 0 && grants.inviterId) {
-    try {
-      // The invite is the owner's consent, so the shares below bypass the
-      // contact gate (insertDeviceShare, not shareDevice) — the same
-      // arrangement demo links use. The contact row is still created, so the
-      // recipient sees a named owner on the devices page and the contacts page
-      // agrees with it.
-      await ensureAcceptedContact(grants.inviterId, userId);
-    } catch (e) {
-      warnings.push(`Could not link the accounts as contacts: ${errMsg(e)}`);
-    }
+	const deviceIds = grants.deviceIds ?? [];
+	if (deviceIds.length > 0 && grants.inviterId) {
+		try {
+			// The invite is the owner's consent, so the shares below bypass the
+			// contact gate (insertDeviceShare, not shareDevice) — the same
+			// arrangement demo links use. The contact row is still created, so the
+			// recipient sees a named owner on the devices page and the contacts page
+			// agrees with it.
+			await ensureAcceptedContact(grants.inviterId, userId);
+		} catch (e) {
+			warnings.push(`Could not link the accounts as contacts: ${errMsg(e)}`);
+		}
 
-    for (const deviceId of deviceIds) {
-      try {
-        const result = await insertDeviceShare(
-          deviceId,
-          grants.inviterId,
-          userId,
-        );
-        if (
-          !result.success &&
-          result.error !== "Device is already shared with this contact"
-        ) {
-          warnings.push(`Device ${deviceId} not shared: ${result.error}`);
-        }
-      } catch (e) {
-        warnings.push(`Device ${deviceId} not shared: ${errMsg(e)}`);
-      }
-    }
-  }
+		for (const deviceId of deviceIds) {
+			try {
+				const result = await insertDeviceShare(deviceId, grants.inviterId, userId);
+				if (!result.success && result.error !== 'Device is already shared with this contact') {
+					warnings.push(`Device ${deviceId} not shared: ${result.error}`);
+				}
+			} catch (e) {
+				warnings.push(`Device ${deviceId} not shared: ${errMsg(e)}`);
+			}
+		}
+	}
 
-  if (warnings.length > 0) {
-    console.error(
-      `[invite-grants] user ${userId}: ${warnings.join(" ")}`,
-    );
-    if (grants.inviterId) {
-      await createNotification({
-        userId: grants.inviterId,
-        type: "invite_grant_failed",
-        title: "Some invite grants could not be applied",
-        message: warnings.join(" "),
-        link: `/admin/users/${userId}`,
-      }).catch(() => {});
-    }
-  }
+	if (warnings.length > 0) {
+		console.error(`[invite-grants] user ${userId}: ${warnings.join(' ')}`);
+		if (grants.inviterId) {
+			await createNotification({
+				userId: grants.inviterId,
+				type: 'invite_grant_failed',
+				title: 'Some invite grants could not be applied',
+				message: warnings.join(' '),
+				link: `/admin/users/${userId}`
+			}).catch(() => {});
+		}
+	}
 
-  return warnings;
+	return warnings;
 }

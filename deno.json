@@ -1,15 +1,8 @@
 {
-  "imports": {
-    "$lib/": "./src/lib/"
-  },
-  "fmt": {
-    "exclude": [
-      "generated/",
-      "node_modules/",
-      ".svelte-kit/",
-      "build/",
-      "dist/",
-      ".vercel/"
-    ]
-  }
+	"imports": {
+		"$lib/": "./src/lib/"
+	},
+	"fmt": {
+		"exclude": ["generated/", "node_modules/", ".svelte-kit/", "build/", "dist/", ".vercel/"]
+	}
 }

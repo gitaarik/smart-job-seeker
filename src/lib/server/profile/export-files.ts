@@ -3,25 +3,25 @@
  * Handles querying profile_exports table and retrieving files
  */
 
-import { dbDirect as db } from "$lib/server/db";
-import { eq, and, desc, isNull } from "drizzle-orm";
-import { profile_exports } from "$lib/server/db/schema";
-import { getFile } from "$lib/server/files";
+import { dbDirect as db } from '$lib/server/db';
+import { eq, and, desc, isNull } from 'drizzle-orm';
+import { profile_exports } from '$lib/server/db/schema';
+import { getFile } from '$lib/server/files';
 
 /**
  * Query parameters for finding profile exports
  */
 interface ExportQuery {
-  profileId: number;
-  exportType: "resume" | "cv" | "structured_data";
-  fileType: "pdf" | "html" | "json" | "txt" | "docx";
-  exportFormat?: string; // Optional version/variant filter
-  // Presentation template filter. `null`/undefined selects the default-template
-  // export (profile_exports.template IS NULL); a string matches that template.
-  template?: string | null;
-  // Locale filter. `null`/undefined selects the base English export
-  // (profile_exports.locale IS NULL); a code matches that language.
-  locale?: string | null;
+	profileId: number;
+	exportType: 'resume' | 'cv' | 'structured_data';
+	fileType: 'pdf' | 'html' | 'json' | 'txt' | 'docx';
+	exportFormat?: string; // Optional version/variant filter
+	// Presentation template filter. `null`/undefined selects the default-template
+	// export (profile_exports.template IS NULL); a string matches that template.
+	template?: string | null;
+	// Locale filter. `null`/undefined selects the base English export
+	// (profile_exports.locale IS NULL); a code matches that language.
+	locale?: string | null;
 }
 
 /**
@@ -30,37 +30,33 @@ interface ExportQuery {
  * @returns Export record with file details, or null if not found
  */
 export async function getLatestExport(query: ExportQuery) {
-  const conditions = [
-    eq(profile_exports.profile_id, query.profileId),
-    eq(profile_exports.export_type, query.exportType),
-    eq(profile_exports.file_type, query.fileType),
-    eq(profile_exports.status, "published"),
-  ];
+	const conditions = [
+		eq(profile_exports.profile_id, query.profileId),
+		eq(profile_exports.export_type, query.exportType),
+		eq(profile_exports.file_type, query.fileType),
+		eq(profile_exports.status, 'published')
+	];
 
-  // Filter by version/variant if provided
-  if (query.exportFormat) {
-    conditions.push(eq(profile_exports.export_format, query.exportFormat));
-  }
+	// Filter by version/variant if provided
+	if (query.exportFormat) {
+		conditions.push(eq(profile_exports.export_format, query.exportFormat));
+	}
 
-  // Filter by presentation template: a string matches that template; otherwise
-  // select the default-template export (template IS NULL).
-  conditions.push(
-    query.template
-      ? eq(profile_exports.template, query.template)
-      : isNull(profile_exports.template),
-  );
+	// Filter by presentation template: a string matches that template; otherwise
+	// select the default-template export (template IS NULL).
+	conditions.push(
+		query.template ? eq(profile_exports.template, query.template) : isNull(profile_exports.template)
+	);
 
-  // Match the requested language; base English exports have locale IS NULL.
-  conditions.push(
-    query.locale
-      ? eq(profile_exports.locale, query.locale)
-      : isNull(profile_exports.locale),
-  );
+	// Match the requested language; base English exports have locale IS NULL.
+	conditions.push(
+		query.locale ? eq(profile_exports.locale, query.locale) : isNull(profile_exports.locale)
+	);
 
-  return db.query.profile_exports.findFirst({
-    where: and(...conditions),
-    orderBy: desc(profile_exports.date_updated),
-  });
+	return db.query.profile_exports.findFirst({
+		where: and(...conditions),
+		orderBy: desc(profile_exports.date_updated)
+	});
 }
 
 /**
@@ -69,7 +65,7 @@ export async function getLatestExport(query: ExportQuery) {
  * @returns Buffer containing the file data
  */
 export async function getExportFileBuffer(fileUuid: string): Promise<Buffer> {
-  return getFile(fileUuid);
+	return getFile(fileUuid);
 }
 
 /**
@@ -78,16 +74,16 @@ export async function getExportFileBuffer(fileUuid: string): Promise<Buffer> {
  * @returns Object with export metadata and file buffer, or null if not found
  */
 export async function getLatestExportWithFile(query: ExportQuery) {
-  const exportRecord = await getLatestExport(query);
+	const exportRecord = await getLatestExport(query);
 
-  if (!exportRecord) {
-    return null;
-  }
+	if (!exportRecord) {
+		return null;
+	}
 
-  const fileBuffer = await getExportFileBuffer(exportRecord.file_id);
+	const fileBuffer = await getExportFileBuffer(exportRecord.file_id);
 
-  return {
-    export: exportRecord,
-    buffer: fileBuffer,
-  };
+	return {
+		export: exportRecord,
+		buffer: fileBuffer
+	};
 }

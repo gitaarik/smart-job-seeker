@@ -12,17 +12,17 @@
  * filter over `collected_data` (see utils.ts), not as an ordering.
  */
 export const CORE_PROFILE_FIELDS = [
-  "name",
-  "title",
-  "headline",
-  "subtitle",
-  "summary",
-  "core_stack",
-  "highlights",
-  "work_experiences",
-  "side_projects",
-  "education",
-  "tech_skill_categories",
+	'name',
+	'title',
+	'headline',
+	'subtitle',
+	'summary',
+	'core_stack',
+	'highlights',
+	'work_experiences',
+	'side_projects',
+	'education',
+	'tech_skill_categories'
 ];
 
 /**
@@ -31,8 +31,4 @@ export const CORE_PROFILE_FIELDS = [
  * definition instead of each declaring their own copy. Not exported from a
  * generator, so nothing external depends on its location.
  */
-export const LETTER_PROFILE_FIELDS = [
-  ...CORE_PROFILE_FIELDS,
-  "location",
-  "languages",
-];
+export const LETTER_PROFILE_FIELDS = [...CORE_PROFILE_FIELDS, 'location', 'languages'];

@@ -3,89 +3,89 @@
  */
 
 export interface SearchTask {
-  id: number;
-  note: string | null;
-  profileId: number;
-  profileName: string | null;
-  platformName: string | null;
-  browserProvider: string | null;
-  userId: string | null;
-  userName: string | null;
+	id: number;
+	note: string | null;
+	profileId: number;
+	profileName: string | null;
+	platformName: string | null;
+	browserProvider: string | null;
+	userId: string | null;
+	userName: string | null;
 }
 
 export interface User {
-  id: string;
-  name: string;
+	id: string;
+	name: string;
 }
 
 export interface Profile {
-  id: number;
-  name: string;
-  userId: string | null;
-  userName: string | null;
+	id: number;
+	name: string;
+	userId: string | null;
+	userName: string | null;
 }
 
 export interface SessionSummary {
-  id: number;
-  searchTaskId: number;
-  searchTaskName: string;
-  status: string;
-  goal: string;
-  maxIterations: number;
-  currentIteration: number;
-  latestStage: string | null;
-  latestSuccessPct: number | null;
-  latestRunId: number | null;
-  latestRunStatus: string | null;
-  latestGoalMet: boolean | null;
-  blockedMessage: string | null;
-  systemPrompt: string | null;
-  runFirst: boolean;
-  pendingHint: string | null;
-  needsInput: string | null;
-  errorMessage: string | null;
-  createdAt: string;
-  updatedAt: string;
-  finishedAt: string | null;
+	id: number;
+	searchTaskId: number;
+	searchTaskName: string;
+	status: string;
+	goal: string;
+	maxIterations: number;
+	currentIteration: number;
+	latestStage: string | null;
+	latestSuccessPct: number | null;
+	latestRunId: number | null;
+	latestRunStatus: string | null;
+	latestGoalMet: boolean | null;
+	blockedMessage: string | null;
+	systemPrompt: string | null;
+	runFirst: boolean;
+	pendingHint: string | null;
+	needsInput: string | null;
+	errorMessage: string | null;
+	createdAt: string;
+	updatedAt: string;
+	finishedAt: string | null;
 }
 
 export interface SessionDetail {
-  id: number;
-  searchTaskId: number;
-  searchTaskName: string;
-  status: string;
-  goal: string;
-  maxIterations: number;
-  currentIteration: number;
-  runFirst: boolean;
-  pendingHint: string | null;
-  needsInput: string | null;
-  blockedMessage: string | null;
-  claudeSessionId: string | null;
-  systemPrompt: string | null;
-  errorMessage: string | null;
-  createdAt: string;
-  updatedAt: string;
-  finishedAt: string | null;
+	id: number;
+	searchTaskId: number;
+	searchTaskName: string;
+	status: string;
+	goal: string;
+	maxIterations: number;
+	currentIteration: number;
+	runFirst: boolean;
+	pendingHint: string | null;
+	needsInput: string | null;
+	blockedMessage: string | null;
+	claudeSessionId: string | null;
+	systemPrompt: string | null;
+	errorMessage: string | null;
+	createdAt: string;
+	updatedAt: string;
+	finishedAt: string | null;
 }
 
 export interface Iteration {
-  id: number;
-  iteration: number;
-  stage: string | null;
-  runId: number | null;
-  runStatus: string | null;
-  itemsTotal: number | null;
-  itemsCompleted: number | null;
-  itemsError: number | null;
-  successPct: number | null;
-  goalMet: boolean | null;
-  goalEvaluation: string | null;
-  prompt: string | null;
-  claudeAnalysis: string | null;
-  claudeChanges: string | null;
-  startedAt: string;
-  finishedAt: string | null;
+	id: number;
+	iteration: number;
+	stage: string | null;
+	runId: number | null;
+	runStatus: string | null;
+	itemsTotal: number | null;
+	itemsCompleted: number | null;
+	itemsError: number | null;
+	successPct: number | null;
+	goalMet: boolean | null;
+	goalEvaluation: string | null;
+	prompt: string | null;
+	claudeAnalysis: string | null;
+	claudeChanges: string | null;
+	startedAt: string;
+	finishedAt: string | null;
 }
 
 export const DEFAULT_SYSTEM_PROMPT = `You are improving a generic job scraper that must work across many job sites (LinkedIn, Indeed, Glassdoor, Upwork, niche boards) without site-specific code branches.
@@ -131,77 +131,103 @@ Focus areas when analyzing logs:
 - Search-form config — did keywords/location/filters apply? Any false unsupported flags?`;
 
 export function isActive(status: string): boolean {
-  return ["active", "paused"].includes(status);
+	return ['active', 'paused'].includes(status);
 }
 
 export function statusColor(status: string): string {
-  switch (status) {
-    case "active": return "text-green-600";
-    case "paused": return "text-amber-600";
-    case "completed": return "text-[var(--dash-primary)]";
-    case "failed": return "text-[var(--dash-error)]";
-    case "cancelled": return "text-[var(--dash-text-muted)]";
-    default: return "text-[var(--dash-text-secondary)]";
-  }
+	switch (status) {
+		case 'active':
+			return 'text-green-600';
+		case 'paused':
+			return 'text-amber-600';
+		case 'completed':
+			return 'text-[var(--dash-primary)]';
+		case 'failed':
+			return 'text-[var(--dash-error)]';
+		case 'cancelled':
+			return 'text-[var(--dash-text-muted)]';
+		default:
+			return 'text-[var(--dash-text-secondary)]';
+	}
 }
 
 export function statusDot(status: string): string {
-  switch (status) {
-    case "active": return "bg-green-500";
-    case "paused": return "bg-amber-500";
-    case "completed": return "bg-[var(--dash-primary)]";
-    case "failed": return "bg-[var(--dash-error)]";
-    case "cancelled": return "bg-gray-400";
-    default: return "bg-gray-400";
-  }
+	switch (status) {
+		case 'active':
+			return 'bg-green-500';
+		case 'paused':
+			return 'bg-amber-500';
+		case 'completed':
+			return 'bg-[var(--dash-primary)]';
+		case 'failed':
+			return 'bg-[var(--dash-error)]';
+		case 'cancelled':
+			return 'bg-gray-400';
+		default:
+			return 'bg-gray-400';
+	}
 }
 
 export function formatTime(date: string): string {
-  const d = new Date(date);
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
+	const d = new Date(date);
+	const now = new Date();
+	const diffMs = now.getTime() - d.getTime();
+	const diffMins = Math.floor(diffMs / 60000);
+	const diffHours = Math.floor(diffMs / 3600000);
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+	if (diffMins < 1) return 'Just now';
+	if (diffMins < 60) return `${diffMins}m ago`;
+	if (diffHours < 24) return `${diffHours}h ago`;
+	return d.toLocaleDateString('en-US', {
+		month: 'short',
+		day: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit'
+	});
 }
 
 export function stageLabel(stage: string | null): string {
-  switch (stage) {
-    case "claude": return "AI analyzing & coding";
-    case "reloading": return "Worker reloading";
-    case "scraping": return "Running scrape";
-    case "blocked": return "Waiting for manual action";
-    case "evaluating": return "Evaluating results";
-    case "done": return "Done";
-    case "error": return "Error";
-    default: return "Starting...";
-  }
+	switch (stage) {
+		case 'claude':
+			return 'AI analyzing & coding';
+		case 'reloading':
+			return 'Worker reloading';
+		case 'scraping':
+			return 'Running scrape';
+		case 'blocked':
+			return 'Waiting for manual action';
+		case 'evaluating':
+			return 'Evaluating results';
+		case 'done':
+			return 'Done';
+		case 'error':
+			return 'Error';
+		default:
+			return 'Starting...';
+	}
 }
 
 export function stageColor(stage: string | null): string {
-  switch (stage) {
-    case "claude": return "text-purple-600";
-    case "reloading": return "text-amber-500";
-    case "scraping": return "text-blue-600";
-    case "blocked": return "text-orange-600";
-    case "evaluating": return "text-cyan-600";
-    case "done": return "text-green-600";
-    case "error": return "text-[var(--dash-error)]";
-    default: return "text-[var(--dash-text-muted)]";
-  }
+	switch (stage) {
+		case 'claude':
+			return 'text-purple-600';
+		case 'reloading':
+			return 'text-amber-500';
+		case 'scraping':
+			return 'text-blue-600';
+		case 'blocked':
+			return 'text-orange-600';
+		case 'evaluating':
+			return 'text-cyan-600';
+		case 'done':
+			return 'text-green-600';
+		case 'error':
+			return 'text-[var(--dash-error)]';
+		default:
+			return 'text-[var(--dash-text-muted)]';
+	}
 }
 
 export function progressPct(session: { currentIteration: number; maxIterations: number }): number {
-  return session.maxIterations > 0
-    ? (session.currentIteration / session.maxIterations) * 100
-    : 0;
+	return session.maxIterations > 0 ? (session.currentIteration / session.maxIterations) * 100 : 0;
 }

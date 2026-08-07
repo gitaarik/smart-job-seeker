@@ -15,8 +15,8 @@
  * Prerequisites: dev stack running, test user seeded (see browser.test.ts).
  */
 
-import { beforeAll, describe, expect, it } from "vitest";
-import { loginViaUI, useBrowser } from "./browser";
+import { beforeAll, describe, expect, it } from 'vitest';
+import { loginViaUI, useBrowser } from './browser';
 
 /**
  * A job whose required skills are all unmatched for the test profile, so every
@@ -37,181 +37,179 @@ const ADD_PILL = 'button[title*="add it to my profile"]';
 /** Any pill for a skill the profile has — these open the editor, not the add form. */
 const KNOWN_PILL = 'button[title^="In your profile"]';
 
-describe("profile-only skills popover", () => {
-  const b = useBrowser();
+describe('profile-only skills popover', () => {
+	const b = useBrowser();
 
-  // Once per suite: the context is shared, and loginViaUI navigates to /login,
-  // which redirects away once authenticated — leaving it waiting on an #email
-  // field that never appears.
-  beforeAll(async () => {
-    await loginViaUI(b.page);
-  });
+	// Once per suite: the context is shared, and loginViaUI navigates to /login,
+	// which redirects away once authenticated — leaving it waiting on an #email
+	// field that never appears.
+	beforeAll(async () => {
+		await loginViaUI(b.page);
+	});
 
-  async function openJob() {
-    await b.page.goto(`/jobs/${JOB_WITH_UNMATCHED_SKILLS}`);
-    await b.page.waitForLoadState("networkidle");
-  }
+	async function openJob() {
+		await b.page.goto(`/jobs/${JOB_WITH_UNMATCHED_SKILLS}`);
+		await b.page.waitForLoadState('networkidle');
+	}
 
-  async function openFirstPopover() {
-    await openJob();
-    const pill = b.page.locator(ADD_PILL).first();
-    await pill.waitFor({ state: "visible", timeout: 15000 });
-    await pill.click();
-    return pill;
-  }
+	async function openFirstPopover() {
+		await openJob();
+		const pill = b.page.locator(ADD_PILL).first();
+		await pill.waitFor({ state: 'visible', timeout: 15000 });
+		await pill.click();
+		return pill;
+	}
 
-  it("renders unmatched required skills as clickable add buttons", async () => {
-    await openJob();
-    expect(await b.page.locator(ADD_PILL).count()).toBeGreaterThan(0);
-  });
+	it('renders unmatched required skills as clickable add buttons', async () => {
+		await openJob();
+		expect(await b.page.locator(ADD_PILL).count()).toBeGreaterThan(0);
+	});
 
-  it("opens the popover with Show on CV defaulted off", async () => {
-    await openFirstPopover();
+	it('opens the popover with Show on CV defaulted off', async () => {
+		await openFirstPopover();
 
-    const toggle = b.page.getByRole("button", { name: "Show on CV" });
-    await toggle.waitFor({ state: "visible", timeout: 10000 });
+		const toggle = b.page.getByRole('button', { name: 'Show on CV' });
+		await toggle.waitFor({ state: 'visible', timeout: 10000 });
 
-    // Off by default: the skill starts counting for matching without landing
-    // on any document until the applicant says so.
-    expect(await toggle.getAttribute("aria-pressed")).toBe("false");
-    expect(await b.page.getByText(/Stays off your resume/i).first().isVisible())
-      .toBe(true);
+		// Off by default: the skill starts counting for matching without landing
+		// on any document until the applicant says so.
+		expect(await toggle.getAttribute('aria-pressed')).toBe('false');
+		expect(
+			await b.page
+				.getByText(/Stays off your resume/i)
+				.first()
+				.isVisible()
+		).toBe(true);
 
-    // Still there a beat later. The popover used to open and then vanish on
-    // its own, because a request fired on click could resolve into a state
-    // that swapped the whole pill out — taking the open popover with it.
-    await b.page.waitForTimeout(1500);
-    expect(await toggle.isVisible()).toBe(true);
-  });
+		// Still there a beat later. The popover used to open and then vanish on
+		// its own, because a request fired on click could resolve into a state
+		// that swapped the whole pill out — taking the open popover with it.
+		await b.page.waitForTimeout(1500);
+		expect(await toggle.isVisible()).toBe(true);
+	});
 
-  it("can file the skill under a category the profile doesn't have yet", async () => {
-    // Skills arrive in whatever order jobs do, so the category you want is
-    // regularly one that doesn't exist — and leaving to create it first loses
-    // the job you were reading. The request is intercepted so the profile is
-    // left alone; that the server then creates and reuses the category is
-    // covered by the API's own tests.
-    let posted: string | null = null;
-    await b.page.route("**/api/profile-skills", async (route) => {
-      if (route.request().method() !== "POST") return route.continue();
-      posted = route.request().postData();
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, id: 0, name: "" }),
-      });
-    });
+	it("can file the skill under a category the profile doesn't have yet", async () => {
+		// Skills arrive in whatever order jobs do, so the category you want is
+		// regularly one that doesn't exist — and leaving to create it first loses
+		// the job you were reading. The request is intercepted so the profile is
+		// left alone; that the server then creates and reuses the category is
+		// covered by the API's own tests.
+		let posted: string | null = null;
+		await b.page.route('**/api/profile-skills', async (route) => {
+			if (route.request().method() !== 'POST') return route.continue();
+			posted = route.request().postData();
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ success: true, id: 0, name: '' })
+			});
+		});
 
-    await openFirstPopover();
-    const select = b.page.getByLabel("Category", { exact: true });
-    await select.waitFor({ state: "visible", timeout: 10000 });
+		await openFirstPopover();
+		const select = b.page.getByLabel('Category', { exact: true });
+		await select.waitFor({ state: 'visible', timeout: 10000 });
 
-    const options = await select.locator("option").allTextContents();
-    expect(options.at(-1)).toContain("New category");
+		const options = await select.locator('option').allTextContents();
+		expect(options.at(-1)).toContain('New category');
 
-    const name = b.page.getByLabel("New category name");
-    expect(await name.count()).toBe(0);
-    await select.selectOption("new");
-    await name.waitFor({ state: "visible", timeout: 5000 });
+		const name = b.page.getByLabel('New category name');
+		expect(await name.count()).toBe(0);
+		await select.selectOption('new');
+		await name.waitFor({ state: 'visible', timeout: 5000 });
 
-    // An unnamed new category is refused rather than quietly filed elsewhere.
-    await b.page.getByRole("button", { name: "Add" }).click();
-    await b.page.waitForTimeout(500);
-    expect(posted).toBe(null);
-    expect(await b.page.getByText("Name the new category.").isVisible())
-      .toBe(true);
+		// An unnamed new category is refused rather than quietly filed elsewhere.
+		await b.page.getByRole('button', { name: 'Add' }).click();
+		await b.page.waitForTimeout(500);
+		expect(posted).toBe(null);
+		expect(await b.page.getByText('Name the new category.').isVisible()).toBe(true);
 
-    await name.fill("  Data & ML  ");
-    await b.page.getByRole("button", { name: "Add" }).click();
-    await b.page.waitForTimeout(800);
-    expect(posted).toContain('"category_name":"Data & ML"');
-    expect(posted).toContain('"category_id":null');
+		await name.fill('  Data & ML  ');
+		await b.page.getByRole('button', { name: 'Add' }).click();
+		await b.page.waitForTimeout(800);
+		expect(posted).toContain('"category_name":"Data & ML"');
+		expect(posted).toContain('"category_id":null');
 
-    await b.page.unroute("**/api/profile-skills");
-  });
+		await b.page.unroute('**/api/profile-skills');
+	});
 
-  it("never offers to add a skill the profile already has", async () => {
-    // The pill has to decide from data the page already holds. Asking the
-    // server only once the popover is open means the answer lands mid-click,
-    // which is what made the popover appear to close itself.
-    await b.page.goto(`/jobs/${JOB_WITH_STALE_MATCH}`);
-    await b.page.waitForLoadState("networkidle");
-    await b.page.locator(KNOWN_PILL).first().waitFor({ timeout: 15000 });
+	it('never offers to add a skill the profile already has', async () => {
+		// The pill has to decide from data the page already holds. Asking the
+		// server only once the popover is open means the answer lands mid-click,
+		// which is what made the popover appear to close itself.
+		await b.page.goto(`/jobs/${JOB_WITH_STALE_MATCH}`);
+		await b.page.waitForLoadState('networkidle');
+		await b.page.locator(KNOWN_PILL).first().waitFor({ timeout: 15000 });
 
-    const known = await b.page.locator(KNOWN_PILL).allTextContents();
-    expect(known.length).toBeGreaterThan(0);
+		const known = await b.page.locator(KNOWN_PILL).allTextContents();
+		expect(known.length).toBeGreaterThan(0);
 
-    const offered = await b.page.locator(ADD_PILL).allTextContents();
-    const overlap = offered.filter((o) =>
-      known.some((k) => k.trim() === o.trim())
-    );
-    expect(overlap).toEqual([]);
-  });
+		const offered = await b.page.locator(ADD_PILL).allTextContents();
+		const overlap = offered.filter((o) => known.some((k) => k.trim() === o.trim()));
+		expect(overlap).toEqual([]);
+	});
 
-  it("opens a skill the profile already has for editing, prefilled", async () => {
-    // "Add it" and "change it" are the same thought a moment apart, so the
-    // pill for an owned skill opens the same form showing what is true.
-    let patched: string | null = null;
-    await b.page.route("**/api/profile-skills", async (route) => {
-      if (route.request().method() !== "PATCH") return route.continue();
-      patched = route.request().postData();
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: true, tags: null }),
-      });
-    });
+	it('opens a skill the profile already has for editing, prefilled', async () => {
+		// "Add it" and "change it" are the same thought a moment apart, so the
+		// pill for an owned skill opens the same form showing what is true.
+		let patched: string | null = null;
+		await b.page.route('**/api/profile-skills', async (route) => {
+			if (route.request().method() !== 'PATCH') return route.continue();
+			patched = route.request().postData();
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ success: true, tags: null })
+			});
+		});
 
-    await b.page.goto(`/jobs/${JOB_WITH_STALE_MATCH}`);
-    await b.page.waitForLoadState("networkidle");
-    const pill = b.page.locator(KNOWN_PILL).first();
-    await pill.waitFor({ state: "visible", timeout: 15000 });
-    await pill.click();
+		await b.page.goto(`/jobs/${JOB_WITH_STALE_MATCH}`);
+		await b.page.waitForLoadState('networkidle');
+		const pill = b.page.locator(KNOWN_PILL).first();
+		await pill.waitFor({ state: 'visible', timeout: 15000 });
+		await pill.click();
 
-    // Prefilled from the profile row, not from a blank form's defaults.
-    const category = b.page.getByLabel("Category", { exact: true });
-    await category.waitFor({ state: "visible", timeout: 10000 });
-    expect(await category.inputValue()).not.toBe("new");
-    expect(
-      await b.page.getByRole("button", { name: "Show on CV" }).getAttribute(
-        "aria-pressed",
-      ),
-    ).toBe("true");
+		// Prefilled from the profile row, not from a blank form's defaults.
+		const category = b.page.getByLabel('Category', { exact: true });
+		await category.waitFor({ state: 'visible', timeout: 10000 });
+		expect(await category.inputValue()).not.toBe('new');
+		expect(
+			await b.page.getByRole('button', { name: 'Show on CV' }).getAttribute('aria-pressed')
+		).toBe('true');
 
-    // It saves, rather than adding a second copy of a skill you already have.
-    // Scoped to the popover — the page has its own "Save job" button.
-    await b.page.locator("div.z-50").getByRole("button", { name: "Save" })
-      .click();
-    await b.page.waitForTimeout(800);
-    expect(patched).toContain('"id":');
-    expect(patched).toContain('"profile_only":false');
+		// It saves, rather than adding a second copy of a skill you already have.
+		// Scoped to the popover — the page has its own "Save job" button.
+		await b.page.locator('div.z-50').getByRole('button', { name: 'Save' }).click();
+		await b.page.waitForTimeout(800);
+		expect(patched).toContain('"id":');
+		expect(patched).toContain('"profile_only":false');
 
-    await b.page.unroute("**/api/profile-skills");
-  });
+		await b.page.unroute('**/api/profile-skills');
+	});
 
-  it("closes on an outside click without having added anything", async () => {
-    await openFirstPopover();
+	it('closes on an outside click without having added anything', async () => {
+		await openFirstPopover();
 
-    const toggle = b.page.getByRole("button", { name: "Show on CV" });
-    await toggle.waitFor({ state: "visible", timeout: 10000 });
+		const toggle = b.page.getByRole('button', { name: 'Show on CV' });
+		await toggle.waitFor({ state: 'visible', timeout: 10000 });
 
-    // Somewhere neutral, well away from the popover.
-    await b.page.locator("body").click({ position: { x: 5, y: 5 } });
-    await toggle.waitFor({ state: "hidden", timeout: 5000 });
-    expect(await toggle.isVisible()).toBe(false);
+		// Somewhere neutral, well away from the popover.
+		await b.page.locator('body').click({ position: { x: 5, y: 5 } });
+		await toggle.waitFor({ state: 'hidden', timeout: 5000 });
+		expect(await toggle.isVisible()).toBe(false);
 
-    // The pill is still the "add" kind — nothing was written.
-    expect(await b.page.locator(ADD_PILL).count()).toBeGreaterThan(0);
-  });
+		// The pill is still the "add" kind — nothing was written.
+		expect(await b.page.locator(ADD_PILL).count()).toBeGreaterThan(0);
+	});
 
-  it("reopens after being dismissed", async () => {
-    // Guards the failure mode where the click-outside listener is armed
-    // permanently and swallows every subsequent open.
-    await openFirstPopover();
-    await b.page.locator("body").click({ position: { x: 5, y: 5 } });
+	it('reopens after being dismissed', async () => {
+		// Guards the failure mode where the click-outside listener is armed
+		// permanently and swallows every subsequent open.
+		await openFirstPopover();
+		await b.page.locator('body').click({ position: { x: 5, y: 5 } });
 
-    const toggle = b.page.getByRole("button", { name: "Show on CV" });
-    await b.page.locator(ADD_PILL).first().click();
-    await toggle.waitFor({ state: "visible", timeout: 10000 });
-    expect(await toggle.isVisible()).toBe(true);
-  });
+		const toggle = b.page.getByRole('button', { name: 'Show on CV' });
+		await b.page.locator(ADD_PILL).first().click();
+		await toggle.waitFor({ state: 'visible', timeout: 10000 });
+		expect(await toggle.isVisible()).toBe(true);
+	});
 });

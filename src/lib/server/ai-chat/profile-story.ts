@@ -10,33 +10,25 @@
  * answer); advice/review only record a version for the timeline to render.
  */
 
-import { db } from "$lib/server/db";
-import { eq } from "drizzle-orm";
-import { project_stories } from "$lib/server/db/schema";
-import { createAndGenerateAiChat, instructionsBlock } from "./utils";
-import {
-  ensureBaselineVersion,
-  recordVersion,
-  STORY_VERSIONS,
-} from "./entity-versions";
-import {
-  parseStarMarkdown,
-  serializeStarMarkdown,
-  type StarFields,
-} from "$lib/interview/star";
-import type { GenerationContextOption } from "./generation-context";
-import { CORE_PROFILE_FIELDS } from "./profile-fields";
+import { db } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
+import { project_stories } from '$lib/server/db/schema';
+import { createAndGenerateAiChat, instructionsBlock } from './utils';
+import { ensureBaselineVersion, recordVersion, STORY_VERSIONS } from './entity-versions';
+import { parseStarMarkdown, serializeStarMarkdown, type StarFields } from '$lib/interview/star';
+import type { GenerationContextOption } from './generation-context';
+import { CORE_PROFILE_FIELDS } from './profile-fields';
 
 /** Profile data fields relevant for building a behavioural STAR story. */
-export const STORY_PROFILE_FIELDS = [...CORE_PROFILE_FIELDS, "project_stories"];
+export const STORY_PROFILE_FIELDS = [...CORE_PROFILE_FIELDS, 'project_stories'];
 
 /** Maps generation mode to the prompt template name. */
 const STORY_MODE_TO_PROMPT: Record<string, string> = {
-  generate: "write_star_story",
-  advice: "advise_star_story",
-  review: "review_star_story",
-  // One entry point; the model picks draft-vs-advice per message.
-  auto: "write_or_advise_star_story",
+	generate: 'write_star_story',
+	advice: 'advise_star_story',
+	review: 'review_star_story',
+	// One entry point; the model picks draft-vs-advice per message.
+	auto: 'write_or_advise_star_story'
 };
 
 /**
@@ -44,21 +36,21 @@ const STORY_MODE_TO_PROMPT: Record<string, string> = {
  * placeholders the "Build with AI" entry point creates a row with. A generate
  * turn is allowed to overwrite these with the model's suggested title.
  */
-const PLACEHOLDER_TITLES = new Set(["new story", "untitled story", "untitled"]);
+const PLACEHOLDER_TITLES = new Set(['new story', 'untitled story', 'untitled']);
 function isUnnamed(title: string | null): boolean {
-  const t = title?.trim().toLowerCase();
-  return !t || PLACEHOLDER_TITLES.has(t);
+	const t = title?.trim().toLowerCase();
+	return !t || PLACEHOLDER_TITLES.has(t);
 }
 
 /** The STAR columns of a project_stories row, as the parser/serializer sees them. */
 function storyColumns(fields: StarFields) {
-  return {
-    situation: fields.situation,
-    task: fields.task,
-    action: fields.action,
-    result: fields.result,
-    reflection: fields.reflection,
-  };
+	return {
+		situation: fields.situation,
+		task: fields.task,
+		action: fields.action,
+		result: fields.result,
+		reflection: fields.reflection
+	};
 }
 
 /**
@@ -66,19 +58,16 @@ function storyColumns(fields: StarFields) {
  * `${storyContext}`. Blank title → tell the model to pick the most compelling
  * story from the profile itself.
  */
-export function buildStoryContext(
-  title: string | null,
-  category: string | null,
-): string {
-  const lines: string[] = [];
-  if (title?.trim()) lines.push(`Working title: ${title.trim()}`);
-  if (category?.trim()) {
-    lines.push(`Theme / category: ${category.trim().replace(/_/g, " ")}`);
-  }
-  if (lines.length === 0) {
-    return "The applicant hasn't named this story yet — choose the single most compelling story from their real experience for a behavioural interview.";
-  }
-  return lines.join("\n");
+export function buildStoryContext(title: string | null, category: string | null): string {
+	const lines: string[] = [];
+	if (title?.trim()) lines.push(`Working title: ${title.trim()}`);
+	if (category?.trim()) {
+		lines.push(`Theme / category: ${category.trim().replace(/_/g, ' ')}`);
+	}
+	if (lines.length === 0) {
+		return "The applicant hasn't named this story yet — choose the single most compelling story from their real experience for a behavioural interview.";
+	}
+	return lines.join('\n');
 }
 
 /**
@@ -90,178 +79,164 @@ export function buildStoryContext(
  * @param opts.instructions the applicant's own brief for this turn (composer).
  */
 export async function generateProfileStory(
-  storyId: number,
-  opts?: {
-    mode?: "generate" | "advice" | "review" | "auto";
-    instructions?: string;
-  },
+	storyId: number,
+	opts?: {
+		mode?: 'generate' | 'advice' | 'review' | 'auto';
+		instructions?: string;
+	}
 ): Promise<{ success: boolean; message: string; text?: string }> {
-  const mode = opts?.mode ?? "generate";
-  const promptType = STORY_MODE_TO_PROMPT[mode];
-  const instructions = opts?.instructions?.trim() || null;
+	const mode = opts?.mode ?? 'generate';
+	const promptType = STORY_MODE_TO_PROMPT[mode];
+	const instructions = opts?.instructions?.trim() || null;
 
-  let story;
-  try {
-    story = await db.query.project_stories.findFirst({
-      where: eq(project_stories.id, storyId),
-    });
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    return { success: false, message: `Database error fetching story: ${msg}` };
-  }
+	let story;
+	try {
+		story = await db.query.project_stories.findFirst({
+			where: eq(project_stories.id, storyId)
+		});
+	} catch (error) {
+		const msg = error instanceof Error ? error.message : 'Unknown error';
+		return { success: false, message: `Database error fetching story: ${msg}` };
+	}
 
-  if (!story) {
-    return { success: false, message: `Story with ID ${storyId} not found` };
-  }
+	if (!story) {
+		return { success: false, message: `Story with ID ${storyId} not found` };
+	}
 
-  const profileId = story.profile_id;
-  const currentStar = serializeStarMarkdown(story);
+	const profileId = story.profile_id;
+	const currentStar = serializeStarMarkdown(story);
 
-  const variables: Record<string, unknown> = {
-    storyContext: buildStoryContext(story.title, story.category),
-  };
-  if (mode === "review") {
-    variables.currentStar = currentStar ||
-      "(The applicant hasn't written anything yet.)";
-  } else {
-    variables.additionalContext = instructionsBlock(instructions);
-  }
+	const variables: Record<string, unknown> = {
+		storyContext: buildStoryContext(story.title, story.category)
+	};
+	if (mode === 'review') {
+		variables.currentStar = currentStar || "(The applicant hasn't written anything yet.)";
+	} else {
+		variables.additionalContext = instructionsBlock(instructions);
+	}
 
-  // Ground the story in the applicant's most relevant real projects and their
-  // own past application writing, for the draft-writing modes only (advice/review
-  // templates don't interpolate these slots — retrieving there would discard the
-  // result; see the drift-guard test). The relevance query is what this story is
-  // *about*: its working title, theme, the applicant's brief, and the current
-  // draft. The `stories` source is deliberately NOT requested — it would retrieve
-  // this very story and feed it back into its own prompt.
-  let context: GenerationContextOption | undefined;
-  if (mode === "generate" || mode === "auto") {
-    const topic = story.title && !isUnnamed(story.title) ? story.title : "";
-    context = {
-      query: {
-        text: [
-          topic,
-          story.category ?? "",
-          instructions ?? "",
-          currentStar ?? "",
-        ]
-          .filter(Boolean)
-          .join("\n"),
-      },
-      sources: ["projects", "application_texts"],
-    };
-  }
+	// Ground the story in the applicant's most relevant real projects and their
+	// own past application writing, for the draft-writing modes only (advice/review
+	// templates don't interpolate these slots — retrieving there would discard the
+	// result; see the drift-guard test). The relevance query is what this story is
+	// *about*: its working title, theme, the applicant's brief, and the current
+	// draft. The `stories` source is deliberately NOT requested — it would retrieve
+	// this very story and feed it back into its own prompt.
+	let context: GenerationContextOption | undefined;
+	if (mode === 'generate' || mode === 'auto') {
+		const topic = story.title && !isUnnamed(story.title) ? story.title : '';
+		context = {
+			query: {
+				text: [topic, story.category ?? '', instructions ?? '', currentStar ?? '']
+					.filter(Boolean)
+					.join('\n')
+			},
+			sources: ['projects', 'application_texts']
+		};
+	}
 
-  let aiChatResult;
-  try {
-    aiChatResult = await createAndGenerateAiChat(
-      profileId,
-      promptType,
-      variables,
-      undefined,
-      { profileDataFields: STORY_PROFILE_FIELDS, context },
-    );
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    return { success: false, message: `Error generating AI chat: ${msg}` };
-  }
+	let aiChatResult;
+	try {
+		aiChatResult = await createAndGenerateAiChat(profileId, promptType, variables, undefined, {
+			profileDataFields: STORY_PROFILE_FIELDS,
+			context
+		});
+	} catch (error) {
+		const msg = error instanceof Error ? error.message : 'Unknown error';
+		return { success: false, message: `Error generating AI chat: ${msg}` };
+	}
 
-  if (!aiChatResult.success || !aiChatResult.aiChat) {
-    return { success: false, message: aiChatResult.message };
-  }
-  const aiChat = aiChatResult.aiChat;
+	if (!aiChatResult.success || !aiChatResult.aiChat) {
+		return { success: false, message: aiChatResult.message };
+	}
+	const aiChat = aiChatResult.aiChat;
 
-  // Extract per mode. generate → { text, feedback, title }; advice → plain text;
-  // review → { feedback, revisedText }. The story body is normalized through
-  // parse→serialize so every stored version is canonical STAR markdown.
-  let storyMarkdown: string | null = null;
-  let aiFeedback: string | null = null;
-  let suggestedTitle: string | null = null;
-  if (mode === "advice") {
-    aiFeedback = aiChat.response;
-  } else if (aiChat.response) {
-    try {
-      const parsed = JSON.parse(aiChat.response);
-      if (typeof parsed.feedback === "string") aiFeedback = parsed.feedback;
-      const raw = mode === "review" ? parsed.revisedText : parsed.text;
-      if (typeof raw === "string" && raw.trim()) {
-        storyMarkdown = serializeStarMarkdown(parseStarMarkdown(raw));
-      }
-      if (
-        (mode === "generate" || mode === "auto") &&
-        typeof parsed.title === "string"
-      ) {
-        suggestedTitle = parsed.title.trim() || null;
-      }
-    } catch {
-      // Non-JSON response: treat the whole thing as the story body (generate) or
-      // as feedback (review), degrading rather than failing.
-      if (mode === "review") {
-        aiFeedback = aiChat.response;
-      } else {
-        storyMarkdown = serializeStarMarkdown(
-          parseStarMarkdown(aiChat.response),
-        );
-      }
-    }
-  }
+	// Extract per mode. generate → { text, feedback, title }; advice → plain text;
+	// review → { feedback, revisedText }. The story body is normalized through
+	// parse→serialize so every stored version is canonical STAR markdown.
+	let storyMarkdown: string | null = null;
+	let aiFeedback: string | null = null;
+	let suggestedTitle: string | null = null;
+	if (mode === 'advice') {
+		aiFeedback = aiChat.response;
+	} else if (aiChat.response) {
+		try {
+			const parsed = JSON.parse(aiChat.response);
+			if (typeof parsed.feedback === 'string') aiFeedback = parsed.feedback;
+			const raw = mode === 'review' ? parsed.revisedText : parsed.text;
+			if (typeof raw === 'string' && raw.trim()) {
+				storyMarkdown = serializeStarMarkdown(parseStarMarkdown(raw));
+			}
+			if ((mode === 'generate' || mode === 'auto') && typeof parsed.title === 'string') {
+				suggestedTitle = parsed.title.trim() || null;
+			}
+		} catch {
+			// Non-JSON response: treat the whole thing as the story body (generate) or
+			// as feedback (review), degrading rather than failing.
+			if (mode === 'review') {
+				aiFeedback = aiChat.response;
+			} else {
+				storyMarkdown = serializeStarMarkdown(parseStarMarkdown(aiChat.response));
+			}
+		}
+	}
 
-  try {
-    // Preserve any pre-AI manual STAR content as a baseline version first.
-    await ensureBaselineVersion(STORY_VERSIONS, storyId, currentStar || null);
+	try {
+		// Preserve any pre-AI manual STAR content as a baseline version first.
+		await ensureBaselineVersion(STORY_VERSIONS, storyId, currentStar || null);
 
-    const commitColumns = (mode === "generate" || mode === "auto") &&
-      storyMarkdown;
-    await db.update(project_stories).set({
-      ai_chat_id: aiChat.id,
-      ai_chat_response: aiChat.response,
-      ...(commitColumns
-        ? {
-          ...storyColumns(parseStarMarkdown(storyMarkdown)),
-          date_updated: new Date(),
-          // Name an as-yet-unnamed story from the model's suggestion.
-          ...(suggestedTitle && isUnnamed(story.title)
-            ? { title: suggestedTitle }
-            : {}),
-        }
-        : {}),
-    }).where(eq(project_stories.id, storyId));
+		const commitColumns = (mode === 'generate' || mode === 'auto') && storyMarkdown;
+		await db
+			.update(project_stories)
+			.set({
+				ai_chat_id: aiChat.id,
+				ai_chat_response: aiChat.response,
+				...(commitColumns
+					? {
+							...storyColumns(parseStarMarkdown(storyMarkdown)),
+							date_updated: new Date(),
+							// Name an as-yet-unnamed story from the model's suggestion.
+							...(suggestedTitle && isUnnamed(story.title) ? { title: suggestedTitle } : {})
+						}
+					: {})
+			})
+			.where(eq(project_stories.id, storyId));
 
-    if (mode === "review") {
-      await recordVersion(STORY_VERSIONS, {
-        entityId: storyId,
-        content: storyMarkdown,
-        source: "ai_review",
-        aiChatId: aiChat.id,
-        aiFeedback,
-      });
-    } else if (mode === "advice" || (mode === "auto" && !storyMarkdown)) {
-      await recordVersion(STORY_VERSIONS, {
-        entityId: storyId,
-        content: null,
-        source: "ai_advice",
-        aiChatId: aiChat.id,
-        aiFeedback,
-        userRequest: instructions,
-      });
-    } else if ((mode === "generate" || mode === "auto") && storyMarkdown) {
-      await recordVersion(STORY_VERSIONS, {
-        entityId: storyId,
-        content: storyMarkdown,
-        source: "ai_generation",
-        aiChatId: aiChat.id,
-        aiFeedback,
-        userRequest: instructions,
-      });
-    }
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    return { success: false, message: `Error updating story record: ${msg}` };
-  }
+		if (mode === 'review') {
+			await recordVersion(STORY_VERSIONS, {
+				entityId: storyId,
+				content: storyMarkdown,
+				source: 'ai_review',
+				aiChatId: aiChat.id,
+				aiFeedback
+			});
+		} else if (mode === 'advice' || (mode === 'auto' && !storyMarkdown)) {
+			await recordVersion(STORY_VERSIONS, {
+				entityId: storyId,
+				content: null,
+				source: 'ai_advice',
+				aiChatId: aiChat.id,
+				aiFeedback,
+				userRequest: instructions
+			});
+		} else if ((mode === 'generate' || mode === 'auto') && storyMarkdown) {
+			await recordVersion(STORY_VERSIONS, {
+				entityId: storyId,
+				content: storyMarkdown,
+				source: 'ai_generation',
+				aiChatId: aiChat.id,
+				aiFeedback,
+				userRequest: instructions
+			});
+		}
+	} catch (error) {
+		const msg = error instanceof Error ? error.message : 'Unknown error';
+		return { success: false, message: `Error updating story record: ${msg}` };
+	}
 
-  return {
-    success: true,
-    message: `Story ${mode} completed for story ID ${storyId}`,
-    text: storyMarkdown ?? undefined,
-  };
+	return {
+		success: true,
+		message: `Story ${mode} completed for story ID ${storyId}`,
+		text: storyMarkdown ?? undefined
+	};
 }

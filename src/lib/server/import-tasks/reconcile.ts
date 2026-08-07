@@ -28,37 +28,37 @@
  * reconciler leaves it alone but the suggester still sees it (dedup). User
  * (origin='user') tasks are never touched.
  */
-import { and, eq, inArray } from "drizzle-orm";
-import { dbDirect as db } from "$lib/server/db";
+import { and, eq, inArray } from 'drizzle-orm';
+import { dbDirect as db } from '$lib/server/db';
 import {
-  job_platforms,
-  match_config,
-  platform_profiles,
-  profile_auto_import,
-  profiles,
-  search_task_runs,
-  search_tasks,
-} from "$lib/server/db/schema";
+	job_platforms,
+	match_config,
+	platform_profiles,
+	profile_auto_import,
+	profiles,
+	search_task_runs,
+	search_tasks
+} from '$lib/server/db/schema';
 import {
-  preferencesToFilters,
-  stripUnsupportedFilters,
-} from "$lib/job-platforms/preferences-to-filters";
-import type { SearchFilterValue } from "$lib/job-platforms/search-filters";
-import { config } from "$lib/server/config";
-import { addScrapeJob } from "$lib/server/queue";
-import { requireCredits } from "$lib/server/billing/require-credits";
-import { getActiveSubscription } from "$lib/server/billing/subscription";
-import type { PlanId } from "$lib/server/billing/plans";
-import { getPreferredDevice } from "$lib/server/sjs-browser-status";
-import { providerRequiresDevice } from "$lib/import-tasks/readiness";
+	preferencesToFilters,
+	stripUnsupportedFilters
+} from '$lib/job-platforms/preferences-to-filters';
+import type { SearchFilterValue } from '$lib/job-platforms/search-filters';
+import { config } from '$lib/server/config';
+import { addScrapeJob } from '$lib/server/queue';
+import { requireCredits } from '$lib/server/billing/require-credits';
+import { getActiveSubscription } from '$lib/server/billing/subscription';
+import type { PlanId } from '$lib/server/billing/plans';
+import { getPreferredDevice } from '$lib/server/sjs-browser-status';
+import { providerRequiresDevice } from '$lib/import-tasks/readiness';
 import {
-  applyPreferenceFilters,
-  canPromoteProposal,
-  computeInputHash,
-  filtersEqual,
-  selectTopUpCandidates,
-} from "./reconcile-policy";
-import { _runSuggester } from "../../../routes/api/jobs/import/suggest/+server";
+	applyPreferenceFilters,
+	canPromoteProposal,
+	computeInputHash,
+	filtersEqual,
+	selectTopUpCandidates
+} from './reconcile-policy';
+import { _runSuggester } from '../../../routes/api/jobs/import/suggest/+server';
 
 /**
  * Per-plan auto-import policy. Auto-activation makes a new profile feel alive
@@ -77,15 +77,15 @@ import { _runSuggester } from "../../../routes/api/jobs/import/suggest/+server";
  * real credit allowances. `profile_auto_import.max_tasks` overrides the count.
  */
 interface AutoImportPolicy {
-  maxTasks: number;
-  autoActivate: boolean;
-  scheduleIntervalHours: number | null;
+	maxTasks: number;
+	autoActivate: boolean;
+	scheduleIntervalHours: number | null;
 }
 const AUTO_IMPORT_POLICY: Record<PlanId, AutoImportPolicy> = {
-  explorer: { maxTasks: 2, autoActivate: true, scheduleIntervalHours: 168 },
-  seeker: { maxTasks: 4, autoActivate: true, scheduleIntervalHours: 72 },
-  hunter: { maxTasks: 6, autoActivate: true, scheduleIntervalHours: 24 },
-  contractor: { maxTasks: 8, autoActivate: true, scheduleIntervalHours: 24 },
+	explorer: { maxTasks: 2, autoActivate: true, scheduleIntervalHours: 168 },
+	seeker: { maxTasks: 4, autoActivate: true, scheduleIntervalHours: 72 },
+	hunter: { maxTasks: 6, autoActivate: true, scheduleIntervalHours: 24 },
+	contractor: { maxTasks: 8, autoActivate: true, scheduleIntervalHours: 24 }
 };
 const DEFAULT_POLICY: AutoImportPolicy = AUTO_IMPORT_POLICY.explorer;
 const DEFAULT_PREFERRED_HOUR = 9;
@@ -101,65 +101,62 @@ const DEFAULT_PREFERRED_HOUR = 9;
 const PROPOSAL_CAP = 3;
 
 export interface ReconcileResult {
-  skipped: boolean;
-  reason?: "disabled" | "no-profile" | "unchanged" | "no-platforms";
-  created: number;
-  pruned: number;
-  recomputed: number;
-  /** Paused proposals flipped to active because they became runnable. */
-  promoted: number;
-  toppedUp: boolean;
+	skipped: boolean;
+	reason?: 'disabled' | 'no-profile' | 'unchanged' | 'no-platforms';
+	created: number;
+	pruned: number;
+	recomputed: number;
+	/** Paused proposals flipped to active because they became runnable. */
+	promoted: number;
+	toppedUp: boolean;
 }
 
-function emptyResult(
-  skipped: boolean,
-  reason?: ReconcileResult["reason"],
-): ReconcileResult {
-  return {
-    skipped,
-    reason,
-    created: 0,
-    pruned: 0,
-    recomputed: 0,
-    promoted: 0,
-    toppedUp: false,
-  };
+function emptyResult(skipped: boolean, reason?: ReconcileResult['reason']): ReconcileResult {
+	return {
+		skipped,
+		reason,
+		created: 0,
+		pruned: 0,
+		recomputed: 0,
+		promoted: 0,
+		toppedUp: false
+	};
 }
 
 type MatchConfigRow = {
-  job_types: string[] | null;
-  experience_levels: string[] | null;
-  work_location: string[] | null;
-  locations: string[] | null;
-  remote_only: boolean | null;
+	job_types: string[] | null;
+	experience_levels: string[] | null;
+	work_location: string[] | null;
+	locations: string[] | null;
+	remote_only: boolean | null;
 };
 
 type PlatformMeta = {
-  id: number;
-  status: string | null;
-  search_page_url: string | null;
-  login_page_url: string | null;
-  unsupported_filters: Record<string, string[]>;
+	id: number;
+	status: string | null;
+	search_page_url: string | null;
+	login_page_url: string | null;
+	unsupported_filters: Record<string, string[]>;
 };
 
 /** Load the per-profile sync-state row, creating it on first use. */
 async function loadOrCreateState(profileId: number) {
-  const existing = await db.query.profile_auto_import.findFirst({
-    where: eq(profile_auto_import.profile_id, profileId),
-  });
-  if (existing) return existing;
-  const [created] = await db
-    .insert(profile_auto_import)
-    .values({ profile_id: profileId })
-    .onConflictDoNothing()
-    .returning();
-  // onConflictDoNothing returns nothing on a race; re-read to be safe.
-  return (
-    created ??
-      (await db.query.profile_auto_import.findFirst({
-        where: eq(profile_auto_import.profile_id, profileId),
-      }))!
-  );
+	const existing = await db.query.profile_auto_import.findFirst({
+		where: eq(profile_auto_import.profile_id, profileId)
+	});
+	if (existing) return existing;
+	const [created] = await db
+		.insert(profile_auto_import)
+		.values({ profile_id: profileId })
+		.onConflictDoNothing()
+		.returning();
+	// onConflictDoNothing returns nothing on a race; re-read to be safe.
+	return (
+		created ??
+		(await db.query.profile_auto_import.findFirst({
+			where: eq(profile_auto_import.profile_id, profileId)
+		}))!
+	);
 }
 
 /**
@@ -172,361 +169,343 @@ async function loadOrCreateState(profileId: number) {
  * for those credential/device triggers.
  */
 export async function reconcileAutoImportTasks(
-  profileId: number,
-  opts: { force?: boolean; skipTopUp?: boolean } = {},
+	profileId: number,
+	opts: { force?: boolean; skipTopUp?: boolean } = {}
 ): Promise<ReconcileResult> {
-  const state = await loadOrCreateState(profileId);
-  if (!state.enabled) return emptyResult(true, "disabled");
+	const state = await loadOrCreateState(profileId);
+	if (!state.enabled) return emptyResult(true, 'disabled');
 
-  const [profile, mc] = await Promise.all([
-    db.query.profiles.findFirst({
-      where: eq(profiles.id, profileId),
-      columns: {
-        id: true,
-        user_id: true,
-        title: true,
-        core_stack: true,
-        city: true,
-        region: true,
-        country_code: true,
-      },
-    }),
-    db.query.match_config.findFirst({
-      where: eq(match_config.profile_id, profileId),
-      columns: {
-        job_types: true,
-        experience_levels: true,
-        work_location: true,
-        locations: true,
-        remote_only: true,
-      },
-    }) as Promise<MatchConfigRow | undefined>,
-  ]);
-  if (!profile) return emptyResult(true, "no-profile");
+	const [profile, mc] = await Promise.all([
+		db.query.profiles.findFirst({
+			where: eq(profiles.id, profileId),
+			columns: {
+				id: true,
+				user_id: true,
+				title: true,
+				core_stack: true,
+				city: true,
+				region: true,
+				country_code: true
+			}
+		}),
+		db.query.match_config.findFirst({
+			where: eq(match_config.profile_id, profileId),
+			columns: {
+				job_types: true,
+				experience_levels: true,
+				work_location: true,
+				locations: true,
+				remote_only: true
+			}
+		}) as Promise<MatchConfigRow | undefined>
+	]);
+	if (!profile) return emptyResult(true, 'no-profile');
 
-  const inputHash = computeInputHash({
-    title: profile.title,
-    core_stack: profile.core_stack,
-    city: profile.city,
-    region: profile.region,
-    country_code: profile.country_code,
-    job_types: mc?.job_types ?? null,
-    experience_levels: mc?.experience_levels ?? null,
-    work_location: mc?.work_location ?? null,
-    locations: mc?.locations ?? null,
-    remote_only: mc?.remote_only ?? null,
-  });
-  if (!opts.force && state.last_input_hash === inputHash) {
-    return emptyResult(true, "unchanged");
-  }
+	const inputHash = computeInputHash({
+		title: profile.title,
+		core_stack: profile.core_stack,
+		city: profile.city,
+		region: profile.region,
+		country_code: profile.country_code,
+		job_types: mc?.job_types ?? null,
+		experience_levels: mc?.experience_levels ?? null,
+		work_location: mc?.work_location ?? null,
+		locations: mc?.locations ?? null,
+		remote_only: mc?.remote_only ?? null
+	});
+	if (!opts.force && state.last_input_hash === inputHash) {
+		return emptyResult(true, 'unchanged');
+	}
 
-  // Platform metadata for prune validity + per-platform filter stripping.
-  const platformRows = await db
-    .select({
-      id: job_platforms.id,
-      status: job_platforms.status,
-      search_page_url: job_platforms.search_page_url,
-      login_page_url: job_platforms.login_page_url,
-      unsupported_filters: job_platforms.unsupported_filters,
-    })
-    .from(job_platforms);
-  const platformById = new Map<number, PlatformMeta>(
-    platformRows.map((p) => [p.id, p as PlatformMeta]),
-  );
+	// Platform metadata for prune validity + per-platform filter stripping.
+	const platformRows = await db
+		.select({
+			id: job_platforms.id,
+			status: job_platforms.status,
+			search_page_url: job_platforms.search_page_url,
+			login_page_url: job_platforms.login_page_url,
+			unsupported_filters: job_platforms.unsupported_filters
+		})
+		.from(job_platforms);
+	const platformById = new Map<number, PlatformMeta>(
+		platformRows.map((p) => [p.id, p as PlatformMeta])
+	);
 
-  const managed = await db
-    .select({
-      id: search_tasks.id,
-      platform_id: search_tasks.platform_id,
-      platform_profile_id: search_tasks.platform_profile_id,
-      search_filters: search_tasks.search_filters,
-      search_term: search_tasks.search_term,
-      login_mode: search_tasks.login_mode,
-      is_active: search_tasks.is_active,
-      last_run: search_tasks.last_run,
-      user_paused_at: search_tasks.user_paused_at,
-    })
-    .from(search_tasks)
-    .where(
-      and(
-        eq(search_tasks.profile_id, profileId),
-        eq(search_tasks.origin, "auto"),
-        eq(search_tasks.auto_managed, true),
-      ),
-    );
+	const managed = await db
+		.select({
+			id: search_tasks.id,
+			platform_id: search_tasks.platform_id,
+			platform_profile_id: search_tasks.platform_profile_id,
+			search_filters: search_tasks.search_filters,
+			search_term: search_tasks.search_term,
+			login_mode: search_tasks.login_mode,
+			is_active: search_tasks.is_active,
+			last_run: search_tasks.last_run,
+			user_paused_at: search_tasks.user_paused_at
+		})
+		.from(search_tasks)
+		.where(
+			and(
+				eq(search_tasks.profile_id, profileId),
+				eq(search_tasks.origin, 'auto'),
+				eq(search_tasks.auto_managed, true)
+			)
+		);
 
-  // 1. PRUNE — only proposed (paused + never run) tasks whose platform is no
-  // longer suggestable. Hard-delete; nothing is lost.
-  const isSuggestable = (platformId: number | null): boolean => {
-    if (platformId === null) return false;
-    const p = platformById.get(platformId);
-    return !!p && p.status === "published" && !!p.search_page_url;
-  };
-  const pruneIds = managed
-    .filter((t) =>
-      !t.is_active && t.last_run === null && !isSuggestable(t.platform_id)
-    )
-    .map((t) => t.id);
-  if (pruneIds.length > 0) {
-    await db.delete(search_tasks).where(inArray(search_tasks.id, pruneIds));
-  }
-  const survivors = managed.filter((t) => !pruneIds.includes(t.id));
+	// 1. PRUNE — only proposed (paused + never run) tasks whose platform is no
+	// longer suggestable. Hard-delete; nothing is lost.
+	const isSuggestable = (platformId: number | null): boolean => {
+		if (platformId === null) return false;
+		const p = platformById.get(platformId);
+		return !!p && p.status === 'published' && !!p.search_page_url;
+	};
+	const pruneIds = managed
+		.filter((t) => !t.is_active && t.last_run === null && !isSuggestable(t.platform_id))
+		.map((t) => t.id);
+	if (pruneIds.length > 0) {
+		await db.delete(search_tasks).where(inArray(search_tasks.id, pruneIds));
+	}
+	const survivors = managed.filter((t) => !pruneIds.includes(t.id));
 
-  // Shared runtime context for RECOMPUTE-promotion and TOP-UP: the user's plan,
-  // the browser device that would run these tasks, and which platforms the
-  // profile already has a login for. Resolved once.
-  const userId = profile.user_id;
-  const policy = userId
-    ? (AUTO_IMPORT_POLICY[(await getActiveSubscription(userId)).plan] ??
-      DEFAULT_POLICY)
-    : DEFAULT_POLICY;
-  // Auto-pick the user's available browser device (own or shared, currently
-  // connected) — the same pick the run path uses. Falls back to the server
-  // default provider when nothing is connected.
-  const device = userId ? await getPreferredDevice(userId) : null;
-  const browserProvider = device ? "tunnel" : config.defaultBrowserProvider;
-  const deviceApiKeyId = device?.apiKeyId ?? null;
-  // When the resolved provider needs a device (self-hosted tunnel) and none is
-  // connected, NOTHING is runnable — it all stays a paused proposal until the
-  // user connects one.
-  const deviceOk = !providerRequiresDevice(
-    browserProvider,
-    config.browserProvider,
-  ) || !!device;
-  // Platforms this profile already has a login for, with the platform_profiles
-  // id so a proposal created before the login existed can be linked to it.
-  const credRows = await db
-    .select({
-      id: platform_profiles.id,
-      platform_id: platform_profiles.platform_id,
-    })
-    .from(platform_profiles)
-    .where(eq(platform_profiles.profile_id, profileId));
-  const ppIdByPlatform = new Map<number, number>();
-  for (const r of credRows) {
-    if (r.platform_id !== null && !ppIdByPlatform.has(r.platform_id)) {
-      ppIdByPlatform.set(r.platform_id, r.id);
-    }
-  }
-  // A platform is runnable now iff it needs no login (public) or the profile
-  // already has one for it, AND a browser is available to run it.
-  const isRunnable = (platformId: number): boolean => {
-    const platform = platformById.get(platformId);
-    const isPublic = !platform?.login_page_url;
-    return (isPublic || ppIdByPlatform.has(platformId)) && deviceOk;
-  };
+	// Shared runtime context for RECOMPUTE-promotion and TOP-UP: the user's plan,
+	// the browser device that would run these tasks, and which platforms the
+	// profile already has a login for. Resolved once.
+	const userId = profile.user_id;
+	const policy = userId
+		? (AUTO_IMPORT_POLICY[(await getActiveSubscription(userId)).plan] ?? DEFAULT_POLICY)
+		: DEFAULT_POLICY;
+	// Auto-pick the user's available browser device (own or shared, currently
+	// connected) — the same pick the run path uses. Falls back to the server
+	// default provider when nothing is connected.
+	const device = userId ? await getPreferredDevice(userId) : null;
+	const browserProvider = device ? 'tunnel' : config.defaultBrowserProvider;
+	const deviceApiKeyId = device?.apiKeyId ?? null;
+	// When the resolved provider needs a device (self-hosted tunnel) and none is
+	// connected, NOTHING is runnable — it all stays a paused proposal until the
+	// user connects one.
+	const deviceOk = !providerRequiresDevice(browserProvider, config.browserProvider) || !!device;
+	// Platforms this profile already has a login for, with the platform_profiles
+	// id so a proposal created before the login existed can be linked to it.
+	const credRows = await db
+		.select({
+			id: platform_profiles.id,
+			platform_id: platform_profiles.platform_id
+		})
+		.from(platform_profiles)
+		.where(eq(platform_profiles.profile_id, profileId));
+	const ppIdByPlatform = new Map<number, number>();
+	for (const r of credRows) {
+		if (r.platform_id !== null && !ppIdByPlatform.has(r.platform_id)) {
+			ppIdByPlatform.set(r.platform_id, r.id);
+		}
+	}
+	// A platform is runnable now iff it needs no login (public) or the profile
+	// already has one for it, AND a browser is available to run it.
+	const isRunnable = (platformId: number): boolean => {
+		const platform = platformById.get(platformId);
+		const isPublic = !platform?.login_page_url;
+		return (isPublic || ppIdByPlatform.has(platformId)) && deviceOk;
+	};
 
-  const activeBudget = state.max_tasks ?? policy.maxTasks;
-  let activeCount = survivors.filter((t) => t.is_active).length;
-  let pausedCount = survivors.filter((t) => !t.is_active).length;
+	const activeBudget = state.max_tasks ?? policy.maxTasks;
+	let activeCount = survivors.filter((t) => t.is_active).length;
+	let pausedCount = survivors.filter((t) => !t.is_active).length;
 
-  // 2. RECOMPUTE — in-place self-heal of every surviving auto-managed task:
-  // refresh preference-derived filters, re-derive login_mode from the
-  // platform's current login requirement, link a login that's since been added,
-  // and PROMOTE an untouched proposal to active once it can actually run.
-  const userFilters = mc
-    ? preferencesToFilters({
-      job_types: mc.job_types ?? [],
-      experience_levels: mc.experience_levels ?? [],
-      work_location: mc.work_location ?? [],
-      remote_only: mc.remote_only ?? null,
-    })
-    : {};
-  let recomputed = 0;
-  const promoted: Array<
-    { id: number; platformId: number; searchTerm: string | null }
-  > = [];
-  for (const task of survivors) {
-    const pid = task.platform_id;
-    const plat = pid !== null ? platformById.get(pid) : undefined;
-    const stripped = stripUnsupportedFilters(
-      userFilters,
-      plat?.unsupported_filters ?? {},
-    );
-    const desiredFilters = applyPreferenceFilters(
-      task.search_filters ?? {},
-      stripped,
-    );
+	// 2. RECOMPUTE — in-place self-heal of every surviving auto-managed task:
+	// refresh preference-derived filters, re-derive login_mode from the
+	// platform's current login requirement, link a login that's since been added,
+	// and PROMOTE an untouched proposal to active once it can actually run.
+	const userFilters = mc
+		? preferencesToFilters({
+				job_types: mc.job_types ?? [],
+				experience_levels: mc.experience_levels ?? [],
+				work_location: mc.work_location ?? [],
+				remote_only: mc.remote_only ?? null
+			})
+		: {};
+	let recomputed = 0;
+	const promoted: Array<{ id: number; platformId: number; searchTerm: string | null }> = [];
+	for (const task of survivors) {
+		const pid = task.platform_id;
+		const plat = pid !== null ? platformById.get(pid) : undefined;
+		const stripped = stripUnsupportedFilters(userFilters, plat?.unsupported_filters ?? {});
+		const desiredFilters = applyPreferenceFilters(task.search_filters ?? {}, stripped);
 
-    const update: {
-      search_filters?: typeof desiredFilters;
-      login_mode?: string;
-      platform_profile_id?: number;
-      is_active?: boolean;
-      browser_provider?: string;
-      sjsbrowser_api_key?: number | null;
-      schedule_interval_hours?: number | null;
-      next_scheduled_run?: Date | null;
-    } = {};
+		const update: {
+			search_filters?: typeof desiredFilters;
+			login_mode?: string;
+			platform_profile_id?: number;
+			is_active?: boolean;
+			browser_provider?: string;
+			sjsbrowser_api_key?: number | null;
+			schedule_interval_hours?: number | null;
+			next_scheduled_run?: Date | null;
+		} = {};
 
-    if (!filtersEqual(desiredFilters, task.search_filters ?? {})) {
-      update.search_filters = desiredFilters;
-    }
+		if (!filtersEqual(desiredFilters, task.search_filters ?? {})) {
+			update.search_filters = desiredFilters;
+		}
 
-    // Keep login_mode aligned with the platform's *current* login requirement
-    // so a platform that flips public↔gated after the task was created
-    // self-heals: a once-public task left on "none" would otherwise silently
-    // stall at a newly-added login wall. Only toggles the reconciler's own two
-    // modes — an adopted (auto_managed=false) task isn't in this set.
-    const desiredLoginMode = plat?.login_page_url ? "auto" : "none";
-    if (
-      (task.login_mode === "auto" || task.login_mode === "none") &&
-      task.login_mode !== desiredLoginMode
-    ) {
-      update.login_mode = desiredLoginMode;
-    }
+		// Keep login_mode aligned with the platform's *current* login requirement
+		// so a platform that flips public↔gated after the task was created
+		// self-heals: a once-public task left on "none" would otherwise silently
+		// stall at a newly-added login wall. Only toggles the reconciler's own two
+		// modes — an adopted (auto_managed=false) task isn't in this set.
+		const desiredLoginMode = plat?.login_page_url ? 'auto' : 'none';
+		if (
+			(task.login_mode === 'auto' || task.login_mode === 'none') &&
+			task.login_mode !== desiredLoginMode
+		) {
+			update.login_mode = desiredLoginMode;
+		}
 
-    // Link a login the user has added since the task was created, so a gated
-    // task actually has credentials to run with (and so becomes runnable).
-    if (
-      pid !== null && !!plat?.login_page_url &&
-      task.platform_profile_id == null && ppIdByPlatform.has(pid)
-    ) {
-      update.platform_profile_id = ppIdByPlatform.get(pid);
-    }
+		// Link a login the user has added since the task was created, so a gated
+		// task actually has credentials to run with (and so becomes runnable).
+		if (
+			pid !== null &&
+			!!plat?.login_page_url &&
+			task.platform_profile_id == null &&
+			ppIdByPlatform.has(pid)
+		) {
+			update.platform_profile_id = ppIdByPlatform.get(pid);
+		}
 
-    // Promote an untouched proposal to active once it can run (a device got
-    // connected, and/or a login was added). canPromoteProposal guards against
-    // ever re-activating a task the user paused or already ran.
-    if (
-      pid !== null &&
-      canPromoteProposal(task, {
-        runnable: isRunnable(pid),
-        autoActivate: policy.autoActivate,
-        hasActiveSlot: activeCount < activeBudget,
-      })
-    ) {
-      update.is_active = true;
-      update.browser_provider = browserProvider;
-      update.sjsbrowser_api_key = deviceApiKeyId;
-      update.schedule_interval_hours = policy.scheduleIntervalHours;
-      update.next_scheduled_run = policy.scheduleIntervalHours
-        ? new Date(Date.now() + policy.scheduleIntervalHours * 3600_000)
-        : null;
-      activeCount++;
-      pausedCount--;
-      promoted.push({
-        id: task.id,
-        platformId: pid,
-        searchTerm: task.search_term,
-      });
-    }
+		// Promote an untouched proposal to active once it can run (a device got
+		// connected, and/or a login was added). canPromoteProposal guards against
+		// ever re-activating a task the user paused or already ran.
+		if (
+			pid !== null &&
+			canPromoteProposal(task, {
+				runnable: isRunnable(pid),
+				autoActivate: policy.autoActivate,
+				hasActiveSlot: activeCount < activeBudget
+			})
+		) {
+			update.is_active = true;
+			update.browser_provider = browserProvider;
+			update.sjsbrowser_api_key = deviceApiKeyId;
+			update.schedule_interval_hours = policy.scheduleIntervalHours;
+			update.next_scheduled_run = policy.scheduleIntervalHours
+				? new Date(Date.now() + policy.scheduleIntervalHours * 3600_000)
+				: null;
+			activeCount++;
+			pausedCount--;
+			promoted.push({
+				id: task.id,
+				platformId: pid,
+				searchTerm: task.search_term
+			});
+		}
 
-    if (Object.keys(update).length > 0) {
-      await db
-        .update(search_tasks)
-        .set({ ...update, date_updated: new Date() })
-        .where(eq(search_tasks.id, task.id));
-      recomputed++;
-    }
-  }
+		if (Object.keys(update).length > 0) {
+			await db
+				.update(search_tasks)
+				.set({ ...update, date_updated: new Date() })
+				.where(eq(search_tasks.id, task.id));
+			recomputed++;
+		}
+	}
 
-  // Kick off an immediate run for each freshly-promoted task — same credit-
-  // gated, best-effort path as a newly auto-activated task.
-  for (const p of promoted) {
-    const platform = platformById.get(p.platformId);
-    if (platform?.search_page_url && userId) {
-      await enqueueInitialRun({
-        searchTaskId: p.id,
-        userId,
-        platformId: p.platformId,
-        searchUrl: platform.search_page_url,
-        searchTerm: p.searchTerm,
-        browserProvider,
-      }).catch((err) => {
-        console.warn(
-          `[auto-import] promoted run enqueue failed for task ${p.id}:`,
-          err,
-        );
-      });
-    }
-  }
+	// Kick off an immediate run for each freshly-promoted task — same credit-
+	// gated, best-effort path as a newly auto-activated task.
+	for (const p of promoted) {
+		const platform = platformById.get(p.platformId);
+		if (platform?.search_page_url && userId) {
+			await enqueueInitialRun({
+				searchTaskId: p.id,
+				userId,
+				platformId: p.platformId,
+				searchUrl: platform.search_page_url,
+				searchTerm: p.searchTerm,
+				browserProvider
+			}).catch((err) => {
+				console.warn(`[auto-import] promoted run enqueue failed for task ${p.id}:`, err);
+			});
+		}
+	}
 
-  // 3. TOP-UP — generate new suggestions to fill the remaining budget. The
-  // suggester already dedups against ALL existing tasks. Skipped for the
-  // credential/device triggers (skipTopUp): those only re-evaluate existing
-  // tasks (promotion above) and shouldn't spend an LLM call. Two budgets:
-  // runnable suggestions fill the credit-relevant active budget; non-runnable
-  // ones become paused proposals up to PROPOSAL_CAP. Counts reflect promotions.
-  const activeSlots = activeBudget - activeCount;
-  const proposalSlots = PROPOSAL_CAP - pausedCount;
-  let created = 0;
-  let toppedUp = false;
-  let suggesterOk = true;
-  if (!opts.skipTopUp && (activeSlots > 0 || proposalSlots > 0)) {
-    const result = await _runSuggester(profileId);
-    if (result.ok) {
-      toppedUp = true;
-      // Fill the runnable budget first, then top up proposals from what's left.
-      // Partition preserves suggester relevance order within each group.
-      const runnablePicks = selectTopUpCandidates(
-        result.tasks.filter((t) => isRunnable(t.platform_id)),
-        activeSlots,
-      );
-      const proposalPicks = selectTopUpCandidates(
-        result.tasks.filter((t) => !isRunnable(t.platform_id)),
-        proposalSlots,
-      );
+	// 3. TOP-UP — generate new suggestions to fill the remaining budget. The
+	// suggester already dedups against ALL existing tasks. Skipped for the
+	// credential/device triggers (skipTopUp): those only re-evaluate existing
+	// tasks (promotion above) and shouldn't spend an LLM call. Two budgets:
+	// runnable suggestions fill the credit-relevant active budget; non-runnable
+	// ones become paused proposals up to PROPOSAL_CAP. Counts reflect promotions.
+	const activeSlots = activeBudget - activeCount;
+	const proposalSlots = PROPOSAL_CAP - pausedCount;
+	let created = 0;
+	let toppedUp = false;
+	let suggesterOk = true;
+	if (!opts.skipTopUp && (activeSlots > 0 || proposalSlots > 0)) {
+		const result = await _runSuggester(profileId);
+		if (result.ok) {
+			toppedUp = true;
+			// Fill the runnable budget first, then top up proposals from what's left.
+			// Partition preserves suggester relevance order within each group.
+			const runnablePicks = selectTopUpCandidates(
+				result.tasks.filter((t) => isRunnable(t.platform_id)),
+				activeSlots
+			);
+			const proposalPicks = selectTopUpCandidates(
+				result.tasks.filter((t) => !isRunnable(t.platform_id)),
+				proposalSlots
+			);
 
-      for (const draft of [...runnablePicks, ...proposalPicks]) {
-        const platform = platformById.get(draft.platform_id);
-        // Public (no-login) platforms run without credentials; gated ones need
-        // a login set first, so configure the matching login mode up front.
-        const isPublic = !platform?.login_page_url;
-        // Activate when the task could actually run now (public or has a login,
-        // and a usable browser). Everything else stays a paused proposal.
-        const activate = policy.autoActivate && isRunnable(draft.platform_id);
-        const taskId = await insertAutoTask(profileId, draft, {
-          activate,
-          scheduleIntervalHours: activate ? policy.scheduleIntervalHours : null,
-          browserProvider,
-          deviceApiKeyId,
-          loginMode: isPublic ? "none" : "auto",
-        });
-        created++;
-        // Kick off one immediate run so the user sees jobs flow in. Credit-
-        // gated and best-effort: a failure here never breaks reconcile.
-        if (activate && platform?.search_page_url && userId) {
-          await enqueueInitialRun({
-            searchTaskId: taskId,
-            userId,
-            platformId: draft.platform_id,
-            searchUrl: platform.search_page_url,
-            searchTerm: draft.keywords,
-            browserProvider,
-          }).catch((err) => {
-            console.warn(
-              `[auto-import] initial run enqueue failed for task ${taskId}:`,
-              err,
-            );
-          });
-        }
-      }
-    } else {
-      suggesterOk = false;
-    }
-  }
+			for (const draft of [...runnablePicks, ...proposalPicks]) {
+				const platform = platformById.get(draft.platform_id);
+				// Public (no-login) platforms run without credentials; gated ones need
+				// a login set first, so configure the matching login mode up front.
+				const isPublic = !platform?.login_page_url;
+				// Activate when the task could actually run now (public or has a login,
+				// and a usable browser). Everything else stays a paused proposal.
+				const activate = policy.autoActivate && isRunnable(draft.platform_id);
+				const taskId = await insertAutoTask(profileId, draft, {
+					activate,
+					scheduleIntervalHours: activate ? policy.scheduleIntervalHours : null,
+					browserProvider,
+					deviceApiKeyId,
+					loginMode: isPublic ? 'none' : 'auto'
+				});
+				created++;
+				// Kick off one immediate run so the user sees jobs flow in. Credit-
+				// gated and best-effort: a failure here never breaks reconcile.
+				if (activate && platform?.search_page_url && userId) {
+					await enqueueInitialRun({
+						searchTaskId: taskId,
+						userId,
+						platformId: draft.platform_id,
+						searchUrl: platform.search_page_url,
+						searchTerm: draft.keywords,
+						browserProvider
+					}).catch((err) => {
+						console.warn(`[auto-import] initial run enqueue failed for task ${taskId}:`, err);
+					});
+				}
+			}
+		} else {
+			suggesterOk = false;
+		}
+	}
 
-  // Persist sync state. Only advance the hash on a clean run — if the
-  // suggester errored we leave the old hash so the next trigger retries
-  // top-up instead of being gated out.
-  await db
-    .update(profile_auto_import)
-    .set({
-      last_synced_at: new Date(),
-      date_updated: new Date(),
-      ...(suggesterOk ? { last_input_hash: inputHash } : {}),
-    })
-    .where(eq(profile_auto_import.profile_id, profileId));
+	// Persist sync state. Only advance the hash on a clean run — if the
+	// suggester errored we leave the old hash so the next trigger retries
+	// top-up instead of being gated out.
+	await db
+		.update(profile_auto_import)
+		.set({
+			last_synced_at: new Date(),
+			date_updated: new Date(),
+			...(suggesterOk ? { last_input_hash: inputHash } : {})
+		})
+		.where(eq(profile_auto_import.profile_id, profileId));
 
-  return {
-    skipped: false,
-    created,
-    pruned: pruneIds.length,
-    recomputed,
-    promoted: promoted.length,
-    toppedUp,
-  };
+	return {
+		skipped: false,
+		created,
+		pruned: pruneIds.length,
+		recomputed,
+		promoted: promoted.length,
+		toppedUp
+	};
 }
 
 /** Insert one suggester draft as an auto-managed task. Mirrors the canonical
@@ -534,57 +513,58 @@ export async function reconcileAutoImportTasks(
  * get a recurring schedule; paused ones (gated platforms) do not. Returns the
  * new task id. */
 async function insertAutoTask(
-  profileId: number,
-  draft: {
-    platform_id: number;
-    keywords: string | null;
-    note: string;
-    filters: Record<string, SearchFilterValue>;
-  },
-  opts: {
-    activate: boolean;
-    scheduleIntervalHours: number | null;
-    browserProvider: string;
-    deviceApiKeyId: number | null;
-    /** "none" for public platforms, "auto" for login-gated ones. */
-    loginMode: string;
-  },
+	profileId: number,
+	draft: {
+		platform_id: number;
+		keywords: string | null;
+		note: string;
+		filters: Record<string, SearchFilterValue>;
+	},
+	opts: {
+		activate: boolean;
+		scheduleIntervalHours: number | null;
+		browserProvider: string;
+		deviceApiKeyId: number | null;
+		/** "none" for public platforms, "auto" for login-gated ones. */
+		loginMode: string;
+	}
 ): Promise<number> {
-  const existingCred = await db.query.platform_profiles.findFirst({
-    where: and(
-      eq(platform_profiles.profile_id, profileId),
-      eq(platform_profiles.platform_id, draft.platform_id),
-    ),
-    columns: { id: true },
-  });
-  const schedule = opts.activate ? opts.scheduleIntervalHours : null;
-  const [row] = await db.insert(search_tasks).values({
-    profile_id: profileId,
-    platform_id: draft.platform_id,
-    platform_profile_id: existingCred?.id ?? null,
-    search_term: draft.keywords,
-    search_location: null,
-    search_filters: draft.filters,
-    note: draft.note,
-    status: "idle",
-    is_active: opts.activate,
-    origin: "auto",
-    auto_managed: true,
-    login_mode: opts.loginMode,
-    skip_existing: false,
-    keep_minimized: true,
-    browser_provider: opts.browserProvider,
-    sjsbrowser_api_key: opts.deviceApiKeyId,
-    schedule_interval_hours: schedule,
-    schedule_preferred_hour: DEFAULT_PREFERRED_HOUR,
-    // First scheduled run is one interval out; the immediate run is enqueued
-    // separately so the recurring cadence doesn't double-fire on creation.
-    next_scheduled_run: schedule
-      ? new Date(Date.now() + schedule * 3600_000)
-      : null,
-    date_created: new Date(),
-  }).returning({ id: search_tasks.id });
-  return row.id;
+	const existingCred = await db.query.platform_profiles.findFirst({
+		where: and(
+			eq(platform_profiles.profile_id, profileId),
+			eq(platform_profiles.platform_id, draft.platform_id)
+		),
+		columns: { id: true }
+	});
+	const schedule = opts.activate ? opts.scheduleIntervalHours : null;
+	const [row] = await db
+		.insert(search_tasks)
+		.values({
+			profile_id: profileId,
+			platform_id: draft.platform_id,
+			platform_profile_id: existingCred?.id ?? null,
+			search_term: draft.keywords,
+			search_location: null,
+			search_filters: draft.filters,
+			note: draft.note,
+			status: 'idle',
+			is_active: opts.activate,
+			origin: 'auto',
+			auto_managed: true,
+			login_mode: opts.loginMode,
+			skip_existing: false,
+			keep_minimized: true,
+			browser_provider: opts.browserProvider,
+			sjsbrowser_api_key: opts.deviceApiKeyId,
+			schedule_interval_hours: schedule,
+			schedule_preferred_hour: DEFAULT_PREFERRED_HOUR,
+			// First scheduled run is one interval out; the immediate run is enqueued
+			// separately so the recurring cadence doesn't double-fire on creation.
+			next_scheduled_run: schedule ? new Date(Date.now() + schedule * 3600_000) : null,
+			date_created: new Date()
+		})
+		.returning({ id: search_tasks.id });
+	return row.id;
 }
 
 /**
@@ -593,55 +573,63 @@ async function insertAutoTask(
  * skip silently — the task stays active and the scheduler retries later.
  */
 async function enqueueInitialRun(opts: {
-  searchTaskId: number;
-  userId: string;
-  platformId: number;
-  searchUrl: string;
-  searchTerm: string | null;
-  browserProvider: string;
+	searchTaskId: number;
+	userId: string;
+	platformId: number;
+	searchUrl: string;
+	searchTerm: string | null;
+	browserProvider: string;
 }): Promise<void> {
-  // Mirrors the run endpoint's ~15-credit pre-check. The OSS stub is a no-op;
-  // the cloud overlay throws when the balance is too low, which we treat as
-  // "skip the immediate run" rather than an error.
-  try {
-    await requireCredits(opts.userId, 15);
-  } catch {
-    return;
-  }
+	// Mirrors the run endpoint's ~15-credit pre-check. The OSS stub is a no-op;
+	// the cloud overlay throws when the balance is too low, which we treat as
+	// "skip the immediate run" rather than an error.
+	try {
+		await requireCredits(opts.userId, 15);
+	} catch {
+		return;
+	}
 
-  const [run] = await db.insert(search_task_runs).values({
-    search_task_id: opts.searchTaskId,
-    status: "queued",
-    triggered_by: "scheduler",
-    settings: { browser_provider: opts.browserProvider },
-  }).returning({ id: search_task_runs.id });
+	const [run] = await db
+		.insert(search_task_runs)
+		.values({
+			search_task_id: opts.searchTaskId,
+			status: 'queued',
+			triggered_by: 'scheduler',
+			settings: { browser_provider: opts.browserProvider }
+		})
+		.returning({ id: search_task_runs.id });
 
-  await db.update(search_tasks).set({
-    status: "queued",
-    status_message: "Waiting in queue",
-    date_updated: new Date(),
-  }).where(eq(search_tasks.id, opts.searchTaskId));
+	await db
+		.update(search_tasks)
+		.set({
+			status: 'queued',
+			status_message: 'Waiting in queue',
+			date_updated: new Date()
+		})
+		.where(eq(search_tasks.id, opts.searchTaskId));
 
-  // Route to the hosted queue when the server defaults to a cloud browser and
-  // no device-backed provider was chosen.
-  let effectiveProvider: string | null = opts.browserProvider;
-  if (!effectiveProvider) {
-    const serverDefault = process.env.SJS_BROWSER_PROVIDER || "local";
-    if (serverDefault === "goLogin") effectiveProvider = "hosted";
-  }
+	// Route to the hosted queue when the server defaults to a cloud browser and
+	// no device-backed provider was chosen.
+	let effectiveProvider: string | null = opts.browserProvider;
+	if (!effectiveProvider) {
+		const serverDefault = process.env.SJS_BROWSER_PROVIDER || 'local';
+		if (serverDefault === 'goLogin') effectiveProvider = 'hosted';
+	}
 
-  const job = await addScrapeJob({
-    searchTaskId: opts.searchTaskId,
-    runId: run.id,
-    searchUrl: opts.searchUrl,
-    platformId: String(opts.platformId),
-    triggeredBy: "scheduler",
-    browserProvider: effectiveProvider,
-    ...(opts.searchTerm ? { searchTerm: opts.searchTerm } : {}),
-  });
+	const job = await addScrapeJob({
+		searchTaskId: opts.searchTaskId,
+		runId: run.id,
+		searchUrl: opts.searchUrl,
+		platformId: String(opts.platformId),
+		triggeredBy: 'scheduler',
+		browserProvider: effectiveProvider,
+		...(opts.searchTerm ? { searchTerm: opts.searchTerm } : {})
+	});
 
-  await db.update(search_task_runs).set({ bullmq_job_id: job.id })
-    .where(eq(search_task_runs.id, run.id));
+	await db
+		.update(search_task_runs)
+		.set({ bullmq_job_id: job.id })
+		.where(eq(search_task_runs.id, run.id));
 }
 
 /**
@@ -655,15 +643,12 @@ async function enqueueInitialRun(opts: {
  * a fresh, LLM-backed top-up.
  */
 export function triggerAutoImportReconcile(
-  profileId: number,
-  opts: { force?: boolean; skipTopUp?: boolean } = {},
+	profileId: number,
+	opts: { force?: boolean; skipTopUp?: boolean } = {}
 ): void {
-  void reconcileAutoImportTasks(profileId, opts).catch((err) => {
-    console.error(
-      `[auto-import] reconcile failed for profile ${profileId}:`,
-      err,
-    );
-  });
+	void reconcileAutoImportTasks(profileId, opts).catch((err) => {
+		console.error(`[auto-import] reconcile failed for profile ${profileId}:`, err);
+	});
 }
 
 /**
@@ -672,8 +657,8 @@ export function triggerAutoImportReconcile(
  * is fed to the suggester as existing context. No-op for non-auto tasks.
  */
 export async function adoptAutoTaskIfManaged(taskId: number): Promise<void> {
-  await db
-    .update(search_tasks)
-    .set({ auto_managed: false })
-    .where(and(eq(search_tasks.id, taskId), eq(search_tasks.origin, "auto")));
+	await db
+		.update(search_tasks)
+		.set({ auto_managed: false })
+		.where(and(eq(search_tasks.id, taskId), eq(search_tasks.origin, 'auto')));
 }

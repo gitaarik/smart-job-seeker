@@ -5,22 +5,22 @@
  * The cloud worker processes these jobs using calculateMatch.
  */
 
-import { Queue, QueueEvents } from "bullmq";
-import { redisConnection } from "./connection";
+import { Queue, QueueEvents } from 'bullmq';
+import { redisConnection } from './connection';
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface MatchJobData {
-  profileId: number;
-  jobId: number;
-  triggeredBy: "user" | "system";
+	profileId: number;
+	jobId: number;
+	triggeredBy: 'user' | 'system';
 }
 
 export interface MatchJobResult {
-  score: number;
-  recommendation: string;
+	score: number;
+	recommendation: string;
 }
 
 // ============================================================================
@@ -32,20 +32,20 @@ let _matchQueue: Queue<MatchJobData, MatchJobResult> | null = null;
 let _matchQueueEvents: QueueEvents | null = null;
 
 function getMatchQueue() {
-  return (_matchQueue ??= new Queue("matcher", {
-    connection: redisConnection,
-    defaultJobOptions: {
-      removeOnComplete: 100,
-      removeOnFail: 500,
-      attempts: 1,
-    },
-  }));
+	return (_matchQueue ??= new Queue('matcher', {
+		connection: redisConnection,
+		defaultJobOptions: {
+			removeOnComplete: 100,
+			removeOnFail: 500,
+			attempts: 1
+		}
+	}));
 }
 
 function getMatchQueueEvents() {
-  return (_matchQueueEvents ??= new QueueEvents("matcher", {
-    connection: redisConnection,
-  }));
+	return (_matchQueueEvents ??= new QueueEvents('matcher', {
+		connection: redisConnection
+	}));
 }
 
 // ============================================================================
@@ -58,17 +58,17 @@ function getMatchQueueEvents() {
  * Throws if the job fails or times out.
  */
 export async function addMatchJob(
-  data: MatchJobData,
-  timeoutMs: number = 60_000,
+	data: MatchJobData,
+	timeoutMs: number = 60_000
 ): Promise<MatchJobResult> {
-  // Use a unique job ID with timestamp to avoid BullMQ deduplication.
-  // A fixed ID like "match-1-617" would silently return the old completed job
-  // instead of creating a new one (since removeOnComplete keeps them around).
-  const jobId = `match-${data.profileId}-${data.jobId}-${Date.now()}`;
-  const queue = getMatchQueue();
-  const job = await queue.add("match", data, { jobId });
-  const result = await job.waitUntilFinished(getMatchQueueEvents(), timeoutMs);
-  return result;
+	// Use a unique job ID with timestamp to avoid BullMQ deduplication.
+	// A fixed ID like "match-1-617" would silently return the old completed job
+	// instead of creating a new one (since removeOnComplete keeps them around).
+	const jobId = `match-${data.profileId}-${data.jobId}-${Date.now()}`;
+	const queue = getMatchQueue();
+	const job = await queue.add('match', data, { jobId });
+	const result = await job.waitUntilFinished(getMatchQueueEvents(), timeoutMs);
+	return result;
 }
 
 /**
@@ -78,13 +78,13 @@ export async function addMatchJob(
  * background matcher loop will pick the job up on its next cycle.
  */
 export async function enqueueMatchJob(data: MatchJobData): Promise<void> {
-  const jobId = `match-${data.profileId}-${data.jobId}-${Date.now()}`;
-  try {
-    await getMatchQueue().add("match", data, { jobId });
-  } catch (err) {
-    console.warn(
-      `[match-queue] enqueue failed for profile=${data.profileId} job=${data.jobId}:`,
-      err,
-    );
-  }
+	const jobId = `match-${data.profileId}-${data.jobId}-${Date.now()}`;
+	try {
+		await getMatchQueue().add('match', data, { jobId });
+	} catch (err) {
+		console.warn(
+			`[match-queue] enqueue failed for profile=${data.profileId} job=${data.jobId}:`,
+			err
+		);
+	}
 }

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
+	import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
 
-  let { children } = $props();
+	let { children } = $props();
 </script>
 
 <div class="fixed top-0 right-0 z-50 p-4">
-  <ThemeSwitcher />
+	<ThemeSwitcher />
 </div>
 
 {@render children()}

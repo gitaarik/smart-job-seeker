@@ -88,17 +88,17 @@ For reads, mock the relational query API (`db.query.<table>.findFirst` /
 `findMany`):
 
 ```typescript
-vi.mock("$lib/server/db", () => ({
-  db: {
-    query: {
-      ai_chats: {
-        findFirst: vi.fn(),
-      },
-      collected_data: {
-        findFirst: vi.fn(),
-      },
-    },
-  },
+vi.mock('$lib/server/db', () => ({
+	db: {
+		query: {
+			ai_chats: {
+				findFirst: vi.fn()
+			},
+			collected_data: {
+				findFirst: vi.fn()
+			}
+		}
+	}
 }));
 ```
 
@@ -112,12 +112,12 @@ const mockUpdateWhere = vi.fn().mockResolvedValue({});
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
-vi.mock("$lib/server/db", () => ({
-  db: { update: (...args: any[]) => mockUpdateFn(...args) },
+vi.mock('$lib/server/db', () => ({
+	db: { update: (...args: any[]) => mockUpdateFn(...args) }
 }));
 
-vi.mock("drizzle-orm", () => ({
-  eq: vi.fn((_col: any, val: any) => val),
+vi.mock('drizzle-orm', () => ({
+	eq: vi.fn((_col: any, val: any) => val)
 }));
 ```
 
@@ -140,18 +140,18 @@ returns a LangChain `AIMessage`:
 ```typescript
 const { mockInvoke } = vi.hoisted(() => ({ mockInvoke: vi.fn() }));
 
-vi.mock("@langchain/groq", () => ({
-  ChatGroq: class ChatGroq {
-    constructor(config: any) {}
-    async invoke(messages: any) {
-      return mockInvoke(messages);
-    }
-  },
+vi.mock('@langchain/groq', () => ({
+	ChatGroq: class ChatGroq {
+		constructor(config: any) {}
+		async invoke(messages: any) {
+			return mockInvoke(messages);
+		}
+	}
 }));
 
 // in a test:
-import { AIMessage } from "@langchain/core/messages";
-mockInvoke.mockResolvedValueOnce(new AIMessage("Mocked AI response content"));
+import { AIMessage } from '@langchain/core/messages';
+mockInvoke.mockResolvedValueOnce(new AIMessage('Mocked AI response content'));
 ```
 
 Alternatively, you can stub a wrapper such as `getInterpolatedPrompts` (from
@@ -162,7 +162,7 @@ Alternatively, you can stub a wrapper such as `getInterpolatedPrompts` (from
 After mocking, import the actual module to get the mocked version:
 
 ```typescript
-import { db } from "$lib/server/db";
+import { db } from '$lib/server/db';
 
 // db is now the mocked version
 const mockDb = db as any;
@@ -174,26 +174,26 @@ mockDb.query.profiles.findFirst.mockResolvedValueOnce({ id: 1 });
 ### Test File Template
 
 ```typescript
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock external dependencies
-vi.mock("$lib/path/to/module");
+vi.mock('$lib/path/to/module');
 
-describe("Feature description", () => {
-  beforeEach(() => {
-    vi.clearAllMocks(); // Reset mocks between tests
-  });
+describe('Feature description', () => {
+	beforeEach(() => {
+		vi.clearAllMocks(); // Reset mocks between tests
+	});
 
-  it("should do something specific", async () => {
-    // Arrange: Set up test data and mocks
-    const mockData = { id: 1, name: "Test" };
+	it('should do something specific', async () => {
+		// Arrange: Set up test data and mocks
+		const mockData = { id: 1, name: 'Test' };
 
-    // Act: Call the function being tested
-    const result = await functionUnderTest(mockData);
+		// Act: Call the function being tested
+		const result = await functionUnderTest(mockData);
 
-    // Assert: Verify the result
-    expect(result.success).toBe(true);
-  });
+		// Assert: Verify the result
+		expect(result.success).toBe(true);
+	});
 });
 ```
 
@@ -272,34 +272,32 @@ npm run test -- ai-chat-response-generate.test.ts
 **Testing Context Interpolation:**
 
 ```typescript
-import { interpolatePrompt } from "$lib/server/ai-chat/utils";
+import { interpolatePrompt } from '$lib/server/ai-chat/utils';
 
-it("should interpolate profile data into template", () => {
-  const template = "Hello ${name}, your email is ${email}";
-  const variables = { name: "John", email: "john@example.com" };
+it('should interpolate profile data into template', () => {
+	const template = 'Hello ${name}, your email is ${email}';
+	const variables = { name: 'John', email: 'john@example.com' };
 
-  const result = interpolatePrompt(template, variables);
+	const result = interpolatePrompt(template, variables);
 
-  expect(result).toBe("Hello John, your email is john@example.com");
+	expect(result).toBe('Hello John, your email is john@example.com');
 });
 ```
 
 **Testing Error Scenarios:**
 
 ```typescript
-it("should handle LLM rate limit error", async () => {
-  (getInterpolatedPrompts as any).mockResolvedValueOnce({
-    systemPrompt: "You are helpful",
-    userPrompt: "Tell me a joke",
-  });
-  mockInvoke.mockRejectedValueOnce(
-    new Error("Groq API error: Rate limit exceeded"),
-  );
+it('should handle LLM rate limit error', async () => {
+	(getInterpolatedPrompts as any).mockResolvedValueOnce({
+		systemPrompt: 'You are helpful',
+		userPrompt: 'Tell me a joke'
+	});
+	mockInvoke.mockRejectedValueOnce(new Error('Groq API error: Rate limit exceeded'));
 
-  const result = await generateAiChatResponse(1);
+	const result = await generateAiChatResponse(1);
 
-  expect(result.success).toBe(false);
-  expect(result.message).toContain("Rate limit");
+	expect(result.success).toBe(false);
+	expect(result.message).toContain('Rate limit');
 });
 ```
 
