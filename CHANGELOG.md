@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.10.2] - 2026-08-08
+
+15 commits since v0.10.1.
+
+### Added
+
+- Scraper now dismisses popups that intercept clicks
+- Tunnel tracks and traces upstream CDP response IDs for improved diagnostics
+
+### Fixed
+
+- Security: esbuild vulnerability (GHSA-67mh-4wv8-2f99)
+- Fixed skill-expansion memory usage with LRU cap
+- Fixed default providers for writing and translation to use Gemini when configured
+- Fixed production environment configuration for writing/translate provider and embeddings
+- Fixed ioredis dependency declaration (now explicitly declared instead of relying on bullmq)
+- Bullmq updated to 6.0.7
+
 ## [0.10.1] - 2026-08-07
 
 6 commits since v0.10.0.
