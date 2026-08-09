@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.10.7] - 2026-08-09
+
+4 commits since v0.10.6.
+
+### Fixed
+
+- Fixed bundling of ops scripts that use relative paths to reference app source
+
+### Removed
+
+- Removed dead test-html-utils script
+
 ## [0.10.6] - 2026-08-09
 
 2 commits since v0.10.5.
