@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.10.6] - 2026-08-09
+
+2 commits since v0.10.5.
+
+### Changed
+
+- Scraper now uses V2 search-form identifier by default
+
+### Fixed
+
+- Scraper no longer incorrectly reports successful overlay dismissals as failures
+
 ## [0.10.5] - 2026-08-09
 
 1 commit since v0.10.4.
