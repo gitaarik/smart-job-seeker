@@ -2,8 +2,8 @@
  * Test script for Cheerio-based HTML utilities
  */
 
-import { stripHtmlForLlm } from '../src/lib/server/html-strip.js';
-import { extractLinks } from '../src/lib/server/html-extract.js';
+import { stripHtmlForLlm } from '$lib/server/html/strip';
+import { extractLinks } from '$lib/server/html/extract';
 
 // Test HTML with various elements
 const testHtml = `

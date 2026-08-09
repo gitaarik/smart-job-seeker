@@ -22,7 +22,15 @@ set -euo pipefail
 # Was 189 when this gate was added. Deleting the unmigrated script cluster —
 # superseded by src/lib/server/resume/ and src/lib/server/profile/, and broken
 # since the Drizzle cutover in 2026-04 — took out 150 of those errors.
-BASELINE=30
+#
+# 30 -> 28 on 2026-08-09: test-html-utils.ts had been importing
+# `../src/lib/server/html-strip.js` and `html-extract.js` since the
+# src/lib/server/ domain reorg (1e2e824f) moved them to `html/strip` and
+# `html/extract`. Note the shape — this gate did not catch it. Both paths are
+# unresolvable, but the errors were inside the tolerated backlog, so they read
+# as pre-existing noise rather than a dead script. It surfaced only when
+# build-ops-scripts.mjs was widened and the bundle failed outright.
+BASELINE=28
 
 npx svelte-kit sync
 

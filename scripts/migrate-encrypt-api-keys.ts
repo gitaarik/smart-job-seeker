@@ -4,6 +4,10 @@
  * Usage (from cloud/oss/):
  *   npx dotenvx run -f ../.env -- npx tsx scripts/migrate-encrypt-api-keys.ts
  *
+ * On a deployed box the raw `.ts` cannot run — the image has no `src/` — so use
+ * the bundle instead:
+ *   docker exec sjs-preview-app-1 node dist-scripts/migrate-encrypt-api-keys.mjs
+ *
  * Safe to run repeatedly — already-encrypted rows are detected and skipped.
  * Requires SJS_CREDENTIALS_KEY to be set in the environment.
  *
