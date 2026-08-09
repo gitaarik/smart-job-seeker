@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.10.8] - 2026-08-09
+
+2 commits since v0.10.7.
+
+### Fixed
+
+- Fixed UK region rule incorrectly claiming Ukraine, and closed gaps in country-name coverage
+
 ## [0.10.7] - 2026-08-09
 
 4 commits since v0.10.6.
