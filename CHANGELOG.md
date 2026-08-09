@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.10.3] - 2026-08-09
+
+7 commits since v0.10.2.
+
+### Added
+
+- Search-URL templates for Upwork and keywords across job platforms
+
+### Fixed
+
+- Scraper no longer reports lost searches as successful runs
+- Scraper handles field value swaps and focus-based form submission
+- Scraper re-resolves targets when popup dismissal triggers re-renders
+
 ## [0.10.2] - 2026-08-08
 
 15 commits since v0.10.1.
