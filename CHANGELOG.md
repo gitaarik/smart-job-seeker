@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.10.5] - 2026-08-09
+
+1 commit since v0.10.4.
+
+### Fixed
+
+- Improved scraper reliability by dismissing overlays that obstruct click targets
+
 ## [0.10.4] - 2026-08-09
 
 1 commit since v0.10.3.
