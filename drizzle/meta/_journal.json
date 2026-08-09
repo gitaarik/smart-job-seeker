@@ -71,6 +71,13 @@
       "when": 1786282468014,
       "tag": "0009_aromatic_queen_noir",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786283682866,
+      "tag": "0010_upwork_search_url_template",
+      "breakpoints": true
     }
   ]
 }
