@@ -361,5 +361,84 @@ describe('classifyRegion', () => {
 				}
 			);
 		});
+
+		// `", uk"` was a plain `includes`, and ", uk" is a substring of
+		// ", ukraine" — so every city-qualified Ukrainian job was British. The
+		// same shape as the ", ne"/", de" bug above, found by auditing each alias
+		// against "Xyzzy, <country>" rather than by anyone noticing bad data.
+		describe('the UK rule does not swallow Ukraine', () => {
+			it.each([['Kyiv, Ukraine'], ['Lviv, Ukraine'], ['Kharkiv, Ukraine']])(
+				'%s is Eastern Europe',
+				(input) => {
+					expect(classifyRegion(input)).toBe('eastern_europe');
+				}
+			);
+
+			it('still gives a genuine ", UK" to the UK', () => {
+				expect(classifyRegion('Bath, UK')).toBe('uk');
+			});
+
+			it('claims Northern Ireland before Western Europe claims "ireland"', () => {
+				expect(classifyRegion('Belfast, Northern Ireland')).toBe('uk');
+			});
+		});
+
+		// The country-name regexes added alongside the Ukraine fix. Each of these
+		// countries previously matched ONLY as a bare whole string, so any
+		// prefixed or hyphen-separated form fell through to null.
+		describe('countries match inside a longer location', () => {
+			it.each([
+				['SITE - GREECE', 'western_europe'],
+				['KLANG VALLEY-MY, MALAYSIA', 'asia_pacific'],
+				['Nairobi, Kenya', 'africa'],
+				['SITE - NIGERIA', 'africa'],
+				['Medellin, Colombia', 'latin_america'],
+				['Santiago, Chile', 'latin_america'],
+				['Bucharest, Romania', 'eastern_europe'],
+				['Istanbul, Turkey', 'middle_east']
+			])('%s is %s', (input, expected) => {
+				expect(classifyRegion(input)).toBe(expected);
+			});
+		});
+
+		// Each of these is a place whose name CONTAINS a country handled above.
+		// Region order means an unguarded pattern would win before the correct
+		// region is ever reached, so these are the regressions that matter.
+		describe('country patterns do not claim places that merely contain them', () => {
+			it.each([
+				['Sydney, New South Wales', 'asia_pacific'],
+				['Albuquerque, New Mexico', 'us'],
+				['Guadalajara, Mexico', 'latin_america'],
+				['Perugia, Italy', 'western_europe'],
+				['Indianapolis, IN', 'us'],
+				['Vancouver, British Columbia', 'canada'],
+				['Columbia, SC', 'us'],
+				['Armenia, Colombia', 'latin_america']
+			])('%s is %s', (input, expected) => {
+				expect(classifyRegion(input)).toBe(expected);
+			});
+		});
+
+		// Gaps found by auditing preview's unclassified locations. `goes` and
+		// `randstad` are exact aliases and MUST stay that way — as substrings they
+		// would claim the English verb and the staffing agency respectively.
+		describe('locations seen unclassified in real data', () => {
+			it.each([
+				['America', 'us'],
+				['SF; LA; NY', 'us'],
+				['Cyprus', 'western_europe'],
+				['Armenia', 'eastern_europe'],
+				['Goes', 'western_europe'],
+				['Randstad', 'western_europe'],
+				['Enschede', 'western_europe'],
+				['Kampenringweg 45a, Gouda', 'western_europe']
+			])('%s is %s', (input, expected) => {
+				expect(classifyRegion(input)).toBe(expected);
+			});
+
+			it('does not let the Randstad alias claim the staffing agency', () => {
+				expect(classifyRegion('Randstad - Chicago, IL')).toBe('us');
+			});
+		});
 	});
 });

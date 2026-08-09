@@ -361,17 +361,28 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'us' },
 				{ text: 'usa' },
 				{ text: 'united states' },
-				{ text: 'united states of america' }
+				{ text: 'united states of america' },
+				// Bare "America" — 6 rows on preview, the single largest gap. Exact
+				// match only, so it cannot claim "Latin America" (which owns its own
+				// exact alias anyway) or "South America".
+				{ text: 'america' }
 			],
 			patterns: [
-				// US state/territory codes after a comma, as a WHOLE token:
-				// "Austin, TX", "Boston, MA 02101", "Portland, OR". The trailing \\b is
-				// what keeps ", ne" from matching ", netherlands" and ", de" from
-				// matching ", denmark" — a plain substring match classified every
-				// country whose name starts with a state code as US.
+				// Spelled-out New Mexico. Needed on its own because the state-code
+				// rule below only sees "NM", and Latin America's `mexico` pattern
+				// carries a `(?<!new )` guard to stay off it — so without this the
+				// state resolved to null from both directions.
+				{ pattern: 'new mexico', mode: 'includes' },
+				// US state/territory codes after a comma OR semicolon, as a WHOLE
+				// token: "Austin, TX", "Boston, MA 02101", "SF; LA; NY". The trailing
+				// \\b is what keeps ", ne" from matching ", netherlands" and ", de"
+				// from matching ", denmark" — a plain substring match classified every
+				// country whose name starts with a state code as US. Widening the
+				// separator class is safe precisely because \\b, not the comma, is
+				// what does the disambiguating.
 				{
 					pattern:
-						',\\s*(?:a[klrz]|c[aot]|d[ce]|fl|ga|hi|i[adln]|k[sy]|la|m[adeinost]|n[cdehjmvy]|o[hkr]|pa|ri|s[cd]|t[nx]|ut|v[at]|w[aivy])\\b',
+						'[,;]\\s*(?:a[klrz]|c[aot]|d[ce]|fl|ga|hi|i[adln]|k[sy]|la|m[adeinost]|n[cdehjmvy]|o[hkr]|pa|ri|s[cd]|t[nx]|ut|v[at]|w[aivy])\\b',
 					mode: 'regex'
 				},
 				{ pattern: ', usa', mode: 'includes' },
@@ -474,7 +485,25 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'gibraltar' }
 			],
 			patterns: [
-				{ pattern: ', uk', mode: 'includes' },
+				// The trailing \\b is load-bearing: as a plain `includes`, ", uk"
+				// is a substring of ", ukraine", so every city-qualified Ukrainian
+				// job ("Kyiv, Ukraine") was classified as British. Same trap as the
+				// US state codes above, and the reason short patterns in this file
+				// are anchored rather than substring-matched.
+				{ pattern: ',\\s*uk\\b', mode: 'regex' },
+				// Northern Ireland is in the UK, but only matched as a bare exact
+				// alias — "Belfast, Northern Ireland" fell through to Western
+				// Europe's ", ireland". This region is checked first, so naming it
+				// here is what settles it.
+				{ pattern: 'northern ireland', mode: 'includes' },
+				// Country names as substrings. The lookbehinds are not decoration:
+				// "New South Wales" is Australian and "New England" is American, and
+				// both regions are checked AFTER this one, so an unguarded \\bwales\\b
+				// would quietly file Sydney under the UK.
+				{
+					pattern: '\\b(?:great britain|(?<!new )england|scotland|(?<!new south )wales)\\b',
+					mode: 'regex'
+				},
 				// "UNITED KINGDOM - REMOTE" and "Virtual UK" name the country outright
 				// but matched neither the exact alias nor ", uk".
 				{ pattern: 'united kingdom', mode: 'includes' },
@@ -518,6 +547,12 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'suisse' },
 				{ text: 'ireland' },
 				{ text: 'luxembourg' },
+				// EU member, euro, free movement — same call as Greece above, which
+				// is the closest analogue and already sits here rather than in the
+				// Middle East. Geography would say otherwise; this taxonomy splits
+				// on labour market, which is why the UK has its own region at all.
+				{ text: 'cyprus' },
+				{ text: 'malta' },
 				{ text: 'denmark' },
 				{ text: 'dnk' },
 				{ text: 'danmark' },
@@ -539,6 +574,13 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'greece' },
 				// Multi-country shorthand seen in real postings.
 				{ text: 'benelux' },
+				// Dutch places that are ONLY ever safe as exact aliases. As
+				// `includes` patterns each would be a live bug: "Goes" is an English
+				// verb, and "Randstad" is a global staffing agency whose name is in
+				// postings for "Randstad — Chicago, IL". Whole-string equality is
+				// what makes them harmless. Do not promote these to patterns.
+				{ text: 'goes' },
+				{ text: 'randstad' },
 				// ISO alpha-3. Exact-match only — safe here, unsafe as a substring
 				// pattern ("ita" and "che" both sit inside ordinary words).
 				{ text: 'che' },
@@ -567,6 +609,10 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: 'tilburg', mode: 'includes' },
 				{ pattern: 'arnhem', mode: 'includes' },
 				{ pattern: 'nijmegen', mode: 'includes' },
+				{ pattern: 'enschede', mode: 'includes' },
+				// Both seen only as street addresses ("Kampenringweg 45a, Gouda"),
+				// which is why the exact alias never fired.
+				{ pattern: 'gouda', mode: 'includes' },
 				{ pattern: 'den bosch', mode: 'includes' },
 				{ pattern: 'hybride werken', mode: 'includes' },
 				// More Dutch towns, from locations that were landing unclassified:
@@ -591,9 +637,19 @@ export const REGIONS: TaxonomyCategory = {
 				// Country names as substrings, not just exact aliases. "Netherlands"
 				// alone matched; "Rotterdam, Netherlands" did not, because aliases are
 				// compared against the whole string. Long enough to be unambiguous.
+				//
+				// The second half was added after auditing every alias in this file
+				// against "Xyzzy, <country>" and "XYZZY - <COUNTRY>": the countries
+				// below matched only in bare form, so a hyphen-separated site code
+				// ("SITE - GREECE") or any prefixed form fell through to null. That
+				// is the same defect that left "KLANG VALLEY-MY, MALAYSIA"
+				// unclassified while plain "Malaysia" worked.
+				//
+				// `europe` is deliberately absent: it is a substring of "Eastern
+				// Europe", and that region is checked AFTER this one.
 				{
 					pattern:
-						'\\b(netherlands|nederland|germany|deutschland|belgium|belgië|denmark|danmark|sweden|norway|finland|ireland|austria|switzerland|portugal)\\b',
+						'\\b(netherlands|nederland|germany|deutschland|belgium|belgië|denmark|danmark|sweden|norway|finland|ireland|austria|switzerland|portugal|france|italy|italia|greece|spain|españa|iceland|cyprus|malta|sverige|norge|suomi|schweiz|suisse|belgique|nordics|scandinavia|benelux)\\b',
 					mode: 'regex'
 				},
 				// German cities
@@ -746,6 +802,11 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'estonia' },
 				// Albania had no coverage at all — not the name, not the code.
 				{ text: 'albania' },
+				// Exact-only on purpose. Armenia is also a city in Colombia, and
+				// Latin America is checked after this region, so a substring pattern
+				// would file Armenia, Quindío under Eastern Europe. One observed row
+				// does not justify that trade.
+				{ text: 'armenia' },
 				// ISO alpha-3 codes — exact-match only, see the note in asia_pacific.
 				{ text: 'pol' },
 				{ text: 'rou' },
@@ -754,6 +815,15 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'alb' }
 			],
 			patterns: [
+				// Country names with word boundaries — see the Western Europe
+				// equivalent. This subsumes the ", <country>" list further down,
+				// which only ever matched a comma-separated form; those are kept
+				// because they are strictly narrower and harmless.
+				{
+					pattern:
+						'\\b(poland|polska|czechia|czech republic|romania|hungary|bulgaria|croatia|slovakia|slovenia|serbia|ukraine|lithuania|latvia|estonia|albania)\\b',
+					mode: 'regex'
+				},
 				{ pattern: 'warsaw', mode: 'includes' },
 				{ pattern: 'prague', mode: 'includes' },
 				{ pattern: 'budapest', mode: 'includes' },
@@ -811,6 +881,16 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'isr' }
 			],
 			patterns: [
+				// Country names with word boundaries — see the Western Europe
+				// equivalent. `jordan` and `oman` are deliberately excluded and stay
+				// exact-only: "West Jordan" is in Utah, and "oman" sits inside
+				// "Romania" and "Oman" is a substring of ordinary words. Both would
+				// cost more than they pay.
+				{
+					pattern:
+						'\\b(united arab emirates|saudi arabia|qatar|bahrain|kuwait|lebanon|turkey|türkiye)\\b',
+					mode: 'regex'
+				},
 				{ pattern: 'dubai', mode: 'includes' },
 				{ pattern: 'abu dhabi', mode: 'includes' },
 				{ pattern: 'riyadh', mode: 'includes' },
@@ -862,6 +942,17 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'hong kong' }
 			],
 			patterns: [
+				// Country names with word boundaries — see the Western Europe
+				// equivalent. The boundaries matter more here than anywhere: \\bindia\\b
+				// must not claim "Indianapolis", and \\bchina\\b must not claim
+				// "Chinatown". `asia` and `korea` stay exact-only, the first because
+				// it sits inside "Eurasia"/"Australasia" and the second because
+				// "South Korea" is already covered by the whole-string alias.
+				{
+					pattern:
+						'\\b(india|china|japan|taiwan|malaysia|indonesia|philippines|vietnam|thailand|pakistan|bangladesh|new zealand|south korea)\\b',
+					mode: 'regex'
+				},
 				{ pattern: 'taipei', mode: 'includes' },
 				{ pattern: 'bengaluru', mode: 'includes' },
 				{ pattern: 'bangalore', mode: 'includes' },
@@ -930,6 +1021,16 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'mex' }
 			],
 			patterns: [
+				// Country names with word boundaries — see the Western Europe
+				// equivalent. The lookbehind on `mexico` is the important part: New
+				// Mexico is a US state, and while "Albuquerque, NM" is caught earlier
+				// by the state-code rule, the spelled-out form would land here.
+				// `peru` stays exact-only — it sits inside "Perugia", in Italy.
+				{
+					pattern:
+						'\\b(brazil|brasil|(?<!new )m(e|é)xico|argentina|colombia|chile|costa rica|uruguay)\\b',
+					mode: 'regex'
+				},
 				{ pattern: 'são paulo', mode: 'includes' },
 				{ pattern: 'sao paulo', mode: 'includes' },
 				{ pattern: 'buenos aires', mode: 'includes' },
@@ -968,6 +1069,16 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'ken' }
 			],
 			patterns: [
+				// Country names with word boundaries — see the Western Europe
+				// equivalent. Bare `africa` is excluded on purpose: it is a substring
+				// of "South Africa" (fine) but the alias already covers the whole
+				// string, and a loose pattern would also claim "Africa" inside
+				// company names like "Bank of Africa Europe".
+				{
+					pattern:
+						'\\b(south africa|nigeria|kenya|egypt|ghana|ethiopia|tanzania|morocco|uganda)\\b',
+					mode: 'regex'
+				},
 				{ pattern: 'cape town', mode: 'includes' },
 				{ pattern: 'johannesburg', mode: 'includes' },
 				{ pattern: 'lagos', mode: 'includes' },
