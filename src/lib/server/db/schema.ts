@@ -984,6 +984,22 @@ export const job_platforms = pgTable(
 		 *  the platform's `url` when null. Example: LinkedIn's would be
 		 *  `https://www.linkedin.com/jobs/`. */
 		search_page_url: varchar({ length: 512 }),
+		/** Optional results-URL template carrying the keywords directly, e.g.
+		 *  `https://www.upwork.com/nx/search/jobs/?q={query}`. `{query}` is
+		 *  replaced with the URL-encoded search term. When set, the search-form
+		 *  scraper navigates here instead of typing into the entry form and
+		 *  guessing at a submit button; filters are still applied by identifying
+		 *  the results page, exactly as when the form is driven.
+		 *
+		 *  Set this for platforms whose entry-page submit is unreliable. Upwork
+		 *  is the motivating case: the accessible name "Search" belongs to both
+		 *  the header search box and a left-nav item, so whenever identification
+		 *  reports a submit button the scraper clicks the nav one, navigating
+		 *  away without searching and returning a page of unfiltered jobs that is
+		 *  indistinguishable from success (runs 1047/1049/1050/1051/1059; run
+		 *  1058 succeeded only because nothing was identified and it fell back to
+		 *  pressing Enter). */
+		search_url_template: varchar({ length: 512 }),
 		// Phase 1 usage signals — incremented when a search_task_run on this
 		// platform reaches a terminal state. See planning/JOB-PLATFORM-SIGNALS.md
 		// for the full multi-phase plan.

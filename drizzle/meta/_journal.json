@@ -64,6 +64,13 @@
       "when": 1786105020505,
       "tag": "0008_futuristic_red_ghost",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786282468014,
+      "tag": "0009_aromatic_queen_noir",
+      "breakpoints": true
     }
   ]
 }

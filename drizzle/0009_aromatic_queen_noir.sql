@@ -1,0 +1,1 @@
+ALTER TABLE "job_platforms" ADD COLUMN "search_url_template" varchar(512);
