@@ -23,13 +23,18 @@ set -euo pipefail
 # superseded by src/lib/server/resume/ and src/lib/server/profile/, and broken
 # since the Drizzle cutover in 2026-04 — took out 150 of those errors.
 #
-# 30 -> 28 on 2026-08-09: test-html-utils.ts had been importing
+# 30 -> 28 on 2026-08-09, by deleting test-html-utils.ts. It had been importing
 # `../src/lib/server/html-strip.js` and `html-extract.js` since the
 # src/lib/server/ domain reorg (1e2e824f) moved them to `html/strip` and
-# `html/extract`. Note the shape — this gate did not catch it. Both paths are
-# unresolvable, but the errors were inside the tolerated backlog, so they read
-# as pre-existing noise rather than a dead script. It surfaced only when
-# build-ops-scripts.mjs was widened and the bundle failed outright.
+# `html/extract` — a console-printing demo, dead for months, superseded by the
+# real Vitest tests in src/lib/server/__tests__/.
+#
+# Note the shape, because it is the limit of this gate: both imports were
+# unresolvable the whole time and both errors were IN this output. They sat
+# inside the tolerated backlog, so a dead script read as pre-existing noise. A
+# ratchet on a count cannot tell a stale error from a live one within its
+# budget. It surfaced only when build-ops-scripts.mjs was widened to bundle
+# relative-path importers and the build failed outright.
 BASELINE=28
 
 npx svelte-kit sync
