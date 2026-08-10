@@ -4,8 +4,9 @@
 
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { jobs } from '$lib/server/db/schema';
+import { jobs, job_importers } from '$lib/server/db/schema';
 import { verifyApiKey } from '$lib/server/auth/api-key';
+import { triggerMatchForImport } from '$lib/server/job/match-trigger';
 
 /**
  * Get profile ID from API key in request headers
@@ -36,4 +37,19 @@ export async function findExistingJob(
 		columns: { id: true, job_description: true }
 	});
 	return result ?? null;
+}
+
+/**
+ * Record who imported a job, then queue matching for them.
+ *
+ * `job_importers` has a unique index on (job_id, profile_id), so let the
+ * database settle the "already recorded?" question — a read-then-insert can
+ * lose the race against a concurrent import of the same job and throw.
+ */
+export async function recordImporter(jobId: number, profileId: number): Promise<void> {
+	await db
+		.insert(job_importers)
+		.values({ job_id: jobId, profile_id: profileId })
+		.onConflictDoNothing({ target: [job_importers.job_id, job_importers.profile_id] });
+	await triggerMatchForImport(profileId, jobId);
 }

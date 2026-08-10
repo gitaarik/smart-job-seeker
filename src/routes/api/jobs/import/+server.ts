@@ -10,10 +10,13 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { jobs, job_importers } from '$lib/server/db/schema';
+import { jobs } from '$lib/server/db/schema';
 import { normalizeJobUrl } from '$lib/server/job/normalize-url';
-import { getProfileIdFromApiKey, findExistingJob } from '$lib/server/job/import-utils';
-import { triggerMatchForImport } from '$lib/server/job/match-trigger';
+import {
+	findExistingJob,
+	getProfileIdFromApiKey,
+	recordImporter
+} from '$lib/server/job/import-utils';
 import { getErrorMessage } from '$lib/server/utils/errors';
 import {
 	formatValidationError,
@@ -103,14 +106,7 @@ export const POST: RequestHandler = async (event) => {
 				})
 				.where(eq(jobs.id, existing.id));
 
-			// Record who imported this job (upsert)
-			const existingImporter = await db.query.job_importers.findFirst({
-				where: (t, { and, eq }) => and(eq(t.job_id, existing.id), eq(t.profile_id, profileId))
-			});
-			if (!existingImporter) {
-				await db.insert(job_importers).values({ job_id: existing.id, profile_id: profileId });
-			}
-			await triggerMatchForImport(profileId, existing.id);
+			await recordImporter(existing.id, profileId);
 
 			return json({
 				success: true,
@@ -120,14 +116,8 @@ export const POST: RequestHandler = async (event) => {
 			} satisfies JobImportResponse);
 		}
 
-		// No changes — still record the importer (upsert)
-		const existingImporter2 = await db.query.job_importers.findFirst({
-			where: (t, { and, eq }) => and(eq(t.job_id, existing.id), eq(t.profile_id, profileId))
-		});
-		if (!existingImporter2) {
-			await db.insert(job_importers).values({ job_id: existing.id, profile_id: profileId });
-		}
-		await triggerMatchForImport(profileId, existing.id);
+		// No changes — still record the importer
+		await recordImporter(existing.id, profileId);
 
 		return json({
 			success: true,
@@ -165,9 +155,7 @@ export const POST: RequestHandler = async (event) => {
 			})
 			.returning();
 
-		// Record who imported this job
-		await db.insert(job_importers).values({ job_id: newJob.id, profile_id: profileId });
-		await triggerMatchForImport(profileId, newJob.id);
+		await recordImporter(newJob.id, profileId);
 
 		return json({
 			success: true,

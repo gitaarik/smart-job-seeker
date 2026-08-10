@@ -145,7 +145,10 @@
 		apiKeyName: string;
 		connectedAt: string;
 		lastHeartbeat: string;
+		/** App code — auto-updates from the release tarball on every boot. */
 		clientVersion: string;
+		/** The image under it, which only moves on a pull. See staleImage(). */
+		imageVersion?: string;
 	}
 	interface PreferredDevice extends DeviceStatus {
 		isShared: boolean;
@@ -346,6 +349,30 @@
 		});
 	}
 
+	/**
+	 * The image version, but only when it is worth showing.
+	 *
+	 * A device reports two versions. The app auto-updates from the release
+	 * tarball on every boot; the image under it — Chrome, Node, base OS — moves
+	 * only when the host pulls. Showing both always would put a second, usually
+	 * identical number in every row, so this returns one only when they
+	 * disagree, which is the entire signal.
+	 *
+	 * Why it exists: `:latest` sat on sjs-browser v1.0.1 from 2026-07-11 while
+	 * instances auto-updated their app code to v1.0.4 and reported *that*. A
+	 * Chrome version pin shipped in v1.0.2 never arrived, and no readout
+	 * anywhere said so.
+	 *
+	 * `unknown` is not a mismatch — it means a client older than v1.0.5 that
+	 * cannot report its image at all. Flagging that as stale would be a
+	 * permanent false alarm on exactly the devices least able to answer.
+	 */
+	function staleImage(d: { clientVersion: string; imageVersion?: string }): string | null {
+		if (!d.imageVersion || d.imageVersion === 'unknown') return null;
+		if (d.imageVersion === d.clientVersion) return null;
+		return d.imageVersion;
+	}
+
 	function formatRelativeTime(dateStr: string): string {
 		const d = new Date(dateStr);
 		const now = new Date();
@@ -512,6 +539,12 @@
 					{#if preferredDevice}
 						<p class="text-sm text-[var(--dash-text-muted)]">
 							v{preferredDevice.clientVersion}
+							{#if staleImage(preferredDevice)}
+								&middot; <span
+									title="The container image is older than the app code. Pull a new image to update Chrome, Node and the base OS."
+									>image v{staleImage(preferredDevice)}</span
+								>
+							{/if}
 							&middot; connected {formatRelativeTime(preferredDevice.connectedAt)}
 							{#if preferredDevice.isShared && preferredDevice.ownerLabel}
 								&middot; shared by {preferredDevice.ownerLabel}
@@ -1099,9 +1132,14 @@ volumes:
 									</div>
 									<p class="text-xs text-[var(--dash-text-muted)]">
 										{#if deviceStatus}
-											v{deviceStatus.clientVersion} &middot; connected {formatRelativeTime(
-												deviceStatus.connectedAt
-											)}
+											v{deviceStatus.clientVersion}
+											{#if staleImage(deviceStatus)}
+												&middot; <span
+													title="The container image is older than the app code. Pull a new image to update Chrome, Node and the base OS."
+													>image v{staleImage(deviceStatus)}</span
+												>
+											{/if}
+											&middot; connected {formatRelativeTime(deviceStatus.connectedAt)}
 										{:else}
 											Created {formatDate(key.date_created)}
 											{#if key.last_used}
@@ -1269,9 +1307,15 @@ volumes:
 							</div>
 							<p class="text-xs text-[var(--dash-text-muted)]">
 								{#if sharedStatus}
-									v{sharedStatus.clientVersion} &middot; connected {formatRelativeTime(
-										sharedStatus.connectedAt
-									)} &middot; shared by {ownerLabel}
+									v{sharedStatus.clientVersion}
+									{#if staleImage(sharedStatus)}
+										&middot; <span
+											title="The container image is older than the app code. Pull a new image to update Chrome, Node and the base OS."
+											>image v{staleImage(sharedStatus)}</span
+										>
+									{/if}
+									&middot; connected {formatRelativeTime(sharedStatus.connectedAt)}
+									&middot; shared by {ownerLabel}
 								{:else}
 									Shared by {ownerLabel}
 									{#if share.date_created}

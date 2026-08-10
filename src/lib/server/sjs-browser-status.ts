@@ -21,7 +21,23 @@ export interface SjsBrowserDevice {
 	apiKeyName: string;
 	connectedAt: string;
 	lastHeartbeat: string;
+	/**
+	 * Running app version. sjs-browser auto-updates `src/` from the release
+	 * tarball on every boot, so this moves without anyone touching the host.
+	 */
 	clientVersion: string;
+	/**
+	 * Image version — Chrome, Node, base OS, shell scripts — which moves only
+	 * when the host pulls a new image. Reported separately because it can lag
+	 * `clientVersion` indefinitely with no other signal: the `:latest` tag sat
+	 * on v1.0.1 from 2026-07-11 while instances auto-updated their app code to
+	 * v1.0.4 and reported that, so a Chrome version pin shipped in v1.0.2 was
+	 * missing for a month while every readout looked current.
+	 *
+	 * `'unknown'` from clients older than sjs-browser v1.0.5, which did not
+	 * report it. Treat unknown as "cannot tell", not as "matches".
+	 */
+	imageVersion?: string;
 }
 
 export interface SjsBrowserStatus {

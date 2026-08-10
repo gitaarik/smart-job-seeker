@@ -15,17 +15,11 @@ const mockUpdateWhere = vi.fn().mockResolvedValue({});
 const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
 const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 
-// Mock Drizzle query finders
-const mockJobImportersFindFirst = vi.fn();
-
 vi.mock('$lib/server/db', () => ({
 	db: {
 		query: {
 			jobs: {
 				findFirst: vi.fn()
-			},
-			job_importers: {
-				findFirst: (...a: any[]) => mockJobImportersFindFirst(...a)
 			}
 		},
 		insert: (...a: any[]) => mockInsertFn(...a),
@@ -45,10 +39,12 @@ vi.mock('$lib/server/db/schema', () => ({
 // Mock the import utilities
 const mockFindExistingJob = vi.fn();
 const mockGetProfileIdFromApiKey = vi.fn();
+const mockRecordImporter = vi.fn();
 
 vi.mock('$lib/server/job/import-utils', () => ({
 	findExistingJob: (...a: any[]) => mockFindExistingJob(...a),
-	getProfileIdFromApiKey: (...a: any[]) => mockGetProfileIdFromApiKey(...a)
+	getProfileIdFromApiKey: (...a: any[]) => mockGetProfileIdFromApiKey(...a),
+	recordImporter: (...a: any[]) => mockRecordImporter(...a)
 }));
 
 // Mock the API key verification module (used by getProfileIdFromApiKey)
@@ -100,7 +96,7 @@ describe('POST /api/jobs/import - Single Job Import', () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
-		mockJobImportersFindFirst.mockResolvedValue(null);
+		mockRecordImporter.mockResolvedValue(undefined);
 		mockInsertFn.mockReturnValue({ values: mockInsertValues });
 		mockInsertValues.mockReturnValue({ returning: mockInsertReturning });
 		mockInsertReturning.mockResolvedValue([{ id: 42 }]);
@@ -348,7 +344,7 @@ describe('POST /api/jobs/import/batch - Batch Job Import', () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
-		mockJobImportersFindFirst.mockResolvedValue(null);
+		mockRecordImporter.mockResolvedValue(undefined);
 		mockInsertFn.mockReturnValue({ values: mockInsertValues });
 		mockInsertValues.mockReturnValue({ returning: mockInsertReturning });
 		mockInsertReturning.mockResolvedValue([{ id: 42 }]);
