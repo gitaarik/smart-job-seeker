@@ -145,6 +145,11 @@ export const actions: Actions = {
 					}
 				}
 
+				console.log(
+					`[Import] Archive restored into profile ${result.profileId}: ` +
+						`${data.media_files?.length ?? 0} media, ${result.documentsImported} documents`
+				);
+
 				redirect(302, `/home?profile=${result.profileId}`);
 			} else {
 				// Handle JSON import

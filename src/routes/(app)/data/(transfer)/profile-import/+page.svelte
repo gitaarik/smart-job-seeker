@@ -172,6 +172,7 @@
 		<StepUpload
 			{isLoading}
 			{error}
+			selectedProfileName={data.selectedProfileName}
 			onParsed={handleParsed}
 			onError={handleError}
 			onLoadingChange={handleLoadingChange}
