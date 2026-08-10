@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.10.9] - 2026-08-10
+
+3 commits since v0.10.8.
+
+### Added
+
+- Record container image versions in tunnel diagnostics
+- Identify container images that lag their app code
+
+### Fixed
+
+- Scraper resilience for handling degenerate accessibility trees
+
 ## [0.10.8] - 2026-08-09
 
 2 commits since v0.10.7.
