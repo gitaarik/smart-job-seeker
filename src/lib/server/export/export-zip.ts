@@ -1,15 +1,29 @@
 /**
- * Create ZIP export with media files
+ * Create ZIP export with media files and uploaded documents
  */
 
 import JSZip from 'jszip';
 import { readUpload } from '$lib/server/uploads';
-import type { ExportData, MediaFile } from './types';
+import type { DocumentFilePayload, ExportData, MediaFile } from './types';
 
 /**
- * Create a ZIP file containing export data and media files
+ * Ceiling on decompressed document text accepted from an import ZIP.
+ *
+ * Text compresses hard, so without a cap a small upload can expand into
+ * gigabytes of heap. Ingest allows 25 MB per source file and 500 MB per
+ * archive; this is well above any real profile and far below trouble. Checked
+ * per file as we decompress, so overshoot is bounded by one file.
  */
-export async function createExportZip(data: ExportData, mediaFiles: MediaFile[]): Promise<Buffer> {
+const MAX_IMPORT_DOCUMENT_BYTES = 100 * 1024 * 1024;
+
+/**
+ * Create a ZIP file containing export data, media files and document text
+ */
+export async function createExportZip(
+	data: ExportData,
+	mediaFiles: MediaFile[],
+	documentFiles: DocumentFilePayload[] = []
+): Promise<Buffer> {
 	const zip = new JSZip();
 
 	// Add JSON data
@@ -28,6 +42,11 @@ export async function createExportZip(data: ExportData, mediaFiles: MediaFile[])
 		}
 	}
 
+	// Add extracted document text. Already in memory — no I/O to fail on.
+	for (const documentFile of documentFiles) {
+		zip.file(documentFile.archivePath, documentFile.text);
+	}
+
 	// Generate ZIP buffer
 	const buffer = await zip.generateAsync({
 		type: 'nodebuffer',
@@ -41,9 +60,11 @@ export async function createExportZip(data: ExportData, mediaFiles: MediaFile[])
 /**
  * Parse a ZIP export file
  */
-export async function parseExportZip(
-	zipBuffer: Buffer
-): Promise<{ data: ExportData; mediaFiles: Map<string, Buffer> }> {
+export async function parseExportZip(zipBuffer: Buffer): Promise<{
+	data: ExportData;
+	mediaFiles: Map<string, Buffer>;
+	documentTexts: Map<string, string>;
+}> {
 	const zip = await JSZip.loadAsync(zipBuffer);
 
 	// Read JSON data
@@ -68,5 +89,31 @@ export async function parseExportZip(
 		}
 	}
 
-	return { data, mediaFiles };
+	// Read document text, keyed by archive path so the importer can look each
+	// file up from the manifest it is already walking.
+	const documentTexts = new Map<string, string>();
+
+	if (data.has_documents && data.documents) {
+		let totalBytes = 0;
+
+		for (const document of data.documents) {
+			for (const documentFile of document.files ?? []) {
+				const file = zip.file(documentFile.archivePath);
+				if (!file) continue;
+
+				const text = await file.async('string');
+				totalBytes += Buffer.byteLength(text, 'utf-8');
+
+				if (totalBytes > MAX_IMPORT_DOCUMENT_BYTES) {
+					throw new Error(
+						`Export contains more than ${Math.round(MAX_IMPORT_DOCUMENT_BYTES / (1024 * 1024))} MB of document text`
+					);
+				}
+
+				documentTexts.set(documentFile.archivePath, text);
+			}
+		}
+	}
+
+	return { data, mediaFiles, documentTexts };
 }

@@ -6,8 +6,8 @@
  * - "full": Complete account data including job tracking
  *
  * And two formats:
- * - JSON: Data only (no media files)
- * - ZIP: Data + media files
+ * - ZIP: data.json + media files + uploaded document text (the complete export)
+ * - JSON: data.json only, for inspecting or piping the structured data
  */
 
 // Types
@@ -15,7 +15,12 @@ export type {
 	ExportScope,
 	ExportFormat,
 	ExportOptions,
+	ExportContentOptions,
 	MediaFile,
+	DocumentAttachment,
+	DocumentFilePayload,
+	ExportedDocument,
+	ExportedDocumentFile,
 	ExportEnvelope,
 	ExportedProfileData,
 	ProfileExportData,
@@ -31,6 +36,7 @@ export { createExportZip, parseExportZip } from './export-zip';
 // Import functions
 export { importExportData, validateExportData, isLegacyFormat } from './import-data';
 export { importMediaFiles, deleteProfileMediaFiles } from './import-media';
+export { deleteProfileDocuments } from './import-documents';
 
 // Settings export/import (search_tasks, match_config, email digest, salary)
 export {

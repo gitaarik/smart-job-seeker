@@ -7,6 +7,8 @@ import { eq, desc, asc } from 'drizzle-orm';
 import { project_stories, cheat_sheets, profiles } from '$lib/server/db/schema';
 import { buildProfileExport } from './export-profile';
 import type {
+	DocumentFilePayload,
+	ExportContentOptions,
 	FullExportData,
 	MediaFile,
 	ExportedProjectStory,
@@ -20,10 +22,18 @@ import type {
  */
 export async function buildFullExport(
 	profileId: number,
-	includeMedia: boolean = false
-): Promise<{ data: FullExportData; mediaFiles: MediaFile[] }> {
+	options: ExportContentOptions = {}
+): Promise<{
+	data: FullExportData;
+	mediaFiles: MediaFile[];
+	documentFiles: DocumentFilePayload[];
+}> {
 	// Start with profile data
-	const { data: profileExport, mediaFiles } = await buildProfileExport(profileId, includeMedia);
+	const {
+		data: profileExport,
+		mediaFiles,
+		documentFiles
+	} = await buildProfileExport(profileId, options);
 
 	// Fetch additional data
 	const [projectStoriesData, cheatSheetsData, profile, applications] = await Promise.all([
@@ -151,8 +161,10 @@ export async function buildFullExport(
 		version: '2.0',
 		exported_at: new Date().toISOString(),
 		scope: 'full',
-		has_media: includeMedia && mediaFiles.length > 0,
-		media_files: includeMedia && mediaFiles.length > 0 ? mediaFiles : undefined,
+		has_media: profileExport.has_media,
+		media_files: profileExport.media_files,
+		has_documents: profileExport.has_documents,
+		documents: profileExport.documents,
 		profile: profileExport.profile,
 		project_stories: exportedProjectStories,
 		cheat_sheets: exportedCheatSheets,
@@ -160,5 +172,5 @@ export async function buildFullExport(
 		applications: exportedApplications
 	};
 
-	return { data: exportData, mediaFiles };
+	return { data: exportData, mediaFiles, documentFiles };
 }

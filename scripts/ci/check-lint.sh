@@ -45,7 +45,7 @@ set -euo pipefail
 #
 # BASELINE must only ever go DOWN. The script nags when the real count drops
 # below it, so the ratchet cannot quietly slip back up.
-BASELINE=1521
+BASELINE=1519
 
 npx svelte-kit sync
 

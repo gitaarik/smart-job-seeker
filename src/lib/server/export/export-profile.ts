@@ -5,15 +5,27 @@
 import { dbDirect } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { profiles } from '$lib/server/db/schema';
-import type { ExportedProfileData, ProfileExportData, MediaFile } from './types';
+import { buildDocumentExport, type ProjectIndexMaps } from './export-documents';
+import type {
+	DocumentFilePayload,
+	ExportContentOptions,
+	ExportedProfileData,
+	ProfileExportData,
+	MediaFile
+} from './types';
 
 /**
  * Build profile export data
  */
 export async function buildProfileExport(
 	profileId: number,
-	includeMedia: boolean = false
-): Promise<{ data: ProfileExportData; mediaFiles: MediaFile[] }> {
+	options: ExportContentOptions = {}
+): Promise<{
+	data: ProfileExportData;
+	mediaFiles: MediaFile[];
+	documentFiles: DocumentFilePayload[];
+}> {
+	const { includeMedia = false, includeDocuments = false } = options;
 	const profile = await dbDirect.query.profiles.findFirst({
 		where: eq(profiles.id, profileId),
 		with: {
@@ -96,6 +108,8 @@ export async function buildProfileExport(
 					},
 					work_experience_projects: {
 						columns: {
+							// Needed to attach documents by position; not emitted in the output.
+							id: true,
 							status: true,
 							sort: true,
 							name: true,
@@ -253,6 +267,37 @@ export async function buildProfileExport(
 				});
 			}
 		}
+	}
+
+	// Collect uploaded documents. Their parent is referenced by position in the
+	// arrays built below, so the maps must be built from the same ordered rows.
+	const documentFiles: DocumentFilePayload[] = [];
+	let documents: ProfileExportData['documents'];
+
+	if (includeDocuments) {
+		const maps: ProjectIndexMaps = {
+			workExperienceIndexById: new Map(),
+			workExperienceProjectIndexById: new Map(),
+			sideProjectIndexById: new Map()
+		};
+
+		profile.work_experiences.forEach((work, workIndex) => {
+			maps.workExperienceIndexById.set(work.id, workIndex);
+			work.work_experience_projects.forEach((proj, projectIndex) => {
+				maps.workExperienceProjectIndexById.set(proj.id, {
+					work_experience_index: workIndex,
+					project_index: projectIndex
+				});
+			});
+		});
+
+		profile.side_projects.forEach((proj, index) => {
+			maps.sideProjectIndexById.set(proj.id, index);
+		});
+
+		const built = await buildDocumentExport(profileId, maps);
+		documents = built.documents;
+		documentFiles.push(...built.documentFiles);
 	}
 
 	// Helper to format dates (handles both Date objects and date strings from Drizzle)
@@ -432,16 +477,20 @@ export async function buildProfileExport(
 		}))
 	};
 
+	const hasDocuments = Boolean(documents && documents.length > 0);
+
 	const exportData: ProfileExportData = {
 		version: '2.0',
 		exported_at: new Date().toISOString(),
 		scope: 'profile',
 		has_media: includeMedia && mediaFiles.length > 0,
 		media_files: includeMedia && mediaFiles.length > 0 ? mediaFiles : undefined,
+		has_documents: hasDocuments,
+		documents: hasDocuments ? documents : undefined,
 		profile: profileData
 	};
 
-	return { data: exportData, mediaFiles };
+	return { data: exportData, mediaFiles, documentFiles };
 }
 
 /**

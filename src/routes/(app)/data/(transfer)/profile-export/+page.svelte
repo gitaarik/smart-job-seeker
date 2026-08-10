@@ -5,7 +5,7 @@
 	import {
 		faDatabase,
 		faDownload,
-		faImage,
+		faFileLines,
 		faUser,
 		faLayerGroup
 	} from '@fortawesome/free-solid-svg-icons';
@@ -15,11 +15,12 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let exports = $derived(data.exports);
+	let contents = $derived(data.contents);
 	let exporting = $state(false);
 
 	// Export options
 	let scope = $state<'profile' | 'full'>('profile');
-	let includeMedia = $state(false);
+	let includeDocuments = $state(true);
 
 	function formatDate(date: Date | string | null): string {
 		if (!date) return '';
@@ -72,18 +73,29 @@
 		};
 	}
 
-	const exportDescription = $derived.by(() => {
-		const scopeText =
-			scope === 'full' ? 'full account (profile + job tracking data)' : 'profile data (resume/CV)';
-		const mediaText = includeMedia ? ' with media files' : '';
-		return `Export your ${scopeText}${mediaText}`;
-	});
+	const exportDescription = $derived(
+		scope === 'full'
+			? 'Export your full account (profile + job tracking data)'
+			: 'Export your profile data (resume/CV)'
+	);
 
-	const exportButtonText = $derived.by(() => {
-		if (exporting) return 'Exporting...';
-		const format = includeMedia ? 'ZIP' : 'JSON';
-		const scopeText = scope === 'full' ? 'Full Account' : 'Profile';
-		return `Export ${scopeText} (${format})`;
+	const exportButtonText = $derived(
+		exporting ? 'Exporting...' : `Export ${scope === 'full' ? 'Full Account' : 'Profile'} (ZIP)`
+	);
+
+	/** Spell out what lands in the archive — a category at zero should be
+	 *  visible, not silently absent. */
+	const contentsSummary = $derived.by(() => {
+		const parts = [
+			`${contents.mediaCount} image${contents.mediaCount === 1 ? '' : 's'} (photos, logos)`
+		];
+		if (includeDocuments) {
+			parts.push(
+				`${contents.documentCount} uploaded document${contents.documentCount === 1 ? '' : 's'}` +
+					(contents.documentBytes ? ` (${formatFileSize(contents.documentBytes)})` : '')
+			);
+		}
+		return `Includes ${parts.join(', ')}.`;
 	});
 </script>
 
@@ -122,7 +134,7 @@
 
 				<form method="POST" action="?/export" use:enhance={handleExport}>
 					<input type="hidden" name="scope" value={scope} />
-					<input type="hidden" name="includeMedia" value={includeMedia.toString()} />
+					<input type="hidden" name="includeDocuments" value={includeDocuments.toString()} />
 
 					<!-- Scope Selection -->
 					<div class="mb-4">
@@ -187,54 +199,75 @@
 						</div>
 					</div>
 
-					<!-- Media Option -->
-					<div class="mb-4">
-						<label
-							class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors {includeMedia
-								? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/5'
-								: 'border-[var(--dash-border)] hover:border-[var(--dash-primary)]/50'}"
-						>
-							<input
-								type="checkbox"
-								bind:checked={includeMedia}
-								class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-							/>
-							<FontAwesomeIcon
-								icon={faImage}
-								class="h-5 w-5 {includeMedia
-									? 'text-[var(--dash-primary)]'
-									: 'text-[var(--dash-text-muted)]'}"
-							/>
-							<div>
-								<div
-									class="font-medium {includeMedia
+					<!-- Documents option. Everything else always ships; documents are the
+					     one category big enough to be worth declining. -->
+					{#if contents.documentCount > 0}
+						<div class="mb-4">
+							<label
+								class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors {includeDocuments
+									? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/5'
+									: 'border-[var(--dash-border)] hover:border-[var(--dash-primary)]/50'}"
+							>
+								<input
+									type="checkbox"
+									bind:checked={includeDocuments}
+									class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+								/>
+								<FontAwesomeIcon
+									icon={faFileLines}
+									class="h-5 w-5 {includeDocuments
 										? 'text-[var(--dash-primary)]'
-										: 'text-[var(--dash-text)]'}"
-								>
-									Include media files
+										: 'text-[var(--dash-text-muted)]'}"
+								/>
+								<div>
+									<div
+										class="font-medium {includeDocuments
+											? 'text-[var(--dash-primary)]'
+											: 'text-[var(--dash-text)]'}"
+									>
+										Uploaded documents ({formatFileSize(contents.documentBytes)})
+									</div>
+									<div class="text-xs text-[var(--dash-text-secondary)]">
+										Extracted text of files you uploaded to work and personal projects
+									</div>
 								</div>
-								<div class="text-xs text-[var(--dash-text-secondary)]">
-									Profile photos, logos, images (creates ZIP file)
-								</div>
-							</div>
-						</label>
-					</div>
+							</label>
+						</div>
+					{/if}
 
-					<button
-						type="submit"
-						disabled={exporting}
-						class="flex items-center gap-2 rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						{#if exporting}
-							<span
-								class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
-							></span>
-							Exporting...
-						{:else}
-							<FontAwesomeIcon icon={faDownload} class="h-4 w-4" />
-							{exportButtonText}
-						{/if}
-					</button>
+					<p class="mb-4 text-xs text-[var(--dash-text-secondary)]">
+						{contentsSummary}
+					</p>
+
+					<div class="flex flex-wrap items-center gap-3">
+						<button
+							type="submit"
+							name="format"
+							value="zip"
+							disabled={exporting}
+							class="flex items-center gap-2 rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{#if exporting}
+								<span
+									class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
+								></span>
+								Exporting...
+							{:else}
+								<FontAwesomeIcon icon={faDownload} class="h-4 w-4" />
+								{exportButtonText}
+							{/if}
+						</button>
+
+						<button
+							type="submit"
+							name="format"
+							value="json"
+							disabled={exporting}
+							class="text-sm text-[var(--dash-text-secondary)] underline underline-offset-2 transition-colors hover:text-[var(--dash-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							Export data only (JSON)
+						</button>
+					</div>
 				</form>
 			</div>
 		</div>

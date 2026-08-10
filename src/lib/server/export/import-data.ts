@@ -33,6 +33,12 @@ import {
 } from '$lib/server/db/schema';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
 import { toDateString } from '$lib/tools/date-utils';
+import {
+	deleteProfileDocuments,
+	emptyCreatedProjectIds,
+	importDocuments,
+	type CreatedProjectIds
+} from './import-documents';
 import type { ExportData, ExportedProfileData, FullExportData } from './types';
 
 // Helper to convert JSON value for database insert
@@ -43,12 +49,16 @@ function toJsonValue(value: unknown): unknown | undefined {
 
 interface ImportOptions {
 	overwriteProfileId?: number;
+	/** Extracted document text from the archive, keyed by archive path. Without
+	 *  it, documents in the manifest are skipped rather than imported empty. */
+	documentTexts?: Map<string, string>;
 }
 
 interface ImportResult {
 	profileId: number;
 	profileName: string;
 	mediaPathMapping: Map<string, string>;
+	documentsImported: number;
 }
 
 /**
@@ -86,7 +96,7 @@ export async function importExportData(
 	userId: string,
 	options: ImportOptions = {}
 ): Promise<ImportResult> {
-	const { overwriteProfileId } = options;
+	const { overwriteProfileId, documentTexts } = options;
 	const p = data.profile;
 
 	let profileId: number;
@@ -142,20 +152,36 @@ export async function importExportData(
 	}
 
 	// Import profile-related entities
-	await importProfileEntities(profileId, p, mediaPathMapping);
+	const createdProjectIds = await importProfileEntities(profileId, p, mediaPathMapping);
 
 	// Import full account data if scope is "full"
 	if (data.scope === 'full') {
 		await importFullAccountEntities(profileId, data as FullExportData);
 	}
 
-	return { profileId, profileName: finalName, mediaPathMapping };
+	// Uploaded documents. Their text lives in the archive, so a JSON-only import
+	// has nothing to restore even when the manifest is present.
+	let documentsImported = 0;
+	if (data.documents?.length && documentTexts) {
+		documentsImported = await importDocuments(
+			profileId,
+			data.documents,
+			documentTexts,
+			createdProjectIds
+		);
+	}
+
+	return { profileId, profileName: finalName, mediaPathMapping, documentsImported };
 }
 
 /**
  * Delete all child records for a profile
  */
 async function deleteProfileChildren(profileId: number): Promise<void> {
+	// Documents first — the ones hanging off a work experience would otherwise
+	// survive their parent as unattached rows (ON DELETE SET NULL).
+	await deleteProfileDocuments(profileId);
+
 	// Delete simple child records
 	await dbDirect.delete(highlights).where(eq(highlights.profile_id, profileId));
 	await dbDirect.delete(education).where(eq(education.profile_id, profileId));
@@ -323,7 +349,10 @@ async function importProfileEntities(
 	profileId: number,
 	p: ExportedProfileData,
 	mediaPathMapping: Map<string, string>
-): Promise<void> {
+): Promise<CreatedProjectIds> {
+	// Positions the document manifest refers to, filled in as projects are created
+	const created = emptyCreatedProjectIds();
+
 	// Highlights
 	for (const h of p.highlights ?? []) {
 		await dbDirect.insert(highlights).values({
@@ -432,7 +461,9 @@ async function importProfileEntities(
 	}
 
 	// Work experiences + children
-	for (const w of p.work_experiences ?? []) {
+	const workExperienceList = p.work_experiences ?? [];
+	for (let workIndex = 0; workIndex < workExperienceList.length; workIndex++) {
+		const w = workExperienceList[workIndex];
 		const [createdWork] = await dbDirect
 			.insert(work_experiences)
 			.values({
@@ -451,6 +482,8 @@ async function importProfileEntities(
 				// logo_path will be set via media import
 			})
 			.returning();
+
+		created.workExperienceIdByIndex[workIndex] = createdWork.id;
 
 		// Track for media mapping
 		if (w.logo_path) {
@@ -477,7 +510,9 @@ async function importProfileEntities(
 			});
 		}
 
-		for (const proj of w.projects ?? []) {
+		const projectList = w.projects ?? [];
+		for (let projectIndex = 0; projectIndex < projectList.length; projectIndex++) {
+			const proj = projectList[projectIndex];
 			const [createdProj] = await dbDirect
 				.insert(work_experience_projects)
 				.values({
@@ -493,6 +528,8 @@ async function importProfileEntities(
 				})
 				.returning();
 
+			created.workExperienceProjectIdByIndex.set(`${workIndex}:${projectIndex}`, createdProj.id);
+
 			for (const pt of proj.technologies ?? []) {
 				await dbDirect.insert(work_experience_project_technologies).values({
 					work_experience_project_id: createdProj.id,
@@ -504,7 +541,9 @@ async function importProfileEntities(
 	}
 
 	// Side projects + children
-	for (const sp of p.side_projects ?? []) {
+	const sideProjectList = p.side_projects ?? [];
+	for (let sideIndex = 0; sideIndex < sideProjectList.length; sideIndex++) {
+		const sp = sideProjectList[sideIndex];
 		const [createdSp] = await dbDirect
 			.insert(side_projects)
 			.values({
@@ -522,6 +561,8 @@ async function importProfileEntities(
 				// image_path will be set via media import
 			})
 			.returning();
+
+		created.sideProjectIdByIndex[sideIndex] = createdSp.id;
 
 		// Track for media mapping
 		if (sp.image_path) {
@@ -595,6 +636,8 @@ async function importProfileEntities(
 	if (p.profile_photo_path) {
 		mediaPathMapping.set(`profile:${profileId}:profile_photo_path`, p.profile_photo_path);
 	}
+
+	return created;
 }
 
 /**

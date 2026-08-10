@@ -12,6 +12,15 @@ export type ExportFormat = 'json' | 'zip';
 export interface ExportOptions {
 	scope: ExportScope;
 	includeMedia: boolean;
+	includeDocuments: boolean;
+}
+
+// What a build function should put in the archive alongside the JSON
+export interface ExportContentOptions {
+	/** Photos, logos and images referenced by path columns */
+	includeMedia?: boolean;
+	/** Extracted text of documents uploaded to work/side projects */
+	includeDocuments?: boolean;
 }
 
 // Media file reference in export
@@ -28,6 +37,54 @@ export interface MediaFile {
 	field: string;
 }
 
+// Where a document attaches. Positional rather than by id: the export carries
+// no database ids, and the importer recreates entities in exported order.
+export type DocumentAttachment =
+	| { kind: 'work_experience_project'; work_experience_index: number; project_index: number }
+	| { kind: 'side_project'; side_project_index: number }
+	| { kind: 'work_experience'; work_experience_index: number }
+	| { kind: 'unattached' };
+
+// One extracted source file within a document attachment
+export interface ExportedDocumentFile {
+	/** Sanitized source path, relative to the attachment (e.g. "src/lib/foo.ts") */
+	path: string;
+	/** Path in the export archive (documents/...) */
+	archivePath: string;
+	ext?: string;
+	chars: number;
+	sort?: number | null;
+}
+
+// An uploaded document attachment (one upload / archive / repo)
+export interface ExportedDocument {
+	/** Directory in the archive holding this attachment's files */
+	archive_dir: string;
+	attached_to: DocumentAttachment;
+	/** "file" | "archive" | "github_repo" | ... */
+	kind: string;
+	title?: string;
+	original_filename?: string;
+	source?: unknown;
+	/** LLM reference notes for the attachment */
+	summary?: string;
+	keywords?: unknown;
+	status?: string;
+	skipped?: unknown;
+	file_count: number;
+	total_chars: number;
+	total_bytes: number;
+	sort?: number | null;
+	files: ExportedDocumentFile[];
+}
+
+/** Extracted text carried to the ZIP writer. Deliberately not part of the
+ *  manifest — a single attachment can hold hundreds of MB of text. */
+export interface DocumentFilePayload {
+	archivePath: string;
+	text: string;
+}
+
 // Base export envelope
 export interface ExportEnvelope {
 	/** Export format version */
@@ -40,6 +97,11 @@ export interface ExportEnvelope {
 	has_media: boolean;
 	/** Media file manifest (only if has_media) */
 	media_files?: MediaFile[];
+	/** Whether uploaded documents are included. Absent on exports made before
+	 *  documents were exportable. */
+	has_documents?: boolean;
+	/** Document manifest (only if has_documents); text lives in the archive */
+	documents?: ExportedDocument[];
 }
 
 // Profile data (resume/CV/portfolio)

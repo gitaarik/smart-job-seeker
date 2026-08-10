@@ -7,7 +7,7 @@ interface CreateExportOptions {
 	profileId: number;
 	fileBuffer: Buffer;
 	filename: string;
-	fileType: 'pdf' | 'html' | 'json' | 'txt' | 'docx';
+	fileType: 'pdf' | 'html' | 'json' | 'txt' | 'docx' | 'zip';
 	exportType: 'resume' | 'cv' | 'structured_data';
 	exportFormat?: string;
 	template?: string | null;
