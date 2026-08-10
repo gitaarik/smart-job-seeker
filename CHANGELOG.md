@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.10.11] - 2026-08-10
+
+1 commit since v0.10.10.
+
+### Fixed
+
+- Login now recognizes Upwork's wrong-password error message and captures a screenshot when the account is blocked
+
 ## [0.10.10] - 2026-08-10
 
 2 commits since v0.10.9.
