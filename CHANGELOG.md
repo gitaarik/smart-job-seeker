@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.10.10] - 2026-08-10
+
+2 commits since v0.10.9.
+
+### Added
+
+- Login now clearly indicates when a password is rejected and records unknown authentication blocks
+- Scraper counts input events during humanType interactions for improved tracking
+
 ## [0.10.9] - 2026-08-10
 
 3 commits since v0.10.8.
