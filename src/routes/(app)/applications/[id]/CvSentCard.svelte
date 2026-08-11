@@ -152,6 +152,24 @@
 	}
 
 	/**
+	 * Clearing is a small destructive act on a factual record — what you told
+	 * this application you sent — and the two other places on this page that
+	 * throw something away (a note, a tailored version) both ask twice.
+	 */
+	let confirmingClear = $state(false);
+
+	/**
+	 * What the record currently claims, in the SAVED values rather than the
+	 * pickers' — the confirmation has to name what is being forgotten, and the
+	 * pickers may have been moved since without being saved.
+	 */
+	let recordedLabel = $derived(
+		app.cv_version_sent
+			? (selectable.find((v) => v.slug === app.cv_version_sent)?.name ?? app.cv_version_sent)
+			: `the plain ${app.cv_sent_through === 'cv' ? 'CV' : 'resume'}`
+	);
+
+	/**
 	 * Back to nothing recorded. The local pickers have to be reset with it:
 	 * `touched` is component state, so a card that had been clicked would stay
 	 * "decided" against a record that no longer exists — and the recommendation,
@@ -252,16 +270,45 @@
 		</form>
 
 		{#if app.cv_sent_through}
-			<form method="POST" action="?/clearCvSent" use:enhance={handleClear} class="mt-2">
-				<button
-					type="submit"
-					title="Forget what was recorded here"
-					class="inline-flex items-center gap-1.5 text-[10px] text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-error)]"
-				>
-					<FontAwesomeIcon icon={faXmark} class="h-2.5 w-2.5" />
-					Clear this record
-				</button>
-			</form>
+			<div class="mt-2">
+				{#if confirmingClear}
+					<div class="inline-flex flex-wrap items-center gap-2">
+						<span class="text-[10px] text-[var(--dash-text-secondary)]">
+							Forget that you sent {recordedLabel}?
+						</span>
+						<form
+							method="POST"
+							action="?/clearCvSent"
+							use:enhance={() => {
+								const done = handleClear();
+								confirmingClear = false;
+								return done;
+							}}
+						>
+							<button type="submit" class="text-[10px] text-[var(--dash-error)] hover:underline">
+								Clear
+							</button>
+						</form>
+						<button
+							type="button"
+							onclick={() => (confirmingClear = false)}
+							class="text-[10px] text-[var(--dash-text-muted)] hover:underline"
+						>
+							Cancel
+						</button>
+					</div>
+				{:else}
+					<button
+						type="button"
+						onclick={() => (confirmingClear = true)}
+						title="Forget what was recorded here"
+						class="inline-flex items-center gap-1.5 text-[10px] text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-error)]"
+					>
+						<FontAwesomeIcon icon={faXmark} class="h-2.5 w-2.5" />
+						Clear this record
+					</button>
+				{/if}
+			</div>
 		{/if}
 
 		<!-- Which version to send, while nothing has been recorded. Ranked by how
