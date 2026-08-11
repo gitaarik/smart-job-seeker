@@ -6,6 +6,7 @@
 		faCheck,
 		faCircleNotch,
 		faExternalLinkAlt,
+		faEye,
 		faEyeSlash,
 		faFileAlt,
 		faFilePdf,
@@ -148,6 +149,20 @@
 				creditedNotNamed.length
 		)
 	);
+
+	/**
+	 * Where to look at a candidate document before committing to it.
+	 *
+	 * Null for the version-less selection on purpose: `profileDocUrl` with no
+	 * version produces a URL with no `?version=`, which the public route
+	 * resolves to the profile's PUBLIC version — so a "preview" there would show
+	 * a different document than the one being considered, which is worse than
+	 * offering nothing.
+	 */
+	function previewUrl(slug: string): string | null {
+		if (!profileSlug || !slug) return null;
+		return profileDocUrl({ profileSlug, docType: docType as DocType, versionSlug: slug });
+	}
 
 	function acceptRecommendation() {
 		if (!recommendation) return;
@@ -298,6 +313,19 @@
 						Set
 					{/if}
 				</button>
+				<!-- eslint-disable svelte/no-navigation-without-resolve -->
+				{#if previewUrl(versionSlug)}
+					<a
+						href={previewUrl(versionSlug)}
+						target="_blank"
+						rel="noopener"
+						class="flex items-center justify-center gap-1.5 rounded-lg border border-[var(--dash-border)] px-3 py-2 text-sm text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)]/60 hover:text-[var(--dash-primary)]"
+					>
+						<FontAwesomeIcon icon={faEye} class="h-3.5 w-3.5" />
+						Preview
+					</a>
+				{/if}
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			</div>
 		</form>
 
@@ -372,6 +400,22 @@
 						<FontAwesomeIcon icon={faCheck} class="h-2.5 w-2.5" />
 						Use this one
 					</button>
+					<!-- Look before you commit: the suggestion is a measurement of skill
+					     coverage, which is one thing a document is judged on and not the
+					     only one. -->
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
+					{#if previewUrl(recommendation.versionSlug)}
+						<a
+							href={previewUrl(recommendation.versionSlug)}
+							target="_blank"
+							rel="noopener"
+							class="inline-flex items-center gap-1 text-xs text-[var(--dash-primary)] hover:underline"
+						>
+							<FontAwesomeIcon icon={faEye} class="h-2.5 w-2.5" />
+							Preview it
+						</a>
+					{/if}
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					<!-- Three separate facts about the rest, not one alternative. The
 					     original said "the other N aren't on your profile at all", which
 					     counted every skill the profile doesn't NAME — and so called SQL
