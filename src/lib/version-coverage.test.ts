@@ -36,14 +36,24 @@ describe('recommendVersion', () => {
 		expect(recommendVersion(coverage, 'resume', CANDIDATES)?.versionSlug).toBe('backend');
 	});
 
-	it('prefers the plain document when nothing beats it', () => {
-		// Ties resolve to the earliest candidate, and '' is passed first — so a
-		// version is only ever recommended when it genuinely wins.
+	it('says nothing when no version beats the plain document', () => {
+		// The plain document is the yardstick, never the answer: it usually cannot
+		// be sent at all (the version-less URL falls back to the public version,
+		// and PDF export is keyed by slug). If nothing beats it, which version you
+		// send makes no difference to this job — so the card stays quiet.
 		const coverage = {
 			[hiddenSkillsKey('resume', '')]: entry(['React'], ['Go']),
 			[hiddenSkillsKey('resume', 'frontend')]: entry(['React'], ['Go'])
 		};
-		expect(recommendVersion(coverage, 'resume', CANDIDATES)?.versionSlug).toBe('');
+		expect(recommendVersion(coverage, 'resume', CANDIDATES)).toBeNull();
+	});
+
+	it('still lets a version win when it genuinely beats the baseline', () => {
+		const coverage = {
+			[hiddenSkillsKey('resume', '')]: entry(['React'], ['Go']),
+			[hiddenSkillsKey('resume', 'backend')]: entry(['React', 'Go'], [])
+		};
+		expect(recommendVersion(coverage, 'resume', CANDIDATES)?.versionSlug).toBe('backend');
 	});
 
 	it('stays quiet when no candidate shows a single required skill', () => {

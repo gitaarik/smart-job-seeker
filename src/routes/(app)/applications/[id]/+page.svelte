@@ -60,14 +60,21 @@
 	// The tailored version answers for the document type actually recorded (or
 	// the default), not for the unsaved picker in the card above — which base
 	// template a selection was computed against is part of what it means.
-	let tailorDocType = $derived(app.cv_sent_through === 'cv' ? 'cv' : 'resume');
-	// Which library version it should build on, by the same coverage ranking the
-	// picker uses. The applicant can override it before generating.
+	// Annotated, not inferred: `$derived` widens the ternary to `string`, and the
+	// default-base lookup below is keyed by the two document types.
+	let tailorDocType: 'resume' | 'cv' = $derived(app.cv_sent_through === 'cv' ? 'cv' : 'resume');
+	// Which library version it should build on: the one the coverage ranking
+	// picks for this job, else whatever this profile sends by default. Falling
+	// back to the plain document would start the tailored version from content
+	// with none of the applicant's curation applied. They can override it
+	// before generating either way.
 	let suggestedBaseSlug = $derived(
 		recommendVersion(data.coverage ?? {}, tailorDocType, [
 			'',
 			...(data.versions ?? []).map((v) => v.slug)
-		])?.versionSlug ?? ''
+		])?.versionSlug ??
+			data.defaultBase?.[tailorDocType] ??
+			''
 	);
 
 	// Notes

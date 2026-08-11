@@ -106,10 +106,13 @@
 	let recommendation = $derived(
 		decided ? null : recommendVersion(coverage, docType, ['', ...selectable.map((v) => v.slug)])
 	);
+	// recommendVersion never names the version-less document, so a missing name
+	// here means the version list and the coverage map disagree — show the slug
+	// rather than inventing a label for it.
 	let recommendedName = $derived(
 		recommendation
 			? (selectable.find((v) => v.slug === recommendation.versionSlug)?.name ??
-					`plain ${docLabel} (no version)`)
+					recommendation.versionSlug)
 			: ''
 	);
 

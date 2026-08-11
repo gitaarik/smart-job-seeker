@@ -7,7 +7,8 @@ import {
 	applications,
 	profile_version_extensions,
 	profile_version_overrides,
-	profile_versions
+	profile_versions,
+	profiles
 } from '$lib/server/db/schema';
 import { getSelectedProfileId } from '../../profile/utils';
 import { getVersionCoverage } from '$lib/server/profile/hidden-required-skills';
@@ -31,7 +32,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 	const requiredSkills = layoutData.application?.job?.skills_required;
 	const applicationId = parseInt(params.id);
 
-	const [profileVersions, coverage] = await Promise.all([
+	const [profileVersions, coverage, profile] = await Promise.all([
 		db.query.profile_versions.findMany({
 			// The applicant's library, plus this application's own tailored version
 			// if one exists. Versions belonging to OTHER applications are somebody
@@ -56,7 +57,15 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 			layoutData.selectedProfile.id,
 			Array.isArray(requiredSkills) ? (requiredSkills as string[]) : [],
 			{ applicationId: isNaN(applicationId) ? null : applicationId }
-		)
+		),
+		// What this profile sends when nobody names a version — the sensible thing
+		// to build a tailored version ON. The plain, version-less document is not:
+		// it discards the applicant's curation, and for a profile with a public
+		// version set it is not even reachable as a document.
+		db.query.profiles.findFirst({
+			where: eq(profiles.id, layoutData.selectedProfile.id),
+			columns: { public_resume_version_id: true, public_cv_version_id: true }
+		})
 	]);
 
 	const usable = profileVersions.filter((v) => v.slug && v.name) as {
@@ -65,6 +74,11 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		name: string;
 		application_id: number | null;
 	}[];
+
+	const defaultBase = {
+		resume: usable.find((v) => v.id === profile?.public_resume_version_id)?.slug ?? '',
+		cv: usable.find((v) => v.id === profile?.public_cv_version_id)?.slug ?? ''
+	};
 
 	const tailoredRow = usable.find((v) => v.application_id !== null) ?? null;
 
@@ -102,7 +116,8 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		tailored,
 		coverage,
 		decisions,
-		gaps
+		gaps,
+		defaultBase
 	};
 };
 

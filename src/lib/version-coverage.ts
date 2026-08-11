@@ -52,15 +52,22 @@ export interface Recommendation {
  * The version to suggest for one base template: most required skills shown,
  * then fewest hidden, then the applicant's own ordering.
  *
- * `candidateSlugs` is passed in the order the applicant would see them, plain
- * base document first, and ties resolve to the earliest — so a version only
- * gets recommended when it genuinely beats sending the plain document, never
- * because it happened to sort first.
+ * The plain, version-less document is the YARDSTICK, not a candidate answer.
+ * Pass it first (`''`) so ties resolve to it, and a version is then only
+ * suggested when it genuinely beats the baseline rather than because it sorted
+ * first — but when the baseline wins, the answer is silence.
  *
- * Returns null when there is nothing to say: no coverage was measured (the job
- * lists no required skills, or the profile has none of them), or no candidate
- * shows a single required skill — in which case a recommendation would be a
- * confident-sounding coin flip.
+ * That distinction is not pedantry: the plain document usually cannot be sent.
+ * `/p/[slug]/resume` with no version falls back to the profile's *public*
+ * version, PDF export is keyed by slug, and the send-record card offers no link
+ * for it — so "send the plain resume" names an artifact that, for most
+ * profiles, does not exist.
+ *
+ * Returns null when there is nothing worth saying: no coverage was measured
+ * (the job lists no required skills, or the profile has none of them), no
+ * candidate shows a single required skill, or nothing beat the baseline — in
+ * which case which version you send makes no difference to this job's required
+ * skills, and saying anything would be a confident-sounding coin flip.
  */
 export function recommendVersion(
 	coverage: Record<string, VersionCoverage>,
@@ -83,5 +90,6 @@ export function recommendVersion(
 		if (better) best = { versionSlug, coverage: entry };
 	}
 
-	return best && best.coverage.shown.length > 0 ? best : null;
+	if (!best || best.versionSlug === '' || best.coverage.shown.length === 0) return null;
+	return best;
 }
