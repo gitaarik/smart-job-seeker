@@ -66,6 +66,12 @@
 	let chosenBase = $state<string | null>(null);
 	let baseSlug = $derived(chosenBase ?? tailored?.baseSlug ?? suggestedBaseSlug);
 	let working = $state(false);
+	/**
+	 * Discard destroys a generated version and every decision on it, and the
+	 * only way back is another model call. One click is too few for that, and
+	 * the notes list on this page already asks twice for the same reason.
+	 */
+	let confirmingDiscard = $state(false);
 
 	let included = $derived(decisions.filter((d) => d.action === 'include' && d.sort === null));
 	let excluded = $derived(decisions.filter((d) => d.action === 'exclude'));
@@ -319,16 +325,49 @@
 						Keep in my versions
 					</button>
 				</form>
-				<form method="POST" action="?/discardTailored" use:enhance={track}>
+				{#if confirmingDiscard}
+					<div class="inline-flex items-center gap-2">
+						<span class="text-xs text-[var(--dash-text-secondary)]">
+							Discard this version and its {decisions.length}
+							{decisions.length === 1 ? 'change' : 'changes'}?
+						</span>
+						<form
+							method="POST"
+							action="?/discardTailored"
+							use:enhance={() => {
+								const done = track();
+								confirmingDiscard = false;
+								return done;
+							}}
+						>
+							<button
+								type="submit"
+								disabled={working}
+								class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-error)] hover:underline disabled:opacity-70"
+							>
+								<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
+								Discard
+							</button>
+						</form>
+						<button
+							type="button"
+							onclick={() => (confirmingDiscard = false)}
+							class="text-xs text-[var(--dash-text-muted)] hover:underline"
+						>
+							Cancel
+						</button>
+					</div>
+				{:else}
 					<button
-						type="submit"
+						type="button"
+						onclick={() => (confirmingDiscard = true)}
 						disabled={working}
 						class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] disabled:opacity-70"
 					>
 						<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
 						Discard
 					</button>
-				</form>
+				{/if}
 			</div>
 		{/if}
 	</Card>

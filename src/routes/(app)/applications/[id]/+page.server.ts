@@ -565,10 +565,14 @@ export const actions: Actions = {
 		// would now render as a broken link. An applicant who recorded sending a
 		// LIBRARY version said something true, and discarding this draft must not
 		// erase it.
+		//
+		// Both columns go, not just the slug: leaving the document type behind
+		// would read as "sent the plain resume", which is a different claim from
+		// the one that was made and no longer a true one.
 		if (doomed.slug) {
 			await db
 				.update(applications)
-				.set({ cv_version_sent: null, date_updated: new Date() })
+				.set({ cv_version_sent: null, cv_sent_through: null, date_updated: new Date() })
 				.where(
 					and(
 						eq(applications.id, appId),
@@ -577,6 +581,32 @@ export const actions: Actions = {
 					)
 				);
 		}
+		return { success: true };
+	},
+
+	/**
+	 * Put the send-record back to nothing recorded.
+	 *
+	 * `setCvSent` cannot express this: the form always posts a document type, so
+	 * "no version" saves as "sent the plain resume" and the card is decided
+	 * forever after. Recording something you did not do is a worse failure than
+	 * recording nothing, and there was no way back.
+	 */
+	clearCvSent: async ({ locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
+
+		await db
+			.update(applications)
+			.set({ cv_version_sent: null, cv_sent_through: null, date_updated: new Date() })
+			.where(and(eq(applications.id, appId), eq(applications.profile_id, profileId)));
+
 		return { success: true };
 	},
 

@@ -11,7 +11,8 @@
 		faFilePdf,
 		faLightbulb,
 		faPlus,
-		faSave
+		faSave,
+		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../components/Card.svelte';
 	import { profileDocUrl } from '$lib/utils/profile-doc-url';
@@ -150,6 +151,22 @@
 		}
 	}
 
+	/**
+	 * Back to nothing recorded. The local pickers have to be reset with it:
+	 * `touched` is component state, so a card that had been clicked would stay
+	 * "decided" against a record that no longer exists — and the recommendation,
+	 * which only shows while undecided, would never come back.
+	 */
+	function handleClear() {
+		return async ({ update }: { update: () => Promise<void> }) => {
+			await update();
+			docType = 'resume';
+			versionSlug = '';
+			touched = false;
+			lifted = [];
+		};
+	}
+
 	function handleCvSubmit() {
 		return async ({
 			result,
@@ -233,6 +250,19 @@
 				</button>
 			</div>
 		</form>
+
+		{#if app.cv_sent_through}
+			<form method="POST" action="?/clearCvSent" use:enhance={handleClear} class="mt-2">
+				<button
+					type="submit"
+					title="Forget what was recorded here"
+					class="inline-flex items-center gap-1.5 text-[10px] text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-error)]"
+				>
+					<FontAwesomeIcon icon={faXmark} class="h-2.5 w-2.5" />
+					Clear this record
+				</button>
+			</form>
+		{/if}
 
 		<!-- Which version to send, while nothing has been recorded. Ranked by how
          much of what the job requires each candidate would actually print, so
