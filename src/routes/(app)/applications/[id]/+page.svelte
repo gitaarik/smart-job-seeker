@@ -425,7 +425,7 @@
 						>
 					{:else}
 						<span class="text-[var(--dash-text-secondary)]">Resume / CV</span>
-						<span class="text-[var(--dash-text-muted)]">not chosen yet</span>
+						<span class="text-[var(--dash-text-secondary)]">not chosen yet</span>
 						<a
 							href={resolve('/(app)/applications/[id]/resume', { id: String(app.id) })}
 							class="dash-link text-xs">Choose one</a

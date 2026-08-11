@@ -101,11 +101,11 @@
 
 	<Card padding="lg">
 		{#if !hasJob}
-			<p class="text-xs text-[var(--dash-text-muted)]">
+			<p class="text-xs text-[var(--dash-text-secondary)]">
 				Link a job to this application to tailor a version for it.
 			</p>
 		{:else if !tailored}
-			<p class="mb-3 text-xs text-[var(--dash-text-muted)]">
+			<p class="mb-3 text-xs text-[var(--dash-text-secondary)]">
 				Build a version of your resume for this job: it starts from one of your own versions and
 				only decides what to <em>show</em> — which bullets, which projects, and any skill this job requires
 				that your document would otherwise hide. It never rewrites your words.
@@ -116,7 +116,7 @@
 					<div class="flex-1">
 						<label
 							for="tailor-base-slug"
-							class="mb-1 block text-[10px] text-[var(--dash-text-muted)]">Start from</label
+							class="mb-1 block text-[10px] text-[var(--dash-text-secondary)]">Start from</label
 						>
 						<select
 							id="tailor-base-slug"
@@ -150,7 +150,7 @@
 			<div class="flex flex-wrap items-center justify-between gap-2">
 				<div>
 					<p class="text-sm font-medium text-[var(--dash-text)]">{tailored.name}</p>
-					<p class="text-[10px] text-[var(--dash-text-muted)]">
+					<p class="text-[10px] text-[var(--dash-text-secondary)]">
 						{decisions.length}
 						{decisions.length === 1 ? 'change' : 'changes'} against the version it builds on.
 					</p>
@@ -194,7 +194,7 @@
 			</div>
 
 			{#if decisions.length === 0}
-				<p class="mt-3 text-xs text-[var(--dash-text-muted)]">
+				<p class="mt-3 text-xs text-[var(--dash-text-secondary)]">
 					Nothing to change — the version this builds on already reads well for this job.
 				</p>
 			{/if}
@@ -210,7 +210,7 @@
 				{#if group.rows.length > 0}
 					<div class="mt-4">
 						<p
-							class="mb-2 text-[10px] font-semibold tracking-wide text-[var(--dash-text-muted)] uppercase"
+							class="mb-2 text-[10px] font-semibold tracking-wide text-[var(--dash-text)] uppercase"
 						>
 							{group.head}
 						</p>
@@ -223,7 +223,9 @@
 									<div class="min-w-0 flex-1">
 										<p class="text-xs text-[var(--dash-text)]">{clip(row.label)}</p>
 										{#if row.reason}
-											<p class="mt-0.5 text-[10px] text-[var(--dash-text-muted)]">{row.reason}</p>
+											<p class="mt-0.5 text-[10px] text-[var(--dash-text-secondary)]">
+												{row.reason}
+											</p>
 										{/if}
 									</div>
 									<div class="flex shrink-0 items-center gap-1">
@@ -268,12 +270,10 @@
 			     document doesn't read as a stronger application. -->
 			{#if gaps.length > 0}
 				<div class="mt-4 rounded-lg border border-[var(--dash-border)] p-3">
-					<p
-						class="text-[10px] font-semibold tracking-wide text-[var(--dash-text-muted)] uppercase"
-					>
+					<p class="text-[10px] font-semibold tracking-wide text-[var(--dash-text)] uppercase">
 						Choosing what to show can't fix
 					</p>
-					<ul class="mt-1 list-inside list-disc text-[10px] text-[var(--dash-text-muted)]">
+					<ul class="mt-1 list-inside list-disc text-[10px] text-[var(--dash-text-secondary)]">
 						{#each gaps as gap (gap)}
 							<li>{gap}</li>
 						{/each}
@@ -362,7 +362,7 @@
 						<button
 							type="button"
 							onclick={() => (confirmingDiscard = false)}
-							class="text-xs text-[var(--dash-text-muted)] hover:underline"
+							class="text-xs text-[var(--dash-text-secondary)] hover:underline"
 						>
 							Cancel
 						</button>
@@ -372,7 +372,7 @@
 						type="button"
 						onclick={() => (confirmingDiscard = true)}
 						disabled={working}
-						class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] disabled:opacity-70"
+						class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] disabled:opacity-70"
 					>
 						<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
 						Discard

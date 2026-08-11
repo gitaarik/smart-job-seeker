@@ -300,7 +300,7 @@
 	</div>
 
 	<Card padding="lg">
-		<p class="mb-4 text-xs text-[var(--dash-text-muted)]">
+		<p class="mb-4 text-xs text-[var(--dash-text-secondary)]">
 			Pick the version that fits this job, see what it leaves out, and record what you sent.
 		</p>
 		<form method="POST" action="?/setCvSent" use:enhance={handleCvSubmit}>
@@ -425,7 +425,7 @@
 							Tailor a version from this one, keeping what fits →
 						</button>
 					</form>
-					<p class="mt-1 text-[10px] text-[var(--dash-text-muted)]">
+					<p class="mt-1 text-[10px] text-[var(--dash-text-secondary)]">
 						Putting these back on <strong>{liftTarget}</strong> itself would change it for every job that
 						uses it.
 					</p>
@@ -456,7 +456,7 @@
 						<button
 							type="button"
 							onclick={() => (confirmingClear = false)}
-							class="text-[10px] text-[var(--dash-text-muted)] hover:underline"
+							class="text-[10px] text-[var(--dash-text-secondary)] hover:underline"
 						>
 							Cancel
 						</button>
@@ -466,7 +466,7 @@
 						type="button"
 						onclick={() => (confirmingClear = true)}
 						title="Forget what was recorded here"
-						class="inline-flex items-center gap-1.5 text-[10px] text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-error)]"
+						class="inline-flex items-center gap-1.5 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)]"
 					>
 						<FontAwesomeIcon icon={faXmark} class="h-2.5 w-2.5" />
 						Clear this record
@@ -533,17 +533,17 @@
 					     counted every skill the profile doesn't NAME — and so called SQL
 					     and Linux missing while the strip below credited them. -->
 					{#if recommendation.coverage.hidden.length > 0}
-						<span class="text-[10px] text-[var(--dash-text-muted)]">
+						<span class="text-[10px] text-[var(--dash-text-secondary)]">
 							{recommendation.coverage.hidden.length} more you have wouldn't print on it.
 						</span>
 					{/if}
 					{#if creditedNotNamed.length > 0}
-						<span class="text-[10px] text-[var(--dash-text-muted)]">
+						<span class="text-[10px] text-[var(--dash-text-secondary)]">
 							{creditedNotNamed.length} you're credited for through related skills.
 						</span>
 					{/if}
 					{#if absentFromProfile > 0}
-						<span class="text-[10px] text-[var(--dash-text-muted)]">
+						<span class="text-[10px] text-[var(--dash-text-secondary)]">
 							{absentFromProfile}
 							{absentFromProfile === 1 ? "isn't" : "aren't"} on your profile at all.
 						</span>
@@ -579,7 +579,7 @@
 					{/each}
 				</div>
 
-				<p class="mt-2 text-[10px] text-[var(--dash-text-muted)]">
+				<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
 					Adding one puts the word on your profile and, unless you say otherwise, on the documents
 					you send.
 				</p>
@@ -625,7 +625,7 @@
                    the one-click lift wouldn't reveal it — don't pretend. -->
 							<span
 								title="Held back by another rule — edit it in your profile skills"
-								class="inline-flex items-center gap-1 rounded border border-dashed border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text-muted)]"
+								class="inline-flex items-center gap-1 rounded border border-dashed border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text-secondary)]"
 							>
 								{skill.name}
 							</span>
@@ -633,7 +633,7 @@
 					{/each}
 				</div>
 
-				<p class="mt-2 text-[10px] text-[var(--dash-text-muted)]">
+				<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
 					Adding puts the skill on <strong>{liftTarget}</strong>. Skills you can't add here are held
 					back by another rule — change them in
 					<a href="/profile/skills" class="dash-link">your skills</a>.
