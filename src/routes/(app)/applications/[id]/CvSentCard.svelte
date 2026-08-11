@@ -132,6 +132,23 @@
 			: ''
 	);
 
+	/**
+	 * Required skills the profile neither names nor is credited for — the ones
+	 * genuinely absent, as opposed to the ones present under another word.
+	 *
+	 * `owned` counts only exact-name matches, so `required - owned` includes the
+	 * semantically credited ones; reporting that difference as "not on your
+	 * profile" contradicted the credited strip on the same card.
+	 */
+	let absentFromProfile = $derived(
+		Math.max(
+			0,
+			(recommendation?.coverage.required ?? 0) -
+				(recommendation?.coverage.owned ?? 0) -
+				creditedNotNamed.length
+		)
+	);
+
 	function acceptRecommendation() {
 		if (!recommendation) return;
 		versionSlug = recommendation.versionSlug;
@@ -355,14 +372,24 @@
 						<FontAwesomeIcon icon={faCheck} class="h-2.5 w-2.5" />
 						Use this one
 					</button>
+					<!-- Three separate facts about the rest, not one alternative. The
+					     original said "the other N aren't on your profile at all", which
+					     counted every skill the profile doesn't NAME — and so called SQL
+					     and Linux missing while the strip below credited them. -->
 					{#if recommendation.coverage.hidden.length > 0}
 						<span class="text-[10px] text-[var(--dash-text-muted)]">
 							{recommendation.coverage.hidden.length} more you have wouldn't print on it.
 						</span>
-					{:else if recommendation.coverage.owned < recommendation.coverage.required}
+					{/if}
+					{#if creditedNotNamed.length > 0}
 						<span class="text-[10px] text-[var(--dash-text-muted)]">
-							The other {recommendation.coverage.required - recommendation.coverage.owned} aren't on your
-							profile at all.
+							{creditedNotNamed.length} you're credited for through related skills.
+						</span>
+					{/if}
+					{#if absentFromProfile > 0}
+						<span class="text-[10px] text-[var(--dash-text-muted)]">
+							{absentFromProfile}
+							{absentFromProfile === 1 ? "isn't" : "aren't"} on your profile at all.
 						</span>
 					{/if}
 				</div>
