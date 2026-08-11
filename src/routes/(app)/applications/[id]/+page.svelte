@@ -38,6 +38,8 @@
 	} from '$lib/application-status';
 	import StatusStepper from './StatusStepper.svelte';
 	import CvSentCard from './CvSentCard.svelte';
+	import TailoredVersionCard from './TailoredVersionCard.svelte';
+	import { recommendVersion } from '$lib/version-coverage';
 	import ActivitySummaryCard from './ActivitySummaryCard.svelte';
 	import OfferCard from './OfferCard.svelte';
 	import DetailsCard from './DetailsCard.svelte';
@@ -54,6 +56,19 @@
 	let app = $derived(data.application);
 	let job = $derived(app.job);
 	let profileSlug = $derived((data as any).selectedProfile?.slug as string | undefined);
+
+	// The tailored version answers for the document type actually recorded (or
+	// the default), not for the unsaved picker in the card above — which base
+	// template a selection was computed against is part of what it means.
+	let tailorDocType = $derived(app.cv_sent_through === 'cv' ? 'cv' : 'resume');
+	// Which library version it should build on, by the same coverage ranking the
+	// picker uses. The applicant can override it before generating.
+	let suggestedBaseSlug = $derived(
+		recommendVersion(data.coverage ?? {}, tailorDocType, [
+			'',
+			...(data.versions ?? []).map((v) => v.slug)
+		])?.versionSlug ?? ''
+	);
 
 	// Notes
 	type Note = { id: string; text: string; created_at: string };
@@ -520,8 +535,20 @@
 	<CvSentCard
 		{app}
 		versions={data.versions ?? []}
-		hiddenRequiredSkills={data.hiddenRequiredSkills ?? {}}
+		tailored={data.tailored ?? null}
+		coverage={data.coverage ?? {}}
 		{profileSlug}
+	/>
+
+	<TailoredVersionCard
+		tailored={data.tailored ?? null}
+		decisions={data.decisions ?? []}
+		gaps={data.gaps ?? []}
+		versions={data.versions ?? []}
+		docType={tailorDocType}
+		{suggestedBaseSlug}
+		{profileSlug}
+		hasJob={!!app.job}
 	/>
 
 	<!-- Notes -->

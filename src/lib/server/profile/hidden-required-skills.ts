@@ -15,32 +15,37 @@
  * about to be sent — needs the whole tag chain evaluated for that one document,
  * which is what createProfileFilter already does for the templates. So this
  * runs the same filter server-side, per (base template × version) pair.
+ *
+ * Running that filter for every candidate document also answers a second
+ * question for free: not just what each one HIDES, but how much of the job it
+ * COVERS — which is what lets the application page recommend a version instead
+ * of presenting an empty picker. Same loop, same filter, one more counter; see
+ * getVersionCoverage below and planning/TAILORED-VERSIONS.md § Phase 1.
  */
 
 import { dbDirect as db } from '$lib/server/db';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq, isNull, or } from 'drizzle-orm';
 import { profile_versions, tech_skill_categories, tech_skills } from '$lib/server/db/schema';
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
 import { BASE_TEMPLATE_TAGS, SHOW_ON_ALL, tagsForShowOn } from '$lib/profile-visibility';
+import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
+import { hiddenSkillsKey, type HiddenSkill, type VersionCoverage } from '$lib/version-coverage';
 
-export interface HiddenSkill {
-	id: number;
-	name: string;
-	/**
-	 * Whether the one-click lift would actually reveal it here. False when
-	 * something else holds it back — a hidden category, or a base-template
-	 * restriction like `["cv"]` on a resume — in which case the caller should
-	 * report the gap rather than offer a button that appears to do nothing.
-	 */
-	liftable: boolean;
-}
+// The shapes and the ranking live in $lib/version-coverage so the card can rank
+// as the applicant flips between Resume and CV without asking the server again.
+export { hiddenSkillsKey };
+export type { HiddenSkill, VersionCoverage };
 
 /**
- * Key into the result map. `versionSlug` is "" when no version is picked, which
- * is a real document in its own right (the plain base template).
+ * Which versions a caller is asking about.
+ *
+ * Library versions (`application_id IS NULL`) are always in. An application's
+ * own tailored version joins them only when that application is the one asking
+ * — without this the loop would grow with every application the applicant ever
+ * created, computing documents nobody is looking at.
  */
-export function hiddenSkillsKey(docType: string, versionSlug: string): string {
-	return `${docType}:${versionSlug}`;
+export interface CoverageScope {
+	applicationId?: number | null;
 }
 
 /**
@@ -53,10 +58,11 @@ export function hiddenSkillsKey(docType: string, versionSlug: string): string {
  * produce a nudge. Only `skills_required` is worth interrupting over; the
  * caller decides what to pass.
  */
-export async function getHiddenRequiredSkills(
+export async function getVersionCoverage(
 	profileId: number,
-	requiredSkills: string[]
-): Promise<Record<string, HiddenSkill[]>> {
+	requiredSkills: string[],
+	scope: CoverageScope = {}
+): Promise<Record<string, VersionCoverage>> {
 	const wanted = new Set(
 		requiredSkills
 			.filter((s): s is string => typeof s === 'string')
@@ -65,11 +71,23 @@ export async function getHiddenRequiredSkills(
 	);
 	if (wanted.size === 0) return {};
 
+	const applicationId = scope.applicationId ?? null;
 	const [versions, categories] = await Promise.all([
 		db.query.profile_versions.findMany({
-			where: eq(profile_versions.profile_id, profileId),
-			columns: { id: true, slug: true, toggles: true },
-			with: { extension_links: true },
+			where: and(
+				eq(profile_versions.profile_id, profileId),
+				applicationId === null
+					? isNull(profile_versions.application_id)
+					: or(
+							isNull(profile_versions.application_id),
+							eq(profile_versions.application_id, applicationId)
+						)
+			),
+			columns: { id: true, slug: true, toggles: true, application_id: true },
+			// A tailored version's visible set is its tags PLUS its per-job
+			// overrides, so the prediction has to see both or it would answer for a
+			// document that doesn't exist.
+			with: { extension_links: true, overrides: true },
 			orderBy: asc(profile_versions.sort)
 		}),
 		db.query.tech_skill_categories.findMany({
@@ -107,7 +125,7 @@ export async function getHiddenRequiredSkills(
 	}
 	if (owned.size === 0) return {};
 
-	const result: Record<string, HiddenSkill[]> = {};
+	const result: Record<string, VersionCoverage> = {};
 	const versionSlugs = ['', ...versions.map((v) => v.slug).filter(Boolean)];
 
 	for (const docType of BASE_TEMPLATE_TAGS) {
@@ -121,10 +139,11 @@ export async function getHiddenRequiredSkills(
 
 			// A skill prints only if its category survives the filter too — that is
 			// how both templates render them (category first, then its skills).
-			const visibleCategories = new Set(filterOnTags(categories).map((c) => c.id));
+			const keptCategories = filterOnTags(categories, OVERRIDE_ENTITIES.skillCategory);
+			const visibleCategories = new Set(keptCategories.map((c) => c.id));
 			const visible = new Set<string>();
-			for (const category of filterOnTags(categories)) {
-				for (const skill of filterOnTags(category.tech_skills)) {
+			for (const category of keptCategories) {
+				for (const skill of filterOnTags(category.tech_skills, OVERRIDE_ENTITIES.skill)) {
 					const key = skill.name?.trim().toLowerCase();
 					if (key) visible.add(key);
 				}
@@ -135,8 +154,12 @@ export async function getHiddenRequiredSkills(
 			const target = versionSlug || SHOW_ON_ALL;
 
 			const hidden: HiddenSkill[] = [];
+			const shown: string[] = [];
 			for (const [key, skill] of owned) {
-				if (visible.has(key)) continue;
+				if (visible.has(key)) {
+					shown.push(skill.name);
+					continue;
+				}
 
 				const lifted = filterOnTags([
 					{
@@ -150,9 +173,12 @@ export async function getHiddenRequiredSkills(
 				});
 			}
 
-			if (hidden.length > 0) {
-				result[hiddenSkillsKey(docType, versionSlug as string)] = hidden;
-			}
+			result[hiddenSkillsKey(docType, versionSlug as string)] = {
+				shown,
+				hidden,
+				owned: owned.size,
+				required: wanted.size
+			};
 		}
 	}
 

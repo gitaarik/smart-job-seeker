@@ -41,6 +41,7 @@ import {
 	profile_document_projects,
 	profile_exports,
 	profile_version_extensions,
+	profile_version_overrides,
 	profile_versions,
 	profiles,
 	project_stories,
@@ -444,8 +445,23 @@ export const profile_versionsRelations = relations(profile_versions, ({ one, man
 	}),
 	profiles_public_resume_version_id: many(profiles, {
 		relationName: 'profiles_public_resume_version_id_profile_versions_id'
-	})
+	}),
+	application: one(applications, {
+		fields: [profile_versions.application_id],
+		references: [applications.id]
+	}),
+	overrides: many(profile_version_overrides)
 }));
+
+export const profile_version_overridesRelations = relations(
+	profile_version_overrides,
+	({ one }) => ({
+		version: one(profile_versions, {
+			fields: [profile_version_overrides.version_id],
+			references: [profile_versions.id]
+		})
+	})
+);
 
 export const side_project_technologiesRelations = relations(
 	side_project_technologies,

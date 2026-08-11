@@ -15,20 +15,41 @@
  * exclusion and re-admits the item there. That is what makes the profile-only
  * pair (`!resume` + `!cv`, see $lib/profile-visibility) an overridable default:
  * off every document, except the versions explicitly tagged back in.
+ *
+ * A version may additionally carry per-item OVERRIDES (see
+ * $lib/version-overrides) — the per-job exceptions that make a version tailored
+ * to one application. Tags are the applicant's general rule; an override is
+ * this document's exception to it, so overrides are applied last and win in
+ * both directions. A caller that passes no entity type gets the tag behaviour
+ * unchanged, which is why adding this broke no existing call site.
  */
 
 import { BASE_TEMPLATE_TAGS, isNegated, tagSlug } from '$lib/profile-visibility';
+import {
+	indexOverrides,
+	orderByOverrides,
+	overrideKey,
+	type VersionOverride
+} from '$lib/version-overrides';
 
 interface VersionObj {
 	id: number;
 	slug: string | null;
 	toggles: string[] | unknown;
 	extension_links: Array<{ extended_id: number | null } & Record<string, unknown>>;
+	/** Loaded alongside the version; absent on every pre-override caller. */
+	overrides?: VersionOverride[] | unknown;
 }
 
 export interface ProfileFilter {
+	/**
+	 * Filter one list for the document being rendered. Pass `entityType` (a
+	 * $lib/version-overrides entity) for lists a tailored version can speak
+	 * about; without it only tags apply.
+	 */
 	filterOnTags: <T extends { tags?: string[] | unknown } & Record<string, any>>(
-		objList: T[]
+		objList: T[],
+		entityType?: string
 	) => T[];
 	versionSlugs: string[];
 	toggles: string[];
@@ -78,15 +99,41 @@ export function createProfileFilter(
 		}
 	});
 
+	// Chain order is root-first (the version being viewed, then what it extends),
+	// and indexOverrides lets the first writer win — so a tailored version's own
+	// decision beats the library version it extends, matching how a positive tag
+	// on the viewed version beats an inherited exclusion.
+	const overrideRows: VersionOverride[] = [];
+	versionObjs.forEach((vo) => {
+		if (Array.isArray(vo?.overrides)) {
+			overrideRows.push(...(vo.overrides as VersionOverride[]));
+		}
+	});
+	const overrides = indexOverrides(overrideRows);
+
 	function filterOnTags<T extends { tags?: string[] | unknown } & Record<string, any>>(
-		objList: T[]
+		objList: T[],
+		entityType?: string
 	): T[] {
 		// The identifiers active for the currently-rendered document: the base
 		// template ("resume"/"cv") plus the viewed version's extension chain.
 		const currentType = (type || 'resume').toLowerCase();
 		const activeVersionIds = versionSlugs.map((s) => s.toLowerCase());
 
-		return objList.filter((obj) => {
+		const overrideFor = (obj: T): VersionOverride | undefined => {
+			if (!entityType || overrides.size === 0) return undefined;
+			const id = (obj as { id?: unknown }).id;
+			return typeof id === 'number' ? overrides.get(overrideKey(entityType, id)) : undefined;
+		};
+
+		const kept = objList.filter((obj) => {
+			// The per-job exception, in both directions: an include re-admits an item
+			// the tags hold back (a profile-only skill this job requires) without
+			// touching the shared tag array; an exclude drops one the tags allow.
+			const override = overrideFor(obj);
+			if (override?.action === 'exclude') return false;
+			if (override?.action === 'include') return true;
+
 			if (!('tags' in obj && Array.isArray(obj.tags) && obj.tags.length)) {
 				return true;
 			}
@@ -124,6 +171,12 @@ export function createProfileFilter(
 			// version-restricted item stays off the plain base document.
 			if (!versionPositives.length) return true;
 			return onActiveVersion;
+		});
+
+		if (!entityType) return kept;
+		return orderByOverrides(kept, entityType, overrides, (obj) => {
+			const id = (obj as { id?: unknown }).id;
+			return typeof id === 'number' ? id : undefined;
 		});
 	}
 

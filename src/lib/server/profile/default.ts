@@ -50,7 +50,12 @@ const PROFILE_INCLUDE = {
 			toggles: true
 		},
 		with: {
-			extension_links: true
+			extension_links: true,
+			// The per-job include/exclude decisions a tailored version carries.
+			// Loaded with the version rather than passed as a separate prop, so
+			// every renderer that already resolves a version chain gets them for
+			// free — see components/ProfileDisplay/profile-filter.ts.
+			overrides: true
 		},
 		orderBy: (t: any, { asc }: any) => asc(t.sort),
 		where: (t: any, { eq }: any) => eq(t.status, 'published')

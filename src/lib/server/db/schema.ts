@@ -1535,9 +1535,28 @@ export const profile_versions = pgTable(
 		name: text(),
 		profile_id: integer().notNull(),
 		toggles: json(),
-		preview_links: text()
+		preview_links: text(),
+		/**
+		 * Set when this version belongs to ONE application — a version tailored to
+		 * that job, generated and then adjusted, rather than one the applicant
+		 * curates by hand and reuses. Null is the library.
+		 *
+		 * Same table as library versions on purpose: a version is consumed by the
+		 * public routes, share tokens, PDF export, the extension chain, the filter
+		 * and the editor, and a parallel table would duplicate every one of them.
+		 * The separation the user actually wants is a LISTING concern — every list
+		 * of "your versions" filters `IS NULL`, and the application's own page is
+		 * the one place its tailored version appears.
+		 */
+		application_id: integer()
 	},
 	(table): PgTableExtraConfigValue[] => [
+		index('profile_versions_application_idx').on(table.application_id),
+		foreignKey({
+			columns: [table.application_id],
+			foreignColumns: [applications.id],
+			name: 'profile_versions_application_foreign'
+		}).onDelete('cascade'),
 		foreignKey({
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
@@ -1937,6 +1956,61 @@ export const profile_version_extensions = pgTable(
 			foreignColumns: [profile_versions.id],
 			name: 'profile_version_extensions_extender_foreign'
 		}).onDelete('set null')
+	]
+);
+
+/**
+ * Per-item include/exclude decisions belonging to ONE version — the delta that
+ * makes a version job-tailored.
+ *
+ * The general rule for what a document prints is the item's own `tags` (see
+ * $lib/profile-visibility); this is the per-job exception, applied after the tag
+ * pass in ProfileDisplay/profile-filter.ts.
+ *
+ * A sidecar rather than more tags because `tags` is a SHARED column on a shared
+ * row: writing `app-45` into every item a tailored version touches accumulates
+ * across every application forever, and deleting the version could not clean it
+ * — no foreign key reaches inside a json array. Here the cascade does it.
+ *
+ * `sort` exists because an item's own `sort` is global. Without a per-version
+ * one, tailoring could only include and exclude, and "lead with the bullet this
+ * job cares about" would be inexpressible.
+ *
+ * `reason` is not decoration: a resume the applicant cannot audit is one they
+ * cannot defend in the room it is read in, so every generated decision carries
+ * why. `source` keeps a regeneration from silently overwriting a decision the
+ * applicant made by hand.
+ */
+export const profile_version_overrides = pgTable(
+	'profile_version_overrides',
+	{
+		id: serial().primaryKey().notNull(),
+		version_id: integer().notNull(),
+		/** Entity vocabulary lives in $lib/version-overrides.ts — append-only. */
+		entity_type: varchar({ length: 64 }).notNull(),
+		entity_id: integer().notNull(),
+		/** 'include' | 'exclude' */
+		action: varchar({ length: 16 }).notNull(),
+		/** Per-version order; null keeps the item's own global `sort`. */
+		sort: integer(),
+		/** Why this decision was made, shown in the review diff. */
+		reason: text(),
+		/** 'ai' | 'user' — a regeneration leaves 'user' decisions alone. */
+		source: varchar({ length: 16 }).default('ai').notNull(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' }),
+		date_updated: timestamp({ withTimezone: true, mode: 'date' })
+	},
+	(table) => [
+		uniqueIndex('profile_version_overrides_item_key').on(
+			table.version_id,
+			table.entity_type,
+			table.entity_id
+		),
+		foreignKey({
+			columns: [table.version_id],
+			foreignColumns: [profile_versions.id],
+			name: 'profile_version_overrides_version_foreign'
+		}).onDelete('cascade')
 	]
 );
 

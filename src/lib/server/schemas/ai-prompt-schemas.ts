@@ -246,6 +246,31 @@ export const extractJobsFromSearchPageSchema = z
 	.passthrough(); // Allow extra keys like pattern, jobCount that LLMs might add
 
 /**
+ * Schema for tailor_resume_selection prompt
+ *
+ * The model reviews a shortlist the deterministic layers already produced and
+ * says which entries it would keep or drop for this job. Deliberately loose —
+ * `ref` and `action` are plain strings, validated in code against the shortlist
+ * — because a strict enum here buys nothing (an unknown ref is dropped either
+ * way) and costs a retry loop when the model answers with a near-miss. Same
+ * lesson as the capability proposals: a flat LIST of decisions survives round
+ * trips that an object with optional keys does not.
+ */
+export const tailorResumeSelectionSchema = z.object({
+	decisions: z
+		.array(
+			z
+				.object({
+					ref: z.string().describe('The exact ref string from the shortlist, e.g. "bullet:412".'),
+					action: z.string().describe('Either "keep" or "drop".'),
+					reason: z.string().describe('One short sentence, addressed to the applicant, saying why.')
+				})
+				.passthrough()
+		)
+		.describe('One entry per shortlist item you want to change or confirm.')
+});
+
+/**
  * Schema for extract_matched_skills prompt
  * Extracts which job skills the candidate has via semantic matching
  * Returns job skill strings (not candidate skill names) that the candidate matches
@@ -794,7 +819,8 @@ export const aiPromptSchemas = {
 	review_prep_sheet: reviewLetterSchema,
 	suggest_import_tasks: suggestImportTasksSchema,
 	extract_qa_pairs: extractQaPairsSchema,
-	revise_application_question: reviseAnswerSchema
+	revise_application_question: reviseAnswerSchema,
+	tailor_resume_selection: tailorResumeSelectionSchema
 } as const;
 
 /**

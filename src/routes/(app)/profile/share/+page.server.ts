@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { profile_tokens, profile_versions } from '$lib/server/db/schema';
-import { eq, and, inArray, asc, desc } from 'drizzle-orm';
+import { eq, and, inArray, asc, desc, isNull } from 'drizzle-orm';
 import { getSelectedProfileId } from '../utils';
 import {
 	DEFAULT_FORMAT,
@@ -28,8 +28,13 @@ export const load: PageServerLoad = async ({ parent }) => {
 	}
 
 	// Get profile versions for this profile to use in the dropdown
+	// Library only — a share link points at a document the applicant maintains,
+	// not at one application's working copy.
 	const versions = await db.query.profile_versions.findMany({
-		where: eq(profile_versions.profile_id, layoutData.selectedProfile.id),
+		where: and(
+			eq(profile_versions.profile_id, layoutData.selectedProfile.id),
+			isNull(profile_versions.application_id)
+		),
 		orderBy: asc(profile_versions.name)
 	});
 

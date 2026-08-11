@@ -197,6 +197,10 @@ export async function buildProfileJsonExport(
 		where: eq(profiles.id, profileId),
 		with: {
 			profile_versions: {
+				// Library only. A tailored version is meaningless without the
+				// application it belongs to, and importing one would point its
+				// application_id at a row that does not exist in the target.
+				where: (t, { isNull }) => isNull(t.application_id),
 				columns: { status: true, sort: true, slug: true, name: true, toggles: true },
 				with: {
 					extension_links: {

@@ -4,6 +4,7 @@
 	import ContactItem from './ContactItem.svelte';
 	import { createProfileFilter } from './profile-filter';
 	import { isContactHidden } from '$lib/resume-contact-fields';
+	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 
 	interface Profile {
 		name: string | null;
@@ -117,15 +118,18 @@
 		versionFromUrl
 	);
 
-	const work_experiences = filterOnTags(profile.work_experiences);
+	const work_experiences = filterOnTags(profile.work_experiences, OVERRIDE_ENTITIES.workExperience);
 
 	// Resolve visible skills per category up front: a category whose skills are
 	// all hidden (all profile-only, say) must not print an empty bullet — nor
 	// keep the SKILLS heading alive when it's the only category left.
-	const skillGroups = filterOnTags(profile.tech_skill_categories ?? [])
+	const skillGroups = filterOnTags(
+		profile.tech_skill_categories ?? [],
+		OVERRIDE_ENTITIES.skillCategory
+	)
 		.map((group) => ({
 			name: group.name,
-			skills: filterOnTags(group.tech_skills ?? [])
+			skills: filterOnTags(group.tech_skills ?? [], OVERRIDE_ENTITIES.skill)
 		}))
 		.filter((group) => group.skills.length > 0);
 
@@ -261,7 +265,10 @@
 					{/if}
 
 					{#if job.work_experience_achievements && job.work_experience_achievements.length > 0}
-						{@const filteredHighlights = filterOnTags(job.work_experience_achievements)}
+						{@const filteredHighlights = filterOnTags(
+							job.work_experience_achievements,
+							OVERRIDE_ENTITIES.achievement
+						)}
 						{#if filteredHighlights.length > 0}
 							<ul class="ml-3 list-disc print:ml-[18px] print:[&>li]:[text-indent:-6px]">
 								{#each filteredHighlights as highlight, index (index)}
@@ -298,13 +305,13 @@
 	{/if}
 
 	<!-- Side Projects -->
-	{#if filterOnTags(profile.side_projects).length > 0}
+	{#if filterOnTags(profile.side_projects, OVERRIDE_ENTITIES.sideProject).length > 0}
 		<section class="my-4 break-inside-avoid">
 			<h2 class="h-5 text-sm font-bold">SIDE PROJECTS<br /><br /></h2>
 
 			<hr class="mt-1 mb-2" />
 
-			{#each filterOnTags(profile.side_projects) as project, index (index)}
+			{#each filterOnTags(profile.side_projects, OVERRIDE_ENTITIES.sideProject) as project, index (index)}
 				<div class="mb-3">
 					<div class="mb-0 text-xs font-bold">
 						{project.name} | {formatDateRangeCompact(project.start_date, project.end_date)}
@@ -327,13 +334,13 @@
 	{/if}
 
 	<!-- Education -->
-	{#if filterOnTags(profile.educations).length > 0}
+	{#if filterOnTags(profile.educations, OVERRIDE_ENTITIES.education).length > 0}
 		<section class="my-3 mb-[-45px] break-inside-avoid">
 			<h2 class="h-5 text-sm font-bold">EDUCATION<br /><br /></h2>
 
 			<hr class="mt-1 mb-2" />
 
-			{#each filterOnTags(profile.educations) as education, index (index)}
+			{#each filterOnTags(profile.educations, OVERRIDE_ENTITIES.education) as education, index (index)}
 				<div class="mb-2">
 					<div class="font-bold">
 						{education.area}, {education.study_type}{#if type === 'cv'},

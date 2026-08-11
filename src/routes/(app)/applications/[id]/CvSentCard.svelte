@@ -9,12 +9,19 @@
 		faEyeSlash,
 		faFileAlt,
 		faFilePdf,
+		faLightbulb,
 		faPlus,
 		faSave
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../components/Card.svelte';
 	import { profileDocUrl } from '$lib/utils/profile-doc-url';
 	import type { DocType } from '$lib/utils/profile-doc-url';
+	import {
+		hiddenSkillsKey,
+		recommendVersion,
+		type HiddenSkill,
+		type VersionCoverage
+	} from '$lib/version-coverage';
 
 	/**
 	 * "Which version did I send them?" — application state, not activity.
@@ -27,30 +34,53 @@
 	 *
 	 * The host page must expose a `setCvSent` action.
 	 */
-	interface HiddenSkill {
-		id: number;
-		name: string;
-		liftable: boolean;
-	}
-
 	let {
 		app,
 		versions,
-		hiddenRequiredSkills,
+		tailored,
+		coverage,
 		profileSlug
 	}: {
 		app: {
 			cv_sent_through: string | null;
 			cv_version_sent: string | null;
 		};
+		/** The applicant's own library of versions. */
 		versions: { slug: string; name: string }[];
-		hiddenRequiredSkills: Record<string, HiddenSkill[]>;
+		/** This application's tailored version, if one has been generated. */
+		tailored: { id: number; slug: string; name: string } | null;
+		coverage: Record<string, VersionCoverage>;
 		profileSlug: string | undefined;
 	} = $props();
+
+	/** Everything selectable here: the library, plus this job's own version. */
+	let selectable = $derived(
+		tailored ? [...versions, { slug: tailored.slug, name: tailored.name }] : versions
+	);
 
 	let cvSaved = $state(false);
 	let docType = $state<string>(app.cv_sent_through || 'resume');
 	let versionSlug = $state<string>(app.cv_version_sent || '');
+
+	/**
+	 * Whether either picker has been touched this visit. The pickers default to
+	 * resume / no version whether or not anything was ever recorded, so without
+	 * this the strip below answers for the plain base document and phrases it as
+	 * the document being sent — telling an applicant who hasn't chosen anything
+	 * yet what "the resume you're sending" omits.
+	 *
+	 * The empty version *is* a real choice (a saved row with no version means the
+	 * plain base template, which is exactly what the server computes an entry
+	 * for), so a recorded pick still warns. Only an undecided one stays quiet.
+	 */
+	let touched = $state(false);
+	let decided = $derived(!!app.cv_sent_through || touched);
+
+	let docLabel = $derived(docType === 'cv' ? 'CV' : 'resume');
+	/** Named for what it is: a picked version, or the version-less base document. */
+	let sendingLabel = $derived(
+		versionSlug ? `${docLabel} you're sending` : `plain ${docLabel} (no version)`
+	);
 
 	/**
 	 * Skills this job requires that the applicant has but the document they're
@@ -58,13 +88,36 @@
 	 * server for every template x version pair, so flipping either picker answers
 	 * instantly and without a round trip.
 	 */
-	let hiddenSkills = $derived(hiddenRequiredSkills[`${docType}:${versionSlug}`] ?? []);
+	let hiddenSkills = $derived(
+		decided ? (coverage[hiddenSkillsKey(docType, versionSlug)]?.hidden ?? []) : []
+	);
 	let liftTarget = $derived(
 		versionSlug
-			? (versions.find((v) => v.slug === versionSlug)?.name ?? versionSlug)
+			? (selectable.find((v) => v.slug === versionSlug)?.name ?? versionSlug)
 			: 'all your documents'
 	);
 
+	/**
+	 * Which version to suggest while nothing is recorded. Ranked here rather than
+	 * on the server because the document type is unsaved client state: flipping
+	 * Resume/CV has to re-rank without a round trip. Plain document first, so a
+	 * version is only ever suggested when it genuinely beats sending it.
+	 */
+	let recommendation = $derived(
+		decided ? null : recommendVersion(coverage, docType, ['', ...selectable.map((v) => v.slug)])
+	);
+	let recommendedName = $derived(
+		recommendation
+			? (selectable.find((v) => v.slug === recommendation.versionSlug)?.name ??
+					`plain ${docLabel} (no version)`)
+			: ''
+	);
+
+	function acceptRecommendation() {
+		if (!recommendation) return;
+		versionSlug = recommendation.versionSlug;
+		touched = true;
+	}
 	let lifting = $state<number | null>(null);
 	let lifted = $state<number[]>([]);
 	let liftError = $state<string | null>(null);
@@ -130,7 +183,10 @@
 				{#each [{ value: 'resume', label: 'Resume' }, { value: 'cv', label: 'CV' }] as opt, i}
 					<button
 						type="button"
-						onclick={() => (docType = opt.value)}
+						onclick={() => {
+							docType = opt.value;
+							touched = true;
+						}}
 						class="px-3 py-1.5 text-sm transition-colors {docType === opt.value
 							? 'bg-[var(--dash-primary)]/10 font-medium text-[var(--dash-primary)]'
 							: 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0
@@ -147,6 +203,7 @@
 				<select
 					name="version_slug"
 					bind:value={versionSlug}
+					onchange={() => (touched = true)}
 					class="flex-1 rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				>
 					<option value="">Select</option>
@@ -155,6 +212,9 @@
 							{v.name}
 						</option>
 					{/each}
+					{#if tailored}
+						<option value={tailored.slug}>{tailored.name} — tailored for this job</option>
+					{/if}
 				</select>
 				<button
 					type="submit"
@@ -171,6 +231,49 @@
 			</div>
 		</form>
 
+		<!-- Which version to send, while nothing has been recorded. Ranked by how
+         much of what the job requires each candidate would actually print, so
+         the answer is measured rather than guessed — and stated with its
+         evidence, since an unexplained suggestion about your own resume is not
+         worth following. -->
+		{#if recommendation}
+			<div
+				class="mt-4 rounded-lg border border-[var(--dash-primary)]/30 bg-[var(--dash-primary)]/5 p-3"
+			>
+				<p class="flex items-start gap-2 text-xs text-[var(--dash-text)]">
+					<FontAwesomeIcon
+						icon={faLightbulb}
+						class="mt-0.5 h-3 w-3 shrink-0 text-[var(--dash-primary)]"
+					/>
+					<span>
+						Send <strong>{recommendedName}</strong> — it shows
+						{recommendation.coverage.shown.length} of the {recommendation.coverage.required}
+						{recommendation.coverage.required === 1 ? 'skill' : 'skills'} this job requires.
+					</span>
+				</p>
+				<div class="mt-2 flex flex-wrap items-center gap-3">
+					<button
+						type="button"
+						onclick={acceptRecommendation}
+						class="inline-flex items-center gap-1.5 rounded border border-[var(--dash-primary)]/40 bg-[var(--dash-card)] px-2 py-1 text-xs text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary)]/10"
+					>
+						<FontAwesomeIcon icon={faCheck} class="h-2.5 w-2.5" />
+						Use this one
+					</button>
+					{#if recommendation.coverage.hidden.length > 0}
+						<span class="text-[10px] text-[var(--dash-text-muted)]">
+							{recommendation.coverage.hidden.length} more you have wouldn't print on it.
+						</span>
+					{:else if recommendation.coverage.owned < recommendation.coverage.required}
+						<span class="text-[10px] text-[var(--dash-text-muted)]">
+							The other {recommendation.coverage.required - recommendation.coverage.owned} aren't on your
+							profile at all.
+						</span>
+					{/if}
+				</div>
+			</div>
+		{/if}
+
 		<!-- Required skills the applicant has but this document won't print.
          Profile-only skills are invisible by design and are stripped from the
          AI snapshot too, so a generated letter won't raise them either — when
@@ -183,8 +286,7 @@
 						This job requires {hiddenSkills.length === 1
 							? 'a skill'
 							: `${hiddenSkills.length} skills`} you have, but
-						{hiddenSkills.length === 1 ? 'it' : 'they'} won't appear on the
-						{docType === 'cv' ? 'CV' : 'resume'} you're sending.
+						{hiddenSkills.length === 1 ? 'it' : 'they'} won't appear on the {sendingLabel}.
 					</span>
 				</p>
 

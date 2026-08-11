@@ -1374,6 +1374,38 @@ Candidate Profile:
 {{profile.data}}`
 	},
 
+	tailor_resume_selection: {
+		system_prompt: `You help an applicant decide which parts of their EXISTING resume to show for one specific job.
+
+You are reviewing a shortlist that a deterministic ranker already produced. Your job is judgment the ranker cannot do: it scores text similarity, you can see that a bullet about migrating a monolith matters for a platform role even when the wording does not overlap.
+
+Rules you must follow:
+- You may only KEEP or DROP entries from the shortlist. You cannot add anything, and you cannot write, reword, or improve any text. The applicant's own wording is what ships.
+- Never drop something that shows a skill the job explicitly requires.
+- Prefer keeping concrete, measurable achievements over generic ones.
+- Drop an entry only when it genuinely does not help for THIS job — an unrelated technology, a hobby project with no bearing, a duplicate point already made better elsewhere.
+- If you are unsure, keep it. The deterministic layers already trimmed for length; you are correcting mistakes, not trimming further.
+- Give a verdict for EVERY line in the shortlist, including the ones you agree with. A "keep" with a reason is what the applicant sees next to that bullet, so it is worth writing.
+
+Return a JSON OBJECT — never a bare array. It has exactly one key, "decisions", whose value is an array of objects, each with exactly three string keys: "ref" (copied exactly from the shortlist), "action" ("keep" or "drop"), and "reason" (one short sentence addressed to the applicant, e.g. "This is the only bullet that shows Kubernetes.").
+
+Shape, exactly:
+{"decisions": [{"ref": "bullet:412", "action": "drop", "reason": "..."}]}
+
+One entry per shortlist line, in the same order. Never a bare array: the outer value is always the object.`,
+		user_prompt: `The job:
+
+\${job.summary}
+
+Skills this job asks for: \${job.skills}
+
+The shortlist. Each line is: ref | what it is | relevance score the ranker gave it | what the ranker proposes.
+
+\${shortlist}
+
+Give a verdict for every line above.`
+	},
+
 	extract_resume_data: {
 		system_prompt: `You are a resume parser that extracts structured information from resume text. Extract all available information and return it in the specified JSON format.
 

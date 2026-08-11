@@ -7,6 +7,7 @@
 	import { formatDateRangeCompact } from '$lib/tools/date-utils';
 	import { createProfileFilter } from '../ProfileDisplay/profile-filter';
 	import { isContactHidden } from '$lib/resume-contact-fields';
+	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 	import { assetUrl, type ResumeTemplateConfig } from '$lib/resume-templates';
 	import { templateLabel } from '$lib/resume-template-labels';
 
@@ -91,11 +92,14 @@
 
 	// Categories whose skills are all hidden (all profile-only, say) drop out
 	// entirely, so neither an empty category nor a lone heading gets printed.
-	const skills = filterOnTags(profile.tech_skill_categories ?? [])
-		.map((cat) => ({ ...cat, tech_skills: filterOnTags(cat.tech_skills ?? []) }))
+	const skills = filterOnTags(profile.tech_skill_categories ?? [], OVERRIDE_ENTITIES.skillCategory)
+		.map((cat) => ({
+			...cat,
+			tech_skills: filterOnTags(cat.tech_skills ?? [], OVERRIDE_ENTITIES.skill)
+		}))
 		.filter((cat) => cat.tech_skills.length > 0);
-	const work = filterOnTags(profile.work_experiences ?? []);
-	const education = filterOnTags(profile.educations ?? []);
+	const work = filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience);
+	const education = filterOnTags(profile.educations ?? [], OVERRIDE_ENTITIES.education);
 
 	// Work-experience lead line. The stored headline holds only the base text;
 	// when the template opts in, the job location is appended ("… in {location}.").
@@ -109,7 +113,7 @@
 		return base.endsWith('.') ? base : base + '.';
 	}
 	function tech(job: WorkExperience): string {
-		return filterOnTags(job.work_experience_technologies ?? [])
+		return filterOnTags(job.work_experience_technologies ?? [], OVERRIDE_ENTITIES.technology)
 			.map((t) => t.name ?? '')
 			.filter(Boolean)
 			.join(', ');
@@ -237,7 +241,10 @@
 						{#if work.length > 0}
 							<h2>{templateLabel('workExperience', locale)}</h2>
 							{#each work as job, i (i)}
-								{@const achievements = filterOnTags(job.work_experience_achievements ?? [])}
+								{@const achievements = filterOnTags(
+									job.work_experience_achievements ?? [],
+									OVERRIDE_ENTITIES.achievement
+								)}
 								{@const techLine = tech(job)}
 								<div class="job">
 									<div class="job-meta">

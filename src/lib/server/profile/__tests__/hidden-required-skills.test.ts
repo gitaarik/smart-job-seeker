@@ -9,7 +9,26 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 
-import { getHiddenRequiredSkills, hiddenSkillsKey } from '../hidden-required-skills';
+import { getVersionCoverage, hiddenSkillsKey } from '../hidden-required-skills';
+import type { HiddenSkill } from '$lib/version-coverage';
+
+/**
+ * The hidden lists alone — a view over the coverage map, which is what the
+ * module actually returns now that the same loop answers both "what would this
+ * document hide" and "how much of the job does it cover". Only pairs with
+ * something hidden appear, so an absent key still means "shows everything".
+ */
+async function getHiddenRequiredSkills(
+	profileId: number,
+	requiredSkills: string[]
+): Promise<Record<string, HiddenSkill[]>> {
+	const coverage = await getVersionCoverage(profileId, requiredSkills);
+	const result: Record<string, HiddenSkill[]> = {};
+	for (const [key, entry] of Object.entries(coverage)) {
+		if (entry.hidden.length > 0) result[key] = entry.hidden;
+	}
+	return result;
+}
 import { dbDirect as db } from '$lib/server/db';
 
 const PROFILE_ONLY = ['!resume', '!cv'];
@@ -35,7 +54,7 @@ function names(hidden: { name: string }[] | undefined): string[] {
 	return (hidden ?? []).map((s) => s.name);
 }
 
-describe('getHiddenRequiredSkills', () => {
+describe('getVersionCoverage — the hidden-skill view', () => {
 	beforeEach(() => vi.clearAllMocks());
 
 	it('returns nothing when the job requires no skills', async () => {

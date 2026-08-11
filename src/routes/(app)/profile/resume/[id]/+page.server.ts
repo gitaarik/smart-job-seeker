@@ -2,12 +2,13 @@ import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db, queryRaw, sql } from '$lib/server/db';
 import { profile_versions, profile_version_extensions, profiles } from '$lib/server/db/schema';
-import { eq, and, ne, or, asc } from 'drizzle-orm';
+import { eq, and, ne, or, asc, isNull } from 'drizzle-orm';
 import { getSelectedProfileId } from '../../utils';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
 import { chargeCredits } from '$lib/server/billing/credits';
 import { requireCredits } from '$lib/server/billing/require-credits';
 import { buildToggles } from '$lib/resume-contact-fields';
+import { isTailoredSlug } from '$lib/version-overrides';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
 	const layoutData = await parent();
@@ -50,10 +51,13 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	});
 
 	// Get all other versions for "extends" options
+	// Extending a library version is how a tailored version reuses curation;
+	// extending somebody's per-job copy is not a thing to offer.
 	const allVersions = await db.query.profile_versions.findMany({
 		where: and(
 			eq(profile_versions.profile_id, layoutData.selectedProfile.id),
-			ne(profile_versions.id, id)
+			ne(profile_versions.id, id),
+			isNull(profile_versions.application_id)
 		),
 		orderBy: asc(profile_versions.name),
 		columns: { id: true, name: true, slug: true }
@@ -155,6 +159,16 @@ export const actions: Actions = {
 
 		if (!existing) {
 			return fail(404, { error: 'Version not found' });
+		}
+
+		// The `app-<id>` namespace belongs to job-tailored versions; a hand-made
+		// version sharing a slug with one would surface as the wrong document being
+		// sent, not as an error. A tailored version editing itself keeps its own
+		// slug, so the guard is about a LIBRARY version claiming the namespace.
+		if (isTailoredSlug(slug) && existing.application_id === null) {
+			return fail(400, {
+				error: 'Slugs starting with "app-<number>" are reserved for job-tailored versions.'
+			});
 		}
 
 		// Contact visibility: the form submits one `contactVisible` value per field

@@ -34,6 +34,12 @@ export async function buildProfileExport(
 		where: eq(profiles.id, profileId),
 		with: {
 			profile_versions: {
+				// Library only. The payload keys versions by slug and carries no
+				// application reference, so an exported tailored version would be
+				// restored as a library one — quietly polluting the list it was
+				// designed to stay out of. Known limitation: a tailored version does
+				// not survive a full export/import round trip.
+				where: (t, { isNull }) => isNull(t.application_id),
 				columns: {
 					status: true,
 					sort: true,

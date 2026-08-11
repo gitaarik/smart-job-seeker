@@ -8,7 +8,7 @@ import {
 	profile_exports,
 	profile_translations
 } from '$lib/server/db/schema';
-import { eq, and, asc, inArray } from 'drizzle-orm';
+import { eq, and, asc, inArray, isNull } from 'drizzle-orm';
 import { getSelectedProfileId } from '../utils';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
 import { chargeCredits } from '$lib/server/billing/credits';
@@ -16,6 +16,7 @@ import { requireCredits } from '$lib/server/billing/require-credits';
 import { DEFAULT_TEMPLATE_ID, templateForStorage } from '$lib/resume-templates';
 import { getResumeTemplatesForProfile } from '$lib/server/profile/resume-templates';
 import { BASE_LOCALE, isKnownLocale, LOCALES } from '$lib/resume-translations';
+import { isTailoredSlug } from '$lib/version-overrides';
 
 export const load: PageServerLoad = async ({ parent, url }) => {
 	const layoutData = await parent();
@@ -33,7 +34,13 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 			}
 		}),
 		db.query.profile_versions.findMany({
-			where: eq(profile_versions.profile_id, layoutData.selectedProfile.id),
+			// Library only. A version owned by an application is that application's
+			// working copy, and belongs on its page rather than in the list the
+			// applicant curates by hand.
+			where: and(
+				eq(profile_versions.profile_id, layoutData.selectedProfile.id),
+				isNull(profile_versions.application_id)
+			),
 			with: {
 				extension_links: {
 					columns: {
@@ -173,6 +180,15 @@ export const actions: Actions = {
 
 		if (!slug) {
 			return fail(400, { error: 'Name is required' });
+		}
+
+		// The `app-<id>` namespace belongs to job-tailored versions; a hand-made
+		// version sharing a slug with one would surface as the wrong document
+		// being sent, not as an error.
+		if (isTailoredSlug(slug)) {
+			return fail(400, {
+				error: 'Slugs starting with "app-<number>" are reserved for job-tailored versions.'
+			});
 		}
 
 		const [created] = await db

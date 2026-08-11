@@ -98,3 +98,141 @@ describe('filterOnTags — profile-only skills', () => {
 		expect(filterFor('resume', 'senior', items)).toHaveLength(0);
 	});
 });
+
+// ── Per-version overrides (job-tailored versions) ──
+//
+// Tags are the applicant's general rule; an override is one application's
+// exception to it. These assert the exception wins in both directions, that a
+// list without ordering opinions is left exactly as it was, and that a tailored
+// version beats the library version it extends.
+
+type Row = { id: number; name: string; tags?: string[] | null };
+
+const TAILORED = [
+	{ id: 1, slug: 'frontend', toggles: [], extension_links: [] },
+	{
+		id: 10,
+		slug: 'app-45',
+		toggles: [],
+		extension_links: [{ extended_id: 1 }],
+		overrides: [] as Array<Record<string, unknown>>
+	}
+];
+
+function tailoredFilter(overrides: Array<Record<string, unknown>>, versionSlug = 'app-45') {
+	const versions = TAILORED.map((v) => (v.id === 10 ? { ...v, overrides } : v));
+	return createProfileFilter(versions, 'resume', null, versionSlug);
+}
+
+describe('filterOnTags — per-version overrides', () => {
+	const PROFILE_ONLY = ['!resume', '!cv'];
+
+	it('leaves lists untouched when the version carries no overrides', () => {
+		const rows: Row[] = [
+			{ id: 1, name: 'React' },
+			{ id: 2, name: 'SQL' }
+		];
+		expect(
+			tailoredFilter([])
+				.filterOnTags(rows, 'tech_skill')
+				.map((r) => r.name)
+		).toEqual(['React', 'SQL']);
+	});
+
+	it('ignores overrides for callers that pass no entity type', () => {
+		// Every pre-existing call site is exactly this: no entity type, so the
+		// tag behaviour must be bit-identical to before overrides existed.
+		const rows: Row[] = [{ id: 1, name: 'React' }];
+		const filter = tailoredFilter([{ entity_type: 'tech_skill', entity_id: 1, action: 'exclude' }]);
+		expect(filter.filterOnTags(rows)).toHaveLength(1);
+		expect(filter.filterOnTags(rows, 'tech_skill')).toHaveLength(0);
+	});
+
+	it('re-admits a profile-only skill without touching its tags', () => {
+		// The whole point of the sidecar: this job requires Kubernetes, which is
+		// held back from every document, and the tailored version shows it while
+		// the shared tag array stays as the applicant wrote it.
+		const rows: Row[] = [{ id: 7, name: 'Kubernetes', tags: PROFILE_ONLY }];
+		const overrides = [{ entity_type: 'tech_skill', entity_id: 7, action: 'include' }];
+		expect(tailoredFilter(overrides).filterOnTags(rows, 'tech_skill')).toHaveLength(1);
+		// The library version it extends is unaffected.
+		expect(tailoredFilter(overrides, 'frontend').filterOnTags(rows, 'tech_skill')).toHaveLength(0);
+	});
+
+	it('drops an item the tags would have shown', () => {
+		const rows: Row[] = [
+			{ id: 1, name: 'WordPress' },
+			{ id: 2, name: 'React' }
+		];
+		const overrides = [{ entity_type: 'tech_skill', entity_id: 1, action: 'exclude' }];
+		expect(
+			tailoredFilter(overrides)
+				.filterOnTags(rows, 'tech_skill')
+				.map((r) => r.name)
+		).toEqual(['React']);
+	});
+
+	it('keys overrides by entity type, so ids from different tables cannot collide', () => {
+		const rows: Row[] = [{ id: 1, name: 'React' }];
+		const overrides = [{ entity_type: 'side_project', entity_id: 1, action: 'exclude' }];
+		expect(tailoredFilter(overrides).filterOnTags(rows, 'tech_skill')).toHaveLength(1);
+	});
+
+	it('orders by the per-version sort, keeping unsorted items behind in place', () => {
+		const rows: Row[] = [
+			{ id: 1, name: 'first' },
+			{ id: 2, name: 'second' },
+			{ id: 3, name: 'third' }
+		];
+		const overrides = [
+			{ entity_type: 'work_experience_achievement', entity_id: 3, action: 'include', sort: 0 },
+			{ entity_type: 'work_experience_achievement', entity_id: 1, action: 'include', sort: 1 }
+		];
+		expect(
+			tailoredFilter(overrides)
+				.filterOnTags(rows, 'work_experience_achievement')
+				.map((r) => r.name)
+		).toEqual(['third', 'first', 'second']);
+	});
+
+	it('does not reorder when no override carries a sort', () => {
+		const rows: Row[] = [
+			{ id: 1, name: 'first' },
+			{ id: 2, name: 'second' }
+		];
+		const overrides = [
+			{ entity_type: 'work_experience_achievement', entity_id: 2, action: 'include' }
+		];
+		expect(
+			tailoredFilter(overrides)
+				.filterOnTags(rows, 'work_experience_achievement')
+				.map((r) => r.name)
+		).toEqual(['first', 'second']);
+	});
+
+	it("lets the tailored version's own decision beat the version it extends", () => {
+		const rows: Row[] = [{ id: 1, name: 'WordPress' }];
+		const versions = [
+			{
+				id: 1,
+				slug: 'frontend',
+				toggles: [],
+				extension_links: [],
+				overrides: [{ entity_type: 'tech_skill', entity_id: 1, action: 'exclude' }]
+			},
+			{
+				id: 10,
+				slug: 'app-45',
+				toggles: [],
+				extension_links: [{ extended_id: 1 }],
+				overrides: [{ entity_type: 'tech_skill', entity_id: 1, action: 'include' }]
+			}
+		];
+		expect(
+			createProfileFilter(versions, 'resume', null, 'app-45').filterOnTags(rows, 'tech_skill')
+		).toHaveLength(1);
+		expect(
+			createProfileFilter(versions, 'resume', null, 'frontend').filterOnTags(rows, 'tech_skill')
+		).toHaveLength(0);
+	});
+});
