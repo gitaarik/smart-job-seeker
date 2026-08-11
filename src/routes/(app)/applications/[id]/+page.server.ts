@@ -17,8 +17,10 @@ import {
 	describeOverrides,
 	jobMatchRead,
 	promoteToLibrary,
+	relevantExclusionsByVersion,
 	tailorVersionForApplication
 } from '$lib/server/profile/tailor-version';
+import { isOverrideEntity } from '$lib/version-overrides';
 
 /**
  * The version list and the coverage map feed CvSentCard, which moved here from
@@ -102,11 +104,20 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 
 	// The annotated diff, and what selection cannot fix. Both only matter once a
 	// tailored version exists, so neither costs anything until then.
-	const [decisions, matchRead] = await Promise.all([
+	const [decisions, matchRead, exclusions] = await Promise.all([
 		tailored ? decisionsForVersion(tailored.id).then(describeOverrides) : Promise.resolve([]),
 		layoutData.application?.job?.id
 			? jobMatchRead(layoutData.selectedProfile.id, layoutData.application.job.id)
-			: Promise.resolve({ gaps: [], matched: [] })
+			: Promise.resolve({ gaps: [], matched: [] }),
+		// What each candidate document leaves out that speaks to this job. Free
+		// after the first view: item vectors and the job's own vector are cached.
+		isNaN(applicationId)
+			? Promise.resolve({})
+			: relevantExclusionsByVersion({
+					profileId: layoutData.selectedProfile.id,
+					applicationId,
+					versionSlugs: ['', ...usable.map((v) => v.slug)]
+				})
 	]);
 
 	/**
@@ -141,6 +152,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		decisions,
 		gaps: matchRead.gaps,
 		creditedNotNamed,
+		exclusions,
 		defaultBase
 	};
 };
@@ -561,6 +573,70 @@ export const actions: Actions = {
 				error: error instanceof Error ? error.message : 'Could not promote this version.'
 			});
 		}
+	},
+
+	/**
+	 * Put one item back on the tailored version for this job.
+	 *
+	 * Recorded as the applicant's own decision, not the generator's, so a later
+	 * regeneration leaves it alone — asking for something back and having the
+	 * next run drop it again would make the control worthless.
+	 */
+	includeInTailored: async ({ request, locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
+
+		const formData = await request.formData();
+		const entityType = (formData.get('entity_type') as string) || '';
+		const entityId = parseInt((formData.get('entity_id') as string) || '');
+		if (!isOverrideEntity(entityType) || isNaN(entityId)) {
+			return fail(400, { error: 'Invalid item' });
+		}
+
+		const version = await db.query.profile_versions.findFirst({
+			where: and(
+				eq(profile_versions.profile_id, profileId),
+				eq(profile_versions.application_id, appId)
+			),
+			columns: { id: true }
+		});
+		if (!version) return fail(404, { error: 'No tailored version for this application' });
+
+		const now = new Date();
+		await db
+			.insert(profile_version_overrides)
+			.values({
+				version_id: version.id,
+				entity_type: entityType,
+				entity_id: entityId,
+				action: 'include',
+				reason: 'you asked for this back',
+				source: 'user',
+				date_created: now,
+				date_updated: now
+			})
+			.onConflictDoUpdate({
+				target: [
+					profile_version_overrides.version_id,
+					profile_version_overrides.entity_type,
+					profile_version_overrides.entity_id
+				],
+				set: {
+					action: 'include',
+					sort: null,
+					reason: 'you asked for this back',
+					source: 'user',
+					date_updated: now
+				}
+			});
+
+		return { success: true };
 	},
 
 	/** Throw the tailored version away; its decisions cascade with it. */

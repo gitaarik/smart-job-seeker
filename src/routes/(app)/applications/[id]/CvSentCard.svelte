@@ -44,6 +44,7 @@
 		tailored,
 		coverage,
 		creditedNotNamed,
+		exclusions,
 		profileSlug
 	}: {
 		app: {
@@ -60,6 +61,11 @@
 		 * skill of the applicant's carries the word itself.
 		 */
 		creditedNotNamed: string[];
+		/** Per document, the relevant things it leaves out. Keyed like `coverage`. */
+		exclusions: Record<
+			string,
+			Array<{ entityType: string; entityId: number; label: string; score: number }>
+		>;
 		profileSlug: string | undefined;
 	} = $props();
 
@@ -108,6 +114,17 @@
 	let hiddenSkills = $derived(
 		decided ? (coverage[hiddenSkillsKey(docType, versionSlug)]?.hidden ?? []) : []
 	);
+	/**
+	 * Relevant things the chosen document leaves out. Gated on a decision for the
+	 * same reason the skills strip is: before one is made, this would be
+	 * describing a document nobody picked.
+	 */
+	let hiddenEvidence = $derived(
+		decided ? (exclusions[hiddenSkillsKey(docType, versionSlug)] ?? []) : []
+	);
+	/** Whether the chosen document is this application's own tailored version. */
+	let choseTailored = $derived(!!tailored && versionSlug === tailored.slug);
+
 	let liftTarget = $derived(
 		versionSlug
 			? (selectable.find((v) => v.slug === versionSlug)?.name ?? versionSlug)
@@ -345,6 +362,68 @@
 				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			</div>
 		</form>
+
+		<!-- Evidence, not vocabulary. The strip above answers "does this document
+		     say the words this job asks for"; this one answers "does it show the
+		     work". A missing keyword costs you a search hit, a missing bullet
+		     costs you the proof — and nothing on this page used to mention it.
+		     The bar is comparative: only things ranking above half of what this
+		     document DOES show, so a sensible selection says nothing at all. -->
+		{#if hiddenEvidence.length > 0}
+			<div class="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+				<p class="flex items-start gap-2 text-xs text-[var(--dash-text)]">
+					<FontAwesomeIcon icon={faEyeSlash} class="mt-0.5 h-3 w-3 shrink-0 text-amber-600" />
+					<span>
+						This {docLabel} also leaves out
+						{hiddenEvidence.length === 1 ? 'something' : `${hiddenEvidence.length} things`} that
+						{hiddenEvidence.length === 1 ? 'speaks' : 'speak'} to this job more than half of what it does
+						show.
+					</span>
+				</p>
+
+				<ul class="mt-2 space-y-1.5">
+					{#each hiddenEvidence as item (item.entityType + item.entityId)}
+						<li
+							class="flex items-start justify-between gap-2 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] p-2"
+						>
+							<span class="min-w-0 flex-1 text-[11px] text-[var(--dash-text-secondary)]">
+								{item.label.length > 110 ? item.label.slice(0, 110).trimEnd() + '…' : item.label}
+							</span>
+							{#if choseTailored}
+								<form method="POST" action="?/includeInTailored" use:enhance={() => () => {}}>
+									<input type="hidden" name="entity_type" value={item.entityType} />
+									<input type="hidden" name="entity_id" value={item.entityId} />
+									<button
+										type="submit"
+										title="Show this on the version tailored for this job"
+										class="shrink-0 rounded border border-[var(--dash-border)] px-1.5 py-0.5 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:border-amber-500/50 hover:text-amber-700"
+									>
+										Put it back
+									</button>
+								</form>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+
+				{#if !choseTailored}
+					<!-- No one-click fix here on purpose: this version's tags belong to
+					     every job that uses it, so "put it back" would be a change to
+					     all of them. Tailoring makes the exception job-local. -->
+					<form method="POST" action="?/tailorVersion" class="mt-2">
+						<input type="hidden" name="doc_type" value={docType} />
+						<input type="hidden" name="base_slug" value={versionSlug} />
+						<button type="submit" class="text-[10px] text-[var(--dash-primary)] hover:underline">
+							Tailor a version from this one, keeping what fits →
+						</button>
+					</form>
+					<p class="mt-1 text-[10px] text-[var(--dash-text-muted)]">
+						Putting these back on <strong>{liftTarget}</strong> itself would change it for every job that
+						uses it.
+					</p>
+				{/if}
+			</div>
+		{/if}
 
 		{#if app.cv_sent_through}
 			<div class="mt-2">

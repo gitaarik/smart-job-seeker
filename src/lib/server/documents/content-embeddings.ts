@@ -181,7 +181,19 @@ async function getUnitVectors(
 export async function semanticScoreUnits(
 	profileId: number,
 	units: ContentUnit[],
-	queryText: string
+	queryText: string,
+	/**
+	 * Cache the QUERY vector too, under this key.
+	 *
+	 * Without it the query is embedded on every call, which is fine for a
+	 * generation someone asked for and wasteful for something computed on every
+	 * page load. A job description does not change between views, so passing
+	 * `{unitType: 'job_query', unitId: jobId}` turns the per-view call into a
+	 * per-job one. The row is keyed by unit alone rather than by profile, so two
+	 * profiles scoring the same job share it — identical text, identical hash,
+	 * and the worst case is one of them re-embedding once.
+	 */
+	queryUnit?: { unitType: string; unitId: number }
 ): Promise<Map<string, number> | null> {
 	if (!isEmbeddingConfigured() || units.length === 0) return null;
 	const query = queryText.trim();
@@ -190,7 +202,11 @@ export async function semanticScoreUnits(
 	try {
 		const [unitVectors, queryNative] = await Promise.all([
 			getUnitVectors(profileId, units),
-			embed(query)
+			queryUnit
+				? getUnitVectors(profileId, [{ ...queryUnit, subId: 0, embedText: query }]).then((m) =>
+						m.get(`${queryUnit.unitType}:${queryUnit.unitId}:0`)
+					)
+				: embed(query)
 		]);
 		if (!queryNative?.length) return null;
 

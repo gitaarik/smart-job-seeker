@@ -33,7 +33,15 @@ import {
 import { getProfileByIdentifier } from '$lib/server/profile/default';
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
 import { isTailoredSlug, OVERRIDE_ENTITIES, tailoredSlugFor } from '$lib/version-overrides';
-import { DEFAULT_SELECTION, selectForJob, type Candidate, type Decision } from '$lib/tailoring';
+import {
+	DEFAULT_SELECTION,
+	DROPPABLE_ENTITIES,
+	selectForJob,
+	type Candidate,
+	type Decision
+} from '$lib/tailoring';
+import { hiddenSkillsKey } from '$lib/version-coverage';
+import { BASE_TEMPLATE_TAGS } from '$lib/profile-visibility';
 import {
 	semanticScoreUnits,
 	poolKey,
@@ -181,7 +189,9 @@ function embedTextFor(candidate: Candidate): string {
 export async function scoreCandidates(
 	profileId: number,
 	candidates: Candidate[],
-	query: { text: string; skills: string[] }
+	query: { text: string; skills: string[] },
+	/** Cache the query vector under this key — see semanticScoreUnits. */
+	queryUnit?: { unitType: string; unitId: number }
 ): Promise<{ candidates: Candidate[]; ranker: 'semantic' | 'lexical'; floor: number }> {
 	const units: ContentUnit[] = candidates.map((c) => ({
 		unitType: c.entityType,
@@ -191,7 +201,7 @@ export async function scoreCandidates(
 	}));
 	const queryText = [query.text, ...query.skills].filter(Boolean).join('\n');
 
-	const semantic = await semanticScoreUnits(profileId, units, queryText);
+	const semantic = await semanticScoreUnits(profileId, units, queryText, queryUnit);
 	if (semantic) {
 		return {
 			candidates: candidates.map((c) => ({
@@ -756,4 +766,154 @@ async function uniqueLibrarySlug(profileId: number, name: string): Promise<strin
 		if (!taken.has(candidate)) return candidate;
 	}
 	throw new Error('Could not find a free slug for this version.');
+}
+
+/** Something a chosen document leaves out that speaks to this job. */
+export interface ExcludedItem {
+	entityType: string;
+	entityId: number;
+	label: string;
+	score: number;
+}
+
+/** At most this many per document — a list of everything is not a warning. */
+const MAX_EXCLUSIONS_REPORTED = 4;
+
+/**
+ * Per candidate document, the relevant things it does NOT show.
+ *
+ * The hidden-skills strip answers this for skills, by exact name and for free.
+ * This is the same question about EVIDENCE — bullets and side projects — which
+ * is the more damaging omission: a missing skill name costs you a keyword, a
+ * missing bullet costs you the proof. Pick your frontend version for a data
+ * role and the pipeline bullet silently stays home.
+ *
+ * It costs no LLM call and no credits. Item vectors are already cached per
+ * content hash in `content_embeddings`, so scoring is cosine over cached
+ * vectors; the job's own vector is cached too (see the `queryUnit` argument),
+ * so a page view after the first embeds nothing at all. With embeddings
+ * unconfigured it degrades to lexical overlap, which is much weaker here — a
+ * bullet about migrating a monolith does not lexically resemble "platform
+ * engineering" — so the floor does more work than the ranking.
+ *
+ * Scores are version-independent, so they are computed ONCE and the loop below
+ * only re-asks which items each document happens to show.
+ */
+export async function relevantExclusionsByVersion(opts: {
+	profileId: number;
+	applicationId: number;
+	versionSlugs: string[];
+}): Promise<Record<string, ExcludedItem[]>> {
+	const { profileId, applicationId, versionSlugs } = opts;
+
+	const application = await db.query.applications.findFirst({
+		where: and(eq(applications.id, applicationId), eq(applications.profile_id, profileId)),
+		with: {
+			job: {
+				columns: {
+					id: true,
+					title: true,
+					job_description: true,
+					skills_required: true,
+					skills_preferred: true,
+					responsibilities: true
+				}
+			}
+		}
+	});
+	const job = application?.job;
+	if (!job) return {};
+
+	const profile = await getProfileByIdentifier(profileId);
+	if (!profile) return {};
+
+	const requiredSkills = asStringArray(job.skills_required);
+	const query = {
+		text: [
+			text(job.title),
+			text(job.job_description),
+			asStringArray(job.responsibilities).join('\n')
+		]
+			.filter(Boolean)
+			.join('\n'),
+		skills: [...requiredSkills, ...asStringArray(job.skills_preferred)]
+	};
+	if (!query.text && query.skills.length === 0) return {};
+
+	// One scoring pass: an item's relevance to the job does not depend on which
+	// document is being considered.
+	const { candidates, floor } = await scoreCandidates(
+		profileId,
+		buildCandidates(profile, 'resume', '', requiredSkills),
+		query,
+		{ unitType: 'job_query', unitId: job.id }
+	);
+	const scoreOf = new Map(candidates.map((c) => [`${c.entityType}:${c.entityId}`, c.score]));
+
+	// Decisions recorded ON a version are not accidents: the tailored version
+	// hides things because this feature, and the model, said so — with a reason
+	// the applicant can read in the diff. Warning about those would have the
+	// page argue with itself. Only what the TAGS hold back is news here.
+	const decidedAgainst = new Map<string, Set<string>>();
+	for (const version of profile.profile_versions ?? []) {
+		const slug = (version as { slug?: string | null }).slug;
+		const overrides = (version as { overrides?: unknown }).overrides;
+		if (!slug || !Array.isArray(overrides)) continue;
+		decidedAgainst.set(
+			slug,
+			new Set(
+				overrides
+					.filter((o) => (o as { action?: string }).action === 'exclude')
+					.map((o) => {
+						const row = o as { entity_type: string; entity_id: number };
+						return `${row.entity_type}:${row.entity_id}`;
+					})
+			)
+		);
+	}
+
+	const result: Record<string, ExcludedItem[]> = {};
+	for (const docType of BASE_TEMPLATE_TAGS) {
+		for (const versionSlug of versionSlugs) {
+			const built = buildCandidates(profile, docType, versionSlug, requiredSkills).filter((c) =>
+				DROPPABLE_ENTITIES.includes(c.entityType)
+			);
+			const scored = built.map((c) => ({
+				...c,
+				score: scoreOf.get(`${c.entityType}:${c.entityId}`) ?? 0
+			}));
+
+			// Relative, not absolute. An embedding floor tuned for retrieval says
+			// "somewhat related to this job", which most of a career is — flagging
+			// on that produces a list, not a warning. The question worth raising is
+			// comparative: is this document leaving out something MORE relevant
+			// than half of what it prints? That calibrates itself per document and
+			// per job, and it says nothing when the selection is already sensible.
+			const visibleScores = scored
+				.filter((c) => c.visible)
+				.map((c) => c.score)
+				.sort((a, z) => a - z);
+			const median = visibleScores.length
+				? visibleScores[Math.floor(visibleScores.length / 2)]
+				: floor;
+			const bar = Math.max(floor, median);
+			const decided = decidedAgainst.get(versionSlug) ?? new Set<string>();
+
+			const excluded = scored
+				.filter((c) => !c.visible && !decided.has(`${c.entityType}:${c.entityId}`))
+				.filter((c) => c.score >= bar)
+				.sort((a, z) => z.score - a.score)
+				.slice(0, MAX_EXCLUSIONS_REPORTED)
+				.map((c) => ({
+					entityType: c.entityType,
+					entityId: c.entityId,
+					label: c.label,
+					score: c.score
+				}));
+
+			if (excluded.length > 0) result[hiddenSkillsKey(docType, versionSlug)] = excluded;
+		}
+	}
+
+	return result;
 }

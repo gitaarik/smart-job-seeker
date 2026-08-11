@@ -545,6 +545,7 @@
 		tailored={data.tailored ?? null}
 		coverage={data.coverage ?? {}}
 		creditedNotNamed={data.creditedNotNamed ?? []}
+		exclusions={data.exclusions ?? {}}
 		{profileSlug}
 	/>
 
