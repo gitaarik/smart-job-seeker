@@ -28,15 +28,23 @@
 	} from '$lib/version-coverage';
 
 	/**
-	 * "Which version did I send them?" — application state, not activity.
+	 * Which document goes to this job — chosen, checked, and then recorded.
 	 *
-	 * Extracted from the Documents tab when that tab was deleted for the Activity
-	 * unification. It was the one thing on that page that had nothing to do with
-	 * attached files, and lifting it out whole was safer than re-typing it: the
-	 * hidden-required-skills strip below carries its own fetch, its own optimistic
-	 * state, and reasoning that is easy to lose in a hand port.
+	 * It began as the record alone ("which version did I send them?"), extracted
+	 * from the Documents tab when that tab was deleted for the Activity
+	 * unification: application state, not activity, and the one thing on that
+	 * page unrelated to attached files.
 	 *
-	 * The host page must expose a `setCvSent` action.
+	 * Recording is now the last of five things it does, and the heading says so.
+	 * Before that come the suggestion (which version prints most of what this job
+	 * asks for), the preview, and three different ways a document can fail this
+	 * job — a required skill it holds back, a skill the match credits you for
+	 * without the word appearing anywhere, and relevant work it leaves out. They
+	 * are separate strips because they are separate failures with separate fixes;
+	 * collapsing them into one "gaps" list would lose which lever applies.
+	 *
+	 * The host page must expose `setCvSent`, `clearCvSent`, `includeInTailored`
+	 * and `tailorVersion` actions.
 	 */
 	let {
 		app,
@@ -288,12 +296,12 @@
 <div>
 	<div class="mb-3 flex items-center gap-2">
 		<FontAwesomeIcon icon={faFileAlt} class="h-5 w-5 text-[var(--dash-primary)]" />
-		<h2 class="text-lg font-semibold text-[var(--dash-text)]">Resume / CV Sent</h2>
+		<h2 class="text-lg font-semibold text-[var(--dash-text)]">Resume / CV for this job</h2>
 	</div>
 
 	<Card padding="lg">
 		<p class="mb-4 text-xs text-[var(--dash-text-muted)]">
-			Track which version you sent, so you can open the same one they'll have during an interview.
+			Pick the version that fits this job, see what it leaves out, and record what you sent.
 		</p>
 		<form method="POST" action="?/setCvSent" use:enhance={handleCvSubmit}>
 			<!-- Document type segmented control -->

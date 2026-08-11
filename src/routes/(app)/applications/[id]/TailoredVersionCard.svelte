@@ -20,6 +20,11 @@
 	/**
 	 * The version tailored to this job, and every decision that shaped it.
 	 *
+	 * Titled "Tailored version" rather than "Tailored for this job": the card
+	 * sits on one application's page, so the job is a given, and the sibling card
+	 * above already ends in those words — two headings with the same tail read as
+	 * a stutter. This one names the artifact it manages.
+	 *
 	 * A tailored version is a SELECTION over what the applicant already wrote —
 	 * it can hide a bullet, surface a held-back skill and reorder within a role,
 	 * but it never writes a word. That is what makes this panel possible: each
@@ -91,7 +96,7 @@
 <div>
 	<div class="mb-3 flex items-center gap-2">
 		<FontAwesomeIcon icon={faWandMagicSparkles} class="h-5 w-5 text-[var(--dash-primary)]" />
-		<h2 class="text-lg font-semibold text-[var(--dash-text)]">Tailored for this job</h2>
+		<h2 class="text-lg font-semibold text-[var(--dash-text)]">Tailored version</h2>
 	</div>
 
 	<Card padding="lg">
