@@ -15,7 +15,7 @@ import { getVersionCoverage } from '$lib/server/profile/hidden-required-skills';
 import {
 	decisionsForVersion,
 	describeOverrides,
-	jobMatchGaps,
+	jobMatchRead,
 	promoteToLibrary,
 	tailorVersionForApplication
 } from '$lib/server/profile/tailor-version';
@@ -102,12 +102,35 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 
 	// The annotated diff, and what selection cannot fix. Both only matter once a
 	// tailored version exists, so neither costs anything until then.
-	const [decisions, gaps] = await Promise.all([
+	const [decisions, matchRead] = await Promise.all([
 		tailored ? decisionsForVersion(tailored.id).then(describeOverrides) : Promise.resolve([]),
 		layoutData.application?.job?.id
-			? jobMatchGaps(layoutData.selectedProfile.id, layoutData.application.job.id)
-			: Promise.resolve([])
+			? jobMatchRead(layoutData.selectedProfile.id, layoutData.application.job.id)
+			: Promise.resolve({ gaps: [], matched: [] })
 	]);
+
+	/**
+	 * Required skills the match CREDITS the applicant with, through something
+	 * related, while no skill of theirs carries the word itself.
+	 *
+	 * The third state between "you have it and it prints" and "you don't have
+	 * it": the matcher counts SQL through MySQL and Linux through Linode, but a
+	 * document that prints those does not print these, and a keyword search for
+	 * them finds nothing. Computed against the same exact-name join the coverage
+	 * map uses, so the two never double-count a skill.
+	 */
+	const namedByProfile = new Set(
+		Object.values(coverage).flatMap((entry) => [
+			...entry.shown.map((n) => n.toLowerCase()),
+			...entry.hidden.map((h) => h.name.toLowerCase())
+		])
+	);
+	const matchedLower = new Set(matchRead.matched.map((s) => s.trim().toLowerCase()));
+	const requiredList = Array.isArray(requiredSkills) ? (requiredSkills as string[]) : [];
+	const creditedNotNamed = requiredList.filter((skill) => {
+		const key = skill.trim().toLowerCase();
+		return key && matchedLower.has(key) && !namedByProfile.has(key);
+	});
 
 	return {
 		versions: usable
@@ -116,7 +139,8 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		tailored,
 		coverage,
 		decisions,
-		gaps,
+		gaps: matchRead.gaps,
+		creditedNotNamed,
 		defaultBase
 	};
 };

@@ -11,10 +11,12 @@
 		faFilePdf,
 		faLightbulb,
 		faPlus,
+		faMagnifyingGlass,
 		faSave,
 		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../components/Card.svelte';
+	import AddSkillToProfile from '../../jobs/components/AddSkillToProfile.svelte';
 	import { profileDocUrl } from '$lib/utils/profile-doc-url';
 	import type { DocType } from '$lib/utils/profile-doc-url';
 	import {
@@ -40,6 +42,7 @@
 		versions,
 		tailored,
 		coverage,
+		creditedNotNamed,
 		profileSlug
 	}: {
 		app: {
@@ -51,6 +54,11 @@
 		/** This application's tailored version, if one has been generated. */
 		tailored: { id: number; slug: string; name: string } | null;
 		coverage: Record<string, VersionCoverage>;
+		/**
+		 * Required skills the match credits through something related, while no
+		 * skill of the applicant's carries the word itself.
+		 */
+		creditedNotNamed: string[];
 		profileSlug: string | undefined;
 	} = $props();
 
@@ -358,6 +366,40 @@
 						</span>
 					{/if}
 				</div>
+			</div>
+		{/if}
+
+		<!-- Credited by the match, absent from the document as a word.
+         Distinct from the strip below, and shown whether or not a version has
+         been picked: this one is not about which document you send — no
+         version of a profile that never says "SQL" says it. The match counts
+         it through MySQL and PostgreSQL, and a recruiter searching the file
+         for the word finds nothing. -->
+		{#if creditedNotNamed.length > 0}
+			<div class="mt-4 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-3">
+				<p class="flex items-start gap-2 text-xs text-[var(--dash-text)]">
+					<FontAwesomeIcon icon={faMagnifyingGlass} class="mt-0.5 h-3 w-3 shrink-0 opacity-60" />
+					<span>
+						This job's match already credits you with
+						{creditedNotNamed.length === 1 ? 'this' : 'these'}, through related skills you have —
+						but
+						{creditedNotNamed.length === 1 ? 'the word' : 'the words'} never {creditedNotNamed.length ===
+						1
+							? 'appears'
+							: 'appear'} on your {docLabel}, so a keyword search of it finds nothing.
+					</span>
+				</p>
+
+				<div class="mt-2 flex flex-wrap gap-1.5">
+					{#each creditedNotNamed as skill (skill)}
+						<AddSkillToProfile {skill} strength="strong" variant="required" defaultShowOnCv />
+					{/each}
+				</div>
+
+				<p class="mt-2 text-[10px] text-[var(--dash-text-muted)]">
+					Adding one puts the word on your profile and, unless you say otherwise, on the documents
+					you send.
+				</p>
 			</div>
 		{/if}
 

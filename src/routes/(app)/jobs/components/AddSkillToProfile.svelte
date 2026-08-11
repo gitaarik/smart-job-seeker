@@ -38,9 +38,22 @@
 		variant?: 'required' | 'preferred';
 		/** What the profile holds for this skill, if anything. */
 		profileSkill?: ProfileSkillRef | null;
+		/**
+		 * Whether a NEW skill starts out shown on documents. Off by default —
+		 * adding a skill from a job listing is usually filing it, not headlining
+		 * it. Callers whose whole purpose is getting the word onto the document
+		 * being sent pass true, so the form opens on the answer they came for.
+		 */
+		defaultShowOnCv?: boolean;
 	}
 
-	let { skill, strength = null, variant = 'required', profileSkill = null }: Props = $props();
+	let {
+		skill,
+		strength = null,
+		variant = 'required',
+		profileSkill = null,
+		defaultShowOnCv = false
+	}: Props = $props();
 
 	/**
 	 * Skill names make bad ids — ".NET", "C++" and "Machine Learning" all appear
@@ -82,7 +95,7 @@
 		level = profileSkill?.level ?? '';
 		categoryChoice = profileSkill ? String(profileSkill.categoryId) : '';
 		newCategoryName = '';
-		showOnCv = profileSkill ? !profileSkill.profileOnly : false;
+		showOnCv = profileSkill ? !profileSkill.profileOnly : defaultShowOnCv;
 		versions = [...(profileSkill?.versions ?? [])];
 		error = null;
 	}

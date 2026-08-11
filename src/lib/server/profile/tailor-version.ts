@@ -556,13 +556,27 @@ async function persistDecisions(versionId: number, decisions: Decision[]): Promi
 	}
 }
 
-/** The job-match read the review panel shows beside the diff. */
-export async function jobMatchGaps(profileId: number, jobId: number): Promise<string[]> {
+/**
+ * What the stored match concluded about this job — the parts a document can be
+ * held to account against.
+ *
+ * `matched` matters here because the matcher is semantic and the document is
+ * literal: it counts "SQL" through MySQL and PostgreSQL, so a required skill can
+ * be *credited* to the applicant while the word appears nowhere on what they
+ * send. Neither the exact-name join nor the score can see that on its own.
+ */
+export async function jobMatchRead(
+	profileId: number,
+	jobId: number
+): Promise<{ gaps: string[]; matched: string[] }> {
 	const match = await db.query.job_matches.findFirst({
 		where: and(eq(job_matches.profile_id, profileId), eq(job_matches.job_id, jobId)),
-		columns: { gaps: true }
+		columns: { gaps: true, matched_skills: true }
 	});
-	return asStringArray(match?.gaps).slice(0, 6);
+	return {
+		gaps: asStringArray(match?.gaps).slice(0, 6),
+		matched: asStringArray(match?.matched_skills)
+	};
 }
 
 /** Every decision on one version, newest first, for the review panel. */

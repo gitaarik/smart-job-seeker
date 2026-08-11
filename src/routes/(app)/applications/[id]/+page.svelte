@@ -544,6 +544,7 @@
 		versions={data.versions ?? []}
 		tailored={data.tailored ?? null}
 		coverage={data.coverage ?? {}}
+		creditedNotNamed={data.creditedNotNamed ?? []}
 		{profileSlug}
 	/>
 
