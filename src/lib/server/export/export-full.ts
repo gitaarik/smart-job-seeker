@@ -9,6 +9,7 @@ import { buildProfileExport } from './export-profile';
 import type {
 	DocumentFilePayload,
 	ExportContentOptions,
+	TemplateAssetPayload,
 	FullExportData,
 	MediaFile,
 	ExportedProjectStory,
@@ -27,12 +28,14 @@ export async function buildFullExport(
 	data: FullExportData;
 	mediaFiles: MediaFile[];
 	documentFiles: DocumentFilePayload[];
+	templateAssets: TemplateAssetPayload[];
 }> {
 	// Start with profile data
 	const {
 		data: profileExport,
 		mediaFiles,
-		documentFiles
+		documentFiles,
+		templateAssets
 	} = await buildProfileExport(profileId, options);
 
 	// Fetch additional data
@@ -165,6 +168,8 @@ export async function buildFullExport(
 		media_files: profileExport.media_files,
 		has_documents: profileExport.has_documents,
 		documents: profileExport.documents,
+		translations: profileExport.translations,
+		resume_templates: profileExport.resume_templates,
 		profile: profileExport.profile,
 		project_stories: exportedProjectStories,
 		cheat_sheets: exportedCheatSheets,
@@ -172,5 +177,5 @@ export async function buildFullExport(
 		applications: exportedApplications
 	};
 
-	return { data: exportData, mediaFiles, documentFiles };
+	return { data: exportData, mediaFiles, documentFiles, templateAssets };
 }

@@ -85,6 +85,53 @@ export interface DocumentFilePayload {
 	text: string;
 }
 
+// --- Translation overlay (profile_translations) ---
+// Positional for the same reason documents are: no database ids travel.
+export type TranslationTarget =
+	| { kind: 'profile' }
+	| { kind: 'work_experience'; work_experience_index: number }
+	| {
+			kind: 'work_experience_achievement';
+			work_experience_index: number;
+			achievement_index: number;
+	  }
+	| { kind: 'side_project'; side_project_index: number }
+	| { kind: 'side_project_achievement'; side_project_index: number; achievement_index: number }
+	| { kind: 'education'; education_index: number }
+	| { kind: 'tech_skill_category'; category_index: number };
+
+export interface ExportedTranslation {
+	target: TranslationTarget;
+	field: string;
+	locale: string;
+	value: string;
+}
+
+// --- Resume templates (resume_templates) ---
+/** An asset the template config points at by file id. */
+export interface ExportedTemplateAsset {
+	/** File id in the source database; rewritten to the new id on import. */
+	file_id: string;
+	archivePath: string;
+	filename: string;
+}
+
+export interface ExportedResumeTemplate {
+	name?: string;
+	slug?: string;
+	status?: string;
+	sort?: number | null;
+	/** Kept verbatim, including its file ids — the importer rewrites them. */
+	config: unknown;
+	assets: ExportedTemplateAsset[];
+}
+
+/** Template asset bytes carried to the ZIP writer. */
+export interface TemplateAssetPayload {
+	archivePath: string;
+	buffer: Buffer;
+}
+
 // Base export envelope
 export interface ExportEnvelope {
 	/** Export format version */
@@ -102,6 +149,10 @@ export interface ExportEnvelope {
 	has_documents?: boolean;
 	/** Document manifest (only if has_documents); text lives in the archive */
 	documents?: ExportedDocument[];
+	/** Per-locale overlay of translated field values */
+	translations?: ExportedTranslation[];
+	/** Custom CV templates; asset bytes live in the archive */
+	resume_templates?: ExportedResumeTemplate[];
 }
 
 // Profile data (resume/CV/portfolio)
@@ -163,6 +214,7 @@ export interface ExportedProfileData {
 	languages: ExportedLanguage[];
 	references: ExportedReference[];
 	certificates: ExportedCertificate[];
+	os_contributions: ExportedOsContribution[];
 }
 
 export interface ExportedProfileVersion {
@@ -212,6 +264,7 @@ export interface ExportedWorkExperience {
 	website?: string;
 	tags?: unknown;
 	logo_path?: string;
+	banner_path?: string;
 	achievements: ExportedWorkExperienceAchievement[];
 	technologies: ExportedWorkExperienceTechnology[];
 	projects: ExportedWorkExperienceProject[];
@@ -260,6 +313,7 @@ export interface ExportedSideProject {
 	summary?: string;
 	repo_url?: string;
 	image_path?: string;
+	banner_path?: string;
 	tags?: unknown;
 	achievements: ExportedSideProjectAchievement[];
 	technologies: ExportedSideProjectTechnology[];
@@ -288,7 +342,19 @@ export interface ExportedEducation {
 	end_date?: string | null;
 	summary?: string;
 	logo_path?: string;
+	banner_path?: string;
 	tags?: unknown;
+}
+
+export interface ExportedOsContribution {
+	status?: string;
+	title?: string;
+	description?: string;
+	project_name?: string;
+	contribution_type?: string;
+	merged_date?: string | null;
+	issue_url?: string;
+	pull_request_url?: string;
 }
 
 export interface ExportedLanguage {
@@ -390,7 +456,8 @@ export interface ExportedApplication {
 	company?: string;
 	source_url?: string;
 	application_sent_date?: string;
-	application_note?: string;
+	/** `applications.application_notes` is jsonb, not text — carried verbatim. */
+	application_note?: unknown;
 	salary_expectation?: number;
 	salary_currency?: string;
 	salary_period?: string;

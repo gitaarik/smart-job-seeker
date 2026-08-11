@@ -3,15 +3,18 @@
  */
 
 import { dbDirect } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
+import { desc, eq } from 'drizzle-orm';
+import { os_contributions, profiles } from '$lib/server/db/schema';
 import { buildDocumentExport, type ProjectIndexMaps } from './export-documents';
+import { buildTranslationExport, emptyTranslationIndexMaps } from './export-translations';
+import { buildTemplateExport } from './export-templates';
 import type {
 	DocumentFilePayload,
 	ExportContentOptions,
 	ExportedProfileData,
 	ProfileExportData,
-	MediaFile
+	MediaFile,
+	TemplateAssetPayload
 } from './types';
 
 /**
@@ -24,6 +27,7 @@ export async function buildProfileExport(
 	data: ProfileExportData;
 	mediaFiles: MediaFile[];
 	documentFiles: DocumentFilePayload[];
+	templateAssets: TemplateAssetPayload[];
 }> {
 	const { includeMedia = false, includeDocuments = false } = options;
 	const profile = await dbDirect.query.profiles.findFirst({
@@ -54,6 +58,8 @@ export async function buildProfileExport(
 			},
 			tech_skill_categories: {
 				columns: {
+					// id: translation overlay targets categories by position
+					id: true,
 					status: true,
 					sort: true,
 					name: true,
@@ -89,11 +95,13 @@ export async function buildProfileExport(
 					end_date: true,
 					website: true,
 					tags: true,
-					logo_path: true
+					logo_path: true,
+					banner_path: true
 				},
 				with: {
 					work_experience_achievements: {
 						columns: {
+							id: true,
 							status: true,
 							sort: true,
 							description: true,
@@ -143,11 +151,12 @@ export async function buildProfileExport(
 					summary: true,
 					repo_url: true,
 					image_path: true,
+					banner_path: true,
 					tags: true
 				},
 				with: {
 					side_project_achievements: {
-						columns: { description: true, sort: true },
+						columns: { id: true, description: true, sort: true },
 						orderBy: (t: any, { asc }: any) => asc(t.sort)
 					},
 					side_project_technologies: {
@@ -172,6 +181,7 @@ export async function buildProfileExport(
 					end_date: true,
 					summary: true,
 					logo_path: true,
+					banner_path: true,
 					tags: true
 				},
 				orderBy: (t: any, { asc }: any) => asc(t.sort)
@@ -206,6 +216,19 @@ export async function buildProfileExport(
 					url: true
 				},
 				orderBy: (t: any, { asc }: any) => asc(t.sort)
+			},
+			os_contributions: {
+				columns: {
+					status: true,
+					title: true,
+					description: true,
+					project_name: true,
+					contribution_type: true,
+					merged_date: true,
+					issue_url: true,
+					pull_request_url: true
+				},
+				orderBy: desc(os_contributions.merged_date)
 			}
 		}
 	});
@@ -231,39 +254,45 @@ export async function buildProfileExport(
 
 		// Work experience media
 		for (const work of profile.work_experiences) {
-			if (work.logo_path) {
+			for (const field of ['logo_path', 'banner_path'] as const) {
+				const path = work[field];
+				if (!path) continue;
 				mediaFiles.push({
-					path: work.logo_path,
-					archivePath: `media/${work.logo_path}`,
+					path,
+					archivePath: `media/${path}`,
 					entityType: 'work_experience',
 					entityId: work.id,
-					field: 'logo_path'
+					field
 				});
 			}
 		}
 
 		// Education media
 		for (const edu of profile.educations) {
-			if (edu.logo_path) {
+			for (const field of ['logo_path', 'banner_path'] as const) {
+				const path = edu[field];
+				if (!path) continue;
 				mediaFiles.push({
-					path: edu.logo_path,
-					archivePath: `media/${edu.logo_path}`,
+					path,
+					archivePath: `media/${path}`,
 					entityType: 'education',
 					entityId: edu.id,
-					field: 'logo_path'
+					field
 				});
 			}
 		}
 
 		// Side project media
 		for (const proj of profile.side_projects) {
-			if (proj.image_path) {
+			for (const field of ['image_path', 'banner_path'] as const) {
+				const path = proj[field];
+				if (!path) continue;
 				mediaFiles.push({
-					path: proj.image_path,
-					archivePath: `media/${proj.image_path}`,
+					path,
+					archivePath: `media/${path}`,
 					entityType: 'side_project',
 					entityId: proj.id,
-					field: 'image_path'
+					field
 				});
 			}
 		}
@@ -299,6 +328,44 @@ export async function buildProfileExport(
 		documents = built.documents;
 		documentFiles.push(...built.documentFiles);
 	}
+
+	// Translation overlay. Always included: it is text the user authored, and it
+	// is meaningless without the entities it hangs off, which are right here.
+	const translationMaps = emptyTranslationIndexMaps(profileId);
+
+	profile.work_experiences.forEach((work, workIndex) => {
+		translationMaps.workExperience.set(work.id, workIndex);
+		work.work_experience_achievements.forEach((achievement, achievementIndex) => {
+			translationMaps.workExperienceAchievement.set(achievement.id, {
+				work_experience_index: workIndex,
+				achievement_index: achievementIndex
+			});
+		});
+	});
+
+	profile.side_projects.forEach((proj, projectIndex) => {
+		translationMaps.sideProject.set(proj.id, projectIndex);
+		proj.side_project_achievements.forEach((achievement, achievementIndex) => {
+			translationMaps.sideProjectAchievement.set(achievement.id, {
+				side_project_index: projectIndex,
+				achievement_index: achievementIndex
+			});
+		});
+	});
+
+	profile.educations.forEach((edu, index) => translationMaps.education.set(edu.id, index));
+	profile.tech_skill_categories.forEach((cat, index) =>
+		translationMaps.techSkillCategory.set(cat.id, index)
+	);
+
+	const translations = await buildTranslationExport(profileId, translationMaps);
+
+	// Custom CV templates. The config is data the user built; its images are
+	// media, so they follow the media switch.
+	const { templates, assetPayloads: templateAssets } = await buildTemplateExport(
+		profileId,
+		includeMedia
+	);
 
 	// Helper to format dates (handles both Date objects and date strings from Drizzle)
 	const formatDate = (date: Date | string | null): string | null => {
@@ -385,6 +452,7 @@ export async function buildProfileExport(
 			website: work.website || undefined,
 			tags: work.tags,
 			logo_path: work.logo_path || undefined,
+			banner_path: work.banner_path || undefined,
 			achievements: work.work_experience_achievements.map((a) => ({
 				status: a.status || undefined,
 				sort: a.sort,
@@ -424,6 +492,7 @@ export async function buildProfileExport(
 			summary: proj.summary || undefined,
 			repo_url: proj.repo_url || undefined,
 			image_path: proj.image_path || undefined,
+			banner_path: proj.banner_path || undefined,
 			tags: proj.tags,
 			achievements: proj.side_project_achievements.map((a) => ({
 				description: a.description || undefined,
@@ -448,6 +517,7 @@ export async function buildProfileExport(
 			end_date: formatDate(edu.end_date),
 			summary: edu.summary || undefined,
 			logo_path: edu.logo_path || undefined,
+			banner_path: edu.banner_path || undefined,
 			tags: edu.tags
 		})),
 
@@ -474,6 +544,17 @@ export async function buildProfileExport(
 			issuer: c.issuer || undefined,
 			date: formatDate(c.date),
 			url: c.url || undefined
+		})),
+
+		os_contributions: profile.os_contributions.map((c) => ({
+			status: c.status || undefined,
+			title: c.title || undefined,
+			description: c.description || undefined,
+			project_name: c.project_name || undefined,
+			contribution_type: c.contribution_type || undefined,
+			merged_date: formatDate(c.merged_date),
+			issue_url: c.issue_url || undefined,
+			pull_request_url: c.pull_request_url || undefined
 		}))
 	};
 
@@ -487,10 +568,12 @@ export async function buildProfileExport(
 		media_files: includeMedia && mediaFiles.length > 0 ? mediaFiles : undefined,
 		has_documents: hasDocuments,
 		documents: hasDocuments ? documents : undefined,
+		translations: translations.length > 0 ? translations : undefined,
+		resume_templates: templates.length > 0 ? templates : undefined,
 		profile: profileData
 	};
 
-	return { data: exportData, mediaFiles, documentFiles };
+	return { data: exportData, mediaFiles, documentFiles, templateAssets };
 }
 
 /**

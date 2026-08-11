@@ -21,6 +21,11 @@ export type {
 	DocumentFilePayload,
 	ExportedDocument,
 	ExportedDocumentFile,
+	ExportedTranslation,
+	TranslationTarget,
+	ExportedResumeTemplate,
+	ExportedTemplateAsset,
+	TemplateAssetPayload,
 	ExportEnvelope,
 	ExportedProfileData,
 	ProfileExportData,
@@ -37,6 +42,8 @@ export { createExportZip, parseExportZip } from './export-zip';
 export { importExportData, validateExportData, isLegacyFormat } from './import-data';
 export { importMediaFiles, deleteProfileMediaFiles } from './import-media';
 export { deleteProfileDocuments } from './import-documents';
+export { deleteProfileTranslations } from './import-translations';
+export { deleteProfileResumeTemplates } from './import-templates';
 
 // Settings export/import (search_tasks, match_config, email digest, salary)
 export {

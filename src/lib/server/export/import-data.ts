@@ -11,6 +11,7 @@ import {
 	languages,
 	references,
 	certificates,
+	os_contributions,
 	project_stories,
 	cheat_sheets,
 	salary_expectations,
@@ -29,7 +30,8 @@ import {
 	profile_version_extensions,
 	applications,
 	application_letters,
-	application_questions
+	application_questions,
+	jobs
 } from '$lib/server/db/schema';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
 import { toDateString } from '$lib/tools/date-utils';
@@ -39,6 +41,13 @@ import {
 	importDocuments,
 	type CreatedProjectIds
 } from './import-documents';
+import {
+	deleteProfileTranslations,
+	emptyCreatedTranslationIds,
+	importTranslations,
+	type CreatedTranslationIds
+} from './import-translations';
+import { deleteProfileResumeTemplates, importResumeTemplates } from './import-templates';
 import type { ExportData, ExportedProfileData, FullExportData } from './types';
 
 // Helper to convert JSON value for database insert
@@ -52,6 +61,8 @@ interface ImportOptions {
 	/** Extracted document text from the archive, keyed by archive path. Without
 	 *  it, documents in the manifest are skipped rather than imported empty. */
 	documentTexts?: Map<string, string>;
+	/** CV template asset bytes from the archive, keyed by archive path. */
+	templateAssets?: Map<string, Buffer>;
 }
 
 interface ImportResult {
@@ -59,6 +70,9 @@ interface ImportResult {
 	profileName: string;
 	mediaPathMapping: Map<string, string>;
 	documentsImported: number;
+	translationsImported: number;
+	templatesImported: number;
+	applicationsImported: number;
 }
 
 /**
@@ -96,7 +110,7 @@ export async function importExportData(
 	userId: string,
 	options: ImportOptions = {}
 ): Promise<ImportResult> {
-	const { overwriteProfileId, documentTexts } = options;
+	const { overwriteProfileId, documentTexts, templateAssets } = options;
 	const p = data.profile;
 
 	let profileId: number;
@@ -152,26 +166,51 @@ export async function importExportData(
 	}
 
 	// Import profile-related entities
-	const createdProjectIds = await importProfileEntities(profileId, p, mediaPathMapping);
+	const { projectIds, translationIds } = await importProfileEntities(
+		profileId,
+		p,
+		mediaPathMapping
+	);
 
 	// Import full account data if scope is "full"
+	let applicationsImported = 0;
 	if (data.scope === 'full') {
-		await importFullAccountEntities(profileId, data as FullExportData);
+		applicationsImported = await importFullAccountEntities(profileId, data as FullExportData);
 	}
 
 	// Uploaded documents. Their text lives in the archive, so a JSON-only import
 	// has nothing to restore even when the manifest is present.
 	let documentsImported = 0;
 	if (data.documents?.length && documentTexts) {
-		documentsImported = await importDocuments(
-			profileId,
-			data.documents,
-			documentTexts,
-			createdProjectIds
-		);
+		documentsImported = await importDocuments(profileId, data.documents, documentTexts, projectIds);
 	}
 
-	return { profileId, profileName: finalName, mediaPathMapping, documentsImported };
+	// Translation overlay — plain text, so it restores from a JSON import too.
+	let translationsImported = 0;
+	if (data.translations?.length) {
+		translationsImported = await importTranslations(profileId, data.translations, translationIds);
+	}
+
+	// CV templates. Config restores either way; the images need the archive.
+	let templatesImported = 0;
+	if (data.resume_templates?.length) {
+		const result = await importResumeTemplates(
+			profileId,
+			data.resume_templates,
+			templateAssets ?? new Map()
+		);
+		templatesImported = result.imported;
+	}
+
+	return {
+		profileId,
+		profileName: finalName,
+		mediaPathMapping,
+		documentsImported,
+		translationsImported,
+		templatesImported,
+		applicationsImported
+	};
 }
 
 /**
@@ -182,12 +221,17 @@ async function deleteProfileChildren(profileId: number): Promise<void> {
 	// survive their parent as unattached rows (ON DELETE SET NULL).
 	await deleteProfileDocuments(profileId);
 
+	// Sidecars keyed by entity id: stale rows would point at recreated entities.
+	await deleteProfileTranslations(profileId);
+	await deleteProfileResumeTemplates(profileId);
+
 	// Delete simple child records
 	await dbDirect.delete(highlights).where(eq(highlights.profile_id, profileId));
 	await dbDirect.delete(education).where(eq(education.profile_id, profileId));
 	await dbDirect.delete(languages).where(eq(languages.profile_id, profileId));
 	await dbDirect.delete(references).where(eq(references.profile_id, profileId));
 	await dbDirect.delete(certificates).where(eq(certificates.profile_id, profileId));
+	await dbDirect.delete(os_contributions).where(eq(os_contributions.profile_id, profileId));
 	await dbDirect.delete(project_stories).where(eq(project_stories.profile_id, profileId));
 	await dbDirect.delete(cheat_sheets).where(eq(cheat_sheets.profile_id, profileId));
 	await dbDirect.delete(salary_expectations).where(eq(salary_expectations.profile_id, profileId));
@@ -349,9 +393,11 @@ async function importProfileEntities(
 	profileId: number,
 	p: ExportedProfileData,
 	mediaPathMapping: Map<string, string>
-): Promise<CreatedProjectIds> {
+): Promise<{ projectIds: CreatedProjectIds; translationIds: CreatedTranslationIds }> {
 	// Positions the document manifest refers to, filled in as projects are created
 	const created = emptyCreatedProjectIds();
+	// Positions the translation overlay refers to
+	const translated = emptyCreatedTranslationIds(profileId);
 
 	// Highlights
 	for (const h of p.highlights ?? []) {
@@ -365,8 +411,10 @@ async function importProfileEntities(
 	}
 
 	// Education
-	for (const e of p.education ?? []) {
-		const [created] = await dbDirect
+	const educationList = p.education ?? [];
+	for (let educationIndex = 0; educationIndex < educationList.length; educationIndex++) {
+		const e = educationList[educationIndex];
+		const [createdEdu] = await dbDirect
 			.insert(education)
 			.values({
 				profile_id: profileId,
@@ -385,9 +433,14 @@ async function importProfileEntities(
 				// logo_path will be set via media import
 			})
 			.returning();
+		translated.educationIdByIndex[educationIndex] = createdEdu.id;
+
 		// Track for media mapping
 		if (e.logo_path) {
-			mediaPathMapping.set(`education:${created.id}:logo_path`, e.logo_path);
+			mediaPathMapping.set(`education:${createdEdu.id}:logo_path`, e.logo_path);
+		}
+		if (e.banner_path) {
+			mediaPathMapping.set(`education:${createdEdu.id}:banner_path`, e.banner_path);
 		}
 	}
 
@@ -429,13 +482,31 @@ async function importProfileEntities(
 		});
 	}
 
+	// Open-source contributions
+	for (const c of p.os_contributions ?? []) {
+		await dbDirect.insert(os_contributions).values({
+			profile_id: profileId,
+			status: c.status || 'draft',
+			title: c.title || null,
+			description: c.description || null,
+			project_name: c.project_name || null,
+			contribution_type: c.contribution_type || null,
+			merged_date: toDateString(c.merged_date),
+			issue_url: c.issue_url || null,
+			pull_request_url: c.pull_request_url || null,
+			date_created: new Date()
+		});
+	}
+
 	// Tech skill categories + tech skills
 	const techTypesList = await dbDirect.query.tech_skill_types.findMany({
 		columns: { id: true, slug: true }
 	});
 	const techTypeBySlug = new Map(techTypesList.map((t) => [t.slug, t.id]));
 
-	for (const cat of p.tech_skill_categories ?? []) {
+	const categoryList = p.tech_skill_categories ?? [];
+	for (let categoryIndex = 0; categoryIndex < categoryList.length; categoryIndex++) {
+		const cat = categoryList[categoryIndex];
 		const [createdCat] = await dbDirect
 			.insert(tech_skill_categories)
 			.values({
@@ -446,6 +517,8 @@ async function importProfileEntities(
 				fa_icon: cat.fa_icon || null
 			})
 			.returning();
+
+		translated.techSkillCategoryIdByIndex[categoryIndex] = createdCat.id;
 
 		for (const skill of cat.tech_skills ?? []) {
 			await dbDirect.insert(tech_skills).values({
@@ -484,21 +557,35 @@ async function importProfileEntities(
 			.returning();
 
 		created.workExperienceIdByIndex[workIndex] = createdWork.id;
+		translated.workExperienceIdByIndex[workIndex] = createdWork.id;
 
 		// Track for media mapping
 		if (w.logo_path) {
 			mediaPathMapping.set(`work_experience:${createdWork.id}:logo_path`, w.logo_path);
 		}
+		if (w.banner_path) {
+			mediaPathMapping.set(`work_experience:${createdWork.id}:banner_path`, w.banner_path);
+		}
 
-		for (const a of w.achievements ?? []) {
-			await dbDirect.insert(work_experience_achievements).values({
-				work_experience_id: createdWork.id,
-				status: a.status || 'draft',
-				sort: a.sort ?? null,
-				description: a.description || a.title || null,
-				fa_icon: a.fa_icon || null,
-				tags: toJsonValue(a.tags)
-			});
+		const achievementList = w.achievements ?? [];
+		for (let achievementIndex = 0; achievementIndex < achievementList.length; achievementIndex++) {
+			const a = achievementList[achievementIndex];
+			const [createdAchievement] = await dbDirect
+				.insert(work_experience_achievements)
+				.values({
+					work_experience_id: createdWork.id,
+					status: a.status || 'draft',
+					sort: a.sort ?? null,
+					description: a.description || a.title || null,
+					fa_icon: a.fa_icon || null,
+					tags: toJsonValue(a.tags)
+				})
+				.returning({ id: work_experience_achievements.id });
+
+			translated.workExperienceAchievementIdByIndex.set(
+				`${workIndex}:${achievementIndex}`,
+				createdAchievement.id
+			);
 		}
 
 		for (const t of w.technologies ?? []) {
@@ -563,18 +650,32 @@ async function importProfileEntities(
 			.returning();
 
 		created.sideProjectIdByIndex[sideIndex] = createdSp.id;
+		translated.sideProjectIdByIndex[sideIndex] = createdSp.id;
 
 		// Track for media mapping
 		if (sp.image_path) {
 			mediaPathMapping.set(`side_project:${createdSp.id}:image_path`, sp.image_path);
 		}
+		if (sp.banner_path) {
+			mediaPathMapping.set(`side_project:${createdSp.id}:banner_path`, sp.banner_path);
+		}
 
-		for (const a of sp.achievements ?? []) {
-			await dbDirect.insert(side_project_achievements).values({
-				side_project_id: createdSp.id,
-				description: a.description || null,
-				sort: a.sort ?? null
-			});
+		const sideAchievements = sp.achievements ?? [];
+		for (let achievementIndex = 0; achievementIndex < sideAchievements.length; achievementIndex++) {
+			const a = sideAchievements[achievementIndex];
+			const [createdAchievement] = await dbDirect
+				.insert(side_project_achievements)
+				.values({
+					side_project_id: createdSp.id,
+					description: a.description || null,
+					sort: a.sort ?? null
+				})
+				.returning({ id: side_project_achievements.id });
+
+			translated.sideProjectAchievementIdByIndex.set(
+				`${sideIndex}:${achievementIndex}`,
+				createdAchievement.id
+			);
 		}
 
 		for (const t of sp.technologies ?? []) {
@@ -637,13 +738,13 @@ async function importProfileEntities(
 		mediaPathMapping.set(`profile:${profileId}:profile_photo_path`, p.profile_photo_path);
 	}
 
-	return created;
+	return { projectIds: created, translationIds: translated };
 }
 
 /**
  * Import full account entities (beyond profile data)
  */
-async function importFullAccountEntities(profileId: number, data: FullExportData): Promise<void> {
+async function importFullAccountEntities(profileId: number, data: FullExportData): Promise<number> {
 	// Project stories
 	for (const ps of data.project_stories ?? []) {
 		await dbDirect.insert(project_stories).values({
@@ -683,8 +784,75 @@ async function importFullAccountEntities(profileId: number, data: FullExportData
 			.where(eq(profiles.id, profileId));
 	}
 
-	// Note: Applications are not imported by default as they reference external jobs
-	// and may not make sense to duplicate. This could be made configurable.
+	// Applications. These hang off `jobs`, which is global rather than
+	// profile-scoped, so an imported application has to be pointed at a job row:
+	// reuse one matching the source URL if the target database already scraped
+	// it, otherwise recreate a minimal one from what the export carried. Marked
+	// created_manually so it is not mistaken for a live scrape.
+	let applicationsImported = 0;
+
+	for (const app of data.applications ?? []) {
+		let jobId: number | null = null;
+
+		if (app.source_url) {
+			const existing = await dbDirect.query.jobs.findFirst({
+				where: eq(jobs.source_url, app.source_url),
+				columns: { id: true }
+			});
+			jobId = existing?.id ?? null;
+		}
+
+		if (jobId === null && (app.job_title || app.company || app.source_url)) {
+			const [createdJob] = await dbDirect
+				.insert(jobs)
+				.values({
+					title: app.job_title || null,
+					company: app.company || null,
+					source_url: app.source_url || null,
+					created_manually: true,
+					date_created: new Date()
+				})
+				.returning({ id: jobs.id });
+			jobId = createdJob.id;
+		}
+
+		const [createdApp] = await dbDirect
+			.insert(applications)
+			.values({
+				profile_id: profileId,
+				job_id: jobId,
+				status: app.status || 'draft',
+				application_sent_date: toDateString(app.application_sent_date),
+				// jsonb note list, carried verbatim through the export.
+				application_notes: toJsonValue(app.application_note) as
+					{ id: string; text: string; created_at: string }[] | undefined,
+				salary_expectation: app.salary_expectation?.toString() ?? null,
+				salary_currency: app.salary_currency || null,
+				salary_period: app.salary_period || null,
+				date_created: new Date()
+			})
+			.returning({ id: applications.id });
+
+		for (const letter of app.letters ?? []) {
+			await dbDirect.insert(application_letters).values({
+				application_id: createdApp.id,
+				letter_type: letter.type || 'cover_letter',
+				content: letter.content || null
+			});
+		}
+
+		for (const question of app.questions ?? []) {
+			await dbDirect.insert(application_questions).values({
+				application_id: createdApp.id,
+				question: question.question || '',
+				answer: question.answer || null
+			});
+		}
+
+		applicationsImported++;
+	}
+
+	return applicationsImported;
 }
 
 /**

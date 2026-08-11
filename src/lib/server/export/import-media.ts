@@ -152,28 +152,28 @@ async function updateEntityMediaPath(
 			break;
 
 		case 'work_experience':
-			if (field === 'logo_path') {
+			if (field === 'logo_path' || field === 'banner_path') {
 				await dbDirect
 					.update(work_experiences)
-					.set({ logo_path: newPath })
+					.set({ [field]: newPath })
 					.where(eq(work_experiences.id, entityId));
 			}
 			break;
 
 		case 'education':
-			if (field === 'logo_path') {
+			if (field === 'logo_path' || field === 'banner_path') {
 				await dbDirect
 					.update(education)
-					.set({ logo_path: newPath })
+					.set({ [field]: newPath })
 					.where(eq(education.id, entityId));
 			}
 			break;
 
 		case 'side_project':
-			if (field === 'image_path') {
+			if (field === 'image_path' || field === 'banner_path') {
 				await dbDirect
 					.update(side_projects)
-					.set({ image_path: newPath })
+					.set({ [field]: newPath })
 					.where(eq(side_projects.id, entityId));
 			}
 			break;
@@ -203,13 +203,14 @@ export async function deleteProfileMediaFiles(profileId: number): Promise<void> 
 	// Get work experience media
 	const workExps = await dbDirect.query.work_experiences.findMany({
 		where: eq(work_experiences.profile_id, profileId),
-		columns: { logo_path: true }
+		columns: { logo_path: true, banner_path: true }
 	});
 
 	for (const we of workExps) {
-		if (we.logo_path) {
+		for (const path of [we.logo_path, we.banner_path]) {
+			if (!path) continue;
 			try {
-				await unlink(join(UPLOADS_DIR, we.logo_path));
+				await unlink(join(UPLOADS_DIR, path));
 			} catch {
 				// File might not exist
 			}
@@ -219,13 +220,14 @@ export async function deleteProfileMediaFiles(profileId: number): Promise<void> 
 	// Get education media
 	const eduRecords = await dbDirect.query.education.findMany({
 		where: eq(education.profile_id, profileId),
-		columns: { logo_path: true }
+		columns: { logo_path: true, banner_path: true }
 	});
 
 	for (const edu of eduRecords) {
-		if (edu.logo_path) {
+		for (const path of [edu.logo_path, edu.banner_path]) {
+			if (!path) continue;
 			try {
-				await unlink(join(UPLOADS_DIR, edu.logo_path));
+				await unlink(join(UPLOADS_DIR, path));
 			} catch {
 				// File might not exist
 			}
@@ -235,13 +237,14 @@ export async function deleteProfileMediaFiles(profileId: number): Promise<void> 
 	// Get side project media
 	const sideProjectRecords = await dbDirect.query.side_projects.findMany({
 		where: eq(side_projects.profile_id, profileId),
-		columns: { image_path: true }
+		columns: { image_path: true, banner_path: true }
 	});
 
 	for (const sp of sideProjectRecords) {
-		if (sp.image_path) {
+		for (const path of [sp.image_path, sp.banner_path]) {
+			if (!path) continue;
 			try {
-				await unlink(join(UPLOADS_DIR, sp.image_path));
+				await unlink(join(UPLOADS_DIR, path));
 			} catch {
 				// File might not exist
 			}

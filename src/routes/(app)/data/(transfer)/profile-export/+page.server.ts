@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
-import { eq, and, count, desc, isNotNull, sum } from 'drizzle-orm';
+import { eq, and, count, desc, isNotNull, or, sum } from 'drizzle-orm';
 import {
 	education,
 	profile_document_projects,
@@ -36,16 +36,29 @@ async function summarizeExportContents(profileId: number) {
 			.select({ value: count() })
 			.from(work_experiences)
 			.where(
-				and(eq(work_experiences.profile_id, profileId), isNotNull(work_experiences.logo_path))
+				and(
+					eq(work_experiences.profile_id, profileId),
+					or(isNotNull(work_experiences.logo_path), isNotNull(work_experiences.banner_path))
+				)
 			),
 		db
 			.select({ value: count() })
 			.from(education)
-			.where(and(eq(education.profile_id, profileId), isNotNull(education.logo_path))),
+			.where(
+				and(
+					eq(education.profile_id, profileId),
+					or(isNotNull(education.logo_path), isNotNull(education.banner_path))
+				)
+			),
 		db
 			.select({ value: count() })
 			.from(side_projects)
-			.where(and(eq(side_projects.profile_id, profileId), isNotNull(side_projects.image_path))),
+			.where(
+				and(
+					eq(side_projects.profile_id, profileId),
+					or(isNotNull(side_projects.image_path), isNotNull(side_projects.banner_path))
+				)
+			),
 		db
 			.select({ value: count(), bytes: sum(profile_document_projects.total_bytes) })
 			.from(profile_document_projects)
@@ -119,7 +132,8 @@ export const actions: Actions = {
 			const {
 				data: exportData,
 				mediaFiles,
-				documentFiles
+				documentFiles,
+				templateAssets
 			} = scope === 'full'
 				? await buildFullExport(profileId, options)
 				: await buildProfileExport(profileId, options);
@@ -131,7 +145,7 @@ export const actions: Actions = {
 			let fileType: 'zip' | 'json';
 
 			if (format === 'zip') {
-				buffer = await createExportZip(exportData, mediaFiles, documentFiles);
+				buffer = await createExportZip(exportData, mediaFiles, documentFiles, templateAssets);
 				filename = `${profileName}-${scope}.zip`;
 				fileType = 'zip';
 			} else {

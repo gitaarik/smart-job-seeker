@@ -4,7 +4,7 @@
 
 import JSZip from 'jszip';
 import { readUpload } from '$lib/server/uploads';
-import type { DocumentFilePayload, ExportData, MediaFile } from './types';
+import type { DocumentFilePayload, ExportData, MediaFile, TemplateAssetPayload } from './types';
 
 /**
  * Ceiling on decompressed document text accepted from an import ZIP.
@@ -22,7 +22,8 @@ const MAX_IMPORT_DOCUMENT_BYTES = 100 * 1024 * 1024;
 export async function createExportZip(
 	data: ExportData,
 	mediaFiles: MediaFile[],
-	documentFiles: DocumentFilePayload[] = []
+	documentFiles: DocumentFilePayload[] = [],
+	templateAssets: TemplateAssetPayload[] = []
 ): Promise<Buffer> {
 	const zip = new JSZip();
 
@@ -47,6 +48,11 @@ export async function createExportZip(
 		zip.file(documentFile.archivePath, documentFile.text);
 	}
 
+	// Add CV template assets
+	for (const asset of templateAssets) {
+		zip.file(asset.archivePath, asset.buffer);
+	}
+
 	// Generate ZIP buffer
 	const buffer = await zip.generateAsync({
 		type: 'nodebuffer',
@@ -64,6 +70,7 @@ export async function parseExportZip(zipBuffer: Buffer): Promise<{
 	data: ExportData;
 	mediaFiles: Map<string, Buffer>;
 	documentTexts: Map<string, string>;
+	templateAssets: Map<string, Buffer>;
 }> {
 	const zip = await JSZip.loadAsync(zipBuffer);
 
@@ -115,5 +122,17 @@ export async function parseExportZip(zipBuffer: Buffer): Promise<{
 		}
 	}
 
-	return { data, mediaFiles, documentTexts };
+	// Read CV template assets, keyed by archive path like the document text is.
+	const templateAssets = new Map<string, Buffer>();
+
+	for (const template of data.resume_templates ?? []) {
+		for (const asset of template.assets ?? []) {
+			const file = zip.file(asset.archivePath);
+			if (file) {
+				templateAssets.set(asset.archivePath, await file.async('nodebuffer'));
+			}
+		}
+	}
+
+	return { data, mediaFiles, documentTexts, templateAssets };
 }

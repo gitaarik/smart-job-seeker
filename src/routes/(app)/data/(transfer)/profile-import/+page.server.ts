@@ -114,7 +114,7 @@ export const actions: Actions = {
 			if (isZip) {
 				// Handle ZIP import (v2.0 format with media)
 				const buffer = Buffer.from(await file.arrayBuffer());
-				const { data, mediaFiles, documentTexts } = await parseExportZip(buffer);
+				const { data, mediaFiles, documentTexts, templateAssets } = await parseExportZip(buffer);
 
 				if (!validateExportData(data)) {
 					return fail(400, { error: 'Invalid export format in ZIP file' });
@@ -128,7 +128,8 @@ export const actions: Actions = {
 				// Import data (document text comes from the archive, so it is passed in)
 				const result = await importExportData(data, user.id, {
 					overwriteProfileId,
-					documentTexts
+					documentTexts,
+					templateAssets
 				});
 
 				// Import media files if present
@@ -147,7 +148,9 @@ export const actions: Actions = {
 
 				console.log(
 					`[Import] Archive restored into profile ${result.profileId}: ` +
-						`${data.media_files?.length ?? 0} media, ${result.documentsImported} documents`
+						`${data.media_files?.length ?? 0} media, ${result.documentsImported} documents, ` +
+						`${result.translationsImported} translations, ${result.templatesImported} templates, ` +
+						`${result.applicationsImported} applications`
 				);
 
 				redirect(302, `/home?profile=${result.profileId}`);
