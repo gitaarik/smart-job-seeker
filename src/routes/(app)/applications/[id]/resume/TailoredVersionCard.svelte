@@ -52,7 +52,8 @@
 		docType,
 		suggestedBaseSlug,
 		profileSlug,
-		hasJob
+		hasJob,
+		recordedHere
 	}: {
 		tailored: { id: number; slug: string; name: string; baseSlug?: string | null } | null;
 		decisions: Decision[];
@@ -63,6 +64,8 @@
 		suggestedBaseSlug: string;
 		profileSlug: string | undefined;
 		hasJob: boolean;
+		/** Whether the send-record names this version — deleting it clears that. */
+		recordedHere: boolean;
 	} = $props();
 
 	// Follows the suggestion until the applicant overrides it — a plain
@@ -72,7 +75,7 @@
 	let baseSlug = $derived(chosenBase ?? tailored?.baseSlug ?? suggestedBaseSlug);
 	let working = $state(false);
 	/**
-	 * Discard destroys a generated version and every decision on it, and the
+	 * Deleting destroys a generated version and every decision on it, and the
 	 * only way back is another model call. One click is too few for that, and
 	 * the notes list on this page already asks twice for the same reason.
 	 */
@@ -155,8 +158,8 @@
 						{decisions.length === 1 ? 'change' : 'changes'} against the version it builds on.
 					</p>
 				</div>
-				{#if profileSlug}
-					<div class="flex items-center gap-3">
+				<div class="flex items-center gap-3">
+					{#if profileSlug}
 						<!-- profileDocUrl builds a public /p/[slug] URL with a query string at
 						     runtime, which resolve() cannot express; the same links on the
 						     recorded version in CvSentCard are in the lint baseline for this. -->
@@ -189,9 +192,60 @@
 							PDF
 						</a>
 						<!-- eslint-enable svelte/no-navigation-without-resolve -->
-					</div>
-				{/if}
+					{/if}
+					<!-- Up here rather than in the footer with the other two: those are
+					     "what next", this is "get rid of it", and a card that routinely
+					     lists a dozen decisions put it a screen and a half down where
+					     nobody found it. Deleting a thing belongs beside opening it. -->
+					<button
+						type="button"
+						onclick={() => (confirmingDiscard = true)}
+						disabled={working}
+						title="Delete this tailored version"
+						class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)] disabled:opacity-70"
+					>
+						<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
+						Delete
+					</button>
+				</div>
 			</div>
+
+			{#if confirmingDiscard}
+				<div
+					class="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--dash-error)]/30 bg-[var(--dash-error)]/5 p-3"
+				>
+					<p class="flex-1 text-xs text-[var(--dash-text)]">
+						Delete this version and its {decisions.length}
+						{decisions.length === 1 ? 'change' : 'changes'}? Your own versions and your profile stay
+						as they are{recordedHere ? ', but the record of what you sent clears with it' : ''}.
+					</p>
+					<form
+						method="POST"
+						action="?/discardTailored"
+						use:enhance={() => {
+							const done = track();
+							confirmingDiscard = false;
+							return done;
+						}}
+					>
+						<button
+							type="submit"
+							disabled={working}
+							class="inline-flex items-center gap-1.5 rounded-lg bg-[var(--dash-error)] px-3 py-1.5 text-xs text-white hover:opacity-90 disabled:opacity-70"
+						>
+							<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
+							Delete it
+						</button>
+					</form>
+					<button
+						type="button"
+						onclick={() => (confirmingDiscard = false)}
+						class="text-xs text-[var(--dash-text-secondary)] hover:underline"
+					>
+						Cancel
+					</button>
+				</div>
+			{/if}
 
 			{#if decisions.length === 0}
 				<p class="mt-3 text-xs text-[var(--dash-text-secondary)]">
@@ -335,49 +389,6 @@
 						Keep in my versions
 					</button>
 				</form>
-				{#if confirmingDiscard}
-					<div class="inline-flex items-center gap-2">
-						<span class="text-xs text-[var(--dash-text-secondary)]">
-							Discard this version and its {decisions.length}
-							{decisions.length === 1 ? 'change' : 'changes'}?
-						</span>
-						<form
-							method="POST"
-							action="?/discardTailored"
-							use:enhance={() => {
-								const done = track();
-								confirmingDiscard = false;
-								return done;
-							}}
-						>
-							<button
-								type="submit"
-								disabled={working}
-								class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-error)] hover:underline disabled:opacity-70"
-							>
-								<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
-								Discard
-							</button>
-						</form>
-						<button
-							type="button"
-							onclick={() => (confirmingDiscard = false)}
-							class="text-xs text-[var(--dash-text-secondary)] hover:underline"
-						>
-							Cancel
-						</button>
-					</div>
-				{:else}
-					<button
-						type="button"
-						onclick={() => (confirmingDiscard = true)}
-						disabled={working}
-						class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] disabled:opacity-70"
-					>
-						<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
-						Discard
-					</button>
-				{/if}
 			</div>
 		{/if}
 	</Card>

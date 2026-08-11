@@ -61,5 +61,6 @@
 		{suggestedBaseSlug}
 		{profileSlug}
 		hasJob={!!app.job}
+		recordedHere={!!data.tailored && app.cv_version_sent === data.tailored.slug}
 	/>
 </div>
