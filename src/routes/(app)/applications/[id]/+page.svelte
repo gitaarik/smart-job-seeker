@@ -37,9 +37,6 @@
 		getQuickStatusActions
 	} from '$lib/application-status';
 	import StatusStepper from './StatusStepper.svelte';
-	import CvSentCard from './CvSentCard.svelte';
-	import TailoredVersionCard from './TailoredVersionCard.svelte';
-	import { recommendVersion } from '$lib/version-coverage';
 	import ActivitySummaryCard from './ActivitySummaryCard.svelte';
 	import OfferCard from './OfferCard.svelte';
 	import DetailsCard from './DetailsCard.svelte';
@@ -50,32 +47,16 @@
 	import type { DocType } from '$lib/utils/profile-doc-url';
 	import { linkify } from '$lib/utils/linkify';
 	import { portalToBody } from '$lib/actions/portal';
+	// The first use of Kit's typed route resolution in this codebase. Every other
+	// internal link here is a template string and sits in the lint baseline; new
+	// ones may as well be checked at build time, which is what the rule wants.
+	import { resolve } from '$app/paths';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let app = $derived(data.application);
 	let job = $derived(app.job);
 	let profileSlug = $derived((data as any).selectedProfile?.slug as string | undefined);
-
-	// The tailored version answers for the document type actually recorded (or
-	// the default), not for the unsaved picker in the card above — which base
-	// template a selection was computed against is part of what it means.
-	// Annotated, not inferred: `$derived` widens the ternary to `string`, and the
-	// default-base lookup below is keyed by the two document types.
-	let tailorDocType: 'resume' | 'cv' = $derived(app.cv_sent_through === 'cv' ? 'cv' : 'resume');
-	// Which library version it should build on: the one the coverage ranking
-	// picks for this job, else whatever this profile sends by default. Falling
-	// back to the plain document would start the tailored version from content
-	// with none of the applicant's curation applied. They can override it
-	// before generating either way.
-	let suggestedBaseSlug = $derived(
-		recommendVersion(data.coverage ?? {}, tailorDocType, [
-			'',
-			...(data.versions ?? []).map((v) => v.slug)
-		])?.versionSlug ??
-			data.defaultBase?.[tailorDocType] ??
-			''
-	);
 
 	// Notes
 	type Note = { id: string; text: string; created_at: string };
@@ -414,14 +395,17 @@
 			</div>
 
 			<div class="flex flex-col gap-3 text-sm">
-				<!-- CV/Resume Sent -->
-				{#if app.cv_sent_through}
-					{@const dt = app.cv_sent_through as DocType}
-					<div class="flex items-center gap-1.5">
-						<FontAwesomeIcon icon={faFileAlt} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
-						<span class="text-[var(--dash-text-secondary)]"
-							>{dt === 'cv' ? 'CV' : 'Resume'} sent</span
-						>
+				<!-- Resume / CV. Shown even when nothing is recorded, because "you have
+				     not chosen one" is the state this page most needs to surface — the
+				     work of choosing lives one tab over, and a row that appears only
+				     after the fact would never tell you to go there. -->
+				<div class="flex items-center gap-1.5">
+					<FontAwesomeIcon icon={faFileAlt} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
+					{#if app.cv_sent_through}
+						{@const dt = app.cv_sent_through as DocType}
+						<span class="text-[var(--dash-text-secondary)]">
+							{dt === 'cv' ? 'CV' : 'Resume'} sent
+						</span>
 						<span class="font-medium text-[var(--dash-text)]">
 							{data.cvVersionName || (dt === 'cv' ? 'CV' : 'Resume')}
 						</span>
@@ -435,8 +419,19 @@
 								<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3" />
 							</a>
 						{/if}
-					</div>
-				{/if}
+						<a
+							href={resolve('/(app)/applications/[id]/resume', { id: String(app.id) })}
+							class="dash-link text-xs">Change</a
+						>
+					{:else}
+						<span class="text-[var(--dash-text-secondary)]">Resume / CV</span>
+						<span class="text-[var(--dash-text-muted)]">not chosen yet</span>
+						<a
+							href={resolve('/(app)/applications/[id]/resume', { id: String(app.id) })}
+							class="dash-link text-xs">Choose one</a
+						>
+					{/if}
+				</div>
 
 				<!-- Letters -->
 				{#each app.application_letters || [] as letter}
@@ -505,7 +500,7 @@
 				{/if}
 
 				<!-- No items -->
-				{#if !app.cv_sent_through && letterCount === 0 && questionCount === 0 && fileCount === 0 && !app.salary_expectation}
+				{#if letterCount === 0 && questionCount === 0 && fileCount === 0 && !app.salary_expectation}
 					<p class="text-sm text-[var(--dash-text-muted)]">No items added yet.</p>
 				{/if}
 			</div>
@@ -538,27 +533,6 @@
 			</div>
 		</div>
 	</Card>
-
-	<CvSentCard
-		{app}
-		versions={data.versions ?? []}
-		tailored={data.tailored ?? null}
-		coverage={data.coverage ?? {}}
-		creditedNotNamed={data.creditedNotNamed ?? []}
-		exclusions={data.exclusions ?? {}}
-		{profileSlug}
-	/>
-
-	<TailoredVersionCard
-		tailored={data.tailored ?? null}
-		decisions={data.decisions ?? []}
-		gaps={data.gaps ?? []}
-		versions={data.versions ?? []}
-		docType={tailorDocType}
-		{suggestedBaseSlug}
-		{profileSlug}
-		hasJob={!!app.job}
-	/>
 
 	<!-- Notes -->
 	<Card padding="lg">

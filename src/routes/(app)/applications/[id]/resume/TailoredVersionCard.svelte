@@ -14,7 +14,7 @@
 		faTrash,
 		faWandMagicSparkles
 	} from '@fortawesome/free-solid-svg-icons';
-	import Card from '../../components/Card.svelte';
+	import Card from '../../../components/Card.svelte';
 	import { profileDocUrl, type DocType } from '$lib/utils/profile-doc-url';
 
 	/**

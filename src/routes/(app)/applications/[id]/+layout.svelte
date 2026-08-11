@@ -6,6 +6,7 @@
 		faArrowLeft,
 		faClipboardList,
 		faEnvelope,
+		faFileLines,
 		faMoneyBillWave,
 		faStream
 	} from '@fortawesome/free-solid-svg-icons';
@@ -21,8 +22,15 @@
 	// Six tabs became four. Interviews, Documents and Timeline all answered
 	// "what happened on this application" and are now one Activity stream; the
 	// old paths 308 to it. See planning/APPLICATION-ACTIVITY.md.
+	//
+	// Resume is the fifth, and not a reversal of that: those three answered the
+	// same question through different windows, while this one answers a question
+	// nothing else does — which document goes to this job, and what it says about
+	// you. It earned a tab by outgrowing a card, and moving it also takes its
+	// analysis off the Overview's load.
 	const tabs = $derived([
 		{ label: 'Overview', href: basePath, icon: faClipboardList },
+		{ label: 'Resume', href: `${basePath}/resume`, icon: faFileLines },
 		{ label: 'Texts', href: `${basePath}/texts`, icon: faEnvelope },
 		{ label: 'Activity', href: `${basePath}/activity`, icon: faStream },
 		{ label: 'Salary', href: `${basePath}/salary`, icon: faMoneyBillWave }

@@ -16,8 +16,8 @@
 		faSave,
 		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
-	import Card from '../../components/Card.svelte';
-	import AddSkillToProfile from '../../jobs/components/AddSkillToProfile.svelte';
+	import Card from '../../../components/Card.svelte';
+	import AddSkillToProfile from '../../../jobs/components/AddSkillToProfile.svelte';
 	import { profileDocUrl } from '$lib/utils/profile-doc-url';
 	import type { DocType } from '$lib/utils/profile-doc-url';
 	import {
