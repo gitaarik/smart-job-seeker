@@ -164,10 +164,27 @@
 		return profileDocUrl({ profileSlug, docType: docType as DocType, versionSlug: slug });
 	}
 
+	/**
+	 * Taking the suggestion records it, rather than pre-filling the picker and
+	 * asking for a second decision somewhere else on the card. "Use this one" is
+	 * already an answer, and a control that only *selects* after saying that is a
+	 * false affordance.
+	 *
+	 * One click is fair here because a mis-click costs nothing: the record can be
+	 * cleared, and setting a different version overwrites it. The slug is read
+	 * before the update because the suggestion is derived from "nothing recorded
+	 * yet" — the moment this succeeds, it is gone.
+	 */
 	function acceptRecommendation() {
-		if (!recommendation) return;
-		versionSlug = recommendation.versionSlug;
-		touched = true;
+		const slug = recommendation?.versionSlug ?? '';
+		return async ({ update }: { update: () => Promise<void> }) => {
+			await update();
+			versionSlug = slug;
+			cvSaved = true;
+			setTimeout(() => {
+				cvSaved = false;
+			}, 2000);
+		};
 	}
 	let lifting = $state<number | null>(null);
 	let lifted = $state<number[]>([]);
@@ -392,14 +409,22 @@
 					</span>
 				</p>
 				<div class="mt-2 flex flex-wrap items-center gap-3">
-					<button
-						type="button"
-						onclick={acceptRecommendation}
-						class="inline-flex items-center gap-1.5 rounded border border-[var(--dash-primary)]/40 bg-[var(--dash-card)] px-2 py-1 text-xs text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary)]/10"
+					<form
+						method="POST"
+						action="?/setCvSent"
+						use:enhance={acceptRecommendation}
+						class="inline-flex"
 					>
-						<FontAwesomeIcon icon={faCheck} class="h-2.5 w-2.5" />
-						Use this one
-					</button>
+						<input type="hidden" name="cv_sent_through" value={docType} />
+						<input type="hidden" name="version_slug" value={recommendation.versionSlug} />
+						<button
+							type="submit"
+							class="inline-flex items-center gap-1.5 rounded border border-[var(--dash-primary)]/40 bg-[var(--dash-card)] px-2 py-1 text-xs text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary)]/10"
+						>
+							<FontAwesomeIcon icon={faCheck} class="h-2.5 w-2.5" />
+							Use this one
+						</button>
+					</form>
 					<!-- Look before you commit: the suggestion is a measurement of skill
 					     coverage, which is one thing a document is judged on and not the
 					     only one. -->
