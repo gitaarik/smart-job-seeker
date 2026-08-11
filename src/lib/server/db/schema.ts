@@ -831,31 +831,6 @@ export const search_task_runs = pgTable(
 	]
 );
 
-export const os_contributions = pgTable(
-	'os_contributions',
-	{
-		id: serial().primaryKey().notNull(),
-		status: varchar({ length: 255 }).default('draft').notNull(),
-		date_created: timestamp({ withTimezone: true, mode: 'date' }),
-		date_updated: timestamp({ withTimezone: true, mode: 'date' }),
-		title: varchar({ length: 255 }),
-		description: text(),
-		project_name: varchar({ length: 255 }),
-		profile_id: integer(),
-		merged_date: date(),
-		issue_url: varchar({ length: 255 }),
-		pull_request_url: varchar({ length: 255 }),
-		contribution_type: varchar({ length: 255 })
-	},
-	(table) => [
-		foreignKey({
-			columns: [table.profile_id],
-			foreignColumns: [profiles.id],
-			name: 'os_contributions_profile_foreign'
-		}).onDelete('cascade')
-	]
-);
-
 /**
  * Per-user credential for a job platform. Owned by the human, not by any
  * one profile — multiple profiles of the same user share these by default.
@@ -4029,7 +4004,6 @@ export type MatchConfig = typeof match_config.$inferSelect;
 export type JobMatches = typeof job_matches.$inferSelect;
 export type JobResources = typeof job_resources.$inferSelect;
 export type SearchTaskRuns = typeof search_task_runs.$inferSelect;
-export type OsContributions = typeof os_contributions.$inferSelect;
 export type PlatformProfiles = typeof platform_profiles.$inferSelect;
 export type PlatformCredentialsRow = typeof platform_credentials.$inferSelect;
 export type Languages = typeof languages.$inferSelect;

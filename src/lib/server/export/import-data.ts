@@ -11,7 +11,6 @@ import {
 	languages,
 	references,
 	certificates,
-	os_contributions,
 	project_stories,
 	cheat_sheets,
 	salary_expectations,
@@ -231,7 +230,6 @@ async function deleteProfileChildren(profileId: number): Promise<void> {
 	await dbDirect.delete(languages).where(eq(languages.profile_id, profileId));
 	await dbDirect.delete(references).where(eq(references.profile_id, profileId));
 	await dbDirect.delete(certificates).where(eq(certificates.profile_id, profileId));
-	await dbDirect.delete(os_contributions).where(eq(os_contributions.profile_id, profileId));
 	await dbDirect.delete(project_stories).where(eq(project_stories.profile_id, profileId));
 	await dbDirect.delete(cheat_sheets).where(eq(cheat_sheets.profile_id, profileId));
 	await dbDirect.delete(salary_expectations).where(eq(salary_expectations.profile_id, profileId));
@@ -478,22 +476,6 @@ async function importProfileEntities(
 			issuer: cert.issuer || null,
 			date: toDateString(cert.date),
 			url: cert.url || null,
-			date_created: new Date()
-		});
-	}
-
-	// Open-source contributions
-	for (const c of p.os_contributions ?? []) {
-		await dbDirect.insert(os_contributions).values({
-			profile_id: profileId,
-			status: c.status || 'draft',
-			title: c.title || null,
-			description: c.description || null,
-			project_name: c.project_name || null,
-			contribution_type: c.contribution_type || null,
-			merged_date: toDateString(c.merged_date),
-			issue_url: c.issue_url || null,
-			pull_request_url: c.pull_request_url || null,
 			date_created: new Date()
 		});
 	}

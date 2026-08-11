@@ -1,0 +1,1 @@
+DROP TABLE "os_contributions" CASCADE;

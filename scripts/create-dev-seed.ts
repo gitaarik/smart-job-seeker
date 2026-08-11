@@ -145,7 +145,6 @@ const SEED_TABLES = {
 		'education',
 		'languages',
 		'highlights',
-		'os_contributions',
 		'project_stories',
 		'cheat_sheets',
 		'salary_expectations',

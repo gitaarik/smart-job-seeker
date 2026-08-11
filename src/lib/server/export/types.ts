@@ -214,7 +214,6 @@ export interface ExportedProfileData {
 	languages: ExportedLanguage[];
 	references: ExportedReference[];
 	certificates: ExportedCertificate[];
-	os_contributions: ExportedOsContribution[];
 }
 
 export interface ExportedProfileVersion {
@@ -344,17 +343,6 @@ export interface ExportedEducation {
 	logo_path?: string;
 	banner_path?: string;
 	tags?: unknown;
-}
-
-export interface ExportedOsContribution {
-	status?: string;
-	title?: string;
-	description?: string;
-	project_name?: string;
-	contribution_type?: string;
-	merged_date?: string | null;
-	issue_url?: string;
-	pull_request_url?: string;
 }
 
 export interface ExportedLanguage {

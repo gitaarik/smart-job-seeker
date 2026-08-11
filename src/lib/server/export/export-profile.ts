@@ -3,8 +3,8 @@
  */
 
 import { dbDirect } from '$lib/server/db';
-import { desc, eq } from 'drizzle-orm';
-import { os_contributions, profiles } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
+import { profiles } from '$lib/server/db/schema';
 import { buildDocumentExport, type ProjectIndexMaps } from './export-documents';
 import { buildTranslationExport, emptyTranslationIndexMaps } from './export-translations';
 import { buildTemplateExport } from './export-templates';
@@ -216,19 +216,6 @@ export async function buildProfileExport(
 					url: true
 				},
 				orderBy: (t: any, { asc }: any) => asc(t.sort)
-			},
-			os_contributions: {
-				columns: {
-					status: true,
-					title: true,
-					description: true,
-					project_name: true,
-					contribution_type: true,
-					merged_date: true,
-					issue_url: true,
-					pull_request_url: true
-				},
-				orderBy: desc(os_contributions.merged_date)
 			}
 		}
 	});
@@ -544,17 +531,6 @@ export async function buildProfileExport(
 			issuer: c.issuer || undefined,
 			date: formatDate(c.date),
 			url: c.url || undefined
-		})),
-
-		os_contributions: profile.os_contributions.map((c) => ({
-			status: c.status || undefined,
-			title: c.title || undefined,
-			description: c.description || undefined,
-			project_name: c.project_name || undefined,
-			contribution_type: c.contribution_type || undefined,
-			merged_date: formatDate(c.merged_date),
-			issue_url: c.issue_url || undefined,
-			pull_request_url: c.pull_request_url || undefined
 		}))
 	};
 

@@ -35,7 +35,6 @@ import {
 	languages,
 	letter_versions,
 	match_config,
-	os_contributions,
 	platform_credentials,
 	platform_profiles,
 	profile_document_files,
@@ -157,7 +156,6 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
 	highlights: many(highlights),
 	match_configs: many(match_config),
 	job_matches: many(job_matches),
-	os_contributions: many(os_contributions),
 	platform_profiles: many(platform_profiles),
 	languages: many(languages),
 	project_stories: many(project_stories),
@@ -324,13 +322,6 @@ export const search_tasksRelations = relations(search_tasks, ({ one, many }) => 
 	}),
 	search_tasks_job_sites: many(search_tasks_job_sites),
 	scraper_agent_sessions: many(scraper_agent_sessions)
-}));
-
-export const os_contributionsRelations = relations(os_contributions, ({ one }) => ({
-	profile: one(profiles, {
-		fields: [os_contributions.profile_id],
-		references: [profiles.id]
-	})
 }));
 
 export const platform_profilesRelations = relations(platform_profiles, ({ one, many }) => ({

@@ -78,6 +78,13 @@
       "when": 1786283682866,
       "tag": "0010_upwork_search_url_template",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1786439725644,
+      "tag": "0011_burly_goliath",
+      "breakpoints": true
     }
   ]
 }
