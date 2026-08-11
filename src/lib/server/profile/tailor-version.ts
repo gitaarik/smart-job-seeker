@@ -18,8 +18,8 @@
  * row still leaves the job's own spec to rank against.
  */
 
-import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { and, asc, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
+import { dbDirect as db, queryRaw } from '$lib/server/db';
 import {
 	applications,
 	job_matches,
@@ -41,7 +41,7 @@ import {
 	type Decision
 } from '$lib/tailoring';
 import { hiddenSkillsKey } from '$lib/version-coverage';
-import { BASE_TEMPLATE_TAGS } from '$lib/profile-visibility';
+import { BASE_TEMPLATE_TAGS, renameTagSlug, tagSlug } from '$lib/profile-visibility';
 import {
 	semanticScoreUnits,
 	poolKey,
@@ -678,6 +678,85 @@ export async function describeOverrides(
 }
 
 /**
+ * Tables carrying a `tags` array that can name a version slug, with what ties a
+ * row to one profile. `app-<id>` slugs are only unique per profile, so every
+ * rewrite below has to be scoped — another applicant can hold the same one.
+ */
+const TAGGED_TABLES: { table: string; scope: (profileId: number) => SQL }[] = [
+	{ table: 'work_experiences', scope: (p) => sql`profile_id = ${p}` },
+	{ table: 'education', scope: (p) => sql`profile_id = ${p}` },
+	{ table: 'side_projects', scope: (p) => sql`profile_id = ${p}` },
+	{ table: 'tech_skill_categories', scope: (p) => sql`profile_id = ${p}` },
+	{
+		table: 'tech_skills',
+		scope: (p) => sql`category_id IN (SELECT id FROM tech_skill_categories WHERE profile_id = ${p})`
+	},
+	{
+		table: 'work_experience_achievements',
+		scope: (p) =>
+			sql`work_experience_id IN (SELECT id FROM work_experiences WHERE profile_id = ${p})`
+	},
+	{
+		table: 'work_experience_technologies',
+		scope: (p) =>
+			sql`work_experience_id IN (SELECT id FROM work_experiences WHERE profile_id = ${p})`
+	}
+];
+
+/**
+ * Point item tags naming `from` at `to` — or drop them, when `to` is null.
+ *
+ * A version is addressed by slug in two places: `applications.cv_version_sent`
+ * and the `tags` array on every profile item. Promoting renames the slug and
+ * discarding retires it, and following only the first left the second naming a
+ * version that no longer existed — so a skill somebody had added to the
+ * tailored version silently stopped printing on the document they added it to,
+ * with nothing to see anywhere: the tag was still there, and still looked right.
+ *
+ * Returns how many rows changed. The SQL only narrows the field — renameTagSlug
+ * decides, and a row it leaves alone is not written — so the predicate being
+ * approximate (it strips every leading `!`, where a tag means only the first)
+ * costs a wasted read at most.
+ */
+export async function retagVersionSlug(
+	profileId: number,
+	from: string,
+	to: string | null
+): Promise<number> {
+	const slug = tagSlug(from);
+	if (!slug) return 0;
+	let touched = 0;
+
+	for (const { table, scope } of TAGGED_TABLES) {
+		const rows = await queryRaw<{ id: number; tags: unknown }>(
+			sql`SELECT id, tags FROM ${sql.raw(table)}
+			     WHERE ${scope(profileId)}
+			       -- Some rows store a JSON null rather than a SQL NULL, and
+			       -- jsonb_array_elements_text errors on anything but an array.
+			       AND jsonb_typeof(tags::jsonb) = 'array'
+			       AND EXISTS (
+			             SELECT 1 FROM jsonb_array_elements_text(tags::jsonb) AS t(tag)
+			              WHERE lower(btrim(ltrim(btrim(t.tag), '!'))) = ${slug}
+			           )`
+		);
+		for (const row of rows) {
+			const before = asStringArray(row.tags);
+			const next = renameTagSlug(before, slug, to);
+			if (next.length === before.length && next.every((tag, i) => tag === before[i])) continue;
+
+			await queryRaw(
+				sql`UPDATE ${sql.raw(table)}
+				       SET tags = ${next.length > 0 ? JSON.stringify(next) : null}::json
+				     WHERE id = ${row.id}`
+			);
+			touched += 1;
+		}
+	}
+
+	return touched;
+}
+
+/**
  * Move a tailored version into the applicant's library.
  *
  * The version keeps its overrides — that is the point of promoting: the
@@ -690,7 +769,8 @@ export async function describeOverrides(
  * Renaming the slug is the part with teeth. `applications.cv_version_sent`
  * stores a slug, not an id, so an application that recorded sending this
  * version would silently point at nothing — hence the update below, scoped to
- * rows that named the old slug.
+ * rows that named the old slug. Item tags are the second reference of that
+ * shape and were missed at first: see retagVersionSlug.
  */
 export async function promoteToLibrary(opts: {
 	profileId: number;
@@ -717,13 +797,17 @@ export async function promoteToLibrary(opts: {
 		.set({ application_id: null, slug, name, date_updated: new Date() })
 		.where(eq(profile_versions.id, version.id));
 
-	if (oldSlug) {
+	if (oldSlug && oldSlug !== slug) {
 		await db
 			.update(applications)
 			.set({ cv_version_sent: slug, date_updated: new Date() })
 			.where(
 				and(eq(applications.profile_id, profileId), eq(applications.cv_version_sent, oldSlug))
 			);
+		// The other slug-keyed reference. Overrides survive a rename on their own
+		// — they key on the version's id — but item tags name the slug, so a skill
+		// added to this version by tag would drop off it here.
+		await retagVersionSlug(profileId, oldSlug, slug);
 	}
 
 	return { slug, name };

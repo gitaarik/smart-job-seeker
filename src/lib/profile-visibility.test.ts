@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { isProfileOnly, setProfileOnly, setVersions, versionsOf } from './profile-visibility';
+import {
+	isProfileOnly,
+	renameTagSlug,
+	setProfileOnly,
+	setVersions,
+	versionsOf
+} from './profile-visibility';
 
 describe('isProfileOnly', () => {
 	it('needs both base templates excluded', () => {
@@ -68,5 +74,44 @@ describe('versionsOf / setVersions', () => {
 		const tags = setVersions(['!resume', '!cv'], ['backend', 'senior']);
 		expect(versionsOf(tags)).toEqual(['backend', 'senior']);
 		expect(isProfileOnly(tags)).toBe(true);
+	});
+});
+
+describe('renameTagSlug', () => {
+	it('follows a version rename', () => {
+		expect(renameTagSlug(['!resume', '!cv', 'app-45'], 'app-45', 'enexis')).toEqual([
+			'!resume',
+			'!cv',
+			'enexis'
+		]);
+	});
+
+	it('drops the tag when the version is gone', () => {
+		expect(renameTagSlug(['!resume', '!cv', 'app-45'], 'app-45', null)).toEqual(['!resume', '!cv']);
+		// Nothing else survived it, so the item goes back to untagged.
+		expect(renameTagSlug(['app-45'], 'app-45', null)).toEqual([]);
+	});
+
+	it('keeps a negation negated', () => {
+		// "never on this one" and "only on this one" are different statements, and
+		// renaming the version is not the place to swap one for the other.
+		expect(renameTagSlug(['!senior', 'backend'], 'senior', 'staff')).toEqual(['!staff', 'backend']);
+		expect(renameTagSlug(['!senior'], 'senior', null)).toEqual([]);
+	});
+
+	it('matches the way every other tag reader does', () => {
+		// tagSlug semantics: case-insensitive, whitespace-tolerant.
+		expect(renameTagSlug([' App-45 '], 'app-45', 'enexis')).toEqual(['enexis']);
+		expect(renameTagSlug(['app-45'], ' APP-45 ', 'enexis')).toEqual(['enexis']);
+	});
+
+	it('leaves everything it was not asked about alone', () => {
+		expect(renameTagSlug(['!resume', 'backend'], 'app-45', 'enexis')).toEqual([
+			'!resume',
+			'backend'
+		]);
+		expect(renameTagSlug(null, 'app-45', 'enexis')).toEqual([]);
+		// An empty needle would otherwise match every tag and rename the lot.
+		expect(renameTagSlug(['backend'], '  ', null)).toEqual(['backend']);
 	});
 });

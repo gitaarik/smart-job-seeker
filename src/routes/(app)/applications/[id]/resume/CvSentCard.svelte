@@ -26,6 +26,7 @@
 		type HiddenSkill,
 		type VersionCoverage
 	} from '$lib/version-coverage';
+	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 
 	/**
 	 * Which document goes to this job — chosen, checked, and then recorded.
@@ -604,7 +605,34 @@
 
 				<div class="mt-2 flex flex-wrap gap-1.5">
 					{#each hiddenSkills as skill (skill.id)}
-						{#if skill.liftable}
+						{#if skill.liftable && choseTailored}
+							<!-- On the tailored version, say it the way the generator says
+							     it: an override row, keyed by the version's id. The tag
+							     route below edits the SKILL, so it survives the version it
+							     was meant for and names that version by slug — which
+							     "Keep in my versions" renames. Same visible result here,
+							     a job-local decision that travels with the version. -->
+							<form
+								method="POST"
+								action="?/includeInTailored"
+								use:enhance={() =>
+									async ({ update }) => {
+										await update();
+										lifted = [...lifted, skill.id];
+									}}
+							>
+								<input type="hidden" name="entity_type" value={OVERRIDE_ENTITIES.skill} />
+								<input type="hidden" name="entity_id" value={skill.id} />
+								<button
+									type="submit"
+									title="Show {skill.name} on this job's version"
+									class="inline-flex items-center gap-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-amber-500/50 hover:text-amber-700"
+								>
+									<FontAwesomeIcon icon={faPlus} class="h-2.5 w-2.5" />
+									{skill.name}
+								</button>
+							</form>
+						{:else if skill.liftable}
 							<button
 								type="button"
 								onclick={() => lift(skill)}
@@ -634,8 +662,12 @@
 				</div>
 
 				<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
-					Adding puts the skill on <strong>{liftTarget}</strong>. Skills you can't add here are held
-					back by another rule — change them in
+					{#if choseTailored}
+						Adding shows the skill on this job's version only — your other documents are untouched.
+					{:else}
+						Adding puts the skill on <strong>{liftTarget}</strong>.
+					{/if}
+					Skills you can't add here are held back by another rule — change them in
 					<a href="/profile/skills" class="dash-link">your skills</a>.
 				</p>
 

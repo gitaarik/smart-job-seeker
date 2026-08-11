@@ -17,6 +17,7 @@ import {
 	jobMatchRead,
 	promoteToLibrary,
 	relevantExclusionsByVersion,
+	retagVersionSlug,
 	tailorVersionForApplication
 } from '$lib/server/profile/tailor-version';
 import { isOverrideEntity } from '$lib/version-overrides';
@@ -385,7 +386,25 @@ export const actions: Actions = {
 		});
 		if (!doomed) return { success: true };
 
+		// Explicitly, not by cascade: both extension FKs are ON DELETE SET NULL,
+		// so letting the delete take them leaves a half-null row behind that
+		// nothing owns and nothing cleans up.
+		await db
+			.delete(profile_version_extensions)
+			.where(
+				or(
+					eq(profile_version_extensions.extender_id, doomed.id),
+					eq(profile_version_extensions.extended_id, doomed.id)
+				)
+			);
+
 		await db.delete(profile_versions).where(eq(profile_versions.id, doomed.id));
+
+		// Overrides cascade with the row; tags naming its slug do not, and would
+		// sit on the profile pointing at a version that no longer exists —
+		// invisible until this application tailored a second version, which gets
+		// the same deterministic slug and would quietly inherit them.
+		if (doomed.slug) await retagVersionSlug(profileId, doomed.slug, null);
 
 		// Clear the record only if it pointed at the version just deleted, which
 		// would now render as a broken link. An applicant who recorded sending a

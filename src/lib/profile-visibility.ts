@@ -109,6 +109,34 @@ export function setVersions(tags: string[] | null | undefined, versions: string[
 	return [...kept, ...versions.map((v) => v.trim()).filter(Boolean)];
 }
 
+/**
+ * Rewrite one item's tags so a tag naming `from` names `to` — or disappears,
+ * when `to` is null.
+ *
+ * Versions are addressed by slug in tags as well as in URLs, so renaming or
+ * retiring one has to reach the items that named it. Nothing else does: a tag
+ * left naming a version that no longer exists reads as correct at a glance
+ * while matching nothing, which is how an item silently stops printing on the
+ * document somebody deliberately added it to.
+ *
+ * Negation survives the rewrite — "never on this one" is a different statement
+ * from "only on this one", and a rename is not the place to flip it.
+ */
+export function renameTagSlug(
+	tags: string[] | null | undefined,
+	from: string,
+	to: string | null
+): string[] {
+	const slug = tagSlug(from);
+	if (!slug) return asTagList(tags);
+
+	return asTagList(tags).flatMap((tag) => {
+		if (tagSlug(tag) !== slug) return [tag];
+		if (to === null) return [];
+		return [isNegated(tag) ? `!${to}` : to];
+	});
+}
+
 /** Where a held-back item is being lifted to: every document, or one version. */
 export const SHOW_ON_ALL = 'all';
 
