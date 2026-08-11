@@ -201,7 +201,12 @@
 
 			<!-- Every decision, with the reason that produced it. A resume you can't
 			     audit is one you can't defend in the room it gets read in. -->
-			{#each [{ rows: included, icon: faEye, tone: 'text-[var(--dash-success)]', head: 'Now showing' }, { rows: excluded, icon: faEyeSlash, tone: 'text-amber-600', head: 'Hidden for this job' }, { rows: reordered, icon: faArrowUp, tone: 'text-[var(--dash-primary)]', head: 'Moved up' }] as group (group.head)}
+			<!-- What the document WILL show first — surfaced skills, then promoted
+			     bullets — and what it won't, last. Two thoughts, not three, and it
+			     keeps the short groups above the long one: hidden is routinely ten
+			     rows, which buried the promotions under a wall of amber. Position
+			     is not what draws the eye to the removals; their colour is. -->
+			{#each [{ rows: included, icon: faEye, tone: 'text-[var(--dash-success)]', head: 'Now showing' }, { rows: reordered, icon: faArrowUp, tone: 'text-[var(--dash-primary)]', head: 'Moved up' }, { rows: excluded, icon: faEyeSlash, tone: 'text-amber-600', head: 'Hidden for this job' }] as group (group.head)}
 				{#if group.rows.length > 0}
 					<div class="mt-4">
 						<p
