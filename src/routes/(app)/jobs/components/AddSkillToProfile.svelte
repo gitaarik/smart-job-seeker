@@ -174,7 +174,9 @@
 
 	let pillTitle = $derived(
 		!editing
-			? 'I have this skill — add it to my profile'
+			? strength !== null
+				? 'Counted by this match through a related skill you have — click to add it by name'
+				: 'I have this skill — add it to my profile'
 			: profileOnly
 				? 'In your profile, kept off your resume / CV — click to change'
 				: strength === null
@@ -204,6 +206,21 @@
 			<!-- Matched or not, the profile has it — reuse the matched styling so a
            stale match doesn't make an owned skill look missing. -->
 			<SkillPill {skill} strength={strength ?? 'strong'} {variant} size="md" />
+		{:else if strength !== null}
+			<!-- The mirror of the case above, and the one that was missing: the match
+           DID count this skill — semantic expansion or the LLM pass reached it
+           through something related (SQL through MySQL, Linux through Linode) —
+           but no profile row carries this exact name, so the branch above can't
+           fire. Falling through to the plain "add me" pill made a counted skill
+           read as one the applicant lacks, contradicting the score right next
+           to it. Dashed, like the profile-only pill: counted, with a caveat. -->
+			<span
+				class="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[var(--dash-success)]/40 bg-[var(--dash-success-light)]/50 px-3 py-1 text-sm text-[var(--dash-success)]"
+			>
+				<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
+				{skill}
+				<FontAwesomeIcon icon={faPlus} class="h-2.5 w-2.5 opacity-60" />
+			</span>
 		{:else}
 			<span
 				class="
@@ -233,6 +250,12 @@
 			{#if editing && strength === null}
 				<p class="text-[10px] leading-snug text-[var(--dash-text-muted)]">
 					This job's match doesn't count it yet — that catches up the next time the job is matched.
+				</p>
+			{:else if !editing && strength !== null}
+				<p class="text-[10px] leading-snug text-[var(--dash-text-muted)]">
+					The match already counts this through a related skill you have. Adding it by name puts the
+					word itself on your profile — and on the documents you send, which is where a keyword
+					search looks for it.
 				</p>
 			{/if}
 

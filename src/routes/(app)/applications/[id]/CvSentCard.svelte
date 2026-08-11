@@ -88,6 +88,13 @@
 	 * about to send wouldn't print — profile-only ones, mostly. Precomputed by the
 	 * server for every template x version pair, so flipping either picker answers
 	 * instantly and without a round trip.
+	 *
+	 * Counted by exact name, which is deliberately stricter than the match score
+	 * beside it: the matcher counts "SQL" through MySQL and PostgreSQL, but a
+	 * document that prints those does not print the word SQL, and a keyword
+	 * search for it will not find one. Hence "names N of M" rather than "matches"
+	 * — the two numbers answer different questions and should not be read as one
+	 * disagreeing with the other.
 	 */
 	let hiddenSkills = $derived(
 		decided ? (coverage[hiddenSkillsKey(docType, versionSlug)]?.hidden ?? []) : []
@@ -326,9 +333,9 @@
 						class="mt-0.5 h-3 w-3 shrink-0 text-[var(--dash-primary)]"
 					/>
 					<span>
-						Send <strong>{recommendedName}</strong> — it shows
+						Send <strong>{recommendedName}</strong> — it names
 						{recommendation.coverage.shown.length} of the {recommendation.coverage.required}
-						{recommendation.coverage.required === 1 ? 'skill' : 'skills'} this job requires.
+						{recommendation.coverage.required === 1 ? 'skill' : 'skills'} this job asks for.
 					</span>
 				</p>
 				<div class="mt-2 flex flex-wrap items-center gap-3">
