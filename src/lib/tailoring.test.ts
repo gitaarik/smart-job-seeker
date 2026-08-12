@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SELECTION, selectForJob, type Candidate } from './tailoring';
+import { DEFAULT_SELECTION, selectForJob, surfaceBar, type Candidate } from './tailoring';
 import { OVERRIDE_ENTITIES } from './version-overrides';
 
 function bullet(
@@ -177,5 +177,87 @@ describe('selectForJob', () => {
 			bullet(4, 10, 0.01, { visible: false })
 		];
 		expect(selectForJob(candidates, OPTS)).toEqual([]);
+	});
+});
+
+describe('surfacing hidden evidence', () => {
+	const hidden = (id: number, score: number, over: Partial<Candidate> = {}) =>
+		bullet(id, 10, score, { visible: false, ...over });
+
+	it('adds back a hidden bullet that outranks half of what prints', () => {
+		// The reported case: a bullet tagged onto the applicant's other versions,
+		// hidden here, and the best proof this job has. Before this, tailoring
+		// could only ever take things away.
+		const decisions = selectForJob(
+			[bullet(1, 10, 0.2), bullet(2, 10, 0.3), bullet(3, 10, 0.4), hidden(9, 0.9)],
+			OPTS
+		);
+		expect(decisions).toContainEqual(
+			expect.objectContaining({ entityId: 9, action: 'include', sort: null })
+		);
+	});
+
+	it('leaves a hidden bullet alone when it is no better than what prints', () => {
+		const decisions = selectForJob(
+			[bullet(1, 10, 0.8), bullet(2, 10, 0.9), bullet(3, 10, 0.95), hidden(9, 0.6)],
+			OPTS
+		);
+		expect(decisions.some((d) => d.entityId === 9)).toBe(false);
+	});
+
+	it('will not surface a bullet whose role the document drops', () => {
+		// Including it prints nothing — the role is filtered before its bullets,
+		// so the decision would claim a change that never happens.
+		const decisions = selectForJob(
+			[
+				bullet(1, 10, 0.2),
+				bullet(2, 10, 0.3),
+				bullet(3, 10, 0.4),
+				hidden(9, 0.9, { parentVisible: false })
+			],
+			OPTS
+		);
+		expect(decisions.some((d) => d.entityId === 9)).toBe(false);
+	});
+
+	it('surfaces the best few rather than everything above the bar', () => {
+		const decisions = selectForJob(
+			[
+				bullet(1, 10, 0.1),
+				bullet(2, 10, 0.2),
+				bullet(3, 10, 0.3),
+				...[0.9, 0.85, 0.8, 0.75, 0.7].map((score, i) => hidden(10 + i, score))
+			],
+			OPTS
+		);
+		const added = decisions.filter((d) => d.action === 'include' && d.entityId >= 10);
+		expect(added.map((d) => d.entityId).sort((a, z) => a - z)).toEqual([10, 11, 12]);
+	});
+
+	it('does not drop what it just surfaced', () => {
+		// It clears the bar by construction, but the page-budget pass must not
+		// undo a decision the same run made.
+		const decisions = selectForJob(
+			[bullet(1, 10, 0.2), bullet(2, 10, 0.3), bullet(3, 10, 0.4), hidden(9, 0.9)],
+			{ ...OPTS, budgetChars: 1 }
+		);
+		expect(decisions.some((d) => d.entityId === 9 && d.action === 'exclude')).toBe(false);
+	});
+});
+
+describe('surfaceBar', () => {
+	it('is the median of what prints, never below the floor', () => {
+		const candidates = [bullet(1, 10, 0.2), bullet(2, 10, 0.6), bullet(3, 10, 0.8)];
+		expect(surfaceBar(candidates, 0.1)).toBeCloseTo(0.6);
+		expect(surfaceBar(candidates, 0.9)).toBeCloseTo(0.9);
+	});
+
+	it('ignores what the document does not print', () => {
+		const candidates = [bullet(1, 10, 0.6), bullet(2, 10, 0.01, { visible: false })];
+		expect(surfaceBar(candidates, 0)).toBeCloseTo(0.6);
+	});
+
+	it('falls back to the floor when nothing prints', () => {
+		expect(surfaceBar([], 0.5)).toBe(0.5);
 	});
 });

@@ -38,6 +38,7 @@ import {
 	DEFAULT_SELECTION,
 	DROPPABLE_ENTITIES,
 	selectForJob,
+	surfaceBar,
 	type Candidate,
 	type Decision
 } from '$lib/tailoring';
@@ -151,6 +152,7 @@ export function buildCandidates(
 				chars: body.length,
 				// A bullet on a role the document doesn't print isn't printed either.
 				visible: visibleRoles.has(role.id) && visibleAchievements.has(achievement.id),
+				parentVisible: visibleRoles.has(role.id),
 				pinned: false,
 				score: 0
 			});
@@ -169,6 +171,7 @@ export function buildCandidates(
 			label: text(project.name) || `project ${project.id}`,
 			chars: (text(project.name) + summary).length,
 			visible: visibleProjects.has(project.id),
+			parentVisible: true,
 			pinned: false,
 			score: 0
 		});
@@ -231,6 +234,7 @@ export function buildCandidates(
 				visible:
 					printedNames.has(name.toLowerCase()) ||
 					(visibleSkillsByCategory.get(category.id)?.has(skill.id) ?? false),
+				parentVisible: true,
 				pinned: true,
 				score: 1,
 				anchor: anchorAmongSiblings(name, printedInCategory.get(category.id) ?? []),
@@ -440,10 +444,13 @@ export async function tailorVersionForApplication(opts: {
 		c.carriedBy
 			? `this job requires ${c.label} — “${c.carriedBy}” already carries the word`
 			: `this job requires ${c.label}`;
+	const surfacedReason = () =>
+		'hidden on the version this builds on, and more relevant to this job than half of what it shows';
 	const deterministic = selectForJob(candidates, {
 		floor,
 		...DEFAULT_SELECTION,
-		pinnedReason
+		pinnedReason,
+		surfacedReason
 	});
 
 	// ── L3 ──
@@ -487,7 +494,8 @@ export async function tailorVersionForApplication(opts: {
 				decisions = selectForJob(applied.candidates, {
 					floor,
 					...DEFAULT_SELECTION,
-					pinnedReason
+					pinnedReason,
+					surfacedReason
 				});
 				modelReviewed = true;
 			}
@@ -1062,20 +1070,10 @@ export async function relevantExclusionsByVersion(opts: {
 				score: scoreOf.get(`${c.entityType}:${c.entityId}`) ?? 0
 			}));
 
-			// Relative, not absolute. An embedding floor tuned for retrieval says
-			// "somewhat related to this job", which most of a career is — flagging
-			// on that produces a list, not a warning. The question worth raising is
-			// comparative: is this document leaving out something MORE relevant
-			// than half of what it prints? That calibrates itself per document and
-			// per job, and it says nothing when the selection is already sensible.
-			const visibleScores = scored
-				.filter((c) => c.visible)
-				.map((c) => c.score)
-				.sort((a, z) => a - z);
-			const median = visibleScores.length
-				? visibleScores[Math.floor(visibleScores.length / 2)]
-				: floor;
-			const bar = Math.max(floor, median);
+			// The same bar the generator surfaces on, from the same function: this
+			// warning is what tells the applicant a version is leaving out proof,
+			// and the two would be worth nothing if they disagreed about which.
+			const bar = surfaceBar(scored, floor);
 			const decided = decidedAgainst.get(versionSlug) ?? new Set<string>();
 
 			const excluded = scored

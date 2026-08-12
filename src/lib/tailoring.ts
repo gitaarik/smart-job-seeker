@@ -47,6 +47,14 @@ export interface Candidate {
 	/** Whether the version this one is built on already prints it. */
 	visible: boolean;
 	/**
+	 * Whether the thing it hangs off prints — the bullet's role, the skill's
+	 * category. Including an item whose parent is filtered out changes nothing,
+	 * because the parent is filtered first, so a decision about it would claim
+	 * the document changed when it didn't. Absent means "no parent to worry
+	 * about".
+	 */
+	parentVisible?: boolean;
+	/**
 	 * Must appear: a skill this job requires that the applicant has. Pinned
 	 * candidates are included whatever their relevance score says.
 	 */
@@ -91,6 +99,8 @@ export interface SelectionOptions {
 	budgetChars: number;
 	/** Name of the skill or theme that pinned a candidate, for the reason line. */
 	pinnedReason?: (candidate: Candidate) => string;
+	/** Why a hidden item was surfaced — see surfaceBar. */
+	surfacedReason?: (candidate: Candidate, bar: number) => string;
 }
 
 export const DEFAULT_SELECTION: Pick<SelectionOptions, 'minPerParent' | 'budgetChars'> = {
@@ -104,6 +114,33 @@ export const DEFAULT_SELECTION: Pick<SelectionOptions, 'minPerParent' | 'budgetC
 
 /** How many items may be promoted within one group. Two lines, not twenty. */
 const MAX_PROMOTED = 2;
+
+/**
+ * How many hidden items one version may surface. Needing more than a handful
+ * means the base version is the wrong one for this job, which is a different
+ * answer, and the recommendation above the card already gives it.
+ */
+const MAX_SURFACED = 3;
+
+/**
+ * The bar a hidden item must clear to be worth surfacing — and the same one the
+ * warning about omitted evidence uses, deliberately: the page said this bullet
+ * outranks half of what the document shows, so the generator had better act on
+ * the same sentence rather than a neighbouring one.
+ *
+ * Relative, not absolute. An embedding floor tuned for retrieval says "somewhat
+ * related to this job", which most of a career is. The question worth asking is
+ * comparative — more relevant than the median of what already prints — which
+ * calibrates per document and per job, and says nothing when the selection is
+ * already sensible.
+ */
+export function surfaceBar(candidates: Candidate[], floor: number): number {
+	const shown = candidates
+		.filter((c) => c.visible && isDroppable(c))
+		.map((c) => c.score)
+		.sort((a, z) => a - z);
+	return shown.length > 0 ? Math.max(floor, shown[Math.floor(shown.length / 2)]) : floor;
+}
 
 function isDroppable(candidate: Candidate): boolean {
 	return DROPPABLE_ENTITIES.includes(candidate.entityType);
@@ -121,6 +158,9 @@ function isDroppable(candidate: Candidate): boolean {
 export function selectForJob(candidates: Candidate[], options: SelectionOptions): Decision[] {
 	const { floor, minPerParent, budgetChars } = options;
 	const decisions: Decision[] = [];
+	// Entity ids are per table, so the type has to be part of the key: bullet 12
+	// and side project 12 both exist.
+	const dropKey = (c: Candidate) => `${c.entityType}:${c.entityId}`;
 
 	// ── L0: what must show ──
 	for (const candidate of candidates) {
@@ -134,8 +174,39 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 		});
 	}
 
+	// ── L0b: evidence the base hides that outranks what it shows ──
+	//
+	// Without this the tailoring could only ever take things away. A bullet the
+	// applicant tagged onto their Django versions and nowhere else stayed hidden
+	// on a data job it was the best proof for — while the card above said so, in
+	// as many words, and offered "tailor a version from this one, keeping what
+	// fits". It did not keep it. Only skills were ever added back.
+	//
+	// It is still a selection over what they wrote, and it stays reviewable: one
+	// row in the diff, with the comparison that produced it, and Undo.
+	const bar = surfaceBar(candidates, floor);
+	const surfaced = new Set<string>();
+	for (const candidate of candidates
+		.filter(
+			(c) =>
+				!c.visible && !c.pinned && isDroppable(c) && c.parentVisible !== false && c.score >= bar
+		)
+		.sort((a, z) => z.score - a.score)
+		.slice(0, MAX_SURFACED)) {
+		surfaced.add(dropKey(candidate));
+		decisions.push({
+			entityType: candidate.entityType,
+			entityId: candidate.entityId,
+			action: 'include',
+			sort: null,
+			reason:
+				options.surfacedReason?.(candidate, bar) ??
+				'more relevant to this job than half of what this version shows'
+		});
+	}
+
 	// Everything the document would print once L0 has had its say.
-	const kept = candidates.filter((c) => c.visible || c.pinned);
+	const kept = candidates.filter((c) => c.visible || c.pinned || surfaced.has(dropKey(c)));
 	const droppable = kept.filter(isDroppable);
 
 	// How many droppable siblings each parent has, so a role cannot be emptied.
@@ -144,11 +215,10 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 		keptPerParent.set(candidate.parentId, (keptPerParent.get(candidate.parentId) ?? 0) + 1);
 	}
 
-	const dropped = new Set<number>();
-	const dropKey = (c: Candidate) => c.entityId;
+	const dropped = new Set<string>();
 
 	function canDrop(candidate: Candidate): boolean {
-		if (candidate.pinned) return false;
+		if (candidate.pinned || surfaced.has(dropKey(candidate))) return false;
 		const siblings = keptPerParent.get(candidate.parentId) ?? 0;
 		// A free-standing group (side projects share a null parent) keeps one, so
 		// the section does not silently disappear; a role keeps minPerParent.
@@ -196,7 +266,12 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	// the front says the same thing in two rows, and the rest keep their order
 	// for free: orderByOverrides leaves items without a sort behind the ones that
 	// have it, in their original sequence.
-	const survivors = kept.filter((c) => isDroppable(c) && !dropped.has(dropKey(c)));
+	// Surfaced items sit out the promotion. Being added is already the strongest
+	// thing this run can say about one, and a sort on top would file it in the
+	// diff under "moved up" — a claim about an item that was not there to move.
+	const survivors = kept.filter(
+		(c) => isDroppable(c) && !dropped.has(dropKey(c)) && !surfaced.has(dropKey(c))
+	);
 	const byParent = new Map<number | null, Candidate[]>();
 	for (const candidate of survivors) {
 		const list = byParent.get(candidate.parentId) ?? [];
