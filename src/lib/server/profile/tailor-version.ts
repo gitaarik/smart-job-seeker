@@ -56,6 +56,7 @@ import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
 import {
 	BASE_TEMPLATE_TAGS,
 	heldBackByTemplate,
+	isProfileOnly,
 	renameTagSlug,
 	tagSlug
 } from '$lib/profile-visibility';
@@ -217,6 +218,7 @@ export function buildCandidates(
 				// A bullet is as old as the role it sits in — it has no dates of its own.
 				age: ageOf(role.end_date),
 				templateHeldBack: heldBackByTemplate(asStringArray(achievement.tags), docType),
+				profileOnly: isProfileOnly(asStringArray(achievement.tags)),
 				pinned: false,
 				score: 0
 			});
@@ -238,6 +240,7 @@ export function buildCandidates(
 			parentVisible: true,
 			age: ageOf(project.end_date),
 			templateHeldBack: heldBackByTemplate(asStringArray(project.tags), docType),
+			profileOnly: isProfileOnly(asStringArray(project.tags)),
 			pinned: false,
 			score: 0
 		});
@@ -582,6 +585,9 @@ export async function tailorVersionForApplication(opts: {
 	const OLD_ENOUGH_TO_SAY = 0.5;
 	const surfacedReason = (c: Candidate) => {
 		const dated = (c.age ?? 0) >= OLD_ENOUGH_TO_SAY ? 'older work, but ' : '';
+		if (c.profileOnly) {
+			return `${dated}kept off your documents, and this job is about it`;
+		}
 		return c.templateHeldBack
 			? `${dated}kept for your ${otherLabel} only and it outranks half of what this ${docLabel} shows`
 			: `${dated}hidden on the version this builds on, and more relevant to this job than half of what it shows`;

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	canSurface,
 	chooseBudget,
+	HOLD_BACK_PENALTY,
 	RECENCY_GRACE,
 	RECENCY_PENALTY,
 	surfaceScore,
@@ -280,7 +281,10 @@ describe('surfacing hidden evidence', () => {
 		expect(decisions).toContainEqual(expect.objectContaining({ entityId: 9, action: 'include' }));
 	});
 
-	it('surfaces the best few rather than everything above the bar', () => {
+	it('surfaces everything above the bar when the page has room', () => {
+		// There was a cap of three here, on the reasoning that wanting more meant
+		// the base was the wrong version. Version tags answer for a CLASS of jobs;
+		// tailoring exists because this job is not a class.
 		const decisions = selectForJob(
 			[
 				bullet(1, 10, 0.1),
@@ -291,7 +295,32 @@ describe('surfacing hidden evidence', () => {
 			OPTS
 		);
 		const added = decisions.filter((d) => d.action === 'include' && d.entityId >= 10);
-		expect(added.map((d) => d.entityId).sort((a, z) => a - z)).toEqual([10, 11, 12]);
+		expect(added.map((d) => d.entityId).sort((a, z) => a - z)).toEqual([10, 11, 12, 13, 14]);
+	});
+
+	it('makes a surfaced item earn the page like anything else', () => {
+		// Room for three. Five want in on top of three the base shows — so the
+		// page has to be the limit, and it has to be able to say no to an
+		// addition. While surfaced items were exempt from the trim, a document
+		// could be gutted to fit its own extras.
+		const decisions = selectForJob(
+			[
+				bullet(1, 10, 0.1, { chars: 100 }),
+				bullet(2, 10, 0.2, { chars: 100 }),
+				bullet(3, 10, 0.3, { chars: 100 }),
+				...[0.9, 0.85, 0.8, 0.75, 0.7].map((score, i) => hidden(10 + i, score, { chars: 100 }))
+			],
+			{ ...OPTS, budgetChars: 300 }
+		);
+		const added = decisions
+			.filter((d) => d.action === 'include')
+			.map((d) => d.entityId)
+			.sort((a, z) => a - z);
+		// The two weakest additions lost to the page and leave no trace: an
+		// include row for an item that never printed is a claim you can check.
+		expect(added).toEqual([10, 11, 12]);
+		expect(decisions.some((d) => d.entityId === 13)).toBe(false);
+		expect(decisions.some((d) => d.entityId === 14)).toBe(false);
 	});
 
 	it('does not drop what it just surfaced', () => {
@@ -436,6 +465,50 @@ describe('recency', () => {
 			{ ...OPTS, budgetChars: 200 }
 		);
 		expect(decisions.filter((d) => d.action === 'exclude').map((d) => d.entityId)).toEqual([3]);
+	});
+});
+
+describe('what a hold-back costs', () => {
+	it('charges a version tag nothing', () => {
+		// "This is my Django resume" is an answer for a class of jobs, written
+		// before this one existed. Tailoring is the thing that gets to disagree.
+		expect(surfaceScore(bullet(1, 10, 0.8, { visible: false }))).toBeCloseTo(0.8);
+	});
+
+	it('charges "CV only" a quarter, and profile-only twice that', () => {
+		expect(surfaceScore(bullet(1, 10, 0.8, { templateHeldBack: true }))).toBeCloseTo(
+			0.8 * (1 - HOLD_BACK_PENALTY.template)
+		);
+		expect(surfaceScore(bullet(1, 10, 0.8, { profileOnly: true }))).toBeCloseTo(
+			0.8 * (1 - HOLD_BACK_PENALTY.profile)
+		);
+	});
+
+	it('takes the stronger statement when an item makes both', () => {
+		// Profile-only is stored as the !resume + !cv pair, so it reads as a
+		// template hold-back too. It is the more emphatic of the two.
+		const both = bullet(1, 10, 0.8, { profileOnly: true, templateHeldBack: true });
+		expect(surfaceScore(both)).toBeCloseTo(0.8 * (1 - HOLD_BACK_PENALTY.profile));
+	});
+
+	it('compounds with age rather than replacing it', () => {
+		const c = bullet(1, 10, 0.8, { templateHeldBack: true, age: 1 });
+		expect(surfaceScore(c)).toBeCloseTo(
+			0.8 * (1 - RECENCY_PENALTY) * (1 - HOLD_BACK_PENALTY.template)
+		);
+	});
+
+	it('never vetoes: a job that is about the held-back thing still gets it', () => {
+		const decisions = selectForJob(
+			[
+				bullet(1, 10, 0.3),
+				bullet(2, 10, 0.4),
+				bullet(3, 10, 0.5),
+				bullet(9, 10, 0.99, { visible: false, profileOnly: true, templateHeldBack: true })
+			],
+			OPTS
+		);
+		expect(decisions).toContainEqual(expect.objectContaining({ entityId: 9, action: 'include' }));
 	});
 });
 

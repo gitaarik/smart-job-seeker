@@ -70,6 +70,13 @@ export interface Candidate {
 	 */
 	age?: number;
 	/**
+	 * Whether the applicant has held it off documents entirely — the `!resume`
+	 * plus `!cv` pair. The most emphatic thing the tag vocabulary can say, and
+	 * graded accordingly: still not a veto, because a job can be about exactly
+	 * the thing somebody keeps for interviews.
+	 */
+	profileOnly?: boolean;
+	/**
 	 * Whether a base-template tag holds it off this document — "CV only, not on
 	 * my resume" — rather than a version tag.
 	 *
@@ -221,11 +228,15 @@ export const DEFAULT_SELECTION: Pick<SelectionOptions, 'minPerParent' | 'budgetC
 const MAX_PROMOTED = 2;
 
 /**
- * How many hidden items one version may surface. Needing more than a handful
- * means the base version is the wrong one for this job, which is a different
- * answer, and the recommendation above the card already gives it.
+ * There is no cap on how many hidden items a version may surface.
+ *
+ * There was one, of three, on the reasoning that needing more meant the base
+ * was the wrong version for this job. That reasoning assumed a base is a
+ * content boundary. It is not the useful thing about one: version tags say
+ * "this is my Django resume", which is an answer for a CLASS of jobs, and the
+ * whole point of tailoring is that this job is not a class. The page budget is
+ * the honest limit, and the surfacing bar is the honest quality gate.
  */
-const MAX_SURFACED = 3;
 
 /**
  * Skill groups a document always keeps, however little the job wants them. A
@@ -267,6 +278,27 @@ function isDroppable(candidate: Candidate): boolean {
 export const RECENCY_PENALTY = 0.35;
 
 /**
+ * What each kind of hold-back costs an item competing to be surfaced.
+ *
+ * The tag vocabulary makes three different statements and they deserve three
+ * different answers:
+ *
+ * - A **version tag** says "this is my Django resume". That is an answer for a
+ *   class of jobs, written before this job existed, and tailoring is the thing
+ *   that gets to disagree with it. It costs nothing.
+ * - **"CV only"** says "over-complete for a short document". That is a judgement
+ *   about focus, and focus is what a targeted resume revisits — but the
+ *   applicant meant it, so the item has to be clearly better than what it
+ *   displaces.
+ * - **Profile-only** says "off my documents". The strongest thing they can say
+ *   short of deleting it, and priced accordingly.
+ *
+ * None of them is a veto. Every one of these items is on the page the moment a
+ * job is actually about it, which is the whole reason to consider them at all.
+ */
+export const HOLD_BACK_PENALTY = { template: 0.25, profile: 0.5 } as const;
+
+/**
  * Age below which nothing is discounted at all, and from which the penalty
  * ramps up rather than starting at zero.
  *
@@ -298,9 +330,17 @@ export const RECENCY_GRACE = 0.35;
  */
 export function surfaceScore(candidate: Candidate): number {
 	const age = candidate.age ?? 0;
-	if (age <= RECENCY_GRACE) return candidate.score;
-	const beyond = (age - RECENCY_GRACE) / (1 - RECENCY_GRACE);
-	return candidate.score * (1 - RECENCY_PENALTY * beyond);
+	const aged =
+		age <= RECENCY_GRACE
+			? candidate.score
+			: candidate.score * (1 - RECENCY_PENALTY * ((age - RECENCY_GRACE) / (1 - RECENCY_GRACE)));
+
+	const held = candidate.profileOnly
+		? HOLD_BACK_PENALTY.profile
+		: candidate.templateHeldBack
+			? HOLD_BACK_PENALTY.template
+			: 0;
+	return aged * (1 - held);
 }
 
 /**
@@ -363,24 +403,22 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	// as many words, and offered "tailor a version from this one, keeping what
 	// fits". It did not keep it. Only skills were ever added back.
 	//
+	// Everything the profile holds competes here, whatever version it was
+	// written for, priced by what its tags actually claim (see
+	// HOLD_BACK_PENALTY) and by how long ago it was (see surfaceScore). The one
+	// thing still gated by tags alone is a whole ROLE: adding one changes the
+	// shape of a history rather than its emphasis, and "my resume covers the
+	// last ten years" is not a per-job judgement. So a bullet on a role this
+	// document omits stays out — canSurface enforces that.
+	//
 	// It is still a selection over what they wrote, and it stays reviewable: one
 	// row in the diff, with the comparison that produced it, and Undo.
 	const bar = surfaceBar(candidates, floor);
 	const surfaced = new Set<string>();
 	for (const candidate of candidates
 		.filter((c) => canSurface(c) && surfaceScore(c) >= bar)
-		.sort((a, z) => surfaceScore(z) - surfaceScore(a))
-		.slice(0, MAX_SURFACED)) {
+		.sort((a, z) => surfaceScore(z) - surfaceScore(a))) {
 		surfaced.add(dropKey(candidate));
-		decisions.push({
-			entityType: candidate.entityType,
-			entityId: candidate.entityId,
-			action: 'include',
-			sort: null,
-			reason:
-				options.surfacedReason?.(candidate, bar) ??
-				'more relevant to this job than half of what this version shows'
-		});
 	}
 
 	// Everything the document would print once L0 has had its say.
@@ -396,7 +434,12 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	const dropped = new Set<string>();
 
 	function canDrop(candidate: Candidate): boolean {
-		if (candidate.pinned || surfaced.has(dropKey(candidate))) return false;
+		// Surfaced items are NOT exempt. They were, back when at most three of them
+		// existed; uncapped, exempting them would have the page eaten by additions
+		// while the curated lines they displace get trimmed to make room — the
+		// document gutted to fit its own extras. They compete like everything
+		// else, and one that loses simply never gets an include row.
+		if (candidate.pinned) return false;
 		const siblings = keptPerParent.get(candidate.parentId) ?? 0;
 		// A free-standing group (side projects share a null parent) keeps one, so
 		// the section does not silently disappear; a role keeps minPerParent.
@@ -481,6 +524,24 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 		if (printedChars() <= budgetChars) break;
 		if (!canDrop(candidate)) continue;
 		drop(candidate, trimReason(candidate));
+	}
+
+	// The include rows for what was surfaced, written only now that the page has
+	// had its say: an item surfaced and then trimmed never reached the document,
+	// and a row announcing it was added would be a claim the applicant can check
+	// and find false.
+	for (const candidate of candidates) {
+		const key = dropKey(candidate);
+		if (!surfaced.has(key) || dropped.has(key)) continue;
+		decisions.push({
+			entityType: candidate.entityType,
+			entityId: candidate.entityId,
+			action: 'include',
+			sort: null,
+			reason:
+				options.surfacedReason?.(candidate, bar) ??
+				'more relevant to this job than half of what this version shows'
+		});
 	}
 
 	// ── Ordering: lead with what this job cares about ──
