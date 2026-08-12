@@ -176,11 +176,13 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 
 export const actions: Actions = {
 	/**
-	 * Generate — or regenerate — the version tailored to this job.
+	 * Generate — or regenerate — the version tailored to this job, and record it
+	 * as the document going out.
 	 *
-	 * The base version is the applicant's choice, defaulting to whatever the
-	 * coverage ranking recommends: a tailored version is a DELTA on a library
-	 * version, so which one it extends is the most consequential input here.
+	 * The base version defaults to whatever the coverage ranking recommends and
+	 * is stated rather than asked: a tailored version is a DELTA on a library
+	 * version, so which one it extends is the most consequential input here —
+	 * consequential enough to show, not to open with.
 	 */
 	tailorVersion: async ({ request, locals, cookies, params }) => {
 		const user = locals.user;
@@ -204,6 +206,22 @@ export const actions: Actions = {
 				baseSlug
 			});
 			refreshPdfs(profileId, result.versionSlug);
+
+			// Tailoring records itself. Generating a version for one job and then
+			// having to select it from a dropdown to say you were sending it is
+			// what made this page read as two competing questions — and nobody
+			// tailors a version for a job they then send something else to. It
+			// takes the record even when a library version held it: the applicant
+			// asked for this document, and changing back is one click above.
+			await db
+				.update(applications)
+				.set({
+					cv_version_sent: result.versionSlug,
+					cv_sent_through: docType,
+					date_updated: new Date()
+				})
+				.where(and(eq(applications.id, appId), eq(applications.profile_id, profileId)));
+
 			return { success: true, tailored: result };
 		} catch (error) {
 			return fail(400, {

@@ -1,8 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
-	import { recommendVersion } from '$lib/version-coverage';
-	import CvSentCard from './CvSentCard.svelte';
-	import TailoredVersionCard from './TailoredVersionCard.svelte';
+	import DocumentForJob from './DocumentForJob.svelte';
 
 	/**
 	 * Choosing, checking and recording the document that goes to this job.
@@ -13,6 +11,10 @@
 	 * the Overview's load — coverage for every template x version pair, the
 	 * match read, and the relevance scoring behind the exclusion warnings were
 	 * all being computed to read a note.
+	 *
+	 * One card, not two. The page used to pair a version picker with a tailoring
+	 * panel, which asked the same question twice from two directions; see
+	 * DocumentForJob.
 	 */
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -23,45 +25,34 @@
 		(data as { selectedProfile?: { slug?: string | null } }).selectedProfile?.slug ?? undefined
 	);
 
-	// The tailored version answers for the document type actually recorded (or
-	// the default), not for the unsaved picker: which base template a selection
-	// was computed against is part of what it means.
-	let tailorDocType: 'resume' | 'cv' = $derived(app.cv_sent_through === 'cv' ? 'cv' : 'resume');
-	// Which library version to build on: the one the coverage ranking picks for
-	// this job, else whatever this profile sends by default. Falling back to the
-	// plain document would start from content with none of the applicant's
-	// curation applied.
-	let suggestedBaseSlug = $derived(
-		recommendVersion(data.coverage ?? {}, tailorDocType, [
-			'',
-			...(data.versions ?? []).map((v) => v.slug)
-		])?.versionSlug ??
-			data.defaultBase?.[tailorDocType] ??
-			''
+	/**
+	 * What the run that just finished reported about itself — the page count it
+	 * reached, and whether it had to rank by word overlap. Read off the action
+	 * result rather than stored: both are facts about one render of a document
+	 * that every later edit changes.
+	 */
+	let lastRun = $derived(
+		form && 'tailored' in form && form.tailored
+			? {
+					ranker: form.tailored.ranker,
+					targetPages: form.tailored.targetPages,
+					pages: form.tailored.pages
+				}
+			: null
 	);
 </script>
 
-<div class="space-y-6">
-	<CvSentCard
-		{app}
-		versions={data.versions ?? []}
-		tailored={data.tailored ?? null}
-		coverage={data.coverage ?? {}}
-		creditedNotNamed={data.creditedNotNamed ?? []}
-		exclusions={data.exclusions ?? {}}
-		{profileSlug}
-	/>
-
-	<TailoredVersionCard
-		tailored={data.tailored ?? null}
-		decisions={data.decisions ?? []}
-		gaps={data.gaps ?? []}
-		versions={data.versions ?? []}
-		docType={tailorDocType}
-		{suggestedBaseSlug}
-		{profileSlug}
-		hasJob={!!app.job}
-		degradedRanking={form && 'tailored' in form ? form.tailored?.ranker === 'lexical' : false}
-		recordedHere={!!data.tailored && app.cv_version_sent === data.tailored.slug}
-	/>
-</div>
+<DocumentForJob
+	{app}
+	versions={data.versions ?? []}
+	tailored={data.tailored ?? null}
+	decisions={data.decisions ?? []}
+	gaps={data.gaps ?? []}
+	coverage={data.coverage ?? {}}
+	creditedNotNamed={data.creditedNotNamed ?? []}
+	exclusions={data.exclusions ?? {}}
+	defaultBase={data.defaultBase}
+	{profileSlug}
+	{lastRun}
+	hasJob={!!app.job}
+/>
