@@ -1363,8 +1363,8 @@ export async function relevantExclusionsByVersion(opts: {
 
 			const excluded = scored
 				.filter((c) => canSurface(c) && !decided.has(`${c.entityType}:${c.entityId}`))
-				.filter((c) => surfaceScore(c) >= bar)
-				.sort((a, z) => surfaceScore(z) - surfaceScore(a))
+				.filter((c) => surfaceScore(c, floor) >= bar)
+				.sort((a, z) => surfaceScore(z, floor) - surfaceScore(a, floor))
 				.slice(0, MAX_EXCLUSIONS_REPORTED)
 				.map((c) => ({
 					entityType: c.entityType,

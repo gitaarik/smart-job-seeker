@@ -416,8 +416,17 @@ describe('recency', () => {
 		// A role that ended last year scores about 0.07 on a twenty-year career,
 		// and the lexical ranker's scores are small integers — so "a little" would
 		// have been the whole decision at the bar.
-		expect(surfaceScore(bullet(1, 10, 2, { age: 0.07 }))).toBe(2);
-		expect(surfaceScore(bullet(1, 10, 2, { age: RECENCY_GRACE }))).toBe(2);
+		expect(surfaceScore(bullet(1, 10, 2, { age: 0.07 }), 1)).toBe(2);
+		expect(surfaceScore(bullet(1, 10, 2, { age: RECENCY_GRACE }), 1)).toBe(2);
+	});
+
+	it('charges the margin above the floor, never the whole score', () => {
+		// Cosine similarity does not start at zero: the floor is 0.50 and a real
+		// job's bar measured 0.55. Charging the whole score took a 0.58 item to
+		// 0.435 — under the floor, a veto in all but name.
+		const old = bullet(1, 10, 0.58, { age: 1 });
+		expect(surfaceScore(old, 0.5)).toBeGreaterThan(0.5);
+		expect(surfaceScore(old, 0.5)).toBeCloseTo(0.5 + 0.08 * (1 - RECENCY_PENALTY));
 	});
 
 	it('raises the bar for surfacing old work rather than banning it', () => {
@@ -475,12 +484,12 @@ describe('what a hold-back costs', () => {
 		expect(surfaceScore(bullet(1, 10, 0.8, { visible: false }))).toBeCloseTo(0.8);
 	});
 
-	it('charges "CV only" a quarter, and profile-only twice that', () => {
-		expect(surfaceScore(bullet(1, 10, 0.8, { templateHeldBack: true }))).toBeCloseTo(
-			0.8 * (1 - HOLD_BACK_PENALTY.template)
+	it('charges "CV only" a quarter of the margin, and profile-only twice that', () => {
+		expect(surfaceScore(bullet(1, 10, 0.8, { templateHeldBack: true }), 0.5)).toBeCloseTo(
+			0.5 + 0.3 * (1 - HOLD_BACK_PENALTY.template)
 		);
-		expect(surfaceScore(bullet(1, 10, 0.8, { profileOnly: true }))).toBeCloseTo(
-			0.8 * (1 - HOLD_BACK_PENALTY.profile)
+		expect(surfaceScore(bullet(1, 10, 0.8, { profileOnly: true }), 0.5)).toBeCloseTo(
+			0.5 + 0.3 * (1 - HOLD_BACK_PENALTY.profile)
 		);
 	});
 
@@ -488,14 +497,26 @@ describe('what a hold-back costs', () => {
 		// Profile-only is stored as the !resume + !cv pair, so it reads as a
 		// template hold-back too. It is the more emphatic of the two.
 		const both = bullet(1, 10, 0.8, { profileOnly: true, templateHeldBack: true });
-		expect(surfaceScore(both)).toBeCloseTo(0.8 * (1 - HOLD_BACK_PENALTY.profile));
+		expect(surfaceScore(both, 0.5)).toBeCloseTo(0.5 + 0.3 * (1 - HOLD_BACK_PENALTY.profile));
 	});
 
 	it('compounds with age rather than replacing it', () => {
 		const c = bullet(1, 10, 0.8, { templateHeldBack: true, age: 1 });
-		expect(surfaceScore(c)).toBeCloseTo(
-			0.8 * (1 - RECENCY_PENALTY) * (1 - HOLD_BACK_PENALTY.template)
+		expect(surfaceScore(c, 0.5)).toBeCloseTo(
+			0.5 + 0.3 * (1 - RECENCY_PENALTY) * (1 - HOLD_BACK_PENALTY.template)
 		);
+	});
+
+	it('never drops an item below the floor, whatever it is tagged', () => {
+		const c = bullet(1, 10, 0.9, { profileOnly: true, age: 1 });
+		expect(surfaceScore(c, 0.5)).toBeGreaterThanOrEqual(0.5);
+	});
+
+	it('leaves a sub-floor item where it is rather than lifting it', () => {
+		// Charging a margin it never earned would return the floor itself, which
+		// clears a bar sitting on the floor — a penalty that promotes.
+		const c = bullet(1, 10, 0.468, { age: 0.42 });
+		expect(surfaceScore(c, 0.5)).toBeCloseTo(0.468);
 	});
 
 	it('never vetoes: a job that is about the held-back thing still gets it', () => {

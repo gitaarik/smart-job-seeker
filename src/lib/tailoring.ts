@@ -328,19 +328,34 @@ export const RECENCY_GRACE = 0.35;
  * whole intent — old work does belong on a resume when it is what the job is
  * about.
  */
-export function surfaceScore(candidate: Candidate): number {
+export function surfaceScore(candidate: Candidate, floor = 0): number {
 	const age = candidate.age ?? 0;
 	const aged =
-		age <= RECENCY_GRACE
-			? candidate.score
-			: candidate.score * (1 - RECENCY_PENALTY * ((age - RECENCY_GRACE) / (1 - RECENCY_GRACE)));
-
+		age <= RECENCY_GRACE ? 0 : RECENCY_PENALTY * ((age - RECENCY_GRACE) / (1 - RECENCY_GRACE));
 	const held = candidate.profileOnly
 		? HOLD_BACK_PENALTY.profile
 		: candidate.templateHeldBack
 			? HOLD_BACK_PENALTY.template
 			: 0;
-	return aged * (1 - held);
+
+	// Charged against the MARGIN above the floor, not against the whole score.
+	//
+	// A cosine similarity does not start at zero — unrelated text sits around
+	// 0.4, the floor is 0.50, and the median of what a resume shows measured
+	// 0.53-0.58 on real jobs. So the entire meaningful range is a few hundredths
+	// wide, and taking a quarter off the score takes an item to 0.435: below the
+	// floor, below anything, a veto in all but name. Taking a quarter off what
+	// it has EARNED above the floor is the same statement at the right scale,
+	// and it works for the lexical fallback's small integers too.
+	//
+	// This is the shape, not the strength. Both were multiplicative first, and
+	// both looked sane because they were measured against the lexical fallback,
+	// where a floor of 1 and scores of 2 to 6 hide the difference.
+	// Below the floor there is nothing earned to charge against, and returning
+	// `floor` would RAISE it — enough to clear a bar that sits exactly on the
+	// floor, which is what an empty document's bar does. Left alone instead.
+	if (candidate.score <= floor) return candidate.score;
+	return floor + (candidate.score - floor) * (1 - aged) * (1 - held);
 }
 
 /**
@@ -416,8 +431,8 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	const bar = surfaceBar(candidates, floor);
 	const surfaced = new Set<string>();
 	for (const candidate of candidates
-		.filter((c) => canSurface(c) && surfaceScore(c) >= bar)
-		.sort((a, z) => surfaceScore(z) - surfaceScore(a))) {
+		.filter((c) => canSurface(c) && surfaceScore(c, floor) >= bar)
+		.sort((a, z) => surfaceScore(z, floor) - surfaceScore(a, floor))) {
 		surfaced.add(dropKey(candidate));
 	}
 
