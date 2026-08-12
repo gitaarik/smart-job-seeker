@@ -48,6 +48,7 @@
 	tailored={data.tailored ?? null}
 	decisions={data.decisions ?? []}
 	gaps={data.gaps ?? []}
+	items={data.items ?? []}
 	coverage={data.coverage ?? {}}
 	creditedNotNamed={data.creditedNotNamed ?? []}
 	exclusions={data.exclusions ?? {}}

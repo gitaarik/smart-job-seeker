@@ -21,8 +21,10 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
 	import AddSkillToProfile from '../../../jobs/components/AddSkillToProfile.svelte';
+	import ItemPicker from './ItemPicker.svelte';
 	import TailoredDetails from './TailoredDetails.svelte';
 	import type { Decision, LastRun } from './types';
+	import type { ItemGroup } from '$lib/tailoring';
 	import { profileDocUrl, type DocType } from '$lib/utils/profile-doc-url';
 	import {
 		hiddenSkillsKey,
@@ -65,6 +67,7 @@
 		tailored,
 		decisions,
 		gaps,
+		items,
 		coverage,
 		creditedNotNamed,
 		exclusions,
@@ -83,6 +86,8 @@
 		tailored: { id: number; slug: string; name: string; baseSlug?: string | null } | null;
 		decisions: Decision[];
 		gaps: string[];
+		/** Everything the document being sent could print — see ItemPicker. */
+		items: ItemGroup[];
 		coverage: Record<string, VersionCoverage>;
 		/**
 		 * Required skills the match credits through something related, while no
@@ -125,6 +130,12 @@
 	let recorded = $derived(!!app.cv_sent_through);
 	/** Whether what's recorded is this job's own tailored version. */
 	let choseTailored = $derived(!!tailored && app.cv_version_sent === tailored.slug);
+
+	/**
+	 * What a first toggle in the picker would build on, when no tailored version
+	 * exists yet: the document currently recorded. Ignored once one does.
+	 */
+	let pickerBase = $derived(tailored ? (tailored.baseSlug ?? '') : (app.cv_version_sent ?? ''));
 
 	let working = $state(false);
 	let cvSaved = $state(false);
@@ -849,6 +860,10 @@
 				<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
 				Every skill this job requires now appears on the document you're sending.
 			</p>
+		{/if}
+
+		{#if items.length > 0}
+			<ItemPicker {items} {docType} baseSlug={pickerBase} />
 		{/if}
 
 		{#if tailored}

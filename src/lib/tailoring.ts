@@ -478,3 +478,37 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 
 	return decisions;
 }
+
+/**
+ * One item as the editing panel reads it: what it is, whether the document
+ * prints it, and who decided that.
+ *
+ * The diff answers "what did tailoring change"; these answer "what is on it",
+ * which is what you need to change something tailoring never decided about.
+ */
+export interface ItemRow {
+	entityType: string;
+	entityId: number;
+	label: string;
+	/** Whether this document prints it. */
+	on: boolean;
+	/** Why it is in that state, in terms the applicant can act on. */
+	reason: string;
+	/** Who put it there: the version's own tags, this feature, or the applicant. */
+	source: 'base' | 'tailoring' | 'user';
+	/** Relevance to this job, or null when nothing scored it. */
+	score: number | null;
+}
+
+export interface ItemGroup {
+	/** Stable key for the UI, and the parent this group's rows hang off. */
+	key: string;
+	entityType: string | null;
+	entityId: number | null;
+	title: string;
+	/** Dates, for a role. */
+	subtitle: string | null;
+	/** Whether the section itself prints. A section that doesn't takes its rows with it. */
+	on: boolean;
+	rows: ItemRow[];
+}

@@ -47,7 +47,9 @@ import {
 	surfaceBar,
 	tightenBudget,
 	type Candidate,
-	type Decision
+	type Decision,
+	type ItemGroup,
+	type ItemRow
 } from '$lib/tailoring';
 import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
 import {
@@ -1319,4 +1321,298 @@ export async function relevantExclusionsByVersion(opts: {
 	}
 
 	return result;
+}
+
+/** How an override row is keyed: entity ids are per table, so the type is part of it. */
+function refKey(candidate: Pick<Candidate, 'entityType' | 'entityId'>): string {
+	return `${candidate.entityType}:${candidate.entityId}`;
+}
+
+function yearOf(value: unknown): string {
+	const raw = value instanceof Date ? value.toISOString() : text(value);
+	return raw.slice(0, 4);
+}
+
+/**
+ * Every item a document could print, with whether it does and why.
+ *
+ * The diff answers "what did tailoring change"; this answers "what is on it",
+ * which is the question you have to answer to change something tailoring did
+ * NOT decide about. Those were unreachable: an item nobody surfaced and nobody
+ * dropped left no row anywhere, so the only way to reach it was to go and edit
+ * the tags on your profile — which changes every job that uses that version,
+ * the one thing a per-job document exists to avoid.
+ *
+ * It reads the same three layers the renderer does, in the same order, through
+ * the same filter: the item's tags, the version's, and the override sidecar.
+ * Nothing here re-derives visibility — a panel that disagreed with the document
+ * would be worse than no panel.
+ */
+export async function versionItemStates(opts: {
+	profileId: number;
+	applicationId: number | null;
+	docType: string;
+	versionSlug: string;
+}): Promise<ItemGroup[]> {
+	const { profileId, applicationId, docType, versionSlug } = opts;
+
+	const profile = await getProfileByIdentifier(profileId);
+	if (!profile) return [];
+
+	// The job is optional: without one there are no scores and no required
+	// skills, and the panel is still the only place to see what prints.
+	const application = applicationId
+		? await db.query.applications.findFirst({
+				where: and(eq(applications.id, applicationId), eq(applications.profile_id, profileId)),
+				with: {
+					job: {
+						columns: {
+							id: true,
+							title: true,
+							job_description: true,
+							skills_required: true,
+							skills_preferred: true,
+							responsibilities: true
+						}
+					}
+				}
+			})
+		: null;
+	const job = application?.job ?? null;
+	const requiredSkills = job ? asStringArray(job.skills_required) : [];
+
+	const built = buildCandidates(profile, docType, versionSlug, requiredSkills);
+
+	let scoreOf = new Map<string, number>();
+	if (job) {
+		const query = {
+			text: [
+				text(job.title),
+				text(job.job_description),
+				asStringArray(job.responsibilities).join('\n')
+			]
+				.filter(Boolean)
+				.join('\n'),
+			skills: [...requiredSkills, ...asStringArray(job.skills_preferred)]
+		};
+		if (query.text || query.skills.length > 0) {
+			const { candidates } = await scoreCandidates(
+				profileId,
+				buildCandidates(profile, 'resume', '', requiredSkills),
+				query,
+				{ unitType: 'job_query', unitId: job.id }
+			);
+			scoreOf = new Map(candidates.map((c) => [refKey(c), c.score]));
+		}
+	}
+
+	// What the override sidecar says, so a row can name who decided and why.
+	// Only a version that HAS one — a library version's items are all "base".
+	const version = await db.query.profile_versions.findFirst({
+		where: and(eq(profile_versions.profile_id, profileId), eq(profile_versions.slug, versionSlug)),
+		columns: { id: true }
+	});
+	const overrides = version
+		? await db.query.profile_version_overrides.findMany({
+				where: eq(profile_version_overrides.version_id, version.id),
+				columns: { entity_type: true, entity_id: true, action: true, reason: true, source: true }
+			})
+		: [];
+	const overrideOf = new Map(overrides.map((o) => [`${o.entity_type}:${o.entity_id}`, o]));
+
+	function describe(candidate: Candidate, stripPrefix = ''): ItemRow {
+		const key = refKey(candidate);
+		const override = overrideOf.get(key);
+		const row: ItemRow = {
+			entityType: candidate.entityType,
+			entityId: candidate.entityId,
+			// The group already names the role; repeating it in every row is noise.
+			label:
+				stripPrefix && candidate.label.startsWith(`${stripPrefix}: `)
+					? candidate.label.slice(stripPrefix.length + 2)
+					: candidate.label,
+			on: candidate.visible,
+			reason: '',
+			source: 'base',
+			score: scoreOf.get(key) ?? null
+		};
+		if (override) {
+			row.source = override.source === 'user' ? 'user' : 'tailoring';
+			row.reason = text(override.reason);
+			return row;
+		}
+		// No override: the tags decided, and which tag it was changes what the
+		// applicant would do about it. Except when the parent is what holds it
+		// back — the group says that once, and repeating it per row would name the
+		// wrong tag as well as the wrong fix.
+		if (!candidate.visible && candidate.parentVisible !== false) {
+			row.reason = candidate.templateHeldBack
+				? `only on your ${docType === 'cv' ? 'resume' : 'CV'}`
+				: 'not on this version';
+		}
+		return row;
+	}
+
+	// Role visibility through the same filter buildCandidates uses. A role with
+	// no achievements produces no candidates, so it cannot be read off them.
+	const { filterOnTags } = createProfileFilter(
+		(profile.profile_versions ?? []) as never,
+		docType,
+		null,
+		versionSlug
+	);
+	const visibleRoles = new Set(
+		filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience).map((w) => w.id)
+	);
+
+	const byParent = new Map<number, Candidate[]>();
+	for (const candidate of built) {
+		if (candidate.entityType !== OVERRIDE_ENTITIES.achievement) continue;
+		if (candidate.parentId === null) continue;
+		const list = byParent.get(candidate.parentId) ?? [];
+		list.push(candidate);
+		byParent.set(candidate.parentId, list);
+	}
+
+	const groups: ItemGroup[] = [];
+	for (const role of profile.work_experiences ?? []) {
+		const title = [role.position, role.name].filter(Boolean).join(' at ') || `role ${role.id}`;
+		const rows = (byParent.get(role.id) ?? []).map((c) => describe(c, title));
+		if (rows.length === 0 && visibleRoles.has(role.id)) continue;
+		groups.push({
+			key: `${OVERRIDE_ENTITIES.workExperience}:${role.id}`,
+			entityType: OVERRIDE_ENTITIES.workExperience,
+			entityId: role.id,
+			title,
+			subtitle:
+				[yearOf(role.start_date), role.end_date ? yearOf(role.end_date) : 'now']
+					.filter(Boolean)
+					.join(' – ') || null,
+			on: visibleRoles.has(role.id),
+			rows
+		});
+	}
+
+	const projects = built.filter((c) => c.entityType === OVERRIDE_ENTITIES.sideProject);
+	if (projects.length > 0) {
+		groups.push({
+			key: 'side-projects',
+			entityType: null,
+			entityId: null,
+			title: 'Side projects',
+			subtitle: null,
+			on: true,
+			rows: projects.map((c) => describe(c))
+		});
+	}
+
+	return groups;
+}
+
+/**
+ * Show or hide one item on this application's version, creating that version if
+ * it does not exist yet.
+ *
+ * Creating on demand is the point. Noticing that the version you picked leaves
+ * out a bullet your CV has, and wanting it for this one job, IS tailoring —
+ * asking someone to first generate a tailored version and then find the same
+ * item again in its diff made a two-step ceremony out of one intent. The
+ * version it makes here holds nothing but the change asked for; a later run
+ * fills in the rest without touching it, because this is recorded as the
+ * applicant's own.
+ *
+ * An override is only written when the answer differs from what the base
+ * already does. Setting something back to the base's own answer deletes the row
+ * instead, so the sidecar stays a diff and a later regeneration is free to
+ * decide about that item again.
+ */
+export async function setItemStateForApplication(opts: {
+	profileId: number;
+	applicationId: number;
+	docType: string;
+	baseSlug: string;
+	entityType: string;
+	entityId: number;
+	on: boolean;
+}): Promise<{ versionSlug: string; created: boolean }> {
+	const { profileId, applicationId, docType, baseSlug, entityType, entityId, on } = opts;
+
+	const profile = await getProfileByIdentifier(profileId);
+	if (!profile) throw new Error('Profile not found');
+
+	const application = await db.query.applications.findFirst({
+		where: and(eq(applications.id, applicationId), eq(applications.profile_id, profileId)),
+		with: { job: { columns: { title: true, company: true } } }
+	});
+	if (!application) throw new Error('Application not found');
+
+	const existing = await db.query.profile_versions.findFirst({
+		where: and(
+			eq(profile_versions.profile_id, profileId),
+			eq(profile_versions.application_id, applicationId)
+		),
+		columns: { id: true, slug: true }
+	});
+
+	const versionId =
+		existing?.id ??
+		(await upsertTailoredVersion({
+			profileId,
+			applicationId,
+			baseSlug,
+			jobTitle: text(application.job?.title),
+			company: text(application.job?.company)
+		}));
+	const versionSlug = existing?.slug ?? tailoredSlugFor(applicationId);
+
+	// What the version this one extends does about it, so an override is only
+	// written for a genuine difference. A role is not a candidate — nothing may
+	// drop one — so its visibility comes from the filter directly.
+	const baseVisible =
+		entityType === OVERRIDE_ENTITIES.workExperience
+			? createProfileFilter((profile.profile_versions ?? []) as never, docType, null, baseSlug)
+					.filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience)
+					.some((w) => w.id === entityId)
+			: (buildCandidates(profile, docType, baseSlug, []).find(
+					(c) => c.entityType === entityType && c.entityId === entityId
+				)?.visible ?? false);
+
+	if (on === baseVisible) {
+		await db
+			.delete(profile_version_overrides)
+			.where(
+				and(
+					eq(profile_version_overrides.version_id, versionId),
+					eq(profile_version_overrides.entity_type, entityType),
+					eq(profile_version_overrides.entity_id, entityId)
+				)
+			);
+		return { versionSlug, created: !existing };
+	}
+
+	const now = new Date();
+	const action = on ? 'include' : 'exclude';
+	const reason = on ? 'you chose to show this' : 'you chose to hide this';
+	await db
+		.insert(profile_version_overrides)
+		.values({
+			version_id: versionId,
+			entity_type: entityType,
+			entity_id: entityId,
+			action,
+			reason,
+			source: 'user',
+			date_created: now,
+			date_updated: now
+		})
+		.onConflictDoUpdate({
+			target: [
+				profile_version_overrides.version_id,
+				profile_version_overrides.entity_type,
+				profile_version_overrides.entity_id
+			],
+			set: { action, sort: null, reason, source: 'user', date_updated: now }
+		});
+
+	return { versionSlug, created: !existing };
 }

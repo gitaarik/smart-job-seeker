@@ -18,7 +18,9 @@ import {
 	promoteToLibrary,
 	relevantExclusionsByVersion,
 	retagVersionSlug,
-	tailorVersionForApplication
+	setItemStateForApplication,
+	tailorVersionForApplication,
+	versionItemStates
 } from '$lib/server/profile/tailor-version';
 import { isOverrideEntity } from '$lib/version-overrides';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
@@ -160,10 +162,34 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		return key && matchedLower.has(key) && !namedByProfile.has(key);
 	});
 
+	/**
+	 * Everything the document being sent could print, for the panel that edits it.
+	 *
+	 * Described for the tailored version when there is one, else for whatever is
+	 * recorded — the two flows the panel serves. With nothing recorded there is
+	 * no document to describe, and the panel stays out of the way.
+	 */
+	const panelType = layoutData.application?.cv_sent_through === 'cv' ? 'cv' : 'resume';
+	const panelSlug =
+		tailored?.slug ??
+		(layoutData.application?.cv_sent_through
+			? (layoutData.application?.cv_version_sent ?? '')
+			: null);
+	const items =
+		panelSlug === null
+			? []
+			: await versionItemStates({
+					profileId: layoutData.selectedProfile.id,
+					applicationId: isNaN(applicationId) ? null : applicationId,
+					docType: panelType,
+					versionSlug: panelSlug
+				});
+
 	return {
 		versions: usable
 			.filter((v) => v.application_id === null)
 			.map(({ slug, name }) => ({ slug, name })),
+		items,
 		tailored,
 		coverage,
 		decisions,
@@ -408,6 +434,67 @@ export const actions: Actions = {
 	},
 
 	/** Throw the tailored version away; its decisions cascade with it. */
+	/**
+	 * Show or hide one item on this job's document.
+	 *
+	 * Generalises includeInTailored, which could only ever add and only ever to a
+	 * version that already existed. This one also creates that version, which is
+	 * what makes the panel work on a library version: editing what a document
+	 * shows for one job IS tailoring it, and the first toggle is as good a moment
+	 * to say so as any.
+	 */
+	setItemState: async ({ request, locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
+
+		const formData = await request.formData();
+		const entityType = (formData.get('entity_type') as string) || '';
+		const entityId = parseInt((formData.get('entity_id') as string) || '');
+		if (!isOverrideEntity(entityType) || isNaN(entityId)) {
+			return fail(400, { error: 'Invalid item' });
+		}
+		const docType = (formData.get('doc_type') as string) === 'cv' ? 'cv' : 'resume';
+		const baseSlug = ((formData.get('base_slug') as string) || '').trim();
+		const on = (formData.get('on') as string) === '1';
+
+		try {
+			const result = await setItemStateForApplication({
+				profileId,
+				applicationId: appId,
+				docType,
+				baseSlug,
+				entityType,
+				entityId,
+				on
+			});
+			refreshPdfs(profileId, result.versionSlug);
+
+			// A version made by a toggle is still the document going to this job,
+			// and for the same reason a generated one is: nothing else asked for it.
+			if (result.created) {
+				await db
+					.update(applications)
+					.set({
+						cv_version_sent: result.versionSlug,
+						cv_sent_through: docType,
+						date_updated: new Date()
+					})
+					.where(and(eq(applications.id, appId), eq(applications.profile_id, profileId)));
+			}
+			return { success: true };
+		} catch (error) {
+			return fail(400, {
+				error: error instanceof Error ? error.message : 'Could not change that item.'
+			});
+		}
+	},
+
 	discardTailored: async ({ locals, cookies, params }) => {
 		const user = locals.user;
 		if (!user) return fail(401, { error: 'Not authenticated' });
