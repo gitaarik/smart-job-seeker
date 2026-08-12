@@ -45,6 +45,7 @@ import {
 	PAGE_BUDGETS,
 	selectForJob,
 	surfaceBar,
+	surfaceScore,
 	tightenBudget,
 	type Candidate,
 	type Decision,
@@ -135,6 +136,46 @@ function anchorAmongSiblings(name: string, siblings: string[]): number | null {
  * the render have to agree, and the only way to guarantee that is to ask the
  * same function.
  */
+/** Past which point in years an item is as old as this scale goes. */
+const OLD_YEARS = 12;
+const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
+
+/**
+ * How far back an item sits, on a scale this profile sets: 0 for current work,
+ * 1 for as far back as it goes.
+ *
+ * Two measures, and the gentler wins. Relative to the applicant's own span,
+ * because "old" for someone three years out of school is not what it is for
+ * someone with twenty years behind them — and absolute in years, because a long
+ * career would otherwise have everything but the last few years written off
+ * just for being long. Taking the smaller means BOTH have to call something old
+ * before it counts as old.
+ *
+ * Worked through: a bullet from a role that ended in 2011, in a career that
+ * started in 2006, scores 0.74 relative and 1.0 absolute — old. The same
+ * fifteen-year-old bullet in a forty-year career scores 0.36 relative and stays
+ * mild. A two-year-old role in a three-year career scores 0.67 relative but
+ * 0.17 absolute, so it is left alone, which is the point.
+ *
+ * Anything current, undated or unparseable is 0. Missing dates are not evidence
+ * of age, and guessing against the applicant on data they never entered is the
+ * wrong direction to be wrong in.
+ */
+function ageScale(profile: ProfileRow, now: number): (ended: unknown) => number {
+	const starts = (profile.work_experiences ?? [])
+		.map((role) => Date.parse(String(role.start_date ?? '')))
+		.filter((value) => !Number.isNaN(value));
+	const careerStart = starts.length > 0 ? Math.min(...starts) : NaN;
+
+	return (ended: unknown) => {
+		const end = Date.parse(String(ended ?? ''));
+		if (Number.isNaN(end) || end >= now) return 0;
+		const absolute = Math.min(1, (now - end) / MS_PER_YEAR / OLD_YEARS);
+		if (Number.isNaN(careerStart) || now <= careerStart) return absolute;
+		return Math.max(0, Math.min(absolute, (now - end) / (now - careerStart)));
+	};
+}
+
 export function buildCandidates(
 	profile: ProfileRow,
 	docType: string,
@@ -149,6 +190,7 @@ export function buildCandidates(
 	);
 	const required = new Set(requiredSkills.map((s) => s.trim().toLowerCase()).filter(Boolean));
 	const candidates: Candidate[] = [];
+	const ageOf = ageScale(profile, Date.now());
 
 	const visibleRoles = new Set(
 		filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience).map((w) => w.id)
@@ -172,6 +214,8 @@ export function buildCandidates(
 				// A bullet on a role the document doesn't print isn't printed either.
 				visible: visibleRoles.has(role.id) && visibleAchievements.has(achievement.id),
 				parentVisible: visibleRoles.has(role.id),
+				// A bullet is as old as the role it sits in — it has no dates of its own.
+				age: ageOf(role.end_date),
 				templateHeldBack: heldBackByTemplate(asStringArray(achievement.tags), docType),
 				pinned: false,
 				score: 0
@@ -192,6 +236,7 @@ export function buildCandidates(
 			chars: (text(project.name) + summary).length,
 			visible: visibleProjects.has(project.id),
 			parentVisible: true,
+			age: ageOf(project.end_date),
 			templateHeldBack: heldBackByTemplate(asStringArray(project.tags), docType),
 			pinned: false,
 			score: 0
@@ -531,10 +576,16 @@ export async function tailorVersionForApplication(opts: {
 			? `none of these ${count} skills is what this job asks for`
 			: 'this job asks for none of the skills in this group';
 	};
-	const surfacedReason = (c: Candidate) =>
-		c.templateHeldBack
-			? `kept for your ${otherLabel} only, but it outranks half of what this ${docLabel} shows`
-			: `hidden on the version this builds on, and more relevant to this job than half of what it shows`;
+	// An old item that got here cleared a higher bar than a recent one, and the
+	// applicant is the one who decided it was old news — so the row says which
+	// judgement is being overruled, not just that something was added.
+	const OLD_ENOUGH_TO_SAY = 0.5;
+	const surfacedReason = (c: Candidate) => {
+		const dated = (c.age ?? 0) >= OLD_ENOUGH_TO_SAY ? 'older work, but ' : '';
+		return c.templateHeldBack
+			? `${dated}kept for your ${otherLabel} only and it outranks half of what this ${docLabel} shows`
+			: `${dated}hidden on the version this builds on, and more relevant to this job than half of what it shows`;
+	};
 	// One page or two, decided by how much this applicant has rather than by a
 	// setting they would have to understand. The fit pass below then holds the
 	// document to it by rendering, which is the only thing that actually knows.
@@ -1306,8 +1357,8 @@ export async function relevantExclusionsByVersion(opts: {
 
 			const excluded = scored
 				.filter((c) => canSurface(c) && !decided.has(`${c.entityType}:${c.entityId}`))
-				.filter((c) => c.score >= bar)
-				.sort((a, z) => z.score - a.score)
+				.filter((c) => surfaceScore(c) >= bar)
+				.sort((a, z) => surfaceScore(z) - surfaceScore(a))
 				.slice(0, MAX_EXCLUSIONS_REPORTED)
 				.map((c) => ({
 					entityType: c.entityType,

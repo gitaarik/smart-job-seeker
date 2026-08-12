@@ -58,6 +58,18 @@ export interface Candidate {
 	 */
 	parentVisible?: boolean;
 	/**
+	 * How far back this item sits, 0 for current work and 1 for as far back as
+	 * this profile goes. Absent means unknown, which is treated as current:
+	 * missing dates are not evidence of age.
+	 *
+	 * Scaled by the applicant's own history rather than in years, and capped by
+	 * years as well — see ageScale in tailor-version.ts. Both have to agree that
+	 * something is old before it counts as old, so a three-year career does not
+	 * have its first job treated as ancient and a forty-year one does not have
+	 * everything before last decade written off.
+	 */
+	age?: number;
+	/**
 	 * Whether a base-template tag holds it off this document — "CV only, not on
 	 * my resume" — rather than a version tag.
 	 *
@@ -249,6 +261,49 @@ function isDroppable(candidate: Candidate): boolean {
 }
 
 /**
+ * How much relevance an item at the far end of a career loses when the question
+ * is whether to overrule the applicant's own judgement about it.
+ */
+export const RECENCY_PENALTY = 0.35;
+
+/**
+ * Age below which nothing is discounted at all, and from which the penalty
+ * ramps up rather than starting at zero.
+ *
+ * The complaint this answers is about work from fifteen years ago, not from
+ * last year, and a rule that shaves something off everything not written this
+ * morning would be a different rule. It also keeps the discount away from the
+ * lexical fallback's coarse scores: those come out as small integers, so the
+ * bar routinely lands exactly on one, and a 3% discount on a two-year-old role
+ * would be the whole decision. Measured on a real profile, a role that ended
+ * last year scored 0.07 and was flipping items out at the bar.
+ */
+export const RECENCY_GRACE = 0.35;
+
+/**
+ * Relevance as the surfacing decision reads it: discounted by age.
+ *
+ * Deliberately not applied to ranking or to trimming. An applicant who tagged
+ * a role "CV only" because it is fifteen years old has already said what they
+ * think, and this feature's licence to overrule that comes from the item being
+ * unusually relevant — so age raises the bar for overruling rather than
+ * demoting the work itself. Discounting the score everywhere would push a
+ * genuinely relevant old bullet off a role the document DOES show, which is a
+ * worse error than the one this fixes, and would reshuffle documents that are
+ * currently right.
+ *
+ * Never a veto: a directly relevant old item still clears the bar, which is the
+ * whole intent — old work does belong on a resume when it is what the job is
+ * about.
+ */
+export function surfaceScore(candidate: Candidate): number {
+	const age = candidate.age ?? 0;
+	if (age <= RECENCY_GRACE) return candidate.score;
+	const beyond = (age - RECENCY_GRACE) / (1 - RECENCY_GRACE);
+	return candidate.score * (1 - RECENCY_PENALTY * beyond);
+}
+
+/**
  * Whether a hidden item could be shown at all — the eligibility half of
  * surfacing, with the score left out.
  *
@@ -313,8 +368,8 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	const bar = surfaceBar(candidates, floor);
 	const surfaced = new Set<string>();
 	for (const candidate of candidates
-		.filter((c) => canSurface(c) && c.score >= bar)
-		.sort((a, z) => z.score - a.score)
+		.filter((c) => canSurface(c) && surfaceScore(c) >= bar)
+		.sort((a, z) => surfaceScore(z) - surfaceScore(a))
 		.slice(0, MAX_SURFACED)) {
 		surfaced.add(dropKey(candidate));
 		decisions.push({
@@ -417,7 +472,12 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 			? `the least relevant thing on a full page, and off-topic for this job (${c.score.toFixed(2)})`
 			: `trimmed to fit the page — the least relevant line left (${c.score.toFixed(2)})`;
 
-	for (const candidate of [...droppable].sort((a, z) => a.score - z.score)) {
+	// Worst first, and between two the job values equally, the older one — the
+	// only place age touches what a document already shows, and only as a
+	// tiebreak, so relevance still ranks and the page budget still decides.
+	for (const candidate of [...droppable].sort(
+		(a, z) => a.score - z.score || (z.age ?? 0) - (a.age ?? 0)
+	)) {
 		if (printedChars() <= budgetChars) break;
 		if (!canDrop(candidate)) continue;
 		drop(candidate, trimReason(candidate));

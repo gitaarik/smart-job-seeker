@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
 	canSurface,
 	chooseBudget,
+	RECENCY_GRACE,
+	RECENCY_PENALTY,
+	surfaceScore,
 	DEFAULT_SELECTION,
 	PAGE_BUDGETS,
 	tightenBudget,
@@ -366,6 +369,73 @@ describe('surfacing respects the parent', () => {
 			OPTS
 		);
 		expect(decisions.some((d) => d.entityId === 3)).toBe(false);
+	});
+});
+
+describe('recency', () => {
+	it('leaves an undated item alone', () => {
+		const c = bullet(1, 10, 0.8);
+		expect(surfaceScore(c)).toBeCloseTo(0.8);
+	});
+
+	it('discounts an old one, without ever zeroing it', () => {
+		expect(surfaceScore(bullet(1, 10, 0.8, { age: 1 }))).toBeCloseTo(0.8 * (1 - RECENCY_PENALTY));
+		expect(surfaceScore(bullet(1, 10, 0.8, { age: 1 }))).toBeGreaterThan(0);
+	});
+
+	it('leaves recent work untouched, not merely lightly touched', () => {
+		// A role that ended last year scores about 0.07 on a twenty-year career,
+		// and the lexical ranker's scores are small integers — so "a little" would
+		// have been the whole decision at the bar.
+		expect(surfaceScore(bullet(1, 10, 2, { age: 0.07 }))).toBe(2);
+		expect(surfaceScore(bullet(1, 10, 2, { age: RECENCY_GRACE }))).toBe(2);
+	});
+
+	it('raises the bar for surfacing old work rather than banning it', () => {
+		// Both bullets are hidden and both outrank the median of what shows (0.5).
+		// The old one is close to the bar, so its age costs it the slot; the old
+		// one that is far above it still gets in, which is the whole intent —
+		// old work belongs on a resume when it is what the job is about.
+		const shown = [bullet(1, 10, 0.4), bullet(2, 10, 0.5), bullet(3, 10, 0.6)];
+		const marginal = bullet(4, 11, 0.55, { visible: false, age: 0.9 });
+		const decisive = bullet(5, 11, 0.95, { visible: false, age: 0.9 });
+
+		const decisions = selectForJob([...shown, marginal, decisive], OPTS);
+		const included = decisions.filter((d) => d.action === 'include').map((d) => d.entityId);
+		expect(included).not.toContain(4);
+		expect(included).toContain(5);
+	});
+
+	it('surfaces the same marginal item when it is recent', () => {
+		const shown = [bullet(1, 10, 0.4), bullet(2, 10, 0.5), bullet(3, 10, 0.6)];
+		const decisions = selectForJob(
+			[...shown, bullet(4, 11, 0.55, { visible: false, age: 0 })],
+			OPTS
+		);
+		expect(decisions.some((d) => d.entityId === 4 && d.action === 'include')).toBe(true);
+	});
+
+	it('does not demote what the document already shows', () => {
+		// Age is not a reason to drop: the applicant put this bullet on the
+		// document, and only the page budget takes things off it.
+		const decisions = selectForJob(
+			[bullet(1, 10, 0.9, { age: 1 }), bullet(2, 10, 0.9), bullet(3, 10, 0.9)],
+			OPTS
+		);
+		expect(decisions.some((d) => d.action === 'exclude')).toBe(false);
+	});
+
+	it('breaks a tie for the page in favour of the newer', () => {
+		// Three bullets of equal relevance, room for two: the old one goes.
+		const decisions = selectForJob(
+			[
+				bullet(1, 10, 0.5, { chars: 100, age: 0 }),
+				bullet(2, 10, 0.5, { chars: 100, age: 0.1 }),
+				bullet(3, 10, 0.5, { chars: 100, age: 0.95 })
+			],
+			{ ...OPTS, budgetChars: 200 }
+		);
+		expect(decisions.filter((d) => d.action === 'exclude').map((d) => d.entityId)).toEqual([3]);
 	});
 });
 
