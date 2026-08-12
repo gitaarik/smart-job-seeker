@@ -37,6 +37,7 @@ import { getProfileByIdentifier } from '$lib/server/profile/default';
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
 import { isTailoredSlug, OVERRIDE_ENTITIES, tailoredSlugFor } from '$lib/version-overrides';
 import {
+	canSurface,
 	chooseBudget,
 	DEFAULT_SELECTION,
 	DROPPABLE_ENTITIES,
@@ -1293,14 +1294,16 @@ export async function relevantExclusionsByVersion(opts: {
 				score: scoreOf.get(`${c.entityType}:${c.entityId}`) ?? 0
 			}));
 
-			// The same bar the generator surfaces on, from the same function: this
-			// warning is what tells the applicant a version is leaving out proof,
-			// and the two would be worth nothing if they disagreed about which.
+			// The same bar AND the same eligibility test the generator surfaces on,
+			// from the same functions: this warning is what tells the applicant a
+			// version is leaving out proof, and the two would be worth nothing if
+			// they disagreed about which. They did disagree, on parent visibility —
+			// see canSurface.
 			const bar = surfaceBar(scored, floor);
 			const decided = decidedAgainst.get(versionSlug) ?? new Set<string>();
 
 			const excluded = scored
-				.filter((c) => !c.visible && !decided.has(`${c.entityType}:${c.entityId}`))
+				.filter((c) => canSurface(c) && !decided.has(`${c.entityType}:${c.entityId}`))
 				.filter((c) => c.score >= bar)
 				.sort((a, z) => z.score - a.score)
 				.slice(0, MAX_EXCLUSIONS_REPORTED)

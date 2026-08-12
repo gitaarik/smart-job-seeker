@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	canSurface,
 	chooseBudget,
 	DEFAULT_SELECTION,
 	PAGE_BUDGETS,
@@ -315,6 +316,56 @@ describe('surfaceBar', () => {
 
 	it('falls back to the floor when nothing prints', () => {
 		expect(surfaceBar([], 0.5)).toBe(0.5);
+	});
+});
+
+describe('canSurface', () => {
+	it('passes a hidden bullet on a role the document prints', () => {
+		expect(canSurface(bullet(1, 10, 0.9, { visible: false, parentVisible: true }))).toBe(true);
+	});
+
+	it('refuses one whose role the document leaves out', () => {
+		// The role is filtered before its bullets are, so showing the bullet is not
+		// something an override can do — and offering it is worse than silence.
+		expect(canSurface(bullet(1, 10, 0.9, { visible: false, parentVisible: false }))).toBe(false);
+	});
+
+	it('treats a missing parent as nothing to worry about', () => {
+		expect(canSurface(bullet(1, 10, 0.9, { visible: false }))).toBe(true);
+	});
+
+	it('says nothing about what already prints', () => {
+		expect(canSurface(bullet(1, 10, 0.9))).toBe(false);
+	});
+
+	it('refuses what is not droppable, which is what surfacing is defined over', () => {
+		expect(
+			canSurface({
+				entityType: OVERRIDE_ENTITIES.skill,
+				entityId: 1,
+				parentId: null,
+				label: 'Django',
+				chars: 10,
+				visible: false,
+				pinned: false,
+				score: 0.9
+			})
+		).toBe(false);
+	});
+});
+
+describe('surfacing respects the parent', () => {
+	it("leaves a hidden role's bullet out of the diff however relevant it is", () => {
+		const decisions = selectForJob(
+			[
+				bullet(1, 10, 0.4),
+				bullet(2, 10, 0.5),
+				// Off the resume because its role is, not because of its own tags.
+				bullet(3, 11, 0.99, { visible: false, parentVisible: false })
+			],
+			OPTS
+		);
+		expect(decisions.some((d) => d.entityId === 3)).toBe(false);
 	});
 });
 

@@ -249,6 +249,30 @@ function isDroppable(candidate: Candidate): boolean {
 }
 
 /**
+ * Whether a hidden item could be shown at all — the eligibility half of
+ * surfacing, with the score left out.
+ *
+ * Shared with the warning about omitted evidence, which is the point. The two
+ * already agreed on the bar and disagreed on this: the warning listed anything
+ * hidden, so a bullet on a role tagged off the resume entirely was reported as
+ * evidence the document leaves out. Its role is filtered before its bullets
+ * are, so showing it was never possible — on a tailored version the "Put it
+ * back" button beside it wrote an override that changed nothing. Three of the
+ * four items warned about on one real resume were that.
+ *
+ * Absent `parentVisible` means "nothing above it to worry about", so only an
+ * explicit false disqualifies.
+ */
+export function canSurface(candidate: Candidate): boolean {
+	return (
+		!candidate.visible &&
+		!candidate.pinned &&
+		isDroppable(candidate) &&
+		candidate.parentVisible !== false
+	);
+}
+
+/**
  * Decide what this job's version shows, as a list of changes against what the
  * base version already prints.
  *
@@ -289,10 +313,7 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	const bar = surfaceBar(candidates, floor);
 	const surfaced = new Set<string>();
 	for (const candidate of candidates
-		.filter(
-			(c) =>
-				!c.visible && !c.pinned && isDroppable(c) && c.parentVisible !== false && c.score >= bar
-		)
+		.filter((c) => canSurface(c) && c.score >= bar)
 		.sort((a, z) => z.score - a.score)
 		.slice(0, MAX_SURFACED)) {
 		surfaced.add(dropKey(candidate));
