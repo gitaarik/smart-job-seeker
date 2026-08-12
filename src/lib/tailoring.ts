@@ -122,10 +122,25 @@ export interface SelectionOptions {
 
 export const DEFAULT_SELECTION: Pick<SelectionOptions, 'minPerParent' | 'budgetChars'> = {
 	minPerParent: 2,
-	// A one-page resume is roughly this much printed text in the default
-	// template. It is a proxy, not a measurement — the honest version would
-	// render and measure, which needs a browser and is not worth it to decide
-	// which bullet is fourth.
+	/*
+	 * Two A4 pages of the default template — measured, and deliberately not one.
+	 *
+	 * One page was the goal, so this was rendered and stripped until the PDF
+	 * became a single page. It gets there at 7 bullets, 1 side project and TWO
+	 * skill groups. The skills block is the constraint, not the prose: with all
+	 * six groups showing, a single page holds no bullets at all, and a real
+	 * tailored version (7 bullets, 1 project, 4 groups) still runs to two.
+	 *
+	 * So this budget cannot buy one page. Lowering it to 1,156 — the measured
+	 * one-page figure — produced seven-bullet documents that were STILL two
+	 * pages, which is strictly worse than a full one. Whatever number goes here,
+	 * one page needs the skills section cut to roughly one group, and that is a
+	 * decision about the profile, not about the page.
+	 *
+	 * 3,400 fills the two pages this template actually renders. Re-measure with
+	 * a browser if the template's spacing changes; the old value was a guess and
+	 * happened to be right.
+	 */
 	budgetChars: 3400
 };
 

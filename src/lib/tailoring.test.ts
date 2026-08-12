@@ -95,13 +95,21 @@ describe('selectForJob', () => {
 		expect(decisions[0]).toMatchObject({ entityId: 4 });
 	});
 
-	it('never empties a role below the minimum', () => {
+	it('never empties a role, however small the page', () => {
 		// Every bullet is irrelevant and the page is far too small for them, but a
-		// role stripped to nothing reads as padding — the floor on siblings wins
-		// over the page.
+		// role listed with nothing under it reads as padding — the floor on
+		// siblings wins over the page.
 		const candidates = [bullet(1, 10, 0.01), bullet(2, 10, 0.01), bullet(3, 10, 0.01)];
 		const decisions = selectForJob(candidates, { ...OPTS, budgetChars: 10 });
-		expect(decisions.filter((d) => d.action === 'exclude')).toHaveLength(1);
+		expect(decisions.filter((d) => d.action === 'exclude')).toHaveLength(
+			candidates.length - DEFAULT_SELECTION.minPerParent
+		);
+	});
+
+	it('spends the floor only when the page has run out', () => {
+		// It is a floor, not a target: three bullets that fit are three bullets.
+		const candidates = [bullet(1, 10, 0.01), bullet(2, 10, 0.01), bullet(3, 10, 0.01)];
+		expect(selectForJob(candidates, { ...OPTS, budgetChars: 10_000 })).toEqual([]);
 	});
 
 	it('never drops a role or an education, however irrelevant', () => {
