@@ -339,12 +339,13 @@ describe('skill groups', () => {
 
 	it('never drops a group holding a skill this job requires', () => {
 		// The filter reaches the category before the skills inside it, so this
-		// would take the required skill off the page with it.
+		// would take the required skill off the page with it — even though it is
+		// the worst-scoring group of the three and the cap is biting.
 		const decisions = selectForJob(
 			[group(1, 0.9), group(2, 0.9), group(3, 0.01, { pinned: true })],
 			OPTS
 		);
-		expect(decisions).toEqual([]);
+		expect(decisions.some((d) => d.entityId === 3)).toBe(false);
 	});
 
 	it('keeps a floor of groups, so the section cannot vanish', () => {
@@ -352,13 +353,29 @@ describe('skill groups', () => {
 		expect(decisions.filter((d) => d.action === 'exclude')).toHaveLength(1);
 	});
 
+	it('keeps every group holding something the job asked for', () => {
+		// However badly they score. A document that fits by not mentioning what
+		// the job wanted has failed at the thing it was for.
+		const decisions = selectForJob(
+			[
+				group(1, 0.9, { pinned: true }),
+				group(2, 0.01, { pinned: true }),
+				group(3, 0.01, { pinned: true }),
+				group(4, 0.01, { pinned: true }),
+				group(5, 0.01)
+			],
+			OPTS
+		);
+		expect(decisions.filter((d) => d.action === 'exclude').map((d) => d.entityId)).toEqual([5]);
+	});
+
 	it('does not spend the page budget on them', () => {
 		// Their chars are zero: a group costs a line either way, and counting it
-		// would silently re-tune how much prose survives.
-		const decisions = selectForJob([group(1, 0.9), group(2, 0.9), group(3, 0.9)], {
-			...OPTS,
-			budgetChars: 0
-		});
-		expect(decisions).toEqual([]);
+		// would silently re-tune how much prose survives. So a page with no room
+		// left drops exactly what the cap drops, and nothing more.
+		const groups = [group(1, 0.9), group(2, 0.9), group(3, 0.9)];
+		expect(selectForJob(groups, { ...OPTS, budgetChars: 0 })).toEqual(
+			selectForJob(groups, { ...OPTS, budgetChars: 10_000 })
+		);
 	});
 });

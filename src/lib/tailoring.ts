@@ -125,21 +125,22 @@ export const DEFAULT_SELECTION: Pick<SelectionOptions, 'minPerParent' | 'budgetC
 	/*
 	 * Two A4 pages of the default template — measured, and deliberately not one.
 	 *
-	 * One page was the goal, so this was rendered and stripped until the PDF
-	 * became a single page. It gets there at 7 bullets, 1 side project and TWO
-	 * skill groups. The skills block is the constraint, not the prose: with all
-	 * six groups showing, a single page holds no bullets at all, and a real
-	 * tailored version (7 bullets, 1 project, 4 groups) still runs to two.
+	 * One page was the goal. Rendered and stripped until the PDF became a single
+	 * page: it gets there at 7 bullets, 1 side project and 2 skill groups, and
+	 * the skills block is what decides — expensive per GROUP, not per skill,
+	 * since four groups cut to one skill each still ran to two pages.
 	 *
-	 * So this budget cannot buy one page. Lowering it to 1,156 — the measured
-	 * one-page figure — produced seven-bullet documents that were STILL two
-	 * pages, which is strictly worse than a full one. Whatever number goes here,
-	 * one page needs the skills section cut to roughly one group, and that is a
-	 * decision about the profile, not about the page.
+	 * Both levers were then tried together — this at 1,156, the groups capped at
+	 * two — across thirteen real jobs. Two of the thirteen came out on one page.
+	 * The rest sat one or two lines over, because at seven bullets the document
+	 * is already at every floor it has and the remaining height is the
+	 * template's own: heading spacing, the blank lines after each project, the
+	 * negative margins correcting them. What that produced was seven-bullet
+	 * documents that were still two pages, which is worse than a full one.
 	 *
-	 * 3,400 fills the two pages this template actually renders. Re-measure with
-	 * a browser if the template's spacing changes; the old value was a guess and
-	 * happened to be right.
+	 * So one page is a template question, not a selection one, and this stays at
+	 * the value that fills the two pages the template renders. Re-measure with a
+	 * browser if that spacing changes.
 	 */
 	budgetChars: 3400
 };
@@ -157,6 +158,9 @@ const MAX_SURFACED = 3;
 /**
  * Skill groups a document always keeps, however little the job wants them. A
  * skills section that empties out reads as a gap rather than as focus.
+ *
+ * A cap was tried here instead — keep the best two — to buy the page back. It
+ * does shrink the section, but not enough to matter: see budgetChars.
  */
 const MIN_SKILL_GROUPS = 2;
 
@@ -289,8 +293,10 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	//
 	// Absolute rather than comparative, unlike the prose trim: "this job asks
 	// for none of these" is a statement about the job, not about how full the
-	// page is. A group holding a required skill is pinned and never reaches
-	// here, and the section keeps its floor so it cannot vanish.
+	// page is. A group holding a required skill — printed OR about to be
+	// surfaced — is pinned and never reaches here, because the filter meets the
+	// category before the skills in it and dropping one would take the required
+	// skill with it. The section keeps a floor so it cannot vanish.
 	const groups = candidates.filter((c) => c.entityType === OVERRIDE_ENTITIES.skillCategory);
 	let groupsLeft = groups.length;
 	for (const group of [...groups].sort((a, z) => a.score - z.score)) {

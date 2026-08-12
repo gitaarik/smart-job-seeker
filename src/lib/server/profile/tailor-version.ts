@@ -232,7 +232,13 @@ export function buildCandidates(
 		if (!visibleCategories.has(category.id)) continue;
 		const names = printedInCategory.get(category.id) ?? [];
 		if (names.length === 0) continue;
-		const holdsRequired = names.some((n) => required.has(n.toLowerCase()));
+		// Any required skill IN the group, printed or not: a hidden one is about to
+		// be surfaced, and the surfacing prints nothing if its group has gone —
+		// the filter reaches the category first.
+		const holdsRequired = (category.tech_skills ?? []).some((skill) => {
+			const name = text(skill.name);
+			return !!name && required.has(name.toLowerCase());
+		});
 		candidates.push({
 			entityType: OVERRIDE_ENTITIES.skillCategory,
 			entityId: category.id,
