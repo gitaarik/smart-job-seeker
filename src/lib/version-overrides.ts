@@ -43,6 +43,30 @@ export function isOverrideEntity(value: unknown): value is OverrideEntity {
 }
 
 /**
+ * What to call each entity where an applicant reads it.
+ *
+ * The stored strings are table names and read like them: a review panel listing
+ * "work_experience_achievement" — or just the bullet's text, which is what it
+ * did first — asks somebody to audit decisions without saying what kind of
+ * thing each one is about. These match the headings the profile editor uses,
+ * so the label names the page you'd go to in order to change it.
+ */
+export const OVERRIDE_ENTITY_LABELS: Record<OverrideEntity, string> = {
+	[OVERRIDE_ENTITIES.workExperience]: 'Work experience',
+	[OVERRIDE_ENTITIES.achievement]: 'Achievement',
+	[OVERRIDE_ENTITIES.technology]: 'Technology',
+	[OVERRIDE_ENTITIES.skillCategory]: 'Skill category',
+	[OVERRIDE_ENTITIES.skill]: 'Skill',
+	[OVERRIDE_ENTITIES.sideProject]: 'Side project',
+	[OVERRIDE_ENTITIES.education]: 'Education'
+};
+
+/** The label, falling back to the raw type so an unknown row still says what it is. */
+export function overrideEntityLabel(entityType: string): string {
+	return isOverrideEntity(entityType) ? OVERRIDE_ENTITY_LABELS[entityType] : entityType;
+}
+
+/**
  * Slug namespace reserved for versions owned by an application.
  *
  * Reserved rather than merely conventional: a hand-made version called `app-45`

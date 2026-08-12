@@ -28,7 +28,8 @@ import {
 	profile_versions,
 	side_projects,
 	tech_skills,
-	work_experience_achievements
+	work_experience_achievements,
+	work_experiences
 } from '$lib/server/db/schema';
 import { getProfileByIdentifier } from '$lib/server/profile/default';
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
@@ -149,25 +150,56 @@ export function buildCandidates(
 	// Skills are include-only (see $lib/tailoring): a required one the document
 	// would hide is exactly the gap this feature exists to close, but dropping a
 	// skill on a relevance score is thin evidence for a lasting decision.
+	//
+	// Visibility is answered by NAME, not by row, the way the coverage map
+	// answers it: a profile may hold the same skill in two categories — one per
+	// version is a real pattern here — and a reader or a keyword search sees the
+	// word, not which row printed it. Asking per row produced an "include
+	// Python" decision on a document already printing Python from its other
+	// category, and the decision did nothing at all.
 	const visibleCategories = new Set(
 		filterOnTags(profile.tech_skill_categories ?? [], OVERRIDE_ENTITIES.skillCategory).map(
 			(c) => c.id
 		)
 	);
+	const visibleSkillsByCategory = new Map<number, Set<number>>();
+	const printedNames = new Set<string>();
 	for (const category of profile.tech_skill_categories ?? []) {
 		const visibleSkills = new Set(
 			filterOnTags(category.tech_skills ?? [], OVERRIDE_ENTITIES.skill).map((s) => s.id)
 		);
+		visibleSkillsByCategory.set(category.id, visibleSkills);
+		if (!visibleCategories.has(category.id)) continue;
+		for (const skill of category.tech_skills ?? []) {
+			const name = text(skill.name);
+			if (name && visibleSkills.has(skill.id)) printedNames.add(name.toLowerCase());
+		}
+	}
+
+	// One candidate per required NAME, for the same reason: two rows would mean
+	// two identical "now showing: Python" lines in the diff.
+	const claimed = new Set<string>();
+	for (const category of profile.tech_skill_categories ?? []) {
+		// An include on a skill inside a hidden category prints nothing — the
+		// category is filtered first, and the skill never gets asked. Recording a
+		// decision that cannot take effect is worse than recording none: the diff
+		// claims the document now shows something it does not. The skills strip
+		// calls the same case "held back by another rule" and declines to offer.
+		if (!visibleCategories.has(category.id)) continue;
 		for (const skill of category.tech_skills ?? []) {
 			const name = text(skill.name);
 			if (!name || !required.has(name.toLowerCase())) continue;
+			if (claimed.has(name.toLowerCase())) continue;
+			claimed.add(name.toLowerCase());
 			candidates.push({
 				entityType: OVERRIDE_ENTITIES.skill,
 				entityId: skill.id,
 				parentId: category.id,
 				label: name,
 				chars: name.length,
-				visible: visibleCategories.has(category.id) && visibleSkills.has(skill.id),
+				visible:
+					printedNames.has(name.toLowerCase()) ||
+					(visibleSkillsByCategory.get(category.id)?.has(skill.id) ?? false),
 				pinned: true,
 				score: 1
 			});
@@ -607,6 +639,12 @@ export interface DescribedDecision {
 	source: string;
 	/** The applicant's own words for the thing being decided about. */
 	label: string;
+	/**
+	 * Where that text lives, when the text alone doesn't place it. A bullet is
+	 * one line out of a role and reads like any other; which job it belongs to
+	 * is most of what tells you whether hiding it was right.
+	 */
+	context: string | null;
 }
 
 /**
@@ -635,7 +673,7 @@ export async function describeOverrides(
 		idsOf(OVERRIDE_ENTITIES.achievement).length
 			? db.query.work_experience_achievements.findMany({
 					where: inArray(work_experience_achievements.id, idsOf(OVERRIDE_ENTITIES.achievement)),
-					columns: { id: true, description: true }
+					columns: { id: true, description: true, work_experience_id: true }
 				})
 			: [],
 		idsOf(OVERRIDE_ENTITIES.sideProject).length
@@ -652,9 +690,26 @@ export async function describeOverrides(
 			: []
 	]);
 
+	// One more round-trip, and only when bullets are involved: a bullet needs the
+	// role it sits under to be identifiable, and the other two entities name
+	// themselves.
+	const roleIds = [...new Set(achievements.map((a) => a.work_experience_id).filter(Boolean))];
+	const roles = roleIds.length
+		? await db.query.work_experiences.findMany({
+				where: inArray(work_experiences.id, roleIds as number[]),
+				columns: { id: true, position: true, name: true }
+			})
+		: [];
+	const roleLabels = new Map(
+		roles.map((r) => [r.id, [text(r.position), text(r.name)].filter(Boolean).join(' at ')])
+	);
+
 	const labels = new Map<string, string>();
+	const contexts = new Map<string, string>();
 	for (const a of achievements) {
 		labels.set(`${OVERRIDE_ENTITIES.achievement}:${a.id}`, text(a.description));
+		const role = roleLabels.get(a.work_experience_id);
+		if (role) contexts.set(`${OVERRIDE_ENTITIES.achievement}:${a.id}`, role);
 	}
 	for (const p of projects) {
 		labels.set(`${OVERRIDE_ENTITIES.sideProject}:${p.id}`, text(p.name));
@@ -672,7 +727,8 @@ export async function describeOverrides(
 			reason: row.reason,
 			sort: row.sort,
 			source: row.source,
-			label: labels.get(`${row.entity_type}:${row.entity_id}`) ?? ''
+			label: labels.get(`${row.entity_type}:${row.entity_id}`) ?? '',
+			context: contexts.get(`${row.entity_type}:${row.entity_id}`) ?? null
 		}))
 		.filter((row) => row.label);
 }

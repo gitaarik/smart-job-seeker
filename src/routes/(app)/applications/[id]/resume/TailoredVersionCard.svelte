@@ -16,6 +16,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
 	import { profileDocUrl, type DocType } from '$lib/utils/profile-doc-url';
+	import { overrideEntityLabel } from '$lib/version-overrides';
 
 	/**
 	 * The version tailored to this job, and every decision that shaped it.
@@ -42,6 +43,8 @@
 		sort: number | null;
 		source: string;
 		label: string;
+		/** Which role a bullet came from; null for things that name themselves. */
+		context: string | null;
 	}
 
 	let {
@@ -110,8 +113,8 @@
 		{:else if !tailored}
 			<p class="mb-3 text-xs text-[var(--dash-text-secondary)]">
 				Build a version of your resume for this job: it starts from one of your own versions and
-				only decides what to <em>show</em> — which bullets, which projects, and any skill this job requires
-				that your document would otherwise hide. It never rewrites your words.
+				only decides what to <em>show</em> — which achievements, which side projects, and any skill this
+				job requires that your document would otherwise hide. It never rewrites your words.
 			</p>
 			<form method="POST" action="?/tailorVersion" use:enhance={track}>
 				<input type="hidden" name="doc_type" value={docType} />
@@ -275,6 +278,22 @@
 								>
 									<FontAwesomeIcon icon={group.icon} class="mt-1 h-3 w-3 shrink-0 {group.tone}" />
 									<div class="min-w-0 flex-1">
+										<!-- What KIND of thing this is, before its text. A bullet, a
+										     side project and a skill all rendered as one line of prose
+										     here, and an achievement out of a role reads like a
+										     sentence about nothing in particular until you know it is
+										     one — so the type leads, and a bullet names its role. -->
+										<p class="mb-1 flex flex-wrap items-center gap-1.5 text-[10px] leading-none">
+											<span
+												class="rounded border border-[var(--dash-border)] px-1 py-0.5 font-medium tracking-wide text-[var(--dash-text-secondary)] uppercase"
+											>
+												{overrideEntityLabel(row.entityType)}
+											</span>
+											{#if row.context}
+												<span class="truncate text-[var(--dash-text-secondary)]">{row.context}</span
+												>
+											{/if}
+										</p>
 										<p class="text-xs text-[var(--dash-text)]">{clip(row.label)}</p>
 										{#if row.reason}
 											<p class="mt-0.5 text-[10px] text-[var(--dash-text-secondary)]">

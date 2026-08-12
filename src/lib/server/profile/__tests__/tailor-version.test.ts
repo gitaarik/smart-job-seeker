@@ -12,7 +12,7 @@ vi.mock('$lib/server/documents/content-retrieval', () => ({
 	scoreUnitAgainstQuery: vi.fn(() => 0)
 }));
 
-import { applyModelOpinions, refFor, shortlistFor } from '../tailor-version';
+import { applyModelOpinions, buildCandidates, refFor, shortlistFor } from '../tailor-version';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import type { Candidate, Decision } from '$lib/tailoring';
 
@@ -135,5 +135,69 @@ describe('shortlistFor', () => {
 	it('flattens whitespace so one candidate is one line', () => {
 		const messy = bullet(1, 0.9, { label: 'first line\n\tsecond   line' });
 		expect(shortlistFor([messy], [], FLOOR).split('\n')).toHaveLength(1);
+	});
+});
+
+describe('buildCandidates: skills', () => {
+	type Skill = { id: number; name: string; tags?: string[] | null };
+	const profileWith = (
+		categories: Array<{ id: number; tags?: string[] | null; skills: Skill[] }>
+	) =>
+		({
+			profile_versions: [{ id: 1, slug: 'base', extension_links: [], toggles: [], overrides: [] }],
+			work_experiences: [],
+			side_projects: [],
+			tech_skill_categories: categories.map((c) => ({
+				id: c.id,
+				tags: c.tags ?? null,
+				tech_skills: c.skills.map((s) => ({ ...s, tags: s.tags ?? null }))
+			}))
+		}) as unknown as Parameters<typeof buildCandidates>[0];
+
+	const skills = (profile: Parameters<typeof buildCandidates>[0]) =>
+		buildCandidates(profile, 'resume', 'base', ['Python']).filter(
+			(c) => c.entityType === OVERRIDE_ENTITIES.skill
+		);
+
+	it('reads visibility by name, not by row', () => {
+		// The same skill in two categories — one per version — is a real shape,
+		// and a reader sees the word, not which row printed it. Asking per row
+		// produced "now showing: Python" on a document already printing Python.
+		const found = skills(
+			profileWith([
+				{ id: 1, skills: [{ id: 10, name: 'Python' }] },
+				{ id: 2, tags: ['other-version'], skills: [{ id: 20, name: 'Python' }] }
+			])
+		);
+		expect(found).toHaveLength(1);
+		expect(found[0].visible).toBe(true);
+	});
+
+	it('says nothing about a skill only an invisible category holds', () => {
+		// Including it would print nothing: the category is filtered first.
+		expect(
+			skills(
+				profileWith([{ id: 2, tags: ['other-version'], skills: [{ id: 20, name: 'Python' }] }])
+			)
+		).toEqual([]);
+	});
+
+	it('still pins a held-back skill its category would print', () => {
+		const found = skills(
+			profileWith([{ id: 1, skills: [{ id: 10, name: 'Python', tags: ['!resume', '!cv'] }] }])
+		);
+		expect(found).toHaveLength(1);
+		expect(found[0]).toMatchObject({ entityId: 10, visible: false, pinned: true });
+	});
+
+	it('pins one row per name, not one per copy', () => {
+		const found = skills(
+			profileWith([
+				{ id: 1, skills: [{ id: 10, name: 'Python', tags: ['!resume', '!cv'] }] },
+				{ id: 2, skills: [{ id: 20, name: 'python', tags: ['!resume', '!cv'] }] }
+			])
+		);
+		expect(found).toHaveLength(1);
+		expect(found[0].visible).toBe(false);
 	});
 });
