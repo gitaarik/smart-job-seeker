@@ -56,7 +56,8 @@
 		suggestedBaseSlug,
 		profileSlug,
 		hasJob,
-		recordedHere
+		recordedHere,
+		degradedRanking = false
 	}: {
 		tailored: { id: number; slug: string; name: string; baseSlug?: string | null } | null;
 		decisions: Decision[];
@@ -69,6 +70,12 @@
 		hasJob: boolean;
 		/** Whether the send-record names this version — deleting it clears that. */
 		recordedHere: boolean;
+		/**
+		 * Whether the run that just finished had to rank by keyword overlap.
+		 * Shown only right after generating, which is the moment it can be acted
+		 * on: the decisions are already stored and read the same either way.
+		 */
+		degradedRanking?: boolean;
 	} = $props();
 
 	// Follows the suggestion until the applicant overrides it — a plain
@@ -265,6 +272,20 @@
 					>
 						Cancel
 					</button>
+				</div>
+			{/if}
+
+			{#if degradedRanking}
+				<!-- The embedding service was unreachable, so relevance came from word
+				     overlap — much weaker here, since a bullet about migrating a
+				     monolith does not lexically resemble "platform engineering". It
+				     happened once in thirteen runs and produced a visibly worse
+				     document with nothing anywhere to say why. -->
+				<div class="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+					<p class="text-xs text-[var(--dash-text)]">
+						This run ranked by word overlap — the embedding service didn't answer. The result is
+						weaker than usual; regenerating will try again.
+					</p>
 				</div>
 			{/if}
 

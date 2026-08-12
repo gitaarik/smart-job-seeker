@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import type { ActionData, PageData } from './$types';
 	import { recommendVersion } from '$lib/version-coverage';
 	import CvSentCard from './CvSentCard.svelte';
 	import TailoredVersionCard from './TailoredVersionCard.svelte';
@@ -14,7 +14,7 @@
 	 * match read, and the relevance scoring behind the exclusion warnings were
 	 * all being computed to read a note.
 	 */
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let app = $derived(data.application);
 	// Narrowed rather than `as any` (which the Overview's copy of this line still
@@ -61,6 +61,7 @@
 		{suggestedBaseSlug}
 		{profileSlug}
 		hasJob={!!app.job}
+		degradedRanking={form && 'tailored' in form ? form.tailored?.ranker === 'lexical' : false}
 		recordedHere={!!data.tailored && app.cv_version_sent === data.tailored.slug}
 	/>
 </div>
