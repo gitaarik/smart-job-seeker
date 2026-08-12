@@ -40,8 +40,11 @@ import {
 	chooseBudget,
 	DEFAULT_SELECTION,
 	DROPPABLE_ENTITIES,
+	FIT_ATTEMPTS,
+	PAGE_BUDGETS,
 	selectForJob,
 	surfaceBar,
+	tightenBudget,
 	type Candidate,
 	type Decision
 } from '$lib/tailoring';
@@ -58,6 +61,7 @@ import {
 	type ContentUnit
 } from '$lib/server/documents/content-embeddings';
 import { scoreUnitAgainstQuery } from '$lib/server/documents/content-retrieval';
+import { countVersionPages } from '$lib/server/profile/page-fit';
 import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
 import { config } from '$lib/server/config';
 
@@ -76,6 +80,10 @@ export interface TailorResult {
 	ranker: 'semantic' | 'lexical';
 	/** Whether the model reviewed the shortlist, or the run stayed deterministic. */
 	modelReviewed: boolean;
+	/** Pages this document was aimed at — see chooseBudget. */
+	targetPages: number;
+	/** Pages it actually renders to, or null when the renderer couldn't answer. */
+	pages: number | null;
 }
 
 type ProfileRow = NonNullable<Awaited<ReturnType<typeof getProfileByIdentifier>>>;
@@ -525,8 +533,13 @@ export async function tailorVersionForApplication(opts: {
 			? `kept for your ${otherLabel} only, but it outranks half of what this ${docLabel} shows`
 			: `hidden on the version this builds on, and more relevant to this job than half of what it shows`;
 	// One page or two, decided by how much this applicant has rather than by a
-	// setting they would have to understand.
+	// setting they would have to understand. The fit pass below then holds the
+	// document to it by rendering, which is the only thing that actually knows.
 	const budgetChars = chooseBudget(candidates);
+	const targetPages = budgetChars === PAGE_BUDGETS.one ? 1 : 2;
+	// Whatever the last selection ran against — the model adjusts scores, and
+	// re-selecting for the page has to see the same field it did.
+	let selectionCandidates = candidates;
 	const deterministic = selectForJob(candidates, {
 		floor,
 		...DEFAULT_SELECTION,
@@ -573,6 +586,7 @@ export async function tailorVersionForApplication(opts: {
 					floor
 				);
 				modelReasons = applied.reasons;
+				selectionCandidates = applied.candidates;
 				// Re-run the same selector: the model changed scores, not rules.
 				decisions = selectForJob(applied.candidates, {
 					floor,
@@ -611,15 +625,99 @@ export async function tailorVersionForApplication(opts: {
 		where: eq(profile_versions.id, versionId),
 		columns: { slug: true, name: true }
 	});
+	const versionSlug = version?.slug ?? tailoredSlugFor(applicationId);
+
+	// ── Fit ──
+	//
+	// The budget is characters and the target is pages, and the exchange rate
+	// between them is the template's own height, which differs per applicant:
+	// one page held 1,150 characters of this profile's prose and 741 of
+	// another's. So the document is rendered and counted, and if it overshoots,
+	// selected again against a tighter budget.
+	//
+	// A run that never reaches the target puts back the FULLEST selection it
+	// made. Half a career removed in pursuit of a page it was never going to
+	// reach is the worst of both, and it is the outcome measuring replaced.
+	const fitted = await fitToPages({
+		profileId,
+		versionId,
+		versionSlug,
+		docType,
+		targetPages,
+		budgetChars,
+		fallback: targetPages === 1 ? { targetPages: 2, budgetChars: PAGE_BUDGETS.two } : null,
+		select: (budget) =>
+			selectForJob(selectionCandidates, {
+				floor,
+				...DEFAULT_SELECTION,
+				budgetChars: budget,
+				pinnedReason,
+				surfacedReason,
+				groupDropReason
+			})
+	});
 
 	return {
 		versionId,
-		versionSlug: version?.slug ?? tailoredSlugFor(applicationId),
+		versionSlug,
 		versionName: version?.name ?? 'Tailored version',
-		decisions,
+		decisions: fitted.decisions ?? decisions,
 		ranker,
-		modelReviewed
+		modelReviewed,
+		targetPages: fitted.targetPages,
+		pages: fitted.pages
 	};
+}
+
+/**
+ * Re-select and re-render until the version fits its page target.
+ *
+ * A run that cannot reach the target falls back to the LARGER one and selects
+ * again for it — not to its own first attempt, which was already trimmed for a
+ * page it never reached. Half a career removed in pursuit of a page that stayed
+ * two is the worst of both, and it is the outcome measuring was meant to end.
+ *
+ * Returns the decisions left in place, the page count reached, and the target
+ * it settled on. A null count means the renderer could not answer; the first
+ * selection stands, which is what happened before any of this existed.
+ */
+async function fitToPages(opts: {
+	profileId: number;
+	versionId: number;
+	versionSlug: string;
+	docType: string;
+	targetPages: number;
+	budgetChars: number;
+	/** The roomier target to settle for. Null when already at the roomiest. */
+	fallback: { targetPages: number; budgetChars: number } | null;
+	select: (budget: number) => Decision[];
+}): Promise<{ decisions: Decision[] | null; pages: number | null; targetPages: number }> {
+	const { profileId, versionId, versionSlug, docType, targetPages } = opts;
+	const count = () => countVersionPages(profileId, versionSlug, docType);
+
+	let budget = opts.budgetChars;
+	let pages = await count();
+
+	for (
+		let attempt = 1;
+		attempt < FIT_ATTEMPTS && pages !== null && pages > targetPages;
+		attempt++
+	) {
+		budget = tightenBudget(budget, pages, targetPages);
+		const tighter = opts.select(budget);
+		await persistDecisions(versionId, tighter);
+		pages = await count();
+		if (pages !== null && pages <= targetPages) {
+			return { decisions: tighter, pages, targetPages };
+		}
+	}
+
+	if (pages !== null && pages > targetPages && opts.fallback) {
+		const full = opts.select(opts.fallback.budgetChars);
+		await persistDecisions(versionId, full);
+		return { decisions: full, pages: await count(), targetPages: opts.fallback.targetPages };
+	}
+	return { decisions: null, pages, targetPages };
 }
 
 /**

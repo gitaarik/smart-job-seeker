@@ -133,15 +133,42 @@ export interface SelectionOptions {
 export const PAGE_BUDGETS = { one: 1156, two: 3400 };
 
 /**
- * How far over a page target the content may sit and still be trimmed to it.
+ * How far over a page target the content may sit and still be aimed at it.
  *
- * A quarter is two or three bullets on the one-page target — a trim, not a
- * rewrite. Past that, aiming at one page means dropping most of a career to
- * hit a number: this profile carries 3,502 chars, and asking for one page threw
- * away two thirds of it and STILL came out on two pages, because at that size
- * the leftover height is the template's own.
+ * Generous, because missing is cheap now: the fit pass renders the result, and
+ * a target it cannot reach falls back to the roomier one and selects again for
+ * that. So an optimistic aim costs a few seconds of rendering rather than a
+ * gutted document, and the renderer settles what a character count only ever
+ * guessed at.
+ *
+ * Twice over is still a refusal, and a deliberate one: this profile carries
+ * 3,502 characters of prose, and one page would have meant dropping two thirds
+ * of it — the answer its owner gave when asked was that one page is not worth
+ * that. Past this the aim is two pages and the trim only has to fit them.
  */
-const BUDGET_SLACK = 1.25;
+const BUDGET_SLACK = 2;
+
+/**
+ * How many times to re-select and re-render when a document overshoots its page
+ * target, and how hard to tighten each time.
+ *
+ * Each attempt costs a browser render, so this is a budget in seconds as much
+ * as in characters. Three is enough to cross a page boundary from either side
+ * without turning a click into a minute.
+ */
+export const FIT_ATTEMPTS = 3;
+
+/**
+ * The next budget to try when the document came out too long.
+ *
+ * Aggressive on purpose. Halving the prose does not halve the pages — the
+ * template's fixed height goes nowhere — so scaling by the page ratio
+ * undershoots every time and wastes an attempt.
+ */
+export function tightenBudget(budget: number, pages: number, targetPages: number): number {
+	const ratio = targetPages / Math.max(pages, targetPages + 1);
+	return Math.max(1, Math.round(budget * ratio * 0.8));
+}
 
 /**
  * The smallest page target this document is already close to.

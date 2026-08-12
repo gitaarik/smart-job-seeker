@@ -3,6 +3,7 @@ import {
 	chooseBudget,
 	DEFAULT_SELECTION,
 	PAGE_BUDGETS,
+	tightenBudget,
 	selectForJob,
 	surfaceBar,
 	type Candidate
@@ -397,11 +398,17 @@ describe('chooseBudget', () => {
 		expect(chooseBudget([chars(Math.round(PAGE_BUDGETS.one * 1.2))])).toBe(PAGE_BUDGETS.one);
 	});
 
+	it('aims optimistically, because missing is only a few seconds', () => {
+		// The fit pass renders the result and falls back to the roomier target
+		// when it misses, so half again over is still worth a try.
+		expect(chooseBudget([chars(Math.round(PAGE_BUDGETS.one * 1.5))])).toBe(PAGE_BUDGETS.one);
+	});
+
 	it('gives up on one page rather than gut a full career', () => {
-		// 3,502 chars is this profile. Asking for one page threw away two thirds
-		// of it and still came out on two pages.
+		// 3,502 chars is this profile. One page would have meant dropping two
+		// thirds of it, and its owner's answer was that it is not worth that.
 		expect(chooseBudget([chars(3502)])).toBe(PAGE_BUDGETS.two);
-		expect(chooseBudget([chars(Math.round(PAGE_BUDGETS.one * 1.5))])).toBe(PAGE_BUDGETS.two);
+		expect(chooseBudget([chars(Math.round(PAGE_BUDGETS.one * 2.1))])).toBe(PAGE_BUDGETS.two);
 	});
 
 	it('measures what would print, not what exists', () => {
@@ -426,5 +433,30 @@ describe('chooseBudget', () => {
 
 	it('falls back to the largest target when nothing fits', () => {
 		expect(chooseBudget([chars(50_000)])).toBe(PAGE_BUDGETS.two);
+	});
+});
+
+describe('tightenBudget', () => {
+	it('cuts harder than the page ratio', () => {
+		// Halving the prose does not halve the pages — the template's fixed height
+		// goes nowhere — so scaling by 1/2 undershoots and wastes an attempt.
+		expect(tightenBudget(3400, 2, 1)).toBeLessThan(1700);
+	});
+
+	it('converges rather than creeping', () => {
+		let budget = PAGE_BUDGETS.two;
+		const seen = [budget];
+		for (let i = 0; i < 3; i++) {
+			budget = tightenBudget(budget, 2, 1);
+			seen.push(budget);
+		}
+		// Strictly decreasing, and inside one page's worth within three tries.
+		expect(seen.every((b, i) => i === 0 || b < seen[i - 1])).toBe(true);
+		expect(budget).toBeLessThan(PAGE_BUDGETS.one);
+	});
+
+	it('never returns a budget that would empty the document', () => {
+		expect(tightenBudget(1, 9, 1)).toBeGreaterThan(0);
+		expect(tightenBudget(1156, 5, 2)).toBeGreaterThan(0);
 	});
 });
