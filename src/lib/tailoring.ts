@@ -58,11 +58,17 @@ export interface Candidate {
 	 */
 	parentVisible?: boolean;
 	/**
-	 * Whether adding it back would go against a base-template rule rather than a
-	 * version tag — "CV only, not on my resume". False means hands off: that is a
-	 * decision about the document type, which no single job revisits.
+	 * Whether a base-template tag holds it off this document — "CV only, not on
+	 * my resume" — rather than a version tag.
+	 *
+	 * Not a veto. That tag usually means "too much detail for a short document",
+	 * which is a judgement about focus, and focus is precisely what a targeted
+	 * resume revisits: an item that outranks half of what this one prints has
+	 * earned the space, and something weaker loses it to the page budget. It is
+	 * carried so the decision can SAY where the item came from, because that is
+	 * the one a reader will want to check.
 	 */
-	surfaceable?: boolean;
+	templateHeldBack?: boolean;
 	/**
 	 * Must appear: a skill this job requires that the applicant has. Pinned
 	 * candidates are included whatever their relevance score says.
@@ -198,12 +204,7 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	for (const candidate of candidates
 		.filter(
 			(c) =>
-				!c.visible &&
-				!c.pinned &&
-				isDroppable(c) &&
-				c.parentVisible !== false &&
-				c.surfaceable !== false &&
-				c.score >= bar
+				!c.visible && !c.pinned && isDroppable(c) && c.parentVisible !== false && c.score >= bar
 		)
 		.sort((a, z) => z.score - a.score)
 		.slice(0, MAX_SURFACED)) {

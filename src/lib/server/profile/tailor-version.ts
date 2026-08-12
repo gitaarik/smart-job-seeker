@@ -159,7 +159,7 @@ export function buildCandidates(
 				// A bullet on a role the document doesn't print isn't printed either.
 				visible: visibleRoles.has(role.id) && visibleAchievements.has(achievement.id),
 				parentVisible: visibleRoles.has(role.id),
-				surfaceable: !heldBackByTemplate(asStringArray(achievement.tags), docType),
+				templateHeldBack: heldBackByTemplate(asStringArray(achievement.tags), docType),
 				pinned: false,
 				score: 0
 			});
@@ -179,7 +179,7 @@ export function buildCandidates(
 			chars: (text(project.name) + summary).length,
 			visible: visibleProjects.has(project.id),
 			parentVisible: true,
-			surfaceable: !heldBackByTemplate(asStringArray(project.tags), docType),
+			templateHeldBack: heldBackByTemplate(asStringArray(project.tags), docType),
 			pinned: false,
 			score: 0
 		});
@@ -469,8 +469,12 @@ export async function tailorVersionForApplication(opts: {
 		c.carriedBy
 			? `this job requires ${c.label} — “${c.carriedBy}” already carries the word`
 			: `this job requires ${c.label}`;
-	const surfacedReason = () =>
-		'hidden on the version this builds on, and more relevant to this job than half of what it shows';
+	const docLabel = docType === 'cv' ? 'CV' : 'resume';
+	const otherLabel = docType === 'cv' ? 'resume' : 'CV';
+	const surfacedReason = (c: Candidate) =>
+		c.templateHeldBack
+			? `kept for your ${otherLabel} only, but it outranks half of what this ${docLabel} shows`
+			: `hidden on the version this builds on, and more relevant to this job than half of what it shows`;
 	const deterministic = selectForJob(candidates, {
 		floor,
 		...DEFAULT_SELECTION,

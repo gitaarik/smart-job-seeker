@@ -243,6 +243,23 @@ describe('surfacing hidden evidence', () => {
 		expect(decisions.some((d) => d.entityId === 9)).toBe(false);
 	});
 
+	it('lets a CV-only item earn a place on a targeted resume', () => {
+		// The tag means "too much detail for a short document" — a judgement about
+		// focus, which is the one a targeted resume is entitled to revisit. It
+		// still has to outrank half the page, and the budget still charges
+		// something weaker for the space.
+		const decisions = selectForJob(
+			[
+				bullet(1, 10, 0.2),
+				bullet(2, 10, 0.3),
+				bullet(3, 10, 0.4),
+				hidden(9, 0.9, { templateHeldBack: true })
+			],
+			OPTS
+		);
+		expect(decisions).toContainEqual(expect.objectContaining({ entityId: 9, action: 'include' }));
+	});
+
 	it('surfaces the best few rather than everything above the bar', () => {
 		const decisions = selectForJob(
 			[
