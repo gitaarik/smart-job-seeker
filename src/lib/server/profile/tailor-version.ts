@@ -26,6 +26,7 @@ import {
 	profile_version_extensions,
 	profile_version_overrides,
 	profile_versions,
+	profiles,
 	side_projects,
 	tech_skills,
 	work_experience_achievements,
@@ -434,7 +435,17 @@ export async function tailorVersionForApplication(opts: {
 		skills: querySkills
 	};
 
-	const built = buildCandidates(profile, docType, baseSlug, requiredSkills);
+	// An empty base means "your plain resume", and for a profile with a public
+	// version that is not a document at all: /p/[slug]/resume serves the public
+	// version, the PDF export is keyed by slug, and every item tagged onto a
+	// version — four side projects here — silently stops printing. A tailored
+	// version built on it is a document nobody can send, and the only sign is
+	// content quietly missing. Several paths can arrive here with '' (the "tailor
+	// from this one" button while nothing is picked, a regenerate that inherited
+	// a version with no extension), so the fallback lives at the bottom where
+	// they all pass rather than at each of them.
+	const effectiveBase = baseSlug || (await defaultBaseSlug(profileId, docType));
+	const built = buildCandidates(profile, docType, effectiveBase, requiredSkills);
 	const { candidates, ranker, floor } = await scoreCandidates(profileId, built, query);
 
 	// The reason carries the counter-argument when there is one: a keyword search
@@ -516,7 +527,7 @@ export async function tailorVersionForApplication(opts: {
 	const versionId = await upsertTailoredVersion({
 		profileId,
 		applicationId,
-		baseSlug,
+		baseSlug: effectiveBase,
 		jobTitle: text(job.title),
 		company: text(job.company)
 	});
@@ -535,6 +546,30 @@ export async function tailorVersionForApplication(opts: {
 		ranker,
 		modelReviewed
 	};
+}
+
+/**
+ * What this profile sends when nobody names a version — the only sensible thing
+ * to build a tailored version ON.
+ *
+ * Empty when the profile has no public version for that template, which is the
+ * one case where the plain document really is the base: there is nothing else,
+ * and no version tags for it to ignore.
+ */
+async function defaultBaseSlug(profileId: number, docType: string): Promise<string> {
+	const profile = await db.query.profiles.findFirst({
+		where: eq(profiles.id, profileId),
+		columns: { public_resume_version_id: true, public_cv_version_id: true }
+	});
+	const versionId =
+		docType === 'cv' ? profile?.public_cv_version_id : profile?.public_resume_version_id;
+	if (!versionId) return '';
+
+	const version = await db.query.profile_versions.findFirst({
+		where: and(eq(profile_versions.id, versionId), eq(profile_versions.profile_id, profileId)),
+		columns: { slug: true }
+	});
+	return version?.slug ?? '';
 }
 
 /** Create the application's version, or reuse the one it already has. */

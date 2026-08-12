@@ -76,6 +76,7 @@
 	// then ignore a re-ranked suggestion after the page invalidates.
 	let chosenBase = $state<string | null>(null);
 	let baseSlug = $derived(chosenBase ?? tailored?.baseSlug ?? suggestedBaseSlug);
+	let baseName = $derived(versions.find((v) => v.slug === tailored?.baseSlug)?.name ?? '');
 	let working = $state(false);
 	/**
 	 * Deleting destroys a generated version and every decision on it, and the
@@ -162,11 +163,20 @@
 			</form>
 		{:else}
 			<div class="flex flex-wrap items-center justify-between gap-2">
-				<div>
+				<div class="min-w-0">
 					<p class="text-sm font-medium text-[var(--dash-text)]">{tailored.name}</p>
+					<!-- Name the base. "Against the version it builds on" was true and
+					     useless: a version built on the plain document shows none of
+					     the applicant's version tags — four side projects vanished
+					     here — and nothing on the page said which document the diff
+					     was a diff against. -->
 					<p class="text-[10px] text-[var(--dash-text-secondary)]">
 						{decisions.length}
-						{decisions.length === 1 ? 'change' : 'changes'} against the version it builds on.
+						{decisions.length === 1 ? 'change' : 'changes'} against
+						{#if baseName}<strong class="font-medium">{baseName}</strong>{:else}your plain {docType ===
+							'cv'
+								? 'CV'
+								: 'resume'}{/if}.
 					</p>
 				</div>
 				<div class="flex items-center gap-3">
@@ -255,6 +265,22 @@
 					>
 						Cancel
 					</button>
+				</div>
+			{/if}
+
+			{#if !tailored.baseSlug}
+				<!-- Not a warning about taste: the plain document ignores every
+				     version tag, so this one is missing whatever the applicant put
+				     on a version, and it is not the document a public profile
+				     serves either. Regenerating from a real version fixes it. -->
+				<div class="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+					<p class="text-xs text-[var(--dash-text)]">
+						This was built on your plain {docType === 'cv' ? 'CV' : 'resume'}, so none of your
+						version tags apply — anything you put on a specific version won't print here.
+					</p>
+					<p class="mt-1 text-[10px] text-[var(--dash-text-secondary)]">
+						Pick a version under “Start from” below and regenerate.
+					</p>
 				</div>
 			{/if}
 

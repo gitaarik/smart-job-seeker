@@ -21,6 +21,23 @@ import {
 	tailorVersionForApplication
 } from '$lib/server/profile/tailor-version';
 import { isOverrideEntity } from '$lib/version-overrides';
+import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
+
+/**
+ * Keep the tailored version's PDF in step with its decisions.
+ *
+ * `/p/[slug]/resume.pdf` serves a stored export and renders nothing on demand,
+ * so a version nobody ever exported 404s — which is what the PDF link on this
+ * page did from the day it was added. Fire-and-forget, like every other caller:
+ * a failed render leaves the previous file, and the link is a convenience, not
+ * the save path.
+ */
+function refreshPdfs(profileId: number, slug: string | null | undefined): void {
+	if (!slug) return;
+	generateVersionPdfs(profileId, slug).catch((err) =>
+		console.error('[tailor-version] PDF refresh failed for', slug, err)
+	);
+}
 
 /**
  * The version list and the coverage map feed CvSentCard, which moved here from
@@ -186,6 +203,7 @@ export const actions: Actions = {
 				docType,
 				baseSlug
 			});
+			refreshPdfs(profileId, result.versionSlug);
 			return { success: true, tailored: result };
 		} catch (error) {
 			return fail(400, {
@@ -218,7 +236,7 @@ export const actions: Actions = {
 				eq(profile_versions.profile_id, profileId),
 				eq(profile_versions.application_id, appId)
 			),
-			columns: { id: true }
+			columns: { id: true, slug: true }
 		});
 		if (!version) return fail(404, { error: 'No tailored version for this application' });
 
@@ -230,6 +248,7 @@ export const actions: Actions = {
 					eq(profile_version_overrides.version_id, version.id)
 				)
 			);
+		refreshPdfs(profileId, version.slug);
 		return { success: true };
 	},
 
@@ -255,7 +274,7 @@ export const actions: Actions = {
 				eq(profile_versions.profile_id, profileId),
 				eq(profile_versions.application_id, appId)
 			),
-			columns: { id: true }
+			columns: { id: true, slug: true }
 		});
 		if (!version) return fail(404, { error: 'No tailored version for this application' });
 
@@ -294,6 +313,9 @@ export const actions: Actions = {
 
 		try {
 			const promoted = await promoteToLibrary({ profileId, applicationId: appId, name });
+			// The slug changes here, and exports are keyed by it — without this a
+			// promoted version has no PDF under the name it now goes by.
+			refreshPdfs(profileId, promoted.slug);
 			return { success: true, promoted };
 		} catch (error) {
 			return fail(400, {
@@ -331,7 +353,7 @@ export const actions: Actions = {
 				eq(profile_versions.profile_id, profileId),
 				eq(profile_versions.application_id, appId)
 			),
-			columns: { id: true }
+			columns: { id: true, slug: true }
 		});
 		if (!version) return fail(404, { error: 'No tailored version for this application' });
 
@@ -363,6 +385,7 @@ export const actions: Actions = {
 				}
 			});
 
+		refreshPdfs(profileId, version.slug);
 		return { success: true };
 	},
 
