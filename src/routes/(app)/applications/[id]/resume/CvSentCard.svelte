@@ -11,6 +11,7 @@
 		faFileAlt,
 		faFilePdf,
 		faLightbulb,
+		faPen,
 		faPlus,
 		faMagnifyingGlass,
 		faSave,
@@ -86,6 +87,24 @@
 	let cvSaved = $state(false);
 	let docType = $state<string>(app.cv_sent_through || 'resume');
 	let versionSlug = $state<string>(app.cv_version_sent || '');
+
+	/**
+	 * Once something is recorded, the pickers collapse to a statement of it.
+	 *
+	 * A dropdown is a question, and leaving one on screen next to an answer asks
+	 * it again on every visit — the card read as "which version?" when the page
+	 * already knew, and nothing distinguished the version being sent from the
+	 * one merely sitting in a select. Changing it is a deliberate act now, which
+	 * is also what it is: the record says what you sent somebody.
+	 */
+	let recorded = $derived(!!app.cv_sent_through);
+	let editing = $state(false);
+
+	function cancelEdit() {
+		docType = app.cv_sent_through || 'resume';
+		versionSlug = app.cv_version_sent || '';
+		editing = false;
+	}
 
 	/**
 	 * Whether either picker has been touched this visit. The pickers default to
@@ -288,6 +307,7 @@
 		}) => {
 			await update();
 			if (result.type === 'success') {
+				editing = false;
 				cvSaved = true;
 				setTimeout(() => {
 					cvSaved = false;
@@ -307,73 +327,145 @@
 		<p class="mb-4 text-xs text-[var(--dash-text-secondary)]">
 			Pick the version that fits this job, see what it leaves out, and record what you sent.
 		</p>
-		<form method="POST" action="?/setCvSent" use:enhance={handleCvSubmit}>
-			<!-- Document type segmented control -->
-			<input type="hidden" name="cv_sent_through" value={docType} />
-			<div class="mb-3 inline-flex overflow-hidden rounded-lg border border-[var(--dash-border)]">
-				{#each [{ value: 'resume', label: 'Resume' }, { value: 'cv', label: 'CV' }] as opt, i}
+		{#if recorded && !editing}
+			<!-- The answer, not the question. Open and PDF live here rather than in
+			     a footer below the warnings: they act on this document, and putting
+			     them beside its name is what makes the row read as a record. -->
+			<div
+				class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-3"
+			>
+				<div class="min-w-0">
+					<p
+						class="text-[10px] font-semibold tracking-wide text-[var(--dash-text-secondary)] uppercase"
+					>
+						Sending
+					</p>
+					<p class="truncate text-sm font-medium text-[var(--dash-text)]">
+						{recordedLabel}<span class="font-normal text-[var(--dash-text-secondary)]">
+							· {app.cv_sent_through === 'cv' ? 'CV' : 'Resume'}</span
+						>
+					</p>
+				</div>
+				<div class="flex shrink-0 flex-wrap items-center gap-3">
+					{#if app.cv_version_sent && app.cv_sent_through && profileSlug}
+						{@const dt = app.cv_sent_through as DocType}
+						<!-- eslint-disable svelte/no-navigation-without-resolve -->
+						<a
+							href={profileDocUrl({ profileSlug, docType: dt, versionSlug: app.cv_version_sent })}
+							target="_blank"
+							rel="noopener"
+							class="dash-link-ext"
+						>
+							<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3" />
+							Open
+						</a>
+						<a
+							href={profileDocUrl({
+								profileSlug,
+								docType: dt,
+								versionSlug: app.cv_version_sent,
+								pdf: true
+							})}
+							target="_blank"
+							rel="noopener"
+							class="dash-link-ext"
+						>
+							<FontAwesomeIcon icon={faFilePdf} class="h-3 w-3" />
+							PDF
+						</a>
+						<!-- eslint-enable svelte/no-navigation-without-resolve -->
+					{/if}
 					<button
 						type="button"
-						onclick={() => {
-							docType = opt.value;
-							touched = true;
-						}}
-						class="px-3 py-1.5 text-sm transition-colors {docType === opt.value
-							? 'bg-[var(--dash-primary)]/10 font-medium text-[var(--dash-primary)]'
-							: 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0
-							? 'border-l border-[var(--dash-border)]'
-							: ''}"
+						onclick={() => (editing = true)}
+						class="inline-flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)]/60 hover:text-[var(--dash-primary)]"
 					>
-						{opt.label}
+						<FontAwesomeIcon icon={faPen} class="h-3 w-3" />
+						Change
 					</button>
-				{/each}
+				</div>
 			</div>
-
-			<!-- Version selector -->
-			<div class="flex flex-col gap-2 sm:flex-row">
-				<select
-					name="version_slug"
-					bind:value={versionSlug}
-					onchange={() => (touched = true)}
-					class="flex-1 rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-				>
-					<option value="">Select</option>
-					{#each versions as v}
-						<option value={v.slug}>
-							{v.name}
-						</option>
+			{#if cvSaved}
+				<p class="mt-2 flex items-center gap-1.5 text-[10px] text-[var(--dash-success)]">
+					<FontAwesomeIcon icon={faCheck} class="h-2.5 w-2.5" />
+					Saved
+				</p>
+			{/if}
+		{:else}
+			<form method="POST" action="?/setCvSent" use:enhance={handleCvSubmit}>
+				<!-- Document type segmented control -->
+				<input type="hidden" name="cv_sent_through" value={docType} />
+				<div class="mb-3 inline-flex overflow-hidden rounded-lg border border-[var(--dash-border)]">
+					{#each [{ value: 'resume', label: 'Resume' }, { value: 'cv', label: 'CV' }] as opt, i}
+						<button
+							type="button"
+							onclick={() => {
+								docType = opt.value;
+								touched = true;
+							}}
+							class="px-3 py-1.5 text-sm transition-colors {docType === opt.value
+								? 'bg-[var(--dash-primary)]/10 font-medium text-[var(--dash-primary)]'
+								: 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0
+								? 'border-l border-[var(--dash-border)]'
+								: ''}"
+						>
+							{opt.label}
+						</button>
 					{/each}
-					{#if tailored}
-						<option value={tailored.slug}>{tailored.name} — tailored for this job</option>
-					{/if}
-				</select>
-				<button
-					type="submit"
-					class="flex items-center justify-center gap-2 rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
-				>
-					{#if cvSaved}
-						<FontAwesomeIcon icon={faCheck} class="h-3.5 w-3.5" />
-						Saved
-					{:else}
-						<FontAwesomeIcon icon={faSave} class="h-3.5 w-3.5" />
-						Set
-					{/if}
-				</button>
-				<!-- eslint-disable svelte/no-navigation-without-resolve -->
-				{#if previewUrl(versionSlug)}
-					<a
-						href={previewUrl(versionSlug)}
-						target="_blank"
-						rel="noopener"
-						class="flex items-center justify-center gap-1.5 rounded-lg border border-[var(--dash-border)] px-3 py-2 text-sm text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)]/60 hover:text-[var(--dash-primary)]"
+				</div>
+
+				<!-- Version selector -->
+				<div class="flex flex-col gap-2 sm:flex-row">
+					<select
+						name="version_slug"
+						bind:value={versionSlug}
+						onchange={() => (touched = true)}
+						class="flex-1 rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 					>
-						<FontAwesomeIcon icon={faEye} class="h-3.5 w-3.5" />
-						Preview
-					</a>
-				{/if}
-				<!-- eslint-enable svelte/no-navigation-without-resolve -->
-			</div>
-		</form>
+						<option value="">Select</option>
+						{#each versions as v}
+							<option value={v.slug}>
+								{v.name}
+							</option>
+						{/each}
+						{#if tailored}
+							<option value={tailored.slug}>{tailored.name} — tailored for this job</option>
+						{/if}
+					</select>
+					<!-- Confirmation belongs on the row that states the record, not on
+					     the button that leaves the screen when it succeeds. -->
+					<button
+						type="submit"
+						class="flex items-center justify-center gap-2 rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
+					>
+						<FontAwesomeIcon icon={faSave} class="h-3.5 w-3.5" />
+						{recorded ? 'Save' : 'Set'}
+					</button>
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
+					{#if previewUrl(versionSlug)}
+						<a
+							href={previewUrl(versionSlug)}
+							target="_blank"
+							rel="noopener"
+							class="flex items-center justify-center gap-1.5 rounded-lg border border-[var(--dash-border)] px-3 py-2 text-sm text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)]/60 hover:text-[var(--dash-primary)]"
+						>
+							<FontAwesomeIcon icon={faEye} class="h-3.5 w-3.5" />
+							Preview
+						</a>
+					{/if}
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
+					{#if recorded}
+						<button
+							type="button"
+							onclick={cancelEdit}
+							class="flex items-center justify-center rounded-lg px-3 py-2 text-sm text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-text)]"
+						>
+							Cancel
+						</button>
+					{/if}
+				</div>
+			</form>
+		{/if}
 
 		<!-- Evidence, not vocabulary. The strip above answers "does this document
 		     say the words this job asks for"; this one answers "does it show the
@@ -697,33 +789,6 @@
 				<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
 				Every skill this job requires now appears on the document you're sending.
 			</p>
-		{/if}
-
-		{#if app.cv_version_sent && app.cv_sent_through && profileSlug}
-			{@const dt = app.cv_sent_through as DocType}
-			<div class="mt-4 flex items-center gap-3 border-t border-[var(--dash-border)] pt-4">
-				<a
-					href={profileDocUrl({ profileSlug, docType: dt, versionSlug: app.cv_version_sent })}
-					target="_blank"
-					class="dash-link-ext"
-				>
-					<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3" />
-					Open {dt === 'cv' ? 'CV' : 'Resume'}
-				</a>
-				<a
-					href={profileDocUrl({
-						profileSlug,
-						docType: dt,
-						versionSlug: app.cv_version_sent,
-						pdf: true
-					})}
-					target="_blank"
-					class="dash-link-ext"
-				>
-					<FontAwesomeIcon icon={faFilePdf} class="h-3 w-3" />
-					PDF
-				</a>
-			</div>
 		{/if}
 	</Card>
 </div>
