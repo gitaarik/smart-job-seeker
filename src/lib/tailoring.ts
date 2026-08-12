@@ -120,29 +120,62 @@ export interface SelectionOptions {
 	groupDropReason?: (candidate: Candidate) => string;
 }
 
+/**
+ * What one and two A4 pages of the default template hold, measured rather than
+ * guessed: rendered and stripped until the PDF changed page count.
+ *
+ * One page is 7 bullets (824 chars) plus one side project (332), with two skill
+ * groups, education and the header taking the rest — and the skills block is
+ * expensive per GROUP rather than per skill, since four groups cut to a single
+ * skill each still ran to two pages. Re-measure with a browser if the
+ * template's spacing changes.
+ */
+export const PAGE_BUDGETS = { one: 1156, two: 3400 };
+
+/**
+ * How far over a page target the content may sit and still be trimmed to it.
+ *
+ * A quarter is two or three bullets on the one-page target — a trim, not a
+ * rewrite. Past that, aiming at one page means dropping most of a career to
+ * hit a number: this profile carries 3,502 chars, and asking for one page threw
+ * away two thirds of it and STILL came out on two pages, because at that size
+ * the leftover height is the template's own.
+ */
+const BUDGET_SLACK = 1.25;
+
+/**
+ * The smallest page target this document is already close to.
+ *
+ * One page is right for someone whose material nearly fits it and wrong for
+ * someone with fifteen years of it, so it is a property of the profile before
+ * it is a preference. Falls back to the largest target, which trims to fit
+ * rather than promising anything.
+ *
+ * It is a guess, and it errs towards two pages on purpose, because the thing
+ * that actually decides the page count is invisible from here: the fixed height
+ * of the template around the prose — role headers, the skills block, education.
+ * Checked against every profile on this instance, it sends three to one page
+ * and the rest to two. One of the three cannot reach one page at any budget
+ * (its two pages are all shell, with nothing removable), where the effect is
+ * nil rather than wrong; another needed to lose 55% of its prose to fit, which
+ * is what the slack exists to refuse.
+ *
+ * Knowing rather than guessing means rendering and counting pages, which needs
+ * a browser and a fitting loop.
+ */
+export function chooseBudget(candidates: Candidate[], budgets = PAGE_BUDGETS): number {
+	const printed = candidates
+		.filter((c) => (c.visible || c.pinned) && isDroppable(c))
+		.reduce((sum, c) => sum + c.chars, 0);
+	const targets = Object.values(budgets).sort((a, z) => a - z);
+	return targets.find((target) => printed <= target * BUDGET_SLACK) ?? targets[targets.length - 1];
+}
+
 export const DEFAULT_SELECTION: Pick<SelectionOptions, 'minPerParent' | 'budgetChars'> = {
 	minPerParent: 2,
-	/*
-	 * Two A4 pages of the default template — measured, and deliberately not one.
-	 *
-	 * One page was the goal. Rendered and stripped until the PDF became a single
-	 * page: it gets there at 7 bullets, 1 side project and 2 skill groups, and
-	 * the skills block is what decides — expensive per GROUP, not per skill,
-	 * since four groups cut to one skill each still ran to two pages.
-	 *
-	 * Both levers were then tried together — this at 1,156, the groups capped at
-	 * two — across thirteen real jobs. Two of the thirteen came out on one page.
-	 * The rest sat one or two lines over, because at seven bullets the document
-	 * is already at every floor it has and the remaining height is the
-	 * template's own: heading spacing, the blank lines after each project, the
-	 * negative margins correcting them. What that produced was seven-bullet
-	 * documents that were still two pages, which is worse than a full one.
-	 *
-	 * So one page is a template question, not a selection one, and this stays at
-	 * the value that fills the two pages the template renders. Re-measure with a
-	 * browser if that spacing changes.
-	 */
-	budgetChars: 3400
+	// The two-page target, and the default for anyone calling selectForJob
+	// directly. The tailoring picks between the two with chooseBudget.
+	budgetChars: PAGE_BUDGETS.two
 };
 
 /** How many items may be promoted within one group. Two lines, not twenty. */

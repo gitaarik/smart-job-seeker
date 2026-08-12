@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SELECTION, selectForJob, surfaceBar, type Candidate } from './tailoring';
+import {
+	chooseBudget,
+	DEFAULT_SELECTION,
+	PAGE_BUDGETS,
+	selectForJob,
+	surfaceBar,
+	type Candidate
+} from './tailoring';
 import { OVERRIDE_ENTITIES } from './version-overrides';
 
 function bullet(
@@ -377,5 +384,47 @@ describe('skill groups', () => {
 		expect(selectForJob(groups, { ...OPTS, budgetChars: 0 })).toEqual(
 			selectForJob(groups, { ...OPTS, budgetChars: 10_000 })
 		);
+	});
+});
+
+describe('chooseBudget', () => {
+	const chars = (total: number, over: Partial<Candidate> = {}) =>
+		bullet(1, 10, 0.5, { chars: total, ...over });
+
+	it('aims at one page when the material nearly fits it', () => {
+		expect(chooseBudget([chars(PAGE_BUDGETS.one)])).toBe(PAGE_BUDGETS.one);
+		// A quarter over is two or three bullets — a trim, not a rewrite.
+		expect(chooseBudget([chars(Math.round(PAGE_BUDGETS.one * 1.2))])).toBe(PAGE_BUDGETS.one);
+	});
+
+	it('gives up on one page rather than gut a full career', () => {
+		// 3,502 chars is this profile. Asking for one page threw away two thirds
+		// of it and still came out on two pages.
+		expect(chooseBudget([chars(3502)])).toBe(PAGE_BUDGETS.two);
+		expect(chooseBudget([chars(Math.round(PAGE_BUDGETS.one * 1.5))])).toBe(PAGE_BUDGETS.two);
+	});
+
+	it('measures what would print, not what exists', () => {
+		// A hidden bullet is not on the page and must not push the target out.
+		const hidden = chars(9_000, { visible: false });
+		expect(chooseBudget([chars(500), hidden])).toBe(PAGE_BUDGETS.one);
+	});
+
+	it('counts a skill toward nothing — it has no chars', () => {
+		const skill: Candidate = {
+			entityType: OVERRIDE_ENTITIES.skill,
+			entityId: 1,
+			parentId: null,
+			label: 'Python',
+			chars: 6,
+			visible: true,
+			pinned: true,
+			score: 1
+		};
+		expect(chooseBudget([chars(500), skill])).toBe(PAGE_BUDGETS.one);
+	});
+
+	it('falls back to the largest target when nothing fits', () => {
+		expect(chooseBudget([chars(50_000)])).toBe(PAGE_BUDGETS.two);
 	});
 });

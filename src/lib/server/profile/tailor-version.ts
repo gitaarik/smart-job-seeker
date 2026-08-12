@@ -37,6 +37,7 @@ import { getProfileByIdentifier } from '$lib/server/profile/default';
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
 import { isTailoredSlug, OVERRIDE_ENTITIES, tailoredSlugFor } from '$lib/version-overrides';
 import {
+	chooseBudget,
 	DEFAULT_SELECTION,
 	DROPPABLE_ENTITIES,
 	selectForJob,
@@ -523,9 +524,13 @@ export async function tailorVersionForApplication(opts: {
 		c.templateHeldBack
 			? `kept for your ${otherLabel} only, but it outranks half of what this ${docLabel} shows`
 			: `hidden on the version this builds on, and more relevant to this job than half of what it shows`;
+	// One page or two, decided by how much this applicant has rather than by a
+	// setting they would have to understand.
+	const budgetChars = chooseBudget(candidates);
 	const deterministic = selectForJob(candidates, {
 		floor,
 		...DEFAULT_SELECTION,
+		budgetChars,
 		pinnedReason,
 		surfacedReason,
 		groupDropReason
@@ -572,6 +577,7 @@ export async function tailorVersionForApplication(opts: {
 				decisions = selectForJob(applied.candidates, {
 					floor,
 					...DEFAULT_SELECTION,
+					budgetChars,
 					pinnedReason,
 					surfacedReason,
 					groupDropReason
