@@ -301,3 +301,56 @@ describe('surfaceBar', () => {
 		expect(surfaceBar([], 0.5)).toBe(0.5);
 	});
 });
+
+describe('skill groups', () => {
+	const group = (id: number, score: number, over: Partial<Candidate> = {}): Candidate => ({
+		entityType: OVERRIDE_ENTITIES.skillCategory,
+		entityId: id,
+		parentId: null,
+		label: `group ${id}: a, b, c`,
+		chars: 0,
+		visible: true,
+		pinned: false,
+		score,
+		...over
+	});
+
+	it('drops a group this job has no use for', () => {
+		const decisions = selectForJob(
+			[group(1, 0.9), group(2, 0.8), group(3, 0.7), group(4, 0.05)],
+			OPTS
+		);
+		expect(decisions).toEqual([
+			expect.objectContaining({
+				entityId: 4,
+				entityType: OVERRIDE_ENTITIES.skillCategory,
+				action: 'exclude'
+			})
+		]);
+	});
+
+	it('never drops a group holding a skill this job requires', () => {
+		// The filter reaches the category before the skills inside it, so this
+		// would take the required skill off the page with it.
+		const decisions = selectForJob(
+			[group(1, 0.9), group(2, 0.9), group(3, 0.01, { pinned: true })],
+			OPTS
+		);
+		expect(decisions).toEqual([]);
+	});
+
+	it('keeps a floor of groups, so the section cannot vanish', () => {
+		const decisions = selectForJob([group(1, 0.01), group(2, 0.01), group(3, 0.01)], OPTS);
+		expect(decisions.filter((d) => d.action === 'exclude')).toHaveLength(1);
+	});
+
+	it('does not spend the page budget on them', () => {
+		// Their chars are zero: a group costs a line either way, and counting it
+		// would silently re-tune how much prose survives.
+		const decisions = selectForJob([group(1, 0.9), group(2, 0.9), group(3, 0.9)], {
+			...OPTS,
+			budgetChars: 0
+		});
+		expect(decisions).toEqual([]);
+	});
+});

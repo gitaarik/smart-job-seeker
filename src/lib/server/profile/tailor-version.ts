@@ -28,6 +28,7 @@ import {
 	profile_versions,
 	profiles,
 	side_projects,
+	tech_skill_categories,
 	tech_skills,
 	work_experience_achievements,
 	work_experiences
@@ -218,6 +219,39 @@ export function buildCandidates(
 		}
 	}
 
+	// Skill CATEGORIES are droppable, and they are the only part of the document
+	// that was identical on every tailored version — a data role listing Vue,
+	// Shopify and Jinja among 59 skills. A category is the right grain for it:
+	// one reviewable line ("Frontend — 10 skills, none of them what this job
+	// asks for") rather than ten fiddly ones, which is the objection that kept
+	// skills include-only.
+	//
+	// The label doubles as the embedding text (see embedTextFor), so it lists
+	// what is actually in the group rather than just naming it.
+	for (const category of profile.tech_skill_categories ?? []) {
+		if (!visibleCategories.has(category.id)) continue;
+		const names = printedInCategory.get(category.id) ?? [];
+		if (names.length === 0) continue;
+		const holdsRequired = names.some((n) => required.has(n.toLowerCase()));
+		candidates.push({
+			entityType: OVERRIDE_ENTITIES.skillCategory,
+			entityId: category.id,
+			parentId: null,
+			label: `${text(category.name) || 'Skills'}: ${names.join(', ')}`,
+			// Deliberately zero. The skills block is a compact list, and the page
+			// budget is calibrated on prose; counting it would silently re-tune
+			// how much of the rest survives. A category goes for irrelevance, not
+			// for space.
+			chars: 0,
+			visible: true,
+			// A group holding a skill this job requires is not up for discussion —
+			// dropping it would take the required skill with it, since the filter
+			// reaches the category before the skills inside it.
+			pinned: holdsRequired,
+			score: holdsRequired ? 1 : 0
+		});
+	}
+
 	// One candidate per required NAME, for the same reason: two rows would mean
 	// two identical "now showing: Python" lines in the diff.
 	const claimed = new Set<string>();
@@ -356,7 +390,9 @@ export function refFor(candidate: Pick<Candidate, 'entityType' | 'entityId'>): s
 			? 'bullet'
 			: candidate.entityType === OVERRIDE_ENTITIES.sideProject
 				? 'project'
-				: 'skill';
+				: candidate.entityType === OVERRIDE_ENTITIES.skillCategory
+					? 'skillgroup'
+					: 'skill';
 	return `${short}:${candidate.entityId}`;
 }
 
@@ -471,6 +507,12 @@ export async function tailorVersionForApplication(opts: {
 			: `this job requires ${c.label}`;
 	const docLabel = docType === 'cv' ? 'CV' : 'resume';
 	const otherLabel = docType === 'cv' ? 'resume' : 'CV';
+	const groupDropReason = (c: Candidate) => {
+		const count = c.label.split(':')[1]?.split(',').length ?? 0;
+		return count > 0
+			? `none of these ${count} skills is what this job asks for`
+			: 'this job asks for none of the skills in this group';
+	};
 	const surfacedReason = (c: Candidate) =>
 		c.templateHeldBack
 			? `kept for your ${otherLabel} only, but it outranks half of what this ${docLabel} shows`
@@ -479,7 +521,8 @@ export async function tailorVersionForApplication(opts: {
 		floor,
 		...DEFAULT_SELECTION,
 		pinnedReason,
-		surfacedReason
+		surfacedReason,
+		groupDropReason
 	});
 
 	// ── L3 ──
@@ -524,7 +567,8 @@ export async function tailorVersionForApplication(opts: {
 					floor,
 					...DEFAULT_SELECTION,
 					pinnedReason,
-					surfacedReason
+					surfacedReason,
+					groupDropReason
 				});
 				modelReviewed = true;
 			}
@@ -769,7 +813,7 @@ export async function describeOverrides(
 	const idsOf = (type: string) =>
 		rows.filter((r) => r.entity_type === type).map((r) => r.entity_id);
 
-	const [achievements, projects, skills] = await Promise.all([
+	const [achievements, projects, skills, groups] = await Promise.all([
 		idsOf(OVERRIDE_ENTITIES.achievement).length
 			? db.query.work_experience_achievements.findMany({
 					where: inArray(work_experience_achievements.id, idsOf(OVERRIDE_ENTITIES.achievement)),
@@ -786,6 +830,13 @@ export async function describeOverrides(
 			? db.query.tech_skills.findMany({
 					where: inArray(tech_skills.id, idsOf(OVERRIDE_ENTITIES.skill)),
 					columns: { id: true, name: true }
+				})
+			: [],
+		idsOf(OVERRIDE_ENTITIES.skillCategory).length
+			? db.query.tech_skill_categories.findMany({
+					where: inArray(tech_skill_categories.id, idsOf(OVERRIDE_ENTITIES.skillCategory)),
+					columns: { id: true, name: true },
+					with: { tech_skills: { columns: { name: true } } }
 				})
 			: []
 	]);
@@ -816,6 +867,15 @@ export async function describeOverrides(
 	}
 	for (const s of skills) {
 		labels.set(`${OVERRIDE_ENTITIES.skill}:${s.id}`, text(s.name));
+	}
+	for (const g of groups) {
+		// The whole list, because what is leaving the page is the list, and a bare
+		// "Frontend" asks the applicant to go and look it up before deciding.
+		const names = (g.tech_skills ?? []).map((s) => text(s.name)).filter(Boolean);
+		labels.set(`${OVERRIDE_ENTITIES.skillCategory}:${g.id}`, text(g.name) || 'Skills');
+		if (names.length > 0) {
+			contexts.set(`${OVERRIDE_ENTITIES.skillCategory}:${g.id}`, names.join(', '));
+		}
 	}
 
 	return rows

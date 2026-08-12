@@ -116,6 +116,8 @@ export interface SelectionOptions {
 	pinnedReason?: (candidate: Candidate) => string;
 	/** Why a hidden item was surfaced — see surfaceBar. */
 	surfacedReason?: (candidate: Candidate, bar: number) => string;
+	/** Why a skill group was dropped whole. */
+	groupDropReason?: (candidate: Candidate) => string;
 }
 
 export const DEFAULT_SELECTION: Pick<SelectionOptions, 'minPerParent' | 'budgetChars'> = {
@@ -136,6 +138,12 @@ const MAX_PROMOTED = 2;
  * answer, and the recommendation above the card already gives it.
  */
 const MAX_SURFACED = 3;
+
+/**
+ * Skill groups a document always keeps, however little the job wants them. A
+ * skills section that empties out reads as a gap rather than as focus.
+ */
+const MIN_SKILL_GROUPS = 2;
 
 /**
  * The bar a hidden item must clear to be worth surfacing — and the same one the
@@ -253,6 +261,34 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 			action: 'exclude',
 			sort: null,
 			reason
+		});
+	}
+
+	// ── Skills: drop a group this job has no use for ──
+	//
+	// The one part of a tailored document that used to be identical on every
+	// version. Not a space decision — the group costs a line either way (its
+	// chars are zero, see buildCandidates) — but a dilution one: the skills
+	// block is read as a keyword list, and a data role listing Vue and Shopify
+	// among fifty-nine entries is asking the reader to do the filtering.
+	//
+	// Absolute rather than comparative, unlike the prose trim: "this job asks
+	// for none of these" is a statement about the job, not about how full the
+	// page is. A group holding a required skill is pinned and never reaches
+	// here, and the section keeps its floor so it cannot vanish.
+	const groups = candidates.filter((c) => c.entityType === OVERRIDE_ENTITIES.skillCategory);
+	let groupsLeft = groups.length;
+	for (const group of [...groups].sort((a, z) => a.score - z.score)) {
+		if (groupsLeft <= MIN_SKILL_GROUPS) break;
+		if (group.pinned || group.score >= floor) continue;
+		groupsLeft -= 1;
+		decisions.push({
+			entityType: group.entityType,
+			entityId: group.entityId,
+			action: 'exclude',
+			sort: null,
+			reason:
+				options.groupDropReason?.(group) ?? 'this job asks for none of the skills in this group'
 		});
 	}
 
