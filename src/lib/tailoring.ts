@@ -11,7 +11,10 @@
  * they are pure and therefore testable:
  *
  *   L0  hard rules — what must show, and what may never be dropped
- *   L2  fit to the page — length is the scarce resource
+ *   L2  fit to the page — length is the scarce resource, and the ONLY reason
+ *       anything is removed. Relevance ranks what goes first; it does not
+ *       decide how much goes, or a document with room to spare gets cut for
+ *       nothing (see the trim pass)
  *   ordering — lead with the bullet this job cares about
  *
  * L1 (semantic relevance) arrives as a score per candidate, and L3 (the model)
@@ -241,20 +244,33 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 		});
 	}
 
-	// ── L1 verdict: below the relevance floor ──
-	const byScore = [...droppable].sort((a, z) => a.score - z.score);
-	for (const candidate of byScore) {
-		if (candidate.score >= floor || !canDrop(candidate)) continue;
-		drop(candidate, `not relevant to this job (${candidate.score.toFixed(2)})`);
-	}
-
-	// ── L2: fit to the page ──
+	// ── L1 + L2: trim the least relevant until the document fits ──
+	//
+	// Relevance decides the ORDER; the page decides how much. These used to be
+	// two passes, and the first one dropped everything under an absolute
+	// relevance floor whether or not the document needed the room. That floor is
+	// a retrieval threshold — it answers "somewhat about this job", not "worth a
+	// line" — and the model sinks a score under it to vote drop, so between them
+	// they cut a 26-item document to 8: a quarter of a page, every role sitting
+	// on the sibling minimum, which exists to stop a role being emptied and is
+	// not a target. Nothing was gained by the space.
+	//
+	// So budgetChars is now the whole control rather than a backstop that rarely
+	// bound. A document that fits keeps what it has, and tailoring it is a matter
+	// of what leads and which held-back skills to surface; a document that does
+	// not fit loses its weakest lines first, which is the judgement the ranker
+	// and the model are actually good for.
 	const printedChars = () =>
 		kept.filter((c) => !dropped.has(dropKey(c))).reduce((sum, c) => sum + c.chars, 0);
-	for (const candidate of byScore) {
+	const trimReason = (c: Candidate) =>
+		c.score < floor
+			? `the least relevant thing on a full page, and off-topic for this job (${c.score.toFixed(2)})`
+			: `trimmed to fit the page — the least relevant line left (${c.score.toFixed(2)})`;
+
+	for (const candidate of [...droppable].sort((a, z) => a.score - z.score)) {
 		if (printedChars() <= budgetChars) break;
-		if (dropped.has(dropKey(candidate)) || !canDrop(candidate)) continue;
-		drop(candidate, 'trimmed to keep the document to length');
+		if (!canDrop(candidate)) continue;
+		drop(candidate, trimReason(candidate));
 	}
 
 	// ── Ordering: lead with what this job cares about ──

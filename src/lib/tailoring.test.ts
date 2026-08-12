@@ -57,30 +57,50 @@ describe('selectForJob', () => {
 		]);
 	});
 
-	it('drops bullets below the relevance floor', () => {
+	it('keeps an irrelevant bullet when the page has room for it', () => {
+		// It used to go on score alone. Dropping it bought nothing — the document
+		// was a third of a page either way — and doing that to every weak line is
+		// how a 26-item resume became an 8-item one.
 		const candidates = [
 			bullet(1, 10, 0.9),
 			bullet(2, 10, 0.8),
 			bullet(3, 10, 0.7),
 			bullet(4, 10, 0.05)
 		];
-		const decisions = selectForJob(candidates, OPTS);
-		expect(decisions).toEqual([
-			{
-				entityType: OVERRIDE_ENTITIES.achievement,
-				entityId: 4,
-				action: 'exclude',
-				sort: null,
-				reason: 'not relevant to this job (0.05)'
-			}
-		]);
+		expect(selectForJob(candidates, OPTS)).toEqual([]);
+	});
+
+	it('drops the least relevant first once the page is full', () => {
+		const candidates = [
+			bullet(1, 10, 0.9),
+			bullet(2, 10, 0.8),
+			bullet(3, 10, 0.7),
+			bullet(4, 10, 0.05)
+		];
+		// Four bullets at 100 chars; room for three.
+		const decisions = selectForJob(candidates, { ...OPTS, budgetChars: 320 });
+		expect(decisions).toHaveLength(1);
+		expect(decisions[0]).toMatchObject({ entityId: 4, action: 'exclude' });
+	});
+
+	it('stops trimming as soon as it fits, however weak the rest', () => {
+		const candidates = [
+			bullet(1, 10, 0.9),
+			bullet(2, 10, 0.02),
+			bullet(3, 10, 0.01),
+			bullet(4, 10, 0.0)
+		];
+		const decisions = selectForJob(candidates, { ...OPTS, budgetChars: 320 });
+		expect(decisions.filter((d) => d.action === 'exclude')).toHaveLength(1);
+		expect(decisions[0]).toMatchObject({ entityId: 4 });
 	});
 
 	it('never empties a role below the minimum', () => {
-		// Every bullet is irrelevant, but a role stripped to nothing reads as
-		// padding — the floor on siblings wins over the floor on relevance.
+		// Every bullet is irrelevant and the page is far too small for them, but a
+		// role stripped to nothing reads as padding — the floor on siblings wins
+		// over the page.
 		const candidates = [bullet(1, 10, 0.01), bullet(2, 10, 0.01), bullet(3, 10, 0.01)];
-		const decisions = selectForJob(candidates, OPTS);
+		const decisions = selectForJob(candidates, { ...OPTS, budgetChars: 10 });
 		expect(decisions.filter((d) => d.action === 'exclude')).toHaveLength(1);
 	});
 
@@ -123,7 +143,10 @@ describe('selectForJob', () => {
 			pinned: false,
 			score
 		});
-		const decisions = selectForJob([project(1, 0.02), project(2, 0.01)], OPTS);
+		const decisions = selectForJob([project(1, 0.02), project(2, 0.01)], {
+			...OPTS,
+			budgetChars: 10
+		});
 		expect(decisions.filter((d) => d.action === 'exclude')).toHaveLength(1);
 	});
 
@@ -139,7 +162,7 @@ describe('selectForJob', () => {
 		expect(excluded).toHaveLength(1);
 		// The least relevant one goes first, and it says why.
 		expect(excluded[0].entityId).toBe(4);
-		expect(excluded[0].reason).toBe('trimmed to keep the document to length');
+		expect(excluded[0].reason).toContain('trimmed to fit the page');
 	});
 
 	it('promotes what speaks to the job instead of re-sorting the whole role', () => {
