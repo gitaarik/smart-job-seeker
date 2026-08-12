@@ -14,18 +14,40 @@
  * itself — is asserted from the other side: the picker offers the tailored
  * version, and recording it produces the settled row.
  *
- * Prerequisites: dev stack up, test user seeded (see browser.test.ts), and a
- * tailored version on application 16 — the flow that creates one is a click on
- * "Tailor a resume for this job".
+ * Prerequisites: dev stack up, test user seeded (see browser.test.ts). The
+ * tailored version this needs is made by toggling one item in the panel, which
+ * costs nothing — depending on a previous run having left one made the whole
+ * file fail whenever it ran before the panel's, which deletes it.
  *
  * Run: npm run test:e2e
  */
 
 import { describe, expect, it } from 'vitest';
 import { loginViaUI, useBrowser } from './browser';
+import type { Page } from 'patchright';
 
-/** The test user's seeded application, which already has a tailored version. */
 const APP_ID = 16;
+
+/**
+ * Give this application a version of its own, the cheap way.
+ *
+ * Through the panel rather than the Tailor button: the button spends a real
+ * model call, a toggle spends nothing, and both end at the same place — a
+ * version owned by this application, recorded as what goes out.
+ */
+async function ensureTailored(page: Page) {
+	if (await page.getByText('Tailored for this job', { exact: true }).count()) return;
+
+	if (!(await page.getByRole('button', { name: /What's on it/ }).count())) {
+		await page.getByRole('button', { name: /Or send one of my versions as it is/ }).click();
+		await page.getByLabel('Version to send').selectOption({ index: 1 });
+		await page.getByRole('button', { name: /^Set$/ }).click();
+		await page.waitForLoadState('networkidle');
+	}
+	await page.getByRole('button', { name: /What's on it/ }).click();
+	await page.locator('button[aria-label^="Hide "]').first().click();
+	await page.getByText('· tailored for this job').waitFor({ state: 'visible', timeout: 20000 });
+}
 
 describe('resume card', () => {
 	const b = useBrowser();
@@ -34,6 +56,7 @@ describe('resume card', () => {
 		await loginViaUI(b.page);
 		await b.page.goto(`/applications/${APP_ID}/resume`);
 		await b.page.waitForLoadState('networkidle');
+		await ensureTailored(b.page);
 
 		expect(await b.page.getByRole('heading', { name: 'Document for this job' }).isVisible()).toBe(
 			true
