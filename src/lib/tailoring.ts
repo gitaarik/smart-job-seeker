@@ -58,6 +58,12 @@ export interface Candidate {
 	 */
 	parentVisible?: boolean;
 	/**
+	 * Whether adding it back would go against a base-template rule rather than a
+	 * version tag — "CV only, not on my resume". False means hands off: that is a
+	 * decision about the document type, which no single job revisits.
+	 */
+	surfaceable?: boolean;
+	/**
 	 * Must appear: a skill this job requires that the applicant has. Pinned
 	 * candidates are included whatever their relevance score says.
 	 */
@@ -192,7 +198,12 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	for (const candidate of candidates
 		.filter(
 			(c) =>
-				!c.visible && !c.pinned && isDroppable(c) && c.parentVisible !== false && c.score >= bar
+				!c.visible &&
+				!c.pinned &&
+				isDroppable(c) &&
+				c.parentVisible !== false &&
+				c.surfaceable !== false &&
+				c.score >= bar
 		)
 		.sort((a, z) => z.score - a.score)
 		.slice(0, MAX_SURFACED)) {

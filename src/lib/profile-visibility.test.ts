@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	heldBackByTemplate,
 	isProfileOnly,
 	renameTagSlug,
 	setProfileOnly,
@@ -113,5 +114,30 @@ describe('renameTagSlug', () => {
 		expect(renameTagSlug(null, 'app-45', 'enexis')).toEqual([]);
 		// An empty needle would otherwise match every tag and rename the lot.
 		expect(renameTagSlug(['backend'], '  ', null)).toEqual(['backend']);
+	});
+});
+
+describe('heldBackByTemplate', () => {
+	it('separates a template rule from a version tag', () => {
+		// "CV only" is about the document type and no single job revisits it.
+		expect(heldBackByTemplate(['cv'], 'resume')).toBe(true);
+		expect(heldBackByTemplate(['!resume'], 'resume')).toBe(true);
+		// "only on my Django versions" is about emphasis, which is exactly what
+		// tailoring is allowed to revisit.
+		expect(heldBackByTemplate(['fullstack-django'], 'resume')).toBe(false);
+		expect(heldBackByTemplate(null, 'resume')).toBe(false);
+	});
+
+	it('does not read profile-only as a template rule', () => {
+		// !resume + !cv means "kept for matching, off all documents" — the state a
+		// version tag exists to re-admit from, and the one surfacing is for.
+		expect(heldBackByTemplate(['!resume', '!cv'], 'resume')).toBe(false);
+		expect(heldBackByTemplate(['!resume', '!cv', 'senior'], 'cv')).toBe(false);
+	});
+
+	it('answers per template', () => {
+		expect(heldBackByTemplate(['cv'], 'cv')).toBe(false);
+		expect(heldBackByTemplate(['resume'], 'cv')).toBe(true);
+		expect(heldBackByTemplate(['resume', 'cv'], 'cv')).toBe(false);
 	});
 });

@@ -137,6 +137,35 @@ export function renameTagSlug(
 	});
 }
 
+/**
+ * Whether a BASE TEMPLATE rule holds this item back, rather than a version tag.
+ *
+ * The two are different instructions and only one is a per-job matter. "Not on
+ * my resume, only my CV" is a statement about the document type that no
+ * particular job changes; "only on my Django versions" is a statement about
+ * emphasis, and picking it up for a job that wants Django is the whole point of
+ * tailoring. A per-job override wins over both — filterOnTags checks it first —
+ * so anything that adds items back has to decline this case itself.
+ *
+ * The skills strip already draws the same line: it will not offer a one-click
+ * lift for a CV-only skill on a resume, because the lift would not reveal it.
+ */
+export function heldBackByTemplate(tags: string[] | null | undefined, docType: string): boolean {
+	const list = asTagList(tags);
+	if (list.length === 0) return false;
+
+	const current = (docType || 'resume').toLowerCase();
+	const other = current === 'cv' ? 'resume' : 'cv';
+	const negated = list.filter(isNegated).map(tagSlug);
+	const positives = list.filter((t) => !isNegated(t)).map(tagSlug);
+
+	// "!resume" alone; the profile-only pair (!resume + !cv) is not this — that
+	// is the held-back-everywhere state a version tag is meant to re-admit from.
+	if (negated.includes(current) && !negated.includes(other)) return true;
+	// "cv" on a resume: the other template named, this one not.
+	return positives.includes(other) && !positives.includes(current);
+}
+
 /** Where a held-back item is being lifted to: every document, or one version. */
 export const SHOW_ON_ALL = 'all';
 

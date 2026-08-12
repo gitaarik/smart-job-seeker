@@ -44,7 +44,12 @@ import {
 	type Decision
 } from '$lib/tailoring';
 import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
-import { BASE_TEMPLATE_TAGS, renameTagSlug, tagSlug } from '$lib/profile-visibility';
+import {
+	BASE_TEMPLATE_TAGS,
+	heldBackByTemplate,
+	renameTagSlug,
+	tagSlug
+} from '$lib/profile-visibility';
 import {
 	semanticScoreUnits,
 	poolKey,
@@ -154,6 +159,7 @@ export function buildCandidates(
 				// A bullet on a role the document doesn't print isn't printed either.
 				visible: visibleRoles.has(role.id) && visibleAchievements.has(achievement.id),
 				parentVisible: visibleRoles.has(role.id),
+				surfaceable: !heldBackByTemplate(asStringArray(achievement.tags), docType),
 				pinned: false,
 				score: 0
 			});
@@ -173,6 +179,7 @@ export function buildCandidates(
 			chars: (text(project.name) + summary).length,
 			visible: visibleProjects.has(project.id),
 			parentVisible: true,
+			surfaceable: !heldBackByTemplate(asStringArray(project.tags), docType),
 			pinned: false,
 			score: 0
 		});
@@ -318,6 +325,13 @@ export function applyModelOpinions(
 		if (action === 'drop') {
 			adjusted.set(refFor(candidate), floor - Math.abs(floor) - 1);
 		} else if (action === 'keep') {
+			// Only for something already ON the document. "Keep" about a hidden
+			// item means "I have no objection", not "add it" — but a lift to the
+			// floor is exactly what the surfacing bar reads as "add it", and the
+			// model says keep to most of the shortlist. It surfaced three filler
+			// side projects onto an AI role and pushed real bullets off the page
+			// to make room for them.
+			if (!candidate.visible) continue;
 			adjusted.set(refFor(candidate), Math.max(candidate.score, floor));
 		} else {
 			continue;
