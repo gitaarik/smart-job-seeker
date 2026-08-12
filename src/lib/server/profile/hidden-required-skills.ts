@@ -29,7 +29,12 @@ import { profile_versions, tech_skill_categories, tech_skills } from '$lib/serve
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
 import { BASE_TEMPLATE_TAGS, SHOW_ON_ALL, tagsForShowOn } from '$lib/profile-visibility';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-import { hiddenSkillsKey, type HiddenSkill, type VersionCoverage } from '$lib/version-coverage';
+import {
+	carrierOf,
+	hiddenSkillsKey,
+	type HiddenSkill,
+	type VersionCoverage
+} from '$lib/version-coverage';
 
 // The shapes and the ranking live in $lib/version-coverage so the card can rank
 // as the applicant flips between Resume and CV without asking the server again.
@@ -142,10 +147,15 @@ export async function getVersionCoverage(
 			const keptCategories = filterOnTags(categories, OVERRIDE_ENTITIES.skillCategory);
 			const visibleCategories = new Set(keptCategories.map((c) => c.id));
 			const visible = new Set<string>();
+			// Kept as a list too: a hidden skill's name may already be on the page
+			// inside another one, and saying which needs the name, not the key.
+			const printed: string[] = [];
 			for (const category of keptCategories) {
 				for (const skill of filterOnTags(category.tech_skills, OVERRIDE_ENTITIES.skill)) {
 					const key = skill.name?.trim().toLowerCase();
-					if (key) visible.add(key);
+					if (!key) continue;
+					visible.add(key);
+					printed.push(skill.name!);
 				}
 			}
 
@@ -169,7 +179,8 @@ export async function getVersionCoverage(
 				hidden.push({
 					id: skill.id,
 					name: skill.name,
-					liftable: lifted.length > 0 && visibleCategories.has(skill.categoryId)
+					liftable: lifted.length > 0 && visibleCategories.has(skill.categoryId),
+					carriedBy: carrierOf(skill.name, printed)
 				});
 			}
 

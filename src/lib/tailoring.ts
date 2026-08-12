@@ -60,6 +60,12 @@ export interface Candidate {
 	 * the document already shows — see orderByOverrides. Null appends.
 	 */
 	anchor?: number | null;
+	/**
+	 * A skill the document already prints that carries this one's name as a
+	 * whole word. Metadata for the reason line, not an input to any rule: the
+	 * decision still stands, it just gets to say the case against itself.
+	 */
+	carriedBy?: string | null;
 }
 
 export interface Decision {

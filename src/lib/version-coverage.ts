@@ -21,6 +21,17 @@ export interface HiddenSkill {
 	 * report the gap rather than offer a button that appears to do nothing.
 	 */
 	liftable: boolean;
+	/**
+	 * A skill the document DOES print that carries this one's name as a whole
+	 * word — "SQL optimization" for "SQL", "AWS EC2" for "AWS". Null when
+	 * nothing does.
+	 *
+	 * Not a verdict, a fact. A keyword search for the required skill finds it
+	 * there already; a person skimming a skills list may not read it as the
+	 * same claim. Which of those two readers matters is per application, so the
+	 * skill stays offered and the caller says this alongside it.
+	 */
+	carriedBy: string | null;
 }
 
 /** What one candidate document does with the skills this job requires. */
@@ -33,6 +44,42 @@ export interface VersionCoverage {
 	owned: number;
 	/** Distinct skills the job requires. */
 	required: number;
+}
+
+/**
+ * A skill name split the way anything reading the document splits it.
+ *
+ * "SQL optimization" is two words; "MySQL" is one, and is not the word SQL —
+ * which is the whole reason this is tokens and not substrings. `+` and `#` stay
+ * inside a word so C++ and C# survive as themselves.
+ */
+export function skillWords(name: string): string[] {
+	return name
+		.toLowerCase()
+		.split(/[^a-z0-9+#]+/i)
+		.filter(Boolean);
+}
+
+/** Whether `haystack` contains every word of `needle`, in order and adjacent. */
+export function carriesName(needle: string, haystack: string): boolean {
+	const want = skillWords(needle);
+	const have = skillWords(haystack);
+	if (want.length === 0 || want.length > have.length) return false;
+	if (want.length === have.length) return want.every((w, i) => have[i] === w);
+	return have.some((_, i) => want.every((w, j) => have[i + j] === w));
+}
+
+/**
+ * The first of `printed` that carries `name` — the evidence for "the word is
+ * already on the page". Skips the skill's own name: a document printing SQL
+ * outright isn't carrying it, it's showing it, and that is a different answer
+ * the coverage map has already given.
+ */
+export function carrierOf(name: string, printed: string[]): string | null {
+	const self = name.trim().toLowerCase();
+	return (
+		printed.find((other) => other.trim().toLowerCase() !== self && carriesName(name, other)) ?? null
+	);
 }
 
 /**

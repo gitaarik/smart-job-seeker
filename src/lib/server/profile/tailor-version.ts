@@ -41,7 +41,7 @@ import {
 	type Candidate,
 	type Decision
 } from '$lib/tailoring';
-import { hiddenSkillsKey } from '$lib/version-coverage';
+import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
 import { BASE_TEMPLATE_TAGS, renameTagSlug, tagSlug } from '$lib/profile-visibility';
 import {
 	semanticScoreUnits,
@@ -80,17 +80,6 @@ function asStringArray(value: unknown): string[] {
 }
 
 /**
- * The words of a skill name, as anything reading the document would split them.
- * "SQL optimization" is two words; "MySQL" is one, and is not the word SQL.
- */
-function words(name: string): string[] {
-	return name
-		.toLowerCase()
-		.split(/[^a-z0-9+#]+/i)
-		.filter(Boolean);
-}
-
-/**
  * Where to slot a surfaced skill among the ones its category already prints.
  *
  * A skill this job requires gets added at whatever position its own global sort
@@ -110,15 +99,9 @@ function words(name: string): string[] {
  * than splitting it. Null when nothing in the category is related.
  */
 function anchorAmongSiblings(name: string, siblings: string[]): number | null {
-	const needle = words(name);
-	if (needle.length === 0) return null;
-
-	const contains = (haystack: string[]) =>
-		haystack.some((_, i) => needle.every((word, j) => haystack[i + j] === word));
-
 	let last = -1;
 	siblings.forEach((sibling, i) => {
-		if (contains(words(sibling))) last = i;
+		if (carriesName(name, sibling)) last = i;
 	});
 	return last === -1 ? null : last + 1;
 }
@@ -210,6 +193,9 @@ export function buildCandidates(
 	// In render order, because an anchor is an index into exactly this list.
 	const printedInCategory = new Map<number, string[]>();
 	const printedNames = new Set<string>();
+	// Carriers are not confined to one category — "Docker Compose" can vouch for
+	// a Docker held somewhere else — so this list spans the whole document.
+	const printedAnywhere: string[] = [];
 	for (const category of profile.tech_skill_categories ?? []) {
 		const kept = filterOnTags(category.tech_skills ?? [], OVERRIDE_ENTITIES.skill);
 		visibleSkillsByCategory.set(category.id, new Set(kept.map((s) => s.id)));
@@ -217,6 +203,7 @@ export function buildCandidates(
 		printedInCategory.set(category.id, kept.map((s) => text(s.name)).filter(Boolean));
 		for (const name of printedInCategory.get(category.id) ?? []) {
 			printedNames.add(name.toLowerCase());
+			printedAnywhere.push(name);
 		}
 	}
 
@@ -246,7 +233,8 @@ export function buildCandidates(
 					(visibleSkillsByCategory.get(category.id)?.has(skill.id) ?? false),
 				pinned: true,
 				score: 1,
-				anchor: anchorAmongSiblings(name, printedInCategory.get(category.id) ?? [])
+				anchor: anchorAmongSiblings(name, printedInCategory.get(category.id) ?? []),
+				carriedBy: carrierOf(name, printedAnywhere)
 			});
 		}
 	}
@@ -445,7 +433,13 @@ export async function tailorVersionForApplication(opts: {
 	const built = buildCandidates(profile, docType, baseSlug, requiredSkills);
 	const { candidates, ranker, floor } = await scoreCandidates(profileId, built, query);
 
-	const pinnedReason = (c: Candidate) => `this job requires ${c.label}`;
+	// The reason carries the counter-argument when there is one: a keyword search
+	// already finds "AWS" inside "AWS EC2", so this include is a judgement about
+	// human readers, and the diff should let it be reviewed as one.
+	const pinnedReason = (c: Candidate) =>
+		c.carriedBy
+			? `this job requires ${c.label} — “${c.carriedBy}” already carries the word`
+			: `this job requires ${c.label}`;
 	const deterministic = selectForJob(candidates, {
 		floor,
 		...DEFAULT_SELECTION,

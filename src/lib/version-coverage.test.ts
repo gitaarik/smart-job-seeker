@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { hiddenSkillsKey, recommendVersion, type VersionCoverage } from './version-coverage';
+import {
+	carrierOf,
+	carriesName,
+	hiddenSkillsKey,
+	recommendVersion,
+	type VersionCoverage
+} from './version-coverage';
 
 function entry(shown: string[], hidden: string[], required = 8): VersionCoverage {
 	return {
 		shown,
-		hidden: hidden.map((name, i) => ({ id: i + 1, name, liftable: true })),
+		hidden: hidden.map((name, i) => ({ id: i + 1, name, liftable: true, carriedBy: null })),
 		owned: shown.length + hidden.length,
 		required
 	};
@@ -74,5 +80,47 @@ describe('recommendVersion', () => {
 		const rec = recommendVersion(coverage, 'resume', CANDIDATES);
 		expect(rec?.versionSlug).toBe('frontend');
 		expect(recommendVersion(coverage, 'cv', CANDIDATES)?.versionSlug).toBe('backend');
+	});
+});
+
+describe('carriesName', () => {
+	it('reads whole words, so a compound is not the word it is built from', () => {
+		expect(carriesName('SQL', 'SQL optimization')).toBe(true);
+		expect(carriesName('AWS', 'AWS EC2')).toBe(true);
+		expect(carriesName('Vue', 'Vue.js')).toBe(true);
+		// The case the whole approach turns on: MySQL is one word, and it is not
+		// the word SQL. A substring test would have said otherwise.
+		expect(carriesName('SQL', 'MySQL')).toBe(false);
+		expect(carriesName('SQL', 'PostgreSQL')).toBe(false);
+		expect(carriesName('Git', 'GitHub Actions')).toBe(false);
+	});
+
+	it('keeps the punctuation that is part of a name', () => {
+		expect(carriesName('C++', 'C++ templates')).toBe(true);
+		expect(carriesName('C', 'C++')).toBe(false);
+		expect(carriesName('C#', 'C# scripting')).toBe(true);
+	});
+
+	it('needs every word, adjacent and in order', () => {
+		expect(carriesName('SQL Server', 'SQL')).toBe(false);
+		expect(carriesName('SQL Server', 'Microsoft SQL Server 2019')).toBe(true);
+		expect(carriesName('SQL Server', 'SQL on a server')).toBe(false);
+	});
+});
+
+describe('carrierOf', () => {
+	it('names the skill already carrying the word', () => {
+		expect(carrierOf('AWS', ['Docker', 'AWS EC2', 'AWS S3'])).toBe('AWS EC2');
+	});
+
+	it('does not count the skill as carrying itself', () => {
+		// A document printing SQL outright is showing it, not carrying it, and
+		// the coverage map has already said so.
+		expect(carrierOf('SQL', ['sql'])).toBeNull();
+		expect(carrierOf('SQL', ['SQL', 'SQL optimization'])).toBe('SQL optimization');
+	});
+
+	it('is null when nothing on the page says the word', () => {
+		expect(carrierOf('Linux', ['Docker', 'Terraform (IaC)', 'Linode'])).toBeNull();
 	});
 });

@@ -134,6 +134,9 @@
 	/** Whether the chosen document is this application's own tailored version. */
 	let choseTailored = $derived(!!tailored && versionSlug === tailored.slug);
 
+	/** Hidden skills whose name the document already prints inside another. */
+	let carried = $derived(hiddenSkills.filter((s) => s.carriedBy));
+
 	let liftTarget = $derived(
 		versionSlug
 			? (selectable.find((v) => v.slug === versionSlug)?.name ?? versionSlug)
@@ -660,6 +663,20 @@
 						{/if}
 					{/each}
 				</div>
+
+				<!-- The case against adding them, where there is one. A keyword search
+				     for "SQL" already hits "SQL optimization" — so this is a judgement
+				     about human readers, and the applicant is better placed to make it
+				     than a substring rule is. Stated, not acted on. -->
+				{#if carried.length > 0}
+					<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
+						Already on the page inside another skill:
+						{#each carried as skill, i (skill.id)}<span
+								>{i > 0 ? ', ' : ''}<strong>{skill.name}</strong> in “{skill.carriedBy}”</span
+							>{/each}. A keyword search finds
+						{carried.length === 1 ? 'it' : 'them'} there; a reader may not.
+					</p>
+				{/if}
 
 				<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
 					{#if choseTailored}
