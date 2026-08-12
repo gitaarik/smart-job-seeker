@@ -195,6 +195,37 @@ describe('filterOnTags — per-version overrides', () => {
 		).toEqual(['third', 'first', 'second']);
 	});
 
+	it('treats the sort as an index, so an item can land in the middle', () => {
+		// The case a sort KEY cannot express: put "SQL" after the SQL cluster
+		// without renumbering — and without claiming anything about the rest.
+		const rows: Row[] = [
+			{ id: 1, name: 'PostgreSQL' },
+			{ id: 2, name: 'MySQL' },
+			{ id: 3, name: 'SQL optimization' },
+			{ id: 4, name: 'MongoDB' },
+			{ id: 5, name: 'SQL' }
+		];
+		const overrides = [{ entity_type: 'tech_skill', entity_id: 5, action: 'include', sort: 3 }];
+		expect(
+			tailoredFilter(overrides)
+				.filterOnTags(rows, 'tech_skill')
+				.map((r) => r.name)
+		).toEqual(['PostgreSQL', 'MySQL', 'SQL optimization', 'SQL', 'MongoDB']);
+	});
+
+	it('clamps a sort past the end rather than dropping the item', () => {
+		const rows: Row[] = [
+			{ id: 1, name: 'first' },
+			{ id: 2, name: 'second' }
+		];
+		const overrides = [{ entity_type: 'tech_skill', entity_id: 2, action: 'include', sort: 99 }];
+		expect(
+			tailoredFilter(overrides)
+				.filterOnTags(rows, 'tech_skill')
+				.map((r) => r.name)
+		).toEqual(['first', 'second']);
+	});
+
 	it('does not reorder when no override carries a sort', () => {
 		const rows: Row[] = [
 			{ id: 1, name: 'first' },

@@ -53,6 +53,13 @@ export interface Candidate {
 	pinned: boolean;
 	/** L1 relevance to this job. Comparable within one run, not across runs. */
 	score: number;
+	/**
+	 * Where a pinned candidate should land among its siblings, when appending it
+	 * would read wrong: a skill surfaced for this job belongs beside the ones it
+	 * relates to, not tacked onto the end of the category. An index in the list
+	 * the document already shows — see orderByOverrides. Null appends.
+	 */
+	anchor?: number | null;
 }
 
 export interface Decision {
@@ -116,7 +123,7 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 			entityType: candidate.entityType,
 			entityId: candidate.entityId,
 			action: 'include',
-			sort: null,
+			sort: candidate.anchor ?? null,
 			reason: options.pinnedReason?.(candidate) ?? 'required by this job'
 		});
 	}

@@ -80,6 +80,50 @@ function asStringArray(value: unknown): string[] {
 }
 
 /**
+ * The words of a skill name, as anything reading the document would split them.
+ * "SQL optimization" is two words; "MySQL" is one, and is not the word SQL.
+ */
+function words(name: string): string[] {
+	return name
+		.toLowerCase()
+		.split(/[^a-z0-9+#]+/i)
+		.filter(Boolean);
+}
+
+/**
+ * Where to slot a surfaced skill among the ones its category already prints.
+ *
+ * A skill this job requires gets added at whatever position its own global sort
+ * happens to give it, which for a recently-added one is the very end — "SQL"
+ * arriving after MongoDB and Redis, three lines below the SQL cluster it
+ * belongs to. Anyone reading it sees an afterthought, which is the opposite of
+ * the point.
+ *
+ * Relatedness here is whole-word containment, not similarity: "SQL optimization"
+ * contains the word, "MySQL" does not. That is a narrow test on purpose — it is
+ * free, it never misfires, and it answers the case that actually arises, which
+ * is an exact skill name being added next to the compounds built on it. A
+ * relative sharing no words (Kubernetes beside Docker) needs an embedding to
+ * find and gets no anchor; appending is the honest fallback.
+ *
+ * Returns the index AFTER the last relative, so the skill closes the run rather
+ * than splitting it. Null when nothing in the category is related.
+ */
+function anchorAmongSiblings(name: string, siblings: string[]): number | null {
+	const needle = words(name);
+	if (needle.length === 0) return null;
+
+	const contains = (haystack: string[]) =>
+		haystack.some((_, i) => needle.every((word, j) => haystack[i + j] === word));
+
+	let last = -1;
+	siblings.forEach((sibling, i) => {
+		if (contains(words(sibling))) last = i;
+	});
+	return last === -1 ? null : last + 1;
+}
+
+/**
  * Every item a tailored version may speak about, with what the BASE version
  * already prints marked as visible.
  *
@@ -163,16 +207,16 @@ export function buildCandidates(
 		)
 	);
 	const visibleSkillsByCategory = new Map<number, Set<number>>();
+	// In render order, because an anchor is an index into exactly this list.
+	const printedInCategory = new Map<number, string[]>();
 	const printedNames = new Set<string>();
 	for (const category of profile.tech_skill_categories ?? []) {
-		const visibleSkills = new Set(
-			filterOnTags(category.tech_skills ?? [], OVERRIDE_ENTITIES.skill).map((s) => s.id)
-		);
-		visibleSkillsByCategory.set(category.id, visibleSkills);
+		const kept = filterOnTags(category.tech_skills ?? [], OVERRIDE_ENTITIES.skill);
+		visibleSkillsByCategory.set(category.id, new Set(kept.map((s) => s.id)));
 		if (!visibleCategories.has(category.id)) continue;
-		for (const skill of category.tech_skills ?? []) {
-			const name = text(skill.name);
-			if (name && visibleSkills.has(skill.id)) printedNames.add(name.toLowerCase());
+		printedInCategory.set(category.id, kept.map((s) => text(s.name)).filter(Boolean));
+		for (const name of printedInCategory.get(category.id) ?? []) {
+			printedNames.add(name.toLowerCase());
 		}
 	}
 
@@ -201,7 +245,8 @@ export function buildCandidates(
 					printedNames.has(name.toLowerCase()) ||
 					(visibleSkillsByCategory.get(category.id)?.has(skill.id) ?? false),
 				pinned: true,
-				score: 1
+				score: 1,
+				anchor: anchorAmongSiblings(name, printedInCategory.get(category.id) ?? [])
 			});
 		}
 	}

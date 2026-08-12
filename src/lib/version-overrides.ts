@@ -126,13 +126,19 @@ export function indexOverrides(rows: VersionOverride[]): Map<string, VersionOver
 }
 
 /**
- * The per-version order for a list, when the version carries one.
+ * Apply per-version ordering: an override's `sort` is the INDEX the item takes
+ * among the others, which keep their own sequence around it.
  *
- * Only reorders when at least one item actually has an override `sort` —
- * otherwise the list is returned untouched, so a version with no ordering
- * opinion renders exactly as it did before overrides existed. Items without one
- * fall to the end in their original relative order rather than interleaving by
- * a global `sort` that means something different.
+ * Not a sort key. A sort key can only pull an item to the front — everything
+ * without one falls behind it — and the two things this ordering has to
+ * express are "lead with this bullet" and "put this skill beside its
+ * relatives". The first is index 0, which both readings agree on; the second is
+ * an index in the middle, which only this one can say. Expressing it as a key
+ * would mean numbering every sibling ahead of the insert, turning one decision
+ * into a diff of six.
+ *
+ * Items without an override sort are never renumbered, so a version that
+ * places one item leaves the applicant's own order intact everywhere else.
  */
 export function orderByOverrides<T>(
 	items: T[],
@@ -149,14 +155,18 @@ export function orderByOverrides<T>(
 		return typeof sort === 'number' ? sort : null;
 	};
 
-	if (!items.some((item) => sortOf(item) !== null)) return items;
+	const placed = items
+		.map((item, order) => ({ item, order, sort: sortOf(item) }))
+		.filter((entry): entry is { item: T; order: number; sort: number } => entry.sort !== null)
+		.sort((a, b) => (a.sort === b.sort ? a.order - b.order : a.sort - b.sort));
+	if (placed.length === 0) return items;
 
-	return items
-		.map((item, index) => ({ item, index, sort: sortOf(item) }))
-		.sort((a, b) => {
-			const as = a.sort ?? Number.MAX_SAFE_INTEGER;
-			const bs = b.sort ?? Number.MAX_SAFE_INTEGER;
-			return as === bs ? a.index - b.index : as - bs;
-		})
-		.map((entry) => entry.item);
+	const result = items.filter((item) => sortOf(item) === null);
+	// Ascending, so each insert lands in a list the earlier ones have already
+	// grown — index 0 then index 1 puts them first and second, which is what
+	// promotion means by those numbers.
+	for (const entry of placed) {
+		result.splice(Math.max(0, Math.min(entry.sort, result.length)), 0, entry.item);
+	}
+	return result;
 }

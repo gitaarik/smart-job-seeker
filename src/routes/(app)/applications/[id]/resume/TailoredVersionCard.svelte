@@ -16,7 +16,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
 	import { profileDocUrl, type DocType } from '$lib/utils/profile-doc-url';
-	import { overrideEntityLabel } from '$lib/version-overrides';
+	import { overrideEntityLabel, OVERRIDE_ENTITIES } from '$lib/version-overrides';
 
 	/**
 	 * The version tailored to this job, and every decision that shaped it.
@@ -84,9 +84,17 @@
 	 */
 	let confirmingDiscard = $state(false);
 
-	let included = $derived(decisions.filter((d) => d.action === 'include' && d.sort === null));
+	// A skill is only ever surfaced, never promoted: it carries a sort so it
+	// lands beside its relatives rather than at the end of its category, and
+	// that placement is part of showing it, not a second claim that the document
+	// changed order. Reading the sort alone would file it under "Moved up",
+	// where it would be the only row whose item wasn't there before.
+	let isSkill = (d: Decision) => d.entityType === OVERRIDE_ENTITIES.skill;
+	let included = $derived(
+		decisions.filter((d) => d.action === 'include' && (d.sort === null || isSkill(d)))
+	);
 	let excluded = $derived(decisions.filter((d) => d.action === 'exclude'));
-	let reordered = $derived(decisions.filter((d) => d.sort !== null));
+	let reordered = $derived(decisions.filter((d) => d.sort !== null && !isSkill(d)));
 
 	function track() {
 		working = true;

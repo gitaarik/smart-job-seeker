@@ -155,7 +155,7 @@ describe('buildCandidates: skills', () => {
 		}) as unknown as Parameters<typeof buildCandidates>[0];
 
 	const skills = (profile: Parameters<typeof buildCandidates>[0]) =>
-		buildCandidates(profile, 'resume', 'base', ['Python']).filter(
+		buildCandidates(profile, 'resume', 'base', ['Python', 'SQL']).filter(
 			(c) => c.entityType === OVERRIDE_ENTITIES.skill
 		);
 
@@ -188,6 +188,61 @@ describe('buildCandidates: skills', () => {
 		);
 		expect(found).toHaveLength(1);
 		expect(found[0]).toMatchObject({ entityId: 10, visible: false, pinned: true });
+	});
+
+	it('slots a surfaced skill after the skills built on its name', () => {
+		// "SQL" added last in the category would print after MongoDB, three lines
+		// below the cluster it belongs to.
+		const found = skills(
+			profileWith([
+				{
+					id: 1,
+					skills: [
+						{ id: 1, name: 'PostgreSQL' },
+						{ id: 2, name: 'MySQL' },
+						{ id: 3, name: 'SQL optimization' },
+						{ id: 4, name: 'MongoDB' },
+						{ id: 5, name: 'SQL', tags: ['!resume', '!cv'] }
+					]
+				}
+			])
+		);
+		// Three siblings print ahead of it; the anchor is the index after the last
+		// one whose name carries the word.
+		expect(found[0]).toMatchObject({ entityId: 5, visible: false, anchor: 3 });
+	});
+
+	it('appends when nothing in the category shares the word', () => {
+		const found = skills(
+			profileWith([
+				{
+					id: 1,
+					skills: [
+						{ id: 1, name: 'Django' },
+						{ id: 5, name: 'Python', tags: ['!resume', '!cv'] }
+					]
+				}
+			])
+		);
+		// Django is a Python framework, which only an embedding knows. No anchor
+		// beats a wrong one.
+		expect(found[0]).toMatchObject({ entityId: 5, anchor: null });
+	});
+
+	it('does not mistake a compound for the word it contains', () => {
+		const found = skills(
+			profileWith([
+				{
+					id: 1,
+					skills: [
+						{ id: 1, name: 'MySQL' },
+						{ id: 2, name: 'PostgreSQL' },
+						{ id: 5, name: 'SQL', tags: ['!resume', '!cv'] }
+					]
+				}
+			])
+		);
+		expect(found[0].anchor).toBeNull();
 	});
 
 	it('pins one row per name, not one per copy', () => {
