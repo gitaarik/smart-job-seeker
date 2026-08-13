@@ -456,12 +456,18 @@ export async function scoreCandidates(
  * A "drop" sinks the candidate below any floor; a "keep" lifts it above one.
  * Anything the model says about a ref that isn't on the shortlist is discarded.
  */
+export interface ModelVerdict {
+	/** "keep" or "drop", as the model said it. */
+	action: string;
+	reason: string;
+}
+
 export function applyModelOpinions(
 	candidates: Candidate[],
 	opinions: Array<{ ref: string; action: string; reason: string }>,
 	floor: number
-): { candidates: Candidate[]; reasons: Map<string, string> } {
-	const reasons = new Map<string, string>();
+): { candidates: Candidate[]; verdicts: Map<string, ModelVerdict> } {
+	const verdicts = new Map<string, ModelVerdict>();
 	const byRef = new Map(candidates.map((c) => [refFor(c), c]));
 	const adjusted = new Map<string, number>();
 
@@ -483,8 +489,11 @@ export function applyModelOpinions(
 		} else {
 			continue;
 		}
+		// The action is carried with the reason, not thrown away. A reason is only
+		// worth printing next to a decision that agrees with it — see where these
+		// are applied.
 		const reason = text(opinion.reason);
-		if (reason) reasons.set(refFor(candidate), reason);
+		if (reason) verdicts.set(refFor(candidate), { action, reason });
 	}
 
 	return {
@@ -492,7 +501,7 @@ export function applyModelOpinions(
 			const score = adjusted.get(refFor(c));
 			return score === undefined ? c : { ...c, score };
 		}),
-		reasons
+		verdicts
 	};
 }
 
@@ -554,6 +563,36 @@ export function shortlistFor(
 			return `${refFor(c)} | ${said.slice(0, SHORTLIST_DETAIL_CHARS)} | ${c.score.toFixed(2)} | ${proposal}`;
 		})
 		.join('\n');
+}
+
+/**
+ * Give each decision the model's wording — but only where the model AGREES with
+ * what the document did.
+ *
+ * It does not have to agree. The page budget re-selects AFTER the model has
+ * spoken, so a "keep" the model argued for can still lose its line for space,
+ * and the row is then an exclusion carrying a sentence written to defend the
+ * item. Measured on application 27: *"excluded — shows you ensured uptime and
+ * performance of critical services, relevant to scaling SaaS backends"*, which
+ * reads as the document arguing with itself.
+ *
+ * Where they disagree the deterministic reason stands, because it is the rule
+ * that actually decided — "trimmed to fit the page — the least relevant line
+ * left". Silence about the model's opinion is better than quoting it as though
+ * it had won.
+ */
+export function applyVerdictReasons(
+	decisions: Decision[],
+	verdicts: Map<string, ModelVerdict>
+): Decision[] {
+	for (const decision of decisions) {
+		const verdict = verdicts.get(refFor(decision));
+		if (!verdict) continue;
+		const agrees =
+			decision.action === 'exclude' ? verdict.action === 'drop' : verdict.action === 'keep';
+		if (agrees) decision.reason = verdict.reason;
+	}
+	return decisions;
 }
 
 /**
@@ -678,7 +717,7 @@ export async function tailorVersionForApplication(opts: {
 	// ── L3 ──
 	let decisions = deterministic;
 	let modelReviewed = false;
-	let modelReasons = new Map<string, string>();
+	let modelVerdicts = new Map<string, ModelVerdict>();
 	const shortlist = shortlistFor(candidates, deterministic, floor);
 	if (shortlist) {
 		try {
@@ -711,7 +750,7 @@ export async function tailorVersionForApplication(opts: {
 					opinions as Array<{ ref: string; action: string; reason: string }>,
 					floor
 				);
-				modelReasons = applied.reasons;
+				modelVerdicts = applied.verdicts;
 				selectionCandidates = applied.candidates;
 				// Re-run the same selector: the model changed scores, not rules.
 				decisions = selectForJob(applied.candidates, {
@@ -734,11 +773,7 @@ export async function tailorVersionForApplication(opts: {
 		}
 	}
 
-	// The model's wording is better than the ranker's when it has an opinion.
-	for (const decision of decisions) {
-		const reason = modelReasons.get(refFor(decision));
-		if (reason) decision.reason = reason;
-	}
+	applyVerdictReasons(decisions, modelVerdicts);
 
 	const versionId = await upsertTailoredVersion({
 		profileId,

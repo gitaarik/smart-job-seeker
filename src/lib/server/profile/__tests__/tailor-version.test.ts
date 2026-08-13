@@ -12,7 +12,13 @@ vi.mock('$lib/server/documents/content-retrieval', () => ({
 	scoreUnitAgainstQuery: vi.fn(() => 0)
 }));
 
-import { applyModelOpinions, buildCandidates, refFor, shortlistFor } from '../tailor-version';
+import {
+	applyModelOpinions,
+	applyVerdictReasons,
+	buildCandidates,
+	refFor,
+	shortlistFor
+} from '../tailor-version';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import type { Candidate, Decision } from '$lib/tailoring';
 
@@ -62,24 +68,29 @@ describe('applyModelOpinions', () => {
 	});
 
 	it('carries the reason through, so the applicant reads the model, not the ranker', () => {
-		const { reasons } = applyModelOpinions(
+		const { verdicts } = applyModelOpinions(
 			[bullet(1, 0.9)],
 			[{ ref: 'bullet:1', action: 'drop', reason: 'Frontend work, not data engineering.' }],
 			FLOOR
 		);
-		expect(reasons.get('bullet:1')).toBe('Frontend work, not data engineering.');
+		// The action rides along with the reason: a sentence written to defend an
+		// item must not end up next to an exclusion that overruled it.
+		expect(verdicts.get('bullet:1')).toEqual({
+			action: 'drop',
+			reason: 'Frontend work, not data engineering.'
+		});
 	});
 
 	it('ignores refs that are not on the shortlist', () => {
 		// An invented ref must not become a decision about something else.
 		const candidates = [bullet(1, 0.9)];
-		const { candidates: adjusted, reasons } = applyModelOpinions(
+		const { candidates: adjusted, verdicts } = applyModelOpinions(
 			candidates,
 			[{ ref: 'bullet:999', action: 'drop', reason: 'Made up.' }],
 			FLOOR
 		);
 		expect(adjusted[0].score).toBe(0.9);
-		expect(reasons.size).toBe(0);
+		expect(verdicts.size).toBe(0);
 	});
 
 	it('refuses to act on a pinned candidate', () => {
@@ -101,6 +112,43 @@ describe('applyModelOpinions', () => {
 			FLOOR
 		);
 		expect(adjusted[0].score).toBe(0.9);
+	});
+});
+
+describe('applyVerdictReasons', () => {
+	const decision = (action: 'include' | 'exclude', entityId: number, reason: string) => ({
+		entityType: OVERRIDE_ENTITIES.achievement,
+		entityId,
+		action,
+		sort: null,
+		reason
+	});
+
+	it('gives a decision the model wording when they agree', () => {
+		const decisions = [decision('exclude', 1, 'trimmed to fit the page')];
+		applyVerdictReasons(
+			decisions,
+			new Map([['bullet:1', { action: 'drop', reason: 'Frontend work, not data engineering.' }]])
+		);
+		expect(decisions[0].reason).toBe('Frontend work, not data engineering.');
+	});
+
+	it('never argues the case for an item it removed', () => {
+		// The page budget re-selects after the model has spoken, so a "keep" can
+		// still lose its line. Quoting the model's defence beside the exclusion is
+		// the document arguing with itself — seen on application 27.
+		const decisions = [decision('exclude', 1, 'trimmed to fit the page')];
+		applyVerdictReasons(
+			decisions,
+			new Map([['bullet:1', { action: 'keep', reason: 'Shows you ensured uptime.' }]])
+		);
+		expect(decisions[0].reason).toBe('trimmed to fit the page');
+	});
+
+	it('leaves a decision the model said nothing about alone', () => {
+		const decisions = [decision('include', 9, 'earned its place on the page for this job')];
+		applyVerdictReasons(decisions, new Map());
+		expect(decisions[0].reason).toBe('earned its place on the page for this job');
 	});
 });
 
