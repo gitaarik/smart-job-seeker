@@ -134,7 +134,7 @@ export interface SelectionOptions {
 	/** Name of the skill or theme that pinned a candidate, for the reason line. */
 	pinnedReason?: (candidate: Candidate) => string;
 	/** Why a hidden item was surfaced — see surfaceBar. */
-	surfacedReason?: (candidate: Candidate, bar: number) => string;
+	surfacedReason?: (candidate: Candidate) => string;
 	/** Why a skill group was dropped whole. */
 	groupDropReason?: (candidate: Candidate) => string;
 }
@@ -410,29 +410,41 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 		});
 	}
 
-	// ── L0b: evidence the base hides that outranks what it shows ──
+	// ── L0b: everything eligible enters, and the page decides ──
 	//
-	// Without this the tailoring could only ever take things away. A bullet the
-	// applicant tagged onto their Django versions and nowhere else stayed hidden
-	// on a data job it was the best proof for — while the card above said so, in
-	// as many words, and offered "tailor a version from this one, keeping what
-	// fits". It did not keep it. Only skills were ever added back.
+	// Whether the base version prints an item used to be worth an INFINITE
+	// bonus: what it showed printed unconditionally, what it hid had to beat the
+	// median of what it showed. And that median came from the base too, so a
+	// narrower base raised its own bar and locked more out. Measured on one job,
+	// the finished document ranged from 33 items to 37 depending only on which
+	// version it started from — four bullets and side projects that a generic
+	// version's whitelist removed from a document tailored to one job.
 	//
-	// Everything the profile holds competes here, whatever version it was
-	// written for, priced by what its tags actually claim (see
-	// HOLD_BACK_PENALTY) and by how long ago it was (see surfaceScore). The one
-	// thing still gated by tags alone is a whole ROLE: adding one changes the
-	// shape of a history rather than its emphasis, and "my resume covers the
-	// last ten years" is not a per-job judgement. So a bullet on a role this
-	// document omits stays out — canSurface enforces that.
+	// So the base stops deciding content. Everything eligible enters here, ranks
+	// by relevance priced for what its tags claim and how long ago it was (see
+	// surfaceScore), and the page budget takes back what does not fit. The base
+	// still supplies the diff, the ordering, and the answer when two items are
+	// alternatives — the things it is actually good for.
 	//
-	// It is still a selection over what they wrote, and it stays reviewable: one
-	// row in the diff, with the comparison that produced it, and Undo.
-	const bar = surfaceBar(candidates, floor);
+	// One thing is still gated by tags alone: a whole ROLE. Adding one changes
+	// the shape of a history rather than its emphasis, and "my resume covers the
+	// last ten years" is not a per-job judgement. A bullet on a role this
+	// document omits stays out — canSurface enforces that, and the item panel is
+	// where a role gets turned on by hand.
+	// The one threshold left, and it comes from the embedding model rather than
+	// from the base: genuinely related to THIS job. It replaces a median that a
+	// narrow base pushed upward, locking out items at 0.55 against a floor of
+	// 0.50 — which is how a generic version's whitelist was still removing four
+	// items from a document tailored to one job.
+	//
+	// It gates additions only. What the base already prints keeps printing until
+	// the page says otherwise, because a below-floor bullet on your own resume
+	// is your judgement about your own history, and making relevance a second
+	// reason to drop is how a role ends up showing two lines.
 	const surfaced = new Set<string>();
-	for (const candidate of candidates
-		.filter((c) => canSurface(c) && surfaceScore(c, floor) >= bar)
-		.sort((a, z) => surfaceScore(z, floor) - surfaceScore(a, floor))) {
+	for (const candidate of candidates.filter(
+		(c) => canSurface(c) && surfaceScore(c, floor) >= floor
+	)) {
 		surfaced.add(dropKey(candidate));
 	}
 
@@ -534,7 +546,7 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	// only place age touches what a document already shows, and only as a
 	// tiebreak, so relevance still ranks and the page budget still decides.
 	for (const candidate of [...droppable].sort(
-		(a, z) => a.score - z.score || (z.age ?? 0) - (a.age ?? 0)
+		(a, z) => surfaceScore(a, floor) - surfaceScore(z, floor) || (z.age ?? 0) - (a.age ?? 0)
 	)) {
 		if (printedChars() <= budgetChars) break;
 		if (!canDrop(candidate)) continue;
@@ -553,9 +565,7 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 			entityId: candidate.entityId,
 			action: 'include',
 			sort: null,
-			reason:
-				options.surfacedReason?.(candidate, bar) ??
-				'more relevant to this job than half of what this version shows'
+			reason: options.surfacedReason?.(candidate) ?? 'earned its place on the page for this job'
 		});
 	}
 

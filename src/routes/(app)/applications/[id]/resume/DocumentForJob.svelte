@@ -176,16 +176,18 @@
 	let activeIsTailored = $derived(!!tailored && activeSlug === tailored.slug);
 
 	/**
-	 * Which of the applicant's versions to build on — stated, not asked.
+	 * Which of the applicant's versions to build on — stated, not asked, and no
+	 * longer the thing that decides what goes on the page.
 	 *
-	 * Ranked by how much of what the job requires each candidate would actually
-	 * print, which is the same measurement that used to headline this card as
-	 * "send this one". Demoted to an input: a version written for a class of
-	 * jobs is a starting point, not the answer to one job.
+	 * It used to be. Measured across seven of this profile's versions on one job,
+	 * the finished document ran from 33 items to 37 depending only on where it
+	 * started. Every eligible item competes now, so six of those seven produce
+	 * the same document and the seventh differs only where the applicant marked
+	 * two items as alternatives — which is the base's remaining job, along with
+	 * the running order and being the version the diff is a diff against.
 	 *
-	 * Still a real choice, which is why the disclosure exists — surfacing is
-	 * capped and reaches only achievements and side projects, so a whole role or
-	 * skill category the base holds back is unreachable by tailoring.
+	 * So the ranking still picks the closest version, and the sentence under the
+	 * button says what that buys rather than implying it picks the contents.
 	 */
 	let chosenBase = $state<string | null>(null);
 
@@ -211,7 +213,10 @@
 			const { shown, required } = winner.coverage;
 			return {
 				slug: winner.versionSlug,
-				why: `which names ${shown.length} of the ${required} ${required === 1 ? 'skill' : 'skills'} this job asks for`
+				// Not "which names 3 of the 4 skills this job asks for" any more: true
+				// of the version, and irrelevant to the document, because a required
+				// skill you have is pinned onto whatever this starts from.
+				why: `the closest of your versions — it names ${shown.length} of the ${required} ${required === 1 ? 'skill' : 'skills'} this job asks for`
 			};
 		}
 		const fallback = defaultBase?.[dt] ?? '';
@@ -558,11 +563,13 @@
 					<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
 						{#if baseName}
 							Starting from <strong class="font-medium">{baseName}</strong>{#if baseWhy}, {baseWhy}{/if}.
+							It sets the running order; what goes on the page is picked for this job from
+							everything on your profile.
 						{:else if versions.length === 0}
 							Starting from your plain {docLabel} — you have no versions to build on yet.
 						{:else}
-							Starting from your plain {docLabel}, which leaves out anything you've assigned to a
-							version.
+							Starting from your plain {docLabel}. It sets the running order; what goes on the page
+							is picked for this job from everything on your profile.
 						{/if}
 						{#if versions.length > 0}
 							<button

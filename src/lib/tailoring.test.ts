@@ -241,12 +241,27 @@ describe('surfacing hidden evidence', () => {
 		);
 	});
 
-	it('leaves a hidden bullet alone when it is no better than what prints', () => {
+	it('leaves a hidden bullet alone when it is not related to the job', () => {
+		// The threshold is the relevance floor, which comes from the embedding
+		// model. It used to be the median of what the base version prints — so a
+		// narrower base raised its own bar and kept more out, which made a generic
+		// version's whitelist decide the contents of a per-job document.
 		const decisions = selectForJob(
-			[bullet(1, 10, 0.8), bullet(2, 10, 0.9), bullet(3, 10, 0.95), hidden(9, 0.6)],
+			[bullet(1, 10, 0.8), bullet(2, 10, 0.9), bullet(3, 10, 0.95), hidden(9, 0.2)],
 			OPTS
 		);
 		expect(decisions.some((d) => d.entityId === 9)).toBe(false);
+	});
+
+	it('adds a hidden bullet the base outranks, when it is related and there is room', () => {
+		// Worse than everything printed and still worth having: the page has room,
+		// and "my Django version does not carry this" is not an answer about this
+		// job.
+		const decisions = selectForJob(
+			[bullet(1, 10, 0.8), bullet(2, 10, 0.9), bullet(3, 10, 0.95), hidden(9, 0.4)],
+			OPTS
+		);
+		expect(decisions).toContainEqual(expect.objectContaining({ entityId: 9, action: 'include' }));
 	});
 
 	it('will not surface a bullet whose role the document drops', () => {
@@ -429,28 +444,35 @@ describe('recency', () => {
 		expect(surfaceScore(old, 0.5)).toBeCloseTo(0.5 + 0.08 * (1 - RECENCY_PENALTY));
 	});
 
-	it('raises the bar for surfacing old work rather than banning it', () => {
-		// Both bullets are hidden and both outrank the median of what shows (0.5).
-		// The old one is close to the bar, so its age costs it the slot; the old
-		// one that is far above it still gets in, which is the whole intent —
-		// old work belongs on a resume when it is what the job is about.
-		const shown = [bullet(1, 10, 0.4), bullet(2, 10, 0.5), bullet(3, 10, 0.6)];
-		const marginal = bullet(4, 11, 0.55, { visible: false, age: 0.9 });
-		const decisive = bullet(5, 11, 0.95, { visible: false, age: 0.9 });
-
-		const decisions = selectForJob([...shown, marginal, decisive], OPTS);
+	it('makes age decide who loses the page, not who may compete', () => {
+		// Two additions of nearly equal relevance, room for one. Age is the whole
+		// difference between them, and the page is where it is spent — a full
+		// page is what a resume is, so the choice is which item, not how many.
+		const decisions = selectForJob(
+			[
+				bullet(1, 10, 0.9, { chars: 100 }),
+				bullet(2, 10, 0.9, { chars: 100 }),
+				bullet(3, 10, 0.62, { visible: false, chars: 100, age: 0.95 }),
+				bullet(4, 10, 0.6, { visible: false, chars: 100, age: 0 })
+			],
+			{ ...OPTS, budgetChars: 300 }
+		);
 		const included = decisions.filter((d) => d.action === 'include').map((d) => d.entityId);
-		expect(included).not.toContain(4);
-		expect(included).toContain(5);
+		expect(included).toContain(4);
+		expect(included).not.toContain(3);
 	});
 
-	it('surfaces the same marginal item when it is recent', () => {
-		const shown = [bullet(1, 10, 0.4), bullet(2, 10, 0.5), bullet(3, 10, 0.6)];
+	it('still keeps old work a job is genuinely about', () => {
 		const decisions = selectForJob(
-			[...shown, bullet(4, 11, 0.55, { visible: false, age: 0 })],
+			[
+				bullet(1, 10, 0.4),
+				bullet(2, 10, 0.5),
+				bullet(3, 10, 0.6),
+				bullet(5, 11, 0.95, { visible: false, age: 0.9 })
+			],
 			OPTS
 		);
-		expect(decisions.some((d) => d.entityId === 4 && d.action === 'include')).toBe(true);
+		expect(decisions.filter((d) => d.action === 'include').map((d) => d.entityId)).toContain(5);
 	});
 
 	it('does not demote what the document already shows', () => {

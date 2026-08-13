@@ -571,7 +571,6 @@ export async function tailorVersionForApplication(opts: {
 		c.carriedBy
 			? `this job requires ${c.label} — “${c.carriedBy}” already carries the word`
 			: `this job requires ${c.label}`;
-	const docLabel = docType === 'cv' ? 'CV' : 'resume';
 	const otherLabel = docType === 'cv' ? 'resume' : 'CV';
 	const groupDropReason = (c: Candidate) => {
 		const count = c.label.split(':')[1]?.split(',').length ?? 0;
@@ -589,8 +588,8 @@ export async function tailorVersionForApplication(opts: {
 			return `${dated}kept off your documents, and this job is about it`;
 		}
 		return c.templateHeldBack
-			? `${dated}kept for your ${otherLabel} only and it outranks half of what this ${docLabel} shows`
-			: `${dated}hidden on the version this builds on, and more relevant to this job than half of what it shows`;
+			? `${dated}kept for your ${otherLabel} only, and it outranks what it displaces here`
+			: `${dated}not on the version this builds on, and it outranks what it displaces here`;
 	};
 	// One page or two, decided by how much this applicant has rather than by a
 	// setting they would have to understand. The fit pass below then holds the
