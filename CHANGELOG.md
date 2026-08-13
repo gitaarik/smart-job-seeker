@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.11.0] - 2026-08-13
+
+47 commits since v0.10.12.
+
+### Added
+
+- Tailor resume content per job application—choose which experience items to include
+- Preview and recommend which resume version to send for each job
+- Dedicated resume tailoring workspace tab
+- Show semantic skill matches in job listings
+- Full profile export and import (applications, CV templates, documents)
+- Allow CV-only items to earn placement on tailored resumes
+
+### Changed
+
+- Tailored resumes fit actual page layout instead of estimates
+- Experience and skills compete for space based on tags and relevance pricing
+- Skill groups adapt to individual job requirements
+- Track when tailored versions were created
+
+### Fixed
+
+- Stop offering documents that cannot be sent
+- Prevent suggestions from exceeding page capacity
+- Keep skill groups with matched skills on tailored resumes
+- Fix false skill credits for items already on page
+- Improve tailoring UI text contrast
+- Reorder tailoring diffs by document content
+- Better login error message formatting
+- Show skills matched to omitted resume roles
+- Various tailoring calculation and layout fixes
+
+### Removed
+
+- `os_contributions` database table
+
 ## [0.10.12] - 2026-08-10
 
 1 commit since v0.10.11.
