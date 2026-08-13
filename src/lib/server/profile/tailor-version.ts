@@ -749,6 +749,18 @@ export async function tailorVersionForApplication(opts: {
 	});
 	await persistDecisions(versionId, decisions);
 
+	// When this document's decisions were made — the other half of "your profile
+	// changed since this was built".
+	//
+	// Stamped by a RUN and by nothing else. A hand toggle also writes to this
+	// version, but it re-decides one item; everything the run concluded about
+	// the rest is exactly as old as it was, so treating a toggle as "rebuilt"
+	// would retire the notice without doing the work it asks for.
+	await db
+		.update(profile_versions)
+		.set({ date_updated: new Date() })
+		.where(eq(profile_versions.id, versionId));
+
 	const version = await db.query.profile_versions.findFirst({
 		where: eq(profile_versions.id, versionId),
 		columns: { slug: true, name: true }

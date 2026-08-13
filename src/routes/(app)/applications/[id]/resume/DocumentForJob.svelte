@@ -66,6 +66,7 @@
 		app,
 		versions,
 		tailored,
+		profileMovedOn,
 		decisions,
 		gaps,
 		items,
@@ -87,6 +88,8 @@
 		versions: { slug: string; name: string }[];
 		/** This application's tailored version, if one has been generated. */
 		tailored: { id: number; slug: string; name: string; baseSlug?: string | null } | null;
+		/** Whether the profile changed since a run last decided that version. */
+		profileMovedOn: boolean;
 		decisions: Decision[];
 		gaps: string[];
 		/** Everything the document being sent could print — see ItemPicker. */
@@ -1043,6 +1046,7 @@
 				{docType}
 				{profileSlug}
 				{lastRun}
+				{profileMovedOn}
 				recordedHere={choseTailored}
 			/>
 		{/if}

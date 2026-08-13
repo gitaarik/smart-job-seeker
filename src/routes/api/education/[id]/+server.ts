@@ -4,6 +4,7 @@ import { dbDirect as db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { education } from '$lib/server/db/schema';
 import { requireAuth, parseIntParam, buildUpdateData } from '$lib/server/utils/api-helpers';
+import { touchProfile } from '$lib/server/profile/touch-profile';
 import { educationUpdateSchema, parseBody } from '$lib/server/validation/api-schemas';
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
@@ -14,7 +15,8 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const educationRecord = await db.query.education.findFirst({
 		where: eq(education.id, educationId),
 		columns: {
-			id: true
+			id: true,
+			profile_id: true
 		},
 		with: {
 			profile: {
@@ -47,6 +49,9 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	);
 
 	await db.update(education).set(updateData).where(eq(education.id, educationId));
+
+	// The parent row moves with its children — see the work-experience route.
+	await touchProfile(educationRecord.profile_id);
 
 	return json({ success: true });
 };

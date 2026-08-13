@@ -10,6 +10,7 @@ import {
 	work_experiences
 } from '$lib/server/db/schema';
 import { buildUpdateData, parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { touchProfile } from '$lib/server/profile/touch-profile';
 import {
 	parseBody,
 	workExperienceAchievementsSchema,
@@ -26,7 +27,8 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const workExperience = await db.query.work_experiences.findFirst({
 		where: eq(work_experiences.id, workExperienceId),
 		columns: {
-			id: true
+			id: true,
+			profile_id: true
 		},
 		with: {
 			profile: {
@@ -41,19 +43,36 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
 	const raw = await request.json();
 
+	/**
+	 * Every write here goes through this, so the parent row moves with its
+	 * children.
+	 *
+	 * A role and its bullets live in their own tables, so editing them left
+	 * `profiles.date_updated` untouched — and two things key off that: the
+	 * matcher's `collected_data` staleness check, and the notice telling an
+	 * applicant that their tailored document was decided before this edit. The
+	 * work-experience LIST page has called touchProfile all along; this route,
+	 * which is where a bullet is actually written, never did.
+	 */
+	const touched = async (result: Promise<Response>) => {
+		const response = await result;
+		await touchProfile(workExperience.profile_id);
+		return response;
+	};
+
 	if (raw.section === 'technologies') {
 		const data = parseBody(workExperienceTechSchema, raw);
-		return updateTechnologies(workExperienceId, data.technologies);
+		return touched(updateTechnologies(workExperienceId, data.technologies));
 	} else if (raw.section === 'achievements') {
 		const data = parseBody(workExperienceAchievementsSchema, raw);
-		return updateAchievements(workExperienceId, data.achievements);
+		return touched(updateAchievements(workExperienceId, data.achievements));
 	} else if (raw.section === 'projects') {
 		const data = parseBody(workExperienceProjectsSchema, raw);
-		return updateProjects(workExperienceId, data.projects);
+		return touched(updateProjects(workExperienceId, data.projects));
 	}
 
 	const data = parseBody(workExperienceBasicSchema, raw);
-	return updateBasicInfo(workExperienceId, data);
+	return touched(updateBasicInfo(workExperienceId, data));
 };
 
 async function updateBasicInfo(id: number, data: Record<string, unknown>) {

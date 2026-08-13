@@ -27,8 +27,12 @@ vi.mock('drizzle-orm', () => ({
 	eq: vi.fn((_col: any, val: any) => val)
 }));
 
+// `profiles` too: the route touches the parent row after a successful write,
+// because a child edit that leaves profiles.date_updated alone leaves the
+// matcher scoring a stale snapshot.
 vi.mock('$lib/server/db/schema', () => ({
-	education: { id: 'education.id' }
+	education: { id: 'education.id' },
+	profiles: { id: 'profiles.id' }
 }));
 
 import { PATCH } from '../+server';
@@ -83,6 +87,7 @@ describe('PATCH /api/education/[id]', () => {
 	it('rejects empty institution', async () => {
 		mockFindFirst.mockResolvedValueOnce({
 			id: 1,
+			profile_id: 7,
 			profile: { user_id: 'user-1' }
 		});
 		await expect(PATCH(createEvent({ institution: '' }))).rejects.toMatchObject({ status: 400 });
@@ -91,6 +96,7 @@ describe('PATCH /api/education/[id]', () => {
 	it('updates education with valid data', async () => {
 		mockFindFirst.mockResolvedValueOnce({
 			id: 1,
+			profile_id: 7,
 			profile: { user_id: 'user-1' }
 		});
 		const res = await PATCH(
@@ -114,6 +120,7 @@ describe('PATCH /api/education/[id]', () => {
 	it('converts date fields to Date objects', async () => {
 		mockFindFirst.mockResolvedValueOnce({
 			id: 1,
+			profile_id: 7,
 			profile: { user_id: 'user-1' }
 		});
 		await PATCH(
@@ -130,6 +137,7 @@ describe('PATCH /api/education/[id]', () => {
 	it('only updates allowed fields', async () => {
 		mockFindFirst.mockResolvedValueOnce({
 			id: 1,
+			profile_id: 7,
 			profile: { user_id: 'user-1' }
 		});
 		await PATCH(

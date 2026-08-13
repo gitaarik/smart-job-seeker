@@ -8,6 +8,7 @@ import {
 	side_project_achievements
 } from '$lib/server/db/schema';
 import { requireAuth, parseIntParam, buildUpdateData } from '$lib/server/utils/api-helpers';
+import { touchProfile } from '$lib/server/profile/touch-profile';
 import {
 	sideProjectBasicSchema,
 	sideProjectTechSchema,
@@ -23,7 +24,8 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const project = await db.query.side_projects.findFirst({
 		where: eq(side_projects.id, projectId),
 		columns: {
-			id: true
+			id: true,
+			profile_id: true
 		},
 		with: {
 			profile: {
@@ -38,16 +40,23 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
 	const raw = await request.json();
 
+	/** Child edits move the parent row too — see the work-experience route. */
+	const touched = async (result: Promise<Response>) => {
+		const response = await result;
+		await touchProfile(project.profile_id);
+		return response;
+	};
+
 	if (raw.section === 'technologies') {
 		const data = parseBody(sideProjectTechSchema, raw);
-		return updateTechnologies(projectId, data.technologies);
+		return touched(updateTechnologies(projectId, data.technologies));
 	} else if (raw.section === 'achievements') {
 		const data = parseBody(sideProjectAchievementsSchema, raw);
-		return updateAchievements(projectId, data.achievements);
+		return touched(updateAchievements(projectId, data.achievements));
 	}
 
 	const data = parseBody(sideProjectBasicSchema, raw);
-	return updateBasicInfo(projectId, data);
+	return touched(updateBasicInfo(projectId, data));
 };
 
 async function updateBasicInfo(id: number, data: Record<string, unknown>) {

@@ -41,6 +41,7 @@
 		docType,
 		profileSlug,
 		recordedHere,
+		profileMovedOn = false,
 		lastRun = null
 	}: {
 		tailored: { slug: string; name: string; baseSlug?: string | null };
@@ -56,6 +57,15 @@
 		 * not, there is nowhere else to reach the document from.
 		 */
 		recordedHere: boolean;
+		/**
+		 * Whether the profile changed since a run last decided this document.
+		 *
+		 * Not a warning: what was added is already printing — the version is a
+		 * sidecar of decisions over live data, not a snapshot. What is out of date
+		 * is the deciding, and the page budget it was fitted to. Said here because
+		 * the button that fixes it is one line below.
+		 */
+		profileMovedOn?: boolean;
 		/**
 		 * The run that just finished, when one did. Shown only here, at the moment
 		 * it can still be acted on: the decisions are stored and read the same
@@ -373,6 +383,12 @@
 			     regenerate at all, and the action moves the extension to match.
 			     Down here rather than in front of the first run — it is a real
 			     choice, but not the one to open with. -->
+			{#if profileMovedOn}
+				<span class="text-[10px] text-[var(--dash-text-secondary)]">
+					Your profile changed since this was built — new items already show; the choices below
+					don't know about them.
+				</span>
+			{/if}
 			<label for="tailor-rebase-slug" class="text-[10px] text-[var(--dash-text-secondary)]">
 				Built on
 			</label>

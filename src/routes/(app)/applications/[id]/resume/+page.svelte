@@ -46,6 +46,7 @@
 	{app}
 	versions={data.versions ?? []}
 	tailored={data.tailored ?? null}
+	profileMovedOn={data.profileMovedOn ?? false}
 	decisions={data.decisions ?? []}
 	gaps={data.gaps ?? []}
 	items={data.items ?? []}

@@ -69,7 +69,14 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 							eq(profile_versions.application_id, applicationId)
 						)
 			),
-			columns: { id: true, slug: true, name: true, application_id: true },
+			columns: {
+				id: true,
+				slug: true,
+				name: true,
+				application_id: true,
+				// When a run last decided this document — see `profileMovedOn`.
+				date_updated: true
+			},
 			orderBy: asc(profile_versions.sort)
 		}),
 		// Precomputed for every template x version pair rather than just the saved
@@ -86,7 +93,13 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		// version set it is not even reachable as a document.
 		db.query.profiles.findFirst({
 			where: eq(profiles.id, layoutData.selectedProfile.id),
-			columns: { public_resume_version_id: true, public_cv_version_id: true }
+			columns: {
+				public_resume_version_id: true,
+				public_cv_version_id: true,
+				// Bumped by touchProfile on every child-record edit — a skill, a
+				// bullet, a project. The cheap half of the staleness question.
+				date_updated: true
+			}
 		})
 	]);
 
@@ -95,6 +108,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		slug: string;
 		name: string;
 		application_id: number | null;
+		date_updated: Date | null;
 	}[];
 
 	const defaultBase = {
@@ -113,6 +127,30 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 				columns: { extended_id: true }
 			})
 		: null;
+	/**
+	 * Whether the profile has changed since a run last decided this document.
+	 *
+	 * New content does not need a rerun to appear — a tailored version is a
+	 * sidecar of decisions over live profile data, so an achievement added
+	 * afterwards has no exclusion row and simply prints. What ages is the
+	 * DECIDING: the surfacing, the ordering, and the page budget the run fitted
+	 * the document to. Add three bullets to a document trimmed to two pages and
+	 * it quietly becomes longer than the run ever checked.
+	 *
+	 * Deliberately coarse. `touchProfile` bumps this for any child edit, a new
+	 * language included, so the notice claims "something moved, a rerun is
+	 * cheap" and not "this document is wrong". Narrowing it to the entities a
+	 * run actually decided about is a lot of bookkeeping for a nudge that sits
+	 * next to a one-click button.
+	 *
+	 * Null on a version built before runs started stamping themselves: unknown,
+	 * so it says nothing rather than nagging every version that predates this.
+	 */
+	const profileMovedOn =
+		!!tailoredRow?.date_updated &&
+		!!profile?.date_updated &&
+		profile.date_updated > tailoredRow.date_updated;
+
 	const tailored = tailoredRow
 		? {
 				...tailoredRow,
@@ -194,6 +232,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 			.map(({ slug, name }) => ({ slug, name })),
 		items,
 		tailored,
+		profileMovedOn,
 		coverage,
 		decisions,
 		gaps: matchRead.gaps,
