@@ -156,6 +156,8 @@ function fetchPromptTemplate(key: string): {
 	id: number;
 	system_prompt: string;
 	user_prompt: string;
+	/** Undefined means the shared default — see PromptTemplate.temperature. */
+	temperature?: number;
 	format: string | null;
 } | null {
 	const template = promptTemplates[key];
@@ -168,6 +170,7 @@ function fetchPromptTemplate(key: string): {
 		id: 0, // Not used for code-defined templates
 		system_prompt: template.system_prompt,
 		user_prompt: template.user_prompt,
+		temperature: template.temperature,
 		format: null
 	};
 }
@@ -470,7 +473,13 @@ export async function createAndGenerateAiChat(
 				...historyMessages,
 				{ role: 'user', content: interpolatedUserPrompt }
 			],
-			{ structuredOutput, provider: activeProvider, model: activeModel }
+			{
+				structuredOutput,
+				provider: activeProvider,
+				model: activeModel,
+				// Undefined leaves generateChatCompletionTracked on its own default.
+				temperature: promptTemplate.temperature
+			}
 		);
 
 		// Step 8: Save response + token usage

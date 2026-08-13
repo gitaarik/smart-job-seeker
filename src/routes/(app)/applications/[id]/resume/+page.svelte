@@ -52,6 +52,8 @@
 	coverage={data.coverage ?? {}}
 	creditedNotNamed={data.creditedNotNamed ?? []}
 	exclusions={data.exclusions ?? {}}
+	outOfReach={data.outOfReach ?? {}}
+	heldBackParents={data.heldBackParents ?? {}}
 	defaultBase={data.defaultBase}
 	{profileSlug}
 	{lastRun}

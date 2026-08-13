@@ -94,11 +94,11 @@
 						{/if}
 					</p>
 					{#if group.entityType && group.entityId !== null}
-						<!-- A whole role can be turned on or off here. It is the one thing
-						     tailoring itself may never do — omitting a job misrepresents a
-						     history rather than focusing it — but it is the applicant's
-						     document, and the alternative was a section they could see was
-						     missing and could not reach. -->
+						<!-- A whole role can be turned on or off here. A run may bring one
+						     back only when a version tag is the sole reason it is hidden
+						     (see canBringBack); one held off this document on purpose is
+						     the applicant's sentence about their own history, so it is
+						     named in a strip above and turned on here. -->
 						<form method="POST" action="?/setItemState" use:enhance={() => track(group.key)}>
 							<input type="hidden" name="entity_type" value={group.entityType} />
 							<input type="hidden" name="entity_id" value={group.entityId} />

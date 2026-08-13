@@ -136,6 +136,139 @@ describe('shortlistFor', () => {
 		const messy = bullet(1, 0.9, { label: 'first line\n\tsecond   line' });
 		expect(shortlistFor([messy], [], FLOOR).split('\n')).toHaveLength(1);
 	});
+
+	it('shows the model what an item says, not what it is called', () => {
+		// Handed the name alone, the model called a Lit web-components library a
+		// "likely unrelated hobby project" — against a job whose frontend is web
+		// components. A project's name is the least informative thing about it.
+		const project = bullet(7, 0.5, {
+			entityType: OVERRIDE_ENTITIES.sideProject,
+			label: 'LitState',
+			detail: 'LitState — Reactive state management library for Lit Web Components.'
+		});
+		const line = shortlistFor([project], [], FLOOR);
+		expect(line).toContain('Lit Web Components');
+		expect(line.split('\n')).toHaveLength(1);
+	});
+
+	it('keeps a long summary from turning the shortlist into a document', () => {
+		const project = bullet(7, 0.5, {
+			entityType: OVERRIDE_ENTITIES.sideProject,
+			label: 'Verbose',
+			detail: 'x'.repeat(900)
+		});
+		expect(shortlistFor([project], [], FLOOR).length).toBeLessThan(400);
+	});
+});
+
+describe('buildCandidates: side projects', () => {
+	const profileWith = (projects: Array<{ id: number; name: string; summary: string }>) =>
+		({
+			profile_versions: [{ id: 1, slug: 'base', extension_links: [], toggles: [], overrides: [] }],
+			work_experiences: [],
+			side_projects: projects.map((p) => ({ ...p, tags: null, end_date: null })),
+			tech_skill_categories: []
+		}) as unknown as Parameters<typeof buildCandidates>[0];
+
+	it('carries the summary as detail and keeps the label a name', () => {
+		// The label is what the review diff lists; the detail is what the ranker
+		// embeds and the model reads. Before this, both were the name.
+		const [project] = buildCandidates(
+			profileWith([
+				{ id: 7, name: 'LitState', summary: 'State management for Lit Web Components.' }
+			]),
+			'resume',
+			'base',
+			[]
+		).filter((c) => c.entityType === OVERRIDE_ENTITIES.sideProject);
+		expect(project.label).toBe('LitState');
+		expect(project.detail).toBe('LitState — State management for Lit Web Components.');
+	});
+
+	it('falls back to the name when there is no summary', () => {
+		const [project] = buildCandidates(
+			profileWith([{ id: 7, name: 'LitState', summary: '' }]),
+			'resume',
+			'base',
+			[]
+		).filter((c) => c.entityType === OVERRIDE_ENTITIES.sideProject);
+		expect(project.detail).toBe('LitState');
+	});
+});
+
+describe('buildCandidates: why a role is hidden', () => {
+	type Role = { id: number; position: string; name: string; tags?: string[] | null };
+	const profileWith = (roles: Role[]) =>
+		({
+			profile_versions: [
+				{ id: 1, slug: 'base', extension_links: [], toggles: [], overrides: [] },
+				{ id: 2, slug: 'other', extension_links: [], toggles: [], overrides: [] }
+			],
+			work_experiences: roles.map((r) => ({
+				...r,
+				tags: r.tags ?? null,
+				start_date: '2020-01-01',
+				end_date: null,
+				work_experience_achievements: [
+					{ id: r.id * 100, description: `what ${r.position} did`, tags: null }
+				]
+			})),
+			side_projects: [],
+			tech_skill_categories: []
+		}) as unknown as Parameters<typeof buildCandidates>[0];
+
+	const holdOn = (roles: Role[], roleId: number) =>
+		buildCandidates(profileWith(roles), 'resume', 'base', []).find(
+			(c) => c.entityType === OVERRIDE_ENTITIES.achievement && c.parentId === roleId
+		)?.parentHeldBack;
+
+	const SHOWN = { id: 1, position: 'Engineer', name: 'Acme' };
+
+	it('calls a whitelist naming another version what it is', () => {
+		// Not a statement about this document: the applicant said "show it on
+		// other", and a job-tailored version is as entitled to it as other was.
+		expect(
+			holdOn([SHOWN, { id: 2, position: 'Engineer', name: 'Other Co', tags: ['other'] }], 2)
+		).toBe('version');
+	});
+
+	it('keeps "CV only" and profile-only apart from it, and from each other', () => {
+		expect(holdOn([SHOWN, { id: 2, position: 'Dev', name: 'Old Co', tags: ['cv'] }], 2)).toBe(
+			'template'
+		);
+		expect(
+			holdOn([SHOWN, { id: 2, position: 'Dev', name: 'Old Co', tags: ['!resume', '!cv'] }], 2)
+		).toBe('profile');
+	});
+
+	it('recognises a second write-up of a role already on the page', () => {
+		// Same job, two tellings, one per version. Restoring the hidden one puts
+		// the same job on the page twice under the same name.
+		expect(holdOn([SHOWN, { id: 2, position: 'Engineer', name: 'Acme', tags: ['other'] }], 2)).toBe(
+			'alternative'
+		);
+	});
+
+	it('says nothing about a role that prints', () => {
+		expect(holdOn([SHOWN], 1)).toBeUndefined();
+	});
+
+	it('carries what a restored role would bring with it', () => {
+		const built = buildCandidates(
+			profileWith([SHOWN, { id: 2, position: 'Dev', name: 'Other Co', tags: ['other'] }]),
+			'resume',
+			'base',
+			[]
+		);
+		const hidden = built.find((c) => c.parentId === 2);
+		// Hidden by its role, not by itself — so it prints the moment the role does.
+		expect(hidden).toMatchObject({
+			visible: false,
+			parentVisible: false,
+			visibleIfParentShown: true,
+			parentType: OVERRIDE_ENTITIES.workExperience
+		});
+	});
 });
 
 describe('buildCandidates: skills', () => {

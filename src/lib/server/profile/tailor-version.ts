@@ -37,12 +37,14 @@ import { getProfileByIdentifier } from '$lib/server/profile/default';
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
 import { isTailoredSlug, OVERRIDE_ENTITIES, tailoredSlugFor } from '$lib/version-overrides';
 import {
+	beyondReach,
 	canSurface,
 	chooseBudget,
 	DEFAULT_SELECTION,
 	DROPPABLE_ENTITIES,
 	FIT_ATTEMPTS,
 	PAGE_BUDGETS,
+	PROMOTION_MARGIN,
 	selectForJob,
 	surfaceBar,
 	surfaceScore,
@@ -196,8 +198,32 @@ export function buildCandidates(
 	const visibleRoles = new Set(
 		filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience).map((w) => w.id)
 	);
+	const labelOfRole = (role: { position?: unknown; name?: unknown; id: number }) =>
+		[text(role.position), text(role.name)].filter(Boolean).join(' at ') || `role ${role.id}`;
+	// The roles this document already prints, by name — so a second write-up of
+	// one of them is never offered as a role to add. Two versions of the same
+	// job on one page is not a tailored resume.
+	const printingRoles = new Set(
+		(profile.work_experiences ?? [])
+			.filter((role) => visibleRoles.has(role.id))
+			.map((role) => labelOfRole(role).toLowerCase())
+	);
+	/**
+	 * Why a role does not print — the four answers are different statements and
+	 * only one of them is about this document being the wrong document. See
+	 * Candidate.parentHeldBack in $lib/tailoring.
+	 */
+	const holdOn = (tags: string[], label: string): Candidate['parentHeldBack'] => {
+		if (isProfileOnly(tags)) return 'profile';
+		if (heldBackByTemplate(tags, docType)) return 'template';
+		if (printingRoles.has(label.toLowerCase())) return 'alternative';
+		return 'version';
+	};
 	for (const role of profile.work_experiences ?? []) {
-		const roleLabel = [role.position, role.name].filter(Boolean).join(' at ') || `role ${role.id}`;
+		const roleLabel = labelOfRole(role);
+		const parentHeldBack = visibleRoles.has(role.id)
+			? undefined
+			: holdOn(asStringArray(role.tags), roleLabel);
 		const visibleAchievements = new Set(
 			filterOnTags(role.work_experience_achievements ?? [], OVERRIDE_ENTITIES.achievement).map(
 				(a) => a.id
@@ -215,6 +241,9 @@ export function buildCandidates(
 				// A bullet on a role the document doesn't print isn't printed either.
 				visible: visibleRoles.has(role.id) && visibleAchievements.has(achievement.id),
 				parentVisible: visibleRoles.has(role.id),
+				parentType: OVERRIDE_ENTITIES.workExperience,
+				parentHeldBack,
+				visibleIfParentShown: visibleAchievements.has(achievement.id),
 				// A bullet is as old as the role it sits in — it has no dates of its own.
 				age: ageOf(role.end_date),
 				templateHeldBack: heldBackByTemplate(asStringArray(achievement.tags), docType),
@@ -235,6 +264,9 @@ export function buildCandidates(
 			entityId: project.id,
 			parentId: null,
 			label: text(project.name) || `project ${project.id}`,
+			// The summary is the project. Kept out of the label so the review diff
+			// stays a list of names rather than paragraphs.
+			detail: [text(project.name), summary].filter(Boolean).join(' — '),
 			chars: (text(project.name) + summary).length,
 			visible: visibleProjects.has(project.id),
 			parentVisible: true,
@@ -256,6 +288,12 @@ export function buildCandidates(
 	// word, not which row printed it. Asking per row produced an "include
 	// Python" decision on a document already printing Python from its other
 	// category, and the decision did nothing at all.
+	// Unlike a role, a hidden skill GROUP is never brought back. The pattern that
+	// hides one is almost always a pair — this profile carries a full Backend
+	// list tagged `!fullstack-react` and a shorter one tagged `fullstack-react` —
+	// so restoring the hidden half prints the same category twice under the same
+	// name. Skills are include-only anyway (see $lib/tailoring), so the required
+	// ones a group holds are reported as out of reach rather than added.
 	const visibleCategories = new Set(
 		filterOnTags(profile.tech_skill_categories ?? [], OVERRIDE_ENTITIES.skillCategory).map(
 			(c) => c.id
@@ -354,9 +392,15 @@ export function buildCandidates(
 	return candidates;
 }
 
-/** What each candidate is embedded/compared as. */
+/**
+ * What each candidate is embedded/compared as — its content, not its name.
+ *
+ * Bullets and skill categories carry theirs in the label already (a category's
+ * label lists the skills in it for exactly this reason). Side projects carry a
+ * `detail`, because a project name says nothing a ranker can use.
+ */
 function embedTextFor(candidate: Candidate): string {
-	return candidate.label;
+	return candidate.detail || candidate.label;
 }
 
 /**
@@ -395,7 +439,10 @@ export async function scoreCandidates(
 			...c,
 			score: c.pinned
 				? Number.MAX_SAFE_INTEGER
-				: scoreUnitAgainstQuery({ title: c.label, keywords: [], text: c.label }, query)
+				: // Title and body are weighted differently by the scorer (title tokens
+					// count double), so the name stays the title and the content becomes
+					// the body — a project whose NAME matches still scores highest.
+					scoreUnitAgainstQuery({ title: c.label, keywords: [], text: embedTextFor(c) }, query)
 		})),
 		ranker: 'lexical',
 		floor: LEXICAL_FLOOR
@@ -473,6 +520,13 @@ export function refFor(candidate: Pick<Candidate, 'entityType' | 'entityId'>): s
  * budget on the obvious keeps and truncate exactly the items worth a second
  * opinion.
  */
+/**
+ * How much of an item's text the model sees per line. Enough for a project
+ * summary (measured: 197-268 characters on this profile), short enough that
+ * SHORTLIST_LIMIT lines stay a shortlist rather than a document.
+ */
+const SHORTLIST_DETAIL_CHARS = 300;
+
 export function shortlistFor(
 	candidates: Candidate[],
 	decisions: Decision[],
@@ -493,7 +547,11 @@ export function shortlistFor(
 		.slice(0, SHORTLIST_LIMIT)
 		.map((c) => {
 			const proposal = dropped.has(key(c)) ? 'drop' : 'keep';
-			return `${refFor(c)} | ${c.label.replace(/\s+/g, ' ')} | ${c.score.toFixed(2)} | ${proposal}`;
+			// What it says, not what it is called. Asked to judge "LitState" against
+			// a web-components job, the model called it a likely unrelated hobby
+			// project; its summary names Lit web components in the first six words.
+			const said = (c.detail || c.label).replace(/\s+/g, ' ');
+			return `${refFor(c)} | ${said.slice(0, SHORTLIST_DETAIL_CHARS)} | ${c.score.toFixed(2)} | ${proposal}`;
 		})
 		.join('\n');
 }
@@ -591,6 +649,13 @@ export async function tailorVersionForApplication(opts: {
 			? `${dated}kept for your ${otherLabel} only, and it outranks what it displaces here`
 			: `${dated}not on the version this builds on, and it outranks what it displaces here`;
 	};
+	// A restored role is the largest thing a run can do, so the row says what
+	// bought it: the role names itself in the diff, and the bullet that earned
+	// it is the part the applicant will want to check.
+	const restoredParentReason = (child: Candidate) => {
+		const bullet = child.label.split(': ').slice(1).join(': ') || child.label;
+		return `on your ${otherLabel} version only, and this job asks about “${bullet}”`;
+	};
 	// One page or two, decided by how much this applicant has rather than by a
 	// setting they would have to understand. The fit pass below then holds the
 	// document to it by rendering, which is the only thing that actually knows.
@@ -602,10 +667,12 @@ export async function tailorVersionForApplication(opts: {
 	const deterministic = selectForJob(candidates, {
 		floor,
 		...DEFAULT_SELECTION,
+		promotionMargin: PROMOTION_MARGIN[ranker],
 		budgetChars,
 		pinnedReason,
 		surfacedReason,
-		groupDropReason
+		groupDropReason,
+		restoredParentReason
 	});
 
 	// ── L3 ──
@@ -650,10 +717,12 @@ export async function tailorVersionForApplication(opts: {
 				decisions = selectForJob(applied.candidates, {
 					floor,
 					...DEFAULT_SELECTION,
+					promotionMargin: PROMOTION_MARGIN[ranker],
 					budgetChars,
 					pinnedReason,
 					surfacedReason,
-					groupDropReason
+					groupDropReason,
+					restoredParentReason
 				});
 				modelReviewed = true;
 			}
@@ -709,10 +778,12 @@ export async function tailorVersionForApplication(opts: {
 			selectForJob(selectionCandidates, {
 				floor,
 				...DEFAULT_SELECTION,
+				promotionMargin: PROMOTION_MARGIN[ranker],
 				budgetChars: budget,
 				pinnedReason,
 				surfacedReason,
-				groupDropReason
+				groupDropReason,
+				restoredParentReason
 			})
 	});
 
@@ -1010,10 +1081,16 @@ export async function describeOverrides(
 			: []
 	]);
 
-	// One more round-trip, and only when bullets are involved: a bullet needs the
-	// role it sits under to be identifiable, and the other two entities name
-	// themselves.
-	const roleIds = [...new Set(achievements.map((a) => a.work_experience_id).filter(Boolean))];
+	// One more round-trip, for the roles: a bullet needs the role it sits under
+	// to be identifiable, and a run can now decide about a role itself — the
+	// biggest change it can make, and the one that would have gone unlisted,
+	// because a row with no label is dropped at the end of this function.
+	const roleIds = [
+		...new Set([
+			...achievements.map((a) => a.work_experience_id).filter(Boolean),
+			...idsOf(OVERRIDE_ENTITIES.workExperience)
+		])
+	];
 	const roles = roleIds.length
 		? await db.query.work_experiences.findMany({
 				where: inArray(work_experiences.id, roleIds as number[]),
@@ -1026,6 +1103,10 @@ export async function describeOverrides(
 
 	const labels = new Map<string, string>();
 	const contexts = new Map<string, string>();
+	for (const role of roles) {
+		const label = roleLabels.get(role.id);
+		if (label) labels.set(`${OVERRIDE_ENTITIES.workExperience}:${role.id}`, label);
+	}
 	for (const a of achievements) {
 		labels.set(`${OVERRIDE_ENTITIES.achievement}:${a.id}`, text(a.description));
 		const role = roleLabels.get(a.work_experience_id);
@@ -1249,6 +1330,39 @@ export interface ExcludedItem {
 const MAX_EXCLUSIONS_REPORTED = 4;
 
 /**
+ * A container this document does not print, holding work that speaks to this
+ * job — and that no amount of tailoring will reach, because turning it on is
+ * not a decision a run gets to make.
+ */
+export interface HeldBackParent {
+	entityType: string;
+	entityId: number;
+	label: string;
+	/** Relevant items it holds that this document cannot print. */
+	count: number;
+	/** `template` — "CV only" here. `profile` — off every document. */
+	reason: 'template' | 'profile';
+}
+
+/**
+ * What one scoring pass can say about every candidate document: the relevant
+ * things it leaves out, what is out of reach entirely, and which containers are
+ * holding that.
+ *
+ * Three answers rather than one because they are read by three parts of the
+ * page — the warning about the document being sent, the ranking of the versions
+ * offered as a base, and the strip that names the roles worth turning on — and
+ * because all three fall out of the same scoring pass.
+ */
+export interface VersionReach {
+	exclusions: Record<string, ExcludedItem[]>;
+	outOfReach: Record<string, number>;
+	heldBackParents: Record<string, HeldBackParent[]>;
+}
+
+const EMPTY_REACH: VersionReach = { exclusions: {}, outOfReach: {}, heldBackParents: {} };
+
+/**
  * Per candidate document, the relevant things it does NOT show.
  *
  * The hidden-skills strip answers this for skills, by exact name and for free.
@@ -1272,7 +1386,7 @@ export async function relevantExclusionsByVersion(opts: {
 	profileId: number;
 	applicationId: number;
 	versionSlugs: string[];
-}): Promise<Record<string, ExcludedItem[]>> {
+}): Promise<VersionReach> {
 	const { profileId, applicationId, versionSlugs } = opts;
 
 	const application = await db.query.applications.findFirst({
@@ -1291,10 +1405,10 @@ export async function relevantExclusionsByVersion(opts: {
 		}
 	});
 	const job = application?.job;
-	if (!job) return {};
+	if (!job) return EMPTY_REACH;
 
 	const profile = await getProfileByIdentifier(profileId);
-	if (!profile) return {};
+	if (!profile) return EMPTY_REACH;
 
 	const requiredSkills = asStringArray(job.skills_required);
 	const query = {
@@ -1307,7 +1421,7 @@ export async function relevantExclusionsByVersion(opts: {
 			.join('\n'),
 		skills: [...requiredSkills, ...asStringArray(job.skills_preferred)]
 	};
-	if (!query.text && query.skills.length === 0) return {};
+	if (!query.text && query.skills.length === 0) return EMPTY_REACH;
 
 	// One scoring pass: an item's relevance to the job does not depend on which
 	// document is being considered.
@@ -1342,6 +1456,14 @@ export async function relevantExclusionsByVersion(opts: {
 	}
 
 	const result: Record<string, ExcludedItem[]> = {};
+	const outOfReach: Record<string, number> = {};
+	const heldBackParents: Record<string, HeldBackParent[]> = {};
+	const roleLabels = new Map(
+		(profile.work_experiences ?? []).map((role) => [
+			role.id,
+			[text(role.position), text(role.name)].filter(Boolean).join(' at ') || `role ${role.id}`
+		])
+	);
 	for (const docType of BASE_TEMPLATE_TAGS) {
 		for (const versionSlug of versionSlugs) {
 			const built = buildCandidates(profile, docType, versionSlug, requiredSkills).filter((c) =>
@@ -1373,10 +1495,44 @@ export async function relevantExclusionsByVersion(opts: {
 				}));
 
 			if (excluded.length > 0) result[hiddenSkillsKey(docType, versionSlug)] = excluded;
+
+			// The exact complement of the warning above, and the reason it is worth
+			// computing here rather than anywhere else: `canBringBack` is what a run
+			// may show, so everything it turns down is what THIS base can never be
+			// talked into showing. One scoring pass answers both questions.
+			//
+			// An alternative write-up is NOT counted. Its bullets are unreachable in
+			// the same literal sense, but the job they describe is on the page
+			// already under the other write-up, so counting them would mark a base
+			// down for a loss the reader cannot see.
+			// Same bar as the warning above, and the rule itself lives in
+			// $lib/tailoring next to the two it has to stay consistent with.
+			const stranded = scored.filter((c) => beyondReach(c, floor, bar));
+			if (stranded.length > 0) {
+				const key = hiddenSkillsKey(docType, versionSlug);
+				outOfReach[key] = stranded.length;
+				const byParent = new Map<number, HeldBackParent>();
+				for (const item of stranded) {
+					if (item.parentId === null || !item.parentType) continue;
+					const existing = byParent.get(item.parentId);
+					if (existing) {
+						existing.count += 1;
+						continue;
+					}
+					byParent.set(item.parentId, {
+						entityType: item.parentType,
+						entityId: item.parentId,
+						label: roleLabels.get(item.parentId) ?? `role ${item.parentId}`,
+						count: 1,
+						reason: item.parentHeldBack === 'profile' ? 'profile' : 'template'
+					});
+				}
+				heldBackParents[key] = [...byParent.values()].sort((a, z) => z.count - a.count);
+			}
 		}
 	}
 
-	return result;
+	return { exclusions: result, outOfReach, heldBackParents };
 }
 
 /** How an override row is keyed: entity ids are per table, so the type is part of it. */

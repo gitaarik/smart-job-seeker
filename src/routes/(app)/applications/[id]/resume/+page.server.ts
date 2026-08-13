@@ -20,7 +20,8 @@ import {
 	retagVersionSlug,
 	setItemStateForApplication,
 	tailorVersionForApplication,
-	versionItemStates
+	versionItemStates,
+	type VersionReach
 } from '$lib/server/profile/tailor-version';
 import { isOverrideEntity } from '$lib/version-overrides';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
@@ -123,15 +124,17 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 
 	// The annotated diff, and what selection cannot fix. Both only matter once a
 	// tailored version exists, so neither costs anything until then.
-	const [decisions, matchRead, exclusions] = await Promise.all([
+	const [decisions, matchRead, reach] = await Promise.all([
 		tailored ? decisionsForVersion(tailored.id).then(describeOverrides) : Promise.resolve([]),
 		layoutData.application?.job?.id
 			? jobMatchRead(layoutData.selectedProfile.id, layoutData.application.job.id)
 			: Promise.resolve({ gaps: [], matched: [] }),
-		// What each candidate document leaves out that speaks to this job. Free
-		// after the first view: item vectors and the job's own vector are cached.
+		// What each candidate document leaves out that speaks to this job, and
+		// what it puts beyond reach entirely — the measure the base suggestion
+		// ranks on. Free after the first view: item vectors and the job's own
+		// vector are cached.
 		isNaN(applicationId)
-			? Promise.resolve({})
+			? Promise.resolve<VersionReach>({ exclusions: {}, outOfReach: {}, heldBackParents: {} })
 			: relevantExclusionsByVersion({
 					profileId: layoutData.selectedProfile.id,
 					applicationId,
@@ -195,7 +198,9 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		decisions,
 		gaps: matchRead.gaps,
 		creditedNotNamed,
-		exclusions,
+		exclusions: reach.exclusions,
+		outOfReach: reach.outOfReach,
+		heldBackParents: reach.heldBackParents,
 		defaultBase
 	};
 };

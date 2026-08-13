@@ -3,83 +3,128 @@ import {
 	carrierOf,
 	carriesName,
 	hiddenSkillsKey,
-	recommendVersion,
+	recommendBase,
 	type VersionCoverage
 } from './version-coverage';
 
-function entry(shown: string[], hidden: string[], required = 8): VersionCoverage {
+/** `hidden` as [name, liftable] — unliftable is the half that ranks a base. */
+function entry(shown: string[], hidden: Array<[string, boolean]>, required = 8): VersionCoverage {
 	return {
 		shown,
-		hidden: hidden.map((name, i) => ({ id: i + 1, name, liftable: true, carriedBy: null })),
+		hidden: hidden.map(([name, liftable], i) => ({ id: i + 1, name, liftable, carriedBy: null })),
 		owned: shown.length + hidden.length,
 		required
 	};
 }
 
-// '' is the plain base document; the rest are the applicant's versions in their
-// own order.
-const CANDIDATES = ['', 'frontend', 'backend'];
+// The plain document is deliberately absent: it is a candidate for "which
+// version should I send", never for what to build one ON.
+const CANDIDATES = ['frontend', 'backend'];
 
-describe('recommendVersion', () => {
-	it('returns nothing when no coverage was measured', () => {
-		expect(recommendVersion({}, 'resume', CANDIDATES)).toBeNull();
+describe('recommendBase', () => {
+	it('returns nothing when nothing was measured', () => {
+		expect(recommendBase('resume', CANDIDATES, { outOfReach: {}, coverage: {} })).toBeNull();
 	});
 
-	it('picks the version that shows the most required skills', () => {
-		const coverage = {
-			[hiddenSkillsKey('resume', '')]: entry(['React'], ['Kubernetes', 'Go']),
-			[hiddenSkillsKey('resume', 'frontend')]: entry(['React', 'CSS'], ['Kubernetes']),
-			[hiddenSkillsKey('resume', 'backend')]: entry(['Go', 'Kubernetes', 'SQL'], [])
-		};
-		expect(recommendVersion(coverage, 'resume', CANDIDATES)?.versionSlug).toBe('backend');
+	it('returns nothing when there are no versions', () => {
+		expect(recommendBase('resume', [], { outOfReach: {}, coverage: {} })).toBeNull();
 	});
 
-	it('breaks a tie on fewest hidden', () => {
-		const coverage = {
-			[hiddenSkillsKey('resume', 'frontend')]: entry(['React'], ['Go', 'Kubernetes']),
-			[hiddenSkillsKey('resume', 'backend')]: entry(['React'], ['Go'])
+	it('picks the version that strands the least relevant evidence', () => {
+		const outOfReach = {
+			[hiddenSkillsKey('resume', 'frontend')]: 4,
+			[hiddenSkillsKey('resume', 'backend')]: 1
 		};
-		expect(recommendVersion(coverage, 'resume', CANDIDATES)?.versionSlug).toBe('backend');
+		const choice = recommendBase('resume', CANDIDATES, { outOfReach, coverage: {} });
+		expect(choice?.versionSlug).toBe('backend');
+		expect(choice?.outOfReach).toBe(1);
+		expect(choice?.decidedBy).toBe('evidence');
 	});
 
-	it('says nothing when no version beats the plain document', () => {
-		// The plain document is the yardstick, never the answer: it usually cannot
-		// be sent at all (the version-less URL falls back to the public version,
-		// and PDF export is keyed by slug). If nothing beats it, which version you
-		// send makes no difference to this job — so the card stays quiet.
-		const coverage = {
-			[hiddenSkillsKey('resume', '')]: entry(['React'], ['Go']),
-			[hiddenSkillsKey('resume', 'frontend')]: entry(['React'], ['Go'])
-		};
-		expect(recommendVersion(coverage, 'resume', CANDIDATES)).toBeNull();
+	it('reads a missing entry as nothing stranded', () => {
+		// Only documents that strand something get a key, so absence is an answer
+		// and not a gap: the version nobody measured a loss for is the winner.
+		const outOfReach = { [hiddenSkillsKey('resume', 'frontend')]: 2 };
+		expect(recommendBase('resume', CANDIDATES, { outOfReach, coverage: {} })?.versionSlug).toBe(
+			'backend'
+		);
 	});
 
-	it('still lets a version win when it genuinely beats the baseline', () => {
+	it('breaks a tie on required skills held in a group the document omits', () => {
 		const coverage = {
-			[hiddenSkillsKey('resume', '')]: entry(['React'], ['Go']),
-			[hiddenSkillsKey('resume', 'backend')]: entry(['React', 'Go'], [])
+			[hiddenSkillsKey('resume', 'frontend')]: entry(['React'], [['Go', false]]),
+			[hiddenSkillsKey('resume', 'backend')]: entry(['React'], [['Go', true]])
 		};
-		expect(recommendVersion(coverage, 'resume', CANDIDATES)?.versionSlug).toBe('backend');
+		const choice = recommendBase('resume', CANDIDATES, { outOfReach: {}, coverage });
+		expect(choice?.versionSlug).toBe('backend');
+		expect(choice?.decidedBy).toBe('skills');
 	});
 
-	it('stays quiet when no candidate shows a single required skill', () => {
+	it('counts a liftable hidden skill as in reach', () => {
+		// Tailoring lifts a skill whose own tag holds it back. Only a hidden
+		// group or a base-template rule puts one beyond it, so a version hiding
+		// three liftable skills is not thereby a worse base than one hiding none.
 		const coverage = {
-			[hiddenSkillsKey('resume', '')]: entry([], ['Go', 'Kubernetes']),
-			[hiddenSkillsKey('resume', 'frontend')]: entry([], ['Go', 'Kubernetes'])
+			[hiddenSkillsKey('resume', 'frontend')]: entry(
+				[],
+				[
+					['Go', true],
+					['Rust', true]
+				]
+			),
+			[hiddenSkillsKey('resume', 'backend')]: entry(['React'], [])
 		};
-		expect(recommendVersion(coverage, 'resume', CANDIDATES)).toBeNull();
+		expect(recommendBase('resume', CANDIDATES, { outOfReach: {}, coverage })).toBeNull();
+	});
+
+	it('says nothing when the versions are equally reachable', () => {
+		// The common case now that the base decides no content: with the same
+		// roles and groups in reach, every base produces the same document, and
+		// naming one "the closest" would be a reason invented after the fact.
+		const outOfReach = {
+			[hiddenSkillsKey('resume', 'frontend')]: 2,
+			[hiddenSkillsKey('resume', 'backend')]: 2
+		};
+		expect(recommendBase('resume', CANDIDATES, { outOfReach, coverage: {} })).toBeNull();
+	});
+
+	it('says nothing when several versions share the best score', () => {
+		// The case real data hit: six versions tied at nothing out of reach and a
+		// seventh held one required skill in a group it omits. Announcing the
+		// first of the six would be a reason true of all six, and it would
+		// override the version the applicant actually sends.
+		const outOfReach = {
+			[hiddenSkillsKey('resume', 'frontend')]: 0,
+			[hiddenSkillsKey('resume', 'backend')]: 0,
+			[hiddenSkillsKey('resume', 'legacy')]: 3
+		};
+		expect(
+			recommendBase('resume', [...CANDIDATES, 'legacy'], { outOfReach, coverage: {} })
+		).toBeNull();
+	});
+
+	it('never ranks on coverage — the thing a base no longer decides', () => {
+		// A required skill the applicant has is pinned onto whatever this starts
+		// from, so showing more of them says nothing about the finished document.
+		const coverage = {
+			[hiddenSkillsKey('resume', 'frontend')]: entry(['React'], []),
+			[hiddenSkillsKey('resume', 'backend')]: entry(['React', 'Go', 'SQL'], [])
+		};
+		expect(recommendBase('resume', CANDIDATES, { outOfReach: {}, coverage })).toBeNull();
 	});
 
 	it('ranks within the chosen base template only', () => {
-		// The CV shows more, but the applicant is sending a resume; flipping their
-		// document type under them would be a different (and unasked) decision.
-		const coverage = {
-			[hiddenSkillsKey('resume', 'frontend')]: entry(['React'], ['Go']),
-			[hiddenSkillsKey('cv', 'backend')]: entry(['React', 'Go'], [])
+		const outOfReach = {
+			[hiddenSkillsKey('resume', 'frontend')]: 3,
+			[hiddenSkillsKey('cv', 'backend')]: 3
 		};
-		const rec = recommendVersion(coverage, 'resume', CANDIDATES);
-		expect(rec?.versionSlug).toBe('frontend');
-		expect(recommendVersion(coverage, 'cv', CANDIDATES)?.versionSlug).toBe('backend');
+		// On the resume, frontend is the one stranding work; on the CV, backend.
+		expect(recommendBase('resume', CANDIDATES, { outOfReach, coverage: {} })?.versionSlug).toBe(
+			'backend'
+		);
+		expect(recommendBase('cv', CANDIDATES, { outOfReach, coverage: {} })?.versionSlug).toBe(
+			'frontend'
+		);
 	});
 });
 

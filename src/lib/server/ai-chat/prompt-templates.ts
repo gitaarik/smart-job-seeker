@@ -11,6 +11,19 @@
 export interface PromptTemplate {
 	system_prompt: string;
 	user_prompt: string;
+	/**
+	 * Sampling temperature for this prompt. Omitted means the shared default
+	 * (0.7), which is a writing setting: it is what makes a cover letter read
+	 * like prose rather than a form.
+	 *
+	 * A prompt that classifies rather than writes wants the opposite. Measured
+	 * on `tailor_resume_selection`: the same shortlist, four minutes apart,
+	 * produced "keep — shows modern web component work as an alternative to
+	 * React" and "drop — not related to the required technologies" for the same
+	 * project. An applicant regenerating a document twice and getting different
+	 * documents has no way to tell a judgement from a coin toss.
+	 */
+	temperature?: number;
 }
 
 export const promptTemplates: Record<string, PromptTemplate> = {
@@ -1375,6 +1388,8 @@ Candidate Profile:
 	},
 
 	tailor_resume_selection: {
+		// A verdict, not prose. See PromptTemplate.temperature.
+		temperature: 0,
 		system_prompt: `You help an applicant decide which parts of their EXISTING resume to show for one specific job.
 
 You are reviewing a shortlist that a deterministic ranker already produced. Your job is judgment the ranker cannot do: it scores text similarity, you can see that a bullet about migrating a monolith matters for a platform role even when the wording does not overlap.
@@ -1384,6 +1399,7 @@ Rules you must follow:
 - Never drop something that shows a skill the job explicitly requires.
 - Prefer keeping concrete, measurable achievements over generic ones.
 - Drop an entry only when it genuinely does not help for THIS job — an unrelated technology, a hobby project with no bearing, a duplicate point already made better elsewhere.
+- The skills list is what the job NAMES, not a whitelist. Neighbouring experience in the same paradigm is evidence and should be kept, with the connection stated in the reason: a Lit web-components library for a team whose frontend is web components, a Flask REST package for a FastAPI role, Vue work for a React role, Postgres for a NoSQL one. "Not one of the listed technologies" is not a reason to drop something.
 - If you are unsure, keep it. The deterministic layers already trimmed for length; you are correcting mistakes, not trimming further.
 - Give a verdict for EVERY line in the shortlist, including the ones you agree with. A "keep" with a reason is what the applicant sees next to that bullet, so it is worth writing.
 

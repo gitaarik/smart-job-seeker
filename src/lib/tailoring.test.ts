@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+	beyondReach,
+	canBringBack,
 	canSurface,
 	chooseBudget,
 	HOLD_BACK_PENALTY,
@@ -8,6 +10,8 @@ import {
 	surfaceScore,
 	DEFAULT_SELECTION,
 	PAGE_BUDGETS,
+	PROMOTION_MARGIN,
+	promotionsFor,
 	tightenBudget,
 	selectForJob,
 	surfaceBar,
@@ -34,7 +38,11 @@ function bullet(
 	};
 }
 
-const OPTS = { floor: 0.3, ...DEFAULT_SELECTION };
+const OPTS = {
+	floor: 0.3,
+	promotionMargin: PROMOTION_MARGIN.semantic,
+	...DEFAULT_SELECTION
+};
 
 describe('selectForJob', () => {
 	it('returns nothing when everything is relevant and fits', () => {
@@ -198,6 +206,45 @@ describe('selectForJob', () => {
 		expect(decisions[0].reason).toBe(
 			'the most relevant thing you have for this job — moved to the top'
 		);
+	});
+
+	it('leaves an order alone when relevance barely disagrees with it', () => {
+		// Both clear the floor and both are relevant; the difference between them
+		// is a hundredth. Moving on that writes "the most relevant thing you have
+		// for this job" about a gap nobody could see, and overrules an order the
+		// applicant chose — the cap keeps the diff short, this keeps it true.
+		const candidates = [bullet(1, 10, 0.55), bullet(2, 10, 0.56), bullet(3, 10, 0.555)];
+		expect(selectForJob(candidates, OPTS).filter((d) => d.sort !== null)).toEqual([]);
+	});
+
+	it('measures each promotion against what it actually displaces', () => {
+		// After bullet 2 moves to the top, position 1 holds bullet 1 — not bullet
+		// 2, which has left. Comparing against the original occupant would ask
+		// whether 0.6 beats 0.9 and stop, burying the second-best bullet.
+		const candidates = [bullet(1, 10, 0.4), bullet(2, 10, 0.9), bullet(3, 10, 0.6)];
+		expect(
+			selectForJob(candidates, OPTS)
+				.filter((d) => d.sort !== null)
+				.map((d) => [d.entityId, d.sort])
+		).toEqual([
+			[2, 0],
+			[3, 1]
+		]);
+	});
+
+	it('promotes more from a long role than from a short one', () => {
+		// Two of eleven leaves the third-best thing you did there in fifth place,
+		// where a reader who skims the first lines never reaches it.
+		expect(promotionsFor(3)).toBe(2);
+		expect(promotionsFor(11)).toBe(3);
+		expect(promotionsFor(13)).toBe(4);
+		// Still a handful of rows, never a re-sort.
+		expect(promotionsFor(60)).toBe(4);
+
+		const many = Array.from({ length: 12 }, (_, i) => bullet(i + 1, 10, 0.4));
+		const candidates = [...many, bullet(90, 10, 0.9), bullet(91, 10, 0.8), bullet(92, 10, 0.7)];
+		const promoted = selectForJob(candidates, OPTS).filter((d) => d.sort !== null);
+		expect(promoted.map((d) => d.entityId)).toEqual([90, 91, 92]);
 	});
 
 	it('promotes nothing when every bullet is below the relevance floor', () => {
@@ -413,6 +460,141 @@ describe('surfacing respects the parent', () => {
 			OPTS
 		);
 		expect(decisions.some((d) => d.entityId === 3)).toBe(false);
+	});
+});
+
+describe('canBringBack', () => {
+	const onHiddenRole = (over: Partial<Candidate>) =>
+		bullet(1, 10, 0.9, { visible: false, parentVisible: false, ...over });
+
+	it('reaches a bullet whose role is hidden only by a version tag', () => {
+		// "Show this on X" is not a statement about this document, and a run can
+		// write the role's include in the same pass — which is the only reason
+		// canSurface refuses the same item.
+		expect(canBringBack(onHiddenRole({ parentHeldBack: 'version' }))).toBe(true);
+		expect(canSurface(onHiddenRole({ parentHeldBack: 'version' }))).toBe(false);
+	});
+
+	it('leaves the applicant their own judgement about a role', () => {
+		expect(canBringBack(onHiddenRole({ parentHeldBack: 'template' }))).toBe(false);
+		expect(canBringBack(onHiddenRole({ parentHeldBack: 'profile' }))).toBe(false);
+	});
+
+	it('never puts the same job on the page twice', () => {
+		expect(canBringBack(onHiddenRole({ parentHeldBack: 'alternative' }))).toBe(false);
+	});
+
+	it('defaults to the conservative answer when no reason is carried', () => {
+		expect(canBringBack(onHiddenRole({}))).toBe(false);
+	});
+
+	it('agrees with canSurface about everything else', () => {
+		expect(canBringBack(bullet(1, 10, 0.9, { visible: false, parentVisible: true }))).toBe(true);
+		expect(canBringBack(bullet(1, 10, 0.9))).toBe(false);
+	});
+});
+
+describe('bringing a role back with what it holds', () => {
+	const role = OVERRIDE_ENTITIES.workExperience;
+	const stranded = (over: Partial<Candidate> = {}) =>
+		bullet(3, 11, 0.99, {
+			visible: false,
+			parentVisible: false,
+			parentHeldBack: 'version',
+			parentType: role,
+			...over
+		});
+	const rowFor = (decisions: ReturnType<typeof selectForJob>, type: string, id: number) =>
+		decisions.find((d) => d.entityType === type && d.entityId === id);
+
+	it('includes the role, not just the bullet that earned it', () => {
+		// Without the role's own row this is a decision that renders as nothing:
+		// the filter meets the role first and never asks about the bullet.
+		const decisions = selectForJob([bullet(1, 10, 0.5), bullet(2, 10, 0.5), stranded()], OPTS);
+		expect(rowFor(decisions, OVERRIDE_ENTITIES.achievement, 3)?.action).toBe('include');
+		expect(rowFor(decisions, role, 11)?.action).toBe('include');
+	});
+
+	it('says nothing about a role held off this document on purpose', () => {
+		for (const hold of ['template', 'profile', 'alternative'] as const) {
+			const decisions = selectForJob(
+				[bullet(1, 10, 0.5), bullet(2, 10, 0.5), stranded({ parentHeldBack: hold })],
+				OPTS
+			);
+			expect(rowFor(decisions, OVERRIDE_ENTITIES.achievement, 3)).toBeUndefined();
+			expect(rowFor(decisions, role, 11)).toBeUndefined();
+		}
+	});
+
+	it('spends the page budget on what rides along with the role', () => {
+		// A sibling its own tags allow prints the moment the role does. Left out
+		// of the budget it would arrive after the page was already full, which is
+		// how a two-page document becomes three.
+		// Below the floor, so it is not surfaced on its own merits — it is here
+		// only because its role is.
+		const rides = (id: number, score: number) =>
+			bullet(id, 11, score, {
+				visible: false,
+				parentVisible: false,
+				parentHeldBack: 'version',
+				parentType: role,
+				visibleIfParentShown: true
+			});
+		const tight = { ...OPTS, budgetChars: 250 };
+		const decisions = selectForJob(
+			[bullet(1, 10, 0.9), bullet(2, 10, 0.9), stranded(), rides(4, 0.1), rides(5, 0.12)],
+			tight
+		);
+		// It is on the page, so trimming it has to be SAID — unlike an item the
+		// base never printed, where an exclusion row would be noise.
+		expect(rowFor(decisions, OVERRIDE_ENTITIES.achievement, 4)?.action).toBe('exclude');
+	});
+});
+
+describe('beyondReach', () => {
+	// floor 0.3, and the document's own median sits at 0.6 — the bar this has to
+	// clear, the same one the evidence warning uses.
+	const FLOOR = 0.3;
+	const BAR = 0.6;
+	const heldRole = (over: Partial<Candidate> = {}) =>
+		bullet(1, 10, 0.9, {
+			visible: false,
+			parentVisible: false,
+			parentHeldBack: 'template',
+			parentType: OVERRIDE_ENTITIES.workExperience,
+			...over
+		});
+
+	it('names a role held off this document that holds strong evidence', () => {
+		expect(beyondReach(heldRole(), FLOOR, BAR)).toBe(true);
+		expect(beyondReach(heldRole({ parentHeldBack: 'profile' }), FLOOR, BAR)).toBe(true);
+	});
+
+	it('asks for the median of what prints, not the floor', () => {
+		// 0.45 is "somewhat about this job", which most of a career is. Arguing
+		// with a decision on that is how a suggestion becomes noise.
+		expect(beyondReach(heldRole({ score: 0.45 }), FLOOR, BAR)).toBe(false);
+	});
+
+	it('leaves an old role alone however well it scores', () => {
+		// Measured on the profile this was built against: two roles ending in 2011
+		// and 2013, named for "promoted to mid-level developer" against a Lead
+		// Software Engineer post, on word overlap alone.
+		expect(beyondReach(heldRole({ age: 0.66 }), FLOOR, BAR)).toBe(false);
+		expect(beyondReach(heldRole({ age: 0.49 }), FLOOR, BAR)).toBe(true);
+	});
+
+	it('says nothing about a role a run can simply bring back', () => {
+		expect(beyondReach(heldRole({ parentHeldBack: 'version' }), FLOOR, BAR)).toBe(false);
+	});
+
+	it('says nothing about an alternative write-up', () => {
+		// The job is on the page already, under its other telling.
+		expect(beyondReach(heldRole({ parentHeldBack: 'alternative' }), FLOOR, BAR)).toBe(false);
+	});
+
+	it('says nothing about what the document already prints', () => {
+		expect(beyondReach(bullet(1, 10, 0.9), FLOOR, BAR)).toBe(false);
 	});
 });
 

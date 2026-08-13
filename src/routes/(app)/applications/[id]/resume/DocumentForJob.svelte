@@ -28,7 +28,8 @@
 	import { profileDocUrl, type DocType } from '$lib/utils/profile-doc-url';
 	import {
 		hiddenSkillsKey,
-		recommendVersion,
+		recommendBase,
+		type BaseChoice,
 		type HiddenSkill,
 		type VersionCoverage
 	} from '$lib/version-coverage';
@@ -71,6 +72,8 @@
 		coverage,
 		creditedNotNamed,
 		exclusions,
+		outOfReach,
+		heldBackParents,
 		defaultBase,
 		profileSlug,
 		hasJob,
@@ -98,6 +101,26 @@
 		exclusions: Record<
 			string,
 			Array<{ entityType: string; entityId: number; label: string; score: number }>
+		>;
+		/**
+		 * Per document, how many relevant bullets sit on roles it does not print —
+		 * the one thing a base still decides that varies between them. Keyed like
+		 * `coverage`, and absent for a document that strands nothing.
+		 */
+		outOfReach: Record<string, number>;
+		/**
+		 * Per document, the roles it keeps off itself that hold work this job asks
+		 * about — the part of `outOfReach` that has a name and a fix.
+		 */
+		heldBackParents: Record<
+			string,
+			Array<{
+				entityType: string;
+				entityId: number;
+				label: string;
+				count: number;
+				reason: 'template' | 'profile';
+			}>
 		>;
 		/** What this profile sends when nobody names a version, per document type. */
 		defaultBase: { resume: string; cv: string } | undefined;
@@ -149,7 +172,16 @@
 	 * one merely sitting in a select.
 	 */
 	let picking = $state(false);
-	let versionSlug = $state<string>(app.cv_version_sent || '');
+	/**
+	 * Which version the picker is on. Unrecorded, it opens on the version this
+	 * profile actually sends rather than on nothing — the likely answer, and the
+	 * only one the version-less option used to stand in for.
+	 */
+	function initialVersionSlug(): string {
+		if (app.cv_version_sent) return app.cv_version_sent;
+		return app.cv_sent_through ? '' : (defaultBase?.[docType] ?? '');
+	}
+	let versionSlug = $state<string>(initialVersionSlug());
 	/** Whether the picker has been touched this visit — see `describing`. */
 	let touched = $state(false);
 
@@ -184,10 +216,8 @@
 	 * started. Every eligible item competes now, so six of those seven produce
 	 * the same document and the seventh differs only where the applicant marked
 	 * two items as alternatives — which is the base's remaining job, along with
-	 * the running order and being the version the diff is a diff against.
-	 *
-	 * So the ranking still picks the closest version, and the sentence under the
-	 * button says what that buys rather than implying it picks the contents.
+	 * the running order, the roles that are in reach at all, and being the
+	 * version the diff is a diff against.
 	 */
 	let chosenBase = $state<string | null>(null);
 
@@ -202,34 +232,57 @@
 	 * version it produces carries an amber warning saying so. A version is the
 	 * right answer whenever there is one; which version is what the ranking and
 	 * these fallbacks decide, and every branch says why on screen.
+	 *
+	 * The ranking used to be skill coverage, which is now the wrong question:
+	 * a required skill the applicant has is pinned onto whatever this starts
+	 * from, so the base's coverage says nothing about the finished document.
+	 * What it still decides is which roles and skill groups are reachable —
+	 * see recommendBase. When nothing separates the versions on that, which is
+	 * the common case, no version is announced as the closest and the applicant's
+	 * own default answers instead.
 	 */
 	function pickBase(dt: DocType): { slug: string; why: string } {
-		const winner = recommendVersion(
-			coverage,
+		const winner = recommendBase(
 			dt,
-			versions.map((v) => v.slug)
+			versions.map((v) => v.slug),
+			{ outOfReach, coverage }
 		);
-		if (winner) {
-			const { shown, required } = winner.coverage;
-			return {
-				slug: winner.versionSlug,
-				// Not "which names 3 of the 4 skills this job asks for" any more: true
-				// of the version, and irrelevant to the document, because a required
-				// skill you have is pinned onto whatever this starts from.
-				why: `the closest of your versions — it names ${shown.length} of the ${required} ${required === 1 ? 'skill' : 'skills'} this job asks for`
-			};
-		}
+		if (winner) return { slug: winner.versionSlug, why: reachWhy(winner) };
+
+		// The rest say nothing. Building on the version you send is what anyone
+		// would expect, and a line explaining it is a line the applicant has to
+		// read past on every visit to get to the button.
 		const fallback = defaultBase?.[dt] ?? '';
-		if (fallback && versions.some((v) => v.slug === fallback)) {
-			return { slug: fallback, why: 'the version you send by default' };
-		}
-		if (versions.length > 0) {
-			return {
-				slug: versions[0].slug,
-				why: 'no version stands out for this job — change it if another fits better'
-			};
-		}
+		if (fallback && versions.some((v) => v.slug === fallback)) return { slug: fallback, why: '' };
+		if (versions.length > 0) return { slug: versions[0].slug, why: '' };
 		return { slug: '', why: '' };
+	}
+
+	/**
+	 * Why this one — in terms of what a base is actually for.
+	 *
+	 * Never "it names 3 of the 5 skills this job asks for" any more. That was
+	 * true of the version and irrelevant to the document, and it sat in the same
+	 * sentence as "what goes on the page is picked from everything on your
+	 * profile", contradicting it.
+	 */
+	function reachWhy(choice: BaseChoice): string {
+		if (choice.decidedBy === 'skills') {
+			return "the version that keeps the most of this job's required skills in reach";
+		}
+		const n = choice.outOfReach;
+		if (n === 0) return "the version that leaves none of this job's evidence out of reach";
+		return `the version that leaves the least out of reach — ${n} relevant ${n === 1 ? 'bullet' : 'bullets'} still sit on roles it doesn't print`;
+	}
+
+	/**
+	 * What choosing this base costs, appended to its name in the base picker —
+	 * the same number the suggestion ranks on, so the choice and its reason are
+	 * the same fact rather than two.
+	 */
+	function reachLabel(slug: string): string {
+		const n = outOfReach[hiddenSkillsKey(docType, slug)] ?? 0;
+		return n > 0 ? ` — ${n} relevant ${n === 1 ? 'bullet' : 'bullets'} out of reach` : '';
 	}
 
 	let baseChoice = $derived(pickBase(docType));
@@ -257,8 +310,48 @@
 	let hiddenEvidence = $derived(
 		describing ? (exclusions[hiddenSkillsKey(docType, activeSlug)] ?? []) : []
 	);
+	/**
+	 * Roles this document keeps off itself that hold work this job asks about.
+	 *
+	 * The one omission nothing on this page could report before. A bullet on a
+	 * role the document doesn't print was dropped from the evidence warning on
+	 * purpose — its "Put it back" button wrote an override that changed nothing,
+	 * because the filter meets the role first — so the fix was to stop listing
+	 * them. Which left an applicant with four relevant bullets behind two
+	 * roles tagged "CV only" and no way to find that out.
+	 *
+	 * Reported rather than done: a run may bring back a role whose only reason
+	 * for hiding is a version tag, but not one held off this document on
+	 * purpose. Which jobs you list is the shape of a history, and that is the
+	 * applicant's sentence to write.
+	 */
+	let heldBackRoles = $derived(
+		describing ? (heldBackParents[hiddenSkillsKey(docType, activeSlug)] ?? []) : []
+	);
+	let heldBackItems = $derived(heldBackRoles.reduce((sum, role) => sum + role.count, 0));
+
 	/** Hidden skills whose name the document already prints inside another. */
 	let carried = $derived(hiddenSkills.filter((s) => s.carriedBy));
+
+	/**
+	 * Whether "no version" names something sendable.
+	 *
+	 * For most profiles it does not. `/p/[slug]/resume` with no version renders
+	 * the profile's PUBLIC version, PDF export is keyed by slug, and the card
+	 * links nothing for it — so on a profile with a public version set, "your
+	 * plain resume" is a label for a document that cannot be sent, sitting at the
+	 * top of the list of ones that can.
+	 *
+	 * It stays offered where it is real: a profile with no public version for
+	 * this document type. And it stays offered to anyone who already recorded it,
+	 * because a picker that cannot show what the record says would rewrite that
+	 * record on the next save.
+	 */
+	let plainIsSendable = $derived(!(defaultBase?.[docType] ?? ''));
+	let plainWasRecorded = $derived(
+		recorded && !app.cv_version_sent && app.cv_sent_through === docType
+	);
+	let offerPlain = $derived(plainIsSendable || plainWasRecorded);
 
 	let liftTarget = $derived(activeSlug ? nameOf(activeSlug) || activeSlug : 'all your documents');
 
@@ -543,9 +636,9 @@
 					<input type="hidden" name="doc_type" value={docType} />
 					<input type="hidden" name="base_slug" value={baseSlug} />
 					<p class="mb-3 text-xs text-[var(--dash-text-secondary)]">
-						Build a {docLabel} for this job: it decides what to <em>show</em> — which achievements, which
-						side projects, and any skill this job requires that your document would otherwise hide. It
-						never rewrites your words.
+						Build a {docLabel} for this job: it picks what to <em>show</em> from everything on your profile
+						— which achievements, which side projects, and any skill this job requires that your document
+						would otherwise hide. It never rewrites your words.
 					</p>
 					<button
 						type="submit"
@@ -561,39 +654,41 @@
 						{/if}
 					</button>
 					<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
-						{#if baseName}
-							Starting from <strong class="font-medium">{baseName}</strong>{#if baseWhy}, {baseWhy}{/if}.
-							It sets the running order; what goes on the page is picked for this job from
-							everything on your profile.
-						{:else if versions.length === 0}
-							Starting from your plain {docLabel} — you have no versions to build on yet.
-						{:else}
-							Starting from your plain {docLabel}. It sets the running order; what goes on the page
-							is picked for this job from everything on your profile.
-						{/if}
+						<!-- A fact and a link, not an explanation. Basing on the version you
+						     already send is the obvious thing to do, and saying why the
+						     obvious thing was done is noise in front of a button — the
+						     sentence that lived here explained the base at length and was
+						     read as "this decides the contents" twice by the person who
+						     built it. `baseWhy` is set only when the ranking overrode that
+						     default, which is the one time the choice is worth a word. -->
+						Based on
+						<strong class="font-medium">{baseName || `your plain ${docLabel}`}</strong>{#if baseWhy}
+							— {baseWhy}{/if}.
 						{#if versions.length > 0}
 							<button
 								type="button"
 								onclick={() => (showBasePicker = !showBasePicker)}
 								class="text-[var(--dash-primary)] hover:underline"
 							>
-								{showBasePicker ? 'Never mind' : 'Start from a different one'}
+								{showBasePicker ? 'Never mind' : 'Change'}
 							</button>
 						{/if}
 					</p>
 					{#if showBasePicker}
-						<!-- A real choice, not a formality: tailoring can surface a bullet
-						     or a held-back skill, but a whole role or skill category the
-						     base leaves out is out of its reach. -->
+						<!-- A real choice, not a formality. A run can reach a bullet, a
+						     held-back skill, and a role hidden only by a version tag — but
+						     never a skill group it leaves out, nor a role kept off this
+						     document on purpose. That is what the count beside each option
+						     is: what this base puts past reach. -->
 						<select
 							value={baseSlug}
 							onchange={(e) => (chosenBase = e.currentTarget.value)}
 							aria-label="Version to start from"
 							class="mt-2 rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-xs focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 						>
-							<option value="">Your plain {docLabel}</option>
+							<option value="">Your plain {docLabel}{reachLabel('')}</option>
 							{#each versions as v (v.slug)}
-								<option value={v.slug}>{v.name}</option>
+								<option value={v.slug}>{v.name}{reachLabel(v.slug)}</option>
 							{/each}
 						</select>
 					{/if}
@@ -627,7 +722,9 @@
 							aria-label="Version to send"
 							class="flex-1 rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 						>
-							<option value="">Your plain {docLabel} (no version){covLabel('')}</option>
+							{#if offerPlain}
+								<option value="">Your plain {docLabel} (no version){covLabel('')}</option>
+							{/if}
 							{#each versions as v (v.slug)}
 								<option value={v.slug}>{v.name}{covLabel(v.slug)}</option>
 							{/each}
@@ -867,6 +964,70 @@
 				<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
 				Every skill this job requires now appears on the document you're sending.
 			</p>
+		{/if}
+
+		<!-- Last, and in the card's own colours rather than amber. The two above
+		     are failures of the document being sent — a required skill it hides,
+		     proof it leaves out. This is not: it is the applicant's own decision
+		     about which era their resume covers, reported back because tailoring
+		     cannot reach past it. Amber said "something is wrong here" about a
+		     choice that is usually right, and it said it above the strips that
+		     genuinely are wrong. -->
+		{#if heldBackRoles.length > 0}
+			<div class="mt-4 rounded-lg border border-[var(--dash-border)] p-3">
+				<p class="flex items-start gap-2 text-xs text-[var(--dash-text-secondary)]">
+					<FontAwesomeIcon
+						icon={faEyeSlash}
+						class="mt-0.5 h-3 w-3 shrink-0 text-[var(--dash-text-secondary)]"
+					/>
+					<span>
+						{heldBackRoles.length === 1 ? 'A role' : `${heldBackRoles.length} roles`} you keep off this
+						{docLabel}
+						{heldBackRoles.length === 1 ? 'holds' : 'hold'}
+						{heldBackItems === 1 ? 'a bullet' : `${heldBackItems} bullets`} this job asks about. Tailoring
+						cannot reach {heldBackRoles.length === 1 ? 'it' : 'them'}: everything under a role the
+						document leaves out stays out with it.
+					</span>
+				</p>
+
+				<ul class="mt-2 space-y-1.5">
+					{#each heldBackRoles as role (role.entityType + role.entityId)}
+						<li
+							class="flex items-start justify-between gap-2 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] p-2"
+						>
+							<span class="min-w-0 flex-1 text-[11px] text-[var(--dash-text-secondary)]">
+								<strong class="font-medium text-[var(--dash-text)]">{role.label}</strong>
+								— {role.count === 1 ? '1 bullet' : `${role.count} bullets`} for this job,
+								{role.reason === 'profile'
+									? 'kept off all your documents'
+									: `kept for your ${docType === 'cv' ? 'resume' : 'CV'} only`}
+							</span>
+							<form method="POST" action="?/setItemState" use:enhance={() => () => {}}>
+								<input type="hidden" name="entity_type" value={role.entityType} />
+								<input type="hidden" name="entity_id" value={role.entityId} />
+								<input type="hidden" name="doc_type" value={docType} />
+								<input type="hidden" name="base_slug" value={pickerBase} />
+								<input type="hidden" name="on" value="1" />
+								<button
+									type="submit"
+									title="Show this role on the version tailored for this job"
+									class="shrink-0 rounded border border-[var(--dash-border)] px-1.5 py-0.5 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)]"
+								>
+									Put this role on
+								</button>
+							</form>
+						</li>
+					{/each}
+				</ul>
+
+				<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
+					This changes {activeIsTailored
+						? 'the version built for this job'
+						: "this job's own version"} only — your {docLabel} keeps {heldBackRoles.length === 1
+						? 'it'
+						: 'them'} off everywhere else.
+				</p>
+			</div>
 		{/if}
 
 		{#if items.length > 0}

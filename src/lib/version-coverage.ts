@@ -90,53 +90,84 @@ export function hiddenSkillsKey(docType: string, versionSlug: string): string {
 	return `${docType}:${versionSlug}`;
 }
 
-export interface Recommendation {
+export interface BaseChoice {
 	versionSlug: string;
-	coverage: VersionCoverage;
+	/** Relevant bullets sitting on roles this version does not print. */
+	outOfReach: number;
+	/** Required skills it holds in a group it does not print. */
+	unreachableSkills: number;
+	/** Which of the two decided it, so the caller can say the true reason. */
+	decidedBy: 'evidence' | 'skills';
 }
 
 /**
- * The version to suggest for one base template: most required skills shown,
- * then fewest hidden, then the applicant's own ordering.
+ * Which version to build a tailored one ON — ranked by what it puts out of
+ * reach, not by what it covers.
  *
- * The plain, version-less document is the YARDSTICK, not a candidate answer.
- * Pass it first (`''`) so ties resolve to it, and a version is then only
- * suggested when it genuinely beats the baseline rather than because it sorted
- * first — but when the baseline wins, the answer is silence.
+ * Coverage was the criterion until the base stopped deciding the contents (see
+ * planning/TAILORED-VERSIONS.md D14). It is the right measure for "which of my
+ * versions should I send as it is", and the wrong one here twice over: a
+ * required skill the applicant has is PINNED onto whatever this starts from, so
+ * the base's coverage says nothing about the finished document, and every other
+ * eligible item competes regardless of which version it was written for.
  *
- * That distinction is not pedantry: the plain document usually cannot be sent.
- * `/p/[slug]/resume` with no version falls back to the profile's *public*
- * version, PDF export is keyed by slug, and the send-record card offers no link
- * for it — so "send the plain resume" names an artifact that, for most
- * profiles, does not exist.
+ * What a base still decides is the CONTAINERS. A bullet on a role this document
+ * omits can never be surfaced — adding a whole role changes the shape of a
+ * history rather than its emphasis — and a required skill in a group it omits
+ * cannot even be pinned. So the question worth asking is which version leaves
+ * the least of this job's evidence unreachable, which is the one measure that
+ * still varies with the choice.
  *
- * Returns null when there is nothing worth saying: no coverage was measured
- * (the job lists no required skills, or the profile has none of them), no
- * candidate shows a single required skill, or nothing beat the baseline — in
- * which case which version you send makes no difference to this job's required
- * skills, and saying anything would be a confident-sounding coin flip.
+ * Returns null when nothing separates the candidates, which after D14 is the
+ * common case: with the containers equal, every base produces the same
+ * document, and naming one as "closest" would be a reason invented after the
+ * fact. The caller falls back to the version the applicant sends by default —
+ * their own answer, and a better one than an arbitrary winner.
  */
-export function recommendVersion(
-	coverage: Record<string, VersionCoverage>,
+export function recommendBase(
 	docType: string,
-	candidateSlugs: string[]
-): Recommendation | null {
-	let best: Recommendation | null = null;
-
-	for (const versionSlug of candidateSlugs) {
-		const entry = coverage[hiddenSkillsKey(docType, versionSlug)];
-		if (!entry) continue;
-		if (!best) {
-			best = { versionSlug, coverage: entry };
-			continue;
-		}
-		const better =
-			entry.shown.length > best.coverage.shown.length ||
-			(entry.shown.length === best.coverage.shown.length &&
-				entry.hidden.length < best.coverage.hidden.length);
-		if (better) best = { versionSlug, coverage: entry };
+	candidateSlugs: string[],
+	measures: {
+		/** Per `hiddenSkillsKey`, relevant items on containers this document omits. */
+		outOfReach: Record<string, number>;
+		coverage: Record<string, VersionCoverage>;
 	}
+): BaseChoice | null {
+	const scored = candidateSlugs.map((versionSlug) => {
+		const key = hiddenSkillsKey(docType, versionSlug);
+		return {
+			versionSlug,
+			outOfReach: measures.outOfReach[key] ?? 0,
+			// Not `hidden.length`: a skill the document could show if its own tag
+			// were lifted is reachable, and the tailoring run lifts it. Only the
+			// ones a hidden group or a base-template rule holds back are beyond it.
+			unreachableSkills: (measures.coverage[key]?.hidden ?? []).filter((h) => !h.liftable).length
+		};
+	});
+	if (scored.length === 0) return null;
 
-	if (!best || best.versionSlug === '' || best.coverage.shown.length === 0) return null;
-	return best;
+	const best = scored.reduce((a, z) =>
+		z.outOfReach < a.outOfReach ||
+		(z.outOfReach === a.outOfReach && z.unreachableSkills < a.unreachableSkills)
+			? z
+			: a
+	);
+	// UNIQUELY best, or there is nothing to say.
+	//
+	// "Better than something" is not enough, and the difference is the whole
+	// honesty of the sentence: measured on a real job, six of this profile's
+	// seven versions tied at nothing out of reach and the seventh held one
+	// required skill in a group it omits. Announcing the first of the six as the
+	// one that "keeps the most in reach" would be true of all six and a reason
+	// invented for one — while quietly overriding the version the applicant
+	// actually sends.
+	const leaders = scored.filter(
+		(c) => c.outOfReach === best.outOfReach && c.unreachableSkills === best.unreachableSkills
+	);
+	if (leaders.length !== 1) return null;
+
+	return {
+		...best,
+		decidedBy: scored.some((c) => c.outOfReach > best.outOfReach) ? 'evidence' : 'skills'
+	};
 }
