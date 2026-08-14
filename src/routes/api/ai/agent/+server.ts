@@ -68,6 +68,7 @@ const CHAT_CONTEXT_PLACEHOLDERS = [
 	'applicationPipeline',
 	'pageScope',
 	'activityManifest',
+	'profileEditManifest',
 	'relevantProjects',
 	'relevantStories',
 	'relevantApplicationTexts',

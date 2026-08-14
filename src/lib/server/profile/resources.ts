@@ -145,6 +145,28 @@ export interface ProfileResource {
 	table: SectionTable;
 	/** Singular and lowercase — it goes straight into "… not found" messages. */
 	label: string;
+	/**
+	 * Where a person edits this section, named the way the page names itself.
+	 *
+	 * Part of the declaration rather than a table beside it because two things
+	 * need it and would otherwise each keep their own copy: the route scopes,
+	 * which decide where the assistant may propose an edit, and the manifest,
+	 * which tells the applicant where to go for the sections it cannot reach
+	 * from here. A wrong answer to the second is worse than no answer — it sends
+	 * them to a page that does not hold the thing.
+	 */
+	page: {
+		/** Route path of the list, normalized (no `(group)` segments). */
+		path: string;
+		/** As the navigation labels it. */
+		name: string;
+	};
+	/**
+	 * The row's own page, for the sections that have one. Its absence is what
+	 * says the section is edited inline on its list, which is why those four are
+	 * the ones the assistant reaches by naming a row rather than by URL.
+	 */
+	detailPath?: (id: number) => string;
 	/** Names one row on a proposal card and in a prompt. */
 	rowLabel(row: SectionRow): string;
 	/**
@@ -217,6 +239,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	work_experience: {
 		table: work_experiences,
 		label: 'work experience',
+		page: { path: '/profile/work-experience', name: 'Work experience' },
+		detailPath: (id) => `/profile/work-experience/${id}`,
 		rowLabel: (row) => joined([row.position, row.name]) || 'Untitled role',
 		fields: {
 			name: { kind: 'string', note: 'the employer or client' },
@@ -246,6 +270,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	education: {
 		table: education,
 		label: 'education entry',
+		page: { path: '/profile/education', name: 'Education' },
+		detailPath: (id) => `/profile/education/${id}`,
 		rowLabel: (row) => joined([row.area, row.institution]) || 'Untitled education entry',
 		fields: {
 			institution: { kind: 'string', note: 'the school or university' },
@@ -270,6 +296,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	side_project: {
 		table: side_projects,
 		label: 'side project',
+		page: { path: '/profile/side-projects', name: 'Side projects' },
+		detailPath: (id) => `/profile/side-projects/${id}`,
 		rowLabel: (row) => short(row.name) || 'Untitled project',
 		fields: {
 			name: { kind: 'string' },
@@ -292,6 +320,7 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	language: {
 		table: languages,
 		label: 'language',
+		page: { path: '/profile/languages', name: 'Languages' },
 		rowLabel: (row) => short(row.name) || 'Untitled language',
 		fields: {
 			name: { kind: 'string', note: 'the language, written the way a reader would name it' },
@@ -312,6 +341,7 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	reference: {
 		table: references,
 		label: 'reference',
+		page: { path: '/profile/references', name: 'References' },
 		rowLabel: (row) => joined([row.author, row.author_position], ', ') || 'Untitled reference',
 		fields: {
 			author: { kind: 'string', note: 'who gave the reference' },
@@ -329,6 +359,7 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	certificate: {
 		table: certificates,
 		label: 'certificate',
+		page: { path: '/profile/certificates', name: 'Certificates' },
 		rowLabel: (row) => joined([row.name, row.issuer], ' — ') || 'Untitled certificate',
 		fields: {
 			name: { kind: 'string', note: 'the certificate' },
@@ -347,6 +378,7 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	highlight: {
 		table: highlights,
 		label: 'highlight',
+		page: { path: '/profile/highlights', name: 'Highlights' },
 		rowLabel: (row) => short(row.text) || 'Untitled highlight',
 		fields: {
 			text: { kind: 'string', note: 'the highlight itself, one line' },

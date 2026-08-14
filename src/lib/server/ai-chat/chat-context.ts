@@ -27,7 +27,11 @@ import { LIST_PIPELINE_BUDGET_CHARS } from './application-pipeline';
 import type { PageScope } from './page-scope';
 import { type Capability, type LiveCapability, resolveCapabilities } from './capabilities';
 import { readOwnedRow } from '$lib/server/profile/write';
-import type { ProfileResourceName } from '$lib/server/profile/resources';
+import {
+	PROFILE_RESOURCE_NAMES,
+	PROFILE_RESOURCES,
+	type ProfileResourceName
+} from '$lib/server/profile/resources';
 
 /**
  * Char budget for the chat's evidence blocks (the profile blob is exempt — see
@@ -114,96 +118,59 @@ const PROFILE_SCOPE: RouteScope = {
 };
 
 /**
- * The profile sections that have a page of their own, and can therefore say
- * which row a bare question is about.
+ * Where the assistant may propose a section edit, derived from the declaration
+ * rather than listed again here.
  *
- * Three of the seven. Languages, references, certificates and highlights are
- * edited inline on their list page — there is no `[id]` route to resolve a row
- * from, so the assistant cannot yet be told which one the user means. They stay
- * out until the model may name a target, rather than being given a capability
- * that silently never resolves.
+ * A section with a detail page gets its row from the URL: the scope names an
+ * entity, so `resolve` finds it and the model is never offered a choice it did
+ * not need. A section without one gets the capability on its LIST page instead —
+ * `resolve` finds nothing, `resolveMany` offers every row, and the model names
+ * which.
  *
- * Every one keeps PROFILE_SCOPE's sources: the row's own text already arrives in
- * the profile blob, so the page adds a *subject*, not evidence.
+ * That asymmetry is deliberate rather than incidental. Offering every row costs
+ * a line of prompt each, which is nothing for a language and a great deal for a
+ * work experience, and the sections with big rows are exactly the ones that have
+ * a page of their own to be specific on.
+ *
+ * Every one keeps PROFILE_SCOPE's sources. The row's own text already arrives in
+ * the profile blob, so these pages add a *subject*, not evidence.
  */
-const PROFILE_SECTION_PAGES: {
-	path: string;
-	resource: ProfileResourceName;
-	page: string;
-	subject: string;
-}[] = [
-	{
-		path: '/profile/work-experience/[id]',
-		resource: 'work_experience',
-		page: "one role's own page, in the work history they apply with",
-		subject: 'that role'
-	},
-	{
-		path: '/profile/education/[id]',
-		resource: 'education',
-		page: "one education entry's own page",
-		subject: 'that entry'
-	},
-	{
-		path: '/profile/side-projects/[id]',
-		resource: 'side_project',
-		page: "one side project's own page",
-		subject: 'that project'
-	}
-];
-
-/**
- * The sections edited inline on their list page, with no `[id]` route.
- *
- * These get the capability without an entity: `resolve` finds nothing, so
- * `resolveMany` offers every row and the model names one. That is only safe
- * because the list is small — a language is three fields, a highlight two — so
- * the block stays labels-and-ids rather than a page of values. Work experience
- * and education would not fit the same treatment, which is why their list pages
- * are still deliberately capability-free.
- */
-const PROFILE_LIST_PAGES: { path: string; resource: ProfileResourceName; page: string }[] = [
-	{ path: '/profile/languages', resource: 'language', page: 'the languages on their profile' },
-	{ path: '/profile/references', resource: 'reference', page: 'the references on their profile' },
-	{
-		path: '/profile/certificates',
-		resource: 'certificate',
-		page: 'the certificates on their profile'
-	},
-	{
-		path: '/profile/highlights',
-		resource: 'highlight',
-		page: 'the highlights on their profile — the short lines shown near the top of a CV'
-	}
-];
-
-const PROFILE_LIST_SCOPES: Record<string, RouteScope> = Object.fromEntries(
-	PROFILE_LIST_PAGES.map(({ path, resource, page }) => [
-		path,
-		{
-			...PROFILE_SCOPE,
-			capabilities: [`edit_${resource}` as Capability],
-			hint: {
-				page,
-				// A list, so a bare question is about the section rather than one row.
-				// The capability block names the rows; this says the page does not.
-				subject: null
-			}
-		}
-	])
-);
-
 const PROFILE_SECTION_SCOPES: Record<string, RouteScope> = Object.fromEntries(
-	PROFILE_SECTION_PAGES.map(({ path, resource, page, subject }) => [
-		path,
-		{
-			...PROFILE_SCOPE,
-			entity: resource,
-			param: 'id',
-			capabilities: [`edit_${resource}` as Capability],
-			hint: { page, subject }
-		}
-	])
+	PROFILE_RESOURCE_NAMES.flatMap((resource): [string, RouteScope][] => {
+		const { page, detailPath, label } = PROFILE_RESOURCES[resource];
+		const capabilities = [`edit_${resource}` as Capability];
+
+		const list: [string, RouteScope] = [
+			page.path,
+			{
+				...PROFILE_SCOPE,
+				...(detailPath ? {} : { capabilities }),
+				hint: {
+					page: `their ${page.name.toLowerCase()}, on their profile`,
+					// A list, so a bare question is about the section rather than one
+					// row. Where a capability is live here, its block names the rows;
+					// this says the page does not.
+					subject: null
+				}
+			}
+		];
+
+		if (!detailPath) return [list];
+
+		return [
+			list,
+			[
+				`${page.path}/[id]`,
+				{
+					...PROFILE_SCOPE,
+					entity: resource,
+					param: 'id',
+					capabilities,
+					hint: { page: `one ${label}'s own page`, subject: `that ${label}` }
+				}
+			]
+		];
+	})
 );
 
 /**
@@ -296,7 +263,7 @@ const APPLICATION_SCOPE: RouteScope = {
  * these two exist to kill is a route silently not requesting something. Listing
  * them per-scope would reproduce it one level up.
  */
-const ALWAYS: ContextSource[] = ['page_scope', 'activity_manifest'];
+const ALWAYS: ContextSource[] = ['page_scope', 'activity_manifest', 'profile_edits'];
 
 const ROUTE_SCOPES: Record<string, RouteScope> = {
 	// Longest prefix wins, so /applications/[id] keeps its own scope and
@@ -382,8 +349,7 @@ const ROUTE_SCOPES: Record<string, RouteScope> = {
 			subject: null
 		}
 	},
-	...PROFILE_SECTION_SCOPES,
-	...PROFILE_LIST_SCOPES
+	...PROFILE_SECTION_SCOPES
 };
 
 /** Drop `(group)` segments so route ids match the table above. */

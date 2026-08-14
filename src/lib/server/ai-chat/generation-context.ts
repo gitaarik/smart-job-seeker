@@ -99,6 +99,13 @@ export type ContextSource =
 	 * distinguishable from a thing that does not exist. See activity-manifest.ts.
 	 */
 	| 'activity_manifest'
+	/**
+	 * An index — not the contents — of the parts of the profile that are
+	 * editable, and where each lives. Cheap and unconditional, so a capability
+	 * this page does not offer is distinguishable from a thing that does not
+	 * exist. See profile-edit-manifest.ts.
+	 */
+	| 'profile_edits'
 	| 'projects'
 	| 'stories'
 	| 'application_texts';
@@ -302,6 +309,30 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 		looked: (req) => !!req.scopeHint,
 		render: async (req) => formatPageScope(req.scopeHint)
 	},
+	profile_edits: {
+		variable: 'profileEditManifest',
+		// Below the activity manifest and above every source either of them frames.
+		// Both are orientation, and dropping orientation to make room for the
+		// evidence it frames is the wrong trade at any budget.
+		priority: 88,
+		// Always looked: every profile has an answer, even when the answer is that
+		// every section is empty.
+		looked: () => true,
+		/**
+		 * Imported here rather than at the top of the file, which is the one place
+		 * a dynamic import earns its keep in this module.
+		 *
+		 * This block is built from `PROFILE_RESOURCES`, so a static import would
+		 * put every profile table into the import graph of everything that merely
+		 * mentions a context source — and `generation-context` is imported very
+		 * widely. Three unrelated test files broke on it before this was made
+		 * lazy, each one partially mocking the schema and now needing seven tables
+		 * it has nothing to do with. Loading it when it renders costs one dynamic
+		 * import on a path that is already awaiting a database round trip.
+		 */
+		render: async (req) =>
+			(await import('./profile-edit-manifest')).profileEditManifestText(req.profileId)
+	},
 	activity_manifest: {
 		variable: 'activityManifest',
 		priority: 90,
@@ -491,6 +522,7 @@ const SOURCE_LABELS: Record<ContextSource, string> = {
 	// whether that stays true.
 	page_scope: 'which page the user is on',
 	activity_manifest: 'the index of everything on record',
+	profile_edits: 'the index of what they can change and where',
 	application_activity: 'the history recorded on this application',
 	application_pipeline: "the applicant's other applications",
 	projects: "the applicant's projects",
