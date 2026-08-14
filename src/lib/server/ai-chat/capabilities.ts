@@ -35,9 +35,7 @@ import { z } from 'zod';
 import { application_records, applications, jobs } from '$lib/server/db/schema';
 import type { ContextEntity } from './generation-context';
 import { coerceValue, WIRE_TYPES, type FieldKind } from '$lib/server/utils/field-kinds';
-
-/** Re-exported so a capability's `fields` map can be typed without reaching past this module. */
-export type { FieldKind };
+import { PROFILE_CAPABILITIES, type ProfileCapability } from './profile-capabilities';
 import {
 	applyJobFields,
 	applyJobSkills,
@@ -56,12 +54,26 @@ import {
 import { deriveRecordMetadata } from './record-derivation';
 import { summarizeApplication } from './application-summary';
 
-export type Capability =
+/** Re-exported so a capability's `fields` map can be typed without reaching past this module. */
+export type { FieldKind };
+
+/**
+ * The hand-written capabilities: jobs and applications, whose semantics are
+ * bespoke enough that generating them would mean describing the exceptions.
+ */
+type HandWrittenCapability =
 	| 'edit_job_details'
 	| 'edit_job_description'
 	| 'edit_job_skills'
 	| 'edit_application_details'
 	| 'add_activity_record';
+
+/**
+ * Everything the assistant may propose. The profile half is generated from
+ * `PROFILE_RESOURCES` — see profile-capabilities.ts for why those are not
+ * written out here.
+ */
+export type Capability = HandWrittenCapability | ProfileCapability;
 
 /** The concrete row a capability acts on, once resolved from the page entity. */
 export interface CapabilityTarget {
@@ -87,8 +99,15 @@ export interface CapabilityDef {
 	resolve(entity: ContextEntity | null, actor: CapabilityActor): Promise<CapabilityTarget | null>;
 	/** Re-asked at apply time. Returning false drops the capability silently. */
 	authorize(target: CapabilityTarget, actor: CapabilityActor): Promise<boolean>;
-	/** Current values, so the model proposes a diff and the card can show one. */
-	current(target: CapabilityTarget): Promise<Record<string, unknown>>;
+	/**
+	 * Current values, so the model proposes a diff and the card can show one.
+	 *
+	 * Takes the actor because not every row is readable by whoever asked. A job
+	 * is — /jobs/[id] renders any job to any signed-in user — but a profile row
+	 * read by id alone would put another applicant's history into this one's
+	 * prompt. The capabilities that don't need it ignore it.
+	 */
+	current(target: CapabilityTarget, actor: CapabilityActor): Promise<Record<string, unknown>>;
 	/**
 	 * The fields this capability can change, by kind. One declaration drives
 	 * both the wire schema (buildProposalSchema) and the coercion applied to
@@ -132,11 +151,18 @@ export interface CapabilityDef {
 		fields: Record<string, unknown>,
 		current: Record<string, unknown>
 	): { ok: true } | { ok: false; error: string };
-	/** Commit. Called only after authorize and validate have passed again. */
+	/**
+	 * Commit. Called only after authorize and validate have passed again.
+	 *
+	 * The actor is here for the same reason it is on `current`: a write through
+	 * the profile write layer is authorized against a profile, and a capability
+	 * wrapping it has to say whose. Job writes don't need it and don't take it.
+	 */
 	apply(
 		target: CapabilityTarget,
 		fields: Record<string, unknown>,
-		current: Record<string, unknown>
+		current: Record<string, unknown>,
+		actor: CapabilityActor
 	): Promise<void>;
 }
 
@@ -765,7 +791,8 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
 	edit_job_description: editJobDescription,
 	edit_job_skills: editJobSkills,
 	edit_application_details: editApplicationDetails,
-	add_activity_record: addActivityRecord
+	add_activity_record: addActivityRecord,
+	...PROFILE_CAPABILITIES
 };
 
 /** A capability that resolved and authorized for this turn. */
@@ -792,7 +819,7 @@ export async function resolveCapabilities(
 			const target = await def.resolve(entity, actor);
 			if (!target) return null;
 			if (!(await def.authorize(target, actor))) return null;
-			return { capability, target, current: await def.current(target) };
+			return { capability, target, current: await def.current(target, actor) };
 		})
 	);
 	return live.filter((c): c is LiveCapability => c !== null);
@@ -905,7 +932,7 @@ export async function executeCapability(
 	// Current values re-read now, not as they were when this was proposed: a
 	// partial edit is merged over whatever is there, and merging stale values
 	// around the changed field would quietly revert anything that happened since.
-	const current = await def.current(target);
+	const current = await def.current(target, actor);
 	const fields = pickCapabilityFields(capability, rawFields);
 	if (Object.keys(fields).length === 0) {
 		return { ok: false, reason: 'empty', error: 'Nothing to change.' };
@@ -924,7 +951,7 @@ export async function executeCapability(
 			.map((key) => [key, current[key]])
 	);
 
-	await def.apply(target, fields, current);
+	await def.apply(target, fields, current, actor);
 	return { ok: true, previous };
 }
 
@@ -1041,11 +1068,26 @@ const FIELD_LABELS: Record<string, string> = {
 	entry_content: 'Entry',
 	entry_type: 'Kind',
 	entry_title: 'Title',
-	entry_date: 'Happened on'
+	entry_date: 'Happened on',
+	// The profile sections. Their wire names carry the section as a prefix, which
+	// the card drops — it already names the row above these, so repeating "Work
+	// experience" on every line says nothing.
+	start_date: 'From',
+	end_date: 'Until',
+	graduation_year: 'Graduated',
+	study_type: 'Qualification',
+	repo_url: 'Repository',
+	stars: 'GitHub stars',
+	language_code: 'Language code',
+	author_position: 'Their role',
+	institution: 'School'
 };
 
 function labelFor(field: string): string {
-	return FIELD_LABELS[field] ?? field.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+	// `work_experience.summary` labels as "Summary": the section is context the
+	// card gets from the row it names, not part of the field's name to a reader.
+	const column = field.slice(field.indexOf('.') + 1);
+	return FIELD_LABELS[column] ?? column.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 }
 
 function renderValue(value: unknown): string {

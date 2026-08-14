@@ -22,6 +22,14 @@ vi.mock('../capabilities', () => ({
 	resolveCapabilities: (...a: unknown[]) => mockResolveCapabilities(...a)
 }));
 
+// A profile section row resolves through the write layer's owned read, which is
+// the same check the capability re-runs. Its behaviour is write.test.ts's
+// business; what matters here is that a row that isn't theirs yields no entity.
+let sectionRow: unknown = null;
+vi.mock('$lib/server/profile/write', () => ({
+	readOwnedRow: () => Promise.resolve(sectionRow)
+}));
+
 import {
 	CHAT_BUDGET_CHARS,
 	normalizeRouteId,
@@ -32,6 +40,7 @@ import {
 beforeEach(() => {
 	applicationRow = null;
 	jobRow = null;
+	sectionRow = null;
 	mockResolveCapabilities.mockClear();
 	mockResolveCapabilities.mockResolvedValue([]);
 });
@@ -445,6 +454,84 @@ describe('resolveChatContext — capabilities', () => {
 
 		expect(mockResolveCapabilities).toHaveBeenCalledWith(
 			expect.anything(),
+			null,
+			expect.anything()
+		);
+	});
+});
+
+describe('profile section pages', () => {
+	const SECTIONS = [
+		['/(app)/profile/(data)/work-experience/[id]', 'work_experience', 'edit_work_experience'],
+		['/(app)/profile/(data)/education/[id]', 'education', 'edit_education'],
+		['/(app)/profile/(data)/side-projects/[id]', 'side_project', 'edit_side_project']
+	] as const;
+
+	it.each(SECTIONS)('%s is about one %s row', (route, resource, capability) => {
+		const scope = scopeForRoute(route);
+		expect(scope.entity).toBe(resource);
+		expect(scope.param).toBe('id');
+		expect(scope.capabilities).toEqual([capability]);
+	});
+
+	it.each(SECTIONS)('%s says what a bare question is about', (route) => {
+		// A section page is about one row, so the model must not read "tighten
+		// this" as being about the profile at large.
+		expect(scopeForRoute(route).hint?.subject).toBeTruthy();
+	});
+
+	it('grants exactly one capability per section page', () => {
+		// The budget rule in capabilities.test.ts measures a single block for the
+		// generated capabilities rather than their sum, and that is only sound
+		// while no page grants two of them. A route that did would make the sum
+		// the real cost and quietly blow past what was measured.
+		for (const [route] of SECTIONS) {
+			expect(scopeForRoute(route).capabilities, route).toHaveLength(1);
+		}
+	});
+
+	it('leaves the section LIST pages without a capability', () => {
+		// They show a list, so there is no row to resolve and nothing for the
+		// model to name yet. They inherit /profile, which is about the applicant
+		// rather than about one entry.
+		const list = scopeForRoute('/(app)/profile/(data)/work-experience');
+		expect(list.entity).toBeNull();
+		expect(list.capabilities).toBeUndefined();
+	});
+
+	it('passes the resolved row to the capability registry', async () => {
+		sectionRow = { id: 5, profile_id: 12 };
+
+		await resolveChatContext({
+			routeId: '/(app)/profile/(data)/work-experience/[id]',
+			params: { id: '5' },
+			message: 'tighten this summary',
+			profileId: 12,
+			isStaff: false
+		});
+
+		expect(mockResolveCapabilities).toHaveBeenCalledWith(
+			['edit_work_experience'],
+			{ type: 'profile_section', resource: 'work_experience', id: 5 },
+			expect.objectContaining({ profileId: 12 })
+		);
+	});
+
+	it("resolves no entity for a row that is not this profile's", async () => {
+		sectionRow = null;
+
+		const { capabilities, context } = await resolveChatContext({
+			routeId: '/(app)/profile/(data)/work-experience/[id]',
+			params: { id: '5' },
+			message: 'tighten this summary',
+			profileId: 12,
+			isStaff: false
+		});
+
+		expect(context.entity).toBeUndefined();
+		expect(capabilities).toEqual([]);
+		expect(mockResolveCapabilities).toHaveBeenCalledWith(
+			['edit_work_experience'],
 			null,
 			expect.anything()
 		);

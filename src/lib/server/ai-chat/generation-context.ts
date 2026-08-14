@@ -35,6 +35,7 @@ import { activityManifestText } from './activity-manifest';
 import { applicationPipelineText } from './application-pipeline';
 import { jobDetailsText } from './job-context';
 import { formatPageScope, type PageScope } from './page-scope';
+import type { ProfileResourceName } from '$lib/server/profile/resources';
 import {
 	fitProfileToBudget,
 	formatTrimNote,
@@ -103,7 +104,18 @@ export type ContextSource =
 	| 'application_texts';
 
 /** The thing a generation is *about*, for scoped sources. */
-export type ContextEntity = { type: 'application'; id: number } | { type: 'job'; id: number };
+export type ContextEntity =
+	| { type: 'application'; id: number }
+	| { type: 'job'; id: number }
+	/**
+	 * One row of a profile section — the role on /profile/work-experience/[id],
+	 * the school on /profile/education/[id], and so on.
+	 *
+	 * Carries which section as well as which row, because unlike jobs and
+	 * applications the id alone does not say what table it is in, and seven of
+	 * them share the id space.
+	 */
+	| { type: 'profile_section'; resource: ProfileResourceName; id: number };
 
 /** Per-source knobs. Sources not listed take their own defaults. */
 export interface SourceOptions {

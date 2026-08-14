@@ -26,6 +26,8 @@ import type {
 import { LIST_PIPELINE_BUDGET_CHARS } from './application-pipeline';
 import type { PageScope } from './page-scope';
 import { type Capability, type LiveCapability, resolveCapabilities } from './capabilities';
+import { readOwnedRow } from '$lib/server/profile/write';
+import type { ProfileResourceName } from '$lib/server/profile/resources';
 
 /**
  * Char budget for the chat's evidence blocks (the profile blob is exempt — see
@@ -74,7 +76,12 @@ export const CHAT_BUDGET_CHARS = 250000;
 
 /** Which entity a route is about, and what the assistant should draw on there. */
 interface RouteScope {
-	entity: 'application' | 'job' | null;
+	/**
+	 * What the page is about. A profile section names which section, because the
+	 * seven of them share an id space and the route id is the only thing that
+	 * says which table a `[id]` belongs to.
+	 */
+	entity: 'application' | 'job' | ProfileResourceName | null;
 	/** Route param holding the entity id. Ignored when entity is null. */
 	param?: string;
 	sources: ContextSource[];
@@ -105,6 +112,58 @@ const PROFILE_SCOPE: RouteScope = {
 	entity: null,
 	sources: ['profile', 'projects', 'stories']
 };
+
+/**
+ * The profile sections that have a page of their own, and can therefore say
+ * which row a bare question is about.
+ *
+ * Three of the seven. Languages, references, certificates and highlights are
+ * edited inline on their list page — there is no `[id]` route to resolve a row
+ * from, so the assistant cannot yet be told which one the user means. They stay
+ * out until the model may name a target, rather than being given a capability
+ * that silently never resolves.
+ *
+ * Every one keeps PROFILE_SCOPE's sources: the row's own text already arrives in
+ * the profile blob, so the page adds a *subject*, not evidence.
+ */
+const PROFILE_SECTION_PAGES: {
+	path: string;
+	resource: ProfileResourceName;
+	page: string;
+	subject: string;
+}[] = [
+	{
+		path: '/profile/work-experience/[id]',
+		resource: 'work_experience',
+		page: "one role's own page, in the work history they apply with",
+		subject: 'that role'
+	},
+	{
+		path: '/profile/education/[id]',
+		resource: 'education',
+		page: "one education entry's own page",
+		subject: 'that entry'
+	},
+	{
+		path: '/profile/side-projects/[id]',
+		resource: 'side_project',
+		page: "one side project's own page",
+		subject: 'that project'
+	}
+];
+
+const PROFILE_SECTION_SCOPES: Record<string, RouteScope> = Object.fromEntries(
+	PROFILE_SECTION_PAGES.map(({ path, resource, page, subject }) => [
+		path,
+		{
+			...PROFILE_SCOPE,
+			entity: resource,
+			param: 'id',
+			capabilities: [`edit_${resource}` as Capability],
+			hint: { page, subject }
+		}
+	])
+);
 
 /**
  * What an unlisted route gets. Same sources as PROFILE_SCOPE, but it says so
@@ -281,7 +340,8 @@ const ROUTE_SCOPES: Record<string, RouteScope> = {
 			page: 'their own profile — the material they apply with, not any one application',
 			subject: null
 		}
-	}
+	},
+	...PROFILE_SECTION_SCOPES
 };
 
 /** Drop `(group)` segments so route ids match the table above. */
@@ -336,6 +396,14 @@ async function resolveEntity(
 			columns: { id: true }
 		});
 		return owned ? { type: 'application', id } : null;
+	}
+
+	// Profile sections ARE profile-scoped, unlike jobs: a row that isn't this
+	// profile's does not resolve, so a capability never sees it and no source
+	// renders it.
+	if (scope.entity !== 'job') {
+		const row = await readOwnedRow(scope.entity, { profileId }, id);
+		return row ? { type: 'profile_section', resource: scope.entity, id } : null;
 	}
 
 	const exists = await db.query.jobs.findFirst({

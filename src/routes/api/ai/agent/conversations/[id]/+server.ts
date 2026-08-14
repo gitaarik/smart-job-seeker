@@ -101,6 +101,15 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 	// beforehand; a salary corrected from 75000 to 55000 read back as
 	// "— → 55,000". It now uses the before-image stored at apply time. Rows from
 	// before that column keep the old behaviour rather than inventing a history.
+	// The same actor shape the apply route builds, because `current` reads the
+	// row against it — a transcript must not render a profile row to whoever
+	// asks for the conversation.
+	const actor = {
+		profileId,
+		isStaff:
+			!!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin
+	};
+
 	const messages = await Promise.all(
 		rows.map(async (m) => {
 			const mine = byMessage.get(m.id) ?? [];
@@ -112,7 +121,7 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 						? {}
 						: p.applied_at
 							? (p.previous ?? {})
-							: await def.current(p.target).catch(() => ({}));
+							: await def.current(p.target, actor).catch(() => ({}));
 					const changes = def ? describeProposalChanges(capability, p.fields, current) : [];
 					return {
 						id: p.id,

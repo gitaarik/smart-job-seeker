@@ -13,6 +13,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+import { PROFILE_CAPABILITY_NAMES } from '../profile-capabilities';
 
 let applicationRow: unknown = null;
 let jobRow: unknown = null;
@@ -60,7 +61,20 @@ vi.mock('$lib/server/db/schema', () => ({
 		application_id: 'application_records.application_id',
 		event_date: 'application_records.event_date',
 		date_created: 'application_records.date_created'
-	}
+	},
+	// The registry now includes the generated profile capabilities, so importing
+	// it reaches PROFILE_RESOURCES and every table it declares. Placeholders, not
+	// the real tables: the drizzle mock below returns whatever it was compared
+	// against, and these strings are what makes a `where` argument readable in an
+	// assertion. A new section failing here is the intended signal.
+	profiles: { id: 'profiles.id', user_id: 'profiles.user_id' },
+	work_experiences: { id: 'work_experiences.id', sort: 'work_experiences.sort' },
+	education: { id: 'education.id', sort: 'education.sort' },
+	side_projects: { id: 'side_projects.id', sort: 'side_projects.sort' },
+	languages: { id: 'languages.id', sort: 'languages.sort' },
+	references: { id: 'references.id', sort: 'references.sort' },
+	certificates: { id: 'certificates.id', sort: 'certificates.sort' },
+	highlights: { id: 'highlights.id', sort: 'highlights.sort' }
 }));
 
 // The two passes an applied entry triggers. Mocked to assert they run, in the
@@ -281,7 +295,7 @@ describe('edit_job_details', () => {
 			work_location: ['remote']
 		};
 
-		await def.apply(target, { salary_max: 140000 }, current);
+		await def.apply(target, { salary_max: 140000 }, current, ACTOR);
 
 		expect(mockApplyJobFields).toHaveBeenCalledWith(
 			900,
@@ -302,7 +316,8 @@ describe('edit_job_details', () => {
 			{
 				title: 'Staff Engineer',
 				salary_min: 100000
-			}
+			},
+			ACTOR
 		);
 
 		expect(mockApplyJobFields).toHaveBeenCalledWith(
@@ -345,7 +360,7 @@ describe('edit_job_description', () => {
 	it('writes only the text that was proposed', async () => {
 		// applyJobTexts leaves an omitted field alone, so rewriting one text must
 		// never blank the other.
-		await def.apply(target, { company_description: 'About G2i' }, {});
+		await def.apply(target, { company_description: 'About G2i' }, {}, ACTOR);
 		expect(mockApplyJobTexts).toHaveBeenCalledWith(900, {
 			company_description: 'About G2i'
 		});
@@ -359,7 +374,8 @@ describe('edit_job_description', () => {
 				job_description: 'New posting',
 				company_description: 'New blurb'
 			},
-			{}
+			{},
+			ACTOR
 		);
 		expect(mockApplyJobTexts).toHaveBeenCalledWith(900, {
 			job_description: 'New posting',
@@ -396,7 +412,8 @@ describe('edit_job_skills', () => {
 			{
 				skills_required: ['React', 'Next.js', 'Node.js'],
 				skills_preferred: ['LangGraph']
-			}
+			},
+			ACTOR
 		);
 
 		expect(mockApplyJobSkills).toHaveBeenCalledWith(900, {
@@ -406,7 +423,7 @@ describe('edit_job_skills', () => {
 	});
 
 	it('lets an explicit null clear a list', async () => {
-		await def.apply(target, { skills_preferred: null }, {});
+		await def.apply(target, { skills_preferred: null }, {}, ACTOR);
 		expect(mockApplyJobSkills).toHaveBeenCalledWith(900, {
 			skills_preferred: null
 		});
@@ -418,7 +435,7 @@ describe('edit_job_skills', () => {
 			skills_required: ['React', 'Next.js'],
 			skills_preferred: ['pgvector']
 		};
-		expect(await def.current(target)).toEqual({
+		expect(await def.current(target, ACTOR)).toEqual({
 			skills_required: ['React', 'Next.js'],
 			skills_preferred: ['pgvector']
 		});
@@ -428,7 +445,7 @@ describe('edit_job_skills', () => {
 		// A job the parser never got to has null columns. They must render as "not
 		// set" so the model proposes a list rather than a diff against [].
 		jobRow = { id: 900 };
-		expect(await def.current(target)).toEqual({
+		expect(await def.current(target, ACTOR)).toEqual({
 			skills_required: null,
 			skills_preferred: null
 		});
@@ -538,7 +555,8 @@ describe('edit_application_details', () => {
 				cv_sent_through: 'LinkedIn',
 				application_sent_date: '2026-07-30',
 				application_seen_date: null
-			}
+			},
+			ACTOR
 		);
 
 		expect(mockAppUpdateSet).toHaveBeenCalledWith(
@@ -804,7 +822,7 @@ describe('the registry as a whole', () => {
 		expect(shared.map(([field, caps]) => `${field}: ${caps.join(', ')}`)).toEqual([]);
 	});
 
-	it('keeps the whole capability block inside its budget', () => {
+	it('keeps the capabilities one page can grant inside its budget', () => {
 		// A ratchet, in the style of CI's svelte-check baseline: it may go down
 		// freely and up only deliberately.
 		//
@@ -818,18 +836,43 @@ describe('the registry as a whole', () => {
 		// (the model asks for a contract when it wants one), which needs
 		// tool-calling and a second round trip.
 		//
-		// So the number is pinned rather than reduced. Adding a capability is
-		// supposed to fail this and make you decide the turn is worth it — the
-		// alternative is finding out from a token bill, or from Gemini's thinking
-		// budget quietly eating the answer.
+		// This measures the hand-written capabilities together because those
+		// genuinely co-occur: a job page grants three, an application page grants
+		// three. It deliberately does NOT measure every capability at once. Once
+		// the profile sections were generated, "all of them" became a state no
+		// route can reach — each section page grants exactly one (asserted in
+		// chat-context.test.ts), so their cost is bounded by the per-capability
+		// ceiling below, not by a sum nothing ever pays.
 		const BUDGET_CHARS = 11500;
 
-		const live = (Object.keys(CAPABILITIES) as Capability[]).map((capability) => ({
+		const together = (Object.keys(CAPABILITIES) as Capability[]).filter(
+			(capability) => !PROFILE_CAPABILITY_NAMES.includes(capability as never)
+		);
+
+		const live = together.map((capability) => ({
 			capability,
 			target: { id: 1, label: 'x' },
 			current: {}
 		}));
 		expect(renderCapabilityPrompt(live).length).toBeLessThanOrEqual(BUDGET_CHARS);
+	});
+
+	it('keeps any single capability inside a one-page budget', () => {
+		// The binding constraint for the generated profile capabilities, which are
+		// never live beside another. The number is the largest block measured,
+		// rounded up — add_activity_record, which carries a chronology as well as
+		// a contract. Adding a capability that exceeds it is supposed to fail here
+		// and make you decide the turn is worth it; the alternative is finding out
+		// from a token bill, or from Gemini's thinking budget quietly eating the
+		// answer.
+		const PER_CAPABILITY_CHARS = 6000;
+
+		for (const capability of Object.keys(CAPABILITIES) as Capability[]) {
+			const rendered = renderCapabilityPrompt([
+				{ capability, target: { id: 1, label: 'x' }, current: {} }
+			]);
+			expect(rendered.length, capability).toBeLessThanOrEqual(PER_CAPABILITY_CHARS);
+		}
 	});
 
 	it('keeps every contract renderable without a target', () => {
@@ -912,7 +955,7 @@ describe('add_activity_record', () => {
 			return Promise.resolve();
 		});
 
-		await def.apply(TARGET, { entry_content: 'They want two office days.' }, {});
+		await def.apply(TARGET, { entry_content: 'They want two office days.' }, {}, ACTOR);
 
 		expect(mockRecordInsert).toHaveBeenCalledTimes(1);
 		expect(order).toEqual(['derive', 'summarise']);
@@ -924,7 +967,8 @@ describe('add_activity_record', () => {
 		await def.apply(
 			TARGET,
 			{ entry_content: 'Recruiter called\n\nThey want two office days.' },
-			{}
+			{},
+			ACTOR
 		);
 
 		expect(mockRecordInsert).toHaveBeenCalledWith(
@@ -948,7 +992,8 @@ describe('add_activity_record', () => {
 				entry_title: 'Verbal offer',
 				entry_date: '2026-07-30'
 			},
-			{}
+			{},
+			ACTOR
 		);
 
 		expect(mockRecordInsert).toHaveBeenCalledWith(
@@ -969,7 +1014,8 @@ describe('add_activity_record', () => {
 				entry_content: '…',
 				entry_title: 'x'.repeat(400)
 			},
-			{}
+			{},
+			ACTOR
 		);
 
 		const values = mockRecordInsert.mock.calls[0][0] as { title: string };
@@ -1003,12 +1049,12 @@ describe('add_activity_record', () => {
 			}
 		];
 
-		const current = await def.current(TARGET);
+		const current = await def.current(TARGET, ACTOR);
 		expect(renderCapabilityBlock('add_activity_record', TARGET, current)).toContain('Second round');
 	});
 
 	it('says so when there is nothing logged yet', async () => {
-		const current = await def.current(TARGET);
+		const current = await def.current(TARGET, ACTOR);
 		expect(renderCapabilityBlock('add_activity_record', TARGET, current)).toContain(
 			'Nothing is logged'
 		);

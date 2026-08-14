@@ -35,6 +35,7 @@ import { coerceFields } from '$lib/server/utils/field-kinds';
 import { formatZodError } from '$lib/server/validation/api-schemas';
 import { touchProfile } from './touch-profile';
 import {
+	fieldKinds,
 	PROFILE_RESOURCES,
 	type ProfileResource,
 	type ProfileResourceName,
@@ -112,6 +113,23 @@ export async function actorForRow(
 	return { profileId };
 }
 
+/**
+ * The actor's row, or null.
+ *
+ * The read half of `findOwnedRow`, for callers that want a row rather than a
+ * write — a capability resolving the page's target, and anything rendering what
+ * it is about to change. Collapses "missing" and "not yours" into one answer
+ * because a reader has nothing to do with the difference.
+ */
+export async function readOwnedRow(
+	name: ProfileResourceName,
+	actor: ProfileActor,
+	id: number
+): Promise<SectionRow | null> {
+	const found = await findOwnedRow(resourceFor(name), actor, id);
+	return found.ok ? found.row : null;
+}
+
 /** Read a row and check it belongs to the actor, in that order so the two refusals stay distinct. */
 async function findOwnedRow(
 	resource: ProfileResource,
@@ -144,6 +162,14 @@ function capitalize(text: string): string {
  * required field, an update only needs the ones it actually mentions to be
  * non-empty.
  */
+export function validatePatch(
+	name: ProfileResourceName,
+	input: Record<string, unknown>,
+	mustBeComplete = false
+): WriteResult<{ values: Record<string, unknown> }> {
+	return validate(resourceFor(name), input, mustBeComplete);
+}
+
 function validate(
 	resource: ProfileResource,
 	input: Record<string, unknown>,
@@ -154,8 +180,17 @@ function validate(
 		return refuse('invalid', formatZodError(parsed.error as z.ZodError));
 	}
 
-	const coerced = coerceFields(resource.fields, parsed.data as Record<string, unknown>);
+	const coerced = coerceFields(fieldKinds(resource), parsed.data as Record<string, unknown>);
 	if (!coerced.ok) return refuse('invalid', coerced.error);
+
+	// A declared vocabulary that nothing checks is a lie the next reader
+	// believes — and the model reading it in a contract is the next reader.
+	for (const [field, spec] of Object.entries(resource.fields)) {
+		if (!spec.allowed || !(field in coerced.values)) continue;
+		const value = coerced.values[field];
+		if (value === null || spec.allowed.includes(String(value))) continue;
+		return refuse('invalid', `${labelFor(field)} must be one of: ${spec.allowed.join(', ')}`);
+	}
 
 	for (const field of resource.required) {
 		const mentioned = field in coerced.values;

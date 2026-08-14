@@ -99,6 +99,47 @@ export interface SectionRow {
  */
 export type NewRowPlacement = 'append' | 'unsorted';
 
+/** Everything true of one writable column. */
+export interface FieldSpec {
+	kind: FieldKind;
+	/**
+	 * One short line saying what this column holds, for the assistant's
+	 * contract. Omit where the column name already says it — a note that
+	 * restates the name is worse than none, because it spends prompt budget
+	 * teaching the model something it already knew.
+	 */
+	note?: string;
+	/**
+	 * The only values this column may hold. Spelled out in the contract *and*
+	 * enforced on write: a declared vocabulary that nothing checks is a lie the
+	 * next reader believes.
+	 */
+	allowed?: string[];
+	/**
+	 * Keep this column away from the assistant, with the reason.
+	 *
+	 * Not the same question as whether a person may edit it. These are the
+	 * fields whose wrong value is *silent* — a version slug that matches no
+	 * version doesn't error, it just stops the item appearing on any document,
+	 * and the applicant finds out from a resume that is missing a job.
+	 */
+	notForAssistant?: string;
+}
+
+/** Just the kinds, for the coercion, which is the one caller that wants nothing else. */
+export function fieldKinds(resource: ProfileResource): Record<string, FieldKind> {
+	return Object.fromEntries(
+		Object.entries(resource.fields).map(([name, spec]) => [name, spec.kind])
+	);
+}
+
+/** The columns the assistant may propose values for. */
+export function assistantFields(resource: ProfileResource): Record<string, FieldSpec> {
+	return Object.fromEntries(
+		Object.entries(resource.fields).filter(([, spec]) => !spec.notForAssistant)
+	);
+}
+
 export interface ProfileResource {
 	/** The rows' table. */
 	table: SectionTable;
@@ -107,12 +148,16 @@ export interface ProfileResource {
 	/** Names one row on a proposal card and in a prompt. */
 	rowLabel(row: SectionRow): string;
 	/**
-	 * The columns a caller may write, by kind. One declaration drives the
-	 * coercion, the allow-list and (from Phase 1) the wire schema, so those
-	 * cannot drift apart the way `buildUpdateData`'s allow-list drifted from the
-	 * zod schema beside it.
+	 * The columns a caller may write, described once each.
+	 *
+	 * One declaration drives the coercion, the allow-list, the assistant's
+	 * contract prose and the wire schema, so those cannot drift apart the way
+	 * `buildUpdateData`'s allow-list drifted from the zod schema beside it. That
+	 * is also why a field is a spec rather than a bare kind: the moment a second
+	 * map keyed by field name exists — notes here, exclusions there — it starts
+	 * disagreeing with this one, which is the disease this whole layer treats.
 	 */
-	fields: Record<string, FieldKind>;
+	fields: Record<string, FieldSpec>;
 	/**
 	 * Fields that may not be empty: the row's identity, the thing every list
 	 * renders. Required on create, and rejected if an update tries to clear one.
@@ -164,22 +209,29 @@ function joined(parts: unknown[], separator = ' at '): string {
 		.join(separator);
 }
 
+/** Said once, because three sections carry the same field for the same reason. */
+const VERSION_SLUGS =
+	'Version slugs, which name documents by a string that nothing keeps in step: a slug matching no version silently drops the item from every document rather than erroring.';
+
 export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	work_experience: {
 		table: work_experiences,
 		label: 'work experience',
 		rowLabel: (row) => joined([row.position, row.name]) || 'Untitled role',
 		fields: {
-			name: 'string',
-			position: 'string',
-			location: 'string',
-			website: 'string',
-			headline: 'string',
-			description: 'string',
-			summary: 'string',
-			start_date: 'date',
-			end_date: 'date',
-			tags: 'stringArray'
+			name: { kind: 'string', note: 'the employer or client' },
+			position: { kind: 'string', note: 'the job title held there' },
+			location: { kind: 'string', note: 'where the role was based' },
+			website: { kind: 'string', note: "the employer's site" },
+			headline: { kind: 'string', note: 'a one-line framing of the role, shown above the summary' },
+			description: {
+				kind: 'string',
+				note: 'the employer blurb — who they are, NOT what the applicant did there'
+			},
+			summary: { kind: 'string', note: 'what the applicant did in this role' },
+			start_date: { kind: 'date' },
+			end_date: { kind: 'date', note: 'empty means they are still there' },
+			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS }
 		},
 		required: ['name', 'position'],
 		insertDefaults: {},
@@ -196,16 +248,16 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		label: 'education entry',
 		rowLabel: (row) => joined([row.area, row.institution]) || 'Untitled education entry',
 		fields: {
-			institution: 'string',
-			area: 'string',
-			study_type: 'string',
-			location: 'string',
-			url: 'string',
-			graduation_year: 'int',
-			start_date: 'date',
-			end_date: 'date',
-			summary: 'string',
-			tags: 'stringArray'
+			institution: { kind: 'string', note: 'the school or university' },
+			area: { kind: 'string', note: 'the field of study' },
+			study_type: { kind: 'string', note: 'the qualification, such as BSc or Minor' },
+			location: { kind: 'string' },
+			url: { kind: 'string' },
+			graduation_year: { kind: 'int' },
+			start_date: { kind: 'date' },
+			end_date: { kind: 'date' },
+			summary: { kind: 'string' },
+			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS }
 		},
 		required: ['institution'],
 		insertDefaults: {},
@@ -220,14 +272,14 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		label: 'side project',
 		rowLabel: (row) => short(row.name) || 'Untitled project',
 		fields: {
-			name: 'string',
-			url: 'string',
-			repo_url: 'string',
-			summary: 'string',
-			stars: 'int',
-			start_date: 'date',
-			end_date: 'date',
-			tags: 'stringArray'
+			name: { kind: 'string' },
+			url: { kind: 'string', note: 'where the project can be seen running' },
+			repo_url: { kind: 'string', note: 'where its source lives' },
+			summary: { kind: 'string', note: 'what it is and what the applicant built' },
+			stars: { kind: 'int', note: 'GitHub stars — a count, not a rating' },
+			start_date: { kind: 'date' },
+			end_date: { kind: 'date' },
+			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS }
 		},
 		required: ['name'],
 		insertDefaults: {},
@@ -242,9 +294,12 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		label: 'language',
 		rowLabel: (row) => short(row.name) || 'Untitled language',
 		fields: {
-			name: 'string',
-			language_code: 'string',
-			proficiency: 'string'
+			name: { kind: 'string', note: 'the language, written the way a reader would name it' },
+			language_code: { kind: 'string', note: 'its two-letter code, such as nl or de' },
+			proficiency: {
+				kind: 'string',
+				allowed: ['native', 'fluent', 'proficient', 'conversational', 'basic']
+			}
 		},
 		required: ['name'],
 		insertDefaults: {},
@@ -259,9 +314,9 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		label: 'reference',
 		rowLabel: (row) => joined([row.author, row.author_position], ', ') || 'Untitled reference',
 		fields: {
-			author: 'string',
-			author_position: 'string',
-			text: 'string'
+			author: { kind: 'string', note: 'who gave the reference' },
+			author_position: { kind: 'string', note: 'their role, and where' },
+			text: { kind: 'string', note: 'what they said, in their words' }
 		},
 		required: ['author'],
 		insertDefaults: {},
@@ -276,10 +331,10 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		label: 'certificate',
 		rowLabel: (row) => joined([row.name, row.issuer], ' — ') || 'Untitled certificate',
 		fields: {
-			name: 'string',
-			issuer: 'string',
-			date: 'date',
-			url: 'string'
+			name: { kind: 'string', note: 'the certificate' },
+			issuer: { kind: 'string', note: 'who awarded it' },
+			date: { kind: 'date', note: 'when it was awarded' },
+			url: { kind: 'string', note: 'where it can be verified' }
 		},
 		required: ['name'],
 		insertDefaults: {},
@@ -294,8 +349,12 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		label: 'highlight',
 		rowLabel: (row) => short(row.text) || 'Untitled highlight',
 		fields: {
-			text: 'string',
-			icon_name: 'string'
+			text: { kind: 'string', note: 'the highlight itself, one line' },
+			icon_name: {
+				kind: 'string',
+				notForAssistant:
+					'A Font Awesome identifier such as faPython. A name that does not exist renders nothing, and the applicant sees a gap rather than an error.'
+			}
 		},
 		required: ['text'],
 		// The table also holds other kinds of profile blurb; the highlights page
