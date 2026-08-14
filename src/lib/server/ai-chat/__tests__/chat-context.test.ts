@@ -537,3 +537,46 @@ describe('profile section pages', () => {
 		);
 	});
 });
+
+describe('profile section list pages', () => {
+	const LISTS = [
+		['/(app)/profile/(data)/languages', 'edit_language'],
+		['/(app)/profile/(data)/references', 'edit_reference'],
+		['/(app)/profile/(data)/certificates', 'edit_certificate'],
+		['/(app)/profile/(data)/highlights', 'edit_highlight']
+	] as const;
+
+	it.each(LISTS)('%s offers its section without naming a row', (route, capability) => {
+		const scope = scopeForRoute(route);
+
+		// No entity: these sections have no [id] page, so the row comes from the
+		// model naming one out of the list the capability offers.
+		expect(scope.entity).toBeNull();
+		expect(scope.capabilities).toEqual([capability]);
+	});
+
+	it.each(LISTS)('%s says a bare question is about the section, not one row', (route) => {
+		expect(scopeForRoute(route).hint?.subject).toBeNull();
+	});
+
+	it('grants exactly one capability per list page', () => {
+		// Same reason as the detail pages: the budget rule measures one block, and
+		// that is only sound while no page grants two.
+		for (const [route] of LISTS) {
+			expect(scopeForRoute(route).capabilities, route).toHaveLength(1);
+		}
+	});
+
+	it('leaves the long sections’ list pages capability-free', () => {
+		// Work experience and education rows are far bigger than a language, so
+		// offering every one of them is a budget question rather than a free one.
+		// Deliberate, not an oversight.
+		for (const route of [
+			'/(app)/profile/(data)/work-experience',
+			'/(app)/profile/(data)/education',
+			'/(app)/profile/(data)/side-projects'
+		]) {
+			expect(scopeForRoute(route).capabilities, route).toBeUndefined();
+		}
+	});
+});

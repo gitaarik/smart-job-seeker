@@ -97,6 +97,20 @@ export interface CapabilityDef {
 	 * profile-only page).
 	 */
 	resolve(entity: ContextEntity | null, actor: CapabilityActor): Promise<CapabilityTarget | null>;
+	/**
+	 * The rows this capability may act on when the page is about a *list* rather
+	 * than one row — the languages page, not one language.
+	 *
+	 * Optional, and tried only when `resolve` came back empty, which is what
+	 * gives the page its bias: a page that names its row keeps that row, and
+	 * only a page that names none offers a choice. A capability without this is
+	 * simply never live on a list.
+	 *
+	 * Every row it returns must already be authorized. The model picks from this
+	 * list by id and cannot name anything outside it — it may name a row, never
+	 * reach one.
+	 */
+	resolveMany?(entity: ContextEntity | null, actor: CapabilityActor): Promise<CapabilityTarget[]>;
 	/** Re-asked at apply time. Returning false drops the capability silently. */
 	authorize(target: CapabilityTarget, actor: CapabilityActor): Promise<boolean>;
 	/**
@@ -798,8 +812,23 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
 /** A capability that resolved and authorized for this turn. */
 export interface LiveCapability {
 	capability: Capability;
-	target: CapabilityTarget;
-	current: Record<string, unknown>;
+	/**
+	 * The rows it may act on, every one already authorized.
+	 *
+	 * One on a page about a single row, which is the case the page bias exists
+	 * to produce. Several on a list page, where the model names which by id.
+	 */
+	targets: CapabilityTarget[];
+	/**
+	 * The single target's current values, for the model to propose a diff
+	 * against and the card to show one.
+	 *
+	 * Null when there are several. There is no one row to diff, and printing
+	 * every row's values is precisely what the prompt budget cannot hold — the
+	 * list shows labels, and the values are re-read for whichever row the model
+	 * names.
+	 */
+	current: Record<string, unknown> | null;
 }
 
 /**
@@ -814,12 +843,38 @@ export async function resolveCapabilities(
 	actor: CapabilityActor
 ): Promise<LiveCapability[]> {
 	const live = await Promise.all(
-		declared.map(async (capability) => {
+		declared.map(async (capability): Promise<LiveCapability | null> => {
 			const def = CAPABILITIES[capability];
+
+			// The page's own row wins. Only a page that names none asks for a list,
+			// which is what keeps "biased to the page" true rather than aspirational.
 			const target = await def.resolve(entity, actor);
-			if (!target) return null;
-			if (!(await def.authorize(target, actor))) return null;
-			return { capability, target, current: await def.current(target, actor) };
+			if (target) {
+				if (!(await def.authorize(target, actor))) return null;
+				return { capability, targets: [target], current: await def.current(target, actor) };
+			}
+
+			if (!def.resolveMany) return null;
+
+			const candidates = await def.resolveMany(entity, actor);
+			const authorized = (
+				await Promise.all(
+					candidates.map(async (row) => ((await def.authorize(row, actor)) ? row : null))
+				)
+			).filter((row): row is CapabilityTarget => row !== null);
+			if (authorized.length === 0) return null;
+
+			// One authorized row is the single-row case however it was reached, so
+			// it gets the values to diff against rather than a list of one.
+			if (authorized.length === 1) {
+				return {
+					capability,
+					targets: authorized,
+					current: await def.current(authorized[0], actor)
+				};
+			}
+
+			return { capability, targets: authorized, current: null };
 		})
 	);
 	return live.filter((c): c is LiveCapability => c !== null);
@@ -999,6 +1054,13 @@ export function buildProposalSchema(capabilities: Capability[]) {
 			.array(
 				z.object({
 					capability: z.enum(capabilities as [Capability, ...Capability[]]),
+					target_id: z
+						.number()
+						.nullish()
+						.describe(
+							'Which row, when the capability lists more than one. Copy the ' +
+								'target_id exactly as shown; omit it when only one row is listed.'
+						),
 					rationale: z
 						.string()
 						.describe(
@@ -1131,23 +1193,61 @@ export function describeProposalChanges(
  */
 export function renderCapabilityBlock(
 	capability: Capability,
-	target: CapabilityTarget,
-	current: Record<string, unknown>
+	targets: CapabilityTarget[],
+	current: Record<string, unknown> | null
 ): string {
 	const def = CAPABILITIES[capability];
-	const state = (def.renderState ?? renderCurrent)(current);
-	return `### Capability: ${capability} — ${target.label}
+
+	// One row: name it in the heading and show its values, which is what a diff
+	// needs and what every capability did before lists existed.
+	if (targets.length === 1 && current) {
+		const state = (def.renderState ?? renderCurrent)(current);
+		return `### Capability: ${capability} — ${targets[0].label}
 
 ${def.contract}
 
 ${state}`;
+	}
+
+	// Several: labels and ids, no values. The model picks one by id, and its
+	// current values are re-read for whichever it picks — printing all of them
+	// is what the budget cannot hold, and is also what would let a model diff
+	// against the wrong row without noticing.
+	const rows = targets.map((t) => `  - target_id ${t.id}: ${t.label}`).join('\n');
+
+	return `### Capability: ${capability}
+
+${def.contract}
+
+Rows you can change with this. Name exactly one, as "target_id", in the same
+proposal — and only one of these, since these are the only ones you can reach:
+
+${rows}`;
 }
+
+/**
+ * Said only where it can apply.
+ *
+ * A page about one row cannot use this rule, and every live capability's block
+ * ships on every capable turn — so stating it unconditionally would spend the
+ * budget on all of them to serve the few. Measured: it is ~450 characters, and
+ * add_activity_record's block was already within 20 of the per-capability
+ * ceiling.
+ */
+const TARGET_ID_RULE = `
+
+Some capabilities below list several rows you could change — languages, say,
+rather than one language. For those, add "target_id" to the proposal, copied
+exactly from the list. Name one row per proposal; to change two rows, return two
+proposals. A target_id that is not in the list is not a row you can reach, and
+the proposal is discarded rather than applied to something else.`;
 
 /** The capability block spliced into the system prompt, or "" when none are live. */
 export function renderCapabilityPrompt(live: LiveCapability[]): string {
 	if (live.length === 0) return '';
 
-	const blocks = live.map((c) => renderCapabilityBlock(c.capability, c.target, c.current));
+	const blocks = live.map((c) => renderCapabilityBlock(c.capability, c.targets, c.current));
+	const choosing = live.some((c) => c.targets.length > 1);
 
 	return `## Changes you can propose
 
@@ -1162,7 +1262,7 @@ Answer with a JSON object with these keys:
   empty, when you are proposing nothing.
 
 Each entry in "proposals" is one KIND of change, with "capability" (one of the
-ids below), "rationale", and "changes".
+ids below), "rationale", and "changes".${choosing ? TARGET_ID_RULE : ''}
 
 "rationale" is what the user reads to decide. Write what you are changing and
 why, IN PROPORTION to the change — one sentence is right for a field

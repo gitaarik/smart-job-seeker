@@ -19,6 +19,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const state = {
 	/** What readOwnedRow returns; null means gone, or not this actor's. */
 	row: null as Record<string, unknown> | null,
+	/** What readOwnedRows returns — every row of the section this actor owns. */
+	rows: [] as Record<string, unknown>[],
 	updates: [] as {
 		resource: string;
 		actor: unknown;
@@ -35,6 +37,7 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => {
 	return {
 		validatePatch: actual.validatePatch,
 		readOwnedRow: () => Promise.resolve(state.row),
+		readOwnedRows: () => Promise.resolve(state.rows),
 		updateRow: (resource: string, actor: unknown, id: number, values: Record<string, unknown>) => {
 			state.updates.push({ resource, actor, id, values });
 			return Promise.resolve(state.updateResult);
@@ -53,6 +56,7 @@ const workExperience = PROFILE_CAPABILITIES.edit_work_experience;
 
 beforeEach(() => {
 	state.row = { id: 5, profile_id: 12, sort: null, status: 'published' };
+	state.rows = [];
 	state.updates = [];
 	state.updateResult = { ok: true };
 });
@@ -272,5 +276,33 @@ describe('apply', () => {
 		await expect(
 			workExperience.apply(TARGET, { 'work_experience.summary': 'x' }, {}, ACTOR)
 		).rejects.toThrow(/refused at write time/);
+	});
+});
+
+describe('resolveMany', () => {
+	it('offers every row of the section, labelled', async () => {
+		state.rows = [
+			{ id: 1, profile_id: 12, name: 'Dutch' },
+			{ id: 2, profile_id: 12, name: 'German' }
+		];
+
+		const targets = await PROFILE_CAPABILITIES.edit_language.resolveMany?.(null, ACTOR);
+
+		expect(targets).toEqual([
+			{ id: 1, label: 'Dutch' },
+			{ id: 2, label: 'German' }
+		]);
+	});
+
+	it('offers nothing when the section is empty', async () => {
+		state.rows = [];
+		expect(await PROFILE_CAPABILITIES.edit_language.resolveMany?.(null, ACTOR)).toEqual([]);
+	});
+
+	it.each(PROFILE_CAPABILITY_NAMES)('%s can offer a list', (capability) => {
+		// Every section is reachable from its list page once the model may name a
+		// row. A capability without this is only ever live where the URL names its
+		// target, which would leave four sections unreachable for good.
+		expect(typeof PROFILE_CAPABILITIES[capability].resolveMany).toBe('function');
 	});
 });

@@ -14,6 +14,7 @@ import type { ChatMessage } from '$lib/server/llm';
 import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
 import { resolveChatContext } from '$lib/server/ai-chat/chat-context';
 import {
+	type CapabilityActor,
 	buildProposalSchema,
 	CAPABILITIES,
 	type Capability,
@@ -99,19 +100,26 @@ type StoredProposal = {
 /**
  * Field-by-field diff for the card, using the values captured when the
  * proposal was made.
+ *
+ * Diffed against the proposal's own `previous` rather than off the live
+ * capability. `previous` is already the before-image of exactly these fields on
+ * exactly this row, so it is both cheaper than a re-read and correct on a list
+ * page — where a capability is live over several rows and has no single set of
+ * current values, and pairing one row's edit with another row's values would
+ * show the user a "from" they never had.
  */
-function describeChanges(proposal: StoredProposal, live: LiveCapability[]) {
-	const match = live.find((c) => c.capability === proposal.capability);
+function describeChanges(proposal: StoredProposal) {
 	return describeProposalChanges(
 		proposal.capability as Capability,
 		proposal.fields,
-		match?.current ?? {}
+		proposal.previous
 	);
 }
 
 /** One entry of the model's `proposals` list, before any of it is trusted. */
 type ProposalCandidate = {
 	capability?: unknown;
+	target_id?: unknown;
 	rationale?: unknown;
 	changes?: unknown;
 };
@@ -132,7 +140,11 @@ type ReadProposal = { ok: true; proposal: StoredProposal } | { ok: false; drop: 
  * error — but it is dropped *with a reason*, because the reply that came back
  * alongside it has usually already promised the user the change.
  */
-function readProposal(candidate: ProposalCandidate, live: LiveCapability[]): ReadProposal {
+async function readProposal(
+	candidate: ProposalCandidate,
+	live: LiveCapability[],
+	actor: CapabilityActor
+): Promise<ReadProposal> {
 	if (!candidate || typeof candidate.capability !== 'string') {
 		return {
 			ok: false,
@@ -155,6 +167,33 @@ function readProposal(candidate: ProposalCandidate, live: LiveCapability[]): Rea
 	}
 
 	const title = CAPABILITIES[match.capability].title;
+
+	// Which row. One live row needs no naming and the model is not asked for it;
+	// several means it must pick, and it may only pick from the list it was
+	// shown — every entry of which was authorized before it was rendered. An id
+	// outside that list is not resolved and looked up, it is refused: the whole
+	// rule is that the model may NAME a row, never reach one.
+	const target =
+		match.targets.length === 1
+			? match.targets[0]
+			: match.targets.find((t) => t.id === Number(candidate.target_id));
+
+	if (!target) {
+		console.warn(
+			`[agent] dropped a proposal for ${match.capability}: target_id ${String(candidate.target_id)}`
+		);
+		return {
+			ok: false,
+			drop: {
+				what: title,
+				why:
+					candidate.target_id === undefined || candidate.target_id === null
+						? "it didn't say which one to change"
+						: "it named one that isn't on this page"
+			}
+		};
+	}
+
 	const changes = Array.isArray(candidate.changes) ? candidate.changes : [];
 	const fields = fieldsFromChanges(
 		match.capability,
@@ -172,7 +211,12 @@ function readProposal(candidate: ProposalCandidate, live: LiveCapability[]): Rea
 		};
 	}
 
-	const valid = CAPABILITIES[match.capability].validate(fields, match.current);
+	// Read for the named row, not off the live capability: with several rows
+	// there is no single `current`, and validating an edit to one row against
+	// another row's values is how a check passes for the wrong reason.
+	const current = match.current ?? (await CAPABILITIES[match.capability].current(target, actor));
+
+	const valid = CAPABILITIES[match.capability].validate(fields, current);
 	if (!valid.ok) {
 		console.warn(`[agent] dropped an invalid proposal: ${valid.error}`);
 		return { ok: false, drop: { what: title, why: valid.error } };
@@ -189,10 +233,10 @@ function readProposal(candidate: ProposalCandidate, live: LiveCapability[]): Rea
 			// drift apart the moment a capability grows a field.
 			previous: Object.fromEntries(
 				Object.keys(fields)
-					.filter((key) => key in match.current)
-					.map((key) => [key, match.current[key]])
+					.filter((key) => key in current)
+					.map((key) => [key, current[key]])
 			),
-			target: match.target
+			target
 		}
 	};
 }
@@ -246,10 +290,11 @@ function renderDropNotice(drops: DroppedProposal[]): string {
  * Each entry is judged on its own: one bad proposal in a pair does not take the
  * good one down with it, which is the point of them being separate cards.
  */
-function readCapableReply(
+async function readCapableReply(
 	raw: string,
-	live: LiveCapability[]
-): { reply: string; proposals: StoredProposal[] } {
+	live: LiveCapability[],
+	actor: CapabilityActor
+): Promise<{ reply: string; proposals: StoredProposal[] }> {
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(raw);
@@ -280,26 +325,35 @@ function readCapableReply(
 	const reply = typeof body.reply === 'string' && body.reply.trim() ? body.reply : raw;
 
 	const candidates = Array.isArray(body.proposals) ? body.proposals : [];
-	const read = candidates.map((c) => readProposal(c as ProposalCandidate, live));
+	const read = await Promise.all(
+		candidates.map((c) => readProposal(c as ProposalCandidate, live, actor))
+	);
 	const drops = read.filter((r) => !r.ok).map((r) => r.drop);
 
-	// One card per capability. A model that splits the same capability across two
-	// entries would otherwise render two cards over the same row, where applying
+	// One card per capability AND row. A model that splits the same edit across
+	// two entries would otherwise render two cards over one row, where applying
 	// both means the second silently overwrites the first.
 	//
-	// Not reported as a drop: both entries are the same KIND of change, so the
-	// user still gets a card for what the reply described. Telling them one was
-	// discarded would describe our deduplication, not a change they're missing.
+	// Keyed on the row as well as the capability, because since a capability can
+	// be live over a list, two entries naming DIFFERENT rows are two real edits
+	// — "rename this language and that one" is one capability and two cards.
+	// Keying on the capability alone would have silently dropped the second.
+	//
+	// Not reported as a drop: both entries are the same KIND of change over the
+	// same row, so the user still gets a card for what the reply described.
+	// Telling them one was discarded would describe our deduplication, not a
+	// change they're missing.
 	const seen = new Set<string>();
 	const proposals = read
 		.filter((r) => r.ok)
 		.map((r) => r.proposal)
 		.filter((p) => {
-			if (seen.has(p.capability)) {
-				console.warn(`[agent] dropped a duplicate proposal for ${p.capability}`);
+			const key = `${p.capability}:${p.target.id}`;
+			if (seen.has(key)) {
+				console.warn(`[agent] dropped a duplicate proposal for ${key}`);
 				return false;
 			}
-			seen.add(p.capability);
+			seen.add(key);
 			return true;
 		});
 
@@ -431,7 +485,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	const { reply, proposals } = capable
-		? readCapableReply(result.aiChat.response, capabilities)
+		? await readCapableReply(result.aiChat.response, capabilities, {
+				profileId: profile_id,
+				isStaff
+			})
 		: { reply: result.aiChat.response, proposals: [] as StoredProposal[] };
 	const now = new Date();
 
@@ -511,28 +568,30 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		conversation_id: conversation.id,
 		title: conversation.title,
 		message_id: assistantMessage.id,
-		proposals: proposals.map((proposal, i) => {
-			const title = CAPABILITIES[proposal.capability as keyof typeof CAPABILITIES].title;
-			// Paired with the current value so the card renders a diff, not a
-			// list of new values with no idea what they replace.
-			const changes = describeChanges(proposal, capabilities);
-			return {
-				id: stored[i].id,
-				capability: proposal.capability,
-				title,
-				rationale: proposal.rationale,
-				target: proposal.target,
-				changes,
-				// The same edit as prose. The card doesn't need it; everything that
-				// isn't a card does — see proposal-summary.ts.
-				summary: summarizeProposal({
+		proposals: await Promise.all(
+			proposals.map(async (proposal, i) => {
+				const title = CAPABILITIES[proposal.capability as keyof typeof CAPABILITIES].title;
+				// Paired with the current value so the card renders a diff, not a
+				// list of new values with no idea what they replace.
+				const changes = describeChanges(proposal);
+				return {
+					id: stored[i].id,
+					capability: proposal.capability,
 					title,
+					rationale: proposal.rationale,
 					target: proposal.target,
 					changes,
-					rationale: proposal.rationale
-				}),
-				applied_at: null
-			};
-		})
+					// The same edit as prose. The card doesn't need it; everything that
+					// isn't a card does — see proposal-summary.ts.
+					summary: summarizeProposal({
+						title,
+						target: proposal.target,
+						changes,
+						rationale: proposal.rationale
+					}),
+					applied_at: null
+				};
+			})
+		)
 	});
 };

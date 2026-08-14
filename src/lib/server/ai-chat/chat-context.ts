@@ -152,6 +152,47 @@ const PROFILE_SECTION_PAGES: {
 	}
 ];
 
+/**
+ * The sections edited inline on their list page, with no `[id]` route.
+ *
+ * These get the capability without an entity: `resolve` finds nothing, so
+ * `resolveMany` offers every row and the model names one. That is only safe
+ * because the list is small — a language is three fields, a highlight two — so
+ * the block stays labels-and-ids rather than a page of values. Work experience
+ * and education would not fit the same treatment, which is why their list pages
+ * are still deliberately capability-free.
+ */
+const PROFILE_LIST_PAGES: { path: string; resource: ProfileResourceName; page: string }[] = [
+	{ path: '/profile/languages', resource: 'language', page: 'the languages on their profile' },
+	{ path: '/profile/references', resource: 'reference', page: 'the references on their profile' },
+	{
+		path: '/profile/certificates',
+		resource: 'certificate',
+		page: 'the certificates on their profile'
+	},
+	{
+		path: '/profile/highlights',
+		resource: 'highlight',
+		page: 'the highlights on their profile — the short lines shown near the top of a CV'
+	}
+];
+
+const PROFILE_LIST_SCOPES: Record<string, RouteScope> = Object.fromEntries(
+	PROFILE_LIST_PAGES.map(({ path, resource, page }) => [
+		path,
+		{
+			...PROFILE_SCOPE,
+			capabilities: [`edit_${resource}` as Capability],
+			hint: {
+				page,
+				// A list, so a bare question is about the section rather than one row.
+				// The capability block names the rows; this says the page does not.
+				subject: null
+			}
+		}
+	])
+);
+
 const PROFILE_SECTION_SCOPES: Record<string, RouteScope> = Object.fromEntries(
 	PROFILE_SECTION_PAGES.map(({ path, resource, page, subject }) => [
 		path,
@@ -341,7 +382,8 @@ const ROUTE_SCOPES: Record<string, RouteScope> = {
 			subject: null
 		}
 	},
-	...PROFILE_SECTION_SCOPES
+	...PROFILE_SECTION_SCOPES,
+	...PROFILE_LIST_SCOPES
 };
 
 /** Drop `(group)` segments so route ids match the table above. */

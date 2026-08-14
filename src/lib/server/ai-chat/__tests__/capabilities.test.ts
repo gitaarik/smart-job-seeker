@@ -176,10 +176,7 @@ describe('resolveCapabilities', () => {
 		);
 
 		expect(live).toHaveLength(1);
-		expect(live[0].target).toMatchObject({
-			id: 900,
-			label: 'Staff Engineer at Acme'
-		});
+		expect(live[0].targets).toEqual([{ id: 900, label: 'Staff Engineer at Acme' }]);
 	});
 
 	it('drops the job capabilities when the application has no job', async () => {
@@ -517,7 +514,7 @@ describe('edit_job_skills', () => {
 			{ type: 'application', id: 42 },
 			ACTOR
 		);
-		expect(live[0]?.target).toMatchObject({ id: 900 });
+		expect(live[0]?.targets[0]).toMatchObject({ id: 900 });
 	});
 
 	it('drops out for a job this profile may not edit', async () => {
@@ -851,7 +848,7 @@ describe('the registry as a whole', () => {
 
 		const live = together.map((capability) => ({
 			capability,
-			target: { id: 1, label: 'x' },
+			targets: [{ id: 1, label: 'x' }],
 			current: {}
 		}));
 		expect(renderCapabilityPrompt(live).length).toBeLessThanOrEqual(BUDGET_CHARS);
@@ -869,7 +866,7 @@ describe('the registry as a whole', () => {
 
 		for (const capability of Object.keys(CAPABILITIES) as Capability[]) {
 			const rendered = renderCapabilityPrompt([
-				{ capability, target: { id: 1, label: 'x' }, current: {} }
+				{ capability, targets: [{ id: 1, label: 'x' }], current: {} }
 			]);
 			expect(rendered.length, capability).toBeLessThanOrEqual(PER_CAPABILITY_CHARS);
 		}
@@ -1050,12 +1047,14 @@ describe('add_activity_record', () => {
 		];
 
 		const current = await def.current(TARGET, ACTOR);
-		expect(renderCapabilityBlock('add_activity_record', TARGET, current)).toContain('Second round');
+		expect(renderCapabilityBlock('add_activity_record', [TARGET], current)).toContain(
+			'Second round'
+		);
 	});
 
 	it('says so when there is nothing logged yet', async () => {
 		const current = await def.current(TARGET, ACTOR);
-		expect(renderCapabilityBlock('add_activity_record', TARGET, current)).toContain(
+		expect(renderCapabilityBlock('add_activity_record', [TARGET], current)).toContain(
 			'Nothing is logged'
 		);
 	});
@@ -1167,5 +1166,65 @@ describe('capabilityFieldSchema', () => {
 		expect(schema.safeParse({}).success).toBe(true);
 		expect(schema.safeParse({ salary_min: '55,000' }).success).toBe(true);
 		expect(schema.safeParse({ work_location: 'remote' }).success).toBe(true);
+	});
+});
+
+describe('a capability live over several rows', () => {
+	const THREE = [
+		{ id: 1, label: 'Dutch' },
+		{ id: 2, label: 'German' },
+		{ id: 3, label: 'Spanish' }
+	];
+
+	it('lists the rows with their ids instead of one row’s values', () => {
+		const block = renderCapabilityBlock('edit_language', THREE, null);
+
+		expect(block).toContain('target_id 1: Dutch');
+		expect(block).toContain('target_id 3: Spanish');
+		// No "Current values" heading: there is no one row to diff against, and
+		// printing all of them is what the budget cannot hold.
+		expect(block).not.toContain('Current values');
+	});
+
+	it('says the list is the whole of what it can reach', () => {
+		expect(renderCapabilityBlock('edit_language', THREE, null)).toContain('only one of these');
+	});
+
+	it('keeps the single-row form when there is one row', () => {
+		const block = renderCapabilityBlock('edit_language', [THREE[0]], { 'language.name': 'Dutch' });
+
+		expect(block).toContain('— Dutch');
+		expect(block).toContain('Current values');
+		expect(block).not.toContain('target_id');
+	});
+
+	it('tells the model how to name a row only when one is offered a choice', () => {
+		const choosing = renderCapabilityPrompt([
+			{ capability: 'edit_language', targets: THREE, current: null }
+		]);
+		const fixed = renderCapabilityPrompt([
+			{ capability: 'edit_language', targets: [THREE[0]], current: {} }
+		]);
+
+		expect(choosing).toContain('add "target_id" to the proposal');
+		// A page about one row cannot use the rule, and every live capability's
+		// block ships on every capable turn — so it must not pay for it.
+		expect(fixed).not.toContain('target_id');
+	});
+
+	it('stays inside the one-page budget with a realistic list', () => {
+		// A section list is the widest this gets: the block carries the contract
+		// AND a line per row. Twenty languages is well past what a real profile
+		// holds and is the point of measuring it.
+		const many = Array.from({ length: 20 }, (_, i) => ({
+			id: i + 1,
+			label: `Language number ${i + 1}`
+		}));
+
+		const rendered = renderCapabilityPrompt([
+			{ capability: 'edit_language', targets: many, current: null }
+		]);
+
+		expect(rendered.length).toBeLessThanOrEqual(6000);
 	});
 });

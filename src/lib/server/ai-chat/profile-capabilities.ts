@@ -39,7 +39,7 @@ import {
 	type ProfileResourceName,
 	type SectionRow
 } from '$lib/server/profile/resources';
-import { readOwnedRow, updateRow, validatePatch } from '$lib/server/profile/write';
+import { readOwnedRow, readOwnedRows, updateRow, validatePatch } from '$lib/server/profile/write';
 import type { CapabilityActor, CapabilityDef, CapabilityTarget } from './capabilities';
 
 export type ProfileCapability = `edit_${ProfileResourceName}`;
@@ -200,6 +200,17 @@ function profileCapability(name: ProfileResourceName): CapabilityDef {
 		resolve: async (entity, actor) => {
 			if (entity?.type !== 'profile_section' || entity.resource !== name) return null;
 			return (await target(name, entity.id, actor))?.target ?? null;
+		},
+
+		/**
+		 * Every row of this section, for a page that is about the list rather than
+		 * one entry — the languages page, not one language. Tried only when
+		 * `resolve` came back empty, so a detail page still keeps its own row and
+		 * the model is never offered a choice it did not need.
+		 */
+		resolveMany: async (_entity, actor) => {
+			const rows = await readOwnedRows(name, { profileId: actor.profileId });
+			return rows.map((row) => ({ id: row.id, label: PROFILE_RESOURCES[name].rowLabel(row) }));
 		},
 
 		/**

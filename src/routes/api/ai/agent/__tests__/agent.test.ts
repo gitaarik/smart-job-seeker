@@ -95,6 +95,13 @@ vi.mock('$lib/server/ai-chat/chat-context', () => ({
 
 vi.mock('$lib/server/ai-chat/capabilities', () => ({
 	CAPABILITIES: {
+		edit_language: {
+			title: 'Correct this language',
+			validate: () => ({ ok: true }),
+			// Never reached: a proposal naming a row outside the offered list must
+			// be refused before anything reads that row's values.
+			current: () => Promise.resolve({ 'language.name': 'Dutch' })
+		},
 		edit_job_details: {
 			title: "Edit the job's details",
 			// Enough of the real rule to exercise the reject path — an empty title
@@ -226,7 +233,7 @@ describe('capability routing', () => {
 			capabilities: [
 				{
 					capability: 'edit_job_details',
-					target: { id: 3818, label: 'Data Engineer at Testco' },
+					targets: [{ id: 3818, label: 'Data Engineer at Testco' }],
 					current: { salary_min: 5 }
 				}
 			]
@@ -282,7 +289,7 @@ describe('degrading a bad structured reply', () => {
 			capabilities: [
 				{
 					capability: 'edit_job_details',
-					target: { id: 3818, label: 'Data Engineer at Testco' },
+					targets: [{ id: 3818, label: 'Data Engineer at Testco' }],
 					current: {}
 				}
 			]
@@ -477,7 +484,7 @@ describe('a response that is valid JSON but not an object', () => {
 			capabilities: [
 				{
 					capability: 'edit_job_details',
-					target: { id: 3818, label: 'Data Engineer at Testco' },
+					targets: [{ id: 3818, label: 'Data Engineer at Testco' }],
 					current: {}
 				}
 			]
@@ -501,5 +508,117 @@ describe('a response that is valid JSON but not an object', () => {
 		expect(body.success).toBe(true);
 		expect(body.proposals).toEqual([]);
 		expect(typeof body.reply).toBe('string');
+	});
+});
+
+describe('naming a row on a list page', () => {
+	const LANGUAGES = [
+		{ id: 11, label: 'Dutch' },
+		{ id: 22, label: 'German' }
+	];
+
+	function liveOverList() {
+		mockResolveChatContext.mockResolvedValue({
+			context: { sources: ['profile'] },
+			capabilities: [{ capability: 'edit_language', targets: LANGUAGES, current: null }]
+		});
+	}
+
+	function reply(proposals: unknown[]) {
+		mockCreateAndGenerate.mockResolvedValue({
+			success: true,
+			aiChat: { id: 7, response: JSON.stringify({ reply: 'Done.', proposals }) }
+		});
+	}
+
+	beforeEach(liveOverList);
+
+	it('applies the proposal to the row the model named', async () => {
+		reply([
+			{
+				capability: 'edit_language',
+				target_id: 22,
+				rationale: 'x',
+				changes: [{ field: 'language.name', value: 'Deutsch' }]
+			}
+		]);
+
+		const body = await (await POST(event())).json();
+		expect(body.proposals).toHaveLength(1);
+		expect(body.proposals[0].target).toEqual({ id: 22, label: 'German' });
+	});
+
+	it('refuses a row it was not offered, rather than resolving it', async () => {
+		// The whole rule: the model may NAME a row, never reach one. 99 may well
+		// exist and may well be this profile's — it was not on the page.
+		reply([
+			{
+				capability: 'edit_language',
+				target_id: 99,
+				rationale: 'x',
+				changes: [{ field: 'language.name', value: 'Klingon' }]
+			}
+		]);
+
+		const body = await (await POST(event())).json();
+		expect(body.proposals).toEqual([]);
+		expect(body.reply).toContain("isn't on this page");
+	});
+
+	it('refuses a proposal that never said which row', async () => {
+		reply([
+			{
+				capability: 'edit_language',
+				rationale: 'x',
+				changes: [{ field: 'language.name', value: 'Nederlands' }]
+			}
+		]);
+
+		const body = await (await POST(event())).json();
+		expect(body.proposals).toEqual([]);
+		expect(body.reply).toContain("didn't say which one");
+	});
+
+	it('keeps two proposals when they name different rows', async () => {
+		// The dedup is keyed on capability AND row. Keyed on the capability alone
+		// this second card would vanish, and the reply would promise an edit the
+		// user was never offered.
+		reply([
+			{
+				capability: 'edit_language',
+				target_id: 11,
+				rationale: 'a',
+				changes: [{ field: 'language.name', value: 'Nederlands' }]
+			},
+			{
+				capability: 'edit_language',
+				target_id: 22,
+				rationale: 'b',
+				changes: [{ field: 'language.name', value: 'Deutsch' }]
+			}
+		]);
+
+		const body = await (await POST(event())).json();
+		expect(body.proposals.map((p: { target: { id: number } }) => p.target.id)).toEqual([11, 22]);
+	});
+
+	it('still keeps one card when two proposals name the same row', async () => {
+		reply([
+			{
+				capability: 'edit_language',
+				target_id: 11,
+				rationale: 'a',
+				changes: [{ field: 'language.name', value: 'Nederlands' }]
+			},
+			{
+				capability: 'edit_language',
+				target_id: 11,
+				rationale: 'b',
+				changes: [{ field: 'language.name', value: 'Hollands' }]
+			}
+		]);
+
+		const body = await (await POST(event())).json();
+		expect(body.proposals).toHaveLength(1);
 	});
 });

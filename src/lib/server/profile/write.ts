@@ -130,6 +130,28 @@ export async function readOwnedRow(
 	return found.ok ? found.row : null;
 }
 
+/**
+ * Every row of a section this actor owns, in the section's declared order.
+ *
+ * The read behind a list page, and behind a capability offering the assistant a
+ * choice of rows. Scoped to the actor in the query rather than filtered after,
+ * so a row that is not theirs is never in memory to be leaked by a later bug.
+ */
+export async function readOwnedRows(
+	name: ProfileResourceName,
+	actor: ProfileActor
+): Promise<SectionRow[]> {
+	const resource = resourceFor(name);
+
+	const rows = await db
+		.select()
+		.from(resource.table)
+		.where(eq(resource.table.profile_id, actor.profileId))
+		.orderBy(...resource.orderBy);
+
+	return rows as unknown as SectionRow[];
+}
+
 /** Read a row and check it belongs to the actor, in that order so the two refusals stay distinct. */
 async function findOwnedRow(
 	resource: ProfileResource,
