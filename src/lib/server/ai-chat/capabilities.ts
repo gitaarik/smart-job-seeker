@@ -34,6 +34,10 @@ import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { application_records, applications, jobs } from '$lib/server/db/schema';
 import type { ContextEntity } from './generation-context';
+import { coerceValue, WIRE_TYPES, type FieldKind } from '$lib/server/utils/field-kinds';
+
+/** Re-exported so a capability's `fields` map can be typed without reaching past this module. */
+export type { FieldKind };
 import {
 	applyJobFields,
 	applyJobSkills,
@@ -139,49 +143,12 @@ export interface CapabilityDef {
 /* ------------------------------------------------------------------ *
  * The LLM boundary
  *
- * Two separate jobs, deliberately not fused:
- *
- *  - the *wire schema*, which goes to the provider and therefore has to survive
- *    conversion to JSON Schema. `z.preprocess`/`.transform` do not: LangChain
- *    throws "Transforms cannot be represented in JSON Schema", which is how the
- *    first version of this failed every capable turn outright. So the wire
- *    types are plain, and permissive where models are known to wander — a bare
- *    "remote" instead of ["remote"], a quoted "55,000" instead of 55000.
- *  - the *coercion*, which runs on our side of the boundary afterwards, in
- *    coerceValue, and is what gets those back to real types.
+ * Two separate jobs, deliberately not fused: the *wire schema* that goes to the
+ * provider and must survive conversion to JSON Schema, and the *coercion* that
+ * runs on our side afterwards and gets loose model output back to real types.
+ * Both live in `field-kinds.ts`, which the profile write layer shares — the
+ * reasoning, and why the strict/lenient split exists, is written up there.
  * ------------------------------------------------------------------ */
-
-export type FieldKind = 'string' | 'int' | 'stringArray';
-
-/** Wire types. Unions and nullish survive JSON Schema; transforms do not. */
-const WIRE_TYPES: Record<string, z.ZodTypeAny> = {
-	string: z.union([z.string(), z.number()]).nullish(),
-	int: z.union([z.number(), z.string()]).nullish(),
-	stringArray: z.union([z.array(z.string()), z.string()]).nullish()
-};
-
-/** Normalize one field to the type apply() expects. Returns null for "clear it". */
-function coerceValue(kind: FieldKind, value: unknown): unknown {
-	if (value === null || value === undefined || value === '') return null;
-
-	if (kind === 'int') {
-		// Models quote their numbers and add separators despite being told not to.
-		const n = typeof value === 'string' ? Number.parseFloat(value.replace(/[,\s]/g, '')) : value;
-		if (typeof n !== 'number' || !Number.isFinite(n)) return null;
-		return Math.round(n);
-	}
-
-	if (kind === 'stringArray') {
-		// gpt-oss returns a bare value where a list belongs, and sometimes a
-		// comma-joined string instead of a list.
-		const list = Array.isArray(value) ? value : String(value).split(',');
-		const cleaned = list.map((item) => String(item).trim()).filter(Boolean);
-		return cleaned.length > 0 ? cleaned : null;
-	}
-
-	const trimmed = String(value).trim();
-	return trimmed === '' ? null : trimmed;
-}
 
 /**
  * Render current values for the prompt, so the model can propose a diff.

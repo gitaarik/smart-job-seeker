@@ -3,8 +3,43 @@ import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
 import { and, eq, ne } from 'drizzle-orm';
 import { profiles } from '$lib/server/db/schema';
-import { buildUpdateData, parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { coerceFields, type FieldKind } from '$lib/server/utils/field-kinds';
 import { parseBody, profileUpdateSchema } from '$lib/server/validation/api-schemas';
+
+/**
+ * The profile row's own editable columns.
+ *
+ * Declared here rather than in `PROFILE_RESOURCES` because the profile is not
+ * one of its sections: it has no `status` to hide behind, its owner is
+ * `user_id` rather than `profile_id`, and its slug needs canonicalizing and a
+ * uniqueness check that nothing else needs. One member with three exceptions is
+ * not a member. What it does share is the coercion — there is one of those now,
+ * and this goes through it.
+ */
+const PROFILE_FIELDS: Record<string, FieldKind> = {
+	name: 'string',
+	slug: 'string',
+	title: 'string',
+	subtitle: 'string',
+	headline: 'string',
+	summary: 'string',
+	email_address: 'string',
+	phone_number: 'string',
+	personal_website: 'string',
+	location: 'string',
+	location_url: 'string',
+	location_timezone: 'string',
+	linkedin_profile: 'string',
+	github_profile: 'string',
+	stackoverflow_profile: 'string',
+	npm_profile: 'string',
+	pypi_profile: 'string',
+	country_code: 'string',
+	browser_language: 'string',
+	browser_timezone: 'string',
+	browser_country_code: 'string'
+};
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);
@@ -49,31 +84,15 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		data.slug = slug;
 	}
 
-	const updateData = buildUpdateData(data, [
-		'name',
-		'slug',
-		'title',
-		'subtitle',
-		'headline',
-		'summary',
-		'email_address',
-		'phone_number',
-		'personal_website',
-		'location',
-		'location_url',
-		'location_timezone',
-		'linkedin_profile',
-		'github_profile',
-		'stackoverflow_profile',
-		'npm_profile',
-		'pypi_profile',
-		'country_code',
-		'browser_language',
-		'browser_timezone',
-		'browser_country_code'
-	]);
+	const coerced = coerceFields(PROFILE_FIELDS, data);
+	if (!coerced.ok) {
+		error(400, coerced.error);
+	}
 
-	await db.update(profiles).set(updateData).where(eq(profiles.id, profileId));
+	await db
+		.update(profiles)
+		.set({ ...coerced.values, date_updated: new Date() })
+		.where(eq(profiles.id, profileId));
 
 	return json({ success: true });
 };

@@ -65,9 +65,15 @@ export const cheatSheetReorderSchema = z.object({
 	order: z.array(positiveInt())
 });
 
-// Languages
-
-export const languageReorderSchema = z.object({
+/**
+ * Reordering a profile section: the profile, and its rows in the order they
+ * should end up.
+ *
+ * One schema, not one per section. There were three — languages, references and
+ * certificates — and they were the same object under three names, which is what
+ * happens when the endpoints they belong to are also the same file three times.
+ */
+export const profileReorderSchema = z.object({
 	profile_id: positiveInt(),
 	order: z.array(positiveInt())
 });
@@ -115,20 +121,6 @@ export const techSkillUpdateSchema = z.object({
 	profile_only: z.boolean().optional(),
 	/** The versions a held-back skill is shown on anyway, as a whole set. */
 	versions: z.array(z.string().trim().max(255)).optional()
-});
-
-// References
-
-export const referenceReorderSchema = z.object({
-	profile_id: positiveInt(),
-	order: z.array(positiveInt())
-});
-
-// Certificates
-
-export const certificateReorderSchema = z.object({
-	profile_id: positiveInt(),
-	order: z.array(positiveInt())
 });
 
 // Job preferences
@@ -330,6 +322,14 @@ export const workExperienceBasicSchema = z.object({
 	location: optionalTrimmedString(),
 	website: optionalTrimmedString(2048),
 	headline: optionalTrimmedString(255),
+	/**
+	 * The company blurb. The create form has always posted it and the detail
+	 * page has never been able to change it, because this schema — which is what
+	 * the detail page saves through — did not list it. Declared here so both
+	 * doors write the same set of columns; whether the detail page grows an
+	 * input for it is a UI question, not this one.
+	 */
+	description: optionalTrimmedString(10000),
 	summary: optionalTrimmedString(10000),
 	start_date: z.string().optional().nullable(),
 	end_date: z.string().optional().nullable(),
@@ -411,6 +411,41 @@ export const sideProjectAchievementsSchema = z.object({
 			description: z.string()
 		})
 	)
+});
+
+/*
+ * The four sections that had no schema.
+ *
+ * Languages, references, certificates and highlights were validated inline in
+ * their form actions and nowhere else, because nothing but a form ever wrote
+ * them. Now that every writer goes through the profile write layer they need
+ * the same declared contract as the sections that already had one — same
+ * shape, same optionality rule: a field may be omitted (leave it alone) but not
+ * present-and-empty when it is the row's identity.
+ */
+
+export const languageBasicSchema = z.object({
+	name: requiredTrimmedString('Language name').optional(),
+	language_code: optionalTrimmedString(10),
+	proficiency: optionalTrimmedString(50)
+});
+
+export const referenceBasicSchema = z.object({
+	author: requiredTrimmedString('Author name').optional(),
+	author_position: optionalTrimmedString(),
+	text: optionalTrimmedString(10000)
+});
+
+export const certificateBasicSchema = z.object({
+	name: requiredTrimmedString('Certificate name').optional(),
+	issuer: optionalTrimmedString(),
+	date: z.string().optional().nullable(),
+	url: optionalTrimmedString(2048)
+});
+
+export const highlightBasicSchema = z.object({
+	text: requiredTrimmedString('Highlight text').optional(),
+	icon_name: optionalTrimmedString(100)
 });
 
 // Shared validation helper

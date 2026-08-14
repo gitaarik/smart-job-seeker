@@ -1,16 +1,13 @@
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
 import { and, eq, notInArray } from 'drizzle-orm';
-import {
-	side_projects,
-	side_project_technologies,
-	side_project_achievements
-} from '$lib/server/db/schema';
-import { requireAuth, parseIntParam, buildUpdateData } from '$lib/server/utils/api-helpers';
+import { side_project_technologies, side_project_achievements } from '$lib/server/db/schema';
+import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { requireRowActor, unwrapWrite } from '$lib/server/profile/write-http';
+import { updateRow } from '$lib/server/profile/write';
 import { touchProfile } from '$lib/server/profile/touch-profile';
 import {
-	sideProjectBasicSchema,
 	sideProjectTechSchema,
 	sideProjectAchievementsSchema,
 	parseBody
@@ -20,30 +17,14 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);
 	const projectId = parseIntParam(params.id, 'project');
 
-	// Verify ownership through profile
-	const project = await db.query.side_projects.findFirst({
-		where: eq(side_projects.id, projectId),
-		columns: {
-			id: true,
-			profile_id: true
-		},
-		with: {
-			profile: {
-				columns: { user_id: true }
-			}
-		}
-	});
-
-	if (!project || project.profile.user_id !== user.id) {
-		error(403, 'Access denied');
-	}
+	const actor = await requireRowActor('side_project', projectId, user.id);
 
 	const raw = await request.json();
 
 	/** Child edits move the parent row too — see the work-experience route. */
 	const touched = async (result: Promise<Response>) => {
 		const response = await result;
-		await touchProfile(project.profile_id);
+		await touchProfile(actor.profileId);
 		return response;
 	};
 
@@ -55,21 +36,9 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		return touched(updateAchievements(projectId, data.achievements));
 	}
 
-	const data = parseBody(sideProjectBasicSchema, raw);
-	return touched(updateBasicInfo(projectId, data));
-};
-
-async function updateBasicInfo(id: number, data: Record<string, unknown>) {
-	const updateData = buildUpdateData(
-		data,
-		['name', 'url', 'repo_url', 'summary', 'stars', 'start_date', 'end_date', 'tags'],
-		{ start_date: 'date', end_date: 'date', stars: 'number' }
-	);
-
-	await db.update(side_projects).set(updateData).where(eq(side_projects.id, id));
-
+	unwrapWrite(await updateRow('side_project', actor, projectId, raw));
 	return json({ success: true });
-}
+};
 
 async function updateTechnologies(id: number, technologies: string[]) {
 	await db

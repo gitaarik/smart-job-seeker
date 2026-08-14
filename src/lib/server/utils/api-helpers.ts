@@ -1,5 +1,5 @@
 /**
- * Shared API route helpers for auth, ID parsing, and field updates
+ * Shared API route helpers for auth and ID parsing
  */
 
 import { error } from '@sveltejs/kit';
@@ -40,40 +40,4 @@ export async function requireProfileAccess(profileId: number, userId: string): P
 	if (!profile) {
 		error(403, 'Not authorized');
 	}
-}
-
-type FieldType = 'string' | 'date' | 'number';
-
-/**
- * Build an update data object from request body, coercing field types.
- * Only includes fields that are present (not undefined) in the input data.
- */
-export function buildUpdateData(
-	data: Record<string, unknown>,
-	allowedFields: string[],
-	fieldTypes?: Record<string, FieldType>
-): Record<string, unknown> {
-	const updateData: Record<string, unknown> = {
-		date_updated: new Date()
-	};
-
-	for (const field of allowedFields) {
-		if (data[field] !== undefined) {
-			const type = fieldTypes?.[field] ?? 'string';
-
-			if (type === 'date') {
-				updateData[field] = data[field] ? new Date(data[field] as string) : null;
-			} else if (type === 'number') {
-				updateData[field] = data[field] ? parseInt(data[field] as string, 10) : null;
-			} else if (Array.isArray(data[field])) {
-				const arr = data[field] as unknown[];
-				updateData[field] = arr.length > 0 ? arr : null;
-			} else {
-				updateData[field] =
-					typeof data[field] === 'string' ? (data[field] as string).trim() || null : data[field];
-			}
-		}
-	}
-
-	return updateData;
 }

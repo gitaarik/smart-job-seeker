@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
 import { and, eq, notInArray } from 'drizzle-orm';
@@ -6,15 +6,15 @@ import {
 	work_experience_achievements,
 	work_experience_project_technologies,
 	work_experience_projects,
-	work_experience_technologies,
-	work_experiences
+	work_experience_technologies
 } from '$lib/server/db/schema';
-import { buildUpdateData, parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { requireRowActor, unwrapWrite } from '$lib/server/profile/write-http';
+import { updateRow } from '$lib/server/profile/write';
 import { touchProfile } from '$lib/server/profile/touch-profile';
 import {
 	parseBody,
 	workExperienceAchievementsSchema,
-	workExperienceBasicSchema,
 	workExperienceProjectsSchema,
 	workExperienceTechSchema
 } from '$lib/server/validation/api-schemas';
@@ -23,40 +23,23 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);
 	const workExperienceId = parseIntParam(params.id, 'work experience');
 
-	// Verify ownership through profile
-	const workExperience = await db.query.work_experiences.findFirst({
-		where: eq(work_experiences.id, workExperienceId),
-		columns: {
-			id: true,
-			profile_id: true
-		},
-		with: {
-			profile: {
-				columns: { user_id: true }
-			}
-		}
-	});
-
-	if (!workExperience || workExperience.profile.user_id !== user.id) {
-		error(403, 'Access denied');
-	}
+	const actor = await requireRowActor('work_experience', workExperienceId, user.id);
 
 	const raw = await request.json();
 
 	/**
-	 * Every write here goes through this, so the parent row moves with its
-	 * children.
+	 * The child collections move the parent row too.
 	 *
 	 * A role and its bullets live in their own tables, so editing them left
 	 * `profiles.date_updated` untouched — and two things key off that: the
 	 * matcher's `collected_data` staleness check, and the notice telling an
 	 * applicant that their tailored document was decided before this edit. The
-	 * work-experience LIST page has called touchProfile all along; this route,
-	 * which is where a bullet is actually written, never did.
+	 * basic fields get this from the write layer; these three don't go through
+	 * it, because an achievement save is an id-stable merge rather than a patch.
 	 */
 	const touched = async (result: Promise<Response>) => {
 		const response = await result;
-		await touchProfile(workExperience.profile_id);
+		await touchProfile(actor.profileId);
 		return response;
 	};
 
@@ -71,31 +54,9 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		return touched(updateProjects(workExperienceId, data.projects));
 	}
 
-	const data = parseBody(workExperienceBasicSchema, raw);
-	return touched(updateBasicInfo(workExperienceId, data));
-};
-
-async function updateBasicInfo(id: number, data: Record<string, unknown>) {
-	const updateData = buildUpdateData(
-		data,
-		[
-			'name',
-			'position',
-			'location',
-			'website',
-			'headline',
-			'summary',
-			'start_date',
-			'end_date',
-			'tags'
-		],
-		{ start_date: 'date', end_date: 'date' }
-	);
-
-	await db.update(work_experiences).set(updateData).where(eq(work_experiences.id, id));
-
+	unwrapWrite(await updateRow('work_experience', actor, workExperienceId, raw));
 	return json({ success: true });
-}
+};
 
 async function updateTechnologies(
 	id: number,

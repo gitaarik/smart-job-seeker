@@ -1,48 +1,72 @@
 /**
- * Tests for Education API
- * PATCH /api/education/[id]
+ * Tests for PATCH /api/education/[id].
+ *
+ * The route is now a thin door onto the shared profile write layer, so what is
+ * worth testing here is the door: that it authenticates, that it translates a
+ * user into the profile actor the layer authorizes against, and that a refusal
+ * comes back as the status this endpoint has always answered with.
+ *
+ * One assertion changed rather than moved. This route used to wrap date fields
+ * in `new Date()` while the education form wrote the `YYYY-MM-DD` string that a
+ * Drizzle `date()` column actually holds — the driver then serialized the Date
+ * in the server's local timezone, so the stored day could land one out either
+ * side of UTC depending on which door the edit came through. Both doors now
+ * write the string.
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockFindFirst = vi.fn();
+const state = {
+	/** The education row a select returns, or none. */
+	rows: [] as Record<string, unknown>[],
+	/** The profile row the ownership lookup finds, or null when it isn't the user's. */
+	profileRow: null as { id: number } | null,
+	updates: [] as { table: unknown; values: Record<string, unknown> }[]
+};
 
-// Mock Drizzle update chain
-const mockUpdateWhere = vi.fn().mockResolvedValue({});
-const mockUpdateSet = vi.fn().mockReturnValue({ where: mockUpdateWhere });
-const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
+vi.mock('$lib/server/db', () => {
+	const resolvable = (rows: unknown[]) =>
+		Object.assign(Promise.resolve(rows), { limit: () => Promise.resolve(rows) });
 
-vi.mock('$lib/server/db', () => ({
-	dbDirect: {
+	const dbMock = {
+		select: () => ({ from: () => ({ where: () => resolvable(state.rows) }) }),
+		update: (table: unknown) => ({
+			set: (values: Record<string, unknown>) => ({
+				where: () => {
+					state.updates.push({ table, values });
+					return Promise.resolve(undefined);
+				}
+			})
+		}),
 		query: {
-			education: {
-				findFirst: (...a: any[]) => mockFindFirst(...a)
-			}
-		},
-		update: (...a: any[]) => mockUpdateFn(...a)
-	}
-}));
+			profiles: { findFirst: () => Promise.resolve(state.profileRow) }
+		}
+	};
 
-vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val)
-}));
+	return { db: dbMock, dbDirect: dbMock };
+});
 
-// `profiles` too: the route touches the parent row after a successful write,
-// because a child edit that leaves profiles.date_updated alone leaves the
-// matcher scoring a stale snapshot.
-vi.mock('$lib/server/db/schema', () => ({
-	education: { id: 'education.id' },
-	profiles: { id: 'profiles.id' }
-}));
+const { education, profiles } = await import('$lib/server/db/schema');
+const { PATCH } = await import('../+server');
 
-import { PATCH } from '../+server';
+/** The education row, owned by profile 7, unless a test says otherwise. */
+function ownedRow(fields: Record<string, unknown> = {}) {
+	return { id: 1, profile_id: 7, sort: 0, status: 'published', ...fields };
+}
+
+/** Put the caller in possession of the row: it exists, and its profile is theirs. */
+function owns(fields: Record<string, unknown> = {}) {
+	state.rows = [ownedRow(fields)];
+	state.profileRow = { id: 7 };
+}
+
+function written() {
+	return state.updates.find((write) => write.table === education)?.values;
+}
 
 function createEvent(
-	body: any,
-	opts: {
-		user?: any;
-		params?: Record<string, string>;
-	} = {}
+	body: unknown,
+	opts: { user?: { id: string } | null; params?: Record<string, string> } = {}
 ) {
 	return {
 		params: opts.params ?? { id: '1' },
@@ -52,13 +76,14 @@ function createEvent(
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(body)
 		})
-	} as any;
+	} as never;
 }
 
 describe('PATCH /api/education/[id]', () => {
 	beforeEach(() => {
-		vi.clearAllMocks();
-		mockUpdateWhere.mockResolvedValue({});
+		state.rows = [];
+		state.profileRow = null;
+		state.updates = [];
 	});
 
 	it('rejects unauthenticated', async () => {
@@ -71,85 +96,71 @@ describe('PATCH /api/education/[id]', () => {
 		});
 	});
 
-	it("rejects when user doesn't own education record", async () => {
-		mockFindFirst.mockResolvedValueOnce({
-			id: 1,
-			profile: { user_id: 'other-user' }
-		});
+	it("rejects when the user doesn't own the education record", async () => {
+		state.rows = [ownedRow()];
+		state.profileRow = null;
 		await expect(PATCH(createEvent({ institution: 'MIT' }))).rejects.toMatchObject({ status: 403 });
 	});
 
-	it('rejects when education not found', async () => {
-		mockFindFirst.mockResolvedValueOnce(null);
+	it('answers the same way when the record is not there at all', async () => {
+		// Deliberately indistinguishable: a caller who does not own a row learns
+		// nothing about whether it exists.
+		state.rows = [];
 		await expect(PATCH(createEvent({ institution: 'MIT' }))).rejects.toMatchObject({ status: 403 });
 	});
 
 	it('rejects empty institution', async () => {
-		mockFindFirst.mockResolvedValueOnce({
-			id: 1,
-			profile_id: 7,
-			profile: { user_id: 'user-1' }
-		});
+		owns();
 		await expect(PATCH(createEvent({ institution: '' }))).rejects.toMatchObject({ status: 400 });
+		expect(written()).toBeUndefined();
 	});
 
 	it('updates education with valid data', async () => {
-		mockFindFirst.mockResolvedValueOnce({
-			id: 1,
-			profile_id: 7,
-			profile: { user_id: 'user-1' }
-		});
+		owns();
 		const res = await PATCH(
-			createEvent({
-				institution: 'MIT',
-				area: 'Computer Science',
-				graduation_year: '2020'
-			})
+			createEvent({ institution: 'MIT', area: 'Computer Science', graduation_year: '2020' })
 		);
-		const data = await res.json();
-		expect(data.success).toBe(true);
-		expect(mockUpdateSet).toHaveBeenCalledWith(
-			expect.objectContaining({
-				institution: 'MIT',
-				area: 'Computer Science',
-				graduation_year: 2020
-			})
-		);
+
+		expect((await res.json()).success).toBe(true);
+		expect(written()).toMatchObject({
+			institution: 'MIT',
+			area: 'Computer Science',
+			// A year arrives as the string a number input posts and is stored as one.
+			graduation_year: 2020
+		});
 	});
 
-	it('converts date fields to Date objects', async () => {
-		mockFindFirst.mockResolvedValueOnce({
-			id: 1,
-			profile_id: 7,
-			profile: { user_id: 'user-1' }
+	it('stores dates as the strings their columns hold', async () => {
+		owns();
+		await PATCH(createEvent({ start_date: '2016-09-01', end_date: '2020-06-15' }));
+
+		expect(written()).toMatchObject({
+			start_date: '2016-09-01',
+			end_date: '2020-06-15'
 		});
-		await PATCH(
-			createEvent({
-				start_date: '2016-09-01',
-				end_date: '2020-06-15'
-			})
-		);
-		const setCallData = mockUpdateSet.mock.calls[0][0];
-		expect(setCallData.start_date).toBeInstanceOf(Date);
-		expect(setCallData.end_date).toBeInstanceOf(Date);
+	});
+
+	it('refuses a date it cannot read rather than clearing the column', async () => {
+		owns({ start_date: '2016-09-01' });
+		await expect(PATCH(createEvent({ start_date: 'autumn 2016' }))).rejects.toMatchObject({
+			status: 400
+		});
+		expect(written()).toBeUndefined();
 	});
 
 	it('only updates allowed fields', async () => {
-		mockFindFirst.mockResolvedValueOnce({
-			id: 1,
-			profile_id: 7,
-			profile: { user_id: 'user-1' }
-		});
-		await PATCH(
-			createEvent({
-				institution: 'MIT',
-				profile: 999,
-				user_id: 'hacker'
-			})
-		);
-		const setCallData = mockUpdateSet.mock.calls[0][0];
-		expect(setCallData.institution).toBe('MIT');
-		expect(setCallData.profile).toBeUndefined();
-		expect(setCallData.user_id).toBeUndefined();
+		owns();
+		await PATCH(createEvent({ institution: 'MIT', profile_id: 999, user_id: 'hacker' }));
+
+		const values = written();
+		expect(values).toMatchObject({ institution: 'MIT' });
+		expect(values).not.toHaveProperty('profile_id');
+		expect(values).not.toHaveProperty('user_id');
+	});
+
+	it('touches the parent profile, so the matcher stops scoring a stale snapshot', async () => {
+		owns();
+		await PATCH(createEvent({ institution: 'MIT' }));
+		expect(state.updates.some((write) => write.table === profiles)).toBe(true);
 	});
 });
