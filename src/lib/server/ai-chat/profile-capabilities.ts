@@ -39,18 +39,39 @@ import {
 	type ProfileResourceName,
 	type SectionRow
 } from '$lib/server/profile/resources';
-import { readOwnedRow, readOwnedRows, updateRow, validatePatch } from '$lib/server/profile/write';
+import {
+	createRow,
+	readOwnedRow,
+	readOwnedRows,
+	setRowVisible,
+	updateRow,
+	validatePatch
+} from '$lib/server/profile/write';
 import type { CapabilityActor, CapabilityDef, CapabilityTarget } from './capabilities';
 
-export type ProfileCapability = `edit_${ProfileResourceName}`;
+/**
+ * The three verbs, and why deletion is not one of them.
+ *
+ * `edit` and `add` are ordinary. Removal is not: nothing a capability writes is
+ * recoverable from the before-image, and a work experience owns achievements,
+ * technologies and projects across four tables that a delete takes with it. So
+ * the assistant proposes `hide` — `status: 'draft'`, which every section's rows
+ * already carry and which exports and CVs already respect. It is one click to
+ * accept and one click to undo, on the same page the applicant would have
+ * edited it from. Hard delete stays UI-only.
+ */
+export type ProfileCapability =
+	`edit_${ProfileResourceName}` | `add_${ProfileResourceName}` | `hide_${ProfileResourceName}`;
 
-export const PROFILE_CAPABILITY_NAMES = PROFILE_RESOURCE_NAMES.map(
-	(resource) => `edit_${resource}` as ProfileCapability
+export const PROFILE_VERBS = ['edit', 'add', 'hide'] as const;
+
+export const PROFILE_CAPABILITY_NAMES = PROFILE_RESOURCE_NAMES.flatMap((resource) =>
+	PROFILE_VERBS.map((verb) => `${verb}_${resource}` as ProfileCapability)
 );
 
-/** The section a generated capability edits. */
+/** The section a generated capability acts on. */
 export function resourceForCapability(capability: ProfileCapability): ProfileResourceName {
-	return capability.slice('edit_'.length) as ProfileResourceName;
+	return capability.slice(capability.indexOf('_') + 1) as ProfileResourceName;
 }
 
 /**
@@ -185,7 +206,7 @@ async function target(
 	return { row, target: { id: row.id, label: PROFILE_RESOURCES[name].rowLabel(row) } };
 }
 
-function profileCapability(name: ProfileResourceName): CapabilityDef {
+function editCapability(name: ProfileResourceName): CapabilityDef {
 	const resource = PROFILE_RESOURCES[name];
 	const fields = assistantFields(resource);
 
@@ -264,6 +285,150 @@ function profileCapability(name: ProfileResourceName): CapabilityDef {
 	};
 }
 
+/**
+ * Add an entry to a section.
+ *
+ * The target is the PROFILE, not a row — there is no row yet. That is the same
+ * shape `add_activity_record` uses for the same reason, and it is why an add is
+ * live on a section's list page and on one entry's page alike: "add another
+ * role" means the same thing from both.
+ *
+ * `current` is what the section already holds rather than a diff, so the model
+ * can tell "they have told me something new" from "that is already the third
+ * item on this list". Adding a language they already have is the failure this
+ * exists to prevent.
+ */
+function addCapability(name: ProfileResourceName): CapabilityDef {
+	const resource = PROFILE_RESOURCES[name];
+	const fields = assistantFields(resource);
+
+	return {
+		title: `Add a ${resource.label}`,
+
+		// The profile itself, on any page of this section. Nothing to resolve
+		// from the URL: an add has no row to name.
+		resolve: async (entity, actor) =>
+			entity?.type === 'profile_section' && entity.resource !== name
+				? null
+				: { id: actor.profileId, label: `their ${resource.page.name.toLowerCase()}` },
+
+		authorize: async (t, actor) => t.id === actor.profileId,
+
+		current: async (_t, actor) => {
+			const rows = await readOwnedRows(name, { profileId: actor.profileId });
+			return { existing: rows.map((row) => resource.rowLabel(row)) };
+		},
+
+		fields: Object.fromEntries(
+			Object.entries(fields).map(([column, spec]) => [wireName(name, column), spec.kind])
+		),
+
+		contract: `${contractFor(resource, name)}
+
+This one ADDS a new ${resource.label} rather than changing an existing one, so
+every field you send is the new entry's own. ${
+			resource.required.length > 0
+				? `You must give ${resource.required
+						.map((column) => `"${wireName(name, column)}"`)
+						.join(
+							' and '
+						)} — without ${resource.required.length > 1 ? 'them' : 'it'} there is nothing to show in the list, and the proposal is discarded.`
+				: ''
+		}
+
+Check what they already have, listed below, before proposing one. Adding a
+second copy of something already there is worse than not adding it: it is a
+duplicate on every document, and they have to find and remove it.`,
+
+		renderState: (current) => {
+			const existing = Array.isArray(current.existing) ? (current.existing as string[]) : [];
+			if (existing.length === 0) return `They have no ${resource.page.name.toLowerCase()} yet.`;
+			return `Already there — do not propose a duplicate of any of these:\n\n${existing
+				.map((label) => `  - ${label}`)
+				.join('\n')}`;
+		},
+
+		// A create, so every required field must be present rather than merely
+		// non-empty where mentioned.
+		validate: (proposed) => {
+			const checked = validatePatch(name, toColumns(name, fields, proposed), true);
+			return checked.ok ? { ok: true } : { ok: false, error: checked.error };
+		},
+
+		apply: async (_t, proposed, _current, actor) => {
+			const result = await createRow(
+				name,
+				{ profileId: actor.profileId },
+				toColumns(name, fields, proposed)
+			);
+			if (!result.ok) {
+				throw new Error(`add_${name} refused at write time: ${result.error}`);
+			}
+		}
+	};
+}
+
+/**
+ * Take an entry off every document, reversibly.
+ *
+ * No fields: naming the row is the whole of the proposal. That is why
+ * `executeCapability` only refuses an empty payload for a capability that asked
+ * for values — this one asked for none and is complete without them.
+ *
+ * `current` returns the row in full even though nothing is being written to it,
+ * because that is what the card has to show. A hide card that said only
+ * "Spanish" would be asking someone to accept the removal of something they
+ * cannot see; the person deciding needs to read what goes.
+ */
+function hideCapability(name: ProfileResourceName): CapabilityDef {
+	const resource = PROFILE_RESOURCES[name];
+	const editor = editCapability(name);
+
+	return {
+		title: `Hide this ${resource.label}`,
+
+		// Same targeting as the edit verb: the page's row where there is one, and
+		// otherwise every row for the model to name.
+		resolve: editor.resolve,
+		resolveMany: editor.resolveMany,
+		authorize: editor.authorize,
+		current: editor.current,
+
+		fields: {},
+
+		contract: `You may propose hiding one of their ${resource.page.name.toLowerCase()}.
+
+Hiding takes it off every CV and every export. It is NOT deleted — they can put
+it back from their ${resource.page.name} page — but it stops appearing
+everywhere until they do, so propose it only when they have asked for it rather
+than because it looks weak to you. A ${resource.label} they are not proud of is
+still theirs to decide about.
+
+This proposal carries no fields. Name the entry and say why in the rationale;
+there is nothing to write.`,
+
+		renderState: (current) => {
+			const shown = Object.entries(current)
+				.filter(([, value]) => value !== null && value !== undefined && value !== '')
+				.map(([field, value]) => `  - ${field}: ${String(value).slice(0, INLINE_LIMIT)}`);
+			return shown.length > 0 ? `What hiding this would take off:\n\n${shown.join('\n')}` : '';
+		},
+
+		validate: () => ({ ok: true }),
+
+		apply: async (t, _proposed, _current, actor) => {
+			const result = await setRowVisible(name, { profileId: actor.profileId }, t.id, false);
+			if (!result.ok) {
+				throw new Error(`hide_${name} refused at write time: ${result.error}`);
+			}
+		}
+	};
+}
+
 export const PROFILE_CAPABILITIES = Object.fromEntries(
-	PROFILE_RESOURCE_NAMES.map((name) => [`edit_${name}`, profileCapability(name)])
+	PROFILE_RESOURCE_NAMES.flatMap((name) => [
+		[`edit_${name}`, editCapability(name)],
+		[`add_${name}`, addCapability(name)],
+		[`hide_${name}`, hideCapability(name)]
+	])
 ) as Record<ProfileCapability, CapabilityDef>;

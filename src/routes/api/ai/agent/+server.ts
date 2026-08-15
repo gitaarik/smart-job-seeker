@@ -200,7 +200,12 @@ async function readProposal(
 		match.capability,
 		changes as { field: string; value: unknown }[]
 	);
-	if (Object.keys(fields).length === 0) {
+	// A fieldless verb — hiding a row — is complete once it has named one. Only
+	// a capability that asked for values and got none is empty.
+	if (
+		Object.keys(CAPABILITIES[match.capability].fields).length > 0 &&
+		Object.keys(fields).length === 0
+	) {
 		console.warn(`[agent] dropped an empty proposal for ${match.capability}`);
 		return {
 			ok: false,

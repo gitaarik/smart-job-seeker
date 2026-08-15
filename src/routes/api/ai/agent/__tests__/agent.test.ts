@@ -97,6 +97,9 @@ vi.mock('$lib/server/ai-chat/capabilities', () => ({
 	CAPABILITIES: {
 		edit_language: {
 			title: 'Correct this language',
+			// The endpoint reads this to tell a capability that asked for values
+			// and got none from one that asks for none at all.
+			fields: { 'language.name': 'string', 'language.proficiency': 'string' },
 			validate: () => ({ ok: true }),
 			// Never reached: a proposal naming a row outside the offered list must
 			// be refused before anything reads that row's values.
@@ -104,6 +107,7 @@ vi.mock('$lib/server/ai-chat/capabilities', () => ({
 		},
 		edit_job_details: {
 			title: "Edit the job's details",
+			fields: { title: 'string', salary_min: 'int', cv_sent_through: 'string' },
 			// Enough of the real rule to exercise the reject path — an empty title
 			// is the one thing validateJobFields refuses outright. The endpoint's
 			// job is to surface whatever a validate() returns, not to know which

@@ -134,19 +134,37 @@ beforeEach(() => {
 });
 
 describe('registry invariants', () => {
-	it('keeps field names unique across capabilities', () => {
-		// buildProposalSchema merges the live capabilities' shapes into one object,
-		// so a shared field name would let one capability's value validate inside
-		// another's payload and be written to the wrong row.
-		const seen = new Map<string, string>();
+	it('makes a field name mean the same column everywhere it appears', () => {
+		// buildProposalSchema merges the live capabilities' shapes into one enum,
+		// and fieldsFromChanges then keeps whatever the named capability declares.
+		// So a name shared by two capabilities that mean DIFFERENT columns by it
+		// lets a value validate inside the wrong payload and land on the wrong row.
+		//
+		// This used to be asserted as "no name is ever shared", which was the same
+		// rule while every capability acted on a different thing. It stopped being
+		// so once the sections grew verbs: `edit_language` and `add_language` both
+		// declare `language.name` and MUST, because it is one column and they
+		// disagree only about whether the row exists yet. The verb is the model's
+		// explicit choice and shows on the card, so that sharing is not ambiguity.
+		//
+		// What must still never happen is two capabilities over different things
+		// sharing a name.
+		const declarers = new Map<string, string[]>();
 		for (const [name, def] of Object.entries(CAPABILITIES)) {
 			for (const field of Object.keys(def.fields)) {
-				expect(
-					seen.has(field),
-					`"${field}" is declared by both ${seen.get(field)} and ${name}`
-				).toBe(false);
-				seen.set(field, name);
+				declarers.set(field, [...(declarers.get(field) ?? []), name]);
 			}
+		}
+
+		/** `add_language` and `edit_language` are two verbs over one thing. */
+		const subject = (capability: string) => capability.slice(capability.indexOf('_') + 1);
+
+		for (const [field, names] of declarers) {
+			const subjects = new Set(names.map(subject));
+			expect(
+				[...subjects],
+				`"${field}" is declared by ${names.join(' and ')}, which act on different things`
+			).toHaveLength(1);
 		}
 	});
 
@@ -157,7 +175,7 @@ describe('registry invariants', () => {
 		//
 		// Asserted through the real wire schema rather than by inspecting each
 		// field's type: it tests the shape the provider is actually handed.
-		for (const [name, def] of Object.entries(CAPABILITIES)) {
+		for (const name of Object.keys(CAPABILITIES)) {
 			const result = buildProposalSchema([name as Capability]).safeParse({ reply: 'x' });
 			expect(result.success, `${name} must accept an empty proposal`).toBe(true);
 		}
@@ -795,7 +813,7 @@ describe('describeProposalChanges', () => {
  * entry that breaks it, and then fails somewhere else entirely.
  */
 describe('the registry as a whole', () => {
-	it('has no two capabilities declaring the same field name', () => {
+	it('has no two SUBJECTS declaring the same field name', () => {
 		// buildProposalSchema flattens every live capability's fields into ONE
 		// enum for the provider. A shared name is therefore not a collision the
 		// model can be blamed for: it can put a value under a name two
@@ -803,20 +821,26 @@ describe('the registry as a whole', () => {
 		// name, having no other signal — hands it to whichever one is being read.
 		// The proposal that loses is dropped silently.
 		//
+		// Grouped by SUBJECT rather than by capability, since the sections grew
+		// verbs: `edit_language` and `add_language` answer to `language.name` and
+		// have to, because it is one column. What must stay distinct is the thing
+		// being written to, not the operation.
+		//
 		// Enforced across ALL capabilities rather than only co-live ones. The
 		// stricter rule is the one the doc comment states, it costs nothing while
 		// the names are already distinct, and "these two are never live together"
 		// is a fact about ROUTE_SCOPES that a future route can change without
 		// anyone thinking about this file.
-		const owners = new Map<string, Capability[]>();
+		const subject = (capability: string) => capability.slice(capability.indexOf('_') + 1);
+		const owners = new Map<string, Set<string>>();
 		for (const [capability, def] of Object.entries(CAPABILITIES)) {
 			for (const field of Object.keys(def.fields)) {
-				owners.set(field, [...(owners.get(field) ?? []), capability as Capability]);
+				owners.set(field, (owners.get(field) ?? new Set()).add(subject(capability)));
 			}
 		}
 
-		const shared = [...owners.entries()].filter(([, caps]) => caps.length > 1);
-		expect(shared.map(([field, caps]) => `${field}: ${caps.join(', ')}`)).toEqual([]);
+		const shared = [...owners.entries()].filter(([, subjects]) => subjects.size > 1);
+		expect(shared.map(([field, subjects]) => `${field}: ${[...subjects].join(', ')}`)).toEqual([]);
 	});
 
 	it('keeps the capabilities one page can grant inside its budget', () => {
@@ -852,6 +876,33 @@ describe('the registry as a whole', () => {
 			current: {}
 		}));
 		expect(renderCapabilityPrompt(live).length).toBeLessThanOrEqual(BUDGET_CHARS);
+	});
+
+	it('keeps a whole section page inside the page budget', () => {
+		// The binding constraint since the sections grew verbs. A section page is
+		// live with all three at once, which the per-capability ceiling below does
+		// not measure and the hand-written total above does not cover.
+		//
+		// Measured at ~7.7k against 11.5k, so there is room — but the failure mode
+		// if there weren't is a block silently dropped for budget, which reads to
+		// the model as a capability that does not exist. Worth a number.
+		const rows = [
+			{ id: 1, label: 'Dutch' },
+			{ id: 2, label: 'German' },
+			{ id: 3, label: 'Spanish' }
+		];
+
+		const sectionPage = renderCapabilityPrompt([
+			{ capability: 'edit_language', targets: rows, current: null },
+			{
+				capability: 'add_language',
+				targets: [{ id: 12, label: 'their languages' }],
+				current: { existing: rows.map((r) => r.label) }
+			},
+			{ capability: 'hide_language', targets: rows, current: null }
+		]);
+
+		expect(sectionPage.length).toBeLessThanOrEqual(11500);
 	});
 
 	it('keeps any single capability inside a one-page budget', () => {

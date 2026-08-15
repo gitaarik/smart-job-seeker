@@ -348,13 +348,53 @@ export async function updateRow(
 }
 
 /**
+ * Take a row off every document without destroying it.
+ *
+ * `status` already means this — every section's rows carry `draft` or
+ * `published`, and exports and CVs render only the latter — so hiding needs no
+ * migration and no new concept, and the applicant un-hides it from the same
+ * page they would have edited it on.
+ *
+ * This is what the assistant gets instead of `deleteRow`. A proposal card is a
+ * thing a person accepts in one click, and a delete is not recoverable from the
+ * before-image: `previous` holds columns, and a work experience owns
+ * achievements, technologies and projects across four tables that go with it.
+ * An accepted mistake should cost a click to undo, not a retyping.
+ */
+export async function setRowVisible(
+	name: ProfileResourceName,
+	actor: ProfileActor,
+	id: number,
+	visible: boolean
+): Promise<WriteResult<{ row: SectionRow; wasVisible: boolean }>> {
+	const resource = resourceFor(name);
+
+	const found = await findOwnedRow(resource, actor, id);
+	if (!found.ok) return found;
+
+	const wasVisible = found.row.status === 'published';
+	const status = visible ? 'published' : 'draft';
+
+	// Already there is not an error, but it must not bump date_updated either:
+	// see updateRow on why a no-op that moves the profile's clock lies to the
+	// matcher and to the tailored-document notice.
+	if (wasVisible === visible) return { ok: true, row: found.row, wasVisible };
+
+	await db
+		.update(resource.table)
+		.set({ status, date_updated: new Date() })
+		.where(eq(resource.table.id, id));
+
+	await touchProfile(actor.profileId);
+
+	return { ok: true, row: found.row, wasVisible };
+}
+
+/**
  * Remove a row for good.
  *
- * Hard delete, and it stays reachable only from the UI. The assistant gets
- * `status: 'draft'` instead when Phase 3 lands, because a proposal card is a
- * thing a person accepts in one click and `previous` cannot restore a row's
- * children — a work experience owns achievements, technologies and projects
- * across four tables, and they go with it.
+ * Hard delete, and it stays reachable only from the UI — the assistant gets
+ * `setRowVisible` instead, for the reason recorded there.
  */
 export async function deleteRow(
 	name: ProfileResourceName,

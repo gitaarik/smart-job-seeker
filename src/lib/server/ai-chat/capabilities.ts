@@ -989,7 +989,11 @@ export async function executeCapability(
 	// around the changed field would quietly revert anything that happened since.
 	const current = await def.current(target, actor);
 	const fields = pickCapabilityFields(capability, rawFields);
-	if (Object.keys(fields).length === 0) {
+	// A verb whose whole content is *which row* legitimately carries no fields —
+	// hiding an entry says everything it has to say by naming one. The refusal
+	// is for a capability that asked for values and got none, which is a model
+	// that produced nothing while its reply promised otherwise.
+	if (Object.keys(def.fields).length > 0 && Object.keys(fields).length === 0) {
 		return { ok: false, reason: 'empty', error: 'Nothing to change.' };
 	}
 

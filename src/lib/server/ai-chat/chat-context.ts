@@ -138,7 +138,14 @@ const PROFILE_SCOPE: RouteScope = {
 const PROFILE_SECTION_SCOPES: Record<string, RouteScope> = Object.fromEntries(
 	PROFILE_RESOURCE_NAMES.flatMap((resource): [string, RouteScope][] => {
 		const { page, detailPath, label } = PROFILE_RESOURCES[resource];
-		const capabilities = [`edit_${resource}` as Capability];
+		// All three verbs wherever the section is reachable. Adding an entry is
+		// the same request from a list and from one entry's page ("add another
+		// role"), and hiding follows the same targeting as editing.
+		const capabilities = [
+			`edit_${resource}`,
+			`add_${resource}`,
+			`hide_${resource}`
+		] as Capability[];
 
 		const list: [string, RouteScope] = [
 			page.path,

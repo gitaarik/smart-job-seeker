@@ -27,6 +27,8 @@ const state = {
 		id: number;
 		values: Record<string, unknown>;
 	}[],
+	creates: [] as { resource: string; actor: unknown; values: Record<string, unknown> }[],
+	visibility: [] as { resource: string; actor: unknown; id: number; visible: boolean }[],
 	updateResult: { ok: true } as { ok: boolean; error?: string; reason?: string }
 };
 
@@ -41,6 +43,14 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => {
 		updateRow: (resource: string, actor: unknown, id: number, values: Record<string, unknown>) => {
 			state.updates.push({ resource, actor, id, values });
 			return Promise.resolve(state.updateResult);
+		},
+		createRow: (resource: string, actor: unknown, values: Record<string, unknown>) => {
+			state.creates.push({ resource, actor, values });
+			return Promise.resolve(state.updateResult.ok ? { ok: true, id: 99 } : state.updateResult);
+		},
+		setRowVisible: (resource: string, actor: unknown, id: number, visible: boolean) => {
+			state.visibility.push({ resource, actor, id, visible });
+			return Promise.resolve(state.updateResult);
 		}
 	};
 });
@@ -48,6 +58,7 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => {
 const { PROFILE_CAPABILITIES, PROFILE_CAPABILITY_NAMES, resourceForCapability } =
 	await import('../profile-capabilities');
 const { PROFILE_RESOURCES } = await import('$lib/server/profile/resources');
+type ProfileResourceName = keyof typeof PROFILE_RESOURCES;
 
 const ACTOR = { profileId: 12, isStaff: false };
 const TARGET = { id: 5, label: 'Engineer at Acme' };
@@ -58,12 +69,20 @@ beforeEach(() => {
 	state.row = { id: 5, profile_id: 12, sort: null, status: 'published' };
 	state.rows = [];
 	state.updates = [];
+	state.creates = [];
+	state.visibility = [];
 	state.updateResult = { ok: true };
 });
 
 describe('the generated set', () => {
-	it('covers every declared section', () => {
-		expect(PROFILE_CAPABILITY_NAMES).toHaveLength(Object.keys(PROFILE_RESOURCES).length);
+	it('covers every declared section with every verb', () => {
+		expect(PROFILE_CAPABILITY_NAMES).toHaveLength(Object.keys(PROFILE_RESOURCES).length * 3);
+	});
+
+	it.each(Object.keys(PROFILE_RESOURCES))('%s can be edited, added to and hidden', (resource) => {
+		for (const verb of ['edit', 'add', 'hide']) {
+			expect(PROFILE_CAPABILITIES[`${verb}_${resource}` as never]).toBeDefined();
+		}
 	});
 
 	it.each(PROFILE_CAPABILITY_NAMES)('%s names its section back', (capability) => {
@@ -77,22 +96,33 @@ describe('the generated set', () => {
 		}
 	});
 
-	it('gives no two capabilities a field name in common', () => {
+	it('gives no two SECTIONS a field name in common', () => {
 		// The proposal schema merges every live capability's field names into one
 		// flat enum. Three sections carry `summary` and four carry `name`; the
 		// prefix is what stops those being one name with four meanings.
-		const seen = new Set<string>();
+		//
+		// Verbs over the same section share names on purpose — `add_language` and
+		// `edit_language` mean the same column by `language.name` — so the check
+		// is per section, not per capability.
+		const owner = new Map<string, ProfileResourceName>();
 		for (const capability of PROFILE_CAPABILITY_NAMES) {
+			const resource = resourceForCapability(capability);
 			for (const field of Object.keys(PROFILE_CAPABILITIES[capability].fields)) {
-				expect(seen.has(field), field).toBe(false);
-				seen.add(field);
+				const seen = owner.get(field);
+				expect(seen === undefined || seen === resource, `${field}: ${seen} vs ${resource}`).toBe(
+					true
+				);
+				owner.set(field, resource);
 			}
 		}
 	});
 
 	it.each(PROFILE_CAPABILITY_NAMES)('%s tells the model about the prefix', (capability) => {
-		const resource = resourceForCapability(capability);
-		expect(PROFILE_CAPABILITIES[capability].contract).toContain(`"${resource}."`);
+		// Except the fieldless verb, which has no names to explain. Hiding says
+		// everything it has to say by naming a row.
+		const def = PROFILE_CAPABILITIES[capability];
+		if (Object.keys(def.fields).length === 0) return;
+		expect(def.contract).toContain(`"${resourceForCapability(capability)}."`);
 	});
 
 	it.each(PROFILE_CAPABILITY_NAMES)('%s leaves no placeholder in its contract', (capability) => {
@@ -299,10 +329,139 @@ describe('resolveMany', () => {
 		expect(await PROFILE_CAPABILITIES.edit_language.resolveMany?.(null, ACTOR)).toEqual([]);
 	});
 
-	it.each(PROFILE_CAPABILITY_NAMES)('%s can offer a list', (capability) => {
-		// Every section is reachable from its list page once the model may name a
-		// row. A capability without this is only ever live where the URL names its
-		// target, which would leave four sections unreachable for good.
-		expect(typeof PROFILE_CAPABILITIES[capability].resolveMany).toBe('function');
+	it.each(PROFILE_CAPABILITY_NAMES)('%s offers a list only if it acts on a row', (capability) => {
+		// The row-acting verbs need it: without it they are only ever live where
+		// the URL names a target, which would leave four sections unreachable for
+		// good. `add` must NOT have it — it resolves the profile, and offering a
+		// list of rows to pick from would be asking which existing entry to create.
+		const offersList = typeof PROFILE_CAPABILITIES[capability].resolveMany === 'function';
+		expect(offersList).toBe(!capability.startsWith('add_'));
+	});
+});
+
+describe('adding an entry', () => {
+	const add = PROFILE_CAPABILITIES.add_language;
+
+	it('targets the profile, because there is no row yet', async () => {
+		expect(await add.resolve(null, ACTOR)).toEqual({ id: 12, label: 'their languages' });
+	});
+
+	it('is live on the section’s own pages and nowhere else', async () => {
+		// "Add another role" means the same thing from the list and from one entry,
+		// so both resolve. Another section's page must not.
+		expect(
+			await add.resolve({ type: 'profile_section', resource: 'language', id: 5 }, ACTOR)
+		).toMatchObject({ id: 12 });
+		expect(
+			await add.resolve({ type: 'profile_section', resource: 'education', id: 5 }, ACTOR)
+		).toBeNull();
+	});
+
+	it('authorizes only the actor’s own profile', async () => {
+		expect(await add.authorize({ id: 12, label: 'x' }, ACTOR)).toBe(true);
+		expect(await add.authorize({ id: 99, label: 'x' }, ACTOR)).toBe(false);
+	});
+
+	it('shows what is already there, so it does not propose a duplicate', async () => {
+		state.rows = [
+			{ id: 1, profile_id: 12, name: 'Dutch' },
+			{ id: 2, profile_id: 12, name: 'German' }
+		];
+
+		const current = await add.current({ id: 12, label: 'x' }, ACTOR);
+		const rendered = add.renderState?.(current);
+
+		expect(rendered).toContain('Dutch');
+		expect(rendered).toContain('German');
+		expect(rendered).toContain('do not propose a duplicate');
+	});
+
+	it('says so plainly when the section is empty', async () => {
+		state.rows = [];
+		const current = await add.current({ id: 12, label: 'x' }, ACTOR);
+		expect(add.renderState?.(current)).toContain('no languages yet');
+	});
+
+	it('refuses a create missing a required field', () => {
+		// Unlike an edit, where an omitted required field just means "not
+		// mentioned", a create with no name has nothing to show in the list.
+		expect(add.validate({ 'language.proficiency': 'fluent' }, {})).toMatchObject({ ok: false });
+	});
+
+	it('accepts a create that has them', () => {
+		expect(add.validate({ 'language.name': 'Spanish' }, {})).toEqual({ ok: true });
+	});
+
+	it('writes column names against the actor', async () => {
+		await add.apply(
+			{ id: 12, label: 'x' },
+			{ 'language.name': 'Spanish', 'language.proficiency': 'basic' },
+			{},
+			ACTOR
+		);
+
+		expect(state.creates[0]).toMatchObject({
+			resource: 'language',
+			actor: { profileId: 12 },
+			values: { name: 'Spanish', proficiency: 'basic' }
+		});
+	});
+});
+
+describe('hiding an entry', () => {
+	const hide = PROFILE_CAPABILITIES.hide_language;
+
+	it('carries no fields — naming the row is the whole proposal', () => {
+		expect(Object.keys(hide.fields)).toEqual([]);
+	});
+
+	it('targets rows the same way editing does', async () => {
+		state.row = { id: 5, profile_id: 12, name: 'Dutch' };
+		expect(
+			await hide.resolve({ type: 'profile_section', resource: 'language', id: 5 }, ACTOR)
+		).toEqual({ id: 5, label: 'Dutch' });
+
+		state.rows = [{ id: 1, profile_id: 12, name: 'Dutch' }];
+		expect(await hide.resolveMany?.(null, ACTOR)).toEqual([{ id: 1, label: 'Dutch' }]);
+	});
+
+	it('shows the person what hiding it would take off', async () => {
+		// A card saying only "Spanish" asks someone to accept the removal of
+		// something they cannot see.
+		state.row = { id: 5, profile_id: 12, name: 'Spanish', proficiency: 'basic' };
+
+		const rendered = hide.renderState?.(await hide.current({ id: 5, label: 'Spanish' }, ACTOR));
+
+		expect(rendered).toContain('Spanish');
+		expect(rendered).toContain('basic');
+	});
+
+	it('says it is reversible and where to reverse it', () => {
+		expect(hide.contract).toContain('NOT deleted');
+		expect(hide.contract).toContain('Languages page');
+	});
+
+	it('says not to propose it unasked', () => {
+		expect(hide.contract).toContain('asked for it');
+	});
+
+	it('hides rather than deletes', async () => {
+		await hide.apply({ id: 5, label: 'Spanish' }, {}, {}, ACTOR);
+
+		expect(state.visibility[0]).toMatchObject({
+			resource: 'language',
+			actor: { profileId: 12 },
+			id: 5,
+			visible: false
+		});
+		// Nothing destroyed: the row is still there, off the documents.
+		expect(state.updates).toHaveLength(0);
+	});
+
+	it('throws when the write refuses, like the other verbs', async () => {
+		state.updateResult = { ok: false, reason: 'not_found', error: 'Language not found' };
+		await expect(hide.apply({ id: 5, label: 'x' }, {}, {}, ACTOR)).rejects.toThrow(
+			/refused at write time/
+		);
 	});
 });

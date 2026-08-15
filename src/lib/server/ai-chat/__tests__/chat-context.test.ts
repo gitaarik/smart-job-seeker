@@ -471,7 +471,18 @@ describe('profile section pages', () => {
 		const scope = scopeForRoute(route);
 		expect(scope.entity).toBe(resource);
 		expect(scope.param).toBe('id');
-		expect(scope.capabilities).toEqual([capability]);
+		expect(scope.capabilities).toContain(capability);
+	});
+
+	it.each(SECTIONS)('%s offers all three verbs', (route, resource) => {
+		// Adding is the same request from a list and from one entry ("add another
+		// role"), and hiding follows the same targeting as editing, so a page that
+		// can reach a section can do all three to it.
+		expect(scopeForRoute(route).capabilities).toEqual([
+			`edit_${resource}`,
+			`add_${resource}`,
+			`hide_${resource}`
+		]);
 	});
 
 	it.each(SECTIONS)('%s says what a bare question is about', (route) => {
@@ -480,13 +491,19 @@ describe('profile section pages', () => {
 		expect(scopeForRoute(route).hint?.subject).toBeTruthy();
 	});
 
-	it('grants exactly one capability per section page', () => {
-		// The budget rule in capabilities.test.ts measures a single block for the
-		// generated capabilities rather than their sum, and that is only sound
-		// while no page grants two of them. A route that did would make the sum
-		// the real cost and quietly blow past what was measured.
-		for (const [route] of SECTIONS) {
-			expect(scopeForRoute(route).capabilities, route).toHaveLength(1);
+	it('grants one section and no more', () => {
+		// The three verbs of ONE section, never two sections' worth. Measured, a
+		// section page costs ~7.7k of the 11.5k page budget with its three verbs,
+		// so a route that reached a second section would be the thing that broke
+		// it — and the failure is a block silently dropped for budget, not an
+		// error.
+		for (const [route, resource] of SECTIONS) {
+			const capabilities = scopeForRoute(route).capabilities ?? [];
+			expect(capabilities, route).toHaveLength(3);
+			expect(
+				capabilities.every((c) => c.endsWith(`_${resource}`)),
+				`${route}: ${capabilities.join(', ')}`
+			).toBe(true);
 		}
 	});
 
@@ -511,7 +528,7 @@ describe('profile section pages', () => {
 		});
 
 		expect(mockResolveCapabilities).toHaveBeenCalledWith(
-			['edit_work_experience'],
+			['edit_work_experience', 'add_work_experience', 'hide_work_experience'],
 			{ type: 'profile_section', resource: 'work_experience', id: 5 },
 			expect.objectContaining({ profileId: 12 })
 		);
@@ -531,7 +548,7 @@ describe('profile section pages', () => {
 		expect(context.entity).toBeUndefined();
 		expect(capabilities).toEqual([]);
 		expect(mockResolveCapabilities).toHaveBeenCalledWith(
-			['edit_work_experience'],
+			['edit_work_experience', 'add_work_experience', 'hide_work_experience'],
 			null,
 			expect.anything()
 		);
@@ -552,18 +569,16 @@ describe('profile section list pages', () => {
 		// No entity: these sections have no [id] page, so the row comes from the
 		// model naming one out of the list the capability offers.
 		expect(scope.entity).toBeNull();
-		expect(scope.capabilities).toEqual([capability]);
+		expect(scope.capabilities).toContain(capability);
 	});
 
 	it.each(LISTS)('%s says a bare question is about the section, not one row', (route) => {
 		expect(scopeForRoute(route).hint?.subject).toBeNull();
 	});
 
-	it('grants exactly one capability per list page', () => {
-		// Same reason as the detail pages: the budget rule measures one block, and
-		// that is only sound while no page grants two.
+	it('grants one section and no more', () => {
 		for (const [route] of LISTS) {
-			expect(scopeForRoute(route).capabilities, route).toHaveLength(1);
+			expect(scopeForRoute(route).capabilities, route).toHaveLength(3);
 		}
 	});
 
