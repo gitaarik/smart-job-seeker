@@ -112,7 +112,9 @@ export const POST: RequestHandler = async ({ locals, params }) => {
 	const actor = { profileId, isStaff };
 
 	const target = { id: stored.target.id, label: stored.target.label };
-	const outcome = await executeCapability(capability, target, actor, stored.fields ?? {});
+	// 'chat', because this endpoint IS the chat's apply button. The parameter
+	// exists so an MCP server has to say something different.
+	const outcome = await executeCapability(capability, target, actor, stored.fields ?? {}, 'chat');
 
 	if (!outcome.ok) {
 		const status: Record<CapabilityRefusal, number> = {

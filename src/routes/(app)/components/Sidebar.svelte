@@ -23,6 +23,7 @@
 		faEnvelope,
 		faExchangeAlt,
 		faFileAlt,
+		faHistory,
 		faWrench,
 		faHome,
 		faLink,
@@ -163,6 +164,11 @@
 					label: 'Profile Settings',
 					href: '/data/settings',
 					icon: faWrench
+				},
+				{
+					label: 'AI Changes',
+					href: '/data/ai-changes',
+					icon: faHistory
 				}
 			]
 		}

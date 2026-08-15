@@ -38,7 +38,7 @@ import {
 	PROFILE_RESOURCES,
 	type ProfileResourceName
 } from '$lib/server/profile/resources';
-import { PROFILE_VERBS } from './profile-capabilities';
+import { verbsFor } from './profile-capabilities';
 
 /**
  * Char budget for the chat's evidence blocks (the profile blob is exempt — see
@@ -125,6 +125,20 @@ const PROFILE_SCOPE: RouteScope = {
 };
 
 /**
+ * Every verb a section has, wherever it is reachable. Adding an entry is the
+ * same request from a list and from one entry's page ("add another role"), and
+ * hiding follows the same targeting as editing — so nothing here grants a
+ * subset of what the section supports.
+ *
+ * What it supports is not uniform: four sections have no `hide`, because
+ * nothing filters them on a document. That is `verbsFor`'s to know, not this
+ * table's.
+ */
+function sectionCapabilities(resource: ProfileResourceName): Capability[] {
+	return verbsFor(resource) as Capability[];
+}
+
+/**
  * Where the assistant may propose a section edit, derived from the declaration
  * rather than listed again here.
  *
@@ -142,15 +156,6 @@ const PROFILE_SCOPE: RouteScope = {
  * Every one keeps PROFILE_SCOPE's sources. The row's own text already arrives in
  * the profile blob, so these pages add a *subject*, not evidence.
  */
-/**
- * All three verbs for a section. Adding an entry is the same request from a list
- * and from one entry's page ("add another role"), and hiding follows the same
- * targeting as editing — so nothing here ever grants a subset.
- */
-function sectionCapabilities(resource: ProfileResourceName): Capability[] {
-	return PROFILE_VERBS.map((verb) => `${verb}_${resource}` as Capability);
-}
-
 const PROFILE_SECTION_SCOPES: Record<string, RouteScope> = Object.fromEntries(
 	PROFILE_RESOURCE_NAMES.flatMap((resource): [string, RouteScope][] => {
 		const { page, detailPath, label } = PROFILE_RESOURCES[resource];

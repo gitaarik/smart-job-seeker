@@ -81,8 +81,16 @@ vi.mock('$lib/server/db', () => {
 
 const { profiles, work_experiences } = await import('$lib/server/db/schema');
 const { PROFILE_RESOURCES } = await import('../resources');
-const { actorForRow, createRow, deleteRow, reorderRows, resetRowOrder, updateRow } =
-	await import('../write');
+const {
+	actorForRow,
+	createRow,
+	deleteRow,
+	reorderRows,
+	resetRowOrder,
+	setRowTags,
+	setRowVisible,
+	updateRow
+} = await import('../write');
 
 const ACTOR = { profileId: 7 };
 
@@ -357,5 +365,108 @@ describe('actorForRow', () => {
 		state.rows = [row({ profile_id: 7 })];
 		state.profileRow = { id: 7 };
 		expect(await actorForRow('language', 42, 'user-1')).toEqual({ profileId: 7 });
+	});
+});
+
+/**
+ * Hiding an entry, which shipped once as a write that changed nothing.
+ *
+ * The first version set `status` to `'draft'` on the stated grounds that
+ * documents render only `'published'`. They do not: `status` defaults to
+ * `'draft'` on every section table, the resume importer writes `'draft'` for
+ * every row it creates, and nothing filters a section row on it anywhere. So
+ * the assistant reported the entry hidden and it went on printing.
+ *
+ * There were no tests over `setRowVisible` at all, which is the other half of
+ * how that shipped. These are them.
+ */
+describe('setRowVisible', () => {
+	it('writes the tags documents actually filter on, and not status', async () => {
+		state.rows = [row({ tags: null })];
+
+		const result = await setRowVisible('work_experience', ACTOR, 42, false);
+
+		expect(result.ok).toBe(true);
+		expect(sectionUpdates()[0].values).toMatchObject({ tags: ['!resume', '!cv'] });
+		expect(sectionUpdates()[0].values).not.toHaveProperty('status');
+	});
+
+	it('leaves a per-version tag alone', async () => {
+		// The applicant said "this one is for my senior versions". Hiding it from
+		// the base templates is not a reason to forget that.
+		state.rows = [row({ tags: ['senior'] })];
+
+		await setRowVisible('work_experience', ACTOR, 42, false);
+
+		expect(sectionUpdates()[0].values.tags).toEqual(['!resume', '!cv', 'senior']);
+	});
+
+	it('reports what it was, from the tags rather than from status', async () => {
+		state.rows = [row({ tags: ['!resume', '!cv'], status: 'published' })];
+
+		const result = await setRowVisible('work_experience', ACTOR, 42, false);
+
+		// 'published' status and already hidden: the two disagree, and the tags win.
+		expect(result).toMatchObject({ ok: true, wasVisible: false });
+	});
+
+	it('writes nothing when it is already where it is being put', async () => {
+		// A no-op that bumps date_updated lies to the matcher and to the
+		// tailored-document notice — see updateRow.
+		state.rows = [row({ tags: ['!resume', '!cv'] })];
+
+		await setRowVisible('work_experience', ACTOR, 42, false);
+
+		expect(sectionUpdates()).toHaveLength(0);
+		expect(touchedProfile()).toBe(false);
+	});
+
+	it('un-hides by lifting the base-template exclusions', async () => {
+		state.rows = [row({ tags: ['!resume', '!cv', 'senior'] })];
+
+		await setRowVisible('work_experience', ACTOR, 42, true);
+
+		expect(sectionUpdates()[0].values.tags).toEqual(['senior']);
+	});
+
+	it('normalises an empty tag list to null', async () => {
+		state.rows = [row({ tags: ['!resume', '!cv'] })];
+
+		await setRowVisible('work_experience', ACTOR, 42, true);
+
+		expect(sectionUpdates()[0].values.tags).toBeNull();
+	});
+
+	it('refuses a section that has no way to be hidden', async () => {
+		// Languages, references, certificates and highlights are rendered with no
+		// filter between them and the page. Writing anything here would be the
+		// original bug again, one layer down.
+		state.rows = [row()];
+
+		const result = await setRowVisible('language', ACTOR, 42, false);
+
+		expect(result).toMatchObject({ ok: false, reason: 'invalid' });
+		expect(sectionUpdates()).toHaveLength(0);
+	});
+});
+
+describe('setRowTags', () => {
+	it('restores the exact array, rather than deriving one', async () => {
+		// The undo counterpart. setProfileOnly(tags, false) lifts BOTH base
+		// exclusions, so a derived restore would drop a `!resume` the applicant
+		// set by hand along with the one the assistant wrote.
+		state.rows = [row({ tags: ['!resume', '!cv'] })];
+
+		await setRowTags('work_experience', ACTOR, 42, ['!resume', 'senior']);
+
+		expect(sectionUpdates()[0].values.tags).toEqual(['!resume', 'senior']);
+	});
+
+	it('refuses a section that carries no document tags', async () => {
+		state.rows = [row()];
+		expect(await setRowTags('certificate', ACTOR, 42, ['x'])).toMatchObject({
+			ok: false,
+			reason: 'invalid'
+		});
 	});
 });

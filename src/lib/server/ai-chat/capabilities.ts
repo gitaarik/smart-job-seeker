@@ -51,6 +51,7 @@ import {
 	recordTypeValues,
 	today
 } from '$lib/application-records';
+import type { EditSource } from './edit-log';
 import { deriveRecordMetadata } from './record-derivation';
 import { summarizeApplication } from './application-summary';
 
@@ -176,6 +177,42 @@ export interface CapabilityDef {
 		target: CapabilityTarget,
 		fields: Record<string, unknown>,
 		current: Record<string, unknown>,
+		actor: CapabilityActor
+	): Promise<void>;
+	/**
+	 * What an undo of this write would need to know, when that isn't "the old
+	 * values of the fields being written".
+	 *
+	 * `executeCapability` records the fields it is about to overwrite, which is
+	 * the right before-image for every capability that patches columns. It is the
+	 * wrong one for a write whose content is not a field patch: `hide_*` carries
+	 * no fields at all — naming the row is the whole proposal — so the default
+	 * narrows to `{}` and there is nothing to put back.
+	 *
+	 * Declared here rather than special-cased in `executeCapability` because the
+	 * question is the capability's own: only it knows what its write disturbed.
+	 */
+	beforeImage?(
+		target: CapabilityTarget,
+		current: Record<string, unknown>,
+		actor: CapabilityActor
+	): Promise<Record<string, unknown>>;
+	/**
+	 * Put back what this capability's write replaced, from the log's before-image.
+	 *
+	 * Optional, and its absence is a real answer rather than a gap. Undo exists
+	 * for writes **nothing else can reverse** — a rewritten summary is gone, and
+	 * only the before-image has it. An `add_*` is not that: the row is sitting on
+	 * its own page with a delete button, and giving the registry a delete is the
+	 * one thing the whole hide-not-delete design refused. So adds have no revert,
+	 * and the feed says where to go instead.
+	 *
+	 * Whatever this writes goes through the same ownership check as any other
+	 * write — a log row is a record, not a licence.
+	 */
+	revert?(
+		target: CapabilityTarget,
+		previous: Record<string, unknown>,
 		actor: CapabilityActor
 	): Promise<void>;
 }
@@ -972,7 +1009,8 @@ export async function executeCapability(
 	capability: Capability,
 	target: CapabilityTarget,
 	actor: CapabilityActor,
-	rawFields: Record<string, unknown>
+	rawFields: Record<string, unknown>,
+	source: EditSource
 ): Promise<CapabilityOutcome> {
 	const def = CAPABILITIES[capability];
 
@@ -1004,13 +1042,40 @@ export async function executeCapability(
 	// capability with no prior row for a field (add_activity_record has none at
 	// all) simply contributes nothing here, which reads correctly as "there was
 	// nothing there".
-	const previous = Object.fromEntries(
-		Object.keys(fields)
-			.filter((key) => key in current)
-			.map((key) => [key, current[key]])
-	);
+	//
+	// A capability whose write is not a field patch overrides this: `hide_*`
+	// carries no fields, so the narrowing would give `{}` and an undo would have
+	// nothing to put back. See CapabilityDef.beforeImage.
+	const previous = def.beforeImage
+		? await def.beforeImage(target, current, actor)
+		: Object.fromEntries(
+				Object.keys(fields)
+					.filter((key) => key in current)
+					.map((key) => [key, current[key]])
+			);
 
 	await def.apply(target, fields, current, actor);
+
+	// After the write, and never able to undo it. The change already happened;
+	// throwing here would report a failure for something that succeeded and
+	// invite the caller to retry it, and a double-applied edit is worse than a
+	// missing log row. Imported lazily so that every test touching the registry
+	// does not also have to mock the log's table — the same fix the profile_edits
+	// context source needed, for the same reason.
+	try {
+		const { recordEdit } = await import('./edit-log');
+		await recordEdit({
+			profileId: actor.profileId,
+			source,
+			capability,
+			target,
+			fields,
+			previous
+		});
+	} catch (e) {
+		console.error(`[capabilities] ${capability} applied but was not logged`, e);
+	}
+
 	return { ok: true, previous };
 }
 

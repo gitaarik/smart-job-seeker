@@ -29,6 +29,7 @@ const state = {
 	}[],
 	creates: [] as { resource: string; actor: unknown; values: Record<string, unknown> }[],
 	visibility: [] as { resource: string; actor: unknown; id: number; visible: boolean }[],
+	tagWrites: [] as { resource: string; actor: unknown; id: number; tags: string[] | null }[],
 	updateResult: { ok: true } as { ok: boolean; error?: string; reason?: string }
 };
 
@@ -51,13 +52,17 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => {
 		setRowVisible: (resource: string, actor: unknown, id: number, visible: boolean) => {
 			state.visibility.push({ resource, actor, id, visible });
 			return Promise.resolve(state.updateResult);
+		},
+		setRowTags: (resource: string, actor: unknown, id: number, tags: string[] | null) => {
+			state.tagWrites.push({ resource, actor, id, tags });
+			return Promise.resolve(state.updateResult);
 		}
 	};
 });
 
 const { PROFILE_CAPABILITIES, PROFILE_CAPABILITY_NAMES, resourceForCapability } =
 	await import('../profile-capabilities');
-const { PROFILE_RESOURCES } = await import('$lib/server/profile/resources');
+const { HIDEABLE_RESOURCES, PROFILE_RESOURCES } = await import('$lib/server/profile/resources');
 type ProfileResourceName = keyof typeof PROFILE_RESOURCES;
 
 const ACTOR = { profileId: 12, isStaff: false };
@@ -71,17 +76,41 @@ beforeEach(() => {
 	state.updates = [];
 	state.creates = [];
 	state.visibility = [];
+	state.tagWrites = [];
 	state.updateResult = { ok: true };
 });
 
 describe('the generated set', () => {
-	it('covers every declared section with every verb', () => {
-		expect(PROFILE_CAPABILITY_NAMES).toHaveLength(Object.keys(PROFILE_RESOURCES).length * 3);
+	it('covers every declared section, with the verbs that section has', () => {
+		// Not sections x 3. `hide` is not universal — see HIDEABLE_RESOURCES:
+		// languages, references, certificates and highlights are rendered on a
+		// document with no filter between them and the page, so there is nothing
+		// to write that would take one off. Asserting the product was what let the
+		// first version ship a hide that changed nothing.
+		expect(PROFILE_CAPABILITY_NAMES).toHaveLength(
+			Object.keys(PROFILE_RESOURCES).length * 2 + HIDEABLE_RESOURCES.length
+		);
 	});
 
-	it.each(Object.keys(PROFILE_RESOURCES))('%s can be edited, added to and hidden', (resource) => {
-		for (const verb of ['edit', 'add', 'hide']) {
+	it.each(Object.keys(PROFILE_RESOURCES))('%s can be edited and added to', (resource) => {
+		for (const verb of ['edit', 'add']) {
 			expect(PROFILE_CAPABILITIES[`${verb}_${resource}` as never]).toBeDefined();
+		}
+	});
+
+	it.each(Object.keys(PROFILE_RESOURCES))('%s can be hidden only if it can be', (resource) => {
+		const hideable = (HIDEABLE_RESOURCES as readonly string[]).includes(resource);
+		expect(PROFILE_CAPABILITIES[`hide_${resource}` as never] !== undefined).toBe(hideable);
+	});
+
+	it('offers hide only where the row carries the tags that hiding writes', () => {
+		// The other half of the declaration. HIDEABLE_RESOURCES is declared rather
+		// than derived, because a `tags` column is necessary and not sufficient —
+		// the renderers have to consult it too, and for highlights they don't. But
+		// a name here WITHOUT the column would be a capability writing to nothing,
+		// which is the failure being fixed, so that half is checked.
+		for (const name of HIDEABLE_RESOURCES) {
+			expect(PROFILE_RESOURCES[name].fields.tags, name).toBeDefined();
 		}
 	});
 
@@ -409,36 +438,38 @@ describe('adding an entry', () => {
 });
 
 describe('hiding an entry', () => {
-	const hide = PROFILE_CAPABILITIES.hide_language;
+	// Work experience rather than a language, because a language cannot be
+	// hidden: nothing filters it on a document. See HIDEABLE_RESOURCES.
+	const hide = PROFILE_CAPABILITIES.hide_work_experience;
 
 	it('carries no fields — naming the row is the whole proposal', () => {
 		expect(Object.keys(hide.fields)).toEqual([]);
 	});
 
 	it('targets rows the same way editing does', async () => {
-		state.row = { id: 5, profile_id: 12, name: 'Dutch' };
+		state.row = { id: 5, profile_id: 12, position: 'Engineer', name: 'Acme' };
 		expect(
-			await hide.resolve({ type: 'profile_section', resource: 'language', id: 5 }, ACTOR)
-		).toEqual({ id: 5, label: 'Dutch' });
+			await hide.resolve({ type: 'profile_section', resource: 'work_experience', id: 5 }, ACTOR)
+		).toEqual({ id: 5, label: 'Engineer at Acme' });
 
-		state.rows = [{ id: 1, profile_id: 12, name: 'Dutch' }];
-		expect(await hide.resolveMany?.(null, ACTOR)).toEqual([{ id: 1, label: 'Dutch' }]);
+		state.rows = [{ id: 1, profile_id: 12, position: 'Engineer', name: 'Acme' }];
+		expect(await hide.resolveMany?.(null, ACTOR)).toEqual([{ id: 1, label: 'Engineer at Acme' }]);
 	});
 
 	it('shows the person what hiding it would take off', async () => {
-		// A card saying only "Spanish" asks someone to accept the removal of
+		// A card saying only the row's name asks someone to accept the removal of
 		// something they cannot see.
-		state.row = { id: 5, profile_id: 12, name: 'Spanish', proficiency: 'basic' };
+		state.row = { id: 5, profile_id: 12, position: 'Engineer', name: 'Acme', location: 'Berlin' };
 
-		const rendered = hide.renderState?.(await hide.current({ id: 5, label: 'Spanish' }, ACTOR));
+		const rendered = hide.renderState?.(await hide.current({ id: 5, label: 'Acme' }, ACTOR));
 
-		expect(rendered).toContain('Spanish');
-		expect(rendered).toContain('basic');
+		expect(rendered).toContain('Acme');
+		expect(rendered).toContain('Berlin');
 	});
 
 	it('says it is reversible and where to reverse it', () => {
 		expect(hide.contract).toContain('NOT deleted');
-		expect(hide.contract).toContain('Languages page');
+		expect(hide.contract).toContain('Work experience page');
 	});
 
 	it('says not to propose it unasked', () => {
@@ -446,10 +477,10 @@ describe('hiding an entry', () => {
 	});
 
 	it('hides rather than deletes', async () => {
-		await hide.apply({ id: 5, label: 'Spanish' }, {}, {}, ACTOR);
+		await hide.apply({ id: 5, label: 'Acme' }, {}, {}, ACTOR);
 
 		expect(state.visibility[0]).toMatchObject({
-			resource: 'language',
+			resource: 'work_experience',
 			actor: { profileId: 12 },
 			id: 5,
 			visible: false
@@ -459,9 +490,33 @@ describe('hiding an entry', () => {
 	});
 
 	it('throws when the write refuses, like the other verbs', async () => {
-		state.updateResult = { ok: false, reason: 'not_found', error: 'Language not found' };
+		state.updateResult = { ok: false, reason: 'not_found', error: 'Role not found' };
 		await expect(hide.apply({ id: 5, label: 'x' }, {}, {}, ACTOR)).rejects.toThrow(
 			/refused at write time/
 		);
+	});
+
+	it('records the tags it is about to overwrite, not the empty field set', async () => {
+		// The default before-image is "the old values of the fields being
+		// written", and this capability writes none — so without its own
+		// beforeImage the log records {} and there is nothing for an undo to put
+		// back.
+		state.row = { id: 5, profile_id: 12, position: 'Engineer', name: 'Acme', tags: ['senior'] };
+
+		expect(await hide.beforeImage?.({ id: 5, label: 'Acme' }, {}, ACTOR)).toEqual({
+			tags: ['senior']
+		});
+	});
+
+	it('undoes by restoring the exact tag array', async () => {
+		// Exact, not "un-hide": setProfileOnly lifts BOTH base exclusions, so a
+		// derived restore would also drop a `!resume` the applicant set by hand.
+		await hide.revert?.({ id: 5, label: 'Acme' }, { tags: ['senior'] }, ACTOR);
+
+		expect(state.tagWrites[0]).toMatchObject({
+			resource: 'work_experience',
+			id: 5,
+			tags: ['senior']
+		});
 	});
 });

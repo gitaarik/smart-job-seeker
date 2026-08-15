@@ -233,6 +233,40 @@ export interface ProfileResource {
 	schema: z.ZodObject<z.ZodRawShape>;
 }
 
+/**
+ * Sections an entry can be taken off every document from — and why the other
+ * four cannot.
+ *
+ * Visibility on a rendered resume or CV is decided by `tags`, through
+ * `profile-filter.ts`: the `!resume` + `!cv` pair (`$lib/profile-visibility`'s
+ * "profile-only") holds an item back from every base template while leaving any
+ * per-version tag it carries intact. Three sections have a `tags` column AND go
+ * through that filter in both renderers. Languages, references and certificates
+ * are rendered straight from the profile with no filter at all, and highlights
+ * have no `tags` column, so for those four there is simply no way to hide an
+ * entry — not from the assistant and not from the UI either.
+ *
+ * `status` is NOT that mechanism, though it reads like one and was taken for it
+ * when `hide_*` was built. Every section's `status` defaults to `'draft'`,
+ * `resume/apply-diff.ts` writes `'draft'` for every row it imports and never
+ * promotes them, and **nothing anywhere filters a section row on it** — measured
+ * on the dev database, 30 of 73 work experiences and 12 of 24 languages sit at
+ * `'draft'` and print on every document. So hiding through `status` was a write
+ * that changed nothing while the assistant reported it done.
+ *
+ * Declared rather than derived from `'tags' in fields`, because the column is
+ * only half of it: highlights would pass that test on a column the renderers
+ * never consult. A test asserts the other half — that every name here does have
+ * the column the mechanism writes.
+ */
+export const HIDEABLE_RESOURCES = ['work_experience', 'education', 'side_project'] as const;
+
+export type HideableResourceName = (typeof HIDEABLE_RESOURCES)[number];
+
+export function isHideable(name: ProfileResourceName): name is HideableResourceName {
+	return (HIDEABLE_RESOURCES as readonly string[]).includes(name);
+}
+
 /** Trim a long text down to something that fits on a card. */
 function short(value: unknown, max = 60): string {
 	const text = String(value ?? '').trim();
@@ -255,7 +289,10 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	work_experience: {
 		table: work_experiences,
 		label: 'work experience',
-		page: { path: '/profile/work-experience', name: 'Work experience' },
+		page: {
+			path: '/profile/work-experience',
+			name: 'Work experience'
+		},
 		detailPath: (id) => `/profile/work-experience/${id}`,
 		// No bare "job" or "role": both mean a posting they are looking at at
 		// least as often as a position they held.
@@ -300,7 +337,10 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	education: {
 		table: education,
 		label: 'education entry',
-		page: { path: '/profile/education', name: 'Education' },
+		page: {
+			path: '/profile/education',
+			name: 'Education'
+		},
 		detailPath: (id) => `/profile/education/${id}`,
 		aliases: [
 			'degree',
@@ -340,7 +380,10 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	side_project: {
 		table: side_projects,
 		label: 'side project',
-		page: { path: '/profile/side-projects', name: 'Side projects' },
+		page: {
+			path: '/profile/side-projects',
+			name: 'Side projects'
+		},
 		detailPath: (id) => `/profile/side-projects/${id}`,
 		// Not bare "project": a work experience has projects of its own, and so
 		// does half the prose in any job description.
@@ -367,7 +410,10 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	language: {
 		table: languages,
 		label: 'language',
-		page: { path: '/profile/languages', name: 'Languages' },
+		page: {
+			path: '/profile/languages',
+			name: 'Languages'
+		},
 		aliases: ['mother tongue', 'native speaker', 'bilingual', 'spoken language'],
 		rowLabel: (row) => short(row.name) || 'Untitled language',
 		fields: {
@@ -389,7 +435,10 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	reference: {
 		table: references,
 		label: 'reference',
-		page: { path: '/profile/references', name: 'References' },
+		page: {
+			path: '/profile/references',
+			name: 'References'
+		},
 		aliases: ['referee', 'recommendation', 'testimonial', 'referral'],
 		rowLabel: (row) => joined([row.author, row.author_position], ', ') || 'Untitled reference',
 		fields: {
@@ -408,7 +457,10 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	certificate: {
 		table: certificates,
 		label: 'certificate',
-		page: { path: '/profile/certificates', name: 'Certificates' },
+		page: {
+			path: '/profile/certificates',
+			name: 'Certificates'
+		},
 		aliases: ['certification', 'certified', 'accreditation', 'credential', 'qualification'],
 		rowLabel: (row) => joined([row.name, row.issuer], ' — ') || 'Untitled certificate',
 		fields: {
@@ -428,7 +480,10 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	highlight: {
 		table: highlights,
 		label: 'highlight',
-		page: { path: '/profile/highlights', name: 'Highlights' },
+		page: {
+			path: '/profile/highlights',
+			name: 'Highlights'
+		},
 		// Not "achievement": a work experience owns a table of those, and they are
 		// a different thing in a different place.
 		aliases: ['profile highlight', 'selling point'],

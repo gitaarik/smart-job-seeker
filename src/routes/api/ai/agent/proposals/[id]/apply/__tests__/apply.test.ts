@@ -142,7 +142,10 @@ describe('POST /api/ai/agent/proposals/:id/apply', () => {
 			'edit_job_details',
 			{ id: 900, label: 'Senior Backend Engineer at Acme' },
 			{ profileId: 12, isStaff: false },
-			{ salary_min: 120000 }
+			{ salary_min: 120000 },
+			// The surface, for the edit log. This endpoint is the chat's Apply
+			// button; the parameter exists so an MCP server has to say otherwise.
+			'chat'
 		);
 	});
 

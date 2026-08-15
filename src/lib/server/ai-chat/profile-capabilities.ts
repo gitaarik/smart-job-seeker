@@ -32,9 +32,11 @@
 
 import {
 	assistantFields,
+	HIDEABLE_RESOURCES,
 	PROFILE_RESOURCE_NAMES,
 	PROFILE_RESOURCES,
 	type FieldSpec,
+	type HideableResourceName,
 	type ProfileResource,
 	type ProfileResourceName,
 	type SectionRow
@@ -43,6 +45,7 @@ import {
 	createRow,
 	readOwnedRow,
 	readOwnedRows,
+	setRowTags,
 	setRowVisible,
 	updateRow,
 	validatePatch
@@ -61,13 +64,31 @@ import type { CapabilityActor, CapabilityDef, CapabilityTarget } from './capabil
  * edited it from. Hard delete stays UI-only.
  */
 export type ProfileCapability =
-	`edit_${ProfileResourceName}` | `add_${ProfileResourceName}` | `hide_${ProfileResourceName}`;
+	`edit_${ProfileResourceName}` | `add_${ProfileResourceName}` | `hide_${HideableResourceName}`;
 
 export const PROFILE_VERBS = ['edit', 'add', 'hide'] as const;
 
-export const PROFILE_CAPABILITY_NAMES = PROFILE_RESOURCE_NAMES.flatMap((resource) =>
-	PROFILE_VERBS.map((verb) => `${verb}_${resource}` as ProfileCapability)
-);
+/**
+ * Every verb this section actually has.
+ *
+ * `hide` is not universal: four of the seven sections are rendered on documents
+ * with no filter between them and the page, so there is nothing to write that
+ * would take an entry off one. See HIDEABLE_RESOURCES. Offering the verb anyway
+ * is how the first version of this shipped a write that changed nothing while
+ * the assistant reported the entry hidden.
+ */
+export function verbsFor(resource: ProfileResourceName): ProfileCapability[] {
+	const verbs: ProfileCapability[] = [
+		`edit_${resource}` as ProfileCapability,
+		`add_${resource}` as ProfileCapability
+	];
+	if ((HIDEABLE_RESOURCES as readonly string[]).includes(resource)) {
+		verbs.push(`hide_${resource as HideableResourceName}`);
+	}
+	return verbs;
+}
+
+export const PROFILE_CAPABILITY_NAMES = PROFILE_RESOURCE_NAMES.flatMap(verbsFor);
 
 /** The section a generated capability acts on. */
 export function resourceForCapability(capability: ProfileCapability): ProfileResourceName {
@@ -268,6 +289,23 @@ function editCapability(name: ProfileResourceName): CapabilityDef {
 			return checked.ok ? { ok: true } : { ok: false, error: checked.error };
 		},
 
+		/**
+		 * Write the old values back. Same path as the edit itself, so ownership,
+		 * coercion and validation are all re-asked — a log row records what
+		 * happened, it does not authorize anything.
+		 */
+		revert: async (t, previous, actor) => {
+			const result = await updateRow(
+				name,
+				{ profileId: actor.profileId },
+				t.id,
+				toColumns(name, fields, previous)
+			);
+			if (!result.ok) {
+				throw new Error(`edit_${name} could not be undone: ${result.error}`);
+			}
+		},
+
 		apply: async (t, proposed, _current, actor) => {
 			const result = await updateRow(
 				name,
@@ -380,7 +418,7 @@ duplicate on every document, and they have to find and remove it.`,
  * "Spanish" would be asking someone to accept the removal of something they
  * cannot see; the person deciding needs to read what goes.
  */
-function hideCapability(name: ProfileResourceName): CapabilityDef {
+function hideCapability(name: HideableResourceName): CapabilityDef {
 	const resource = PROFILE_RESOURCES[name];
 	const editor = editCapability(name);
 
@@ -416,6 +454,28 @@ there is nothing to write.`,
 
 		validate: () => ({ ok: true }),
 
+		/**
+		 * The row's document tags, which is what hiding rewrites.
+		 *
+		 * The default before-image is the old values of the fields being written,
+		 * and this capability writes no fields — so without this the log would
+		 * record `{}` and an undo would have nothing to put back. Recording the
+		 * whole array rather than "it was visible" is what lets the undo restore a
+		 * per-version tag the applicant set by hand alongside it.
+		 */
+		beforeImage: async (t, _current, actor) => {
+			const row = await readOwnedRow(name, { profileId: actor.profileId }, t.id);
+			return { tags: (row?.tags as string[] | null) ?? null };
+		},
+
+		revert: async (t, previous, actor) => {
+			const tags = Array.isArray(previous.tags) ? (previous.tags as string[]) : null;
+			const result = await setRowTags(name, { profileId: actor.profileId }, t.id, tags);
+			if (!result.ok) {
+				throw new Error(`hide_${name} could not be undone: ${result.error}`);
+			}
+		},
+
 		apply: async (t, _proposed, _current, actor) => {
 			const result = await setRowVisible(name, { profileId: actor.profileId }, t.id, false);
 			if (!result.ok) {
@@ -425,10 +485,10 @@ there is nothing to write.`,
 	};
 }
 
-export const PROFILE_CAPABILITIES = Object.fromEntries(
-	PROFILE_RESOURCE_NAMES.flatMap((name) => [
+export const PROFILE_CAPABILITIES = Object.fromEntries([
+	...PROFILE_RESOURCE_NAMES.flatMap((name) => [
 		[`edit_${name}`, editCapability(name)],
-		[`add_${name}`, addCapability(name)],
-		[`hide_${name}`, hideCapability(name)]
-	])
-) as Record<ProfileCapability, CapabilityDef>;
+		[`add_${name}`, addCapability(name)]
+	]),
+	...HIDEABLE_RESOURCES.map((name) => [`hide_${name}`, hideCapability(name)])
+]) as Record<ProfileCapability, CapabilityDef>;

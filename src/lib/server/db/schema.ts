@@ -2623,6 +2623,85 @@ export const agent_message_proposals = pgTable(
 	]
 );
 
+/**
+ * Every write the capability registry has made, whoever made it.
+ *
+ * ## Why it is not a column on the proposal
+ *
+ * `agent_message_proposals` already carries a `previous`, and promoting it here
+ * was the original sketch. It cannot be promoted, because the two have
+ * different *lifetimes*: proposals cascade from `agent_messages`, which cascade
+ * from a conversation, and conversations get pruned. A record of what was
+ * changed that disappears when the chat it was requested in is deleted is not a
+ * record. So the proposal keeps its own before-image for the card it renders,
+ * and this table keeps one for the change itself.
+ *
+ * They also answer different questions. A proposal exists whether or not anyone
+ * accepted it; a row here exists only because something was written.
+ *
+ * ## Why it exists at all
+ *
+ * Nothing a capability writes is otherwise recoverable — `applyJobFields` keeps
+ * no audit trail, and only profiles, letters, questions, stories and cheat
+ * sheets have version tables — so a rewritten summary used to be simply gone.
+ * And the chat is about to stop being the only writer: an MCP server calls
+ * `executeCapability` with nobody watching, which is the case
+ * `docs/PROMPT-INJECTION.md` rates on the assumption that a human clicks Apply.
+ * Being able to say what changed, when, and through which surface is what makes
+ * that reviewable after the fact.
+ */
+export const capability_edits = pgTable(
+	'capability_edits',
+	{
+		id: serial().primaryKey().notNull(),
+		/**
+		 * Whose feed this appears in. The profile rather than the user because
+		 * that is what a capability authorizes against — `CapabilityActor` is a
+		 * profile and a staff flag — and every capability's target is reachable
+		 * from one.
+		 */
+		profile_id: integer().notNull(),
+		/**
+		 * Which surface made it: `chat` today, `mcp` next.
+		 *
+		 * Text rather than an enum, for the reason `capability` is text: the code
+		 * is the authority, and a migration to add a surface is a migration to
+		 * write nothing. `ui` is deliberately NOT in use — form actions write
+		 * through `profile/write.ts` and never touch the registry, so claiming
+		 * them here would be a column that lies by omission.
+		 */
+		source: varchar({ length: 16 }).notNull(),
+		/** A key of CAPABILITIES. Text, not an enum: the registry is the authority. */
+		capability: varchar({ length: 64 }).notNull(),
+		target: jsonb().$type<{ id: number; label: string }>().notNull(),
+		/** What was written. */
+		fields: jsonb().$type<Record<string, unknown>>().notNull(),
+		/**
+		 * What it replaced — the before-image, read inside the same call that did
+		 * the write. This is the whole of what an undo has to work from.
+		 *
+		 * Usually the old values of the fields above, one for one. A capability
+		 * whose write is not a field patch says otherwise through `beforeImage`:
+		 * `hide_*` carries no fields and records the document tags it overwrote.
+		 */
+		previous: jsonb().$type<Record<string, unknown>>().notNull(),
+		/** Set when the change was undone, so the feed can say so without deleting the record. */
+		reverted_at: timestamp({ withTimezone: true, mode: 'date' }),
+		date_created: timestamp({ withTimezone: true, mode: 'date' })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull()
+	},
+	(table) => [
+		// The only read: this profile's changes, newest first.
+		index('capability_edits_profile_idx').on(table.profile_id, table.date_created),
+		foreignKey({
+			columns: [table.profile_id],
+			foreignColumns: [profiles.id],
+			name: 'capability_edits_profile_foreign'
+		}).onDelete('cascade')
+	]
+);
+
 export const search_tasks_job_sites = pgTable(
 	'search_tasks_job_sites',
 	{

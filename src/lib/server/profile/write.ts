@@ -33,9 +33,11 @@ import { z } from 'zod';
 import { profiles } from '$lib/server/db/schema';
 import { coerceFields } from '$lib/server/utils/field-kinds';
 import { formatZodError } from '$lib/server/validation/api-schemas';
+import { isProfileOnly, setProfileOnly } from '$lib/profile-visibility';
 import { touchProfile } from './touch-profile';
 import {
 	fieldKinds,
+	isHideable,
 	PROFILE_RESOURCES,
 	type ProfileResource,
 	type ProfileResourceName,
@@ -350,16 +352,32 @@ export async function updateRow(
 /**
  * Take a row off every document without destroying it.
  *
- * `status` already means this — every section's rows carry `draft` or
- * `published`, and exports and CVs render only the latter — so hiding needs no
- * migration and no new concept, and the applicant un-hides it from the same
- * page they would have edited it on.
- *
  * This is what the assistant gets instead of `deleteRow`. A proposal card is a
  * thing a person accepts in one click, and a delete is not recoverable from the
  * before-image: `previous` holds columns, and a work experience owns
  * achievements, technologies and projects across four tables that go with it.
  * An accepted mistake should cost a click to undo, not a retyping.
+ *
+ * ## It used to write `status`, and that did nothing
+ *
+ * The first version set `status` to `'draft'` on the stated grounds that
+ * "exports and CVs render only `published`". They do not. `status` defaults to
+ * `'draft'` on every section table, `resume/apply-diff.ts` writes `'draft'` for
+ * every row it imports and never promotes them, and nothing anywhere filters a
+ * section row on it — 30 of 73 work experiences and 12 of 24 languages on the
+ * dev database sit at `'draft'` and print on every document. So the write
+ * succeeded, the assistant reported the entry hidden, and it went on appearing
+ * everywhere. A capability that lies is worse than one that refuses.
+ *
+ * What actually decides visibility is `tags`, through
+ * `ProfileDisplay/profile-filter.ts`. `setProfileOnly` writes the `!resume` +
+ * `!cv` pair that holds an item back from every base template, and it leaves
+ * per-version tags alone — so an entry tagged onto one tailored version keeps
+ * that tag and comes back to exactly its old state when un-hidden.
+ *
+ * Only the three sections in HIDEABLE_RESOURCES have that mechanism; the other
+ * four are rendered unfiltered and are refused here rather than written
+ * pointlessly. See the note on HIDEABLE_RESOURCES for the whole picture.
  */
 export async function setRowVisible(
 	name: ProfileResourceName,
@@ -369,25 +387,76 @@ export async function setRowVisible(
 ): Promise<WriteResult<{ row: SectionRow; wasVisible: boolean }>> {
 	const resource = resourceFor(name);
 
+	// Re-checked here even though no `hide_*` capability exists for these
+	// sections: `apply` is what writes, and a write path that is only correct
+	// because of what its caller did is one refactor away from not being.
+	if (!isHideable(name)) {
+		return refuse(
+			'invalid',
+			`A ${resource.label} cannot be hidden — nothing filters this section on a document.`
+		);
+	}
+
 	const found = await findOwnedRow(resource, actor, id);
 	if (!found.ok) return found;
 
-	const wasVisible = found.row.status === 'published';
-	const status = visible ? 'published' : 'draft';
+	const tags = (found.row.tags ?? null) as string[] | null;
+	const wasVisible = !isProfileOnly(tags);
 
 	// Already there is not an error, but it must not bump date_updated either:
 	// see updateRow on why a no-op that moves the profile's clock lies to the
 	// matcher and to the tailored-document notice.
 	if (wasVisible === visible) return { ok: true, row: found.row, wasVisible };
 
+	const next = setProfileOnly(tags, !visible);
+
 	await db
 		.update(resource.table)
-		.set({ status, date_updated: new Date() })
+		// Empty normalises to null, the way every other tag writer here leaves it.
+		.set({ tags: next.length > 0 ? next : null, date_updated: new Date() })
 		.where(eq(resource.table.id, id));
 
 	await touchProfile(actor.profileId);
 
 	return { ok: true, row: found.row, wasVisible };
+}
+
+/**
+ * Put a row's tags back exactly as they were — the undo counterpart of
+ * `setRowVisible`.
+ *
+ * Exact rather than derived. `setProfileOnly(tags, true)` is a *merge*, so
+ * un-hiding through it lifts both base-template exclusions and would take a
+ * `!resume` the applicant set by hand along with the one the assistant wrote.
+ * The edit log recorded the array that was there; writing that array back is
+ * the only restore that means "the way it was".
+ *
+ * Which also means it overwrites anything that happened since, the way every
+ * undo does. The feed shows when the change was made and what it would restore,
+ * and that is where the user decides.
+ */
+export async function setRowTags(
+	name: ProfileResourceName,
+	actor: ProfileActor,
+	id: number,
+	tags: string[] | null
+): Promise<WriteAck> {
+	const resource = resourceFor(name);
+	if (!isHideable(name)) {
+		return refuse('invalid', `A ${resource.label} carries no document tags.`);
+	}
+
+	const found = await findOwnedRow(resource, actor, id);
+	if (!found.ok) return found;
+
+	await db
+		.update(resource.table)
+		.set({ tags: tags && tags.length > 0 ? tags : null, date_updated: new Date() })
+		.where(eq(resource.table.id, id));
+
+	await touchProfile(actor.profileId);
+
+	return { ok: true };
 }
 
 /**

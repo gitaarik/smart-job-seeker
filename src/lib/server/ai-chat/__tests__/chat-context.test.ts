@@ -588,8 +588,13 @@ describe('profile section list pages', () => {
 	});
 
 	it('grants one section and no more', () => {
+		// Two verbs, not three: none of the list-page sections can be hidden —
+		// nothing filters them on a document. See HIDEABLE_RESOURCES.
 		for (const [route] of LISTS) {
-			expect(scopeForRoute(route).capabilities, route).toHaveLength(3);
+			expect(scopeForRoute(route).capabilities, route).toEqual([
+				expect.stringMatching(/^edit_/),
+				expect.stringMatching(/^add_/)
+			]);
 		}
 	});
 
@@ -645,8 +650,7 @@ describe('sections the message reaches for', () => {
 			'edit_job_description',
 			'edit_job_skills',
 			'edit_language',
-			'add_language',
-			'hide_language'
+			'add_language'
 		]);
 	});
 
@@ -668,7 +672,7 @@ describe('sections the message reaches for', () => {
 		await onJobPage('make my Spanish conversational');
 
 		expect(mockResolveCapabilities).toHaveBeenCalledWith(
-			['edit_language', 'add_language', 'hide_language'],
+			['edit_language', 'add_language'],
 			{ type: 'profile_section', resource: 'language', id: 11 },
 			expect.objectContaining({ profileId: 7 })
 		);
@@ -686,11 +690,7 @@ describe('sections the message reaches for', () => {
 			message: 'fix my languages'
 		});
 
-		expect(capabilities.map((c) => c.capability)).toEqual([
-			'edit_language',
-			'add_language',
-			'hide_language'
-		]);
+		expect(capabilities.map((c) => c.capability)).toEqual(['edit_language', 'add_language']);
 	});
 
 	it('carries a section through a follow-up that names nothing', async () => {

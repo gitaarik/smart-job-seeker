@@ -22,6 +22,11 @@ const mockAppUpdateSet = vi.fn().mockReturnValue({
 	where: vi.fn().mockResolvedValue(undefined)
 });
 const mockRecordInsert = vi.fn();
+// The edit log's insert, kept apart from the activity-record one above so the
+// call-count assertions on that spy keep meaning what they say. Dispatched on
+// the table rather than the call order, because `recordEdit` runs after every
+// successful write and would otherwise be counted as one.
+const mockEditLogInsert = vi.fn();
 
 // vi.mock is hoisted above every top-level binding, so the query object is
 // written out twice rather than shared through a helper — a helper here is a
@@ -34,8 +39,12 @@ vi.mock('$lib/server/db', () => ({
 			application_records: { findMany: () => Promise.resolve(recordRows) }
 		},
 		update: () => ({ set: (...a: unknown[]) => mockAppUpdateSet(...a) }),
-		insert: () => ({
+		insert: (table: unknown) => ({
 			values: (v: unknown) => {
+				if ((table as { id?: string })?.id === 'capability_edits.id') {
+					mockEditLogInsert(v);
+					return { returning: () => Promise.resolve([{ id: 999 }]) };
+				}
 				mockRecordInsert(v);
 				return { returning: () => Promise.resolve([{ id: 777 }]) };
 			}
@@ -46,7 +55,20 @@ vi.mock('$lib/server/db', () => ({
 			applications: { findFirst: () => Promise.resolve(applicationRow) },
 			jobs: { findFirst: () => Promise.resolve(jobRow) },
 			application_records: { findMany: () => Promise.resolve(recordRows) }
-		}
+		},
+		// The edit log writes through `dbDirect`, not `db` — see the alias in
+		// edit-log.ts. Spelled out again rather than shared with the insert above,
+		// for the same hoisting reason the query object is.
+		insert: (table: unknown) => ({
+			values: (v: unknown) => {
+				if ((table as { id?: string })?.id === 'capability_edits.id') {
+					mockEditLogInsert(v);
+					return { returning: () => Promise.resolve([{ id: 999 }]) };
+				}
+				mockRecordInsert(v);
+				return { returning: () => Promise.resolve([{ id: 777 }]) };
+			}
+		})
 	}
 }));
 
@@ -57,6 +79,11 @@ vi.mock('$lib/server/db/schema', () => ({
 	},
 	jobs: { id: 'jobs.id' },
 	job_importers: {},
+	// Present so `recordEdit` can run for real. Without it the lazy import in
+	// executeCapability threw, the catch there swallowed it, and every test in
+	// this file passed while the log was never written — which is the failure
+	// the log exists to make impossible.
+	capability_edits: { id: 'capability_edits.id', profile_id: 'capability_edits.profile_id' },
 	application_records: {
 		application_id: 'application_records.application_id',
 		event_date: 'application_records.event_date',
@@ -921,19 +948,26 @@ describe('the registry as a whole', () => {
 	});
 
 	describe('fitMatchedCapabilities', () => {
+		// Real capability names, so the sizes measured are the sizes shipped.
+		// `hide` only exists for the three sections that can be hidden, so a
+		// section's group is two or three entries depending on which it is.
 		const section = (resource: string): LiveCapability[] =>
-			(['edit', 'add', 'hide'] as const).map((verb) => ({
-				capability: `${verb}_${resource}` as Capability,
-				targets: [{ id: 1, label: 'x' }],
-				current: {}
-			}));
+			(['edit', 'add', 'hide'] as const)
+				.map((verb) => `${verb}_${resource}` as Capability)
+				.filter((capability) => capability in CAPABILITIES)
+				.map((capability) => ({
+					capability,
+					targets: [{ id: 1, label: 'x' }],
+					current: {}
+				}));
 
 		it('admits a matched section when it fits', () => {
 			const granted = section('language');
 			const fitted = fitMatchedCapabilities(granted, [section('certificate')]);
 
 			expect(fitted.map((c) => c.capability)).toContain('edit_certificate');
-			expect(fitted).toHaveLength(6);
+			// Two sections that cannot be hidden: two verbs each.
+			expect(fitted).toHaveLength(4);
 		});
 
 		it('drops a matched section rather than exceeding the budget', () => {
@@ -968,7 +1002,7 @@ describe('the registry as a whole', () => {
 			);
 
 			const matched = fitted.filter((c) => !granted.includes(c)).map((c) => c.capability);
-			expect(matched).toEqual(['edit_certificate', 'add_certificate', 'hide_certificate']);
+			expect(matched).toEqual(['edit_certificate', 'add_certificate']);
 		});
 
 		it('keeps the earlier match when only one fits', () => {
@@ -983,11 +1017,7 @@ describe('the registry as a whole', () => {
 				budget
 			);
 
-			expect(fitted.map((c) => c.capability)).toEqual([
-				'edit_certificate',
-				'add_certificate',
-				'hide_certificate'
-			]);
+			expect(fitted.map((c) => c.capability)).toEqual(['edit_certificate', 'add_certificate']);
 		});
 	});
 
@@ -1215,9 +1245,15 @@ describe('executeCapability', () => {
 	});
 
 	it('writes on the happy path', async () => {
-		const outcome = await executeCapability('add_activity_record', TARGET, ACTOR, {
-			entry_content: 'They want two office days.'
-		});
+		const outcome = await executeCapability(
+			'add_activity_record',
+			TARGET,
+			ACTOR,
+			{
+				entry_content: 'They want two office days.'
+			},
+			'chat'
+		);
 
 		// add_activity_record appends, so there is no prior value for the field it
 		// writes — an empty before-image is the correct answer here, not a missing
@@ -1244,7 +1280,8 @@ describe('executeCapability', () => {
 			'edit_job_details',
 			{ id: 3818, label: 'Data Engineer at Acme' },
 			ACTOR,
-			{ salary_min: 75000 }
+			{ salary_min: 75000 },
+			'chat'
 		);
 
 		expect(outcome.ok).toBe(true);
@@ -1255,33 +1292,100 @@ describe('executeCapability', () => {
 		});
 	});
 
+	it('records the change in the edit log, from inside the write', async () => {
+		// The claim the whole design rests on: every surface logs by construction
+		// rather than by remembering to. Nothing else asserts it — recordEdit is
+		// tested in isolation, and the call from here is wrapped in a catch that
+		// swallows failures on purpose, so a regression that stopped logging
+		// altogether would leave this file green without this test.
+		jobRow = { id: 3818, title: 'Data Engineer', company: 'Acme', salary_min: 55000 };
+
+		const outcome = await executeCapability(
+			'edit_job_details',
+			{ id: 3818, label: 'Data Engineer at Acme' },
+			ACTOR,
+			{ salary_min: 75000 },
+			'chat'
+		);
+
+		expect(outcome.ok).toBe(true);
+		expect(mockEditLogInsert).toHaveBeenCalledTimes(1);
+		expect(mockEditLogInsert).toHaveBeenCalledWith(
+			expect.objectContaining({
+				profile_id: 12,
+				source: 'chat',
+				capability: 'edit_job_details',
+				target: { id: 3818, label: 'Data Engineer at Acme' },
+				fields: { salary_min: 75000 },
+				// The before-image, not the new value — an undo reads this back.
+				previous: { salary_min: 55000 }
+			})
+		);
+	});
+
+	it('logs nothing when the write was refused', async () => {
+		// A log row is a record of a change that happened. One written for a
+		// refused write would offer an undo for something never applied.
+		mockCanEditJob.mockResolvedValue(false);
+		jobRow = { id: 3818, title: 'Data Engineer', company: 'Acme', salary_min: 55000 };
+
+		const outcome = await executeCapability(
+			'edit_job_details',
+			{ id: 3818, label: 'Data Engineer at Acme' },
+			ACTOR,
+			{ salary_min: 75000 },
+			'chat'
+		);
+
+		expect(outcome.ok).toBe(false);
+		expect(mockEditLogInsert).not.toHaveBeenCalled();
+	});
+
 	it('refuses, and writes nothing, when the actor no longer owns the row', async () => {
 		// The window this closes is real: a proposal sits in a 12h-resumable
 		// thread, and rights can be lost inside it rather than only outside.
 		applicationRow = null;
 
-		const outcome = await executeCapability('add_activity_record', TARGET, ACTOR, {
-			entry_content: 'They want two office days.'
-		});
+		const outcome = await executeCapability(
+			'add_activity_record',
+			TARGET,
+			ACTOR,
+			{
+				entry_content: 'They want two office days.'
+			},
+			'chat'
+		);
 
 		expect(outcome).toMatchObject({ ok: false, reason: 'unauthorized' });
 		expect(mockRecordInsert).not.toHaveBeenCalled();
 	});
 
 	it('refuses when nothing survives coercion', async () => {
-		const outcome = await executeCapability('add_activity_record', TARGET, ACTOR, {
-			salary_min: 90000
-		});
+		const outcome = await executeCapability(
+			'add_activity_record',
+			TARGET,
+			ACTOR,
+			{
+				salary_min: 90000
+			},
+			'chat'
+		);
 
 		expect(outcome).toMatchObject({ ok: false, reason: 'empty' });
 		expect(mockRecordInsert).not.toHaveBeenCalled();
 	});
 
 	it('refuses what validate refuses', async () => {
-		const outcome = await executeCapability('add_activity_record', TARGET, ACTOR, {
-			entry_content: 'x',
-			entry_type: 'phone'
-		});
+		const outcome = await executeCapability(
+			'add_activity_record',
+			TARGET,
+			ACTOR,
+			{
+				entry_content: 'x',
+				entry_type: 'phone'
+			},
+			'chat'
+		);
 
 		expect(outcome).toMatchObject({ ok: false, reason: 'invalid' });
 		expect(mockRecordInsert).not.toHaveBeenCalled();
