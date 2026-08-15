@@ -3,6 +3,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { getSelectedProfileId } from '../../profile/utils';
 import { describeProposalChanges } from '$lib/server/ai-chat/capabilities';
 import { readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
+import { approveRequest, readRequests, rejectRequest } from '$lib/server/mcp/requests';
 import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
 
 /**
@@ -22,9 +23,27 @@ export const load: PageServerLoad = async ({ parent }) => {
 	const { selectedProfile } = await parent();
 	if (!selectedProfile) redirect(302, '/home');
 
-	const entries = await readEditLog(selectedProfile.id);
+	const [entries, pending] = await Promise.all([
+		readEditLog(selectedProfile.id),
+		readRequests(selectedProfile.id, ['pending'])
+	]);
 
 	return {
+		// Everything an agent asked for and nobody has answered. First on the page
+		// because it is the only part of this feed with anything outstanding — the
+		// rest is history, and history can wait.
+		pending: pending.map((request) => ({
+			id: request.id,
+			title: request.title,
+			target: request.target,
+			createdAt: request.createdAt,
+			// The agent's own account of why. Rendered as text and never as markup:
+			// it was authored outside this application, by a model that may have been
+			// reading a document a stranger wrote.
+			rationale: request.rationale,
+			changes: describeProposalChanges(request.capability, request.fields, request.previous),
+			whereInstead: pageFor(request.capability)
+		})),
 		entries: entries.map((entry) => ({
 			id: entry.id,
 			title: entry.title,
@@ -43,28 +62,78 @@ export const load: PageServerLoad = async ({ parent }) => {
 	};
 };
 
+/**
+ * Whoever is signed in, and which profile they have selected.
+ *
+ * A form action gets no `parent()`, so the profile comes from the cookie the
+ * same way every other action in this section resolves it. Shared by all three
+ * actions because the alternative is three copies of an authorization check.
+ */
+async function actorFor(
+	cookies: Parameters<Actions[string]>[0]['cookies'],
+	locals: App.Locals
+): Promise<{ profileId: number; isStaff: boolean } | { error: string; status: number }> {
+	const user = locals.user as { id: string; is_staff?: boolean; is_admin?: boolean } | undefined;
+	if (!user) return { error: 'Not signed in.', status: 401 };
+
+	const profileId = await getSelectedProfileId(cookies, user.id);
+	if (!profileId) return { error: 'No profile selected.', status: 400 };
+
+	return { profileId, isStaff: !!user.is_staff || !!user.is_admin };
+}
+
+function idFrom(form: FormData): number | null {
+	const id = Number(form.get('id'));
+	return Number.isInteger(id) && id > 0 ? id : null;
+}
+
 export const actions: Actions = {
-	// A form action gets no parent() — the profile comes from the cookie, the
-	// same way every other action in this section resolves it.
 	revert: async ({ request, cookies, locals }) => {
-		const user = locals.user as { id: string; is_staff?: boolean; is_admin?: boolean } | undefined;
-		if (!user) return fail(401, { error: 'Not signed in.' });
+		const actor = await actorFor(cookies, locals);
+		if ('error' in actor) return fail(actor.status, { error: actor.error });
 
-		const profileId = await getSelectedProfileId(cookies, user.id);
-		if (!profileId) return fail(400, { error: 'No profile selected.' });
+		const id = idFrom(await request.formData());
+		if (id === null) return fail(400, { error: 'Invalid change.' });
 
-		const form = await request.formData();
-		const id = Number(form.get('id'));
-		if (!Number.isInteger(id) || id <= 0) return fail(400, { error: 'Invalid change.' });
-
-		const outcome = await revertEdit(id, {
-			profileId,
-			isStaff: !!user.is_staff || !!user.is_admin
-		});
-
+		const outcome = await revertEdit(id, actor);
 		if (!outcome.ok) {
 			return fail(outcome.reason === 'not_found' ? 404 : 409, { error: outcome.error });
 		}
 		return { reverted: id };
+	},
+
+	/**
+	 * Do what an agent asked for.
+	 *
+	 * This is the one place a Tier 2 change becomes a write, and it is reached
+	 * through a signed-in session on this application's own origin — never
+	 * through the MCP server, which has no tool that approves and must not grow
+	 * one. That separation is the whole reason the tier exists: it is what
+	 * survives an agent that has been talked into something by text it read.
+	 */
+	approve: async ({ request, cookies, locals }) => {
+		const actor = await actorFor(cookies, locals);
+		if ('error' in actor) return fail(actor.status, { error: actor.error });
+
+		const id = idFrom(await request.formData());
+		if (id === null) return fail(400, { error: 'Invalid request.' });
+
+		const outcome = await approveRequest(id, actor);
+		if (!outcome.ok) {
+			return fail(outcome.reason === 'already_decided' ? 409 : 400, { error: outcome.error });
+		}
+		return { approved: id };
+	},
+
+	reject: async ({ request, cookies, locals }) => {
+		const actor = await actorFor(cookies, locals);
+		if ('error' in actor) return fail(actor.status, { error: actor.error });
+
+		const id = idFrom(await request.formData());
+		if (id === null) return fail(400, { error: 'Invalid request.' });
+
+		const outcome = await rejectRequest(id, actor);
+		if (!outcome.ok) return fail(409, { error: outcome.error });
+		return { rejected: id };
 	}
 };

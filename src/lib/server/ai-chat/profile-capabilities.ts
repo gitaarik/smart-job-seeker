@@ -58,10 +58,15 @@ import type { CapabilityActor, CapabilityDef, CapabilityTarget } from './capabil
  * `edit` and `add` are ordinary. Removal is not: nothing a capability writes is
  * recoverable from the before-image, and a work experience owns achievements,
  * technologies and projects across four tables that a delete takes with it. So
- * the assistant proposes `hide` — `status: 'draft'`, which every section's rows
- * already carry and which exports and CVs already respect. It is one click to
- * accept and one click to undo, on the same page the applicant would have
- * edited it from. Hard delete stays UI-only.
+ * the assistant proposes `hide` — the `!resume` + `!cv` tag pair, which takes
+ * an entry off every document while leaving the row and its children alone. It
+ * is one click to accept and one to undo, on the same page the applicant would
+ * have edited it from. Hard delete stays UI-only.
+ *
+ * `hide` was originally `status: 'draft'`, on the belief that documents render
+ * only `published` rows. They do not; nothing filters on that column at all.
+ * See HIDEABLE_RESOURCES, which also records why only three of the seven
+ * sections have this verb.
  */
 export type ProfileCapability =
 	`edit_${ProfileResourceName}` | `add_${ProfileResourceName}` | `hide_${HideableResourceName}`;

@@ -190,6 +190,23 @@ export const aiRateLimiter = new RateLimiter({
 });
 
 /**
+ * Every MCP call, keyed on the key id by the endpoint rather than on IP — an
+ * agent and its user share an address, and a bucket per address would let one
+ * runaway client starve every other on the same machine.
+ *
+ * Looser than the AI limiter because these calls are cheap: no provider is
+ * involved, most of them are reads, and an agent legitimately makes several in
+ * a row to orient itself before writing anything. It is here for the loop, not
+ * for the bill — `DIRECT_WRITE_BURST` in `mcp/tiers.ts` is what bounds the
+ * damage a loop can actually do, by turning writes into requests rather than by
+ * refusing them.
+ */
+export const mcpRateLimiter = new RateLimiter({
+	maxTokens: 30, // burst — an agent reading every section at once
+	refillRate: 1 // 60/min sustained
+});
+
+/**
  * Create a rate limit response
  */
 export function createRateLimitResponse(retryAfter: number = 60): Response {

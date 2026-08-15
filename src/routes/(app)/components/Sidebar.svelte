@@ -24,6 +24,7 @@
 		faExchangeAlt,
 		faFileAlt,
 		faHistory,
+		faPlug,
 		faWrench,
 		faHome,
 		faLink,
@@ -169,6 +170,11 @@
 					label: 'AI Changes',
 					href: '/data/ai-changes',
 					icon: faHistory
+				},
+				{
+					label: 'Connected Apps',
+					href: '/data/connected-apps',
+					icon: faPlug
 				}
 			]
 		}

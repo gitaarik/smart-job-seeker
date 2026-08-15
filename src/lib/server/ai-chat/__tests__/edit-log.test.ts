@@ -26,7 +26,10 @@ vi.mock('$lib/server/db', () => {
 		insert: () => ({
 			values: (values: Record<string, unknown>) => {
 				state.inserts.push(values);
-				return Promise.resolve(undefined);
+				// The new row's id comes back, because it is the handle an undo is
+				// addressed by: an MCP tool result carries it into the transcript the
+				// user is actually reading at the time.
+				return { returning: () => Promise.resolve([{ id: 77 }]) };
 			}
 		}),
 		select: () => ({
@@ -107,7 +110,7 @@ describe('recordEdit', () => {
 	it('stores the surface alongside the change', async () => {
 		// The column exists because the chat is about to stop being the only
 		// writer, and an MCP write is the one nobody watches happen.
-		await recordEdit({
+		const id = await recordEdit({
 			profileId: 12,
 			source: 'mcp',
 			capability: 'edit_work_experience',
@@ -122,6 +125,7 @@ describe('recordEdit', () => {
 			capability: 'edit_work_experience',
 			previous: { 'work_experience.summary': 'old' }
 		});
+		expect(id).toBe(77);
 	});
 });
 

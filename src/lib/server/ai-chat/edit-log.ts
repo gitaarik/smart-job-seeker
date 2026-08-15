@@ -67,6 +67,14 @@ export interface EditLogEntry {
 /** Newest first. */
 const DEFAULT_LIMIT = 50;
 
+/**
+ * Returns the new row's id, which is the handle an undo is addressed by.
+ *
+ * It matters most where nobody is watching: an MCP tool result carries it back
+ * so the agent can tell the applicant how to reverse what it just did, in the
+ * transcript they are actually reading, rather than leaving them to find the
+ * change in a feed they may not know exists.
+ */
 export async function recordEdit(opts: {
 	profileId: number;
 	source: EditSource;
@@ -74,15 +82,20 @@ export async function recordEdit(opts: {
 	target: { id: number; label: string };
 	fields: Record<string, unknown>;
 	previous: Record<string, unknown>;
-}): Promise<void> {
-	await db.insert(capability_edits).values({
-		profile_id: opts.profileId,
-		source: opts.source,
-		capability: opts.capability,
-		target: opts.target,
-		fields: opts.fields,
-		previous: opts.previous
-	});
+}): Promise<number> {
+	const [row] = await db
+		.insert(capability_edits)
+		.values({
+			profile_id: opts.profileId,
+			source: opts.source,
+			capability: opts.capability,
+			target: opts.target,
+			fields: opts.fields,
+			previous: opts.previous
+		})
+		.returning({ id: capability_edits.id });
+
+	return row.id;
 }
 
 function toEntry(row: typeof capability_edits.$inferSelect): EditLogEntry {

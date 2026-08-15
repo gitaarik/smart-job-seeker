@@ -16,7 +16,11 @@ initSentry('sveltekit');
 const PUBLIC_API_ROUTES = [
 	'/api/auth', // Better Auth handles its own auth
 	'/api/verify-turnstile', // Public CAPTCHA verification
-	'/api/jobs/import' // Uses API key auth
+	'/api/jobs/import', // Uses API key auth
+	// The MCP server. Authenticates on an Authorization bearer token against
+	// `mcp_keys` — a separate table from the device keys above, deliberately, so
+	// that neither kind of credential can be presented where the other belongs.
+	'/api/mcp'
 ];
 
 function getSystemTheme(request: Request): 'light' | 'dark' {

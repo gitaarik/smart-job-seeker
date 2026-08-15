@@ -984,7 +984,18 @@ export type CapabilityOutcome =
 	 * Only the fields being written appear in it, so it pairs one-for-one with
 	 * what was proposed and can be replayed as an undo.
 	 */
-	| { ok: true; previous: Record<string, unknown> }
+	| {
+			ok: true;
+			previous: Record<string, unknown>;
+			/**
+			 * The `capability_edits` row this write produced — the handle an undo is
+			 * addressed by, and null when the log write itself failed.
+			 *
+			 * Nullable rather than absent because the write succeeded either way, and
+			 * a caller must not be able to mistake "not logged" for "not written".
+			 */
+			editId: number | null;
+	  }
 	| { ok: false; reason: CapabilityRefusal; error: string };
 
 /**
@@ -1062,9 +1073,10 @@ export async function executeCapability(
 	// missing log row. Imported lazily so that every test touching the registry
 	// does not also have to mock the log's table — the same fix the profile_edits
 	// context source needed, for the same reason.
+	let editId: number | null = null;
 	try {
 		const { recordEdit } = await import('./edit-log');
-		await recordEdit({
+		editId = await recordEdit({
 			profileId: actor.profileId,
 			source,
 			capability,
@@ -1076,7 +1088,7 @@ export async function executeCapability(
 		console.error(`[capabilities] ${capability} applied but was not logged`, e);
 	}
 
-	return { ok: true, previous };
+	return { ok: true, previous, editId };
 }
 
 /** Every field name the live capabilities can address, for the `field` enum. */

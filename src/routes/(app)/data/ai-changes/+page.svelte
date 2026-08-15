@@ -2,7 +2,7 @@
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faHistory, faRotateLeft } from '@fortawesome/free-solid-svg-icons';
+	import { faCheck, faHistory, faRotateLeft, faXmark } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -29,9 +29,9 @@
 	<SectionHeader title="AI Changes" icon={faHistory} />
 
 	<p class="text-[var(--dash-text-secondary)]">
-		Every change made to your data through the assistant, newest first, with what it replaced. Undo
-		puts the old value back exactly as it was — which also means it overwrites anything you have
-		changed since.
+		Every change made to your data by the assistant or by a connected app, newest first, with what
+		it replaced. Undo puts the old value back exactly as it was — which also means it overwrites
+		anything you have changed since.
 	</p>
 
 	{#if form?.error}
@@ -41,6 +41,94 @@
 		>
 			{form.error}
 		</p>
+	{/if}
+
+	{#if data.pending.length > 0}
+		<!--
+			Waiting on a decision, above the history. A connected app asked for
+			something it is not allowed to do on its own — overwriting text you
+			wrote, or taking an entry off your documents — and nothing happens
+			until you say so here.
+		-->
+		<section class="space-y-4">
+			<h2 class="text-lg font-semibold">Waiting for you</h2>
+			<ul class="space-y-4">
+				{#each data.pending as request (request.id)}
+					<li
+						id="request-{request.id}"
+						class="rounded-lg border p-4"
+						style="border-color: var(--dash-warning, var(--dash-border));"
+					>
+						<div class="flex flex-wrap items-baseline justify-between gap-2">
+							<div>
+								<h3 class="font-semibold">{request.title}</h3>
+								<p class="text-sm text-[var(--dash-text-secondary)]">
+									{request.target.label} · asked {when(request.createdAt)} · by a connected app
+								</p>
+							</div>
+
+							<div class="flex gap-2">
+								<form method="POST" action="?/approve" use:enhance>
+									<input type="hidden" name="id" value={request.id} />
+									<button
+										type="submit"
+										class="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-white"
+										style="background-color: var(--dash-primary);"
+									>
+										<FontAwesomeIcon icon={faCheck} class="h-3.5 w-3.5" />
+										Apply
+									</button>
+								</form>
+								<form method="POST" action="?/reject" use:enhance>
+									<input type="hidden" name="id" value={request.id} />
+									<button
+										type="submit"
+										class="flex items-center gap-2 rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm hover:bg-[var(--dash-surface-hover)]"
+									>
+										<FontAwesomeIcon icon={faXmark} class="h-3.5 w-3.5" />
+										Discard
+									</button>
+								</form>
+							</div>
+						</div>
+
+						{#if request.rationale}
+							<!--
+								The app's own account of why, quoted as text. It was written
+								outside this application by a model that may have been reading a
+								document a stranger wrote, so it is shown as a claim and never
+								as instructions or markup.
+							-->
+							<p class="mt-3 text-sm text-[var(--dash-text-secondary)] italic">
+								“{request.rationale}”
+							</p>
+						{/if}
+
+						{#if request.changes.length > 0}
+							<dl class="mt-3 space-y-2 text-sm">
+								{#each request.changes as change (change.field)}
+									<div>
+										<dt class="text-[var(--dash-text-secondary)]">{change.label}</dt>
+										<dd class="break-words">
+											<span class="line-through opacity-60">{change.from || '—'}</span>
+											<span aria-hidden="true"> → </span>
+											<span>{change.to || '—'}</span>
+										</dd>
+									</div>
+								{/each}
+							</dl>
+						{:else if request.whereInstead}
+							<p class="mt-3 text-sm text-[var(--dash-text-secondary)]">
+								This would take the entry off your CVs and exports. It stays on your
+								{request.whereInstead} page, and you can put it back there.
+							</p>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		</section>
+
+		<h2 class="text-lg font-semibold">History</h2>
 	{/if}
 
 	{#if data.entries.length === 0}

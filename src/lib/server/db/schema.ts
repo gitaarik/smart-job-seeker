@@ -2702,6 +2702,161 @@ export const capability_edits = pgTable(
 	]
 );
 
+/**
+ * Credentials for the MCP server: one key, one profile, one scope.
+ *
+ * ## Why this is not a scope column on `api_keys`
+ *
+ * That was the plan, and it is unsafe. `api_keys` rows are **devices** — the
+ * key gets pasted into a tunnel client on a NAS, and holding one means being
+ * able to drive a browser on the owner's machine. Two independent verifiers
+ * read that table: `auth/api-key.ts` (which the job-import endpoints use) and a
+ * hand-rolled copy in the cloud tree's tunnel server, which cannot import the
+ * SvelteKit DB adapter and so re-implements the lookup in its own SQL.
+ *
+ * Neither reads a scope, and one of them lives in a different repository. So a
+ * key minted as `read` and handed to a third-party agent would authenticate as
+ * a device against both of them: a "read-only" credential whose real blast
+ * radius includes the applicant's browser. A separate table cannot be confused
+ * for a device by code that never queries it, which is a guarantee a column
+ * cannot give.
+ *
+ * The prefix differs for the same reason (`sjsmcp_` against `sjs_`), so the two
+ * are distinguishable before any lookup happens, and pasting one where the
+ * other belongs fails at the format check.
+ *
+ * ## Why the profile is on the credential
+ *
+ * `api_keys` is deliberately user-scoped: a device is the same machine whichever
+ * profile is active. This is the opposite — a capability authorizes against a
+ * profile, and an agent should not be able to reach a second one by asking. The
+ * binding is chosen once, in the app, where the consequences can be written out,
+ * rather than in a per-call prompt inside someone else's client.
+ */
+export const mcp_keys = pgTable(
+	'mcp_keys',
+	{
+		id: serial().primaryKey().notNull(),
+		user_id: text().notNull(),
+		/** The one profile this key may read and write. Never inferred at call time. */
+		profile_id: integer().notNull(),
+		name: varchar({ length: 255 }).notNull(),
+		key_hash: varchar({ length: 64 }).notNull(),
+		/**
+		 * AES-256-GCM, same as `api_keys.key_encrypted` and for the same reason:
+		 * this is pasted into a long-lived client config, and the owner has to be
+		 * able to read it back rather than re-configure every client that holds it.
+		 */
+		key_encrypted: text(),
+		/**
+		 * `read` | `propose` | `write`. Text rather than an enum because the tier
+		 * table in `mcp/tiers.ts` is the authority on what each one permits.
+		 *
+		 * Defaults to `propose`: the safe end. A key that can only ask is useless
+		 * in a way the user notices immediately; one that can write more than they
+		 * meant is not.
+		 */
+		scope: varchar({ length: 16 }).default('propose').notNull(),
+		expires_at: timestamp({ withTimezone: true, mode: 'date' }),
+		last_used: timestamp({ withTimezone: true, mode: 'date' }),
+		revoked: boolean().default(false).notNull(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull()
+	},
+	(table) => [
+		uniqueIndex('mcp_keys_key_hash_key').on(table.key_hash),
+		index('mcp_keys_user_idx').on(table.user_id),
+		foreignKey({
+			columns: [table.user_id],
+			foreignColumns: [users.id],
+			name: 'mcp_keys_user_foreign'
+		}).onDelete('cascade'),
+		// Revoking the profile revokes its keys. A key bound to a deleted profile
+		// has nothing left to authorize against.
+		foreignKey({
+			columns: [table.profile_id],
+			foreignColumns: [profiles.id],
+			name: 'mcp_keys_profile_foreign'
+		}).onDelete('cascade')
+	]
+);
+
+/**
+ * A write that was asked for by something that may not approve it.
+ *
+ * The counterpart to `capability_edits`: that table records writes that
+ * happened, this one records writes that were *requested*. An approved request
+ * becomes an edit, through the same `executeCapability` as every other write —
+ * so approving here is not a second write path, and the result is undoable from
+ * the same feed as everything else.
+ *
+ * ## Why not `agent_message_proposals`
+ *
+ * Same reason the edit log is not a column on it. Proposals cascade from
+ * `agent_messages` → a conversation, and conversations get pruned; an MCP call
+ * has no conversation to hang from in the first place. A pending change that
+ * disappears is worse than one that was never made.
+ *
+ * ## Why the request is stored before the human sees it
+ *
+ * Because the record must not depend on the client. Elicitation, deep links and
+ * inline confirmations are all things the *client* may or may not do; the row
+ * exists either way, so "what did my agent ask for while I was away" has an
+ * answer that no client capability can take away.
+ *
+ * Nothing here is trusted on the way back out. `fields` came from a model, so
+ * approval re-authorizes, re-coerces and re-validates exactly as a chat
+ * proposal does.
+ */
+export const capability_requests = pgTable(
+	'capability_requests',
+	{
+		id: serial().primaryKey().notNull(),
+		profile_id: integer().notNull(),
+		/** Which surface asked. `mcp` today; the column exists so a second one can. */
+		source: varchar({ length: 16 }).notNull(),
+		/** Which credential asked, so revoking a key can be traced to what it wanted. */
+		mcp_key_id: integer(),
+		/** A key of CAPABILITIES. Text, not an enum: the registry is the authority. */
+		capability: varchar({ length: 64 }).notNull(),
+		target: jsonb().$type<{ id: number; label: string }>().notNull(),
+		fields: jsonb().$type<Record<string, unknown>>().notNull(),
+		/**
+		 * What the row held when the request was made, for the diff the approver
+		 * reads. Re-read at approval time before anything is written — this is what
+		 * the card shows, not what the write acts on.
+		 */
+		previous: jsonb().$type<Record<string, unknown>>().notNull(),
+		/** The agent's own account of why, shown to the human deciding. Untrusted text. */
+		rationale: text().default('').notNull(),
+		/** `pending` | `approved` | `rejected`. */
+		status: varchar({ length: 16 }).default('pending').notNull(),
+		decided_at: timestamp({ withTimezone: true, mode: 'date' }),
+		/** The `capability_edits` row an approval produced, when it produced one. */
+		edit_id: integer(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull()
+	},
+	(table) => [
+		// The feed asks for this profile's pending ones, then its recent decided ones.
+		index('capability_requests_profile_idx').on(table.profile_id, table.status, table.date_created),
+		foreignKey({
+			columns: [table.profile_id],
+			foreignColumns: [profiles.id],
+			name: 'capability_requests_profile_foreign'
+		}).onDelete('cascade'),
+		// The request outlives the credential: revoking a key must not erase what it
+		// asked for while it was valid.
+		foreignKey({
+			columns: [table.mcp_key_id],
+			foreignColumns: [mcp_keys.id],
+			name: 'capability_requests_key_foreign'
+		}).onDelete('set null')
+	]
+);
+
 export const search_tasks_job_sites = pgTable(
 	'search_tasks_job_sites',
 	{

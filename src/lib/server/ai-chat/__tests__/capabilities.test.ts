@@ -1258,7 +1258,12 @@ describe('executeCapability', () => {
 		// add_activity_record appends, so there is no prior value for the field it
 		// writes — an empty before-image is the correct answer here, not a missing
 		// one. An editing capability returns the values it replaced (below).
-		expect(outcome).toEqual({ ok: true, previous: {} });
+		//
+		// `editId` is the log row this write produced. It comes back because it is
+		// the handle an undo is addressed by, and the caller who most needs it is
+		// the one with nobody watching: an MCP tool result carries it into the
+		// transcript the user is reading at the time.
+		expect(outcome).toEqual({ ok: true, previous: {}, editId: 999 });
 		expect(mockRecordInsert).toHaveBeenCalledTimes(1);
 	});
 
