@@ -25,13 +25,20 @@ import type {
 } from './generation-context';
 import { LIST_PIPELINE_BUDGET_CHARS } from './application-pipeline';
 import type { PageScope } from './page-scope';
-import { type Capability, type LiveCapability, resolveCapabilities } from './capabilities';
+import {
+	type Capability,
+	fitMatchedCapabilities,
+	type LiveCapability,
+	resolveCapabilities
+} from './capabilities';
+import { matchProfileSections } from './profile-matching';
 import { readOwnedRow } from '$lib/server/profile/write';
 import {
 	PROFILE_RESOURCE_NAMES,
 	PROFILE_RESOURCES,
 	type ProfileResourceName
 } from '$lib/server/profile/resources';
+import { PROFILE_VERBS } from './profile-capabilities';
 
 /**
  * Char budget for the chat's evidence blocks (the profile blob is exempt — see
@@ -135,17 +142,19 @@ const PROFILE_SCOPE: RouteScope = {
  * Every one keeps PROFILE_SCOPE's sources. The row's own text already arrives in
  * the profile blob, so these pages add a *subject*, not evidence.
  */
+/**
+ * All three verbs for a section. Adding an entry is the same request from a list
+ * and from one entry's page ("add another role"), and hiding follows the same
+ * targeting as editing — so nothing here ever grants a subset.
+ */
+function sectionCapabilities(resource: ProfileResourceName): Capability[] {
+	return PROFILE_VERBS.map((verb) => `${verb}_${resource}` as Capability);
+}
+
 const PROFILE_SECTION_SCOPES: Record<string, RouteScope> = Object.fromEntries(
 	PROFILE_RESOURCE_NAMES.flatMap((resource): [string, RouteScope][] => {
 		const { page, detailPath, label } = PROFILE_RESOURCES[resource];
-		// All three verbs wherever the section is reachable. Adding an entry is
-		// the same request from a list and from one entry's page ("add another
-		// role"), and hiding follows the same targeting as editing.
-		const capabilities = [
-			`edit_${resource}`,
-			`add_${resource}`,
-			`hide_${resource}`
-		] as Capability[];
+		const capabilities = sectionCapabilities(resource);
 
 		const list: [string, RouteScope] = [
 			page.path,
@@ -458,9 +467,63 @@ async function entityQueryTerms(
 }
 
 /**
+ * How far back the section matcher may look for a section the conversation is
+ * about. Four user turns: long enough to survive an exchange of clarifications
+ * about one section, short enough that a section mentioned at the start of a
+ * long conversation stops being offered once the subject has moved on.
+ */
+const MATCH_WINDOW_MESSAGES = 4;
+
+/**
+ * The sections the page itself grants, so the matcher does not find them again.
+ * Resolving one twice would put two copies of its contract in the prompt.
+ */
+function grantedSections(scope: RouteScope): ProfileResourceName[] {
+	return PROFILE_RESOURCE_NAMES.filter((resource) =>
+		(scope.capabilities ?? []).some((capability) => capability.endsWith(`_${resource}`))
+	);
+}
+
+/**
+ * Sections the message named but the page does not offer, resolved the same way
+ * the page's own are — `resolveCapabilities` against an entity, so a matched row
+ * behaves exactly like a row reached by URL and gets its current values.
+ *
+ * Returned as one group per section rather than one flat list, because the
+ * budget admits a section whole or not at all.
+ */
+async function matchedCapabilities(
+	scope: RouteScope,
+	messages: string[],
+	actor: { profileId: number; isStaff: boolean }
+): Promise<LiveCapability[][]> {
+	const matches = await matchProfileSections({
+		messages: messages.slice(-MATCH_WINDOW_MESSAGES),
+		profileId: actor.profileId,
+		exclude: grantedSections(scope)
+	});
+
+	return Promise.all(
+		matches.map(({ resource, row }) =>
+			resolveCapabilities(
+				sectionCapabilities(resource),
+				row ? { type: 'profile_section', resource, id: row.id } : null,
+				actor
+			)
+		)
+	);
+}
+
+/**
  * Build the context request for a chat turn, plus the edits the assistant may
  * propose on it. `message` is the user's newest message — it is the primary
  * ranking signal, since what they just asked is what they want evidence about.
+ *
+ * `history` is the user's earlier turns, oldest first, and is used only by the
+ * section matcher: a follow-up ("actually, make it conversational") names
+ * nothing, and would otherwise lose the capability the turn before it earned.
+ * It does not widen what may be proposed — every match is re-resolved and
+ * re-authorized here, and again at apply time.
  *
  * `isStaff` is read from the session by the caller, never from the request
  * body: the route and its params are client-supplied, and once they gate a
@@ -474,6 +537,7 @@ export async function resolveChatContext(opts: {
 	profileId: number;
 	isStaff: boolean;
 	message: string;
+	history?: string[];
 }): Promise<{
 	context: GenerationContextOption;
 	capabilities: LiveCapability[];
@@ -505,10 +569,15 @@ export async function resolveChatContext(opts: {
 	// Jobs resolve for any signed-in user by design (see resolveEntity), so the
 	// entity resolving says nothing about edit rights. resolveCapabilities asks
 	// each capability's own authorize().
-	const capabilities = await resolveCapabilities(scope.capabilities ?? [], entity, {
-		profileId: opts.profileId,
-		isStaff: opts.isStaff
-	});
+	const actor = { profileId: opts.profileId, isStaff: opts.isStaff };
+	const granted = await resolveCapabilities(scope.capabilities ?? [], entity, actor);
+
+	// The page's own capabilities are the page bias; these are the rest of the
+	// profile, reachable when the user says which part they mean. They come
+	// second and they are what gives way to the budget, so page bias survives
+	// contact with a message that names three sections at once.
+	const matched = await matchedCapabilities(scope, [...(opts.history ?? []), opts.message], actor);
+	const capabilities = fitMatchedCapabilities(granted, matched);
 
 	return {
 		context: {

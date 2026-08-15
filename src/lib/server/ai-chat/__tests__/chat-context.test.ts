@@ -18,7 +18,11 @@ vi.mock('$lib/server/db', () => ({
 // route hands it and who it says is asking — the resolve/authorize behaviour
 // behind them is capabilities.test.ts's business.
 const mockResolveCapabilities = vi.fn().mockResolvedValue([]);
-vi.mock('../capabilities', () => ({
+// Only the resolution is stubbed. `fitMatchedCapabilities` stays real, because
+// what this file tests is which capabilities a page ends up with — and since
+// message matching, that is granted-plus-matched-that-fit rather than a lookup.
+vi.mock('../capabilities', async (importOriginal) => ({
+	...(await importOriginal<typeof import('../capabilities')>()),
 	resolveCapabilities: (...a: unknown[]) => mockResolveCapabilities(...a)
 }));
 
@@ -26,8 +30,14 @@ vi.mock('../capabilities', () => ({
 // the same check the capability re-runs. Its behaviour is write.test.ts's
 // business; what matters here is that a row that isn't theirs yields no entity.
 let sectionRow: unknown = null;
+let sectionRows: Record<string, unknown[]> = {};
 vi.mock('$lib/server/profile/write', () => ({
-	readOwnedRow: () => Promise.resolve(sectionRow)
+	readOwnedRow: () => Promise.resolve(sectionRow),
+	// The section matcher's read, keyed by resource. Empty by default: these
+	// tests are about what the ROUTE grants, so a message that also matched a
+	// section would be a second variable in every one of them. The matching
+	// itself has its own file.
+	readOwnedRows: (name: string) => Promise.resolve(sectionRows[name] ?? [])
 }));
 
 import {
@@ -41,7 +51,8 @@ beforeEach(() => {
 	applicationRow = null;
 	jobRow = null;
 	sectionRow = null;
-	mockResolveCapabilities.mockClear();
+	sectionRows = {};
+	mockResolveCapabilities.mockReset();
 	mockResolveCapabilities.mockResolvedValue([]);
 });
 
@@ -492,11 +503,11 @@ describe('profile section pages', () => {
 	});
 
 	it('grants one section and no more', () => {
-		// The three verbs of ONE section, never two sections' worth. Measured, a
-		// section page costs ~7.7k of the 11.5k page budget with its three verbs,
-		// so a route that reached a second section would be the thing that broke
-		// it — and the failure is a block silently dropped for budget, not an
-		// error.
+		// The three verbs of ONE section, never two sections' worth. A section
+		// page costs ~7.7k with its three verbs, so a ROUTE that reached a second
+		// one would be spending the budget with nothing able to say no. A message
+		// can still reach one — that path goes through fitMatchedCapabilities,
+		// which drops rather than overflows.
 		for (const [route, resource] of SECTIONS) {
 			const capabilities = scopeForRoute(route).capabilities ?? [];
 			expect(capabilities, route).toHaveLength(3);
@@ -593,5 +604,102 @@ describe('profile section list pages', () => {
 		]) {
 			expect(scopeForRoute(route).capabilities, route).toBeUndefined();
 		}
+	});
+});
+
+describe('sections the message reaches for', () => {
+	// Page bias is the default and the matcher is the exception, so what these
+	// assert is mostly that the exception stays an exception: it fires when the
+	// user said which part they meant, and not otherwise.
+
+	beforeEach(() => {
+		sectionRows = { language: [{ id: 11, name: 'Spanish' }] };
+		mockResolveCapabilities.mockImplementation((capabilities: string[]) =>
+			Promise.resolve(
+				capabilities.map((capability) => ({
+					capability,
+					targets: [{ id: 1, label: 'x' }],
+					current: {}
+				}))
+			)
+		);
+	});
+
+	const onJobPage = (message: string, history?: string[]) =>
+		resolveChatContext({
+			routeId: '/(app)/jobs/[id]',
+			params: { id: '5' },
+			profileId: 7,
+			isStaff: false,
+			message,
+			history
+		});
+
+	it('offers a named section from a page that does not hold it', async () => {
+		jobRow = { id: 5, title: 'Staff Engineer' };
+
+		const { capabilities } = await onJobPage('while I think of it, add Spanish to my languages');
+
+		expect(capabilities.map((c) => c.capability)).toEqual([
+			'edit_job_details',
+			'edit_job_description',
+			'edit_job_skills',
+			'edit_language',
+			'add_language',
+			'hide_language'
+		]);
+	});
+
+	it('leaves a page alone when the message names no section', async () => {
+		jobRow = { id: 5, title: 'Staff Engineer' };
+
+		const { capabilities } = await onJobPage('is this job worth applying to?');
+
+		expect(capabilities.map((c) => c.capability)).toEqual([
+			'edit_job_details',
+			'edit_job_description',
+			'edit_job_skills'
+		]);
+	});
+
+	it('passes a named row as the entity, so it resolves like a detail page', async () => {
+		// The whole point of narrowing: the capability gets one target and its
+		// current values, exactly as if the user had navigated to the row.
+		await onJobPage('make my Spanish conversational');
+
+		expect(mockResolveCapabilities).toHaveBeenCalledWith(
+			['edit_language', 'add_language', 'hide_language'],
+			{ type: 'profile_section', resource: 'language', id: 11 },
+			expect.objectContaining({ profileId: 7 })
+		);
+	});
+
+	it('does not offer a section the page already grants', async () => {
+		// Twice would be two copies of the same contract in one prompt.
+		sectionRow = { id: 5, profile_id: 7 };
+
+		const { capabilities } = await resolveChatContext({
+			routeId: '/(app)/profile/(data)/languages',
+			params: {},
+			profileId: 7,
+			isStaff: false,
+			message: 'fix my languages'
+		});
+
+		expect(capabilities.map((c) => c.capability)).toEqual([
+			'edit_language',
+			'add_language',
+			'hide_language'
+		]);
+	});
+
+	it('carries a section through a follow-up that names nothing', async () => {
+		jobRow = { id: 5, title: 'Staff Engineer' };
+
+		const { capabilities } = await onJobPage('actually, make it conversational', [
+			'add Spanish to my languages'
+		]);
+
+		expect(capabilities.map((c) => c.capability)).toContain('edit_language');
 	});
 });

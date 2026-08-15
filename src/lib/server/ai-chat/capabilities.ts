@@ -1246,6 +1246,60 @@ exactly from the list. Name one row per proposal; to change two rows, return two
 proposals. A target_id that is not in the list is not a row you can reach, and
 the proposal is discarded rather than applied to something else.`;
 
+/**
+ * What the whole "Changes you can propose" block may cost, in characters.
+ *
+ * A ratchet in the style of CI's svelte-check baseline: it may go down freely
+ * and up only deliberately. Every live capability's contract ships on every
+ * capable turn, because one structured-output call has to carry the rules for
+ * anything it might propose — so this is paid per turn, not once.
+ *
+ * It was 11,500 when a page could only grant what its route declared. Message
+ * matching is what raised it: the total became a sum of two independent things —
+ * what the route offers and what the message reached for — rather than one
+ * table's worth.
+ *
+ * The number is the worst arrangement a page can reach, rounded up. Measured at
+ * 17,828: an application page's five capabilities beside a matched work-history
+ * section listing twelve roles. Note what that last part means — a target list
+ * grows with the profile, so this is the size of an ordinary busy applicant's
+ * turn and not a hard bound on one. A profile past it loses the *matched*
+ * section, never the page's own (see `fitMatchedCapabilities`), and the manifest
+ * still says where that section lives.
+ */
+export const CAPABILITY_PROMPT_BUDGET_CHARS = 18000;
+
+/**
+ * Admit matched capabilities while they fit, in the order given.
+ *
+ * The route's own capabilities are never dropped: they are what the page
+ * promised, and a page that silently stops offering its own edit is the failure
+ * this whole layer exists to avoid. Matched ones are the additions, so they are
+ * what gives way — and giving way is cheap, because the manifest still names
+ * the section and its page, which is the answer the user got before matching
+ * existed.
+ *
+ * Groups are admitted whole. A section's three verbs are one offer; loading the
+ * edit without the add would leave the model able to correct a language and not
+ * to add one, for a reason no prompt states.
+ */
+export function fitMatchedCapabilities(
+	granted: LiveCapability[],
+	matched: LiveCapability[][],
+	budgetChars = CAPABILITY_PROMPT_BUDGET_CHARS
+): LiveCapability[] {
+	const admitted = [...granted];
+
+	for (const group of matched) {
+		if (group.length === 0) continue;
+		const candidate = [...admitted, ...group];
+		if (renderCapabilityPrompt(candidate).length > budgetChars) continue;
+		admitted.push(...group);
+	}
+
+	return admitted;
+}
+
 /** The capability block spliced into the system prompt, or "" when none are live. */
 export function renderCapabilityPrompt(live: LiveCapability[]): string {
 	if (live.length === 0) return '';

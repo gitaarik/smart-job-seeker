@@ -104,16 +104,28 @@ vi.mock('$lib/server/jobs/edit-job', async (importOriginal) => ({
 import {
 	buildProposalSchema,
 	CAPABILITIES,
+	CAPABILITY_PROMPT_BUDGET_CHARS,
 	type Capability,
 	capabilityFieldSchema,
 	describeProposalChanges,
 	executeCapability,
 	fieldsFromChanges,
+	fitMatchedCapabilities,
+	type LiveCapability,
 	pickCapabilityFields,
 	renderCapabilityBlock,
 	renderCapabilityPrompt,
 	resolveCapabilities
 } from '../capabilities';
+
+/** What /applications/[id] declares — the busiest route in the table. */
+const APPLICATION_PAGE_CAPABILITIES: Capability[] = [
+	'edit_application_details',
+	'add_activity_record',
+	'edit_job_details',
+	'edit_job_description',
+	'edit_job_skills'
+];
 
 const ACTOR = { profileId: 12, isStaff: false };
 
@@ -859,50 +871,124 @@ describe('the registry as a whole', () => {
 		//
 		// This measures the hand-written capabilities together because those
 		// genuinely co-occur: a job page grants three, an application page grants
-		// three. It deliberately does NOT measure every capability at once. Once
-		// the profile sections were generated, "all of them" became a state no
-		// route can reach — each section page grants exactly one (asserted in
-		// chat-context.test.ts), so their cost is bounded by the per-capability
-		// ceiling below, not by a sum nothing ever pays.
-		const BUDGET_CHARS = 11500;
+		// five. It deliberately does NOT measure every capability at once — that
+		// is a state no route can reach, and the arrangements that ARE reachable
+		// are asserted below.
+		const live = (Object.keys(CAPABILITIES) as Capability[])
+			.filter((capability) => !PROFILE_CAPABILITY_NAMES.includes(capability as never))
+			.map((capability) => ({ capability, targets: [{ id: 1, label: 'x' }], current: {} }));
 
-		const together = (Object.keys(CAPABILITIES) as Capability[]).filter(
-			(capability) => !PROFILE_CAPABILITY_NAMES.includes(capability as never)
-		);
+		expect(renderCapabilityPrompt(live).length).toBeLessThanOrEqual(CAPABILITY_PROMPT_BUDGET_CHARS);
+	});
 
-		const live = together.map((capability) => ({
+	it('keeps the worst page a message can reach inside the budget', () => {
+		// The arrangement that actually binds, since message matching: the busiest
+		// page's own capabilities PLUS a whole section the message named. Neither
+		// half is measured by the per-capability ceiling below, and the two arrive
+		// together by design rather than by accident.
+		//
+		// Twelve rows because a target list grows with the profile — three would
+		// measure the feature rather than the applicant. Measured at 17,828.
+		//
+		// This has to fail before the runtime starts dropping. `fitMatchedCapabilities`
+		// degrades gracefully when a turn does not fit, which is right for a heavy
+		// profile and wrong as a way to absorb a contract that grew: the section
+		// would stop being offered and nothing would say so.
+		const roles = Array.from({ length: 12 }, (_, i) => ({
+			id: i + 1,
+			label: `Senior Software Engineer at Some Company Name ${i}`
+		}));
+
+		const applicationPage = APPLICATION_PAGE_CAPABILITIES.map((capability) => ({
 			capability,
 			targets: [{ id: 1, label: 'x' }],
 			current: {}
 		}));
-		expect(renderCapabilityPrompt(live).length).toBeLessThanOrEqual(BUDGET_CHARS);
-	});
 
-	it('keeps a whole section page inside the page budget', () => {
-		// The binding constraint since the sections grew verbs. A section page is
-		// live with all three at once, which the per-capability ceiling below does
-		// not measure and the hand-written total above does not cover.
-		//
-		// Measured at ~7.7k against 11.5k, so there is room — but the failure mode
-		// if there weren't is a block silently dropped for budget, which reads to
-		// the model as a capability that does not exist. Worth a number.
-		const rows = [
-			{ id: 1, label: 'Dutch' },
-			{ id: 2, label: 'German' },
-			{ id: 3, label: 'Spanish' }
+		const matchedSection: LiveCapability[] = [
+			{ capability: 'edit_work_experience', targets: roles, current: null },
+			{
+				capability: 'add_work_experience',
+				targets: [{ id: 12, label: 'their work experience' }],
+				current: { existing: roles.map((r) => r.label) }
+			},
+			{ capability: 'hide_work_experience', targets: roles, current: null }
 		];
 
-		const sectionPage = renderCapabilityPrompt([
-			{ capability: 'edit_language', targets: rows, current: null },
-			{
-				capability: 'add_language',
-				targets: [{ id: 12, label: 'their languages' }],
-				current: { existing: rows.map((r) => r.label) }
-			},
-			{ capability: 'hide_language', targets: rows, current: null }
-		]);
+		expect(
+			renderCapabilityPrompt([...applicationPage, ...matchedSection]).length
+		).toBeLessThanOrEqual(CAPABILITY_PROMPT_BUDGET_CHARS);
+	});
 
-		expect(sectionPage.length).toBeLessThanOrEqual(11500);
+	describe('fitMatchedCapabilities', () => {
+		const section = (resource: string): LiveCapability[] =>
+			(['edit', 'add', 'hide'] as const).map((verb) => ({
+				capability: `${verb}_${resource}` as Capability,
+				targets: [{ id: 1, label: 'x' }],
+				current: {}
+			}));
+
+		it('admits a matched section when it fits', () => {
+			const granted = section('language');
+			const fitted = fitMatchedCapabilities(granted, [section('certificate')]);
+
+			expect(fitted.map((c) => c.capability)).toContain('edit_certificate');
+			expect(fitted).toHaveLength(6);
+		});
+
+		it('drops a matched section rather than exceeding the budget', () => {
+			// The degradation that makes matching safe to have at all: the section
+			// is not offered, and the manifest still names it and its page — which
+			// is the answer the user got before matching existed.
+			const granted = section('language');
+			const fitted = fitMatchedCapabilities(granted, [section('certificate')], 100);
+
+			expect(fitted).toEqual(granted);
+		});
+
+		it('never drops what the page itself granted', () => {
+			// A page that silently stops offering its own edit is the failure the
+			// whole layer exists to avoid: the user is standing on the thing.
+			const granted = section('work_experience');
+			const fitted = fitMatchedCapabilities(granted, [section('education')], 1);
+
+			expect(fitted).toEqual(granted);
+		});
+
+		it('admits a section whole or not at all', () => {
+			// Three verbs are one offer. Half of one would leave the model able to
+			// correct a language and not to add one, for a reason no prompt states.
+			const granted = section('language');
+			const budget = renderCapabilityPrompt([...granted, ...section('certificate')]).length;
+
+			const fitted = fitMatchedCapabilities(
+				granted,
+				[section('certificate'), section('education')],
+				budget
+			);
+
+			const matched = fitted.filter((c) => !granted.includes(c)).map((c) => c.capability);
+			expect(matched).toEqual(['edit_certificate', 'add_certificate', 'hide_certificate']);
+		});
+
+		it('keeps the earlier match when only one fits', () => {
+			// Rank order is the matcher's, and it is the message's: the section
+			// named first is the one the user led with.
+			const granted: LiveCapability[] = [];
+			const budget = renderCapabilityPrompt(section('certificate')).length;
+
+			const fitted = fitMatchedCapabilities(
+				granted,
+				[section('certificate'), section('education')],
+				budget
+			);
+
+			expect(fitted.map((c) => c.capability)).toEqual([
+				'edit_certificate',
+				'add_certificate',
+				'hide_certificate'
+			]);
+		});
 	});
 
 	it('keeps any single capability inside a one-page budget', () => {

@@ -447,7 +447,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		params: routeParams ?? {},
 		profileId: profile_id,
 		isStaff,
-		message
+		message,
+		// Only the user's own turns. What the assistant said is not the user
+		// asking for it — it names sections all the time ("that's on your
+		// Languages page"), and matching on its own suggestions would let the
+		// assistant talk itself into a capability nobody requested.
+		history: history.filter((m) => m.role === 'user').map((m) => m.content)
 	});
 
 	// Turns with nothing to propose keep the original plain-text path exactly:

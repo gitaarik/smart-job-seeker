@@ -167,6 +167,22 @@ export interface ProfileResource {
 	 * the ones the assistant reaches by naming a row rather than by URL.
 	 */
 	detailPath?: (id: number) => string;
+	/**
+	 * What a person calls this section when they are not reading the navigation.
+	 *
+	 * Used only by `profile-matching.ts`, to decide whether a message is about a
+	 * section the current page does not offer. `page.name` and `label` are terms
+	 * already and are not repeated here.
+	 *
+	 * Conservative on purpose, and the bar is this app's vocabulary rather than
+	 * English: an alias earns its place only if it means this section and nothing
+	 * else *here*. "job" is the clearest exclusion — it means a posting far more
+	 * often than a past role, and it appears in nearly every turn on a job page,
+	 * so it would load the work-history capabilities on every one of them.
+	 * Multi-word phrases are safer than single nouns for the same reason, and
+	 * plurals are matched automatically rather than listed.
+	 */
+	aliases?: string[];
 	/** Names one row on a proposal card and in a prompt. */
 	rowLabel(row: SectionRow): string;
 	/**
@@ -241,6 +257,20 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		label: 'work experience',
 		page: { path: '/profile/work-experience', name: 'Work experience' },
 		detailPath: (id) => `/profile/work-experience/${id}`,
+		// No bare "job" or "role": both mean a posting they are looking at at
+		// least as often as a position they held.
+		aliases: [
+			'work history',
+			'employment history',
+			'career history',
+			'employment',
+			'employer',
+			'past job',
+			'previous job',
+			'former job',
+			'past role',
+			'previous role'
+		],
 		rowLabel: (row) => joined([row.position, row.name]) || 'Untitled role',
 		fields: {
 			name: { kind: 'string', note: 'the employer or client' },
@@ -272,6 +302,20 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		label: 'education entry',
 		page: { path: '/profile/education', name: 'Education' },
 		detailPath: (id) => `/profile/education/${id}`,
+		aliases: [
+			'degree',
+			'diploma',
+			'university',
+			'college',
+			'studied',
+			'studies',
+			'graduated',
+			'bachelor',
+			'master',
+			'masters',
+			'phd',
+			'doctorate'
+		],
 		rowLabel: (row) => joined([row.area, row.institution]) || 'Untitled education entry',
 		fields: {
 			institution: { kind: 'string', note: 'the school or university' },
@@ -298,6 +342,9 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		label: 'side project',
 		page: { path: '/profile/side-projects', name: 'Side projects' },
 		detailPath: (id) => `/profile/side-projects/${id}`,
+		// Not bare "project": a work experience has projects of its own, and so
+		// does half the prose in any job description.
+		aliases: ['personal project', 'hobby project', 'own project', 'open source project'],
 		rowLabel: (row) => short(row.name) || 'Untitled project',
 		fields: {
 			name: { kind: 'string' },
@@ -321,6 +368,7 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		table: languages,
 		label: 'language',
 		page: { path: '/profile/languages', name: 'Languages' },
+		aliases: ['mother tongue', 'native speaker', 'bilingual', 'spoken language'],
 		rowLabel: (row) => short(row.name) || 'Untitled language',
 		fields: {
 			name: { kind: 'string', note: 'the language, written the way a reader would name it' },
@@ -342,6 +390,7 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		table: references,
 		label: 'reference',
 		page: { path: '/profile/references', name: 'References' },
+		aliases: ['referee', 'recommendation', 'testimonial', 'referral'],
 		rowLabel: (row) => joined([row.author, row.author_position], ', ') || 'Untitled reference',
 		fields: {
 			author: { kind: 'string', note: 'who gave the reference' },
@@ -360,6 +409,7 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		table: certificates,
 		label: 'certificate',
 		page: { path: '/profile/certificates', name: 'Certificates' },
+		aliases: ['certification', 'certified', 'accreditation', 'credential', 'qualification'],
 		rowLabel: (row) => joined([row.name, row.issuer], ' — ') || 'Untitled certificate',
 		fields: {
 			name: { kind: 'string', note: 'the certificate' },
@@ -379,6 +429,9 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		table: highlights,
 		label: 'highlight',
 		page: { path: '/profile/highlights', name: 'Highlights' },
+		// Not "achievement": a work experience owns a table of those, and they are
+		// a different thing in a different place.
+		aliases: ['profile highlight', 'selling point'],
 		rowLabel: (row) => short(row.text) || 'Untitled highlight',
 		fields: {
 			text: { kind: 'string', note: 'the highlight itself, one line' },
