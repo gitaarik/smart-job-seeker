@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.12.0] - 2026-08-15
+
+16 commits since v0.11.0.
+
+### Added
+
+- MCP capability registry served to agents outside the app
+- Assistant change tracking with undo for all edits
+- Assistant can edit profile sections from any page, add or hide entries, and work with sections not currently visible on the page
+
+### Changed
+
+- Profile sections consolidated to a single write path
+
 ## [0.11.0] - 2026-08-13
 
 47 commits since v0.10.12.
