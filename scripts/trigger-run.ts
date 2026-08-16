@@ -23,7 +23,8 @@ async function main() {
 	}
 
 	const searchTask = await db.query.search_tasks.findFirst({
-		where: eq(search_tasks.id, taskId)
+		where: eq(search_tasks.id, taskId),
+		with: { job_platform: { columns: { search_page_url: true } } }
 	});
 	if (!searchTask) {
 		console.error(`Task ${taskId} not found`);
@@ -31,6 +32,22 @@ async function main() {
 	}
 	if (!searchTask.platform_id) {
 		console.error(`Task ${taskId} has no platform configured`);
+		process.exit(1);
+	}
+
+	// Same fallback the scheduler applies (worker.ts runSchedulerCycle). Tasks
+	// created under the dynamic form-fill flow have no `search_url` at all —
+	// the scraper drives the platform's search page instead — so passing the
+	// column raw sent `null` down to `page.goto()` and killed the run in five
+	// seconds with "url: expected string, got object". That is every task on
+	// the current flow, i.e. this script was broken for exactly the tasks
+	// anyone would want to debug.
+	const effectiveSearchUrl = searchTask.search_url || searchTask.job_platform?.search_page_url;
+	if (!effectiveSearchUrl) {
+		console.error(
+			`Task ${taskId} has no search_url, and its platform has no search_page_url — ` +
+				`nothing to navigate to`
+		);
 		process.exit(1);
 	}
 
@@ -75,7 +92,7 @@ async function main() {
 	const job = await addScrapeJob({
 		searchTaskId: taskId,
 		runId: run.id,
-		searchUrl: searchTask.search_url,
+		searchUrl: effectiveSearchUrl,
 		platformId: String(searchTask.platform_id),
 		triggeredBy: 'user',
 		browserProvider: effectiveProvider,

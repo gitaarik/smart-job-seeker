@@ -35,7 +35,7 @@ set -euo pipefail
 # ratchet on a count cannot tell a stale error from a live one within its
 # budget. It surfaced only when build-ops-scripts.mjs was widened to bundle
 # relative-path importers and the build failed outright.
-BASELINE=27
+BASELINE=26
 
 npx svelte-kit sync
 
