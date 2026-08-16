@@ -5,6 +5,19 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-08-16
+
+11 commits since v0.13.0.
+
+### Changed
+
+- Upgraded ioredis to version 6 with RESP2 wire protocol pinning in queue connections
+- Upgraded BullMQ to 6.1.0
+
+### Fixed
+
+- Region classification now properly handles two address families and stops counting non-places
+
 ## [0.13.0] - 2026-08-16
 
 10 commits since v0.12.0.
