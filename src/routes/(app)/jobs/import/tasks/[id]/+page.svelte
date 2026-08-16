@@ -5,6 +5,7 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import Card from '../../../../components/Card.svelte';
 	import ImportTaskBlockerList from '../../components/ImportTaskBlockerList.svelte';
+	import AuthBlockNotice from '../../components/AuthBlockNotice.svelte';
 	import { computeImportTaskBlockers } from '$lib/import-tasks/readiness';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { autoSaveField } from '$lib/components/auto-save.svelte';
@@ -2416,6 +2417,18 @@
 					</div>
 				{/if}
 			</div>
+
+			{#if searchTask.auth_block_kind}
+				<!-- The status line above says "Failed — Platform login failed"; this
+				     says what to do about it, which is the part nobody can work out
+				     from the error. -->
+				<AuthBlockNotice
+					kind={searchTask.auth_block_kind}
+					disabled={!!searchTask.auto_disabled_at}
+					platform={searchTask.job_platform?.name ?? 'the platform'}
+					taskLabel={searchTask.note?.trim() || searchTask.search_term?.trim() || null}
+				/>
+			{/if}
 
 			{#if searchTask.schedule_interval_hours}
 				{@const intervalDays = searchTask.schedule_interval_hours / 24}

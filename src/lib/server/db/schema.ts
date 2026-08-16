@@ -792,6 +792,12 @@ export const search_task_runs = pgTable(
 		finished_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
 		jobs_found: integer(),
 		error_message: text(),
+		// Machine-readable cause of a terminal failure — one of FAILURE_KINDS
+		// (`$lib/import-tasks/failure-kinds`). error_message is the prose
+		// a user reads and is free to be reworded; this is what code branches
+		// on, so policies never depend on message wording. Null on runs that
+		// didn't fail, and on rows written before the column existed.
+		failure_kind: varchar({ length: 32 }),
 		triggered_by: varchar({ length: 20 }).notNull(),
 		bullmq_job_id: varchar({ length: 100 }),
 		live_url: varchar({ length: 500 }),
@@ -2333,7 +2339,29 @@ export const search_tasks = pgTable(
 		// reconciler treats a null value as "never user-paused" and may promote a
 		// runnable auto proposal to active; a set value means hands-off — promotion
 		// must never override a deliberate pause. Cleared when the user re-activates.
-		user_paused_at: timestamp({ withTimezone: true, mode: 'date' })
+		user_paused_at: timestamp({ withTimezone: true, mode: 'date' }),
+		// The three columns below track a task stuck at the platform's login —
+		// see $lib/import-tasks/failure-policy for what counts as stuck and why
+		// the response is to retry less often rather than to give up.
+		//
+		// The FailureKind of the block currently in effect, null when the task
+		// isn't blocked. Kept as the kind rather than a rendered sentence so the
+		// UI can show the specific remedy (complete a device check / update the
+		// password / accept new terms) and re-word it freely.
+		auth_block_kind: varchar({ length: 32 }),
+		// When the user was last told about it. Compared against the *start* of
+		// the current failure streak, so one notification is sent per episode
+		// rather than per failed run, and a fresh block after a recovery
+		// notifies again.
+		auth_block_notified_at: timestamp({ withTimezone: true, mode: 'date' }),
+		// Set only on the escalation: after a month of continuous failure the
+		// task is switched off rather than retried forever. Deliberately not
+		// user_paused_at — that column means "the user made a deliberate
+		// choice", and the reconciler reads it as hands-off. This one means the
+		// opposite: the user hasn't decided anything yet and is being asked to.
+		//
+		// All three clear when a run succeeds, or when the user re-activates.
+		auto_disabled_at: timestamp({ withTimezone: true, mode: 'date' })
 	},
 	(table) => [
 		index('search_tasks_next_run_idx')

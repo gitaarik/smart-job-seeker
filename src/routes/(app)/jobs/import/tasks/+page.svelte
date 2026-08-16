@@ -26,6 +26,7 @@
 	import SimplifiedAddTaskForm from '../components/SimplifiedAddTaskForm.svelte';
 	import SuggestionsList, { type Suggestion } from '../components/SuggestionsList.svelte';
 	import ImportTaskBlockerBadge from '../components/ImportTaskBlockerBadge.svelte';
+	import AuthBlockNotice from '../components/AuthBlockNotice.svelte';
 	import { computeImportTaskBlockers, providerRequiresDevice } from '$lib/import-tasks/readiness';
 	import { track } from '$lib/tools/analytics';
 
@@ -767,6 +768,16 @@
 										{isActive(search) ? 'Active' : 'Paused'}
 									</button>
 								{/if}
+								{#if search.auth_block_kind}
+									<span
+										class="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs whitespace-nowrap text-amber-600 dark:text-amber-400"
+										title={search.auto_disabled_at
+											? 'Switched off after weeks of being unable to log in — run it once yourself to sort the login out.'
+											: "Can't get past the platform's login, so it's retrying less often. Run it once yourself to fix it."}
+									>
+										{search.auto_disabled_at ? 'Login blocked — off' : 'Login blocked'}
+									</span>
+								{/if}
 								{#if search.origin === 'auto'}
 									<span
 										class="rounded-full bg-purple-500/15 px-2 py-0.5 text-xs whitespace-nowrap text-purple-600"
@@ -887,6 +898,15 @@
 										<span class="font-medium text-[var(--dash-text-secondary)]">Next run</span>
 										<span>{formatFutureRelativeTime(nextRun)}</span>
 									</div>
+								{/if}
+
+								{#if search.auth_block_kind}
+									<AuthBlockNotice
+										kind={search.auth_block_kind}
+										disabled={!!search.auto_disabled_at}
+										platform={search.job_platform?.name ?? 'the platform'}
+										taskLabel={search.note?.trim() || search.search_term?.trim() || null}
+									/>
 								{/if}
 							</div>
 						</div>

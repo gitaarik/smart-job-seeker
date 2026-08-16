@@ -73,12 +73,19 @@ export function selectTopUpCandidates<T extends { relevance: Relevance }>(
  * explicitly paused (`user_paused_at`) or already ran (`last_run`), so
  * promotion can't fight a deliberate choice. It must also be runnable now, the
  * plan must auto-activate, and there must be room in the active budget.
+ *
+ * `auto_disabled_at` is checked separately from `last_run` and is not
+ * redundant with it: `last_run` is only stamped by a *successful* run, so a
+ * task whose every run has failed at the login wall still reads as "never ran"
+ * — exactly the task the auth-block policy just switched off, and exactly the
+ * one the reconciler would otherwise switch straight back on to fail again.
  */
 export function canPromoteProposal(
 	task: {
 		is_active: boolean | null;
 		user_paused_at: Date | null;
 		last_run: Date | null;
+		auto_disabled_at: Date | null;
 	},
 	opts: { runnable: boolean; autoActivate: boolean; hasActiveSlot: boolean }
 ): boolean {
@@ -86,6 +93,7 @@ export function canPromoteProposal(
 		!task.is_active &&
 		task.user_paused_at == null &&
 		task.last_run == null &&
+		task.auto_disabled_at == null &&
 		opts.autoActivate &&
 		opts.runnable &&
 		opts.hasActiveSlot

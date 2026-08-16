@@ -127,6 +127,9 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 		sjsbrowser_api_key?: number | null;
 		debug_screenshots?: boolean;
 		user_paused_at?: Date | null;
+		auth_block_kind?: string | null;
+		auth_block_notified_at?: Date | null;
+		auto_disabled_at?: Date | null;
 	} = {};
 
 	if (body.note !== undefined) data.note = body.note || null;
@@ -148,6 +151,16 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 		// Record a deliberate pause so the reconciler never auto-promotes this task
 		// back to active behind the user's back; clear it when they re-activate.
 		data.user_paused_at = body.is_active ? null : new Date();
+		// Turning it back on is the user answering the "this needs you once"
+		// notification, so retire the auth-block markers with it. Left set,
+		// auto_disabled_at would keep showing the banner and keep blocking
+		// reconciler promotion for a task the user has explicitly re-armed, and
+		// the notified stamp would swallow the next warning.
+		if (body.is_active) {
+			data.auth_block_kind = null;
+			data.auth_block_notified_at = null;
+			data.auto_disabled_at = null;
+		}
 		data.date_updated = new Date();
 	}
 	if (body.platform_id !== undefined) {

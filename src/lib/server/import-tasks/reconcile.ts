@@ -241,7 +241,8 @@ export async function reconcileAutoImportTasks(
 			login_mode: search_tasks.login_mode,
 			is_active: search_tasks.is_active,
 			last_run: search_tasks.last_run,
-			user_paused_at: search_tasks.user_paused_at
+			user_paused_at: search_tasks.user_paused_at,
+			auto_disabled_at: search_tasks.auto_disabled_at
 		})
 		.from(search_tasks)
 		.where(

@@ -23,7 +23,12 @@ const baseHashInput: InputHashSources = {
 };
 
 describe('canPromoteProposal', () => {
-	const fresh = { is_active: false, user_paused_at: null, last_run: null };
+	const fresh = {
+		is_active: false,
+		user_paused_at: null,
+		last_run: null,
+		auto_disabled_at: null
+	};
 	const ok = { runnable: true, autoActivate: true, hasActiveSlot: true };
 
 	it("promotes an untouched, runnable proposal when there's budget", () => {
@@ -40,6 +45,13 @@ describe('canPromoteProposal', () => {
 
 	it('never re-activates a proposal the user already ran', () => {
 		expect(canPromoteProposal({ ...fresh, last_run: new Date(1) }, ok)).toBe(false);
+	});
+
+	it('never re-activates a task the auth-block policy switched off', () => {
+		// last_run stays null when every run failed at the login wall, so this
+		// is the only thing standing between that switch-off and the reconciler
+		// undoing it on the next cycle.
+		expect(canPromoteProposal({ ...fresh, auto_disabled_at: new Date(1) }, ok)).toBe(false);
 	});
 
 	it('requires runnability, auto-activation, and an open slot', () => {
