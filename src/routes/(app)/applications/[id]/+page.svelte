@@ -878,7 +878,6 @@
 
 <!-- Status Picker Modal -->
 {#if statusPickerOpen}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		use:portalToBody={{ onClose: () => (statusPickerOpen = false) }}
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"

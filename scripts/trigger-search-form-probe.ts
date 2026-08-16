@@ -97,7 +97,7 @@ async function main() {
 	}
 
 	const deviceFlag = parseFlag('device');
-	let deviceId: number | null = deviceFlag
+	const deviceId: number | null = deviceFlag
 		? parseInt(deviceFlag, 10)
 		: (previousRun?.sjsbrowser_api_key_id ?? null);
 	if (deviceId !== null && !Number.isFinite(deviceId)) {

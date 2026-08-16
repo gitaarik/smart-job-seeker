@@ -188,7 +188,7 @@ export const actions: Actions = {
 		}
 
 		// Generate a slug from the name
-		let slug = name
+		const slug = name
 			.toLowerCase()
 			.replace(/[^a-z0-9]+/g, '-')
 			.replace(/(^-|-$)/g, '');

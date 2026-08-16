@@ -73,6 +73,7 @@ function decodeText(bytes: Uint8Array): string {
 		new TextDecoder('utf-8', { fatal: false })
 			.decode(bytes)
 			// Strip NULs defensively (sniff should have rejected true binaries).
+			// eslint-disable-next-line no-control-regex -- matching the control char is the point
 			.replace(/\u0000/g, '')
 	);
 }

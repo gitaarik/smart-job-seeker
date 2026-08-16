@@ -118,7 +118,8 @@ export async function loginViaUI(
 			if (attempt === ATTEMPTS) {
 				throw new Error(
 					`Login did not reach the dashboard after ${ATTEMPTS} attempts ` +
-						`(still at ${page.url()}). Original error: ${err}`
+						`(still at ${page.url()}). Original error: ${err}`,
+					{ cause: err }
 				);
 			}
 		}

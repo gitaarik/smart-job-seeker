@@ -27,7 +27,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 	const jobId = parseIntParam(params.id, 'job');
 
 	// Parse optional overrides from request body
-	let overrides: {
+	const overrides: {
 		countryCode?: string;
 		browserLanguage?: string;
 		browserTimezone?: string;

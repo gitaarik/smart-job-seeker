@@ -145,7 +145,6 @@
 
 <div class="space-y-3">
 	<!-- Upload -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		role="button"
 		tabindex="0"

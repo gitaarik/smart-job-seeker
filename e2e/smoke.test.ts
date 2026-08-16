@@ -23,7 +23,8 @@ beforeAll(async () => {
 	} catch (error) {
 		throw new Error(
 			`Dev server not reachable at ${BASE_URL}. ` +
-				`Make sure the Docker dev stack is running (npm start from cloud/).`
+				`Make sure the Docker dev stack is running (npm start from cloud/).`,
+			{ cause: error }
 		);
 	}
 });

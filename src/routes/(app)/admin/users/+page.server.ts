@@ -107,7 +107,9 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 				deviceNames = (data.deviceIds ?? []).map(
 					(id: number) => deviceNameMap.get(id) ?? `Device ${id}`
 				);
-			} catch {}
+			} catch {
+				// Best effort: a malformed metadata blob just means no device names.
+			}
 			return {
 				email,
 				name,

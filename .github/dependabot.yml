@@ -15,6 +15,17 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # TypeScript 7 cannot land as a version bump here. svelte-check refuses a
+      # bare TS 7 — it requires TypeScript 6 AND 7 installed side by side
+      # (`typescript@~6` plus `@typescript/native@npm:typescript@7`) and a
+      # `--tsgo` / `--tsgo-experimental-api` flag. That is a migration someone
+      # chooses to do, not a dependency update, and until it is done every
+      # weekly run re-opens a PR that cannot go green. Minor and patch bumps
+      # within TS 5 still come through.
+      - dependency-name: typescript
+        update-types:
+          - version-update:semver-major
 
   # --- Docker images ---
   - package-ecosystem: docker

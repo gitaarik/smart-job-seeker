@@ -45,7 +45,21 @@ set -euo pipefail
 #
 # BASELINE must only ever go DOWN. The script nags when the real count drops
 # below it, so the ratchet cannot quietly slip back up.
-BASELINE=1506
+#
+# 1506 -> 1486 on 2026-08-16, by fixing every rule whose violations were small
+# in number and unambiguous to repair: prefer-const (5, via --fix), stale
+# svelte-ignore comments whose warning no longer fires (4), preserve-caught-error
+# (6, now passing `{ cause }` — the one change here that improves a stack trace
+# rather than a count), no-control-regex (2, justified disables: matching the
+# control character IS the point in both), and empty catch blocks (2, given the
+# comment that says why they are empty).
+#
+# Two rules were deliberately left in the budget. svelte/no-useless-mustaches
+# flags `{' '}` and a multi-line string literal, and both mustaches are load
+# bearing — one forces a space the whitespace collapser would eat, the other
+# carries newlines that an HTML attribute would have to encode as entities.
+# Changing behaviour to satisfy a cosmetic rule is the wrong trade.
+BASELINE=1486
 
 npx svelte-kit sync
 

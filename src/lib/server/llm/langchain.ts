@@ -645,7 +645,8 @@ async function generateWithLangChain(
 							`Failed to parse JSON response from ${provider}: ${errorMsg}\nResponse was: ${responseContent.substring(
 								0,
 								500
-							)}`
+							)}`,
+							{ cause: jsonError }
 						);
 					}
 				}
@@ -726,7 +727,8 @@ async function generateWithLangChain(
 						`Failed to parse JSON response from ${provider}: ${errorMsg}\nResponse was: ${responseContent.substring(
 							0,
 							500
-						)}`
+						)}`,
+						{ cause: zodError }
 					);
 				}
 			}
@@ -795,7 +797,8 @@ async function generateWithLangChain(
 					// If even String() fails, use generic message
 				}
 				throw new Error(
-					`Failed to parse JSON response from LLM (${provider}/${model}): ${errorMsg}\nResponse was: ${resultPreview}`
+					`Failed to parse JSON response from LLM (${provider}/${model}): ${errorMsg}\nResponse was: ${resultPreview}`,
+					{ cause: stringifyError }
 				);
 			}
 		}
@@ -917,7 +920,8 @@ export async function generateChatCompletion(
 					error instanceof Error ? error.message : String(error)
 				}\nResponse was: ${result.content.substring(0, 500)}${
 					result.content.length > 500 ? '...' : ''
-				}`
+				}`,
+				{ cause: error }
 			);
 		}
 	}

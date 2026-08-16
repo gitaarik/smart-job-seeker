@@ -64,7 +64,7 @@ export async function createProfileFromResume(
 	}
 
 	// Generate unique slug
-	let slug = data.basics.name
+	const slug = data.basics.name
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/(^-|-$)/g, '');

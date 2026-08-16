@@ -88,7 +88,6 @@
 </script>
 
 {#if open && (isCloudMode || isTunnelMode)}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		use:portalToBody={{ onClose: close }}
 		class="fixed inset-0 z-50 flex items-center justify-center p-4"

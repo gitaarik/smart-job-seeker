@@ -71,7 +71,9 @@
 				try {
 					const errData = await res.json();
 					message = errData.message || errData.error || message;
-				} catch {}
+				} catch {
+					// Non-JSON error body — keep the generic message above.
+				}
 				error = message;
 				return;
 			}

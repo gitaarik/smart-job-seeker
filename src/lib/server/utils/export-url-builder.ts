@@ -14,7 +14,7 @@ export function buildExportUrl(options: ExportUrlOptions): string {
 	const base = getBaseUrl();
 	const { route, version, queryParams = {} } = options;
 
-	let url = `${base}/${route.replace(/^\//, '')}`;
+	const url = `${base}/${route.replace(/^\//, '')}`;
 
 	const params = new URLSearchParams();
 	if (version) params.set('version', version);

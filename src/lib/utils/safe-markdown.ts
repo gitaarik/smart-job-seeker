@@ -31,6 +31,7 @@ function safeUrl(href: string | null | undefined): string | null {
 	// becomes "javascript:..." in the browser). Strip those control chars first,
 	// then resolve and allowlist the protocol. Resolving against a base keeps
 	// relative links ("/jobs/12", "#section") and protocol-relative URLs working.
+	// eslint-disable-next-line no-control-regex -- stripping control chars is the point
 	const cleaned = href.replace(/[\x00-\x1f\x7f]/g, '').trim();
 	if (!cleaned) return null;
 	let url: URL;
