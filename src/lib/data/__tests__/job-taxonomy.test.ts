@@ -13,7 +13,7 @@
  * reintroduce it inside Western Europe.
  */
 import { describe, expect, it } from 'vitest';
-import { classifyRegion } from '../job-taxonomy';
+import { classifyRegion, isNonLocation } from '../job-taxonomy';
 
 describe('classifyRegion', () => {
 	it('returns null for empty input', () => {
@@ -439,6 +439,59 @@ describe('classifyRegion', () => {
 			it('does not let the Randstad alias claim the staffing agency', () => {
 				expect(classifyRegion('Randstad - Chicago, IL')).toBe('us');
 			});
+		});
+
+		describe('isNonLocation', () => {
+			it.each(['-', '--', 'N/A', 'none', 'TBD', 'Unknown', 'Onbekend', '', '   '])(
+				'%s is not a place',
+				(input) => {
+					expect(isNonLocation(input)).toBe(true);
+				}
+			);
+
+			it.each(['Freelance', 'Contract', 'Contractor', 'Temporary'])(
+				'%s is an employment type, not a place',
+				(input) => {
+					expect(isNonLocation(input)).toBe(true);
+				}
+			);
+
+			it.each(['Amsterdam', 'Neuville Sur Oise', 'Berlin, Germany', 'Randstad'])(
+				'%s is a place',
+				(input) => {
+					expect(isNonLocation(input)).toBe(false);
+				}
+			);
+
+			// Ambiguous on purpose: Eastern Standard Time, or ISO 3166 for Estonia.
+			// Guessing files a job on the wrong continent, so it stays a real miss.
+			it('leaves timezone-or-country abbreviations alone', () => {
+				expect(isNonLocation('EST')).toBe(false);
+			});
+		});
+
+		describe('the 2026-08-16 audit misses', () => {
+			// Both are matched by family rather than by the one town that showed
+			// up: French "X-sur-Y" communes, and Italian street addresses.
+			it.each([
+				['Neuville Sur Oise', 'western_europe'],
+				['Neuville-sur-Oise', 'western_europe'],
+				['Boulogne-sur-Mer', 'western_europe'],
+				['Chalon-sur-Saône', 'western_europe'],
+				['Via Giuseppe Verdi snc, 03030, Villa Santa Lucia F', 'western_europe'],
+				['Via Roma 12, 00184, Roma', 'western_europe']
+			])('%s is %s', (input, expected) => {
+				expect(classifyRegion(input)).toBe(expected);
+			});
+
+			// "via" is an ordinary English preposition, so the Italian pattern
+			// insists on the comma and the 5-digit CAP that follow a real address.
+			it.each(['Remote via Zoom', 'Hired via an agency', 'via our partner'])(
+				'%s is not an Italian address',
+				(input) => {
+					expect(classifyRegion(input)).toBeNull();
+				}
+			);
 		});
 	});
 });

@@ -22,7 +22,7 @@
 
 import { dbDirect as db } from '$lib/server/db';
 import { jobs } from '$lib/server/db/schema';
-import { classifyRegion } from '$lib/data/job-taxonomy';
+import { classifyRegion, isNonLocation } from '$lib/data/job-taxonomy';
 import { normalizeWorkLocation } from '$lib/data/job-normalize';
 
 function isRemote(workLocation: unknown): boolean {
@@ -77,7 +77,17 @@ async function main() {
 	const arrangementSettled = withLocation.filter(
 		(r) => isArrangement(r) && hasWorkLocation(r.work_location)
 	);
-	const stillAPlace = withLocation.filter((r) => !isArrangement(r));
+	// A placeholder ("-", "Onbekend") or an employment type ("Freelance") in the
+	// location column is the same mistake as an arrangement, one column further
+	// over: not a misclassified place, just not a place. Counting them as
+	// classifier gaps asks for a pattern that would be wrong to write, and keeps
+	// the defect number permanently above zero.
+	const notAPlace = withLocation.filter(
+		(r) => !isArrangement(r) && isNonLocation(r.office_location)
+	);
+	const stillAPlace = withLocation.filter(
+		(r) => !isArrangement(r) && !isNonLocation(r.office_location)
+	);
 
 	// Split what is left by whether the CURRENT classifier can read it. Without
 	// this the report tells you to add a pattern for a city you added an hour
@@ -111,7 +121,8 @@ async function main() {
 		`  classifier reads it now     ${String(pendingBackfill.length).padStart(6)}   run backfill-job-regions`
 	);
 	console.log(
-		`  ── unclassified location    ${String(realMisses.length).padStart(6)}   ← the only defect count`
+		`  not a location            ${String(notAPlace.length).padStart(6)}   correct — placeholder or employment type\n` +
+			`  ── unclassified location    ${String(realMisses.length).padStart(6)}   ← the only defect count`
 	);
 
 	if (realMisses.length > 0) {

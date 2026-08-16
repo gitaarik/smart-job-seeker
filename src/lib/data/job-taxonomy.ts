@@ -739,6 +739,19 @@ export const REGIONS: TaxonomyCategory = {
 						'\\b(?:leipzig|dresden|hannover|n(?:ü|u)rnberg|nuremberg|karlsruhe|mannheim|bremen|essen|dortmund|toulouse|bordeaux|nantes|lille|nice|grenoble|bilbao|zaragoza|palma)\\b',
 					mode: 'regex'
 				},
+				// French communes are overwhelmingly named "X-sur-Y" after the river
+				// or coast they sit on, and the scrapers see both the hyphenated
+				// form and a space-separated one ("Neuville Sur Oise"). Matching the
+				// suffix rather than the town covers the whole family instead of the
+				// single commune that happened to turn up in the audit.
+				{
+					pattern: '\\bsur[\\s-](?:oise|seine|marne|mer|loire|sa(?:ô|o)ne|yvette)\\b',
+					mode: 'regex'
+				},
+				// An Italian street address: "Via <street>, <5-digit CAP>". Requiring
+				// the comma and the postal code keeps the English preposition "via"
+				// from matching — "via Zoom" is not a place in Lazio.
+				{ pattern: '\\bvia\\s[^,]+,\\s*\\d{5}\\b', mode: 'regex' },
 				// European meta
 				{ pattern: 'european', mode: 'includes' },
 				{ pattern: ', netherlands', mode: 'includes' },
@@ -1148,6 +1161,65 @@ export function classifyRegion(location: string | null | undefined): string | nu
 	}
 
 	return null;
+}
+
+/**
+ * Placeholders that appear in `office_location` and are not places.
+ *
+ * Kept separate from the region patterns because the two answer different
+ * questions. `classifyRegion` returning null means "no region", which is the
+ * right answer for both "Onbekend" and a French town nobody has added a pattern
+ * for yet — and those want opposite responses. Only the second is a defect.
+ */
+const NON_LOCATION_PLACEHOLDERS = new Set([
+	'-',
+	'--',
+	'---',
+	'?',
+	'n/a',
+	'n.a.',
+	'na',
+	'none',
+	'null',
+	'undefined',
+	'tbd',
+	'tba',
+	'unknown',
+	'onbekend', // Dutch
+	'inconnu', // French
+	'unbekannt' // German
+]);
+
+const _jobTypeNormalizeMap = buildNormalizeMap(JOB_TYPES);
+
+/**
+ * True when a location string is not a place and never will be — a
+ * placeholder, or an employment type that landed in the location field.
+ *
+ * This exists for the region audit, which counts "has a location the classifier
+ * cannot read" as its defect number. Without this split, "Freelance" and "-"
+ * sit in that count forever, asking to be fixed by a classifier pattern that
+ * would be wrong to write: they are not misclassified places, they are not
+ * places. The audit already draws the same distinction for work *arrangements*
+ * ("Worldwide"); employment types are the same mistake one column over.
+ *
+ * Deliberately excluded: timezone abbreviations. "EST" is either Eastern
+ * Standard Time or the ISO code for Estonia, and guessing wrong files a job on
+ * the wrong continent. It stays a real miss until a human decides.
+ */
+export function isNonLocation(value: string | null | undefined): boolean {
+	if (!value) return true;
+
+	const cleaned = value
+		.replace(/\s*\((?:remote|hybrid|on-?site)\)\s*/gi, '')
+		.trim()
+		.toLowerCase();
+
+	if (!cleaned) return true;
+	if (NON_LOCATION_PLACEHOLDERS.has(cleaned)) return true;
+
+	// An employment type in the location column — "Freelance", "Contract".
+	return _jobTypeNormalizeMap.has(cleaned);
 }
 
 // ============================================================================
