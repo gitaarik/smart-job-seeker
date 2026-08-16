@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faBriefcase, faExternalLink, faPencil } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../components/SectionHeader.svelte';
@@ -72,9 +73,11 @@
 
 	<!-- Add Form -->
 	{#if showAddForm}
+		<!-- Enhanced so a refused create keeps what was typed — see side-projects. -->
 		<form
 			method="POST"
 			action="?/create"
+			use:enhance
 			class="rounded-lg border border-[var(--dash-primary)] bg-[var(--dash-card)] p-4"
 		>
 			<h3 class="mb-4 font-medium text-[var(--dash-text)]">Add New Work Experience</h3>

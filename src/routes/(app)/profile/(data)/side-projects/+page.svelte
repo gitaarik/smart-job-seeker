@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faExternalLink,
@@ -79,9 +80,17 @@
 
 	<!-- Add Form -->
 	{#if showAddForm}
+		<!--
+			Enhanced so a refused create keeps what was typed. Without it the
+			failure is a full page load: the response re-renders the list with
+			`form.error` at the top and the add form gone, along with every field
+			the applicant had filled in — the error is about one of them, and
+			it is the one thing they can no longer see.
+		-->
 		<form
 			method="POST"
 			action="?/create"
+			use:enhance
 			class="rounded-lg border border-[var(--dash-primary)] bg-[var(--dash-card)] p-4"
 		>
 			<h3 class="mb-4 font-medium text-[var(--dash-text)]">Add New Side Project</h3>

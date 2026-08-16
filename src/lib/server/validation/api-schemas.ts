@@ -10,6 +10,26 @@ const optionalTrimmedString = (maxLen = 255) => trimmedString(maxLen).optional()
 
 const positiveInt = () => z.number().int().positive();
 
+/**
+ * An integer column, shaped the way the doors in front of it actually deliver
+ * it rather than the way the column stores it.
+ *
+ * Both writers hand this a string. An `<input type="number">` posts "150", and
+ * "" when the field was left blank; a model quotes its numbers whatever the
+ * contract says. The number itself is made one step later, by
+ * `coerceField('int', …)` in the write layer — it parses, strips separators,
+ * rounds, and reads empty as "clear this column". So the only job here is to
+ * not reject the string before it gets there, and to leave the reporting of a
+ * genuinely unreadable value ("abc" is not a number) to the layer that can say
+ * which value it was.
+ *
+ * A bare `z.number()` refused every side-project create the form could make,
+ * blank stars or filled, and a `z.string().regex(/^\d+$/)` union refused only
+ * the blank ones — which is the more confusing half, because leaving an
+ * optional field alone is the one thing that cannot be wrong.
+ */
+const optionalInt = () => z.union([z.number(), z.string()]).optional().nullable();
+
 const httpUrl = (field: string) =>
 	z
 		.string()
@@ -303,10 +323,7 @@ export const educationUpdateSchema = z.object({
 	study_type: optionalTrimmedString(),
 	location: optionalTrimmedString(),
 	url: optionalTrimmedString(2048),
-	graduation_year: z
-		.union([z.number().int(), z.string().regex(/^\d+$/).transform(Number)])
-		.optional()
-		.nullable(),
+	graduation_year: optionalInt(),
 	start_date: z.string().optional().nullable(),
 	end_date: z.string().optional().nullable(),
 	summary: optionalTrimmedString(10000),
@@ -391,7 +408,7 @@ export const sideProjectBasicSchema = z.object({
 	url: optionalTrimmedString(2048),
 	repo_url: optionalTrimmedString(),
 	summary: optionalTrimmedString(10000),
-	stars: z.number().int().optional().nullable(),
+	stars: optionalInt(),
 	start_date: z.string().optional().nullable(),
 	end_date: z.string().optional().nullable(),
 	tags: z.array(z.string()).optional().nullable()
@@ -480,10 +497,7 @@ export const techSkillBasicSchema = z.object({
 	name: requiredTrimmedString('Skill name').optional(),
 	category: requiredTrimmedString('Category').optional(),
 	level: optionalTrimmedString(50),
-	years_experience: z
-		.union([z.number().int(), z.string().regex(/^\d+$/).transform(Number)])
-		.optional()
-		.nullable(),
+	years_experience: optionalInt(),
 	tags: z.array(z.string()).optional().nullable()
 });
 

@@ -299,6 +299,27 @@ describe('createRow', () => {
 		expect(state.inserts[0].values.date).toBe('2020-05-15');
 	});
 
+	it('stores a number a form posted as text as a number', async () => {
+		// Every value out of a FormData is a string, `<input type="number">`
+		// included. The declared schema used to demand a real number here, which
+		// meant the side-projects create form could not succeed at all.
+		await createRow('side_project', ACTOR, { name: 'Widget', stars: '150' });
+		expect(state.inserts[0].values.stars).toBe(150);
+	});
+
+	it('reads an optional number left blank as no value, not as a refusal', async () => {
+		const result = await createRow('side_project', ACTOR, { name: 'Widget', stars: '' });
+		expect(result).toMatchObject({ ok: true });
+		expect(state.inserts[0].values.stars).toBeNull();
+	});
+
+	it('still refuses a number it cannot read, and says which value', async () => {
+		const result = await createRow('side_project', ACTOR, { name: 'Widget', stars: 'lots' });
+		expect(result).toMatchObject({ ok: false, reason: 'invalid' });
+		expect(result).toMatchObject({ error: expect.stringContaining('lots') });
+		expect(state.inserts).toHaveLength(0);
+	});
+
 	it('fills the columns the database refuses null for, even unmentioned ones', async () => {
 		// work_experiences.location/description/summary are NOT NULL with no
 		// default, so a create that omits them has to supply something. The old
@@ -402,6 +423,14 @@ describe('updateRow', () => {
 		state.rows = [row({ start_date: null })];
 		await updateRow('work_experience', ACTOR, 42, { start_date: '2020-05-15' });
 		expect(sectionUpdates()[0].values.start_date).toBe('2020-05-15');
+	});
+
+	it('clears a number the detail page sent back emptied', async () => {
+		// The side-project autosave holds `stars` as the input's string and sends
+		// it as-is, so "the applicant deleted the digits" arrives as ''.
+		state.rows = [row({ stars: 150 })];
+		await updateRow('side_project', ACTOR, 42, { stars: '' });
+		expect(sectionUpdates()[0].values.stars).toBeNull();
 	});
 
 	it('refuses a date it cannot read instead of clearing the column', async () => {
