@@ -20,7 +20,11 @@ export function getRedisClient(): RedisClient {
 			host: process.env.REDIS_HOST || 'localhost',
 			port: parseInt(process.env.REDIS_PORT || '6379'),
 			maxRetriesPerRequest: 3,
-			lazyConnect: true
+			lazyConnect: true,
+			// RESP2, for the reasons in queue/connection.ts. This client shares the
+			// ioredis major with BullMQ's, and the two should not disagree about
+			// the protocol they speak to the same Redis.
+			protocol: 2
 		});
 
 		redisClient.on('error', (err) => {
