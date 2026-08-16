@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 1 commit since v0.5.0.
 
+## [0.13.0] - 2026-08-16
+
+10 commits since v0.12.0.
+
+### Added
+
+- Assistant can now modify skills on profiles
+
+### Changed
+
+- Updated dependencies: dotenvx 2.21.0, jsdom, @types/uuid, and numerous minor/patch updates
+
+### Fixed
+
+- Security: patched nanoid vulnerability (GHSA-2v37-7h3g-55p8)
+- Fixed build script compatibility with dotenvx 2's async-only API
+- Fixed profile version slug references not persisting when version is renamed
+
 ## [0.12.0] - 2026-08-15
 
 16 commits since v0.11.0.
