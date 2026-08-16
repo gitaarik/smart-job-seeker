@@ -27,30 +27,32 @@
  * spend the budget to say what has already been said.
  */
 
-import { dbDirect as db } from '$lib/server/db';
-import { count, eq } from 'drizzle-orm';
 import {
 	PROFILE_RESOURCE_NAMES,
 	PROFILE_RESOURCES,
 	type ProfileResourceName
 } from '$lib/server/profile/resources';
+import { countOwnedRows } from '$lib/server/profile/write';
 
 export interface ManifestSection {
 	name: ProfileResourceName;
 	rows: number;
 }
 
-/** How many rows of each section this profile has. */
+/**
+ * How many rows of each section this profile has.
+ *
+ * Counted through the write layer rather than against `profile_id` here: skills
+ * do not have that column — they reach the profile through their category — and
+ * a manifest that assumed it would have been the one place quietly reporting
+ * every profile as having no skills.
+ */
 export async function profileEditCounts(profileId: number): Promise<ManifestSection[]> {
 	return Promise.all(
-		PROFILE_RESOURCE_NAMES.map(async (name) => {
-			const table = PROFILE_RESOURCES[name].table;
-			const [row] = await db
-				.select({ rows: count() })
-				.from(table)
-				.where(eq(table.profile_id, profileId));
-			return { name, rows: Number(row?.rows ?? 0) };
-		})
+		PROFILE_RESOURCE_NAMES.map(async (name) => ({
+			name,
+			rows: await countOwnedRows(name, { profileId })
+		}))
 	);
 }
 
@@ -62,8 +64,8 @@ function describeCount(rows: number): string {
 
 export function formatProfileEditManifest(sections: ManifestSection[]): string {
 	const lines = sections.map(({ name, rows }) => {
-		const { page } = PROFILE_RESOURCES[name];
-		return `- ${page.name} — ${describeCount(rows)}. On their ${page.name} page.`;
+		const { page, title } = PROFILE_RESOURCES[name];
+		return `- ${title} — ${describeCount(rows)}. On their ${page.name} page.`;
 	});
 
 	return [

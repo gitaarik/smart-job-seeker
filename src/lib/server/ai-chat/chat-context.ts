@@ -153,46 +153,55 @@ function sectionCapabilities(resource: ProfileResourceName): Capability[] {
  * work experience, and the sections with big rows are exactly the ones that have
  * a page of their own to be specific on.
  *
+ * Built by page PATH rather than by section, because /profile/skills holds two
+ * of them — the skills and the groups they are filed under. Keyed by section it
+ * would have been an object literal with a duplicate key, where the second
+ * silently wins and half the page's verbs are never offered: the assistant could
+ * rename a category and not add a skill, on a page showing both, for no reason
+ * a reader of either file could see.
+ *
  * Every one keeps PROFILE_SCOPE's sources. The row's own text already arrives in
  * the profile blob, so these pages add a *subject*, not evidence.
  */
-const PROFILE_SECTION_SCOPES: Record<string, RouteScope> = Object.fromEntries(
-	PROFILE_RESOURCE_NAMES.flatMap((resource): [string, RouteScope][] => {
+const PROFILE_SECTION_SCOPES: Record<string, RouteScope> = (() => {
+	const scopes: Record<string, RouteScope> = {};
+
+	for (const resource of PROFILE_RESOURCE_NAMES) {
 		const { page, detailPath, label } = PROFILE_RESOURCES[resource];
 		const capabilities = sectionCapabilities(resource);
 
-		const list: [string, RouteScope] = [
-			page.path,
-			{
-				...PROFILE_SCOPE,
-				...(detailPath ? {} : { capabilities }),
-				hint: {
-					page: `their ${page.name.toLowerCase()}, on their profile`,
-					// A list, so a bare question is about the section rather than one
-					// row. Where a capability is live here, its block names the rows;
-					// this says the page does not.
-					subject: null
-				}
+		// The list page. A section with a detail page contributes no verbs here —
+		// its rows are reached by URL — so a path holding only such sections keeps
+		// the key absent rather than empty.
+		const granted = [
+			...(scopes[page.path]?.capabilities ?? []),
+			...(detailPath ? [] : capabilities)
+		];
+		scopes[page.path] = {
+			...PROFILE_SCOPE,
+			...(granted.length > 0 ? { capabilities: granted } : {}),
+			hint: {
+				page: `their ${page.name.toLowerCase()}, on their profile`,
+				// A list, so a bare question is about the section rather than one
+				// row. Where a capability is live here, its block names the rows;
+				// this says the page does not.
+				subject: null
 			}
-		];
+		};
 
-		if (!detailPath) return [list];
+		if (detailPath) {
+			scopes[`${page.path}/[id]`] = {
+				...PROFILE_SCOPE,
+				entity: resource,
+				param: 'id',
+				capabilities,
+				hint: { page: `one ${label}'s own page`, subject: `that ${label}` }
+			};
+		}
+	}
 
-		return [
-			list,
-			[
-				`${page.path}/[id]`,
-				{
-					...PROFILE_SCOPE,
-					entity: resource,
-					param: 'id',
-					capabilities,
-					hint: { page: `one ${label}'s own page`, subject: `that ${label}` }
-				}
-			]
-		];
-	})
-);
+	return scopes;
+})();
 
 /**
  * What an unlisted route gets. Same sources as PROFILE_SCOPE, but it says so
@@ -502,8 +511,9 @@ async function matchedCapabilities(
 	messages: string[],
 	actor: { profileId: number; isStaff: boolean }
 ): Promise<LiveCapability[][]> {
+	const recent = messages.slice(-MATCH_WINDOW_MESSAGES);
 	const matches = await matchProfileSections({
-		messages: messages.slice(-MATCH_WINDOW_MESSAGES),
+		messages: recent,
 		profileId: actor.profileId,
 		exclude: grantedSections(scope)
 	});
@@ -513,7 +523,8 @@ async function matchedCapabilities(
 			resolveCapabilities(
 				sectionCapabilities(resource),
 				row ? { type: 'profile_section', resource, id: row.id } : null,
-				actor
+				actor,
+				{ message: recent.join('\n') }
 			)
 		)
 	);
@@ -575,7 +586,14 @@ export async function resolveChatContext(opts: {
 	// entity resolving says nothing about edit rights. resolveCapabilities asks
 	// each capability's own authorize().
 	const actor = { profileId: opts.profileId, isStaff: opts.isStaff };
-	const granted = await resolveCapabilities(scope.capabilities ?? [], entity, actor);
+
+	// The same window the matcher searches, for the same reason: a section whose
+	// list is too long to print narrows to the rows the conversation has named,
+	// and "make that one expert" names nothing on its own. See TARGET_LIST_CAP.
+	const recent = [...(opts.history ?? []), opts.message].slice(-MATCH_WINDOW_MESSAGES).join('\n');
+	const granted = await resolveCapabilities(scope.capabilities ?? [], entity, actor, {
+		message: recent
+	});
 
 	// The page's own capabilities are the page bias; these are the rest of the
 	// profile, reachable when the user says which part they mean. They come

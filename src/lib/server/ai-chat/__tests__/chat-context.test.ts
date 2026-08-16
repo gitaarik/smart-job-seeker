@@ -387,7 +387,10 @@ describe('resolveChatContext — capabilities', () => {
 		expect(mockResolveCapabilities).toHaveBeenCalledWith(
 			['edit_job_details', 'edit_job_description', 'edit_job_skills'],
 			{ type: 'job', id: 5 },
-			{ profileId: 7, isStaff: false }
+			{ profileId: 7, isStaff: false },
+			// The turn's recent messages, for a section whose list is too long to
+			// print in full — see TARGET_LIST_CAP.
+			expect.objectContaining({ message: expect.any(String) })
 		);
 	});
 
@@ -428,7 +431,12 @@ describe('resolveChatContext — capabilities', () => {
 			params: {}
 		});
 
-		expect(mockResolveCapabilities).toHaveBeenCalledWith([], null, expect.anything());
+		expect(mockResolveCapabilities).toHaveBeenCalledWith(
+			[],
+			null,
+			expect.anything(),
+			expect.anything()
+		);
 		expect(capabilities).toEqual([]);
 	});
 
@@ -445,10 +453,12 @@ describe('resolveChatContext — capabilities', () => {
 			params: { id: '5' }
 		});
 
-		expect(mockResolveCapabilities).toHaveBeenCalledWith(expect.anything(), expect.anything(), {
-			profileId: 7,
-			isStaff: true
-		});
+		expect(mockResolveCapabilities).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.anything(),
+			{ profileId: 7, isStaff: true },
+			expect.anything()
+		);
 	});
 
 	it('still resolves capabilities when the entity did not resolve', async () => {
@@ -466,6 +476,7 @@ describe('resolveChatContext — capabilities', () => {
 		expect(mockResolveCapabilities).toHaveBeenCalledWith(
 			expect.anything(),
 			null,
+			expect.anything(),
 			expect.anything()
 		);
 	});
@@ -522,9 +533,31 @@ describe('profile section pages', () => {
 		// They show a list, so there is no row to resolve and nothing for the
 		// model to name yet. They inherit /profile, which is about the applicant
 		// rather than about one entry.
+		//
+		// True of the sections that HAVE a detail page. A section edited inline on
+		// its list is the other way round — see the skills page below.
 		const list = scopeForRoute('/(app)/profile/(data)/work-experience');
 		expect(list.entity).toBeNull();
 		expect(list.capabilities).toBeUndefined();
+	});
+
+	it('grants both of the skills page’s sections, not whichever was declared last', () => {
+		// Two sections share one page, and the scope table is keyed by PATH for
+		// exactly this: keyed by section, the second would have silently replaced
+		// the first and the assistant could rename a group but not add a skill,
+		// on a page showing both.
+		const scope = scopeForRoute('/(app)/profile/(data)/skills');
+
+		expect(scope.capabilities).toEqual([
+			'edit_skill',
+			'add_skill',
+			'hide_skill',
+			'edit_skill_category',
+			'add_skill_category',
+			'hide_skill_category'
+		]);
+		// A list page: no row comes from the URL, so the model names one.
+		expect(scope.entity).toBeNull();
 	});
 
 	it('passes the resolved row to the capability registry', async () => {
@@ -541,7 +574,8 @@ describe('profile section pages', () => {
 		expect(mockResolveCapabilities).toHaveBeenCalledWith(
 			['edit_work_experience', 'add_work_experience', 'hide_work_experience'],
 			{ type: 'profile_section', resource: 'work_experience', id: 5 },
-			expect.objectContaining({ profileId: 12 })
+			expect.objectContaining({ profileId: 12 }),
+			expect.anything()
 		);
 	});
 
@@ -561,6 +595,7 @@ describe('profile section pages', () => {
 		expect(mockResolveCapabilities).toHaveBeenCalledWith(
 			['edit_work_experience', 'add_work_experience', 'hide_work_experience'],
 			null,
+			expect.anything(),
 			expect.anything()
 		);
 	});
@@ -674,7 +709,8 @@ describe('sections the message reaches for', () => {
 		expect(mockResolveCapabilities).toHaveBeenCalledWith(
 			['edit_language', 'add_language'],
 			{ type: 'profile_section', resource: 'language', id: 11 },
-			expect.objectContaining({ profileId: 7 })
+			expect.objectContaining({ profileId: 7 }),
+			expect.anything()
 		);
 	});
 

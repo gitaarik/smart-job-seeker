@@ -55,7 +55,12 @@ beforeEach(() => {
 		certificate: [{ id: 30, name: 'Solutions Architect', issuer: 'AWS' }],
 		reference: [{ id: 40, author: 'Jane Smith', author_position: 'CTO at Northwind' }],
 		side_project: [{ id: 50, name: 'Tunnelvision' }],
-		highlight: [{ id: 60, text: 'Shipped a scraper that runs on the applicant’s own machine' }]
+		highlight: [{ id: 60, text: 'Shipped a scraper that runs on the applicant’s own machine' }],
+		skill: [
+			{ id: 70, name: 'PostgreSQL' },
+			{ id: 71, name: 'Svelte' }
+		],
+		skill_category: [{ id: 80, name: 'Backend' }]
 	};
 });
 
@@ -68,11 +73,15 @@ describe('the declared vocabulary', () => {
 			await import('$lib/server/profile/resources');
 
 		// A section naming itself twice is fine and common — "Work experience" is
-		// both the page and the label. What must not happen is two sections.
+		// both the title and the label. What must not happen is two sections.
+		//
+		// Built from `title` and not `page.name` because the matcher is: skills and
+		// skill categories share the Skills page, so the page's name belongs to
+		// both of them and says nothing about which one a message meant.
 		const owners = new Map<string, Set<string>>();
 		for (const name of PROFILE_RESOURCE_NAMES) {
-			const { page, label, aliases = [] } = PROFILE_RESOURCES[name];
-			for (const term of [page.name, label, ...aliases]) {
+			const { title, label, aliases = [] } = PROFILE_RESOURCES[name];
+			for (const term of [title, label, ...aliases]) {
 				const key = term.toLowerCase();
 				owners.set(key, (owners.get(key) ?? new Set()).add(name));
 			}
@@ -200,6 +209,11 @@ describe('naming a row and no section', () => {
 	it('only looks at the sections edited on their list', async () => {
 		// The long-label sections would never match whole anyway, so reading them
 		// costs the applicant's entire work history per turn to find nothing.
+		//
+		// Skills are edited on their list and are still not here: their labels are
+		// the app's ordinary vocabulary, so a whole-label match on one fires on
+		// turns about a job posting. They declare that themselves — see
+		// `rowNamesAreAmbiguous` — rather than this file keeping a list.
 		await match('some message naming nothing at all');
 		expect(readRows.mock.calls.map(([name]) => name).sort()).toEqual([
 			'certificate',
@@ -207,6 +221,14 @@ describe('naming a row and no section', () => {
 			'language',
 			'reference'
 		]);
+	});
+
+	it('does not reach for skills because a message named a technology', async () => {
+		// The failure this prevents: every turn spent reading a job description
+		// mentions a skill by name, and matching on that would put the skills
+		// capabilities — the biggest section there is — into all of them.
+		rowsByResource.skill = [{ id: 70, name: 'React' }];
+		expect(await match('does this job really need five years of React?')).toEqual([]);
 	});
 });
 

@@ -30,6 +30,14 @@ interface RecordedWrite {
 const state = {
 	/** What a select of the resource's table returns. */
 	rows: [] as Record<string, unknown>[],
+	/**
+	 * Rows for a specific table, for the reads that touch two of them.
+	 *
+	 * A parent-owned section reads its own row and then its parent's — and, on a
+	 * create, the parent list it resolves a named group against. One `rows` for
+	 * every select would answer all three with the same array.
+	 */
+	rowsByTable: new Map<unknown, Record<string, unknown>[]>(),
 	/** What `max(sort)` returns for the append placement. */
 	maxSort: null as number | null,
 	/** The profile row `actorForRow` looks for; null means "not this user's". */
@@ -40,17 +48,49 @@ const state = {
 };
 
 vi.mock('$lib/server/db', () => {
-	// `.where()` is awaited directly by the max-sort query and chained with
-	// `.limit()` by the row read, so it has to be both a promise and an object.
+	// `.where()` is awaited directly by the max-sort query, chained with
+	// `.limit()` by the row read and with `.orderBy()` by the list read, so it
+	// has to be both a promise and an object.
 	const resolvable = (rows: unknown[]) =>
-		Object.assign(Promise.resolve(rows), { limit: () => Promise.resolve(rows) });
+		Object.assign(Promise.resolve(rows), {
+			limit: () => Promise.resolve(rows),
+			orderBy: () => Promise.resolve(rows)
+		});
+
+	const rowsFor = (table: unknown) => state.rowsByTable.get(table) ?? state.rows;
 
 	const dbMock = {
-		select: (fields?: Record<string, unknown>) => ({
-			from: () => ({
-				where: () => resolvable(fields && 'max' in fields ? [{ max: state.maxSort }] : state.rows)
-			})
-		}),
+		select: (fields?: Record<string, unknown>) => {
+			let primary: unknown = null;
+			let joined: unknown = null;
+
+			// The join a parent-owned list read builds. Drizzle returns the two
+			// tables' columns under the keys the projection named, so the mock has
+			// to as well — a flat row would let a bug that ignores the parent pass.
+			const rows = () => {
+				if (fields && 'max' in fields) return [{ max: state.maxSort }];
+				if (fields && 'rows' in fields) return [{ rows: rowsFor(primary).length }];
+				if (!joined) return rowsFor(primary);
+				return rowsFor(primary).map((row) => ({
+					row,
+					parent: rowsFor(joined).find((p) => p.id === row.category_id) ?? null
+				}));
+			};
+
+			const chain = {
+				from: (table: unknown) => {
+					primary = table;
+					return chain;
+				},
+				innerJoin: (table: unknown) => {
+					joined = table;
+					return chain;
+				},
+				where: () => resolvable(rows())
+			};
+
+			return chain;
+		},
 		insert: (table: unknown) => ({
 			values: (values: Record<string, unknown>) => {
 				state.inserts.push({ table, values });
@@ -79,12 +119,16 @@ vi.mock('$lib/server/db', () => {
 	return { db: dbMock, dbDirect: dbMock };
 });
 
-const { profiles, work_experiences } = await import('$lib/server/db/schema');
+const { profiles, tech_skill_categories, tech_skills, work_experiences } =
+	await import('$lib/server/db/schema');
 const { PROFILE_RESOURCES } = await import('../resources');
 const {
 	actorForRow,
+	countOwnedRows,
 	createRow,
 	deleteRow,
+	readOwnedRow,
+	readOwnedRows,
 	reorderRows,
 	resetRowOrder,
 	setRowTags,
@@ -110,12 +154,30 @@ function touchedProfile() {
 
 beforeEach(() => {
 	state.rows = [];
+	state.rowsByTable = new Map();
 	state.maxSort = null;
 	state.profileRow = null;
 	state.inserts = [];
 	state.updates = [];
 	state.deletes = [];
 });
+
+/** A profile with two skill groups and one skill filed under the first. */
+function givenSkills(
+	opts: { skills?: Record<string, unknown>[]; groups?: Record<string, unknown>[] } = {}
+) {
+	state.rowsByTable.set(
+		tech_skill_categories,
+		opts.groups ?? [
+			{ id: 1, profile_id: 7, name: 'Backend', sort: 0, status: 'published' },
+			{ id: 2, profile_id: 7, name: 'Frontend', sort: 1, status: 'published' }
+		]
+	);
+	state.rowsByTable.set(
+		tech_skills,
+		opts.skills ?? [{ id: 42, category_id: 1, name: 'PostgreSQL', sort: 0, status: 'published' }]
+	);
+}
 
 describe('the declaration', () => {
 	it.each(Object.entries(PROFILE_RESOURCES))(
@@ -142,6 +204,52 @@ describe('the declaration', () => {
 		'%s names a row it has not filled in',
 		(_name, resource) => {
 			expect(resource.rowLabel(row())).toBeTruthy();
+		}
+	);
+
+	it('names a skill group by its note before its tags', () => {
+		// Two groups called "Backend" is real data, not a hypothetical — one per
+		// document version. What tells them apart is the note, which the skills
+		// page has always offered for exactly this and calls a private hint. The
+		// applicant's own words beat a slug: the note says what the group IS.
+		const label = (row: Record<string, unknown>) =>
+			PROFILE_RESOURCES.skill_category.rowLabel({
+				id: 1,
+				sort: null,
+				status: 'published',
+				...row
+			});
+
+		expect(label({ name: 'Backend', note: 'Python / Django' })).toBe('Backend (Python / Django)');
+		// No note: the tags are what is left to tell them apart, and a group merely
+		// EXCLUDED from a version keeps its plain name (versionsOf drops negations).
+		expect(label({ name: 'Backend', tags: ['fullstack-react'] })).toBe('Backend [fullstack-react]');
+		expect(label({ name: 'Backend', tags: ['!fullstack-react'] })).toBe('Backend');
+		expect(label({ name: 'Backend' })).toBe('Backend');
+		// A note is free text and every skill in the group carries the label.
+		expect(label({ name: 'Backend', note: 'x'.repeat(200) }).length).toBeLessThan(60);
+	});
+
+	it('owns every row at most one row away from the profile', () => {
+		// `ownedRows` builds a subquery for a parent-owned section and refuses a
+		// chain outright, because scoping a write through two joins is a different
+		// query than the one written there. Nothing needs a chain today; this is
+		// what makes "nothing does" a fact rather than an assumption.
+		for (const [name, resource] of Object.entries(PROFILE_RESOURCES)) {
+			if (resource.owner.via !== 'parent') continue;
+			expect(PROFILE_RESOURCES[resource.owner.parent].owner.via, name).toBe('profile');
+		}
+	});
+
+	it.each(Object.entries(PROFILE_RESOURCES))(
+		'%s names its parent with a field it can write',
+		(_name, resource) => {
+			// The parent is named through an ordinary declared field, so everything
+			// that walks `fields` — the coercion, the contract, the wire schema, the
+			// proposal card — carries it without knowing what it is.
+			if (resource.owner.via !== 'parent') return;
+			expect(Object.keys(resource.fields)).toContain(resource.owner.nameField);
+			expect(resource.required).toContain(resource.owner.nameField);
 		}
 	);
 });
@@ -468,5 +576,131 @@ describe('setRowTags', () => {
 			ok: false,
 			reason: 'invalid'
 		});
+	});
+});
+
+/**
+ * The one section whose rows do not carry `profile_id`.
+ *
+ * A skill belongs to a category and the category belongs to the profile, so
+ * every question this layer asks — is it theirs, where does a new one go, what
+ * is it called — has to go one row further. These are the cases where getting
+ * that wrong would not have thrown: a create landing under someone else's
+ * group, a read reporting a skill as unowned, an append numbering against the
+ * whole profile instead of the group.
+ */
+describe('a section owned through its parent', () => {
+	it('reads a row as owned when the parent is the actor’s', async () => {
+		givenSkills();
+
+		const found = await readOwnedRow('skill', ACTOR, 42);
+
+		expect(found).toMatchObject({ id: 42, name: 'PostgreSQL' });
+	});
+
+	it('refuses a row whose parent belongs to someone else', async () => {
+		// The check that has no column to read: the skill itself says nothing
+		// about whose it is.
+		givenSkills({ groups: [{ id: 1, profile_id: 999, name: 'Backend' }] });
+
+		expect(await readOwnedRow('skill', ACTOR, 42)).toBeNull();
+		expect(await updateRow('skill', ACTOR, 42, { name: 'MySQL' })).toMatchObject({
+			ok: false,
+			reason: 'unauthorized'
+		});
+	});
+
+	it('hands back the parent’s name as a field of the row', async () => {
+		// What makes the section look like every other one to its readers: the
+		// capability's current values, the MCP read tool and the proposal card all
+		// read a row by field name and none of them knows about the join.
+		givenSkills();
+
+		const [skill] = await readOwnedRows('skill', ACTOR);
+
+		expect(skill.category).toBe('Backend');
+	});
+
+	it('files a create under the group it names', async () => {
+		givenSkills();
+
+		const result = await createRow('skill', ACTOR, { name: 'Redis', category: 'backend' });
+
+		expect(result.ok).toBe(true);
+		// Matched case-insensitively — people do not capitalise their own headings
+		// consistently, and a refusal over it would be about nothing.
+		expect(state.inserts[0].values).toMatchObject({ category_id: 1, name: 'Redis' });
+		// The name is not a column. Writing it as one is a SQL error at best and a
+		// silent extra column at worst.
+		expect(state.inserts[0].values).not.toHaveProperty('category');
+	});
+
+	it('refuses a create naming a group that does not exist, and says which do', async () => {
+		givenSkills();
+
+		const result = await createRow('skill', ACTOR, { name: 'Redis', category: 'Databases' });
+
+		expect(result).toMatchObject({ ok: false, reason: 'invalid' });
+		expect((result as { error: string }).error).toContain('Backend');
+		expect(state.inserts).toHaveLength(0);
+	});
+
+	it('refuses a create with no group at all', async () => {
+		givenSkills();
+
+		expect(await createRow('skill', ACTOR, { name: 'Redis' })).toMatchObject({
+			ok: false,
+			reason: 'invalid'
+		});
+	});
+
+	it('moves a row to the end of the group it lands in', async () => {
+		// `sort` meant a position among its old siblings. Carried across it
+		// collides with whatever already holds that position in the new group.
+		givenSkills();
+		state.maxSort = 6;
+
+		await updateRow('skill', ACTOR, 42, { category: 'Frontend' });
+
+		expect(sectionUpdates()[0].values).toMatchObject({ category_id: 2, sort: 7 });
+	});
+
+	it('does not renumber a patch that names the group it is already in', async () => {
+		givenSkills();
+		state.maxSort = 6;
+
+		await updateRow('skill', ACTOR, 42, { name: 'Postgres', category: 'Backend' });
+
+		expect(sectionUpdates()[0].values).toMatchObject({ name: 'Postgres' });
+		expect(sectionUpdates()[0].values).not.toHaveProperty('sort');
+		expect(sectionUpdates()[0].values).not.toHaveProperty('category');
+	});
+
+	it('records the group it was in as the before-image of a move', async () => {
+		// So an undo can put it back. `previous` is keyed by the field that was
+		// written, and for a move that field is the parent's name.
+		givenSkills();
+
+		const result = await updateRow('skill', ACTOR, 42, { category: 'Frontend' });
+
+		expect(result).toMatchObject({ ok: true, previous: { category: 'Backend' } });
+	});
+
+	it('counts rows through the parent', async () => {
+		givenSkills({
+			skills: [
+				{ id: 42, category_id: 1, name: 'PostgreSQL' },
+				{ id: 43, category_id: 2, name: 'Svelte' }
+			]
+		});
+
+		expect(await countOwnedRows('skill', ACTOR)).toBe(2);
+	});
+
+	it('resolves an actor for a row through the parent', async () => {
+		givenSkills();
+		state.profileRow = { id: 7 };
+
+		expect(await actorForRow('skill', 42, 'user-1')).toEqual({ profileId: 7 });
 	});
 });

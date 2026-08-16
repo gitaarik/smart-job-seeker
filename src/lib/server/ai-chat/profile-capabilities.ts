@@ -28,6 +28,15 @@
  * document without erroring, and a Font Awesome name that does not exist renders
  * a gap. A person editing those sees the result immediately; a proposal card
  * shows the string and looks fine.
+ *
+ * **The parent, named rather than numbered.** A skill belongs to a category, so
+ * its capabilities carry one extra field — `skill.category` — holding the
+ * group's NAME. The write layer resolves it against the actor's own categories,
+ * which is where the ownership check on the parent lives; what this file adds is
+ * that the groups are listed in the prompt and checked against that list before
+ * a proposal is stored. A name that matches nothing is then a refusal that says
+ * which groups exist, at the point the model can still do something about it,
+ * rather than an exception thrown at apply time.
  */
 
 import {
@@ -142,6 +151,60 @@ function toColumns(
 	);
 }
 
+/** The wire name of the field naming this section's parent, or null. */
+function parentWireField(resource: ProfileResource, name: ProfileResourceName): string | null {
+	return resource.owner.via === 'parent' ? wireName(name, resource.owner.nameField) : null;
+}
+
+/**
+ * The parent rows this section can be filed under, as names.
+ *
+ * Carried in `current` beside the values, which is what lets `validate` — which
+ * is synchronous and has no database — refuse a group that does not exist. It
+ * is read fresh on every turn and again inside `executeCapability`, so the list
+ * a proposal is checked against is never the one it was written against.
+ */
+async function parentLabels(
+	resource: ProfileResource,
+	actor: CapabilityActor
+): Promise<string[] | undefined> {
+	if (resource.owner.via !== 'parent') return undefined;
+	const parent = PROFILE_RESOURCES[resource.owner.parent];
+	const rows = await readOwnedRows(resource.owner.parent, { profileId: actor.profileId });
+	return rows.map((row) => parent.rowLabel(row));
+}
+
+/** "One of Backend, Frontend or Databases" — the check and the message it produces. */
+function checkParent(
+	resource: ProfileResource,
+	name: ProfileResourceName,
+	proposed: Record<string, unknown>,
+	current: Record<string, unknown>
+): { ok: true } | { ok: false; error: string } {
+	const field = parentWireField(resource, name);
+	if (!field || !(field in proposed)) return { ok: true };
+
+	const groups = Array.isArray(current.parents) ? (current.parents as string[]) : null;
+	// No list to check against is not a pass by omission: `apply` re-resolves the
+	// name and refuses there too. It is a pass by *deferral*, and the only way to
+	// reach it is a caller that did not read `current` first.
+	if (!groups) return { ok: true };
+
+	const wanted = String(proposed[field] ?? '')
+		.trim()
+		.toLowerCase();
+	if (groups.some((group) => group.trim().toLowerCase() === wanted)) return { ok: true };
+
+	const parent = PROFILE_RESOURCES[(resource.owner as { parent: ProfileResourceName }).parent];
+	return {
+		ok: false,
+		error:
+			groups.length > 0
+				? `There is no ${parent.label} called "${String(proposed[field])}". They have: ${groups.join(', ')}.`
+				: `They have no ${parent.title.toLowerCase()} yet, so there is nowhere to file a ${resource.label}. Propose adding one first.`
+	};
+}
+
 /** One line of the contract's field list. */
 function describeField(name: string, spec: FieldSpec): string {
 	const parts: string[] = [];
@@ -207,18 +270,38 @@ not.`;
  */
 const INLINE_LIMIT = 160;
 
+/**
+ * `parents` rides along in `current` without being a field, so it is rendered
+ * as what it is — the groups this row could be filed under — rather than as a
+ * value someone could propose a new version of.
+ */
+const NOT_A_VALUE = new Set(['parents']);
+
 function renderState(current: Record<string, unknown>): string {
-	const lines = Object.entries(current).map(([field, value]) => {
-		if (value === null || value === undefined || value === '') return `  - ${field}: (not set)`;
-		if (Array.isArray(value)) return `  - ${field}: ${value.join(', ')}`;
+	const lines = Object.entries(current)
+		.filter(([field]) => !NOT_A_VALUE.has(field))
+		.map(([field, value]) => {
+			if (value === null || value === undefined || value === '') return `  - ${field}: (not set)`;
+			if (Array.isArray(value)) return `  - ${field}: ${value.join(', ')}`;
 
-		const text = String(value);
-		return text.length > INLINE_LIMIT
-			? `  - ${field}: ${text.length} characters, shown in full in their profile above`
-			: `  - ${field}: ${text}`;
-	});
+			const text = String(value);
+			return text.length > INLINE_LIMIT
+				? `  - ${field}: ${text.length} characters, shown in full in their profile above`
+				: `  - ${field}: ${text}`;
+		});
 
-	return `Current values:\n\n${lines.join('\n')}`;
+	const groups = Array.isArray(current.parents) ? (current.parents as string[]) : null;
+
+	return [
+		`Current values:\n\n${lines.join('\n')}`,
+		groups
+			? `\n\nThe groups it can be filed under, named exactly as written:\n\n${groups
+					.map((group) => `  - ${group}`)
+					.join('\n')}`
+			: ''
+	]
+		.join('')
+		.trimEnd();
 }
 
 /** Read the row this capability is about, or null if it is gone or not theirs. */
@@ -229,7 +312,20 @@ async function target(
 ): Promise<{ row: SectionRow; target: CapabilityTarget } | null> {
 	const row = await readOwnedRow(name, { profileId: actor.profileId }, id);
 	if (!row) return null;
-	return { row, target: { id: row.id, label: PROFILE_RESOURCES[name].rowLabel(row) } };
+	return { row, target: targetFor(name, row) };
+}
+
+/**
+ * A row as a capability target: its label, and — where the label says more than
+ * the row does — the row's own name for the matcher to narrow on.
+ */
+function targetFor(name: ProfileResourceName, row: SectionRow): CapabilityTarget {
+	const resource = PROFILE_RESOURCES[name];
+	return {
+		id: row.id,
+		label: resource.rowLabel(row),
+		...(resource.shortLabel ? { match: resource.shortLabel(row) } : {})
+	};
 }
 
 function editCapability(name: ProfileResourceName): CapabilityDef {
@@ -257,7 +353,7 @@ function editCapability(name: ProfileResourceName): CapabilityDef {
 		 */
 		resolveMany: async (_entity, actor) => {
 			const rows = await readOwnedRows(name, { profileId: actor.profileId });
-			return rows.map((row) => ({ id: row.id, label: PROFILE_RESOURCES[name].rowLabel(row) }));
+			return rows.map((row) => targetFor(name, row));
 		},
 
 		/**
@@ -276,9 +372,13 @@ function editCapability(name: ProfileResourceName): CapabilityDef {
 		 */
 		current: async (t, actor) => {
 			const row = await readOwnedRow(name, { profileId: actor.profileId }, t.id);
-			return Object.fromEntries(
-				Object.keys(fields).map((column) => [wireName(name, column), row?.[column] ?? null])
-			);
+			const groups = await parentLabels(resource, actor);
+			return {
+				...Object.fromEntries(
+					Object.keys(fields).map((column) => [wireName(name, column), row?.[column] ?? null])
+				),
+				...(groups ? { parents: groups } : {})
+			};
 		},
 
 		fields: Object.fromEntries(
@@ -289,7 +389,10 @@ function editCapability(name: ProfileResourceName): CapabilityDef {
 
 		renderState,
 
-		validate: (proposed) => {
+		validate: (proposed, current) => {
+			const group = checkParent(resource, name, proposed, current);
+			if (!group.ok) return group;
+
 			const checked = validatePatch(name, toColumns(name, fields, proposed));
 			return checked.ok ? { ok: true } : { ok: false, error: checked.error };
 		},
@@ -353,13 +456,28 @@ function addCapability(name: ProfileResourceName): CapabilityDef {
 		resolve: async (entity, actor) =>
 			entity?.type === 'profile_section' && entity.resource !== name
 				? null
-				: { id: actor.profileId, label: `their ${resource.page.name.toLowerCase()}` },
+				: { id: actor.profileId, label: `their ${resource.title.toLowerCase()}` },
 
 		authorize: async (t, actor) => t.id === actor.profileId,
 
 		current: async (_t, actor) => {
 			const rows = await readOwnedRows(name, { profileId: actor.profileId });
-			return { existing: rows.map((row) => resource.rowLabel(row)) };
+			const groups = await parentLabels(resource, actor);
+			if (!groups) return { existing: rows.map((row) => resource.rowLabel(row)) };
+
+			// By group, the way the page shows them. A flat list would repeat the
+			// group on every line — a skill's label carries it — which on a profile
+			// with a hundred skills is most of this block spent on the word
+			// "Backend". Measured at 2,800 characters flat against 1,200 grouped.
+			const inventory: Record<string, string[]> = Object.fromEntries(
+				groups.map((group) => [group, []])
+			);
+			for (const row of rows) {
+				const group = String(row[(resource.owner as { nameField: string }).nameField] ?? '');
+				(inventory[group] ??= []).push((resource.shortLabel ?? resource.rowLabel)(row));
+			}
+
+			return { existingByGroup: inventory, parents: groups };
 		},
 
 		fields: Object.fromEntries(
@@ -384,8 +502,32 @@ second copy of something already there is worse than not adding it: it is a
 duplicate on every document, and they have to find and remove it.`,
 
 		renderState: (current) => {
+			const groups = Array.isArray(current.parents) ? (current.parents as string[]) : null;
+
+			// A parent-owned section prints its inventory by group, which is both
+			// what the page looks like and where a new entry has to go — so the two
+			// things the model needs are one list rather than two.
+			if (groups) {
+				if (groups.length === 0) {
+					return (
+						`They have no groups to file one under yet, so there is nothing you can add ` +
+						`here until one exists. Propose adding a group first.`
+					);
+				}
+
+				const inventory = (current.existingByGroup ?? {}) as Record<string, string[]>;
+				const lines = groups.map(
+					(group) =>
+						`  - ${group}: ${inventory[group]?.length ? inventory[group].join(', ') : '(empty)'}`
+				);
+
+				return `File it under one of these groups, named exactly as written, and do not
+propose a duplicate of anything already in one:\n\n${lines.join('\n')}`;
+			}
+
 			const existing = Array.isArray(current.existing) ? (current.existing as string[]) : [];
-			if (existing.length === 0) return `They have no ${resource.page.name.toLowerCase()} yet.`;
+			if (existing.length === 0) return `They have no ${resource.title.toLowerCase()} yet.`;
+
 			return `Already there — do not propose a duplicate of any of these:\n\n${existing
 				.map((label) => `  - ${label}`)
 				.join('\n')}`;
@@ -393,7 +535,10 @@ duplicate on every document, and they have to find and remove it.`,
 
 		// A create, so every required field must be present rather than merely
 		// non-empty where mentioned.
-		validate: (proposed) => {
+		validate: (proposed, current) => {
+			const group = checkParent(resource, name, proposed, current);
+			if (!group.ok) return group;
+
 			const checked = validatePatch(name, toColumns(name, fields, proposed), true);
 			return checked.ok ? { ok: true } : { ok: false, error: checked.error };
 		},
@@ -439,19 +584,20 @@ function hideCapability(name: HideableResourceName): CapabilityDef {
 
 		fields: {},
 
-		contract: `You may propose hiding one of their ${resource.page.name.toLowerCase()}.
+		contract: `You may propose hiding one of their ${resource.title.toLowerCase()}.
 
 Hiding takes it off every CV and every export. It is NOT deleted — they can put
 it back from their ${resource.page.name} page — but it stops appearing
 everywhere until they do, so propose it only when they have asked for it rather
 than because it looks weak to you. A ${resource.label} they are not proud of is
-still theirs to decide about.
+still theirs to decide about.${resource.hideNote ? `\n\n${resource.hideNote}` : ''}
 
 This proposal carries no fields. Name the entry and say why in the rationale;
 there is nothing to write.`,
 
 		renderState: (current) => {
 			const shown = Object.entries(current)
+				.filter(([field]) => !NOT_A_VALUE.has(field))
 				.filter(([, value]) => value !== null && value !== undefined && value !== '')
 				.map(([field, value]) => `  - ${field}: ${String(value).slice(0, INLINE_LIMIT)}`);
 			return shown.length > 0 ? `What hiding this would take off:\n\n${shown.join('\n')}` : '';

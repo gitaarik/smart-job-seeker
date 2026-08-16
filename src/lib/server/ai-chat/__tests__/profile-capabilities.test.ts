@@ -21,6 +21,12 @@ const state = {
 	row: null as Record<string, unknown> | null,
 	/** What readOwnedRows returns — every row of the section this actor owns. */
 	rows: [] as Record<string, unknown>[],
+	/**
+	 * Rows for a named section, for the capabilities that read two of them. A
+	 * parent-owned section reads its own rows and its parent's, and one `rows`
+	 * for both would answer "which groups exist" with the list of skills.
+	 */
+	rowsByResource: {} as Record<string, Record<string, unknown>[]>,
 	updates: [] as {
 		resource: string;
 		actor: unknown;
@@ -40,7 +46,8 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => {
 	return {
 		validatePatch: actual.validatePatch,
 		readOwnedRow: () => Promise.resolve(state.row),
-		readOwnedRows: () => Promise.resolve(state.rows),
+		readOwnedRows: (resource: string) =>
+			Promise.resolve(state.rowsByResource[resource] ?? state.rows),
 		updateRow: (resource: string, actor: unknown, id: number, values: Record<string, unknown>) => {
 			state.updates.push({ resource, actor, id, values });
 			return Promise.resolve(state.updateResult);
@@ -73,6 +80,7 @@ const workExperience = PROFILE_CAPABILITIES.edit_work_experience;
 beforeEach(() => {
 	state.row = { id: 5, profile_id: 12, sort: null, status: 'published' };
 	state.rows = [];
+	state.rowsByResource = {};
 	state.updates = [];
 	state.creates = [];
 	state.visibility = [];
@@ -518,5 +526,129 @@ describe('hiding an entry', () => {
 			id: 5,
 			tags: ['senior']
 		});
+	});
+});
+
+/**
+ * Skills, the one section whose rows hang off another row.
+ *
+ * The generator gives them one extra field — the group, by name — and one extra
+ * rule: the name has to be one of the groups the applicant actually has. Both
+ * halves matter. Without the field the model cannot say where a new skill goes;
+ * without the rule it can say anything, and the refusal lands at apply time,
+ * after the user has clicked Apply on a card that looked fine.
+ */
+describe('a section owned through its parent', () => {
+	const add = PROFILE_CAPABILITIES.add_skill;
+	const edit = PROFILE_CAPABILITIES.edit_skill;
+
+	const GROUPS = [
+		{ id: 1, name: 'Backend' },
+		{ id: 2, name: 'Frontend' }
+	];
+
+	beforeEach(() => {
+		state.rowsByResource = {
+			skill_category: GROUPS,
+			skill: [
+				{ id: 5, name: 'PostgreSQL', category: 'Backend' },
+				{ id: 6, name: 'Svelte', category: 'Frontend' }
+			]
+		};
+	});
+
+	it('offers the group as a field, namespaced like every other', () => {
+		expect(Object.keys(add.fields)).toContain('skill.category');
+		expect(Object.keys(edit.fields)).toContain('skill.category');
+	});
+
+	it('lists the groups and what is already in each', async () => {
+		const current = await add.current({ id: 12, label: 'their skills' }, ACTOR);
+		const state_ = add.renderState?.(current) ?? '';
+
+		expect(state_).toContain('Backend: PostgreSQL');
+		expect(state_).toContain('Frontend: Svelte');
+	});
+
+	it('says a group is empty rather than leaving it out', async () => {
+		// A group missing from the list reads as a group that does not exist, and
+		// the model then proposes creating one that is sitting there empty.
+		state.rowsByResource.skill = [{ id: 5, name: 'PostgreSQL', category: 'Backend' }];
+
+		const current = await add.current({ id: 12, label: 'their skills' }, ACTOR);
+
+		expect(add.renderState?.(current)).toContain('Frontend: (empty)');
+	});
+
+	it('refuses a group they do not have, and names the ones they do', async () => {
+		const current = await add.current({ id: 12, label: 'their skills' }, ACTOR);
+		const result = add.validate({ 'skill.name': 'Redis', 'skill.category': 'Databases' }, current);
+
+		expect(result.ok).toBe(false);
+		expect((result as { error: string }).error).toContain('Backend');
+	});
+
+	it('accepts a group named in the wrong case', async () => {
+		// People do not capitalise their own headings consistently, and a refusal
+		// over it would be about nothing.
+		const current = await add.current({ id: 12, label: 'their skills' }, ACTOR);
+
+		expect(add.validate({ 'skill.name': 'Redis', 'skill.category': 'backend' }, current)).toEqual({
+			ok: true
+		});
+	});
+
+	it('refuses an add with no group at all', async () => {
+		const current = await add.current({ id: 12, label: 'their skills' }, ACTOR);
+
+		expect(add.validate({ 'skill.name': 'Redis' }, current).ok).toBe(false);
+	});
+
+	it('passes the group to the write layer as a field, not as an id', async () => {
+		// The name is what the model can produce; resolving it against the
+		// applicant's own groups is the write layer's job, and is where the
+		// ownership check on the parent lives.
+		await add.apply(
+			{ id: 12, label: 'their skills' },
+			{ 'skill.name': 'Redis', 'skill.category': 'Backend' },
+			{},
+			ACTOR
+		);
+
+		expect(state.creates[0]).toMatchObject({
+			resource: 'skill',
+			values: { name: 'Redis', category: 'Backend' }
+		});
+	});
+
+	it('shows the group a skill is in, and the ones it could move to', async () => {
+		state.row = { id: 5, name: 'PostgreSQL', category: 'Backend' };
+
+		const current = await edit.current({ id: 5, label: 'PostgreSQL — Backend' }, ACTOR);
+
+		expect(current['skill.category']).toBe('Backend');
+		expect(current.parents).toEqual(['Backend', 'Frontend']);
+	});
+
+	it('does not count the groups among what hiding takes off', async () => {
+		// `parents` rides along in `current` for validate's sake, and hide renders
+		// `current` as "what hiding this would take off" — so without excluding it
+		// the card offered to remove the list of the applicant's own headings.
+		state.row = { id: 5, name: 'PostgreSQL', category: 'Backend' };
+		const hide = PROFILE_CAPABILITIES.hide_skill;
+		const current = await hide.current({ id: 5, label: 'PostgreSQL — Backend' }, ACTOR);
+
+		expect(hide.renderState?.(current)).not.toContain('parents');
+	});
+
+	it('does not offer the groups as something to edit', async () => {
+		// `parents` rides along in `current` so validate can check a name without
+		// a database. Rendered as a value it would read as a field holding a list.
+		state.row = { id: 5, name: 'PostgreSQL', category: 'Backend' };
+		const current = await edit.current({ id: 5, label: 'PostgreSQL — Backend' }, ACTOR);
+
+		const rendered = edit.renderState?.(current) ?? '';
+		expect(rendered).not.toContain('- parents:');
+		expect(rendered).toContain('groups it can be filed under');
 	});
 });

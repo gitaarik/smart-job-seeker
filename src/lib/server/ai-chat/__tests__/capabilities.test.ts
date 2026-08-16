@@ -72,6 +72,23 @@ vi.mock('$lib/server/db', () => ({
 	}
 }));
 
+/**
+ * The profile write layer, for the one thing this file asks of it: how many rows
+ * a section has. `resolveMany` is a read, and what it returns decides whether a
+ * capability prints its whole list or narrows to what the message named — which
+ * is the behaviour, not the storage.
+ */
+let sectionRows: Record<string, Record<string, unknown>[]> = {};
+vi.mock('$lib/server/profile/write', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('$lib/server/profile/write')>();
+	return {
+		...actual,
+		readOwnedRow: (resource: string, _actor: unknown, id: number) =>
+			Promise.resolve(sectionRows[resource]?.find((row) => row.id === id) ?? null),
+		readOwnedRows: (resource: string) => Promise.resolve(sectionRows[resource] ?? [])
+	};
+});
+
 vi.mock('$lib/server/db/schema', () => ({
 	applications: {
 		id: 'applications.id',
@@ -101,7 +118,20 @@ vi.mock('$lib/server/db/schema', () => ({
 	languages: { id: 'languages.id', sort: 'languages.sort' },
 	references: { id: 'references.id', sort: 'references.sort' },
 	certificates: { id: 'certificates.id', sort: 'certificates.sort' },
-	highlights: { id: 'highlights.id', sort: 'highlights.sort' }
+	highlights: { id: 'highlights.id', sort: 'highlights.sort' },
+	// Skills are two tables, because a skill belongs to a category rather than to
+	// the profile. `category_id` is the join the write layer follows to find out
+	// whose a row is — see ResourceOwner.
+	tech_skills: {
+		id: 'tech_skills.id',
+		sort: 'tech_skills.sort',
+		category_id: 'tech_skills.category_id'
+	},
+	tech_skill_categories: {
+		id: 'tech_skill_categories.id',
+		sort: 'tech_skill_categories.sort',
+		profile_id: 'tech_skill_categories.profile_id'
+	}
 }));
 
 // The two passes an applied entry triggers. Mocked to assert they run, in the
@@ -132,6 +162,7 @@ import {
 	buildProposalSchema,
 	CAPABILITIES,
 	CAPABILITY_PROMPT_BUDGET_CHARS,
+	TARGET_LIST_CAP,
 	type Capability,
 	capabilityFieldSchema,
 	describeProposalChanges,
@@ -157,6 +188,7 @@ const APPLICATION_PAGE_CAPABILITIES: Capability[] = [
 const ACTOR = { profileId: 12, isStaff: false };
 
 beforeEach(() => {
+	sectionRows = {};
 	vi.clearAllMocks();
 	applicationRow = null;
 	jobRow = null;
@@ -218,6 +250,102 @@ describe('registry invariants', () => {
 			const result = buildProposalSchema([name as Capability]).safeParse({ reply: 'x' });
 			expect(result.success, `${name} must accept an empty proposal`).toBe(true);
 		}
+	});
+});
+
+describe('a target list too long to print', () => {
+	/** `n` skills, labelled the way the declaration labels them. */
+	const givenSkills = (n: number) => {
+		sectionRows.skill_category = [{ id: 1, name: 'Backend', profile_id: 12 }];
+		sectionRows.skill = Array.from({ length: n }, (_, i) => ({
+			id: 100 + i,
+			name: i === 0 ? 'PostgreSQL' : `Thing ${i}`,
+			category: 'Backend',
+			profile_id: 12
+		}));
+	};
+
+	it('prints every row while the section is small enough', async () => {
+		givenSkills(TARGET_LIST_CAP);
+
+		const [live] = await resolveCapabilities(['edit_skill'], null, ACTOR);
+
+		expect(live.targets).toHaveLength(TARGET_LIST_CAP);
+		expect(live.omitted).toBeUndefined();
+	});
+
+	it('narrows to the row the message named', async () => {
+		// The case that matters on a real profile: 93 skills, and the one they are
+		// asking about is in the message. Narrowed to one, it also gets its current
+		// values — the same shape a detail page produces.
+		givenSkills(TARGET_LIST_CAP + 20);
+
+		const [live] = await resolveCapabilities(['edit_skill'], null, ACTOR, {
+			message: 'can you set my PostgreSQL level to expert?'
+		});
+
+		// `match` rides along: the row's own name, for the next turn's narrowing.
+		expect(live.targets).toEqual([{ id: 100, label: 'PostgreSQL — Backend', match: 'PostgreSQL' }]);
+		expect(live.current).toMatchObject({ 'skill.name': 'PostgreSQL' });
+		expect(live.omitted).toBe(TARGET_LIST_CAP + 19);
+	});
+
+	it('narrows on the skill, not on the words in its group’s note', async () => {
+		// The label carries the group, and the group carries a note — "Backend
+		// (Python / Django)". Matched whole, asking about Python reaches every row
+		// of that group, which is not narrowing. `match` is the row's own name.
+		sectionRows.skill_category = [
+			{ id: 1, name: 'Backend', note: 'Python / Django', profile_id: 12 }
+		];
+		sectionRows.skill = Array.from({ length: TARGET_LIST_CAP + 20 }, (_, i) => ({
+			id: 100 + i,
+			name: i === 0 ? 'Python' : `Thing ${i}`,
+			category: 'Backend (Python / Django)',
+			profile_id: 12
+		}));
+
+		const [live] = await resolveCapabilities(['edit_skill'], null, ACTOR, {
+			message: 'set my Python level to expert'
+		});
+
+		expect(live.targets).toEqual([
+			{ id: 100, label: 'Python — Backend (Python / Django)', match: 'Python' }
+		]);
+	});
+
+	it('falls back to the head of the list when the message names none', async () => {
+		givenSkills(TARGET_LIST_CAP + 20);
+
+		const [live] = await resolveCapabilities(['edit_skill'], null, ACTOR, {
+			message: 'what should I be learning next?'
+		});
+
+		expect(live.targets).toHaveLength(TARGET_LIST_CAP);
+		expect(live.omitted).toBe(20);
+	});
+
+	it('says the list is partial rather than letting it read as the whole section', async () => {
+		// A truncated list that reads like the whole list is an assistant telling
+		// someone they have no such skill because it sorted 41st.
+		givenSkills(TARGET_LIST_CAP + 20);
+
+		const live = await resolveCapabilities(['edit_skill'], null, ACTOR, {
+			message: 'what should I be learning next?'
+		});
+
+		expect(renderCapabilityPrompt(live)).toContain('20 more exist and are not listed');
+	});
+
+	it('prints one list for a section, not one per verb', async () => {
+		// `hide_*` resolves the same rows as `edit_*` by construction. Printing
+		// them twice is the section's whole list again, for nothing.
+		givenSkills(10);
+
+		const live = await resolveCapabilities(['edit_skill', 'hide_skill'], null, ACTOR);
+		const prompt = renderCapabilityPrompt(live);
+
+		expect(prompt.match(/target_id 100: PostgreSQL/g)).toHaveLength(1);
+		expect(prompt).toContain('the rows listed under edit_skill above');
 	});
 });
 
@@ -945,6 +1073,100 @@ describe('the registry as a whole', () => {
 		expect(
 			renderCapabilityPrompt([...applicationPage, ...matchedSection]).length
 		).toBeLessThanOrEqual(CAPABILITY_PROMPT_BUDGET_CHARS);
+	});
+
+	/**
+	 * A real profile's skills, in shape and in size: seven groups and 93 skills,
+	 * two of the groups being version variants that share a heading. Names are
+	 * padded to the length real ones run to — a fixture of "a", "b", "c" would
+	 * measure the code rather than the applicant.
+	 */
+	const SKILL_GROUPS = [
+		'Backend (Python / Django)',
+		'Backend (TypeScript / React)',
+		'Frontend',
+		'AI & LLM engineering',
+		'Databases',
+		'DevOps & Cloud',
+		'Tooling & Methodology'
+	];
+	const SKILL_INVENTORY = {
+		parents: SKILL_GROUPS,
+		existingByGroup: Object.fromEntries(
+			SKILL_GROUPS.map((group, i) => [
+				group,
+				Array.from({ length: i === 0 ? 33 : 10 }, (_, n) => `PostgreSQL ${n}`)
+			])
+		)
+	};
+
+	it('keeps the biggest section a message can reach inside the budget', () => {
+		// Skills are the section that made TARGET_LIST_CAP necessary: 93 of them on
+		// the profile this was measured against, against twelve roles for the
+		// arrangement above. Two of the three verbs list rows, so an uncapped list
+		// would have put ~6,500 characters of skill names into every turn that
+		// mentioned the section — and the group would then have been dropped for
+		// not fitting, which is the feature silently not working.
+		//
+		// Capped, this is the same shape as the work-history case above, and it is
+		// asserted for the same reason: the runtime degrades gracefully when a turn
+		// does not fit, which is right for a heavy profile and wrong as a way to
+		// absorb a contract that grew.
+		const skills = Array.from({ length: TARGET_LIST_CAP }, (_, i) => ({
+			id: i + 1,
+			label: `PostgreSQL ${i} — Backend (TypeScript / React)`
+		}));
+
+		const applicationPage = APPLICATION_PAGE_CAPABILITIES.map((capability) => ({
+			capability,
+			targets: [{ id: 1, label: 'x' }],
+			current: {}
+		}));
+
+		const matchedSection: LiveCapability[] = [
+			{ capability: 'edit_skill', targets: skills, current: null, omitted: 53 },
+			{
+				capability: 'add_skill',
+				targets: [{ id: 12, label: 'their skills' }],
+				current: SKILL_INVENTORY
+			},
+			{ capability: 'hide_skill', targets: skills, current: null, omitted: 53 }
+		];
+
+		expect(
+			renderCapabilityPrompt([...applicationPage, ...matchedSection]).length
+		).toBeLessThanOrEqual(CAPABILITY_PROMPT_BUDGET_CHARS);
+	});
+
+	it('keeps the skills page inside the budget with both its sections live', () => {
+		// /profile/skills grants six capabilities — three verbs over skills and
+		// three over the groups — because two sections share one page. Nothing
+		// drops a page's OWN capabilities, so this one is not protected by
+		// fitMatchedCapabilities and has to fit on its own.
+		const skills = Array.from({ length: TARGET_LIST_CAP }, (_, i) => ({
+			id: i + 1,
+			label: `PostgreSQL ${i} — Backend (TypeScript / React)`
+		}));
+		const groups = SKILL_GROUPS.map((label, i) => ({ id: 100 + i, label }));
+
+		const live: LiveCapability[] = [
+			{ capability: 'edit_skill', targets: skills, current: null, omitted: 53 },
+			{
+				capability: 'add_skill',
+				targets: [{ id: 1, label: 'their skills' }],
+				current: SKILL_INVENTORY
+			},
+			{ capability: 'hide_skill', targets: skills, current: null, omitted: 53 },
+			{ capability: 'edit_skill_category', targets: groups, current: null },
+			{
+				capability: 'add_skill_category',
+				targets: [{ id: 1, label: 'their skill categories' }],
+				current: { existing: SKILL_GROUPS }
+			},
+			{ capability: 'hide_skill_category', targets: groups, current: null }
+		];
+
+		expect(renderCapabilityPrompt(live).length).toBeLessThanOrEqual(CAPABILITY_PROMPT_BUDGET_CHARS);
 	});
 
 	describe('fitMatchedCapabilities', () => {

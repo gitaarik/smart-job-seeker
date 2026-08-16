@@ -448,6 +448,45 @@ export const highlightBasicSchema = z.object({
 	icon_name: optionalTrimmedString(100)
 });
 
+/**
+ * A skill category — the group a skill is filed under, and a row of its own.
+ *
+ * Separate from `techSkillQuickAddSchema` above, which is the job page's
+ * "add this to my profile" popover and carries that flow's own concerns
+ * (`profile_only`, a category named or created on the fly). This one is the
+ * section shape the write layer validates every category patch against.
+ */
+export const techSkillCategoryBasicSchema = z.object({
+	name: requiredTrimmedString('Category name').optional(),
+	note: optionalTrimmedString(2000),
+	fa_icon: optionalTrimmedString(100),
+	tags: z.array(z.string()).optional().nullable()
+});
+
+/**
+ * One skill.
+ *
+ * `category` is the parent named rather than its id: it is what a person says
+ * and what a model can produce, and the write layer resolves it against the
+ * profile's own categories. See `PROFILE_RESOURCES.skill.owner` — a skill is
+ * the one section whose rows hang off another row rather than off the profile.
+ *
+ * `years_experience` follows `graduation_year` in taking a numeric string as
+ * well as a number: the schema runs BEFORE the shared coercion, so a form post
+ * or a model that quotes its numbers would otherwise be rejected before
+ * anything got the chance to clean it up.
+ */
+export const techSkillBasicSchema = z.object({
+	name: requiredTrimmedString('Skill name').optional(),
+	category: requiredTrimmedString('Category').optional(),
+	level: optionalTrimmedString(50),
+	years_experience: z
+		.union([z.number().int(), z.string().regex(/^\d+$/).transform(Number)])
+		.optional()
+		.nullable(),
+	tags: z.array(z.string()).optional().nullable()
+});
+
 // Shared validation helper
 
 /**

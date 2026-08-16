@@ -28,7 +28,7 @@
  */
 
 import { dbDirect as db } from '$lib/server/db';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, getTableColumns, inArray, sql, type SQL } from 'drizzle-orm';
 import { z } from 'zod';
 import { profiles } from '$lib/server/db/schema';
 import { coerceFields } from '$lib/server/utils/field-kinds';
@@ -43,6 +43,149 @@ import {
 	type ProfileResourceName,
 	type SectionRow
 } from './resources';
+
+/* ------------------------------------------------------------------ *
+ * Ownership
+ *
+ * Eight sections carry `profile_id`; skills carry `category_id` and reach the
+ * profile through it. Everything below asks the declaration which it is holding
+ * rather than reading a column that eight of nine tables happen to have — see
+ * `ResourceOwner`. The indirection is one level deep and a test in
+ * write.test.ts keeps it there: `ownerOf` would follow a chain row by row, and
+ * `ownedRows` deliberately refuses to build one as SQL, so a two-level section
+ * would work through one door and throw at the other. Nothing needs one.
+ * ------------------------------------------------------------------ */
+
+/** Rows of this section the actor owns, as a condition usable in any statement. */
+function ownedRows(resource: ProfileResource, actor: ProfileActor): SQL {
+	const { owner } = resource;
+	if (owner.via === 'profile') return eq(owner.column, actor.profileId);
+
+	const parent = resourceFor(owner.parent);
+	if (parent.owner.via !== 'profile') {
+		throw new Error(`${owner.parent} is not profile-owned; ownership chains are not supported`);
+	}
+
+	// A subquery rather than a join, so this composes into an UPDATE or a DELETE
+	// the same way it composes into a SELECT.
+	return inArray(
+		owner.column,
+		db
+			.select({ id: parent.table.id })
+			.from(parent.table)
+			.where(eq(parent.owner.column, actor.profileId))
+	);
+}
+
+/**
+ * The profile a row belongs to, and — for a parent-owned row — what its parent
+ * is called.
+ *
+ * The label comes back with the profile id because finding one costs the same
+ * read as the other, and every caller that has just checked ownership is about
+ * to want the parent's name: it is the value the row shows for its declared
+ * `nameField`.
+ */
+async function ownerOf(
+	resource: ProfileResource,
+	row: Record<string, unknown>
+): Promise<{ profileId: number | null; parentLabel?: string }> {
+	const { owner } = resource;
+	if (owner.via === 'profile') {
+		const value = row.profile_id;
+		return { profileId: value === null || value === undefined ? null : Number(value) };
+	}
+
+	const parentId = row[owner.key];
+	if (parentId === null || parentId === undefined) return { profileId: null };
+
+	const parent = resourceFor(owner.parent);
+	const [parentRow] = await db
+		.select()
+		.from(parent.table)
+		.where(eq(parent.table.id, Number(parentId)))
+		.limit(1);
+	if (!parentRow) return { profileId: null };
+
+	const found = await ownerOf(parent, parentRow as Record<string, unknown>);
+	return { profileId: found.profileId, parentLabel: parent.rowLabel(parentRow as SectionRow) };
+}
+
+/**
+ * A row as callers read it: its own columns, plus the parent's name under the
+ * field the section declared for it.
+ *
+ * This is what makes a parent-owned section look like every other one to
+ * everything downstream. The assistant's current values, the MCP read tool and
+ * a proposal card all read a row by field name, and none of them should have to
+ * know that one section's `category` is a join away.
+ */
+function withParentName(
+	resource: ProfileResource,
+	row: Record<string, unknown>,
+	parentLabel?: string
+): SectionRow {
+	if (resource.owner.via !== 'parent') return row as unknown as SectionRow;
+	return { ...row, [resource.owner.nameField]: parentLabel ?? null } as unknown as SectionRow;
+}
+
+/**
+ * The parent row this name refers to, matched the way a person would mean it.
+ *
+ * Case- and space-insensitive against the parent's own `rowLabel`, scoped to
+ * the actor, and it returns the parent's real label so a caller can report
+ * which one it landed on. A miss is not an error here — the caller turns it
+ * into a refusal that lists what does exist, which is the only refusal worth
+ * reading.
+ */
+async function findParentNamed(
+	resource: ProfileResource,
+	actor: ProfileActor,
+	name: string
+): Promise<{ id: number; label: string } | 'none' | 'ambiguous'> {
+	if (resource.owner.via !== 'parent') return 'none';
+
+	const wanted = name.trim().toLowerCase();
+	const parents = await readOwnedRows(resource.owner.parent, actor);
+	const parent = resourceFor(resource.owner.parent);
+
+	const found = parents.filter((row) => parent.rowLabel(row).trim().toLowerCase() === wanted);
+
+	// Two groups whose labels are identical even after the version they belong to
+	// has been added to them. Picking the first would be a coin toss the caller
+	// cannot see the result of — the row lands under one of two headings that read
+	// the same on the page — so this refuses and says so.
+	if (found.length > 1) return 'ambiguous';
+
+	return found.length === 1 ? { id: found[0].id, label: parent.rowLabel(found[0]) } : 'none';
+}
+
+/** "Backend, Frontend or Databases" — what a refusal has to say to be actionable. */
+async function parentNames(resource: ProfileResource, actor: ProfileActor): Promise<string[]> {
+	if (resource.owner.via !== 'parent') return [];
+	const parent = resourceFor(resource.owner.parent);
+	return (await readOwnedRows(resource.owner.parent, actor)).map((row) => parent.rowLabel(row));
+}
+
+/** The property a row carries its owner under: the parent's key, or `profile_id`. */
+function ownerKey(resource: ProfileResource): string {
+	return resource.owner.via === 'parent' ? resource.owner.key : 'profile_id';
+}
+
+/** The name field a parent-owned section carries, or null for the eight that have none. */
+function parentField(resource: ProfileResource): string | null {
+	return resource.owner.via === 'parent' ? resource.owner.nameField : null;
+}
+
+/** A patch with the parent's name taken out, leaving only real columns. */
+function withoutParentField(
+	resource: ProfileResource,
+	values: Record<string, unknown>
+): Record<string, unknown> {
+	const field = parentField(resource);
+	if (!field) return values;
+	return Object.fromEntries(Object.entries(values).filter(([name]) => name !== field));
+}
 
 /**
  * Who is asking.
@@ -98,14 +241,12 @@ export async function actorForRow(
 ): Promise<ProfileActor | null> {
 	const resource = resourceFor(name);
 
-	const [row] = await db
-		.select({ profile_id: resource.table.profile_id })
-		.from(resource.table)
-		.where(eq(resource.table.id, id))
-		.limit(1);
+	const [row] = await db.select().from(resource.table).where(eq(resource.table.id, id)).limit(1);
 	if (!row) return null;
 
-	const profileId = Number(row.profile_id);
+	const { profileId } = await ownerOf(resource, row as Record<string, unknown>);
+	if (profileId === null) return null;
+
 	const owner = await db.query.profiles.findFirst({
 		where: and(eq(profiles.id, profileId), eq(profiles.user_id, userId)),
 		columns: { id: true }
@@ -145,13 +286,60 @@ export async function readOwnedRows(
 ): Promise<SectionRow[]> {
 	const resource = resourceFor(name);
 
+	if (resource.owner.via === 'profile') {
+		const rows = await db
+			.select()
+			.from(resource.table)
+			.where(eq(resource.owner.column, actor.profileId))
+			.orderBy(...resource.orderBy);
+
+		return rows as unknown as SectionRow[];
+	}
+
+	// Joined rather than scoped by subquery, because this read wants two things
+	// the subquery cannot give it: the parent's name on every row, and an order
+	// that starts with the parent's — a skills list reads by group first, and a
+	// group is a column on the other table.
+	const parent = resourceFor(resource.owner.parent);
 	const rows = await db
-		.select()
+		.select({
+			row: getTableColumns(resource.table),
+			parent: getTableColumns(parent.table)
+		})
 		.from(resource.table)
-		.where(eq(resource.table.profile_id, actor.profileId))
+		.innerJoin(parent.table, eq(resource.owner.column, parent.table.id))
+		.where(ownedRows(resource, actor))
 		.orderBy(...resource.orderBy);
 
-	return rows as unknown as SectionRow[];
+	return rows.map(({ row, parent: parentRow }) =>
+		withParentName(
+			resource,
+			row as Record<string, unknown>,
+			parent.rowLabel(parentRow as unknown as SectionRow)
+		)
+	);
+}
+
+/**
+ * How many rows of a section the actor has.
+ *
+ * A count rather than a read, because the one caller that wants this — the
+ * manifest the assistant gets on every turn — wants only the difference between
+ * "none yet" and "some", and a skills section is a hundred rows to fetch for a
+ * number.
+ */
+export async function countOwnedRows(
+	name: ProfileResourceName,
+	actor: ProfileActor
+): Promise<number> {
+	const resource = resourceFor(name);
+
+	const [row] = await db
+		.select({ rows: sql<number>`count(*)` })
+		.from(resource.table)
+		.where(ownedRows(resource, actor));
+
+	return Number(row?.rows ?? 0);
 }
 
 /** Read a row and check it belongs to the actor, in that order so the two refusals stay distinct. */
@@ -164,12 +352,15 @@ async function findOwnedRow(
 
 	if (!row) return refuse('not_found', `${capitalize(resource.label)} not found`);
 
-	const found = row as unknown as SectionRow;
-	if (Number(found.profile_id) !== actor.profileId) {
+	const owner = await ownerOf(resource, row as Record<string, unknown>);
+	if (owner.profileId !== actor.profileId) {
 		return refuse('unauthorized', 'Access denied');
 	}
 
-	return { ok: true, row: found };
+	return {
+		ok: true,
+		row: withParentName(resource, row as Record<string, unknown>, owner.parentLabel)
+	};
 }
 
 function capitalize(text: string): string {
@@ -266,13 +457,25 @@ function withoutNulls(
  * by date until someone drags something, and a create must not be the thing
  * that flips it to manual.
  */
-async function nextSort(resource: ProfileResource, profileId: number): Promise<number | null> {
+async function nextSort(
+	resource: ProfileResource,
+	actor: ProfileActor,
+	parentId?: number
+): Promise<number | null> {
 	if (resource.newRowPlacement === 'unsorted') return null;
+
+	// Within the group for a parent-owned row, not across the profile: skills are
+	// ordered inside their category, and appending against a profile-wide maximum
+	// would put every new skill after every skill in every other group.
+	const scope =
+		resource.owner.via === 'parent' && parentId !== undefined
+			? eq(resource.owner.column, parentId)
+			: ownedRows(resource, actor);
 
 	const [last] = await db
 		.select({ max: sql<number | null>`max(${resource.table.sort})` })
 		.from(resource.table)
-		.where(eq(resource.table.profile_id, profileId));
+		.where(scope);
 
 	return (last?.max ?? -1) + 1;
 }
@@ -288,13 +491,20 @@ export async function createRow(
 	const checked = validate(resource, input, true);
 	if (!checked.ok) return checked;
 
+	// The parent is named, not pointed at, so it is resolved here — against the
+	// actor's own parents, which is where the ownership check on it lives. The
+	// name is required on a create (it is in `required`), so a missing one has
+	// already been refused above; what is left is a name that matches nothing.
+	const parent = await resolveParent(resource, actor, checked.values);
+	if (!parent.ok) return parent;
+
 	const [created] = await db
 		.insert(resource.table)
 		.values({
 			...resource.insertDefaults,
-			...withoutNulls(resource, checked.values, 'fill'),
-			profile_id: actor.profileId,
-			sort: await nextSort(resource, actor.profileId),
+			...withoutNulls(resource, withoutParentField(resource, checked.values), 'fill'),
+			[ownerKey(resource)]: parent.id ?? actor.profileId,
+			sort: await nextSort(resource, actor, parent.id),
 			status: 'published',
 			date_created: new Date()
 		})
@@ -303,7 +513,56 @@ export async function createRow(
 	await touchProfile(actor.profileId);
 
 	const row = created as unknown as SectionRow;
-	return { ok: true, id: Number(row.id), row };
+	return { ok: true, id: Number(row.id), row: withParentName(resource, row, parent.label) };
+}
+
+/**
+ * The parent id a patch names, or the refusal to hand back.
+ *
+ * `{ id: undefined }` for a profile-owned section and for a patch that does not
+ * mention the parent — both mean "nothing to move", which is the common case
+ * and not a decision.
+ */
+async function resolveParent(
+	resource: ProfileResource,
+	actor: ProfileActor,
+	values: Record<string, unknown>
+): Promise<
+	{ ok: true; id?: number; label?: string } | { ok: false; reason: WriteRefusal; error: string }
+> {
+	const field = parentField(resource);
+	if (!field || !(field in values)) return { ok: true };
+
+	const named = values[field];
+	if (named === null || String(named).trim() === '') {
+		return refuse(
+			'invalid',
+			`A ${resource.label} has to be in a group; name the one it belongs in.`
+		);
+	}
+
+	const found = await findParentNamed(resource, actor, String(named));
+	if (typeof found === 'object') return { ok: true, id: found.id, label: found.label };
+
+	if (found === 'ambiguous') {
+		// Actionable, because there is something to act on: the groups page has a
+		// note field for exactly this, and a group with a note is named by it.
+		return refuse(
+			'invalid',
+			`More than one of their groups is called "${String(named)}" and nothing tells them ` +
+				`apart, so this would have to guess which. Adding a note to one of them on ` +
+				`their Skills page is what distinguishes them — it is private, and it is what ` +
+				`the group is then called here.`
+		);
+	}
+
+	const available = await parentNames(resource, actor);
+	return refuse(
+		'invalid',
+		available.length > 0
+			? `There is no group called "${String(named)}". They have: ${available.join(', ')}.`
+			: `There are no groups to file a ${resource.label} under yet — one has to be created first.`
+	);
 }
 
 /**
@@ -339,9 +598,24 @@ export async function updateRow(
 
 	const previous = Object.fromEntries(written.map((field) => [field, found.row[field] ?? null]));
 
+	// A patch naming a different parent MOVES the row. Its `sort` goes to the end
+	// of the group it lands in rather than travelling with it: the number meant a
+	// position among its old siblings, and carried over it collides with whatever
+	// already holds that position in the new group.
+	const parent = await resolveParent(resource, actor, checked.values);
+	if (!parent.ok) return parent;
+	const moved =
+		parent.id !== undefined && parent.id !== Number(found.row[ownerKey(resource)])
+			? { [ownerKey(resource)]: parent.id, sort: await nextSort(resource, actor, parent.id) }
+			: {};
+
 	await db
 		.update(resource.table)
-		.set({ ...withoutNulls(resource, checked.values, 'leave'), date_updated: new Date() })
+		.set({
+			...withoutNulls(resource, withoutParentField(resource, checked.values), 'leave'),
+			...moved,
+			date_updated: new Date()
+		})
 		.where(eq(resource.table.id, id));
 
 	await touchProfile(actor.profileId);
@@ -502,7 +776,7 @@ export async function reorderRows(
 			db
 				.update(resource.table)
 				.set({ sort: index, date_updated: new Date() })
-				.where(and(eq(resource.table.id, id), eq(resource.table.profile_id, actor.profileId)))
+				.where(and(eq(resource.table.id, id), ownedRows(resource, actor)))
 		)
 	);
 
@@ -520,7 +794,7 @@ export async function resetRowOrder(
 	await db
 		.update(resource.table)
 		.set({ sort: null, date_updated: new Date() })
-		.where(eq(resource.table.profile_id, actor.profileId));
+		.where(ownedRows(resource, actor));
 
 	await touchProfile(actor.profileId);
 	return { ok: true };

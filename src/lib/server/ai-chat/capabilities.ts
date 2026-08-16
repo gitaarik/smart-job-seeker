@@ -36,6 +36,7 @@ import { application_records, applications, jobs } from '$lib/server/db/schema';
 import type { ContextEntity } from './generation-context';
 import { coerceValue, WIRE_TYPES, type FieldKind } from '$lib/server/utils/field-kinds';
 import { PROFILE_CAPABILITIES, type ProfileCapability } from './profile-capabilities';
+import { rowsNamedInMessage } from './profile-matching';
 import {
 	applyJobFields,
 	applyJobSkills,
@@ -81,6 +82,17 @@ export interface CapabilityTarget {
 	id: number;
 	/** Names the thing in the proposal card and in the prompt. */
 	label: string;
+	/**
+	 * The row's own name, when its label carries context as well.
+	 *
+	 * Only used to decide whether a message named this row (see `fitTargets`),
+	 * and only a skill has one: its label is "Python — Backend (Python /
+	 * Django)", where everything after the dash belongs to the group. Matching on
+	 * the whole of that makes every skill in the group answer to the words in its
+	 * group's note — measured, once the note went into the label: asking about
+	 * Python matched all 33 rows of Backend, which is not narrowing at all.
+	 */
+	match?: string;
 }
 
 /** Who is asking. Passed to authorize; never taken from the client. */
@@ -866,7 +878,41 @@ export interface LiveCapability {
 	 * names.
 	 */
 	current: Record<string, unknown> | null;
+	/**
+	 * Rows this capability can reach that are not in `targets`, when the list was
+	 * too long to print. Absent for every section that fits, which is all of them
+	 * but skills on an ordinary profile.
+	 *
+	 * Carried rather than left implicit because the block has to SAY so. A
+	 * truncated list that reads like the whole list is a model confidently
+	 * telling someone they have no such skill.
+	 */
+	omitted?: number;
 }
+
+/**
+ * How many rows a capability will list before it narrows to what the message
+ * named.
+ *
+ * Every other section prints its whole list, and should: twelve roles or
+ * twenty-four languages cost a line each and buy the model the ability to name
+ * any of them. Skills do not fit that shape — a working applicant has a hundred,
+ * measured at 93 on the profile this was built against — and two verbs listing
+ * them is most of the turn's capability budget spent on rows nobody asked about.
+ *
+ * Above the cap the list becomes: the rows this message names, or the head of
+ * the list when it names none. Both are stated in the block, and a row outside
+ * it is reachable the moment the user says its name — which is how someone asks
+ * about a specific skill anyway.
+ *
+ * Twenty-five rather than a round fifty because a skill's label carries its
+ * group to stay unique ("PostgreSQL — Tooling & Methodology"), so a row is ~35
+ * characters and the list is the part of the block that scales with the
+ * applicant. What the list is FOR is naming one row; the inventory the add verb
+ * prints — every skill, grouped, at a third of the cost per name — is what
+ * answers "what do they already have".
+ */
+export const TARGET_LIST_CAP = 25;
 
 /**
  * Narrow a scope's declared capabilities to the ones that actually apply right
@@ -877,7 +923,8 @@ export interface LiveCapability {
 export async function resolveCapabilities(
 	declared: Capability[],
 	entity: ContextEntity | null,
-	actor: CapabilityActor
+	actor: CapabilityActor,
+	opts: { message?: string } = {}
 ): Promise<LiveCapability[]> {
 	const live = await Promise.all(
 		declared.map(async (capability): Promise<LiveCapability | null> => {
@@ -901,20 +948,46 @@ export async function resolveCapabilities(
 			).filter((row): row is CapabilityTarget => row !== null);
 			if (authorized.length === 0) return null;
 
-			// One authorized row is the single-row case however it was reached, so
-			// it gets the values to diff against rather than a list of one.
-			if (authorized.length === 1) {
+			const { targets, omitted } = fitTargets(authorized, opts.message ?? '');
+
+			// One row is the single-row case however it was reached — by URL, by
+			// being the only one, or by being the only one the message named — so it
+			// gets the values to diff against rather than a list of one.
+			if (targets.length === 1) {
 				return {
 					capability,
-					targets: authorized,
-					current: await def.current(authorized[0], actor)
+					targets,
+					current: await def.current(targets[0], actor),
+					...(omitted > 0 ? { omitted } : {})
 				};
 			}
 
-			return { capability, targets: authorized, current: null };
+			return { capability, targets, current: null, ...(omitted > 0 ? { omitted } : {}) };
 		})
 	);
 	return live.filter((c): c is LiveCapability => c !== null);
+}
+
+/**
+ * The rows worth printing, out of every row the capability could reach.
+ *
+ * Under the cap this is everything, unchanged, which is every section but one.
+ * Over it, the message decides: the rows it names, or the head of the list when
+ * it names none. The head rather than nothing, because a list is also how the
+ * model learns what is THERE — asked what to add, it needs to see enough of the
+ * section not to propose a duplicate, and the add verb's own state carries the
+ * full set of labels for exactly that.
+ */
+function fitTargets(
+	authorized: CapabilityTarget[],
+	message: string
+): { targets: CapabilityTarget[]; omitted: number } {
+	if (authorized.length <= TARGET_LIST_CAP) return { targets: authorized, omitted: 0 };
+
+	const named = rowsNamedInMessage(message, authorized);
+	const targets = (named.length > 0 ? named : authorized).slice(0, TARGET_LIST_CAP);
+
+	return { targets, omitted: authorized.length - targets.length };
 }
 
 /**
@@ -1275,7 +1348,18 @@ export function describeProposalChanges(
 export function renderCapabilityBlock(
 	capability: Capability,
 	targets: CapabilityTarget[],
-	current: Record<string, unknown> | null
+	current: Record<string, unknown> | null,
+	omitted = 0,
+	/**
+	 * The capability that already printed this exact list, when one has.
+	 *
+	 * A section's verbs share their targeting by construction — `hide_*` reuses
+	 * the editor's `resolve` and `resolveMany` — so printing the rows again is
+	 * the same hundred lines a second time. Naming where they are is not a
+	 * shorthand the model has to unpack: it is one list, and it was already
+	 * established a few hundred characters earlier.
+	 */
+	listedBy?: string
 ): string {
 	const def = CAPABILITIES[capability];
 
@@ -1285,7 +1369,7 @@ export function renderCapabilityBlock(
 		const state = (def.renderState ?? renderCurrent)(current);
 		return `### Capability: ${capability} — ${targets[0].label}
 
-${def.contract}
+${def.contract}${omitted > 0 ? `\n\n${narrowedNote(omitted, true)}` : ''}
 
 ${state}`;
 	}
@@ -1294,6 +1378,15 @@ ${state}`;
 	// current values are re-read for whichever it picks — printing all of them
 	// is what the budget cannot hold, and is also what would let a model diff
 	// against the wrong row without noticing.
+	if (listedBy) {
+		return `### Capability: ${capability}
+
+${def.contract}
+
+This one acts on exactly the rows listed under ${listedBy} above — the same list,
+not a shorter one. Name one of them as "target_id", copied from there.`;
+	}
+
 	const rows = targets.map((t) => `  - target_id ${t.id}: ${t.label}`).join('\n');
 
 	return `### Capability: ${capability}
@@ -1303,7 +1396,26 @@ ${def.contract}
 Rows you can change with this. Name exactly one, as "target_id", in the same
 proposal — and only one of these, since these are the only ones you can reach:
 
-${rows}`;
+${rows}${omitted > 0 ? `\n\n${narrowedNote(omitted, false)}` : ''}`;
+}
+
+/**
+ * Said whenever the list above is not the whole list.
+ *
+ * The alternative — printing 40 of 93 rows and letting the model assume it has
+ * them all — is how an assistant tells someone they have no PostgreSQL on their
+ * profile because it happened to sort 41st. What replaces the missing rows is a
+ * sentence saying they exist and how to reach one.
+ */
+function narrowedNote(omitted: number, narrowedToOne: boolean): string {
+	return narrowedToOne
+		? `This is the entry their message named. They have ${omitted} more in this ` +
+				`section that are not shown; if they meant a different one, ask which rather ` +
+				`than proposing a change to this one.`
+		: `${omitted} more exist and are not listed — this section is too long to print in ` +
+				`full. They are reachable, just not from here: if the user means one that is ` +
+				`not above, say so and ask them to name it, and it will be listed next turn. ` +
+				`Never guess a target_id.`;
 }
 
 /**
@@ -1336,15 +1448,33 @@ the proposal is discarded rather than applied to something else.`;
  * what the route offers and what the message reached for — rather than one
  * table's worth.
  *
- * The number is the worst arrangement a page can reach, rounded up. Measured at
- * 17,828: an application page's five capabilities beside a matched work-history
- * section listing twelve roles. Note what that last part means — a target list
- * grows with the profile, so this is the size of an ordinary busy applicant's
- * turn and not a hard bound on one. A profile past it loses the *matched*
- * section, never the page's own (see `fitMatchedCapabilities`), and the manifest
- * still says where that section lives.
+ * The number is the worst arrangement a page can reach, rounded up. Note what
+ * that means — a target list grows with the profile, so this is the size of an
+ * ordinary busy applicant's turn and not a hard bound on one. A profile past it
+ * loses the *matched* section, never the page's own (see
+ * `fitMatchedCapabilities`), and the manifest still says where that section
+ * lives.
+ *
+ * Raised from 18,000 to 19,000 when skills became a section. Measured, on the
+ * profile this was built against:
+ *
+ *  - **18,300** — an application page's five capabilities beside a matched
+ *    skills section: 93 skills, 25 of them listed, three verbs. This is the new
+ *    worst arrangement and it displaced the old one (17,828, the same page
+ *    beside twelve roles of work history).
+ *  - **14,350** — /profile/skills itself, measured on the real profile, where
+ *    six capabilities are live because two sections share that page. Nothing
+ *    drops a page's own capabilities, so this one has to fit on its own merits
+ *    rather than by degrading.
+ *
+ * Three things paid for most of what skills would otherwise have cost, and they
+ * are why this is 1,000 higher rather than 8,000: `TARGET_LIST_CAP` bounds the
+ * list at 25 rows of the 93, a list is printed once per section rather than once
+ * per verb (see `renderCapabilityPrompt`), and the add verb's inventory is
+ * grouped rather than one row per line. Without them the same turn measured
+ * 19,740 with a target list that was still not the whole section.
  */
-export const CAPABILITY_PROMPT_BUDGET_CHARS = 18000;
+export const CAPABILITY_PROMPT_BUDGET_CHARS = 19000;
 
 /**
  * Admit matched capabilities while they fit, in the order given.
@@ -1381,7 +1511,18 @@ export function fitMatchedCapabilities(
 export function renderCapabilityPrompt(live: LiveCapability[]): string {
 	if (live.length === 0) return '';
 
-	const blocks = live.map((c) => renderCapabilityBlock(c.capability, c.targets, c.current));
+	// A list printed once. Two verbs over one section resolve the same rows, and
+	// a hundred skills rendered twice is most of what a busy profile's turn used
+	// to spend here — measured at 1,040 characters of pure repetition per
+	// hideable section, before this.
+	const listedBy = new Map<string, string>();
+	const blocks = live.map((c) => {
+		const key = c.targets.length > 1 ? c.targets.map((t) => t.id).join(',') : null;
+		const first = key ? listedBy.get(key) : undefined;
+		if (key && !first) listedBy.set(key, c.capability);
+
+		return renderCapabilityBlock(c.capability, c.targets, c.current, c.omitted, first);
+	});
 	const choosing = live.some((c) => c.targets.length > 1);
 
 	return `## Changes you can propose

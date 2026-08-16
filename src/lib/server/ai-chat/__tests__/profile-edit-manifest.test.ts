@@ -17,8 +17,21 @@ describe('formatProfileEditManifest', () => {
 	it('names every editable section', () => {
 		const text = formatProfileEditManifest(ALL);
 		for (const name of PROFILE_RESOURCE_NAMES) {
-			expect(text, name).toContain(PROFILE_RESOURCES[name].page.name);
+			expect(text, name).toContain(PROFILE_RESOURCES[name].title);
 		}
+	});
+
+	it('tells apart two sections that live on one page', () => {
+		// Skills and skill categories are both edited at /profile/skills. Named by
+		// the page they would be two identical lines, and the count on each would
+		// be a number the model could not attach to anything.
+		const text = formatProfileEditManifest([
+			{ name: 'skill', rows: 93 },
+			{ name: 'skill_category', rows: 7 }
+		]);
+
+		expect(text).toContain('- Skills — 93 entries. On their Skills page.');
+		expect(text).toContain('- Skill categories — 7 entries. On their Skills page.');
 	});
 
 	it('says where each section is edited', () => {
@@ -48,7 +61,7 @@ describe('formatProfileEditManifest', () => {
 
 	it('stays small enough to be unconditional', () => {
 		// It ships on every turn on every page, including ones with no capability
-		// at all. Seven sections at ~60 chars a line plus a short frame.
+		// at all. Nine sections at ~60 chars a line plus a short frame.
 		expect(formatProfileEditManifest(ALL).length).toBeLessThanOrEqual(1200);
 	});
 });

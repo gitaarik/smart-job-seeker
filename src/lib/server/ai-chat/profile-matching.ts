@@ -47,6 +47,13 @@
  * so looking for it would cost a read of the applicant's entire work history on
  * every turn to find nothing.
  *
+ * Skills are edited inline too and are deliberately NOT in that tier. Their
+ * labels are short enough — that is the problem. "React" is in half the job
+ * descriptions this assistant reads, so a whole-label match on a skill fires on
+ * turns that were never about the profile. The section says so itself, in
+ * `rowNamesAreAmbiguous`, because it is a fact about the section's vocabulary
+ * rather than a rule this file should be keeping a list for.
+ *
  * ## What a false positive costs
  *
  * Prompt budget, and an offer. A section loaded that the user did not mean adds
@@ -111,8 +118,11 @@ function variants(term: string): string[] {
  */
 const SECTION_TERMS: Record<ProfileResourceName, string[]> = Object.fromEntries(
 	PROFILE_RESOURCE_NAMES.map((name) => {
-		const { page, label, aliases = [] } = PROFILE_RESOURCES[name];
-		return [name, [...new Set([page.name, label, ...aliases].flatMap(variants))]];
+		// `title`, not `page.name`: two sections share the skills page, and a term
+		// list built from the page would give both of them "skills" and neither of
+		// them a word that tells them apart.
+		const { title, label, aliases = [] } = PROFILE_RESOURCES[name];
+		return [name, [...new Set([title, label, ...aliases].flatMap(variants))]];
 	})
 ) as Record<ProfileResourceName, string[]>;
 
@@ -176,22 +186,70 @@ function labelTokens(label: string): string[] {
 		);
 }
 
-/** Where the earliest of these terms appears in the message, or -1 for none. */
-function earliestHit(haystack: string, terms: string[]): number {
-	let best = -1;
+/**
+ * Where the earliest of these terms appears, and how much of the message it
+ * claimed there.
+ *
+ * The length is the tie-break between two sections that hit at the same place,
+ * which is not a hypothetical: "skill category" and "skill" both start at the
+ * same word of "add a skill category for cloud", and without this the winner is
+ * whichever section happens to be declared first. Longer means more of the
+ * user's words accounted for, which is the only reading of "more specific" that
+ * does not require a hand-maintained priority list.
+ */
+function earliestMatch(haystack: string, terms: string[]): { at: number; length: number } {
+	let best = { at: -1, length: 0 };
 	for (const term of terms) {
 		const at = haystack.indexOf(` ${term} `);
-		if (at !== -1 && (best === -1 || at < best)) best = at;
+		if (at === -1) continue;
+		if (best.at === -1 || at < best.at || (at === best.at && term.length > best.length)) {
+			best = { at, length: term.length };
+		}
 	}
 	return best;
 }
 
-/** The rows whose significant words appear in the message. */
-function rowsNamedIn(haystack: string, rows: { id: number; label: string }[]) {
-	return rows.filter((row) => earliestHit(haystack, labelTokens(row.label)) !== -1);
+/** Where the earliest of these terms appears in the message, or -1 for none. */
+function earliestHit(haystack: string, terms: string[]): number {
+	return earliestMatch(haystack, terms).at;
 }
 
-type RowLabels = { id: number; label: string }[];
+/** The rows whose significant words appear in the message. */
+function rowsNamedIn(haystack: string, rows: RowLabel[]) {
+	return rows.filter((row) => earliestHit(haystack, labelTokens(row.match ?? row.label)) !== -1);
+}
+
+/**
+ * The rows a message names, out of rows that are already reachable.
+ *
+ * The same narrowing tier one does, exported for the other half of the problem:
+ * a section the page DOES grant, whose list is too long to print. There the
+ * question is not which section the user means — that is settled — but which of
+ * a hundred rows, and the answer is the same one, from the same tokens.
+ *
+ * Returns them in the order given, and an empty array when the message names
+ * none. It is the caller's business what to do with that: `resolveCapabilities`
+ * falls back to the head of the list rather than to nothing, because a message
+ * that names no row is usually not asking for a row.
+ */
+export function rowsNamedInMessage<T extends { label: string; match?: string }>(
+	message: string,
+	rows: T[]
+): T[] {
+	const haystack = normalize(message);
+	if (haystack.trim() === '') return [];
+	return rows.filter((row) => earliestHit(haystack, labelTokens(row.match ?? row.label)) !== -1);
+}
+
+/** A row as the matcher sees it: what it is called, and what identifies it. */
+interface RowLabel {
+	id: number;
+	label: string;
+	/** The row's own name where the label carries more — see CapabilityTarget.match. */
+	match?: string;
+}
+
+type RowLabels = RowLabel[];
 
 /**
  * One read per section per turn, however many messages are searched.
@@ -209,8 +267,15 @@ function rowReader(profileId: number): (name: ProfileResourceName) => Promise<Ro
 		const cached = seen.get(name);
 		if (cached) return cached;
 
+		const resource = PROFILE_RESOURCES[name];
 		const reading = readOwnedRows(name, { profileId }).then((rows) =>
-			rows.map((row) => ({ id: row.id, label: PROFILE_RESOURCES[name].rowLabel(row) }))
+			rows.map((row) => ({
+				id: row.id,
+				label: resource.rowLabel(row),
+				// Narrowed on the row's own name where its label says more than the
+				// row does — see CapabilityTarget.match.
+				...(resource.shortLabel ? { match: resource.shortLabel(row) } : {})
+			}))
 		);
 		seen.set(name, reading);
 		return reading;
@@ -224,9 +289,12 @@ async function matchBySectionName(
 	candidates: ProfileResourceName[]
 ): Promise<SectionMatch[]> {
 	const named = candidates
-		.map((resource) => ({ resource, at: earliestHit(haystack, SECTION_TERMS[resource]) }))
+		.map((resource) => ({ resource, ...earliestMatch(haystack, SECTION_TERMS[resource]) }))
 		.filter(({ at }) => at !== -1)
-		.sort((a, b) => a.at - b.at);
+		// Earliest first, and the more specific name first where two start at the
+		// same word. Order decides which section the budget admits when both match
+		// and only one fits, so the specific one has to come first.
+		.sort((a, b) => a.at - b.at || b.length - a.length);
 
 	return Promise.all(
 		named.map(async ({ resource, at }): Promise<SectionMatch> => {
@@ -250,7 +318,9 @@ async function matchByRowLabel(
 	rows: (name: ProfileResourceName) => Promise<RowLabels>,
 	candidates: ProfileResourceName[]
 ): Promise<SectionMatch[]> {
-	const inline = candidates.filter((name) => !PROFILE_RESOURCES[name].detailPath);
+	const inline = candidates.filter(
+		(name) => !PROFILE_RESOURCES[name].detailPath && !PROFILE_RESOURCES[name].rowNamesAreAmbiguous
+	);
 
 	const found = await Promise.all(
 		inline.map(async (resource): Promise<SectionMatch | null> => {
