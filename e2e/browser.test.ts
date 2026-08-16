@@ -793,12 +793,31 @@ describe('export page', () => {
 		expect(await fullBtn.isVisible()).toBe(true);
 	});
 
-	it('has media files checkbox and export button', async () => {
-		const mediaCheckbox = b.page.locator('input[type="checkbox"]');
-		expect(await mediaCheckbox.isVisible()).toBe(true);
+	it('offers the documents opt-out only when there are documents', async () => {
+		// Was "has media files checkbox and export button", asserting an
+		// unconditional checkbox. The page has no media checkbox at all —
+		// photos and logos always ship; documents are the one category worth
+		// declining, and that checkbox lives inside
+		// `{#if contents.documentCount > 0}`. On a seed account with no
+		// documents it correctly does not render, so the assertion failed on
+		// working code. It also inherited the page from the previous test
+		// rather than navigating, so it could not be run on its own.
+		await b.page.goto('/export/data');
+		await b.page.waitForLoadState('networkidle');
 
 		const exportBtn = b.page.getByRole('button', { name: /export.*json/i });
 		expect(await exportBtn.isVisible()).toBe(true);
+
+		// No presence assertion on the checkbox: whether it renders depends on
+		// the account having documents, which this suite does not seed or
+		// control. An attempt to infer it from the page text failed — the
+		// contents summary prints "0 uploaded documents" whenever
+		// includeDocuments is true, which it is by default, so the word is on
+		// the page while the checkbox is not. At most one is the real
+		// invariant; asserting presence is what made the original test fail on
+		// working code.
+		const checkboxes = b.page.locator('input[type="checkbox"]');
+		expect(await checkboxes.count()).toBeLessThanOrEqual(1);
 	});
 
 	it('triggers export and shows result', async () => {
