@@ -45,9 +45,18 @@ const TABLES_TO_SYNC = [
 console.log('📋 Tables to sync:', TABLES_TO_SYNC.join(', '));
 
 // Load dev DB connection details from .env (using dotenvx)
-const DEV_DB_USER = dotenvx.get('SJS_DB_USER');
-const DEV_DB_PASSWORD = dotenvx.get('SJS_DB_PASSWORD');
-const DEV_DB_NAME = dotenvx.get('SJS_DB_DATABASE');
+//
+// The `await`s look redundant against dotenvx 1.x, where `get` is synchronous,
+// and they are — awaiting a string is a no-op. They are here because dotenvx
+// 2.0 made `lib/main#get` **async only** (a documented breaking change), and
+// without them the bump does not fail loudly: the three constants become
+// Promises, the guard below sees three truthy objects and passes, and the
+// script builds a `pg_dump` command line containing `[object Promise]`.
+// Writing it this way lets the major land as a lockfile change alone, and
+// costs nothing on the version currently installed.
+const DEV_DB_USER = await dotenvx.get('SJS_DB_USER');
+const DEV_DB_PASSWORD = await dotenvx.get('SJS_DB_PASSWORD');
+const DEV_DB_NAME = await dotenvx.get('SJS_DB_DATABASE');
 const DEV_DB_CONTAINER = 'database';
 
 if (!DEV_DB_USER || !DEV_DB_PASSWORD || !DEV_DB_NAME) {
