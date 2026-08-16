@@ -114,8 +114,16 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
 		error(404, 'Application not found');
 	}
 
-	// Resolve CV version name from slug
+	// Resolve CV version name from slug.
+	//
+	// `cvVersionExists` is separate from the name because a version may carry no
+	// name at all, and because the record outlives the version: deleting a
+	// library document does not erase the true statement that it was sent. What
+	// the record cannot do once the version is gone is link anywhere, so the two
+	// questions — what to call it, and whether there is still a document behind
+	// it — have to be asked separately.
 	let cvVersionName: string | null = null;
+	let cvVersionExists = false;
 	if (application.cv_version_sent) {
 		const version = await db.query.profile_versions.findFirst({
 			where: and(
@@ -125,11 +133,13 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
 			columns: { name: true }
 		});
 		cvVersionName = version?.name || null;
+		cvVersionExists = !!version;
 	}
 
 	return {
 		application,
 		cvVersionName,
+		cvVersionExists,
 		profileId: layoutData.selectedProfile.id
 	};
 };

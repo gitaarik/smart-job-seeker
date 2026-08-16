@@ -409,7 +409,9 @@
 						<span class="font-medium text-[var(--dash-text)]">
 							{data.cvVersionName || (dt === 'cv' ? 'CV' : 'Resume')}
 						</span>
-						{#if app.cv_version_sent && profileSlug}
+						<!-- Only when the version is still there: the record survives a
+						     deleted library version on purpose, but a link to one is a 404. -->
+						{#if app.cv_version_sent && profileSlug && data.cvVersionExists}
 							<a
 								href={profileDocUrl({ profileSlug, docType: dt, versionSlug: app.cv_version_sent })}
 								target="_blank"

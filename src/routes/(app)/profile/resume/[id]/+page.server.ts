@@ -1,10 +1,16 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db, queryRaw, sql } from '$lib/server/db';
-import { profile_versions, profile_version_extensions, profiles } from '$lib/server/db/schema';
+import {
+	profile_versions,
+	profile_version_extensions,
+	profiles,
+	applications
+} from '$lib/server/db/schema';
 import { eq, and, ne, or, asc, isNull } from 'drizzle-orm';
 import { getSelectedProfileId } from '../../utils';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
+import { retagVersionSlug } from '$lib/server/profile/tailor-version';
 import { chargeCredits } from '$lib/server/billing/credits';
 import { requireCredits } from '$lib/server/billing/require-credits';
 import { buildToggles } from '$lib/resume-contact-fields';
@@ -171,6 +177,33 @@ export const actions: Actions = {
 			});
 		}
 
+		const newSlug = slug.trim();
+		// Nullable: a version can exist without a slug, and giving it one for the
+		// first time is a change that has to be checked like any other — it just
+		// has no references behind it to carry.
+		const oldSlug = existing.slug;
+		const slugChanged = oldSlug !== newSlug;
+
+		// The column has no unique constraint — uniqueness is a rule this app
+		// keeps, the same way `uniqueLibrarySlug` keeps it when promoting. It
+		// matters more here than at creation: a slug is how item tags and
+		// `applications.cv_version_sent` name a version, so renaming onto a slug
+		// already in use would not merely be ambiguous, it would hand this
+		// version every item tagged onto the other one.
+		if (slugChanged) {
+			const clash = await db.query.profile_versions.findFirst({
+				where: and(
+					eq(profile_versions.profile_id, profileId),
+					eq(profile_versions.slug, newSlug),
+					ne(profile_versions.id, id)
+				),
+				columns: { id: true }
+			});
+			if (clash) {
+				return fail(400, { error: `Another version already uses the slug "${newSlug}".` });
+			}
+		}
+
 		// Contact visibility: the form submits one `contactVisible` value per field
 		// left checked. buildToggles() turns the rest into `hide:<key>` tokens and
 		// preserves any non-contact toggles (e.g. "nationality") already stored.
@@ -180,12 +213,32 @@ export const actions: Actions = {
 		await db
 			.update(profile_versions)
 			.set({
-				slug: slug.trim(),
+				slug: newSlug,
 				name: name?.trim() || null,
 				toggles,
 				date_updated: new Date()
 			})
 			.where(eq(profile_versions.id, id));
+
+		// A slug is a reference, not a label. Two things name this version by slug
+		// rather than by id, and neither cascades: the record of which document an
+		// application sent, and the `tags` array on every profile item. Renaming
+		// without carrying them broke both silently — the sent-record started
+		// pointing at nothing, and a skill somebody had added to this version
+		// stopped printing on it while its tag still sat there looking right.
+		//
+		// `promoteToLibrary` has done exactly this since tailored versions shipped;
+		// the library editor is the path that was missed.
+		if (slugChanged && oldSlug) {
+			await db
+				.update(applications)
+				.set({ cv_version_sent: newSlug, date_updated: new Date() })
+				.where(
+					and(eq(applications.profile_id, profileId), eq(applications.cv_version_sent, oldSlug))
+				);
+
+			await retagVersionSlug(profileId, oldSlug, newSlug);
+		}
 
 		// Update public resume/cv version on profile
 		const profile = await db.query.profiles.findFirst({
@@ -237,7 +290,7 @@ export const actions: Actions = {
 
 		await requireCredits(user.id, 1);
 		await chargeCredits(user.id, 1, 'pdf_export', 'PDF export');
-		generateVersionPdfs(profileId, slug.trim()).catch(console.error);
+		generateVersionPdfs(profileId, newSlug).catch(console.error);
 
 		return { success: true };
 	},
@@ -299,6 +352,22 @@ export const actions: Actions = {
 			);
 
 		await db.delete(profile_versions).where(eq(profile_versions.id, id));
+
+		// Overrides cascade with the row; tags naming its slug do not. Left behind
+		// they are invisible — the item still carries a tag that still looks right
+		// — and the slug is not retired with the version: nothing stops a later
+		// version from being created under the same one, which would silently
+		// inherit every item tagged onto this one.
+		if (existing.slug) await retagVersionSlug(profileId, existing.slug, null);
+
+		// `applications.cv_version_sent` is deliberately NOT cleared here, which is
+		// the opposite of what discarding a tailored version does. That one is a
+		// draft belonging to a single application, and deleting it means it was
+		// never sent. This is a library document that may have been sent to any
+		// number of applications, and "I sent my frontend resume" stays true after
+		// the version is deleted — nulling it would erase a real record for every
+		// one of them. The application page degrades on its own: the name resolves
+		// to null and it reads "Resume sent", which is still what happened.
 
 		redirect(302, '/profile/resume');
 	}
