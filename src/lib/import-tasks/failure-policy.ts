@@ -330,6 +330,16 @@ export function explainAuthBlock(kind: FailureKind, ctx: ExplainContext): Explan
 	const what = ctx.taskLabel
 		? `“${ctx.taskLabel}” on ${ctx.platform}`
 		: `Your ${ctx.platform} import`;
+
+	// The title has to name the *task*, not just the platform. Several blocked
+	// tasks on one platform otherwise produce a stack of byte-identical
+	// notifications, and the only thing telling them apart is buried in the
+	// body. Truncated hard because search_term and note are 500-char columns
+	// while the title is 200, and a long label would push the reason — the part
+	// that says what to do — off the end.
+	const subject = ctx.taskLabel
+		? `“${ctx.taskLabel.length > 40 ? `${ctx.taskLabel.slice(0, 39)}…` : ctx.taskLabel}” on ${ctx.platform}`
+		: `${ctx.platform} import`;
 	const everyN =
 		ctx.retryInHours && ctx.retryInHours % 24 === 0
 			? `every ${ctx.retryInHours / 24} days`
@@ -365,7 +375,7 @@ export function explainAuthBlock(kind: FailureKind, ctx: ExplainContext): Explan
 					`emails to ${ctx.relayAddress} and future runs will read the code themselves.`
 				: '';
 			return {
-				title: `${ctx.platform} import can't log in — needs confirming`,
+				title: `${subject} can't log in — needs confirming`,
 				message:
 					`${opening}\n\n` +
 					`${ctx.platform} is asking for an extra confirmation at login — an emailed code, ` +
@@ -376,7 +386,7 @@ export function explainAuthBlock(kind: FailureKind, ctx: ExplainContext): Explan
 		}
 		case 'auth_credentials':
 			return {
-				title: `${ctx.platform} import can't log in — password rejected`,
+				title: `${subject} can't log in — password rejected`,
 				message:
 					`${opening}\n\n` +
 					`${ctx.platform} rejected the saved password. Update the stored credentials for ` +
@@ -386,7 +396,7 @@ export function explainAuthBlock(kind: FailureKind, ctx: ExplainContext): Explan
 			};
 		case 'auth_captcha':
 			return {
-				title: `${ctx.platform} import can't log in — CAPTCHA at login`,
+				title: `${subject} can't log in — CAPTCHA at login`,
 				message:
 					`${opening}\n\n` +
 					`${ctx.platform} is putting a CAPTCHA in front of the login and an unattended run ` +
@@ -395,7 +405,7 @@ export function explainAuthBlock(kind: FailureKind, ctx: ExplainContext): Explan
 			};
 		case 'auth_restricted':
 			return {
-				title: `${ctx.platform} import can't log in — account restricted`,
+				title: `${subject} can't log in — account restricted`,
 				message:
 					`${opening}\n\n` +
 					`${ctx.platform} says the account is restricted or flagged for unusual activity. ` +
@@ -405,7 +415,7 @@ export function explainAuthBlock(kind: FailureKind, ctx: ExplainContext): Explan
 			};
 		case 'auth_terms':
 			return {
-				title: `${ctx.platform} import can't log in — terms need accepting`,
+				title: `${subject} can't log in — terms need accepting`,
 				message:
 					`${opening}\n\n` +
 					`${ctx.platform} wants updated terms accepted before it will let anyone in.\n\n` +
@@ -415,7 +425,7 @@ export function explainAuthBlock(kind: FailureKind, ctx: ExplainContext): Explan
 		case 'auth_unknown':
 		default:
 			return {
-				title: `${ctx.platform} import can't log in`,
+				title: `${subject} can't log in`,
 				message:
 					`${opening}\n\n` +
 					`The login isn't going through and we couldn't work out why from the page. ` +

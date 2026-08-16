@@ -292,10 +292,29 @@ describe('decideAuthBlockRemedy', () => {
 describe('explainAuthBlock', () => {
 	const ctx = { platform: 'LinkedIn', taskLabel: 'Senior TypeScript' };
 
-	it('names the platform and the task so several tasks are tellable apart', () => {
-		const e = explainAuthBlock('auth_verification', ctx);
+	it('names the task in the title, not just the platform', () => {
+		// Titles used to carry the platform alone, so several blocked tasks on
+		// one platform produced byte-identical notifications and the only thing
+		// telling them apart sat in the body.
+		const a = explainAuthBlock('auth_verification', ctx);
+		const b = explainAuthBlock('auth_verification', { ...ctx, taskLabel: 'Rust, Berlin' });
+		expect(a.title).toContain('LinkedIn');
+		expect(a.title).toContain('Senior TypeScript');
+		expect(a.title).not.toBe(b.title);
+		expect(a.message).toContain('Senior TypeScript');
+	});
+
+	it('keeps the reason visible when the task name is enormous', () => {
+		// search_term and note are 500-char columns and the title is 200, so an
+		// untruncated label would push the part that says what went wrong off
+		// the end of the notification.
+		const e = explainAuthBlock('auth_verification', {
+			...ctx,
+			taskLabel: 'Senior '.repeat(60).trim()
+		});
+		expect(e.title.length).toBeLessThanOrEqual(200);
+		expect(e.title).toContain('needs confirming');
 		expect(e.title).toContain('LinkedIn');
-		expect(e.message).toContain('Senior TypeScript');
 	});
 
 	it('survives a task with no label, capitalised where the sentence starts', () => {

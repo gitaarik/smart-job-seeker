@@ -39,6 +39,7 @@ export default defineConfig({
 					name: 'client',
 					environment: 'jsdom',
 					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
+					setupFiles: ['./vitest.setup.client.ts'],
 					pool: 'forks'
 				}
 			}

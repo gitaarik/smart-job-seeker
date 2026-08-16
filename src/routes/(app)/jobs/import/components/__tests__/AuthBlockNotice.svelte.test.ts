@@ -1,12 +1,9 @@
-import { afterEach, describe, expect, test } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/svelte';
+import { describe, expect, test } from 'vitest';
+import { render, screen } from '@testing-library/svelte';
 import AuthBlockNotice from '../AuthBlockNotice.svelte';
 
-// The `client` vitest project declares no setupFiles, so testing-library's
-// auto-cleanup never registers and renders accumulate in one jsdom document.
-// Without this, a later `queryByText(...).toBeNull()` reads an earlier test's
-// markup and fails — or worse, passes for the wrong reason.
-afterEach(cleanup);
+// Cleanup between renders comes from vitest.setup.client.ts — see that file
+// for why the client project needs it at all.
 
 const BASE = {
 	kind: 'auth_verification',
