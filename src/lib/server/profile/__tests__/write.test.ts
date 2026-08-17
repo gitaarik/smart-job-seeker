@@ -71,9 +71,20 @@ vi.mock('$lib/server/db', () => {
 				if (fields && 'max' in fields) return [{ max: state.maxSort }];
 				if (fields && 'rows' in fields) return [{ rows: rowsFor(primary).length }];
 				if (!joined) return rowsFor(primary);
+				// Joined on whichever foreign key the child carries, rather than on
+				// `category_id`: six sections reach their parent through a key of
+				// their own now, and one of them is a grandchild whose parent is a
+				// project. `profile_id` is excluded because it points at a profile,
+				// not at the table being joined — a role with id 7 on a profile with
+				// id 7 would otherwise join to itself.
+				const foreignKeys = (row: Record<string, unknown>) =>
+					Object.entries(row)
+						.filter(([key]) => key.endsWith('_id') && key !== 'profile_id')
+						.map(([, value]) => value);
+
 				return rowsFor(primary).map((row) => ({
 					row,
-					parent: rowsFor(joined).find((p) => p.id === row.category_id) ?? null
+					parent: rowsFor(joined).find((p) => foreignKeys(row).includes(p.id)) ?? null
 				}));
 			};
 
@@ -119,9 +130,16 @@ vi.mock('$lib/server/db', () => {
 	return { db: dbMock, dbDirect: dbMock };
 });
 
-const { profiles, tech_skill_categories, tech_skills, work_experiences } =
-	await import('$lib/server/db/schema');
+const {
+	profiles,
+	tech_skill_categories,
+	tech_skills,
+	work_experiences,
+	work_experience_projects,
+	work_experience_project_technologies
+} = await import('$lib/server/db/schema');
 const { PROFILE_RESOURCES } = await import('../resources');
+type ProfileResourceName = keyof typeof PROFILE_RESOURCES;
 const {
 	actorForRow,
 	countOwnedRows,
@@ -230,14 +248,27 @@ describe('the declaration', () => {
 		expect(label({ name: 'Backend', note: 'x'.repeat(200) }).length).toBeLessThan(60);
 	});
 
-	it('owns every row at most one row away from the profile', () => {
-		// `ownedRows` builds a subquery for a parent-owned section and refuses a
-		// chain outright, because scoping a write through two joins is a different
-		// query than the one written there. Nothing needs a chain today; this is
-		// what makes "nothing does" a fact rather than an assumption.
-		for (const [name, resource] of Object.entries(PROFILE_RESOURCES)) {
-			if (resource.owner.via !== 'parent') continue;
-			expect(PROFILE_RESOURCES[resource.owner.parent].owner.via, name).toBe('profile');
+	it('owns every row through a chain that ends at the profile', () => {
+		// `ownedRows` recurses now, so the thing worth asserting is not the depth
+		// but that every walk terminates: a section naming itself as its own
+		// parent would build a subquery forever, and it would do it inside every
+		// read of that section rather than at import time where a reader would
+		// see it. MAX_OWNER_DEPTH catches it at runtime; this catches it here.
+		for (const name of Object.keys(PROFILE_RESOURCES) as ProfileResourceName[]) {
+			const seen = new Set<ProfileResourceName>();
+			let at = name;
+
+			while (PROFILE_RESOURCES[at].owner.via === 'parent') {
+				expect(seen.has(at), `${name}: cycle through ${at}`).toBe(false);
+				seen.add(at);
+				at = (PROFILE_RESOURCES[at].owner as { parent: ProfileResourceName }).parent;
+			}
+
+			expect(PROFILE_RESOURCES[at].owner.via, name).toBe('profile');
+			// One deeper than anything declared today would still work; this is
+			// here so growing the chain is a decision someone makes rather than
+			// one that happens. MAX_OWNER_DEPTH is 4.
+			expect(seen.size, `${name} is ${seen.size} rows from its profile`).toBeLessThanOrEqual(3);
 		}
 	});
 
@@ -731,5 +762,103 @@ describe('a section owned through its parent', () => {
 		state.profileRow = { id: 7 };
 
 		expect(await actorForRow('skill', 42, 'user-1')).toEqual({ profileId: 7 });
+	});
+});
+
+/**
+ * The two things a child collection needed that a one-level parent did not: a
+ * chain that goes further than one row, and a table with no `status` column.
+ * Both are the whole of what stopped these being sections — the id-stable merge
+ * the detail page does is the page's concern, not this layer's, which writes one
+ * row at a time and never deletes and re-creates.
+ */
+describe('a section owned two rows away', () => {
+	function givenProjectTechnologies(
+		opts: { roles?: Record<string, unknown>[]; projects?: Record<string, unknown>[] } = {}
+	) {
+		state.rowsByTable.set(
+			work_experiences,
+			opts.roles ?? [{ id: 3, profile_id: 7, name: 'Chipta', position: 'Senior Engineer', sort: 0 }]
+		);
+		state.rowsByTable.set(
+			work_experience_projects,
+			opts.projects ?? [{ id: 9, work_experience_id: 3, name: 'The migration', sort: 0 }]
+		);
+		state.rowsByTable.set(work_experience_project_technologies, [
+			{ id: 11, work_experience_project_id: 9, name: 'Django', sort: 0 }
+		]);
+	}
+
+	it('follows the chain to the profile', async () => {
+		givenProjectTechnologies();
+
+		expect(await readOwnedRow('work_experience_project_technology', ACTOR, 11)).toMatchObject({
+			id: 11,
+			name: 'Django'
+		});
+	});
+
+	it('refuses a row whose grandparent belongs to someone else', async () => {
+		// Two rows with no column saying whose they are. The role is the only place
+		// the answer exists, and it is two joins from the row being written.
+		givenProjectTechnologies({
+			roles: [{ id: 3, profile_id: 999, name: 'Chipta', position: 'Senior Engineer' }]
+		});
+
+		expect(await readOwnedRow('work_experience_project_technology', ACTOR, 11)).toBeNull();
+		expect(
+			await updateRow('work_experience_project_technology', ACTOR, 11, { name: 'Flask' })
+		).toMatchObject({ ok: false, reason: 'unauthorized' });
+	});
+
+	it('names its parent the way its parent is named everywhere else', async () => {
+		// The parent's own label carries ITS parent — "the migration — Senior
+		// Engineer at Chipta" — and that is not a column the join returns. A short
+		// form here would be a name the model is shown and cannot resolve, because
+		// `findParentNamed` matches against the long one.
+		givenProjectTechnologies();
+
+		const [row] = await readOwnedRows('work_experience_project_technology', ACTOR);
+
+		expect(row.work_experience_project).toBe('The migration — Senior Engineer at Chipta');
+	});
+
+	it('files a create under the project it names, resolved through both levels', async () => {
+		givenProjectTechnologies();
+
+		const result = await createRow('work_experience_project_technology', ACTOR, {
+			name: 'Celery',
+			work_experience_project: 'the migration — senior engineer at chipta'
+		});
+
+		expect(result.ok).toBe(true);
+		expect(state.inserts[0].values).toMatchObject({
+			work_experience_project_id: 9,
+			name: 'Celery'
+		});
+		expect(state.inserts[0].values).not.toHaveProperty('work_experience_project');
+	});
+
+	it('writes no status to a table that has no status column', async () => {
+		// Three of the child collections never grew one. It filters nothing
+		// anywhere, so the fix is to skip it rather than to migrate dead columns
+		// onto three tables — but an insert naming a column that does not exist
+		// fails, so skipping it is not optional.
+		givenProjectTechnologies();
+
+		await createRow('work_experience_project_technology', ACTOR, {
+			name: 'Celery',
+			work_experience_project: 'The migration — Senior Engineer at Chipta'
+		});
+
+		expect(state.inserts[0].values).not.toHaveProperty('status');
+	});
+
+	it('still writes status where the column exists', async () => {
+		givenSkills();
+
+		await createRow('skill', ACTOR, { name: 'Redis', category: 'Backend' });
+
+		expect(state.inserts[0].values).toMatchObject({ status: 'published' });
 	});
 });

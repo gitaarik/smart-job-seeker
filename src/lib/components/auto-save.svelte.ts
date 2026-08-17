@@ -31,6 +31,25 @@ import { onDestroy, untrack } from 'svelte';
 
 export type AutoSaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
+/**
+ * The part of a save that a status pill reads.
+ *
+ * Narrower than {@link AutoSaveField} on purpose: an indicator needs to know
+ * what happened and offer the two ways out of it, and nothing else. Naming that
+ * subset is what lets something which is not one field — the aggregate over a
+ * whole section's rows, see `sectionRows` — be rendered by the same component
+ * without inventing a `value` for it to satisfy a type.
+ */
+export interface SaveStatus {
+	readonly status: AutoSaveStatus;
+	/** Last error message, cleared on the next set/retry. */
+	readonly error: string | null;
+	/** True while a previous value is still recoverable. */
+	readonly canUndo: boolean;
+	undo: () => void;
+	retry: () => void;
+}
+
 export interface AutoSaveOptions<T> {
 	/** Value that's currently persisted on the server. */
 	initial: T;

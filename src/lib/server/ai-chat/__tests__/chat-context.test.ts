@@ -44,7 +44,8 @@ import {
 	CHAT_BUDGET_CHARS,
 	normalizeRouteId,
 	resolveChatContext,
-	scopeForRoute
+	scopeForRoute,
+	tieredCapabilities
 } from '../chat-context';
 
 beforeEach(() => {
@@ -496,11 +497,11 @@ describe('profile section pages', () => {
 		expect(scope.capabilities).toContain(capability);
 	});
 
-	it.each(SECTIONS)('%s offers all three verbs', (route, resource) => {
+	it.each(SECTIONS)('%s offers all three verbs on its own row', (route, resource) => {
 		// Adding is the same request from a list and from one entry ("add another
 		// role"), and hiding follows the same targeting as editing, so a page that
 		// can reach a section can do all three to it.
-		expect(scopeForRoute(route).capabilities).toEqual([
+		expect(tieredCapabilities(scopeForRoute(route)).subject).toEqual([
 			`edit_${resource}`,
 			`add_${resource}`,
 			`hide_${resource}`
@@ -513,20 +514,71 @@ describe('profile section pages', () => {
 		expect(scopeForRoute(route).hint?.subject).toBeTruthy();
 	});
 
-	it('grants one section and no more', () => {
-		// The three verbs of ONE section, never two sections' worth. A section
-		// page costs ~7.7k with its three verbs, so a ROUTE that reached a second
-		// one would be spending the budget with nothing able to say no. A message
-		// can still reach one — that path goes through fitMatchedCapabilities,
-		// which drops rather than overflows.
+	it('makes only the page’s own section unconditional', () => {
+		// The three verbs of ONE section are the promise the page makes, and
+		// nothing may drop them. Anything else it grants is a child collection
+		// that lives on the same page — a role's projects — and those go in the
+		// tier that gives way, because a busy role’s five sections measure 30k
+		// against a 22k budget. Without the split a page would either overflow or
+		// have to give up its own subject.
 		for (const [route, resource] of SECTIONS) {
-			const capabilities = scopeForRoute(route).capabilities ?? [];
-			expect(capabilities, route).toHaveLength(3);
+			const { subject, children } = tieredCapabilities(scopeForRoute(route));
+
+			expect(subject, route).toHaveLength(3);
 			expect(
-				capabilities.every((c) => c.endsWith(`_${resource}`)),
-				`${route}: ${capabilities.join(', ')}`
+				subject.every((c) => c.endsWith(`_${resource}`)),
+				`${route}: ${subject.join(', ')}`
 			).toBe(true);
+
+			// A child group is a section's whole set of verbs — never a lone edit,
+			// which would leave the model able to correct a project and not add one.
+			for (const group of children) {
+				expect(group.length, `${route}: ${group.join(', ')}`).toBeGreaterThan(0);
+				expect(
+					group.some((c) => subject.includes(c)),
+					route
+				).toBe(false);
+			}
 		}
+	});
+
+	it('reaches a role’s projects from the role’s own page', () => {
+		// The gap this closed: the assistant could rewrite a role's summary and
+		// not touch the projects listed right under it, because a project is a row
+		// of another table and only the role's own section was declared here.
+		const { children } = tieredCapabilities(
+			scopeForRoute('/(app)/profile/(data)/work-experience/[id]')
+		);
+
+		expect(children.flat()).toEqual([
+			'edit_work_experience_project',
+			'add_work_experience_project',
+			'edit_work_experience_achievement',
+			'add_work_experience_achievement',
+			'hide_work_experience_achievement',
+			'edit_work_experience_technology',
+			'add_work_experience_technology',
+			'hide_work_experience_technology',
+			'edit_work_experience_project_technology',
+			'add_work_experience_project_technology'
+		]);
+	});
+
+	it('orders the children by what should survive the budget', () => {
+		// Groups are admitted in this order and dropped from the end, so the order
+		// IS the decision about what a busy role keeps. Projects and achievements
+		// carry prose the assistant can actually improve; the technology lists are
+		// single names, and they are what goes.
+		const { children } = tieredCapabilities(
+			scopeForRoute('/(app)/profile/(data)/work-experience/[id]')
+		);
+
+		expect(children.map((group) => group[0])).toEqual([
+			'edit_work_experience_project',
+			'edit_work_experience_achievement',
+			'edit_work_experience_technology',
+			'edit_work_experience_project_technology'
+		]);
 	});
 
 	it('leaves the section LIST pages without a capability', () => {
@@ -571,6 +623,8 @@ describe('profile section pages', () => {
 			isStaff: false
 		});
 
+		// The page's own section, resolved against the row the URL named. Its child
+		// collections are resolved in their own calls — see the tiering above.
 		expect(mockResolveCapabilities).toHaveBeenCalledWith(
 			['edit_work_experience', 'add_work_experience', 'hide_work_experience'],
 			{ type: 'profile_section', resource: 'work_experience', id: 5 },

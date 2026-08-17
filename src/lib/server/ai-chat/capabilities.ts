@@ -134,7 +134,20 @@ export interface CapabilityDef {
 	 * read by id alone would put another applicant's history into this one's
 	 * prompt. The capabilities that don't need it ignore it.
 	 */
-	current(target: CapabilityTarget, actor: CapabilityActor): Promise<Record<string, unknown>>;
+	current(
+		target: CapabilityTarget,
+		actor: CapabilityActor,
+		/**
+		 * The row the page is about, where there is one and the caller knows it.
+		 *
+		 * Only `resolveCapabilities` passes it, and only a child collection reads
+		 * it: what a role's page has to say about its projects is *its* projects,
+		 * not every project on the profile. The apply paths deliberately do not
+		 * pass it — a proposal is applied from a card, long after any page, and
+		 * the wider list is both the honest answer there and the permissive one.
+		 */
+		entity?: ContextEntity | null
+	): Promise<Record<string, unknown>>;
 	/**
 	 * The fields this capability can change, by kind. One declaration drives
 	 * both the wire schema (buildProposalSchema) and the coercion applied to
@@ -935,7 +948,11 @@ export async function resolveCapabilities(
 			const target = await def.resolve(entity, actor);
 			if (target) {
 				if (!(await def.authorize(target, actor))) return null;
-				return { capability, targets: [target], current: await def.current(target, actor) };
+				return {
+					capability,
+					targets: [target],
+					current: await def.current(target, actor, entity)
+				};
 			}
 
 			if (!def.resolveMany) return null;
@@ -957,7 +974,7 @@ export async function resolveCapabilities(
 				return {
 					capability,
 					targets,
-					current: await def.current(targets[0], actor),
+					current: await def.current(targets[0], actor, entity),
 					...(omitted > 0 ? { omitted } : {})
 				};
 			}
@@ -1473,8 +1490,29 @@ the proposal is discarded rather than applied to something else.`;
  * per verb (see `renderCapabilityPrompt`), and the add verb's inventory is
  * grouped rather than one row per line. Without them the same turn measured
  * 19,740 with a target list that was still not the whole section.
+ *
+ * Raised again to 22,000 when the child collections became sections — a role's
+ * projects, achievements and technologies. Measured with
+ * `scripts/measure-capability-budget.ts` against profile 1's heaviest role
+ * (8 projects, 13 achievements, 22 technologies, 38 project technologies):
+ *
+ *  - **8,572** — the role's own three verbs. Never dropped.
+ *  - **4,469** — its projects (2 verbs, 8 rows).
+ *  - **6,015** — its achievements (3 verbs, 13 rows).
+ *  - **5,227** — its technologies, **6,137** — its project technologies.
+ *  - **30,420** — all five together, which is what settled the number: this is
+ *    not a page that can be admitted whole, so it isn't. 22,000 holds the role,
+ *    its projects and its achievements, and `tieredCapabilities` gives up the
+ *    two technology sections rather than half of everything. A role with less
+ *    hanging off it keeps more; the lightest of the eight keeps all of it.
+ *
+ * The per-section numbers are incremental, not standalone — a section's rows are
+ * printed once for all its verbs, so measuring a verb alone counts a list its
+ * siblings are already paying for. They are also ~10% below what the same
+ * arrangement cost before `current` learned the page's row: a child's inventory
+ * used to list every role's projects to answer a question about one.
  */
-export const CAPABILITY_PROMPT_BUDGET_CHARS = 19000;
+export const CAPABILITY_PROMPT_BUDGET_CHARS = 22000;
 
 /**
  * Admit matched capabilities while they fit, in the order given.

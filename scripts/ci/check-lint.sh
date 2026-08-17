@@ -59,7 +59,12 @@ set -euo pipefail
 # bearing — one forces a space the whitespace collapser would eat, the other
 # carries newlines that an HTML attribute would have to encode as entities.
 # Changing behaviour to satisfy a cosmetic rule is the wrong trade.
-BASELINE=1486
+#
+# 1,486 -> 1,477 when the child collections moved to per-row auto-save: the two
+# detail pages' collection-save functions, their staged-removal index sets and
+# five whole-collection zod schemas went with them. Nothing was fixed to earn
+# this; it is code that no longer exists.
+BASELINE=1477
 
 npx svelte-kit sync
 

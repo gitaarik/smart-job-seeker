@@ -131,6 +131,40 @@ vi.mock('$lib/server/db/schema', () => ({
 		id: 'tech_skill_categories.id',
 		sort: 'tech_skill_categories.sort',
 		profile_id: 'tech_skill_categories.profile_id'
+	},
+	// The child collections. Each hangs off a row rather than off the profile,
+	// so what they carry here is the foreign key the write layer follows —
+	// `work_experience_project_technologies` twice over, since its parent is
+	// itself parent-owned.
+	work_experience_projects: {
+		id: 'work_experience_projects.id',
+		sort: 'work_experience_projects.sort',
+		work_experience_id: 'work_experience_projects.work_experience_id'
+	},
+	work_experience_project_technologies: {
+		id: 'work_experience_project_technologies.id',
+		sort: 'work_experience_project_technologies.sort',
+		work_experience_project_id: 'work_experience_project_technologies.work_experience_project_id'
+	},
+	work_experience_achievements: {
+		id: 'work_experience_achievements.id',
+		sort: 'work_experience_achievements.sort',
+		work_experience_id: 'work_experience_achievements.work_experience_id'
+	},
+	work_experience_technologies: {
+		id: 'work_experience_technologies.id',
+		sort: 'work_experience_technologies.sort',
+		work_experience_id: 'work_experience_technologies.work_experience_id'
+	},
+	side_project_achievements: {
+		id: 'side_project_achievements.id',
+		sort: 'side_project_achievements.sort',
+		side_project_id: 'side_project_achievements.side_project_id'
+	},
+	side_project_technologies: {
+		id: 'side_project_technologies.id',
+		sort: 'side_project_technologies.sort',
+		side_project_id: 'side_project_technologies.side_project_id'
 	}
 }));
 

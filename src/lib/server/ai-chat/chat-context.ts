@@ -38,7 +38,7 @@ import {
 	PROFILE_RESOURCES,
 	type ProfileResourceName
 } from '$lib/server/profile/resources';
-import { verbsFor } from './profile-capabilities';
+import { type ProfileCapability, resourceForCapability, verbsFor } from './profile-capabilities';
 
 /**
  * Char budget for the chat's evidence blocks (the profile blob is exempt — see
@@ -86,7 +86,7 @@ import { verbsFor } from './profile-capabilities';
 export const CHAT_BUDGET_CHARS = 250000;
 
 /** Which entity a route is about, and what the assistant should draw on there. */
-interface RouteScope {
+export interface RouteScope {
 	/**
 	 * What the page is about. A profile section names which section, because the
 	 * seven of them share an id space and the route id is the only thing that
@@ -139,6 +139,30 @@ function sectionCapabilities(resource: ProfileResourceName): Capability[] {
 }
 
 /**
+ * The route a section's rows are edited on.
+ *
+ * Three cases, and the third is what the child collections needed. A section
+ * with a detail page is edited there. A section without one is edited on its
+ * list. A section owned by a parent row is edited wherever its PARENT is —
+ * because that is what "owned by a parent row" means on a page: a role's
+ * projects, achievements and technologies are all on the role's own page, and
+ * a project's technologies are on the same page one level further in.
+ *
+ * Recursive rather than one level, for the one section that is two away.
+ * Skills come out unchanged: their category has no detail page, so both land
+ * on /profile/skills exactly as before.
+ *
+ * The alternative was a child declaring the route itself, which would have put
+ * `/profile/work-experience/[id]` in five places and made a section's page and
+ * its parent's able to disagree.
+ */
+function editRouteFor(name: ProfileResourceName): string {
+	const resource = PROFILE_RESOURCES[name];
+	if (resource.owner.via === 'parent') return editRouteFor(resource.owner.parent);
+	return resource.detailPath ? `${resource.page.path}/[id]` : resource.page.path;
+}
+
+/**
  * Where the assistant may propose a section edit, derived from the declaration
  * rather than listed again here.
  *
@@ -165,21 +189,23 @@ function sectionCapabilities(resource: ProfileResourceName): Capability[] {
  */
 const PROFILE_SECTION_SCOPES: Record<string, RouteScope> = (() => {
 	const scopes: Record<string, RouteScope> = {};
+	const granted: Record<string, Capability[]> = {};
+
+	for (const resource of PROFILE_RESOURCE_NAMES) {
+		for (const capability of sectionCapabilities(resource)) {
+			(granted[editRouteFor(resource)] ??= []).push(capability);
+		}
+	}
 
 	for (const resource of PROFILE_RESOURCE_NAMES) {
 		const { page, detailPath, label } = PROFILE_RESOURCES[resource];
-		const capabilities = sectionCapabilities(resource);
 
-		// The list page. A section with a detail page contributes no verbs here —
-		// its rows are reached by URL — so a path holding only such sections keeps
-		// the key absent rather than empty.
-		const granted = [
-			...(scopes[page.path]?.capabilities ?? []),
-			...(detailPath ? [] : capabilities)
-		];
+		// The list page. Present for every section, capabilities or not: it is
+		// where the hint lives, and a section reached by URL grants its verbs on
+		// the detail route instead.
 		scopes[page.path] = {
 			...PROFILE_SCOPE,
-			...(granted.length > 0 ? { capabilities: granted } : {}),
+			...(granted[page.path]?.length ? { capabilities: granted[page.path] } : {}),
 			hint: {
 				page: `their ${page.name.toLowerCase()}, on their profile`,
 				// A list, so a bare question is about the section rather than one
@@ -190,11 +216,12 @@ const PROFILE_SECTION_SCOPES: Record<string, RouteScope> = (() => {
 		};
 
 		if (detailPath) {
-			scopes[`${page.path}/[id]`] = {
+			const route = `${page.path}/[id]`;
+			scopes[route] = {
 				...PROFILE_SCOPE,
 				entity: resource,
 				param: 'id',
-				capabilities,
+				capabilities: granted[route] ?? [],
 				hint: { page: `one ${label}'s own page`, subject: `that ${label}` }
 			};
 		}
@@ -202,6 +229,64 @@ const PROFILE_SECTION_SCOPES: Record<string, RouteScope> = (() => {
 
 	return scopes;
 })();
+
+/**
+ * A route's capabilities split into what it must offer and what it can drop.
+ *
+ * A detail page is *about* one row, and that row's section is the promise the
+ * page makes — dropping it would be the failure this whole layer exists to
+ * avoid. What hangs off it is a different matter. A role's page also carries its
+ * projects, achievements and technologies, and on a busy role those are four
+ * more sections' worth of contract on every turn: measured at 30,420 characters
+ * against a 22,000 budget for the heaviest role on the dev profile, where the
+ * role's own three verbs are 8,572 of it. So they are offered while they fit and
+ * given up whole when they do not, exactly as a matched section is.
+ *
+ * A LIST page has no subject, so nothing here is optional on one: /profile/skills
+ * grants skills and their groups, both of which are what that page IS. That is
+ * also what keeps this from changing anything that existed before the child
+ * collections — every route that had capabilities before has the same ones in
+ * `subject` now.
+ *
+ * Grouped by section rather than by verb, because a section's verbs are one
+ * offer: admitting the edit without the add would leave the model able to
+ * correct a project and not to add one, for a reason no prompt states.
+ */
+export function tieredCapabilities(scope: RouteScope): {
+	subject: Capability[];
+	children: Capability[][];
+} {
+	const declared = scope.capabilities ?? [];
+	if (!scope.entity || scope.entity === 'job' || scope.entity === 'application') {
+		return { subject: declared, children: [] };
+	}
+
+	const subject: Capability[] = [];
+	const bySection = new Map<ProfileResourceName, Capability[]>();
+
+	for (const capability of declared) {
+		// Split at the FIRST underscore, not by suffix: `edit_work_experience` and
+		// `edit_work_experience_project` are two sections whose names are a prefix
+		// of each other, and a suffix test on them answers by declaration order.
+		const section = resourceForCapability(capability as ProfileCapability);
+		if (!(section in PROFILE_RESOURCES) || section === scope.entity) {
+			subject.push(capability);
+			continue;
+		}
+		bySection.set(section, [...(bySection.get(section) ?? []), capability]);
+	}
+
+	// Declaration order, which is where the ordering decision lives: it is what
+	// decides which children survive a budget that cannot hold them all, and
+	// PROFILE_RESOURCES lists them most useful first for that reason.
+	return {
+		subject,
+		children: PROFILE_RESOURCE_NAMES.flatMap((name) => {
+			const group = bySection.get(name);
+			return group ? [group] : [];
+		})
+	};
+}
 
 /**
  * What an unlisted route gets. Same sources as PROFILE_SCOPE, but it says so
@@ -591,16 +676,21 @@ export async function resolveChatContext(opts: {
 	// list is too long to print narrows to the rows the conversation has named,
 	// and "make that one expert" names nothing on its own. See TARGET_LIST_CAP.
 	const recent = [...(opts.history ?? []), opts.message].slice(-MATCH_WINDOW_MESSAGES).join('\n');
-	const granted = await resolveCapabilities(scope.capabilities ?? [], entity, actor, {
-		message: recent
-	});
+	const tiers = tieredCapabilities(scope);
 
-	// The page's own capabilities are the page bias; these are the rest of the
-	// profile, reachable when the user says which part they mean. They come
-	// second and they are what gives way to the budget, so page bias survives
-	// contact with a message that names three sections at once.
+	const [subject, ...children] = await Promise.all(
+		[tiers.subject, ...tiers.children].map((group) =>
+			resolveCapabilities(group, entity, actor, { message: recent })
+		)
+	);
+
+	// Three tiers, in the order they may be given up. The page's subject never
+	// is. Its child collections come next, because they are on this page too and
+	// a role's projects belong to the turn far more than a section the message
+	// merely brushed against. The rest of the profile is last, and gives way
+	// first — page bias has to survive a message that names three sections.
 	const matched = await matchedCapabilities(scope, [...(opts.history ?? []), opts.message], actor);
-	const capabilities = fitMatchedCapabilities(granted, matched);
+	const capabilities = fitMatchedCapabilities(subject, [...children, ...matched]);
 
 	return {
 		context: {

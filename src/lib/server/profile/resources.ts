@@ -25,12 +25,29 @@
  * ordered by `sort`, validation, tags — is the same CRUD the other eight are.
  * See `ResourceOwner`.
  *
- * Deliberately not here:
+ * Fifteen, since the child collections joined them — the projects,
+ * achievements and technologies that hang off a role or a side project. They
+ * used to be excluded here on the grounds that their writes are id-stable
+ * merges, which is real bespoke logic rather than CRUD. That is true of the
+ * *collection* write and irrelevant to a section: the detail page posts every
+ * project of one role at once, so its save has to keep each row's id across the
+ * round trip, while this layer writes one row at a time and never deletes and
+ * re-creates. The merge is what the page needs; a section needs `createRow` and
+ * `updateRow`, which are id-stable by construction.
  *
- *  - **The child collections** — achievements, technologies, projects. Their
- *    writes are id-stable merges (a row keeps its id across a save so
- *    translations keyed on it don't orphan), which is real bespoke logic, not
- *    CRUD wearing a different name.
+ * What they did cost is two generalizations, both small and both now the rule
+ * rather than an exception for them:
+ *
+ *  - **Ownership more than one row deep.** A project technology hangs off a
+ *    project, which hangs off a role, which hangs off the profile. `ownedRows`
+ *    used to refuse a chain outright; it now builds one, which turned out to be
+ *    less code than the refusal was. See `ResourceOwner`.
+ *  - **`status` is not universal.** Three of the six have no such column. It
+ *    filters nothing anywhere (see HIDEABLE_RESOURCES), so the write layer
+ *    writes it where it exists and does not miss it where it doesn't.
+ *
+ * Deliberately still not here:
+ *
  *  - **The profile row itself.** It has no `status`, its owner is `user_id`
  *    rather than `profile_id`, and its slug needs canonicalizing and a
  *    uniqueness check. One member with three exceptions is not a member.
@@ -45,9 +62,15 @@ import {
 	highlights,
 	languages,
 	references,
+	side_project_achievements,
+	side_project_technologies,
 	side_projects,
 	tech_skill_categories,
 	tech_skills,
+	work_experience_achievements,
+	work_experience_project_technologies,
+	work_experience_projects,
+	work_experience_technologies,
 	work_experiences
 } from '$lib/server/db/schema';
 import { SKILL_LEVELS } from '$lib/data/field-labels';
@@ -59,16 +82,28 @@ import {
 	highlightBasicSchema,
 	languageBasicSchema,
 	referenceBasicSchema,
+	sideProjectAchievementBasicSchema,
 	sideProjectBasicSchema,
+	sideProjectTechnologyBasicSchema,
 	techSkillBasicSchema,
 	techSkillCategoryBasicSchema,
-	workExperienceBasicSchema
+	workExperienceAchievementBasicSchema,
+	workExperienceBasicSchema,
+	workExperienceProjectBasicSchema,
+	workExperienceProjectTechnologyBasicSchema,
+	workExperienceTechnologyBasicSchema
 } from '$lib/server/validation/api-schemas';
 
 export type ProfileResourceName =
 	| 'work_experience'
+	| 'work_experience_project'
+	| 'work_experience_achievement'
+	| 'work_experience_technology'
+	| 'work_experience_project_technology'
 	| 'education'
 	| 'side_project'
+	| 'side_project_achievement'
+	| 'side_project_technology'
 	| 'language'
 	| 'reference'
 	| 'certificate'
@@ -90,7 +125,15 @@ export type ProfileResourceName =
  */
 export interface SectionTable extends PgTable {
 	id: PgColumn;
-	status: PgColumn;
+	/**
+	 * Optional, because three of the child collections do not have it.
+	 *
+	 * Not a gap worth closing with a migration: `status` filters nothing
+	 * anywhere (see HIDEABLE_RESOURCES), so the three tables without it are the
+	 * ones that never grew a column nothing reads. Declaring it required here
+	 * would have meant adding dead columns to make a structural type fit.
+	 */
+	status?: PgColumn;
 	sort: PgColumn;
 	date_created: PgColumn;
 	date_updated: PgColumn;
@@ -127,6 +170,14 @@ export interface SectionRow {
  * A parent is a section in its own right — `skill_category` is declared below
  * with its own verbs — so nothing about this makes a child row reachable
  * without its parent being reachable too.
+ *
+ * A parent may itself be parent-owned, and one is: a project technology hangs
+ * off a project, which hangs off a role. `ownedRows` used to refuse that outright
+ * and now recurses, which is fewer lines than the refusal was — the recursion
+ * was already there in `ownerOf`, and the SQL is one more nested subquery. The
+ * chain must still terminate at a profile-owned section; `write.ts` bounds the
+ * depth so a declaration that pointed a section at itself fails loudly rather
+ * than hanging.
  */
 export type ResourceOwner =
 	| {
@@ -366,11 +417,31 @@ export interface ProfileResource {
  * Visibility on a rendered resume or CV is decided by `tags`, through
  * `profile-filter.ts`: the `!resume` + `!cv` pair (`$lib/profile-visibility`'s
  * "profile-only") holds an item back from every base template while leaving any
- * per-version tag it carries intact. Five sections have a `tags` column AND go
- * through that filter in both renderers. Languages, references and certificates
- * are rendered straight from the profile with no filter at all, and highlights
- * have no `tags` column, so for those four there is simply no way to hide an
- * entry — not from the assistant and not from the UI either.
+ * per-version tag it carries intact. A section qualifies when it has a `tags`
+ * column AND every document renderer that prints it puts it through that
+ * filter. Languages, references and certificates are rendered straight from the
+ * profile with no filter at all, and highlights have no `tags` column, so for
+ * those four there is simply no way to hide an entry — not from the assistant
+ * and not from the UI either.
+ *
+ * The child collections split on the same test rather than on being children:
+ *
+ *  - **Role achievements** have `tags` and are filtered in both renderers
+ *    (`ProfileDisplay` and `StructuredResume` each call `filterOnTags` with
+ *    `OVERRIDE_ENTITIES.achievement`), so they hide.
+ *  - **Role technologies** have `tags`, are filtered in `StructuredResume`, and
+ *    are not printed by `ProfileDisplay` at all — nothing to filter is not the
+ *    same failure as printing them unfiltered, so they hide too.
+ *  - **Role projects, project technologies and the side-project pair** have no
+ *    `tags` column. Projects additionally render on no document — they feed the
+ *    generation context, not the layout — so there is nothing a hide could take
+ *    them off of.
+ *
+ * The public portfolio at /p/[slug]/portfolio prints roles, achievements and
+ * technologies with no filter at all, which is true of the five original
+ * sections as well. It is a portfolio page rather than a document, and this list
+ * is about documents; the hide contract says "every CV and every export" and
+ * means it.
  *
  * Skills and their categories are filtered on both sides — `ProfileDisplay`
  * filters the groups and then the skills inside each, and `StructuredResume`
@@ -394,6 +465,8 @@ export interface ProfileResource {
  */
 export const HIDEABLE_RESOURCES = [
 	'work_experience',
+	'work_experience_achievement',
+	'work_experience_technology',
 	'education',
 	'side_project',
 	'skill',
@@ -484,6 +557,213 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		schema: workExperienceBasicSchema
 	},
 
+	/**
+	 * The projects inside one role, and the first section that renders on no
+	 * document at all.
+	 *
+	 * That is not an oversight to fix here. Neither `ProfileDisplay` nor
+	 * `StructuredResume` prints them; what reads them is the generation context —
+	 * `assembleGenerationContext`'s `projects` source ranks them against the job
+	 * being written for, and a cover letter or an interview answer is built out
+	 * of the two or three that fit. So they are the applicant's evidence rather
+	 * than their layout, and the consequence for this file is `hide`: there is
+	 * nothing to take a project off, so it does not get the verb. See
+	 * HIDEABLE_RESOURCES.
+	 */
+	work_experience_project: {
+		table: work_experience_projects,
+		owner: {
+			via: 'parent',
+			parent: 'work_experience',
+			column: work_experience_projects.work_experience_id,
+			key: 'work_experience_id',
+			nameField: 'work_experience'
+		},
+		title: 'Role projects',
+		label: 'role project',
+		page: {
+			path: '/profile/work-experience',
+			name: 'Work experience'
+		},
+		// No bare "project": it is what `side_project` is called, it is half of
+		// what a job description says, and this section is reached from the page
+		// its rows live on rather than by being named.
+		aliases: ['work project', 'project at a job', 'project within a role'],
+		// Named with its role, for the reason a skill is named with its group: a
+		// project called "the migration" is one row under this employer and
+		// another under the next, and a label that said only "the migration"
+		// would be picking between them by coin toss.
+		rowLabel: (row) => joined([short(row.name), row.work_experience], ' — ') || 'Untitled project',
+		shortLabel: (row) => short(row.name) || 'Untitled project',
+		fields: {
+			name: { kind: 'string', note: 'what the project was called' },
+			work_experience: {
+				kind: 'string',
+				note: 'the role it was part of, named exactly as one of the roles listed below'
+			},
+			url: { kind: 'string', note: 'where it can be seen, if anywhere' },
+			start_date: { kind: 'date' },
+			end_date: { kind: 'date' },
+			description: {
+				kind: 'string',
+				note: 'what the project was and what the applicant did on it'
+			},
+			outcome: { kind: 'string', note: 'what it changed — the result, not the work' }
+		},
+		required: ['name', 'work_experience'],
+		insertDefaults: {},
+		notNullColumns: [],
+		newRowPlacement: 'append',
+		// The role's order first, then the project's within it: the page shows
+		// projects under the role they belong to, and appending against a
+		// profile-wide maximum would put every new project after every project of
+		// every other role.
+		orderBy: [
+			asc(work_experiences.sort),
+			desc(work_experiences.start_date),
+			asc(work_experience_projects.sort)
+		],
+		schema: workExperienceProjectBasicSchema
+	},
+
+	/** The bullet points under a role — what the applicant actually achieved there. */
+	work_experience_achievement: {
+		table: work_experience_achievements,
+		owner: {
+			via: 'parent',
+			parent: 'work_experience',
+			column: work_experience_achievements.work_experience_id,
+			key: 'work_experience_id',
+			nameField: 'work_experience'
+		},
+		title: 'Role achievements',
+		label: 'role achievement',
+		page: {
+			path: '/profile/work-experience',
+			name: 'Work experience'
+		},
+		aliases: ['achievement at a job', 'achievement in a role', 'what they achieved'],
+		// The whole row is one sentence, so the label is the row cut short.
+		rowLabel: (row) =>
+			joined([short(row.description), row.work_experience], ' — ') || 'Untitled achievement',
+		shortLabel: (row) => short(row.description) || 'Untitled achievement',
+		fields: {
+			description: {
+				kind: 'string',
+				note: 'one achievement, as one sentence — at most 255 characters'
+			},
+			work_experience: {
+				kind: 'string',
+				note: 'the role it belongs to, named exactly as one of the roles listed below'
+			},
+			fa_icon: {
+				kind: 'string',
+				notForAssistant:
+					'A Font Awesome identifier such as faRocket. A name that does not exist renders nothing, and the applicant sees a gap rather than an error.'
+			},
+			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS }
+		},
+		required: ['description', 'work_experience'],
+		insertDefaults: {},
+		notNullColumns: [],
+		newRowPlacement: 'append',
+		orderBy: [
+			asc(work_experiences.sort),
+			desc(work_experiences.start_date),
+			asc(work_experience_achievements.sort)
+		],
+		schema: workExperienceAchievementBasicSchema
+	},
+
+	/** What one role was worked in — the stack listed under the job. */
+	work_experience_technology: {
+		table: work_experience_technologies,
+		owner: {
+			via: 'parent',
+			parent: 'work_experience',
+			column: work_experience_technologies.work_experience_id,
+			key: 'work_experience_id',
+			nameField: 'work_experience'
+		},
+		title: 'Role technologies',
+		label: 'role technology',
+		page: {
+			path: '/profile/work-experience',
+			name: 'Work experience'
+		},
+		aliases: ['technology used in a role', 'stack at a job'],
+		rowLabel: (row) =>
+			joined([short(row.name), row.work_experience], ' — ') || 'Untitled technology',
+		shortLabel: (row) => short(row.name) || 'Untitled technology',
+		rowNamesAreAmbiguous:
+			'A technology name is what job descriptions are made of, exactly as for skills. ' +
+			'Matching on one would reach for this section on any turn that mentions a stack.',
+		fields: {
+			name: { kind: 'string', note: 'the technology, named the way a job listing would' },
+			work_experience: {
+				kind: 'string',
+				note: 'the role it was used in, named exactly as one of the roles listed below'
+			},
+			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS }
+		},
+		required: ['name', 'work_experience'],
+		insertDefaults: {},
+		notNullColumns: [],
+		newRowPlacement: 'append',
+		orderBy: [
+			asc(work_experiences.sort),
+			desc(work_experiences.start_date),
+			asc(work_experience_technologies.sort)
+		],
+		schema: workExperienceTechnologyBasicSchema
+	},
+
+	/**
+	 * What one project was built with — the only two-level section there is.
+	 *
+	 * Its parent is `work_experience_project`, which is itself parent-owned, so
+	 * this is the row that makes `ownedRows` recurse. Everything else about it is
+	 * a name in a list.
+	 */
+	work_experience_project_technology: {
+		table: work_experience_project_technologies,
+		owner: {
+			via: 'parent',
+			parent: 'work_experience_project',
+			column: work_experience_project_technologies.work_experience_project_id,
+			key: 'work_experience_project_id',
+			nameField: 'work_experience_project'
+		},
+		title: 'Role project technologies',
+		label: 'role project technology',
+		page: {
+			path: '/profile/work-experience',
+			name: 'Work experience'
+		},
+		rowLabel: (row) =>
+			joined([short(row.name), row.work_experience_project], ' — ') || 'Untitled technology',
+		shortLabel: (row) => short(row.name) || 'Untitled technology',
+		rowNamesAreAmbiguous:
+			'A technology name is what job descriptions are made of, exactly as for skills. ' +
+			'Matching on one would reach for this section on any turn that mentions a stack.',
+		fields: {
+			name: { kind: 'string', note: 'the technology, named the way a job listing would' },
+			work_experience_project: {
+				kind: 'string',
+				note: 'the project it was used on, named exactly as one of the projects listed below'
+			}
+		},
+		required: ['name', 'work_experience_project'],
+		insertDefaults: {},
+		notNullColumns: [],
+		newRowPlacement: 'append',
+		// Only one join deep, so the role's order is not in scope here — a
+		// grandchild's read joins its parent and no further. Within a project is
+		// the order that matters anyway; across projects the list is grouped.
+		orderBy: [asc(work_experience_projects.sort), asc(work_experience_project_technologies.sort)],
+		schema: workExperienceProjectTechnologyBasicSchema
+	},
+
 	education: {
 		table: education,
 		owner: { via: 'profile', column: education.profile_id },
@@ -559,6 +839,87 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		newRowPlacement: 'unsorted',
 		orderBy: [asc(side_projects.sort), desc(side_projects.start_date)],
 		schema: sideProjectBasicSchema
+	},
+
+	/** The bullet points under a side project. Same shape as a role's, one column lighter. */
+	side_project_achievement: {
+		table: side_project_achievements,
+		owner: {
+			via: 'parent',
+			parent: 'side_project',
+			column: side_project_achievements.side_project_id,
+			key: 'side_project_id',
+			nameField: 'side_project'
+		},
+		title: 'Side project achievements',
+		label: 'side project achievement',
+		page: {
+			path: '/profile/side-projects',
+			name: 'Side projects'
+		},
+		rowLabel: (row) =>
+			joined([short(row.description), row.side_project], ' — ') || 'Untitled achievement',
+		shortLabel: (row) => short(row.description) || 'Untitled achievement',
+		fields: {
+			description: {
+				kind: 'string',
+				note: 'one achievement, as one sentence — at most 255 characters'
+			},
+			side_project: {
+				kind: 'string',
+				note: 'the project it belongs to, named exactly as one of the projects listed below'
+			}
+		},
+		required: ['description', 'side_project'],
+		insertDefaults: {},
+		notNullColumns: [],
+		newRowPlacement: 'append',
+		orderBy: [
+			asc(side_projects.sort),
+			desc(side_projects.start_date),
+			asc(side_project_achievements.sort)
+		],
+		schema: sideProjectAchievementBasicSchema
+	},
+
+	/** What one side project was built with. */
+	side_project_technology: {
+		table: side_project_technologies,
+		owner: {
+			via: 'parent',
+			parent: 'side_project',
+			column: side_project_technologies.side_project_id,
+			key: 'side_project_id',
+			nameField: 'side_project'
+		},
+		title: 'Side project technologies',
+		label: 'side project technology',
+		page: {
+			path: '/profile/side-projects',
+			name: 'Side projects'
+		},
+		rowLabel: (row) => joined([short(row.name), row.side_project], ' — ') || 'Untitled technology',
+		shortLabel: (row) => short(row.name) || 'Untitled technology',
+		rowNamesAreAmbiguous:
+			'A technology name is what job descriptions are made of, exactly as for skills. ' +
+			'Matching on one would reach for this section on any turn that mentions a stack.',
+		fields: {
+			name: { kind: 'string', note: 'the technology, named the way a job listing would' },
+			side_project: {
+				kind: 'string',
+				note: 'the project it was used on, named exactly as one of the projects listed below'
+			}
+		},
+		required: ['name', 'side_project'],
+		insertDefaults: {},
+		notNullColumns: [],
+		newRowPlacement: 'append',
+		orderBy: [
+			asc(side_projects.sort),
+			desc(side_projects.start_date),
+			asc(side_project_technologies.sort)
+		],
+		schema: sideProjectTechnologyBasicSchema
 	},
 
 	language: {

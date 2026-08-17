@@ -353,51 +353,63 @@ export const workExperienceBasicSchema = z.object({
 	tags: z.array(z.string()).optional().nullable()
 });
 
-export const workExperienceTechSchema = z.object({
-	section: z.literal('technologies'),
-	// Accept either bare names (legacy) or {name, tags} so per-technology
-	// version tags survive the save round-trip.
-	technologies: z.array(
-		z.union([
-			z.string(),
-			z.object({
-				name: z.string(),
-				tags: z.array(z.string()).optional().nullable()
-			})
-		])
-	)
+/**
+ * The child collections, one row at a time.
+ *
+ * These replaced five whole-collection schemas — one per section, each holding
+ * an array the detail page posted in full. That shape is what a Save button
+ * needs and what auto-save cannot use, since the endpoint behind it reconciles
+ * by deleting every row the payload does not mention. One row per request has no
+ * such window, so the columns are declared per row here for `PROFILE_RESOURCES`
+ * to hand to `validatePatch`.
+ *
+ * The parent is NAMED here rather than pointed at, the way a skill names its
+ * category: `work_experience` is a role's label, resolved against the profile's
+ * own roles. That is for the assistant, which cannot produce a row id it was
+ * never told. A UI holds the id and sends it instead — `resolveParent` takes
+ * either, and the id is not one of these fields because it is not a column this
+ * section owns.
+ *
+ * Identity fields are `.optional()` for the reason every schema here has them
+ * so: a partial patch may leave them out, and telling "not mentioned" from
+ * "cleared" is `resource.required`'s job, not the schema's.
+ */
+export const workExperienceProjectBasicSchema = z.object({
+	name: requiredTrimmedString('Project name').optional(),
+	work_experience: requiredTrimmedString('Work experience').optional(),
+	url: optionalTrimmedString(2048),
+	start_date: z.string().optional().nullable(),
+	end_date: z.string().optional().nullable(),
+	description: optionalTrimmedString(10000),
+	outcome: optionalTrimmedString(10000)
 });
 
-export const workExperienceAchievementsSchema = z.object({
-	section: z.literal('achievements'),
-	achievements: z.array(
-		z.object({
-			// Present for existing rows so the id survives a save (stable across edits
-			// → translations keyed by it don't orphan); absent for newly-added ones.
-			id: z.number().int().optional(),
-			description: z.string(),
-			tags: z.array(z.string()).optional().nullable()
-		})
-	)
+export const workExperienceAchievementBasicSchema = z.object({
+	description: requiredTrimmedString('Achievement', 255).optional(),
+	work_experience: requiredTrimmedString('Work experience').optional(),
+	fa_icon: optionalTrimmedString(100),
+	tags: z.array(z.string()).optional().nullable()
 });
 
-export const workExperienceProjectsSchema = z.object({
-	section: z.literal('projects'),
-	// The full ordered list of projects for this work experience. Existing rows
-	// carry their `id` so it survives a save (keeps the row — and its
-	// technologies — stable); newly-added ones omit it.
-	projects: z.array(
-		z.object({
-			id: z.number().int().optional(),
-			name: z.string(),
-			url: optionalTrimmedString(2048),
-			start_date: z.string().optional().nullable(),
-			end_date: z.string().optional().nullable(),
-			description: optionalTrimmedString(10000),
-			outcome: optionalTrimmedString(10000),
-			technologies: z.array(z.string()).optional().default([])
-		})
-	)
+export const workExperienceTechnologyBasicSchema = z.object({
+	name: requiredTrimmedString('Technology name').optional(),
+	work_experience: requiredTrimmedString('Work experience').optional(),
+	tags: z.array(z.string()).optional().nullable()
+});
+
+export const workExperienceProjectTechnologyBasicSchema = z.object({
+	name: requiredTrimmedString('Technology name').optional(),
+	work_experience_project: requiredTrimmedString('Project').optional()
+});
+
+export const sideProjectAchievementBasicSchema = z.object({
+	description: requiredTrimmedString('Achievement', 255).optional(),
+	side_project: requiredTrimmedString('Side project').optional()
+});
+
+export const sideProjectTechnologyBasicSchema = z.object({
+	name: requiredTrimmedString('Technology name').optional(),
+	side_project: requiredTrimmedString('Side project').optional()
 });
 
 // Side project update
@@ -412,22 +424,6 @@ export const sideProjectBasicSchema = z.object({
 	start_date: z.string().optional().nullable(),
 	end_date: z.string().optional().nullable(),
 	tags: z.array(z.string()).optional().nullable()
-});
-
-export const sideProjectTechSchema = z.object({
-	section: z.literal('technologies'),
-	technologies: z.array(z.string())
-});
-
-export const sideProjectAchievementsSchema = z.object({
-	section: z.literal('achievements'),
-	achievements: z.array(
-		z.object({
-			// See workExperienceAchievementsSchema — stable id across saves.
-			id: z.number().int().optional(),
-			description: z.string()
-		})
-	)
 });
 
 /*

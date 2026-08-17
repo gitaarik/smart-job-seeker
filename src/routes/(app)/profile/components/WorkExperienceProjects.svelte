@@ -1,21 +1,45 @@
 <script lang="ts">
+	/**
+	 * A role's projects, each saving itself.
+	 *
+	 * ## What changed, and why
+	 *
+	 * This used to be one local array posted whole to
+	 * `PATCH /api/work-experience/[id]` behind a Save button. Two problems, and
+	 * only one of them was visible:
+	 *
+	 *  - The button sat below every project in the section, after "Add Project",
+	 *    so editing the seventh one put it off-screen — on a page whose basic
+	 *    fields had been auto-saving for months. Nothing was broken. The page
+	 *    asked for a click it never showed you, having taught you it wouldn't.
+	 *  - The endpoint reconciles: it deletes every project the payload does not
+	 *    mention. That is correct behind a button and unusable in front of a
+	 *    debounce, because each tick would ship one tab's whole idea of the
+	 *    section and silently delete rows another tab had added.
+	 *
+	 * So the writes are per row now, through `/api/profile-section/…` and
+	 * `sectionRows`. Reordering keeps an explicit commit because a drag is not
+	 * finished until it is dropped, and deleting asks first because a project
+	 * owns its technologies and documents by cascade.
+	 */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import {
-		faChevronDown,
-		faChevronRight,
-		faGripVertical,
-		faPlus,
-		faTimes,
-		faUndo
-	} from '@fortawesome/free-solid-svg-icons';
+	import { faGripVertical, faPlus } from '@fortawesome/free-solid-svg-icons';
 	import SectionSaveButton from '$lib/components/SectionSaveButton.svelte';
-	import ProjectDocuments from './ProjectDocuments.svelte';
+	import { sectionRows, type SectionRow } from '$lib/components/section-rows.svelte';
+	import ConfirmModal from './ConfirmModal.svelte';
+	import WorkExperienceProjectRow from './WorkExperienceProjectRow.svelte';
+	import {
+		blankProject,
+		projectBody,
+		projectIsWorthCreating,
+		toProjectData,
+		type ProjectData
+	} from './work-experience-projects';
 	import { dndzone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 
-	type SaveState = 'idle' | 'saving' | 'saved' | 'error';
-
 	interface InitialTech {
+		id: number;
 		name: string | null;
 	}
 	interface InitialProject {
@@ -54,247 +78,125 @@
 		documentsByProject?: Record<number, DocForList[]>;
 	} = $props();
 
-	// `_key` is a stable client-side key so #each and drag-reorder can track a
-	// project across moves and inserts; it's stripped before saving.
-	interface ProjectItem {
-		id?: number;
-		name: string;
-		url: string;
-		start_date: string;
-		end_date: string;
-		description: string;
-		outcome: string;
-		technologies: string[];
-		_key: number;
-	}
+	const store = sectionRows({
+		resource: 'work_experience_project',
+		parentKey: 'work_experience_id',
+		parentId: workExperienceId,
+		profileId,
+		initial,
+		toData: toProjectData,
+		blank: blankProject,
+		toBody: projectBody,
+		canCreate: projectIsWorthCreating
+	});
 
-	function formatDate(date: Date | string | null): string {
-		if (!date) return '';
-		const d = typeof date === 'string' ? new Date(date) : date;
-		return d.toISOString().split('T')[0];
-	}
-
-	let keySeq = 0;
-	let items = $state<ProjectItem[]>(
-		initial.map((p) => ({
-			id: p.id,
-			name: p.name ?? '',
-			url: p.url ?? '',
-			start_date: formatDate(p.start_date),
-			end_date: formatDate(p.end_date),
-			description: p.description ?? '',
-			outcome: p.outcome ?? '',
-			technologies: (p.work_experience_project_technologies ?? [])
-				.map((t) => t.name ?? '')
-				.filter(Boolean),
-			_key: keySeq++
-		}))
+	// The technologies each project started with, by project id. The store for a
+	// project's chips is seeded from this once and owns the list after that.
+	const initialTechnologies: Record<number, InitialTech[]> = Object.fromEntries(
+		initial.map((p) => [p.id, p.work_experience_project_technologies ?? []])
 	);
 
-	let deleted = $state<Set<number>>(new Set());
 	let expanded = $state<number | null>(null);
-	let saveState = $state<SaveState>('idle');
+	let confirming = $state<SectionRow<ProjectData> | null>(null);
+	let removeError = $state<string | null>(null);
+
+	function addProject() {
+		const row = store.add();
+		expanded = row.key;
+	}
+
+	/**
+	 * A project the user has opened and not written goes without asking.
+	 *
+	 * The confirmation is about losing something: the technologies and documents
+	 * that hang off a saved project go with it, and no undo can bring those back.
+	 * A draft has neither, and has never been anywhere but this screen.
+	 */
+	function requestRemove(row: SectionRow<ProjectData>) {
+		if (row.id === null) {
+			void store.remove(row);
+			if (expanded === row.key) expanded = null;
+			return;
+		}
+		confirming = row;
+	}
+
+	async function confirmRemove() {
+		const row = confirming;
+		confirming = null;
+		if (!row) return;
+		try {
+			await store.remove(row);
+			if (expanded === row.key) expanded = null;
+		} catch (e) {
+			removeError = e instanceof Error ? e.message : 'Could not delete that project';
+		}
+	}
+
+	// --- Drag reorder (gated behind a toggle, like the Technologies section) ---
+	const flipMs = 150;
+	let reorderMode = $state(false);
+	let reorderState = $state<'idle' | 'saving' | 'error'>('idle');
+	let dnd = $state<Array<{ id: number; row: SectionRow<ProjectData> }>>([]);
+
+	function startReorder() {
+		dnd = store.rows.map((row) => ({ id: row.key, row }));
+		expanded = null;
+		reorderMode = true;
+	}
+
+	function handleConsider(e: CustomEvent<{ items: typeof dnd }>) {
+		dnd = e.detail.items;
+	}
+
+	function handleFinalize(e: CustomEvent<{ items: typeof dnd }>) {
+		dnd = e.detail.items;
+	}
+
+	async function saveReorder() {
+		reorderState = 'saving';
+		try {
+			await store.reorder(dnd.map((d) => d.row));
+			reorderState = 'idle';
+			reorderMode = false;
+			dnd = [];
+		} catch {
+			// Stay in reorder mode so the drop the user made is still on screen to
+			// retry, rather than snapping back with nothing to show for it.
+			reorderState = 'error';
+			setTimeout(() => (reorderState = 'idle'), 3000);
+		}
+	}
+
+	function cancelReorder() {
+		reorderMode = false;
+		dnd = [];
+	}
 
 	function yearLabel(value: string): string {
 		return value ? value.slice(0, 4) : '';
 	}
 
-	function dateRange(p: ProjectItem): string {
+	function dateRange(p: ProjectData): string {
 		const start = yearLabel(p.start_date);
 		const end = yearLabel(p.end_date);
 		if (start && end) return start === end ? start : `${start} – ${end}`;
 		if (start) return `${start} – present`;
 		return end;
 	}
-
-	function toggleExpand(index: number) {
-		expanded = expanded === index ? null : index;
-	}
-
-	function addProject() {
-		items = [
-			...items,
-			{
-				name: '',
-				url: '',
-				start_date: '',
-				end_date: '',
-				description: '',
-				outcome: '',
-				technologies: [],
-				_key: keySeq++
-			}
-		];
-		expanded = items.length - 1;
-	}
-
-	function isEmptyProject(p: ProjectItem): boolean {
-		return (
-			!p.name.trim() &&
-			!p.url.trim() &&
-			!p.description.trim() &&
-			!p.outcome.trim() &&
-			p.technologies.filter((t) => t.trim()).length === 0
-		);
-	}
-
-	function removeProject(index: number) {
-		if (isEmptyProject(items[index])) {
-			// Brand-new empty row — drop it and remap side state by index.
-			items = items.filter((_, i) => i !== index);
-			const remap = (set: Set<number>) => {
-				const next = new Set<number>();
-				set.forEach((i) => {
-					if (i > index) next.add(i - 1);
-					else if (i < index) next.add(i);
-				});
-				return next;
-			};
-			deleted = remap(deleted);
-			if (expanded === index) expanded = null;
-			else if (expanded !== null && expanded > index) expanded -= 1;
-		} else {
-			deleted = new Set([...deleted, index]);
-			if (expanded === index) expanded = null;
-		}
-	}
-
-	function undoRemove(index: number) {
-		const next = new Set(deleted);
-		next.delete(index);
-		deleted = next;
-	}
-
-	// --- Per-project technologies (simple chip list, no version tags) ---
-	function addTech(pi: number) {
-		items[pi].technologies = [...items[pi].technologies, ''];
-	}
-
-	function removeTech(pi: number, ti: number) {
-		items[pi].technologies = items[pi].technologies.filter((_, i) => i !== ti);
-	}
-
-	// --- Drag reorder (gated behind a toggle, like the Technologies section) ---
-	const flipMs = 150;
-	let reorderMode = $state(false);
-	let reorderSnapshot = $state<{ items: ProjectItem[]; deleted: Set<number> } | null>(null);
-
-	interface DndProject {
-		id: number;
-		project: ProjectItem;
-		deleted: boolean;
-	}
-	let dnd = $state<DndProject[]>([]);
-
-	function startReorder() {
-		reorderSnapshot = {
-			items: items.map((p) => ({ ...p })),
-			deleted: new Set(deleted)
-		};
-		dnd = items.map((p, i) => ({ id: p._key, project: p, deleted: deleted.has(i) }));
-		expanded = null;
-		reorderMode = true;
-	}
-
-	function applyDndOrder(next: DndProject[]) {
-		dnd = next;
-		items = next.map((d) => d.project);
-		deleted = new Set(next.flatMap((d, i) => (d.deleted ? [i] : [])));
-	}
-
-	function handleConsider(e: CustomEvent<{ items: DndProject[] }>) {
-		dnd = e.detail.items;
-	}
-
-	function handleFinalize(e: CustomEvent<{ items: DndProject[] }>) {
-		applyDndOrder(e.detail.items);
-	}
-
-	function cancelReorder() {
-		if (reorderSnapshot) {
-			items = reorderSnapshot.items;
-			deleted = reorderSnapshot.deleted;
-		}
-		reorderSnapshot = null;
-		reorderMode = false;
-		dnd = [];
-	}
-
-	async function saveReorder() {
-		await save();
-		if (saveState === 'error') return; // stay in reorder mode so the user can retry
-		reorderSnapshot = null;
-		reorderMode = false;
-		dnd = [];
-	}
-
-	async function save() {
-		saveState = 'saving';
-		try {
-			// Track the source indices we send so the server's returned ids can be
-			// written back onto the freshly-inserted projects (keeps them stable for
-			// the next save without a reload).
-			const sent = items
-				.map((p, i) => ({ p, i }))
-				.filter(({ p, i }) => p.name.trim() && !deleted.has(i));
-
-			const response = await fetch(`/api/work-experience/${workExperienceId}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					section: 'projects',
-					projects: sent.map(({ p }) => ({
-						id: p.id,
-						name: p.name.trim(),
-						url: p.url.trim() || null,
-						start_date: p.start_date || null,
-						end_date: p.end_date || null,
-						description: p.description.trim() || null,
-						outcome: p.outcome.trim() || null,
-						technologies: p.technologies.map((t) => t.trim()).filter(Boolean)
-					}))
-				})
-			});
-
-			if (response.ok) {
-				const result = await response.json().catch(() => null);
-				if (result && Array.isArray(result.projects)) {
-					const updated = [...items];
-					sent.forEach(({ i }, k) => {
-						const newId = result.projects[k]?.id;
-						if (newId) updated[i] = { ...updated[i], id: newId };
-					});
-					items = updated;
-				}
-				saveState = 'saved';
-				setTimeout(() => (saveState = 'idle'), 2000);
-			} else {
-				saveState = 'error';
-				setTimeout(() => (saveState = 'idle'), 3000);
-			}
-		} catch {
-			saveState = 'error';
-			setTimeout(() => (saveState = 'idle'), 3000);
-		}
-	}
-
-	const inputClass =
-		'w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent';
 </script>
 
 {#if reorderMode}
 	<div
-		class="overflow-hidden rounded-md border border-[var(--dash-border)]"
-		use:dndzone={{ items: dnd, flipDurationMs: flipMs, type: 'we-projects' }}
+		use:dndzone={{ items: dnd, flipDurationMs: flipMs, dropTargetStyle: {} }}
 		onconsider={handleConsider}
 		onfinalize={handleFinalize}
+		class="space-y-2"
 	>
-		{#each dnd as item, index (item.id)}
+		{#each dnd as entry (entry.id)}
 			<div
 				animate:flip={{ duration: flipMs }}
-				class="flex cursor-grab items-center active:cursor-grabbing {index > 0
-					? 'border-t border-[var(--dash-border)]'
-					: ''} {item.deleted ? 'bg-[var(--dash-bg)]/50 opacity-50' : ''}"
+				class="flex cursor-grab items-center rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface)] active:cursor-grabbing"
 			>
 				<span
 					class="flex items-center self-stretch pr-1 pl-3 text-[var(--dash-text-secondary)]/60"
@@ -303,14 +205,15 @@
 					<FontAwesomeIcon icon={faGripVertical} class="h-3 w-3" />
 				</span>
 				<span
-					class="flex-1 px-2 py-3 text-[var(--dash-text)] {item.deleted
-						? 'text-[var(--dash-text-secondary)] line-through'
-						: ''} {!item.project.name.trim() ? 'text-[var(--dash-text-secondary)] italic' : ''}"
+					class="flex-1 px-2 py-3 text-[var(--dash-text)] {!entry.row.data.name.trim()
+						? 'text-[var(--dash-text-secondary)] italic'
+						: ''}"
 				>
-					{item.project.name.trim() || 'Untitled project'}
+					{entry.row.data.name.trim() || 'Untitled project'}
 				</span>
-				{#if dateRange(item.project)}
-					<span class="px-3 text-xs text-[var(--dash-text-muted)]">{dateRange(item.project)}</span>
+				{#if dateRange(entry.row.data)}
+					<span class="px-3 text-xs text-[var(--dash-text-muted)]">{dateRange(entry.row.data)}</span
+					>
 				{/if}
 			</div>
 		{/each}
@@ -324,10 +227,13 @@
 		>
 			Cancel
 		</button>
-		<SectionSaveButton state={saveState} onClick={saveReorder} />
+		<SectionSaveButton
+			state={reorderState === 'idle' ? 'idle' : reorderState}
+			onClick={saveReorder}
+		/>
 	</div>
 {:else}
-	{#if items.length > 1}
+	{#if store.rows.length > 1}
 		<div class="mb-2 flex justify-end">
 			<button
 				type="button"
@@ -340,211 +246,27 @@
 		</div>
 	{/if}
 
-	{#if items.length === 0}
+	{#if store.rows.length === 0}
 		<p class="text-sm text-[var(--dash-text-secondary)]">No projects added yet.</p>
 	{:else}
 		<div class="space-y-3">
-			{#each items as project, index (project._key)}
-				{@const isDeleted = deleted.has(index)}
-				{@const isOpen = expanded === index}
-				<div
-					class="overflow-hidden rounded-lg border border-[var(--dash-border)] {isDeleted
-						? 'opacity-50'
-						: ''}"
-				>
-					<!-- Header row -->
-					<div class="flex items-center">
-						{#if isDeleted}
-							<span class="flex-1 px-4 py-3 text-[var(--dash-text-secondary)] line-through">
-								{project.name.trim() || 'Untitled project'}
-							</span>
-							<button
-								type="button"
-								onclick={() => undoRemove(index)}
-								class="p-3 text-[var(--dash-primary)] transition-colors hover:text-[var(--dash-primary-hover)]"
-								aria-label="Undo"
-							>
-								<FontAwesomeIcon icon={faUndo} class="h-4 w-4" />
-							</button>
-						{:else}
-							<button
-								type="button"
-								onclick={() => toggleExpand(index)}
-								class="flex flex-1 items-center gap-2 px-4 py-3 text-left transition-colors hover:bg-[var(--dash-bg)]/50"
-							>
-								<FontAwesomeIcon
-									icon={isOpen ? faChevronDown : faChevronRight}
-									class="h-3 w-3 text-[var(--dash-text-secondary)]"
-								/>
-								<span
-									class="flex-1 text-[var(--dash-text)] {!project.name.trim()
-										? 'text-[var(--dash-text-secondary)] italic'
-										: ''}"
-								>
-									{project.name.trim() || 'Untitled project'}
-								</span>
-								{#if dateRange(project)}
-									<span class="text-xs text-[var(--dash-text-muted)]">{dateRange(project)}</span>
-								{/if}
-							</button>
-							<button
-								type="button"
-								onclick={() => removeProject(index)}
-								class="p-3 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)]"
-								aria-label="Remove project"
-							>
-								<FontAwesomeIcon icon={faTimes} class="h-4 w-4" />
-							</button>
-						{/if}
-					</div>
-
-					<!-- Editor body -->
-					{#if isOpen && !isDeleted}
-						<div class="space-y-4 border-t border-[var(--dash-border)] bg-[var(--dash-bg)]/30 p-4">
-							<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-								<div>
-									<label
-										for="proj-name-{project._key}"
-										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
-									>
-										Project Name <span class="text-[var(--dash-error)]">*</span>
-									</label>
-									<input
-										id="proj-name-{project._key}"
-										type="text"
-										bind:value={items[index].name}
-										placeholder="e.g. Checkout redesign"
-										class={inputClass}
-									/>
-								</div>
-								<div>
-									<label
-										for="proj-url-{project._key}"
-										class="mb-1 block text-sm font-medium text-[var(--dash-text)]">URL</label
-									>
-									<input
-										id="proj-url-{project._key}"
-										type="url"
-										bind:value={items[index].url}
-										placeholder="https://…"
-										class={inputClass}
-									/>
-								</div>
-								<div>
-									<label
-										for="proj-start-{project._key}"
-										class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Start Date</label
-									>
-									<input
-										id="proj-start-{project._key}"
-										type="date"
-										bind:value={items[index].start_date}
-										class={inputClass}
-									/>
-								</div>
-								<div>
-									<label
-										for="proj-end-{project._key}"
-										class="mb-1 block text-sm font-medium text-[var(--dash-text)]">End Date</label
-									>
-									<input
-										id="proj-end-{project._key}"
-										type="date"
-										bind:value={items[index].end_date}
-										class={inputClass}
-									/>
-								</div>
-							</div>
-
-							<div>
-								<label
-									for="proj-desc-{project._key}"
-									class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Description</label
-								>
-								<textarea
-									id="proj-desc-{project._key}"
-									bind:value={items[index].description}
-									rows={3}
-									placeholder="What was the project and your role in it?"
-									class="{inputClass} resize-y"></textarea>
-							</div>
-
-							<div>
-								<label
-									for="proj-outcome-{project._key}"
-									class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Outcome</label
-								>
-								<textarea
-									id="proj-outcome-{project._key}"
-									bind:value={items[index].outcome}
-									rows={2}
-									placeholder="The result or impact (e.g. cut checkout time by 30%)."
-									class="{inputClass} resize-y"></textarea>
-							</div>
-
-							<div>
-								<span class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
-									>Technologies</span
-								>
-								<div class="flex flex-wrap gap-2">
-									{#each items[index].technologies as _, ti}
-										<div
-											class="flex items-center gap-1 rounded-lg border border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/5 py-1 pr-1 pl-3.5"
-										>
-											<div class="relative pr-3">
-												<span class="invisible min-w-[3ch] text-sm whitespace-pre"
-													>{items[index].technologies[ti] || 'Technology'}</span
-												>
-												<input
-													type="text"
-													bind:value={items[index].technologies[ti]}
-													placeholder="Technology"
-													class="absolute inset-0 w-full border-none bg-transparent pr-3 text-sm text-[var(--dash-text)] focus:outline-none"
-												/>
-											</div>
-											<button
-												type="button"
-												onclick={() => removeTech(index, ti)}
-												class="p-1 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)]"
-												aria-label="Remove technology"
-											>
-												<FontAwesomeIcon icon={faTimes} class="h-3 w-3" />
-											</button>
-										</div>
-									{/each}
-									<button
-										type="button"
-										onclick={() => addTech(index)}
-										class="flex items-center gap-1 rounded-lg border border-dashed border-[var(--dash-border)] px-3 py-1 text-sm text-[var(--dash-primary)] transition-colors hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary-hover)]"
-									>
-										<FontAwesomeIcon icon={faPlus} class="h-3 w-3" />
-										Add
-									</button>
-								</div>
-							</div>
-
-							<!-- Files & source code -->
-							<div>
-								<span class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
-									Files & source code
-								</span>
-								{#if project.id}
-									<ProjectDocuments
-										{profileId}
-										workExperienceProjectId={project.id}
-										documents={documentsByProject[project.id] ?? []}
-									/>
-								{:else}
-									<p class="text-xs text-[var(--dash-text-muted)] italic">
-										Save this project first, then you can attach files.
-									</p>
-								{/if}
-							</div>
-						</div>
-					{/if}
-				</div>
+			{#each store.rows as row (row.key)}
+				<WorkExperienceProjectRow
+					{row}
+					{store}
+					{profileId}
+					technologies={row.id ? (initialTechnologies[row.id] ?? []) : []}
+					documents={row.id ? (documentsByProject[row.id] ?? []) : []}
+					open={expanded === row.key}
+					onToggle={() => (expanded = expanded === row.key ? null : row.key)}
+					onRemove={() => requestRemove(row)}
+				/>
 			{/each}
 		</div>
+	{/if}
+
+	{#if removeError}
+		<p class="mt-2 text-sm text-[var(--dash-error)]">{removeError}</p>
 	{/if}
 
 	<button
@@ -555,8 +277,13 @@
 		<FontAwesomeIcon icon={faPlus} class="h-3 w-3" />
 		Add Project
 	</button>
-
-	<div class="mt-4 flex justify-end">
-		<SectionSaveButton state={saveState} onClick={save} />
-	</div>
 {/if}
+
+<ConfirmModal
+	isOpen={confirming !== null}
+	title="Delete project"
+	message={`Delete “${confirming?.data.name.trim() || 'Untitled project'}”? Its technologies and any files attached to it go with it, and this cannot be undone.`}
+	confirmLabel="Delete"
+	onCancel={() => (confirming = null)}
+	onConfirm={confirmRemove}
+/>

@@ -17,6 +17,7 @@
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
 	import AchievementsList, { type AchievementItem } from '$lib/components/AchievementsList.svelte';
+	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import WorkExperienceProjects from '../../../components/WorkExperienceProjects.svelte';
 	import VersionTags from '$lib/components/VersionTags.svelte';
 	import VersionTagsPopup from '$lib/components/VersionTagsPopup.svelte';
@@ -43,12 +44,17 @@
 
 	let pageTitle = $derived(experience.position || experience.name || 'Experience');
 
-	// Section save states. Technologies and achievements stay on explicit save:
-	// both stage removals in a `deleted*` index set that only takes effect on
-	// commit, so auto-saving would change what the delete button means, not just
-	// when the PATCH fires.
-	let techSaveState = $state<SaveState>('idle');
-	let achievementsSaveState = $state<SaveState>('idle');
+	// Every section on this page now saves as you type, through `sectionRows`
+	// and `/api/profile-section/…`. What is left of an explicit save is the two
+	// reorder modes: a drag is not finished until it is dropped, and an order is
+	// one write for the section rather than one per row.
+	//
+	// The staged-removal sets these used to keep are gone with it. They were the
+	// reason technologies and achievements stayed on a button — a delete that
+	// only took effect on commit needs a commit — and the replacement is that a
+	// delete means it now: immediately for a chip, and behind a confirmation for
+	// an achievement, whose text nothing can retype for you.
+	let techReorderState = $state<SaveState>('idle');
 
 	// Form states
 	let editName = $state(experience.name || '');
@@ -64,34 +70,99 @@
 	);
 	let showDeleteConfirm = $state(false);
 
-	let editAchievements = $state<AchievementItem[]>(
-		experience.work_experience_achievements.map((a) => ({
-			id: a.id,
-			description: a.description || '',
-			tags: Array.isArray(a.tags) ? (a.tags as string[]) : null
-		}))
-	);
 	let versionSlugs = $state<string[]>([]);
-	let deletedAchievements = $state<Set<number>>(new Set());
-	// `_id` is a stable client-side key so drag-and-drop reordering can track
-	// items across moves (it's stripped before saving).
-	type TechItem = { name: string; tags: string[]; _id: number };
-	let techIdSeq = 0;
-	let editTechnologies = $state<TechItem[]>(
-		experience.work_experience_technologies.map((t) => ({
-			name: t.name || '',
-			tags: Array.isArray(t.tags) ? (t.tags as string[]) : [],
-			_id: techIdSeq++
+
+	/**
+	 * The two child collections, each row saving itself.
+	 *
+	 * `tags` is a real field on both — the version slugs that decide which
+	 * documents an entry appears on — so it goes through the same PATCH as the
+	 * text. `sectionRows` compares arrays by element, or rebuilding the tag list
+	 * on every keystroke in the name beside it would rewrite the tags each time.
+	 */
+	type ChildRow = { description?: string; name?: string; tags: string[] };
+
+	const achievementStore = sectionRows({
+		resource: 'work_experience_achievement',
+		parentKey: 'work_experience_id',
+		parentId: experience.id,
+		profileId: data.profileId,
+		initial: experience.work_experience_achievements,
+		toData: (a) => ({
+			description: a.description ?? '',
+			tags: Array.isArray(a.tags) ? (a.tags as string[]) : []
+		}),
+		blank: () => ({ description: '', tags: [] as string[] }),
+		toBody: (v: ChildRow) => ({
+			description: (v.description ?? '').trim(),
+			tags: v.tags.length > 0 ? v.tags : null
+		}),
+		canCreate: (v: ChildRow) => (v.description ?? '').trim().length > 0
+	});
+
+	const techStore = sectionRows({
+		resource: 'work_experience_technology',
+		parentKey: 'work_experience_id',
+		parentId: experience.id,
+		profileId: data.profileId,
+		initial: experience.work_experience_technologies,
+		toData: (t) => ({
+			name: t.name ?? '',
+			tags: Array.isArray(t.tags) ? (t.tags as string[]) : []
+		}),
+		blank: () => ({ name: '', tags: [] as string[] }),
+		toBody: (v: ChildRow) => ({
+			name: (v.name ?? '').trim(),
+			tags: v.tags.length > 0 ? v.tags : null
+		}),
+		canCreate: (v: ChildRow) => (v.name ?? '').trim().length > 0
+	});
+
+	/**
+	 * What `AchievementsList` renders, kept in step with the store by `key`.
+	 *
+	 * The component owns an array and reports changes by index; the store owns
+	 * the saves and identifies rows by key. Neither is wrong and they cannot be
+	 * merged without the component growing a second mode, so the array carries
+	 * the key and this page is the one place that knows both.
+	 */
+	let editAchievements = $state<AchievementItem[]>(
+		achievementStore.rows.map((row) => ({
+			key: row.key,
+			id: row.id ?? undefined,
+			description: row.data.description ?? '',
+			tags: row.data.tags.length > 0 ? row.data.tags : null
 		}))
 	);
-	let deletedTechnologies = $state<Set<number>>(new Set());
-	let lastAddedTechIndex = $state<number | null>(null);
-	// Index of the technology whose version-tags popup is open (null = closed).
-	let techTagIndex = $state<number | null>(null);
+
+	/**
+	 * Ids arrive later for a row that started as a draft, and the list needs them
+	 * — a translated achievement is looked up by id, so without this a newly
+	 * added one would show its base text until the next page load.
+	 */
+	$effect(() => {
+		const ids = new Map(achievementStore.rows.map((row) => [row.key, row.id ?? undefined]));
+		let changed = false;
+		const next = editAchievements.map((item) => {
+			const id = item.key === undefined ? item.id : ids.get(item.key);
+			if (id === item.id) return item;
+			changed = true;
+			return { ...item, id };
+		});
+		if (changed) editAchievements = next;
+	});
+
+	function achievementRow(key: number | undefined) {
+		return key === undefined ? undefined : achievementStore.rows.find((r) => r.key === key);
+	}
+
+	let lastAddedTechKey = $state<number | null>(null);
+	/** The technology whose version-tags popup is open, by row key (null = closed). */
+	let techTagKey = $state<number | null>(null);
 	// Version tags are hidden on the chips until toggled on (like the skills page).
 	let showTechVersionTags = $state(false);
 	let hasAnyTechVersionTags = $derived(
-		versionSlugs.length > 0 || editTechnologies.some((t) => t.tags.length > 0)
+		versionSlugs.length > 0 || techStore.rows.some((t) => t.data.tags.length > 0)
 	);
 
 	// Load version slugs for achievement tags
@@ -187,151 +258,97 @@
 		})
 	);
 
-	async function saveTechnologies() {
-		techSaveState = 'saving';
-		try {
-			const response = await fetch(`/api/work-experience/${experience.id}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					section: 'technologies',
-					technologies: editTechnologies
-						.filter((t, i) => t.name.trim() && !deletedTechnologies.has(i))
-						.map((t) => ({
-							name: t.name.trim(),
-							tags: t.tags.length > 0 ? t.tags : null
-						}))
-				})
-			});
-
-			if (response.ok) {
-				techSaveState = 'saved';
-				setTimeout(() => (techSaveState = 'idle'), 2000);
-			} else {
-				techSaveState = 'error';
-				setTimeout(() => (techSaveState = 'idle'), 3000);
-			}
-		} catch {
-			techSaveState = 'error';
-			setTimeout(() => (techSaveState = 'idle'), 3000);
-		}
-	}
-
-	async function saveAchievements() {
-		achievementsSaveState = 'saving';
-		try {
-			// Track the original indices we send so we can write back the ids the
-			// server assigns to newly-inserted achievements (keeps them translatable
-			// without a reload).
-			const sent = editAchievements
-				.map((a, i) => ({ a, i }))
-				.filter(({ a, i }) => a.description.trim() && !deletedAchievements.has(i));
-
-			const response = await fetch(`/api/work-experience/${experience.id}`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					section: 'achievements',
-					achievements: sent.map(({ a }) => ({
-						id: a.id,
-						description: a.description,
-						tags: a.tags
-					}))
-				})
-			});
-
-			if (response.ok) {
-				const result = await response.json().catch(() => null);
-				if (result && Array.isArray(result.achievements)) {
-					const updated = [...editAchievements];
-					sent.forEach(({ i }, k) => {
-						const newId = result.achievements[k]?.id;
-						if (newId) updated[i] = { ...updated[i], id: newId };
-					});
-					editAchievements = updated;
-				}
-				achievementsSaveState = 'saved';
-				setTimeout(() => (achievementsSaveState = 'idle'), 2000);
-			} else {
-				achievementsSaveState = 'error';
-				setTimeout(() => (achievementsSaveState = 'idle'), 3000);
-			}
-		} catch {
-			achievementsSaveState = 'error';
-			setTimeout(() => (achievementsSaveState = 'idle'), 3000);
-		}
-	}
-
 	let lastAddedAchievementIndex = $state<number | null>(null);
+	let confirmingAchievement = $state<number | null>(null);
+	let childError = $state<string | null>(null);
 
 	function addAchievement() {
-		editAchievements = [...editAchievements, { description: '', tags: null }];
+		const row = achievementStore.add();
+		editAchievements = [...editAchievements, { key: row.key, description: '', tags: null }];
 		lastAddedAchievementIndex = editAchievements.length - 1;
 	}
 
-	function removeAchievement(index: number) {
-		if (!editAchievements[index]?.description.trim()) {
-			// Empty item - remove immediately
-			editAchievements = editAchievements.filter((_, i) => i !== index);
-			// Adjust deleted indices for removed item
-			const newDeleted = new Set<number>();
-			deletedAchievements.forEach((i) => {
-				if (i > index) newDeleted.add(i - 1);
-				else if (i < index) newDeleted.add(i);
-			});
-			deletedAchievements = newDeleted;
-		} else {
-			// Has content - soft delete
-			deletedAchievements = new Set([...deletedAchievements, index]);
+	/** The popup was accepted: write the entry the user just edited. */
+	function changeAchievement(index: number, item: AchievementItem) {
+		const row = achievementRow(item.key);
+		if (row) {
+			achievementStore.update(row, { description: item.description, tags: item.tags ?? [] });
 		}
 	}
 
-	function undoRemoveAchievement(index: number) {
-		const newSet = new Set(deletedAchievements);
-		newSet.delete(index);
-		deletedAchievements = newSet;
+	/**
+	 * Remove an achievement — for good, and after asking unless it is empty.
+	 *
+	 * There is no soft delete any more because there is no commit to stage it
+	 * against. An achievement is a sentence the applicant wrote and nothing can
+	 * retype it for them, so this asks; a row they added and never filled in has
+	 * nothing to lose and goes straight away.
+	 */
+	function removeAchievement(index: number) {
+		const item = editAchievements[index];
+		if (!item?.description.trim()) {
+			void dropAchievement(index);
+			return;
+		}
+		confirmingAchievement = index;
 	}
 
-	// AchievementsList commits a reorder with the soft-delete set already
-	// remapped to the new order; realign our index-based side state to match.
-	function commitAchievementsReorder(newDeleted: Set<number>) {
-		deletedAchievements = newDeleted;
+	async function dropAchievement(index: number) {
+		const item = editAchievements[index];
+		const row = achievementRow(item?.key);
+		try {
+			if (row) await achievementStore.remove(row);
+			editAchievements = editAchievements.filter((_, i) => i !== index);
+			if (lastAddedAchievementIndex === index) lastAddedAchievementIndex = null;
+		} catch (e) {
+			childError = e instanceof Error ? e.message : 'Could not delete that achievement';
+		}
+	}
+
+	async function confirmRemoveAchievement() {
+		const index = confirmingAchievement;
+		confirmingAchievement = null;
+		if (index !== null) await dropAchievement(index);
+	}
+
+	/**
+	 * The list has already written the new order into `editAchievements`; this
+	 * turns it into one reorder call, matching the array's entries back to their
+	 * rows by key.
+	 */
+	async function saveAchievementsReorder() {
 		lastAddedAchievementIndex = null;
+		// The list runs its own spinner for the duration of this call, so the only
+		// thing left to report is a failure.
+		try {
+			await achievementStore.reorder(
+				editAchievements.map((item) => achievementRow(item.key)).filter((row) => row !== undefined)
+			);
+		} catch (e) {
+			childError = e instanceof Error ? e.message : 'Could not save that order';
+		}
 	}
 
 	function addTechnology() {
-		editTechnologies = [...editTechnologies, { name: '', tags: [], _id: techIdSeq++ }];
-		lastAddedTechIndex = editTechnologies.length - 1;
+		lastAddedTechKey = techStore.add().key;
 	}
 
 	function focusIfNew(node: HTMLInputElement, isNew: boolean) {
 		if (isNew) {
 			node.focus();
-			lastAddedTechIndex = null;
+			lastAddedTechKey = null;
 		}
 	}
 
-	function removeTechnology(index: number) {
-		if (!editTechnologies[index]?.name?.trim()) {
-			// Empty tag - remove immediately
-			editTechnologies = editTechnologies.filter((_, i) => i !== index);
-			// Adjust deleted indices for removed item
-			const newDeleted = new Set<number>();
-			deletedTechnologies.forEach((i) => {
-				if (i > index) newDeleted.add(i - 1);
-				else if (i < index) newDeleted.add(i);
-			});
-			deletedTechnologies = newDeleted;
-		} else {
-			// Has content - soft delete
-			deletedTechnologies = new Set([...deletedTechnologies, index]);
+	/** A chip is one word; deleting it costs a retype, so it does not ask. */
+	async function removeTechnology(key: number) {
+		const row = techStore.rows.find((r) => r.key === key);
+		if (!row) return;
+		try {
+			await techStore.remove(row);
+		} catch (e) {
+			childError = e instanceof Error ? e.message : 'Could not delete that technology';
 		}
-	}
-
-	function undoRemoveTechnology(index: number) {
-		const newSet = new Set(deletedTechnologies);
-		newSet.delete(index);
-		deletedTechnologies = newSet;
 	}
 
 	// --- Drag-and-drop reordering of technologies (svelte-dnd-action) ---
@@ -339,34 +356,16 @@
 	// page) so that clicking chips edits them normally until the user opts in.
 	const techFlipMs = 150;
 	let techReorderMode = $state(false);
-	// Snapshot both the order and the soft-delete set so Cancel is a true revert.
-	let techReorderSnapshot = $state<{ techs: TechItem[]; deleted: Set<number> } | null>(null);
 
 	interface DndTechItem {
 		id: number;
-		tech: TechItem;
-		deleted: boolean;
+		row: (typeof techStore.rows)[number];
 	}
 	let dndTech = $state<DndTechItem[]>([]);
 
 	function startTechReorder() {
-		techReorderSnapshot = {
-			techs: editTechnologies.map((t) => ({ ...t })),
-			deleted: new Set(deletedTechnologies)
-		};
-		dndTech = editTechnologies.map((t, i) => ({
-			id: t._id,
-			tech: t,
-			deleted: deletedTechnologies.has(i)
-		}));
+		dndTech = techStore.rows.map((row) => ({ id: row.key, row }));
 		techReorderMode = true;
-	}
-
-	function applyDndOrder(items: DndTechItem[]) {
-		dndTech = items;
-		editTechnologies = items.map((w) => w.tech);
-		deletedTechnologies = new Set(items.flatMap((w, i) => (w.deleted ? [i] : [])));
-		lastAddedTechIndex = null;
 	}
 
 	function handleTechConsider(e: CustomEvent<{ items: DndTechItem[] }>) {
@@ -374,26 +373,27 @@
 	}
 
 	function handleTechFinalize(e: CustomEvent<{ items: DndTechItem[] }>) {
-		applyDndOrder(e.detail.items);
+		dndTech = e.detail.items;
 	}
 
 	function cancelTechReorder() {
-		if (techReorderSnapshot) {
-			editTechnologies = techReorderSnapshot.techs;
-			deletedTechnologies = techReorderSnapshot.deleted;
-		}
-		techReorderSnapshot = null;
 		techReorderMode = false;
 		dndTech = [];
 	}
 
 	async function saveTechReorder() {
-		await saveTechnologies();
-		// Stay in reorder mode on failure so the user can retry.
-		if (techSaveState === 'error') return;
-		techReorderSnapshot = null;
-		techReorderMode = false;
-		dndTech = [];
+		techReorderState = 'saving';
+		try {
+			await techStore.reorder(dndTech.map((d) => d.row));
+			techReorderState = 'idle';
+			techReorderMode = false;
+			dndTech = [];
+		} catch (e) {
+			// Stay in reorder mode so the drop the user made is still on screen.
+			techReorderState = 'error';
+			childError = e instanceof Error ? e.message : 'Could not save that order';
+			setTimeout(() => (techReorderState = 'idle'), 3000);
+		}
 	}
 </script>
 
@@ -537,7 +537,10 @@
 	<!-- Technologies -->
 	<Card padding="lg">
 		<div class="mb-4 flex items-center justify-between">
-			<h2 class="text-lg font-semibold text-[var(--dash-text)]">Technologies</h2>
+			<div class="flex items-center gap-3">
+				<h2 class="text-lg font-semibold text-[var(--dash-text)]">Technologies</h2>
+				<AutoSaveIndicator field={techStore.summary} idleLabel="Saves as you type" />
+			</div>
 			<div class="flex items-center gap-1.5">
 				{#if !techReorderMode && hasAnyTechVersionTags}
 					<button
@@ -555,7 +558,7 @@
 						Versions
 					</button>
 				{/if}
-				{#if editTechnologies.length > 1}
+				{#if techStore.rows.length > 1}
 					<button
 						type="button"
 						onclick={() => (techReorderMode ? cancelTechReorder() : startTechReorder())}
@@ -584,17 +587,13 @@
 				{#each dndTech as item (item.id)}
 					<div animate:flip={{ duration: techFlipMs }}>
 						<div
-							class="flex cursor-grab items-center gap-1.5 rounded-lg border border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/5 py-1.5 pr-3.5 pl-2 text-sm active:cursor-grabbing {item.deleted
-								? 'opacity-50'
-								: ''}"
+							class="flex cursor-grab items-center gap-1.5 rounded-lg border border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/5 py-1.5 pr-3.5 pl-2 text-sm active:cursor-grabbing"
 						>
 							<FontAwesomeIcon
 								icon={faGripVertical}
 								class="h-3 w-3 text-[var(--dash-text-muted)]"
 							/>
-							<span class="text-[var(--dash-text)] {item.deleted ? 'line-through' : ''}"
-								>{item.tech.name || 'Technology'}</span
-							>
+							<span class="text-[var(--dash-text)]">{item.row.data.name || 'Technology'}</span>
 						</div>
 					</div>
 				{/each}
@@ -610,77 +609,59 @@
 				>
 					Cancel
 				</button>
-				<SectionSaveButton state={techSaveState} onClick={saveTechReorder} />
+				<SectionSaveButton state={techReorderState} onClick={saveTechReorder} />
 			</div>
 		{:else}
 			<div class="flex flex-wrap gap-2">
-				{#each editTechnologies as tech, index}
-					{@const isDeleted = deletedTechnologies.has(index)}
+				{#each techStore.rows as tech (tech.key)}
 					<div
-						class="flex items-center gap-1 rounded-lg border border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/5 py-1 pr-1 pl-3.5 {isDeleted
-							? 'opacity-50'
-							: ''}"
+						class="flex items-center gap-1 rounded-lg border border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/5 py-1 pr-1 pl-3.5"
+						class:opacity-60={tech.field.status === 'saving'}
+						title={tech.field.error ?? undefined}
 					>
 						<div class="relative pr-3">
-							<span
-								class="invisible min-w-[3ch] text-sm whitespace-pre {isDeleted
-									? 'line-through'
-									: ''}">{editTechnologies[index].name || 'Technology'}</span
+							<span class="invisible min-w-[3ch] text-sm whitespace-pre"
+								>{tech.data.name || 'Technology'}</span
 							>
-							{#if isDeleted}
-								<span
-									class="absolute inset-0 pr-3 text-sm text-[var(--dash-text-secondary)] line-through"
-									>{editTechnologies[index].name}</span
-								>
-							{:else}
-								<input
-									type="text"
-									bind:value={editTechnologies[index].name}
-									placeholder="Technology"
-									use:focusIfNew={index === lastAddedTechIndex}
-									class="absolute inset-0 w-full border-none bg-transparent pr-3 text-sm text-[var(--dash-text)] focus:outline-none"
-								/>
-							{/if}
+							<input
+								type="text"
+								value={tech.data.name}
+								oninput={(e) => techStore.update(tech, { name: e.currentTarget.value })}
+								onblur={tech.field.flush}
+								placeholder="Technology"
+								aria-label="Technology"
+								use:focusIfNew={tech.key === lastAddedTechKey}
+								class="absolute inset-0 w-full border-none bg-transparent pr-3 text-sm focus:outline-none {tech
+									.field.status === 'error'
+									? 'text-[var(--dash-error)]'
+									: 'text-[var(--dash-text)]'}"
+							/>
 						</div>
-						{#if isDeleted}
+						{#if showTechVersionTags}
 							<button
 								type="button"
-								onclick={() => undoRemoveTechnology(index)}
-								class="p-1 text-[var(--dash-primary)] transition-colors hover:text-[var(--dash-primary-hover)]"
-								aria-label="Undo"
+								onclick={() => (techTagKey = tech.key)}
+								class="flex items-center gap-1 rounded p-1 transition-colors {tech.data.tags
+									.length > 0
+									? 'text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]'
+									: 'text-[var(--dash-text-secondary)]/50 hover:text-[var(--dash-primary)]'}"
+								aria-label="Version tags"
+								title="Resume / CV versions"
 							>
-								<FontAwesomeIcon icon={faUndo} class="h-3 w-3" />
-							</button>
-						{:else}
-							{#if showTechVersionTags}
-								<button
-									type="button"
-									onclick={() => (techTagIndex = index)}
-									class="flex items-center gap-1 rounded p-1 transition-colors {editTechnologies[
-										index
-									].tags.length > 0
-										? 'text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]'
-										: 'text-[var(--dash-text-secondary)]/50 hover:text-[var(--dash-primary)]'}"
-									aria-label="Version tags"
-									title="Resume / CV versions"
-								>
-									<FontAwesomeIcon icon={faTags} class="h-3 w-3" />
-									{#if editTechnologies[index].tags.length > 0}
-										<span class="text-[10px] leading-none font-medium"
-											>{editTechnologies[index].tags.length}</span
-										>
-									{/if}
-								</button>
-							{/if}
-							<button
-								type="button"
-								onclick={() => removeTechnology(index)}
-								class="p-1 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)]"
-								aria-label="Remove"
-							>
-								<FontAwesomeIcon icon={faTimes} class="h-3 w-3" />
+								<FontAwesomeIcon icon={faTags} class="h-3 w-3" />
+								{#if tech.data.tags.length > 0}
+									<span class="text-[10px] leading-none font-medium">{tech.data.tags.length}</span>
+								{/if}
 							</button>
 						{/if}
+						<button
+							type="button"
+							onclick={() => removeTechnology(tech.key)}
+							class="p-1 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)]"
+							aria-label="Remove"
+						>
+							<FontAwesomeIcon icon={faTimes} class="h-3 w-3" />
+						</button>
 					</div>
 				{/each}
 				<button
@@ -692,33 +673,31 @@
 					Add
 				</button>
 			</div>
-			<div class="mt-4 flex justify-end">
-				<SectionSaveButton state={techSaveState} onClick={saveTechnologies} />
-			</div>
 		{/if}
 	</Card>
 
 	<!-- Achievements -->
 	<Card padding="lg">
-		<h2 class="mb-4 text-lg font-semibold text-[var(--dash-text)]">Achievements</h2>
+		<div class="mb-4 flex items-center gap-3">
+			<h2 class="text-lg font-semibold text-[var(--dash-text)]">Achievements</h2>
+			<AutoSaveIndicator field={achievementStore.summary} idleLabel="Saves as you type" />
+		</div>
 
 		<AchievementsList
 			bind:achievements={editAchievements}
-			deletedIndices={deletedAchievements}
 			lastAddedIndex={lastAddedAchievementIndex}
 			showTags={true}
 			entity="work_experience_achievement"
 			{versionSlugs}
 			onAdd={addAchievement}
 			onRemove={removeAchievement}
-			onUndoRemove={undoRemoveAchievement}
-			onReorderCommit={commitAchievementsReorder}
-			onReorderSave={saveAchievements}
+			onItemChange={changeAchievement}
+			onReorderSave={saveAchievementsReorder}
 			onFocused={() => (lastAddedAchievementIndex = null)}
 		/>
-		<div class="mt-4 flex justify-end">
-			<SectionSaveButton state={achievementsSaveState} onClick={saveAchievements} />
-		</div>
+		{#if childError}
+			<p class="mt-3 text-sm text-[var(--dash-error)]">{childError}</p>
+		{/if}
 	</Card>
 
 	<!-- Projects -->
@@ -806,6 +785,15 @@
 </div>
 
 <ConfirmModal
+	isOpen={confirmingAchievement !== null}
+	title="Delete achievement"
+	message={`Delete “${(confirmingAchievement !== null && editAchievements[confirmingAchievement]?.description) || ''}”? This cannot be undone.`}
+	confirmLabel="Delete"
+	onCancel={() => (confirmingAchievement = null)}
+	onConfirm={confirmRemoveAchievement}
+/>
+
+<ConfirmModal
 	isOpen={showDeleteConfirm}
 	title="Delete Work Experience"
 	message="Are you sure you want to permanently delete this work experience? All achievements and technologies will also be deleted. This action cannot be undone."
@@ -826,13 +814,16 @@
 	}}
 />
 
-{#if techTagIndex !== null}
-	{@const idx = techTagIndex}
-	<VersionTagsPopup
-		title="Technology versions"
-		subtitle={editTechnologies[idx].name || undefined}
-		bind:tags={editTechnologies[idx].tags}
-		{versionSlugs}
-		onClose={() => (techTagIndex = null)}
-	/>
+{#if techTagKey !== null}
+	{@const row = techStore.rows.find((r) => r.key === techTagKey)}
+	{#if row}
+		<VersionTagsPopup
+			title="Technology versions"
+			subtitle={row.data.name || undefined}
+			tags={row.data.tags}
+			{versionSlugs}
+			onChange={(tags) => techStore.update(row, { tags })}
+			onClose={() => (techTagKey = null)}
+		/>
+	{/if}
 {/if}

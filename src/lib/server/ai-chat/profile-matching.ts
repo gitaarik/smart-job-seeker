@@ -318,9 +318,19 @@ async function matchByRowLabel(
 	rows: (name: ProfileResourceName) => Promise<RowLabels>,
 	candidates: ProfileResourceName[]
 ): Promise<SectionMatch[]> {
-	const inline = candidates.filter(
-		(name) => !PROFILE_RESOURCES[name].detailPath && !PROFILE_RESOURCES[name].rowNamesAreAmbiguous
-	);
+	// Not the child collections either, and not because their names are ambiguous
+	// — because they do not have one. A child's label carries its parent's, to
+	// stay unique across the profile: a project reads "the migration — Senior
+	// Engineer at Chipta", which is the same thing the note at the top of this
+	// file says a work experience's label is and will not appear verbatim in a
+	// sentence. Looking for it would read every project, achievement and
+	// technology on the profile, every turn, to find nothing.
+	const inline = candidates.filter((name) => {
+		const resource = PROFILE_RESOURCES[name];
+		return (
+			!resource.detailPath && !resource.rowNamesAreAmbiguous && resource.owner.via !== 'parent'
+		);
+	});
 
 	const found = await Promise.all(
 		inline.map(async (resource): Promise<SectionMatch | null> => {

@@ -60,6 +60,7 @@ import {
 	validatePatch
 } from '$lib/server/profile/write';
 import type { CapabilityActor, CapabilityDef, CapabilityTarget } from './capabilities';
+import type { ContextEntity } from './generation-context';
 
 /**
  * The three verbs, and why deletion is not one of them.
@@ -166,11 +167,16 @@ function parentWireField(resource: ProfileResource, name: ProfileResourceName): 
  */
 async function parentLabels(
 	resource: ProfileResource,
-	actor: CapabilityActor
+	actor: CapabilityActor,
+	entity?: ContextEntity | null
 ): Promise<string[] | undefined> {
 	if (resource.owner.via !== 'parent') return undefined;
 	const parent = PROFILE_RESOURCES[resource.owner.parent];
-	const rows = await readOwnedRows(resource.owner.parent, { profileId: actor.profileId });
+	// Narrowed to the row the page is about, like the target list is. A page
+	// about one role offering "file it under any of your eight jobs" is inviting
+	// the wrong one, and it is also the single most expensive block on that page
+	// — every role's projects, printed to answer a question about this role.
+	const rows = await rowsFor(resource.owner.parent, entity ?? null, actor);
 	return rows.map((row) => parent.rowLabel(row));
 }
 
@@ -295,13 +301,78 @@ function renderState(current: Record<string, unknown>): string {
 	return [
 		`Current values:\n\n${lines.join('\n')}`,
 		groups
-			? `\n\nThe groups it can be filed under, named exactly as written:\n\n${groups
+			? `\n\nWhat it can be filed under, named exactly as written:\n\n${groups
 					.map((group) => `  - ${group}`)
 					.join('\n')}`
 			: ''
 	]
 		.join('')
 		.trimEnd();
+}
+
+/**
+ * The sections between this one and the profile, nearest first.
+ *
+ * A role's projects are one away, a project's technologies two. Both are
+ * "part of" the role whose page the user is on, and that is the relation the
+ * two functions below need: which rows a page is about, and whether a verb
+ * belongs on it at all.
+ */
+function ancestorsOf(name: ProfileResourceName): ProfileResourceName[] {
+	const { owner } = PROFILE_RESOURCES[name];
+	return owner.via === 'parent' ? [owner.parent, ...ancestorsOf(owner.parent)] : [];
+}
+
+/**
+ * The ids of this section's rows that are, or descend from, the row the page is
+ * about — or null when the page is about something else entirely.
+ *
+ * Walks down from the entity rather than up from each row, so it costs one read
+ * per level rather than one per row, and so the answer for a grandchild is the
+ * intersection of two levels rather than a special case.
+ */
+async function idsUnder(
+	name: ProfileResourceName,
+	entity: { resource: ProfileResourceName; id: number },
+	actor: CapabilityActor
+): Promise<Set<number> | null> {
+	if (name === entity.resource) return new Set([entity.id]);
+
+	const { owner } = PROFILE_RESOURCES[name];
+	if (owner.via !== 'parent') return null;
+
+	const above = await idsUnder(owner.parent, entity, actor);
+	if (!above) return null;
+
+	const rows = await readOwnedRows(name, { profileId: actor.profileId });
+	return new Set(
+		rows.filter((row) => above.has(Number(row[owner.key]))).map((row) => Number(row.id))
+	);
+}
+
+/**
+ * Every row of this section the model may name here.
+ *
+ * On a page about one role, that is that role's projects — not every project on
+ * the profile. Without this the list on /profile/work-experience/8 would be the
+ * projects of all twelve roles, which is both the wrong offer (the user is
+ * looking at one job) and, at a line each, most of what the page's capability
+ * budget buys.
+ *
+ * A page about nothing in particular, or about an unrelated section, falls
+ * through to the whole list — which is the behaviour every section had before
+ * there were children.
+ */
+async function rowsFor(
+	name: ProfileResourceName,
+	entity: ContextEntity | null,
+	actor: CapabilityActor
+): Promise<SectionRow[]> {
+	const rows = await readOwnedRows(name, { profileId: actor.profileId });
+	if (entity?.type !== 'profile_section') return rows;
+
+	const allowed = await idsUnder(name, entity, actor);
+	return allowed ? rows.filter((row) => allowed.has(Number(row.id))) : rows;
 }
 
 /** Read the row this capability is about, or null if it is gone or not theirs. */
@@ -351,8 +422,8 @@ function editCapability(name: ProfileResourceName): CapabilityDef {
 		 * `resolve` came back empty, so a detail page still keeps its own row and
 		 * the model is never offered a choice it did not need.
 		 */
-		resolveMany: async (_entity, actor) => {
-			const rows = await readOwnedRows(name, { profileId: actor.profileId });
+		resolveMany: async (entity, actor) => {
+			const rows = await rowsFor(name, entity, actor);
 			return rows.map((row) => targetFor(name, row));
 		},
 
@@ -370,9 +441,9 @@ function editCapability(name: ProfileResourceName): CapabilityDef {
 		 * profile row read that way would put another applicant's history into
 		 * this one's prompt.
 		 */
-		current: async (t, actor) => {
+		current: async (t, actor, entity) => {
 			const row = await readOwnedRow(name, { profileId: actor.profileId }, t.id);
-			const groups = await parentLabels(resource, actor);
+			const groups = await parentLabels(resource, actor, entity);
 			return {
 				...Object.fromEntries(
 					Object.keys(fields).map((column) => [wireName(name, column), row?.[column] ?? null])
@@ -451,18 +522,21 @@ function addCapability(name: ProfileResourceName): CapabilityDef {
 	return {
 		title: `Add a ${resource.label}`,
 
-		// The profile itself, on any page of this section. Nothing to resolve
-		// from the URL: an add has no row to name.
+		// The profile itself, on any page of this section — or of a section this
+		// one hangs off, since a role's page is where its projects are added.
+		// Nothing to resolve from the URL: an add has no row to name.
 		resolve: async (entity, actor) =>
-			entity?.type === 'profile_section' && entity.resource !== name
+			entity?.type === 'profile_section' &&
+			entity.resource !== name &&
+			!ancestorsOf(name).includes(entity.resource)
 				? null
 				: { id: actor.profileId, label: `their ${resource.title.toLowerCase()}` },
 
 		authorize: async (t, actor) => t.id === actor.profileId,
 
-		current: async (_t, actor) => {
-			const rows = await readOwnedRows(name, { profileId: actor.profileId });
-			const groups = await parentLabels(resource, actor);
+		current: async (_t, actor, entity) => {
+			const rows = await rowsFor(name, entity ?? null, actor);
+			const groups = await parentLabels(resource, actor, entity);
 			if (!groups) return { existing: rows.map((row) => resource.rowLabel(row)) };
 
 			// By group, the way the page shows them. A flat list would repeat the
@@ -504,14 +578,20 @@ duplicate on every document, and they have to find and remove it.`,
 		renderState: (current) => {
 			const groups = Array.isArray(current.parents) ? (current.parents as string[]) : null;
 
-			// A parent-owned section prints its inventory by group, which is both
+			// A parent-owned section prints its inventory by parent, which is both
 			// what the page looks like and where a new entry has to go — so the two
 			// things the model needs are one list rather than two.
 			if (groups) {
+				// The parent's own noun, never "group". A project filed under a role
+				// is not in a group of anything, and six sections have a parent now
+				// where only skills did when this said otherwise.
+				const parent =
+					PROFILE_RESOURCES[(resource.owner as { parent: ProfileResourceName }).parent];
+
 				if (groups.length === 0) {
 					return (
-						`They have no groups to file one under yet, so there is nothing you can add ` +
-						`here until one exists. Propose adding a group first.`
+						`They have no ${parent.label} to file one under yet, so there is nothing you ` +
+						`can add here until one exists. Propose adding a ${parent.label} first.`
 					);
 				}
 
@@ -521,8 +601,12 @@ duplicate on every document, and they have to find and remove it.`,
 						`  - ${group}: ${inventory[group]?.length ? inventory[group].join(', ') : '(empty)'}`
 				);
 
-				return `File it under one of these groups, named exactly as written, and do not
-propose a duplicate of anything already in one:\n\n${lines.join('\n')}`;
+				// No plural of the parent's label anywhere here: `label` is singular and
+				// naive pluralisation produces "skill categorys". The list that
+				// follows says what these are, and each field's own note names the
+				// parent in words the declaration chose.
+				return `File it under one of these, named exactly as written, and do not propose
+a duplicate of anything already in one:\n\n${lines.join('\n')}`;
 			}
 
 			const existing = Array.isArray(current.existing) ? (current.existing as string[]) : [];

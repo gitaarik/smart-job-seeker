@@ -47,33 +47,47 @@ import {
 /* ------------------------------------------------------------------ *
  * Ownership
  *
- * Eight sections carry `profile_id`; skills carry `category_id` and reach the
- * profile through it. Everything below asks the declaration which it is holding
- * rather than reading a column that eight of nine tables happen to have — see
- * `ResourceOwner`. The indirection is one level deep and a test in
- * write.test.ts keeps it there: `ownerOf` would follow a chain row by row, and
- * `ownedRows` deliberately refuses to build one as SQL, so a two-level section
- * would work through one door and throw at the other. Nothing needs one.
+ * Most sections carry `profile_id`; the rest reach it through a parent row, and
+ * one — a project technology — through two. Everything below asks the
+ * declaration which it is holding rather than reading a column that most tables
+ * happen to have. See `ResourceOwner`.
+ *
+ * `ownedRows` used to refuse a chain outright, on the grounds that scoping a
+ * write through two joins is a different query than the one written there. That
+ * was the mistaken half: it is the same query nested once more, and recursing
+ * came to fewer lines than the refusal was. What survives of the caution is
+ * `MAX_OWNER_DEPTH`, which turns a declaration pointing a section at itself into
+ * a loud failure rather than a hang at the bottom of every read.
  * ------------------------------------------------------------------ */
 
+/**
+ * How far a row may be from its profile.
+ *
+ * Three is what the declaration uses — a project technology sits under a
+ * project, under a role, under the profile — and the bound is for the case the
+ * declaration does not have: a cycle.
+ */
+const MAX_OWNER_DEPTH = 4;
+
 /** Rows of this section the actor owns, as a condition usable in any statement. */
-function ownedRows(resource: ProfileResource, actor: ProfileActor): SQL {
+function ownedRows(resource: ProfileResource, actor: ProfileActor, depth = 0): SQL {
 	const { owner } = resource;
 	if (owner.via === 'profile') return eq(owner.column, actor.profileId);
 
-	const parent = resourceFor(owner.parent);
-	if (parent.owner.via !== 'profile') {
-		throw new Error(`${owner.parent} is not profile-owned; ownership chains are not supported`);
+	if (depth >= MAX_OWNER_DEPTH) {
+		throw new Error(`Ownership chain deeper than ${MAX_OWNER_DEPTH} at ${owner.parent}`);
 	}
 
 	// A subquery rather than a join, so this composes into an UPDATE or a DELETE
-	// the same way it composes into a SELECT.
+	// the same way it composes into a SELECT — and so a chain is one more of the
+	// same rather than a second shape.
+	const parent = resourceFor(owner.parent);
 	return inArray(
 		owner.column,
 		db
 			.select({ id: parent.table.id })
 			.from(parent.table)
-			.where(eq(parent.owner.column, actor.profileId))
+			.where(ownedRows(parent, actor, depth + 1))
 	);
 }
 
@@ -107,8 +121,19 @@ async function ownerOf(
 		.limit(1);
 	if (!parentRow) return { profileId: null };
 
+	// Labelled from the enriched row, not the raw one. A parent that is itself
+	// parent-owned names ITS parent in its label — a project reads "the migration
+	// — Backend Developer at Chipta" — and that name is a joined column rather
+	// than one this bare select returned. Labelling the raw row would produce
+	// "the migration" here and the long form in `readOwnedRows`, so a name
+	// resolved against one would not match a row read through the other.
 	const found = await ownerOf(parent, parentRow as Record<string, unknown>);
-	return { profileId: found.profileId, parentLabel: parent.rowLabel(parentRow as SectionRow) };
+	return {
+		profileId: found.profileId,
+		parentLabel: parent.rowLabel(
+			withParentName(parent, parentRow as Record<string, unknown>, found.parentLabel)
+		)
+	};
 }
 
 /**
@@ -311,13 +336,30 @@ export async function readOwnedRows(
 		.where(ownedRows(resource, actor))
 		.orderBy(...resource.orderBy);
 
-	return rows.map(({ row, parent: parentRow }) =>
-		withParentName(
+	// The join reaches the parent and stops there, which is one row short when
+	// the parent is itself parent-owned: a project's own label names the role it
+	// is under, and that name is not a column this select returned. So for the
+	// one chained section, the labels come from reading the parent as a section —
+	// the same call `findParentNamed` matches against, which is what keeps a name
+	// the model is shown identical to a name it can resolve.
+	const labels =
+		parent.owner.via === 'parent'
+			? new Map(
+					(await readOwnedRows(resource.owner.parent, actor)).map((row) => [
+						Number(row.id),
+						parent.rowLabel(row)
+					])
+				)
+			: null;
+
+	return rows.map(({ row, parent: parentRow }) => {
+		const parentId = Number((parentRow as Record<string, unknown>).id);
+		return withParentName(
 			resource,
 			row as Record<string, unknown>,
-			parent.rowLabel(parentRow as unknown as SectionRow)
-		)
-	);
+			labels?.get(parentId) ?? parent.rowLabel(parentRow as unknown as SectionRow)
+		);
+	});
 }
 
 /**
@@ -488,15 +530,20 @@ export async function createRow(
 ): Promise<WriteResult<{ id: number; row: SectionRow }>> {
 	const resource = resourceFor(name);
 
-	const checked = validate(resource, input, true);
-	if (!checked.ok) return checked;
-
-	// The parent is named, not pointed at, so it is resolved here — against the
-	// actor's own parents, which is where the ownership check on it lives. The
-	// name is required on a create (it is in `required`), so a missing one has
-	// already been refused above; what is left is a name that matches nothing.
-	const parent = await resolveParent(resource, actor, checked.values);
+	// Before the validation rather than after it, so a caller that pointed at the
+	// parent by id satisfies the required name without having to know the label.
+	// `required` holds the nameField for every parent-owned section — that is what
+	// makes "a row filed nowhere" impossible — and an id is a better answer to
+	// that requirement than a string the caller would have had to look up.
+	const parent = await resolveParent(resource, actor, input);
 	if (!parent.ok) return parent;
+
+	const checked = validate(
+		resource,
+		parent.label ? { ...input, [parentField(resource) as string]: parent.label } : input,
+		true
+	);
+	if (!checked.ok) return checked;
 
 	const [created] = await db
 		.insert(resource.table)
@@ -505,7 +552,11 @@ export async function createRow(
 			...withoutNulls(resource, withoutParentField(resource, checked.values), 'fill'),
 			[ownerKey(resource)]: parent.id ?? actor.profileId,
 			sort: await nextSort(resource, actor, parent.id),
-			status: 'published',
+			// Written where the column exists, skipped where it doesn't — three of
+			// the child collections never grew one. It decides nothing either way
+			// (see HIDEABLE_RESOURCES); what it must not do is fail an insert on a
+			// table that has no such column.
+			...(resource.table.status ? { status: 'published' } : {}),
 			date_created: new Date()
 		})
 		.returning();
@@ -517,11 +568,27 @@ export async function createRow(
 }
 
 /**
- * The parent id a patch names, or the refusal to hand back.
+ * The parent a patch points at, by id or by name, or the refusal to hand back.
  *
- * `{ id: undefined }` for a profile-owned section and for a patch that does not
- * mention the parent — both mean "nothing to move", which is the common case
- * and not a decision.
+ * `{ id: undefined }` for a profile-owned section and for a patch that mentions
+ * neither — both mean "nothing to move", which is the common case and not a
+ * decision.
+ *
+ * ## Two ways in, because the two callers have different things to give
+ *
+ * The name came first and exists for the assistant: a model cannot produce a row
+ * id it has never been told, and a wrong id is a write into someone else's shape
+ * of the profile where a wrong name is a refusal that lists what does exist.
+ *
+ * A UI is the opposite. It rendered the row, so it holds the id, and making it
+ * send a label instead adds a lookup that can *fail*: two roles with the same
+ * title at the same employer resolve to 'ambiguous', and the projects editor
+ * would refuse to add a project for a reason about neither. Given the id, the
+ * ownership question is the same one — read the row as the actor, and it is
+ * theirs or it is not.
+ *
+ * The id wins where both are present. It is the more specific of the two and the
+ * one that cannot be ambiguous.
  */
 async function resolveParent(
 	resource: ProfileResource,
@@ -530,14 +597,37 @@ async function resolveParent(
 ): Promise<
 	{ ok: true; id?: number; label?: string } | { ok: false; reason: WriteRefusal; error: string }
 > {
-	const field = parentField(resource);
-	if (!field || !(field in values)) return { ok: true };
+	if (resource.owner.via !== 'parent') return { ok: true };
+	const { key, parent: parentName } = resource.owner;
+
+	const pointed = values[key];
+	if (pointed !== null && pointed !== undefined && String(pointed).trim() !== '') {
+		const id = Number(pointed);
+		if (!Number.isInteger(id)) {
+			return refuse('invalid', `${labelFor(key)} must be a row id.`);
+		}
+		const row = await readOwnedRow(parentName, actor, id);
+		// Missing and not-theirs give the same answer, the way every read here
+		// does: a caller who does not own a row learns nothing about whether it
+		// exists.
+		if (!row) return refuse('not_found', `${capitalize(resourceFor(parentName).label)} not found`);
+		return { ok: true, id, label: resourceFor(parentName).rowLabel(row) };
+	}
+
+	const field = resource.owner.nameField;
+	if (!(field in values)) return { ok: true };
+
+	// Named by the parent section's own label, never "group". Six sections reach
+	// their profile through a parent now and only one of them is a group of
+	// skills; a project told it needs a group is being told the wrong noun about
+	// the right problem.
+	const parentLabel = resourceFor(resource.owner.parent).label;
 
 	const named = values[field];
 	if (named === null || String(named).trim() === '') {
 		return refuse(
 			'invalid',
-			`A ${resource.label} has to be in a group; name the one it belongs in.`
+			`A ${resource.label} has to belong to a ${parentLabel}; name the one it belongs to.`
 		);
 	}
 
@@ -545,14 +635,15 @@ async function resolveParent(
 	if (typeof found === 'object') return { ok: true, id: found.id, label: found.label };
 
 	if (found === 'ambiguous') {
-		// Actionable, because there is something to act on: the groups page has a
-		// note field for exactly this, and a group with a note is named by it.
+		// Actionable, because there is something to act on: every parent label is
+		// built to be distinguishing, so two identical ones mean two rows that read
+		// the same on the page too.
 		return refuse(
 			'invalid',
-			`More than one of their groups is called "${String(named)}" and nothing tells them ` +
-				`apart, so this would have to guess which. Adding a note to one of them on ` +
-				`their Skills page is what distinguishes them — it is private, and it is what ` +
-				`the group is then called here.`
+			`More than one of their ${parentLabel} entries is called "${String(named)}" and nothing ` +
+				`tells them apart, so this would have to guess which. They read the same on ` +
+				`the page as well — giving one of them a distinguishing name or note is what ` +
+				`separates them here.`
 		);
 	}
 
@@ -560,8 +651,8 @@ async function resolveParent(
 	return refuse(
 		'invalid',
 		available.length > 0
-			? `There is no group called "${String(named)}". They have: ${available.join(', ')}.`
-			: `There are no groups to file a ${resource.label} under yet — one has to be created first.`
+			? `There is no ${parentLabel} called "${String(named)}". They have: ${available.join(', ')}.`
+			: `There is no ${parentLabel} to file a ${resource.label} under yet — one has to be created first.`
 	);
 }
 
@@ -598,11 +689,14 @@ export async function updateRow(
 
 	const previous = Object.fromEntries(written.map((field) => [field, found.row[field] ?? null]));
 
-	// A patch naming a different parent MOVES the row. Its `sort` goes to the end
-	// of the group it lands in rather than travelling with it: the number meant a
-	// position among its old siblings, and carried over it collides with whatever
-	// already holds that position in the new group.
-	const parent = await resolveParent(resource, actor, checked.values);
+	// A patch pointing at a different parent MOVES the row. Its `sort` goes to the
+	// end of the group it lands in rather than travelling with it: the number
+	// meant a position among its old siblings, and carried over it collides with
+	// whatever already holds that position in the new group.
+	//
+	// Read from the raw input, not the validated values: an id is not one of the
+	// section's declared fields, so the schema strips it before this would see it.
+	const parent = await resolveParent(resource, actor, { ...input, ...checked.values });
 	if (!parent.ok) return parent;
 	const moved =
 		parent.id !== undefined && parent.id !== Number(found.row[ownerKey(resource)])

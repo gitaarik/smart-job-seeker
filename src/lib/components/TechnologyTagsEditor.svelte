@@ -10,6 +10,17 @@
 		onRemove?: (index: number) => void;
 		onUndoRemove?: (index: number) => void;
 		onFocused?: () => void;
+		/**
+		 * One chip's text changed, as it is typed.
+		 *
+		 * For a parent that persists each row on its own rather than posting the
+		 * whole list later. The binding still carries the value, so a parent that
+		 * only needs the array can ignore this; what the array cannot say is
+		 * *which* entry moved, which is the one thing a per-row save needs.
+		 */
+		onItemChange?: (index: number, value: string) => void;
+		/** Called when a chip loses focus, so a debounced save can be pushed out. */
+		onItemBlur?: (index: number) => void;
 	}
 
 	let {
@@ -19,7 +30,9 @@
 		onAdd,
 		onRemove,
 		onUndoRemove,
-		onFocused
+		onFocused,
+		onItemChange,
+		onItemBlur
 	}: Props = $props();
 
 	// Simple mode: component manages its own add/remove when callbacks not provided
@@ -72,7 +85,10 @@
 					<input
 						type="text"
 						bind:value={technologies[index]}
+						oninput={(e) => onItemChange?.(index, e.currentTarget.value)}
+						onblur={() => onItemBlur?.(index)}
 						placeholder="Technology"
+						aria-label="Technology"
 						use:focusIfNew={index === effectiveLastAdded}
 						class="absolute inset-0 w-full border-none bg-transparent pr-3 text-sm text-[var(--dash-text)] focus:outline-none"
 					/>

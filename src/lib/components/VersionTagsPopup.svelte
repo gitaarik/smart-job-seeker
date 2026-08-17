@@ -15,12 +15,20 @@
 		subtitle,
 		tags = $bindable([]),
 		versionSlugs = [],
+		onChange,
 		onClose
 	}: {
 		title?: string;
 		subtitle?: string;
 		tags: string[];
 		versionSlugs?: string[];
+		/**
+		 * The new tag list, for a parent that persists per row rather than through
+		 * a section save it will run later. Fires on every add and remove, which
+		 * is what keeps the chip's badge and the saved row in step while this is
+		 * still open. Optional: a binding parent needs nothing.
+		 */
+		onChange?: (tags: string[]) => void;
 		onClose: () => void;
 	} = $props();
 
@@ -39,11 +47,14 @@
 	let available = $derived(candidates.filter((c) => !has(c) && !has(`!${c}`)));
 
 	function addTag(tag: string) {
-		if (!has(tag)) tags = [...tags, tag];
+		if (has(tag)) return;
+		tags = [...tags, tag];
+		onChange?.(tags);
 	}
 
 	function removeTag(tag: string) {
 		tags = tags.filter((t) => t !== tag);
+		onChange?.(tags);
 	}
 </script>
 

@@ -649,6 +649,138 @@ describe('a section owned through its parent', () => {
 
 		const rendered = edit.renderState?.(current) ?? '';
 		expect(rendered).not.toContain('- parents:');
-		expect(rendered).toContain('groups it can be filed under');
+		// Named without a noun: `label` is singular, and six sections have a parent
+		// now, so "one of these groups" was both wrong for five of them and the
+		// source of "skill categorys" when it was made plural.
+		expect(rendered).toContain('What it can be filed under');
+		expect(rendered).toContain('- Backend');
+	});
+});
+
+/**
+ * A child collection on the page of the row it hangs off.
+ *
+ * The behaviour this pins is the one that makes those sections usable at all:
+ * /profile/work-experience/8 is not a page about projects, so a project
+ * capability resolves no single row from it — and if the fallback were "every
+ * project on the profile" the model would be choosing between twelve roles'
+ * worth of them while looking at one job. Narrowing is what makes the offer the
+ * page's own.
+ */
+describe('a child collection reached from its parent’s page', () => {
+	const ROLE = { type: 'profile_section' as const, resource: 'work_experience' as const, id: 8 };
+
+	beforeEach(() => {
+		state.rowsByResource = {
+			work_experience: [
+				{ id: 8, position: 'Senior Engineer', name: 'Chipta' },
+				{ id: 9, position: 'Engineer', name: 'Tender-it' }
+			],
+			work_experience_project: [
+				{
+					id: 1,
+					work_experience_id: 8,
+					name: 'The migration',
+					work_experience: 'Senior Engineer at Chipta'
+				},
+				{
+					id: 2,
+					work_experience_id: 9,
+					name: 'Other thing',
+					work_experience: 'Engineer at Tender-it'
+				}
+			],
+			work_experience_project_technology: [
+				{ id: 5, work_experience_project_id: 1, name: 'Django' },
+				{ id: 6, work_experience_project_id: 2, name: 'Rails' }
+			]
+		};
+	});
+
+	it('offers only the projects of the role the page is about', async () => {
+		const targets = await PROFILE_CAPABILITIES.edit_work_experience_project.resolveMany?.(
+			ROLE,
+			ACTOR
+		);
+
+		expect(targets).toEqual([
+			{ id: 1, label: 'The migration — Senior Engineer at Chipta', match: 'The migration' }
+		]);
+	});
+
+	it('narrows a grandchild through the level in between', async () => {
+		// The page names a role; the technology hangs off a project. Neither of
+		// those is the other, and the only thing connecting them is the project's
+		// own parent — so this walks down rather than filtering on a column the
+		// row does not have.
+		const targets =
+			await PROFILE_CAPABILITIES.edit_work_experience_project_technology.resolveMany?.(ROLE, ACTOR);
+
+		expect(targets?.map((t) => t.id)).toEqual([5]);
+	});
+
+	it('offers every row when the page is about nothing in particular', async () => {
+		const targets = await PROFILE_CAPABILITIES.edit_work_experience_project.resolveMany?.(
+			null,
+			ACTOR
+		);
+
+		expect(targets?.map((t) => t.id)).toEqual([1, 2]);
+	});
+
+	it('offers every row when the page is about an unrelated section', async () => {
+		const targets = await PROFILE_CAPABILITIES.edit_work_experience_project.resolveMany?.(
+			{ type: 'profile_section', resource: 'education', id: 4 },
+			ACTOR
+		);
+
+		expect(targets?.map((t) => t.id)).toEqual([1, 2]);
+	});
+
+	it('keeps the add verb live on the parent’s page', async () => {
+		// "Add a project to this role" is the request the page exists for. The
+		// guard that drops a capability whose section the page is not about would
+		// otherwise take it out, since the page is about the ROLE.
+		const target = await PROFILE_CAPABILITIES.add_work_experience_project.resolve(ROLE, ACTOR);
+
+		expect(target).toEqual({ id: 12, label: 'their role projects' });
+	});
+
+	it('offers only the page’s row as somewhere to file a new one', async () => {
+		// Both the correctness and the cost. A page about one role listing all
+		// eight as places to put a new project invites the wrong one, and the
+		// inventory it prints under them was the single most expensive block on
+		// that page — every role's projects, to answer a question about this role.
+		const current = await PROFILE_CAPABILITIES.add_work_experience_project.current(
+			{ id: 12, label: 'their role projects' },
+			ACTOR,
+			ROLE
+		);
+
+		expect(current.parents).toEqual(['Senior Engineer at Chipta']);
+		expect(current.existingByGroup).toEqual({
+			'Senior Engineer at Chipta': ['The migration']
+		});
+	});
+
+	it('offers every parent when nothing says which page', async () => {
+		// The apply paths pass no entity on purpose: a proposal is applied from a
+		// card, long after any page, and narrowing there would refuse a parent the
+		// proposal was validly filed under.
+		const current = await PROFILE_CAPABILITIES.add_work_experience_project.current(
+			{ id: 12, label: 'their role projects' },
+			ACTOR
+		);
+
+		expect(current.parents).toEqual(['Senior Engineer at Chipta', 'Engineer at Tender-it']);
+	});
+
+	it('still drops the add verb on a page about something else', async () => {
+		expect(
+			await PROFILE_CAPABILITIES.add_work_experience_project.resolve(
+				{ type: 'profile_section', resource: 'education', id: 4 },
+				ACTOR
+			)
+		).toBeNull();
 	});
 });

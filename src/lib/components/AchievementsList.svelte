@@ -22,6 +22,15 @@
 	export interface AchievementItem {
 		/** DB row id; absent for freshly-added, not-yet-saved achievements. */
 		id?: number;
+		/**
+		 * A caller's own handle on this entry, carried through reorders untouched.
+		 *
+		 * For a parent that saves each row as it changes (see `sectionRows`), the
+		 * index is not an identity: a drag renumbers every entry, and an id is
+		 * absent exactly when the row is new and most needs identifying. This is
+		 * whatever that parent wants it to be; nothing here reads it.
+		 */
+		key?: number;
 		description: string;
 		tags?: string[] | null;
 	}
@@ -42,6 +51,15 @@
 		onRemove?: (index: number) => void;
 		onUndoRemove?: (index: number) => void;
 		onFocused?: () => void;
+		/**
+		 * One entry's text or tags changed, after the edit popup was accepted.
+		 *
+		 * The reordered array already reaches a binding parent on its own; this is
+		 * for the parent that persists per row and needs to know WHICH row, at the
+		 * moment it changed, rather than diffing the array on every keystroke
+		 * elsewhere on the page.
+		 */
+		onItemChange?: (index: number, item: AchievementItem) => void;
 		/**
 		 * Called when a reorder is committed (Save/Done), with the soft-delete
 		 * index set remapped to the new order. The component already writes the
@@ -68,6 +86,7 @@
 		onRemove,
 		onUndoRemove,
 		onFocused,
+		onItemChange,
 		onReorderCommit,
 		onReorderSave
 	}: Props = $props();
@@ -138,11 +157,15 @@
 
 	function saveEdit() {
 		if (editingIndex === null) return;
-		setItem(editingIndex, {
-			id: getItem(editingIndex).id,
+		const previous = getItem(editingIndex);
+		const next: AchievementItem = {
+			id: previous.id,
+			key: previous.key,
 			description: editDescription,
 			tags: editTags.length > 0 ? editTags : null
-		});
+		};
+		setItem(editingIndex, next);
+		onItemChange?.(editingIndex, next);
 		closeEdit();
 	}
 
