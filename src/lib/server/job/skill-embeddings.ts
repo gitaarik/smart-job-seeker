@@ -26,20 +26,7 @@ import {
 	isEmbeddingConfigured,
 	truncateVector
 } from '$lib/server/llm/embeddings';
-
-/**
- * Normalize a skill for use as the vocabulary key.
- *
- * Kept in sync with normalizeSkill() in cloud/src/server/job/match-utils.ts —
- * the expanded skills are matched downstream by that exact-match logic, so the
- * normalization must agree.
- */
-function normalizeSkill(skill: string): string {
-	return skill
-		.toLowerCase()
-		.replace(/[^a-z0-9+#]/g, '')
-		.trim();
-}
+import { normalizeSkill } from '$lib/skills';
 
 interface VocabEntry {
 	label: string;

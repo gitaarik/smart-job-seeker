@@ -13,6 +13,7 @@
  */
 
 import { config } from '$lib/server/config';
+import { normalizeSkill } from '$lib/skills';
 
 export class GitHubFetchError extends Error {
 	constructor(
@@ -96,7 +97,7 @@ function normalizeRef(owner: string, repo: string): RepoRef | null {
 }
 
 /**
- * Fetch public repository metadata.
+ * One GitHub REST call, with this feature's shared headers and error mapping.
  *
  * Unauthenticated GitHub allows 60 requests/hour **per IP** — which is per
  * *server*, not per user, so on a shared instance that budget is gone quickly.
@@ -104,7 +105,11 @@ function normalizeRef(owner: string, repo: string): RepoRef | null {
  * repos) to get 5,000/hour. The rate-limit path is reported as its own message
  * because "try again" is the right advice for it and wrong for a 404.
  */
-export async function fetchRepoMetadata(ref: RepoRef, signal?: AbortSignal): Promise<RepoMetadata> {
+async function githubRequest(
+	path: string,
+	ref: RepoRef,
+	signal?: AbortSignal
+): Promise<Record<string, unknown>> {
 	const headers: Record<string, string> = {
 		Accept: 'application/vnd.github+json',
 		'X-GitHub-Api-Version': '2022-11-28',
@@ -115,10 +120,7 @@ export async function fetchRepoMetadata(ref: RepoRef, signal?: AbortSignal): Pro
 
 	let response: Response;
 	try {
-		response = await fetch(`https://api.github.com/repos/${ref.owner}/${ref.repo}`, {
-			headers,
-			signal
-		});
+		response = await fetch(`https://api.github.com${path}`, { headers, signal });
 	} catch (err) {
 		throw new GitHubFetchError(`Could not reach GitHub: ${(err as Error).message}`, 502);
 	}
@@ -143,7 +145,12 @@ export async function fetchRepoMetadata(ref: RepoRef, signal?: AbortSignal): Pro
 		throw new GitHubFetchError(`GitHub returned ${response.status}.`, 502);
 	}
 
-	const body = (await response.json()) as Record<string, unknown>;
+	return (await response.json()) as Record<string, unknown>;
+}
+
+/** Fetch public repository metadata. */
+export async function fetchRepoMetadata(ref: RepoRef, signal?: AbortSignal): Promise<RepoMetadata> {
+	const body = await githubRequest(`/repos/${ref.owner}/${ref.repo}`, ref, signal);
 	return {
 		owner: ref.owner,
 		repo: ref.repo,
@@ -161,6 +168,26 @@ export async function fetchRepoMetadata(ref: RepoRef, signal?: AbortSignal): Pro
 		language: typeof body.language === 'string' ? body.language : null,
 		topics: Array.isArray(body.topics) ? body.topics.filter((t) => typeof t === 'string') : []
 	};
+}
+
+/**
+ * Byte counts per language, e.g. `{ TypeScript: 91234, Shell: 2100 }`.
+ *
+ * A second call, deliberately: the repo payload's `language` is only the single
+ * biggest one, so a TypeScript+Python project would claim TypeScript alone. For
+ * a technology list that is the difference between right and half-right, and it
+ * costs one request against a budget `SJS_GITHUB_TOKEN` fixes properly.
+ */
+export async function fetchRepoLanguages(
+	ref: RepoRef,
+	signal?: AbortSignal
+): Promise<Record<string, number>> {
+	const body = await githubRequest(`/repos/${ref.owner}/${ref.repo}/languages`, ref, signal);
+	const languages: Record<string, number> = {};
+	for (const [name, bytes] of Object.entries(body)) {
+		if (typeof bytes === 'number' && bytes > 0) languages[name] = bytes;
+	}
+	return languages;
 }
 
 /** A `side_projects` column this feature can fill, and where the value came from. */
@@ -240,6 +267,119 @@ export function proposalsFor(meta: RepoMetadata): FieldProposal[] {
 			note: 'Repository archived after this push'
 		});
 	}
+
+	return proposals;
+}
+
+/** A technology chip this feature can add, and why. */
+export interface TechnologyProposal {
+	name: string;
+	note: string;
+	/**
+	 * Whether to tick this by default. Only the repository's primary language
+	 * earns it: that is a measured fact about the code. Everything else — minor
+	 * languages and the owner's discovery topics — is proposed unticked, because
+	 * a topic list is as likely to hold `hacktoberfest` as it is `playwright`,
+	 * and no blocklist would keep up. The client drops anything already listed
+	 * before applying this.
+	 */
+	preselect: boolean;
+}
+
+/**
+ * Ignore languages below this share of the repository's bytes.
+ *
+ * A stray CI script should not put "Shell" on someone's CV. The cut is
+ * arbitrary but the failure it prevents is not: GitHub reports every language
+ * it detects, including one-file ones.
+ */
+const LANGUAGE_SHARE_FLOOR = 0.05;
+
+/**
+ * Tokens to upper-case when title-casing a topic.
+ *
+ * Deliberately short and deliberately not a taxonomy: GitHub topics are
+ * lowercase-hyphenated (`telegram-bot`, `claude-code`), and title-casing gets
+ * the common case right while mangling acronyms. These are the ones worth
+ * hard-coding; anything else the user can fix in the chip, which is editable.
+ */
+const TOPIC_ACRONYMS = new Set([
+	'ai',
+	'api',
+	'cli',
+	'css',
+	'html',
+	'http',
+	'https',
+	'json',
+	'llm',
+	'mcp',
+	'ml',
+	'nlp',
+	'ocr',
+	'orm',
+	'rest',
+	'sdk',
+	'sql',
+	'ssh',
+	'tui',
+	'ui',
+	'ux',
+	'xml',
+	'yaml'
+]);
+
+/** `telegram-bot` → `Telegram Bot`, `mcp-sdk` → `Mcp SDK`. */
+function topicLabel(topic: string): string {
+	return topic
+		.split(/[-_\s]+/)
+		.filter(Boolean)
+		.map((word) =>
+			TOPIC_ACRONYMS.has(word) ? word.toUpperCase() : word.charAt(0).toUpperCase() + word.slice(1)
+		)
+		.join(' ');
+}
+
+/**
+ * Technology chips a repository can justify: its languages, then its topics.
+ *
+ * Deduped against each other by the matching pipeline's own rule, so a
+ * `typescript` topic does not arrive next to the `TypeScript` language. The
+ * caller dedupes against what the project already lists.
+ */
+export function technologyProposalsFor(
+	meta: RepoMetadata,
+	languages: Record<string, number>
+): TechnologyProposal[] {
+	const proposals: TechnologyProposal[] = [];
+	const seen = new Set<string>();
+
+	const add = (name: string, note: string, preselect: boolean) => {
+		const key = normalizeSkill(name);
+		if (!key || seen.has(key)) return;
+		seen.add(key);
+		proposals.push({ name, note, preselect });
+	};
+
+	const ranked = Object.entries(languages).sort(([, a], [, b]) => b - a);
+	const totalBytes = ranked.reduce((sum, [, bytes]) => sum + bytes, 0);
+	ranked.forEach(([name, bytes], index) => {
+		const share = totalBytes > 0 ? bytes / totalBytes : 0;
+		// The top language is kept whatever its share — a repository is written in
+		// something, even when the byte counts are spread thin.
+		if (index > 0 && share < LANGUAGE_SHARE_FLOOR) return;
+		add(
+			name,
+			index === 0 ? 'Primary language' : `Language, ${Math.round(share * 100)}% of the code`,
+			index === 0
+		);
+	});
+
+	// `/languages` can come back empty (an empty repo, or one of only unrecognized
+	// files); the repo payload's own field is the fallback.
+	if (ranked.length === 0 && meta.language) add(meta.language, 'Primary language', true);
+
+	for (const topic of meta.topics) add(topicLabel(topic), 'GitHub topic', false);
 
 	return proposals;
 }

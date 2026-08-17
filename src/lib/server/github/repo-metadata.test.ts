@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+	fetchRepoLanguages,
 	fetchRepoMetadata,
 	GitHubFetchError,
 	parseGitHubRepoUrl,
 	proposalsFor,
+	technologyProposalsFor,
 	type RepoMetadata
 } from './repo-metadata';
 
@@ -192,5 +194,65 @@ describe('proposalsFor', () => {
 
 	it('ignores an unparseable date rather than emitting Invalid Date', () => {
 		expect(byField(meta({ createdAt: 'not-a-date' })).start_date).toBeUndefined();
+	});
+});
+
+describe('fetchRepoLanguages', () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('keeps positive byte counts and drops anything else', async () => {
+		vi.stubGlobal('fetch', mockFetch(200, { TypeScript: 9000, Shell: 0, Makefile: 'lots' }));
+		expect(await fetchRepoLanguages(ref)).toEqual({ TypeScript: 9000 });
+	});
+
+	it('shares the repo error mapping', async () => {
+		vi.stubGlobal('fetch', mockFetch(403, {}, { 'x-ratelimit-remaining': '0' }));
+		await expect(fetchRepoLanguages(ref)).rejects.toMatchObject({ status: 429 });
+	});
+});
+
+describe('technologyProposalsFor', () => {
+	const names = (m: RepoMetadata, langs: Record<string, number>) =>
+		technologyProposalsFor(m, langs).map((t) => t.name);
+
+	it('ticks only the primary language', () => {
+		const proposals = technologyProposalsFor(meta({ topics: ['playwright'] }), {
+			TypeScript: 9000,
+			Python: 1000
+		});
+		expect(proposals.map((t) => [t.name, t.preselect])).toEqual([
+			['TypeScript', true],
+			['Python', false],
+			['Playwright', false]
+		]);
+		expect(proposals[0].note).toBe('Primary language');
+		expect(proposals[1].note).toBe('Language, 10% of the code');
+	});
+
+	it('drops a trace language but never the top one', () => {
+		// A one-file CI script must not put "Shell" on a CV.
+		expect(names(meta(), { TypeScript: 99_000, Shell: 100 })).toEqual(['TypeScript']);
+		// Even a repo that is 100% one trace-sized language still names it.
+		expect(names(meta(), { Shell: 40 })).toEqual(['Shell']);
+	});
+
+	it('falls back to the repo payload language when /languages is empty', () => {
+		expect(names(meta({ language: 'Rust' }), {})).toEqual(['Rust']);
+		expect(names(meta({ language: null }), {})).toEqual([]);
+	});
+
+	it('does not propose a topic that repeats a language', () => {
+		// Deduped by the matching pipeline's own rule, so "type-script" collides.
+		expect(
+			names(meta({ topics: ['typescript', 'type-script', 'mcp'] }), { TypeScript: 900 })
+		).toEqual(['TypeScript', 'MCP']);
+	});
+
+	it('title-cases topics, upper-casing the acronyms worth hard-coding', () => {
+		expect(
+			names(meta({ language: null, topics: ['telegram-bot', 'ai', 'rest-api', 'claude_code'] }), {})
+		).toEqual(['Telegram Bot', 'AI', 'REST API', 'Claude Code']);
 	});
 });

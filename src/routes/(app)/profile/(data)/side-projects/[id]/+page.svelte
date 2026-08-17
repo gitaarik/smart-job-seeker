@@ -195,6 +195,21 @@
 	 * `$effect` → `basicsField` autosave picks the change up and writes it — the
 	 * fetch needs no save path of its own.
 	 */
+	/**
+	 * Add the technology chips the user ticked.
+	 *
+	 * `add()` makes a local draft and `update()` is what actually creates it —
+	 * a blank draft is deliberately not written (see section-rows), so the name
+	 * has to go through update rather than being handed to add.
+	 */
+	function applyRepoTechnologies(names: string[]) {
+		for (const name of names) {
+			const row = techStore.add();
+			editTechnologies = [...editTechnologies, name];
+			techStore.update(row, { name });
+		}
+	}
+
 	function applyRepoMetadata(values: Partial<Record<string, string>>) {
 		if (values.name !== undefined) editName = values.name;
 		if (values.url !== undefined) editUrl = values.url;
@@ -432,7 +447,9 @@
 				start_date: editStartDate,
 				end_date: editEndDate
 			}}
+			currentTechnologies={editTechnologies}
 			onApply={applyRepoMetadata}
+			onApplyTechnologies={applyRepoTechnologies}
 		/>
 		<div class="mt-4 flex justify-end">
 			<AutoSaveIndicator field={basicsField} />

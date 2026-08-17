@@ -18,10 +18,12 @@ import { side_projects } from '$lib/server/db/schema';
 import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
 import { requireRowActor } from '$lib/server/profile/write-http';
 import {
+	fetchRepoLanguages,
 	fetchRepoMetadata,
 	GitHubFetchError,
 	parseGitHubRepoUrl,
-	proposalsFor
+	proposalsFor,
+	technologyProposalsFor
 } from '$lib/server/github/repo-metadata';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -50,10 +52,18 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	if (!ref) error(400, 'Not a GitHub repository URL. Only GitHub is supported for now.');
 
 	try {
-		const meta = await fetchRepoMetadata(ref, AbortSignal.timeout(10_000));
+		const signal = AbortSignal.timeout(10_000);
+		// Two calls, one round trip: the repo payload has no per-language breakdown
+		// and `/languages` has nothing else. Both share the rate-limit budget, so
+		// they go together rather than on separate button presses.
+		const [meta, languages] = await Promise.all([
+			fetchRepoMetadata(ref, signal),
+			fetchRepoLanguages(ref, signal)
+		]);
 		return json({
 			repo: { owner: meta.owner, repo: meta.repo, url: meta.htmlUrl, archived: meta.archived },
-			proposals: proposalsFor(meta)
+			proposals: proposalsFor(meta),
+			technologies: technologyProposalsFor(meta, languages)
 		});
 	} catch (err) {
 		// GitHubFetchError already carries a client-appropriate status and message.

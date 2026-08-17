@@ -14,12 +14,17 @@
 	  thing a button like this must never do by surprise.
 	- **The current value is shown next to the proposed one** whenever they
 	  differ, so an overwrite is always a visible choice.
+
+	Technologies are additive rather than replacing, so they are listed
+	separately: anything the project already lists is dropped before the list is
+	shown, and only the repository's primary language is ticked by default.
 -->
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
 	import { faCircleNotch, faDownload } from '@fortawesome/free-solid-svg-icons';
 	import { SvelteSet } from 'svelte/reactivity';
+	import { normalizeSkill } from '$lib/skills';
 
 	type Field = 'name' | 'url' | 'summary' | 'stars' | 'start_date' | 'end_date';
 
@@ -30,36 +35,50 @@
 		note: string;
 	}
 
+	interface TechnologyProposal {
+		name: string;
+		note: string;
+		preselect: boolean;
+	}
+
 	let {
 		projectId,
 		repoUrl,
 		current,
-		onApply
+		currentTechnologies,
+		onApply,
+		onApplyTechnologies
 	}: {
 		projectId: number;
 		repoUrl: string;
 		/** Live form values, so "would this overwrite something?" reflects what the
 		 *  user sees rather than what was last saved. */
 		current: Record<Field, string>;
+		currentTechnologies: string[];
 		onApply: (values: Partial<Record<Field, string>>) => void;
+		onApplyTechnologies: (names: string[]) => void;
 	} = $props();
 
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let proposals = $state<Proposal[] | null>(null);
-	// SvelteSet, not a plain Set: the checkboxes render from it, so mutation has
-	// to be reactive.
+	let technologies = $state<TechnologyProposal[]>([]);
+	// SvelteSets, not plain Sets: the checkboxes render from them, so mutation
+	// has to be reactive.
 	const selected = new SvelteSet<Field>();
+	const selectedTech = new SvelteSet<string>();
 	let repoLabel = $state<string | null>(null);
 	let applied = $state(false);
 
 	let canFetch = $derived(repoUrl.trim().length > 0 && !loading);
+	let selectedCount = $derived(selected.size + selectedTech.size);
 
 	async function fetchMetadata() {
 		loading = true;
 		error = null;
 		applied = false;
 		proposals = null;
+		technologies = [];
 		try {
 			const response = await fetch(`/api/side-project/${projectId}/repo-metadata`, {
 				method: 'POST',
@@ -72,12 +91,26 @@
 			}
 			proposals = body.proposals as Proposal[];
 			repoLabel = `${body.repo.owner}/${body.repo.repo}`;
+
 			// Only what is empty today; everything else is an explicit choice.
 			selected.clear();
 			for (const proposal of proposals) {
 				if (!current[proposal.field]?.trim()) selected.add(proposal.field);
 			}
-			if (proposals.length === 0) error = 'GitHub had nothing to fill in for this repository.';
+
+			// A chip the project already lists is not a proposal, so it is dropped
+			// rather than shown unticked — matched by the same rule the matching
+			// pipeline uses, so "claude-code" and "Claude Code" are one chip.
+			const have = new Set(currentTechnologies.map(normalizeSkill).filter(Boolean));
+			technologies = (body.technologies as TechnologyProposal[]).filter(
+				(t) => !have.has(normalizeSkill(t.name))
+			);
+			selectedTech.clear();
+			for (const tech of technologies) if (tech.preselect) selectedTech.add(tech.name);
+
+			if (proposals.length === 0 && technologies.length === 0) {
+				error = 'GitHub had nothing to add for this repository.';
+			}
 		} catch (err) {
 			error = (err as Error).message;
 		} finally {
@@ -90,14 +123,24 @@
 		else selected.add(field);
 	}
 
+	function toggleTech(name: string) {
+		if (selectedTech.has(name)) selectedTech.delete(name);
+		else selectedTech.add(name);
+	}
+
 	function apply() {
 		if (!proposals) return;
 		const values: Partial<Record<Field, string>> = {};
 		for (const proposal of proposals) {
 			if (selected.has(proposal.field)) values[proposal.field] = proposal.value;
 		}
-		onApply(values);
+		if (Object.keys(values).length > 0) onApply(values);
+
+		const names = technologies.map((t) => t.name).filter((name) => selectedTech.has(name));
+		if (names.length > 0) onApplyTechnologies(names);
+
 		proposals = null;
+		technologies = [];
 		applied = true;
 	}
 
@@ -126,7 +169,7 @@
 			{#if !repoUrl.trim()}
 				Add a repo URL to fill these fields from GitHub.
 			{:else}
-				Fills stars, dates and description from the public repository.
+				Fills stars, dates, description and technologies from the public repository.
 			{/if}
 		</span>
 	</div>
@@ -141,50 +184,82 @@
 		</p>
 	{/if}
 
-	{#if proposals && proposals.length > 0}
+	{#if proposals && (proposals.length > 0 || technologies.length > 0)}
 		<div class="mt-3 rounded-md border border-[var(--dash-border)] p-3">
 			<p class="mb-2 text-sm text-[var(--dash-text-secondary)]">
 				From <span class="font-medium text-[var(--dash-text)]">{repoLabel}</span>. Fields you have
 				already filled in start unchecked.
 			</p>
-			<ul class="space-y-2">
-				{#each proposals as proposal (proposal.field)}
-					{@const existing = overwrites(proposal)}
-					<li>
-						<label class="flex cursor-pointer items-start gap-3 text-sm">
+
+			{#if proposals.length > 0}
+				<ul class="space-y-2">
+					{#each proposals as proposal (proposal.field)}
+						{@const existing = overwrites(proposal)}
+						<li>
+							<label class="flex cursor-pointer items-start gap-3 text-sm">
+								<input
+									type="checkbox"
+									checked={selected.has(proposal.field)}
+									onchange={() => toggle(proposal.field)}
+									class="mt-1 h-4 w-4 shrink-0 accent-[var(--dash-primary)]"
+								/>
+								<span class="min-w-0">
+									<span class="font-medium text-[var(--dash-text)]">{proposal.label}:</span>
+									<span class="break-words text-[var(--dash-text)]">{proposal.value}</span>
+									<span class="text-[var(--dash-text-secondary)]">— {proposal.note}</span>
+									{#if existing}
+										<span class="mt-0.5 block text-xs text-amber-500">
+											Replaces: {existing}
+										</span>
+									{/if}
+								</span>
+							</label>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+
+			{#if technologies.length > 0}
+				<p class="mt-3 mb-2 text-sm font-medium text-[var(--dash-text)]">
+					Technologies to add
+					<span class="font-normal text-[var(--dash-text-secondary)]">
+						— topics are the repository owner's tags, so they start unchecked
+					</span>
+				</p>
+				<div class="flex flex-wrap gap-2">
+					{#each technologies as tech (tech.name)}
+						<label
+							class="flex cursor-pointer items-center gap-2 rounded-full border border-[var(--dash-border)] px-3 py-1 text-sm"
+						>
 							<input
 								type="checkbox"
-								checked={selected.has(proposal.field)}
-								onchange={() => toggle(proposal.field)}
-								class="mt-1 h-4 w-4 shrink-0 accent-[var(--dash-primary)]"
+								checked={selectedTech.has(tech.name)}
+								onchange={() => toggleTech(tech.name)}
+								class="h-3.5 w-3.5 accent-[var(--dash-primary)]"
 							/>
-							<span class="min-w-0">
-								<span class="font-medium text-[var(--dash-text)]">{proposal.label}:</span>
-								<span class="break-words text-[var(--dash-text)]">{proposal.value}</span>
-								<span class="text-[var(--dash-text-secondary)]">— {proposal.note}</span>
-								{#if existing}
-									<span class="mt-0.5 block text-xs text-amber-500">
-										Replaces: {existing}
-									</span>
-								{/if}
-							</span>
+							<span class="text-[var(--dash-text)]">{tech.name}</span>
+							<span class="text-xs text-[var(--dash-text-secondary)]">{tech.note}</span>
 						</label>
-					</li>
-				{/each}
-			</ul>
+					{/each}
+				</div>
+			{/if}
+
 			<div class="mt-3 flex items-center gap-3">
 				<button
 					type="button"
 					onclick={apply}
-					disabled={selected.size === 0}
+					disabled={selectedCount === 0}
 					class="inline-flex items-center gap-2 rounded-md bg-[var(--dash-primary)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					<FontAwesomeIcon icon={faDownload} class="h-4 w-4" />
-					Apply {selected.size} field{selected.size === 1 ? '' : 's'}
+					Apply {selectedCount} change{selectedCount === 1 ? '' : 's'}
 				</button>
 				<button
 					type="button"
-					onclick={() => (proposals = null)}
+					onclick={() => {
+						proposals = null;
+						technologies = [];
+					}}
 					class="text-sm text-[var(--dash-text-secondary)] hover:underline"
 				>
 					Cancel
