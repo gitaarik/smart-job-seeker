@@ -44,6 +44,27 @@
 		void value;
 		resize();
 	});
+
+	// A width change re-wraps the text, so a value-only effect would leave a
+	// stale height until the next keystroke — with overflowY hidden that clips
+	// content outright. Covers window resizes, layout shifts and being moved
+	// into another container (e.g. a modal portalled to <body>).
+	$effect(() => {
+		const node = el;
+		if (!node) return;
+		// jsdom has no ResizeObserver; there the value effect above is all we get.
+		if (typeof ResizeObserver === 'undefined') return;
+		// Guard on width: resize() writes height, which would otherwise re-enter.
+		let lastWidth = -1;
+		const ro = new ResizeObserver((entries) => {
+			const width = entries[0]?.contentRect.width ?? 0;
+			if (width === lastWidth) return;
+			lastWidth = width;
+			resize();
+		});
+		ro.observe(node);
+		return () => ro.disconnect();
+	});
 </script>
 
 <textarea bind:this={el} bind:value rows={minRows} style="resize: none;" {...rest}></textarea>

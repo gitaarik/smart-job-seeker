@@ -1,4 +1,5 @@
 <script lang="ts">
+	import AutoGrowTextarea from '$lib/components/AutoGrowTextarea.svelte';
 	import { LOCALES, BASE_LOCALE } from '$lib/resume-translations';
 	import { translations } from '$lib/stores/translations.svelte';
 
@@ -10,7 +11,10 @@
 		/** The English base value — owned by the parent form (bindable). */
 		value: string;
 		multiline?: boolean;
+		/** Minimum visible rows; multiline fields grow past this as you type. */
 		rows?: number;
+		/** Cap the growth so a long value can't push the save button off-screen. */
+		maxRows?: number;
 		placeholder?: string;
 		/** Small helper text under the field. */
 		hint?: string;
@@ -27,6 +31,7 @@
 		value = $bindable(),
 		multiline = false,
 		rows = 3,
+		maxRows = 12,
 		placeholder,
 		hint,
 		required = false,
@@ -119,14 +124,16 @@
 
 	{#if onBase || !canTranslate}
 		{#if multiline}
-			<textarea
-				{rows}
+			<AutoGrowTextarea
+				minRows={rows}
+				{maxRows}
 				{required}
 				{placeholder}
 				{onkeydown}
 				lang={BASE_LOCALE}
 				bind:value
-				class="{inputClass} resize-y"></textarea>
+				class={inputClass}
+			/>
 		{:else}
 			<input
 				type="text"
@@ -148,14 +155,16 @@
 			</p>
 		{/if}
 		{#if multiline}
-			<textarea
-				{rows}
+			<AutoGrowTextarea
+				minRows={rows}
+				{maxRows}
 				placeholder="Translation…"
 				lang={active}
 				value={translations.get(entity, id, field)}
 				oninput={(e) => editTranslation(e.currentTarget.value)}
 				onblur={flush}
-				class="{inputClass} resize-y"></textarea>
+				class={inputClass}
+			/>
 		{:else}
 			<input
 				type="text"
