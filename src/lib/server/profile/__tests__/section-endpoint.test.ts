@@ -122,7 +122,9 @@ describe('creating a row', () => {
 		expect(state.created).toEqual([
 			{
 				resource: 'work_experience_project',
-				actor: { profileId: 3 },
+				// `source` is what puts the write in the change history — this door
+				// is one of three that set it, and a door that forgets logs nothing.
+				actor: { profileId: 3, source: 'ui' },
 				values: { name: 'Migration', work_experience_id: 8 }
 			}
 		]);
@@ -158,7 +160,7 @@ describe('creating a row', () => {
 		);
 
 		expect(result.status).toBe(201);
-		expect(state.created[0].actor).toEqual({ profileId: 3 });
+		expect(state.created[0].actor).toEqual({ profileId: 3, source: 'ui' });
 	});
 
 	it("refuses a profile that is not the caller's", async () => {
@@ -265,7 +267,7 @@ describe('reordering', () => {
 
 		expect(result.status).toBe(200);
 		expect(state.reordered).toEqual([
-			{ resource: 'work_experience_project', actor: { profileId: 3 }, order: [2, 1] }
+			{ resource: 'work_experience_project', actor: { profileId: 3, source: 'ui' }, order: [2, 1] }
 		]);
 	});
 

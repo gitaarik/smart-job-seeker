@@ -21,6 +21,9 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+// A type-only import, so it is erased and does not defeat the mocks the runtime
+// imports below are ordered around.
+import type { ProfileActor } from '../write';
 
 interface RecordedWrite {
 	table: unknown;
@@ -44,8 +47,26 @@ const state = {
 	profileRow: null as { id: number } | null,
 	inserts: [] as RecordedWrite[],
 	updates: [] as RecordedWrite[],
-	deletes: [] as unknown[]
+	deletes: [] as unknown[],
+	/** What was written to the change history — see the `change log` block. */
+	logged: [] as Array<{
+		profileId: number;
+		source: string;
+		action: string;
+		target: { id: number; label: string };
+		fields: Record<string, unknown>;
+		previous: Record<string, unknown>;
+	}>
 };
+
+// The log's own table access is tested next door; here it is a spy, so these
+// assert what the write layer decided to record rather than how it stores it.
+vi.mock('../change-log', () => ({
+	recordChangeQuietly: (change: (typeof state.logged)[number]) => {
+		state.logged.push(change);
+		return Promise.resolve();
+	}
+}));
 
 vi.mock('$lib/server/db', () => {
 	// `.where()` is awaited directly by the max-sort query, chained with
@@ -154,7 +175,7 @@ const {
 	updateRow
 } = await import('../write');
 
-const ACTOR = { profileId: 7 };
+const ACTOR: ProfileActor = { profileId: 7 };
 
 /** A stored row, with the columns this layer reads and whatever the test cares about. */
 function row(fields: Record<string, unknown> = {}) {
@@ -860,5 +881,109 @@ describe('a section owned two rows away', () => {
 		await createRow('skill', ACTOR, { name: 'Redis', category: 'Backend' });
 
 		expect(state.inserts[0].values).toMatchObject({ status: 'published' });
+	});
+});
+
+/**
+ * What lands in the change history, and what deliberately does not.
+ *
+ * The property being pinned is that the log is a function of the WRITE rather
+ * than of the caller: every door a person comes through sets `source` on the
+ * actor it resolves, and everything below records the same way. The capability
+ * path sets none, because `executeCapability` writes its own richer row and two
+ * would double every assistant edit in the feed.
+ */
+describe('the change log', () => {
+	const UI: ProfileActor = { profileId: 7, source: 'ui' };
+
+	beforeEach(() => {
+		state.logged.length = 0;
+	});
+
+	it('records nothing for an actor with no source', async () => {
+		state.rows = [{ id: 5, profile_id: 7, name: 'Dutch' }];
+
+		await updateRow('language', ACTOR, 5, { name: 'German' });
+
+		expect(state.logged).toHaveLength(0);
+	});
+
+	it('records an edit under the same action a proposal would', async () => {
+		// Not a parallel vocabulary: an edit through this layer and an edit
+		// accepted from a card are the same write, and undo the same way, so they
+		// are one entry type in one history.
+		state.rows = [{ id: 5, profile_id: 7, name: 'Dutch', proficiency: 'basic' }];
+
+		await updateRow('language', UI, 5, { proficiency: 'fluent' });
+
+		expect(state.logged).toEqual([
+			expect.objectContaining({
+				profileId: 7,
+				source: 'ui',
+				action: 'edit_language',
+				target: { id: 5, label: 'Dutch' },
+				fields: { proficiency: 'fluent' },
+				previous: { proficiency: 'basic' }
+			})
+		]);
+	});
+
+	it('records a create with no before-image, since there was no row', async () => {
+		await createRow('language', UI, { name: 'Dutch' });
+
+		expect(state.logged[0]).toMatchObject({ action: 'add_language', previous: {} });
+	});
+
+	it('records a delete with the whole row, though nothing can put it back', async () => {
+		state.rows = [{ id: 5, profile_id: 7, name: 'Dutch', proficiency: 'fluent' }];
+
+		await deleteRow('language', UI, 5);
+
+		expect(state.logged[0]).toMatchObject({ action: 'delete_language' });
+		expect(state.logged[0].previous).toMatchObject({ name: 'Dutch', proficiency: 'fluent' });
+	});
+
+	it('tells hiding and showing apart', async () => {
+		// One column, two things that happened. Logging an un-hide as a hide would
+		// print the wrong verb for something the user did on purpose.
+		state.rows = [{ id: 5, profile_id: 7, name: 'Engineer', position: 'Engineer', tags: null }];
+		await setRowVisible('work_experience', UI, 5, false);
+		expect(state.logged[0]).toMatchObject({ action: 'hide_work_experience' });
+
+		state.rows = [
+			{ id: 5, profile_id: 7, name: 'Engineer', position: 'Engineer', tags: ['!resume', '!cv'] }
+		];
+		await setRowVisible('work_experience', UI, 5, true);
+		expect(state.logged[1]).toMatchObject({
+			action: 'show_work_experience',
+			previous: { tags: ['!resume', '!cv'] }
+		});
+	});
+
+	it('records the order a reorder replaced, read before it is overwritten', async () => {
+		// The only before-image that exists nowhere else: once the sorts are
+		// written the previous arrangement is gone, so it is read inside the same
+		// call — and only when someone is going to read the history.
+		state.rows = [
+			{ id: 1, profile_id: 7, name: 'Dutch' },
+			{ id: 2, profile_id: 7, name: 'German' },
+			{ id: 3, profile_id: 7, name: 'French' }
+		];
+
+		await reorderRows('language', UI, [3, 1, 2]);
+
+		expect(state.logged[0]).toMatchObject({
+			action: 'reorder_language',
+			fields: { order: [3, 1, 2] },
+			previous: { order: [1, 2, 3] }
+		});
+	});
+
+	it('does not read the previous order when nobody is logging', async () => {
+		state.rows = [{ id: 1, profile_id: 7, name: 'Dutch' }];
+
+		await reorderRows('language', ACTOR, [1]);
+
+		expect(state.logged).toHaveLength(0);
 	});
 });

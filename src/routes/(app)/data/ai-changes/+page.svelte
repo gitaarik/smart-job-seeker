@@ -7,10 +7,11 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	/** Which surface asked for the change, in words rather than a column value. */
+	/** Which surface made the change, in words rather than a column value. */
 	const SOURCE_LABELS: Record<string, string> = {
 		chat: 'the assistant',
-		mcp: 'a connected app'
+		mcp: 'a connected app',
+		ui: 'you'
 	};
 
 	function when(date: Date | string): string {
@@ -22,16 +23,16 @@
 </script>
 
 <svelte:head>
-	<title>AI Changes - Smart Job Seeker</title>
+	<title>Recent Changes - Smart Job Seeker</title>
 </svelte:head>
 
 <div class="space-y-6">
-	<SectionHeader title="AI Changes" icon={faHistory} />
+	<SectionHeader title="Recent Changes" icon={faHistory} />
 
 	<p class="text-[var(--dash-text-secondary)]">
-		Every change made to your data by the assistant or by a connected app, newest first, with what
-		it replaced. Undo puts the old value back exactly as it was — which also means it overwrites
-		anything you have changed since.
+		Every change made to your data — by you, by the assistant, or by a connected app — newest first,
+		with what it replaced. Undo puts the old value back exactly as it was, which also means it
+		overwrites anything changed since.
 	</p>
 
 	{#if form?.error}
@@ -133,7 +134,8 @@
 
 	{#if data.entries.length === 0}
 		<p class="rounded-lg border border-[var(--dash-border)] p-6 text-[var(--dash-text-secondary)]">
-			Nothing yet. When you accept a change the assistant proposes, it is recorded here.
+			Nothing yet. Every edit you make, and every change you accept from the assistant, is recorded
+			here.
 		</p>
 	{:else}
 		<ul class="space-y-4">
@@ -143,7 +145,7 @@
 						<div>
 							<h3 class="font-semibold">{entry.title}</h3>
 							<p class="text-sm text-[var(--dash-text-secondary)]">
-								{entry.target.label} · {when(entry.createdAt)} · via {SOURCE_LABELS[entry.source] ??
+								{entry.target.label} · {when(entry.createdAt)} · by {SOURCE_LABELS[entry.source] ??
 									entry.source}
 							</p>
 						</div>

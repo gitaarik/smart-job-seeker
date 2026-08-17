@@ -167,7 +167,10 @@
 					icon: faWrench
 				},
 				{
-					label: 'AI Changes',
+					label: 'Recent Changes',
+					// The route keeps its old name: MCP tool results hand agents
+					// `/data/ai-changes#request-N` links, and some are already in
+					// transcripts. What changed is what the page holds, not where it is.
 					href: '/data/ai-changes',
 					icon: faHistory
 				},

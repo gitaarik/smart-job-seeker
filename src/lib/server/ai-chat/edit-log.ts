@@ -1,21 +1,37 @@
 /**
- * What the capability registry has changed, and how to put it back.
+ * What has changed a profile, and how to put it back.
  *
  * HTTP-free, like `executeCapability` and for the same reason: the page that
  * shows the feed is the only caller today and should not also be the only place
  * the rules are written down. An MCP server exposing "what have you changed?"
  * and "undo that" calls these.
  *
+ * ## It used to be only the assistant's history
+ *
+ * And it said so: a `ui` source would have been "a claim nobody makes", because
+ * form actions write through `profile/write.ts` and never reach the registry.
+ * They still don't — `write.ts` records for itself now (see `change-log.ts`),
+ * which is what turns this from an account of what the assistant did into an
+ * account of what happened. The two land as the same action name where they are
+ * the same write: an edit is `edit_work_experience` whether a person or a
+ * proposal made it, and undoes identically either way.
+ *
+ * Three things only a person can do have no capability to name them — deleting,
+ * reordering, and showing something hidden. They are resolved here through
+ * `UI_ACTIONS`, which is deliberately not part of the registry: that list is
+ * what an agent is offered, and a `delete_*` in it is a delete tool.
+ *
  * ## Recording is not optional, and it is not the caller's job
  *
- * `recordEdit` is called from inside `executeCapability`, after the write. Every
- * surface therefore logs by construction rather than by remembering to — which
- * is the property the whole table exists for, since the surface that most needs
- * logging is the one nobody is watching.
+ * `recordChange` is called from inside `executeCapability` and from inside each
+ * of `write.ts`'s writes, after the write. Every surface therefore logs by
+ * construction rather than by remembering to — which is the property the whole
+ * table exists for, since the surface that most needs logging is the one nobody
+ * is watching.
  *
  * It is also why a failure to log does not fail the write. The change already
- * happened; throwing here would report failure for something that succeeded, and
- * the caller would reasonably retry it. A missing log row is bad, and a
+ * happened; throwing there would report failure for something that succeeded,
+ * and the caller would reasonably retry it. A missing log row is bad, and a
  * double-applied edit is worse.
  *
  * ## What undo means here
@@ -29,29 +45,37 @@
  * since. That is what undo is, and it is why the feed shows the timestamp and
  * the before-image next to the button rather than only a verb.
  *
- * Not every capability has one. `add_*` deliberately does not: the row is on
- * its own page with a delete control, and giving the registry a delete is the
- * one thing the hide-not-delete design refused. The feed says where to go
- * instead, the same way the manifest names a page it cannot reach.
+ * Not every action has one. `add_*` deliberately does not: the row is on its own
+ * page with a delete control, and giving the registry a delete is the one thing
+ * the hide-not-delete design refused. Nor does `delete_*`, for a harder reason —
+ * a project owns its technologies and documents by cascade, so a re-create would
+ * restore the text and none of the things that hung off it. The feed says where
+ * to go instead, the same way the manifest names a page it cannot reach.
  */
 
 import { dbDirect as db } from '$lib/server/db';
 import { and, desc, eq, isNull } from 'drizzle-orm';
 import { capability_edits } from '$lib/server/db/schema';
-import { CAPABILITIES, type Capability, type CapabilityActor } from './capabilities';
+import { recordChange, type EditSource } from '$lib/server/profile/change-log';
+import { isUiAction, UI_ACTIONS, type UiAction } from '$lib/server/profile/ui-actions';
+import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
+import {
+	CAPABILITIES,
+	describeFieldChanges,
+	describeProposalChanges,
+	type Capability,
+	type CapabilityActor,
+	type ProposedChange
+} from './capabilities';
 
-/**
- * Which surface made a write.
- *
- * `ui` is absent on purpose: form actions write through `profile/write.ts` and
- * never reach the registry, so a `ui` value would only ever be a claim nobody
- * makes. Add it when something actually routes a form through a capability.
- */
-export type EditSource = 'chat' | 'mcp';
+export type { EditSource };
+
+/** Anything the history can hold: a capability, or one of the UI-only verbs. */
+export type LoggedAction = Capability | UiAction;
 
 export interface EditLogEntry {
 	id: number;
-	capability: Capability;
+	capability: LoggedAction;
 	source: EditSource;
 	target: { id: number; label: string };
 	fields: Record<string, unknown>;
@@ -68,12 +92,12 @@ export interface EditLogEntry {
 const DEFAULT_LIMIT = 50;
 
 /**
- * Returns the new row's id, which is the handle an undo is addressed by.
+ * Record a capability's write.
  *
- * It matters most where nobody is watching: an MCP tool result carries it back
- * so the agent can tell the applicant how to reverse what it just did, in the
- * transcript they are actually reading, rather than leaving them to find the
- * change in a feed they may not know exists.
+ * The row is built in `change-log.ts`, which knows nothing about capabilities —
+ * `write.ts` records through it too, and importing this module from there would
+ * close a circle through the registry. This is the capability-shaped door onto
+ * it, kept so `executeCapability` reads as it always did.
  */
 export async function recordEdit(opts: {
 	profileId: number;
@@ -83,40 +107,104 @@ export async function recordEdit(opts: {
 	fields: Record<string, unknown>;
 	previous: Record<string, unknown>;
 }): Promise<number> {
-	const [row] = await db
-		.insert(capability_edits)
-		.values({
-			profile_id: opts.profileId,
-			source: opts.source,
-			capability: opts.capability,
-			target: opts.target,
-			fields: opts.fields,
-			previous: opts.previous
-		})
-		.returning({ id: capability_edits.id });
+	return recordChange({ ...opts, action: opts.capability });
+}
 
-	return row.id;
+/**
+ * What an entry means: its title, and the undo if it has one.
+ *
+ * Two registries, because two things write here. A capability where the action
+ * is something the assistant could also have done, and `UI_ACTIONS` for the
+ * three verbs only a person has. Null for neither — a capability can be removed
+ * from the registry while its history stays (`hide_language` was one for a day),
+ * and the row still describes what happened; it just cannot be named or undone.
+ */
+function definitionFor(action: string): { title: string; revert?: unknown } | null {
+	if (action in CAPABILITIES) return CAPABILITIES[action as Capability];
+	return isUiAction(action) ? UI_ACTIONS[action] : null;
 }
 
 function toEntry(row: typeof capability_edits.$inferSelect): EditLogEntry {
-	const capability = row.capability as Capability;
-	const def = CAPABILITIES[capability];
+	const action = row.capability as LoggedAction;
+	const def = definitionFor(action);
 
 	return {
 		id: row.id,
-		capability,
+		capability: action,
 		source: row.source as EditSource,
 		target: row.target,
 		fields: row.fields,
 		previous: row.previous,
 		revertedAt: row.reverted_at,
 		createdAt: row.date_created,
-		// A capability can be removed from the registry while its history stays —
-		// `hide_language` was one for a day. The row still describes what happened;
-		// it just cannot be named or undone.
-		title: def?.title ?? capability,
+		title: def?.title ?? action,
 		revertible: !!def?.revert && !row.reverted_at
 	};
+}
+
+/**
+ * One entry's field-level diff, whichever registry wrote it.
+ *
+ * ## The two sources spell their fields differently
+ *
+ * A capability records what the model proposed, and the model is given
+ * namespaced names — `work_experience_project.outcome` — because one proposal
+ * schema carries every live capability's fields and several sections have a
+ * `summary`. `write.ts` records columns, because that is what it wrote. Same
+ * action, same undo, two key shapes, and describing one with the other's field
+ * list matches nothing: the first UI edits landed in the history with no diff
+ * at all beside a title that said something had changed.
+ *
+ * So a section's entry is described against the section's own columns, with the
+ * prefix taken off whichever keys have one. One rendering for one kind of
+ * change, whoever made it.
+ *
+ * ## And three that describe themselves better without one
+ *
+ * A **reorder** has nothing to say field by field; its title names the section
+ * and its undo puts the order back, where a list of row ids would be true and
+ * unreadable. **Hiding** and **showing** write only the tag pair that does it,
+ * which is the mechanism rather than the change — "Hide this work experience"
+ * is the whole of what happened. A **deletion** is the opposite: the row's
+ * columns on the left and nothing on the right, which is the whole of "where
+ * did that go".
+ */
+export function describeLoggedChange(entry: EditLogEntry): ProposedChange[] {
+	const section = sectionOf(entry.capability);
+
+	// A job or an application capability: not a section, so its own field list is
+	// the only one there is.
+	if (!section) {
+		return entry.capability in CAPABILITIES
+			? describeProposalChanges(entry.capability as Capability, entry.fields, entry.previous)
+			: [];
+	}
+
+	const [verb, resource] = section;
+	if (verb === 'reorder' || verb === 'hide' || verb === 'show') return [];
+
+	return describeFieldChanges(
+		Object.keys(PROFILE_RESOURCES[resource].fields),
+		byColumn(entry.fields),
+		byColumn(entry.previous)
+	);
+}
+
+/** The verb and section of a profile action, or null for anything else. */
+function sectionOf(action: string): [string, ProfileResourceName] | null {
+	const at = action.indexOf('_');
+	if (at === -1) return null;
+	const resource = action.slice(at + 1);
+	return resource in PROFILE_RESOURCES
+		? [action.slice(0, at), resource as ProfileResourceName]
+		: null;
+}
+
+/** `work_experience_project.outcome` -> `outcome`, and a column left alone. */
+function byColumn(values: Record<string, unknown>): Record<string, unknown> {
+	return Object.fromEntries(
+		Object.entries(values).map(([key, value]) => [key.slice(key.indexOf('.') + 1), value])
+	);
 }
 
 export async function readEditLog(
@@ -158,8 +246,11 @@ export async function revertEdit(editId: number, actor: CapabilityActor): Promis
 		return { ok: false, reason: 'already_reverted', error: 'That change was already undone.' };
 	}
 
-	const def = CAPABILITIES[row.capability as Capability];
-	if (!def?.revert) {
+	const action = row.capability as LoggedAction;
+	const capability = action in CAPABILITIES ? CAPABILITIES[action as Capability] : null;
+	const revert = capability?.revert ?? (isUiAction(action) ? UI_ACTIONS[action].revert : undefined);
+
+	if (!revert) {
 		return {
 			ok: false,
 			reason: 'not_revertible',
@@ -170,7 +261,12 @@ export async function revertEdit(editId: number, actor: CapabilityActor): Promis
 	// The capability's own authorize, against a fresh read — the same one the
 	// write passed. A change made months ago is exactly the case where the row
 	// has since been deleted or the profile switched.
-	if (!(await def.authorize(row.target, actor))) {
+	//
+	// A UI action has none, and needs none: its target is a section rather than
+	// a row it could read, and both of its reverts go through the write layer,
+	// which scopes every statement to the actor's own profile. The check is the
+	// write, one layer down, rather than a second one written here.
+	if (capability && !(await capability.authorize(row.target, actor))) {
 		return {
 			ok: false,
 			reason: 'not_found',
@@ -179,7 +275,7 @@ export async function revertEdit(editId: number, actor: CapabilityActor): Promis
 	}
 
 	try {
-		await def.revert(row.target, row.previous, actor);
+		await revert(row.target, row.previous, actor);
 	} catch (e) {
 		return {
 			ok: false,

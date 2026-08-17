@@ -53,7 +53,10 @@ async function resolveActor(
 	const profileId = await getSelectedProfileId(cookies, user.id);
 	if (!profileId) return { failure: fail(400, { error: 'No profile selected' }) };
 
-	return { actor: { profileId } };
+	// `source` puts every form post in the change history alongside the
+	// assistant's edits — see ProfileActor. This is one of three doors a person
+	// writes through; a fourth would have to say so itself.
+	return { actor: { profileId, source: 'ui' } };
 }
 
 /**

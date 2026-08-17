@@ -51,5 +51,7 @@ export async function requireRowActor(
 	if (!actor) {
 		error(403, 'Access denied');
 	}
-	return actor;
+	// Everything through here is a person at a keyboard — an autosaving editor or
+	// a form — so it belongs in the change history. See ProfileActor.
+	return { ...actor, source: 'ui' };
 }

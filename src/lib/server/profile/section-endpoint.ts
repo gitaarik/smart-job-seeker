@@ -90,7 +90,7 @@ async function requireProfileActor(profileId: number, userId: string): Promise<P
 		columns: { id: true }
 	});
 	if (!owned) error(403, 'Access denied');
-	return { profileId };
+	return { profileId, source: 'ui' };
 }
 
 /**

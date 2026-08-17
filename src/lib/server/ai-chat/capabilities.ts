@@ -1341,6 +1341,10 @@ export function describeProposalChanges(
 	fields: Record<string, unknown>,
 	current: Record<string, unknown>
 ): ProposedChange[] {
+	// Filtered on what the proposal actually WROTE, not on the union below: a
+	// proposal's `previous` holds the old value of every written field, so the
+	// two are the same set here — and `hide_*` writes none at all, where a union
+	// would start describing the tag array it recorded as a change nobody made.
 	return Object.keys(CAPABILITIES[capability].fields)
 		.filter((field) => field in fields)
 		.map((field) => ({
@@ -1348,6 +1352,31 @@ export function describeProposalChanges(
 			label: labelFor(field),
 			from: renderValue(current[field]),
 			to: renderValue(fields[field])
+		}))
+		.filter((change) => change.from !== change.to);
+}
+
+/**
+ * The same diff over a field list the caller names.
+ *
+ * For the history entries that are not capabilities and so have no `fields` map
+ * to walk — a deletion is the section's own columns, and what it has to show is
+ * a value on the left and nothing on the right. Sides are unioned rather than
+ * taken from `next`, because that is the case: a deletion writes no fields, and
+ * filtering on the ones it wrote would describe it as nothing having happened.
+ */
+export function describeFieldChanges(
+	names: string[],
+	next: Record<string, unknown>,
+	previous: Record<string, unknown>
+): ProposedChange[] {
+	return names
+		.filter((field) => field in next || field in previous)
+		.map((field) => ({
+			field,
+			label: labelFor(field),
+			from: renderValue(previous[field]),
+			to: renderValue(next[field])
 		}))
 		.filter((change) => change.from !== change.to);
 }

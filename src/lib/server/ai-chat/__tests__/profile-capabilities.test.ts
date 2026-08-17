@@ -784,3 +784,54 @@ describe('a child collection reached from its parent’s page', () => {
 		).toBeNull();
 	});
 });
+
+/**
+ * Undoing a change recorded by either writer.
+ *
+ * Two things write history under the same action name. A capability records
+ * what the model proposed, so its keys are namespaced (`language.name`);
+ * `write.ts` records the columns it wrote (`name`). Both are the same change and
+ * both come back through here, and the strict wire-name mapping applied to the
+ * second resolved every key to null — leaving an empty patch, which `updateRow`
+ * wrote successfully and the history then marked as undone.
+ */
+describe('reverting from the change history', () => {
+	const edit = PROFILE_CAPABILITIES.edit_language;
+	const TARGET = { id: 5, label: 'Dutch' };
+
+	beforeEach(() => {
+		state.updates = [];
+		state.updateResult = { ok: true };
+	});
+
+	it('puts back a before-image a capability recorded', async () => {
+		await edit.revert?.(TARGET, { 'language.proficiency': 'basic' }, ACTOR);
+
+		expect(state.updates).toEqual([
+			expect.objectContaining({ resource: 'language', id: 5, values: { proficiency: 'basic' } })
+		]);
+	});
+
+	it('puts back a before-image the write layer recorded', async () => {
+		await edit.revert?.(TARGET, { proficiency: 'basic' }, ACTOR);
+
+		expect(state.updates).toEqual([
+			expect.objectContaining({ resource: 'language', id: 5, values: { proficiency: 'basic' } })
+		]);
+	});
+
+	it('still refuses a field belonging to another section', async () => {
+		// The leniency is for a stored before-image, not for a name that says it
+		// means something else. This one does, and it is dropped — leaving nothing
+		// to write, which is refused rather than reported as undone.
+		await expect(
+			edit.revert?.(TARGET, { 'work_experience.summary': 'nope' }, ACTOR)
+		).rejects.toThrow(/recorded no fields/);
+		expect(state.updates).toHaveLength(0);
+	});
+
+	it('refuses an empty before-image instead of writing nothing successfully', async () => {
+		await expect(edit.revert?.(TARGET, {}, ACTOR)).rejects.toThrow(/recorded no fields/);
+		expect(state.updates).toHaveLength(0);
+	});
+});

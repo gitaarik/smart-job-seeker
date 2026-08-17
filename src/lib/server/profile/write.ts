@@ -35,6 +35,7 @@ import { coerceFields } from '$lib/server/utils/field-kinds';
 import { formatZodError } from '$lib/server/validation/api-schemas';
 import { isProfileOnly, setProfileOnly } from '$lib/profile-visibility';
 import { touchProfile } from './touch-profile';
+import { recordChangeQuietly, type EditSource } from './change-log';
 import {
 	fieldKinds,
 	isHideable,
@@ -225,6 +226,21 @@ function withoutParentField(
 export interface ProfileActor {
 	profileId: number;
 	isStaff?: boolean;
+	/**
+	 * Who is writing, for the change log — and whether to write one at all.
+	 *
+	 * Absent means "do not log", which is the capability path: `executeCapability`
+	 * records a richer entry of its own, naming the capability and the proposal
+	 * it came from, and a second row here would double every assistant edit in
+	 * the history.
+	 *
+	 * Set to `'ui'` by the three doors a person comes through — the form-action
+	 * factory, `requireRowActor`, and the section endpoint's profile check — so
+	 * that a change made by hand and a change made by an agent land in the same
+	 * feed. A fourth door has to opt in, which is the one part of this that is a
+	 * convention rather than a guarantee.
+	 */
+	source?: EditSource;
 }
 
 /** Why a write was refused, for a caller to map onto its own error shape. */
@@ -245,6 +261,36 @@ function refuse(
 
 export function resourceFor(name: ProfileResourceName): ProfileResource {
 	return PROFILE_RESOURCES[name];
+}
+
+/**
+ * Write one line of history, if this actor is one whose changes are history.
+ *
+ * Called after the write, never before, and never in a way that can fail it:
+ * the change has happened by the time this runs, so a logging error is reported
+ * to the server and swallowed here. See `change-log.ts`.
+ *
+ * `action` is a capability name where the same thing is something the assistant
+ * can do — an edit through this layer and an edit through a proposal are the
+ * same write and undo identically — and one of the three UI-only verbs where it
+ * is not. See `ui-actions.ts`.
+ */
+async function logChange(
+	actor: ProfileActor,
+	action: string,
+	target: { id: number; label: string },
+	fields: Record<string, unknown>,
+	previous: Record<string, unknown>
+): Promise<void> {
+	if (!actor.source) return;
+	await recordChangeQuietly({
+		profileId: actor.profileId,
+		source: actor.source,
+		action,
+		target,
+		fields,
+		previous
+	});
 }
 
 /**
@@ -563,8 +609,18 @@ export async function createRow(
 
 	await touchProfile(actor.profileId);
 
-	const row = created as unknown as SectionRow;
-	return { ok: true, id: Number(row.id), row: withParentName(resource, row, parent.label) };
+	const row = withParentName(resource, created as unknown as SectionRow, parent.label);
+	// No before-image, because there was no row. The history says one appeared
+	// and what it said; `add_*` has no undo, so the feed sends them to the page.
+	await logChange(
+		actor,
+		`add_${name}`,
+		{ id: Number(row.id), label: resource.rowLabel(row) },
+		checked.values,
+		{}
+	);
+
+	return { ok: true, id: Number(row.id), row };
 }
 
 /**
@@ -714,6 +770,16 @@ export async function updateRow(
 
 	await touchProfile(actor.profileId);
 
+	// The same action name a proposal writes, because it is the same write and
+	// undoes the same way: one history, whoever made the change.
+	await logChange(
+		actor,
+		`edit_${name}`,
+		{ id, label: resource.rowLabel(found.row) },
+		checked.values,
+		previous
+	);
+
 	return { ok: true, previous };
 }
 
@@ -786,6 +852,16 @@ export async function setRowVisible(
 
 	await touchProfile(actor.profileId);
 
+	// Hiding is a capability; showing is not, and logging an un-hide as a hide
+	// would print the wrong verb in the history for a thing the user did.
+	await logChange(
+		actor,
+		visible ? `show_${name}` : `hide_${name}`,
+		{ id, label: resource.rowLabel(found.row) },
+		{ tags: next.length > 0 ? next : null },
+		{ tags }
+	);
+
 	return { ok: true, row: found.row, wasVisible };
 }
 
@@ -846,6 +922,18 @@ export async function deleteRow(
 	await db.delete(resource.table).where(eq(resource.table.id, id));
 	await touchProfile(actor.profileId);
 
+	// The whole row as the before-image, even though nothing here can put it
+	// back: what it buys is an answer to "where did that go", which is the
+	// question a history is asked about a deletion. See `ui-actions.ts` for why
+	// there is no undo.
+	await logChange(
+		actor,
+		`delete_${name}`,
+		{ id, label: resource.rowLabel(found.row) },
+		{},
+		found.row as unknown as Record<string, unknown>
+	);
+
 	return { ok: true, row: found.row };
 }
 
@@ -865,6 +953,12 @@ export async function reorderRows(
 ): Promise<WriteAck> {
 	const resource = resourceFor(name);
 
+	// Read before writing, and only when someone is going to read the history:
+	// the order a reorder replaces exists nowhere else, and an undo of one is
+	// nothing but that list. The ids are the caller's, so the previous order is
+	// the same set as the section reads them today.
+	const previous = actor.source ? await currentOrder(name, actor, order) : [];
+
 	await Promise.all(
 		order.map((id, index) =>
 			db
@@ -875,7 +969,29 @@ export async function reorderRows(
 	);
 
 	await touchProfile(actor.profileId);
+
+	await logChange(
+		actor,
+		`reorder_${name}`,
+		// No one row to name, so the section names itself. The undo ignores the
+		// target and writes the list back.
+		{ id: actor.profileId, label: resource.title },
+		{ order },
+		{ order: previous }
+	);
+
 	return { ok: true };
+}
+
+/** The section's rows, in the order it reads them, narrowed to the ones given. */
+async function currentOrder(
+	name: ProfileResourceName,
+	actor: ProfileActor,
+	only?: number[]
+): Promise<number[]> {
+	const wanted = only ? new Set(only) : null;
+	const rows = await readOwnedRows(name, actor);
+	return rows.map((row) => Number(row.id)).filter((id) => !wanted || wanted.has(id));
 }
 
 /** Drop the manual order, so the list falls back to whatever `orderBy` says next. */
@@ -885,11 +1001,24 @@ export async function resetRowOrder(
 ): Promise<WriteAck> {
 	const resource = resourceFor(name);
 
+	const previous = actor.source ? await currentOrder(name, actor) : [];
+
 	await db
 		.update(resource.table)
 		.set({ sort: null, date_updated: new Date() })
 		.where(ownedRows(resource, actor));
 
 	await touchProfile(actor.profileId);
+
+	// Logged as a reorder, because that is what it is from the outside: the list
+	// is in a different order afterwards, and putting it back is the same write.
+	await logChange(
+		actor,
+		`reorder_${name}`,
+		{ id: actor.profileId, label: resource.title },
+		{ order: [] },
+		{ order: previous }
+	);
+
 	return { ok: true };
 }

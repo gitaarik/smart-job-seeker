@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { getSelectedProfileId } from '../../profile/utils';
 import { describeProposalChanges } from '$lib/server/ai-chat/capabilities';
-import { readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
+import { describeLoggedChange, readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
 import { approveRequest, readRequests, rejectRequest } from '$lib/server/mcp/requests';
 import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
 
@@ -54,10 +54,10 @@ export const load: PageServerLoad = async ({ parent }) => {
 			revertible: entry.revertible,
 			whereInstead: entry.revertible ? null : pageFor(entry.capability),
 			// Rendered server-side through the same describer the proposal card
-			// uses, so a change reads the same in the feed as it did on the card
-			// it was accepted from. `previous` is the before-image the write
+			// uses where the change was one, and through its own where it was a
+			// deletion or a reorder. `previous` is the before-image the write
 			// recorded, which is what makes an applied change reviewable at all.
-			changes: describeProposalChanges(entry.capability, entry.fields, entry.previous)
+			changes: describeLoggedChange(entry)
 		}))
 	};
 };

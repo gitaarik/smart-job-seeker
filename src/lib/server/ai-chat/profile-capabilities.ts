@@ -128,6 +128,39 @@ function columnName(resource: ProfileResourceName, field: string): string | null
 }
 
 /**
+ * The columns a recorded before-image refers to, accepting either spelling.
+ *
+ * Not a relaxation of the rule above — that one is for model output, where a
+ * field naming another section has to fail rather than land somewhere
+ * plausible. This is for `previous` off a history row, and there are two
+ * writers of those: a capability records what was proposed, so its keys are
+ * namespaced, and `write.ts` records the columns it wrote. Both are the same
+ * change and both undo through here.
+ *
+ * The strict version applied to a column-named before-image resolves every key
+ * to null, filters the patch to empty, and `updateRow` reports success at having
+ * written nothing — so the history marked the change undone and the value
+ * stayed. That is the shape of failure this whole layer exists to remove, and it
+ * is why this is a separate function rather than a flag: the two callers want
+ * genuinely different answers to a name with no prefix.
+ */
+function toColumnsFromRecord(
+	resource: ProfileResourceName,
+	allowed: Record<string, FieldSpec>,
+	fields: Record<string, unknown>
+): Record<string, unknown> {
+	const prefix = `${resource}.`;
+	return Object.fromEntries(
+		Object.entries(fields)
+			.map(
+				([field, value]) =>
+					[field.startsWith(prefix) ? field.slice(prefix.length) : field, value] as const
+			)
+			.filter(([column]) => column in allowed)
+	);
+}
+
+/**
  * Turn a namespaced patch back into column names, keeping only this section's
  * columns and only the ones the assistant may write.
  *
@@ -474,12 +507,15 @@ function editCapability(name: ProfileResourceName): CapabilityDef {
 		 * happened, it does not authorize anything.
 		 */
 		revert: async (t, previous, actor) => {
-			const result = await updateRow(
-				name,
-				{ profileId: actor.profileId },
-				t.id,
-				toColumns(name, fields, previous)
-			);
+			const patch = toColumnsFromRecord(name, fields, previous);
+			// An empty patch is a before-image this capability cannot read, not a
+			// change with nothing in it: `updateRow` would write nothing and report
+			// success, and the history would mark the change undone.
+			if (Object.keys(patch).length === 0) {
+				throw new Error(`edit_${name} recorded no fields this can put back`);
+			}
+
+			const result = await updateRow(name, { profileId: actor.profileId }, t.id, patch);
 			if (!result.ok) {
 				throw new Error(`edit_${name} could not be undone: ${result.error}`);
 			}
