@@ -138,9 +138,18 @@ export const POST: RequestHandler = async ({ locals, params }) => {
 	// a resumable thread — and what it replaced is what executeCapability read on
 	// its way through. Keeping the proposal-time values would record an undo that
 	// reverts to a state that never immediately preceded this edit.
+	//
+	// `created_row` is the other half of that: an add's target names the list it
+	// was addressed to, and only the write knows which row came out. Stored here
+	// rather than derived later, because this is the only moment anything holds
+	// both the proposal and its result — see the column's own note.
 	await db
 		.update(agent_message_proposals)
-		.set({ applied_at: new Date(), previous: outcome.previous })
+		.set({
+			applied_at: new Date(),
+			previous: outcome.previous,
+			created_row: outcome.created
+		})
 		.where(eq(agent_message_proposals.id, proposalId));
 
 	return json({ success: true });

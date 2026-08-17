@@ -197,13 +197,30 @@ export interface CapabilityDef {
 	 * The actor is here for the same reason it is on `current`: a write through
 	 * the profile write layer is authorized against a profile, and a capability
 	 * wrapping it has to say whose. Job writes don't need it and don't take it.
+	 *
+	 * ## An add returns the row it made
+	 *
+	 * Everything else returns nothing, and the `target` it was called with is
+	 * both what it wrote to and what the history names. An `add_*` has no row
+	 * when it starts — its target is the profile, or the application the entry
+	 * is filed under — so without this the created row has no id anywhere: the
+	 * log named "their role projects", and nothing downstream could say which
+	 * entry an accepted proposal had produced.
+	 *
+	 * That is not a cosmetic gap. `write.ts` logs a person's add against the row
+	 * it created, so the same action recorded through a proposal and through the
+	 * form disagreed about what it had touched — against a module whose premise
+	 * is that the two are the same write. And a thread cannot tell the model
+	 * "that one exists now, edit it rather than adding it again" without an id
+	 * to point at, which is the duplicate this and `checkDuplicate` were added
+	 * together to stop.
 	 */
 	apply(
 		target: CapabilityTarget,
 		fields: Record<string, unknown>,
 		current: Record<string, unknown>,
 		actor: CapabilityActor
-	): Promise<void>;
+	): Promise<CapabilityTarget | void>;
 	/**
 	 * What an undo of this write would need to know, when that isn't "the old
 	 * values of the fields being written".
@@ -829,13 +846,14 @@ drop the other, and an entry is also the unit the chronology is read in.`,
 
 		const content = String(fields.entry_content);
 		const proposedTitle = typeof fields.entry_title === 'string' ? fields.entry_title.trim() : '';
+		const title = proposedTitle ? clampRecordTitle(proposedTitle) : deriveRecordTitle(content);
 
 		const [created] = await db
 			.insert(application_records)
 			.values({
 				application_id: target.id,
 				record_type: typeof fields.entry_type === 'string' ? fields.entry_type : 'note',
-				title: proposedTitle ? clampRecordTitle(proposedTitle) : deriveRecordTitle(content),
+				title,
 				content,
 				// The stage the application is in now, same as the composer: things are
 				// logged as they happen, and this is free and right more often than a
@@ -855,6 +873,11 @@ drop the other, and an entry is also the unit the chronology is read in.`,
 		// failure in either leaves the entry written and visible.
 		await deriveRecordMetadata(created.id, app.profile_id);
 		await summarizeApplication(target.id, app.profile_id);
+
+		// The entry, not the application it was filed under. The target this was
+		// called with names the application, which is the right thing to authorize
+		// against and the wrong thing to call the change.
+		return { id: created.id, label: title };
 	}
 };
 
@@ -1085,6 +1108,14 @@ export type CapabilityOutcome =
 			 * a caller must not be able to mistake "not logged" for "not written".
 			 */
 			editId: number | null;
+			/**
+			 * The row this write created, for the capabilities that create one.
+			 *
+			 * Null for every edit, and that is the honest answer rather than a
+			 * missing case: an edit changed a row that already existed, and the
+			 * target it was called with already names it.
+			 */
+			created: CapabilityTarget | null;
 	  }
 	| { ok: false; reason: CapabilityRefusal; error: string };
 
@@ -1155,7 +1186,9 @@ export async function executeCapability(
 					.map((key) => [key, current[key]])
 			);
 
-	await def.apply(target, fields, current, actor);
+	// An add hands back the row it made; everything else writes to the target it
+	// was given and returns nothing. See CapabilityDef.apply.
+	const created = (await def.apply(target, fields, current, actor)) ?? null;
 
 	// After the write, and never able to undo it. The change already happened;
 	// throwing here would report a failure for something that succeeded and
@@ -1170,7 +1203,12 @@ export async function executeCapability(
 			profileId: actor.profileId,
 			source,
 			capability,
-			target,
+			// The created row where there is one, not the profile the add was
+			// addressed to. `write.ts` logs a person's add the same way, and the
+			// whole premise of that log is that one action name means one change
+			// whoever made it — an entry reading "their role projects" said only
+			// which list had grown.
+			target: created ?? target,
 			fields,
 			previous
 		});
@@ -1178,7 +1216,7 @@ export async function executeCapability(
 		console.error(`[capabilities] ${capability} applied but was not logged`, e);
 	}
 
-	return { ok: true, previous, editId };
+	return { ok: true, previous, editId, created };
 }
 
 /** Every field name the live capabilities can address, for the `field` enum. */

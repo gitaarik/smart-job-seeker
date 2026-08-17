@@ -98,7 +98,9 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	currentUser = { id: 'user-1' };
 	storedRow = proposalRow();
-	mockExecute.mockResolvedValue({ ok: true, previous: { salary_min: 55000 } });
+	// `created` is part of the real outcome and null for every edit — a mock that
+	// left it out would let the route store `undefined` and still pass.
+	mockExecute.mockResolvedValue({ ok: true, previous: { salary_min: 55000 }, created: null });
 	mockUpdateSet.mockReturnValue({ where: mockUpdateWhere });
 });
 
@@ -203,5 +205,32 @@ describe('the before-image', () => {
 				previous: { salary_min: 55000 }
 			})
 		);
+	});
+});
+
+describe('the row an add created', () => {
+	it('is stored, because this is the only moment anything holds both', async () => {
+		// An add's target names the list it was addressed to — there was no row
+		// when the proposal was made. Without this the created entry has no id in
+		// the thread, and a later turn can only match its own draft against a name
+		// in a list, which is how the same project came to be added twice.
+		mockExecute.mockResolvedValue({
+			ok: true,
+			previous: {},
+			created: { id: 256, label: 'High-Traffic Ticket Shop Scaling' }
+		});
+
+		await POST(event());
+
+		expect(mockUpdateSet).toHaveBeenCalledWith(
+			expect.objectContaining({
+				created_row: { id: 256, label: 'High-Traffic Ticket Shop Scaling' }
+			})
+		);
+	});
+
+	it('is null for an edit, which created nothing', async () => {
+		await POST(event());
+		expect(mockUpdateSet).toHaveBeenCalledWith(expect.objectContaining({ created_row: null }));
 	});
 });

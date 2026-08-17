@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import {
 	agent_conversations,
 	agent_message_proposals,
@@ -24,6 +24,10 @@ import {
 	renderCapabilityPrompt
 } from '$lib/server/ai-chat/capabilities';
 import { summarizeProposal } from '$lib/server/ai-chat/proposal-summary';
+import {
+	type ProposalOutcome,
+	renderProposalOutcomes
+} from '$lib/server/ai-chat/proposal-outcomes';
 
 // Profile fields the agent is allowed to reason over. Mirrors the cover-letter
 // feature's set — enough to give grounded, personal advice without leaking
@@ -81,6 +85,42 @@ const CHAT_CONTEXT_PLACEHOLDERS = [
 const EMPTY_CONTEXT_VARIABLES: Record<string, string> = Object.fromEntries(
 	CHAT_CONTEXT_PLACEHOLDERS.map((key) => [key, ''])
 );
+
+/**
+ * What each of a window's turns proposed and whether it was applied, grouped by
+ * turn.
+ *
+ * Read straight from the proposal rows rather than through the transcript
+ * endpoint's richer shape: this needs the fate of a proposal, not its diff, and
+ * rebuilding the diffs would mean a `current` read per proposal per turn — the
+ * expensive half of that endpoint, spent to produce something no one reads.
+ */
+async function readProposalOutcomes(messageIds: number[]): Promise<Map<number, ProposalOutcome[]>> {
+	const rows = await db
+		.select({
+			message_id: agent_message_proposals.message_id,
+			capability: agent_message_proposals.capability,
+			target: agent_message_proposals.target,
+			created_row: agent_message_proposals.created_row,
+			applied_at: agent_message_proposals.applied_at
+		})
+		.from(agent_message_proposals)
+		.where(inArray(agent_message_proposals.message_id, messageIds))
+		.orderBy(asc(agent_message_proposals.id));
+
+	const byMessage = new Map<number, ProposalOutcome[]>();
+	for (const row of rows) {
+		const list = byMessage.get(row.message_id) ?? [];
+		list.push({
+			capability: row.capability,
+			target: row.target,
+			createdRow: row.created_row,
+			applied: !!row.applied_at
+		});
+		byMessage.set(row.message_id, list);
+	}
+	return byMessage;
+}
 
 /** First line of the opening message, trimmed to a sane title length. */
 function deriveTitle(message: string): string {
@@ -418,10 +458,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	// Prior turns (oldest → newest), capped to the recent window. The new message
 	// isn't persisted yet, so it isn't included here.
-	const history: ChatMessage[] = conversation
+	const past = conversation
 		? (
 				await db
 					.select({
+						id: agent_messages.id,
 						role: agent_messages.role,
 						content: agent_messages.content
 					})
@@ -429,13 +470,23 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					.where(eq(agent_messages.conversation_id, conversation.id))
 					.orderBy(desc(agent_messages.id))
 					.limit(MAX_CONTEXT_MESSAGES)
-			)
-				.reverse()
-				.map((m) => ({
-					role: m.role === 'assistant' ? ('assistant' as const) : ('user' as const),
-					content: m.content
-				}))
+			).reverse()
 		: [];
+
+	// What each of those turns proposed, and whether it happened. Replayed with
+	// the turn because otherwise it isn't replayed at all: a model reading its own
+	// prose back has no way to tell a draft it offered from a row that exists, and
+	// re-proposing an accepted add is what that costs. See proposal-outcomes.ts.
+	//
+	// One query for the window rather than one per turn, and only for a thread
+	// that has one — the same shape the transcript endpoint uses.
+	const outcomes: Map<number, ProposalOutcome[]> =
+		past.length > 0 ? await readProposalOutcomes(past.map((m) => m.id)) : new Map();
+
+	const history: ChatMessage[] = past.map((m) => ({
+		role: m.role === 'assistant' ? ('assistant' as const) : ('user' as const),
+		content: m.content + renderProposalOutcomes(outcomes.get(m.id) ?? [])
+	}));
 
 	// What the user is looking at, and what may be changed there — both resolved
 	// server-side from the route and authorized against this profile. `route` is

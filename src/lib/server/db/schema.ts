@@ -2634,6 +2634,28 @@ export const agent_message_proposals = pgTable(
 		 */
 		previous: jsonb().$type<Record<string, unknown>>(),
 		target: jsonb().$type<{ id: number; label: string }>().notNull(),
+		/**
+		 * The row an accepted `add_*` created, written at apply time.
+		 *
+		 * `target` cannot say it. An add is addressed to the profile — or to the
+		 * application an entry is filed under — because when the proposal is made
+		 * there is no row yet, so what a card records as its target is the list
+		 * that grew rather than the thing that appeared.
+		 *
+		 * That absence is what let one project be added twice. A later turn is
+		 * replayed to the model as its own prose and nothing else, so an assistant
+		 * that had proposed a project, watched it accepted, and was then handed the
+		 * user's rewrite of it had no way to know its draft had become a row: it
+		 * proposed the add again, and the second card produced a duplicate. This is
+		 * the id that makes "you added that already — correct it, at this id"
+		 * something the transcript can state instead of something to infer from a
+		 * name in a list.
+		 *
+		 * Null for every edit, and for an add nobody accepted — both mean no row
+		 * came out of this proposal, which is the same answer for two reasons the
+		 * reader can tell apart with `applied_at`.
+		 */
+		created_row: jsonb().$type<{ id: number; label: string }>(),
 		applied_at: timestamp({ withTimezone: true, mode: 'date' }),
 		date_created: timestamp({ withTimezone: true, mode: 'date' })
 			.default(sql`CURRENT_TIMESTAMP`)

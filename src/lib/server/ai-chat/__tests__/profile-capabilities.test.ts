@@ -54,7 +54,14 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => {
 		},
 		createRow: (resource: string, actor: unknown, values: Record<string, unknown>) => {
 			state.creates.push({ resource, actor, values });
-			return Promise.resolve(state.updateResult.ok ? { ok: true, id: 99 } : state.updateResult);
+			// The row as well as its id, because the real one hands both back and the
+			// capability labels what it created from the row — a mock returning only
+			// an id passes a test the write layer's own shape would not.
+			return Promise.resolve(
+				state.updateResult.ok
+					? { ok: true, id: 99, row: { ...values, id: 99, sort: null, status: null } }
+					: state.updateResult
+			);
 		},
 		setRowVisible: (resource: string, actor: unknown, id: number, visible: boolean) => {
 			state.visibility.push({ resource, actor, id, visible });
@@ -429,6 +436,43 @@ describe('adding an entry', () => {
 		expect(add.validate({ 'language.name': 'Spanish' }, {})).toEqual({ ok: true });
 	});
 
+	it('refuses one that is already in the list it was shown', async () => {
+		// The contract says not to, in words, above the list. That instruction lost
+		// an argument it should have won — a project proposed, accepted and then
+		// reworded came back as a second add of the same name — so the rule the
+		// prompt asks for is also enforced where a refusal is possible.
+		state.rows = [{ id: 1, profile_id: 12, name: 'Dutch' }];
+		const current = await add.current({ id: 12, label: 'x' }, ACTOR);
+
+		const result = add.validate({ 'language.name': 'Dutch' }, current);
+
+		expect(result.ok).toBe(false);
+		// Names the entry and where to take it, because this reaches the user under
+		// a reply that has already promised them the change.
+		expect((result as { error: string }).error).toContain('"Dutch" is already');
+		expect((result as { error: string }).error).toContain('correction');
+	});
+
+	it('ignores case and stray spacing, which is how a duplicate actually arrives', async () => {
+		state.rows = [{ id: 1, profile_id: 12, name: 'Dutch' }];
+		const current = await add.current({ id: 12, label: 'x' }, ACTOR);
+
+		expect(add.validate({ 'language.name': '  dutch ' }, current).ok).toBe(false);
+	});
+
+	it('allows an entry that is merely similar', async () => {
+		state.rows = [{ id: 1, profile_id: 12, name: 'Dutch' }];
+		const current = await add.current({ id: 12, label: 'x' }, ACTOR);
+
+		expect(add.validate({ 'language.name': 'Dutch Sign Language' }, current)).toEqual({ ok: true });
+	});
+
+	it('passes when there is no inventory to check against', () => {
+		// A deferral, not an exemption — the same shape checkParent uses. validate
+		// is also called at apply time, where `current` is read fresh.
+		expect(add.validate({ 'language.name': 'Dutch' }, {})).toEqual({ ok: true });
+	});
+
 	it('writes column names against the actor', async () => {
 		await add.apply(
 			{ id: 12, label: 'x' },
@@ -586,6 +630,24 @@ describe('a section owned through its parent', () => {
 
 		expect(result.ok).toBe(false);
 		expect((result as { error: string }).error).toContain('Backend');
+	});
+
+	it('refuses a duplicate within its group, and allows the same name in another', async () => {
+		// The inventory is per group, and so is the rule: one skill can honestly be
+		// in two categories, and refusing that would be refusing the page's own
+		// shape. What must not happen is a second PostgreSQL under Backend.
+		const current = await add.current({ id: 12, label: 'their skills' }, ACTOR);
+
+		const repeat = add.validate(
+			{ 'skill.name': 'PostgreSQL', 'skill.category': 'Backend' },
+			current
+		);
+		expect(repeat.ok).toBe(false);
+		expect((repeat as { error: string }).error).toContain('Backend');
+
+		expect(
+			add.validate({ 'skill.name': 'PostgreSQL', 'skill.category': 'Frontend' }, current)
+		).toEqual({ ok: true });
 	});
 
 	it('accepts a group named in the wrong case', async () => {

@@ -244,6 +244,101 @@ function checkParent(
 	};
 }
 
+/**
+ * Refuse an add of an entry the model was just shown it already has.
+ *
+ * ## Why prose was not enough
+ *
+ * The add contract already ends with the inventory and "do not propose a
+ * duplicate of anything already in one". That instruction lost an argument it
+ * should have won: asked to revise a project it had proposed one turn earlier
+ * and the user had accepted, the assistant proposed adding it again — with the
+ * duplicate name sitting first in that very list, and first in the edit verb's
+ * target list a few hundred characters above it. Two copies of one project,
+ * differing only in wording, on every document.
+ *
+ * The cause is fixed elsewhere (a turn's proposals now come back with their
+ * outcome, so "you already added that" is a fact in the transcript rather than
+ * something to infer from a list). This is the floor under it: the same rule
+ * the contract states, enforced where a refusal is possible instead of asked
+ * for where it can only be obeyed.
+ *
+ * ## Where the comparison comes from
+ *
+ * The labels — the exact strings the model was shown — rather than a column
+ * chosen per section. Sections name themselves differently (`name` here,
+ * `description` there, `area` and `institution` joined), and `rowLabel` is
+ * already the one place that knows which; comparing anything else would be a
+ * second answer to a question the declaration has settled. It also keeps the
+ * check honest about what it is: not "is this the same entry" — nothing here
+ * can know that — but "did you propose a duplicate of a line in the list",
+ * which is what was asked of the model in words.
+ *
+ * ## Two entries sharing a truncated label are not a duplicate
+ *
+ * `short()` cuts a label at 60 characters, so an achievement's label is the
+ * head of its description and two unrelated achievements can open identically.
+ * A truncated label is a prefix, and a prefix match is not an identity, so a
+ * refusal is only issued when neither side was cut. That leaves the long-text
+ * sections unguarded here, which is the correct amount of guarding available
+ * from the data this has — and they are also the sections where a genuine
+ * second entry is most likely.
+ *
+ * Nothing is refused when there is no inventory to check against, the same way
+ * `checkParent` passes when it has no list: both are deferrals, not exemptions.
+ */
+function checkDuplicate(
+	resource: ProfileResource,
+	name: ProfileResourceName,
+	allowed: Record<string, FieldSpec>,
+	proposed: Record<string, unknown>,
+	current: Record<string, unknown>
+): { ok: true } | { ok: false; error: string } {
+	const grouped = current.existingByGroup as Record<string, string[]> | undefined;
+	const flat = Array.isArray(current.existing) ? (current.existing as string[]) : null;
+	if (!grouped && !flat) return { ok: true };
+
+	// The row this proposal would produce, labelled by whichever function built
+	// the list it is being compared against — the grouped inventory prints short
+	// labels, because a row's group is already the line it sits on.
+	const row = toColumns(name, allowed, proposed) as unknown as SectionRow;
+	const label = grouped ? (resource.shortLabel ?? resource.rowLabel)(row) : resource.rowLabel(row);
+	if (label.trim() === '' || label.endsWith('…')) return { ok: true };
+
+	const parentField = parentWireField(resource, name);
+	const group = grouped
+		? Object.keys(grouped).find(
+				(key) =>
+					key.trim().toLowerCase() ===
+					String(proposed[parentField ?? ''] ?? '')
+						.trim()
+						.toLowerCase()
+			)
+		: null;
+	const existing = grouped ? (group ? (grouped[group] ?? []) : []) : (flat ?? []);
+
+	const match = existing.find(
+		(entry) => !entry.endsWith('…') && entry.trim().toLowerCase() === label.trim().toLowerCase()
+	);
+	if (!match) return { ok: true };
+
+	// Addressed to both readers this reaches. It is shown to the user, under the
+	// reply that promised them the change (see renderDropNotice), and it is
+	// stored with that reply — so it is also what the model reads next turn,
+	// where "correct that one" is the move it has a capability for.
+	//
+	// No full stop at the end: `renderDropNotice` adds one. Every other refusal
+	// in this layer is written the same way, bar `checkParent`, which is where
+	// the stray ".." in the drop notice comes from.
+	return {
+		ok: false,
+		error:
+			`"${match}" is already ${group ? `a ${resource.label} under ${group}` : `in their ${resource.title.toLowerCase()}`}. ` +
+			`Propose a correction to that one instead of adding a second copy — ` +
+			`if it really is a separate entry, it can be added from the page itself`
+	};
+}
+
 /** One line of the contract's field list. */
 function describeField(name: string, spec: FieldSpec): string {
 	const parts: string[] = [];
@@ -660,7 +755,18 @@ a duplicate of anything already in one:\n\n${lines.join('\n')}`;
 			if (!group.ok) return group;
 
 			const checked = validatePatch(name, toColumns(name, fields, proposed), true);
-			return checked.ok ? { ok: true } : { ok: false, error: checked.error };
+			if (!checked.ok) return { ok: false, error: checked.error };
+
+			// Last, because a duplicate of a row that does not have a valid name yet
+			// is not the interesting thing wrong with it — and because this reads
+			// the label the proposal would produce, which is only meaningful once
+			// the fields behind it have been checked.
+			//
+			// Runs in both places `validate` runs, and the second is not redundant:
+			// two turns can each propose the same addition while neither has been
+			// accepted, and it is the Apply button on the second card — not the
+			// model — that would then make the duplicate.
+			return checkDuplicate(resource, name, fields, proposed, current);
 		},
 
 		apply: async (_t, proposed, _current, actor) => {
@@ -672,6 +778,11 @@ a duplicate of anything already in one:\n\n${lines.join('\n')}`;
 			if (!result.ok) {
 				throw new Error(`add_${name} refused at write time: ${result.error}`);
 			}
+
+			// The row, so the change is recorded against the thing that appeared
+			// rather than against the profile this was addressed to — and so a
+			// thread can name it next turn instead of proposing it a second time.
+			return targetFor(name, result.row);
 		}
 	};
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "agent_message_proposals" ADD COLUMN "created_row" jsonb;

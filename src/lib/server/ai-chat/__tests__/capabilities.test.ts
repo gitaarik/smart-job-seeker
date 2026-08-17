@@ -1519,8 +1519,39 @@ describe('executeCapability', () => {
 		// the handle an undo is addressed by, and the caller who most needs it is
 		// the one with nobody watching: an MCP tool result carries it into the
 		// transcript the user is reading at the time.
-		expect(outcome).toEqual({ ok: true, previous: {}, editId: 999 });
+		//
+		// `created` is the entry itself, not the application it was filed under.
+		// An add is called with a target it cannot have written to — there was no
+		// row yet — so without this the only id the caller keeps is the one place
+		// the change did not happen.
+		expect(outcome).toEqual({
+			ok: true,
+			previous: {},
+			editId: 999,
+			created: { id: 777, label: 'They want two office days.' }
+		});
 		expect(mockRecordInsert).toHaveBeenCalledTimes(1);
+	});
+
+	it('logs an add against the row it created, not against what it was called with', async () => {
+		// The target an add resolves is the parent — an application here, a profile
+		// for a section — because there is no row to name until the write happens.
+		// Logging that is how the history came to say only which list had grown,
+		// while the same add made through a form recorded the row itself.
+		await executeCapability(
+			'add_activity_record',
+			TARGET,
+			ACTOR,
+			{ entry_content: 'They want two office days.' },
+			'chat'
+		);
+
+		expect(mockEditLogInsert).toHaveBeenCalledWith(
+			expect.objectContaining({
+				capability: 'add_activity_record',
+				target: { id: 777, label: 'They want two office days.' }
+			})
+		);
 	});
 
 	it('hands back what an edit replaced, read inside the call', async () => {
