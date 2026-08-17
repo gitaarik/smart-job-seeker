@@ -5,6 +5,25 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2026-08-17
+
+6 commits since v0.15.0.
+
+### Added
+
+- Profile editing for role, projects, achievements, and technologies
+- Passkey prompt detection to prevent login interruption
+- Auth passkey failure type in import tasks
+
+### Changed
+
+- Profile text fields now expand to fit content
+- Profile now tracks all user changes, not just assistant suggestions
+
+### Fixed
+
+- Assistant threads now report what happened to their proposed edits
+
 ## [0.15.0] - 2026-08-17
 
 17 commits since v0.14.0.
