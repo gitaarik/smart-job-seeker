@@ -71,6 +71,10 @@ export const TRANSLATABLE_FIELDS: TranslatableField[] = [
 		label: 'Achievement'
 	},
 
+	{ entity: 'work_experience_project', field: 'name', label: 'Project name' },
+	{ entity: 'work_experience_project', field: 'description', label: 'Description' },
+	{ entity: 'work_experience_project', field: 'outcome', label: 'Outcome' },
+
 	{ entity: 'tech_skill_category', field: 'name', label: 'Category name' },
 
 	{ entity: 'education', field: 'area', label: 'Field of study' },

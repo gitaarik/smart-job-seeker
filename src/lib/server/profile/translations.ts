@@ -19,6 +19,7 @@ import {
 	side_projects,
 	tech_skill_categories,
 	work_experience_achievements,
+	work_experience_projects,
 	work_experiences
 } from '$lib/server/db/schema';
 import {
@@ -108,6 +109,11 @@ export function applyTranslations(
 		}
 		for (const a of we.work_experience_achievements ?? []) {
 			overlay(tr, 'work_experience_achievement', a, 'description');
+		}
+		for (const p of we.work_experience_projects ?? []) {
+			for (const f of ['name', 'description', 'outcome']) {
+				overlay(tr, 'work_experience_project', p, f);
+			}
 		}
 	}
 
@@ -209,6 +215,22 @@ export async function isEntityOwned(
 						.limit(1)
 				).length > 0
 			);
+		case 'work_experience_project':
+			return (
+				(
+					await db
+						.select({ id: work_experience_projects.id })
+						.from(work_experience_projects)
+						.innerJoin(
+							work_experiences,
+							eq(work_experience_projects.work_experience_id, work_experiences.id)
+						)
+						.where(
+							and(eq(work_experience_projects.id, id), eq(work_experiences.profile_id, profileId))
+						)
+						.limit(1)
+				).length > 0
+			);
 		case 'side_project_achievement':
 			return (
 				(
@@ -232,11 +254,11 @@ export async function isEntityOwned(
 
 /**
  * Batch variant of {@link isEntityOwned}: the set of owned entity ids per type
- * for a profile (7 queries, independent of how many rows are being saved).
+ * for a profile (8 queries, independent of how many rows are being saved).
  * Used by the overview page which writes many fields at once.
  */
 export async function loadOwnedEntityIds(profileId: number): Promise<Record<string, Set<number>>> {
-	const [we, wea, cats, edu, sp, spa] = await Promise.all([
+	const [we, wea, wep, cats, edu, sp, spa] = await Promise.all([
 		db
 			.select({ id: work_experiences.id })
 			.from(work_experiences)
@@ -247,6 +269,14 @@ export async function loadOwnedEntityIds(profileId: number): Promise<Record<stri
 			.innerJoin(
 				work_experiences,
 				eq(work_experience_achievements.work_experience_id, work_experiences.id)
+			)
+			.where(eq(work_experiences.profile_id, profileId)),
+		db
+			.select({ id: work_experience_projects.id })
+			.from(work_experience_projects)
+			.innerJoin(
+				work_experiences,
+				eq(work_experience_projects.work_experience_id, work_experiences.id)
 			)
 			.where(eq(work_experiences.profile_id, profileId)),
 		db
@@ -268,6 +298,7 @@ export async function loadOwnedEntityIds(profileId: number): Promise<Record<stri
 		profile: new Set([profileId]),
 		work_experience: new Set(we.map((r) => r.id)),
 		work_experience_achievement: new Set(wea.map((r) => r.id)),
+		work_experience_project: new Set(wep.map((r) => r.id)),
 		tech_skill_category: new Set(cats.map((r) => r.id)),
 		education: new Set(edu.map((r) => r.id)),
 		side_project: new Set(sp.map((r) => r.id)),
@@ -276,7 +307,7 @@ export async function loadOwnedEntityIds(profileId: number): Promise<Record<stri
 }
 
 /** Longer fields get a textarea in the editor; the rest a single-line input. */
-const MULTILINE_FIELDS = new Set(['summary', 'description', 'note', 'about_me_text']);
+const MULTILINE_FIELDS = new Set(['summary', 'description', 'outcome', 'note', 'about_me_text']);
 
 /** Append a registered entity's non-empty fields as editor rows. */
 function pushRows(
@@ -331,6 +362,11 @@ export function collectTranslatable(
 				base,
 				multiline: true
 			});
+		});
+		const projects: Array<Record<string, unknown>> = we.work_experience_projects ?? [];
+		projects.forEach((p, i) => {
+			const name = typeof p.name === 'string' ? p.name.trim() : '';
+			pushRows(rows, 'work_experience_project', Number(p.id), p, name || `Project ${i + 1}`);
 		});
 		if (rows.length) {
 			groups.push({

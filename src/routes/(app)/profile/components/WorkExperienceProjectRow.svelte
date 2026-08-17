@@ -11,6 +11,7 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronDown, faChevronRight, faTimes } from '@fortawesome/free-solid-svg-icons';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
+	import TranslatableField from '$lib/components/TranslatableField.svelte';
 	import type { SectionRow, SectionRows } from '$lib/components/section-rows.svelte';
 	import ProjectDocuments from './ProjectDocuments.svelte';
 	import ProjectTechnologies from './ProjectTechnologies.svelte';
@@ -115,23 +116,16 @@
 	{#if open}
 		<div class="space-y-4 border-t border-[var(--dash-border)] bg-[var(--dash-bg)]/30 p-4">
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-				<div>
-					<label
-						for="proj-name-{row.key}"
-						class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
-					>
-						Project Name <span class="text-[var(--dash-error)]">*</span>
-					</label>
-					<input
-						id="proj-name-{row.key}"
-						type="text"
-						value={row.data.name}
-						oninput={(e) => set({ name: e.currentTarget.value })}
-						onblur={row.field.flush}
-						placeholder="e.g. Payments rewrite"
-						class={inputClass}
-					/>
-				</div>
+				<TranslatableField
+					entity="work_experience_project"
+					id={row.id ?? 0}
+					field="name"
+					label="Project Name"
+					required
+					bind:value={() => row.data.name, (v) => set({ name: v })}
+					onblur={row.field.flush}
+					placeholder="e.g. Payments rewrite"
+				/>
 				<div>
 					<label
 						for="proj-url-{row.key}"
@@ -175,35 +169,29 @@
 				</div>
 			</div>
 
-			<div>
-				<label
-					for="proj-desc-{row.key}"
-					class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Description</label
-				>
-				<textarea
-					id="proj-desc-{row.key}"
-					value={row.data.description}
-					oninput={(e) => set({ description: e.currentTarget.value })}
-					onblur={row.field.flush}
-					rows={3}
-					placeholder="What was the project and your role in it?"
-					class="{inputClass} resize-y"></textarea>
-			</div>
+			<TranslatableField
+				entity="work_experience_project"
+				id={row.id ?? 0}
+				field="description"
+				label="Description"
+				multiline
+				rows={3}
+				bind:value={() => row.data.description, (v) => set({ description: v })}
+				onblur={row.field.flush}
+				placeholder="What was the project and your role in it?"
+			/>
 
-			<div>
-				<label
-					for="proj-outcome-{row.key}"
-					class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Outcome</label
-				>
-				<textarea
-					id="proj-outcome-{row.key}"
-					value={row.data.outcome}
-					oninput={(e) => set({ outcome: e.currentTarget.value })}
-					onblur={row.field.flush}
-					rows={2}
-					placeholder="What changed because of it?"
-					class="{inputClass} resize-y"></textarea>
-			</div>
+			<TranslatableField
+				entity="work_experience_project"
+				id={row.id ?? 0}
+				field="outcome"
+				label="Outcome"
+				multiline
+				rows={2}
+				bind:value={() => row.data.outcome, (v) => set({ outcome: v })}
+				onblur={row.field.flush}
+				placeholder="What changed because of it?"
+			/>
 
 			<div>
 				{#if row.id}

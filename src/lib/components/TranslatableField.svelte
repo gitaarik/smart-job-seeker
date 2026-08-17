@@ -21,6 +21,12 @@
 		required?: boolean;
 		/** Passed through to the base (English) input, e.g. Enter/Escape handling. */
 		onkeydown?: (e: KeyboardEvent) => void;
+		/**
+		 * Passed through to the base (English) input. The translation tab keeps its
+		 * own blur handler — that one flushes the overlay, this one is the parent's
+		 * business (flushing a debounced save of the base value, typically).
+		 */
+		onblur?: (e: FocusEvent) => void;
 	}
 
 	let {
@@ -35,7 +41,8 @@
 		placeholder,
 		hint,
 		required = false,
-		onkeydown
+		onkeydown,
+		onblur
 	}: Props = $props();
 
 	// A translation needs a persisted row id; disable tabs until the entity is
@@ -130,6 +137,7 @@
 				{required}
 				{placeholder}
 				{onkeydown}
+				{onblur}
 				lang={BASE_LOCALE}
 				bind:value
 				class={inputClass}
@@ -140,6 +148,7 @@
 				{required}
 				{placeholder}
 				{onkeydown}
+				{onblur}
 				lang={BASE_LOCALE}
 				bind:value
 				class={inputClass}

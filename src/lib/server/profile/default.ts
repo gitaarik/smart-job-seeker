@@ -4,8 +4,8 @@
  */
 
 import { dbDirect as db } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
-import { profiles, config } from '$lib/server/db/schema';
+import { asc, eq } from 'drizzle-orm';
+import { profiles, config, work_experience_projects } from '$lib/server/db/schema';
 
 /**
  * Standard include structure used across all profile queries
@@ -23,7 +23,12 @@ const PROFILE_INCLUDE = {
 	work_experiences: {
 		with: {
 			work_experience_achievements: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
-			work_experience_technologies: { orderBy: (t: any, { asc }: any) => asc(t.sort) }
+			work_experience_technologies: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
+			// Nothing renders a role's projects yet, but their name/description/
+			// outcome are translatable — and both the overlay resolver and the
+			// auto-translate endpoint walk the tree this include builds, so a
+			// project left out here is a field the user can never translate.
+			work_experience_projects: { orderBy: asc(work_experience_projects.sort) }
 		},
 		orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)]
 	},
