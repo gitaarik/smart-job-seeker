@@ -18,6 +18,12 @@ export interface AppConfig {
 	// External Services
 	publicSiteUrl: string;
 
+	// GitHub (repo-derived project evidence — deterministic metadata fetch).
+	// Optional: unauthenticated works but shares a 60 req/hour PER-SERVER budget.
+	// Any read-only token lifts that to 5,000/hour; no scopes are needed for
+	// public repos, and private repos are not supported by this feature.
+	githubToken: string;
+
 	// Browser
 	chromePath: string;
 
@@ -194,6 +200,7 @@ function loadConfig(): AppConfig {
 
 		// External Services
 		publicSiteUrl: getEnv('SJS_APP_URL_HOST', 'http://localhost:5173'),
+		githubToken: getEnv('SJS_GITHUB_TOKEN', ''),
 
 		// Browser
 		chromePath: getEnv('SJS_CHROME_PATH', ''),

@@ -16,6 +16,7 @@
 	import AchievementsList, { type AchievementItem } from '$lib/components/AchievementsList.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import TechnologyTagsEditor from '$lib/components/TechnologyTagsEditor.svelte';
+	import RepoMetadataFetch from '$lib/components/RepoMetadataFetch.svelte';
 	import VersionTags from '$lib/components/VersionTags.svelte';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
 	import ProjectDocuments from '../../../components/ProjectDocuments.svelte';
@@ -186,6 +187,22 @@
 			endDate: editEndDate
 		})
 	);
+
+	/**
+	 * Apply what the user ticked in the GitHub proposal list.
+	 *
+	 * These are the same `$state` variables the form binds to, so the existing
+	 * `$effect` → `basicsField` autosave picks the change up and writes it — the
+	 * fetch needs no save path of its own.
+	 */
+	function applyRepoMetadata(values: Partial<Record<string, string>>) {
+		if (values.name !== undefined) editName = values.name;
+		if (values.url !== undefined) editUrl = values.url;
+		if (values.summary !== undefined) editSummary = values.summary;
+		if (values.stars !== undefined) editStars = values.stars;
+		if (values.start_date !== undefined) editStartDate = values.start_date;
+		if (values.end_date !== undefined) editEndDate = values.end_date;
+	}
 
 	let lastAddedAchievementIndex = $state<number | null>(null);
 
@@ -404,6 +421,19 @@
 				placeholder="Brief description of the project..."
 			/>
 		</div>
+		<RepoMetadataFetch
+			projectId={project.id}
+			repoUrl={editRepoUrl}
+			current={{
+				name: editName,
+				url: editUrl,
+				summary: editSummary,
+				stars: editStars,
+				start_date: editStartDate,
+				end_date: editEndDate
+			}}
+			onApply={applyRepoMetadata}
+		/>
 		<div class="mt-4 flex justify-end">
 			<AutoSaveIndicator field={basicsField} />
 		</div>
