@@ -5,6 +5,24 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-08-17
+
+17 commits since v0.14.0.
+
+### Added
+
+- Import tasks now back off and notify when stuck at a platform login screen
+- Jobs automatically age out stale entries
+- Scraper records a machine-readable failure cause for every failed run
+
+### Fixed
+
+- Import task auth-block notifications now display the task name
+- Profile form accepts blank optional number fields
+- Trigger-run script uses the scheduler's search-URL fallback
+- Search form improved to prevent accidental filter application from misplaced clicks
+- Scraper now correctly reports runs as partial when it drops a requested filter
+
 ## [0.14.0] - 2026-08-16
 
 11 commits since v0.13.0.
