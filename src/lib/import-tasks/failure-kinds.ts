@@ -34,6 +34,11 @@ export const FAILURE_KINDS = [
 	'auth_restricted',
 	/** The platform demands acceptance of new terms before letting us through. */
 	'auth_terms',
+	/** The browser's own passkey / security-key dialog took the keyboard, so the
+	 *  credentials never reached the form. Drawn outside the page, so no
+	 *  amount of reading the DOM sees it — see the scraper's
+	 *  `login/passkey.ts`. */
+	'auth_passkey',
 	/** Login failed and the page state didn't match any known pattern. */
 	'auth_unknown',
 
@@ -77,6 +82,7 @@ export const AUTH_SETUP_FAILURE_KINDS: readonly FailureKind[] = [
 	'auth_captcha',
 	'auth_restricted',
 	'auth_terms',
+	'auth_passkey',
 	'auth_unknown'
 ];
 

@@ -353,6 +353,21 @@ describe('explainAuthBlock', () => {
 		expect(e.message).toContain('no manual run needed');
 	});
 
+	it('tells the passkey case the fix is on the platform, and that the password is fine', () => {
+		// The failure looks exactly like a rejected password from the platform's
+		// side — the form submits empty because the browser's own passkey dialog
+		// took the keystrokes — so this has to say outright that the stored
+		// password is not the problem, or the user changes a working one.
+		const e = explainAuthBlock('auth_passkey', ctx);
+		expect(e.message).toContain('passkey');
+		expect(e.message).toContain('the stored one is fine, leave it alone');
+		expect(e.message).toContain('remove the passkeys registered on your LinkedIn account');
+		// The shared "complete the check" instruction belongs to the challenge
+		// kinds; there is no challenge here, only a dialog to dismiss.
+		expect(e.message).toContain('dismiss the passkey dialog');
+		expect(e.message).not.toContain('complete the check');
+	});
+
 	it('keeps every status message inside the 255-char column', () => {
 		const kinds: FailureKind[] = [
 			'auth_verification',
@@ -360,6 +375,7 @@ describe('explainAuthBlock', () => {
 			'auth_captcha',
 			'auth_restricted',
 			'auth_terms',
+			'auth_passkey',
 			'auth_unknown'
 		];
 		for (const kind of kinds) {

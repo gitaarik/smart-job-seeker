@@ -413,6 +413,27 @@ export function explainAuthBlock(kind: FailureKind, ctx: ExplainContext): Explan
 					`follow whatever it asks for.`,
 				statusMessage: short('platform account is restricted')
 			};
+		case 'auth_passkey':
+			// Does not reuse `oneTimeRun`: its "complete the check" wording is
+			// about a platform challenge, and there is no challenge here. The
+			// thing to complete is dismissing a dialog the browser drew.
+			return {
+				title: `${subject} can't log in — passkey prompt in the way`,
+				message:
+					`${opening}\n\n` +
+					`${ctx.platform} offers passkey sign-in, and the browser answers by opening ` +
+					`its own passkey/security-key dialog over the login form. That dialog belongs ` +
+					`to the browser rather than to the page, so it takes the keyboard and the ` +
+					`saved password never reaches the form. ${ctx.platform} then refuses the ` +
+					`empty form, which looks exactly like a wrong password — the stored one is ` +
+					`fine, leave it alone.\n\n` +
+					`Open the task and hit Run now: dismiss the passkey dialog in the browser ` +
+					`window and sign in with the password. ${ctx.platform} remembers the device ` +
+					`afterwards, so the scheduled runs go back to working on their own. To stop ` +
+					`it recurring, remove the passkeys registered on your ${ctx.platform} ` +
+					`account.`,
+				statusMessage: short('browser passkey prompt blocks the login')
+			};
 		case 'auth_terms':
 			return {
 				title: `${subject} can't log in — terms need accepting`,
