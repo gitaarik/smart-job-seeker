@@ -279,6 +279,7 @@
 						projectId={row.id}
 						currentSummary={row.data.description ?? ''}
 						currentTechnologies={technologies.map((t) => t.name ?? '').filter(Boolean)}
+						currentAchievement={row.data.outcome ?? ''}
 						summaryLabel="Description"
 						achievementLabel="Outcome"
 						onApplySummary={(v) => {

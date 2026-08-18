@@ -13,16 +13,45 @@
  *
  * The split that matters: source code proves what was **built** and says
  * nothing about whether it **mattered**. It has no access to user counts, load,
- * incidents, deadlines or money. So this asks the model for a summary and a
- * technology list — both fully evidenced by the code — and for the achievement
- * half it asks the model to ask *the applicant questions* instead. A generated
- * "reduced latency by 40%" would be a fabricated metric on a real person's CV,
- * about their own project, with nothing to check it against.
+ * incidents, deadlines or money. So a description and a technology list are
+ * fair game — both are fully evidenced — while impact is not, and a generated
+ * "reduced latency by 40%" would be a fabricated metric on a real person's CV
+ * with nothing to check it against.
+ *
+ * `outcome` is the one concession, and a narrow one: the corpus is not always
+ * code. Someone who uploads the acceptance email for a placement test has
+ * supplied a result *stated by a third party*, and quoting that is not
+ * invention. So the prompt may fill `outcome` when the files assert one, and
+ * must return "" and ask a question when they do not.
  */
 
 import { runProfileAiChat } from '$lib/server/ai-chat/job-utils';
 import { buildDocumentBlob, type SummarizableFile } from '$lib/server/documents/summarize';
 import { normalizeSkill } from '$lib/skills';
+
+/**
+ * Rewrite third-person stand-ins into first person.
+ *
+ * The prompt forbids "the applicant" twice over and gpt-oss writes it anyway —
+ * the same "a prompt is a request, the caller is the guarantee" shape as the
+ * technology dedupe below. A CV that refers to its own subject in the third
+ * person reads as machine-written, which is the one thing this feature must not
+ * produce.
+ *
+ * Only **subject position** is rewritten: the start of the text or of a
+ * sentence, where "The applicant passed" becomes "I passed" and "The
+ * applicant's tests" becomes "My tests". A mid-sentence occurrence is left
+ * alone, because turning it into "me" or "my" correctly needs grammar this
+ * cannot see, and a mangled sentence is worse than a stray phrase the user can
+ * edit.
+ */
+export function toFirstPerson(text: string): string {
+	return text.replace(
+		/(^|[.!?]\s+)(?:the\s+)?(applicant|author|candidate)(['’]s)?\s+/gi,
+		(_match, lead: string, _noun: string, possessive: string | undefined) =>
+			`${lead}${possessive ? 'My' : 'I'} `
+	);
+}
 
 export interface RepoQuestion {
 	/** What the applicant is being asked. */
@@ -32,7 +61,9 @@ export interface RepoQuestion {
 }
 
 export interface RepoProposals {
-	summary: string;
+	description: string;
+	/** Empty unless the supplied files actually assert a result. */
+	outcome: string;
 	technologies: string[];
 	questions: RepoQuestion[];
 }
@@ -69,7 +100,8 @@ export async function proposeFromCode(
 	if (!document) return null;
 
 	const result = await runProfileAiChat<{
-		summary?: string | null;
+		description?: string | null;
+		outcome?: string | null;
 		technologies?: string[] | null;
 		questions?: { question?: string; evidence?: string }[] | null;
 	}>(profileId, 'propose_project_from_code', { document, ...renderContext(context) });
@@ -96,9 +128,12 @@ export async function proposeFromCode(
 		questions.push({ question, evidence: String(raw?.evidence ?? '').trim() });
 	}
 
-	const summary = (result.response.summary ?? '').trim();
-	if (!summary && technologies.length === 0 && questions.length === 0) return null;
-	return { summary, technologies, questions };
+	const description = toFirstPerson((result.response.description ?? '').trim());
+	const outcome = toFirstPerson((result.response.outcome ?? '').trim());
+	if (!description && !outcome && technologies.length === 0 && questions.length === 0) {
+		return null;
+	}
+	return { description, outcome, technologies, questions };
 }
 
 export interface AchievementDraft {
@@ -134,7 +169,7 @@ export async function achievementFromAnswer(
 	});
 
 	if (!result.success || !result.response) return null;
-	const achievement = (result.response.achievement ?? '').trim();
+	const achievement = toFirstPerson((result.response.achievement ?? '').trim());
 	if (!achievement) return null;
 	return { achievement, usedFromAnswer: (result.response.usedFromAnswer ?? '').trim() };
 }

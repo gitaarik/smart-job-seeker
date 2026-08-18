@@ -795,12 +795,21 @@ export const extractDocumentSchema = z
  */
 export const proposeProjectFromCodeSchema = z
 	.object({
-		summary: z
+		description: z
 			.preprocess(
 				(v) => (Array.isArray(v) ? v.join('\n\n') : coerceNull(v)),
 				z.string().optional().nullable()
 			)
-			.describe('Rewritten CV summary for the project'),
+			.describe('Rewritten CV description, first person, problem then action'),
+		// Empty is the CORRECT answer whenever the files assert no result — the
+		// prompt is told to ask about it instead. Optional here so an omission
+		// reads as "none found" rather than failing the whole proposal.
+		outcome: z
+			.preprocess(
+				(v) => (Array.isArray(v) ? v.join(' ') : coerceNull(v)),
+				z.string().optional().nullable()
+			)
+			.describe('What changed because of the work, only if the files assert it'),
 		technologies: z
 			.preprocess((v) => {
 				const n = coerceNull(v);

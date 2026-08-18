@@ -13,7 +13,7 @@
  * exact target for an answered question.
  */
 
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { asc, desc, eq, inArray } from 'drizzle-orm';
 import { dbDirect as db } from '$lib/server/db';
 import {
 	profile_document_files,
@@ -106,18 +106,24 @@ export async function loadProjectContext(
 }
 
 export interface ProjectCorpus {
-	scan: { id: number; title: string | null };
+	scan: { id: number; title: string | null; sourceCount: number };
 	files: { path: string; text: string }[];
 }
 
 /**
- * The most recent ingested code for a project — a repository scan if there is
- * one, otherwise the newest upload.
+ * Everything ingested for a project, as one corpus.
  *
- * Repository scans win because they are the only source that can be re-pulled
- * on demand, so a stale upload should not shadow a fresh scan. Beyond that it
- * is newest-first: an older ingest of the same project is a stale view of the
- * code and there is nothing to be learned from asking about it.
+ * **All** of its attachments, not the newest one. An earlier version of this
+ * took only the latest, reasoning that an older ingest is a stale view of the
+ * code — true for a *repeat scan of the same repository*, and wrong for
+ * everything else. Someone who uploads a task document and the acceptance email
+ * that followed it has described one project in two files, and reading only the
+ * newer one produced a summary of the email.
+ *
+ * Repeat scans are still collapsed: repository attachments are deduped by
+ * owner/repo, newest kept, so re-scanning after a commit does not feed the
+ * model two versions of the same tree. `buildDocumentBlob` caps the total, so a
+ * project with many attachments trims rather than explodes.
  */
 export async function loadProjectCorpus(
 	kind: ProjectKind,
@@ -128,27 +134,35 @@ export async function loadProjectCorpus(
 			? eq(profile_document_projects.side_project_id, id)
 			: eq(profile_document_projects.work_experience_project_id, id);
 
-	const scan =
-		(await db.query.profile_document_projects.findFirst({
-			where: and(scoped, eq(profile_document_projects.kind, 'github_repo')),
-			orderBy: [desc(profile_document_projects.date_created)],
-			columns: { id: true, title: true }
-		})) ??
-		(await db.query.profile_document_projects.findFirst({
-			where: scoped,
-			orderBy: [desc(profile_document_projects.date_created)],
-			columns: { id: true, title: true }
-		}));
-	if (!scan) return null;
+	const attachments = await db.query.profile_document_projects.findMany({
+		where: scoped,
+		orderBy: [desc(profile_document_projects.date_created)],
+		columns: { id: true, title: true, kind: true, source: true }
+	});
+	if (attachments.length === 0) return null;
+
+	const seenRepos = new Set<string>();
+	const useful = attachments.filter((row) => {
+		if (row.kind !== 'github_repo') return true;
+		const source = row.source as { owner?: string; repo?: string } | null;
+		const key = `${source?.owner ?? ''}/${source?.repo ?? ''}`;
+		if (seenRepos.has(key)) return false;
+		seenRepos.add(key);
+		return true;
+	});
 
 	const files = await db.query.profile_document_files.findMany({
-		where: eq(profile_document_files.project_id, scan.id),
-		orderBy: [asc(profile_document_files.sort)],
+		where: inArray(
+			profile_document_files.project_id,
+			useful.map((a) => a.id)
+		),
+		orderBy: [asc(profile_document_files.project_id), asc(profile_document_files.sort)],
 		columns: { path: true, extracted_text: true }
 	});
 
 	return {
-		scan,
+		// The newest attachment names the corpus in the UI; the rest are counted.
+		scan: { id: useful[0].id, title: useful[0].title, sourceCount: useful.length },
 		files: files.map((f) => ({ path: f.path ?? '', text: f.extracted_text ?? '' }))
 	};
 }

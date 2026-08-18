@@ -44,6 +44,7 @@
 		projectId,
 		currentSummary,
 		currentTechnologies,
+		currentAchievement = '',
 		summaryLabel = 'Summary',
 		achievementLabel = 'Achievements',
 		onApplySummary,
@@ -54,6 +55,8 @@
 		projectId: number;
 		currentSummary: string;
 		currentTechnologies: string[];
+		/** What is already written where an outcome would land, if anything. */
+		currentAchievement?: string;
 		/** "Summary" on a side project, "Description" on a work-experience one. */
 		summaryLabel?: string;
 		/** Where an answered question ends up, named as the user sees it. */
@@ -67,11 +70,14 @@
 	let error = $state<string | null>(null);
 	let open = $state(false);
 	let summary = $state('');
+	let outcome = $state('');
 	let technologies = $state<string[]>([]);
 	let questions = $state<Question[]>([]);
 	let scanTitle = $state<string | null>(null);
+	let sourceCount = $state(0);
 	let applied = $state(false);
 	let summarySelected = $state(false);
+	let outcomeSelected = $state(false);
 	const selectedTech = new SvelteSet<string>();
 
 	/**
@@ -87,7 +93,9 @@
 	const answerErrors = new SvelteMap<string, string>();
 	const answeringOpen = new SvelteSet<string>();
 
-	let selectedCount = $derived((summarySelected ? 1 : 0) + selectedTech.size);
+	let selectedCount = $derived(
+		(summarySelected ? 1 : 0) + (outcomeSelected ? 1 : 0) + selectedTech.size
+	);
 
 	async function suggest() {
 		loading = true;
@@ -102,7 +110,8 @@
 			if (!response.ok) {
 				throw new Error(body.message || body.error || `Request failed (${response.status})`);
 			}
-			summary = String(body.summary ?? '');
+			summary = String(body.description ?? '');
+			outcome = String(body.outcome ?? '');
 			// The server dedupes against the SAVED chips; this catches one the user
 			// has just typed and not yet saved, which the server cannot see.
 			const have = new Set(currentTechnologies.map(normalizeSkill).filter(Boolean));
@@ -111,10 +120,13 @@
 			);
 			questions = (body.questions ?? []) as Question[];
 			scanTitle = body.scan?.title ?? null;
+			sourceCount = Number(body.scan?.sourceCount ?? 1);
 
 			// Same rule as the metadata panel: a summary the applicant already wrote
 			// is not replaced unless they say so.
 			summarySelected = !!summary && !currentSummary.trim();
+			// Same rule: never silently replace something already written.
+			outcomeSelected = !!outcome && !currentAchievement.trim();
 			selectedTech.clear();
 			// These are read out of the code rather than off a tag list, so unlike a
 			// GitHub topic they start ticked.
@@ -186,6 +198,7 @@
 
 	function apply() {
 		if (summarySelected && summary) onApplySummary(summary);
+		if (outcomeSelected && outcome) onApplyAchievement(outcome);
 		const names = technologies.filter((name) => selectedTech.has(name));
 		if (names.length > 0) onApplyTechnologies(names);
 		open = false;
@@ -208,7 +221,7 @@
 			{loading ? 'Reading the code…' : 'Suggest from scanned code'}
 		</button>
 		<span class="text-sm text-[var(--dash-text-secondary)]">
-			Reads this project's ingested code — add it below first.
+			Reads the files and code you added below.
 		</span>
 	</div>
 
@@ -226,7 +239,12 @@
 		<div class="mt-3 rounded-md border border-[var(--dash-border)] p-3">
 			{#if scanTitle}
 				<p class="mb-2 text-sm text-[var(--dash-text-secondary)]">
-					From the scan of <span class="font-medium text-[var(--dash-text)]">{scanTitle}</span>.
+					{#if sourceCount > 1}
+						From the {sourceCount} files you added, including
+						<span class="font-medium text-[var(--dash-text)]">{scanTitle}</span>.
+					{:else}
+						From <span class="font-medium text-[var(--dash-text)]">{scanTitle}</span>.
+					{/if}
 				</p>
 			{/if}
 
@@ -245,6 +263,23 @@
 								Replaces what you have written.
 							</span>
 						{/if}
+					</span>
+				</label>
+			{/if}
+
+			{#if outcome}
+				<label class="mt-2 flex cursor-pointer items-start gap-3 text-sm">
+					<input
+						type="checkbox"
+						bind:checked={outcomeSelected}
+						class="mt-1 h-4 w-4 shrink-0 accent-[var(--dash-primary)]"
+					/>
+					<span class="min-w-0">
+						<span class="font-medium text-[var(--dash-text)]">{achievementLabel}:</span>
+						<span class="text-[var(--dash-text)]">{outcome}</span>
+						<span class="mt-0.5 block text-xs text-[var(--dash-text-secondary)]">
+							Stated in the files you added — not inferred from the code.
+						</span>
 					</span>
 				</label>
 			{/if}
@@ -274,11 +309,15 @@
 				<div class="mt-4 rounded-md bg-[var(--dash-bg)] p-3">
 					<p class="flex items-center gap-2 text-sm font-medium text-[var(--dash-text)]">
 						<FontAwesomeIcon icon={faLightbulb} class="h-4 w-4 text-amber-500" />
-						Worth writing an achievement about
+						{outcome ? `More for ${achievementLabel}` : `${achievementLabel} comes from these`}
 					</p>
 					<p class="mt-1 text-xs text-[var(--dash-text-secondary)]">
-						The code shows what you built; only you know what it was worth. Answer one and it
-						becomes a bullet built from your words, not the model's.
+						{#if !outcome}
+							Your files don't say what changed because of this work, and code can't tell us — so
+							nothing was filled in above.
+						{/if}
+						Answer one and it becomes {achievementLabel.toLowerCase()} text built from your words, not
+						the model's.
 					</p>
 					<ul class="mt-2 space-y-3">
 						{#each questions as q (q.question)}
