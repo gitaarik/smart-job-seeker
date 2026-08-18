@@ -6,6 +6,10 @@
  * unzip (for archives) → text extraction → secret redaction. The raw upload is
  * never retained; callers store only what this returns.
  *
+ * A pasted note (`extractNote`) lives here too. It has no bytes to sniff and no
+ * archive to unpack, but it must not skip redaction, so it shares the same
+ * finalize step rather than reimplementing it a module away.
+ *
  * See planning/DOCUMENT-INGESTION.md.
  */
 
@@ -102,6 +106,92 @@ export async function extractUpload(
 	}
 	if (kind === 'zip') return extractArchive(input.bytes, limits);
 	return extractLooseFile(input.filename, input.bytes);
+}
+
+/** Cap on one pasted note. Longer than this is a document, and documents upload. */
+export const MAX_NOTE_CHARS = 100_000;
+
+/**
+ * What to call a note.
+ *
+ * Every label in the app reads `title || original_filename || fallback`, and a
+ * note has no filename — so an untitled one is cited as "Untitled" in the very
+ * places the citation matters. The first line is what the applicant would have
+ * called it anyway, so it stands in when they don't type a title.
+ */
+export function deriveNoteTitle(given: string | null | undefined, text: string): string {
+	const explicit = given?.trim();
+	if (explicit) return explicit.slice(0, 255);
+	const firstLine = text
+		.split('\n')
+		.map((l) => l.trim())
+		// A markdown heading's hashes are punctuation, not part of the name.
+		.map((l) => l.replace(/^#+\s*/, '').trim())
+		.find(Boolean);
+	if (!firstLine) return 'Note';
+	return firstLine.length > 80 ? `${firstLine.slice(0, 79)}\u2026` : firstLine;
+}
+
+/**
+ * The note's stored path: its title as a filename, under `notes/`.
+ *
+ * The prefix is not decoration. `buildDocumentBlob` heads each file with
+ * `=== path ===`, and that header is all the model has to tell one source from
+ * another — without it a note the applicant typed is indistinguishable from a
+ * README someone else wrote, and the prompt cannot say which to believe.
+ */
+function notePath(title: string): string {
+	const slug = title
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '')
+		.slice(0, 60)
+		.replace(/-+$/, '');
+	return `notes/${slug || 'note'}.md`;
+}
+
+/**
+ * A pasted note as an extracted project.
+ *
+ * Redacted like an upload, and for a stronger reason: a paste comes from a
+ * terminal or a chat window, not from a tree someone chose to publish, so it is
+ * if anything likelier to carry a token.
+ *
+ * The stored path ends in `.md`, which puts the note ahead of source files in
+ * `buildDocumentBlob`'s ordering. That is the right way round — a sentence the
+ * applicant wrote about their own work outranks anything inferred from code.
+ */
+export function extractNote(input: { title: string; text: string }): ExtractedProject {
+	// eslint-disable-next-line no-control-regex -- matching the control char is the point
+	const raw = input.text.replace(/\u0000/g, '').trim();
+	if (!raw) throw new DocumentExtractError('The note is empty.');
+	if (raw.length > MAX_NOTE_CHARS) {
+		throw new DocumentExtractError(
+			`A note is limited to ${MAX_NOTE_CHARS.toLocaleString('en-US')} characters; ` +
+				`this one is ${raw.length.toLocaleString('en-US')}. Upload it as a file instead.`
+		);
+	}
+
+	const { text, secretsRedacted } = finalize(raw);
+	const file: ExtractedFile = {
+		path: notePath(input.title),
+		ext: 'md',
+		text,
+		chars: text.length,
+		secretsRedacted
+	};
+	return {
+		// The extractor classifies what it produced — one text file. That a human
+		// typed it rather than uploaded it is provenance, and rides on the row's
+		// `kind`/`source`, exactly as a GitHub zipball's does.
+		kind: 'file',
+		files: [file],
+		skipped: [],
+		truncated: false,
+		totalChars: file.chars,
+		totalBytes: Buffer.byteLength(text, 'utf8'),
+		secretsRedacted
+	};
 }
 
 async function extractLooseFile(filename: string, bytes: Uint8Array): Promise<ExtractedProject> {

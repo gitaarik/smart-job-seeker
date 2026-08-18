@@ -1,11 +1,17 @@
 /**
  * Profile document ingestion.
  *
- *   POST /api/profile/[id]/documents  — upload files / ZIPs → extract → store
+ *   POST /api/profile/[id]/documents  — upload files / ZIPs, or paste a note →
+ *                                       extract → store
  *   GET  /api/profile/[id]/documents  — list this profile's document projects
  *
  * Each uploaded file (a loose doc or a ZIP) becomes one document "project".
  * Raw uploads are NOT retained — only extracted (secret-redacted) text.
+ *
+ * A pasted note arrives on the same endpoint as a `text` field, because it is
+ * the same thing to everything downstream: extracted text attached to a
+ * project, summarized, retrieved and cited alongside the files. Only its
+ * provenance differs, and that is a column.
  */
 
 import { error, json } from '@sveltejs/kit';
@@ -22,8 +28,10 @@ import { parseIntParam, requireAuth, requireProfileAccess } from '$lib/server/ut
 import { requireCredits } from '$lib/server/billing/require-credits';
 import { requireDocumentQuota } from '$lib/server/billing/require-document-quota';
 import {
+	deriveNoteTitle,
 	DocumentExtractError,
 	type ExtractedProject,
+	extractNote,
 	extractUpload
 } from '$lib/server/documents/extract';
 import {
@@ -85,7 +93,8 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		.filter((f): f is File => f instanceof File && f.size > 0);
 	const single = form.get('file');
 	if (single instanceof File && single.size > 0) uploads.push(single);
-	if (uploads.length === 0) error(400, 'No files uploaded');
+	const noteText = ((form.get('text') as string | null) ?? '').trim();
+	if (uploads.length === 0 && !noteText) error(400, 'Nothing to save: add a file or write a note');
 
 	const title = (form.get('title') as string | null)?.trim() || null;
 	const workExperienceId = parseOptionalId(form.get('work_experience_id'));
@@ -124,8 +133,9 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 				input: {
 					profileId,
 					filename: file.name,
-					// A user-supplied title only makes sense for a single upload.
-					title: uploads.length === 1 ? title : null,
+					// A user-supplied title only makes sense for a single upload, and a
+					// note in the same post has already claimed it.
+					title: uploads.length === 1 && !noteText ? title : null,
 					workExperienceId,
 					workExperienceProjectId,
 					sideProjectId
@@ -135,6 +145,31 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		} catch (err) {
 			if (err instanceof DocumentExtractError) {
 				errors.push({ filename: file.name, error: err.message });
+			} else {
+				throw err;
+			}
+		}
+	}
+
+	if (noteText) {
+		try {
+			const noteTitle = deriveNoteTitle(title, noteText);
+			pending.push({
+				input: {
+					profileId,
+					filename: null,
+					title: noteTitle,
+					workExperienceId,
+					workExperienceProjectId,
+					sideProjectId,
+					kind: 'note',
+					source: { type: 'paste' }
+				},
+				extracted: extractNote({ title: noteTitle, text: noteText })
+			});
+		} catch (err) {
+			if (err instanceof DocumentExtractError) {
+				errors.push({ filename: 'Note', error: err.message });
 			} else {
 				throw err;
 			}

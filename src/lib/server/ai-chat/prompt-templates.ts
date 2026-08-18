@@ -2031,6 +2031,8 @@ Return ONLY the JSON object described above.`
 
 You are given the project's current CV entry and the text of its code and documents (many files concatenated with "=== path ===" headers). They may come from a scanned repository, an archive the applicant uploaded, or loose documents such as a task brief and the email that followed it. Treat them all as one body of evidence about the same project.
 
+A path beginning "notes/" is different in kind: it is a note the applicant wrote themselves, in this app, about this project. It is first-hand testimony from the person whose CV this is — the most authoritative source you have. Believe it over anything you infer from code, and use it directly.
+
 Return a JSON OBJECT with EXACTLY these four fields: description, outcome, technologies, questions.
 
 ### description (a single STRING)
@@ -2048,7 +2050,7 @@ What changed because of the work — the result, not the work.
 - **The subject is the change, not you.** "The new deployment system reduced…", "This testing foundation gave the team…". Not "I reduced…".
 - **Never "the applicant", "the author" or "the candidate."** The same third-person ban as the description applies here. Where the person is unavoidable, say "me" or "my": "Passing it put me on their bench", not "the applicant was placed on their bench".
 - Lead with the concrete result, then what it enabled for the team, company or users.
-- **ONLY state an outcome the supplied files actually assert.** An email saying the applicant passed, a changelog claiming a speed-up, a report with a measurement — those are outcomes you may use. Code alone is NOT an outcome: it shows what was built, and knows nothing about whether it mattered.
+- **ONLY state an outcome the supplied files actually assert.** A note under "notes/", an email saying the applicant passed, a changelog claiming a speed-up, a report with a measurement — those are outcomes you may use. Code alone is NOT an outcome: it shows what was built, and knows nothing about whether it mattered.
 - **If the files assert no outcome, return "" and ask about it in questions instead.** Never infer, never estimate, never fill the gap with "significantly" or "greatly". A percentage that is not in the files is a lie on someone's CV.
 
 ### technologies (an ARRAY OF STRINGS)

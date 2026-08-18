@@ -8,6 +8,8 @@
 		faCloudArrowUp,
 		faFileLines,
 		faFileZipper,
+		faNoteSticky,
+		faPenToSquare,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
@@ -47,11 +49,116 @@
 	let deleteId = $state<number | null>(null);
 	let reparsingId = $state<number | null>(null);
 	let importing = $state(false);
-	let importNote = $state<string | null>(null);
+	let importMessage = $state<string | null>(null);
 	let projectKind = $derived(sideProjectId != null ? 'side_project' : 'work_experience_project');
 	let projectRef = $derived(sideProjectId ?? workExperienceProjectId);
 	let canImportRepo = $derived(projectRef != null && !!repoUrl?.trim());
 	let expanded = $state<Set<number>>(new Set());
+
+	/**
+	 * The note composer.
+	 *
+	 * One surface for both writing and editing: `noteId` null means a new note.
+	 * Two composers would be two places to fix the same bug, and the states are
+	 * mutually exclusive anyway — you cannot be writing a new note and editing an
+	 * old one at once.
+	 */
+	let noteOpen = $state(false);
+	let noteId = $state<number | null>(null);
+	let noteTitle = $state('');
+	let noteText = $state('');
+	let noteSaving = $state(false);
+	let noteLoadingId = $state<number | null>(null);
+
+	function openNewNote() {
+		noteId = null;
+		noteTitle = '';
+		noteText = '';
+		noteOpen = true;
+		error = null;
+	}
+
+	function closeNote() {
+		noteOpen = false;
+		noteId = null;
+		noteTitle = '';
+		noteText = '';
+	}
+
+	/** Load a note's stored text — the list rows carry summaries, not content. */
+	async function editNote(id: number) {
+		if (noteLoadingId !== null) return;
+		noteLoadingId = id;
+		error = null;
+		try {
+			const res = await fetch(`/api/profile/${profileId}/documents/${id}`);
+			const body = await res.json().catch(() => null);
+			if (!res.ok) {
+				error = body?.message ?? 'Could not open that note.';
+				return;
+			}
+			noteId = id;
+			noteTitle = body?.title ?? '';
+			noteText = body?.text ?? '';
+			noteOpen = true;
+		} catch {
+			error = 'Could not open that note.';
+		} finally {
+			noteLoadingId = null;
+		}
+	}
+
+	async function saveNote() {
+		if (noteSaving || !noteText.trim()) return;
+		noteSaving = true;
+		error = null;
+		try {
+			let res: Response;
+			if (noteId === null) {
+				const fd = new FormData();
+				fd.append('text', noteText);
+				if (noteTitle.trim()) fd.append('title', noteTitle.trim());
+				if (workExperienceProjectId != null) {
+					fd.append('work_experience_project_id', String(workExperienceProjectId));
+				}
+				if (sideProjectId != null) {
+					fd.append('side_project_id', String(sideProjectId));
+				}
+				res = await fetch(`/api/profile/${profileId}/documents`, { method: 'POST', body: fd });
+			} else {
+				res = await fetch(`/api/profile/${profileId}/documents/${noteId}`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ text: noteText, title: noteTitle.trim() || null })
+				});
+			}
+			const body = await res.json().catch(() => null);
+			if (!res.ok) {
+				error = body?.message ?? 'Could not save the note.';
+				return;
+			}
+			// A create reports per-item failures in `errors` rather than a status.
+			const errs: Array<{ filename: string; error: string }> = body?.errors ?? [];
+			if (errs.length > 0) {
+				error = errs.map((e) => e.error).join('; ');
+				return;
+			}
+			closeNote();
+			await invalidateAll();
+		} catch {
+			error = 'Could not save the note.';
+		} finally {
+			noteSaving = false;
+		}
+	}
+
+	/** Deleting a note loses the only copy; deleting an upload loses a copy. */
+	let deletingNote = $derived(documents.some((d) => d.id === deleteId && d.kind === 'note'));
+
+	function docIcon(kind: string) {
+		if (kind === 'note') return faNoteSticky;
+		return kind === 'archive' ? faFileZipper : faFileLines;
+	}
 
 	function formatSize(bytes: number): string {
 		if (!bytes) return '0 KB';
@@ -120,13 +227,13 @@
 	 *
 	 * Slow by nature — download, unpack, summarize — so this reports its own
 	 * progress rather than borrowing the upload spinner, and an unchanged HEAD
-	 * comes back as a note instead of a second identical document.
+	 * says so instead of storing a second identical document.
 	 */
 	async function importRepo() {
 		if (!canImportRepo || importing) return;
 		importing = true;
 		error = null;
-		importNote = null;
+		importMessage = null;
 		try {
 			const res = await fetch(`/api/project-repo/${projectKind}/${projectRef}/import`, {
 				method: 'POST',
@@ -138,7 +245,9 @@
 				error = body?.message ?? 'Could not scan the repository.';
 				return;
 			}
-			importNote = body?.unchanged ? 'Already scanned at this commit — nothing to re-read.' : null;
+			importMessage = body?.unchanged
+				? 'Already scanned at this commit — nothing to re-read.'
+				: null;
 			await invalidateAll();
 		} catch {
 			error = 'Could not scan the repository.';
@@ -225,6 +334,53 @@
 		/>
 	</div>
 
+	{#if noteOpen}
+		<div class="space-y-2 rounded-lg border border-[var(--dash-border)] p-3">
+			<input
+				type="text"
+				bind:value={noteTitle}
+				placeholder="Title (optional — the first line is used if you leave this empty)"
+				class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+			/>
+			<textarea
+				bind:value={noteText}
+				rows="6"
+				placeholder="Anything the code doesn't say: what the project was for, what changed because of it, numbers you remember, why a decision went the way it did."
+				class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+			></textarea>
+			<div class="flex items-center gap-2">
+				<button
+					type="button"
+					onclick={saveNote}
+					disabled={noteSaving || !noteText.trim()}
+					class="rounded-md bg-[var(--dash-primary)] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+				>
+					{noteSaving ? 'Saving…' : noteId === null ? 'Save note' : 'Save changes'}
+				</button>
+				<button
+					type="button"
+					onclick={closeNote}
+					disabled={noteSaving}
+					class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)] disabled:opacity-50"
+				>
+					Cancel
+				</button>
+				<span class="text-xs text-[var(--dash-text-muted)]">
+					Read alongside the files, and ahead of them.
+				</span>
+			</div>
+		</div>
+	{:else}
+		<button
+			type="button"
+			onclick={openNewNote}
+			class="inline-flex items-center gap-2 rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm font-medium text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
+		>
+			<FontAwesomeIcon icon={faNoteSticky} class="h-4 w-4" />
+			Write a note
+		</button>
+	{/if}
+
 	{#if canImportRepo}
 		<div class="flex flex-wrap items-center gap-3">
 			<button
@@ -245,8 +401,8 @@
 		</div>
 	{/if}
 
-	{#if importNote}
-		<p class="text-sm text-[var(--dash-text-secondary)]">{importNote}</p>
+	{#if importMessage}
+		<p class="text-sm text-[var(--dash-text-secondary)]">{importMessage}</p>
 	{/if}
 
 	{#if error}
@@ -260,7 +416,7 @@
 		<div class="rounded-lg border border-[var(--dash-border)] p-3">
 			<div class="flex items-start gap-3">
 				<FontAwesomeIcon
-					icon={doc.kind === 'archive' ? faFileZipper : faFileLines}
+					icon={docIcon(doc.kind)}
 					class="mt-0.5 h-4 w-4 text-[var(--dash-text-muted)]"
 				/>
 				<div class="min-w-0 flex-1">
@@ -311,6 +467,18 @@
 				</div>
 
 				<div class="flex items-center gap-0.5">
+					{#if doc.kind === 'note'}
+						<button
+							type="button"
+							onclick={() => editNote(doc.id)}
+							disabled={noteLoadingId === doc.id}
+							class="p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)] disabled:opacity-50"
+							aria-label="Edit note"
+							title="Edit this note"
+						>
+							<FontAwesomeIcon icon={faPenToSquare} class="h-3.5 w-3.5" />
+						</button>
+					{/if}
 					<button
 						type="button"
 						onclick={() => reparse(doc.id)}
@@ -341,8 +509,10 @@
 
 <ConfirmModal
 	isOpen={deleteId !== null}
-	title="Delete document"
-	message="Permanently delete this document and its extracted notes? This cannot be undone."
+	title={deletingNote ? 'Delete note' : 'Delete document'}
+	message={deletingNote
+		? 'Permanently delete this note? Nothing else holds this text — it was written here, not uploaded — so it cannot be recovered.'
+		: 'Permanently delete this document and its extracted notes? This cannot be undone.'}
 	confirmLabel="Delete"
 	onCancel={() => (deleteId = null)}
 	onConfirm={doDelete}

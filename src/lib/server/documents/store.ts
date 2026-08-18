@@ -14,7 +14,14 @@ import type { ExtractedProject } from './extract';
 
 export interface SaveDocumentProjectInput {
 	profileId: number;
-	filename: string;
+	/**
+	 * The file this came from, or null when nothing was uploaded.
+	 *
+	 * A pasted note has no filename, and inventing one would be a lie that shows:
+	 * `original_filename` is the fallback label everywhere a document is cited,
+	 * and it is also what a profile export writes out as the source's name.
+	 */
+	filename: string | null;
 	title?: string | null;
 	workExperienceId?: number | null;
 	workExperienceProjectId?: number | null;
@@ -51,7 +58,7 @@ export async function saveExtractedProject(
 ): Promise<SavedDocumentProject> {
 	const now = new Date();
 	const status = extracted.truncated ? 'partial' : 'extracted';
-	const title = input.title?.trim() || input.filename;
+	const title = input.title?.trim() || input.filename || 'Untitled';
 
 	const [project] = await db
 		.insert(profile_document_projects)
@@ -117,4 +124,49 @@ export async function setProjectSummary(
 			date_updated: new Date()
 		})
 		.where(eq(profile_document_projects.id, projectId));
+}
+
+/**
+ * Swap a note's text for a new version, in place.
+ *
+ * A note is the one attachment kind whose content exists nowhere else: an
+ * upload can be re-uploaded and a repository re-scanned, but a paste the
+ * applicant typed is gone if this loses it. So the rows move inside a
+ * transaction — delete-then-insert without one leaves a window where the note
+ * is a row with no text, and a crash in that window is silent data loss.
+ *
+ * The embedding cache needs no invalidation: it is hash-gated, so the next
+ * retrieval sees changed text and re-embeds on its own.
+ */
+export async function replaceNoteContent(
+	projectId: number,
+	title: string,
+	extracted: ExtractedProject
+): Promise<void> {
+	const now = new Date();
+	await db.transaction(async (tx) => {
+		await tx.delete(profile_document_files).where(eq(profile_document_files.project_id, projectId));
+		await tx.insert(profile_document_files).values(
+			extracted.files.map((f, i) => ({
+				project_id: projectId,
+				path: f.path,
+				ext: f.ext,
+				extracted_text: f.text,
+				chars: f.chars,
+				sort: i,
+				date_created: now
+			}))
+		);
+		await tx
+			.update(profile_document_projects)
+			.set({
+				title,
+				file_count: extracted.files.length,
+				total_chars: extracted.totalChars,
+				total_bytes: extracted.totalBytes,
+				status: 'extracted',
+				date_updated: now
+			})
+			.where(eq(profile_document_projects.id, projectId));
+	});
 }

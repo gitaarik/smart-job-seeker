@@ -3,10 +3,11 @@
 	`planning/SEMANTIC-MATCHING-AND-RAG.md` § Repo-derived project evidence.
 
 	Used by both project kinds. A side project's corpus usually comes from a
-	repository scan and a work-experience project's from an uploaded archive, but
-	the reading is identical, so the only differences here are the labels.
+	repository scan and a work-experience project's from an uploaded archive or a
+	note the applicant typed, but the reading is identical, so the only
+	differences here are the labels.
 
-	Its sibling `RepoMetadataFetch` offers facts GitHub reports. This one offers
+	Its sibling `ProjectRepoFetch` offers facts GitHub reports. This one offers
 	an LLM's reading of the source, so it is shaped around what source code can
 	and cannot support:
 
@@ -218,10 +219,10 @@
 				icon={loading ? faCircleNotch : faWandMagicSparkles}
 				class="h-4 w-4 {loading ? 'animate-spin' : ''}"
 			/>
-			{loading ? 'Reading the code…' : 'Suggest from scanned code'}
+			{loading ? 'Reading what you added…' : 'Suggest from what you added'}
 		</button>
 		<span class="text-sm text-[var(--dash-text-secondary)]">
-			Reads the files and code you added below.
+			Reads the notes, files and code you added below.
 		</span>
 	</div>
 
@@ -240,7 +241,7 @@
 			{#if scanTitle}
 				<p class="mb-2 text-sm text-[var(--dash-text-secondary)]">
 					{#if sourceCount > 1}
-						From the {sourceCount} files you added, including
+						From the {sourceCount} sources you added, including
 						<span class="font-medium text-[var(--dash-text)]">{scanTitle}</span>.
 					{:else}
 						From <span class="font-medium text-[var(--dash-text)]">{scanTitle}</span>.
@@ -278,7 +279,7 @@
 						<span class="font-medium text-[var(--dash-text)]">{achievementLabel}:</span>
 						<span class="text-[var(--dash-text)]">{outcome}</span>
 						<span class="mt-0.5 block text-xs text-[var(--dash-text-secondary)]">
-							Stated in the files you added — not inferred from the code.
+							Stated in what you added — not inferred from the code.
 						</span>
 					</span>
 				</label>
