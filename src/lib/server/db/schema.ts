@@ -1712,6 +1712,12 @@ export const work_experience_projects = pgTable(
 		work_experience_id: integer(),
 		name: varchar({ length: 255 }),
 		url: varchar({ length: 255 }),
+		// Mirrors side_projects.repo_url. Often empty here — most work code is
+		// private — but a role project with a public repo can be read the same way
+		// a side project is, and without this it could only ever be given a corpus
+		// by hand. There is no `stars` twin: a starred repo is a side-project
+		// vanity metric, and a role project's CV entry is about the work.
+		repo_url: varchar({ length: 255 }),
 		start_date: date(),
 		end_date: date(),
 		description: text(),

@@ -1,6 +1,11 @@
 <!--
-	Fetch deterministic metadata for a side project's GitHub repository and offer
-	it as a reviewable proposal list.
+	Fetch deterministic metadata for a project's GitHub repository and offer it as
+	a reviewable proposal list.
+
+	Used by both project kinds. The server maps its own field names onto whatever
+	the target table calls them — a work-experience project stores its summary as
+	`description` and has no `stars` — so everything here works off whatever
+	fields come back rather than a fixed list.
 
 	Tier 1 of `planning/SEMANTIC-MATCHING-AND-RAG.md` § Repo-derived project
 	evidence. Nothing here is inferred — every value is a fact GitHub reports, so
@@ -26,7 +31,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { normalizeSkill } from '$lib/skills';
 
-	type Field = 'name' | 'url' | 'summary' | 'stars' | 'start_date' | 'end_date';
+	type Field = 'name' | 'url' | 'summary' | 'description' | 'stars' | 'start_date' | 'end_date';
 
 	interface Proposal {
 		field: Field;
@@ -42,6 +47,7 @@
 	}
 
 	let {
+		kind,
 		projectId,
 		repoUrl,
 		current,
@@ -49,11 +55,13 @@
 		onApply,
 		onApplyTechnologies
 	}: {
+		kind: 'side_project' | 'work_experience_project';
 		projectId: number;
 		repoUrl: string;
 		/** Live form values, so "would this overwrite something?" reflects what the
-		 *  user sees rather than what was last saved. */
-		current: Record<Field, string>;
+		 *  user sees rather than what was last saved. Partial because which fields
+		 *  exist depends on the kind. */
+		current: Partial<Record<Field, string>>;
 		currentTechnologies: string[];
 		onApply: (values: Partial<Record<Field, string>>) => void;
 		onApplyTechnologies: (names: string[]) => void;
@@ -80,7 +88,7 @@
 		proposals = null;
 		technologies = [];
 		try {
-			const response = await fetch(`/api/side-project/${projectId}/repo-metadata`, {
+			const response = await fetch(`/api/project-repo/${kind}/${projectId}/metadata`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ repo_url: repoUrl })
@@ -169,7 +177,8 @@
 			{#if !repoUrl.trim()}
 				Add a repo URL to fill these fields from GitHub.
 			{:else}
-				Fills stars, dates, description and technologies from the public repository.
+				Fills {kind === 'side_project' ? 'stars, ' : ''}dates, description and technologies from the
+				public repository.
 			{/if}
 		</span>
 	</div>

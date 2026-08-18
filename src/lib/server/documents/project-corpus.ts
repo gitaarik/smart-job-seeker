@@ -31,6 +31,33 @@ export function parseProjectKind(value: string): ProjectKind | null {
 
 export interface LoadedProjectContext extends ProjectContext {
 	profileId: number;
+	/** Both kinds carry one now; a role project's is usually empty. */
+	repoUrl: string;
+}
+
+/**
+ * Re-aim one metadata proposal at this kind's own column, or drop it when the
+ * kind has no equivalent.
+ *
+ * The GitHub metadata fetch speaks in side-project field names because that is
+ * where it was built. A work-experience project stores the same idea under
+ * `description`, and has no `stars` column at all — deliberately, since a star
+ * count is a side-project vanity metric and a role project's entry is about the
+ * work. Mapping here keeps that knowledge out of the fetcher and the UI.
+ *
+ * The label moves with the field: a checkbox reading "Summary" above a box
+ * headed "Description" is a small lie about where the value is going.
+ */
+export function mapProposal<T extends { field: string; label: string }>(
+	kind: ProjectKind,
+	proposal: T
+): T | null {
+	if (kind === 'side_project') return proposal;
+	if (proposal.field === 'stars') return null;
+	if (proposal.field === 'summary') {
+		return { ...proposal, field: 'description', label: 'Description' };
+	}
+	return proposal;
 }
 
 /** The project as the proposal prompt needs to see it, or null if it is gone. */
@@ -41,7 +68,7 @@ export async function loadProjectContext(
 	if (kind === 'side_project') {
 		const row = await db.query.side_projects.findFirst({
 			where: eq(side_projects.id, id),
-			columns: { id: true, profile_id: true, name: true, summary: true },
+			columns: { id: true, profile_id: true, name: true, summary: true, repo_url: true },
 			with: {
 				side_project_technologies: { columns: { name: true } },
 				side_project_achievements: { columns: { description: true } }
@@ -53,13 +80,14 @@ export async function loadProjectContext(
 			name: row.name ?? '',
 			summary: row.summary ?? '',
 			technologies: row.side_project_technologies.map((t) => t.name ?? '').filter(Boolean),
-			achievements: row.side_project_achievements.map((a) => a.description ?? '').filter(Boolean)
+			achievements: row.side_project_achievements.map((a) => a.description ?? '').filter(Boolean),
+			repoUrl: row.repo_url?.trim() ?? ''
 		};
 	}
 
 	const row = await db.query.work_experience_projects.findFirst({
 		where: eq(work_experience_projects.id, id),
-		columns: { id: true, name: true, description: true, outcome: true },
+		columns: { id: true, name: true, description: true, outcome: true, repo_url: true },
 		with: {
 			work_experience: { columns: { profile_id: true } },
 			work_experience_project_technologies: { columns: { name: true } }
@@ -72,7 +100,8 @@ export async function loadProjectContext(
 		// `description` is this table's summary; `outcome` is its one achievement.
 		summary: row.description ?? '',
 		technologies: row.work_experience_project_technologies.map((t) => t.name ?? '').filter(Boolean),
-		achievements: row.outcome?.trim() ? [row.outcome.trim()] : []
+		achievements: row.outcome?.trim() ? [row.outcome.trim()] : [],
+		repoUrl: row.repo_url?.trim() ?? ''
 	};
 }
 

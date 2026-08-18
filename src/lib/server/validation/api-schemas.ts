@@ -378,6 +378,7 @@ export const workExperienceProjectBasicSchema = z.object({
 	name: requiredTrimmedString('Project name').optional(),
 	work_experience: requiredTrimmedString('Work experience').optional(),
 	url: optionalTrimmedString(2048),
+	repo_url: optionalTrimmedString(),
 	start_date: z.string().optional().nullable(),
 	end_date: z.string().optional().nullable(),
 	description: optionalTrimmedString(10000),

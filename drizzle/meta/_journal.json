@@ -120,6 +120,13 @@
       "when": 1786991357605,
       "tag": "0016_parched_piledriver",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1787037789018,
+      "tag": "0017_striped_starhawk",
+      "breakpoints": true
     }
   ]
 }

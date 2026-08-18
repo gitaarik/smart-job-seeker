@@ -46,6 +46,7 @@
 		id: number;
 		name: string | null;
 		url: string | null;
+		repo_url: string | null;
 		start_date: string | Date | null;
 		end_date: string | Date | null;
 		description: string | null;

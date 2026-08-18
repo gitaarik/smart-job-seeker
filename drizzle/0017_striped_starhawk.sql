@@ -1,0 +1,1 @@
+ALTER TABLE "work_experience_projects" ADD COLUMN "repo_url" varchar(255);

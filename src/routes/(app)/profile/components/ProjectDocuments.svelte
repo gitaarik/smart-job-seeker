@@ -36,7 +36,7 @@
 		profileId: number;
 		workExperienceProjectId?: number | null;
 		sideProjectId?: number | null;
-		/** Enables the repo scan. Side projects only — nothing else stores one. */
+		/** Enables the repo scan. Both project kinds carry one. */
 		repoUrl?: string | null;
 		documents: DocRow[];
 	} = $props();
@@ -48,7 +48,9 @@
 	let reparsingId = $state<number | null>(null);
 	let importing = $state(false);
 	let importNote = $state<string | null>(null);
-	let canImportRepo = $derived(sideProjectId != null && !!repoUrl?.trim());
+	let projectKind = $derived(sideProjectId != null ? 'side_project' : 'work_experience_project');
+	let projectRef = $derived(sideProjectId ?? workExperienceProjectId);
+	let canImportRepo = $derived(projectRef != null && !!repoUrl?.trim());
 	let expanded = $state<Set<number>>(new Set());
 
 	function formatSize(bytes: number): string {
@@ -126,7 +128,7 @@
 		error = null;
 		importNote = null;
 		try {
-			const res = await fetch(`/api/side-project/${sideProjectId}/repo-import`, {
+			const res = await fetch(`/api/project-repo/${projectKind}/${projectRef}/import`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ repo_url: repoUrl })

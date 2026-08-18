@@ -1,5 +1,5 @@
 /**
- * Scan a side project's linked GitHub repository into its document corpus.
+ * Scan a project's linked GitHub repository into its document corpus.
  *
  * Tier 2 of `planning/SEMANTIC-MATCHING-AND-RAG.md` § Repo-derived project
  * evidence: the repository becomes one more *attachment* on the project, so the
@@ -13,16 +13,22 @@
  */
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import { dbDirect as db } from '$lib/server/db';
-import { profile_document_projects, side_projects } from '$lib/server/db/schema';
+import { profile_document_projects } from '$lib/server/db/schema';
 import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
 import { requireRowActor } from '$lib/server/profile/write-http';
 import { requireCredits } from '$lib/server/billing/require-credits';
 import { requireDocumentQuota } from '$lib/server/billing/require-document-quota';
 import { DocumentExtractError, extractUpload } from '$lib/server/documents/extract';
-import { saveExtractedProject, setProjectSummary } from '$lib/server/documents/store';
+import { saveExtractedProject } from '$lib/server/documents/store';
+import { setProjectSummary } from '$lib/server/documents/store';
 import { summarizeProject } from '$lib/server/documents/summarize';
+import {
+	loadProjectContext,
+	parseProjectKind,
+	type ProjectKind
+} from '$lib/server/documents/project-corpus';
 import {
 	fetchRepoArchive,
 	fetchRepoHeadSha,
@@ -32,12 +38,15 @@ import {
 } from '$lib/server/github/repo-metadata';
 
 /** Has this exact commit already been scanned into this project? */
-async function existingScan(sideProjectId: number, sha: string) {
+async function existingScan(kind: ProjectKind, projectId: number, sha: string) {
+	const scoped =
+		kind === 'side_project'
+			? eq(profile_document_projects.side_project_id, projectId)
+			: eq(profile_document_projects.work_experience_project_id, projectId);
+
 	const rows = await db.query.profile_document_projects.findMany({
-		where: and(
-			eq(profile_document_projects.side_project_id, sideProjectId),
-			eq(profile_document_projects.kind, 'github_repo')
-		),
+		where: and(scoped, eq(profile_document_projects.kind, 'github_repo')),
+		orderBy: [desc(profile_document_projects.date_created)],
 		columns: { id: true, title: true, source: true }
 	});
 	return rows.find((row) => (row.source as { sha?: string } | null)?.sha === sha) ?? null;
@@ -45,20 +54,17 @@ async function existingScan(sideProjectId: number, sha: string) {
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);
+	const kind = parseProjectKind(params.kind);
+	if (!kind) error(400, 'Unknown project type');
 	const projectId = parseIntParam(params.id, 'project');
-	await requireRowActor('side_project', projectId, user.id);
+	await requireRowActor(kind, projectId, user.id);
 
-	const project = await db.query.side_projects.findFirst({
-		where: eq(side_projects.id, projectId),
-		columns: { id: true, profile_id: true, name: true, repo_url: true }
-	});
+	const project = await loadProjectContext(kind, projectId);
 	if (!project) error(404, 'Project not found');
 
 	const body = (await request.json().catch(() => ({}))) as { repo_url?: unknown };
 	const repoUrl =
-		(typeof body.repo_url === 'string' ? body.repo_url.trim() : '') ||
-		project.repo_url?.trim() ||
-		'';
+		(typeof body.repo_url === 'string' ? body.repo_url.trim() : '') || project.repoUrl;
 	if (!repoUrl) error(400, 'This project has no repository URL yet.');
 
 	const ref = parseGitHubRepoUrl(repoUrl);
@@ -76,7 +82,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 		// Re-scanning an unmoved HEAD would spend a download, an extraction and a
 		// summarization to arrive at a byte-identical corpus.
-		const already = await existingScan(projectId, sha);
+		const already = await existingScan(kind, projectId, sha);
 		if (already) {
 			return json({
 				success: true,
@@ -94,10 +100,11 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 		const saved = await saveExtractedProject(
 			{
-				profileId: project.profile_id,
+				profileId: project.profileId,
 				filename,
 				title: `${ref.owner}/${ref.repo} @ ${sha.slice(0, 7)}`,
-				sideProjectId: projectId,
+				sideProjectId: kind === 'side_project' ? projectId : null,
+				workExperienceProjectId: kind === 'work_experience_project' ? projectId : null,
 				kind: 'github_repo',
 				source: {
 					type: 'github_repo',
@@ -116,7 +123,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		// step fails, and the summary can be filled later by a reparse.
 		let summary: string | null = null;
 		let keywords: string[] | null = null;
-		const result = await summarizeProject(project.profile_id, extracted.files).catch(() => null);
+		const result = await summarizeProject(project.profileId, extracted.files).catch(() => null);
 		if (result) {
 			await setProjectSummary(saved.id, result.summary, result.keywords);
 			summary = result.summary || null;

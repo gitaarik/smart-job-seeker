@@ -9,6 +9,7 @@
 export interface ProjectData extends Record<string, unknown> {
 	name: string;
 	url: string;
+	repo_url: string;
 	/** `YYYY-MM-DD`, which is what `<input type="date">` reads and writes. */
 	start_date: string;
 	end_date: string;
@@ -32,6 +33,7 @@ export type LoadedProject = {
 	id: number;
 	name: string | null;
 	url: string | null;
+	repo_url: string | null;
 	start_date: string | Date | null;
 	end_date: string | Date | null;
 	description: string | null;
@@ -43,6 +45,7 @@ export function toProjectData(row: LoadedProject): ProjectData {
 	return {
 		name: row.name ?? '',
 		url: row.url ?? '',
+		repo_url: row.repo_url ?? '',
 		start_date: dateInputValue(row.start_date),
 		end_date: dateInputValue(row.end_date),
 		description: row.description ?? '',
@@ -51,7 +54,15 @@ export function toProjectData(row: LoadedProject): ProjectData {
 }
 
 export function blankProject(): ProjectData {
-	return { name: '', url: '', start_date: '', end_date: '', description: '', outcome: '' };
+	return {
+		name: '',
+		url: '',
+		repo_url: '',
+		start_date: '',
+		end_date: '',
+		description: '',
+		outcome: ''
+	};
 }
 
 /** The PATCH/POST body for a project: trimmed, with empty meaning cleared. */
@@ -59,6 +70,7 @@ export function projectBody(v: ProjectData): Record<string, unknown> {
 	return {
 		name: v.name.trim(),
 		url: v.url.trim() || null,
+		repo_url: v.repo_url.trim() || null,
 		start_date: v.start_date || null,
 		end_date: v.end_date || null,
 		description: v.description.trim() || null,

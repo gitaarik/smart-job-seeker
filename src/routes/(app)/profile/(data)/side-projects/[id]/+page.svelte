@@ -16,7 +16,7 @@
 	import AchievementsList, { type AchievementItem } from '$lib/components/AchievementsList.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import TechnologyTagsEditor from '$lib/components/TechnologyTagsEditor.svelte';
-	import RepoMetadataFetch from '$lib/components/RepoMetadataFetch.svelte';
+	import ProjectRepoFetch from '$lib/components/ProjectRepoFetch.svelte';
 	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
 	import VersionTags from '$lib/components/VersionTags.svelte';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
@@ -447,7 +447,8 @@
 				placeholder="Brief description of the project..."
 			/>
 		</div>
-		<RepoMetadataFetch
+		<ProjectRepoFetch
+			kind="side_project"
 			projectId={project.id}
 			repoUrl={editRepoUrl}
 			current={{

@@ -602,6 +602,7 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 				note: 'the role it was part of, named exactly as one of the roles listed below'
 			},
 			url: { kind: 'string', note: 'where it can be seen, if anywhere' },
+			repo_url: { kind: 'string', note: 'where its source lives, if it is public' },
 			start_date: { kind: 'date' },
 			end_date: { kind: 'date' },
 			description: {

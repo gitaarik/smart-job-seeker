@@ -16,6 +16,7 @@
 	import ProjectDocuments from './ProjectDocuments.svelte';
 	import ProjectTechnologies from './ProjectTechnologies.svelte';
 	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
+	import ProjectRepoFetch from '$lib/components/ProjectRepoFetch.svelte';
 	import type { ProjectData } from './work-experience-projects';
 
 	interface DocForList {
@@ -160,6 +161,21 @@
 				</div>
 				<div>
 					<label
+						for="proj-repo-{row.key}"
+						class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Repo URL</label
+					>
+					<input
+						id="proj-repo-{row.key}"
+						type="url"
+						value={row.data.repo_url}
+						oninput={(e) => set({ repo_url: e.currentTarget.value })}
+						onblur={row.field.flush}
+						placeholder="https://github.com/…"
+						class={inputClass}
+					/>
+				</div>
+				<div>
+					<label
 						for="proj-start-{row.key}"
 						class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Start Date</label
 					>
@@ -230,7 +246,30 @@
 					Files & source code
 				</span>
 				{#if row.id}
-					<ProjectDocuments {profileId} workExperienceProjectId={row.id} {documents} />
+					<ProjectRepoFetch
+						kind="work_experience_project"
+						projectId={row.id}
+						repoUrl={row.data.repo_url ?? ''}
+						current={{
+							name: row.data.name ?? '',
+							url: row.data.url ?? '',
+							description: row.data.description ?? '',
+							start_date: row.data.start_date ?? '',
+							end_date: row.data.end_date ?? ''
+						}}
+						currentTechnologies={technologies.map((t) => t.name ?? '').filter(Boolean)}
+						onApply={(values: Record<string, string>) => {
+							set(values as Partial<ProjectData>);
+							row.field.flush();
+						}}
+						onApplyTechnologies={(names: string[]) => technologiesRef?.addTechnologies(names)}
+					/>
+					<ProjectDocuments
+						{profileId}
+						workExperienceProjectId={row.id}
+						repoUrl={row.data.repo_url ?? ''}
+						{documents}
+					/>
 					<ProjectSuggestions
 						kind="work_experience_project"
 						projectId={row.id}
