@@ -784,7 +784,7 @@ export const extractDocumentSchema = z
 	.passthrough();
 
 /**
- * Schema for propose_project_from_repo.
+ * Schema for propose_project_from_code.
  *
  * Same gpt-oss defences as extract_document, plus one of its own: the model
  * likes to answer `questions` as an array of plain strings even when told to
@@ -793,7 +793,7 @@ export const extractDocumentSchema = z
  * question; discarding it would silently thin the only output of this prompt
  * that cannot be re-derived from the code.
  */
-export const proposeProjectFromRepoSchema = z
+export const proposeProjectFromCodeSchema = z
 	.object({
 		summary: z
 			.preprocess(
@@ -830,12 +830,36 @@ export const proposeProjectFromRepoSchema = z
 	})
 	.passthrough();
 
+/**
+ * Schema for write_achievement_from_answer.
+ *
+ * `usedFromAnswer` is not decoration: it is the model quoting the part of the
+ * applicant's own words that supports the claim, so a caller (or a reviewer)
+ * can see at a glance whether an outcome in the bullet came from them or from
+ * the model. Defaulted to "" rather than required, because an answer with no
+ * outcome in it is a legitimate case and must still produce a bullet.
+ */
+export const writeAchievementFromAnswerSchema = z
+	.object({
+		achievement: z
+			.preprocess(
+				(v) => (Array.isArray(v) ? v.join(' ') : coerceNull(v)),
+				z.string().optional().nullable()
+			)
+			.describe('One CV achievement line'),
+		usedFromAnswer: z
+			.preprocess((v) => coerceNull(v) ?? '', z.string().default(''))
+			.describe("Verbatim quote from the applicant's answer supporting the claim")
+	})
+	.passthrough();
+
 export const aiPromptSchemas = {
 	extract_job_data: extractJobDataSchema,
 	derive_record_metadata: deriveRecordMetadataSchema,
 	summarize_application: summarizeApplicationSchema,
 	extract_document: extractDocumentSchema,
-	propose_project_from_repo: proposeProjectFromRepoSchema,
+	propose_project_from_code: proposeProjectFromCodeSchema,
+	write_achievement_from_answer: writeAchievementFromAnswerSchema,
 	extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
 	score_job_match: scoreJobMatchSchema,
 	extract_matched_skills: extractMatchedSkillsSchema,

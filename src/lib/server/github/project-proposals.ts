@@ -1,6 +1,11 @@
 /**
- * Repository → profile proposals (Tier 3 of `planning/SEMANTIC-MATCHING-AND-RAG.md`
- * § Repo-derived project evidence).
+ * Project code → profile proposals (Tier 3 of
+ * `planning/SEMANTIC-MATCHING-AND-RAG.md` § Repo-derived project evidence).
+ *
+ * Corpus-shaped, not GitHub-shaped: the files reaching this module are the same
+ * whether Tier 2 scanned a repository or the applicant uploaded a ZIP, which is
+ * what lets a work-experience project — which has no `repo_url` and never will
+ * for proprietary work — use it on equal terms.
  *
  * Tiers 1 and 1b read facts GitHub reports about a repository. This one reads
  * the *code* — so unlike them it can be wrong, and its shape is chosen around
@@ -55,7 +60,7 @@ function renderContext(context: ProjectContext) {
  * Returns null on any failure — this is an optional assist, so a dead provider
  * must not turn into a failed request the user has to make sense of.
  */
-export async function proposeFromRepo(
+export async function proposeFromCode(
 	profileId: number,
 	files: SummarizableFile[],
 	context: ProjectContext
@@ -67,7 +72,7 @@ export async function proposeFromRepo(
 		summary?: string | null;
 		technologies?: string[] | null;
 		questions?: { question?: string; evidence?: string }[] | null;
-	}>(profileId, 'propose_project_from_repo', { document, ...renderContext(context) });
+	}>(profileId, 'propose_project_from_code', { document, ...renderContext(context) });
 
 	if (!result.success || !result.response) return null;
 
@@ -94,4 +99,42 @@ export async function proposeFromRepo(
 	const summary = (result.response.summary ?? '').trim();
 	if (!summary && technologies.length === 0 && questions.length === 0) return null;
 	return { summary, technologies, questions };
+}
+
+export interface AchievementDraft {
+	achievement: string;
+	/** The part of the applicant's own answer the claim rests on, verbatim. */
+	usedFromAnswer: string;
+}
+
+/**
+ * Turn one answered question into one CV achievement line.
+ *
+ * The inverse of the constraint above, and the reason the questions exist at
+ * all: `proposeFromCode` may not assert impact because it only has the code,
+ * and this may because the applicant just supplied it. The safety property is
+ * that the impact came from the person — so the prompt is told, at length, not
+ * to add any of its own, and `usedFromAnswer` makes that auditable rather than
+ * merely requested.
+ */
+export async function achievementFromAnswer(
+	profileId: number,
+	input: { projectName: string; question: string; evidence: string; answer: string }
+): Promise<AchievementDraft | null> {
+	if (!input.answer.trim()) return null;
+
+	const result = await runProfileAiChat<{
+		achievement?: string | null;
+		usedFromAnswer?: string | null;
+	}>(profileId, 'write_achievement_from_answer', {
+		projectName: input.projectName || 'Untitled project',
+		question: input.question,
+		evidence: input.evidence || '(none recorded)',
+		answer: input.answer
+	});
+
+	if (!result.success || !result.response) return null;
+	const achievement = (result.response.achievement ?? '').trim();
+	if (!achievement) return null;
+	return { achievement, usedFromAnswer: (result.response.usedFromAnswer ?? '').trim() };
 }

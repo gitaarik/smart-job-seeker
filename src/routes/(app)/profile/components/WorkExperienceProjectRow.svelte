@@ -15,6 +15,7 @@
 	import type { SectionRow, SectionRows } from '$lib/components/section-rows.svelte';
 	import ProjectDocuments from './ProjectDocuments.svelte';
 	import ProjectTechnologies from './ProjectTechnologies.svelte';
+	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
 	import type { ProjectData } from './work-experience-projects';
 
 	interface DocForList {
@@ -55,6 +56,22 @@
 
 	function set(patch: Partial<ProjectData>) {
 		store.update(row, patch);
+	}
+
+	/** The chips component owns its own store, so suggestions reach it by ref. */
+	let technologiesRef = $state<{ addTechnologies: (names: string[]) => void } | null>(null);
+
+	/**
+	 * An answered question lands in `outcome`, whose placeholder is literally
+	 * "What changed because of it?" — this table has no achievement rows, and
+	 * that field is the same idea in singular form. Appended rather than
+	 * replaced: a role's project can have more than one thing worth saying, and
+	 * silently overwriting what is there would be the worse failure.
+	 */
+	function applyDraftedAchievement(achievement: string) {
+		const current = (row.data.outcome ?? '').trim();
+		set({ outcome: current ? `${current}\n${achievement}` : achievement });
+		row.field.flush();
 	}
 
 	function yearLabel(value: string): string {
@@ -196,7 +213,12 @@
 			<div>
 				{#if row.id}
 					<!-- Brings its own heading, so the chips' save state sits beside it. -->
-					<ProjectTechnologies projectId={row.id} {profileId} initial={technologies} />
+					<ProjectTechnologies
+						bind:this={technologiesRef}
+						projectId={row.id}
+						{profileId}
+						initial={technologies}
+					/>
 				{:else}
 					<span class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Technologies</span>
 					<p class="text-xs text-[var(--dash-text-muted)] italic">{untilNamed}</p>
@@ -209,6 +231,20 @@
 				</span>
 				{#if row.id}
 					<ProjectDocuments {profileId} workExperienceProjectId={row.id} {documents} />
+					<ProjectSuggestions
+						kind="work_experience_project"
+						projectId={row.id}
+						currentSummary={row.data.description ?? ''}
+						currentTechnologies={technologies.map((t) => t.name ?? '').filter(Boolean)}
+						summaryLabel="Description"
+						achievementLabel="Outcome"
+						onApplySummary={(v) => {
+							set({ description: v });
+							row.field.flush();
+						}}
+						onApplyTechnologies={(names) => technologiesRef?.addTechnologies(names)}
+						onApplyAchievement={applyDraftedAchievement}
+					/>
 				{:else}
 					<p class="text-xs text-[var(--dash-text-muted)] italic">{untilNamed}</p>
 				{/if}

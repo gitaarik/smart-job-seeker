@@ -17,7 +17,7 @@
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import TechnologyTagsEditor from '$lib/components/TechnologyTagsEditor.svelte';
 	import RepoMetadataFetch from '$lib/components/RepoMetadataFetch.svelte';
-	import RepoSuggestions from '$lib/components/RepoSuggestions.svelte';
+	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
 	import VersionTags from '$lib/components/VersionTags.svelte';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
 	import ProjectDocuments from '../../../components/ProjectDocuments.svelte';
@@ -196,6 +196,16 @@
 	 * `$effect` → `basicsField` autosave picks the change up and writes it — the
 	 * fetch needs no save path of its own.
 	 */
+	/** An answered question, drafted into a bullet, saved like any typed one. */
+	function applyDraftedAchievement(achievement: string) {
+		const row = achievementStore.add();
+		editAchievements = [
+			...editAchievements,
+			{ key: row.key, description: achievement, tags: null }
+		];
+		achievementStore.update(row, { description: achievement });
+	}
+
 	/**
 	 * Add the technology chips the user ticked.
 	 *
@@ -452,12 +462,14 @@
 			onApply={applyRepoMetadata}
 			onApplyTechnologies={applyRepoTechnologies}
 		/>
-		<RepoSuggestions
+		<ProjectSuggestions
+			kind="side_project"
 			projectId={project.id}
 			currentSummary={editSummary}
 			currentTechnologies={editTechnologies}
 			onApplySummary={(v) => (editSummary = v)}
 			onApplyTechnologies={applyRepoTechnologies}
+			onApplyAchievement={applyDraftedAchievement}
 		/>
 		<div class="mt-4 flex justify-end">
 			<AutoSaveIndicator field={basicsField} />

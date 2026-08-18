@@ -40,6 +40,24 @@
 
 	let added = $state<number | null>(null);
 
+	/**
+	 * Add chips from outside this component.
+	 *
+	 * The store is created in here (see the note above), so a parent offering
+	 * suggested technologies has no way to reach it. Exported rather than lifted
+	 * because lifting the store would cost the per-chip autoSaveField the
+	 * `onDestroy` it deregisters from. Reached via `bind:this`.
+	 */
+	export function addTechnologies(names: string[]) {
+		for (const name of names) {
+			const trimmed = name.trim();
+			if (!trimmed) continue;
+			const row = store.add();
+			// A blank draft is not written; the name has to arrive through update.
+			store.update(row, { name: trimmed });
+		}
+	}
+
 	function focusNew(node: HTMLInputElement, isNew: boolean) {
 		if (isNew) {
 			node.focus();
