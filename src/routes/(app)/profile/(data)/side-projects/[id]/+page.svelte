@@ -1,13 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import {
-		faArrowLeft,
-		faLightbulb,
-		faPlus,
-		faStar,
-		faTrash
-	} from '@fortawesome/free-solid-svg-icons';
+	import { faTrash } from '@fortawesome/free-solid-svg-icons';
 	import MediaUpload from '$lib/components/MediaUpload.svelte';
 	import SectionSaveButton from '$lib/components/SectionSaveButton.svelte';
 	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
@@ -20,7 +15,6 @@
 	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
 	import VersionTags from '$lib/components/VersionTags.svelte';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
-	import ProjectDocuments from '../../../components/ProjectDocuments.svelte';
 	import Card from '../../../../components/Card.svelte';
 
 	type SaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -31,8 +25,6 @@
 	let bannerUrl = $state(data.bannerUrl);
 
 	let project = $derived(data.project);
-
-	let pageTitle = $derived(project.name || 'Project');
 
 	// Both child collections save as you type now, through `sectionRows` and
 	// `/api/profile-section/…`. The staged-removal sets that used to require a
@@ -319,44 +311,7 @@
 	}
 </script>
 
-<svelte:head>
-	<title>{pageTitle} - Side Projects - Smart Job Seeker</title>
-</svelte:head>
-
 <div class="space-y-6">
-	<!-- Header -->
-	<div class="flex items-center gap-4">
-		<a
-			href="/profile/side-projects"
-			class="flex items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
-		>
-			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />
-			<span class="text-sm">All Side Projects</span>
-		</a>
-	</div>
-
-	<div class="flex items-center gap-4">
-		{#if imageUrl}
-			<img src={imageUrl} alt="{project.name} image" class="h-12 w-12 rounded-lg object-cover" />
-		{:else}
-			<div class="flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--dash-bg)]">
-				<FontAwesomeIcon icon={faLightbulb} class="h-6 w-6 text-[var(--dash-primary)]" />
-			</div>
-		{/if}
-		<div>
-			<h1 class="text-2xl font-bold text-[var(--dash-text)]">
-				Edit Side Project
-				{#if project.stars}
-					<span class="ml-2 text-lg text-amber-500">
-						<FontAwesomeIcon icon={faStar} class="h-4 w-4" />
-						{project.stars}
-					</span>
-				{/if}
-			</h1>
-			<p class="text-[var(--dash-text-secondary)]">{project.name}</p>
-		</div>
-	</div>
-
 	<!-- Basic Info -->
 	<Card padding="lg">
 		<h2 class="mb-4 text-lg font-semibold text-[var(--dash-text)]">Basic Information</h2>
@@ -518,21 +473,6 @@
 		{/if}
 	</Card>
 
-	<!-- Files & source code -->
-	<Card padding="lg">
-		<h2 class="mb-1 text-lg font-semibold text-[var(--dash-text)]">Files & source code</h2>
-		<p class="mb-4 text-sm text-[var(--dash-text-secondary)]">
-			Attach this project's source code or docs. We summarize them into reference notes we can cite
-			when a job matches this project.
-		</p>
-		<ProjectDocuments
-			profileId={data.profileId}
-			sideProjectId={project.id}
-			repoUrl={editRepoUrl}
-			documents={data.documents}
-		/>
-	</Card>
-
 	<!-- Portfolio Images -->
 	<Card padding="lg">
 		<h2 class="mb-2 text-lg font-semibold text-[var(--dash-text)]">Portfolio Images</h2>
@@ -549,8 +489,15 @@
 					currentUrl={imageUrl}
 					label="Project Image"
 					showHint={false}
-					onUpload={(url) => (imageUrl = url)}
-					onDelete={() => (imageUrl = null)}
+					onUpload={(url) => {
+						imageUrl = url;
+						// The header shows this too, from layout data.
+						void invalidateAll();
+					}}
+					onDelete={() => {
+						imageUrl = null;
+						void invalidateAll();
+					}}
 				/>
 			</div>
 			<div class="flex-1">

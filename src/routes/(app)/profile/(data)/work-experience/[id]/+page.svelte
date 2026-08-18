@@ -34,13 +34,6 @@
 	let bannerUrl = $state(data.bannerUrl);
 
 	let experience = $derived(data.experience);
-	// projectId → attached documents; rebuilt on reload so the docs section stays
-	// fresh after upload/delete (invalidateAll).
-	let documentsByProject = $derived(
-		Object.fromEntries(
-			experience.work_experience_projects.map((p) => [p.id, p.profile_document_projects])
-		)
-	);
 
 	let pageTitle = $derived(experience.position || experience.name || 'Experience');
 
@@ -704,14 +697,13 @@
 	<Card padding="lg">
 		<h2 class="mb-1 text-lg font-semibold text-[var(--dash-text)]">Projects</h2>
 		<p class="mb-4 text-sm text-[var(--dash-text-secondary)]">
-			Specific projects you worked on at {experience.name || 'this company'}, each with its own
-			details and technologies.
+			Specific projects you worked on at {experience.name || 'this company'}. Each opens its own
+			page, with its details, technologies and any source or notes you attach to it.
 		</p>
 		<WorkExperienceProjects
 			workExperienceId={experience.id}
 			projects={experience.work_experience_projects}
 			profileId={data.profileId}
-			{documentsByProject}
 		/>
 	</Card>
 

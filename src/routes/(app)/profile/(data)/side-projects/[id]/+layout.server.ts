@@ -1,15 +1,22 @@
-import type { PageServerLoad } from './$types';
+/**
+ * One side project, for its header and both of its tabs.
+ *
+ * In the layout rather than the page because the tab bar and the title are the
+ * layout's, and the Details tab needs nothing this does not already fetch. Its
+ * attachments load in the tab that renders them.
+ */
+
+import type { LayoutServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import {
-	profile_document_projects,
 	side_project_achievements,
 	side_project_technologies,
 	side_projects
 } from '$lib/server/db/schema';
 
-export const load: PageServerLoad = async ({ params, parent }) => {
+export const load: LayoutServerLoad = async ({ params, parent }) => {
 	const layoutData = await parent();
 
 	if (!layoutData.selectedProfile) {
@@ -40,24 +47,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		redirect(302, '/profile/side-projects');
 	}
 
-	// Documents attached to this side project.
-	const documents = await db.query.profile_document_projects.findMany({
-		where: eq(profile_document_projects.side_project_id, id),
-		orderBy: [asc(profile_document_projects.sort), desc(profile_document_projects.date_created)],
-		columns: {
-			id: true,
-			kind: true,
-			title: true,
-			original_filename: true,
-			status: true,
-			summary: true,
-			keywords: true,
-			skipped: true,
-			file_count: true,
-			total_bytes: true
-		}
-	});
-
 	// Get image URL
 	const imageUrl = project?.image_path ? `/uploads/${project.image_path}` : null;
 
@@ -66,7 +55,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
 	return {
 		project,
-		documents,
 		profileId: layoutData.selectedProfile.id,
 		imageUrl,
 		bannerUrl

@@ -64,7 +64,7 @@ set -euo pipefail
 # detail pages' collection-save functions, their staged-removal index sets and
 # five whole-collection zod schemas went with them. Nothing was fixed to earn
 # this; it is code that no longer exists.
-BASELINE=1477
+BASELINE=1475
 
 npx svelte-kit sync
 
