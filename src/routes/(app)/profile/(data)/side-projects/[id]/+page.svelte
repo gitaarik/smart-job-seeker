@@ -17,6 +17,7 @@
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import TechnologyTagsEditor from '$lib/components/TechnologyTagsEditor.svelte';
 	import RepoMetadataFetch from '$lib/components/RepoMetadataFetch.svelte';
+	import RepoSuggestions from '$lib/components/RepoSuggestions.svelte';
 	import VersionTags from '$lib/components/VersionTags.svelte';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
 	import ProjectDocuments from '../../../components/ProjectDocuments.svelte';
@@ -449,6 +450,13 @@
 			}}
 			currentTechnologies={editTechnologies}
 			onApply={applyRepoMetadata}
+			onApplyTechnologies={applyRepoTechnologies}
+		/>
+		<RepoSuggestions
+			projectId={project.id}
+			currentSummary={editSummary}
+			currentTechnologies={editTechnologies}
+			onApplySummary={(v) => (editSummary = v)}
 			onApplyTechnologies={applyRepoTechnologies}
 		/>
 		<div class="mt-4 flex justify-end">

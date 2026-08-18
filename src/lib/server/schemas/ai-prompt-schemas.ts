@@ -783,11 +783,59 @@ export const extractDocumentSchema = z
 	})
 	.passthrough();
 
+/**
+ * Schema for propose_project_from_repo.
+ *
+ * Same gpt-oss defences as extract_document, plus one of its own: the model
+ * likes to answer `questions` as an array of plain strings even when told to
+ * return objects, so a bare string is lifted into `{ question, evidence: '' }`
+ * rather than dropped. A question with no stated evidence is still a usable
+ * question; discarding it would silently thin the only output of this prompt
+ * that cannot be re-derived from the code.
+ */
+export const proposeProjectFromRepoSchema = z
+	.object({
+		summary: z
+			.preprocess(
+				(v) => (Array.isArray(v) ? v.join('\n\n') : coerceNull(v)),
+				z.string().optional().nullable()
+			)
+			.describe('Rewritten CV summary for the project'),
+		technologies: z
+			.preprocess((v) => {
+				const n = coerceNull(v);
+				if (typeof n === 'string') {
+					return n
+						.split(',')
+						.map((t) => t.trim())
+						.filter(Boolean);
+				}
+				return n ?? [];
+			}, z.array(z.string()).default([]))
+			.describe('Technologies visibly used in the code'),
+		questions: z
+			.preprocess(
+				(v) => {
+					const n = coerceNull(v);
+					if (!Array.isArray(n)) return [];
+					return n.map((item) =>
+						typeof item === 'string' ? { question: item, evidence: '' } : item
+					);
+				},
+				z
+					.array(z.object({ question: z.string(), evidence: z.string().default('') }).passthrough())
+					.default([])
+			)
+			.describe('Questions only the applicant can answer, with the code observation behind each')
+	})
+	.passthrough();
+
 export const aiPromptSchemas = {
 	extract_job_data: extractJobDataSchema,
 	derive_record_metadata: deriveRecordMetadataSchema,
 	summarize_application: summarizeApplicationSchema,
 	extract_document: extractDocumentSchema,
+	propose_project_from_repo: proposeProjectFromRepoSchema,
 	extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
 	score_job_match: scoreJobMatchSchema,
 	extract_matched_skills: extractMatchedSkillsSchema,
