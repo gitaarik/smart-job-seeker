@@ -42,6 +42,8 @@ export interface RepoMetadata extends RepoRef {
 	/** Last push. Only meaningful as an END date once the repo is archived. */
 	pushedAt: string;
 	archived: boolean;
+	/** Branch a zipball is taken from when no ref is given. */
+	defaultBranch: string;
 	/** Dominant language, and the topics the owner declared. Not applied in
 	 *  Tier 1 — carried so Tier 1b can seed technology chips without a second
 	 *  round-trip. */
@@ -105,18 +107,49 @@ function normalizeRef(owner: string, repo: string): RepoRef | null {
  * repos) to get 5,000/hour. The rate-limit path is reported as its own message
  * because "try again" is the right advice for it and wrong for a 404.
  */
-async function githubRequest(
-	path: string,
-	ref: RepoRef,
-	signal?: AbortSignal
-): Promise<Record<string, unknown>> {
+function githubHeaders(accept: string): Record<string, string> {
 	const headers: Record<string, string> = {
-		Accept: 'application/vnd.github+json',
+		Accept: accept,
 		'X-GitHub-Api-Version': '2022-11-28',
 		// GitHub rejects unidentified clients on some paths.
 		'User-Agent': 'smart-job-seeker'
 	};
 	if (config.githubToken) headers.Authorization = `Bearer ${config.githubToken}`;
+	return headers;
+}
+
+/**
+ * Turn a non-OK response into the error the caller should surface.
+ *
+ * Shared so the archive download reports a missing repo and an exhausted rate
+ * limit exactly as the metadata calls do.
+ */
+function assertGitHubOk(response: Response, ref: RepoRef): void {
+	if (response.ok) return;
+	if (response.status === 404) {
+		throw new GitHubFetchError(
+			`No public repository at ${ref.owner}/${ref.repo}. Private repositories are not supported yet — upload a ZIP instead.`,
+			404
+		);
+	}
+	if (response.status === 403 || response.status === 429) {
+		if (response.headers.get('x-ratelimit-remaining') === '0') {
+			throw new GitHubFetchError(
+				'GitHub rate limit reached for this server. Try again later.',
+				429
+			);
+		}
+		throw new GitHubFetchError('GitHub refused the request.', 403);
+	}
+	throw new GitHubFetchError(`GitHub returned ${response.status}.`, 502);
+}
+
+async function githubRequest(
+	path: string,
+	ref: RepoRef,
+	signal?: AbortSignal
+): Promise<Record<string, unknown>> {
+	const headers = githubHeaders('application/vnd.github+json');
 
 	let response: Response;
 	try {
@@ -125,25 +158,7 @@ async function githubRequest(
 		throw new GitHubFetchError(`Could not reach GitHub: ${(err as Error).message}`, 502);
 	}
 
-	if (response.status === 404) {
-		throw new GitHubFetchError(
-			`No public repository at ${ref.owner}/${ref.repo}. Private repositories are not supported yet — upload a ZIP instead.`,
-			404
-		);
-	}
-	if (response.status === 403 || response.status === 429) {
-		const remaining = response.headers.get('x-ratelimit-remaining');
-		if (remaining === '0') {
-			throw new GitHubFetchError(
-				'GitHub rate limit reached for this server. Try again later.',
-				429
-			);
-		}
-		throw new GitHubFetchError('GitHub refused the request.', 403);
-	}
-	if (!response.ok) {
-		throw new GitHubFetchError(`GitHub returned ${response.status}.`, 502);
-	}
+	assertGitHubOk(response, ref);
 
 	return (await response.json()) as Record<string, unknown>;
 }
@@ -165,6 +180,7 @@ export async function fetchRepoMetadata(ref: RepoRef, signal?: AbortSignal): Pro
 		createdAt: typeof body.created_at === 'string' ? body.created_at : '',
 		pushedAt: typeof body.pushed_at === 'string' ? body.pushed_at : '',
 		archived: body.archived === true,
+		defaultBranch: typeof body.default_branch === 'string' ? body.default_branch : 'HEAD',
 		language: typeof body.language === 'string' ? body.language : null,
 		topics: Array.isArray(body.topics) ? body.topics.filter((t) => typeof t === 'string') : []
 	};
@@ -188,6 +204,97 @@ export async function fetchRepoLanguages(
 		if (typeof bytes === 'number' && bytes > 0) languages[name] = bytes;
 	}
 	return languages;
+}
+
+/**
+ * The commit a scan is pinned to.
+ *
+ * The import records this so a re-scan of an unmoved HEAD can be refused
+ * instead of re-downloading, re-extracting and re-charging for a byte-identical
+ * corpus. `ref` may be a branch, tag or sha — GitHub resolves all three.
+ */
+export async function fetchRepoHeadSha(
+	ref: RepoRef,
+	gitRef: string,
+	signal?: AbortSignal
+): Promise<string> {
+	const body = await githubRequest(
+		`/repos/${ref.owner}/${ref.repo}/commits/${encodeURIComponent(gitRef)}`,
+		ref,
+		signal
+	);
+	if (typeof body.sha !== 'string' || !body.sha) {
+		throw new GitHubFetchError('GitHub did not report a commit for that branch.', 502);
+	}
+	return body.sha;
+}
+
+/**
+ * Hard ceiling on a downloaded archive.
+ *
+ * The extractor already caps what it will unpack, but that cap is applied
+ * *after* the bytes are in memory. A repository is user-chosen and can be
+ * enormous, so the download is capped on its own and aborted mid-stream rather
+ * than buffered first and judged afterwards.
+ */
+export const MAX_ARCHIVE_BYTES = 100 * 1024 * 1024;
+
+/**
+ * Download a repository zipball.
+ *
+ * Returned as raw bytes for `extractUpload`, which sniffs it as a ZIP like any
+ * other — a zipball needs no special extractor, only special provenance.
+ */
+export async function fetchRepoArchive(
+	ref: RepoRef,
+	gitRef: string,
+	signal?: AbortSignal
+): Promise<Uint8Array> {
+	const url = `https://api.github.com/repos/${ref.owner}/${ref.repo}/zipball/${encodeURIComponent(gitRef)}`;
+	let response: Response;
+	try {
+		// Redirects to codeload; fetch follows it by default.
+		response = await fetch(url, { headers: githubHeaders('application/vnd.github+json'), signal });
+	} catch (err) {
+		throw new GitHubFetchError(`Could not reach GitHub: ${(err as Error).message}`, 502);
+	}
+	assertGitHubOk(response, ref);
+
+	// Trust the advertised length when there is one, but never *only* that: the
+	// codeload response is often chunked, and a wrong header would be the whole
+	// guard.
+	const advertised = Number(response.headers.get('content-length'));
+	if (Number.isFinite(advertised) && advertised > MAX_ARCHIVE_BYTES) {
+		throw new GitHubFetchError(tooLargeMessage(), 413);
+	}
+
+	const reader = response.body?.getReader();
+	if (!reader) throw new GitHubFetchError('GitHub returned an empty archive.', 502);
+
+	const chunks: Uint8Array[] = [];
+	let total = 0;
+	for (;;) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		total += value.byteLength;
+		if (total > MAX_ARCHIVE_BYTES) {
+			await reader.cancel();
+			throw new GitHubFetchError(tooLargeMessage(), 413);
+		}
+		chunks.push(value);
+	}
+
+	const bytes = new Uint8Array(total);
+	let offset = 0;
+	for (const chunk of chunks) {
+		bytes.set(chunk, offset);
+		offset += chunk.byteLength;
+	}
+	return bytes;
+}
+
+function tooLargeMessage(): string {
+	return `That repository is larger than the ${Math.round(MAX_ARCHIVE_BYTES / 1024 / 1024)}MB scan limit. Upload a ZIP of the parts that matter instead.`;
 }
 
 /** A `side_projects` column this feature can fill, and where the value came from. */

@@ -506,6 +506,7 @@
 		<ProjectDocuments
 			profileId={data.profileId}
 			sideProjectId={project.id}
+			repoUrl={editRepoUrl}
 			documents={data.documents}
 		/>
 	</Card>

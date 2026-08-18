@@ -10,6 +10,7 @@
 		faFileZipper,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
+	import { faGithub } from '@fortawesome/free-brands-svg-icons';
 	import ConfirmModal from './ConfirmModal.svelte';
 
 	interface DocRow {
@@ -29,11 +30,14 @@
 		profileId,
 		workExperienceProjectId = null,
 		sideProjectId = null,
+		repoUrl = null,
 		documents
 	}: {
 		profileId: number;
 		workExperienceProjectId?: number | null;
 		sideProjectId?: number | null;
+		/** Enables the repo scan. Side projects only — nothing else stores one. */
+		repoUrl?: string | null;
 		documents: DocRow[];
 	} = $props();
 
@@ -42,6 +46,9 @@
 	let isDragging = $state(false);
 	let deleteId = $state<number | null>(null);
 	let reparsingId = $state<number | null>(null);
+	let importing = $state(false);
+	let importNote = $state<string | null>(null);
+	let canImportRepo = $derived(sideProjectId != null && !!repoUrl?.trim());
 	let expanded = $state<Set<number>>(new Set());
 
 	function formatSize(bytes: number): string {
@@ -103,6 +110,38 @@
 			error = 'Upload failed.';
 		} finally {
 			uploading = false;
+		}
+	}
+
+	/**
+	 * Pull the linked repository in as an attachment.
+	 *
+	 * Slow by nature — download, unpack, summarize — so this reports its own
+	 * progress rather than borrowing the upload spinner, and an unchanged HEAD
+	 * comes back as a note instead of a second identical document.
+	 */
+	async function importRepo() {
+		if (!canImportRepo || importing) return;
+		importing = true;
+		error = null;
+		importNote = null;
+		try {
+			const res = await fetch(`/api/side-project/${sideProjectId}/repo-import`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ repo_url: repoUrl })
+			});
+			const body = await res.json().catch(() => null);
+			if (!res.ok) {
+				error = body?.message ?? 'Could not scan the repository.';
+				return;
+			}
+			importNote = body?.unchanged ? 'Already scanned at this commit — nothing to re-read.' : null;
+			await invalidateAll();
+		} catch {
+			error = 'Could not scan the repository.';
+		} finally {
+			importing = false;
 		}
 	}
 
@@ -183,6 +222,30 @@
 			class="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-default"
 		/>
 	</div>
+
+	{#if canImportRepo}
+		<div class="flex flex-wrap items-center gap-3">
+			<button
+				type="button"
+				onclick={importRepo}
+				disabled={importing}
+				class="inline-flex items-center gap-2 rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm font-medium text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)] disabled:cursor-not-allowed disabled:opacity-50"
+			>
+				<FontAwesomeIcon
+					icon={importing ? faArrowsRotate : faGithub}
+					class="h-4 w-4 {importing ? 'animate-spin' : ''}"
+				/>
+				{importing ? 'Scanning repository…' : 'Scan the linked repository'}
+			</button>
+			<span class="text-sm text-[var(--dash-text-secondary)]">
+				Reads the public repo's code the same way an upload would. Public repos only.
+			</span>
+		</div>
+	{/if}
+
+	{#if importNote}
+		<p class="text-sm text-[var(--dash-text-secondary)]">{importNote}</p>
+	{/if}
 
 	{#if error}
 		<p class="text-sm text-[var(--dash-error)]">{error}</p>

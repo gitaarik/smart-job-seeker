@@ -19,12 +19,23 @@ export interface SaveDocumentProjectInput {
 	workExperienceId?: number | null;
 	workExperienceProjectId?: number | null;
 	sideProjectId?: number | null;
+	/**
+	 * Override the extractor's own classification and provenance.
+	 *
+	 * A GitHub zipball is indistinguishable from any other ZIP to the extractor,
+	 * but everything downstream — the UI label, the re-scan check, the citation
+	 * in a cover letter — needs to know it was a repository at a given commit.
+	 * Left unset, the extractor's `kind` and a filename-only source are used, as
+	 * they are for a plain upload.
+	 */
+	kind?: string;
+	source?: Record<string, unknown>;
 }
 
 export interface SavedDocumentProject {
 	id: number;
 	status: string;
-	kind: 'archive' | 'file';
+	kind: string;
 	title: string;
 	fileCount: number;
 	totalChars: number;
@@ -49,11 +60,11 @@ export async function saveExtractedProject(
 			work_experience_id: input.workExperienceId ?? null,
 			work_experience_project_id: input.workExperienceProjectId ?? null,
 			side_project_id: input.sideProjectId ?? null,
-			kind: extracted.kind,
+			kind: input.kind ?? extracted.kind,
 			title,
 			original_filename: input.filename,
-			// Provider-agnostic provenance; git sources will set a richer object here.
-			source: { type: extracted.kind, filename: input.filename },
+			// Provider-agnostic provenance; git sources pass a richer object in.
+			source: input.source ?? { type: extracted.kind, filename: input.filename },
 			status,
 			skipped: extracted.skipped.length > 0 ? extracted.skipped : null,
 			file_count: extracted.files.length,
@@ -81,7 +92,7 @@ export async function saveExtractedProject(
 	return {
 		id: project.id,
 		status,
-		kind: extracted.kind,
+		kind: input.kind ?? extracted.kind,
 		title,
 		fileCount: extracted.files.length,
 		totalChars: extracted.totalChars,

@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+	fetchRepoArchive,
+	fetchRepoHeadSha,
 	fetchRepoLanguages,
 	fetchRepoMetadata,
 	GitHubFetchError,
 	parseGitHubRepoUrl,
+	MAX_ARCHIVE_BYTES,
 	proposalsFor,
 	technologyProposalsFor,
 	type RepoMetadata
@@ -159,6 +162,7 @@ const meta = (overrides: Partial<RepoMetadata> = {}): RepoMetadata => ({
 	createdAt: '2026-01-15T10:00:00Z',
 	pushedAt: '2026-08-14T09:30:00Z',
 	archived: false,
+	defaultBranch: 'main',
 	language: 'TypeScript',
 	topics: [],
 	...overrides
@@ -254,5 +258,80 @@ describe('technologyProposalsFor', () => {
 		expect(
 			names(meta({ language: null, topics: ['telegram-bot', 'ai', 'rest-api', 'claude_code'] }), {})
 		).toEqual(['Telegram Bot', 'AI', 'REST API', 'Claude Code']);
+	});
+});
+
+describe('fetchRepoHeadSha', () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('returns the commit sha for a ref', async () => {
+		const fetchMock = mockFetch(200, { sha: 'd28ab862577afe9bf0d6e87ee4c4a591f2925420' });
+		vi.stubGlobal('fetch', fetchMock);
+		expect(await fetchRepoHeadSha(ref, 'main')).toBe('d28ab862577afe9bf0d6e87ee4c4a591f2925420');
+		expect(fetchMock.mock.calls[0][0]).toContain('/commits/main');
+	});
+
+	it('refuses a response with no sha rather than importing under a blank key', async () => {
+		vi.stubGlobal('fetch', mockFetch(200, {}));
+		await expect(fetchRepoHeadSha(ref, 'main')).rejects.toMatchObject({ status: 502 });
+	});
+});
+
+/** A Response whose body streams `chunks`, so the size guard can be exercised. */
+function streamingResponse(chunks: Uint8Array[], headers: Record<string, string> = {}) {
+	let i = 0;
+	let cancelled = false;
+	const reader = {
+		read: async () => (i < chunks.length ? { done: false, value: chunks[i++] } : { done: true }),
+		cancel: async () => {
+			cancelled = true;
+		}
+	};
+	return {
+		response: {
+			status: 200,
+			ok: true,
+			headers: { get: (k: string) => headers[k.toLowerCase()] ?? null },
+			body: { getReader: () => reader }
+		},
+		wasCancelled: () => cancelled
+	};
+}
+
+describe('fetchRepoArchive', () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('concatenates the streamed chunks in order', async () => {
+		const { response } = streamingResponse([new Uint8Array([1, 2]), new Uint8Array([3])]);
+		vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response));
+		expect(Array.from(await fetchRepoArchive(ref, 'main'))).toEqual([1, 2, 3]);
+	});
+
+	it('rejects on the advertised length before downloading anything', async () => {
+		const { response } = streamingResponse([], {
+			'content-length': String(MAX_ARCHIVE_BYTES + 1)
+		});
+		vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response));
+		await expect(fetchRepoArchive(ref, 'main')).rejects.toMatchObject({ status: 413 });
+	});
+
+	it('aborts mid-stream when a chunked response exceeds the cap', async () => {
+		// The guard cannot rest on content-length: codeload often omits it, and a
+		// wrong header would otherwise be the whole protection.
+		const chunk = new Uint8Array(1024 * 1024);
+		const chunks = Array.from({ length: 200 }, () => chunk);
+		const { response, wasCancelled } = streamingResponse(chunks);
+		vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response));
+		await expect(fetchRepoArchive(ref, 'main')).rejects.toMatchObject({ status: 413 });
+		expect(wasCancelled()).toBe(true);
+	});
+
+	it('maps a missing repo the same way the metadata calls do', async () => {
+		vi.stubGlobal('fetch', mockFetch(404, {}));
+		await expect(fetchRepoArchive(ref, 'main')).rejects.toMatchObject({ status: 404 });
 	});
 });
