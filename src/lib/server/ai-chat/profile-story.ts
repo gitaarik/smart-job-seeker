@@ -18,6 +18,7 @@ import { ensureBaselineVersion, recordVersion, STORY_VERSIONS } from './entity-v
 import { parseStarMarkdown, serializeStarMarkdown, type StarFields } from '$lib/interview/star';
 import type { GenerationContextOption } from './generation-context';
 import { CORE_PROFILE_FIELDS } from './profile-fields';
+import { pinnedProjectForStory } from '$lib/server/profile/project-stories';
 
 /** Profile data fields relevant for building a behavioural STAR story. */
 export const STORY_PROFILE_FIELDS = [...CORE_PROFILE_FIELDS, 'project_stories'];
@@ -125,13 +126,21 @@ export async function generateProfileStory(
 	let context: GenerationContextOption | undefined;
 	if (mode === 'generate' || mode === 'auto') {
 		const topic = story.title && !isUnnamed(story.title) ? story.title : '';
+		// A story linked to a project has a subject, so say which one rather than
+		// hoping the ranker recovers it from the title. This matters most for the
+		// story that most needs help: a blank one started from a project's page has
+		// no title, no category and no draft, so the query is empty and retrieval
+		// used to return nothing at all — the model was asked to write about a
+		// project it had never been shown.
+		const pinned = pinnedProjectForStory(story);
 		context = {
 			query: {
 				text: [topic, story.category ?? '', instructions ?? '', currentStar ?? '']
 					.filter(Boolean)
 					.join('\n')
 			},
-			sources: ['projects', 'application_texts']
+			sources: ['projects', 'application_texts'],
+			...(pinned ? { sourceOptions: { projects: { pinned } } } : {})
 		};
 	}
 

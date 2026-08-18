@@ -327,6 +327,11 @@ export async function buildProfileJsonExport(
 				orderBy: (t: any, { asc }: any) => asc(t.sort)
 			},
 			project_stories: {
+				// The project a story is linked to is deliberately NOT exported: this
+				// format carries no row ids, so there would be nothing to remap the
+				// FK against on import, and a copied id would point at whatever row
+				// happened to take that number in the destination profile. An
+				// imported story arrives unlinked, which is where every story starts.
 				columns: {
 					sort: true,
 					title: true,

@@ -139,7 +139,8 @@ describe('assembleGenerationContext', () => {
 				job_description: 'backend scaling',
 				skills_required: ['Go']
 			}),
-			3
+			3,
+			undefined
 		);
 	});
 
@@ -162,7 +163,37 @@ describe('assembleGenerationContext', () => {
 			sources: ['projects'],
 			perSourceK: 5
 		});
-		expect(mockRelevantProjects).toHaveBeenCalledWith(7, expect.anything(), 5);
+		expect(mockRelevantProjects).toHaveBeenCalledWith(7, expect.anything(), 5, undefined);
+	});
+
+	it('passes a pinned project through to the retriever', async () => {
+		mockRelevantProjects.mockResolvedValue('## Relevant projects\n1. Foo — THE SUBJECT');
+		const ctx = await assembleGenerationContext({
+			profileId: 1,
+			query: { text: 'a story about it' },
+			sources: ['projects'],
+			sourceOptions: { projects: { pinned: { kind: 'side_project', id: 42 } } }
+		});
+		expect(mockRelevantProjects).toHaveBeenCalledWith(1, expect.anything(), 3, {
+			kind: 'side_project',
+			id: 42
+		});
+		expect(ctx.usedSources).toEqual(['projects']);
+	});
+
+	it('retrieves for a pinned project even with no query — the subject is not a guess', async () => {
+		mockRelevantProjects.mockResolvedValue('## Relevant projects\n1. Foo — THE SUBJECT');
+		await assembleGenerationContext({
+			profileId: 1,
+			query: { text: '   ' },
+			sources: ['projects'],
+			sourceOptions: { projects: { pinned: { kind: 'work_experience_project', id: 7 } } }
+		});
+		// The empty query would normally cost-gate the whole source out.
+		expect(mockRelevantProjects).toHaveBeenCalledWith(1, expect.anything(), 3, {
+			kind: 'work_experience_project',
+			id: 7
+		});
 	});
 
 	it('assembles multiple sources, each into its own variable', async () => {

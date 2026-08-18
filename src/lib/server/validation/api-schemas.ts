@@ -46,11 +46,23 @@ export const interviewStoryCreateSchema = z.object({
 	task: optionalTrimmedString(10000),
 	action: optionalTrimmedString(10000),
 	result: optionalTrimmedString(10000),
-	reflection: optionalTrimmedString(10000)
+	reflection: optionalTrimmedString(10000),
+	// The project this story is about, when it is started from that project's
+	// page. Both optional and at most one of them means something — the route
+	// checks the named project belongs to this profile before writing either.
+	work_experience_project_id: positiveInt().optional(),
+	side_project_id: positiveInt().optional()
 });
 
 export const interviewStoryUpdateSchema = interviewStoryCreateSchema.extend({
 	id: positiveInt()
+});
+
+/** Link a story to a project, or (with a null id) unlink it. */
+export const interviewStoryLinkSchema = z.object({
+	profile_id: positiveInt(),
+	kind: z.enum(['work_experience_project', 'side_project']).nullable(),
+	project_id: positiveInt().nullable()
 });
 
 export const interviewStoryDeleteSchema = z.object({

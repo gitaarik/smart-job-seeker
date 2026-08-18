@@ -15,6 +15,7 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowLeft,
+		faBook,
 		faFolderOpen,
 		faLightbulb,
 		faListCheck
@@ -46,7 +47,8 @@
 
 	const tabs = $derived([
 		{ label: 'Details', href: basePath, icon: faListCheck },
-		{ label: 'Files & code', href: `${basePath}/sources`, icon: faFolderOpen }
+		{ label: 'Files & code', href: `${basePath}/sources`, icon: faFolderOpen },
+		{ label: 'Stories', href: `${basePath}/stories`, icon: faBook }
 	]);
 
 	function isTabActive(href: string): boolean {

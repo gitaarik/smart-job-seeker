@@ -11,14 +11,23 @@ import {
 	interviewStoryReorderSchema,
 	parseBody
 } from '$lib/server/validation/api-schemas';
+import { projectBelongsToProfile } from '$lib/server/profile/project-ownership';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = requireAuth(locals);
 
-	const { profile_id, title, category, situation, task, action, result, reflection } = parseBody(
-		interviewStoryCreateSchema,
-		await request.json()
-	);
+	const {
+		profile_id,
+		title,
+		category,
+		situation,
+		task,
+		action,
+		result,
+		reflection,
+		work_experience_project_id,
+		side_project_id
+	} = parseBody(interviewStoryCreateSchema, await request.json());
 
 	// Verify the profile belongs to this user
 	const profile = await db.query.profiles.findFirst({
@@ -27,6 +36,23 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	if (!profile) {
 		return json({ error: 'Profile not found' }, { status: 404 });
+	}
+
+	// A story started from a project's page names that project. The id comes from
+	// the client like any other, so it is checked against the profile before it is
+	// written — a link nobody verified would put another applicant's project on
+	// this story's page and into its prompt.
+	if (work_experience_project_id !== undefined) {
+		const owned = await projectBelongsToProfile(
+			'work_experience_project',
+			work_experience_project_id,
+			profile_id
+		);
+		if (!owned) return json({ error: 'Project not found on this profile' }, { status: 400 });
+	}
+	if (side_project_id !== undefined) {
+		const owned = await projectBelongsToProfile('side_project', side_project_id, profile_id);
+		if (!owned) return json({ error: 'Project not found on this profile' }, { status: 400 });
 	}
 
 	// Get the highest sort value
@@ -46,6 +72,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			result: result?.trim() || null,
 			reflection: reflection?.trim() || null,
 			profile_id: profile_id,
+			work_experience_project_id: work_experience_project_id ?? null,
+			side_project_id: side_project_id ?? null,
 			sort: (lastItem?.sort ?? -1) + 1,
 			date_created: new Date()
 		})

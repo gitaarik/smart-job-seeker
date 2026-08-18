@@ -1225,6 +1225,21 @@ export const project_stories = pgTable(
 		reflection: text(),
 		category: varchar({ length: 255 }),
 		profile_id: integer().notNull(),
+		// The project this story is about — either kind, or neither.
+		//
+		// The table is called project_stories and had no way to name a project: a
+		// STAR story floated free of the work it described, and the generator
+		// reached the project only by *retrieving* it, guessing from the story's
+		// title. Linking it makes the subject a fact instead of a guess, and lets
+		// the project's own page show the stories written about it.
+		//
+		// Nullable because most stories are about a role or a situation rather than
+		// a project row, and SET NULL rather than CASCADE on delete because a story
+		// is the applicant's own writing: deleting the project it mentions must not
+		// take the paragraphs with it. Unlike an attached document, which describes
+		// something that no longer exists, an unlinked story still reads fine.
+		work_experience_project_id: integer(),
+		side_project_id: integer(),
 		// Live AI thread pointer for the conversational story editor (see
 		// story_versions). Null until the applicant starts an AI thread on the story.
 		ai_chat_id: integer(),
@@ -1232,6 +1247,8 @@ export const project_stories = pgTable(
 	},
 	(table) => [
 		index('project_stories_ai_chat_id_idx').on(table.ai_chat_id),
+		index('project_stories_work_experience_project_idx').on(table.work_experience_project_id),
+		index('project_stories_side_project_idx').on(table.side_project_id),
 		foreignKey({
 			columns: [table.ai_chat_id],
 			foreignColumns: [ai_chats.id],
@@ -1241,7 +1258,17 @@ export const project_stories = pgTable(
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
 			name: 'project_stories_profile_foreign'
-		}).onDelete('cascade')
+		}).onDelete('cascade'),
+		foreignKey({
+			columns: [table.work_experience_project_id],
+			foreignColumns: [work_experience_projects.id],
+			name: 'project_stories_work_experience_project_foreign'
+		}).onDelete('set null'),
+		foreignKey({
+			columns: [table.side_project_id],
+			foreignColumns: [side_projects.id],
+			name: 'project_stories_side_project_foreign'
+		}).onDelete('set null')
 	]
 );
 

@@ -45,6 +45,13 @@ vi.mock('drizzle-orm', () => ({
 	desc: vi.fn()
 }));
 
+const mockProjectBelongsToProfile = vi.fn();
+vi.mock('$lib/server/profile/project-ownership', () => ({
+	// `unknown[]` rather than the `any[]` its neighbours use: the lint budget is a
+	// ratchet, so a new `any` here would cost a gate even where it matches local style.
+	projectBelongsToProfile: (...a: unknown[]) => mockProjectBelongsToProfile(...a)
+}));
+
 vi.mock('$lib/server/db/schema', () => ({
 	profiles: { id: 'profiles.id', user_id: 'profiles.user_id' },
 	project_stories: {
@@ -120,6 +127,35 @@ describe('POST /api/interview-stories', () => {
 				profile_id: 1
 			})
 		);
+	});
+
+	it('links a new story to the project it was started from', async () => {
+		mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
+		mockProjectBelongsToProfile.mockResolvedValueOnce(true);
+		mockStoriesFindFirst.mockResolvedValueOnce(null);
+		mockInsertReturning.mockResolvedValueOnce([{ id: 11 }]);
+
+		const res = await POST(
+			createEvent('POST', { profile_id: 1, title: 'A story', side_project_id: 42 })
+		);
+		expect(res.status).toBe(200);
+		expect(mockProjectBelongsToProfile).toHaveBeenCalledWith('side_project', 42, 1);
+		expect(mockInsertValues).toHaveBeenCalledWith(
+			expect.objectContaining({ side_project_id: 42, work_experience_project_id: null })
+		);
+	});
+
+	it('refuses a link to a project that is not on this profile', async () => {
+		mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
+		// The id is a plain integer from the client; without this check a story
+		// would carry another applicant's project into its page and its prompt.
+		mockProjectBelongsToProfile.mockResolvedValueOnce(false);
+
+		const res = await POST(
+			createEvent('POST', { profile_id: 1, title: 'A story', work_experience_project_id: 99 })
+		);
+		expect(res.status).toBe(400);
+		expect(mockInsertFn).not.toHaveBeenCalled();
 	});
 
 	it('starts sort at 0 when no existing stories', async () => {

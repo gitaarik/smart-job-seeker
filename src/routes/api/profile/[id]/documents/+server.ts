@@ -18,12 +18,9 @@ import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
 import { and, asc, desc, eq } from 'drizzle-orm';
-import {
-	profile_document_projects,
-	side_projects,
-	work_experience_projects,
-	work_experiences
-} from '$lib/server/db/schema';
+import { profile_document_projects, work_experiences } from '$lib/server/db/schema';
+import { projectBelongsToProfile } from '$lib/server/profile/project-ownership';
+import type { ProjectKind } from '$lib/server/documents/project-corpus';
 import { parseIntParam, requireAuth, requireProfileAccess } from '$lib/server/utils/api-helpers';
 import { requireCredits } from '$lib/server/billing/require-credits';
 import { requireDocumentQuota } from '$lib/server/billing/require-document-quota';
@@ -58,25 +55,11 @@ async function assertWorkExperienceOwned(id: number, profileId: number) {
 	if (!row) error(400, 'Linked work experience not found on this profile');
 }
 
-/** A linked work-experience project must roll up to this profile. */
-async function assertWorkExperienceProjectOwned(id: number, profileId: number) {
-	const row = await db.query.work_experience_projects.findFirst({
-		where: eq(work_experience_projects.id, id),
-		columns: { id: true },
-		with: { work_experience: { columns: { profile_id: true } } }
-	});
-	if (!row || row.work_experience?.profile_id !== profileId) {
+/** A linked project of either kind must roll up to this profile. */
+async function assertProjectOwned(kind: ProjectKind, id: number, profileId: number) {
+	if (!(await projectBelongsToProfile(kind, id, profileId))) {
 		error(400, 'Linked project not found on this profile');
 	}
-}
-
-/** A linked side project must belong to this profile. */
-async function assertSideProjectOwned(id: number, profileId: number) {
-	const row = await db.query.side_projects.findFirst({
-		where: and(eq(side_projects.id, id), eq(side_projects.profile_id, profileId)),
-		columns: { id: true }
-	});
-	if (!row) error(400, 'Linked project not found on this profile');
 }
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
@@ -104,10 +87,10 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		await assertWorkExperienceOwned(workExperienceId, profileId);
 	}
 	if (workExperienceProjectId !== null) {
-		await assertWorkExperienceProjectOwned(workExperienceProjectId, profileId);
+		await assertProjectOwned('work_experience_project', workExperienceProjectId, profileId);
 	}
 	if (sideProjectId !== null) {
-		await assertSideProjectOwned(sideProjectId, profileId);
+		await assertProjectOwned('side_project', sideProjectId, profileId);
 	}
 
 	// Extract everything first so we can total the extracted bytes and gate on

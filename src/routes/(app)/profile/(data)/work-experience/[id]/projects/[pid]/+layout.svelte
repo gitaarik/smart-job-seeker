@@ -14,7 +14,12 @@
 	import { page } from '$app/stores';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faArrowLeft, faFolderOpen, faListCheck } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faArrowLeft,
+		faBook,
+		faFolderOpen,
+		faListCheck
+	} from '@fortawesome/free-solid-svg-icons';
 	import TabNav from '../../../../../../components/TabNav.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
@@ -48,7 +53,8 @@
 
 	const tabs = $derived([
 		{ label: 'Details', href: basePath, icon: faListCheck },
-		{ label: 'Files & code', href: `${basePath}/sources`, icon: faFolderOpen }
+		{ label: 'Files & code', href: `${basePath}/sources`, icon: faFolderOpen },
+		{ label: 'Stories', href: `${basePath}/stories`, icon: faBook }
 	]);
 
 	function isTabActive(href: string): boolean {

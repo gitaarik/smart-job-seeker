@@ -26,7 +26,17 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 	if (isNaN(storyId)) error(400, 'Invalid story ID');
 
 	const story = await db.query.project_stories.findFirst({
-		where: and(eq(project_stories.id, storyId), eq(project_stories.profile_id, selectedProfile.id))
+		where: and(eq(project_stories.id, storyId), eq(project_stories.profile_id, selectedProfile.id)),
+		with: {
+			// What the story is about, when the applicant has said. Named here so the
+			// editor can show it and link back, and so the two halves of the link are
+			// visible from both ends rather than only from the project's page.
+			work_experience_project: {
+				columns: { id: true, name: true },
+				with: { work_experience: { columns: { id: true, name: true } } }
+			},
+			side_project: { columns: { id: true, name: true } }
+		}
 	});
 	if (!story) error(404, 'Story not found');
 
@@ -49,10 +59,32 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		conversation = [initial];
 	}
 
+	// The project this story is about, as the ids the page needs to link to it.
+	// Not a built URL: `resolve()` belongs at the href, where it can be checked
+	// against the route it names.
+	const linkedProject = story.work_experience_project
+		? {
+				kind: 'work_experience_project' as const,
+				id: story.work_experience_project.id,
+				workExperienceId: story.work_experience_project.work_experience?.id ?? null,
+				name: story.work_experience_project.name ?? 'Untitled project',
+				context: story.work_experience_project.work_experience?.name ?? null
+			}
+		: story.side_project
+			? {
+					kind: 'side_project' as const,
+					id: story.side_project.id,
+					workExperienceId: null,
+					name: story.side_project.name ?? 'Untitled project',
+					context: null
+				}
+			: null;
+
 	return {
 		story,
 		conversation,
 		currentStar,
+		linkedProject,
 		profileId: selectedProfile.id,
 		generating: await isGenerating('story', storyId)
 	};

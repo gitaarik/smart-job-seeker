@@ -2,6 +2,7 @@
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowLeft, faBook, faCheck, faRobot } from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../../components/Card.svelte';
@@ -267,6 +268,45 @@
 		<div class="rounded-lg border border-[var(--dash-error)] bg-[var(--dash-error-light)] p-4">
 			<p class="text-sm text-[var(--dash-error)]">{form.error}</p>
 		</div>
+	{/if}
+
+	<!--
+		What the story is about, when it says so.
+
+		Read-only here, and linked: the link is set from the project's page, which
+		is where the applicant is when they know the answer. Showing it on this end
+		too is what makes it a relationship rather than a hidden column — and it
+		tells them why the AI has this project's details when they never mentioned
+		it in the conversation.
+	-->
+	{#if data.linkedProject}
+		{@const linked = data.linkedProject}
+		<p class="text-sm text-[var(--dash-text-secondary)]">
+			About
+			{#if linked.kind === 'work_experience_project' && linked.workExperienceId !== null}
+				<a
+					href={resolve('/(app)/profile/(data)/work-experience/[id]/projects/[pid]/stories', {
+						id: String(linked.workExperienceId),
+						pid: String(linked.id)
+					})}
+					class="dash-link"
+				>
+					{linked.name}{linked.context ? ` (${linked.context})` : ''}
+				</a>
+			{:else if linked.kind === 'side_project'}
+				<a
+					href={resolve('/(app)/profile/(data)/side-projects/[id]/stories', {
+						id: String(linked.id)
+					})}
+					class="dash-link"
+				>
+					{linked.name}
+				</a>
+			{:else}
+				<span class="text-[var(--dash-text)]">{linked.name}</span>
+			{/if}
+			— the AI writes this story from that project's details and attached notes.
+		</p>
 	{/if}
 
 	<!-- Title + category (saved independently of the STAR versioning) -->

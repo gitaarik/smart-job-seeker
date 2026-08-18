@@ -109,6 +109,22 @@ describe('formatProjectCitations', () => {
 		expect(out).toContain('1. Solo App\n');
 		expect(out).not.toContain('Solo App (');
 	});
+
+	it('names the pinned project as the subject and says it was not inferred', () => {
+		const out = formatProjectCitations([
+			ranked({ pinned: true }),
+			ranked({ id: 2, title: 'Other', context: '' })
+		]);
+		expect(out).toContain('1. Payments Migration (at Acme Corp) — THE SUBJECT');
+		expect(out).toContain('2. Other\n');
+		expect(out).toContain('it was not inferred');
+	});
+
+	it('says nothing about a subject when nothing is pinned', () => {
+		const out = formatProjectCitations([ranked()]);
+		expect(out).not.toContain('THE SUBJECT');
+		expect(out).not.toContain('was not inferred');
+	});
 });
 
 describe('formatSupportingEvidence', () => {

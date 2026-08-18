@@ -25,7 +25,11 @@
  * See planning/SEMANTIC-MATCHING-AND-RAG.md § Feature 5.
  */
 
-import { type JobLike, relevantProjectsText } from '$lib/server/documents/retrieval';
+import {
+	type JobLike,
+	type PinnedProject,
+	relevantProjectsText
+} from '$lib/server/documents/retrieval';
 import {
 	relevantApplicationTextsText,
 	relevantStoriesText
@@ -127,6 +131,12 @@ export type ContextEntity =
 /** Per-source knobs. Sources not listed take their own defaults. */
 export interface SourceOptions {
 	application_activity?: { detail: 'full' | 'compact' };
+	/**
+	 * A project the caller knows this generation is about, rather than one the
+	 * ranker has to find. It is always included and always first — see
+	 * relevantProfileProjects.
+	 */
+	projects?: { pinned?: PinnedProject };
 	/**
 	 * Char ceiling on the pipeline block, which degrades internally to fit it
 	 * (see fitPipelineToBudget) rather than being dropped whole by the budgeter.
@@ -289,6 +299,11 @@ interface SourceDef {
 	looked?(req: ContextRequest): boolean;
 }
 
+/** The project the caller pinned for this generation, if any. */
+function pinnedProject(req: ContextRequest): PinnedProject | undefined {
+	return req.sourceOptions?.projects?.pinned;
+}
+
 /**
  * The source registry — the one place a data source is taught to the whole
  * system. Add an entry here and every generator that lists it in `sources` can
@@ -420,12 +435,20 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 	projects: {
 		variable: 'relevantProjects',
 		priority: 10,
-		looked: (req) => hasQuery(req),
+		// A pinned project needs no query: the caller has already said which one
+		// this is about, and that is a lookup that can always be performed.
+		looked: (req) => hasQuery(req) || !!pinnedProject(req),
 		render: async (req) => {
-			// No query → nothing to rank against; skip the retrieval (and its
-			// embedding search) entirely rather than rank against noise.
-			if (!hasQuery(req)) return '';
-			return relevantProjectsText(req.profileId, queryToJobLike(req.query!), req.perSourceK ?? 3);
+			const pinned = pinnedProject(req);
+			// No query and nothing pinned → nothing to rank against; skip the
+			// retrieval (and its embedding search) entirely rather than rank noise.
+			if (!hasQuery(req) && !pinned) return '';
+			return relevantProjectsText(
+				req.profileId,
+				queryToJobLike(req.query ?? { text: '' }),
+				req.perSourceK ?? 3,
+				pinned
+			);
 		}
 	},
 	stories: {

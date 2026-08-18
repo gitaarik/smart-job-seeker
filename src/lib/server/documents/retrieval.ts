@@ -33,6 +33,8 @@ export interface JobLike {
 
 /** A project (typed + doc-enriched) that can be ranked against a job. */
 export interface RankableProject {
+	/** Set when the caller named this project rather than the ranker finding it. */
+	pinned?: boolean;
 	kind: 'side_project' | 'work_experience_project';
 	id: number;
 	title: string;
@@ -199,14 +201,24 @@ export function buildDocEvidence(docs: DocRow[]): string {
 	return lines.join('\n');
 }
 
+/** A project named by the caller rather than found by ranking it. */
+export interface PinnedProject {
+	kind: RankableProject['kind'];
+	id: number;
+}
+
 /**
  * Load the applicant's projects (work-experience + side), fold in any attached
  * documents, and return the top-K relevant to `job`.
+ *
+ * `pinned` names a project the caller already knows this is about — it is
+ * always included, always first, and takes one of the K slots.
  */
 export async function relevantProfileProjects(
 	profileId: number,
 	job: JobLike,
-	k = 3
+	k = 3,
+	pinned?: PinnedProject
 ): Promise<(RankableProject & { score: number })[]> {
 	const docCols = {
 		id: true,
@@ -322,11 +334,32 @@ export async function relevantProfileProjects(
 		}
 	}
 
+	// A pinned project is the subject, not a candidate: the applicant said this
+	// piece of writing is about it. It goes first and it is never ranked away —
+	// scoring it against a query derived from the thing being written *about* it
+	// is circular, and a floor that dropped it would leave the model to write
+	// about a project it was never shown.
+	const subject = pinned
+		? projects.find((p) => p.kind === pinned.kind && p.id === pinned.id)
+		: undefined;
+	const rest = subject ? projects.filter((p) => p !== subject) : projects;
+	const remaining = subject ? Math.max(0, k - 1) : k;
+
 	// Prefer semantic (embedding) ranking; fall back to deterministic overlap when
 	// embeddings are off or the provider fails (semanticScoreProjects → null).
-	const scores = await semanticScoreProjects(profileId, units, job);
-	if (scores) return rankBySemanticScores(projects, scores, k);
-	return rankProjects(projects, job, k);
+	let ranked: (RankableProject & { score: number })[];
+	if (remaining === 0) {
+		ranked = [];
+	} else {
+		const scores = await semanticScoreProjects(profileId, units, job);
+		ranked = scores
+			? rankBySemanticScores(rest, scores, remaining)
+			: rankProjects(rest, job, remaining);
+	}
+
+	// The score on the subject is a sort key, not a measurement: nothing ranked it,
+	// and 1 keeps it above the cosine scores it is being listed with.
+	return subject ? [{ ...subject, score: 1, pinned: true }, ...ranked] : ranked;
 }
 
 /**
@@ -353,15 +386,24 @@ function rankBySemanticScores(
  */
 export function formatProjectCitations(ranked: RankableProject[]): string {
 	if (ranked.length === 0) return '';
+	const subject = ranked.find((p) => p.pinned);
 	const items = ranked.map((p, i) => {
 		const head = p.context ? `${p.title} (${p.context})` : p.title;
-		return `${i + 1}. ${head}\n${p.citation}`;
+		const mark = p.pinned ? ' — THE SUBJECT' : '';
+		return `${i + 1}. ${head}${mark}\n${p.citation}`;
 	});
+	const subjectNote = subject
+		? `\n\nThe project marked THE SUBJECT is the one this piece of writing is about — ` +
+			`the applicant said so, it was not inferred. Write about that one. The others are ` +
+			`background, to be drawn on only where they genuinely bear on it.`
+		: '';
 	return (
 		'## Relevant projects from the applicant\n\n' +
 		"These are the applicant's REAL projects — from their work experience, " +
 		'personal projects, and any source/docs they uploaded. Cite the ones that ' +
-		'fit this role; ground every claim only in the notes here, do not invent.\n\n' +
+		'fit this role; ground every claim only in the notes here, do not invent.' +
+		subjectNote +
+		'\n\n' +
 		items.join('\n\n')
 	);
 }
@@ -375,9 +417,10 @@ export function formatProjectCitations(ranked: RankableProject[]): string {
 export async function relevantProjectsText(
 	profileId: number,
 	job: JobLike,
-	k = 3
+	k = 3,
+	pinned?: PinnedProject
 ): Promise<string> {
-	const ranked = await relevantProfileProjects(profileId, job, k);
+	const ranked = await relevantProfileProjects(profileId, job, k, pinned);
 	return formatProjectCitations(ranked);
 }
 

@@ -393,6 +393,14 @@ export const project_storiesRelations = relations(project_stories, ({ one }) => 
 	profile: one(profiles, {
 		fields: [project_stories.profile_id],
 		references: [profiles.id]
+	}),
+	work_experience_project: one(work_experience_projects, {
+		fields: [project_stories.work_experience_project_id],
+		references: [work_experience_projects.id]
+	}),
+	side_project: one(side_projects, {
+		fields: [project_stories.side_project_id],
+		references: [side_projects.id]
 	})
 }));
 
@@ -480,7 +488,8 @@ export const side_projectsRelations = relations(side_projects, ({ one, many }) =
 		references: [profiles.id]
 	}),
 	side_project_achievements: many(side_project_achievements),
-	profile_document_projects: many(profile_document_projects)
+	profile_document_projects: many(profile_document_projects),
+	project_stories: many(project_stories)
 }));
 
 export const work_experience_achievementsRelations = relations(
@@ -540,7 +549,8 @@ export const work_experience_projectsRelations = relations(
 			references: [work_experiences.id]
 		}),
 		work_experience_project_technologies: many(work_experience_project_technologies),
-		profile_document_projects: many(profile_document_projects)
+		profile_document_projects: many(profile_document_projects),
+		project_stories: many(project_stories)
 	})
 );
 

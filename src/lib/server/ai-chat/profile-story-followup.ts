@@ -17,6 +17,7 @@ import { buildConversationMessages } from './conversation-messages';
 import { ensureBaselineVersion, recordVersion, STORY_VERSIONS } from './entity-versions';
 import { buildStoryContext, STORY_PROFILE_FIELDS } from './profile-story';
 import { parseStarMarkdown, serializeStarMarkdown, type StarFields } from '$lib/interview/star';
+import { pinnedProjectForStory } from '$lib/server/profile/project-stories';
 
 /** Parse a structured `{ text, feedback }` revision response. */
 function parseStoryResponse(response: string | null): {
@@ -92,11 +93,15 @@ export async function createProfileStoryFollowup(
 			// rather than against itself. `stories` stays out: it would retrieve the
 			// very story being revised.
 			if (mode !== 'review') {
+				// Same pinning as the initial draft: a linked story's subject is a fact
+				// on every turn, not just the first.
+				const pinned = pinnedProjectForStory(story);
 				context = {
 					query: {
 						text: [followupRequest, storyContext, currentStar].filter(Boolean).join('\n')
 					},
-					sources: ['projects', 'application_texts']
+					sources: ['projects', 'application_texts'],
+					...(pinned ? { sourceOptions: { projects: { pinned } } } : {})
 				};
 			}
 		}
