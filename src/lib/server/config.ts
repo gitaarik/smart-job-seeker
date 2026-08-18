@@ -20,9 +20,30 @@ export interface AppConfig {
 
 	// GitHub (repo-derived project evidence — deterministic metadata fetch).
 	// Optional: unauthenticated works but shares a 60 req/hour PER-SERVER budget.
-	// Any read-only token lifts that to 5,000/hour; no scopes are needed for
-	// public repos, and private repos are not supported by this feature.
+	// Any read-only token lifts that to 5,000/hour. This one is server-wide and
+	// only ever reaches public repos.
 	githubToken: string;
+
+	// GitHub App — how a USER grants read access to their own private repos.
+	//
+	// Preferred over asking them for a token: the install screen is GitHub's own
+	// per-repo picker, the granted set can be changed later without re-issuing
+	// anything, and what we hold is an installation id (an identifier) rather
+	// than a bearer credential. The only long-lived secret is the app private
+	// key below, which mints 1-hour installation tokens on demand.
+	//
+	// Unset in every environment until the app is registered; the feature
+	// degrades to public-repos-only rather than erroring.
+	githubAppId: string;
+	/** App slug, for building the install URL (github.com/apps/<slug>). */
+	githubAppSlug: string;
+	/**
+	 * PEM private key, base64-encoded so it survives a single-line env var.
+	 *
+	 * Canonical copy belongs in `keys/github-app.pem` — same arrangement as the
+	 * release-signing keys, which live there and are consumed from env.
+	 */
+	githubAppPrivateKey: string;
 
 	// Browser
 	chromePath: string;
@@ -201,6 +222,9 @@ function loadConfig(): AppConfig {
 		// External Services
 		publicSiteUrl: getEnv('SJS_APP_URL_HOST', 'http://localhost:5173'),
 		githubToken: getEnv('SJS_GITHUB_TOKEN', ''),
+		githubAppId: getEnv('SJS_GITHUB_APP_ID', ''),
+		githubAppSlug: getEnv('SJS_GITHUB_APP_SLUG', ''),
+		githubAppPrivateKey: getEnv('SJS_GITHUB_APP_PRIVATE_KEY', ''),
 
 		// Browser
 		chromePath: getEnv('SJS_CHROME_PATH', ''),

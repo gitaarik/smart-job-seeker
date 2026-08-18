@@ -32,10 +32,13 @@ import {
 import {
 	fetchRepoArchive,
 	fetchRepoHeadSha,
+	fetchRepoLanguages,
 	fetchRepoMetadata,
 	GitHubFetchError,
-	parseGitHubRepoUrl
+	parseGitHubRepoUrl,
+	technologyProposalsFor
 } from '$lib/server/github/repo-metadata';
+import { tokenForRepo } from '$lib/server/github/app-auth';
 
 /** Has this exact commit already been scanned into this project? */
 async function existingScan(kind: ProjectKind, projectId: number, sha: string) {
@@ -77,8 +80,12 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 	try {
 		const signal = AbortSignal.timeout(120_000);
-		const meta = await fetchRepoMetadata(ref, signal);
-		const sha = await fetchRepoHeadSha(ref, meta.defaultBranch, signal);
+		// Null when no installation covers this owner — correct for a public repo,
+		// and the reason a private one reports "connect GitHub" rather than
+		// appearing not to exist.
+		const token = (await tokenForRepo(user.id, ref.owner, Date.now())) ?? undefined;
+		const meta = await fetchRepoMetadata(ref, signal, token);
+		const sha = await fetchRepoHeadSha(ref, meta.defaultBranch, signal, token);
 
 		// Re-scanning an unmoved HEAD would spend a download, an extraction and a
 		// summarization to arrive at a byte-identical corpus.
@@ -92,7 +99,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			});
 		}
 
-		const bytes = await fetchRepoArchive(ref, sha, signal);
+		const bytes = await fetchRepoArchive(ref, sha, signal, token);
 		const filename = `${ref.owner}-${ref.repo}-${sha.slice(0, 7)}.zip`;
 		const extracted = await extractUpload({ filename, bytes });
 
@@ -112,27 +119,50 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 					repo: ref.repo,
 					ref: meta.defaultBranch,
 					sha,
-					visibility: 'public',
+					visibility: meta.isPrivate ? 'private' : 'public',
 					url: meta.htmlUrl
 				}
 			},
 			extracted
 		);
 
-		// Best-effort, exactly as for an upload: the scan still counts if the LLM
-		// step fails, and the summary can be filled later by a reparse.
 		let summary: string | null = null;
 		let keywords: string[] | null = null;
-		const result = await summarizeProject(project.profileId, extracted.files).catch(() => null);
-		if (result) {
-			await setProjectSummary(saved.id, result.summary, result.keywords);
-			summary = result.summary || null;
-			keywords = result.keywords.length > 0 ? result.keywords : null;
+
+		if (meta.isPrivate) {
+			// LOCAL-ONLY BY DEFAULT for a private repository.
+			//
+			// Summarizing means sending the source to a third-party model, and a
+			// private repo is frequently not the applicant's to send — on a
+			// work-experience project it is usually an employer's. So the scan stops
+			// at extraction: the text is stored, but nothing leaves.
+			//
+			// Retrieval still works, because it falls back to deterministic keyword
+			// overlap when there is no embedding, and these keywords come from
+			// GitHub's own language and topic data rather than from reading the code.
+			// Someone who does want the AI summary opts in per-attachment through the
+			// existing reparse action — a deliberate, visible second step.
+			const languages = await fetchRepoLanguages(ref, signal, token).catch(() => ({}));
+			const derived = technologyProposalsFor(meta, languages).map((t) => t.name);
+			if (derived.length > 0) {
+				await setProjectSummary(saved.id, '', derived);
+				keywords = derived;
+			}
+		} else {
+			// Best-effort, exactly as for an upload: the scan still counts if the LLM
+			// step fails, and the summary can be filled later by a reparse.
+			const result = await summarizeProject(project.profileId, extracted.files).catch(() => null);
+			if (result) {
+				await setProjectSummary(saved.id, result.summary, result.keywords);
+				summary = result.summary || null;
+				keywords = result.keywords.length > 0 ? result.keywords : null;
+			}
 		}
 
 		return json({
 			success: true,
 			unchanged: false,
+			localOnly: meta.isPrivate,
 			document: { ...saved, summary, keywords },
 			sha
 		});

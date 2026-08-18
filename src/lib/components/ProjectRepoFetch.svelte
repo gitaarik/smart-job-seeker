@@ -27,7 +27,7 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
-	import { faCircleNotch, faDownload } from '@fortawesome/free-solid-svg-icons';
+	import { faCircleNotch, faDownload, faListUl } from '@fortawesome/free-solid-svg-icons';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { normalizeSkill } from '$lib/skills';
 
@@ -53,7 +53,8 @@
 		current,
 		currentTechnologies,
 		onApply,
-		onApplyTechnologies
+		onApplyTechnologies,
+		onSetRepoUrl
 	}: {
 		kind: 'side_project' | 'work_experience_project';
 		projectId: number;
@@ -65,6 +66,8 @@
 		currentTechnologies: string[];
 		onApply: (values: Partial<Record<Field, string>>) => void;
 		onApplyTechnologies: (names: string[]) => void;
+		/** Lets the repo picker fill the URL field. Omitted = no picker. */
+		onSetRepoUrl?: (url: string) => void;
 	} = $props();
 
 	let loading = $state(false);
@@ -79,6 +82,43 @@
 	let applied = $state(false);
 
 	let canFetch = $derived(repoUrl.trim().length > 0 && !loading);
+
+	interface GrantedRepo {
+		fullName: string;
+		owner: string;
+		isPrivate: boolean;
+	}
+
+	// The GitHub App, if this server has one. `available: false` means it was
+	// never registered, in which case none of this renders and public repos keep
+	// working exactly as before.
+	let appAvailable = $state(false);
+	let connected = $state(false);
+	let grantedRepos = $state<GrantedRepo[]>([]);
+	let pickerOpen = $state(false);
+
+	$effect(() => {
+		void loadGrants();
+	});
+
+	async function loadGrants() {
+		try {
+			const response = await fetch('/api/github/repos');
+			if (!response.ok) return;
+			const body = await response.json();
+			appAvailable = body.available === true;
+			connected = body.connected === true;
+			grantedRepos = (body.repos ?? []) as GrantedRepo[];
+		} catch {
+			// A missing endpoint or an offline moment is not worth a message here:
+			// the URL field still works, which is the whole feature.
+		}
+	}
+
+	function pick(repo: GrantedRepo) {
+		onSetRepoUrl?.(`https://github.com/${repo.fullName}`);
+		pickerOpen = false;
+	}
 	let selectedCount = $derived(selected.size + selectedTech.size);
 
 	async function fetchMetadata() {
@@ -152,6 +192,18 @@
 		applied = true;
 	}
 
+	/**
+	 * Leave for GitHub's install screen.
+	 *
+	 * A full navigation rather than an `<a>`: the endpoint immediately 302s to
+	 * github.com, so there is no in-app route for the router to resolve, and
+	 * `return_to` carries where to come back to.
+	 */
+	function startInstall() {
+		const returnTo = encodeURIComponent(window.location.pathname);
+		window.location.href = `/api/github/app/install?return_to=${returnTo}`;
+	}
+
 	function overwrites(proposal: Proposal): string | null {
 		const existing = current[proposal.field]?.trim();
 		if (!existing || existing === proposal.value) return null;
@@ -173,6 +225,27 @@
 			/>
 			{loading ? 'Fetching…' : 'Fetch from GitHub'}
 		</button>
+		{#if appAvailable && onSetRepoUrl}
+			{#if connected && grantedRepos.length > 0}
+				<button
+					type="button"
+					onclick={() => (pickerOpen = !pickerOpen)}
+					class="inline-flex items-center gap-2 rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm font-medium text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
+				>
+					<FontAwesomeIcon icon={faListUl} class="h-4 w-4" />
+					Pick a repo
+				</button>
+			{:else}
+				<button
+					type="button"
+					onclick={startInstall}
+					class="inline-flex items-center gap-2 rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm font-medium text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
+				>
+					<FontAwesomeIcon icon={faGithub} class="h-4 w-4" />
+					Connect GitHub
+				</button>
+			{/if}
+		{/if}
 		<span class="text-sm text-[var(--dash-text-secondary)]">
 			{#if !repoUrl.trim()}
 				Add a repo URL to fill these fields from GitHub.
@@ -182,6 +255,46 @@
 			{/if}
 		</span>
 	</div>
+
+	{#if appAvailable && !connected && onSetRepoUrl}
+		<p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
+			Private repos need a connection. On GitHub's screen choose
+			<span class="font-medium text-[var(--dash-text)]">“Only select repositories”</span> — it defaults
+			to all of them, and we only ever need the one.
+		</p>
+	{/if}
+
+	{#if pickerOpen && grantedRepos.length > 0}
+		<div class="mt-3 rounded-md border border-[var(--dash-border)] p-2">
+			<ul class="max-h-56 space-y-1 overflow-y-auto">
+				{#each grantedRepos as repo (repo.fullName)}
+					<li>
+						<button
+							type="button"
+							onclick={() => pick(repo)}
+							class="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-[var(--dash-bg)]"
+						>
+							<span class="text-[var(--dash-text)]">{repo.fullName}</span>
+							{#if repo.isPrivate}
+								<span
+									class="rounded-full border border-[var(--dash-border)] px-2 text-xs text-[var(--dash-text-secondary)]"
+								>
+									private
+								</span>
+							{/if}
+						</button>
+					</li>
+				{/each}
+			</ul>
+			<button
+				type="button"
+				onclick={startInstall}
+				class="mt-1 block px-2 text-xs text-[var(--dash-text-secondary)] hover:underline"
+			>
+				Grant access to more repos…
+			</button>
+		</div>
+	{/if}
 
 	{#if error}
 		<p class="mt-3 text-sm text-red-500">{error}</p>

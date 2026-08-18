@@ -42,6 +42,8 @@ export interface RepoMetadata extends RepoRef {
 	/** Last push. Only meaningful as an END date once the repo is archived. */
 	pushedAt: string;
 	archived: boolean;
+	/** Drives `source.visibility`, and with it how the corpus may be handled. */
+	isPrivate: boolean;
 	/** Branch a zipball is taken from when no ref is given. */
 	defaultBranch: string;
 	/** Dominant language, and the topics the owner declared. Not applied in
@@ -107,14 +109,21 @@ function normalizeRef(owner: string, repo: string): RepoRef | null {
  * repos) to get 5,000/hour. The rate-limit path is reported as its own message
  * because "try again" is the right advice for it and wrong for a 404.
  */
-function githubHeaders(accept: string): Record<string, string> {
+/**
+ * `token` is a per-user installation token when the caller has one; it is what
+ * makes a private repository reachable at all. Without it we fall back to the
+ * server-wide token, which only ever sees public repositories and exists purely
+ * to widen the rate limit.
+ */
+function githubHeaders(accept: string, token?: string): Record<string, string> {
 	const headers: Record<string, string> = {
 		Accept: accept,
 		'X-GitHub-Api-Version': '2022-11-28',
 		// GitHub rejects unidentified clients on some paths.
 		'User-Agent': 'smart-job-seeker'
 	};
-	if (config.githubToken) headers.Authorization = `Bearer ${config.githubToken}`;
+	const auth = token || config.githubToken;
+	if (auth) headers.Authorization = `Bearer ${auth}`;
 	return headers;
 }
 
@@ -127,8 +136,11 @@ function githubHeaders(accept: string): Record<string, string> {
 function assertGitHubOk(response: Response, ref: RepoRef): void {
 	if (response.ok) return;
 	if (response.status === 404) {
+		// A private repo we have no installation for is indistinguishable from one
+		// that does not exist — GitHub 404s both, deliberately, so that a token
+		// cannot be used to probe for the existence of private repositories.
 		throw new GitHubFetchError(
-			`No public repository at ${ref.owner}/${ref.repo}. Private repositories are not supported yet — upload a ZIP instead.`,
+			`No repository we can read at ${ref.owner}/${ref.repo}. If it is private, connect GitHub and grant access to it.`,
 			404
 		);
 	}
@@ -147,9 +159,10 @@ function assertGitHubOk(response: Response, ref: RepoRef): void {
 async function githubRequest(
 	path: string,
 	ref: RepoRef,
-	signal?: AbortSignal
+	signal?: AbortSignal,
+	token?: string
 ): Promise<Record<string, unknown>> {
-	const headers = githubHeaders('application/vnd.github+json');
+	const headers = githubHeaders('application/vnd.github+json', token);
 
 	let response: Response;
 	try {
@@ -164,8 +177,12 @@ async function githubRequest(
 }
 
 /** Fetch public repository metadata. */
-export async function fetchRepoMetadata(ref: RepoRef, signal?: AbortSignal): Promise<RepoMetadata> {
-	const body = await githubRequest(`/repos/${ref.owner}/${ref.repo}`, ref, signal);
+export async function fetchRepoMetadata(
+	ref: RepoRef,
+	signal?: AbortSignal,
+	token?: string
+): Promise<RepoMetadata> {
+	const body = await githubRequest(`/repos/${ref.owner}/${ref.repo}`, ref, signal, token);
 	return {
 		owner: ref.owner,
 		repo: ref.repo,
@@ -180,6 +197,7 @@ export async function fetchRepoMetadata(ref: RepoRef, signal?: AbortSignal): Pro
 		createdAt: typeof body.created_at === 'string' ? body.created_at : '',
 		pushedAt: typeof body.pushed_at === 'string' ? body.pushed_at : '',
 		archived: body.archived === true,
+		isPrivate: body.private === true,
 		defaultBranch: typeof body.default_branch === 'string' ? body.default_branch : 'HEAD',
 		language: typeof body.language === 'string' ? body.language : null,
 		topics: Array.isArray(body.topics) ? body.topics.filter((t) => typeof t === 'string') : []
@@ -196,9 +214,10 @@ export async function fetchRepoMetadata(ref: RepoRef, signal?: AbortSignal): Pro
  */
 export async function fetchRepoLanguages(
 	ref: RepoRef,
-	signal?: AbortSignal
+	signal?: AbortSignal,
+	token?: string
 ): Promise<Record<string, number>> {
-	const body = await githubRequest(`/repos/${ref.owner}/${ref.repo}/languages`, ref, signal);
+	const body = await githubRequest(`/repos/${ref.owner}/${ref.repo}/languages`, ref, signal, token);
 	const languages: Record<string, number> = {};
 	for (const [name, bytes] of Object.entries(body)) {
 		if (typeof bytes === 'number' && bytes > 0) languages[name] = bytes;
@@ -216,12 +235,14 @@ export async function fetchRepoLanguages(
 export async function fetchRepoHeadSha(
 	ref: RepoRef,
 	gitRef: string,
-	signal?: AbortSignal
+	signal?: AbortSignal,
+	token?: string
 ): Promise<string> {
 	const body = await githubRequest(
 		`/repos/${ref.owner}/${ref.repo}/commits/${encodeURIComponent(gitRef)}`,
 		ref,
-		signal
+		signal,
+		token
 	);
 	if (typeof body.sha !== 'string' || !body.sha) {
 		throw new GitHubFetchError('GitHub did not report a commit for that branch.', 502);
@@ -248,13 +269,17 @@ export const MAX_ARCHIVE_BYTES = 100 * 1024 * 1024;
 export async function fetchRepoArchive(
 	ref: RepoRef,
 	gitRef: string,
-	signal?: AbortSignal
+	signal?: AbortSignal,
+	token?: string
 ): Promise<Uint8Array> {
 	const url = `https://api.github.com/repos/${ref.owner}/${ref.repo}/zipball/${encodeURIComponent(gitRef)}`;
 	let response: Response;
 	try {
 		// Redirects to codeload; fetch follows it by default.
-		response = await fetch(url, { headers: githubHeaders('application/vnd.github+json'), signal });
+		response = await fetch(url, {
+			headers: githubHeaders('application/vnd.github+json', token),
+			signal
+		});
 	} catch (err) {
 		throw new GitHubFetchError(`Could not reach GitHub: ${(err as Error).message}`, 502);
 	}

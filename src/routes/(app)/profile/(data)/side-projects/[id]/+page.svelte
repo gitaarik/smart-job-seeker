@@ -462,6 +462,7 @@
 			currentTechnologies={editTechnologies}
 			onApply={applyRepoMetadata}
 			onApplyTechnologies={applyRepoTechnologies}
+			onSetRepoUrl={(v) => (editRepoUrl = v)}
 		/>
 		<ProjectSuggestions
 			kind="side_project"

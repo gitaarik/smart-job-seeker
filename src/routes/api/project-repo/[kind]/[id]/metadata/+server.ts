@@ -30,6 +30,7 @@ import {
 	proposalsFor,
 	technologyProposalsFor
 } from '$lib/server/github/repo-metadata';
+import { tokenForRepo } from '$lib/server/github/app-auth';
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);
@@ -57,19 +58,29 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 	try {
 		const signal = AbortSignal.timeout(10_000);
+		// Null when no installation covers this owner — correct for a public repo,
+		// and the reason a private one 404s with "connect GitHub" rather than
+		// silently appearing not to exist.
+		const token = await tokenForRepo(user.id, ref.owner, Date.now());
 		// Two calls, one round trip: the repo payload has no per-language breakdown
 		// and `/languages` has nothing else. Both share the rate-limit budget, so
 		// they go together rather than on separate button presses.
 		const [meta, languages] = await Promise.all([
-			fetchRepoMetadata(ref, signal),
-			fetchRepoLanguages(ref, signal)
+			fetchRepoMetadata(ref, signal, token ?? undefined),
+			fetchRepoLanguages(ref, signal, token ?? undefined)
 		]);
 		const proposals = proposalsFor(meta).flatMap((proposal) => {
 			const mapped = mapProposal(kind, proposal);
 			return mapped ? [mapped] : [];
 		});
 		return json({
-			repo: { owner: meta.owner, repo: meta.repo, url: meta.htmlUrl, archived: meta.archived },
+			repo: {
+				owner: meta.owner,
+				repo: meta.repo,
+				url: meta.htmlUrl,
+				archived: meta.archived,
+				isPrivate: meta.isPrivate
+			},
 			proposals,
 			technologies: technologyProposalsFor(meta, languages)
 		});

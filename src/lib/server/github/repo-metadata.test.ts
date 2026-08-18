@@ -162,6 +162,7 @@ const meta = (overrides: Partial<RepoMetadata> = {}): RepoMetadata => ({
 	createdAt: '2026-01-15T10:00:00Z',
 	pushedAt: '2026-08-14T09:30:00Z',
 	archived: false,
+	isPrivate: false,
 	defaultBranch: 'main',
 	language: 'TypeScript',
 	topics: [],

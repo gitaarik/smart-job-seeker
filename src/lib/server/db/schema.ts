@@ -849,6 +849,47 @@ export const search_task_runs = pgTable(
  * Password and security_answer are stored as dotenvx-style ciphertext;
  * see lib/server/auth/crypto.ts.
  */
+/**
+ * One GitHub App installation a user has granted us.
+ *
+ * The row holds an installation *id*, not a credential: on its own it opens
+ * nothing. Access tokens are minted on demand from the app private key, live an
+ * hour, and are never stored. Revocation happens on GitHub's side — the user
+ * uninstalls the app and the id simply stops working, so there is nothing here
+ * that has to be cleaned up for access to end.
+ *
+ * One row per (user, installation) because a person can install on their
+ * personal account and on an org separately, and a repo is reachable through
+ * whichever installation covers it.
+ */
+export const github_app_installations = pgTable(
+	'github_app_installations',
+	{
+		id: serial().primaryKey().notNull(),
+		user_id: text().notNull(),
+		/** GitHub's installation id. Not secret. */
+		installation_id: integer().notNull(),
+		/** The account the app was installed on — a user or an org login. */
+		account_login: varchar({ length: 255 }),
+		account_type: varchar({ length: 32 }),
+		date_created: timestamp({ withTimezone: true, mode: 'date' }).defaultNow(),
+		date_updated: timestamp({ withTimezone: true, mode: 'date' }).defaultNow()
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.user_id],
+			foreignColumns: [users.id],
+			name: 'github_app_installations_user_fkey'
+		}).onDelete('cascade'),
+		// Re-installing, or completing the callback twice, must update rather than
+		// duplicate — the pair is the identity.
+		uniqueIndex('github_app_installations_user_installation_unique').on(
+			table.user_id,
+			table.installation_id
+		)
+	]
+);
+
 export const platform_credentials = pgTable(
 	'platform_credentials',
 	{

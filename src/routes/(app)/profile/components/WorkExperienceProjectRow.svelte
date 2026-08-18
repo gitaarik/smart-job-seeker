@@ -263,6 +263,10 @@
 							row.field.flush();
 						}}
 						onApplyTechnologies={(names: string[]) => technologiesRef?.addTechnologies(names)}
+						onSetRepoUrl={(v: string) => {
+							set({ repo_url: v });
+							row.field.flush();
+						}}
 					/>
 					<ProjectDocuments
 						{profileId}
