@@ -254,3 +254,51 @@ export async function listAccessibleRepos(
 		(a, b) => Number(b.isPrivate) - Number(a.isPrivate) || a.fullName.localeCompare(b.fullName)
 	);
 }
+
+/**
+ * Exchange the `code` GitHub sends to the install callback for a user-to-server
+ * token.
+ *
+ * This is the only thing that ties an installation to a *person*. The app JWT
+ * proves we are the app and can read any installation of it, which is precisely
+ * why it cannot be used to decide whose installation this is.
+ */
+export async function exchangeUserCode(code: string): Promise<string | null> {
+	if (!config.githubAppClientId || !config.githubAppClientSecret) return null;
+
+	const response = await fetch('https://github.com/login/oauth/access_token', {
+		method: 'POST',
+		headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			client_id: config.githubAppClientId,
+			client_secret: config.githubAppClientSecret,
+			code
+		})
+	});
+	if (!response.ok) return null;
+	const body = (await response.json()) as { access_token?: string };
+	return body.access_token ?? null;
+}
+
+/**
+ * The installations that GitHub user can actually reach.
+ *
+ * `GET /user/installations` is scoped to the token's own user, so an id absent
+ * from this list is one they do not control — which is the whole check.
+ */
+export async function userInstallationIds(userToken: string): Promise<number[]> {
+	const response = await fetch('https://api.github.com/user/installations?per_page=100', {
+		headers: {
+			Accept: 'application/vnd.github+json',
+			'X-GitHub-Api-Version': '2022-11-28',
+			'User-Agent': 'smart-job-seeker',
+			Authorization: `Bearer ${userToken}`
+		}
+	});
+	if (!response.ok) return [];
+	const body = (await response.json()) as { installations?: unknown };
+	if (!Array.isArray(body.installations)) return [];
+	return body.installations
+		.map((raw) => (raw as { id?: unknown }).id)
+		.filter((id): id is number => typeof id === 'number');
+}

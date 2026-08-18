@@ -10,12 +10,26 @@ const { privateKey, publicKey } = generateKeyPairSync('rsa', {
 });
 
 const h = vi.hoisted(() => ({
-	config: { githubAppId: '', githubAppSlug: '', githubAppPrivateKey: '', githubToken: '' }
+	config: {
+		githubAppId: '',
+		githubAppSlug: '',
+		githubAppPrivateKey: '',
+		githubToken: '',
+		githubAppClientId: '',
+		githubAppClientSecret: ''
+	}
 }));
 vi.mock('$lib/server/config', () => ({ config: h.config }));
 vi.mock('$lib/server/db', () => ({ dbDirect: {} }));
 
-import { appInstallUrl, createAppJwt, installationToken, isGitHubAppConfigured } from './app-auth';
+import {
+	appInstallUrl,
+	createAppJwt,
+	exchangeUserCode,
+	installationToken,
+	isGitHubAppConfigured,
+	userInstallationIds
+} from './app-auth';
 
 const NOW_S = 1_760_000_000;
 
@@ -23,6 +37,8 @@ beforeEach(() => {
 	h.config.githubAppId = '12345';
 	h.config.githubAppSlug = 'smart-job-seeker';
 	h.config.githubAppPrivateKey = Buffer.from(privateKey).toString('base64');
+	h.config.githubAppClientId = 'Iv1.abc';
+	h.config.githubAppClientSecret = 'shhh';
 });
 afterEach(() => vi.unstubAllGlobals());
 
@@ -117,5 +133,59 @@ describe('installationToken', () => {
 		vi.stubGlobal('fetch', fetchMock);
 		expect(await installationToken(44, NOW_MS)).toBeNull();
 		expect(fetchMock).not.toHaveBeenCalled();
+	});
+});
+
+describe('proving who an installation belongs to', () => {
+	// The app JWT can read every installation of the app, so it can only say an
+	// installation EXISTS. Binding one to a person needs a user-to-server token,
+	// and these two functions are that check. Without it, a signed-in attacker
+	// could replay a valid state with someone else's (enumerable) installation
+	// id and have it stored against their own account.
+
+	it('will not exchange a code without client credentials', async () => {
+		h.config.githubAppClientSecret = '';
+		const fetchMock = vi.fn();
+		vi.stubGlobal('fetch', fetchMock);
+		expect(await exchangeUserCode('abc')).toBeNull();
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
+	it('posts the code and returns the user token', async () => {
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValue({ ok: true, json: async () => ({ access_token: 'ghu_x' }) });
+		vi.stubGlobal('fetch', fetchMock);
+		expect(await exchangeUserCode('abc')).toBe('ghu_x');
+		const [url, init] = fetchMock.mock.calls[0];
+		expect(url).toBe('https://github.com/login/oauth/access_token');
+		expect(JSON.parse(init.body)).toMatchObject({ client_id: 'Iv1.abc', code: 'abc' });
+	});
+
+	it('returns null when GitHub rejects the code', async () => {
+		vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 401 }));
+		expect(await exchangeUserCode('abc')).toBeNull();
+		// A 200 with no token — GitHub's shape for a used or expired code.
+		vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+		expect(await exchangeUserCode('abc')).toBeNull();
+	});
+
+	it('lists only the ids the user can reach', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn().mockResolvedValue({
+				ok: true,
+				json: async () => ({ installations: [{ id: 7 }, { id: 9 }, { id: 'x' }, {}] })
+			})
+		);
+		expect(await userInstallationIds('ghu_x')).toEqual([7, 9]);
+	});
+
+	it('returns an EMPTY list on any failure, so the caller denies', async () => {
+		// Fail closed: an error here must not read as "no restrictions".
+		vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }));
+		expect(await userInstallationIds('ghu_x')).toEqual([]);
+		vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) }));
+		expect(await userInstallationIds('ghu_x')).toEqual([]);
 	});
 });

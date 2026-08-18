@@ -44,6 +44,16 @@ export interface AppConfig {
 	 * release-signing keys, which live there and are consumed from env.
 	 */
 	githubAppPrivateKey: string;
+	/**
+	 * OAuth client credentials for the SAME app.
+	 *
+	 * Required, not optional: the install callback has to prove the browser
+	 * controls the GitHub account the installation belongs to, and the only way
+	 * to do that is a user-to-server token. Without these the callback fails
+	 * closed. See the install-hijacking note in the callback route.
+	 */
+	githubAppClientId: string;
+	githubAppClientSecret: string;
 
 	// Browser
 	chromePath: string;
@@ -225,6 +235,8 @@ function loadConfig(): AppConfig {
 		githubAppId: getEnv('SJS_GITHUB_APP_ID', ''),
 		githubAppSlug: getEnv('SJS_GITHUB_APP_SLUG', ''),
 		githubAppPrivateKey: getEnv('SJS_GITHUB_APP_PRIVATE_KEY', ''),
+		githubAppClientId: getEnv('SJS_GITHUB_APP_CLIENT_ID', ''),
+		githubAppClientSecret: getEnv('SJS_GITHUB_APP_CLIENT_SECRET', ''),
 
 		// Browser
 		chromePath: getEnv('SJS_CHROME_PATH', ''),
