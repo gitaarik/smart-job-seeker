@@ -241,8 +241,12 @@ function loadConfig(): AppConfig {
 		// Browser
 		chromePath: getEnv('SJS_CHROME_PATH', ''),
 
-		// Internal rendering (for server-side PDF generation)
-		internalRenderSecret: getEnv('SJS_INTERNAL_RENDER_SECRET', 'dev-internal-render-secret'),
+		// Internal rendering (for server-side PDF generation). No default: an
+		// unset value fails closed — the hooks bypass that trusts this secret is
+		// disabled unless it is set to a real value. The former default
+		// ('dev-internal-render-secret') was public in the oss repo and thus a
+		// live auth bypass on every environment that never overrode it.
+		internalRenderSecret: getEnv('SJS_INTERNAL_RENDER_SECRET', ''),
 
 		// LLM (for TypeScript/SvelteKit app)
 		llmProvider: llmProvider as 'groq' | 'gemini' | 'openai' | 'deepseek' | 'cerebras',

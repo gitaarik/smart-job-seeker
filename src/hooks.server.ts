@@ -74,10 +74,20 @@ function getThemeFromRequest(request: Request): string {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
-	// Internal rendering bypass (for server-side PDF generation)
+	// Internal rendering bypass (for server-side PDF generation).
+	//
+	// This header authenticates the request as an arbitrary user, so it is
+	// fail-closed: honoured ONLY when SJS_INTERNAL_RENDER_SECRET is configured
+	// to a real value. An unset secret (`''`) or the burned public placeholder
+	// disables the bypass entirely — the header then does nothing. The legit
+	// caller (profile/page-fit.ts, generate-version-pdfs.ts) reaches the app on
+	// loopback and never traverses the public edge, which additionally strips
+	// these headers from inbound requests (see caddy/sites/{dev,preview,prod}).
+	const renderSecret = config.internalRenderSecret;
+	const bypassEnabled = renderSecret !== '' && renderSecret !== 'dev-internal-render-secret';
 	const internalSecret = event.request.headers.get('x-internal-render-secret');
 	const internalUserId = event.request.headers.get('x-internal-user-id');
-	if (internalSecret && internalUserId && internalSecret === config.internalRenderSecret) {
+	if (bypassEnabled && internalSecret && internalUserId && internalSecret === renderSecret) {
 		event.locals.user = { id: internalUserId } as User;
 		event.locals.session = null;
 		return await resolve(event);
