@@ -413,7 +413,13 @@
 						     deleted library version on purpose, but a link to one is a 404. -->
 						{#if app.cv_version_sent && profileSlug && data.cvVersionExists}
 							<a
-								href={profileDocUrl({ profileSlug, docType: dt, versionSlug: app.cv_version_sent })}
+								href={profileDocUrl({
+									profileSlug,
+									docType: dt,
+									versionSlug: app.cv_version_sent,
+									template: app.cv_template_sent,
+									locale: app.cv_locale_sent
+								})}
 								target="_blank"
 								rel="noopener"
 								class="text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"

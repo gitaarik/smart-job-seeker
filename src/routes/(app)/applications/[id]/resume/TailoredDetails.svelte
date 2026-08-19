@@ -42,6 +42,8 @@
 		profileSlug,
 		recordedHere,
 		profileMovedOn = false,
+		template = null,
+		locale = null,
 		lastRun = null
 	}: {
 		tailored: { slug: string; name: string; baseSlug?: string | null };
@@ -66,6 +68,17 @@
 		 * the button that fixes it is one line below.
 		 */
 		profileMovedOn?: boolean;
+		/**
+		 * How this application's document is presented — the template it renders
+		 * in and the language it is written in, both in storage form (null is the
+		 * built-in template / base English).
+		 *
+		 * Read off the application rather than chosen here: the PDF that exists on
+		 * disk for this version was rendered in that pair, so linking any other
+		 * one links a document nobody made.
+		 */
+		template?: string | null;
+		locale?: string | null;
 		/**
 		 * The run that just finished, when one did. Shown only here, at the moment
 		 * it can still be acted on: the decisions are stored and read the same
@@ -141,7 +154,13 @@
 					     runtime, which resolve() cannot express. -->
 					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
-						href={profileDocUrl({ profileSlug, docType, versionSlug: tailored.slug })}
+						href={profileDocUrl({
+							profileSlug,
+							docType,
+							versionSlug: tailored.slug,
+							template,
+							locale
+						})}
 						target="_blank"
 						rel="noopener"
 						class="dash-link-ext"
@@ -150,7 +169,14 @@
 						Open
 					</a>
 					<a
-						href={profileDocUrl({ profileSlug, docType, versionSlug: tailored.slug, pdf: true })}
+						href={profileDocUrl({
+							profileSlug,
+							docType,
+							versionSlug: tailored.slug,
+							pdf: true,
+							template,
+							locale
+						})}
 						target="_blank"
 						rel="noopener"
 						class="dash-link-ext"

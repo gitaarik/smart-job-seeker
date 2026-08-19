@@ -25,7 +25,7 @@
 	import TailoredDetails from './TailoredDetails.svelte';
 	import type { Decision, LastRun } from './types';
 	import type { ItemGroup } from '$lib/tailoring';
-	import { profileDocUrl, type DocType } from '$lib/utils/profile-doc-url';
+	import { exportKey, profileDocUrl, type DocType } from '$lib/utils/profile-doc-url';
 	import {
 		hiddenSkillsKey,
 		recommendBase,
@@ -34,6 +34,8 @@
 		type VersionCoverage
 	} from '$lib/version-coverage';
 	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
+	import { DEFAULT_TEMPLATE_ID } from '$lib/resume-templates';
+	import { BASE_LOCALE } from '$lib/resume-translations';
 
 	/**
 	 * The document going out for this job — built for it, checked, and recorded.
@@ -78,11 +80,18 @@
 		defaultBase,
 		profileSlug,
 		hasJob,
+		templates = [],
+		availableLocales = [],
+		pdfKeys = [],
 		lastRun = null
 	}: {
 		app: {
 			cv_sent_through: string | null;
 			cv_version_sent: string | null;
+			/** Template it goes out in; null is the built-in one. */
+			cv_template_sent?: string | null;
+			/** Language it goes out in; null is the base English. */
+			cv_locale_sent?: string | null;
 		};
 		/** The applicant's own library of versions. */
 		versions: { slug: string; name: string }[];
@@ -129,6 +138,12 @@
 		defaultBase: { resume: string; cv: string } | undefined;
 		profileSlug: string | undefined;
 		hasJob: boolean;
+		/** This profile's own presentation templates; empty for most profiles. */
+		templates?: { slug: string; name: string }[];
+		/** English plus every language this profile has translated into. */
+		availableLocales?: { code: string; label: string; nativeLabel: string }[];
+		/** Which (type, version, template, language) combinations have a PDF on disk. */
+		pdfKeys?: string[];
 		lastRun?: LastRun | null;
 	} = $props();
 
@@ -187,6 +202,64 @@
 	let versionSlug = $state<string>(initialVersionSlug());
 	/** Whether the picker has been touched this visit — see `describing`. */
 	let touched = $state(false);
+
+	/**
+	 * Which template and which language the document goes out in.
+	 *
+	 * Recorded, not lensed. The library page carries both in the URL and lets
+	 * them die with the visit, which is right for browsing a list; here they are
+	 * two more facts about ONE artifact, alongside its type and its version. A
+	 * Dutch employer sent the branded Dutch CV was not sent the same document as
+	 * the same version in Standard English, and a record that cannot say which
+	 * cannot answer "what did I send them" three weeks later.
+	 *
+	 * Both carry their UI form here — `'default'` and `'en'` rather than null —
+	 * because that is what a `<select>` can hold. The server normalises.
+	 */
+	let templateSlug = $state<string>(app.cv_template_sent || DEFAULT_TEMPLATE_ID);
+	let localeCode = $state<string>(app.cv_locale_sent || BASE_LOCALE);
+	/** Nothing to ask a profile with one template and one language — most of them. */
+	let offersTemplate = $derived(templates.length > 0);
+	let offersLocale = $derived(availableLocales.length > 1);
+	let offersPresentation = $derived(offersTemplate || offersLocale);
+
+	/** What the record says it went out as, named — blank for the defaults. */
+	let sentTemplateName = $derived(
+		app.cv_template_sent
+			? (templates.find((t) => t.slug === app.cv_template_sent)?.name ?? app.cv_template_sent)
+			: ''
+	);
+	let sentLocaleName = $derived(
+		app.cv_locale_sent
+			? (availableLocales.find((l) => l.code === app.cv_locale_sent)?.nativeLabel ??
+					app.cv_locale_sent)
+			: ''
+	);
+
+	/**
+	 * Whether a PDF exists for what is recorded, and for what the picker is on.
+	 *
+	 * A stored export is keyed by version AND template AND language and the
+	 * `.pdf` route renders nothing on demand, so this is a real question with a
+	 * different answer per combination — and the difference between a link and a
+	 * 404. The library answers it with an amber "Generate" button; here the save
+	 * renders what it just recorded, and this is what tells the applicant it is
+	 * about to, or that an earlier render never landed.
+	 */
+	let recordedHasPdf = $derived(
+		!!app.cv_version_sent &&
+			pdfKeys.includes(
+				exportKey(
+					app.cv_sent_through ?? 'resume',
+					app.cv_version_sent,
+					app.cv_template_sent,
+					app.cv_locale_sent
+				)
+			)
+	);
+	let pickedHasPdf = $derived(
+		!versionSlug || pdfKeys.includes(exportKey(docType, versionSlug, templateSlug, localeCode))
+	);
 
 	/**
 	 * The picker stands in for the tailor button whenever tailoring isn't the
@@ -395,7 +468,13 @@
 	 */
 	function previewUrl(slug: string): string | null {
 		if (!profileSlug || !slug) return null;
-		return profileDocUrl({ profileSlug, docType, versionSlug: slug });
+		return profileDocUrl({
+			profileSlug,
+			docType,
+			versionSlug: slug,
+			template: templateSlug,
+			locale: localeCode
+		});
 	}
 
 	let lifting = $state<number | null>(null);
@@ -440,6 +519,8 @@
 		return async ({ update }: { update: () => Promise<void> }) => {
 			await update();
 			versionSlug = '';
+			templateSlug = DEFAULT_TEMPLATE_ID;
+			localeCode = BASE_LOCALE;
 			touched = false;
 			picking = false;
 			lifted = [];
@@ -455,6 +536,7 @@
 	}
 
 	function handleCvSubmit() {
+		saving = true;
 		return async ({
 			result,
 			update
@@ -463,6 +545,7 @@
 			update: () => Promise<void>;
 		}) => {
 			await update();
+			saving = false;
 			if (result.type === 'success') {
 				picking = false;
 				cvSaved = true;
@@ -473,12 +556,72 @@
 		};
 	}
 
+	/**
+	 * Saving can include rendering a PDF, which takes seconds rather than
+	 * milliseconds — see `pickedHasPdf`. Separate from `working` because that one
+	 * gates the destructive buttons in the record row, which this must not.
+	 */
+	let saving = $state(false);
+	/** Rendering a PDF for what is already recorded, from the repair button. */
+	let makingPdf = $state(false);
+
 	function cancelPicking() {
 		versionSlug = app.cv_version_sent || '';
 		docType = app.cv_sent_through === 'cv' ? 'cv' : 'resume';
+		templateSlug = app.cv_template_sent || DEFAULT_TEMPLATE_ID;
+		localeCode = app.cv_locale_sent || BASE_LOCALE;
 		picking = false;
 	}
 </script>
+
+<!--
+	Template and language, wherever the document is being decided.
+
+	Rendered inside whichever form is asking — the tailor run or the library
+	picker — so the same click that records a version records what it looks like
+	and what language it is in. Three selects and one Save, not a lens above a
+	list: the library page's switchers browse a list of documents, this one
+	describes the single document going to this job.
+
+	Absent for a profile with no templates of its own and no translations, which
+	is most of them; the server then records the built-in template and English
+	without ever being asked.
+-->
+{#snippet presentationControls()}
+	{#if offersPresentation}
+		<div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+			{#if offersTemplate}
+				<label class="flex items-center gap-1.5 text-xs text-[var(--dash-text-secondary)]">
+					Template
+					<select
+						name="template"
+						bind:value={templateSlug}
+						class="rounded-md border border-[var(--dash-border)] px-2 py-1 text-xs text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+					>
+						<option value={DEFAULT_TEMPLATE_ID}>Standard</option>
+						{#each templates as t (t.slug)}
+							<option value={t.slug}>{t.name}</option>
+						{/each}
+					</select>
+				</label>
+			{/if}
+			{#if offersLocale}
+				<label class="flex items-center gap-1.5 text-xs text-[var(--dash-text-secondary)]">
+					Language
+					<select
+						name="locale"
+						bind:value={localeCode}
+						class="rounded-md border border-[var(--dash-border)] px-2 py-1 text-xs text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+					>
+						{#each availableLocales as l (l.code)}
+							<option value={l.code}>{l.nativeLabel}</option>
+						{/each}
+					</select>
+				</label>
+			{/if}
+		</div>
+	{/if}
+{/snippet}
 
 <div>
 	<div class="mb-3 flex items-center gap-2">
@@ -503,7 +646,9 @@
 					</p>
 					<p class="truncate text-sm font-medium text-[var(--dash-text)]">
 						{recordedLabel}<span class="font-normal text-[var(--dash-text-secondary)]">
-							· {app.cv_sent_through === 'cv' ? 'CV' : 'Resume'}{choseTailored
+							· {app.cv_sent_through === 'cv' ? 'CV' : 'Resume'}{sentTemplateName
+								? ` · ${sentTemplateName}`
+								: ''}{sentLocaleName ? ` · ${sentLocaleName}` : ''}{choseTailored
 								? ' · tailored for this job'
 								: ''}</span
 						>
@@ -514,7 +659,13 @@
 						{@const dt = app.cv_sent_through as DocType}
 						<!-- eslint-disable svelte/no-navigation-without-resolve -->
 						<a
-							href={profileDocUrl({ profileSlug, docType: dt, versionSlug: app.cv_version_sent })}
+							href={profileDocUrl({
+								profileSlug,
+								docType: dt,
+								versionSlug: app.cv_version_sent,
+								template: app.cv_template_sent,
+								locale: app.cv_locale_sent
+							})}
 							target="_blank"
 							rel="noopener"
 							class="dash-link-ext"
@@ -522,20 +673,53 @@
 							<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3" />
 							Open
 						</a>
-						<a
-							href={profileDocUrl({
-								profileSlug,
-								docType: dt,
-								versionSlug: app.cv_version_sent,
-								pdf: true
-							})}
-							target="_blank"
-							rel="noopener"
-							class="dash-link-ext"
-						>
-							<FontAwesomeIcon icon={faFilePdf} class="h-3 w-3" />
-							PDF
-						</a>
+						{#if recordedHasPdf}
+							<a
+								href={profileDocUrl({
+									profileSlug,
+									docType: dt,
+									versionSlug: app.cv_version_sent,
+									pdf: true,
+									template: app.cv_template_sent,
+									locale: app.cv_locale_sent
+								})}
+								target="_blank"
+								rel="noopener"
+								class="dash-link-ext"
+							>
+								<FontAwesomeIcon icon={faFilePdf} class="h-3 w-3" />
+								PDF
+							</a>
+						{:else}
+							<!-- No stored export for this combination, so a PDF link here
+							     would 404. Saving normally renders one; this is the way back
+							     when that render failed, or when the record predates the
+							     template and language being part of it. -->
+							<form
+								method="POST"
+								action="?/generatePdfs"
+								use:enhance={() => {
+									makingPdf = true;
+									return async ({ update }) => {
+										await update();
+										makingPdf = false;
+									};
+								}}
+							>
+								<button
+									type="submit"
+									disabled={makingPdf}
+									class="dash-link-ext !bg-amber-500/10 !text-amber-600 hover:!bg-amber-500/20 disabled:opacity-70"
+								>
+									<FontAwesomeIcon
+										icon={makingPdf ? faCircleNotch : faFilePdf}
+										spin={makingPdf}
+										class="h-3 w-3"
+									/>
+									{makingPdf ? 'Making the PDF…' : 'Make the PDF'}
+								</button>
+							</form>
+						{/if}
 						<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					{/if}
 					<button
@@ -643,6 +827,7 @@
 						— which achievements, which side projects, and any skill this job requires that your document
 						would otherwise hide. It never rewrites your words.
 					</p>
+					{@render presentationControls()}
 					<button
 						type="submit"
 						disabled={working}
@@ -717,6 +902,7 @@
 				{/if}
 				<form method="POST" action="?/setCvSent" use:enhance={handleCvSubmit}>
 					<input type="hidden" name="cv_sent_through" value={docType} />
+					{@render presentationControls()}
 					<div class="flex flex-col gap-2 sm:flex-row">
 						<select
 							name="version_slug"
@@ -737,12 +923,26 @@
 								</option>
 							{/if}
 						</select>
+						<!-- The label says when the save is also a render. Exports are
+						     keyed by version, template and language together, so a
+						     combination nobody has exported yet has no PDF — and the save
+						     makes one rather than leaving a dead link behind. It takes
+						     seconds, which is worth a word in front of the click. -->
 						<button
 							type="submit"
-							class="flex items-center justify-center gap-2 rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
+							disabled={saving}
+							class="flex items-center justify-center gap-2 rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:opacity-70"
 						>
-							<FontAwesomeIcon icon={faSave} class="h-3.5 w-3.5" />
-							{recorded ? 'Save' : 'Set'}
+							<FontAwesomeIcon
+								icon={saving ? faCircleNotch : faSave}
+								spin={saving}
+								class="h-3.5 w-3.5"
+							/>
+							{#if saving}
+								{pickedHasPdf ? 'Saving…' : 'Making the PDF…'}
+							{:else}
+								{recorded ? 'Save' : 'Set'}{pickedHasPdf ? '' : ' & make the PDF'}
+							{/if}
 						</button>
 						<!-- eslint-disable svelte/no-navigation-without-resolve -->
 						{#if previewUrl(versionSlug)}
@@ -1048,6 +1248,8 @@
 				{lastRun}
 				{profileMovedOn}
 				recordedHere={choseTailored}
+				template={app.cv_template_sent}
+				locale={app.cv_locale_sent}
 			/>
 		{/if}
 

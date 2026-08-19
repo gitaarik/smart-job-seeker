@@ -40,7 +40,22 @@
 				}
 			: null
 	);
+
+	/**
+	 * What the save reported about the PDF it tried to render alongside it. The
+	 * record is the point and is written either way; a failed render is worth a
+	 * line, not a failed save — the Make-the-PDF button on the row is the retry.
+	 */
+	let pdfError = $derived(form && 'pdfError' in form ? (form.pdfError as string | null) : null);
 </script>
+
+{#if pdfError}
+	<p
+		class="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-[var(--dash-text)]"
+	>
+		{pdfError}
+	</p>
+{/if}
 
 <DocumentForJob
 	{app}
@@ -56,6 +71,9 @@
 	outOfReach={data.outOfReach ?? {}}
 	heldBackParents={data.heldBackParents ?? {}}
 	defaultBase={data.defaultBase}
+	templates={data.templates ?? []}
+	availableLocales={data.availableLocales ?? []}
+	pdfKeys={data.pdfKeys ?? []}
 	{profileSlug}
 	{lastRun}
 	hasJob={!!app.job}

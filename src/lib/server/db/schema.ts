@@ -2207,6 +2207,22 @@ export const applications = pgTable(
 		status_action_date: date(),
 		cv_version_sent: varchar({ length: 255 }),
 		/**
+		 * Which presentation template and which language the document went out in.
+		 *
+		 * Part of the record, not a viewing preference. A version says WHAT the
+		 * document contains; these two say what it looked like and what language it
+		 * was written in, and a Dutch employer sent the Dutch CV in the branded
+		 * template was sent a different artifact than the same version in Standard
+		 * English. The profile library treats both as a lens that dies with the
+		 * visit, which is right for browsing and wrong for a record.
+		 *
+		 * Stored in the same shape as `profile_exports.template`/`.locale`: null
+		 * means the built-in template / the base English, so the two line up at
+		 * retrieval time without a mapping layer.
+		 */
+		cv_template_sent: varchar({ length: 255 }),
+		cv_locale_sent: varchar({ length: 16 }),
+		/**
 		 * A digest of everything recorded on this application, for the
 		 * cross-application comparison spine. The spine can afford one line per
 		 * application, not their histories — this is what makes that line say

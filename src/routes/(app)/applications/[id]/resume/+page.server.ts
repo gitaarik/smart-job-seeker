@@ -1,15 +1,22 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
-import { and, asc, eq, isNull, or } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, or } from 'drizzle-orm';
 import {
 	applications,
+	profile_exports,
+	profile_translations,
 	profile_version_extensions,
 	profile_version_overrides,
 	profile_versions,
 	profiles
 } from '$lib/server/db/schema';
 import { getSelectedProfileId } from '../../../profile/utils';
+import { DEFAULT_TEMPLATE_ID, templateForStorage } from '$lib/resume-templates';
+import { getResumeTemplatesForProfile } from '$lib/server/profile/resume-templates';
+import { BASE_LOCALE, isKnownLocale, LOCALES } from '$lib/resume-translations';
+import { getLatestExport } from '$lib/server/profile/export-files';
+import { exportKey } from '$lib/utils/profile-doc-url';
 import { getVersionCoverage } from '$lib/server/profile/hidden-required-skills';
 import {
 	decisionsForVersion,
@@ -26,6 +33,23 @@ import {
 import { isOverrideEntity } from '$lib/version-overrides';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
 
+/** How the document going to this job is presented: which template, which language. */
+interface SentAs {
+	/** Template slug in storage form — null is the built-in default. */
+	template: string | null;
+	/** Locale code — null is the base English. */
+	locale: string | null;
+}
+
+/** What the application records about presentation, in storage form. */
+async function sentAs(profileId: number, appId: number): Promise<SentAs> {
+	const row = await db.query.applications.findFirst({
+		where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+		columns: { cv_template_sent: true, cv_locale_sent: true }
+	});
+	return { template: row?.cv_template_sent ?? null, locale: row?.cv_locale_sent ?? null };
+}
+
 /**
  * Keep the tailored version's PDF in step with its decisions.
  *
@@ -34,12 +58,54 @@ import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
  * page did from the day it was added. Fire-and-forget, like every other caller:
  * a failed render leaves the previous file, and the link is a convenience, not
  * the save path.
+ *
+ * Rendered in the template and language THIS application records, because a
+ * stored export is keyed by both: refreshing the default-template English pair
+ * for an application sending the branded Dutch one leaves the document it
+ * actually links to untouched. Callers that just changed those columns pass the
+ * new values in `as` — reading them back here would race their own update.
  */
-function refreshPdfs(profileId: number, slug: string | null | undefined): void {
+function refreshPdfs(
+	profileId: number,
+	appId: number,
+	slug: string | null | undefined,
+	as?: SentAs
+): void {
 	if (!slug) return;
-	generateVersionPdfs(profileId, slug).catch((err) =>
-		console.error('[tailor-version] PDF refresh failed for', slug, err)
-	);
+	Promise.resolve(as ?? sentAs(profileId, appId))
+		.then(({ template, locale }) => generateVersionPdfs(profileId, slug, template, locale))
+		.catch((err) => console.error('[tailor-version] PDF refresh failed for', slug, err));
+}
+
+/**
+ * Read a template + language choice off a submitted form, in storage form.
+ *
+ * Validated against what this profile actually has: a template slug that isn't
+ * one of its own, or a locale it has no translations for, falls back to the
+ * built-in default rather than being recorded — the record has to name a
+ * document that can be produced.
+ */
+async function readSentAs(profileId: number, formData: FormData): Promise<SentAs> {
+	const rawTemplate = ((formData.get('template') as string) || DEFAULT_TEMPLATE_ID).trim();
+	const templates =
+		rawTemplate && rawTemplate !== DEFAULT_TEMPLATE_ID
+			? await getResumeTemplatesForProfile(profileId)
+			: [];
+	const template = templates.some((t) => t.slug === rawTemplate)
+		? templateForStorage(rawTemplate)
+		: null;
+
+	const rawLocale = ((formData.get('locale') as string) || '').trim();
+	let locale: string | null = null;
+	if (isKnownLocale(rawLocale) && rawLocale !== BASE_LOCALE) {
+		const translated = await db
+			.selectDistinct({ locale: profile_translations.locale })
+			.from(profile_translations)
+			.where(eq(profile_translations.profile_id, profileId));
+		locale = translated.some((r) => r.locale === rawLocale) ? rawLocale : null;
+	}
+
+	return { template, locale };
 }
 
 /**
@@ -54,54 +120,82 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 	const requiredSkills = layoutData.application?.job?.skills_required;
 	const applicationId = parseInt(params.id);
 
-	const [profileVersions, coverage, profile] = await Promise.all([
-		db.query.profile_versions.findMany({
-			// The applicant's library, plus this application's own tailored version
-			// if one exists. Versions belonging to OTHER applications are somebody
-			// else's business and never appear in this picker.
-			where: and(
-				eq(profile_versions.profile_id, layoutData.selectedProfile.id),
-				eq(profile_versions.status, 'published'),
-				isNaN(applicationId)
-					? isNull(profile_versions.application_id)
-					: or(
-							isNull(profile_versions.application_id),
-							eq(profile_versions.application_id, applicationId)
-						)
+	const [profileVersions, coverage, profile, templates, translatedLocaleRows, pdfExports] =
+		await Promise.all([
+			db.query.profile_versions.findMany({
+				// The applicant's library, plus this application's own tailored version
+				// if one exists. Versions belonging to OTHER applications are somebody
+				// else's business and never appear in this picker.
+				where: and(
+					eq(profile_versions.profile_id, layoutData.selectedProfile.id),
+					eq(profile_versions.status, 'published'),
+					isNaN(applicationId)
+						? isNull(profile_versions.application_id)
+						: or(
+								isNull(profile_versions.application_id),
+								eq(profile_versions.application_id, applicationId)
+							)
+				),
+				columns: {
+					id: true,
+					slug: true,
+					name: true,
+					application_id: true,
+					// When a run last decided this document — see `profileMovedOn`.
+					date_updated: true
+				},
+				orderBy: asc(profile_versions.sort)
+			}),
+			// Precomputed for every template x version pair rather than just the saved
+			// one: the type and version pickers are unsaved client state, so the page
+			// must be able to answer for whatever the applicant is currently eyeing.
+			getVersionCoverage(
+				layoutData.selectedProfile.id,
+				Array.isArray(requiredSkills) ? (requiredSkills as string[]) : [],
+				{ applicationId: isNaN(applicationId) ? null : applicationId }
 			),
-			columns: {
-				id: true,
-				slug: true,
-				name: true,
-				application_id: true,
-				// When a run last decided this document — see `profileMovedOn`.
-				date_updated: true
-			},
-			orderBy: asc(profile_versions.sort)
-		}),
-		// Precomputed for every template x version pair rather than just the saved
-		// one: the type and version pickers are unsaved client state, so the page
-		// must be able to answer for whatever the applicant is currently eyeing.
-		getVersionCoverage(
-			layoutData.selectedProfile.id,
-			Array.isArray(requiredSkills) ? (requiredSkills as string[]) : [],
-			{ applicationId: isNaN(applicationId) ? null : applicationId }
-		),
-		// What this profile sends when nobody names a version — the sensible thing
-		// to build a tailored version ON. The plain, version-less document is not:
-		// it discards the applicant's curation, and for a profile with a public
-		// version set it is not even reachable as a document.
-		db.query.profiles.findFirst({
-			where: eq(profiles.id, layoutData.selectedProfile.id),
-			columns: {
-				public_resume_version_id: true,
-				public_cv_version_id: true,
-				// Bumped by touchProfile on every child-record edit — a skill, a
-				// bullet, a project. The cheap half of the staleness question.
-				date_updated: true
-			}
-		})
-	]);
+			// What this profile sends when nobody names a version — the sensible thing
+			// to build a tailored version ON. The plain, version-less document is not:
+			// it discards the applicant's curation, and for a profile with a public
+			// version set it is not even reachable as a document.
+			db.query.profiles.findFirst({
+				where: eq(profiles.id, layoutData.selectedProfile.id),
+				columns: {
+					public_resume_version_id: true,
+					public_cv_version_id: true,
+					// Bumped by touchProfile on every child-record edit — a skill, a
+					// bullet, a project. The cheap half of the staleness question.
+					date_updated: true
+				}
+			}),
+			// How the document can be presented. Both are part of what gets recorded
+			// here rather than a lens over a list, so the card offers them beside the
+			// version — and offers nothing at all to a profile that has neither, which
+			// is most of them.
+			getResumeTemplatesForProfile(layoutData.selectedProfile.id),
+			db
+				.selectDistinct({ locale: profile_translations.locale })
+				.from(profile_translations)
+				.where(eq(profile_translations.profile_id, layoutData.selectedProfile.id)),
+			// Which PDFs actually exist. A stored export is keyed by version AND
+			// template AND language, and nothing renders one on demand, so whether the
+			// PDF link works is a real question with a per-combination answer.
+			db.query.profile_exports.findMany({
+				where: and(
+					eq(profile_exports.profile_id, layoutData.selectedProfile.id),
+					eq(profile_exports.status, 'published'),
+					eq(profile_exports.file_type, 'pdf'),
+					inArray(profile_exports.export_type, ['resume', 'cv'])
+				),
+				columns: {
+					description: true,
+					export_type: true,
+					export_format: true,
+					template: true,
+					locale: true
+				}
+			})
+		]);
 
 	const usable = profileVersions.filter((v) => v.slug && v.name) as {
 		id: number;
@@ -117,6 +211,31 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 	};
 
 	const tailoredRow = usable.find((v) => v.application_id !== null) ?? null;
+
+	// English plus the languages this profile has actually translated into.
+	const translated = new Set(translatedLocaleRows.map((r) => r.locale));
+	const availableLocales = LOCALES.filter((l) => l.code === BASE_LOCALE || translated.has(l.code));
+
+	/**
+	 * Every (document type, version, template, language) combination that has a
+	 * PDF on disk, as flat keys the card can test a selection against.
+	 *
+	 * The version is read off `export_format` (current) or out of the "(slug)"
+	 * in the description (legacy), the same two ways the profile library reads
+	 * it. Combinations nobody has rendered are simply absent, which is the whole
+	 * point: the card can then offer to render one instead of linking a 404.
+	 */
+	const knownSlugs = usable.map((v) => v.slug);
+	const pdfKeys = [
+		...new Set(
+			pdfExports.flatMap((e) => {
+				const slug = knownSlugs.find(
+					(sl) => e.export_format === sl || e.description?.includes(`(${sl})`)
+				);
+				return slug ? [exportKey(e.export_type, slug, e.template, e.locale)] : [];
+			})
+		)
+	];
 
 	// Which library version it currently extends. The regenerate control has to
 	// show the real answer: defaulting it back to the recommendation would
@@ -240,7 +359,10 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		exclusions: reach.exclusions,
 		outOfReach: reach.outOfReach,
 		heldBackParents: reach.heldBackParents,
-		defaultBase
+		defaultBase,
+		templates: templates.map((t) => ({ slug: t.slug, name: t.name })),
+		availableLocales,
+		pdfKeys
 	};
 };
 
@@ -267,6 +389,10 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const docType = (formData.get('doc_type') as string) === 'cv' ? 'cv' : 'resume';
 		const baseSlug = ((formData.get('base_slug') as string) || '').trim();
+		// Presentation travels with the run: the PDF it renders is the one the
+		// card then links, and rendering it in a template the applicant did not
+		// ask for means the first thing they open is the wrong document.
+		const as = await readSentAs(profileId, formData);
 
 		try {
 			const result = await tailorVersionForApplication({
@@ -275,7 +401,7 @@ export const actions: Actions = {
 				docType,
 				baseSlug
 			});
-			refreshPdfs(profileId, result.versionSlug);
+			refreshPdfs(profileId, appId, result.versionSlug, as);
 
 			// Tailoring records itself. Generating a version for one job and then
 			// having to select it from a dropdown to say you were sending it is
@@ -288,6 +414,8 @@ export const actions: Actions = {
 				.set({
 					cv_version_sent: result.versionSlug,
 					cv_sent_through: docType,
+					cv_template_sent: as.template,
+					cv_locale_sent: as.locale,
 					date_updated: new Date()
 				})
 				.where(and(eq(applications.id, appId), eq(applications.profile_id, profileId)));
@@ -336,7 +464,7 @@ export const actions: Actions = {
 					eq(profile_version_overrides.version_id, version.id)
 				)
 			);
-		refreshPdfs(profileId, version.slug);
+		refreshPdfs(profileId, appId, version.slug);
 		return { success: true };
 	},
 
@@ -403,7 +531,7 @@ export const actions: Actions = {
 			const promoted = await promoteToLibrary({ profileId, applicationId: appId, name });
 			// The slug changes here, and exports are keyed by it — without this a
 			// promoted version has no PDF under the name it now goes by.
-			refreshPdfs(profileId, promoted.slug);
+			refreshPdfs(profileId, appId, promoted.slug);
 			return { success: true, promoted };
 		} catch (error) {
 			return fail(400, {
@@ -473,7 +601,7 @@ export const actions: Actions = {
 				}
 			});
 
-		refreshPdfs(profileId, version.slug);
+		refreshPdfs(profileId, appId, version.slug);
 		return { success: true };
 	},
 
@@ -517,7 +645,7 @@ export const actions: Actions = {
 				entityId,
 				on
 			});
-			refreshPdfs(profileId, result.versionSlug);
+			refreshPdfs(profileId, appId, result.versionSlug);
 
 			// A version made by a toggle is still the document going to this job,
 			// and for the same reason a generated one is: nothing else asked for it.
@@ -589,7 +717,13 @@ export const actions: Actions = {
 		if (doomed.slug) {
 			await db
 				.update(applications)
-				.set({ cv_version_sent: null, cv_sent_through: null, date_updated: new Date() })
+				.set({
+					cv_version_sent: null,
+					cv_sent_through: null,
+					cv_template_sent: null,
+					cv_locale_sent: null,
+					date_updated: new Date()
+				})
 				.where(
 					and(
 						eq(applications.id, appId),
@@ -621,7 +755,13 @@ export const actions: Actions = {
 
 		await db
 			.update(applications)
-			.set({ cv_version_sent: null, cv_sent_through: null, date_updated: new Date() })
+			.set({
+				cv_version_sent: null,
+				cv_sent_through: null,
+				cv_template_sent: null,
+				cv_locale_sent: null,
+				date_updated: new Date()
+			})
 			.where(and(eq(applications.id, appId), eq(applications.profile_id, profileId)));
 
 		return { success: true };
@@ -645,16 +785,90 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const versionSlug = (formData.get('version_slug') as string) || null;
 		const cvSentThrough = (formData.get('cv_sent_through') as string) || null;
+		const as = await readSentAs(profileId, formData);
 
 		await db
 			.update(applications)
 			.set({
 				cv_version_sent: versionSlug,
 				cv_sent_through: cvSentThrough,
+				cv_template_sent: as.template,
+				cv_locale_sent: as.locale,
 				date_updated: new Date()
 			})
 			.where(eq(applications.id, appId));
 
-		return { success: true };
+		// Make the record's own PDF link work.
+		//
+		// Exports are keyed by version AND template AND language and nothing
+		// renders one on demand, so picking a template the applicant has never
+		// exported this version in — which is the normal case, since the library
+		// only renders what its own switcher was on — records a document whose PDF
+		// 404s. Rendered here, while the applicant is waiting on a save they just
+		// asked for, rather than left as a chore they have to discover.
+		//
+		// Not charged, unlike the library's Generate button: every other write on
+		// this page already refreshes PDFs for free, and a save that silently cost
+		// a credit because a select moved would be a worse surprise than the
+		// inconsistency.
+		let pdfError: string | null = null;
+		if (versionSlug) {
+			const docType = cvSentThrough === 'cv' ? 'cv' : 'resume';
+			const existing = await getLatestExport({
+				profileId,
+				exportType: docType,
+				fileType: 'pdf',
+				exportFormat: versionSlug,
+				template: as.template,
+				locale: as.locale
+			});
+			if (!existing) {
+				try {
+					await generateVersionPdfs(profileId, versionSlug, as.template, as.locale);
+				} catch (err) {
+					console.error('[tailor-version] PDF render failed for', versionSlug, err);
+					pdfError = "Saved, but the PDF couldn't be rendered. Try again from the PDF button.";
+				}
+			}
+		}
+
+		return { success: true, pdfError };
+	},
+
+	/**
+	 * Render the PDF for what this application records it is sending.
+	 *
+	 * The repair path for the one thing `setCvSent` cannot guarantee: a render
+	 * that failed, or a record made before presentation was part of it. Awaited,
+	 * because the button that calls it says it is making a file.
+	 */
+	generatePdfs: async ({ locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
+
+		const app = await db.query.applications.findFirst({
+			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+			columns: { cv_version_sent: true, cv_template_sent: true, cv_locale_sent: true }
+		});
+		if (!app?.cv_version_sent) return fail(400, { error: 'No version recorded for this job' });
+
+		try {
+			await generateVersionPdfs(
+				profileId,
+				app.cv_version_sent,
+				app.cv_template_sent,
+				app.cv_locale_sent
+			);
+			return { success: true };
+		} catch (err) {
+			console.error('[tailor-version] PDF render failed for', app.cv_version_sent, err);
+			return fail(500, { error: "The PDF couldn't be rendered. Try again in a moment." });
+		}
 	}
 };
