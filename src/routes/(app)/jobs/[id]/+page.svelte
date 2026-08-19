@@ -28,6 +28,8 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons';
 	import { track } from '$lib/tools/analytics';
+	import { renderSafeMarkdown } from '$lib/utils/safe-markdown';
+	import { normalizePostingMarkdown } from '$lib/utils/posting-markdown';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import ScoreBadge from '../components/ScoreBadge.svelte';
 	import AddSkillToProfile from '../components/AddSkillToProfile.svelte';
@@ -721,8 +723,25 @@
 							</div>
 						</form>
 					{:else if job.job_description}
-						<div class="prose prose-sm max-w-none whitespace-pre-wrap text-[var(--dash-text)]">
-							{job.job_description}
+						<!--
+              Two authors, one field: the scraper writes stripped HTML and the
+              assistant writes markdown. Rendered as plain text this showed the
+              assistant's `**headings**` as literal asterisks; rendered as
+              markdown without normalizePostingMarkdown it would show the
+              scraper's indented lists as code blocks. See posting-markdown.ts.
+            -->
+						<div class="posting-md max-w-none text-[var(--dash-text)]">
+							<!--
+              renderSafeMarkdown escapes raw HTML tokens to inert text and
+              allowlists link/image schemes to http(s)/mailto — the same audited
+              sink the four other markdown surfaces use. The input here is
+              scraper output and LLM output; both are untrusted, and neither
+              reaches the DOM as markup.
+            -->
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							{@html renderSafeMarkdown(normalizePostingMarkdown(job.job_description), {
+								breaks: true
+							})}
 						</div>
 					{:else}
 						<p class="text-sm text-[var(--dash-text-muted)]">This job has no description yet.</p>
@@ -807,8 +826,12 @@
 							</div>
 						</form>
 					{:else if job.company_description}
-						<div class="prose prose-sm max-w-none whitespace-pre-wrap text-[var(--dash-text)]">
-							{job.company_description}
+						<div class="posting-md max-w-none text-[var(--dash-text)]">
+							<!-- Same audited sink as the description above. -->
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							{@html renderSafeMarkdown(normalizePostingMarkdown(job.company_description), {
+								breaks: true
+							})}
 						</div>
 					{:else}
 						<p class="text-sm text-[var(--dash-text-muted)]">Nothing about the company yet.</p>
@@ -1260,3 +1283,43 @@
 		deleteFormEl?.requestSubmit();
 	}}
 />
+
+<style>
+	/* Markdown in a job posting. Same shape as AgentChat's .agent-md — the
+	   tree has no typography plugin, so a rendered list has no bullets and a
+	   heading no weight unless said here. */
+	.posting-md :global(p) {
+		margin: 0 0 0.75rem;
+	}
+	.posting-md :global(p:last-child) {
+		margin-bottom: 0;
+	}
+	.posting-md :global(ul),
+	.posting-md :global(ol) {
+		margin: 0.25rem 0 0.75rem;
+		padding-left: 1.25rem;
+		list-style: revert;
+	}
+	.posting-md :global(li) {
+		margin: 0.2rem 0;
+	}
+	.posting-md :global(h1),
+	.posting-md :global(h2),
+	.posting-md :global(h3),
+	.posting-md :global(h4) {
+		margin: 1rem 0 0.4rem;
+		font-weight: 600;
+		font-size: 1em;
+	}
+	.posting-md :global(strong) {
+		font-weight: 600;
+	}
+	.posting-md :global(a) {
+		color: var(--dash-primary);
+		text-decoration: underline;
+	}
+	.posting-md :global(hr) {
+		margin: 1rem 0;
+		border-color: var(--dash-border);
+	}
+</style>

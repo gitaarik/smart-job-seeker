@@ -68,7 +68,16 @@ const md = new Marked({
 	}
 });
 
-/** Parse untrusted markdown into XSS-safe HTML. */
-export function renderSafeMarkdown(markdown: string): string {
-	return md.parse(markdown, { async: false }) as string;
+/**
+ * Parse untrusted markdown into XSS-safe HTML.
+ *
+ * `breaks` turns a single newline into a `<br>` instead of collapsing it into
+ * the paragraph, which is off by default because that is what markdown means.
+ * Text that was never written as markdown needs it on: a scraped job posting
+ * uses bare newlines as line breaks, and rendering it without this reflows the
+ * whole thing into a wall — a visible regression against the `whitespace-pre-wrap`
+ * it replaced.
+ */
+export function renderSafeMarkdown(markdown: string, opts: { breaks?: boolean } = {}): string {
+	return md.parse(markdown, { async: false, breaks: opts.breaks ?? false }) as string;
 }

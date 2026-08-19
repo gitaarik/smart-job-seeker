@@ -402,13 +402,15 @@ const ROUTE_SCOPES: Record<string, RouteScope> = {
 	'/jobs/[id]': {
 		entity: 'job',
 		param: 'id',
-		// No application exists yet, so there is nothing recorded and nothing
-		// attached — but past application writing is still worth drawing on when
-		// the user asks "should I apply?" or "how would I pitch this?".
+		// The posting, not an application to it — so no `application_activity`
+		// even when one exists, because the history belongs to the application's
+		// own page. Past application writing is still worth drawing on when the
+		// user asks "should I apply?" or "how would I pitch this?".
 		sources: ['profile', 'job', 'application_pipeline', 'projects', 'stories', 'application_texts'],
 		capabilities: ['edit_job_details', 'edit_job_description', 'edit_job_skills'],
+		// Whether they have applied is NOT part of this — see `jobApplicationNote`.
 		hint: {
-			page: 'a job posting they have not applied to yet',
+			page: "a job posting's own page",
 			subject: 'that job'
 		}
 	},
@@ -534,6 +536,48 @@ async function resolveEntity(
 		columns: { id: true }
 	});
 	return exists ? { type: 'job', id } : null;
+}
+
+/**
+ * Whether they have already applied to the job they are looking at, said out
+ * loud on the job's own page.
+ *
+ * The route's hint used to assert they had not, because when /jobs/[id] was
+ * given a scope that was the case it was written for. It is a constant, and the
+ * fact is not: a job with an application against it renders exactly the same
+ * page, and the prompt then carried "a job posting they have not applied to
+ * yet" beside a pipeline row and a manifest entry for that very application.
+ * Cheap to resolve — one indexed lookup on a scope that already read the job —
+ * and the answer is useful in both directions, since "no application yet" is
+ * what makes "should I apply?" a live question.
+ *
+ * Deliberately says where the history is rather than pulling it in. The job
+ * page is about the posting; the application's own page is where its records
+ * live, and naming it is the honest answer to a question this page cannot
+ * reach.
+ */
+async function jobApplicationNote(
+	hint: PageScope | undefined,
+	entity: ContextEntity | null,
+	profileId: number
+): Promise<PageScope | undefined> {
+	if (!hint || entity?.type !== 'job') return hint;
+
+	const existing = await db.query.applications.findFirst({
+		where: and(eq(applications.profile_id, profileId), eq(applications.job_id, entity.id)),
+		columns: { id: true }
+	});
+
+	return {
+		...hint,
+		note: existing
+			? `They have already applied to this one — it is application ${existing.id}, ` +
+				'listed below with the rest of their pipeline. What has happened on it is ' +
+				"recorded on that application's own page, not here, so send them there for " +
+				'anything they ask about its history.'
+			: 'They have not applied to this one yet: there is no application behind it and ' +
+				'nothing has been recorded against it.'
+	};
 }
 
 /**
@@ -665,7 +709,10 @@ export async function resolveChatContext(opts: {
 	// block is missing is worse than no hint: it tells the model to read a bare
 	// question as being about something it cannot see. An entity that failed to
 	// resolve therefore drops the hint rather than keeping half of it.
-	const scopeHint = entity || scope.entity === null ? scope.hint : undefined;
+	const scopeHint =
+		entity || scope.entity === null
+			? await jobApplicationNote(scope.hint, entity, opts.profileId)
+			: undefined;
 
 	// Jobs resolve for any signed-in user by design (see resolveEntity), so the
 	// entity resolving says nothing about edit rights. resolveCapabilities asks

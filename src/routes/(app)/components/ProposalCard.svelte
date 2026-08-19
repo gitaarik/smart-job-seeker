@@ -68,15 +68,58 @@
 	const asText = (value: string) => (value === '—' ? '' : value);
 
 	/**
-	 * A tweak gets a word diff, a wholesale rewrite gets the new text.
+	 * How short a removed run has to be before it counts as rewording rather
+	 * than a cut.
 	 *
-	 * Same threshold the version editors use. Diffing two texts that share
-	 * almost nothing produces an unreadable stripe of every word deleted and
-	 * every word added, which hides the very thing the user opened this to read.
+	 * Chosen, not guessed, but on a thin corpus: every stored rewrite proposal
+	 * yields 7.5 runs per card at 40 characters, 4.0 at 80 and 2.5 at 120, and
+	 * the paragraph this was built to catch survives all three. Length is a
+	 * weak discriminator — a rewritten region comes back as a removed run too,
+	 * and some of those run past 100 characters — so the panel is labelled as
+	 * what it literally is rather than as "what you lost". 80 halves the churn
+	 * without reaching the length of a dropped sentence.
 	 */
-	function diffFor(change: { from: string; to: string }) {
-		const segments = computeDiff(asText(change.from), asText(change.to));
-		return isSmallDiff(segments) ? segments : null;
+	const DROPPED_RUN_CHARS = 80;
+
+	/**
+	 * Each long change, diffed once, with what a rewrite dropped pulled out.
+	 *
+	 * A tweak gets the word diff inline — same threshold the version editors
+	 * use, because diffing two texts that share almost nothing produces an
+	 * unreadable stripe of every word deleted and every word added, which hides
+	 * the very thing the user opened this to read.
+	 *
+	 * A wholesale rewrite got only the new text, and that is the hole this
+	 * fills. Asked to combine a job posting with a second one the user pasted
+	 * into the chat, the assistant returned a merge 950 characters SHORTER than
+	 * the description it replaced — and because a merge changes far more than
+	 * 30% of the words, the card showed the new text with nothing to say a whole
+	 * paragraph of the old one had gone. No prompt makes an LLM rewrite
+	 * lossless; what it can do is not be silent about it. `dropped` is the runs
+	 * of the old text with no counterpart in the new one, which is that
+	 * paragraph and not the rewording around it.
+	 *
+	 * Computed only while expanded: the LCS is quadratic in words, and a thread
+	 * with a dozen cards would run it a dozen times over two 4,000-character
+	 * texts to render nothing.
+	 */
+	const analysed = $derived(
+		(expanded ? longChanges : []).map((change) => {
+			const segments = computeDiff(asText(change.from), asText(change.to));
+			return {
+				change,
+				segments: isSmallDiff(segments) ? segments : null,
+				dropped: segments
+					.filter((s) => s.type === 'removed' && s.text.trim().length >= DROPPED_RUN_CHARS)
+					.map((s) => s.text.trim())
+			};
+		})
+	);
+
+	/** How much shorter the replacement is, when it is materially shorter. */
+	function shrinkage(change: { from: string; to: string }): number {
+		if (!isLong(change) || change.from === '—') return 0;
+		return Math.max(0, change.from.length - change.to.length);
 	}
 
 	async function apply() {
@@ -176,6 +219,18 @@
 								/>
 							{/if}
 							<span class="font-medium break-words">{summarize(change.to)}</span>
+							<!--
+                Said here rather than left to be worked out from two character
+                counts either side of an arrow. A replacement that is shorter
+                than what it replaces is the one shape of edit whose loss is
+                invisible: the new text reads perfectly well, and nothing about
+                it says what used to be there.
+              -->
+							{#if shrinkage(change) > 0}
+								<span class="mt-px shrink-0 text-[11px] text-amber-600 dark:text-amber-400">
+									−{shrinkage(change).toLocaleString()}
+								</span>
+							{/if}
 						</dd>
 					</div>
 				{/each}
@@ -195,8 +250,7 @@
 
 		{#if expanded}
 			<div class="space-y-2">
-				{#each longChanges as change}
-					{@const segments = diffFor(change)}
+				{#each analysed as { change, segments, dropped } (change.field)}
 					<div>
 						<p class="mb-0.5 text-[11px] text-[var(--dash-text-muted)]">
 							{change.label}
@@ -223,6 +277,24 @@
 									) || '(empty)'}</pre>
 							{/if}
 						</div>
+
+						<!--
+              Only on the rewrite branch: a small diff already shows its
+              removals inline, in place, which is better than a list of them.
+            -->
+						{#if !segments && dropped.length > 0}
+							<p class="mt-1 mb-0.5 text-[11px] text-amber-600 dark:text-amber-400">
+								In the old text and not in the new one
+							</p>
+							<div
+								class="max-h-40 space-y-1 overflow-y-auto rounded-md border border-amber-500/30 bg-amber-500/5 px-2 py-1.5"
+							>
+								{#each dropped as run, i (i)}
+									<pre
+										class="text-[11px] leading-relaxed break-words whitespace-pre-wrap text-[var(--dash-text-muted)]">{run}</pre>
+								{/each}
+							</div>
+						{/if}
 					</div>
 				{/each}
 			</div>

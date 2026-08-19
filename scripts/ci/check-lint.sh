@@ -64,7 +64,12 @@ set -euo pipefail
 # detail pages' collection-save functions, their staged-removal index sets and
 # five whole-collection zod schemas went with them. Nothing was fixed to earn
 # this; it is code that no longer exists.
-BASELINE=1475
+#
+# 1,475 -> 1,474 when ProposalCard's long-text diff moved into a keyed `{#each}`
+# over pre-analysed changes. One require-each-key, earned rather than waived: the
+# block had to be rebuilt anyway to carry what a rewrite dropped, and a keyless
+# each over a reordering list is exactly the latent bug that rule is about.
+BASELINE=1474
 
 npx svelte-kit sync
 

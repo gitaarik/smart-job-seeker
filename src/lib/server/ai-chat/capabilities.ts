@@ -407,6 +407,18 @@ Field rules, all of which are enforced after you answer:
  * edit_job_description
  * ------------------------------------------------------------------ */
 
+/**
+ * How much of the two long texts the capability block will carry inline before
+ * it gives up and points at the job section instead. See `renderState`.
+ *
+ * 8,000 because the page's own capabilities are never dropped and so have to
+ * fit on their own merits: an application page's five measure 11,390, and
+ * 19,390 leaves the 22,000 budget a margin rather than spending it. A posting
+ * longer than this is rare — the longest on dev is 4,069 — and the fallback is
+ * exactly what every turn did before.
+ */
+const INLINE_TEXT_CHARS = 8000;
+
 const editJobDescription: CapabilityDef = {
 	title: "Rewrite the job's description or company profile",
 	resolve: (entity) => resolveJobTarget(entity),
@@ -434,7 +446,9 @@ const editJobDescription: CapabilityDef = {
 - "company_description" — the "About the company" blurb.
 
 Each is replaced outright, so send the complete new text as the value, not a
-fragment or a diff. Change one or both in the same proposal.
+fragment or a diff. Change one or both in the same proposal. Light markdown
+renders on the page — bold, lists, headings — so use it where the posting has
+structure, and keep the shape of a posting rather than of a report.
 
 Which one holds what matters, and they are edited independently:
 - Anything about the ROLE — duties, requirements, pay, hours, process — is
@@ -448,26 +462,64 @@ blurb, and saying you have removed something you did not reach is worse than
 saying you cannot.
 
 Do not invent requirements, benefits or company details that are not in the
-material you have been given; tidying and restructuring are in scope, inventing
-facts is not.
+material you have been given. Reordering, re-heading and fixing the wording are
+in scope; condensing is not. Every fact the old text carried is in the new one
+unless the user asked you to take it out.
+
+When they give you MORE material about the same job — a second posting, what a
+recruiter told them — what you send back is the union of the two, not a digest
+of them. The character count below is a floor: a merged posting is longer than
+the one it replaces. Where the two sources disagree, keep the specific reading,
+and say in your reply which one you took and what the other said.
 
 The structured fields — skills, salary, location — were extracted from the OLD
 text, so anything your rewrite changes is now stale in them. Correct the ones
-you have a capability for, in the same answer. For the ones you do not, say so
-in your reply: they stay wrong until the job is re-parsed, and the user is the
-only one who can decide to do that.`,
-	// Lengths, not the texts. The texts themselves reach the model through the
-	// `job` context source — which is why this says "shown in full above". A
-	// caller that makes this capability live without that source hands the model
-	// a rewrite button for something it cannot read; it then proposes nothing,
-	// which reads as the contract failing rather than as the context being
-	// absent.
-	renderState: (current) =>
-		`Both are shown in full in the job section above — currently ${
-			String(current.job_description ?? '').length
-		} characters of job_description and ${
-			String(current.company_description ?? '').length
-		} of company_description.`,
+you have a capability for, in the same answer; check each one against the new
+text rather than only the ones that caught your eye. For the ones you do not
+have, say so in your reply: they stay wrong until the job is re-parsed, and the
+user is the only one who can decide to do that.`,
+	// The texts themselves, next to the instruction that rewrites them — and yes,
+	// a second time, because the `job` context source already carries them.
+	//
+	// This used to be the lengths and a pointer at that block, on the reasoning
+	// that paying twice for the same characters is waste. It is waste, and it was
+	// still the wrong trade: on a job page the pointer is ~55,000 characters away
+	// from the capability, and a model asked to re-emit 4,000 characters it read
+	// that long ago reconstructs them instead of copying them. Measured over
+	// eleven replays of one real turn — merge a stored posting with a second one
+	// pasted into the chat — the pointer form kept the pasted material's facts in
+	// 2 of 7 runs and this form in 6 of 7, and only this form ever produced the
+	// salary correction the new posting implied.
+	//
+	// It does not make the rewrite lossless; nothing here does (see
+	// ProposalCard's `dropped`, which exists because of that). It moves the
+	// median.
+	//
+	// Above the cap it falls back to the pointer. That is the honest failure: a
+	// 10,000-character posting inlined beside an application page's five
+	// capabilities is most of `CAPABILITY_PROMPT_BUDGET_CHARS`, and the block
+	// that would give way to it is a section the user asked about.
+	renderState: (current) => {
+		const job = String(current.job_description ?? '');
+		const company = String(current.company_description ?? '');
+		const lengths = `${job.length} characters of job_description and ${company.length} of company_description`;
+
+		if (job.length + company.length > INLINE_TEXT_CHARS) {
+			return `Both are shown in full in the job section above — currently ${lengths}.`;
+		}
+
+		return `The two texts as they stand — ${lengths}. Build your replacement from
+THESE characters. They are the same ones in the job section above; work from the
+copy here, because it is the one you are editing.
+
+--- job_description ---
+${job || '(not set)'}
+--- end job_description ---
+
+--- company_description ---
+${company || '(not set)'}
+--- end company_description ---`;
+	},
 	validate: (fields) => {
 		if (
 			fields.job_description !== undefined &&
@@ -1578,6 +1630,23 @@ the proposal is discarded rather than applied to something else.`;
  * siblings are already paying for. They are also ~10% below what the same
  * arrangement cost before `current` learned the page's row: a child's inventory
  * used to list every role's projects to answer a question about one.
+ *
+ * Held at 22,000 through the 2026-08-19 rewrite, which moved the numbers in
+ * both directions. The preamble lost 326 characters that every capability was
+ * paying; `edit_job_description` spent 427 on the rules that stop a rewrite
+ * eating the text it replaces, and then ~4,900 more inlining the two texts it
+ * edits (see its `renderState` for the measurement that bought it). On the
+ * profile this was built against:
+ *
+ *  - **13,034** — a job page, with the real 4,069-character posting inline.
+ *  - **16,289** — an application page's five, same posting. The most a page can
+ *    reach today, and the margin is what a matched section spends.
+ *  - **11,383** — the same page once a posting passes `INLINE_TEXT_CHARS` and
+ *    the state falls back to pointing at the job block.
+ *
+ * Note which way that last one runs: the heaviest posting costs the LEAST here,
+ * because the fallback is the cheap form. The number to watch is a page whose
+ * posting sits just under the cap.
  */
 export const CAPABILITY_PROMPT_BUDGET_CHARS = 22000;
 
@@ -1645,52 +1714,44 @@ Answer with a JSON object with these keys:
 Each entry in "proposals" is one KIND of change, with "capability" (one of the
 ids below), "rationale", and "changes".${choosing ? TARGET_ID_RULE : ''}
 
-"rationale" is what the user reads to decide. Write what you are changing and
-why, IN PROPORTION to the change — one sentence is right for a field
-correction, and a short paragraph is right when you have replaced a long text,
-because all they otherwise see of a rewrite is a character count and a few
-excerpts to reconstruct your intent from.
-
-Cover every entry in your "changes" list. Fields that belong together are one
-idea and should read as one — a minimum and a maximum are a salary range, not
-two separate edits — but an entry you never mention is a change the user is
-asked to accept without being told about it.
-
-Say what changed, not that something did. "Updated the description" tells them
-nothing they can't see; "cut the required experience from 10 years to 3 and
-replaced the unstated salary with the range you were given" is the thing they
-are actually deciding about.
-
 "changes" is a LIST, one entry per field you are changing, each
 {"field": "...", "value": ...}. Fields you don't list keep their current value;
 an entry with "value": null clears that field.
 
-Before you write "changes", re-read the user's message and count the distinct
-things they asked you to correct. Your list must have an entry for every one of
-them. If your reply says you are changing the salary and the location, then
-"changes" has an entry for the salary AND an entry for the location — a reply
-that promises more than the list delivers leaves half the correction unmade, and
-the user has to ask twice.
+A value you send REPLACES what the field holds — it is never merged with it, so
+a field you are adding to comes back whole: everything it already says, plus
+what you are adding. Whatever you leave out is deleted, and nothing warns either
+of you that it went. Rewriting is not condensing: unless the user asked you to
+cut something, every fact in the old value is in the new one.
 
-If the user asks for two different kinds of change in one message — a correction
-to the structured fields AND a rewrite of the description, say — return TWO
-entries in "proposals", one per capability. Do not do one and describe the other
-in prose. Each entry becomes a separate card the user accepts or rejects on its
-own, so there is no cost to listing both, and no reason to make them ask twice.
+Before you write "changes", re-read the message and count the distinct things
+they asked you to correct — there is an entry for each. And if they asked for
+two different KINDS of change, a correction to the structured fields AND a
+rewrite of a long text, that is TWO entries in "proposals", one per capability.
+Never do one and describe the other in prose: each entry becomes a separate card
+they accept or reject on its own, so listing both costs them nothing, while a
+reply promising more than the list delivers leaves half the correction unmade.
 
-Count the kinds of change the same way you counted the fields: "proposals" has
-exactly as many entries as there are kinds you were asked for.
+"rationale" is what the user reads to decide, and for a replaced text it is all
+they get besides a character count and a few excerpts. Cover every entry in
+"changes", in proportion — one sentence for a field correction, a short
+paragraph for a rewritten text. Say what the change IS, not that there is one:
+"cuts the required experience from 10 years to 3 and fills in the salary you
+gave me", not "updates the description". Fields that belong together are one
+idea and read as one; a minimum and a maximum are a salary range, not two edits.
 
 These hold for every kind of change below:
 
-- List only the fields you are changing. Don't restate a field whose value is
-  already correct — an entry that changes nothing is noise the user reads past.
-- Only propose a change the user actually asked for, or one they have clearly
-  confirmed, never as an unrequested tidy-up. If they are asking a question
-  rather than requesting an edit, answer it and propose nothing.
-- Change what you were asked to change and nothing adjacent to it. If a
-  correction seems to imply a second one, say so in your reply and let the user
-  decide, rather than folding it into the same proposal.
+- List only the fields you are changing. A field whose value is already right is
+  noise the user reads past.
+- Only propose what they asked for or have confirmed. A question is not an edit
+  request — answer it and propose nothing. Never tidy up unasked, and when a
+  correction merely suggests a second one, say so in your reply and let them
+  decide instead of folding it in.
+- The exception is a field your OWN change makes wrong. If what you are
+  proposing contradicts a value you can also reach, correct that one too, in the
+  same answer, and say so. Leaving it is not restraint — it is a row that now
+  disagrees with itself.
 
 ${blocks.join('\n\n')}`;
 }

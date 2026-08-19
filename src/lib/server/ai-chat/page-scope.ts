@@ -24,6 +24,18 @@ export interface PageScope {
 	 * difference between "they must mean this one" and "they could mean any".
 	 */
 	subject: string | null;
+	/**
+	 * One more fact about this page, when the route id alone cannot know it.
+	 *
+	 * Still a fact and not guidance — the rule above holds. It exists because a
+	 * route's hint is a constant, and a constant that describes the user's
+	 * situation is only right until the situation changes: /jobs/[id] asserted
+	 * "a job posting they have not applied to yet" on every job, including the
+	 * ones they had applied to, whose application was listed by two other blocks
+	 * in the same prompt. A hint that contradicts the evidence beside it is worse
+	 * than no hint, so anything conditional is resolved per turn and lands here.
+	 */
+	note?: string;
 }
 
 export function formatPageScope(scope: PageScope | undefined): string {
@@ -39,6 +51,7 @@ export function formatPageScope(scope: PageScope | undefined): string {
 			: 'This page is not about any one application or job, so a question ' +
 				'that names no subject is about their search as a whole rather than ' +
 				'about a single item in it. Do not pick one and answer as if they ' +
-				'meant that.'
+				'meant that.',
+		...(scope.note ? ['', scope.note] : [])
 	].join('\n');
 }

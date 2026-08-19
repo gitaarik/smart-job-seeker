@@ -377,7 +377,8 @@ ${lines.join('\n')}
 
 Each field is replaced outright, so send the complete new value, not a fragment
 or a diff. A field you do not list keeps what it holds; a field with a null value
-is cleared.${
+is cleared. Whatever you leave out of a new value is gone — a text you are adding
+to comes back whole, with everything it already said still in it.${
 		withheld.length > 0
 			? `
 
@@ -387,9 +388,10 @@ work around it by writing the value into another field.`
 			: ''
 	}
 
-Do not invent history. Tightening how something is worded is in scope; adding a
-responsibility, a date or an employer the applicant has not told you about is
-not.`;
+Do not invent history, and do not lose any. Tightening how something is worded
+is in scope; quietly dropping half of what it claimed is not, and neither is
+adding a responsibility, a date or an employer the applicant has not told you
+about.`;
 }
 
 /**

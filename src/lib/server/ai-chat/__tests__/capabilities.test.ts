@@ -1285,7 +1285,14 @@ describe('the registry as a whole', () => {
 		// and make you decide the turn is worth it; the alternative is finding out
 		// from a token bill, or from Gemini's thinking budget quietly eating the
 		// answer.
-		const PER_CAPABILITY_CHARS = 6000;
+		//
+		// Ratcheted from 6,000 to 5,700 once the preamble was rewritten: it had
+		// grown three paragraphs saying the same thing at two levels (count the
+		// fields, count the kinds, cover every entry), and folding them back into
+		// one took it from 3,351 characters to 3,025 — which every capability
+		// pays, on every capable turn. It left add_activity_record at 5,657, and
+		// 17 characters of headroom was not a budget, it was a coincidence.
+		const PER_CAPABILITY_CHARS = 5700;
 
 		for (const capability of Object.keys(CAPABILITIES) as Capability[]) {
 			const rendered = renderCapabilityPrompt([
@@ -1334,6 +1341,47 @@ describe('renderCapabilityPrompt', () => {
 		// message must come back as two entries, not one plus an apology.
 		expect(prompt).toMatch(/TWO\s+entries/);
 		expect(prompt).toMatch(/separate\s+card/i);
+	});
+
+	it('says a replaced value is not merged, so a partial one loses the rest', async () => {
+		// The rule the block was missing for its first two weeks. "Each is replaced
+		// outright" told the model HOW to send a value and nothing about what
+		// happens to the part it leaves out — so asked to combine a job posting
+		// with a second one the user pasted in, it returned a merge 950 characters
+		// SHORTER than the description it replaced, and every fact it dropped went
+		// without a word to anyone. `edit_job_skills` had the equivalent rule from
+		// the day it was written, because a half-sent list is visibly a wipe; a
+		// half-sent text is not.
+		jobRow = { id: 900, title: 'Staff Engineer', company: 'Acme' };
+		const live = await resolveCapabilities(
+			['edit_job_description'],
+			{ type: 'job', id: 900 },
+			ACTOR
+		);
+
+		const prompt = renderCapabilityPrompt(live);
+		expect(prompt).toMatch(/never\s+merged\s+with\s+it/i);
+		expect(prompt).toMatch(/comes\s+back\s+whole/i);
+		expect(prompt).toMatch(/[Rr]ewriting\s+is\s+not\s+condensing/);
+	});
+
+	it('carves the stale-neighbour case out of "change nothing adjacent"', async () => {
+		// Two rules that contradicted each other for three days. The preamble said
+		// to change nothing adjacent to what was asked for; edit_job_description
+		// said to correct the structured fields its own rewrite had made stale.
+		// The model split the difference — it re-proposed the skills, which the
+		// skills contract also asks for, and left salary_min = salary_max = 8500
+		// standing against a new text saying "up to €8,500".
+		jobRow = { id: 900, title: 'Staff Engineer', company: 'Acme' };
+		const live = await resolveCapabilities(
+			['edit_job_details', 'edit_job_description'],
+			{ type: 'job', id: 900 },
+			ACTOR
+		);
+
+		const prompt = renderCapabilityPrompt(live);
+		expect(prompt).toMatch(/never\s+tidy\s+up\s+unasked/i);
+		expect(prompt).toMatch(/your\s+OWN\s+change\s+makes\s+wrong/);
 	});
 
 	it('shows the current values so the model proposes a diff', async () => {

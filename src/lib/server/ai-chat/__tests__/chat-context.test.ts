@@ -351,6 +351,53 @@ describe('resolveChatContext — orientation blocks', () => {
 		expect(profile.context.scopeHint?.page).not.toBe(interview.context.scopeHint?.page);
 	});
 
+	// The route's hint is a constant; whether they have applied is not. It used
+	// to be baked into the page description, so a job with an application against
+	// it got "a job posting they have not applied to yet" in the same prompt as a
+	// pipeline row and a manifest entry for that application.
+	it('says they have not applied when no application is behind the job', async () => {
+		jobRow = { id: 9, title: 'Staff Engineer' };
+		applicationRow = null;
+
+		const { context: ctx } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/jobs/[id]',
+			params: { id: '9' }
+		});
+
+		expect(ctx.scopeHint?.page).not.toMatch(/applied/i);
+		expect(ctx.scopeHint?.note).toMatch(/have not applied/i);
+	});
+
+	it('names the application when there is one, and says where its history lives', async () => {
+		jobRow = { id: 9, title: 'Staff Engineer' };
+		applicationRow = { id: 42 };
+
+		const { context: ctx } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/jobs/[id]',
+			params: { id: '9' }
+		});
+
+		expect(ctx.scopeHint?.note).toContain('application 42');
+		// The job page does not carry the activity, so the note has to say where
+		// it is rather than leaving the model to answer from nothing.
+		expect(ctx.sources).not.toContain('application_activity');
+		expect(ctx.scopeHint?.note).toMatch(/own page/i);
+	});
+
+	it('leaves the note off a page that is not about a job', async () => {
+		applicationRow = { id: 42, job: { title: 'Staff Engineer' } };
+
+		const { context: ctx } = await resolveChatContext({
+			...base,
+			routeId: '/(app)/applications/[id]',
+			params: { id: '42' }
+		});
+
+		expect(ctx.scopeHint?.note).toBeUndefined();
+	});
+
 	// A hint saying "they are on one application's page" while the application
 	// block is missing would point the model at something it cannot see.
 	it('drops the hint when the entity failed to resolve', async () => {

@@ -47,6 +47,27 @@ describe('formatPageScope', () => {
 		expect(out).toContain('Do not pick one and answer as if they meant that');
 	});
 
+	it('carries a per-turn fact the route could not know', () => {
+		// The route's hint is a constant. Anything about the user's own situation
+		// — have they applied to this job? — is resolved per turn and lands here,
+		// rather than being asserted by a page description that cannot see it.
+		const out = formatPageScope({
+			page: "a job posting's own page",
+			subject: 'that job',
+			note: 'They have not applied to this one yet.'
+		});
+
+		expect(out).toContain('They have not applied to this one yet.');
+		expect(out.indexOf('names no subject')).toBeLessThan(out.indexOf('They have not applied'));
+	});
+
+	it('renders nothing extra when there is no note', () => {
+		const out = formatPageScope({ page: "a job posting's own page", subject: 'that job' });
+
+		expect(out.trimEnd()).toBe(out);
+		expect(out).toContain('A question that names no subject is about that job.');
+	});
+
 	it('stays out of behaviour, which belongs with the block it governs', () => {
 		// Two places wording the same rule is how they drift. The pipeline block
 		// already explains what comparing across applications means; this one
