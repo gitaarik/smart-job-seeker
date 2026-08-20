@@ -5,6 +5,34 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2026-08-20
+
+39 commits since v0.16.0.
+
+### Added
+
+- Document application tracking: template and language are now recorded
+- Interview stories linked to their associated projects
+- Role project pages with tabbed layouts
+- Written notes support as a project source
+- GitHub App integration to scan private repositories into profiles
+- Automatic CV content suggestions from repository scans
+- Technology chip proposals based on repository metadata
+- Repository URL integration and workflow for work-experience projects
+- Code questions answerable as project achievements
+- Auto-fill side-project fields from GitHub repository data
+- Translatable fields on role projects
+
+### Fixed
+
+- Assistant text rewrite bug that would consume the text it replaced
+- Authentication bypass in internal rendering (now fail-closed)
+- Installation ownership validation before storage
+- Production environment security: separate keypair and fresh secrets
+- Worker overwriting committed lockfile on restart
+- Container key provisioning for environment decryption
+- Internal-render secret provisioning
+
 ## [0.16.0] - 2026-08-17
 
 6 commits since v0.15.0.
