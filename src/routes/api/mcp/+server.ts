@@ -25,7 +25,7 @@ import {
 	type RpcRequest,
 	type RpcResponse
 } from '$lib/server/mcp/protocol';
-import { toolsFor } from '$lib/server/mcp/tools';
+import { instructionsFor, toolsFor } from '$lib/server/mcp/tools';
 
 /**
  * The bearer token, and only the bearer token.
@@ -76,20 +76,10 @@ async function handleMessage(
 				// ends up calling a method that 404s mid-conversation.
 				capabilities: { tools: { listChanged: false } },
 				serverInfo: SERVER_INFO,
-				instructions:
-					`This server reads and changes one job applicant's own record — the profile ` +
-					`this key is bound to, the jobs they have collected and the applications ` +
-					`they have sent. Call list_profile_sections first: it returns the profile ` +
-					`id every other tool needs.\n\n` +
-					`Jobs are the exception to "their own": a posting is shared between everyone ` +
-					`it matched, so only the ones they typed in by hand can be changed, and only ` +
-					`the ones they imported or applied to can be read at all.\n\n` +
-					`Changes that overwrite something the applicant wrote, and changes that hide ` +
-					`an entry, are not applied by you. They are recorded and the applicant ` +
-					`approves them in their own app. There is no tool that approves one, and ` +
-					`asking again will not help — say it is waiting and carry on.\n\n` +
-					`Do not invent history. Rewording what the applicant has said is in scope; ` +
-					`adding a role, a date or an employer they have not told you about is not.`
+				// Next to the tool list rather than here, because it names tools and
+				// is filtered by the same read scope they are. Two copies of that
+				// filter is one copy that goes stale.
+				instructions: instructionsFor(key.readScope)
 			});
 
 		case 'ping':

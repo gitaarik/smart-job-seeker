@@ -704,6 +704,16 @@ describe('jobs and applications', () => {
 		expect(result.content[0].text).toContain('Do not propose an entry that repeats');
 	});
 
+	it('names the posting in the text, not only in the structured content', async () => {
+		// An agent handed an application id has no other route to what was
+		// advertised, and a client that renders only the content block would never
+		// see `job_id`. The pointer has to survive that rendering.
+		const result = await callTool('read_application', { profile_id: 12, application_id: 44 }, KEY);
+
+		expect(result.content[0].text).toContain('job 100');
+		expect(result.content[0].text).toContain('read_job');
+	});
+
 	it('reads a job through the fields its write tools declare', async () => {
 		// The read tool promises "every field you are allowed to write", and the
 		// capabilities are where that list lives. A field appears because a

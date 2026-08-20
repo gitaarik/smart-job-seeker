@@ -11,6 +11,7 @@ import { CAPABILITIES } from '$lib/server/ai-chat/capabilities';
 import { ENTITY_CAPABILITY_NAMES, targetingFor } from '../entities';
 import {
 	DOCUMENT_TOOLS,
+	instructionsFor,
 	isReadTool,
 	MCP_CAPABILITIES,
 	READ_TOOLS,
@@ -135,5 +136,39 @@ describe('what a read scope is shown', () => {
 		expect(names).toEqual(
 			READ_TOOLS.filter((n) => !(DOCUMENT_TOOLS as readonly string[]).includes(n))
 		);
+	});
+});
+
+describe('what the client is told before it sees a tool', () => {
+	it('routes a question through the reads it needs', () => {
+		// The gap this closes: every other "read this first" in the server is
+		// conditioned on a write, so a question that only reads was steered by
+		// nothing at all.
+		const instructions = instructionsFor('documents');
+
+		expect(instructions).toContain('read_application');
+		expect(instructions).toContain('read_job');
+		expect(instructions).toContain('read_profile_section');
+	});
+
+	it('names no tool a record key cannot call', () => {
+		// Same rule as the tool list: pointing an agent at a tool it will never be
+		// shown is a retry it has no way to avoid.
+		const instructions = instructionsFor('record');
+		for (const hidden of DOCUMENT_TOOLS) expect(instructions, hidden).not.toContain(hidden);
+	});
+
+	it('still names them to a documents key', () => {
+		const instructions = instructionsFor('documents');
+		expect(instructions).toContain('read_activity_entry');
+		expect(instructions).toContain('list_documents');
+	});
+
+	it('keeps what is true of every key at either scope', () => {
+		for (const scope of ['record', 'documents'] as const) {
+			const instructions = instructionsFor(scope);
+			expect(instructions, scope).toContain('list_profile_sections');
+			expect(instructions, scope).toContain('Do not invent history');
+		}
 	});
 });

@@ -456,6 +456,60 @@ asked for is still pending, say so and move on.`,
 };
 
 /**
+ * What the client is told at initialize, before it has seen a single tool.
+ *
+ * The cheapest prose in the server: paid once per connection, where a sentence
+ * added to a capability contract is paid per capability per turn. So it carries
+ * what is true of every session — what this key reaches, which reads a question
+ * usually needs, and what is not applied by the agent at all.
+ *
+ * The middle one is here because nothing else says it. Every "read this first"
+ * on a tool is conditioned on a *write*; a question that only reads had no
+ * guidance whatsoever, and an agent answering "how do I fit this role" from
+ * `read_application` alone answers from a status and a log with neither the
+ * posting nor the applicant in front of it.
+ *
+ * Deliberately a routing hint and not "gather context first". The general
+ * instruction buys the opposite failure — a 60,000-character repository scan
+ * pulled in to answer what its summary already answered. What it costs to read
+ * a thing stays on the tool that reads it, which the agent has in front of it
+ * either way.
+ *
+ * Varies with the read scope for the same reason the tool list does: naming a
+ * tool this credential cannot call is a retry the agent has no way to avoid.
+ */
+export function instructionsFor(readScope: McpReadScope = 'documents'): string {
+	const documents = readScope === 'documents';
+
+	return [
+		`This server reads and changes one job applicant's own record — the profile ` +
+			`this key is bound to, the jobs they have collected and the applications ` +
+			`they have sent. Call list_profile_sections first: it returns the profile ` +
+			`id every other tool needs.`,
+
+		`Jobs are the exception to "their own": a posting is shared between everyone ` +
+			`it matched, so only the ones they typed in by hand can be changed, and only ` +
+			`the ones they imported or applied to can be read at all.`,
+
+		`A question about an application is usually a question about more than the ` +
+			`application. What was sent and what has happened since is read_application` +
+			`${documents ? ', with read_activity_entry for what an entry actually says' : ''}; ` +
+			`what was asked for is read_job, with the job_id read_application returns; ` +
+			`what the applicant has to offer is read_profile_section` +
+			`${documents ? ', and list_documents for the evidence behind it' : ''}. ` +
+			`Read what the question needs before answering it.`,
+
+		`Changes that overwrite something the applicant wrote, and changes that hide ` +
+			`an entry, are not applied by you. They are recorded and the applicant ` +
+			`approves them in their own app. There is no tool that approves one, and ` +
+			`asking again will not help — say it is waiting and carry on.`,
+
+		`Do not invent history. Rewording what the applicant has said is in scope; ` +
+			`adding a role, a date or an employer they have not told you about is not.`
+	].join('\n\n');
+}
+
+/**
  * The tool list, filtered by what the credential may do.
  *
  * A `read` key is not shown the write tools at all. Listing a tool that always

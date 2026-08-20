@@ -394,8 +394,13 @@ async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolRes
 	return ok(
 		`Application ${application.id} — ${application.job_title ?? 'Untitled'}` +
 			`${application.job_company ? ` at ${application.job_company}` : ''}\n` +
-			`status: ${application.status}${application.status_step ? ` (${application.status_step})` : ''}\n\n` +
-			`${renderFields(fields)}\n\n${chronology}`,
+			`status: ${application.status}${application.status_step ? ` (${application.status_step})` : ''}\n` +
+			// The job in the text and not only in `structuredContent`, which plenty
+			// of clients never surface. An agent handed an application id directly
+			// otherwise has no route to the posting but list_jobs and a guess, and
+			// this record says what was sent — never what was asked for.
+			`${application.job_id === null ? '' : `posting: job ${application.job_id} — read_job for what was advertised\n`}` +
+			`\n${renderFields(fields)}\n\n${chronology}`,
 		{ application, fields, ...logged }
 	);
 }
