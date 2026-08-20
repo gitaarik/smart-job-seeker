@@ -5,6 +5,30 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0] - 2026-08-20
+
+13 commits since v0.17.0.
+
+### Added
+
+- MCP now pages the pending queue and indicates withheld results
+- Job and application capabilities now accessible via MCP
+- Profile reads can retrieve documents and activity stream
+- Read permissions grading lets you control what each API key sees
+- Read operations report which permissions they require
+- Undo guard prevents removing changes that later operations depend on
+
+### Changed
+
+- MCP parent list rendering now matches tool contract specifications
+- Parent name matching is consistent across profile access paths
+- MCP reads now flow through the same tools that handle writes
+
+### Fixed
+
+- Stop requesting approval for no-op profile changes
+- Improved worker command for yamllint compatibility in CI
+
 ## [0.17.0] - 2026-08-20
 
 39 commits since v0.16.0.
