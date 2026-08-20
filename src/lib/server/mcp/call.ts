@@ -61,7 +61,7 @@ import { listProfileJobs, readProfileJob } from '$lib/server/jobs/profile-jobs';
 import { recentDirectWrites } from './burst';
 import { targetingFor } from './entities';
 import { createRequest, readRequests, requestPath } from './requests';
-import { dispositionFor, tierForWrite } from './tiers';
+import { dispositionFor, isUnchanged, tierForWrite } from './tiers';
 import {
 	DOCUMENT_TOOLS,
 	isMcpCapability,
@@ -585,12 +585,37 @@ async function runWrite(
 	const { target } = resolved;
 
 	const current = await def.current(target, actor);
-	const fields = pickCapabilityFields(capability, args);
+	const sent = pickCapabilityFields(capability, args);
 
-	if (Object.keys(def.fields).length > 0 && Object.keys(fields).length === 0) {
+	if (Object.keys(def.fields).length > 0 && Object.keys(sent).length === 0) {
 		return fail(
 			`No recognised fields. This tool writes: ${Object.keys(def.fields).join(', ')} — ` +
 				`use the full names including the prefix.`
+		);
+	}
+
+	// A value identical to the one the row already holds is not a change, and
+	// asking the applicant to approve it is a card that says nothing and still
+	// has to be read. Dropped BEFORE the tier is decided, which is also what
+	// makes a call that re-states three fields and edits a fourth empty one
+	// direct rather than a request — nothing it writes replaces anything.
+	//
+	// Adds are exempt: their `current` is the section's inventory, not this row's
+	// values, so there is nothing here to compare against.
+	const fields =
+		capability.startsWith('add_') || Object.keys(def.fields).length === 0
+			? sent
+			: Object.fromEntries(
+					Object.entries(sent).filter(
+						([name, value]) => !(name in current) || !isUnchanged(current[name], value)
+					)
+				);
+
+	if (Object.keys(sent).length > 0 && Object.keys(fields).length === 0) {
+		return ok(
+			`Nothing to change — every value sent is already what "${target.label}" holds. ` +
+				`No request was made and nothing was written.`,
+			{ applied: false, unchanged: true, target: target.label }
 		);
 	}
 

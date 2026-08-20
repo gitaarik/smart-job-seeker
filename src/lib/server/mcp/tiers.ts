@@ -61,6 +61,36 @@ export interface TierDecision {
 	reason: string;
 }
 
+/**
+ * The value as it would be compared, so a column and a wire value can agree.
+ *
+ * Only dates need it: a `timestamp` column reads back as a Date where the tool
+ * schema takes "YYYY-MM-DD", and the two spell the same day.
+ */
+function comparable(value: unknown): unknown {
+	return value instanceof Date ? value.toISOString().slice(0, 10) : value;
+}
+
+/**
+ * Whether a proposed value is the one already there.
+ *
+ * Deliberately strict about blanks: null and "" are NOT folded together, so
+ * clearing a field still counts as a change. Erring this way costs a redundant
+ * proposal at worst, where the other way silently drops a write the caller
+ * meant.
+ */
+export function isUnchanged(before: unknown, after: unknown): boolean {
+	const a = comparable(before);
+	const b = comparable(after);
+
+	if (Array.isArray(a) || Array.isArray(b)) {
+		if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+		return a.every((value, index) => isUnchanged(value, b[index]));
+	}
+
+	return a === b;
+}
+
 /** Empty in the sense that filling it destroys nothing. */
 function isBlank(value: unknown): boolean {
 	if (value === null || value === undefined || value === '') return true;

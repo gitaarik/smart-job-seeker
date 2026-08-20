@@ -415,6 +415,53 @@ describe('tier 1 — direct writes', () => {
 		expect(result.structuredContent?.applied).toBe(true);
 	});
 
+	it('says nothing changed rather than queuing an identical value', async () => {
+		// Row 5's summary sent back verbatim. Before this, the tier saw a populated
+		// field being written and produced a request whose diff had the same string
+		// on both sides — a card the applicant has to open, read and decline to
+		// learn that nothing was being asked.
+		const result = await callTool(
+			'edit_work_experience',
+			{
+				profile_id: 12,
+				entry_id: 5,
+				'work_experience.summary': 'What the applicant wrote themselves.',
+				rationale: 'Restating what is already there.'
+			},
+			KEY
+		);
+
+		expect(result.structuredContent?.unchanged).toBe(true);
+		expect(result.structuredContent?.applied).toBe(false);
+		expect(createRequest).not.toHaveBeenCalled();
+		expect(executeCapability).not.toHaveBeenCalled();
+	});
+
+	it('grades a call on the fields it actually changes', async () => {
+		// The mixed case, and the reason this is dropped before the tier rather
+		// than at the diff: the only field left is one that was empty, so nothing
+		// is being replaced and there is nothing to approve. Restating a value
+		// alongside a real edit must not turn the real edit into a request.
+		const result = await callTool(
+			'edit_work_experience',
+			{
+				profile_id: 12,
+				entry_id: 5,
+				'work_experience.summary': 'What the applicant wrote themselves.',
+				'work_experience.location': 'Amsterdam',
+				rationale: 'They told me where the role was.'
+			},
+			KEY
+		);
+
+		expect(result.structuredContent?.applied).toBe(true);
+		expect(createRequest).not.toHaveBeenCalled();
+
+		// And the write is the change, not the restatement carried along with it.
+		const written = executeCapability.mock.calls[0][3];
+		expect(written).toEqual({ 'work_experience.location': 'Amsterdam' });
+	});
+
 	it('returns before and after, not only what arrived', async () => {
 		// An MCP client renders the arguments of a call. It never shows what is
 		// being destroyed, which is the half that matters.

@@ -8,7 +8,13 @@
  * design exists.
  */
 import { describe, expect, it } from 'vitest';
-import { annotationsFor, dispositionFor, DIRECT_WRITE_BURST, tierForWrite } from '../tiers';
+import {
+	annotationsFor,
+	dispositionFor,
+	DIRECT_WRITE_BURST,
+	isUnchanged,
+	tierForWrite
+} from '../tiers';
 import { MCP_SCOPES } from '../keys';
 
 const noBurst = { recentDirectWrites: 0 };
@@ -182,5 +188,33 @@ describe('annotationsFor', () => {
 		// a question asked that early — and these are hints to a client we do not
 		// control either way.
 		expect(annotationsFor('edit_language').destructiveHint).toBe(true);
+	});
+});
+
+describe('isUnchanged', () => {
+	it('sees through the two spellings of a date', () => {
+		// A timestamp column reads back as a Date; the tool schema takes
+		// "YYYY-MM-DD". Comparing them raw makes every date a change forever.
+		expect(isUnchanged(new Date('2026-08-20T00:00:00.000Z'), '2026-08-20')).toBe(true);
+		expect(isUnchanged(new Date('2026-08-20T00:00:00.000Z'), '2026-08-21')).toBe(false);
+	});
+
+	it('compares a skill list by its contents, in order', () => {
+		// Both job skill lists are replaced whole, so a re-send arrives as a new
+		// array that is equal to the old one and identical to nothing.
+		expect(isUnchanged(['Python', 'SQL'], ['Python', 'SQL'])).toBe(true);
+		expect(isUnchanged(['Python', 'SQL'], ['SQL', 'Python'])).toBe(false);
+		expect(isUnchanged(['Python'], ['Python', 'SQL'])).toBe(false);
+		expect(isUnchanged(['Python'], 'Python')).toBe(false);
+	});
+
+	it('counts clearing a field as a change', () => {
+		// Strict about blanks on purpose. Folding null and "" together would make
+		// "empty this" look like a no-op and drop it, which is a write the caller
+		// asked for and did not get — the one failure mode worse than a redundant
+		// proposal.
+		expect(isUnchanged('something', null)).toBe(false);
+		expect(isUnchanged(null, '')).toBe(false);
+		expect(isUnchanged(null, null)).toBe(true);
 	});
 });
