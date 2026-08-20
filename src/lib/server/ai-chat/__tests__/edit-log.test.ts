@@ -18,7 +18,9 @@ const state = {
 	inserts: [] as Record<string, unknown>[],
 	updates: [] as Record<string, unknown>[],
 	/** What the conditional "mark reverted" update returns; empty means someone got there first. */
-	marked: [{ id: 1 }] as { id: number }[]
+	marked: [{ id: 1 }] as { id: number }[],
+	/** Un-reverted changes made after the one being undone. */
+	newer: [] as Record<string, unknown>[]
 };
 
 vi.mock('$lib/server/db', () => {
@@ -34,9 +36,15 @@ vi.mock('$lib/server/db', () => {
 		}),
 		select: () => ({
 			from: () => ({
+				// A real drizzle builder is thenable, and the ordering check uses that:
+				// it awaits `where(...)` with no limit, where the other two callers
+				// paginate. So `then` here is the "everything newer than this row"
+				// query and the two chains below are the reads that existed before.
 				where: () => ({
 					orderBy: () => ({ limit: () => Promise.resolve(state.rows) }),
-					limit: () => Promise.resolve(state.rows)
+					limit: () => Promise.resolve(state.rows),
+					then: (resolve: (rows: Record<string, unknown>[]) => unknown) =>
+						Promise.resolve(state.newer).then(resolve)
 				})
 			})
 		}),
@@ -74,7 +82,7 @@ vi.mock('../capabilities', () => ({
 	describeFieldChanges: () => []
 }));
 
-const { readEditLog, recordEdit, revertEdit } = await import('../edit-log');
+const { readEditLog, recordEdit, revertEdit, supersedingChange } = await import('../edit-log');
 
 const ACTOR = { profileId: 12, isStaff: false };
 
@@ -99,6 +107,7 @@ beforeEach(() => {
 	state.inserts = [];
 	state.updates = [];
 	state.marked = [{ id: 1 }];
+	state.newer = [];
 	mockAuthorize.mockResolvedValue(true);
 	mockRevert.mockResolvedValue(undefined);
 });
@@ -218,5 +227,105 @@ describe('revertEdit', () => {
 
 		expect(await revertEdit(1, ACTOR)).toMatchObject({ ok: false, reason: 'failed' });
 		expect(state.updates).toHaveLength(0);
+	});
+});
+
+describe('undoing in order', () => {
+	/**
+	 * There is no version history here — one before-image per change — so
+	 * rolling back several changes is several undos, and a before-image is only
+	 * the inverse of its own write while nothing has been written on top of it.
+	 *
+	 *     v0 --A--> v1 --B--> v2
+	 *
+	 * B then A lands on v0. A then B lands on v1, which nobody ever chose, with
+	 * B still reading as applied. These tests are that asymmetry made into a
+	 * refusal.
+	 */
+	const A = {
+		id: 1,
+		capability: 'edit_work_experience',
+		target: { id: 5 },
+		fields: { 'work_experience.summary': 'v1' },
+		previous: { 'work_experience.summary': 'v0' }
+	};
+
+	it('finds the later change that wrote the same field of the same row', () => {
+		const B = { ...A, id: 2, fields: { 'work_experience.summary': 'v2' } };
+		expect(supersedingChange(A, [B])?.id).toBe(2);
+	});
+
+	it('ignores a later change to a different row', () => {
+		const other = { ...A, id: 2, target: { id: 6 } };
+		expect(supersedingChange(A, [other])).toBeNull();
+	});
+
+	it('ignores a later change to a different field of the same row', () => {
+		const other = { ...A, id: 2, fields: { 'work_experience.job_title': 'Lead' }, previous: {} };
+		expect(supersedingChange(A, [other])).toBeNull();
+	});
+
+	it('counts a hide and a show as the same field, across two action names', () => {
+		// Both write the row's tags, and neither is the other's capability — which
+		// is why the rule keys on the section rather than on the verb.
+		const hidden = {
+			id: 1,
+			capability: 'hide_work_experience',
+			target: { id: 5 },
+			fields: {},
+			previous: { tags: null }
+		};
+		const shown = { ...hidden, id: 2, capability: 'show_work_experience', previous: { tags: [] } };
+		expect(supersedingChange(hidden, [shown])?.id).toBe(2);
+	});
+
+	it('names the newest blocker, which is where the applicant has to start', () => {
+		const B = { ...A, id: 2, fields: { 'work_experience.summary': 'v2' } };
+		const C = { ...A, id: 3, fields: { 'work_experience.summary': 'v3' } };
+		// Newest first, the order both callers pass them in.
+		expect(supersedingChange(A, [C, B])?.id).toBe(3);
+	});
+
+	it('refuses the undo, and says which one to take back first', async () => {
+		state.rows = [logRow()];
+		state.newer = [{ ...logRow({ id: 2 }), fields: { 'work_experience.summary': 'newer' } }];
+
+		const outcome = await revertEdit(1, ACTOR);
+
+		expect(outcome).toMatchObject({ ok: false, reason: 'superseded' });
+		expect('error' in outcome && outcome.error).toContain('Correct this work experience');
+		// The point of the refusal: nothing is written, so the later change stands.
+		expect(mockRevert).not.toHaveBeenCalled();
+		expect(state.updates).toHaveLength(0);
+	});
+
+	it('allows it once the later change is out of the way', async () => {
+		// `newer` is the un-reverted ones — an undone change is no longer on top.
+		state.rows = [logRow()];
+		state.newer = [];
+
+		expect(await revertEdit(1, ACTOR)).toEqual({ ok: true });
+		expect(mockRevert).toHaveBeenCalled();
+	});
+
+	it('marks the blocked entry in the feed rather than only on the click', async () => {
+		// Newest first, as the query returns them: entry 2 is on top of entry 1.
+		state.rows = [
+			logRow({ id: 2, fields: { 'work_experience.summary': 'v2' } }),
+			logRow({ id: 1 })
+		];
+
+		const [newer, older] = await readEditLog(12);
+		expect(newer.supersededBy).toBeNull();
+		expect(older.supersededBy).toBe(2);
+	});
+
+	it('does not mark one whose blocker was already undone', async () => {
+		state.rows = [
+			logRow({ id: 2, fields: { 'work_experience.summary': 'v2' }, reverted_at: new Date() }),
+			logRow({ id: 1 })
+		];
+
+		expect((await readEditLog(12))[1].supersededBy).toBeNull();
 	});
 });

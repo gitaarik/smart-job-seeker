@@ -39,6 +39,11 @@ export const load: PageServerLoad = async ({ parent }) => {
 		readRequests(selectedProfile.id, ['pending'])
 	]);
 
+	// An entry's blocker arrives as an id, and an id is not what the page shows.
+	// Resolved here against the same window it was computed over, so the card can
+	// say which change to undo first in the words that change is titled with.
+	const titles = new Map(entries.map((entry) => [entry.id, entry.title]));
+
 	return {
 		// Everything an agent asked for and nobody has answered. First on the page
 		// because it is the only part of this feed with anything outstanding — the
@@ -63,6 +68,11 @@ export const load: PageServerLoad = async ({ parent }) => {
 			createdAt: entry.createdAt,
 			revertedAt: entry.revertedAt,
 			revertible: entry.revertible,
+			// What the applicant has to undo before this one, named rather than
+			// numbered. See the ordering note in edit-log.ts for why undoing out of
+			// order lands on a value nobody chose.
+			blockedBy:
+				entry.supersededBy === null ? null : (titles.get(entry.supersededBy) ?? 'a later change'),
 			whereInstead: entry.revertible ? null : pageFor(entry.capability),
 			// Rendered server-side through the same describer the proposal card
 			// uses where the change was one, and through its own where it was a

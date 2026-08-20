@@ -45,6 +45,25 @@
  * since. That is what undo is, and it is why the feed shows the timestamp and
  * the before-image next to the button rather than only a verb.
  *
+ * ## Undo is per change, and the order is not free
+ *
+ * There is no version history here — one before-image per change, per field —
+ * so "roll back to Tuesday" is a sequence of undos rather than one operation.
+ * That works, in one direction only. Take a field written twice:
+ *
+ *     v0 --A--> v1 --B--> v2       A recorded v0, B recorded v1
+ *
+ * Undoing B then A lands on v0, which is what was asked for. Undoing A first
+ * writes v0 over v2 — discarding B's change while B still reads as applied —
+ * and then undoing B writes v1, leaving a value nobody ever chose. Nothing
+ * about the record is wrong; it is simply that a before-image is only the
+ * inverse of its own write when nothing has happened on top of it.
+ *
+ * So an undo is refused while a NEWER un-reverted change touched the same
+ * fields of the same row, and the refusal names the one to undo first. The feed
+ * lists newest-first, so working down it was always the right order — this is
+ * what stops the wrong one being a silent mongrel instead of a message.
+ *
  * Not every action has one. `add_*` deliberately does not: the row is on its own
  * page with a delete control, and giving the registry a delete is the one thing
  * the hide-not-delete design refused. Nor does `delete_*`, for a harder reason —
@@ -54,7 +73,7 @@
  */
 
 import { dbDirect as db } from '$lib/server/db';
-import { and, desc, eq, isNull } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray, isNull } from 'drizzle-orm';
 import { capability_edits } from '$lib/server/db/schema';
 import { recordChange, type EditSource } from '$lib/server/profile/change-log';
 import { isUiAction, UI_ACTIONS, type UiAction } from '$lib/server/profile/ui-actions';
@@ -86,6 +105,83 @@ export interface EditLogEntry {
 	title: string;
 	/** Whether this one can be put back — see the note above on why some cannot. */
 	revertible: boolean;
+	/**
+	 * The newer change that has to be undone first, if there is one.
+	 *
+	 * Null for most entries, and null for everything that could not be undone
+	 * anyway. Set means the undo would not restore what its before-image says —
+	 * see the ordering note above.
+	 */
+	supersededBy: number | null;
+}
+
+/** What the ordering rule needs of a change. Both a log row and an entry fit. */
+interface LoggedChange {
+	id: number;
+	capability: string;
+	target: { id: number; label?: string };
+	fields: Record<string, unknown>;
+	previous: Record<string, unknown>;
+}
+
+/**
+ * Every field name one change is about.
+ *
+ * The union of what it wrote and what it recorded to put back, because those
+ * are not always the same set: `hide_*` writes no fields and records `tags`,
+ * and it is the recorded half that a later change would invalidate.
+ */
+function touchedFields(change: LoggedChange): string[] {
+	return [...new Set([...Object.keys(change.fields ?? {}), ...Object.keys(change.previous ?? {})])];
+}
+
+/**
+ * What "the same row" means for the ordering rule.
+ *
+ * A section, so that hiding, showing and editing one work experience all land
+ * on one key — three actions, one row, and a later hide really does sit on top
+ * of an earlier edit's tags. A capability that acts on something other than a
+ * section keys on its own name instead, which is exact rather than approximate:
+ * the three job verbs write disjoint columns, so two of them can never both be
+ * about the same field of the same job.
+ */
+function rowScope(action: string): string {
+	return sectionOf(action)?.[1] ?? action;
+}
+
+/**
+ * The newest un-reverted change standing in front of this one's undo.
+ *
+ * `newer` must hold only changes made after this one and not themselves undone;
+ * newest first, so the one returned is where the applicant has to start.
+ * Exported for the feed, which computes it over the window it has already
+ * loaded rather than asking again per row.
+ */
+export function supersedingChange<T extends LoggedChange>(
+	change: LoggedChange,
+	newer: T[]
+): T | null {
+	const fields = new Set(touchedFields(change));
+	const scope = rowScope(change.capability);
+
+	return (
+		newer.find(
+			(later) =>
+				rowScope(later.capability) === scope &&
+				later.target?.id === change.target?.id &&
+				touchedFields(later).some((field) => fields.has(field))
+		) ?? null
+	);
+}
+
+/** Every action that could be about the same row as this one — the SQL filter. */
+function siblingActions(action: string): string[] {
+	const scope = rowScope(action);
+	const all = [...Object.keys(CAPABILITIES), ...Object.keys(UI_ACTIONS)];
+	const siblings = all.filter((name) => rowScope(name) === scope);
+	// An action the registry no longer has still has to match itself, or its own
+	// history would stop blocking anything.
+	return siblings.includes(action) ? siblings : [...siblings, action];
 }
 
 /** Newest first. */
@@ -138,7 +234,10 @@ function toEntry(row: typeof capability_edits.$inferSelect): EditLogEntry {
 		revertedAt: row.reverted_at,
 		createdAt: row.date_created,
 		title: def?.title ?? action,
-		revertible: !!def?.revert && !row.reverted_at
+		revertible: !!def?.revert && !row.reverted_at,
+		// Filled by readEditLog, which is the caller that has the newer entries to
+		// compare against. A row on its own cannot answer this.
+		supersededBy: null
 	};
 }
 
@@ -218,10 +317,30 @@ export async function readEditLog(
 		.orderBy(desc(capability_edits.date_created), desc(capability_edits.id))
 		.limit(limit);
 
-	return rows.map(toEntry);
+	const entries = rows.map(toEntry);
+
+	// Newest first, so everything that could block entry `i` is already in
+	// `entries[0..i-1]` — whatever the window's size. Computed here rather than
+	// per row in SQL: the comparison is against the newer entries, and this is
+	// the only place that has them all at once.
+	return entries.map((entry, i) => ({
+		...entry,
+		supersededBy: entry.revertible
+			? (supersedingChange(
+					entry,
+					entries.slice(0, i).filter((later) => !later.revertedAt)
+				)?.id ?? null)
+			: null
+	}));
 }
 
-export type RevertRefusal = 'not_found' | 'already_reverted' | 'not_revertible' | 'failed';
+export type RevertRefusal =
+	| 'not_found'
+	| 'already_reverted'
+	| 'not_revertible'
+	/** A newer un-reverted change is sitting on top of this one — see the ordering note. */
+	| 'superseded'
+	| 'failed';
 
 export type RevertOutcome = { ok: true } | { ok: false; reason: RevertRefusal; error: string };
 
@@ -255,6 +374,37 @@ export async function revertEdit(editId: number, actor: CapabilityActor): Promis
 			ok: false,
 			reason: 'not_revertible',
 			error: 'This kind of change cannot be undone from here.'
+		};
+	}
+
+	// Anything later that is still standing and touched the same fields of the
+	// same row. Narrowed in SQL to the actions that could possibly be about that
+	// row, so this reads a handful and not a history — and asked here rather than
+	// trusted from a page, which may have been open since before the later change
+	// was made.
+	const newer = await db
+		.select()
+		.from(capability_edits)
+		.where(
+			and(
+				eq(capability_edits.profile_id, actor.profileId),
+				isNull(capability_edits.reverted_at),
+				gt(capability_edits.id, row.id),
+				inArray(capability_edits.capability, siblingActions(action))
+			)
+		);
+	const blocker = supersedingChange(
+		row,
+		[...newer].sort((a, b) => b.id - a.id)
+	);
+	if (blocker) {
+		const title = definitionFor(blocker.capability)?.title ?? blocker.capability;
+		return {
+			ok: false,
+			reason: 'superseded',
+			error:
+				`Undo "${title}" first — it changed the same thing afterwards, so putting ` +
+				`this one back now would overwrite it with a value nobody chose.`
 		};
 	}
 

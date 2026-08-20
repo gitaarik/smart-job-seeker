@@ -154,6 +154,17 @@
 							<span class="text-sm text-[var(--dash-text-secondary)]">
 								Undone {when(entry.revertedAt)}
 							</span>
+						{:else if entry.blockedBy}
+							<!--
+								Undoable, but not yet. A later change wrote the same fields of the
+								same row, so this before-image is no longer the inverse of its own
+								write — putting it back would discard the later change and leave a
+								value nobody chose. Undo runs newest-first, which is the order this
+								list is already in.
+							-->
+							<span class="text-sm text-[var(--dash-text-secondary)]">
+								Undo “{entry.blockedBy}” above first
+							</span>
 						{:else if entry.revertible}
 							<form method="POST" action="?/revert" use:enhance>
 								<input type="hidden" name="id" value={entry.id} />

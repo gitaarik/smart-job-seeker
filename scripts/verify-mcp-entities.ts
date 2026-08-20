@@ -29,7 +29,8 @@ import {
 import { canEditJob } from '$lib/server/jobs/edit-job';
 import { listProfileJobs, readProfileJob } from '$lib/server/jobs/profile-jobs';
 import { readProfileApplication } from '$lib/server/applications/profile-applications';
-import { revertEdit } from '$lib/server/ai-chat/edit-log';
+import { readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
+import { executeCapability } from '$lib/server/ai-chat/capabilities';
 import { callTool } from '$lib/server/mcp/call';
 import { createMcpKey } from '$lib/server/mcp/keys';
 import { toolsFor } from '$lib/server/mcp/tools';
@@ -207,6 +208,64 @@ async function main() {
 		check('the change undoes', undone.ok === true, 'ok' in undone ? '' : undone);
 		const afterUndo = await readProfileJob(job.id, profileId);
 		check('the field is empty again', afterUndo?.salary_min === null, afterUndo?.salary_min);
+
+		/* --- two changes to one field, undone in the wrong order ------------ */
+
+		// Written through executeCapability rather than a tool call, because two
+		// DIRECT writes to one field cannot happen over MCP: the second is an
+		// overwrite and becomes a request. The chat's Apply button takes exactly
+		// this path, and the log rows are identical either way — which is the
+		// point, since undo is about the log and not about who wrote it.
+		const target = { id: job.id, label: 'ZZ Verify Scratch Job at Verify Co' };
+		const first = await executeCapability(
+			'edit_job_details',
+			target,
+			actor,
+			{ salary_min: 60000 },
+			'chat'
+		);
+		const second = await executeCapability(
+			'edit_job_details',
+			target,
+			actor,
+			{ salary_min: 90000 },
+			'chat'
+		);
+		const firstId = first.ok ? first.editId : null;
+		const secondId = second.ok ? second.editId : null;
+		check('two changes to one field are both logged', firstId !== null && secondId !== null);
+
+		const feed = await readEditLog(profileId, 10);
+		check(
+			'the feed marks the older one as blocked by the newer',
+			feed.find((e) => e.id === firstId)?.supersededBy === secondId,
+			feed.find((e) => e.id === firstId)?.supersededBy
+		);
+
+		const outOfOrder = firstId ? await revertEdit(firstId, actor) : { ok: true as const };
+		check(
+			'undoing the older one first is refused',
+			outOfOrder.ok === false && outOfOrder.reason === 'superseded',
+			'ok' in outOfOrder && outOfOrder.ok ? '' : (outOfOrder as { error: string }).error
+		);
+		check(
+			'and nothing was written by the refusal',
+			(await readProfileJob(job.id, profileId))?.salary_min === 90000
+		);
+
+		const undoNewest = secondId ? await revertEdit(secondId, actor) : { ok: false as const };
+		check('undoing the newest works', undoNewest.ok === true);
+		check(
+			'which puts back what the older change wrote',
+			(await readProfileJob(job.id, profileId))?.salary_min === 60000
+		);
+
+		const undoOlder = firstId ? await revertEdit(firstId, actor) : { ok: false as const };
+		check('and then the older one goes back too', undoOlder.ok === true);
+		check(
+			'landing on the value before either',
+			(await readProfileJob(job.id, profileId))?.salary_min === null
+		);
 
 		/* --- tier 2: overwriting authored prose ----------------------------- */
 

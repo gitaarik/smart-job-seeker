@@ -192,6 +192,11 @@ async function listChanges(args: Args, key: VerifiedMcpKey): Promise<ToolResult>
 		fields: e.fields,
 		replaced: e.previous,
 		undone: e.revertedAt !== null,
+		// Why an undo would be refused: a later change wrote the same fields of the
+		// same row, so this one has to wait for it. There is no undo tool here —
+		// this is so an agent asked to roll something back can say which change the
+		// applicant has to take back first, rather than that it cannot be done.
+		undo_blocked_by: e.supersededBy,
 		at: e.createdAt.toISOString()
 	}));
 
