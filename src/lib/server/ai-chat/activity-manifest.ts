@@ -1,5 +1,6 @@
 /**
- * An index of everything recorded across ALL of the applicant's applications.
+ * An index of everything the applicant has on record — every entry across ALL
+ * of their applications, and every document ingested into their profile.
  *
  * ## Why an index and not the contents
  *
@@ -22,11 +23,27 @@
  * enough to be. It does not answer questions — it makes the model able to say
  * *which* questions it cannot answer from here, and where the answer lives.
  * That turns a silent blind spot into "open that application and I can".
+ *
+ * ## Why documents are in the same block
+ *
+ * They have the same failure. A profile document reaches a prompt only through
+ * retrieval — top-k passages ranked against a query — so "nothing was retrieved"
+ * and "no such document" are indistinguishable from inside the model, and both
+ * come out as a confident no. A repository scan the applicant uploaded is
+ * 4.5M characters on this profile; the index of it is one line.
+ *
+ * One block rather than two because the model is being told one thing: here is
+ * what exists that you cannot see from here.
  */
 
 import { db } from '$lib/server/db';
 import { asc, eq } from 'drizzle-orm';
-import { application_records, applications, jobs } from '$lib/server/db/schema';
+import {
+	application_records,
+	applications,
+	jobs,
+	profile_document_projects
+} from '$lib/server/db/schema';
 import { getRecordTypeLabel } from '$lib/application-records';
 
 /**
@@ -37,6 +54,16 @@ import { getRecordTypeLabel } from '$lib/application-records';
  */
 export const MANIFEST_BUDGET_CHARS = 6000;
 
+/**
+ * The documents half, budgeted apart from the applications half.
+ *
+ * Separate so that neither can starve the other: a profile with forty documents
+ * must not push an application out of the index, and forty applications must
+ * not hide the repository the applicant's whole CV is built on. Small, because
+ * a document is one line and a real profile has a handful.
+ */
+export const DOCUMENT_MANIFEST_BUDGET_CHARS = 1500;
+
 /** The shape the formatter needs — kept narrow so tests need no DB row. */
 export interface ManifestEntry {
 	id: number;
@@ -44,6 +71,16 @@ export interface ManifestEntry {
 	title: string | null;
 	event_date: string | null;
 	chars: number;
+}
+
+export interface ManifestDocument {
+	id: number;
+	kind: string | null;
+	title: string | null;
+	fileCount: number;
+	chars: number;
+	/** Whether a summary exists — the model should ask for it before the text. */
+	summarised: boolean;
 }
 
 export interface ManifestApplication {
@@ -82,11 +119,54 @@ function line(entry: ManifestEntry): string {
  * does not exist, which is the exact failure this block was built to remove. A
  * truncated list still says the application is there.
  */
+function documentLine(doc: ManifestDocument): string {
+	return `- #${doc.id} ${doc.kind ?? 'document'}: "${doc.title?.trim() || 'Untitled'}" · ${
+		doc.fileCount
+	} ${doc.fileCount === 1 ? 'file' : 'files'} · ${doc.chars} chars${
+		doc.summarised ? ' · summarised' : ''
+	}`;
+}
+
+/** The documents half of the index, trimmed on its own budget. */
+function documentSection(
+	docs: ManifestDocument[],
+	budgetChars = DOCUMENT_MANIFEST_BUDGET_CHARS
+): string[] {
+	if (docs.length === 0) return [];
+
+	const lines: string[] = [];
+	let used = 0;
+	let dropped = 0;
+	for (const doc of docs) {
+		const rendered = documentLine(doc);
+		if (used + rendered.length > budgetChars) {
+			dropped++;
+			continue;
+		}
+		lines.push(rendered);
+		used += rendered.length + 1;
+	}
+
+	return [
+		'',
+		'### Documents on their profile',
+		'',
+		'Uploads, notes and scanned repositories. Their text reaches you only',
+		'through retrieval, so if one of these holds the answer and no passage of',
+		'it appears above, say which document you would need rather than',
+		'answering as though it were not there.',
+		'',
+		...lines,
+		...(dropped > 0 ? [`- (${dropped} more not listed)`] : [])
+	];
+}
+
 export function formatActivityManifest(
 	apps: ManifestApplication[],
-	budgetChars = MANIFEST_BUDGET_CHARS
+	budgetChars = MANIFEST_BUDGET_CHARS,
+	docs: ManifestDocument[] = []
 ): string {
-	if (apps.length === 0) return '';
+	if (apps.length === 0 && docs.length === 0) return '';
 
 	const working = apps.map((a) => ({ ...a, entries: [...a.entries] }));
 	const body = () =>
@@ -117,7 +197,7 @@ export function formatActivityManifest(
 		// never appears contiguously in the output. The breaks are chosen so each
 		// load-bearing phrase stays whole and can be asserted on — same convention
 		// as the guidance block in application-activity.ts.
-		'## Everything on record, across all their applications',
+		'## Everything on record: their applications, and their documents',
 		'',
 		'An index, not the contents: it says what exists, so you can tell the',
 		'difference between something you cannot see and something that is not',
@@ -134,7 +214,8 @@ export function formatActivityManifest(
 				]
 			: []),
 		'',
-		body()
+		body(),
+		...documentSection(docs)
 	].join('\n');
 }
 
@@ -205,12 +286,40 @@ export async function loadActivityManifest(
  * Load and render the index for a profile. Returns "" when the applicant has no
  * applications at all — callers interpolate it blindly.
  */
+export async function loadDocumentManifest(profileId: number): Promise<ManifestDocument[]> {
+	const rows = await db
+		.select({
+			id: profile_document_projects.id,
+			kind: profile_document_projects.kind,
+			title: profile_document_projects.title,
+			fileCount: profile_document_projects.file_count,
+			chars: profile_document_projects.total_chars,
+			summary: profile_document_projects.summary
+		})
+		.from(profile_document_projects)
+		.where(eq(profile_document_projects.profile_id, profileId))
+		.orderBy(asc(profile_document_projects.sort), asc(profile_document_projects.id));
+
+	return rows.map((row) => ({
+		id: row.id,
+		kind: row.kind,
+		title: row.title,
+		fileCount: row.fileCount ?? 0,
+		chars: row.chars ?? 0,
+		summarised: !!row.summary
+	}));
+}
+
 export async function activityManifestText(
 	profileId: number,
 	currentApplicationId?: number
 ): Promise<string> {
 	try {
-		return formatActivityManifest(await loadActivityManifest(profileId, currentApplicationId));
+		const [apps, docs] = await Promise.all([
+			loadActivityManifest(profileId, currentApplicationId),
+			loadDocumentManifest(profileId)
+		]);
+		return formatActivityManifest(apps, MANIFEST_BUDGET_CHARS, docs);
 	} catch {
 		// Context is a bonus, never a reason to fail the generation.
 		return '';

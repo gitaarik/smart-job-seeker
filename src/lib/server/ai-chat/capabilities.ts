@@ -918,8 +918,13 @@ const addActivityRecord: CapabilityDef = {
 			limit: RECENT_ENTRIES_SHOWN
 		});
 		return {
+			// The id leads, because it is the handle: an MCP caller reads this list
+			// and then asks for one entry's text by number. It costs a few characters
+			// in the chat's prompt, where nothing addresses an entry by id — worth it
+			// against rendering the same chronology twice in two formats.
 			recent_entries: recent.map(
-				(r) => `${r.event_date ?? 'undated'} — ${getRecordTypeLabel(r.record_type)}: ${r.title}`
+				(r) =>
+					`[${r.id}] ${r.event_date ?? 'undated'} — ${getRecordTypeLabel(r.record_type)}: ${r.title}`
 			)
 		};
 	},

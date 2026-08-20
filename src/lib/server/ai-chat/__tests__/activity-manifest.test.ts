@@ -9,7 +9,9 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
+	DOCUMENT_MANIFEST_BUDGET_CHARS,
 	formatActivityManifest,
+	MANIFEST_BUDGET_CHARS,
 	type ManifestApplication,
 	type ManifestEntry
 } from '../activity-manifest';
@@ -165,5 +167,57 @@ describe('formatActivityManifest', () => {
 
 			expect(out).toContain('Acme');
 		});
+	});
+});
+
+describe('documents in the index', () => {
+	/**
+	 * A profile document reaches a prompt only through retrieval, so "nothing was
+	 * retrieved" and "no such document" look identical from inside the model —
+	 * the same confusion the applications half of this block exists to remove.
+	 */
+	const DOC = {
+		id: 14,
+		kind: 'archive',
+		title: 'Recent AI achievements.zip',
+		fileCount: 41,
+		chars: 4538182,
+		summarised: true
+	};
+
+	it('lists a document with its size and whether it has a summary', () => {
+		const out = formatActivityManifest([], MANIFEST_BUDGET_CHARS, [DOC]);
+
+		expect(out).toContain('#14');
+		expect(out).toContain('Recent AI achievements.zip');
+		expect(out).toContain('41 files');
+		// The summary is the cheap way in to 4.5M characters, so the model is told
+		// one exists rather than being left to ask for the text.
+		expect(out).toContain('summarised');
+	});
+
+	it('tells the model what to say when a document holds the answer', () => {
+		const out = formatActivityManifest([], MANIFEST_BUDGET_CHARS, [DOC]);
+		expect(out).toContain('say which document you would need');
+	});
+
+	it('renders for a profile with documents and no applications at all', () => {
+		// Applications used to be the only reason this block existed, so an empty
+		// list short-circuited the whole thing — which would now hide the documents.
+		expect(formatActivityManifest([], MANIFEST_BUDGET_CHARS, [DOC])).not.toBe('');
+	});
+
+	it('stays empty when there is neither', () => {
+		expect(formatActivityManifest([], MANIFEST_BUDGET_CHARS, [])).toBe('');
+	});
+
+	it('trims documents on their own budget, saying how many it dropped', () => {
+		// Separate budgets so neither half can starve the other: forty documents
+		// must not push an application out of the index, or the reverse.
+		const many = Array.from({ length: 60 }, (_, i) => ({ ...DOC, id: i + 1 }));
+		const out = formatActivityManifest([], MANIFEST_BUDGET_CHARS, many);
+
+		expect(out).toContain('more not listed');
+		expect(out.length).toBeLessThan(MANIFEST_BUDGET_CHARS + DOCUMENT_MANIFEST_BUDGET_CHARS + 800);
 	});
 });

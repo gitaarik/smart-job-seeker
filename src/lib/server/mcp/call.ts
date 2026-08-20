@@ -53,8 +53,10 @@ import { readEditLog } from '$lib/server/ai-chat/edit-log';
 import { createNotification } from '$lib/server/notifications';
 import {
 	listProfileApplications,
+	readApplicationEntry,
 	readProfileApplication
 } from '$lib/server/applications/profile-applications';
+import { listProfileDocuments, readProfileDocument } from '$lib/server/documents/read';
 import { listProfileJobs, readProfileJob } from '$lib/server/jobs/profile-jobs';
 import { recentDirectWrites } from './burst';
 import { targetingFor } from './entities';
@@ -390,6 +392,94 @@ async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolRes
 	);
 }
 
+/**
+ * One activity entry in full — which is also how an application's attached
+ * documents are read, since an upload becomes an entry with its text extracted.
+ *
+ * The application id is required as well as the entry id, though the entry
+ * alone would resolve. It is what the agent already has in hand, and asking for
+ * both means a mistyped entry id fails rather than quietly returning a
+ * different application's history.
+ */
+async function readActivityEntry(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+	const applicationId = argInt(args, 'application_id');
+	const entryId = argInt(args, 'entry_id');
+	if (applicationId === null || entryId === null) {
+		return fail('application_id and entry_id are both required. Call read_application for them.');
+	}
+
+	const application = await readProfileApplication(applicationId, key.profileId);
+	if (!application) {
+		return fail(`There is no application ${applicationId} on this profile.`);
+	}
+
+	const entry = await readApplicationEntry(entryId, key.profileId, {
+		offset: argInt(args, 'offset') ?? 0
+	});
+	if (!entry) {
+		return fail(`There is no entry ${entryId} on this profile. Call read_application for the ids.`);
+	}
+
+	const more = entry.more
+		? `\n\n[…${entry.offset + entry.returned_chars} of the entry read. Call again with ` +
+			`offset ${entry.offset + entry.returned_chars} for the rest.]`
+		: '';
+
+	return ok(
+		`${entry.date ?? 'undated'} — ${entry.type}: ${entry.title}` +
+			`${entry.from_file ? ' (extracted from an attached file)' : ''}\n\n` +
+			`${entry.text || '(this entry has no text)'}${more}`,
+		{ entry }
+	);
+}
+
+async function listDocuments(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+	const documents = await listProfileDocuments(key.profileId, {
+		limit: argInt(args, 'limit') ?? undefined
+	});
+
+	if (documents.length === 0) {
+		return ok('They have not added any documents to their profile.', { documents });
+	}
+
+	return ok(
+		documents
+			.map(
+				(doc) =>
+					`- [${doc.id}] ${doc.title ?? doc.filename ?? 'Untitled'} (${doc.kind}, ${doc.file_count} ` +
+					`${doc.file_count === 1 ? 'file' : 'files'}, ${doc.total_chars} chars)` +
+					`${doc.summary ? `\n      ${doc.summary}` : ''}`
+			)
+			.join('\n'),
+		{ documents }
+	);
+}
+
+async function readDocument(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+	const id = argInt(args, 'document_id');
+	if (id === null) return fail('document_id is required. Call list_documents for the ids.');
+
+	const doc = await readProfileDocument(id, key.profileId, {
+		offset: argInt(args, 'offset') ?? 0
+	});
+	if (!doc) {
+		return fail(`There is no document ${id} on this profile. Call list_documents for the ids.`);
+	}
+
+	const more = doc.more
+		? `\n\n[…${doc.offset + doc.returned_chars} of this document read. Call again with ` +
+			`offset ${doc.offset + doc.returned_chars} for the rest.]`
+		: '';
+
+	return ok(
+		`${doc.title ?? doc.filename ?? 'Untitled'} (${doc.kind}, ${doc.file_count} ` +
+			`${doc.file_count === 1 ? 'file' : 'files'})` +
+			`${doc.summary ? `\n\nSummary: ${doc.summary}` : ''}\n\n` +
+			`${doc.text || '(nothing was extracted from this document)'}${more}`,
+		{ document: doc }
+	);
+}
+
 /* ------------------------------------------------------------------ *
  * Writes
  * ------------------------------------------------------------------ */
@@ -672,6 +762,12 @@ export async function callTool(name: string, args: Args, key: VerifiedMcpKey): P
 				return listApplications(args, key);
 			case 'read_application':
 				return readApplication(args, key);
+			case 'read_activity_entry':
+				return readActivityEntry(args, key);
+			case 'list_documents':
+				return listDocuments(args, key);
+			case 'read_document':
+				return readDocument(args, key);
 			case 'list_changes':
 				return listChanges(args, key);
 			default:

@@ -16,7 +16,8 @@
 
 import { db } from '$lib/server/db';
 import { and, desc, eq } from 'drizzle-orm';
-import { applications } from '$lib/server/db/schema';
+import { application_records, applications } from '$lib/server/db/schema';
+import { getRecordTypeLabel } from '$lib/application-records';
 
 export const APPLICATION_PAGE_DEFAULT = 20;
 export const APPLICATION_PAGE_MAX = 50;
@@ -101,5 +102,77 @@ export async function readProfileApplication(
 		status: row.status,
 		status_step: row.status_step,
 		application_sent_date: row.application_sent_date
+	};
+}
+
+/**
+ * How much of one entry a read returns before asking for an offset.
+ *
+ * The chat's activity source uses the same 60,000 for one entry, and for the
+ * same reason: it is a backstop against a 2MB attachment, not a budget. A real
+ * interview transcript measured 57,616 — under it, and close enough that the
+ * offset is not decoration.
+ */
+export const ENTRY_READ_CHARS = 60000;
+
+export interface ApplicationEntryText {
+	entry_id: number;
+	type: string;
+	title: string;
+	date: string | null;
+	/** Where the text came from: a typed note, or a file that was extracted. */
+	from_file: boolean;
+	text: string;
+	offset: number;
+	returned_chars: number;
+	more: boolean;
+}
+
+/**
+ * One activity entry in full, or null when it is not this profile's.
+ *
+ * This is where an application's DOCUMENTS live as well as its notes: an upload
+ * on the Activity tab becomes a record with `file_id` set and its text
+ * extracted into `content`. One store, so one reader — the split into "records"
+ * and "documents" was undone before this was written, and re-introducing it
+ * here would be inventing a distinction the data no longer makes.
+ */
+export async function readApplicationEntry(
+	entryId: number,
+	profileId: number,
+	opts: { offset?: number } = {}
+): Promise<ApplicationEntryText | null> {
+	// Joined through the application, so the profile scope is the same query that
+	// finds the row rather than a check a later edit could forget.
+	const [row] = await db
+		.select({
+			id: application_records.id,
+			record_type: application_records.record_type,
+			title: application_records.title,
+			event_date: application_records.event_date,
+			file_id: application_records.file_id,
+			content: application_records.content
+		})
+		.from(application_records)
+		.innerJoin(applications, eq(applications.id, application_records.application_id))
+		.where(and(eq(application_records.id, entryId), eq(applications.profile_id, profileId)))
+		.limit(1);
+
+	if (!row) return null;
+
+	const whole = row.content ?? '';
+	const offset = Math.max(opts.offset ?? 0, 0);
+	const text = whole.slice(offset, offset + ENTRY_READ_CHARS);
+
+	return {
+		entry_id: row.id,
+		type: getRecordTypeLabel(row.record_type),
+		title: row.title,
+		date: row.event_date,
+		from_file: row.file_id !== null,
+		text,
+		offset,
+		returned_chars: text.length,
+		more: offset + text.length < whole.length
 	};
 }

@@ -143,12 +143,63 @@ vi.mock('$lib/server/jobs/profile-jobs', () => ({
 		)
 }));
 
+/** A long entry, so the slicing and the "there is more" line are exercised. */
+const ENTRY_TEXT = 'The transcript. '.repeat(20);
+
 vi.mock('$lib/server/applications/profile-applications', () => ({
 	APPLICATION_PAGE_DEFAULT: 20,
 	APPLICATION_PAGE_MAX: 50,
+	ENTRY_READ_CHARS: 100,
 	listProfileApplications: () => Promise.resolve([APPLICATION]),
 	readProfileApplication: (id: number, profileId: number) =>
-		Promise.resolve(id === APPLICATION.id && profileId === 12 ? APPLICATION : null)
+		Promise.resolve(id === APPLICATION.id && profileId === 12 ? APPLICATION : null),
+	readApplicationEntry: (entryId: number, profileId: number, opts?: { offset?: number }) => {
+		if (entryId !== 7 || profileId !== 12) return Promise.resolve(null);
+		const offset = opts?.offset ?? 0;
+		const text = ENTRY_TEXT.slice(offset, offset + 100);
+		return Promise.resolve({
+			entry_id: 7,
+			type: 'Transcript',
+			title: 'Recruiter call',
+			date: '2026-08-02',
+			from_file: true,
+			text,
+			offset,
+			returned_chars: text.length,
+			more: offset + text.length < ENTRY_TEXT.length
+		});
+	}
+}));
+
+const DOCUMENT = {
+	id: 3,
+	kind: 'repo',
+	title: 'smart-job-seeker',
+	filename: 'sjs.zip',
+	status: 'ready',
+	summary: 'A SvelteKit job-hunting app.',
+	file_count: 2,
+	total_chars: 400
+};
+
+vi.mock('$lib/server/documents/read', () => ({
+	DOCUMENT_PAGE_DEFAULT: 20,
+	DOCUMENT_PAGE_MAX: 50,
+	DOCUMENT_READ_CHARS: 100,
+	listProfileDocuments: () => Promise.resolve([DOCUMENT]),
+	readProfileDocument: (id: number, profileId: number, opts?: { offset?: number }) =>
+		Promise.resolve(
+			id === DOCUMENT.id && profileId === 12
+				? {
+						...DOCUMENT,
+						text: '--- src/app.ts ---\nthe code',
+						offset: opts?.offset ?? 0,
+						returned_chars: 26,
+						more: false,
+						files: [{ path: 'src/app.ts', chars: 400 }]
+					}
+				: null
+		)
 }));
 
 /**
@@ -661,5 +712,73 @@ describe('jobs and applications', () => {
 			])
 		);
 		expect(fields.job_description).toBe('The posting as it stands.');
+	});
+});
+
+describe('reading the material an application collected', () => {
+	it('returns an entry in full, and says it came from a file', async () => {
+		// The gap this closes: the chronology names a transcript, and until now
+		// naming it was all this server could do with it.
+		const result = await callTool(
+			'read_activity_entry',
+			{ profile_id: 12, application_id: 44, entry_id: 7 },
+			KEY
+		);
+
+		expect(result.content[0].text).toContain('The transcript.');
+		expect(result.content[0].text).toContain('extracted from an attached file');
+	});
+
+	it('says where to resume when the entry is longer than a slice', async () => {
+		const result = await callTool(
+			'read_activity_entry',
+			{ profile_id: 12, application_id: 44, entry_id: 7 },
+			KEY
+		);
+
+		expect(result.content[0].text).toContain('offset 100');
+		expect((result.structuredContent?.entry as { more: boolean }).more).toBe(true);
+	});
+
+	it('continues from an offset', async () => {
+		const result = await callTool(
+			'read_activity_entry',
+			{ profile_id: 12, application_id: 44, entry_id: 7, offset: 300 },
+			KEY
+		);
+
+		const entry = result.structuredContent?.entry as { offset: number; more: boolean };
+		expect(entry.offset).toBe(300);
+		expect(entry.more).toBe(false);
+	});
+
+	it('refuses an entry on an application that is not this profile’s', async () => {
+		const result = await callTool(
+			'read_activity_entry',
+			{ profile_id: 12, application_id: 999, entry_id: 7 },
+			KEY
+		);
+		expect(result.isError).toBe(true);
+	});
+
+	it('lists profile documents with their summaries', async () => {
+		const result = await callTool('list_documents', { profile_id: 12 }, KEY);
+
+		expect(result.content[0].text).toContain('[3] smart-job-seeker');
+		// The summary is often the whole answer, so it travels with the listing
+		// rather than costing a second call to find out.
+		expect(result.content[0].text).toContain('A SvelteKit job-hunting app.');
+	});
+
+	it('reads a document, naming the file each passage came from', async () => {
+		const result = await callTool('read_document', { profile_id: 12, document_id: 3 }, KEY);
+		expect(result.content[0].text).toContain('--- src/app.ts ---');
+	});
+
+	it('refuses a document that is not this profile’s', async () => {
+		const result = await callTool('read_document', { profile_id: 12, document_id: 999 }, KEY);
+
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('list_documents');
 	});
 });
