@@ -45,9 +45,11 @@ import {
 import { profileEditCounts } from '$lib/server/ai-chat/profile-edit-manifest';
 import {
 	assistantFields,
+	isHideable,
 	PROFILE_RESOURCES,
 	type ProfileResourceName
 } from '$lib/server/profile/resources';
+import { isProfileOnly, versionsOf } from '$lib/profile-visibility';
 import { readOwnedRows } from '$lib/server/profile/write';
 import { readEditLog } from '$lib/server/ai-chat/edit-log';
 import { createNotification } from '$lib/server/notifications';
@@ -168,26 +170,60 @@ async function readProfileSection(args: Args, key: VerifiedMcpKey): Promise<Tool
 	const resource = PROFILE_RESOURCES[name];
 	const fields = assistantFields(resource);
 	const rows = await readOwnedRows(name, { profileId: key.profileId });
+	const hideable = isHideable(name);
 
-	const entries = rows.map((row) => ({
-		entry_id: row.id,
-		label: resource.rowLabel(row),
-		fields: Object.fromEntries(
-			Object.keys(fields).map((column) => [`${name}.${column}`, row[column] ?? null])
-		)
-	}));
+	const entries = rows.map((row) => {
+		const entry: Record<string, unknown> = {
+			entry_id: row.id,
+			label: resource.rowLabel(row),
+			fields: Object.fromEntries(
+				Object.keys(fields).map((column) => [`${name}.${column}`, row[column] ?? null])
+			)
+		};
+
+		// Visibility is not an assistant field — `tags` is `notForAssistant`
+		// precisely because a wrong value there is silent. But not returning the
+		// state at all makes every read blind to it: an agent auditing what prints
+		// cannot tell an entry it should propose hiding from one already hidden,
+		// and proposes the no-op. So the state is reported in the two terms that
+		// answer that question, and neither is a tag string it could echo back.
+		if (hideable) {
+			const tags = (row.tags ?? null) as string[] | null;
+			entry.hidden = isProfileOnly(tags);
+			entry.versions = versionsOf(tags);
+		}
+
+		return entry;
+	});
 
 	if (entries.length === 0) {
 		return ok(`No ${resource.page.name.toLowerCase()} yet. Use add_${name} to create one.`, {
 			section: name,
+			hideable,
 			entries
 		});
 	}
 
+	const hiddenCount = entries.filter((e) => e.hidden === true).length;
+
+	// Said in the text as well as the payload: an agent that skims the summary
+	// and reads `fields` for the one row it came for would otherwise act on a
+	// hidden entry as though it prints.
+	const note = hideable
+		? hiddenCount > 0
+			? `\n\n${hiddenCount} of these ${hiddenCount === 1 ? 'is' : 'are'} hidden — off every ` +
+				`CV and export, still counted for job matching. Do not propose hiding those again.`
+			: ''
+		: `\n\nNothing filters this section on a document, so every entry here prints and ` +
+			`none of them can be hidden — by you or from the profile page.`;
+
 	return ok(
 		`${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} in ${name}:\n\n` +
-			entries.map((e) => `- [${e.entry_id}] ${e.label}`).join('\n'),
-		{ section: name, entries }
+			entries
+				.map((e) => `- [${e.entry_id}] ${e.label}${e.hidden === true ? ' — hidden' : ''}`)
+				.join('\n') +
+			note,
+		{ section: name, hideable, entries }
 	);
 }
 

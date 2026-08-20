@@ -357,7 +357,15 @@ through list_jobs and list_applications, which take the same profile_id.`,
 current value of every field you are allowed to write.
 
 Read before you write. An edit is a partial patch over what is here, and a
-field you do not send keeps what it holds.`,
+field you do not send keeps what it holds.
+
+Where the section can be hidden from, each entry also carries what it is
+currently doing on a document: "hidden" is true when it prints on no CV and no
+export — still counted for job matching, just off every document — and
+"versions" lists the versions it is re-admitted on despite that. An entry
+already hidden does not need hiding again. Where "hideable" is false the
+section has no such control at all: every entry prints, and there is nothing
+to propose.`,
 		inputSchema: {
 			type: 'object',
 			properties: {

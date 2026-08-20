@@ -27,7 +27,17 @@ const ROWS: Record<string, Record<string, unknown>[]> = {
 			location: null,
 			tags: null
 		},
-		{ id: 6, job_title: 'Intern', company: 'Globex', summary: null, location: null, tags: null }
+		// Hidden, and re-admitted on one version — the shape that distinguishes
+		// "off every document" from "off everything", which a reader has to be
+		// able to tell apart before proposing anything.
+		{
+			id: 6,
+			job_title: 'Intern',
+			company: 'Globex',
+			summary: null,
+			location: null,
+			tags: ['!resume', '!cv', 'senior']
+		}
 	],
 	language: [{ id: 9, name: 'Dutch', level: 'Native' }]
 };
@@ -297,6 +307,60 @@ describe('reads', () => {
 			KEY
 		);
 		expect(result.isError).toBe(true);
+	});
+
+	it('reports which entries are already hidden, and on what versions', async () => {
+		// Without this an audit of what prints is blind: the only way to tell a
+		// row that needs hiding from one already hidden was to propose the hide
+		// and read the refusal — which is a request the applicant has to review.
+		const result = await callTool(
+			'read_profile_section',
+			{ profile_id: 12, section: 'work_experience' },
+			KEY
+		);
+
+		const entries = result.structuredContent?.entries as {
+			entry_id: number;
+			hidden: boolean;
+			versions: string[];
+		}[];
+
+		expect(result.structuredContent?.hideable).toBe(true);
+		expect(entries.find((e) => e.entry_id === 5)).toMatchObject({ hidden: false, versions: [] });
+		expect(entries.find((e) => e.entry_id === 6)).toMatchObject({
+			hidden: true,
+			versions: ['senior']
+		});
+	});
+
+	it('says in the text that an entry is hidden, not only in the payload', async () => {
+		const result = await callTool(
+			'read_profile_section',
+			{ profile_id: 12, section: 'work_experience' },
+			KEY
+		);
+
+		expect(result.content[0].text).toContain('[6]');
+		expect(result.content[0].text).toMatch(/\[6\][^\n]*— hidden/);
+		expect(result.content[0].text).toContain('1 of these is hidden');
+	});
+
+	it('says a section with no visibility control has none', async () => {
+		// Languages render straight from the profile with no filter, so there is
+		// nothing to hide and no hide_language to propose. Reporting `hidden:
+		// false` here would read as "visible, and could be hidden", which is the
+		// half of it that is untrue.
+		const result = await callTool(
+			'read_profile_section',
+			{ profile_id: 12, section: 'language' },
+			KEY
+		);
+
+		const entries = result.structuredContent?.entries as Record<string, unknown>[];
+
+		expect(result.structuredContent?.hideable).toBe(false);
+		expect(entries[0]).not.toHaveProperty('hidden');
+		expect(result.content[0].text).toContain('none of them can be hidden');
 	});
 });
 
