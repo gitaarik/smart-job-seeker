@@ -12,7 +12,13 @@
 
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { createMcpKey, isMcpScope, listMcpKeys, revokeMcpKey } from '$lib/server/mcp/keys';
+import {
+	createMcpKey,
+	isMcpReadScope,
+	isMcpScope,
+	listMcpKeys,
+	revokeMcpKey
+} from '$lib/server/mcp/keys';
 
 export const load: PageServerLoad = async ({ parent, locals }) => {
 	const { profiles, selectedProfile } = await parent();
@@ -38,17 +44,22 @@ export const actions: Actions = {
 		const form = await request.formData();
 		const name = String(form.get('name') ?? '').trim();
 		const scope = String(form.get('scope') ?? '');
+		const readScope = String(form.get('read_scope') ?? 'record');
 		const profileId = Number(form.get('profile_id'));
 
 		if (!name) return fail(400, { error: 'Give the app a name so you can tell it apart later.' });
 		if (!isMcpScope(scope)) return fail(400, { error: 'Pick what the app is allowed to do.' });
+		// Refused rather than narrowed to the safe end: this is the moment the
+		// decision is made, and silently making a different one is how someone
+		// ends up believing they granted less than they did — or more.
+		if (!isMcpReadScope(readScope)) return fail(400, { error: 'Pick what the app may see.' });
 		if (!Number.isInteger(profileId)) return fail(400, { error: 'Pick a profile.' });
 
 		// `createMcpKey` re-checks the profile against the user rather than
 		// trusting this form. This is the moment a credential is bound, and a
 		// mistake here binds an agent to the wrong history for as long as the key
 		// lives.
-		const created = await createMcpKey({ userId: user.id, profileId, name, scope });
+		const created = await createMcpKey({ userId: user.id, profileId, name, scope, readScope });
 		if (!created) return fail(400, { error: 'That profile is not yours.' });
 
 		// Returned once and never again — the row keeps it encrypted for re-reading

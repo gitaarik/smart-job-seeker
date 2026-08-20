@@ -53,6 +53,7 @@ function keyRow(overrides: Record<string, unknown> = {}) {
 		user_id: 'user-1',
 		profile_id: 12,
 		scope: 'propose',
+		read_scope: 'record',
 		name: 'Claude Desktop',
 		revoked: false,
 		expires_at: null,
@@ -82,7 +83,12 @@ describe('verifyMcpKey', () => {
 		state.rows = [keyRow()];
 
 		const verified = await verifyMcpKey(`${MCP_KEY_PREFIX}abc`);
-		expect(verified).toMatchObject({ keyId: 7, profileId: 12, scope: 'propose' });
+		expect(verified).toMatchObject({
+			keyId: 7,
+			profileId: 12,
+			scope: 'propose',
+			readScope: 'record'
+		});
 	});
 
 	it('refuses a device key outright', async () => {

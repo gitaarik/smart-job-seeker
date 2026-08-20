@@ -1,0 +1,1 @@
+ALTER TABLE "mcp_keys" ADD COLUMN "read_scope" varchar(16) DEFAULT 'record' NOT NULL;

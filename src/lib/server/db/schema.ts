@@ -2897,6 +2897,24 @@ export const mcp_keys = pgTable(
 		 * meant is not.
 		 */
 		scope: varchar({ length: 16 }).default('propose').notNull(),
+		/**
+		 * `record` | `documents` — the second dimension, and it grades READS.
+		 *
+		 * `scope` above says how far a key may write, and said nothing at all
+		 * about what it may see. That was fine while the server returned an
+		 * applicant's own structured rows; it stopped being fine when it learned
+		 * to return the text of what other people sent them — a recruiter's email,
+		 * an offer, an interview transcript, an uploaded archive. Those are the
+		 * largest untrusted blocks this system holds, and handing them to an agent
+		 * that also holds a write scope is the combination `PROMPT-INJECTION.md`
+		 * §10 is about.
+		 *
+		 * So an applicant can now mint "my record, never my correspondence".
+		 * Defaults to `record`, the closed end, and for the same reason `scope`
+		 * defaults to `propose`: a key that sees too little is noticed in one
+		 * call, and one that sees too much is not noticed at all.
+		 */
+		read_scope: varchar({ length: 16 }).default('record').notNull(),
 		expires_at: timestamp({ withTimezone: true, mode: 'date' }),
 		last_used: timestamp({ withTimezone: true, mode: 'date' }),
 		revoked: boolean().default(false).notNull(),

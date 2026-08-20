@@ -62,7 +62,14 @@ import { recentDirectWrites } from './burst';
 import { targetingFor } from './entities';
 import { createRequest, readRequests, requestPath } from './requests';
 import { dispositionFor, tierForWrite } from './tiers';
-import { isMcpCapability, isReadTool, pageFor, sectionFor, MCP_CAPABILITIES } from './tools';
+import {
+	DOCUMENT_TOOLS,
+	isMcpCapability,
+	isReadTool,
+	pageFor,
+	sectionFor,
+	MCP_CAPABILITIES
+} from './tools';
 import { JOB_CAPABILITIES } from './entities';
 import type { VerifiedMcpKey } from './keys';
 
@@ -142,11 +149,12 @@ async function listProfileSections(key: VerifiedMcpKey): Promise<ToolResult> {
 	// told to call first — so it is the one place that can say the other half of
 	// the data exists. A tool list says the same thing and is read less carefully.
 	return ok(
-		`Profile ${key.profileId}, reachable with this key (scope: ${key.scope}).\n\n` +
+		`Profile ${key.profileId}, reachable with this key (writes: ${key.scope}, ` +
+			`reads: ${key.readScope}).\n\n` +
 			`${lines.join('\n')}\n\n` +
 			`Their jobs and applications are separate: list_jobs and list_applications, ` +
 			`same profile_id.`,
-		{ profile_id: key.profileId, scope: key.scope, sections }
+		{ profile_id: key.profileId, scope: key.scope, read_scope: key.readScope, sections }
 	);
 }
 
@@ -751,6 +759,19 @@ export async function callTool(name: string, args: Args, key: VerifiedMcpKey): P
 	if (mismatch) return mismatch;
 
 	if (isReadTool(name)) {
+		// The read scope, enforced here and not only by hiding the tool. A client
+		// that remembers a tool list from before the key was re-minted, or one that
+		// simply tries a name it read about, gets the same answer as a write above
+		// its scope: a refusal that names where to change it.
+		if (key.readScope !== 'documents' && (DOCUMENT_TOOLS as readonly string[]).includes(name)) {
+			return fail(
+				`This key reads the applicant's own record — their profile, jobs and ` +
+					`applications — and not the documents and messages they have collected. ` +
+					`They can widen it on their MCP keys page; there is nothing you can do ` +
+					`from here.`
+			);
+		}
+
 		switch (name) {
 			case 'read_profile_section':
 				return readProfileSection(args, key);

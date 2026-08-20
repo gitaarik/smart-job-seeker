@@ -148,7 +148,8 @@ async function main() {
 		userId: profile.userId,
 		profileId,
 		name: 'ZZ Verify Scratch Key',
-		scope: 'write'
+		scope: 'write',
+		readScope: 'documents'
 	});
 	if (!minted) throw new Error('could not mint a key for this profile');
 
@@ -157,6 +158,9 @@ async function main() {
 		userId: profile.userId,
 		profileId,
 		scope: 'write',
+		// The wide end of the read dimension: this script exercises the write path,
+		// and a `record` key would refuse the document tools it does not test.
+		readScope: 'documents',
 		name: 'ZZ Verify Scratch Key'
 	};
 	const readKey: VerifiedMcpKey = { ...KEY, scope: 'read' };

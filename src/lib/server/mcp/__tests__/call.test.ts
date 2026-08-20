@@ -227,11 +227,18 @@ const KEY = {
 	userId: 'user-1',
 	profileId: 12,
 	scope: 'write' as const,
+	// The wide end of both dimensions, so a test that cares about one of them
+	// says so rather than inheriting it.
+	readScope: 'documents' as const,
 	name: 'Claude Desktop'
 };
 
 function withScope(scope: 'read' | 'propose' | 'write') {
 	return { ...KEY, scope };
+}
+
+function withReadScope(readScope: 'record' | 'documents') {
+	return { ...KEY, readScope };
 }
 
 beforeEach(() => {
@@ -780,5 +787,67 @@ describe('reading the material an application collected', () => {
 
 		expect(result.isError).toBe(true);
 		expect(result.content[0].text).toContain('list_documents');
+	});
+});
+
+describe('the read scope', () => {
+	/**
+	 * `scope` grades what a key may write and said nothing about what it may
+	 * see — which was fine until the server learned to return the text of what
+	 * other people sent the applicant. A `record` key reads their own history and
+	 * not their correspondence.
+	 */
+	it('refuses an entry’s text, and says where that is changed', async () => {
+		const result = await callTool(
+			'read_activity_entry',
+			{ profile_id: 12, application_id: 44, entry_id: 7 },
+			withReadScope('record')
+		);
+
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('MCP keys page');
+		expect(result.content[0].text).not.toContain('The transcript.');
+	});
+
+	it('refuses the profile documents too', async () => {
+		for (const name of ['list_documents', 'read_document']) {
+			const result = await callTool(
+				name,
+				{ profile_id: 12, document_id: 3 },
+				withReadScope('record')
+			);
+			expect(result.isError, name).toBe(true);
+		}
+	});
+
+	it('still returns the applicant’s own record', async () => {
+		// The line is authorship, not sensitivity: everything here was written by
+		// them or by this application.
+		for (const [name, args] of [
+			['list_profile_sections', {}],
+			['read_application', { profile_id: 12, application_id: 44 }],
+			['list_jobs', { profile_id: 12 }]
+		] as const) {
+			const result = await callTool(name, args, withReadScope('record'));
+			expect(result.isError, name).toBeUndefined();
+		}
+	});
+
+	it('keeps the chronology at both levels, because a write needs it', async () => {
+		// `add_activity_record` must not log the same call twice, and the index is
+		// how it knows. A title is not the document.
+		const result = await callTool(
+			'read_application',
+			{ profile_id: 12, application_id: 44 },
+			withReadScope('record')
+		);
+		expect(result.content[0].text).toContain('Recruiter call');
+	});
+
+	it('says which dimensions a key has, so an agent can explain a refusal', async () => {
+		const result = await callTool('list_profile_sections', {}, withReadScope('record'));
+
+		expect(result.content[0].text).toContain('writes: write');
+		expect(result.content[0].text).toContain('reads: record');
 	});
 });

@@ -40,6 +40,7 @@
 import { CAPABILITIES, type Capability } from '$lib/server/ai-chat/capabilities';
 import { PROFILE_CAPABILITY_NAMES } from '$lib/server/ai-chat/profile-capabilities';
 import { ENTITY_CAPABILITY_NAMES, targetingFor } from './entities';
+import type { McpReadScope, McpScope } from './keys';
 import {
 	APPLICATION_PAGE_DEFAULT,
 	APPLICATION_PAGE_MAX
@@ -71,6 +72,18 @@ export interface McpTool {
 	inputSchema: JsonSchema;
 	annotations: ToolAnnotations;
 }
+
+/**
+ * The read tools that return somebody else's words rather than the applicant's
+ * own record.
+ *
+ * Hidden from a `record` key rather than refused, for the same reason a `read`
+ * key is not shown the write tools: a listed tool that always refuses is a
+ * conversation spent retrying, and the fix is on the applicant's settings page
+ * rather than in the transcript. `call.ts` refuses them regardless — a tool
+ * list is a courtesy, not a boundary.
+ */
+export const DOCUMENT_TOOLS = ['read_activity_entry', 'list_documents', 'read_document'] as const;
 
 /** The read tools, which are what most agents want and all they should need. */
 export const READ_TOOLS = [
@@ -450,8 +463,11 @@ asked for is still pending, say so and move on.`,
  * carries no information it could act on — the fix is on the applicant's
  * settings page, not in the transcript.
  */
-export function toolsFor(scope: 'read' | 'propose' | 'write'): McpTool[] {
-	const tools: McpTool[] = READ_TOOLS.map((name) => readTools[name]);
+export function toolsFor(scope: McpScope, readScope: McpReadScope = 'documents'): McpTool[] {
+	const tools: McpTool[] = READ_TOOLS.filter(
+		(name) => readScope === 'documents' || !(DOCUMENT_TOOLS as readonly string[]).includes(name)
+	).map((name) => readTools[name]);
+
 	if (scope === 'read') return tools;
 	return [...tools, ...MCP_CAPABILITIES.map(writeTool)];
 }

@@ -43,12 +43,40 @@ export function isMcpScope(value: unknown): value is McpScope {
 	return typeof value === 'string' && (MCP_SCOPES as readonly string[]).includes(value);
 }
 
-/** A key that verified: who it speaks for, and how far. */
+/**
+ * What a key is allowed to SEE — the second dimension, and the newer one.
+ *
+ * `record` is the applicant's own structured history: their profile, their
+ * jobs, their applications, what has been changed. `documents` adds the text of
+ * the things other people sent them — an offer, a recruiter's email, an
+ * interview transcript, an uploaded archive.
+ *
+ * The split is drawn there because that is where authorship changes. Everything
+ * under `record` was written by the applicant or by this application; the text
+ * a `documents` key reads was written by somebody else and can say anything,
+ * including things addressed to the agent reading it. That is the whole of
+ * `PROMPT-INJECTION.md` §10, and this is its answer: an applicant who wants an
+ * agent tidying their CV does not have to hand it their correspondence too.
+ *
+ * The INDEX stays either way — an application's chronology names its entries at
+ * both levels, because `add_activity_record` needs it to avoid logging the same
+ * thing twice, and a title is not the document. What `record` never returns is
+ * the text.
+ */
+export const MCP_READ_SCOPES = ['record', 'documents'] as const;
+export type McpReadScope = (typeof MCP_READ_SCOPES)[number];
+
+export function isMcpReadScope(value: unknown): value is McpReadScope {
+	return typeof value === 'string' && (MCP_READ_SCOPES as readonly string[]).includes(value);
+}
+
+/** A key that verified: who it speaks for, how far, and how much it sees. */
 export interface VerifiedMcpKey {
 	keyId: number;
 	userId: string;
 	profileId: number;
 	scope: McpScope;
+	readScope: McpReadScope;
 	name: string;
 }
 
@@ -98,6 +126,7 @@ export async function verifyMcpKey(key: string): Promise<VerifiedMcpKey | null> 
 				user_id: mcp_keys.user_id,
 				profile_id: mcp_keys.profile_id,
 				scope: mcp_keys.scope,
+				read_scope: mcp_keys.read_scope,
 				name: mcp_keys.name,
 				revoked: mcp_keys.revoked,
 				expires_at: mcp_keys.expires_at,
@@ -116,6 +145,11 @@ export async function verifyMcpKey(key: string): Promise<VerifiedMcpKey | null> 
 		if (row.expires_at && new Date(row.expires_at) < new Date()) return null;
 		if (row.owner_id !== row.user_id) return null;
 		if (!isMcpScope(row.scope)) return null;
+		// A read scope this build does not recognise is refused rather than
+		// narrowed to `record`. A value only gets into that column from a future
+		// version, and quietly reading a key as less permissive than it was minted
+		// is a support call; refusing it is one line in a log.
+		if (!isMcpReadScope(row.read_scope)) return null;
 
 		// Fire and forget, like the device-key path: a failure to stamp last_used
 		// must not fail the call it is describing.
@@ -131,6 +165,7 @@ export async function verifyMcpKey(key: string): Promise<VerifiedMcpKey | null> 
 			userId: row.user_id,
 			profileId: row.profile_id,
 			scope: row.scope,
+			readScope: row.read_scope,
 			name: row.name
 		};
 	} catch (e) {
@@ -153,6 +188,8 @@ export async function createMcpKey(opts: {
 	profileId: number;
 	name: string;
 	scope: McpScope;
+	/** Defaults to the closed end, like the column does. */
+	readScope?: McpReadScope;
 	expiresAt?: Date | null;
 }): Promise<{ id: number; key: string } | null> {
 	const [owned] = await db
@@ -173,6 +210,7 @@ export async function createMcpKey(opts: {
 			key_hash: hash,
 			key_encrypted: encryptCredential(key),
 			scope: opts.scope,
+			read_scope: opts.readScope ?? 'record',
 			expires_at: opts.expiresAt ?? null
 		})
 		.returning({ id: mcp_keys.id });
@@ -186,6 +224,7 @@ export interface McpKeyListing {
 	profileId: number;
 	profileName: string | null;
 	scope: McpScope;
+	readScope: McpReadScope;
 	revoked: boolean;
 	expiresAt: Date | null;
 	lastUsed: Date | null;
@@ -202,6 +241,7 @@ export async function listMcpKeys(userId: string): Promise<McpKeyListing[]> {
 			profile_id: mcp_keys.profile_id,
 			profile_name: profiles.name,
 			scope: mcp_keys.scope,
+			read_scope: mcp_keys.read_scope,
 			revoked: mcp_keys.revoked,
 			expires_at: mcp_keys.expires_at,
 			last_used: mcp_keys.last_used,
@@ -219,6 +259,7 @@ export async function listMcpKeys(userId: string): Promise<McpKeyListing[]> {
 		profileId: row.profile_id,
 		profileName: row.profile_name,
 		scope: isMcpScope(row.scope) ? row.scope : 'read',
+		readScope: isMcpReadScope(row.read_scope) ? row.read_scope : 'record',
 		revoked: row.revoked,
 		expiresAt: row.expires_at,
 		lastUsed: row.last_used,

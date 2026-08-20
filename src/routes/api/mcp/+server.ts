@@ -96,7 +96,7 @@ async function handleMessage(
 			return rpcResult(id, {});
 
 		case 'tools/list':
-			return rpcResult(id, { tools: toolsFor(key.scope) });
+			return rpcResult(id, { tools: toolsFor(key.scope, key.readScope) });
 
 		case 'tools/call': {
 			const params = message.params ?? {};

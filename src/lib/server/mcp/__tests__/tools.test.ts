@@ -9,7 +9,14 @@
 import { describe, expect, it } from 'vitest';
 import { CAPABILITIES } from '$lib/server/ai-chat/capabilities';
 import { ENTITY_CAPABILITY_NAMES, targetingFor } from '../entities';
-import { isReadTool, MCP_CAPABILITIES, READ_TOOLS, sectionFor, toolsFor } from '../tools';
+import {
+	DOCUMENT_TOOLS,
+	isReadTool,
+	MCP_CAPABILITIES,
+	READ_TOOLS,
+	sectionFor,
+	toolsFor
+} from '../tools';
 
 const write = toolsFor('write');
 const byName = new Map(write.map((tool) => [tool.name, tool]));
@@ -97,5 +104,36 @@ describe('sectionFor', () => {
 	it('still answers with the section for a generated one', () => {
 		expect(sectionFor('edit_work_experience')).toBe('work_experience');
 		expect(sectionFor('hide_side_project')).toBe('side_project');
+	});
+});
+
+describe('what a read scope is shown', () => {
+	it('hides the document tools from a record key', () => {
+		const names = toolsFor('write', 'record').map((tool) => tool.name);
+		for (const hidden of DOCUMENT_TOOLS) expect(names, hidden).not.toContain(hidden);
+	});
+
+	it('shows them to a documents key', () => {
+		const names = toolsFor('write', 'documents').map((tool) => tool.name);
+		for (const shown of DOCUMENT_TOOLS) expect(names, shown).toContain(shown);
+	});
+
+	it('leaves the write tools alone either way', () => {
+		// The two dimensions are independent: narrowing what a key SEES must not
+		// quietly narrow what it may change, or the grading stops being readable.
+		const record = toolsFor('write', 'record').map((t) => t.name);
+		const documents = toolsFor('write', 'documents').map((t) => t.name);
+		for (const capability of MCP_CAPABILITIES) {
+			expect(record, capability).toContain(capability);
+			expect(documents, capability).toContain(capability);
+		}
+	});
+
+	it('gives a read-only record key the narrowest surface there is', () => {
+		const names = toolsFor('read', 'record').map((tool) => tool.name);
+		expect(names.every((name) => isReadTool(name))).toBe(true);
+		expect(names).toEqual(
+			READ_TOOLS.filter((n) => !(DOCUMENT_TOOLS as readonly string[]).includes(n))
+		);
 	});
 });

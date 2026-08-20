@@ -42,6 +42,35 @@
 		write: 'Adds directly'
 	};
 
+	/**
+	 * The second decision, and the one that is easy to get wrong by not being
+	 * asked. Everything under "your own record" was written by you or by this
+	 * app; the documents half is what other people sent you, and an app that can
+	 * read those is an app you are trusting with your correspondence.
+	 */
+	const READ_SCOPES = [
+		{
+			value: 'record',
+			label: 'Your own record (recommended)',
+			blurb:
+				'Your profile, your jobs, your applications and their history — including what each ' +
+				'entry is called, but not what it says.'
+		},
+		{
+			value: 'documents',
+			label: 'Everything you have collected',
+			blurb:
+				'Also the text of what you attached and were sent: interview transcripts, recruiter ' +
+				'emails, offers, uploaded documents. Give this only to an app you would forward ' +
+				'those to.'
+		}
+	];
+
+	const READ_SCOPE_LABELS: Record<string, string> = {
+		record: 'reads your record',
+		documents: 'reads your documents too'
+	};
+
 	const endpoint = $derived(`${page.url.origin}/api/mcp`);
 
 	function when(date: Date | string | null): string {
@@ -155,6 +184,25 @@
 			{/each}
 		</fieldset>
 
+		<fieldset class="space-y-2">
+			<legend class="text-sm text-[var(--dash-text-secondary)]">What may it see?</legend>
+			{#each READ_SCOPES as readScope (readScope.value)}
+				<label class="flex gap-3 rounded-md border border-[var(--dash-border)] p-3">
+					<input
+						type="radio"
+						name="read_scope"
+						value={readScope.value}
+						checked={readScope.value === 'record'}
+						class="mt-1"
+					/>
+					<span>
+						<span class="block font-medium">{readScope.label}</span>
+						<span class="block text-sm text-[var(--dash-text-secondary)]">{readScope.blurb}</span>
+					</span>
+				</label>
+			{/each}
+		</fieldset>
+
 		<button
 			type="submit"
 			class="rounded-md px-4 py-2 text-sm text-white"
@@ -184,7 +232,8 @@
 							</h3>
 							<p class="text-sm text-[var(--dash-text-secondary)]">
 								{key.profileName ?? `Profile ${key.profileId}`} · {SCOPE_LABELS[key.scope] ??
-									key.scope} · last used {when(key.lastUsed)}
+									key.scope} · {READ_SCOPE_LABELS[key.readScope] ?? key.readScope} · last used
+								{when(key.lastUsed)}
 							</p>
 						</div>
 
