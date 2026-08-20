@@ -568,10 +568,17 @@ Use it to avoid re-doing something the applicant already reverted.`,
 
 There is no tool that approves one, and asking again does not help — a second
 request for the same thing is a second thing for them to read. If something you
-asked for is still pending, say so and move on.`,
+asked for is still pending, say so and move on.
+
+Only the newest are returned, but the count is always the true one: when it says
+more are waiting than it showed, the ones it did not show were still asked for.
+Raise "limit" before concluding that something is missing from the queue.`,
 		inputSchema: {
 			type: 'object',
-			properties: { profile_id: PROFILE_ID_PROPERTY },
+			properties: {
+				profile_id: PROFILE_ID_PROPERTY,
+				limit: { type: 'integer', description: 'How many, newest first. Default 20, max 50.' }
+			},
 			required: ['profile_id'],
 			additionalProperties: false
 		},

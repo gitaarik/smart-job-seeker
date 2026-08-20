@@ -46,6 +46,8 @@ const executeCapability = vi.fn();
 const createRequest = vi.fn();
 const createNotification = vi.fn();
 const recentDirectWrites = vi.fn();
+const readRequests = vi.fn();
+const countRequests = vi.fn();
 
 vi.mock('$lib/server/profile/write', () => ({
 	readOwnedRows: (name: string) => Promise.resolve(ROWS[name] ?? []),
@@ -69,7 +71,8 @@ vi.mock('../burst', () => ({ recentDirectWrites: () => recentDirectWrites() }));
 vi.mock('../requests', async (importOriginal) => ({
 	...(await importOriginal<typeof import('../requests')>()),
 	createRequest: (...args: unknown[]) => createRequest(...args),
-	readRequests: () => Promise.resolve([])
+	readRequests: (...args: unknown[]) => readRequests(...args),
+	countRequests: (...args: unknown[]) => countRequests(...args)
 }));
 
 vi.mock('$lib/server/notifications', () => ({
@@ -256,7 +259,24 @@ beforeEach(() => {
 	recentDirectWrites.mockResolvedValue(0);
 	createRequest.mockResolvedValue(101);
 	executeCapability.mockResolvedValue({ ok: true, previous: {}, editId: 55 });
+	readRequests.mockResolvedValue([]);
+	countRequests.mockResolvedValue(0);
 });
+
+/** `n` pending requests, newest first, as `readRequests` returns them. */
+function pendingRequests(n: number) {
+	return Array.from({ length: n }, (_, i) => ({
+		id: 500 + i,
+		capability: 'edit_language',
+		target: { label: `Entry ${i}` },
+		fields: { 'language.name': 'Dutch' },
+		rationale: 'because',
+		status: 'pending' as const,
+		createdAt: new Date('2026-08-20T20:31:00Z'),
+		decidedAt: null,
+		editId: null
+	}));
+}
 
 describe('profile scoping', () => {
 	it('refuses a profile the key is not bound to', async () => {
@@ -361,6 +381,68 @@ describe('reads', () => {
 		expect(result.structuredContent?.hideable).toBe(false);
 		expect(entries[0]).not.toHaveProperty('hidden');
 		expect(result.content[0].text).toContain('none of them can be hidden');
+	});
+});
+
+/**
+ * The queue an agent cannot drain.
+ *
+ * Every other list here shrinks as work gets done. This one only the applicant
+ * empties, so it grows across sessions and is read far more often than it
+ * changes — which is why it is paged at all. The property that matters is not
+ * the page size but that the page admits to being one: the tool's whole job is
+ * stopping a second request for something already asked, and it can only do that
+ * if a caller seeing 20 of 38 knows there are 38.
+ */
+describe('list_pending_changes', () => {
+	it('pages the queue instead of returning all of it', async () => {
+		readRequests.mockResolvedValue(pendingRequests(20));
+		countRequests.mockResolvedValue(38);
+
+		const result = await callTool('list_pending_changes', { profile_id: 12 }, KEY);
+
+		expect(readRequests).toHaveBeenCalledWith(12, ['pending'], 20);
+		expect((result.structuredContent?.requests as unknown[]).length).toBe(20);
+	});
+
+	it('reports the true total when it shows only some', async () => {
+		readRequests.mockResolvedValue(pendingRequests(20));
+		countRequests.mockResolvedValue(38);
+
+		const result = await callTool('list_pending_changes', { profile_id: 12 }, KEY);
+
+		// The 18 it withheld are the ones an agent would otherwise ask for twice.
+		expect(result.structuredContent?.total).toBe(38);
+		expect(result.content[0].text).toContain('38 waiting');
+		expect(result.content[0].text).toContain('20 shown');
+		expect(result.content[0].text).toContain('remaining 18');
+	});
+
+	it('says nothing about a remainder when there is none', async () => {
+		readRequests.mockResolvedValue(pendingRequests(3));
+		countRequests.mockResolvedValue(3);
+
+		const result = await callTool('list_pending_changes', { profile_id: 12 }, KEY);
+
+		expect(result.content[0].text).toContain('3 waiting on the applicant:');
+		expect(result.content[0].text).not.toContain('shown');
+	});
+
+	it('clamps a limit past the ceiling, and a nonsense one', async () => {
+		readRequests.mockResolvedValue([]);
+
+		await callTool('list_pending_changes', { profile_id: 12, limit: 5000 }, KEY);
+		expect(readRequests).toHaveBeenLastCalledWith(12, ['pending'], 50);
+
+		await callTool('list_pending_changes', { profile_id: 12, limit: 0 }, KEY);
+		expect(readRequests).toHaveBeenLastCalledWith(12, ['pending'], 1);
+	});
+
+	it('reports an empty queue as empty', async () => {
+		const result = await callTool('list_pending_changes', { profile_id: 12 }, KEY);
+
+		expect(result.content[0].text).toBe('Nothing is waiting for approval.');
+		expect(result.structuredContent?.total).toBe(0);
 	});
 });
 

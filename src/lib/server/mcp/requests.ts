@@ -24,7 +24,7 @@
  */
 
 import { dbDirect as db } from '$lib/server/db';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, count, desc, eq, inArray } from 'drizzle-orm';
 import { capability_requests } from '$lib/server/db/schema';
 import {
 	CAPABILITIES,
@@ -107,7 +107,8 @@ function toRequest(row: typeof capability_requests.$inferSelect): CapabilityRequ
 
 export async function readRequests(
 	profileId: number,
-	statuses: RequestStatus[] = ['pending']
+	statuses: RequestStatus[] = ['pending'],
+	limit = 100
 ): Promise<CapabilityRequest[]> {
 	if (statuses.length === 0) return [];
 
@@ -121,9 +122,37 @@ export async function readRequests(
 			)
 		)
 		.orderBy(desc(capability_requests.date_created), desc(capability_requests.id))
-		.limit(100);
+		.limit(limit);
 
 	return rows.map(toRequest);
+}
+
+/**
+ * How many there are, as opposed to how many were returned.
+ *
+ * Only worth a query because of what `list_pending_changes` promises. That tool
+ * exists to stop an agent asking twice for the same thing, and a page of it that
+ * did not say how much it left out would cause exactly that: everything past the
+ * page reads as never having been asked for, and gets asked for again. The count
+ * is what makes a truncated page safe to act on.
+ */
+export async function countRequests(
+	profileId: number,
+	statuses: RequestStatus[] = ['pending']
+): Promise<number> {
+	if (statuses.length === 0) return 0;
+
+	const [row] = await db
+		.select({ value: count() })
+		.from(capability_requests)
+		.where(
+			and(
+				eq(capability_requests.profile_id, profileId),
+				inArray(capability_requests.status, statuses)
+			)
+		);
+
+	return Number(row?.value ?? 0);
 }
 
 export type DecisionRefusal = 'not_found' | 'already_decided' | 'failed';

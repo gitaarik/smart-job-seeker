@@ -62,7 +62,7 @@ import { listProfileDocuments, readProfileDocument } from '$lib/server/documents
 import { listProfileJobs, readProfileJob } from '$lib/server/jobs/profile-jobs';
 import { recentDirectWrites } from './burst';
 import { targetingFor } from './entities';
-import { createRequest, readRequests, requestPath } from './requests';
+import { countRequests, createRequest, readRequests, requestPath } from './requests';
 import { dispositionFor, isUnchanged, tierForWrite } from './tiers';
 import {
 	DOCUMENT_TOOLS,
@@ -261,8 +261,15 @@ async function listChanges(args: Args, key: VerifiedMcpKey): Promise<ToolResult>
 	);
 }
 
-async function listPendingChanges(key: VerifiedMcpKey): Promise<ToolResult> {
-	const pending = await readRequests(key.profileId, ['pending']);
+async function listPendingChanges(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+	const requested = argInt(args, 'limit') ?? 20;
+	const limit = Math.min(Math.max(requested, 1), 50);
+
+	const [pending, total] = await Promise.all([
+		readRequests(key.profileId, ['pending'], limit),
+		countRequests(key.profileId, ['pending'])
+	]);
+
 	const requests = pending.map((r) => ({
 		request_id: r.id,
 		capability: r.capability,
@@ -272,12 +279,23 @@ async function listPendingChanges(key: VerifiedMcpKey): Promise<ToolResult> {
 		review_at: requestPath(r.id)
 	}));
 
-	if (requests.length === 0) return ok('Nothing is waiting for approval.', { requests });
+	if (total === 0) return ok('Nothing is waiting for approval.', { requests, total });
+
+	// Say what was left out rather than only what was shown. A queue only the
+	// applicant can drain outlives the agent reading it, and an unmentioned
+	// remainder reads as "never asked for" — which is how you get a second
+	// request for something already sitting in the list.
+	const withheld = total - requests.length;
+	const heading =
+		withheld > 0
+			? `${total} waiting on the applicant, ${requests.length} shown ` +
+				`(raise "limit" up to 50 to see more of the remaining ${withheld}):`
+			: `${total} waiting on the applicant:`;
 
 	return ok(
-		`${requests.length} waiting on the applicant:\n\n` +
+		`${heading}\n\n` +
 			requests.map((r) => `- [${r.request_id}] ${r.capability} on "${r.target}"`).join('\n'),
-		{ requests }
+		{ requests, total }
 	);
 }
 
@@ -858,7 +876,7 @@ export async function callTool(name: string, args: Args, key: VerifiedMcpKey): P
 			case 'list_changes':
 				return listChanges(args, key);
 			default:
-				return listPendingChanges(key);
+				return listPendingChanges(args, key);
 		}
 	}
 
