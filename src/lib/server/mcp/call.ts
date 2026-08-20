@@ -61,6 +61,7 @@ import { targetingFor } from './entities';
 import { createRequest, readRequests, requestPath } from './requests';
 import { dispositionFor, tierForWrite } from './tiers';
 import { isMcpCapability, isReadTool, pageFor, sectionFor, MCP_CAPABILITIES } from './tools';
+import { JOB_CAPABILITIES } from './entities';
 import type { VerifiedMcpKey } from './keys';
 
 /** What a tool call answers with. `isError` is the protocol's, not an exception. */
@@ -269,6 +270,41 @@ async function listJobs(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
 	);
 }
 
+/**
+ * What the write tools for one row would be patching, read from the write tools.
+ *
+ * A read tool's promise is "the current value of every field you are allowed to
+ * write", and the capabilities are where that list is declared — one map per
+ * capability driving the prompt, the JSON Schema, the coercion and the write.
+ * Spelling the same columns out again in a read query is how the two come to
+ * disagree, which is a whole genre of bug this repository has already paid for.
+ * So a field appears here because a capability writes it, or it does not appear.
+ */
+async function currentFields(
+	capabilities: Capability[],
+	target: CapabilityTarget,
+	actor: CapabilityActor
+): Promise<Record<string, unknown>> {
+	const states = await Promise.all(
+		capabilities.map((capability) => CAPABILITIES[capability].current(target, actor))
+	);
+	return Object.assign({}, ...states);
+}
+
+/** `name: value` over whatever a capability's `current` returned. */
+function renderFields(fields: Record<string, unknown>): string {
+	return Object.entries(fields)
+		.map(([name, value]) => {
+			const rendered = Array.isArray(value)
+				? value.join(', ')
+				: value === null || value === undefined || value === ''
+					? '(not set)'
+					: String(value);
+			return `${name}: ${rendered}`;
+		})
+		.join('\n');
+}
+
 async function readJob(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
 	const id = argInt(args, 'job_id');
 	if (id === null) return fail('job_id is required. Call list_jobs for the ids.');
@@ -283,18 +319,15 @@ async function readJob(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
 		);
 	}
 
-	const lines = Object.entries(job)
-		.filter(([name]) => name !== 'id')
-		.map(([name, value]) => {
-			const rendered = Array.isArray(value)
-				? value.join(', ')
-				: value === null || value === ''
-					? '(not set)'
-					: String(value);
-			return `${name}: ${rendered}`;
-		});
+	const actor: CapabilityActor = { profileId: key.profileId, isStaff: false };
+	const target: CapabilityTarget = { id: job.id, label: job.title ?? 'Untitled' };
+	const fields = await currentFields(JOB_CAPABILITIES, target, actor);
 
-	return ok(`Job ${job.id}:\n\n${lines.join('\n')}`, { job });
+	return ok(
+		`Job ${job.id}${job.editable ? '' : ' (read-only: imported, not hand-entered)'}:\n\n` +
+			renderFields(fields),
+		{ job, fields }
+	);
 }
 
 async function listApplications(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
@@ -334,21 +367,26 @@ async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolRes
 		return fail(`There is no application ${id} on this profile. Call list_applications.`);
 	}
 
-	const entries = application.recent_entries.map(
-		(entry) => `  - ${entry.date ?? 'undated'} — ${entry.type}: ${entry.title}`
-	);
+	const actor: CapabilityActor = { profileId: key.profileId, isStaff: false };
+	const target: CapabilityTarget = { id: application.id, label: application.job_title ?? '' };
+	const details = CAPABILITIES.edit_application_details;
+	const activity = CAPABILITIES.add_activity_record;
+
+	const fields = await details.current(target, actor);
+	const logged = await activity.current(target, actor);
+
+	// The chronology rendered by the capability that writes into it, rather than
+	// by a second copy here. It already has to tell a model not to log the same
+	// thing twice — that instruction belongs next to the contract that says what
+	// an entry is, and having said it twice in two wordings is how one goes stale.
+	const chronology = activity.renderState?.(logged) ?? renderFields(logged);
 
 	return ok(
 		`Application ${application.id} — ${application.job_title ?? 'Untitled'}` +
 			`${application.job_company ? ` at ${application.job_company}` : ''}\n` +
-			`status: ${application.status}${application.status_step ? ` (${application.status_step})` : ''}\n` +
-			`cv_sent_through: ${application.cv_sent_through ?? '(not set)'}\n` +
-			`application_sent_date: ${application.application_sent_date ?? '(not set)'}\n` +
-			`application_seen_date: ${application.application_seen_date ?? '(not set)'}\n\n` +
-			(entries.length > 0
-				? `Already logged, most recent first. Do not log any of these again:\n${entries.join('\n')}`
-				: 'Nothing is logged on this application yet.'),
-		{ application }
+			`status: ${application.status}${application.status_step ? ` (${application.status_step})` : ''}\n\n` +
+			`${renderFields(fields)}\n\n${chronology}`,
+		{ application, fields, ...logged }
 	);
 }
 

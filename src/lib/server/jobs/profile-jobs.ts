@@ -55,21 +55,16 @@ export interface ProfileJobSummary {
 	editable: boolean;
 }
 
-export interface ProfileJobDetail extends ProfileJobSummary {
-	job_poster: string | null;
-	office_location: string | null;
-	salary_min: number | null;
-	salary_max: number | null;
-	salary_currency: string | null;
-	salary_period: string | null;
-	work_location: string[] | null;
-	job_types: string[] | null;
-	experience_levels: string[] | null;
-	job_description: string | null;
-	company_description: string | null;
-	skills_required: string[] | null;
-	skills_preferred: string[] | null;
-}
+/**
+ * Deliberately the same shape as a list row.
+ *
+ * This module answers "may this profile see this job, and may it change it".
+ * What the job currently HOLDS is a different question with an existing answer:
+ * each job capability's `current()`, which is what the prompt, the proposal
+ * card and the coercion already read. Listing those columns again here would be
+ * a second copy of a declaration that exists precisely so there is one.
+ */
+export type ProfileJobDetail = ProfileJobSummary;
 
 /**
  * The profile's own jobs, newest first.
@@ -133,7 +128,17 @@ export async function readProfileJob(
 	jobId: number,
 	profileId: number
 ): Promise<ProfileJobDetail | null> {
-	const job = await db.query.jobs.findFirst({ where: eq(jobs.id, jobId) });
+	const job = await db.query.jobs.findFirst({
+		where: eq(jobs.id, jobId),
+		columns: {
+			id: true,
+			title: true,
+			company: true,
+			date_posted: true,
+			source_url: true,
+			created_manually: true
+		}
+	});
 	if (!job) return null;
 
 	const importer = await db.query.job_importers.findFirst({
@@ -154,19 +159,6 @@ export async function readProfileJob(
 		source_url: job.source_url,
 		imported: !!importer,
 		applied: !!application,
-		editable: job.created_manually && !!importer,
-		job_poster: job.job_poster,
-		office_location: job.office_location,
-		salary_min: job.salary_min,
-		salary_max: job.salary_max,
-		salary_currency: job.salary_currency,
-		salary_period: job.salary_period,
-		work_location: (job.work_location as string[] | null) ?? null,
-		job_types: (job.job_types as string[] | null) ?? null,
-		experience_levels: (job.experience_levels as string[] | null) ?? null,
-		job_description: job.job_description,
-		company_description: job.company_description,
-		skills_required: (job.skills_required as string[] | null) ?? null,
-		skills_preferred: (job.skills_preferred as string[] | null) ?? null
+		editable: job.created_manually && !!importer
 	};
 }

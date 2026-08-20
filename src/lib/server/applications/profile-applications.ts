@@ -7,23 +7,19 @@
  * reason this module exists is that the MCP layer should not be assembling
  * queries of its own.
  *
- * What it returns is chosen by what the two write verbs need: the three fields
- * `edit_application_details` patches, and the chronology `add_activity_record`
- * must not duplicate. Everything else about an application — its letters, its
+ * What it returns is what NAMES an application — the job behind it and where it
+ * stands. What it holds is a different question, answered by the capabilities'
+ * own `current()`. Everything else about an application — its letters, its
  * documents, its match score — is reachable in the app and is not part of what
  * an external agent was given a key for.
  */
 
 import { db } from '$lib/server/db';
 import { and, desc, eq } from 'drizzle-orm';
-import { application_records, applications } from '$lib/server/db/schema';
-import { getRecordTypeLabel } from '$lib/application-records';
+import { applications } from '$lib/server/db/schema';
 
 export const APPLICATION_PAGE_DEFAULT = 20;
 export const APPLICATION_PAGE_MAX = 50;
-
-/** How much of the chronology a detail read carries. Same reason as the chat's. */
-const RECENT_ENTRIES = 20;
 
 export interface ProfileApplicationSummary {
 	id: number;
@@ -36,12 +32,15 @@ export interface ProfileApplicationSummary {
 	application_sent_date: string | null;
 }
 
-export interface ProfileApplicationDetail extends ProfileApplicationSummary {
-	cv_sent_through: string | null;
-	application_seen_date: string | null;
-	/** Newest first, in the form the activity contract shows them. */
-	recent_entries: { entry_id: number; type: string; title: string; date: string | null }[];
-}
+/**
+ * The same shape as a list row, and for the same reason `ProfileJobDetail` is.
+ *
+ * The fields an agent can WRITE, and the chronology it must not repeat, are
+ * both already declared — by `edit_application_details.current` and
+ * `add_activity_record.current`. Reading them from there is what keeps the read
+ * tool and the write tool describing one application rather than two.
+ */
+export type ProfileApplicationDetail = ProfileApplicationSummary;
 
 export async function listProfileApplications(
 	profileId: number,
@@ -88,20 +87,11 @@ export async function readProfileApplication(
 			job_id: true,
 			status: true,
 			status_step: true,
-			application_sent_date: true,
-			application_seen_date: true,
-			cv_sent_through: true
+			application_sent_date: true
 		},
 		with: { job: { columns: { title: true, company: true } } }
 	});
 	if (!row) return null;
-
-	const entries = await db.query.application_records.findMany({
-		where: eq(application_records.application_id, applicationId),
-		columns: { id: true, record_type: true, title: true, event_date: true },
-		orderBy: [desc(application_records.event_date), desc(application_records.date_created)],
-		limit: RECENT_ENTRIES
-	});
 
 	return {
 		id: row.id,
@@ -110,14 +100,6 @@ export async function readProfileApplication(
 		job_company: row.job?.company ?? null,
 		status: row.status,
 		status_step: row.status_step,
-		application_sent_date: row.application_sent_date,
-		application_seen_date: row.application_seen_date,
-		cv_sent_through: row.cv_sent_through,
-		recent_entries: entries.map((entry) => ({
-			entry_id: entry.id,
-			type: getRecordTypeLabel(entry.record_type),
-			title: entry.title,
-			date: entry.event_date
-		}))
+		application_sent_date: row.application_sent_date
 	};
 }

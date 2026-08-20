@@ -28,9 +28,8 @@ import {
 } from '$lib/server/db/schema';
 import { canEditJob } from '$lib/server/jobs/edit-job';
 import { listProfileJobs, readProfileJob } from '$lib/server/jobs/profile-jobs';
-import { readProfileApplication } from '$lib/server/applications/profile-applications';
 import { readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
-import { executeCapability } from '$lib/server/ai-chat/capabilities';
+import { CAPABILITIES, executeCapability } from '$lib/server/ai-chat/capabilities';
 import { callTool } from '$lib/server/mcp/call';
 import { createMcpKey } from '$lib/server/mcp/keys';
 import { toolsFor } from '$lib/server/mcp/tools';
@@ -52,6 +51,22 @@ function check(what: string, ok: boolean, detail: unknown = '') {
 
 function text(result: { content: { text: string }[] }): string {
 	return result.content.map((part) => part.text).join('\n');
+}
+
+/**
+ * What the job currently holds, read the way `read_job` reads it — through the
+ * capabilities that write those columns rather than a query of this script's
+ * own. A helper that went looking in the table itself would pass while the tool
+ * it is standing in for showed something else.
+ */
+async function currentJob(jobId: number): Promise<Record<string, unknown>> {
+	const target = { id: jobId, label: 'job' };
+	const states = await Promise.all(
+		(['edit_job_details', 'edit_job_description', 'edit_job_skills'] as const).map((capability) =>
+			CAPABILITIES[capability].current(target, actor)
+		)
+	);
+	return Object.assign({}, ...states);
 }
 
 async function main() {
@@ -199,15 +214,14 @@ async function main() {
 			editId
 		);
 
-		const afterWrite = await readProfileJob(job.id, profileId);
-		check('the value landed', afterWrite?.salary_min === 75000);
+		check('the value landed', (await currentJob(job.id)).salary_min === 75000);
 
 		/* --- undo ----------------------------------------------------------- */
 
 		const undone = editId ? await revertEdit(editId, actor) : { ok: false as const };
 		check('the change undoes', undone.ok === true, 'ok' in undone ? '' : undone);
-		const afterUndo = await readProfileJob(job.id, profileId);
-		check('the field is empty again', afterUndo?.salary_min === null, afterUndo?.salary_min);
+		const afterUndo = await currentJob(job.id);
+		check('the field is empty again', afterUndo.salary_min === null, afterUndo.salary_min);
 
 		/* --- two changes to one field, undone in the wrong order ------------ */
 
@@ -250,22 +264,19 @@ async function main() {
 		);
 		check(
 			'and nothing was written by the refusal',
-			(await readProfileJob(job.id, profileId))?.salary_min === 90000
+			(await currentJob(job.id)).salary_min === 90000
 		);
 
 		const undoNewest = secondId ? await revertEdit(secondId, actor) : { ok: false as const };
 		check('undoing the newest works', undoNewest.ok === true);
 		check(
 			'which puts back what the older change wrote',
-			(await readProfileJob(job.id, profileId))?.salary_min === 60000
+			(await currentJob(job.id)).salary_min === 60000
 		);
 
 		const undoOlder = firstId ? await revertEdit(firstId, actor) : { ok: false as const };
 		check('and then the older one goes back too', undoOlder.ok === true);
-		check(
-			'landing on the value before either',
-			(await readProfileJob(job.id, profileId))?.salary_min === null
-		);
+		check('landing on the value before either', (await currentJob(job.id)).salary_min === null);
 
 		/* --- tier 2: overwriting authored prose ----------------------------- */
 
@@ -290,10 +301,9 @@ async function main() {
 			typeof rewrite.structuredContent?.review_at === 'string',
 			rewrite.structuredContent?.review_at
 		);
-		const stillThere = await readProfileJob(job.id, profileId);
 		check(
 			'the posting is untouched',
-			stillThere?.job_description === 'The posting as the applicant typed it.'
+			(await currentJob(job.id)).job_description === 'The posting as the applicant typed it.'
 		);
 
 		/* --- an entry filed under an application ---------------------------- */
@@ -316,12 +326,14 @@ async function main() {
 				text(logged).includes(`/applications/${application.id}`)
 		);
 
-		const withEntry = await readProfileApplication(application.id, profileId);
-		check(
-			'the entry is on the application',
-			withEntry?.recent_entries.length === 1,
-			withEntry?.recent_entries[0]?.title
+		// Read the way `read_application` reads it: through the capability that
+		// writes entries, which is also what renders the chronology to a model.
+		const chronology = await CAPABILITIES.add_activity_record.current(
+			{ id: application.id, label: 'application' },
+			actor
 		);
+		const loggedEntries = (chronology.recent_entries as string[]) ?? [];
+		check('the entry is on the application', loggedEntries.length === 1, loggedEntries[0]);
 
 		/* --- application details, and their undo ---------------------------- */
 
@@ -340,12 +352,13 @@ async function main() {
 			'an empty application field is filled directly',
 			details.structuredContent?.applied === true
 		);
-		check(
-			'and it undoes back to empty',
-			detailEditId !== undefined &&
-				(await revertEdit(detailEditId, actor)).ok === true &&
-				(await readProfileApplication(application.id, profileId))?.cv_sent_through === null
+		const detailsBack =
+			detailEditId !== undefined && (await revertEdit(detailEditId, actor)).ok === true;
+		const applicationNow = await CAPABILITIES.edit_application_details.current(
+			{ id: application.id, label: 'application' },
+			actor
 		);
+		check('and it undoes back to empty', detailsBack && applicationNow.cv_sent_through === null);
 
 		/* --- refusals ------------------------------------------------------- */
 

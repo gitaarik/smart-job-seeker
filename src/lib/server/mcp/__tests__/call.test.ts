@@ -14,6 +14,7 @@
  *  3. What comes back says what was destroyed, not only what arrived.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { CAPABILITIES } from '$lib/server/ai-chat/capabilities';
 
 /** One work experience with an authored summary, and one with none. */
 const ROWS: Record<string, Record<string, unknown>[]> = {
@@ -88,7 +89,19 @@ const JOB = {
 	source_url: null,
 	imported: true,
 	applied: true,
-	editable: true,
+	editable: true
+};
+
+/**
+ * The same job as a database row.
+ *
+ * Kept apart from the scope row above because they are now different questions:
+ * `profile-jobs.ts` answers whether this profile may see and change the job,
+ * and the capabilities' own `current()` answers what it holds. The read tool
+ * composes the two rather than one module claiming both.
+ */
+const JOB_ROW = {
+	...JOB,
 	job_poster: null,
 	office_location: null,
 	salary_min: null,
@@ -112,11 +125,11 @@ const APPLICATION = {
 	job_company: 'Acme',
 	status: 'applied',
 	status_step: null,
-	application_sent_date: '2026-08-01',
-	application_seen_date: null,
-	cv_sent_through: null,
-	recent_entries: [{ entry_id: 7, type: 'Note', title: 'Recruiter call', date: '2026-08-02' }]
+	application_sent_date: '2026-08-01'
 };
+
+/** What `add_activity_record.current` reads to render the chronology. */
+const RECORDS = [{ id: 7, record_type: 'note', title: 'Recruiter call', event_date: '2026-08-02' }];
 
 vi.mock('$lib/server/jobs/profile-jobs', () => ({
 	JOB_PAGE_DEFAULT: 20,
@@ -148,9 +161,9 @@ vi.mock('$lib/server/applications/profile-applications', () => ({
 vi.mock('$lib/server/db', () => ({
 	db: {
 		query: {
-			jobs: { findFirst: () => Promise.resolve(JOB) },
+			jobs: { findFirst: () => Promise.resolve(JOB_ROW) },
 			applications: { findFirst: () => Promise.resolve({ id: 44, profile_id: 12 }) },
-			application_records: { findMany: () => Promise.resolve([]) }
+			application_records: { findMany: () => Promise.resolve(RECORDS) }
 		}
 	},
 	dbDirect: { query: {} }
@@ -628,6 +641,25 @@ describe('jobs and applications', () => {
 		const result = await callTool('read_application', { profile_id: 12, application_id: 44 }, KEY);
 
 		expect(result.content[0].text).toContain('Recruiter call');
-		expect(result.content[0].text).toContain('Do not log any of these again');
+		// Rendered by the capability that writes entries, not by a second copy of
+		// its instruction here — one wording, one place to change it.
+		expect(result.content[0].text).toContain('Do not propose an entry that repeats');
+	});
+
+	it('reads a job through the fields its write tools declare', async () => {
+		// The read tool promises "every field you are allowed to write", and the
+		// capabilities are where that list lives. A field appears because a
+		// capability writes it, or it does not appear.
+		const result = await callTool('read_job', { profile_id: 12, job_id: 100 }, KEY);
+		const fields = result.structuredContent?.fields as Record<string, unknown>;
+
+		expect(Object.keys(fields)).toEqual(
+			expect.arrayContaining([
+				...Object.keys(CAPABILITIES.edit_job_details.fields),
+				...Object.keys(CAPABILITIES.edit_job_description.fields),
+				...Object.keys(CAPABILITIES.edit_job_skills.fields)
+			])
+		);
+		expect(fields.job_description).toBe('The posting as it stands.');
 	});
 });

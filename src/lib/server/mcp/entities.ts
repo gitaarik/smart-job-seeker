@@ -150,6 +150,15 @@ export const ENTITY_TARGETING: Partial<Record<Capability, EntityTargeting>> = {
 
 export const ENTITY_CAPABILITY_NAMES = Object.keys(ENTITY_TARGETING) as Capability[];
 
+/**
+ * The verbs that write a job — which is also the definition of what `read_job`
+ * shows, since a read tool's promise is the current value of every field a
+ * write tool could patch.
+ */
+export const JOB_CAPABILITIES = ENTITY_CAPABILITY_NAMES.filter(
+	(capability) => ENTITY_TARGETING[capability]?.entity === 'job'
+);
+
 export function targetingFor(capability: Capability): EntityTargeting | null {
 	return ENTITY_TARGETING[capability] ?? null;
 }
