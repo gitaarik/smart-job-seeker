@@ -77,9 +77,13 @@ async function handleMessage(
 				capabilities: { tools: { listChanged: false } },
 				serverInfo: SERVER_INFO,
 				instructions:
-					`This server reads and changes one job applicant's profile — the one this ` +
-					`key is bound to. Call list_profile_sections first: it returns the profile ` +
+					`This server reads and changes one job applicant's own record — the profile ` +
+					`this key is bound to, the jobs they have collected and the applications ` +
+					`they have sent. Call list_profile_sections first: it returns the profile ` +
 					`id every other tool needs.\n\n` +
+					`Jobs are the exception to "their own": a posting is shared between everyone ` +
+					`it matched, so only the ones they typed in by hand can be changed, and only ` +
+					`the ones they imported or applied to can be read at all.\n\n` +
 					`Changes that overwrite something the applicant wrote, and changes that hide ` +
 					`an entry, are not applied by you. They are recorded and the applicant ` +
 					`approves them in their own app. There is no tool that approves one, and ` +

@@ -294,6 +294,25 @@ function renderCurrent(current: Record<string, unknown>): string {
  * ------------------------------------------------------------------ */
 
 /**
+ * What a job and an application are called, wherever one is named.
+ *
+ * Exported because MCP resolves the same two rows a different way — by an id
+ * the agent supplies, against the profile's own scope — and a target's label is
+ * shown to the applicant on the approval card. Two spellings of the same row
+ * would read as two different rows on the one surface where it matters that
+ * they do not.
+ */
+export function jobLabel(job: { title: string | null; company: string | null }): string {
+	return [job.title ?? 'Untitled job', job.company].filter(Boolean).join(' at ');
+}
+
+export function applicationLabel(
+	job: { title: string | null; company: string | null } | null | undefined
+): string {
+	return [job?.title ?? 'Application', job?.company].filter(Boolean).join(' at ');
+}
+
+/**
  * The job a page is about: itself on /jobs/[id], the attached one on an
  * application page. Returns null for a page with neither.
  */
@@ -317,10 +336,7 @@ async function resolveJobTarget(entity: ContextEntity | null): Promise<Capabilit
 	});
 	if (!job) return null;
 
-	return {
-		id: job.id,
-		label: [job.title ?? 'Untitled job', job.company].filter(Boolean).join(' at ')
-	};
+	return { id: job.id, label: jobLabel(job) };
 }
 
 async function currentJobFields(target: CapabilityTarget): Promise<Record<string, unknown>> {
@@ -400,6 +416,33 @@ Field rules, all of which are enforced after you answer:
 		// through — otherwise an omitted field would read as "clear it".
 		const merged = { ...current, ...fields } as unknown as JobFieldValues;
 		await applyJobFields(target.id, merged);
+	},
+
+	/**
+	 * Put the replaced values back, through the same authoritative write.
+	 *
+	 * Merged over a fresh read for exactly the reason `apply` is: the before-image
+	 * holds only the fields that changed, and applyJobFields writes all thirteen.
+	 * Passing it through alone would undo one correction by clearing twelve
+	 * columns nobody touched.
+	 *
+	 * Ownership is not re-checked here because `revertEdit` has already asked
+	 * this capability's own `authorize` — `canEditJob`, against a fresh read. A
+	 * job that stopped being this profile's to edit cannot be reverted either,
+	 * which is the same answer as for any other write.
+	 */
+	revert: async (target, previous) => {
+		// An empty before-image is a log row this capability cannot read, not a
+		// change with nothing in it. Writing the current values back over
+		// themselves would report a successful undo and undo nothing.
+		if (Object.keys(previous).length === 0) {
+			throw new Error('edit_job_details recorded no fields this can put back');
+		}
+		const merged = { ...(await currentJobFields(target)), ...previous };
+		await applyJobFields(target.id, {
+			...(merged as unknown as JobFieldValues),
+			title: typeof merged.title === 'string' ? merged.title : ''
+		});
 	}
 };
 
@@ -547,6 +590,29 @@ ${company || '(not set)'}
 				? { company_description: fields.company_description as string | null }
 				: {})
 		});
+	},
+
+	/**
+	 * The undo this capability exists to have.
+	 *
+	 * A rewritten posting is the one change on a job that nothing else can put
+	 * back: the old text is gone from the row and lives only in the before-image.
+	 * Same partial semantics as `apply` — restore the text that was replaced and
+	 * leave the other alone.
+	 */
+	revert: async (target, previous) => {
+		const texts = {
+			...('job_description' in previous
+				? { job_description: previous.job_description as string | null }
+				: {}),
+			...('company_description' in previous
+				? { company_description: previous.company_description as string | null }
+				: {})
+		};
+		if (Object.keys(texts).length === 0) {
+			throw new Error('edit_job_description recorded no text this can put back');
+		}
+		await applyJobTexts(target.id, texts);
 	}
 };
 
@@ -650,6 +716,25 @@ text first, because the reason it is wrong is usually that the text was wrong.`,
 				? { skills_preferred: fields.skills_preferred as string[] | null }
 				: {})
 		});
+	},
+
+	/**
+	 * Put the replaced list back — and with it the match score, since writing
+	 * these columns is what re-scores the job.
+	 */
+	revert: async (target, previous) => {
+		const lists = {
+			...('skills_required' in previous
+				? { skills_required: previous.skills_required as string[] | null }
+				: {}),
+			...('skills_preferred' in previous
+				? { skills_preferred: previous.skills_preferred as string[] | null }
+				: {})
+		};
+		if (Object.keys(lists).length === 0) {
+			throw new Error('edit_job_skills recorded no list this can put back');
+		}
+		await applyJobSkills(target.id, lists);
 	}
 };
 
@@ -668,10 +753,7 @@ async function resolveApplicationTarget(
 		with: { job: { columns: { title: true, company: true } } }
 	});
 	if (!app) return null;
-	return {
-		id: app.id,
-		label: [app.job?.title ?? 'Application', app.job?.company].filter(Boolean).join(' at ')
-	};
+	return { id: app.id, label: applicationLabel(app.job) };
 }
 
 /**
@@ -685,6 +767,31 @@ async function ownsApplication(target: CapabilityTarget, actor: CapabilityActor)
 		columns: { id: true }
 	});
 	return !!owned;
+}
+
+/**
+ * The one write for an application's three sent-through fields, so the edit and
+ * its undo cannot disagree about what "unchanged" means.
+ *
+ * Authoritative for all three columns, which is why both callers merge over a
+ * current read before getting here. Scoped by profile as well as by id: the
+ * caller has authorized already, and a write that carries its own scope cannot
+ * be reached by a caller that forgot to.
+ */
+async function writeApplicationDetails(
+	applicationId: number,
+	profileId: number,
+	values: Record<string, unknown>
+): Promise<void> {
+	await db
+		.update(applications)
+		.set({
+			cv_sent_through: (values.cv_sent_through as string | null) ?? null,
+			application_sent_date: (values.application_sent_date as string | null) ?? null,
+			application_seen_date: (values.application_seen_date as string | null) ?? null,
+			date_updated: new Date()
+		})
+		.where(and(eq(applications.id, applicationId), eq(applications.profile_id, profileId)));
 }
 
 /**
@@ -737,17 +844,22 @@ want, tell them to use the status control on the page.`,
 		}
 		return { ok: true };
 	},
-	apply: async (target, fields, current) => {
-		const merged = { ...current, ...fields };
-		await db
-			.update(applications)
-			.set({
-				cv_sent_through: (merged.cv_sent_through as string | null) ?? null,
-				application_sent_date: (merged.application_sent_date as string | null) ?? null,
-				application_seen_date: (merged.application_seen_date as string | null) ?? null,
-				date_updated: new Date()
-			})
-			.where(eq(applications.id, target.id));
+	apply: async (target, fields, current, actor) => {
+		await writeApplicationDetails(target.id, actor.profileId, { ...current, ...fields });
+	},
+
+	/**
+	 * Put the replaced values back.
+	 *
+	 * Merged over a fresh read, like the write it undoes: all three columns are
+	 * written together, so a before-image of one would clear the other two.
+	 */
+	revert: async (target, previous, actor) => {
+		if (Object.keys(previous).length === 0) {
+			throw new Error('edit_application_details recorded no fields this can put back');
+		}
+		const current = await editApplicationDetails.current(target, actor);
+		await writeApplicationDetails(target.id, actor.profileId, { ...current, ...previous });
 	}
 };
 

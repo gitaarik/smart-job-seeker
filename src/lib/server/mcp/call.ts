@@ -51,7 +51,13 @@ import {
 import { readOwnedRows } from '$lib/server/profile/write';
 import { readEditLog } from '$lib/server/ai-chat/edit-log';
 import { createNotification } from '$lib/server/notifications';
+import {
+	listProfileApplications,
+	readProfileApplication
+} from '$lib/server/applications/profile-applications';
+import { listProfileJobs, readProfileJob } from '$lib/server/jobs/profile-jobs';
 import { recentDirectWrites } from './burst';
+import { targetingFor } from './entities';
 import { createRequest, readRequests, requestPath } from './requests';
 import { dispositionFor, tierForWrite } from './tiers';
 import { isMcpCapability, isReadTool, pageFor, sectionFor, MCP_CAPABILITIES } from './tools';
@@ -129,8 +135,14 @@ async function listProfileSections(key: VerifiedMcpKey): Promise<ToolResult> {
 		(s) => `- ${s.section} (${s.page}): ${s.entries} ${s.entries === 1 ? 'entry' : 'entries'}`
 	);
 
+	// The profile is what this tool is about, but it is also the tool an agent is
+	// told to call first — so it is the one place that can say the other half of
+	// the data exists. A tool list says the same thing and is read less carefully.
 	return ok(
-		`Profile ${key.profileId}, reachable with this key (scope: ${key.scope}).\n\n${lines.join('\n')}`,
+		`Profile ${key.profileId}, reachable with this key (scope: ${key.scope}).\n\n` +
+			`${lines.join('\n')}\n\n` +
+			`Their jobs and applications are separate: list_jobs and list_applications, ` +
+			`same profile_id.`,
 		{ profile_id: key.profileId, scope: key.scope, sections }
 	);
 }
@@ -217,17 +229,143 @@ async function listPendingChanges(key: VerifiedMcpKey): Promise<ToolResult> {
 	);
 }
 
+/**
+ * The jobs this profile has, which is not the same set as "the jobs".
+ *
+ * `listProfileJobs` is where that distinction is enforced; this only renders it.
+ * `editable` is carried on every row rather than filtered out by default,
+ * because an agent that cannot see the unedittable ones cannot tell the
+ * applicant *why* it did not fix the salary on the one they asked about.
+ */
+async function listJobs(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+	const jobs = await listProfileJobs(key.profileId, {
+		limit: argInt(args, 'limit') ?? undefined,
+		editableOnly: args.editable_only === true
+	});
+
+	if (jobs.length === 0) {
+		return ok(
+			args.editable_only === true
+				? 'None of their jobs were entered by hand, so none can be changed.'
+				: 'They have no jobs yet.',
+			{ jobs }
+		);
+	}
+
+	return ok(
+		jobs
+			.map(
+				(job) =>
+					`- [${job.id}] ${job.title ?? 'Untitled'}${job.company ? ` — ${job.company}` : ''}` +
+					`${job.editable ? '' : ' (read-only: imported, not hand-entered)'}`
+			)
+			.join('\n'),
+		{ jobs }
+	);
+}
+
+async function readJob(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+	const id = argInt(args, 'job_id');
+	if (id === null) return fail('job_id is required. Call list_jobs for the ids.');
+
+	const job = await readProfileJob(id, key.profileId);
+	// The same answer for a job that does not exist and one this profile cannot
+	// reach. Telling them apart is how the id space gets walked.
+	if (!job) {
+		return fail(
+			`There is no job ${id} in this applicant's jobs. Call list_jobs — this key ` +
+				`reaches the jobs they imported or applied to, and nothing else.`
+		);
+	}
+
+	const lines = Object.entries(job)
+		.filter(([name]) => name !== 'id')
+		.map(([name, value]) => {
+			const rendered = Array.isArray(value)
+				? value.join(', ')
+				: value === null || value === ''
+					? '(not set)'
+					: String(value);
+			return `${name}: ${rendered}`;
+		});
+
+	return ok(`Job ${job.id}:\n\n${lines.join('\n')}`, { job });
+}
+
+async function listApplications(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+	const applications = await listProfileApplications(key.profileId, {
+		limit: argInt(args, 'limit') ?? undefined,
+		status: typeof args.status === 'string' ? args.status : undefined
+	});
+
+	if (applications.length === 0) {
+		return ok(
+			typeof args.status === 'string'
+				? `No applications with status "${args.status}".`
+				: 'They have no applications yet.',
+			{ applications }
+		);
+	}
+
+	return ok(
+		applications
+			.map(
+				(app) =>
+					`- [${app.id}] ${app.job_title ?? 'Untitled'}` +
+					`${app.job_company ? ` at ${app.job_company}` : ''} — ${app.status}` +
+					`${app.job_id === null ? '' : ` (job ${app.job_id})`}`
+			)
+			.join('\n'),
+		{ applications }
+	);
+}
+
+async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+	const id = argInt(args, 'application_id');
+	if (id === null) return fail('application_id is required. Call list_applications for the ids.');
+
+	const application = await readProfileApplication(id, key.profileId);
+	if (!application) {
+		return fail(`There is no application ${id} on this profile. Call list_applications.`);
+	}
+
+	const entries = application.recent_entries.map(
+		(entry) => `  - ${entry.date ?? 'undated'} — ${entry.type}: ${entry.title}`
+	);
+
+	return ok(
+		`Application ${application.id} — ${application.job_title ?? 'Untitled'}` +
+			`${application.job_company ? ` at ${application.job_company}` : ''}\n` +
+			`status: ${application.status}${application.status_step ? ` (${application.status_step})` : ''}\n` +
+			`cv_sent_through: ${application.cv_sent_through ?? '(not set)'}\n` +
+			`application_sent_date: ${application.application_sent_date ?? '(not set)'}\n` +
+			`application_seen_date: ${application.application_seen_date ?? '(not set)'}\n\n` +
+			(entries.length > 0
+				? `Already logged, most recent first. Do not log any of these again:\n${entries.join('\n')}`
+				: 'Nothing is logged on this application yet.'),
+		{ application }
+	);
+}
+
 /* ------------------------------------------------------------------ *
  * Writes
  * ------------------------------------------------------------------ */
 
 /**
- * The row a write names, resolved through the capability's own targeting.
+ * The row a write names, resolved without trusting the id it was given.
  *
- * `resolveMany` rather than a direct read by id, so an MCP call can only reach
- * rows the registry would already have offered — and so there is one definition
- * of what a target's label is. `executeCapability` re-authorizes regardless;
- * this is about not building a second way in.
+ * Two shapes, because the two families of capability are addressed differently:
+ *
+ * - A **job or an application** is named by its own id, resolved through
+ *   `entities.ts` against what this profile can reach. That module also refuses
+ *   an unedittable job here rather than at the gate, so the agent is told it
+ *   never could rather than that it no longer can.
+ * - A **profile section row** is found by listing the section's rows and
+ *   matching the id among them — `resolveMany` rather than a read by id, so an
+ *   MCP call can only reach rows the registry would already have offered.
+ *
+ * `executeCapability` re-authorizes on the far side of both. This is about not
+ * building a second way in, never about being the only check.
  */
 async function resolveTarget(
 	capability: Capability,
@@ -235,6 +373,15 @@ async function resolveTarget(
 	actor: CapabilityActor
 ): Promise<{ target: CapabilityTarget } | { error: string }> {
 	const def = CAPABILITIES[capability];
+	const targeting = targetingFor(capability);
+
+	if (targeting) {
+		const id = argInt(args, targeting.arg);
+		if (id === null) {
+			return { error: `${targeting.arg} is required. Call ${targeting.listTool} to find it.` };
+		}
+		return targeting.resolve(id, actor);
+	}
 
 	if (capability.startsWith('add_')) {
 		const target = await def.resolve(null, actor);
@@ -388,7 +535,10 @@ async function runWrite(
 	}
 
 	const { text, diff } = renderDiff(outcome.previous, fields);
-	const page = pageFor(capability);
+	// A section has one page for its whole list; a job or an application has one
+	// per row, and only the resolved target knows which row.
+	const targeting = targetingFor(capability);
+	const page = targeting ? targeting.page(target.id) : pageFor(capability);
 
 	// How they take it back, which is not the same question for both verbs. An
 	// edit is undoable from the feed, because only its before-image has what it
@@ -398,7 +548,7 @@ async function runWrite(
 	const reversal = def.revert
 		? `The applicant can undo this from /data/ai-changes (change ${outcome.editId}).`
 		: page
-			? `They can remove it again from their ${page.name} page.`
+			? `They can remove it again from their ${page.name} page (${page.path}).`
 			: '';
 
 	return ok(
@@ -468,9 +618,22 @@ export async function callTool(name: string, args: Args, key: VerifiedMcpKey): P
 	if (mismatch) return mismatch;
 
 	if (isReadTool(name)) {
-		if (name === 'read_profile_section') return readProfileSection(args, key);
-		if (name === 'list_changes') return listChanges(args, key);
-		return listPendingChanges(key);
+		switch (name) {
+			case 'read_profile_section':
+				return readProfileSection(args, key);
+			case 'list_jobs':
+				return listJobs(args, key);
+			case 'read_job':
+				return readJob(args, key);
+			case 'list_applications':
+				return listApplications(args, key);
+			case 'read_application':
+				return readApplication(args, key);
+			case 'list_changes':
+				return listChanges(args, key);
+			default:
+				return listPendingChanges(key);
+		}
 	}
 
 	if (!isMcpCapability(name)) {

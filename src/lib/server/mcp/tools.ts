@@ -1,22 +1,23 @@
 /**
  * The tools this server offers, built from the same registry the chat uses.
  *
- * ## Why only the profile capabilities
+ * ## Two families, and why the second one arrived later
  *
- * `CAPABILITIES` also holds five hand-written verbs over jobs and applications,
- * and they are not here. Not an oversight and not laziness: those are
- * *page-bound*. Their `resolve` takes the entity the user is looking at, and
- * they have no `resolveMany`, so over MCP — where there is no page — the only
- * way to reach one would be to let an agent name a job by id.
+ * The generated **profile** capabilities were the whole of this server's first
+ * cut. Their rows are owned outright — `authorize` is
+ * `row.profile_id === actor.profileId` — so an entry id means one row on one
+ * profile and there is nothing else to decide.
  *
- * That is a different authorization question, not a smaller one. A job row is
- * shared: `/jobs/[id]` renders any job to any signed-in user, and `canEditJob`
- * is about who may edit a shared record rather than about who owns it. Handing
- * an external agent id-addressed access to that table is a decision worth
- * making on its own, and it is not the one this plan is about — the goal was
- * "change any part of the *profile*". Profile rows are owned outright, and
- * `authorize` is `row.profile_id === actor.profileId`, which is a sentence an
- * external caller cannot argue with.
+ * The five hand-written **job and application** verbs were held back, because
+ * they are page-bound: their `resolve` takes the entity the user is looking at,
+ * and over MCP there is no page. The open question was never the write — a job
+ * write has always gone through `canEditJob`, which is "you hand-created it and
+ * you imported it" — but the *targeting*: naming a job by id is naming a row in
+ * a shared table, and reading one by id is a table an agent could walk.
+ *
+ * `mcp/entities.ts` answers that: an id is resolved against the profile's own
+ * scope, and one outside it reads exactly like one that does not exist.
+ * Applications never had the question — they carry `profile_id`.
  *
  * ## Why the field names keep their prefix
  *
@@ -38,6 +39,12 @@
 
 import { CAPABILITIES, type Capability } from '$lib/server/ai-chat/capabilities';
 import { PROFILE_CAPABILITY_NAMES } from '$lib/server/ai-chat/profile-capabilities';
+import { ENTITY_CAPABILITY_NAMES, targetingFor } from './entities';
+import {
+	APPLICATION_PAGE_DEFAULT,
+	APPLICATION_PAGE_MAX
+} from '$lib/server/applications/profile-applications';
+import { JOB_PAGE_DEFAULT, JOB_PAGE_MAX } from '$lib/server/jobs/profile-jobs';
 import {
 	PROFILE_RESOURCE_NAMES,
 	PROFILE_RESOURCES,
@@ -68,6 +75,10 @@ export interface McpTool {
 export const READ_TOOLS = [
 	'list_profile_sections',
 	'read_profile_section',
+	'list_jobs',
+	'read_job',
+	'list_applications',
+	'read_application',
 	'list_changes',
 	'list_pending_changes'
 ] as const;
@@ -77,8 +88,18 @@ export function isReadTool(name: string): name is ReadTool {
 	return (READ_TOOLS as readonly string[]).includes(name);
 }
 
-/** Which capabilities this server exposes — the generated profile ones, all of them. */
-export const MCP_CAPABILITIES: Capability[] = PROFILE_CAPABILITY_NAMES;
+/**
+ * Which capabilities this server exposes: all of them.
+ *
+ * The profile ones are generated and reach rows this profile owns; the five
+ * entity ones are hand-written and reach a job or an application through
+ * `entities.ts`. Nothing in the registry is held back now — which is worth
+ * stating, because for one release something was.
+ */
+export const MCP_CAPABILITIES: Capability[] = [
+	...PROFILE_CAPABILITY_NAMES,
+	...ENTITY_CAPABILITY_NAMES
+];
 
 export function isMcpCapability(name: string): name is Capability {
 	return (MCP_CAPABILITIES as string[]).includes(name);
@@ -131,11 +152,19 @@ function writeTool(capability: Capability): McpTool {
 
 	const properties: Record<string, unknown> = { profile_id: PROFILE_ID_PROPERTY };
 	const required = ['profile_id'];
+	const targeting = targetingFor(capability);
 
-	// An add has no row yet; everything else names one. `entry_id` rather than
-	// `id`, so a schema that also carries `work_experience.*` fields cannot be
-	// read as though the id were one of them.
-	if (!isAdd) {
+	if (targeting) {
+		// A job or an application, named by its own id. This branch comes first
+		// because `add_activity_record` is an add that still needs one: its
+		// argument names the application the entry is filed under, where a profile
+		// add needs nothing — the key already says which profile.
+		properties[targeting.arg] = { type: 'integer', description: targeting.argDescription };
+		required.push(targeting.arg);
+	} else if (!isAdd) {
+		// A profile add has no row yet; everything else names one. `entry_id` rather
+		// than `id`, so a schema that also carries `work_experience.*` fields cannot
+		// be read as though the id were one of them.
 		properties.entry_id = {
 			type: 'integer',
 			description: 'Which entry, by the id returned from read_profile_section.'
@@ -182,7 +211,10 @@ holds, and which tool changes it. Start here: it also returns the profile_id
 this key is bound to, which every other tool requires.
 
 A count of zero means the applicant has nothing in that section yet — not that
-you cannot see it.`,
+you cannot see it.
+
+This covers the profile only. Their jobs and their applications are reached
+through list_jobs and list_applications, which take the same profile_id.`,
 		inputSchema: { type: 'object', properties: {}, required: [], additionalProperties: false },
 		annotations: readToolAnnotations('List the parts of the profile')
 	},
@@ -203,6 +235,96 @@ field you do not send keeps what it holds.`,
 			additionalProperties: false
 		},
 		annotations: readToolAnnotations('Read one section')
+	},
+	list_jobs: {
+		name: 'list_jobs',
+		description: `The jobs this applicant has: the ones they imported, and the ones they
+applied to. Not every job in the database — an id you did not get from here
+will not resolve.
+
+"editable" is the one field to read before planning a change. Only jobs the
+applicant typed in themselves can be edited at all; a scraped posting is a
+capture of someone else's page, and the next re-scrape would overwrite anything
+written over it. Everything here can be READ.`,
+		inputSchema: {
+			type: 'object',
+			properties: {
+				profile_id: PROFILE_ID_PROPERTY,
+				limit: {
+					type: 'integer',
+					description: `How many, newest first. Default ${JOB_PAGE_DEFAULT}, max ${JOB_PAGE_MAX}.`
+				},
+				editable_only: {
+					type: 'boolean',
+					description: 'Only the jobs a change tool could actually write to.'
+				}
+			},
+			required: ['profile_id'],
+			additionalProperties: false
+		},
+		annotations: readToolAnnotations('List their jobs')
+	},
+	read_job: {
+		name: 'read_job',
+		description: `One job in full — the structured fields, both long texts and both skill
+lists, which is every field the three job tools write.
+
+Read before you write: an edit is a patch over what is here, a field you do not
+send keeps its value, and each skill list is replaced whole.`,
+		inputSchema: {
+			type: 'object',
+			properties: {
+				profile_id: PROFILE_ID_PROPERTY,
+				job_id: { type: 'integer', description: 'The id from list_jobs.' }
+			},
+			required: ['profile_id', 'job_id'],
+			additionalProperties: false
+		},
+		annotations: readToolAnnotations('Read one job')
+	},
+	list_applications: {
+		name: 'list_applications',
+		description: `The applicant's applications, newest first, with the job each one is for
+and where it stands.
+
+The id from here is what edit_application_details and add_activity_record both
+take — the second files an entry UNDER an application rather than changing it.`,
+		inputSchema: {
+			type: 'object',
+			properties: {
+				profile_id: PROFILE_ID_PROPERTY,
+				limit: {
+					type: 'integer',
+					description: `How many, newest first. Default ${APPLICATION_PAGE_DEFAULT}, max ${APPLICATION_PAGE_MAX}.`
+				},
+				status: {
+					type: 'string',
+					description: 'Only applications in this status, e.g. "applied", "interviewing".'
+				}
+			},
+			required: ['profile_id'],
+			additionalProperties: false
+		},
+		annotations: readToolAnnotations('List their applications')
+	},
+	read_application: {
+		name: 'read_application',
+		description: `One application: how and when it was sent, and its activity log newest
+first.
+
+Read the log before proposing an entry. An entry repeating something already
+there is the failure this tool exists to prevent — the chronology is read as
+evidence of what happened, and the same call logged twice reads as two calls.`,
+		inputSchema: {
+			type: 'object',
+			properties: {
+				profile_id: PROFILE_ID_PROPERTY,
+				application_id: { type: 'integer', description: 'The id from list_applications.' }
+			},
+			required: ['profile_id', 'application_id'],
+			additionalProperties: false
+		},
+		annotations: readToolAnnotations('Read one application')
 	},
 	list_changes: {
 		name: 'list_changes',
@@ -253,14 +375,29 @@ export function toolsFor(scope: 'read' | 'propose' | 'write'): McpTool[] {
 	return [...tools, ...MCP_CAPABILITIES.map(writeTool)];
 }
 
-/** The section a generated capability acts on. */
-export function sectionFor(capability: Capability): ProfileResourceName {
-	return capability.slice(capability.indexOf('_') + 1) as ProfileResourceName;
+/**
+ * The section a generated capability acts on, or null for one of the five that
+ * acts on a job or an application instead.
+ *
+ * Null rather than a cast: `edit_job_details` slices to "job_details", which is
+ * not a section and never was — the cast simply said it was, and every caller
+ * that compared it to a real section name happened to get the right answer for
+ * the wrong reason.
+ */
+export function sectionFor(capability: Capability): ProfileResourceName | null {
+	const section = capability.slice(capability.indexOf('_') + 1);
+	return section in PROFILE_RESOURCES ? (section as ProfileResourceName) : null;
 }
 
-/** Where a person would change this section by hand, for a result that has to say so. */
+/**
+ * Where a person would change this by hand, for a result that has to say so.
+ *
+ * A section has one page for the whole list; a job or an application has one
+ * per row, so that answer needs the id and lives in `entities.ts`.
+ */
 export function pageFor(capability: Capability): { name: string; path: string } | null {
 	const section = sectionFor(capability);
+	if (!section) return null;
 	const resource = PROFILE_RESOURCES[section];
 	return resource ? { name: resource.page.name, path: resource.page.path } : null;
 }

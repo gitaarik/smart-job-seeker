@@ -4,6 +4,8 @@ import { getSelectedProfileId } from '../../profile/utils';
 import { describeProposalChanges } from '$lib/server/ai-chat/capabilities';
 import { describeLoggedChange, readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
 import { approveRequest, readRequests, rejectRequest } from '$lib/server/mcp/requests';
+import { targetingFor } from '$lib/server/mcp/entities';
+import type { Capability } from '$lib/server/ai-chat/capabilities';
 import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
 
 /**
@@ -13,10 +15,19 @@ import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile
  * registry has no delete, on purpose — so the honest response is the same one
  * the assistant gives for a section it cannot reach from a page: name the page
  * and send them there.
+ *
+ * Two registries again, because two things write here: a profile section names
+ * its own page, and a job or an application names the list it lives on. Only
+ * the second needed adding — `add_activity_record` was the one verb in the feed
+ * whose fallback answer was nothing at all.
  */
 function pageFor(capability: string): string | null {
 	const resource = capability.slice(capability.indexOf('_') + 1) as ProfileResourceName;
-	return PROFILE_RESOURCES[resource]?.page.name ?? null;
+	return (
+		PROFILE_RESOURCES[resource]?.page.name ??
+		targetingFor(capability as Capability)?.collection.name ??
+		null
+	);
 }
 
 export const load: PageServerLoad = async ({ parent }) => {

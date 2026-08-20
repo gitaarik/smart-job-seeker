@@ -1732,6 +1732,115 @@ describe('executeCapability', () => {
 	});
 });
 
+describe('undoing a job or an application edit', () => {
+	/**
+	 * These four reverts are what let an MCP write be undone at all — before
+	 * them, `revertible` was false for every job and application change in the
+	 * feed, whoever made it. The property each one has to hold is the same:
+	 * the write is authoritative for a set of columns, so the before-image goes
+	 * back merged over a fresh read rather than on its own.
+	 *
+	 * Ownership is not re-checked in any of them, and that is deliberate:
+	 * `revertEdit` asks the capability's own `authorize` first, which is
+	 * `canEditJob` for the three job verbs. A second check here would be a
+	 * different one, and two answers to one question is how they drift.
+	 */
+	it('puts a job field back without clearing the twelve it never touched', async () => {
+		jobRow = {
+			id: 3818,
+			title: 'Data Engineer',
+			company: 'Acme',
+			salary_min: 75000,
+			salary_max: 90000,
+			salary_currency: 'EUR'
+		};
+
+		await CAPABILITIES.edit_job_details.revert!(
+			{ id: 3818, label: 'Data Engineer at Acme' },
+			{ salary_min: 55000 },
+			ACTOR
+		);
+
+		// applyJobFields writes every column it is given, so passing the
+		// before-image through alone would undo one correction by wiping the rest.
+		expect(mockApplyJobFields).toHaveBeenCalledWith(
+			3818,
+			expect.objectContaining({
+				salary_min: 55000,
+				salary_max: 90000,
+				salary_currency: 'EUR',
+				title: 'Data Engineer',
+				company: 'Acme'
+			})
+		);
+	});
+
+	it('refuses a job revert with nothing recorded, rather than writing the row over itself', async () => {
+		jobRow = { id: 3818, title: 'Data Engineer', company: 'Acme' };
+
+		await expect(
+			CAPABILITIES.edit_job_details.revert!({ id: 3818, label: 'x' }, {}, ACTOR)
+		).rejects.toThrow(/no fields/);
+		expect(mockApplyJobFields).not.toHaveBeenCalled();
+	});
+
+	it('puts back only the text that was replaced', async () => {
+		// Same partial semantics as the write: applyJobTexts touches what it is
+		// given, so restoring both would blank a company blurb the edit never saw.
+		await CAPABILITIES.edit_job_description.revert!(
+			{ id: 3818, label: 'Data Engineer at Acme' },
+			{ job_description: 'The posting as it was.' },
+			ACTOR
+		);
+
+		expect(mockApplyJobTexts).toHaveBeenCalledWith(3818, {
+			job_description: 'The posting as it was.'
+		});
+	});
+
+	it('puts back a skill list whole, and only the list that changed', async () => {
+		await CAPABILITIES.edit_job_skills.revert!(
+			{ id: 3818, label: 'Data Engineer at Acme' },
+			{ skills_required: ['Python', 'SQL'] },
+			ACTOR
+		);
+
+		expect(mockApplyJobSkills).toHaveBeenCalledWith(3818, {
+			skills_required: ['Python', 'SQL']
+		});
+	});
+
+	it('puts an application detail back merged over the other two', async () => {
+		applicationRow = {
+			id: 44,
+			cv_sent_through: 'Company website',
+			application_sent_date: '2026-08-01',
+			application_seen_date: '2026-08-05'
+		};
+
+		await CAPABILITIES.edit_application_details.revert!(
+			{ id: 44, label: 'Data Engineer at Acme' },
+			{ cv_sent_through: 'LinkedIn Easy Apply' },
+			ACTOR
+		);
+
+		expect(mockAppUpdateSet).toHaveBeenCalledWith(
+			expect.objectContaining({
+				cv_sent_through: 'LinkedIn Easy Apply',
+				application_sent_date: '2026-08-01',
+				application_seen_date: '2026-08-05'
+			})
+		);
+	});
+
+	it('gives an add no undo, so nothing offers one', () => {
+		// The rule the whole hide-not-delete design rests on: the registry has no
+		// delete, so an add is taken back on the page that shows it. A revert here
+		// would be that delete, arriving through the back door.
+		expect(CAPABILITIES.add_activity_record.revert).toBeUndefined();
+	});
+});
+
 describe('capabilityFieldSchema', () => {
 	it('gives each capability its own object, keyed by its own fields', () => {
 		for (const [name, def] of Object.entries(CAPABILITIES)) {

@@ -75,6 +75,87 @@ vi.mock('$lib/server/ai-chat/profile-edit-manifest', () => ({
 
 vi.mock('$lib/server/ai-chat/edit-log', () => ({ readEditLog: () => Promise.resolve([]) }));
 
+/**
+ * A job this profile entered by hand, and one it only imported. The second is
+ * the case the whole scope question is about: readable, and refused by every
+ * write with a sentence saying why.
+ */
+const JOB = {
+	id: 100,
+	title: 'Data Engineer',
+	company: 'Acme',
+	date_posted: null,
+	source_url: null,
+	imported: true,
+	applied: true,
+	editable: true,
+	job_poster: null,
+	office_location: null,
+	salary_min: null,
+	salary_max: null,
+	salary_currency: null,
+	salary_period: null,
+	work_location: null,
+	job_types: null,
+	experience_levels: null,
+	job_description: 'The posting as it stands.',
+	company_description: null,
+	skills_required: null,
+	skills_preferred: null
+};
+const SCRAPED_JOB = { ...JOB, id: 200, title: 'Scraped Role', company: 'Globex', editable: false };
+
+const APPLICATION = {
+	id: 44,
+	job_id: 100,
+	job_title: 'Data Engineer',
+	job_company: 'Acme',
+	status: 'applied',
+	status_step: null,
+	application_sent_date: '2026-08-01',
+	application_seen_date: null,
+	cv_sent_through: null,
+	recent_entries: [{ entry_id: 7, type: 'Note', title: 'Recruiter call', date: '2026-08-02' }]
+};
+
+vi.mock('$lib/server/jobs/profile-jobs', () => ({
+	JOB_PAGE_DEFAULT: 20,
+	JOB_PAGE_MAX: 50,
+	listProfileJobs: (_profileId: number, opts?: { editableOnly?: boolean }) =>
+		Promise.resolve(opts?.editableOnly ? [JOB] : [JOB, SCRAPED_JOB]),
+	// Profile 12 only: the scope is the point, so the mock has one too.
+	readProfileJob: (id: number, profileId: number) =>
+		Promise.resolve(
+			profileId === 12 ? ([JOB, SCRAPED_JOB].find((job) => job.id === id) ?? null) : null
+		)
+}));
+
+vi.mock('$lib/server/applications/profile-applications', () => ({
+	APPLICATION_PAGE_DEFAULT: 20,
+	APPLICATION_PAGE_MAX: 50,
+	listProfileApplications: () => Promise.resolve([APPLICATION]),
+	readProfileApplication: (id: number, profileId: number) =>
+		Promise.resolve(id === APPLICATION.id && profileId === 12 ? APPLICATION : null)
+}));
+
+/**
+ * Only the reads the job and application capabilities do for themselves.
+ *
+ * `executeCapability` is mocked, so nothing here writes — what runs against
+ * this is `current()`, which is what decides the tier, and that is the half
+ * worth exercising with real rows.
+ */
+vi.mock('$lib/server/db', () => ({
+	db: {
+		query: {
+			jobs: { findFirst: () => Promise.resolve(JOB) },
+			applications: { findFirst: () => Promise.resolve({ id: 44, profile_id: 12 }) },
+			application_records: { findMany: () => Promise.resolve([]) }
+		}
+	},
+	dbDirect: { query: {} }
+}));
+
 const { callTool } = await import('../call');
 
 const KEY = {
@@ -425,5 +506,128 @@ describe('refusals the agent can act on', () => {
 	it('refuses a tool that does not exist', async () => {
 		const result = await callTool('delete_work_experience', { profile_id: 12 }, KEY);
 		expect(result.isError).toBe(true);
+	});
+});
+
+describe('jobs and applications', () => {
+	it('lists the jobs this profile has, and says which cannot be changed', async () => {
+		const result = await callTool('list_jobs', { profile_id: 12 }, KEY);
+
+		expect(result.content[0].text).toContain('[100] Data Engineer');
+		expect(result.content[0].text).toContain('[200] Scraped Role');
+		// The reason travels with the row. An agent that only learns a job is
+		// unedittable when a write refuses spends a turn discovering it.
+		expect(result.content[0].text).toContain('read-only');
+	});
+
+	it('narrows to what a change tool could actually write to', async () => {
+		const result = await callTool('list_jobs', { profile_id: 12, editable_only: true }, KEY);
+		const jobs = result.structuredContent?.jobs as { id: number }[];
+		expect(jobs.map((job) => job.id)).toEqual([100]);
+	});
+
+	it('answers a job outside this profile the same way as one that does not exist', async () => {
+		// The property, not a nicety: a different answer for "not yours" and "not
+		// here" is how an id space gets walked by an agent that can loop.
+		const result = await callTool('read_job', { profile_id: 12, job_id: 4242 }, KEY);
+
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('list_jobs');
+	});
+
+	it('refuses a write to an imported job, and says it never could', async () => {
+		const result = await callTool(
+			'edit_job_details',
+			{ profile_id: 12, job_id: 200, salary_min: 75000, rationale: 'They told me the range.' },
+			KEY
+		);
+
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('entered by hand');
+		expect(executeCapability).not.toHaveBeenCalled();
+		expect(createRequest).not.toHaveBeenCalled();
+	});
+
+	it('fills an empty job field directly on a write key', async () => {
+		const result = await callTool(
+			'edit_job_details',
+			{ profile_id: 12, job_id: 100, salary_min: 75000, rationale: 'The recruiter said 75k.' },
+			KEY
+		);
+
+		expect(result.structuredContent?.applied).toBe(true);
+		expect(executeCapability).toHaveBeenCalledWith(
+			'edit_job_details',
+			// The label the applicant will read on the change, resolved here rather
+			// than taken from the agent.
+			{ id: 100, label: 'Data Engineer at Acme' },
+			{ profileId: 12, isStaff: false },
+			{ salary_min: 75000 },
+			'mcp'
+		);
+	});
+
+	it('sends a rewrite of an existing posting for approval, even on a write key', async () => {
+		// The tier rule is about what the write destroys, and it did not learn
+		// anything new for jobs: this text exists, so replacing it is Tier 2.
+		const result = await callTool(
+			'edit_job_description',
+			{
+				profile_id: 12,
+				job_id: 100,
+				job_description: 'A tidier posting.',
+				rationale: 'They asked me to clean it up.'
+			},
+			KEY
+		);
+
+		expect(executeCapability).not.toHaveBeenCalled();
+		expect(createRequest).toHaveBeenCalled();
+		expect(result.structuredContent?.applied).toBe(false);
+	});
+
+	it('names the application an entry is filed under, not an entry id', async () => {
+		const result = await callTool(
+			'add_activity_record',
+			{ profile_id: 12, entry_content: 'They called about the offer.', rationale: 'They told me.' },
+			KEY
+		);
+
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('application_id');
+		expect(result.content[0].text).toContain('list_applications');
+	});
+
+	it('files an entry under an application, and says where to remove it', async () => {
+		const result = await callTool(
+			'add_activity_record',
+			{
+				profile_id: 12,
+				application_id: 44,
+				entry_content: 'They called about the offer.',
+				rationale: 'They told me on the phone.'
+			},
+			KEY
+		);
+
+		expect(result.structuredContent?.applied).toBe(true);
+		// An add has no undo — the honest answer is the page with the delete
+		// button, and for an application that page is one row's, not a section's.
+		expect(result.structuredContent?.undoable).toBe(false);
+		expect(result.content[0].text).toContain('/applications/44');
+	});
+
+	it("refuses an application that is not this profile's", async () => {
+		const result = await callTool('read_application', { profile_id: 12, application_id: 999 }, KEY);
+
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('list_applications');
+	});
+
+	it('shows what is already logged, so an entry is not written twice', async () => {
+		const result = await callTool('read_application', { profile_id: 12, application_id: 44 }, KEY);
+
+		expect(result.content[0].text).toContain('Recruiter call');
+		expect(result.content[0].text).toContain('Do not log any of these again');
 	});
 });
