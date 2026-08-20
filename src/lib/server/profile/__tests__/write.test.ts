@@ -166,6 +166,7 @@ const {
 	countOwnedRows,
 	createRow,
 	deleteRow,
+	parentNames,
 	readOwnedRow,
 	readOwnedRows,
 	reorderRows,
@@ -724,6 +725,37 @@ describe('a section owned through its parent', () => {
 		expect(result).toMatchObject({ ok: false, reason: 'invalid' });
 		expect((result as { error: string }).error).toContain('Backend');
 		expect(state.inserts).toHaveLength(0);
+	});
+
+	it('takes back the label it printed, ellipsis and all', async () => {
+		// The invariant that makes `parentNames` worth exporting rather than
+		// copying: whatever a surface prints from it is a string this resolves.
+		// A group carries its note so two "Backend"s can be told apart, and a long
+		// note is cut to width — so a printed name can end in an ellipsis that is
+		// PART of the string rather than a mark of something left out. A list
+		// rendered from `name` instead, or an ellipsis helpfully expanded before
+		// being sent back, is refused, and that refusal is invisible until a
+		// caller hits it.
+		const note = 'everything the fullstack-react version keeps, and nothing the other one does';
+		givenSkills({
+			groups: [{ id: 1, profile_id: 7, name: 'Backend', note, sort: 0, status: 'published' }]
+		});
+
+		const [printed] = await parentNames(PROFILE_RESOURCES.skill, ACTOR);
+		expect(printed).toContain('…');
+
+		expect(await createRow('skill', ACTOR, { name: 'Redis', category: printed })).toMatchObject({
+			ok: true
+		});
+		expect(state.inserts[0].values).toMatchObject({ category_id: 1 });
+
+		// The bare heading is what a caller reading `skill_category.name` off
+		// `read_profile_section` would send, and it is not what the matcher wants.
+		state.inserts = [];
+		expect(await createRow('skill', ACTOR, { name: 'Redis', category: 'Backend' })).toMatchObject({
+			ok: false,
+			reason: 'invalid'
+		});
 	});
 
 	it('refuses a create with no group at all', async () => {

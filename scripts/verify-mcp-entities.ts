@@ -168,7 +168,7 @@ async function main() {
 	try {
 		/* --- the tool surface --------------------------------------------- */
 
-		const tools = toolsFor('write');
+		const tools = await toolsFor('write');
 		const names = new Set(tools.map((tool) => tool.name));
 		check(
 			'the five entity write tools are listed',

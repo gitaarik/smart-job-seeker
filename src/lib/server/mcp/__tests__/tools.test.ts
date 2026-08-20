@@ -19,7 +19,7 @@ import {
 	toolsFor
 } from '../tools';
 
-const write = toolsFor('write');
+const write = await toolsFor('write');
 const byName = new Map(write.map((tool) => [tool.name, tool]));
 
 describe('what is exposed', () => {
@@ -30,8 +30,8 @@ describe('what is exposed', () => {
 		expect(new Set(MCP_CAPABILITIES)).toEqual(new Set(Object.keys(CAPABILITIES)));
 	});
 
-	it('gives a read key the reads and nothing else', () => {
-		const read = toolsFor('read');
+	it('gives a read key the reads and nothing else', async () => {
+		const read = await toolsFor('read');
 		expect(read.map((tool) => tool.name)).toEqual([...READ_TOOLS]);
 		expect(read.every((tool) => isReadTool(tool.name))).toBe(true);
 	});
@@ -109,29 +109,29 @@ describe('sectionFor', () => {
 });
 
 describe('what a read scope is shown', () => {
-	it('hides the document tools from a record key', () => {
-		const names = toolsFor('write', 'record').map((tool) => tool.name);
+	it('hides the document tools from a record key', async () => {
+		const names = (await toolsFor('write', 'record')).map((tool) => tool.name);
 		for (const hidden of DOCUMENT_TOOLS) expect(names, hidden).not.toContain(hidden);
 	});
 
-	it('shows them to a documents key', () => {
-		const names = toolsFor('write', 'documents').map((tool) => tool.name);
+	it('shows them to a documents key', async () => {
+		const names = (await toolsFor('write', 'documents')).map((tool) => tool.name);
 		for (const shown of DOCUMENT_TOOLS) expect(names, shown).toContain(shown);
 	});
 
-	it('leaves the write tools alone either way', () => {
+	it('leaves the write tools alone either way', async () => {
 		// The two dimensions are independent: narrowing what a key SEES must not
 		// quietly narrow what it may change, or the grading stops being readable.
-		const record = toolsFor('write', 'record').map((t) => t.name);
-		const documents = toolsFor('write', 'documents').map((t) => t.name);
+		const record = (await toolsFor('write', 'record')).map((t) => t.name);
+		const documents = (await toolsFor('write', 'documents')).map((t) => t.name);
 		for (const capability of MCP_CAPABILITIES) {
 			expect(record, capability).toContain(capability);
 			expect(documents, capability).toContain(capability);
 		}
 	});
 
-	it('gives a read-only record key the narrowest surface there is', () => {
-		const names = toolsFor('read', 'record').map((tool) => tool.name);
+	it('gives a read-only record key the narrowest surface there is', async () => {
+		const names = (await toolsFor('read', 'record')).map((tool) => tool.name);
 		expect(names.every((name) => isReadTool(name))).toBe(true);
 		expect(names).toEqual(
 			READ_TOOLS.filter((n) => !(DOCUMENT_TOOLS as readonly string[]).includes(n))

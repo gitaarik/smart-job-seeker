@@ -86,7 +86,12 @@ async function handleMessage(
 			return rpcResult(id, {});
 
 		case 'tools/list':
-			return rpcResult(id, { tools: toolsFor(key.scope, key.readScope) });
+			// The profile, so the parent-owned contracts get the list they promise.
+			// Without it they say "listed below" over nothing, and naming a group
+			// becomes guess-refuse-retry.
+			return rpcResult(id, {
+				tools: await toolsFor(key.scope, key.readScope, { profileId: key.profileId })
+			});
 
 		case 'tools/call': {
 			const params = message.params ?? {};

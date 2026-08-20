@@ -50,8 +50,10 @@ import { DOCUMENT_PAGE_DEFAULT, DOCUMENT_PAGE_MAX } from '$lib/server/documents/
 import {
 	PROFILE_RESOURCE_NAMES,
 	PROFILE_RESOURCES,
+	type ProfileResource,
 	type ProfileResourceName
 } from '$lib/server/profile/resources';
+import { parentNames, type ProfileActor } from '$lib/server/profile/write';
 import type { FieldKind } from '$lib/server/utils/field-kinds';
 import { annotationsFor, readToolAnnotations, type ToolAnnotations } from './tiers';
 
@@ -162,7 +164,119 @@ const RATIONALE_PROPERTY = {
 		'not for a log.'
 };
 
-function writeTool(capability: Capability): McpTool {
+/**
+ * The parent list a parent-owned capability's contract promises, rendered.
+ *
+ * Every such field says to name one "exactly as one of the groups listed
+ * below". The chat surface earns that sentence: it prints a capability's
+ * contract next to the state block `renderState` builds, so there is a list
+ * below it. This server rendered the contract alone, and the sentence pointed
+ * at nothing — leaving an agent to guess a name, be refused, and read the list
+ * out of the refusal. For a parent whose label is truncated for width, that
+ * refusal was the ONLY place the exact matchable string ever appeared.
+ *
+ * The labels come from `parentNames`, which is what `findParentNamed` matches
+ * against. That shared call is the whole point: a list built here from `name`
+ * columns would print "Backend" where the matcher wants "Backend (Python /
+ * Django)", and would be a second thing to keep in step with the first.
+ *
+ * One read per distinct parent SECTION, not per capability — seven sections
+ * hang off four parents, and `add_` and `edit_` of each want the same list.
+ */
+async function parentBlocksFor(actor: ProfileActor): Promise<Map<Capability, string>> {
+	const reads = new Map<ProfileResourceName, Promise<string[]>>();
+	const wanted: {
+		capability: Capability;
+		section: ProfileResourceName;
+		parent: ProfileResourceName;
+		field: string;
+	}[] = [];
+
+	for (const capability of MCP_CAPABILITIES) {
+		const section = sectionFor(capability);
+		if (!section) continue;
+
+		const resource = PROFILE_RESOURCES[section];
+		if (resource.owner.via !== 'parent') continue;
+
+		// By the field rather than by the section, because a hide carries no
+		// fields: it names a row by `entry_id` and has no parent to resolve, so
+		// printing its parents would be a block it can do nothing with.
+		const field = `${section}.${resource.owner.nameField}`;
+		if (!(field in CAPABILITIES[capability].fields)) continue;
+
+		if (!reads.has(resource.owner.parent)) {
+			reads.set(resource.owner.parent, parentNames(resource, actor));
+		}
+		wanted.push({ capability, section, parent: resource.owner.parent, field });
+	}
+
+	const resolved = new Map(
+		await Promise.all([...reads].map(async ([parent, rows]) => [parent, await rows] as const))
+	);
+
+	return new Map(
+		wanted.map(({ capability, section, parent, field }) => [
+			capability,
+			renderParents(
+				PROFILE_RESOURCES[parent],
+				section,
+				field,
+				resolved.get(parent) ?? [],
+				capability.startsWith('add_')
+			)
+		])
+	);
+}
+
+/**
+ * What to say about a parent field, given the labels it may name.
+ *
+ * The "character for character" is not padding. A label is built to be
+ * distinguishing rather than to be pretty — a note in brackets separates two
+ * groups both called "Backend" — and a long one is cut to width with an
+ * ellipsis. The matcher compares the whole label, so that ellipsis is part of
+ * the string an agent has to send back, and every instinct it has says to treat
+ * a trailing "…" as something omitted for display and to write out the name it
+ * abbreviates. That guess is refused.
+ */
+function renderParents(
+	parent: ProfileResource,
+	section: ProfileResourceName,
+	field: string,
+	labels: string[],
+	isAdd: boolean
+): string {
+	// An add's contract points "below" twice — once at the parents, once at the
+	// rows already there, so it can ask for neither a bad group nor a duplicate.
+	// Only the first is rendered here: the parents are a bounded list and naming
+	// one wrong is a refusal, where the inventory is unbounded (a hundred skills
+	// on one profile) and naming a duplicate is a card the applicant declines.
+	// Paying for the second on every tools/list, in a description clients cache
+	// for the session, buys a staler answer than the read that is one call away.
+	const inventory = isAdd
+		? `\n\nFor what they already have — the other list this contract mentions — ` +
+			`call read_profile_section with section "${section}".`
+		: '';
+
+	if (labels.length === 0) {
+		return (
+			`They have no ${parent.label} to file one under yet, so nothing can go here ` +
+			`until one exists. Propose adding a ${parent.label} first.`
+		);
+	}
+
+	return (
+		`The ${parent.label} entries "${field}" may name. Copy one exactly as ` +
+		`written, character for character: anything in brackets is part of the name ` +
+		`and is what tells two entries of the same name apart, and a trailing "…" is ` +
+		`part of the string too rather than a sign that something was left out.\n\n` +
+		labels.map((label) => `  - ${label}`).join('\n') +
+		inventory
+	);
+}
+
+function writeTool(capability: Capability, parents?: string): McpTool {
 	const def = CAPABILITIES[capability];
 	const isAdd = capability.startsWith('add_');
 	const isHide = capability.startsWith('hide_');
@@ -198,7 +312,9 @@ function writeTool(capability: Capability): McpTool {
 
 	return {
 		name: capability,
-		description: `${def.title}.\n\n${def.contract}`,
+		description: parents
+			? `${def.title}.\n\n${def.contract}\n\n${parents}`
+			: `${def.title}.\n\n${def.contract}`,
 		inputSchema: {
 			type: 'object',
 			properties,
@@ -517,13 +633,24 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
  * carries no information it could act on — the fix is on the applicant's
  * settings page, not in the transcript.
  */
-export function toolsFor(scope: McpScope, readScope: McpReadScope = 'documents'): McpTool[] {
+export async function toolsFor(
+	scope: McpScope,
+	readScope: McpReadScope = 'documents',
+	actor?: ProfileActor
+): Promise<McpTool[]> {
 	const tools: McpTool[] = READ_TOOLS.filter(
 		(name) => readScope === 'documents' || !(DOCUMENT_TOOLS as readonly string[]).includes(name)
 	).map((name) => readTools[name]);
 
 	if (scope === 'read') return tools;
-	return [...tools, ...MCP_CAPABILITIES.map(writeTool)];
+
+	// Without an actor this is the shape and nothing else — every tool, every
+	// schema, and contracts that still say "listed below" with nothing under
+	// them. That is the right answer for a caller asking what this server
+	// offers, and the wrong one to serve to an agent, which is why the route
+	// passes the key's profile.
+	const parents = actor ? await parentBlocksFor(actor) : null;
+	return [...tools, ...MCP_CAPABILITIES.map((c) => writeTool(c, parents?.get(c)))];
 }
 
 /**

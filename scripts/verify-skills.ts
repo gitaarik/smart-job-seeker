@@ -238,7 +238,7 @@ async function main() {
 
 	// --- the same registry, over MCP ---
 	const { toolsFor } = await import('$lib/server/mcp/tools');
-	const tools = toolsFor('write');
+	const tools = await toolsFor('write');
 	const addSkill = tools.find((t) => t.name === 'add_skill');
 	check('MCP serves a tool per profile capability', tools.length === 27, `${tools.length} tools`);
 	check(

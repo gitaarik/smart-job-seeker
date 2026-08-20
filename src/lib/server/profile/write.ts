@@ -186,8 +186,21 @@ async function findParentNamed(
 	return found.length === 1 ? { id: found[0].id, label: parent.rowLabel(found[0]) } : 'none';
 }
 
-/** "Backend, Frontend or Databases" — what a refusal has to say to be actionable. */
-async function parentNames(resource: ProfileResource, actor: ProfileActor): Promise<string[]> {
+/**
+ * "Backend, Frontend or Databases" — what a refusal has to say to be actionable.
+ *
+ * Exported because a refusal is not the only place these have to appear. Every
+ * parent-owned field's contract tells the caller to name one "exactly as one of
+ * the groups listed below", and whichever surface renders that sentence owes it
+ * a list. This is the one that can be trusted to match: it reads the same rows
+ * through the same `rowLabel` as `findParentNamed`, so a label printed from here
+ * is a label that resolves. A surface building its own list from `name` columns
+ * would print `Backend` where the matcher wants `Backend (Python / Django)`.
+ */
+export async function parentNames(
+	resource: ProfileResource,
+	actor: ProfileActor
+): Promise<string[]> {
 	if (resource.owner.via !== 'parent') return [];
 	const parent = resourceFor(resource.owner.parent);
 	return (await readOwnedRows(resource.owner.parent, actor)).map((row) => parent.rowLabel(row));
