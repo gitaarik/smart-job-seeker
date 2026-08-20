@@ -748,14 +748,114 @@ describe('a section owned through its parent', () => {
 			ok: true
 		});
 		expect(state.inserts[0].values).toMatchObject({ category_id: 1 });
+	});
 
-		// The bare heading is what a caller reading `skill_category.name` off
-		// `read_profile_section` would send, and it is not what the matcher wants.
-		state.inserts = [];
+	it('takes the note written out in full, ellipsis expanded', async () => {
+		// Told to copy a cut label exactly, a model will sometimes restore what the
+		// ellipsis stands for. That names the same row: the truncation is a
+		// property of the card, not of the group. Note the cut is INSIDE the
+		// brackets, so the label still closes with ")" — matching on a trailing
+		// ellipsis would miss every group there is.
+		const note = 'everything the fullstack-react version keeps, and nothing the other one does';
+		givenSkills({
+			groups: [{ id: 1, profile_id: 7, name: 'Backend', note, sort: 0, status: 'published' }]
+		});
+
+		const result = await createRow('skill', ACTOR, {
+			name: 'Redis',
+			category: `Backend (${note})`
+		});
+
+		expect(result).toMatchObject({ ok: true });
+		expect(state.inserts[0].values).toMatchObject({ category_id: 1 });
+	});
+
+	it('takes the heading alone when one group answers to it', async () => {
+		// What `read_profile_section` returns under `skill_category.name`. The two
+		// readers used to disagree — the row said "Backend", the matcher wanted
+		// "Backend (Python / Django)" — so a caller reading the row and a caller
+		// reading the label could not both be right.
+		givenSkills({
+			groups: [
+				{
+					id: 1,
+					profile_id: 7,
+					name: 'Backend',
+					note: 'Python / Django',
+					sort: 0,
+					status: 'published'
+				},
+				{ id: 2, profile_id: 7, name: 'Frontend', sort: 1, status: 'published' }
+			]
+		});
+
+		expect(await createRow('skill', ACTOR, { name: 'Redis', category: 'Backend' })).toMatchObject({
+			ok: true
+		});
+		expect(state.inserts[0].values).toMatchObject({ category_id: 1 });
+	});
+
+	it('reads a heading no further than a separator its label was built from', async () => {
+		// A heading matches up to one of the joins a label is assembled with, not
+		// to any prefix — otherwise "Backend" quietly files under whatever longer
+		// name happens to start the same way.
+		givenSkills({
+			groups: [{ id: 1, profile_id: 7, name: 'Backend Engineering', sort: 0, status: 'published' }]
+		});
+
 		expect(await createRow('skill', ACTOR, { name: 'Redis', category: 'Backend' })).toMatchObject({
 			ok: false,
 			reason: 'invalid'
 		});
+		expect(state.inserts).toHaveLength(0);
+	});
+
+	it('refuses a heading that reaches two groups, and names both', async () => {
+		givenSkills({
+			groups: [
+				{
+					id: 1,
+					profile_id: 7,
+					name: 'Backend',
+					note: 'Python / Django',
+					sort: 0,
+					status: 'published'
+				},
+				{
+					id: 2,
+					profile_id: 7,
+					name: 'Backend',
+					note: 'TypeScript / React',
+					sort: 1,
+					status: 'published'
+				}
+			]
+		});
+
+		const result = await createRow('skill', ACTOR, { name: 'Redis', category: 'Backend' });
+
+		expect(result).toMatchObject({ ok: false, reason: 'invalid' });
+		// The labels themselves, because this is the refusal the caller can act on
+		// without the applicant: it only has to say more of the name.
+		expect((result as { error: string }).error).toContain('Backend (Python / Django)');
+		expect((result as { error: string }).error).toContain('Backend (TypeScript / React)');
+		expect(state.inserts).toHaveLength(0);
+	});
+
+	it('still sends two groups that read alike back to the applicant', async () => {
+		// Nothing the caller can say separates these, so the refusal asks for a
+		// distinguishing note rather than for a fuller name.
+		givenSkills({
+			groups: [
+				{ id: 1, profile_id: 7, name: 'Backend', sort: 0, status: 'published' },
+				{ id: 2, profile_id: 7, name: 'Backend', sort: 1, status: 'published' }
+			]
+		});
+
+		const result = await createRow('skill', ACTOR, { name: 'Redis', category: 'Backend' });
+
+		expect(result).toMatchObject({ ok: false, reason: 'invalid' });
+		expect((result as { error: string }).error).toContain('nothing tells them apart');
 	});
 
 	it('refuses a create with no group at all', async () => {

@@ -164,26 +164,151 @@ function withParentName(
  * into a refusal that lists what does exist, which is the only refusal worth
  * reading.
  */
+type ParentMatch =
+	| { kind: 'found'; id: number; label: string }
+	| { kind: 'none' }
+	| { kind: 'ambiguous'; labels: string[]; identical: boolean };
+
+/**
+ * The separators a `rowLabel` builds a compound name out of.
+ *
+ * Matching a bare heading is allowed only up to one of these, so "Backend"
+ * reaches "Backend (Python / Django)" and never "Backend Engineering". Keep in
+ * step with the joins in `resources.ts` — `joined`'s two separators, and the
+ * bracket a note or a version list opens with.
+ */
+const LABEL_JOINS = [' at ', ' — ', ' (', ' ['];
+
+/** How well a label answers to a name, or null when it does not. */
+function labelAnswersTo(label: string, wanted: string): 'exact' | 'expanded' | 'heading' | null {
+	const held = label.trim().toLowerCase();
+	if (held === wanted) return 'exact';
+
+	// A label is cut to width for a card, so a long one carries an ellipsis and
+	// the string it stands for is what you get by putting the omitted text back.
+	// Told to copy "Backend (everything the fullstack-react version …)" exactly, a
+	// model will sometimes write the note out in full instead — that names the
+	// same row, and refusing it teaches nothing except that the ellipsis mattered.
+	//
+	// Split rather than `endsWith`, because the cut is not always at the end: a
+	// group's note is truncated INSIDE the brackets, so the label still closes
+	// with ")", and a skill's name is truncated before " — Category".
+	const cut = held.indexOf('…');
+	if (cut !== -1) {
+		const head = held.slice(0, cut);
+		const tail = held.slice(cut + 1);
+		if (
+			wanted.length >= head.length + tail.length &&
+			wanted.startsWith(head) &&
+			wanted.endsWith(tail)
+		) {
+			return 'expanded';
+		}
+	}
+
+	// The heading alone. This is what `read_profile_section` hands back under the
+	// parent's own name field, so it is what a caller reading the row rather than
+	// the label will send.
+	if (LABEL_JOINS.some((join) => held.startsWith(wanted + join))) return 'heading';
+
+	return null;
+}
+
+/**
+ * Which of these labels a caller meant, or why none of them can be said to be.
+ *
+ * Exported because there are two doors and they must not disagree. This one is
+ * reached at write time, where the labels come from a fresh read; the chat's
+ * `checkParent` is reached at validate time, where they come from the `current`
+ * the model was shown. Both ask the same question, and while they answered it
+ * separately the stricter of the two decided everything — so a name the write
+ * layer would have resolved was refused a layer above it, and a fix that reached
+ * only this function changed nothing anybody could observe.
+ *
+ * Pure and label-only, so it can be asked without a database.
+ */
+export function matchParentName(
+	labels: string[],
+	name: string
+):
+	| { kind: 'found'; label: string }
+	| { kind: 'none' }
+	| { kind: 'ambiguous'; labels: string[]; identical: boolean } {
+	const wanted = name.trim().toLowerCase();
+
+	// Most specific first, so a name that IS one row's whole label is never read
+	// as the heading of another's. Only labels matched the same way compete: an
+	// exact hit settles it even when a second label's heading also begins that way.
+	for (const how of ['exact', 'expanded', 'heading'] as const) {
+		const hits = labels.filter((label) => labelAnswersTo(label, wanted) === how);
+		if (hits.length === 0) continue;
+
+		// Two rows the one name reaches. Picking the first would be a coin toss the
+		// caller cannot see the result of, so this refuses — and says which two,
+		// because what settles it differs: identical labels need the applicant to
+		// tell them apart, where a shared heading only needs the caller to say more
+		// of it.
+		if (hits.length > 1) {
+			return {
+				kind: 'ambiguous',
+				labels: hits,
+				identical: new Set(hits.map((label) => label.trim().toLowerCase())).size === 1
+			};
+		}
+
+		return { kind: 'found', label: hits[0] };
+	}
+
+	return { kind: 'none' };
+}
+
+/**
+ * What to tell a caller that named a parent nothing answers to.
+ *
+ * One copy, for the same reason the matcher is one copy: two refusals for one
+ * rule drift, and the one an agent actually reads decides whether it retries
+ * usefully or gives up.
+ */
+export function parentNameRefusal(
+	match: { kind: 'none' } | { kind: 'ambiguous'; labels: string[]; identical: boolean },
+	opts: { named: string; parentLabel: string; childLabel: string; available: string[] }
+): string {
+	if (match.kind === 'ambiguous') {
+		return match.identical
+			? `More than one of their ${opts.parentLabel} entries is called "${opts.named}" and ` +
+					`nothing tells them apart, so this would have to guess which. They read the ` +
+					`same on the page as well — giving one of them a distinguishing name or note ` +
+					`is what separates them here.`
+			: `"${opts.named}" is the start of more than one of their ${opts.parentLabel} ` +
+					`entries: ${match.labels.join(', ')}. Name the one you mean in full.`;
+	}
+
+	return opts.available.length > 0
+		? `There is no ${opts.parentLabel} called "${opts.named}". They have: ${opts.available.join(', ')}.`
+		: `There is no ${opts.parentLabel} to file a ${opts.childLabel} under yet — one has to be created first.`;
+}
+
 async function findParentNamed(
 	resource: ProfileResource,
 	actor: ProfileActor,
 	name: string
-): Promise<{ id: number; label: string } | 'none' | 'ambiguous'> {
-	if (resource.owner.via !== 'parent') return 'none';
+): Promise<ParentMatch> {
+	if (resource.owner.via !== 'parent') return { kind: 'none' };
 
-	const wanted = name.trim().toLowerCase();
 	const parents = await readOwnedRows(resource.owner.parent, actor);
 	const parent = resourceFor(resource.owner.parent);
+	const labelled = parents.map((row) => ({ row, label: parent.rowLabel(row) }));
 
-	const found = parents.filter((row) => parent.rowLabel(row).trim().toLowerCase() === wanted);
+	const match = matchParentName(
+		labelled.map((entry) => entry.label),
+		name
+	);
+	if (match.kind !== 'found') return match;
 
-	// Two groups whose labels are identical even after the version they belong to
-	// has been added to them. Picking the first would be a coin toss the caller
-	// cannot see the result of — the row lands under one of two headings that read
-	// the same on the page — so this refuses and says so.
-	if (found.length > 1) return 'ambiguous';
-
-	return found.length === 1 ? { id: found[0].id, label: parent.rowLabel(found[0]) } : 'none';
+	// Safe by construction: two rows carrying the label that won would have come
+	// back ambiguous rather than found.
+	const hit = labelled.find((entry) => entry.label === match.label);
+	return hit ? { kind: 'found', id: hit.row.id, label: hit.label } : { kind: 'none' };
 }
 
 /**
@@ -701,27 +826,18 @@ async function resolveParent(
 	}
 
 	const found = await findParentNamed(resource, actor, String(named));
-	if (typeof found === 'object') return { ok: true, id: found.id, label: found.label };
+	if (found.kind === 'found') return { ok: true, id: found.id, label: found.label };
 
-	if (found === 'ambiguous') {
-		// Actionable, because there is something to act on: every parent label is
-		// built to be distinguishing, so two identical ones mean two rows that read
-		// the same on the page too.
-		return refuse(
-			'invalid',
-			`More than one of their ${parentLabel} entries is called "${String(named)}" and nothing ` +
-				`tells them apart, so this would have to guess which. They read the same on ` +
-				`the page as well — giving one of them a distinguishing name or note is what ` +
-				`separates them here.`
-		);
-	}
-
-	const available = await parentNames(resource, actor);
+	// The list is only read for the refusal, and only when there is one to build:
+	// an ambiguous match already carries the labels it could not choose between.
 	return refuse(
 		'invalid',
-		available.length > 0
-			? `There is no ${parentLabel} called "${String(named)}". They have: ${available.join(', ')}.`
-			: `There is no ${parentLabel} to file a ${resource.label} under yet — one has to be created first.`
+		parentNameRefusal(found, {
+			named: String(named),
+			parentLabel,
+			childLabel: resource.label,
+			available: found.kind === 'none' ? await parentNames(resource, actor) : []
+		})
 	);
 }
 

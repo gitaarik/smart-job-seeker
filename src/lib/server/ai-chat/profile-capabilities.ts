@@ -52,6 +52,8 @@ import {
 } from '$lib/server/profile/resources';
 import {
 	createRow,
+	matchParentName,
+	parentNameRefusal,
 	readOwnedRow,
 	readOwnedRows,
 	setRowTags,
@@ -229,18 +231,24 @@ function checkParent(
 	// reach it is a caller that did not read `current` first.
 	if (!groups) return { ok: true };
 
-	const wanted = String(proposed[field] ?? '')
-		.trim()
-		.toLowerCase();
-	if (groups.some((group) => group.trim().toLowerCase() === wanted)) return { ok: true };
+	// The same matcher the write layer resolves with, not a second reading of the
+	// same rule. While this compared labels itself it was the stricter of the two,
+	// so it — not `findParentNamed` — decided what a name could reach, and a
+	// caller sending the heading it had just read off the row was refused here
+	// with the answer sitting in the list the refusal printed.
+	const named = String(proposed[field] ?? '');
+	const match = matchParentName(groups, named);
+	if (match.kind === 'found') return { ok: true };
 
 	const parent = PROFILE_RESOURCES[(resource.owner as { parent: ProfileResourceName }).parent];
 	return {
 		ok: false,
-		error:
-			groups.length > 0
-				? `There is no ${parent.label} called "${String(proposed[field])}". They have: ${groups.join(', ')}.`
-				: `They have no ${parent.title.toLowerCase()} yet, so there is nowhere to file a ${resource.label}. Propose adding one first.`
+		error: parentNameRefusal(match, {
+			named,
+			parentLabel: parent.label,
+			childLabel: resource.label,
+			available: groups
+		})
 	};
 }
 

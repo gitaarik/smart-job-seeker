@@ -41,10 +41,15 @@ const state = {
 
 vi.mock('$lib/server/profile/write', async (importOriginal) => {
 	// validatePatch is real — the point of the capability's validate() is that it
-	// is the write layer's rule, not a second copy of it.
+	// is the write layer's rule, not a second copy of it. Same for the parent
+	// matcher and its refusal: checkParent used to compare labels itself, and
+	// being the stricter of the two readings is how it silently decided what a
+	// name could reach.
 	const actual = await importOriginal<typeof import('$lib/server/profile/write')>();
 	return {
 		validatePatch: actual.validatePatch,
+		matchParentName: actual.matchParentName,
+		parentNameRefusal: actual.parentNameRefusal,
 		readOwnedRow: () => Promise.resolve(state.row),
 		readOwnedRows: (resource: string) =>
 			Promise.resolve(state.rowsByResource[resource] ?? state.rows),
@@ -658,6 +663,51 @@ describe('a section owned through its parent', () => {
 		expect(add.validate({ 'skill.name': 'Redis', 'skill.category': 'backend' }, current)).toEqual({
 			ok: true
 		});
+	});
+
+	it('accepts the heading of a group whose label carries a note', async () => {
+		// The two-doors case. `checkParent` used to compare labels itself and was
+		// the stricter of the two readings, so a caller that sent what
+		// `read_profile_section` returns under `skill_category.name` was refused
+		// here — with the group it named sitting in the list the refusal printed.
+		state.rowsByResource.skill_category = [
+			{ id: 1, name: 'Backend', note: 'Python / Django' },
+			{ id: 2, name: 'Frontend' }
+		];
+
+		const current = await add.current({ id: 12, label: 'their skills' }, ACTOR);
+
+		expect(add.validate({ 'skill.name': 'Redis', 'skill.category': 'Backend' }, current)).toEqual({
+			ok: true
+		});
+	});
+
+	it('accepts a note the caller wrote out past the ellipsis', async () => {
+		// The label is cut to width, so copying it exactly means copying an
+		// ellipsis; expanding it names the same group and must not be refused.
+		const note = 'everything the fullstack-react version keeps, and nothing the other one does';
+		state.rowsByResource.skill_category = [{ id: 1, name: 'Backend', note }];
+
+		const current = await add.current({ id: 12, label: 'their skills' }, ACTOR);
+
+		expect(
+			add.validate({ 'skill.name': 'Redis', 'skill.category': `Backend (${note})` }, current)
+		).toEqual({ ok: true });
+	});
+
+	it('refuses a heading two groups answer to, and names both', async () => {
+		// Two Backends is the shape the note exists for. Neither door may guess.
+		state.rowsByResource.skill_category = [
+			{ id: 1, name: 'Backend', note: 'Python / Django' },
+			{ id: 2, name: 'Backend', note: 'TypeScript / React' }
+		];
+
+		const current = await add.current({ id: 12, label: 'their skills' }, ACTOR);
+		const result = add.validate({ 'skill.name': 'Redis', 'skill.category': 'Backend' }, current);
+
+		expect(result.ok).toBe(false);
+		expect((result as { error: string }).error).toContain('Backend (Python / Django)');
+		expect((result as { error: string }).error).toContain('Backend (TypeScript / React)');
 	});
 
 	it('refuses an add with no group at all', async () => {
