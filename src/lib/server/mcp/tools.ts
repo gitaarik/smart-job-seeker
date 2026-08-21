@@ -8,7 +8,7 @@
  * `row.profile_id === actor.profileId` — so an entry id means one row on one
  * profile and there is nothing else to decide.
  *
- * The five hand-written **job and application** verbs were held back, because
+ * The hand-written **job and application** verbs were held back, because
  * they are page-bound: their `resolve` takes the entity the user is looking at,
  * and over MCP there is no page. The open question was never the write — a job
  * write has always gone through `canEditJob`, which is "you hand-created it and
@@ -110,8 +110,8 @@ export function isReadTool(name: string): name is ReadTool {
 /**
  * Which capabilities this server exposes: all of them.
  *
- * The profile ones are generated and reach rows this profile owns; the five
- * entity ones are hand-written and reach a job or an application through
+ * The profile ones are generated and reach rows this profile owns; the entity
+ * ones are hand-written and reach a job or an application through
  * `entities.ts`. Nothing in the registry is held back now — which is worth
  * stating, because for one release something was.
  */
@@ -428,8 +428,10 @@ send keeps its value, and each skill list is replaced whole.`,
 		description: `The applicant's applications, newest first, with the job each one is for
 and where it stands.
 
-The id from here is what edit_application_details and add_activity_record both
-take — the second files an entry UNDER an application rather than changing it.`,
+The id from here is what the three application tools take:
+edit_application_details for how and when it was sent,
+update_application_status for where it stands now, and add_activity_record,
+which files an entry UNDER an application rather than changing it.`,
 		inputSchema: {
 			type: 'object',
 			properties: {

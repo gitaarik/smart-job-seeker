@@ -52,6 +52,15 @@ import {
 	recordTypeValues,
 	today
 } from '$lib/application-records';
+import { actionsByPhase, isFinishedStatus, stepsByPhase } from '$lib/application-status';
+import {
+	actionsFor,
+	applicationStatusError,
+	revertApplicationStatus,
+	settableStatuses,
+	stepsFor,
+	writeApplicationStatus
+} from '$lib/server/applications/status';
 import type { EditSource } from './edit-log';
 import { deriveRecordMetadata } from './record-derivation';
 import { summarizeApplication } from './application-summary';
@@ -68,6 +77,7 @@ type HandWrittenCapability =
 	| 'edit_job_description'
 	| 'edit_job_skills'
 	| 'edit_application_details'
+	| 'update_application_status'
 	| 'add_activity_record';
 
 /**
@@ -186,6 +196,29 @@ export interface CapabilityDef {
 	 * chronology it is about to add to because there is no row to diff yet.
 	 */
 	renderState?(current: Record<string, unknown>): string;
+	/**
+	 * Whether a field may be dropped on its way to `apply` because its value
+	 * already matches the row.
+	 *
+	 * Absent for everything that patches columns independently, which is the
+	 * common case and the reason MCP narrows a call to what it actually changes:
+	 * re-stating a value writes nothing, and an approval card that says nothing
+	 * is worse than no card.
+	 *
+	 * Set where the fields are ONE state rather than a patch, so that dropping
+	 * one changes the meaning of the others. `update_application_status` clears
+	 * the stage when the status moves and no stage was sent — so a stage that was
+	 * sent and happened to equal the current one, narrowed away as "unchanged",
+	 * came out the far end as a clear the agent never asked for and the card
+	 * never showed. The two labels that make it reachable are real: "Awaiting
+	 * response" belongs to both applying and negotiating, "Provide references" to
+	 * both interviewing and negotiating.
+	 *
+	 * Only the MCP path narrows. A chat proposal already stores every field it
+	 * was given, and drops the unchanged ones from the CARD rather than from the
+	 * write.
+	 */
+	writesOneState?: boolean;
 	/** Checks the schema can't express. Runs before apply, and before storing a proposal. */
 	validate(
 		fields: Record<string, unknown>,
@@ -796,9 +829,9 @@ async function writeApplicationDetails(
 
 /**
  * Deliberately the three fields the page's own `?/updateDetails` action covers.
- * Status is excluded: it writes an application_status_log row and drives the
- * pipeline view, so it wants its own capability with its own contract rather
- * than riding along in a details edit.
+ * Status is not one of them: it writes an `application_status_log` row and
+ * drives the pipeline view, so it has its own capability with its own contract
+ * rather than riding along in a details edit — see `update_application_status`.
  */
 const editApplicationDetails: CapabilityDef = {
 	title: "Edit the application's details",
@@ -860,6 +893,296 @@ want, tell them to use the status control on the page.`,
 		}
 		const current = await editApplicationDetails.current(target, actor);
 		await writeApplicationDetails(target.id, actor.profileId, { ...current, ...previous });
+	}
+};
+
+/* ------------------------------------------------------------------ *
+ * update_application_status
+ * ------------------------------------------------------------------ */
+
+/**
+ * The vocabulary, rendered from the same tables the editor's dropdowns use.
+ *
+ * Written out rather than described, because "pick a sensible stage" produces a
+ * new label every time and the pipeline groups on this column — one invented
+ * stage is a stage of one. Built from `stepsByPhase` and `actionsByPhase` so
+ * that the list a model is held to and the list a person is offered cannot
+ * drift apart.
+ */
+const STATUS_VOCABULARY = `Stages, by status:
+${Object.entries(stepsByPhase)
+	.map(([status, steps]) => `  ${status}: ${steps.join(', ')}`)
+	.join('\n')}
+
+Next actions, by status:
+${Object.entries(actionsByPhase)
+	.map(([status, actions]) => `  ${status}: ${actions.join(', ')}`)
+	.join('\n')}`;
+
+/** The four columns this capability writes, as `current` reports them. */
+interface StatusFields {
+	status: string;
+	status_step: string | null;
+	status_action: string | null;
+	status_action_date: string | null;
+}
+
+/** The three that hang off the status and are cleared with it. */
+type StatusStageField = 'status_step' | 'status_action' | 'status_action_date';
+
+const STAGE_FIELDS: StatusStageField[] = ['status_step', 'status_action', 'status_action_date'];
+
+function statusFieldsOf(values: Record<string, unknown>): StatusFields {
+	return {
+		status: String(values.status ?? ''),
+		status_step: (values.status_step as string | null) ?? null,
+		status_action: (values.status_action as string | null) ?? null,
+		status_action_date: (values.status_action_date as string | null) ?? null
+	};
+}
+
+/**
+ * What the application will say once this proposal is applied.
+ *
+ * The rule that makes it more than a merge: **a stage belongs to the status it
+ * was reached in.** Moving to "rejected" while keeping "Offer received" under
+ * it describes an application nobody has, so an unproposed stage and next
+ * action are dropped whenever the status itself moves, and always for a status
+ * that has no stages at all. The editor does the same — its phase buttons clear
+ * both.
+ *
+ * Shared by `validate` and `apply`, so the combination that is checked is the
+ * one that gets written. Deriving it twice is how a capability comes to refuse
+ * something it would have written differently anyway.
+ */
+function nextStatusFields(
+	fields: Record<string, unknown>,
+	current: Record<string, unknown>
+): StatusFields {
+	const before = statusFieldsOf(current);
+	const status = 'status' in fields ? String(fields.status ?? '') : before.status;
+	const moved = status !== before.status;
+
+	const carry = (field: StatusStageField): string | null => {
+		// Null for a finished application whatever was proposed. `validate`
+		// refuses a stage sent with one, so this only ever drops a stale one.
+		if (isFinishedStatus(status)) return null;
+		if (field in fields) return (fields[field] as string | null) ?? null;
+		return moved ? null : before[field];
+	};
+
+	return {
+		status,
+		status_step: carry('status_step'),
+		status_action: carry('status_action'),
+		status_action_date: carry('status_action_date')
+	};
+}
+
+/** One line on the timeline beside the move, not an account of what happened. */
+const MAX_STATUS_NOTE = 300;
+
+/**
+ * Move the application through the pipeline, and record the move.
+ *
+ * ## Why this is not part of `edit_application_details`
+ *
+ * That one patches three columns nobody reads but the details card. This writes
+ * the column every list filters on, the board groups by and the comparison
+ * spine sorts by — and it appends to `application_status_log`, which the
+ * activity tab reads as a chronology of what happened. Two writes with the same
+ * shape and nothing else in common: one is a correction, the other is an
+ * assertion that the world moved.
+ *
+ * ## Why it is never a direct write
+ *
+ * `tierForWrite` grades this Tier 2 without being told to, because `status` is
+ * `notNull` with a default and so is never blank — every change to it replaces
+ * something. That arithmetic happens to land on the right answer, and the
+ * reason is worth stating rather than leaving to it: "you were rejected" is a
+ * claim about an employer, it moves the application out of the list the
+ * applicant works from, and it lands in a history that is read back later as
+ * evidence. An agent may ask for it; a person answers.
+ */
+const updateApplicationStatus: CapabilityDef = {
+	title: "Update the application's status",
+	resolve: resolveApplicationTarget,
+	authorize: ownsApplication,
+	current: async (target) => {
+		const app = await db.query.applications.findFirst({
+			where: eq(applications.id, target.id),
+			columns: {
+				status: true,
+				status_step: true,
+				status_action: true,
+				status_action_date: true
+			}
+		});
+		return {
+			status: app?.status ?? null,
+			status_step: app?.status_step ?? null,
+			status_action: app?.status_action ?? null,
+			status_action_date: app?.status_action_date ?? null
+		};
+	},
+	fields: {
+		status: 'string',
+		status_step: 'string',
+		status_action: 'string',
+		status_action_date: 'string',
+		status_note: 'string'
+	},
+	// The stage is cleared by a status move that does not name one, so a stage
+	// that WAS named must reach `apply` even when it matches the row.
+	writesOneState: true,
+	contract: `Where this application stands. It is what moves it between the user's
+lists, so propose it when they say something HAPPENED — not when they say what
+they are hoping for or about to do.
+
+- "status" is exactly one of: ${settableStatuses.join(', ')}.
+  "rejected" is the employer saying no; "withdrawn" is the applicant stopping.
+  Never guess between those two — ask which it was.
+- "status_step" is the stage within that status, and must be one of the labels
+  listed for it below. accepted, rejected and withdrawn have no stages; a step
+  sent with one of them is refused.
+- "status_action" is what has to happen NEXT, from the same lists.
+- "status_action_date" is YYYY-MM-DD, and is when that next thing is due or
+  booked. Not the date of what already happened — that belongs on an activity
+  entry.
+- "status_note" is at most one short line saying why it moved, shown on the
+  timeline beside it ("recruiter called after the technical"). It goes WITH a
+  move — on its own, with nothing else changing, it is refused. Anything longer
+  than a line is an activity entry instead.
+
+Changing the status clears the stage and the next action unless you send new
+ones with it, because a stage belongs to the status it was reached in. A move to
+"interviewing" that names no stage leaves it blank, which is honest; naming one
+you were not told about is not.
+
+${STATUS_VOCABULARY}
+
+If they describe a stage that is not in these lists, use the closest one and say
+in your reply which you picked. Do not invent a label — the pipeline groups on
+these, and a new one makes a group of one.`,
+	validate: (fields, current) => {
+		const next = nextStatusFields(fields, current);
+
+		if ('status' in fields) {
+			const problem = applicationStatusError(next.status);
+			if (problem) return { ok: false, error: problem };
+		}
+
+		if (isFinishedStatus(next.status)) {
+			const sent = STAGE_FIELDS.find((field) => fields[field]);
+			if (sent) {
+				return {
+					ok: false,
+					error:
+						`"${next.status}" finishes the application, so it has no stage or next ` +
+						`action. Leave ${sent} out, or send it as null.`
+				};
+			}
+		}
+
+		// Only what this proposal SENT is checked against the vocabulary. A stage
+		// carried over from the row may be one the applicant typed themselves —
+		// the editor offers "Custom…" — and refusing a proposal about the next
+		// action because of a label nobody proposed would make this capability
+		// stricter than the form it mirrors.
+		const steps = stepsFor(next.status);
+		if (fields.status_step && !steps.includes(String(fields.status_step))) {
+			return {
+				ok: false,
+				error: steps.length
+					? `"${String(fields.status_step)}" is not a stage of "${next.status}". Use one of: ${steps.join(', ')}.`
+					: `"${next.status}" has no stages. Leave status_step out, or send it as null.`
+			};
+		}
+
+		const actions = actionsFor(next.status, next.status_step);
+		if (fields.status_action && !actions.includes(String(fields.status_action))) {
+			return {
+				ok: false,
+				error: actions.length
+					? `"${String(fields.status_action)}" is not a next action here. Use one of: ${actions.join(', ')}.`
+					: `"${next.status}" has no next actions. Leave status_action out, or send it as null.`
+			};
+		}
+
+		const date = fields.status_action_date;
+		if (typeof date === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+			return { ok: false, error: 'status_action_date must be a YYYY-MM-DD date' };
+		}
+
+		const note = fields.status_note;
+		if (typeof note === 'string' && note.length > MAX_STATUS_NOTE) {
+			return {
+				ok: false,
+				error:
+					`status_note is one line on the timeline, not the account of what happened ` +
+					`(${note.length} characters, limit ${MAX_STATUS_NOTE}). The rest belongs in ` +
+					`an activity entry.`
+			};
+		}
+
+		// A note annotates a move; it is not a thing of its own. Without this, a
+		// proposal carrying only `status_note` writes a timeline row saying the
+		// application went from "applying" to "applying" — and it does so at Tier
+		// 1, because a note has no current value to be replacing. Something worth
+		// recording on its own is an activity entry.
+		const before = statusFieldsOf(current);
+		if (
+			next.status === before.status &&
+			STAGE_FIELDS.every((field) => next[field] === before[field])
+		) {
+			return {
+				ok: false,
+				error:
+					'Nothing about the status is changing, so there is no move for a note to ' +
+					'go on. Something worth recording on its own is an activity entry — use ' +
+					'add_activity_record.'
+			};
+		}
+
+		return { ok: true };
+	},
+	apply: async (target, fields, current, actor) => {
+		const next = nextStatusFields(fields, current);
+		const note = typeof fields.status_note === 'string' ? fields.status_note.trim() : '';
+		const written = await writeApplicationStatus(target.id, actor.profileId, {
+			status: next.status,
+			step: next.status_step,
+			action: next.status_action,
+			actionDate: next.status_action_date,
+			description: note || null
+		});
+		if (!written) throw new Error('That application no longer exists.');
+	},
+
+	/**
+	 * All four columns, not only the ones proposed.
+	 *
+	 * `apply` writes more than it was asked to — an unproposed stage is cleared
+	 * when the status moves — so the default before-image would record the status
+	 * alone, and an undo would put that back with the stage still missing. The
+	 * rule that makes this capability more than a patch is the same rule that
+	 * makes it need its own before-image.
+	 */
+	beforeImage: async (_target, current) => ({ ...current }),
+
+	revert: async (target, previous, actor) => {
+		if (typeof previous?.status !== 'string' || previous.status === '') {
+			throw new Error('update_application_status recorded no status this can put back');
+		}
+		const before = statusFieldsOf(previous);
+		const restored = await revertApplicationStatus(target.id, actor.profileId, {
+			status: before.status,
+			step: before.status_step,
+			action: before.status_action,
+			actionDate: before.status_action_date,
+			description: null
+		});
+		if (!restored) throw new Error('That application no longer exists.');
 	}
 };
 
@@ -1059,6 +1382,7 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
 	edit_job_description: editJobDescription,
 	edit_job_skills: editJobSkills,
 	edit_application_details: editApplicationDetails,
+	update_application_status: updateApplicationStatus,
 	add_activity_record: addActivityRecord,
 	...PROFILE_CAPABILITIES
 };
@@ -1505,6 +1829,10 @@ const FIELD_LABELS: Record<string, string> = {
 	cv_sent_through: 'Sent through',
 	application_sent_date: 'Sent on',
 	application_seen_date: 'Seen on',
+	status_step: 'Stage',
+	status_action: 'Next action',
+	status_action_date: 'Due on',
+	status_note: 'Timeline note',
 	entry_content: 'Entry',
 	entry_type: 'Kind',
 	entry_title: 'Title',
@@ -1764,6 +2092,15 @@ the proposal is discarded rather than applied to something else.`;
  * Note which way that last one runs: the heaviest posting costs the LEAST here,
  * because the fallback is the cheap form. The number to watch is a page whose
  * posting sits just under the cap.
+ *
+ * Held at 22,000 again when `update_application_status` made the application
+ * page six capabilities rather than five. It costs 2,360 characters of block,
+ * 2,148 of which is the contract, and most of that is the stage and next-action
+ * vocabulary — which is written out rather than described because the pipeline
+ * groups on those labels and a model asked to pick a sensible one invents a new
+ * one every turn. Measured at **16,984** on application 49, with the six live
+ * and the posting inline. The arrangement that binds is still that page beside
+ * a matched section, which the test above holds to the budget.
  */
 export const CAPABILITY_PROMPT_BUDGET_CHARS = 22000;
 

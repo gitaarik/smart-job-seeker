@@ -17,6 +17,7 @@ import { and, eq, gte, inArray, sql } from 'drizzle-orm';
 import { db, queryRaw } from '$lib/server/db';
 import {
 	application_records,
+	application_status_log,
 	applications,
 	capability_edits,
 	capability_requests,
@@ -32,6 +33,7 @@ import { readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
 import { CAPABILITIES, executeCapability } from '$lib/server/ai-chat/capabilities';
 import { callTool } from '$lib/server/mcp/call';
 import { createMcpKey } from '$lib/server/mcp/keys';
+import { approveRequest } from '$lib/server/mcp/requests';
 import { toolsFor } from '$lib/server/mcp/tools';
 import type { VerifiedMcpKey } from '$lib/server/mcp/keys';
 
@@ -171,12 +173,13 @@ async function main() {
 		const tools = await toolsFor('write');
 		const names = new Set(tools.map((tool) => tool.name));
 		check(
-			'the five entity write tools are listed',
+			'the entity write tools are listed',
 			[
 				'edit_job_details',
 				'edit_job_description',
 				'edit_job_skills',
 				'edit_application_details',
+				'update_application_status',
 				'add_activity_record'
 			].every((name) => names.has(name))
 		);
@@ -363,6 +366,102 @@ async function main() {
 			actor
 		);
 		check('and it undoes back to empty', detailsBack && applicationNow.cv_sent_through === null);
+
+		/* --- the status, its timeline row and its undo ---------------------- */
+
+		// Refused before anything is recorded: a stage from another phase is a
+		// malformed request, and queuing one for a person to read and reject is
+		// the outcome `validate`-before-tier exists to avoid.
+		const wrongStage = await callTool(
+			'update_application_status',
+			{
+				profile_id: profileId,
+				application_id: application.id,
+				status: 'interviewing',
+				status_step: 'Offer received',
+				rationale: 'Verification script.'
+			},
+			KEY
+		);
+		check(
+			'a stage from another phase is refused, not queued',
+			wrongStage.isError === true && text(wrongStage).includes('Screening call')
+		);
+
+		const moved = await callTool(
+			'update_application_status',
+			{
+				profile_id: profileId,
+				application_id: application.id,
+				status: 'interviewing',
+				status_step: 'Technical interview',
+				status_action: 'Awaiting result',
+				status_note: 'ZZ Verify Scratch Move',
+				rationale: 'Verification script.'
+			},
+			KEY
+		);
+		const statusRequestId = moved.structuredContent?.request_id as number | undefined;
+		check(
+			'a status move needs approval even on a write key',
+			moved.structuredContent?.applied === false && statusRequestId !== undefined
+		);
+
+		const approved =
+			statusRequestId !== undefined ? await approveRequest(statusRequestId, actor) : null;
+		const statusEditId = approved?.ok === true ? approved.editId : null;
+		const afterMove = await CAPABILITIES.update_application_status.current(
+			{ id: application.id, label: 'application' },
+			actor
+		);
+		check(
+			'approving it moves the application',
+			afterMove.status === 'interviewing' &&
+				afterMove.status_step === 'Technical interview' &&
+				afterMove.status_action === 'Awaiting result',
+			JSON.stringify(afterMove)
+		);
+
+		const timeline = await db
+			.select({
+				from_status: application_status_log.from_status,
+				to_status: application_status_log.to_status,
+				description: application_status_log.description
+			})
+			.from(application_status_log)
+			.where(eq(application_status_log.application, application.id));
+		check(
+			'and records the move on the timeline',
+			timeline.length === 1 &&
+				timeline[0].from_status === 'draft' &&
+				timeline[0].to_status === 'interviewing' &&
+				timeline[0].description === 'ZZ Verify Scratch Move',
+			JSON.stringify(timeline)
+		);
+
+		const statusBack = statusEditId !== null && (await revertEdit(statusEditId, actor)).ok === true;
+		const afterUndoStatus = await CAPABILITIES.update_application_status.current(
+			{ id: application.id, label: 'application' },
+			actor
+		);
+		check(
+			'the undo puts back the stage the move cleared, not only the status',
+			statusBack &&
+				afterUndoStatus.status === 'draft' &&
+				afterUndoStatus.status_step === null &&
+				afterUndoStatus.status_action === null,
+			JSON.stringify(afterUndoStatus)
+		);
+
+		const timelineAfterUndo = await db
+			.select({ id: application_status_log.id })
+			.from(application_status_log)
+			.where(eq(application_status_log.application, application.id));
+		check(
+			'and takes the timeline row back with it',
+			timelineAfterUndo.length === 0,
+			JSON.stringify(timelineAfterUndo)
+		);
 
 		/* --- refusals ------------------------------------------------------- */
 

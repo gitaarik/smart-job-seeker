@@ -106,6 +106,28 @@ describe('tierForWrite', () => {
 		).toBe(2);
 	});
 
+	it('never lets an agent move an application through the pipeline on its own', () => {
+		// Reached from `current` alone rather than from the capability's name:
+		// `status` is notNull with a default, so it is never blank and every change
+		// to it replaces something. The answer is the intended one — "you were
+		// rejected" is a claim about an employer, and it moves the application out
+		// of the list the applicant works from — so it is pinned here rather than
+		// left to the arithmetic that happens to produce it.
+		const decision = tierForWrite({
+			capability: 'update_application_status',
+			current: {
+				status: 'applying',
+				status_step: 'Applied through job platform',
+				status_action: 'Awaiting response',
+				status_action_date: null
+			},
+			fields: { status: 'rejected' },
+			...noBurst
+		});
+
+		expect(decision.tier).toBe(2);
+	});
+
 	it('sends writes for approval once an agent has made too many in an hour', () => {
 		// The only enforceable reading of "anything bulk": a single call is one
 		// capability on one row, so bulk is never visible inside one.

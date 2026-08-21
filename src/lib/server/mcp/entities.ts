@@ -1,6 +1,6 @@
 /**
  * How an MCP call names a job or an application, which is the whole of what
- * kept these five capabilities off this server until now.
+ * kept these capabilities off this server until now.
  *
  * The profile capabilities need none of this: their rows are owned outright,
  * `read_profile_section` lists them, and an entry id means one row on one
@@ -133,7 +133,7 @@ const applicationTargeting: EntityTargeting = {
 };
 
 /**
- * The five hand-written capabilities, and what each one's id argument names.
+ * The hand-written capabilities, and what each one's id argument names.
  *
  * `add_activity_record` is the odd one and worth reading twice: its argument
  * names the application the entry is FILED UNDER, not a row being changed.
@@ -145,6 +145,7 @@ export const ENTITY_TARGETING: Partial<Record<Capability, EntityTargeting>> = {
 	edit_job_description: jobTargeting,
 	edit_job_skills: jobTargeting,
 	edit_application_details: applicationTargeting,
+	update_application_status: applicationTargeting,
 	add_activity_record: applicationTargeting
 };
 

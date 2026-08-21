@@ -179,6 +179,29 @@ vi.mock('../application-summary', () => ({
 	summarizeApplication: (...a: unknown[]) => mockSummarize(...a)
 }));
 
+/**
+ * The status write layer, mocked the way `edit-job` is: the capability's job is
+ * to decide WHAT the application should say, and this file asserts that. What
+ * the columns and the timeline row then do about it is `applications/status.ts`
+ * and has its own tests.
+ *
+ * The pure half — the vocabulary and the status check — is kept real, because a
+ * fake list would let a contract and a validator agree with each other and with
+ * nothing the editor offers.
+ */
+const mockWriteStatus = vi.fn().mockResolvedValue({
+	from: 'applying',
+	logId: 5,
+	replaced: false,
+	appliedDateSet: null
+});
+const mockRevertStatus = vi.fn().mockResolvedValue(true);
+vi.mock('$lib/server/applications/status', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/applications/status')>()),
+	writeApplicationStatus: (...a: unknown[]) => mockWriteStatus(...a),
+	revertApplicationStatus: (...a: unknown[]) => mockRevertStatus(...a)
+}));
+
 const mockCanEditJob = vi.fn();
 const mockApplyJobFields = vi.fn().mockResolvedValue(undefined);
 const mockApplyJobTexts = vi.fn().mockResolvedValue(undefined);
@@ -213,6 +236,7 @@ import {
 /** What /applications/[id] declares — the busiest route in the table. */
 const APPLICATION_PAGE_CAPABILITIES: Capability[] = [
 	'edit_application_details',
+	'update_application_status',
 	'add_activity_record',
 	'edit_job_details',
 	'edit_job_description',
@@ -233,6 +257,13 @@ beforeEach(() => {
 	mockApplyJobFields.mockResolvedValue(undefined);
 	mockApplyJobTexts.mockResolvedValue(undefined);
 	mockApplyJobSkills.mockResolvedValue(undefined);
+	mockWriteStatus.mockResolvedValue({
+		from: 'applying',
+		logId: 5,
+		replaced: false,
+		appliedDateSet: null
+	});
+	mockRevertStatus.mockResolvedValue(true);
 	mockAppUpdateSet.mockReturnValue({
 		where: vi.fn().mockResolvedValue(undefined)
 	});
@@ -790,6 +821,186 @@ describe('edit_application_details', () => {
 
 		applicationRow = { id: 42 };
 		expect(await def.authorize({ id: 42, label: 'x' }, ACTOR)).toBe(true);
+	});
+});
+
+describe('update_application_status', () => {
+	const def = CAPABILITIES.update_application_status;
+	const APPLYING = {
+		status: 'applying',
+		status_step: 'Applied through job platform',
+		status_action: 'Awaiting response',
+		status_action_date: null
+	};
+
+	const apply = (fields: Record<string, unknown>, current = APPLYING) =>
+		def.apply({ id: 49, label: 'x' }, fields, current, ACTOR);
+
+	it('only accepts a status the pipeline actually has', () => {
+		expect(def.validate({ status: 'interviewing' }, APPLYING).ok).toBe(true);
+		expect(def.validate({ status: 'ghosted' }, APPLYING).ok).toBe(false);
+		// The read-side legacy names render on old rows and must not be written
+		// onto new ones — see `settableStatuses`.
+		expect(def.validate({ status: 'offered' }, APPLYING).ok).toBe(false);
+		expect(def.validate({ status: 'draft' }, APPLYING).ok).toBe(false);
+	});
+
+	it('holds a proposed stage to the ones that status has', () => {
+		expect(
+			def.validate({ status: 'interviewing', status_step: 'Team interview' }, APPLYING).ok
+		).toBe(true);
+
+		// Right label, wrong status: "Offer received" is a negotiating stage, and
+		// accepting it here is how a stage ends up under a status it cannot be
+		// reached from.
+		const wrong = def.validate({ status: 'interviewing', status_step: 'Offer received' }, APPLYING);
+		expect(wrong.ok).toBe(false);
+		expect(wrong.ok === false && wrong.error).toContain('Screening call');
+	});
+
+	it('refuses a stage on a status that finishes the application', () => {
+		const refused = def.validate(
+			{ status: 'rejected', status_step: 'Technical interview' },
+			APPLYING
+		);
+		expect(refused.ok).toBe(false);
+		expect(refused.ok === false && refused.error).toContain('no stage');
+
+		expect(def.validate({ status: 'rejected' }, APPLYING).ok).toBe(true);
+		expect(def.validate({ status: 'rejected', status_step: null }, APPLYING).ok).toBe(true);
+	});
+
+	it('accepts a next action the stage offers, and one the phase does', () => {
+		// From actionsByStep for that stage.
+		expect(
+			def.validate(
+				{ status: 'interviewing', status_step: 'Technical interview', status_action: 'Scheduled' },
+				APPLYING
+			).ok
+		).toBe(true);
+		// From actionsByPhase, which the editor falls back to.
+		expect(
+			def.validate(
+				{
+					status: 'interviewing',
+					status_step: 'Technical interview',
+					status_action: 'Provide references'
+				},
+				APPLYING
+			).ok
+		).toBe(true);
+		expect(
+			def.validate({ status: 'interviewing', status_action: 'Send application' }, APPLYING).ok
+		).toBe(false);
+	});
+
+	it('leaves a stage the applicant typed themselves alone', () => {
+		// The editor offers "Custom…", so a stage on the row is not necessarily one
+		// from the list. Validating the CARRIED value rather than the proposed one
+		// would refuse a proposal about the next action because of a label nobody
+		// proposed — and make this stricter than the form it mirrors.
+		const custom = { ...APPLYING, status: 'interviewing', status_step: 'Coffee chat with the CTO' };
+		expect(def.validate({ status_action: 'Awaiting result' }, custom).ok).toBe(true);
+	});
+
+	it('rejects a note long enough to be the account of what happened', () => {
+		// Carried on a real move, since a note on its own is refused above.
+		const withMove = (note: string) => ({ status: 'interviewing', status_note: note });
+		expect(def.validate(withMove('x'.repeat(301)), APPLYING).ok).toBe(false);
+		expect(def.validate(withMove('x'.repeat(300)), APPLYING).ok).toBe(true);
+	});
+
+	it('refuses a note with no move to hang it on', async () => {
+		// A note has no current value, so `tierForWrite` would grade a note-only
+		// call additive and write it directly — a timeline row saying the
+		// application went from "applying" to "applying".
+		const refused = def.validate({ status_note: 'they seemed keen' }, APPLYING);
+		expect(refused.ok).toBe(false);
+		expect(refused.ok === false && refused.error).toContain('add_activity_record');
+
+		expect(
+			def.validate({ status: 'interviewing', status_note: 'they seemed keen' }, APPLYING).ok
+		).toBe(true);
+	});
+
+	it('clears the stage and the next action when the status moves without them', async () => {
+		await apply({ status: 'interviewing' });
+
+		expect(mockWriteStatus).toHaveBeenCalledWith(
+			49,
+			ACTOR.profileId,
+			expect.objectContaining({ status: 'interviewing', step: null, action: null })
+		);
+	});
+
+	it('keeps them when the status is not what moved', async () => {
+		await apply({ status_action_date: '2026-09-01' });
+
+		expect(mockWriteStatus).toHaveBeenCalledWith(
+			49,
+			ACTOR.profileId,
+			expect.objectContaining({
+				status: 'applying',
+				step: 'Applied through job platform',
+				action: 'Awaiting response',
+				actionDate: '2026-09-01'
+			})
+		);
+	});
+
+	it('carries a proposed stage through the move', async () => {
+		await apply({
+			status: 'interviewing',
+			status_step: 'Technical interview',
+			status_action: 'Scheduled',
+			status_note: '  second round with the client  '
+		});
+
+		expect(mockWriteStatus).toHaveBeenCalledWith(49, ACTOR.profileId, {
+			status: 'interviewing',
+			step: 'Technical interview',
+			action: 'Scheduled',
+			actionDate: null,
+			description: 'second round with the client'
+		});
+	});
+
+	it('drops the stage entirely for a status that finishes the application', async () => {
+		await apply({ status: 'rejected' });
+
+		expect(mockWriteStatus).toHaveBeenCalledWith(49, ACTOR.profileId, {
+			status: 'rejected',
+			step: null,
+			action: null,
+			actionDate: null,
+			description: null
+		});
+	});
+
+	it('records every column it could clear, not only the ones proposed', async () => {
+		// The undo case this exists for: the proposal names the status alone, the
+		// write clears the stage as well, and a before-image of the proposed
+		// fields would put the status back with the stage still gone.
+		const before = await def.beforeImage?.({ id: 49, label: 'x' }, APPLYING, ACTOR);
+
+		expect(before).toEqual(APPLYING);
+	});
+
+	it('puts back what the write replaced', async () => {
+		await def.revert?.({ id: 49, label: 'x' }, APPLYING, ACTOR);
+
+		expect(mockRevertStatus).toHaveBeenCalledWith(49, ACTOR.profileId, {
+			status: 'applying',
+			step: 'Applied through job platform',
+			action: 'Awaiting response',
+			actionDate: null,
+			description: null
+		});
+	});
+
+	it('refuses an undo with no status recorded rather than writing an empty one', async () => {
+		await expect(def.revert?.({ id: 49, label: 'x' }, {}, ACTOR)).rejects.toThrow();
+		expect(mockRevertStatus).not.toHaveBeenCalled();
 	});
 });
 

@@ -357,6 +357,7 @@ const APPLICATION_SCOPE: RouteScope = {
 	// to without leaving the page. They drop out for scraped jobs.
 	capabilities: [
 		'edit_application_details',
+		'update_application_status',
 		'add_activity_record',
 		'edit_job_details',
 		'edit_job_description',

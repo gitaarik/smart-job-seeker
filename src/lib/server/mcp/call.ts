@@ -436,7 +436,14 @@ async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolRes
 	const details = CAPABILITIES.edit_application_details;
 	const activity = CAPABILITIES.add_activity_record;
 
-	const fields = await details.current(target, actor);
+	// Both writable halves of the record, each read by the capability that writes
+	// it: how it was sent, and where it stands. The status is printed in the
+	// header line as well, where it is what NAMES the application's state — this
+	// is the same four values in the form an edit has to diff against.
+	const fields = {
+		...(await details.current(target, actor)),
+		...(await CAPABILITIES.update_application_status.current(target, actor))
+	};
 	const logged = await activity.current(target, actor);
 
 	// The chronology rendered by the capability that writes into it, rather than
@@ -656,7 +663,7 @@ async function runWrite(
 	//
 	// Adds are exempt: their `current` is the section's inventory, not this row's
 	// values, so there is nothing here to compare against.
-	const fields =
+	const changed =
 		capability.startsWith('add_') || Object.keys(def.fields).length === 0
 			? sent
 			: Object.fromEntries(
@@ -665,13 +672,20 @@ async function runWrite(
 					)
 				);
 
-	if (Object.keys(sent).length > 0 && Object.keys(fields).length === 0) {
+	if (Object.keys(sent).length > 0 && Object.keys(changed).length === 0) {
 		return ok(
 			`Nothing to change — every value sent is already what "${target.label}" holds. ` +
 				`No request was made and nothing was written.`,
 			{ applied: false, unchanged: true, target: target.label }
 		);
 	}
+
+	// The narrowing decides whether there is anything to do; it does not decide
+	// what gets written. For a capability whose fields are one state rather than
+	// a patch, dropping a field because it matches the row turns "leave this as
+	// it is" into "it was not sent" — and `update_application_status` clears a
+	// stage that was not sent. See CapabilityDef.writesOneState.
+	const fields = def.writesOneState ? sent : changed;
 
 	// Validated before the tier is decided, so a malformed request is answered as
 	// malformed rather than queued for a person to read and reject.

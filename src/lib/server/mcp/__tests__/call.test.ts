@@ -222,11 +222,28 @@ vi.mock('$lib/server/documents/read', () => ({
  * this is `current()`, which is what decides the tier, and that is the half
  * worth exercising with real rows.
  */
+/**
+ * The application as a database row, for the same reason `JOB_ROW` is separate
+ * from `JOB`: the scope row above says whose it is, and the capabilities' own
+ * `current()` says what it holds.
+ */
+const APPLICATION_ROW = {
+	id: 44,
+	profile_id: 12,
+	status: 'applying',
+	status_step: 'E-mail sent',
+	status_action: 'Awaiting response',
+	status_action_date: null,
+	cv_sent_through: null,
+	application_sent_date: '2026-08-01',
+	application_seen_date: null
+};
+
 vi.mock('$lib/server/db', () => ({
 	db: {
 		query: {
 			jobs: { findFirst: () => Promise.resolve(JOB_ROW) },
-			applications: { findFirst: () => Promise.resolve({ id: 44, profile_id: 12 }) },
+			applications: { findFirst: () => Promise.resolve(APPLICATION_ROW) },
 			application_records: { findMany: () => Promise.resolve(RECORDS) }
 		}
 	},
@@ -581,6 +598,54 @@ describe('tier 1 — direct writes', () => {
 		expect(result.structuredContent?.applied).toBe(false);
 		expect(createRequest).not.toHaveBeenCalled();
 		expect(executeCapability).not.toHaveBeenCalled();
+	});
+
+	it('writes a value it was sent even when the row already holds it', async () => {
+		// The narrowing above decides whether there is anything to do; for a
+		// one-state capability it must not decide what gets written.
+		// `update_application_status` clears the stage when the status moves and
+		// none was sent, so a next action that WAS sent and happened to match the
+		// row came out the far end as a clear nobody asked for. Reachable because
+		// "Awaiting response" belongs to applying and to negotiating alike.
+		await callTool(
+			'update_application_status',
+			{
+				profile_id: 12,
+				application_id: 44,
+				status: 'negotiating',
+				status_step: 'Offer received',
+				status_action: 'Awaiting response',
+				rationale: 'They made an offer.'
+			},
+			KEY
+		);
+
+		// A status change is always Tier 2, so what would be written is what was
+		// recorded for the applicant to approve.
+		expect(createRequest).toHaveBeenCalled();
+		expect(createRequest.mock.calls[0][0].fields).toEqual({
+			status: 'negotiating',
+			status_step: 'Offer received',
+			status_action: 'Awaiting response'
+		});
+	});
+
+	it('still says nothing changed when a one-state call matches the row', async () => {
+		const result = await callTool(
+			'update_application_status',
+			{
+				profile_id: 12,
+				application_id: 44,
+				status: 'applying',
+				status_step: 'E-mail sent',
+				status_action: 'Awaiting response',
+				rationale: 'Restating where it stands.'
+			},
+			KEY
+		);
+
+		expect(result.structuredContent?.unchanged).toBe(true);
+		expect(createRequest).not.toHaveBeenCalled();
 	});
 
 	it('grades a call on the fields it actually changes', async () => {
