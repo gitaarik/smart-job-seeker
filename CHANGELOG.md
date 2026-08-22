@@ -5,6 +5,27 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] - 2026-08-22
+
+9 commits since v0.18.0.
+
+### Added
+
+- Open registration, email verification, and account erasure with grace period
+- Ability to park applications until a specified date
+- Application status management via assistant and MCP
+- Capability self-grading tier system for improved queue decidability
+
+### Changed
+
+- Review interface now displays changes as unified diffs
+
+### Fixed
+
+- Profile validation now enforces baseline requirements at save time
+- Profile saves now reject when baseline has changed since load
+- Capabilities now properly reject HTML entities in document-bound text
+
 ## [0.18.0] - 2026-08-20
 
 13 commits since v0.17.0.
