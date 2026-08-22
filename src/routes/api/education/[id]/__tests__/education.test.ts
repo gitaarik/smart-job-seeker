@@ -66,15 +66,28 @@ function written() {
 
 function createEvent(
 	body: unknown,
-	opts: { user?: { id: string } | null; params?: Record<string, string> } = {}
+	opts: {
+		user?: { id: string } | null;
+		params?: Record<string, string>;
+		/** Omit the baseline the door requires, to exercise that refusal. */
+		stale?: boolean;
+	} = {}
 ) {
+	// Every real client sends one — `patchBody` and the tag editor both build it
+	// — so the fixtures do too, and the one test that cares about its absence
+	// asks for it. See `patchOwnedRow`.
+	const payload =
+		!opts.stale && body && typeof body === 'object' && !Array.isArray(body)
+			? { expected: {}, ...(body as Record<string, unknown>) }
+			: body;
+
 	return {
 		params: opts.params ?? { id: '1' },
 		locals: { user: opts.user === undefined ? { id: 'user-1' } : opts.user, session: null },
 		request: new Request('http://localhost/api/education/1', {
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(body)
+			body: JSON.stringify(payload)
 		})
 	} as never;
 }
@@ -84,6 +97,18 @@ describe('PATCH /api/education/[id]', () => {
 		state.rows = [];
 		state.profileRow = null;
 		state.updates = [];
+	});
+
+	it('refuses a body with no baseline, whatever else is right about it', async () => {
+		// A page loaded before the guard shipped sends a perfectly well-formed
+		// patch and no baseline. Accepting it is how the guard fails to guard the
+		// only client that was ever going to need it.
+		owns();
+
+		await expect(PATCH(createEvent({ institution: 'MIT' }, { stale: true }))).rejects.toMatchObject(
+			{ status: 400 }
+		);
+		expect(written()).toBeUndefined();
 	});
 
 	it('rejects unauthenticated', async () => {

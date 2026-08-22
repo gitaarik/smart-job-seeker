@@ -65,8 +65,24 @@ function splitExpected(body: Record<string, unknown>): {
  * the conditional write is not something a door remembers to do, it is what a
  * door *is*. Before this the doors each spelled out the same three steps, which
  * is exactly the shape where the fourth one quietly omits the middle step and
- * nothing fails — it just silently overwrites again, which is the bug this
- * whole mechanism exists to close.
+ * nothing fails — it just silently overwrites again.
+ *
+ * ## Why the baseline is required here and optional in `updateRow`
+ *
+ * `updateRow` treats an absent baseline as "this caller has nothing to be stale
+ * about", which is true of a capability write and false of a browser. Left
+ * optional at the door too, the guard protects only the clients that opted in —
+ * and the client that most needs it is the one that cannot, because a tab
+ * loaded before the change shipped is running the bundle that does not send it.
+ *
+ * That is not a thought experiment. It is how a restored value was reverted a
+ * third time, ninety seconds after the guard went in and by the same open tab
+ * the guard was written for: the server was ready, the tab was not, and a
+ * missing baseline read as consent.
+ *
+ * So the door refuses instead. It costs the capability paths nothing — they
+ * call `updateRow` directly and never come through here — and it turns a stale
+ * bundle from a silent revert into a message telling the user to reload.
  *
  * Throws the HTTP error on refusal, like `unwrapWrite`, so a route stays the
  * one line it should be.
@@ -78,6 +94,13 @@ export async function patchOwnedRow(
 	body: Record<string, unknown>
 ): Promise<void> {
 	const { patch, expected } = splitExpected(body);
+	if (!expected) {
+		error(
+			400,
+			'This page was loaded before an update and can no longer save safely. ' +
+				'Reload the page and try again.'
+		);
+	}
 	unwrapWrite(await updateRow(resource, actor, id, patch, { expected }));
 }
 

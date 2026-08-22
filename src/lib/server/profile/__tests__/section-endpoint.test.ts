@@ -202,7 +202,10 @@ describe('patching a row', () => {
 	it('writes through the row it names', async () => {
 		const result = await call(() =>
 			patchSectionRow(
-				event({ resource: 'work_experience_project', id: '5' }, { end_date: '2024-06-30' })
+				event(
+					{ resource: 'work_experience_project', id: '5' },
+					{ end_date: '2024-06-30', expected: { end_date: '2024-01-31' } }
+				)
 			)
 		);
 
@@ -212,14 +215,19 @@ describe('patching a row', () => {
 				resource: 'work_experience_project',
 				id: 5,
 				values: { end_date: '2024-06-30' },
-				expected: undefined
+				expected: { end_date: '2024-01-31' }
 			}
 		]);
 	});
 
 	it('reads the row back, so a derived value does not need a reload', async () => {
 		const result = await call(() =>
-			patchSectionRow(event({ resource: 'work_experience_project', id: '5' }, { name: 'x' }))
+			patchSectionRow(
+				event(
+					{ resource: 'work_experience_project', id: '5' },
+					{ name: 'x', expected: { name: 'y' } }
+				)
+			)
 		);
 		expect(result.body).toMatchObject({ row: { id: 5 } });
 	});
@@ -238,7 +246,12 @@ describe('patching a row', () => {
 		state.writeResult = { ok: false, reason: 'invalid', error: 'Project name is required' };
 
 		const result = await call(() =>
-			patchSectionRow(event({ resource: 'work_experience_project', id: '5' }, { name: ' ' }))
+			patchSectionRow(
+				event(
+					{ resource: 'work_experience_project', id: '5' },
+					{ name: ' ', expected: { name: 'y' } }
+				)
+			)
 		);
 
 		expect(result.status).toBe(400);
@@ -280,11 +293,31 @@ describe('patching a row', () => {
 		};
 
 		const result = await call(() =>
-			patchSectionRow(event({ resource: 'work_experience_project', id: '5' }, { name: 'x' }))
+			patchSectionRow(
+				event(
+					{ resource: 'work_experience_project', id: '5' },
+					{ name: 'x', expected: { name: 'y' } }
+				)
+			)
 		);
 
 		expect(result.status).toBe(409);
 		expect(result.body.message).toContain('changed somewhere else');
+	});
+
+	it('refuses a save from a page that predates the guard', async () => {
+		// The case the requirement exists for, and the one an optional baseline
+		// cannot cover: a tab loaded before the client learned to send one is
+		// running the bundle that does not, and treating "no baseline" as consent
+		// is how a restored value was reverted a third time ninety seconds after
+		// the guard shipped. A reload is the whole fix, so the message says that.
+		const result = await call(() =>
+			patchSectionRow(event({ resource: 'work_experience_project', id: '5' }, { name: 'x' }))
+		);
+
+		expect(result.status).toBe(400);
+		expect(result.body.message).toContain('Reload');
+		expect(state.updated).toHaveLength(0);
 	});
 
 	it('rejects an unusable id before authorising anything', async () => {
