@@ -151,16 +151,23 @@ describe('summarizeProposal', () => {
 			expect(zuluAt).toBeLessThan(closingAt);
 		});
 
-		it('still reports the change when no run is long enough to quote', () => {
-			// Scattered one-word edits produce no quotable run. Saying nothing
-			// changed would be wrong; the shape line has to stand on its own.
+		it('quotes short runs rather than nothing when there is nothing longer', () => {
+			// Scattered one-word edits clear no length threshold, and this is exactly
+			// the case a reader needs help with: a long text where little moved. The
+			// threshold is there to prefer substantial runs over trivial ones, not to
+			// answer "what changed?" with silence when every run is trivial.
 			const old = Array.from({ length: 60 }, (_, i) => `word${i}`).join(' ');
 			const next = old.replace('word7', 'seven').replace('word31', 'x');
 			const out = summarizeProposal({
 				...base,
 				changes: [change('Description', old, next)]
 			});
+
 			expect(out).toContain('Description: rewritten');
+			expect(out).toContain('seven');
+			expect(out).toContain('word7');
+			// And still not the sixty words that did not move.
+			expect(out).not.toContain('word12');
 		});
 	});
 

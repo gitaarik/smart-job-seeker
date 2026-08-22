@@ -488,6 +488,66 @@ describe('list_pending_changes', () => {
 		expect(request.changes[0].to.length).toBeLessThan(long.length);
 	});
 
+	it('renders a long rewrite as what moved, not as the first 200 characters twice', async () => {
+		// The failure this replaced: both sides truncated at a flat 200 characters,
+		// so a one-word fix inside a long description printed the same 200
+		// characters on either side of an arrow and called it a diff. The text a
+		// person reads now goes through the same renderer the chat summary uses.
+		const shared = Array(60).fill('alpha').join(' ');
+		readRequests.mockResolvedValue(
+			pendingRequests(1, {
+				fields: { 'language.name': `${shared} released as open source` },
+				previous: { 'language.name': `${shared} used by other people` }
+			})
+		);
+		countRequests.mockResolvedValue(1);
+
+		const result = await callTool('list_pending_changes', { profile_id: 12 }, KEY);
+		const text = result.content[0].text;
+
+		expect(text).toContain('rewritten');
+		// The words that actually differ, and not the paragraph they sit in.
+		expect(text).toContain('released as open source');
+		expect(text).toContain('used by other people');
+		expect(text).not.toContain(shared);
+	});
+
+	it('quotes a one-word fix in a long text rather than only its shape', async () => {
+		// The queue's whole reason for existing is being decidable without opening
+		// a browser, and "rewritten, 305 → 306 characters" is not a decision. A
+		// small edit in a long field is the case that needs the excerpt most.
+		const shared = Array(60).fill('alpha').join(' ');
+		readRequests.mockResolvedValue(
+			pendingRequests(1, {
+				fields: { 'language.name': `${shared} gamma` },
+				previous: { 'language.name': `${shared} beta` }
+			})
+		);
+		countRequests.mockResolvedValue(1);
+
+		const result = await callTool('list_pending_changes', { profile_id: 12 }, KEY);
+
+		const text = result.content[0].text;
+		expect(text).toContain('rewritten');
+		expect(text).toContain('gamma');
+		expect(text).toContain('beta');
+		expect(text).not.toContain(shared);
+	});
+
+	it('keeps the rendering out of the structured payload', async () => {
+		// `lines` is how the text half is built. Shipping it as data too would
+		// hand a consumer two answers to the same question and no way to tell
+		// which one is the record.
+		readRequests.mockResolvedValue(pendingRequests(1));
+		countRequests.mockResolvedValue(1);
+
+		const result = await callTool('list_pending_changes', { profile_id: 12 }, KEY);
+		const [request] = result.structuredContent?.requests as Record<string, unknown>[];
+
+		expect(request).not.toHaveProperty('lines');
+		expect(request).toHaveProperty('changes');
+	});
+
 	it('says so for a change that has no fields to show', async () => {
 		// Naming the row is the whole proposal for a hide, so an empty change list
 		// is the correct answer and has to read as one.

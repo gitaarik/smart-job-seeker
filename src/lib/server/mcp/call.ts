@@ -46,6 +46,7 @@ import {
 	type ProposedChange
 } from '$lib/server/ai-chat/capabilities';
 import { profileEditCounts } from '$lib/server/ai-chat/profile-edit-manifest';
+import { describeChangeLines } from '$lib/server/ai-chat/proposal-summary';
 import {
 	assistantFields,
 	isHideable,
@@ -314,6 +315,7 @@ async function listPendingChanges(args: Args, key: VerifiedMcpKey): Promise<Tool
 		// queue. Rendering a raw name beats a read tool that throws on one stale
 		// row and takes the other thirty-seven with it.
 		const known = r.capability in CAPABILITIES;
+		const changes = known ? describeProposalChanges(r.capability, r.fields, r.previous) : [];
 		return {
 			request_id: r.id,
 			capability: r.capability,
@@ -321,9 +323,12 @@ async function listPendingChanges(args: Args, key: VerifiedMcpKey): Promise<Tool
 			supported: known,
 			target: r.target.label,
 			rationale: r.rationale,
-			changes: known
-				? describeProposalChanges(r.capability, r.fields, r.previous).map(excerptChange)
-				: [],
+			// The structured half is excerpted because it is bulk — twenty requests
+			// carrying two full descriptions each is a payload nobody asked for. The
+			// text half below reads the same changes unexcerpted, so what a person
+			// is shown is a diff rather than the first 200 characters twice.
+			changes: changes.map(excerptChange),
+			lines: changes.flatMap(describeChangeLines),
 			asked_at: r.createdAt.toISOString(),
 			review_at: requestPath(r.id)
 		};
@@ -348,13 +353,16 @@ async function listPendingChanges(args: Args, key: VerifiedMcpKey): Promise<Tool
 		// request this build can no longer apply has to say that instead.
 		const changes = !r.supported
 			? '\n    (this kind of change is no longer supported — it can only be rejected)'
-			: r.changes.length > 0
-				? r.changes.map((c) => `\n    ${c.label}: ${c.from} → ${c.to}`).join('')
+			: r.lines.length > 0
+				? r.lines.map((line) => `\n    ${line}`).join('')
 				: '\n    (no fields — naming the entry is the whole change)';
 		return `- [${r.request_id}] ${r.title} on "${r.target}"\n    why: ${r.rationale}${changes}`;
 	});
 
-	return ok(`${heading}\n\n${lines.join('\n')}`, { requests, total });
+	return ok(`${heading}\n\n${lines.join('\n')}`, {
+		requests: requests.map(({ lines: _lines, ...rest }) => rest),
+		total
+	});
 }
 
 /**

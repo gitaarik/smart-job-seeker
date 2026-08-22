@@ -4,6 +4,8 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faHistory, faRotateLeft, faXmark } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
+	import ChangeDiff from '$lib/components/ChangeDiff.svelte';
+	import { shrinkage, summarizeValue } from '$lib/utils/change-analysis';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -111,13 +113,26 @@
 									<div>
 										<dt class="text-[var(--dash-text-secondary)]">{change.label}</dt>
 										<dd class="break-words">
-											<span class="line-through opacity-60">{change.from || '—'}</span>
+											<span class="line-through opacity-60">{summarizeValue(change.from)}</span>
 											<span aria-hidden="true"> → </span>
-											<span>{change.to || '—'}</span>
+											<span>{summarizeValue(change.to)}</span>
+											<!--
+												A replacement shorter than what it replaces is the one shape of
+												edit whose loss is invisible — the new text reads perfectly well,
+												and nothing about it says what used to be there.
+											-->
+											{#if shrinkage(change) > 0}
+												<span class="text-[11px] text-amber-600 dark:text-amber-400">
+													−{shrinkage(change).toLocaleString()}
+												</span>
+											{/if}
 										</dd>
 									</div>
 								{/each}
 							</dl>
+							<div class="mt-2">
+								<ChangeDiff changes={request.changes} />
+							</div>
 						{:else if request.whereInstead}
 							<p class="mt-3 text-sm text-[var(--dash-text-secondary)]">
 								This would take the entry off your CVs and exports. It stays on your
@@ -201,13 +216,26 @@
 								<div>
 									<dt class="text-[var(--dash-text-secondary)]">{change.label}</dt>
 									<dd class="break-words">
-										<span class="line-through opacity-60">{change.from || '—'}</span>
+										<span class="line-through opacity-60">{summarizeValue(change.from)}</span>
 										<span aria-hidden="true"> → </span>
-										<span>{change.to || '—'}</span>
+										<span>{summarizeValue(change.to)}</span>
+										<!--
+											A replacement shorter than what it replaces is the one shape of
+											edit whose loss is invisible — the new text reads perfectly well,
+											and nothing about it says what used to be there.
+										-->
+										{#if shrinkage(change) > 0}
+											<span class="text-[11px] text-amber-600 dark:text-amber-400">
+												−{shrinkage(change).toLocaleString()}
+											</span>
+										{/if}
 									</dd>
 								</div>
 							{/each}
 						</dl>
+						<div class="mt-2">
+							<ChangeDiff changes={entry.changes} />
+						</div>
 					{/if}
 				</li>
 			{/each}

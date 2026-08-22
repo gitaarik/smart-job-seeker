@@ -28,7 +28,16 @@ const LONG_VALUE_CHARS = 120;
 /** How many changed runs to quote per field, longest first. */
 const MAX_EXCERPTS = 4;
 
-/** Runs shorter than this are noise — a changed comma, a moved "the". */
+/**
+ * Runs shorter than this are noise — a changed comma, a moved "the".
+ *
+ * A preference, not a floor. It earns its keep when there are longer runs to
+ * show instead; when every changed run is under it, the short ones ARE the
+ * change, and dropping them leaves a shape line that says a 5,204-character
+ * description was rewritten and refuses to say what moved. That is the small
+ * edit in a long text — the case a reader most needs help with, and the one
+ * where a strict threshold helps least.
+ */
 const MIN_EXCERPT_CHARS = 12;
 
 /** Cap on a single quoted run, so one rewritten paragraph can't be the summary. */
@@ -57,11 +66,17 @@ function clip(text: string, max: number): string {
  * fragments rather than as a description of an edit.
  */
 function excerpts(segments: DiffSegment[]): string[] {
-	return segments
+	const changed = segments
 		.map((segment, index) => ({ segment, index }))
-		.filter(
-			({ segment }) => segment.type !== 'same' && segment.text.trim().length >= MIN_EXCERPT_CHARS
-		)
+		.filter(({ segment }) => segment.type !== 'same' && segment.text.trim().length > 0);
+
+	// Prefer runs substantial enough to stand alone; fall back to whatever
+	// changed when none of them are. See MIN_EXCERPT_CHARS.
+	const substantial = changed.filter(
+		({ segment }) => segment.text.trim().length >= MIN_EXCERPT_CHARS
+	);
+
+	return (substantial.length > 0 ? substantial : changed)
 		.sort((a, z) => z.segment.text.length - a.segment.text.length)
 		.slice(0, MAX_EXCERPTS)
 		.sort((a, z) => a.index - z.index)
@@ -71,8 +86,16 @@ function excerpts(segments: DiffSegment[]): string[] {
 		);
 }
 
-/** One field's change as a line, plus excerpt lines for a long text. */
-function describeOne(change: ProposedChange): string[] {
+/**
+ * One field's change as a line, plus excerpt lines for a long text.
+ *
+ * Exported because the MCP queue listing needs exactly this and had grown its
+ * own worse version: a flat 200-character truncation of both sides, which for a
+ * one-word fix in a long description prints the same 200 characters twice and
+ * calls it a diff. A reader that cannot render markup still deserves to be told
+ * what moved.
+ */
+export function describeChangeLines(change: ProposedChange): string[] {
 	const { label, from, to } = change;
 	const wasEmpty = from === EMPTY;
 	const isEmpty = to === EMPTY;
@@ -122,7 +145,7 @@ export function summarizeProposal(opts: {
 	if (opts.rationale?.trim()) lines.push(opts.rationale.trim());
 	lines.push('');
 	for (const change of opts.changes) {
-		for (const line of describeOne(change)) lines.push(`  ${line}`);
+		for (const line of describeChangeLines(change)) lines.push(`  ${line}`);
 	}
 	return lines.join('\n');
 }
