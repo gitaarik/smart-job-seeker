@@ -1,5 +1,9 @@
+<script lang="ts">
+	import { resolve } from '$app/paths';
+</script>
+
 <svelte:head>
-	<title>Pending Approval - Smart Job Seeker</title>
+	<title>Almost there - Smart Job Seeker</title>
 </svelte:head>
 
 <div
@@ -34,13 +38,34 @@
 
 		<h2 class="text-2xl font-bold text-[var(--dash-text)]">Thanks for joining!</h2>
 
-		<p class="text-[var(--dash-text-secondary)]">
-			Your account has been created and is pending approval. You'll receive an email once your
-			account has been activated.
-		</p>
+		<!--
+			Two things stand between a new signup and the product, and both used to
+			be invisible here: the address has to be verified (enforced since
+			requireEmailVerification was turned on) and the account has to be
+			approved. Naming them in order is the difference between waiting and
+			wondering.
+		-->
+		<div class="space-y-4 text-left">
+			<div class="flex gap-3">
+				<span class="font-semibold text-[var(--dash-primary)]">1.</span>
+				<p class="text-[var(--dash-text-secondary)]">
+					<strong class="text-[var(--dash-text)]">Confirm your email address.</strong> We've sent you
+					a link — you'll need to click it before you can sign in. Check your spam folder if it hasn't
+					arrived in a few minutes.
+				</p>
+			</div>
+			<div class="flex gap-3">
+				<span class="font-semibold text-[var(--dash-primary)]">2.</span>
+				<p class="text-[var(--dash-text-secondary)]">
+					<strong class="text-[var(--dash-text)]">Wait for your place.</strong> We're letting people in
+					gradually while we get the platform ready. You'll get an email the moment your account is activated
+					— there's nothing else you need to do.
+				</p>
+			</div>
+		</div>
 
 		<a
-			href="/"
+			href={resolve('/')}
 			class="inline-block text-sm font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 			>Back to homepage</a
 		>

@@ -162,6 +162,13 @@
       "when": 1787399666723,
       "tag": "0022_lyrical_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1787404552503,
+      "tag": "0023_soft_dark_beast",
+      "breakpoints": true
     }
   ]
 }

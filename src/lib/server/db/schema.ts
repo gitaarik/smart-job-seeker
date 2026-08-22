@@ -1843,8 +1843,49 @@ export const users = pgTable('users', {
 	// fixture (demo:export-template / demo:seed-template).
 	is_demo_template: boolean().default(false).notNull(),
 	timezone: varchar({ length: 100 }),
-	time_format: varchar('time_format', { length: 10 })
+	time_format: varchar('time_format', { length: 10 }),
+	// Set when the account holder asks to be deleted. Access is revoked the
+	// moment this is stamped; the row itself survives a 30-day grace window so
+	// a mistake (or a compromised session making the request) is recoverable,
+	// and so erasure completes at the same time the nightly backups holding the
+	// data roll off. The reaper in $lib/server/account/delete is what finally
+	// removes the row. Null means no pending deletion — an account that was
+	// restored is indistinguishable from one that never asked, deliberately.
+	deletion_requested_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
 });
+
+/**
+ * One row per erased account — the proof the erasure happened, kept once the
+ * thing it describes is gone.
+ *
+ * It deliberately carries **no** identifying field: `account_ref` is a SHA-256
+ * of the deleted user id, which answers "was this account deleted, and when"
+ * for anyone who already knows the id, and answers nothing at all to anyone
+ * who doesn't. Keeping the email here would recreate the record we just
+ * promised to destroy.
+ *
+ * The counts are what the reap actually did rather than what it intended. If
+ * `unlink_failures` is non-zero, bytes survived the request and somebody has to
+ * go and look.
+ */
+export const account_deletions = pgTable(
+	'account_deletions',
+	{
+		id: serial().primaryKey().notNull(),
+		account_ref: varchar({ length: 64 }).notNull(),
+		requested_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }).notNull(),
+		completed_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
+			.defaultNow()
+			.notNull(),
+		// `user` = they asked; `admin` = staff erased it on their behalf.
+		requested_by: varchar({ length: 16 }).default('user').notNull(),
+		profiles_deleted: integer().default(0).notNull(),
+		files_deleted: integer().default(0).notNull(),
+		blobs_unlinked: integer().default(0).notNull(),
+		unlink_failures: integer().default(0).notNull()
+	},
+	(table) => [uniqueIndex('account_deletions_ref_unique').on(table.account_ref)]
+);
 
 export const side_projects = pgTable(
 	'side_projects',
@@ -3725,7 +3766,12 @@ export const billing_customers = pgTable(
 	'billing_customers',
 	{
 		id: serial().primaryKey().notNull(),
-		user_id: text().notNull(),
+		// Nulled rather than deleted when the account is erased: a payment record
+		// has a statutory retention of its own (7 years in NL) that outlives the
+		// holder's right to erasure. `deleted_account_ref` keeps the row
+		// reconcilable against account_deletions without naming anyone.
+		user_id: text(),
+		deleted_account_ref: varchar({ length: 64 }),
 		stripe_customer_id: varchar({ length: 255 }).notNull(),
 		date_created: timestamp({ precision: 6, withTimezone: true, mode: 'date' }).defaultNow()
 	},
@@ -3736,7 +3782,7 @@ export const billing_customers = pgTable(
 			name: 'billing_customers_user_id_fkey'
 		})
 			.onUpdate('cascade')
-			.onDelete('cascade'),
+			.onDelete('set null'),
 		unique('billing_customers_user_id_key').on(table.user_id),
 		unique('billing_customers_stripe_customer_id_key').on(table.stripe_customer_id)
 	]
@@ -3746,7 +3792,12 @@ export const subscriptions = pgTable(
 	'subscriptions',
 	{
 		id: serial().primaryKey().notNull(),
-		user_id: text().notNull(),
+		// Nulled rather than deleted when the account is erased: a payment record
+		// has a statutory retention of its own (7 years in NL) that outlives the
+		// holder's right to erasure. `deleted_account_ref` keeps the row
+		// reconcilable against account_deletions without naming anyone.
+		user_id: text(),
+		deleted_account_ref: varchar({ length: 64 }),
 		stripe_subscription_id: varchar({ length: 255 }).notNull(),
 		stripe_price_id: varchar({ length: 255 }).notNull(),
 		plan: varchar({ length: 50 }).notNull(),
@@ -3774,7 +3825,7 @@ export const subscriptions = pgTable(
 			name: 'subscriptions_user_id_fkey'
 		})
 			.onUpdate('cascade')
-			.onDelete('cascade'),
+			.onDelete('set null'),
 		unique('subscriptions_stripe_subscription_id_key').on(table.stripe_subscription_id)
 	]
 );
@@ -3783,7 +3834,12 @@ export const credit_purchases = pgTable(
 	'credit_purchases',
 	{
 		id: serial().primaryKey().notNull(),
-		user_id: text().notNull(),
+		// Nulled rather than deleted when the account is erased: a payment record
+		// has a statutory retention of its own (7 years in NL) that outlives the
+		// holder's right to erasure. `deleted_account_ref` keeps the row
+		// reconcilable against account_deletions without naming anyone.
+		user_id: text(),
+		deleted_account_ref: varchar({ length: 64 }),
 		stripe_payment_intent_id: varchar({ length: 255 }),
 		pack_type: varchar({ length: 50 }).notNull(),
 		amount_cents: integer().notNull(),
@@ -3798,7 +3854,7 @@ export const credit_purchases = pgTable(
 			name: 'credit_purchases_user_id_fkey'
 		})
 			.onUpdate('cascade')
-			.onDelete('cascade')
+			.onDelete('set null')
 	]
 );
 

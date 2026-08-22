@@ -3,6 +3,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { eq, and, ne, count, asc } from 'drizzle-orm';
 import { profiles } from '$lib/server/db/schema';
+import { deleteProfile } from '$lib/server/profile/delete';
 import { getSelectedProfileId } from '../../profile/utils';
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -72,8 +73,9 @@ export const actions: Actions = {
 			orderBy: asc(profiles.id)
 		});
 
-		// Delete the profile (cascades to related records)
-		await db.delete(profiles).where(eq(profiles.id, profileId));
+		// Cascades to related records, and unlinks the uploaded bytes those
+		// records were the only reference to.
+		await deleteProfile(profileId);
 
 		// Clear the selected profile cookie so the layout auto-selects another
 		cookies.delete('selected_profile_id', { path: '/' });

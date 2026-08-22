@@ -5,12 +5,15 @@
  */
 
 import { betterAuth } from 'better-auth';
+import { APIError, createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { verifications } from '$lib/server/db/schema';
 import { getEnv } from '$lib/tools/get-env';
 import { sendEmail } from '$lib/server/email';
+import { verifyTurnstileToken } from '$lib/server/auth/turnstile';
+import { registrationOpen } from '$lib/server/auth/registration';
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, { provider: 'pg' }),
@@ -61,6 +64,48 @@ export const auth = betterAuth({
 	 * app node, and a thing to revisit alongside the other in-memory state when
 	 * it does not.
 	 */
+	/**
+	 * Registration is open, so the signup endpoint is now reachable by anything
+	 * that can make an HTTP request. Turnstile gates it **here**, on the
+	 * endpoint, rather than on the page: a form that checks a token and then
+	 * calls `/sign-up/email` itself protects nothing, because the caller can
+	 * skip the form. Anything that reaches the endpoint passes through this.
+	 *
+	 * The token travels as a header rather than a body field — better-auth
+	 * validates the signup body against the user model and an unknown property
+	 * is a 400, and a CAPTCHA nonce has no business being on the user model.
+	 *
+	 * Skipped entirely when no secret is configured; see `turnstile.ts` for why
+	 * that is a deliberate open rather than an oversight.
+	 */
+	hooks: {
+		before: createAuthMiddleware(async (ctx) => {
+			if (ctx.path !== '/sign-up/email') return;
+
+			// Closing the /signup *route* only hides the form; this is what
+			// actually refuses a registration, and it is the check that matters
+			// because anything can POST here directly.
+			if (!registrationOpen()) {
+				throw new APIError('FORBIDDEN', {
+					message: 'Registration is currently closed.'
+				});
+			}
+
+			const token = ctx.headers?.get('x-turnstile-token');
+			const ip = ctx.headers?.get('cf-connecting-ip') || ctx.headers?.get('x-real-ip') || undefined;
+
+			const result = await verifyTurnstileToken(token, ip);
+			if (!result.success) {
+				console.warn(
+					`[auth] Signup rejected by Turnstile: ${(result.errorCodes ?? []).join(', ') || 'no codes'}`
+				);
+				throw new APIError('BAD_REQUEST', {
+					message: 'Captcha verification failed. Please reload the page and try again.'
+				});
+			}
+		})
+	},
+
 	rateLimit: {
 		customRules: {
 			'/sign-in/email': { window: 60, max: 10 },
@@ -107,6 +152,13 @@ export const auth = betterAuth({
 			is_demo: {
 				type: 'boolean',
 				defaultValue: false
+			},
+			// Exposed on the session so the auth gates can refuse an account that
+			// has asked to be erased without a second query on every request. See
+			// $lib/server/account/delete.
+			deletion_requested_at: {
+				type: 'date',
+				required: false
 			}
 		}
 	},
@@ -133,6 +185,18 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 		minPasswordLength: 8,
+		/**
+		 * A verification mail was always sent; nothing ever required it, so an
+		 * address nobody could receive at signed in fine. That was survivable
+		 * while registration was invite-only and every account had been approved
+		 * by hand — it is not once anyone can sign up.
+		 *
+		 * Existing accounts predate the flag: backfill them with
+		 * `scripts/backfill-email-verified.ts` before deploying this, or they
+		 * are locked out of their own data. Admins can also verify a single
+		 * address by hand from /admin/users/[id].
+		 */
+		requireEmailVerification: true,
 		sendResetPassword: async ({ user, url }) => {
 			await sendEmail({
 				to: user.email,
@@ -179,8 +243,14 @@ export const auth = betterAuth({
 						subject: `Welcome to ${appName}`,
 						html: `
               <h2>Thanks for joining ${appName}!</h2>
-              <p>Your account has been created and is pending approval.</p>
-              <p>You'll receive an email once your account has been activated.</p>
+              <p>Two things before you're in:</p>
+              <ol>
+                <li><strong>Confirm your email address</strong> — we've sent a separate
+                    message with the link. You can't sign in until you've clicked it.</li>
+                <li><strong>Wait for your place.</strong> We're letting people in
+                    gradually. You'll get an email the moment your account is activated.</li>
+              </ol>
+              <p>There's nothing else you need to do.</p>
             `,
 						type: 'welcome',
 						userId: user.id

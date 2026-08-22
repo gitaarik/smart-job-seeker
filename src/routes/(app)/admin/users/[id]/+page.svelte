@@ -125,6 +125,23 @@
 					>Pending</span
 				>
 			{/if}
+			{#if user.emailVerified}
+				<span
+					class="rounded-full bg-green-500/15 px-1.5 py-0.5 text-xs text-green-600 dark:text-green-400"
+					>Email verified</span
+				>
+			{:else}
+				<span
+					class="rounded-full bg-red-500/15 px-1.5 py-0.5 text-xs text-red-600 dark:text-red-400"
+					>Email unverified</span
+				>
+			{/if}
+			{#if user.deletion_requested_at}
+				<span
+					class="rounded-full bg-red-500/15 px-1.5 py-0.5 text-xs text-red-600 dark:text-red-400"
+					>Deletion pending</span
+				>
+			{/if}
 			{#if user.hasInvite}
 				<span
 					class="rounded-full bg-orange-500/15 px-1.5 py-0.5 text-xs text-orange-600 dark:text-orange-400"
@@ -166,6 +183,53 @@
 			</div>
 
 			{#if editing}
+				<div class="mb-4 flex flex-wrap items-center gap-2">
+					{#if user.emailVerified}
+						<form method="POST" action="?/unverify_email" use:enhance>
+							<button
+								type="submit"
+								class="rounded-md border px-3 py-1.5 text-sm font-medium"
+								style="border-color: var(--dash-border); color: var(--dash-text);"
+								>Mark email unverified</button
+							>
+						</form>
+					{:else}
+						<form method="POST" action="?/verify_email" use:enhance>
+							<button
+								type="submit"
+								class="rounded-md px-3 py-1.5 text-sm font-medium text-white"
+								style="background-color: var(--dash-primary);">Verify email address</button
+							>
+						</form>
+					{/if}
+
+					{#if user.deletion_requested_at}
+						<form method="POST" action="?/restore_account" use:enhance>
+							<button
+								type="submit"
+								class="rounded-md px-3 py-1.5 text-sm font-medium text-white"
+								style="background-color: var(--dash-primary);">Cancel scheduled deletion</button
+							>
+						</form>
+					{:else}
+						<form
+							method="POST"
+							action="?/request_deletion"
+							use:enhance
+							onsubmit={(e) => {
+								if (!confirm('Schedule this account for deletion in 30 days?')) e.preventDefault();
+							}}
+						>
+							<button
+								type="submit"
+								class="rounded-md border px-3 py-1.5 text-sm font-medium"
+								style="border-color: var(--dash-error); color: var(--dash-error);"
+								>Schedule deletion</button
+							>
+						</form>
+					{/if}
+				</div>
+
 				<form
 					method="POST"
 					action="?/update"

@@ -12,6 +12,7 @@ import {
 	verifications
 } from '$lib/server/db/schema';
 import { auth } from '$lib/server/auth/better-auth';
+import { cancelAccountDeletion, requestAccountDeletion } from '$lib/server/account/delete';
 import { sendEmail } from '$lib/server/email';
 import { getEnv } from '$lib/tools/get-env';
 import { getActiveSubscription } from '$lib/server/billing/subscription';
@@ -109,6 +110,86 @@ export const actions: Actions = {
 			.where(eq(usersTable.id, params.id));
 
 		return { success: true };
+	},
+
+	/**
+	 * Mark an address verified by hand.
+	 *
+	 * `requireEmailVerification` is on, so an account whose verification mail
+	 * bounced, went to spam, or predates the requirement cannot sign in at all.
+	 * Without this the only remedy is SQL, and the person who needs it is
+	 * locked out of the product while you write it.
+	 */
+	verify_email: async ({ locals, params }) => {
+		if (!locals.user?.is_admin) {
+			return fail(403, { error: 'Admin access required' });
+		}
+		const res = await db
+			.update(usersTable)
+			.set({ emailVerified: true, updatedAt: new Date() })
+			.where(eq(usersTable.id, params.id));
+		if ((res.rowCount ?? 0) === 0) {
+			return fail(404, { error: 'User not found' });
+		}
+		return { success: true, message: 'Email address marked as verified.' };
+	},
+
+	unverify_email: async ({ locals, params }) => {
+		if (!locals.user?.is_admin) {
+			return fail(403, { error: 'Admin access required' });
+		}
+		if (params.id === locals.user.id) {
+			return fail(400, { error: 'Cannot unverify your own address' });
+		}
+		await db
+			.update(usersTable)
+			.set({ emailVerified: false, updatedAt: new Date() })
+			.where(eq(usersTable.id, params.id));
+		return { success: true, message: 'Email address marked as unverified.' };
+	},
+
+	/**
+	 * Undo a pending erasure, inside the 30-day window.
+	 *
+	 * Admin-only because requesting deletion revokes every session — the account
+	 * holder cannot reach a cancel button of their own. Credentials revoked by
+	 * the request stay revoked; the user re-issues them after signing back in.
+	 */
+	restore_account: async ({ locals, params }) => {
+		if (!locals.user?.is_admin) {
+			return fail(403, { error: 'Admin access required' });
+		}
+		const restored = await cancelAccountDeletion(params.id);
+		if (!restored) {
+			return fail(400, { error: 'No pending deletion for this account' });
+		}
+		return { success: true, message: 'Deletion cancelled; the account is active again.' };
+	},
+
+	/**
+	 * Start an erasure on the holder's behalf — an emailed request, or a
+	 * support call. Same 30-day window as the self-service path.
+	 */
+	request_deletion: async ({ locals, params }) => {
+		if (!locals.user?.is_admin) {
+			return fail(403, { error: 'Admin access required' });
+		}
+		if (params.id === locals.user.id) {
+			return fail(400, { error: 'Delete your own account from /data/delete' });
+		}
+		const target = await db.query.users.findFirst({
+			where: eq(usersTable.id, params.id),
+			columns: { id: true, deletion_requested_at: true }
+		});
+		if (!target) return fail(404, { error: 'User not found' });
+		if (target.deletion_requested_at) {
+			return fail(400, { error: 'Deletion already pending for this account' });
+		}
+		const { scheduledFor } = await requestAccountDeletion(params.id, { by: 'admin' });
+		return {
+			success: true,
+			message: `Deletion scheduled for ${scheduledFor.toISOString().slice(0, 10)}.`
+		};
 	},
 
 	set_subscription: async ({ request, locals, params }) => {

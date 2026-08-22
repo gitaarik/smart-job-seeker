@@ -69,7 +69,7 @@ set -euo pipefail
 # over pre-analysed changes. One require-each-key, earned rather than waived: the
 # block had to be rebuilt anyway to carry what a rewrite dropped, and a keyless
 # each over a reordering list is exactly the latent bug that rule is about.
-BASELINE=1474
+BASELINE=1469
 
 npx svelte-kit sync
 

@@ -167,6 +167,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 		if (!(event.locals.user as { is_approved?: boolean }).is_approved && !event.locals.adminUser) {
 			return json({ error: 'Account pending approval' }, { status: 403 });
 		}
+		if (
+			(event.locals.user as { deletion_requested_at?: Date | null }).deletion_requested_at &&
+			!event.locals.adminUser
+		) {
+			return json({ error: 'Account scheduled for deletion' }, { status: 403 });
+		}
 
 		// Throttle AI writes, for the same reason the auth gate above is central:
 		// a new /api/ai route should be covered by default rather than by

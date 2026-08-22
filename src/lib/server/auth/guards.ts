@@ -19,6 +19,16 @@ export function requireAuth(event: RequestEvent) {
 	if (!(event.locals.user as { is_approved?: boolean }).is_approved && !event.locals.adminUser) {
 		redirect(302, '/signup/pending');
 	}
+	// A pending erasure revokes access to the data without revoking the ability
+	// to sign in and see what is happening — the alternative is a login that
+	// fails for no stated reason, on the one request where the reason matters
+	// most. Admins keep their view so a restore can be checked.
+	if (
+		(event.locals.user as { deletion_requested_at?: Date | null }).deletion_requested_at &&
+		!event.locals.adminUser
+	) {
+		redirect(302, '/deletion-pending');
+	}
 	return event.locals.user;
 }
 

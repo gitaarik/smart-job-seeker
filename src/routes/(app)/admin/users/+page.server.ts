@@ -69,6 +69,9 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 
 	const userPlanMap = new Map<string, string>();
 	for (const sub of activeSubs) {
+		// A null user_id is a payment record retained past its account's erasure
+		// (see $lib/server/account/delete) — it belongs to nobody in this list.
+		if (!sub.user_id) continue;
 		if (!userPlanMap.has(sub.user_id)) {
 			userPlanMap.set(sub.user_id, sub.plan);
 		}

@@ -1,76 +1,43 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getEnv } from '$lib/tools/get-env';
+import { verifyTurnstileToken } from '$lib/server/auth/turnstile';
 
-export const POST: RequestHandler = async ({ request }) => {
-	// Parse request body (try block for async operation)
-	let token;
+/**
+ * Client-facing token check, used by the public contact-info reveal.
+ *
+ * Note what this endpoint is and is not: it tells the caller whether a token
+ * is good. It does not protect anything by itself, because whatever the caller
+ * does next is the caller's choice. Registration is gated in `better-auth.ts`
+ * instead, on the endpoint rather than in front of it.
+ */
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+	let token: string | undefined;
 	try {
-		const body = await request.json();
-		token = body.token;
-	} catch (error) {
-		return json(
-			{ success: false, error: 'Invalid request body' },
-			{
-				status: 400
-			}
-		);
+		token = (await request.json()).token;
+	} catch {
+		return json({ success: false, error: 'Invalid request body' }, { status: 400 });
 	}
 
-	// Validation outside try block
 	if (!token) {
-		return json(
-			{ success: false, error: 'No token provided' },
-			{
-				status: 400
-			}
-		);
+		return json({ success: false, error: 'No token provided' }, { status: 400 });
 	}
 
-	const turnstileSecret = getEnv('SJS_TURNSTILE_SECRET_KEY');
+	const result = await verifyTurnstileToken(token, getClientAddress());
 
-	// Verify with Cloudflare (try block for async operations)
-	let verifyResponse;
-	let verifyData;
-	try {
-		verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			},
-			body: new URLSearchParams({
-				secret: turnstileSecret,
-				response: token
-			})
-		});
-
-		verifyData = await verifyResponse.json();
-	} catch (error) {
-		console.error('Error verifying Turnstile:', error);
-		return json(
-			{
-				success: false,
-				error: 'Internal server error'
-			},
-			{ status: 500 }
-		);
-	}
-
-	// Response construction outside try block
-	if (verifyData.success) {
-		return json({
-			success: true,
-			challenge_ts: verifyData.challenge_ts,
-			hostname: verifyData.hostname
-		});
-	} else {
+	if (!result.success) {
 		return json(
 			{
 				success: false,
 				error: 'Turnstile verification failed',
-				'error-codes': verifyData['error-codes'] || []
+				'error-codes': result.errorCodes ?? []
 			},
 			{ status: 400 }
 		);
 	}
+
+	return json({
+		success: true,
+		challenge_ts: result.challengeTs,
+		hostname: result.hostname
+	});
 };
