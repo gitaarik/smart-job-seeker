@@ -38,6 +38,7 @@ import {
 	CAPABILITIES,
 	executeCapability,
 	pickCapabilityFields,
+	htmlEntityError,
 	type Capability,
 	type CapabilityActor,
 	type CapabilityTarget
@@ -688,7 +689,12 @@ async function runWrite(
 	const fields = def.writesOneState ? sent : changed;
 
 	// Validated before the tier is decided, so a malformed request is answered as
-	// malformed rather than queued for a person to read and reject.
+	// malformed rather than queued for a person to read and reject. Escaped text
+	// is the sharpest case of that: a request carrying `&amp;` reads correctly in
+	// the approval UI and is wrong only once it is on a document.
+	const escaped = htmlEntityError(fields);
+	if (escaped) return fail(escaped);
+
 	const valid = def.validate(fields, current);
 	if (!valid.ok) return fail(valid.error);
 

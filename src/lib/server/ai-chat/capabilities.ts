@@ -1596,6 +1596,51 @@ export type CapabilityOutcome =
 			/**
 			 * The `capability_edits` row this write produced — the handle an undo is
 			 * addressed by, and null when the log write itself failed.
+/**
+ * The escaping set, and deliberately not any `&word;`.
+ *
+ * This must never refuse a sentence someone wrote, so it matches only the
+ * characters an HTML escaper produces, named and numeric. Measured zero matches
+ * across every profile text column in the database when it was added.
+ */
+const HTML_ENTITY =
+	/&(?:amp|lt|gt|quot|apos|nbsp|#0*(?:34|38|39|60|62)|#[xX]0*(?:22|26|27|3[cCeE]));/;
+
+/**
+ * An HTML entity in a value that is going onto a CV.
+ *
+ * Nothing downstream renders markup — the resume components have no `{@html}`,
+ * so Svelte escapes on output and a stored `&amp;` reaches the page as those
+ * five characters. The applicant reads `Lit &amp; Web Components` on a document
+ * they are about to send to someone.
+ *
+ * It gets in when a model copies text out of its own rendered output instead of
+ * composing it, and every later stage is blind to it: the value is a valid
+ * string, `validate` has no opinion about it, and the diff renders it
+ * faithfully — so the proposal a person reads looks exactly like what they
+ * meant. The one place it currently fails loudly is by accident, when the text
+ * happens to be a name something else has to match: a category called
+ * "AI &amp; LLM engineering" resolves to nothing. Free text has no such luck.
+ *
+ * Returns the message rather than throwing, because both call sites already
+ * have a refusal shape and the agent that sent it can fix it and retry.
+ */
+export function htmlEntityError(fields: Record<string, unknown>): string | null {
+	for (const [name, value] of Object.entries(fields)) {
+		for (const text of Array.isArray(value) ? value : [value]) {
+			if (typeof text !== 'string') continue;
+			const found = text.match(HTML_ENTITY)?.[0];
+			if (found) {
+				return (
+					`${name} contains the HTML entity "${found}", which would be stored and ` +
+					`shown literally on the document. Send the character itself instead.`
+				);
+			}
+		}
+	}
+	return null;
+}
+
 			 *
 			 * Nullable rather than absent because the write succeeded either way, and
 			 * a caller must not be able to mistake "not logged" for "not written".
@@ -1707,6 +1752,11 @@ export async function executeCapability(
 		});
 	} catch (e) {
 		console.error(`[capabilities] ${capability} applied but was not logged`, e);
+	// Before validate, not inside it: no capability has an opinion about this and
+	// every one of them would need the same one.
+	const escaped = htmlEntityError(fields);
+	if (escaped) return { ok: false, reason: 'invalid', error: escaped };
+
 	}
 
 	return { ok: true, previous, editId, created };

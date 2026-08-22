@@ -909,6 +909,28 @@ describe('jobs and applications', () => {
 			},
 			KEY
 		);
+	it('refuses escaped text instead of queueing it for a person to read', async () => {
+		// The one refusal here that would otherwise be invisible. A request holding
+		// `&amp;` renders correctly in the approval UI — the diff shows what the
+		// agent meant — and is wrong only once it is on a document, so catching it
+		// at approval time depends on someone spotting five characters they have
+		// no reason to look for.
+		const result = await callTool(
+			'edit_work_experience',
+			{
+				profile_id: 12,
+				entry_id: 6,
+				'work_experience.summary': 'Built with Lit &amp; Web Components.',
+				rationale: 'y'
+			},
+			KEY
+		);
+
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('&amp;');
+		expect(createRequest).not.toHaveBeenCalled();
+	});
+
 
 		expect(executeCapability).not.toHaveBeenCalled();
 		expect(createRequest).toHaveBeenCalled();

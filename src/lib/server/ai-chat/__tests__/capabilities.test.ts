@@ -226,6 +226,7 @@ import {
 	executeCapability,
 	fieldsFromChanges,
 	fitMatchedCapabilities,
+	htmlEntityError,
 	type LiveCapability,
 	pickCapabilityFields,
 	renderCapabilityBlock,
@@ -1747,6 +1748,57 @@ describe('add_activity_record', () => {
 	});
 });
 
+describe('htmlEntityError', () => {
+	// The failure this exists for: a model composes text by copying its own
+	// rendered output, and every stage after that is blind to the difference.
+	it('catches an escaped ampersand and names the field', () => {
+		expect(
+			htmlEntityError({
+				'side_project_achievement.description': 'Appreciated in the Lit &amp; Web Components era'
+			})
+		).toMatch(/side_project_achievement\.description.*&amp;/);
+	});
+
+	it('catches the rest of the escaping set, named and numeric', () => {
+		for (const text of [
+			'a &lt; b',
+			'a &gt; b',
+			'he said &quot;no&quot;',
+			'it&apos;s',
+			'a&nbsp;b'
+		]) {
+			expect(htmlEntityError({ summary: text })).not.toBeNull();
+		}
+		for (const text of ['it&#39;s', 'it&#x27;s', 'R&#38;D', 'a &#60; b']) {
+			expect(htmlEntityError({ summary: text })).not.toBeNull();
+		}
+	});
+
+	it('leaves a real ampersand alone', () => {
+		// The whole point of matching the escaping set rather than /&\w+;/ — this
+		// must never refuse a sentence someone wrote.
+		for (const text of [
+			'Lit & Web Components',
+			'R&D at AT&T',
+			'React & Redux; a comparison',
+			'Tom & Jerry; then lunch',
+			'AI & LLM engineering'
+		]) {
+			expect(htmlEntityError({ summary: text })).toBeNull();
+		}
+	});
+
+	it('looks inside arrays and steps over everything that is not a string', () => {
+		expect(htmlEntityError({ tags: ['resume', 'a &amp; b'] })).not.toBeNull();
+		expect(htmlEntityError({ tags: ['resume', 'cv'], stars: 154, url: null })).toBeNull();
+	});
+
+	it('passes clean fields', () => {
+		expect(htmlEntityError({})).toBeNull();
+		expect(htmlEntityError({ summary: 'Reactive state management for Lit.' })).toBeNull();
+	});
+});
+
 describe('executeCapability', () => {
 	const TARGET = { id: 42, label: 'Staff Engineer at Acme' };
 
@@ -1790,6 +1842,21 @@ describe('executeCapability', () => {
 			created: { id: 777, label: 'They want two office days.' }
 		});
 		expect(mockRecordInsert).toHaveBeenCalledTimes(1);
+	});
+
+	it('refuses escaped text before it can be written', async () => {
+		// Refused here rather than in a capability's own validate: no capability
+		// has an opinion about this and every one of them would need the same one.
+		const outcome = await executeCapability(
+			'add_activity_record',
+			TARGET,
+			ACTOR,
+			{ entry_content: 'They asked about Lit &amp; Web Components.' },
+			'chat'
+		);
+
+		expect(outcome).toMatchObject({ ok: false, reason: 'invalid' });
+		expect(mockRecordInsert).not.toHaveBeenCalled();
 	});
 
 	it('logs an add against the row it created, not against what it was called with', async () => {
