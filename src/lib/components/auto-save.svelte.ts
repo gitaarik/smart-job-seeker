@@ -171,6 +171,36 @@ export function diffPayload<T extends Record<string, unknown>>(next: T, prev: T)
 	return out;
 }
 
+/**
+ * The PATCH body for a record-shaped field: what changed, and what this tab
+ * believed it was changing.
+ *
+ * {@link diffPayload} answers "what did the user touch", which stops a save from
+ * carrying siblings it has no news about. It cannot answer the other question —
+ * whether the values it *is* carrying are about to be written over something
+ * this tab has never seen. `prev` is a page-load copy of the server refreshed
+ * only by this tab's own saves, so every field it sends is sent against a belief
+ * that may be hours old and was never rechecked.
+ *
+ * Sending that belief with the patch is what lets the server refuse rather than
+ * apply it — see `updateRow`'s `expected`. Use this instead of `diffPayload` for
+ * anything that PATCHes a profile row; the diff alone narrows the blast radius
+ * without closing the window.
+ *
+ * Null when nothing changed, so the caller's early return stays one check.
+ */
+export function patchBody<T extends Record<string, unknown>>(
+	next: T,
+	prev: T
+): (Partial<T> & { expected: Partial<T> }) | null {
+	const changed = diffPayload(next, prev);
+	const fields = Object.keys(changed) as (keyof T)[];
+	if (fields.length === 0) return null;
+
+	const expected = Object.fromEntries(fields.map((key) => [key, prev[key]])) as Partial<T>;
+	return { ...changed, expected };
+}
+
 export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
 	const equal = opts.equal ?? Object.is;
 	const debounceMs = opts.debounceMs ?? 0;

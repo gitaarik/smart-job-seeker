@@ -500,6 +500,99 @@ describe('updateRow', () => {
 	});
 });
 
+describe('a conditional write', () => {
+	// The failure this closes: an editor that saves as you type measures every
+	// decision against a page-load copy of the server and never asks again, so a
+	// write from anywhere else — Tier 2 approval, a second device, an undo —
+	// leaves that copy wrong and the next save puts it back.
+	it('applies when the row still holds what the caller expected', async () => {
+		state.rows = [row({ name: 'Dutch', proficiency: 'native' })];
+
+		const result = await updateRow(
+			'language',
+			ACTOR,
+			42,
+			{ proficiency: 'fluent' },
+			{ expected: { proficiency: 'native' } }
+		);
+
+		expect(result).toMatchObject({ ok: true });
+		expect(sectionUpdates()[0].values).toMatchObject({ proficiency: 'fluent' });
+	});
+
+	it('refuses, and writes nothing, when the field moved underneath', async () => {
+		state.rows = [row({ name: 'Dutch', proficiency: 'fluent' })];
+
+		const result = await updateRow(
+			'language',
+			ACTOR,
+			42,
+			{ proficiency: 'basic' },
+			{ expected: { proficiency: 'native' } }
+		);
+
+		expect(result).toMatchObject({ ok: false, reason: 'conflict' });
+		expect(sectionUpdates()).toHaveLength(0);
+	});
+
+	it('names what moved, so the message says what to reload for', async () => {
+		state.rows = [row({ name: 'Nederlands', proficiency: 'native' })];
+
+		const result = await updateRow(
+			'language',
+			ACTOR,
+			42,
+			{ name: 'Flemish' },
+			{ expected: { name: 'Dutch' } }
+		);
+
+		expect(result).toMatchObject({ ok: false, reason: 'conflict' });
+		if (!result.ok) expect(result.error.toLowerCase()).toContain('reload');
+	});
+
+	it('compares in the shape the column stores, not the shape JSON carries', async () => {
+		// The wire value for a number field is a string, and "155" is not a stale
+		// 155 — refusing that would make every save of an untouched number fail.
+		state.rows = [row({ stars: 155 })];
+
+		const result = await updateRow(
+			'side_project',
+			ACTOR,
+			42,
+			{ stars: '154' },
+			{ expected: { stars: '155' } }
+		);
+
+		expect(result).toMatchObject({ ok: true });
+	});
+
+	it('only checks the fields being written', async () => {
+		// Two people editing different parts of one row is not a conflict, and
+		// treating it as one would make the check the thing people work around.
+		state.rows = [row({ name: 'Nederlands', proficiency: 'native' })];
+
+		const result = await updateRow(
+			'language',
+			ACTOR,
+			42,
+			{ proficiency: 'fluent' },
+			{ expected: { proficiency: 'native', name: 'Dutch' } }
+		);
+
+		expect(result).toMatchObject({ ok: true });
+	});
+
+	it('writes as before when the caller claims no baseline', async () => {
+		// An agent has no page-load copy to be stale about. Requiring one would
+		// make every capability write invent a value it does not have.
+		state.rows = [row({ proficiency: 'native' })];
+
+		expect(await updateRow('language', ACTOR, 42, { proficiency: 'fluent' })).toMatchObject({
+			ok: true
+		});
+	});
+});
+
 describe('deleteRow', () => {
 	it('refuses a row belonging to another profile', async () => {
 		state.rows = [row({ profile_id: 8 })];

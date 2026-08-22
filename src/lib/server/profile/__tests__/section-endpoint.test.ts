@@ -15,7 +15,12 @@ const state = {
 	/** What actorForRow resolves for a row, keyed `resource:id`. */
 	actors: {} as Record<string, { profileId: number } | null>,
 	created: [] as { resource: string; actor: unknown; values: Record<string, unknown> }[],
-	updated: [] as { resource: string; id: number; values: Record<string, unknown> }[],
+	updated: [] as {
+		resource: string;
+		id: number;
+		values: Record<string, unknown>;
+		expected: Record<string, unknown> | undefined;
+	}[],
 	deleted: [] as { resource: string; id: number }[],
 	reordered: [] as { resource: string; actor: unknown; order: number[] }[],
 	/** Overrides the next write's result, for the refusal paths. */
@@ -43,8 +48,14 @@ vi.mock('../write', async (importOriginal) => {
 			state.created.push({ resource, actor, values });
 			return Promise.resolve(state.writeResult ?? { ok: true, id: 7, row: { id: 7, ...values } });
 		},
-		updateRow: (resource: string, _actor: unknown, id: number, values: Record<string, unknown>) => {
-			state.updated.push({ resource, id, values });
+		updateRow: (
+			resource: string,
+			_actor: unknown,
+			id: number,
+			values: Record<string, unknown>,
+			opts?: { expected?: Record<string, unknown> }
+		) => {
+			state.updated.push({ resource, id, values, expected: opts?.expected });
 			return Promise.resolve(state.writeResult ?? { ok: true, previous: {} });
 		},
 		deleteRow: (resource: string, _actor: unknown, id: number) => {
@@ -197,7 +208,12 @@ describe('patching a row', () => {
 
 		expect(result.status).toBe(200);
 		expect(state.updated).toEqual([
-			{ resource: 'work_experience_project', id: 5, values: { end_date: '2024-06-30' } }
+			{
+				resource: 'work_experience_project',
+				id: 5,
+				values: { end_date: '2024-06-30' },
+				expected: undefined
+			}
 		]);
 	});
 
@@ -227,6 +243,48 @@ describe('patching a row', () => {
 
 		expect(result.status).toBe(400);
 		expect(result.body.message).toBe('Project name is required');
+	});
+
+	it('takes the baseline out of the patch rather than writing it as a field', async () => {
+		// `expected` travels in the body because a PATCH has nowhere else to put it,
+		// and the row has no such column. A door that forwarded it whole would try
+		// to write it — or, since the schema strips unknown keys, would drop it
+		// silently and leave the write unconditional, which is the failure this
+		// mechanism exists to close wearing the mechanism's own clothes.
+		await call(() =>
+			patchSectionRow(
+				event(
+					{ resource: 'work_experience_project', id: '5' },
+					{ name: 'Migration II', expected: { name: 'Migration' } }
+				)
+			)
+		);
+
+		expect(state.updated).toEqual([
+			{
+				resource: 'work_experience_project',
+				id: 5,
+				values: { name: 'Migration II' },
+				expected: { name: 'Migration' }
+			}
+		]);
+	});
+
+	it('answers a row that moved underneath with 409 and says so', async () => {
+		// Not 400: the input was correct when the page drew it. What changed is the
+		// row, and the only thing the user can do about it is reload.
+		state.writeResult = {
+			ok: false,
+			reason: 'conflict',
+			error: 'Summary changed somewhere else since this was loaded.'
+		};
+
+		const result = await call(() =>
+			patchSectionRow(event({ resource: 'work_experience_project', id: '5' }, { name: 'x' }))
+		);
+
+		expect(result.status).toBe(409);
+		expect(result.body.message).toContain('changed somewhere else');
 	});
 
 	it('rejects an unusable id before authorising anything', async () => {

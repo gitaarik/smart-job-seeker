@@ -11,8 +11,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
-import { requireRowActor, unwrapWrite } from '$lib/server/profile/write-http';
-import { updateRow } from '$lib/server/profile/write';
+import { patchOwnedRow, requireRowActor } from '$lib/server/profile/write-http';
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);
@@ -20,6 +19,6 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 
 	const actor = await requireRowActor('work_experience', workExperienceId, user.id);
 
-	unwrapWrite(await updateRow('work_experience', actor, workExperienceId, await request.json()));
+	await patchOwnedRow('work_experience', actor, workExperienceId, await request.json());
 	return json({ success: true });
 };

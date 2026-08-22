@@ -382,7 +382,7 @@ export interface ProfileActor {
 }
 
 /** Why a write was refused, for a caller to map onto its own error shape. */
-export type WriteRefusal = 'not_found' | 'unauthorized' | 'invalid';
+export type WriteRefusal = 'not_found' | 'unauthorized' | 'invalid' | 'conflict';
 
 export type WriteResult<T> =
 	({ ok: true } & T) | { ok: false; reason: WriteRefusal; error: string };
@@ -842,6 +842,27 @@ async function resolveParent(
 }
 
 /**
+ * The value as it would be compared, so a column and a wire value can agree.
+ *
+ * Only dates need it: a date column reads back as a Date where a JSON body
+ * carries "YYYY-MM-DD", and the two spell the same day.
+ */
+function comparableStored(value: unknown): unknown {
+	if (value instanceof Date) return value.toISOString().slice(0, 10);
+	return value ?? null;
+}
+
+function sameStored(a: unknown, b: unknown): boolean {
+	const x = comparableStored(a);
+	const y = comparableStored(b);
+	if (Array.isArray(x) || Array.isArray(y)) {
+		if (!Array.isArray(x) || !Array.isArray(y) || x.length !== y.length) return false;
+		return x.every((value, index) => sameStored(value, y[index]));
+	}
+	return x === y;
+}
+
+/**
  * Change some of a row's fields, leaving the rest alone.
  *
  * `previous` holds what the written fields contained immediately before, read
@@ -851,12 +872,38 @@ async function resolveParent(
  * appear in it, so it pairs one-for-one with the patch and can be replayed as
  * an undo. Nothing consumes it yet; the edit log in Phase 4 is what it is for,
  * and capturing it here is what makes that phase a reader rather than a rewrite.
+ *
+ * ## `expected` — what the caller believed it was changing
+ *
+ * An editor that saves as you type holds one answer to "what does the server
+ * have", taken when the page loaded, and never asks again. Everything it
+ * decides is measured against that: which fields to send, and whether a field
+ * counts as touched at all. The moment anything writes from somewhere else the
+ * baseline is wrong, and the tab's next save puts its page-load copy back —
+ * silently, because from the tab's side nothing failed.
+ *
+ * That is not a hypothetical. It is what Tier 2 approval runs into by
+ * construction: approval deliberately happens on a *different* surface from the
+ * editor, and the editor is the surface most likely to still be open. Two
+ * devices, and the edit log's own undo, are the same shape.
+ *
+ * So a caller may say what it thought each field held. Any of them that no
+ * longer holds it means the row moved underneath, and the write is refused
+ * rather than applied — the caller reloads and decides again with the truth in
+ * front of it. Compared per field and only across the fields being written, so
+ * two people editing different parts of one row never collide.
+ *
+ * Optional on purpose. An agent writing through a capability has no page-load
+ * baseline and nothing to be stale about, and requiring one would make every
+ * such write invent a value it does not have. A caller that omits it gets
+ * exactly the old behaviour; a caller that sends it cannot clobber.
  */
 export async function updateRow(
 	name: ProfileResourceName,
 	actor: ProfileActor,
 	id: number,
-	input: Record<string, unknown>
+	input: Record<string, unknown>,
+	opts: { expected?: Record<string, unknown> } = {}
 ): Promise<WriteResult<{ previous: Record<string, unknown> }>> {
 	const resource = resourceFor(name);
 
@@ -873,6 +920,25 @@ export async function updateRow(
 	if (written.length === 0) return { ok: true, previous: {} };
 
 	const previous = Object.fromEntries(written.map((field) => [field, found.row[field] ?? null]));
+
+	// Coerced through the same validate the patch went through, so the two sides
+	// are compared in the shape the column stores rather than the shape JSON
+	// carries — "155" and 155 are the same baseline.
+	if (opts.expected) {
+		const baseline = validate(resource, opts.expected, false);
+		if (!baseline.ok) return baseline;
+
+		const moved = written.filter(
+			(field) => field in baseline.values && !sameStored(found.row[field], baseline.values[field])
+		);
+		if (moved.length > 0) {
+			return refuse(
+				'conflict',
+				`${moved.map(labelFor).join(', ')} changed somewhere else since this was loaded. ` +
+					`Reload to see the current value before saving over it.`
+			);
+		}
+	}
 
 	// A patch pointing at a different parent MOVES the row. Its `sort` goes to the
 	// end of the group it lands in rather than travelling with it: the number

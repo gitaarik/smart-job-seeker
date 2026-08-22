@@ -69,8 +69,13 @@
 	async function save() {
 		saveState = 'saving';
 		try {
+			// `savedTags` is this component's copy of the server, taken when the page
+			// loaded — so the tags it is about to write are written against a belief
+			// that may be stale. Sending it makes the server refuse rather than
+			// silently drop a tag added elsewhere. See `updateRow`'s `expected`.
 			const body: Record<string, unknown> = {
-				tags: tags.length > 0 ? tags : null
+				tags: tags.length > 0 ? tags : null,
+				expected: { tags: savedTags.length > 0 ? savedTags : null }
 			};
 			if (section) {
 				body.section = section;

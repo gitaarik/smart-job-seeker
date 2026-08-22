@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { autoSaveField, diffPayload, flushPendingSaves, hasPendingSaves } from './auto-save.svelte';
+import {
+	autoSaveField,
+	diffPayload,
+	flushPendingSaves,
+	hasPendingSaves,
+	patchBody
+} from './auto-save.svelte';
 
 /**
  * These run in the "client" vitest project (jsdom + browser resolve condition)
@@ -246,6 +252,33 @@ describe('navigation guard helpers', () => {
 
 		expect(save).not.toHaveBeenCalled();
 		expect(hasPendingSaves()).toBe(false);
+	});
+});
+
+describe('patchBody', () => {
+	it('carries the baseline for exactly the fields it is writing', () => {
+		const prev = { name: 'a', stars: '155', summary: 'old' };
+		const next = { name: 'a', stars: '154', summary: 'new' };
+
+		expect(patchBody(next, prev)).toEqual({
+			stars: '154',
+			summary: 'new',
+			expected: { stars: '155', summary: 'old' }
+		});
+	});
+
+	it('does not claim a baseline for a field it is leaving alone', () => {
+		// Claiming one would turn "someone edited a field I am not touching" into
+		// a conflict, which is the check being wrong rather than the write.
+		const body = patchBody({ name: 'a', url: 'CHANGED' }, { name: 'a', url: 'u' });
+
+		expect(body).toEqual({ url: 'CHANGED', expected: { url: 'u' } });
+		expect(body && 'name' in body.expected).toBe(false);
+	});
+
+	it('is null when nothing changed, so the caller keeps one early return', () => {
+		const same = { name: 'a', stars: null };
+		expect(patchBody({ ...same }, { ...same })).toBeNull();
 	});
 });
 

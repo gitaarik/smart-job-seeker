@@ -108,7 +108,7 @@ describe('sectionRows', () => {
 		expect(sent[1]).toEqual({
 			url: '/api/profile-section/work_experience_project/99',
 			method: 'PATCH',
-			body: { name: 'Migration II' }
+			body: { name: 'Migration II', expected: { name: 'Migration' } }
 		});
 	});
 
@@ -134,12 +134,17 @@ describe('sectionRows', () => {
 		await settle();
 
 		// Not the name, which nobody touched — and the body is built fresh on both
-		// sides of the diff, so this is also the array-comparison test.
-		expect(sent[0].body).toEqual({ tags: ['resume'] });
+		// sides of the diff, so this is also the array-comparison test. `expected`
+		// covers exactly the field being written, for the same reason: claiming a
+		// baseline for the name would make someone else's rename a conflict here.
+		expect(sent[0].body).toEqual({ tags: ['resume'], expected: { tags: null } });
 
 		store.update(row, { name: 'Migration II' });
 		await settle();
-		expect(sent[1].body).toEqual({ name: 'Migration II' });
+		expect(sent[1].body).toEqual({
+			name: 'Migration II',
+			expected: { name: 'Migration' }
+		});
 	});
 
 	it('reports a failed save on the row that failed', async () => {

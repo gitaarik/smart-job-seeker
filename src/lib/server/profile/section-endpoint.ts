@@ -51,15 +51,8 @@ import { profiles } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/utils/api-helpers';
 import { formatZodError } from '$lib/server/validation/api-schemas';
 import { PROFILE_RESOURCES, type ProfileResourceName } from './resources';
-import {
-	createRow,
-	deleteRow,
-	type ProfileActor,
-	readOwnedRow,
-	reorderRows,
-	updateRow
-} from './write';
-import { requireRowActor, unwrapWrite } from './write-http';
+import { createRow, deleteRow, type ProfileActor, readOwnedRow, reorderRows } from './write';
+import { patchOwnedRow, requireRowActor, unwrapWrite } from './write-http';
 
 /**
  * The section named in the URL, or 404.
@@ -152,9 +145,7 @@ export async function patchSectionRow({
 	const id = requireId(params.id);
 
 	const actor = await requireRowActor(resource, id, user.id);
-	const body = (await request.json()) as Record<string, unknown>;
-
-	unwrapWrite(await updateRow(resource, actor, id, body));
+	await patchOwnedRow(resource, actor, id, (await request.json()) as Record<string, unknown>);
 
 	// The row as it now stands, so a caller holding a stale copy of a derived
 	// value — the parent's name after a move — does not have to reload for it.

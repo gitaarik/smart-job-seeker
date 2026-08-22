@@ -203,13 +203,22 @@ export function sectionRows<T extends Record<string, unknown>, R extends { id: n
 			return;
 		}
 
-		const changed = changedOnly(opts.toBody(value), opts.toBody(previous));
-		if (Object.keys(changed).length === 0) return;
+		// `expected` alongside the diff, so a row this store has not looked at since
+		// the page loaded cannot be written over something it never saw. Built here
+		// rather than inside changedOnly because only the caller knows which side is
+		// the server's. See `patchBody` and `updateRow`'s `expected`.
+		const before = opts.toBody(previous);
+		const changed = changedOnly(opts.toBody(value), before);
+		const fields = Object.keys(changed);
+		if (fields.length === 0) return;
 
 		const response = await fetch(`${base}/${entry.id}`, {
 			method: 'PATCH',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(changed)
+			body: JSON.stringify({
+				...changed,
+				expected: Object.fromEntries(fields.map((key) => [key, before[key]]))
+			})
 		});
 		if (!response.ok) throw await failure(response);
 	}

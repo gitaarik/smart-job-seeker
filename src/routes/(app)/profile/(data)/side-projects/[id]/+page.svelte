@@ -5,7 +5,7 @@
 	import { faTrash } from '@fortawesome/free-solid-svg-icons';
 	import MediaUpload from '$lib/components/MediaUpload.svelte';
 	import SectionSaveButton from '$lib/components/SectionSaveButton.svelte';
-	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
+	import { autoSaveField, patchBody, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
 	import AchievementsList, { type AchievementItem } from '$lib/components/AchievementsList.svelte';
@@ -144,17 +144,17 @@
 			endDate: editEndDate
 		},
 		save: async (v, prev) => {
-			const changed = diffPayload(basicsBody(v), basicsBody(prev));
-			if (Object.keys(changed).length === 0) return;
+			const body = patchBody(basicsBody(v), basicsBody(prev));
+			if (!body) return;
 
 			const response = await fetch(`/api/side-project/${project.id}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ section: 'basic', ...changed })
+				body: JSON.stringify({ section: 'basic', ...body })
 			});
 			if (!response.ok) {
-				const body = await response.json().catch(() => ({}));
-				throw new Error(body.message || body.error || `Save failed (${response.status})`);
+				const failed = await response.json().catch(() => ({}));
+				throw new Error(failed.message || failed.error || `Save failed (${response.status})`);
 			}
 		},
 		onSaved: (v) => {
