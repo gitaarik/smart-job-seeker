@@ -281,17 +281,20 @@ beforeEach(() => {
 });
 
 /** `n` pending requests, newest first, as `readRequests` returns them. */
-function pendingRequests(n: number) {
+function pendingRequests(n: number, overrides: Record<string, unknown> = {}) {
 	return Array.from({ length: n }, (_, i) => ({
 		id: 500 + i,
 		capability: 'edit_language',
 		target: { label: `Entry ${i}` },
 		fields: { 'language.name': 'Dutch' },
+		// The before-image, which is half of what makes a queued change decidable.
+		previous: { 'language.name': 'Nederlands' },
 		rationale: 'because',
 		status: 'pending' as const,
 		createdAt: new Date('2026-08-20T20:31:00Z'),
 		decidedAt: null,
-		editId: null
+		editId: null,
+		...overrides
 	}));
 }
 
@@ -443,6 +446,80 @@ describe('list_pending_changes', () => {
 
 		expect(result.content[0].text).toContain('3 waiting on the applicant:');
 		expect(result.content[0].text).not.toContain('shown');
+	});
+
+	it('says what each change would replace, and why it was asked for', async () => {
+		// The queue used to carry the new value with nothing to compare it against
+		// and not a word of why — enough for an agent to say "still pending" and
+		// useless for the person, who is the only one who can drain it.
+		readRequests.mockResolvedValue(pendingRequests(1));
+		countRequests.mockResolvedValue(1);
+
+		const result = await callTool('list_pending_changes', { profile_id: 12 }, KEY);
+		const [request] = result.structuredContent?.requests as {
+			rationale: string;
+			changes: { label: string; from: string; to: string }[];
+		}[];
+
+		expect(request.rationale).toBe('because');
+		expect(request.changes).toEqual([
+			{ field: 'language.name', label: 'Name', from: 'Nederlands', to: 'Dutch' }
+		]);
+		expect(result.content[0].text).toContain('why: because');
+		expect(result.content[0].text).toContain('Name: Nederlands → Dutch');
+	});
+
+	it('cuts a long value and says how long it really was', async () => {
+		// A queued rewrite can be thousands of characters, and twenty of those is a
+		// response nobody reads. An excerpt that did not say it was one would be
+		// worse than the count it replaced.
+		const long = 'x'.repeat(500);
+		readRequests.mockResolvedValue(
+			pendingRequests(1, { fields: { 'language.name': long }, previous: {} })
+		);
+		countRequests.mockResolvedValue(1);
+
+		const result = await callTool('list_pending_changes', { profile_id: 12 }, KEY);
+		const [request] = result.structuredContent?.requests as {
+			changes: { to: string }[];
+		}[];
+
+		expect(request.changes[0].to).toContain('(500 characters in total)');
+		expect(request.changes[0].to.length).toBeLessThan(long.length);
+	});
+
+	it('says so for a change that has no fields to show', async () => {
+		// Naming the row is the whole proposal for a hide, so an empty change list
+		// is the correct answer and has to read as one.
+		readRequests.mockResolvedValue(
+			pendingRequests(1, {
+				capability: 'hide_work_experience',
+				fields: {},
+				previous: { tags: [] }
+			})
+		);
+		countRequests.mockResolvedValue(1);
+
+		const result = await callTool('list_pending_changes', { profile_id: 12 }, KEY);
+
+		expect((result.structuredContent?.requests as { changes: unknown[] }[])[0].changes).toEqual([]);
+		expect(result.content[0].text).toContain('naming the entry is the whole change');
+	});
+
+	it('renders a request whose capability the registry no longer has', async () => {
+		// A queue outlives the build that filled it. Throwing on one stale row
+		// would take the other thirty-seven with it, so it degrades to a name.
+		readRequests.mockResolvedValue(
+			pendingRequests(1, { capability: 'edit_favourite_colour', fields: { hue: 'blue' } })
+		);
+		countRequests.mockResolvedValue(1);
+
+		const result = await callTool('list_pending_changes', { profile_id: 12 }, KEY);
+
+		expect((result.structuredContent?.requests as { supported: boolean }[])[0].supported).toBe(
+			false
+		);
+		expect(result.content[0].text).toContain('no longer supported');
 	});
 
 	it('clamps a limit past the ceiling, and a nonsense one', async () => {
@@ -620,10 +697,10 @@ describe('tier 1 — direct writes', () => {
 			KEY
 		);
 
-		// A status change is always Tier 2, so what would be written is what was
-		// recorded for the applicant to approve.
-		expect(createRequest).toHaveBeenCalled();
-		expect(createRequest.mock.calls[0][0].fields).toEqual({
+		// A move that leaves the application live is Tier 1, so this is written —
+		// and what reaches the write is the whole state, restatement included.
+		expect(createRequest).not.toHaveBeenCalled();
+		expect(executeCapability.mock.calls[0][3]).toEqual({
 			status: 'negotiating',
 			status_step: 'Offer received',
 			status_action: 'Awaiting response'
@@ -832,6 +909,28 @@ describe('refusals the agent can act on', () => {
 		expect(createRequest).not.toHaveBeenCalled();
 	});
 
+	it('refuses escaped text instead of queueing it for a person to read', async () => {
+		// The one refusal here that would otherwise be invisible. A request holding
+		// `&amp;` renders correctly in the approval UI — the diff shows what the
+		// agent meant — and is wrong only once it is on a document, so catching it
+		// at approval time depends on someone spotting five characters they have
+		// no reason to look for.
+		const result = await callTool(
+			'edit_work_experience',
+			{
+				profile_id: 12,
+				entry_id: 6,
+				'work_experience.summary': 'Built with Lit &amp; Web Components.',
+				rationale: 'y'
+			},
+			KEY
+		);
+
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('&amp;');
+		expect(createRequest).not.toHaveBeenCalled();
+	});
+
 	it('refuses a tool that does not exist', async () => {
 		const result = await callTool('delete_work_experience', { profile_id: 12 }, KEY);
 		expect(result.isError).toBe(true);
@@ -909,28 +1008,6 @@ describe('jobs and applications', () => {
 			},
 			KEY
 		);
-	it('refuses escaped text instead of queueing it for a person to read', async () => {
-		// The one refusal here that would otherwise be invisible. A request holding
-		// `&amp;` renders correctly in the approval UI — the diff shows what the
-		// agent meant — and is wrong only once it is on a document, so catching it
-		// at approval time depends on someone spotting five characters they have
-		// no reason to look for.
-		const result = await callTool(
-			'edit_work_experience',
-			{
-				profile_id: 12,
-				entry_id: 6,
-				'work_experience.summary': 'Built with Lit &amp; Web Components.',
-				rationale: 'y'
-			},
-			KEY
-		);
-
-		expect(result.isError).toBe(true);
-		expect(result.content[0].text).toContain('&amp;');
-		expect(createRequest).not.toHaveBeenCalled();
-	});
-
 
 		expect(executeCapability).not.toHaveBeenCalled();
 		expect(createRequest).toHaveBeenCalled();

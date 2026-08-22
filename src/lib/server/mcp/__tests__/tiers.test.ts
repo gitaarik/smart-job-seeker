@@ -106,26 +106,50 @@ describe('tierForWrite', () => {
 		).toBe(2);
 	});
 
-	it('never lets an agent move an application through the pipeline on its own', () => {
-		// Reached from `current` alone rather than from the capability's name:
-		// `status` is notNull with a default, so it is never blank and every change
-		// to it replaces something. The answer is the intended one — "you were
-		// rejected" is a claim about an employer, and it moves the application out
-		// of the list the applicant works from — so it is pinned here rather than
-		// left to the arithmetic that happens to produce it.
-		const decision = tierForWrite({
-			capability: 'update_application_status',
-			current: {
-				status: 'applying',
-				status_step: 'Applied through job platform',
-				status_action: 'Awaiting response',
-				status_action_date: null
-			},
-			fields: { status: 'rejected' },
-			...noBurst
+	describe('a capability that grades its own write', () => {
+		// `status` is notNull with a default, so the overwrite rule below would
+		// grade every move through the pipeline Tier 2 — putting "they invited me
+		// to a second interview" behind the same approval as rewriting a summary.
+		// `CapabilityDef.tierFor` is the correction, and what it decides is the
+		// point of the feature, so it is pinned here rather than in the registry.
+		const APPLYING = {
+			status: 'applying',
+			status_step: 'Applied through job platform',
+			status_action: 'Awaiting response',
+			status_action_date: null
+		};
+
+		const move = (status: string, recentDirectWrites = 0) =>
+			tierForWrite({
+				capability: 'update_application_status',
+				current: APPLYING,
+				fields: { status },
+				recentDirectWrites
+			});
+
+		it('writes a move that leaves the application live', () => {
+			// Undone with one click and visible the moment it lands, which is what
+			// Tier 1 says its protection is.
+			expect(move('interviewing').tier).toBe(1);
+			expect(move('negotiating').tier).toBe(1);
 		});
 
-		expect(decision.tier).toBe(2);
+		it('asks before closing one', () => {
+			// Each of these takes it off the board the applicant works from, and
+			// each is a claim about a decision somebody else made.
+			for (const status of ['accepted', 'rejected', 'withdrawn']) {
+				const decision = move(status);
+				expect(decision.tier, status).toBe(2);
+				expect(decision.reason, status).toContain('closes it');
+			}
+		});
+
+		it('cannot lift the burst ceiling', () => {
+			// A capability may say its own write is cheap. It may not say that the
+			// twenty-first one in an hour still is — which is why the hook is asked
+			// below that check and not above it.
+			expect(move('interviewing', DIRECT_WRITE_BURST).tier).toBe(2);
+		});
 	});
 
 	it('sends writes for approval once an agent has made too many in an hour', () => {

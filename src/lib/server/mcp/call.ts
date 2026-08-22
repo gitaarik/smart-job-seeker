@@ -36,12 +36,14 @@
 
 import {
 	CAPABILITIES,
+	describeProposalChanges,
 	executeCapability,
-	pickCapabilityFields,
 	htmlEntityError,
+	pickCapabilityFields,
 	type Capability,
 	type CapabilityActor,
-	type CapabilityTarget
+	type CapabilityTarget,
+	type ProposedChange
 } from '$lib/server/ai-chat/capabilities';
 import { profileEditCounts } from '$lib/server/ai-chat/profile-edit-manifest';
 import {
@@ -262,6 +264,41 @@ async function listChanges(args: Args, key: VerifiedMcpKey): Promise<ToolResult>
 	);
 }
 
+/**
+ * How much of a replaced value the queue shows before it points at the card.
+ *
+ * A list is for deciding what to look at, not for reading a rewrite in full —
+ * one of these can be a 3,000-character description, and twenty of those is a
+ * response nobody reads. Cut values SAY they were cut and give the true length,
+ * so an excerpt is never mistaken for the whole change; the card at `review_at`
+ * has both sides entire.
+ */
+const PENDING_VALUE_CHARS = 200;
+
+function excerpt(value: string): string {
+	return value.length > PENDING_VALUE_CHARS
+		? `${value.slice(0, PENDING_VALUE_CHARS)}… (${value.length} characters in total)`
+		: value;
+}
+
+function excerptChange(change: ProposedChange): ProposedChange {
+	return { ...change, from: excerpt(change.from), to: excerpt(change.to) };
+}
+
+/**
+ * The queue, in enough detail to be answered rather than only counted.
+ *
+ * It used to carry the capability, the target and the proposed `fields` — the
+ * new value with nothing to compare it against, and not a word of why. That is
+ * enough for the one thing this tool's contract asks of an agent ("if something
+ * you asked for is still pending, say so and move on") and useless for the
+ * person, who cannot decide from a list that never says what a change replaces.
+ *
+ * So it carries the same diff the approval card renders, through the same
+ * function, plus the rationale. The rationale is NOT excerpted: it is the one
+ * field written to be read by whoever decides, and cutting it would hide the
+ * argument while showing the claim.
+ */
 async function listPendingChanges(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
 	const requested = argInt(args, 'limit') ?? 20;
 	const limit = Math.min(Math.max(requested, 1), 50);
@@ -271,14 +308,26 @@ async function listPendingChanges(args: Args, key: VerifiedMcpKey): Promise<Tool
 		countRequests(key.profileId, ['pending'])
 	]);
 
-	const requests = pending.map((r) => ({
-		request_id: r.id,
-		capability: r.capability,
-		target: r.target.label,
-		fields: r.fields,
-		asked_at: r.createdAt.toISOString(),
-		review_at: requestPath(r.id)
-	}));
+	const requests = pending.map((r) => {
+		// Same fallback as `toRequest`, and for the same reason: a capability can
+		// leave the registry while a request naming it is still sitting in this
+		// queue. Rendering a raw name beats a read tool that throws on one stale
+		// row and takes the other thirty-seven with it.
+		const known = r.capability in CAPABILITIES;
+		return {
+			request_id: r.id,
+			capability: r.capability,
+			title: known ? CAPABILITIES[r.capability].title : r.capability,
+			supported: known,
+			target: r.target.label,
+			rationale: r.rationale,
+			changes: known
+				? describeProposalChanges(r.capability, r.fields, r.previous).map(excerptChange)
+				: [],
+			asked_at: r.createdAt.toISOString(),
+			review_at: requestPath(r.id)
+		};
+	});
 
 	if (total === 0) return ok('Nothing is waiting for approval.', { requests, total });
 
@@ -293,11 +342,19 @@ async function listPendingChanges(args: Args, key: VerifiedMcpKey): Promise<Tool
 				`(raise "limit" up to 50 to see more of the remaining ${withheld}):`
 			: `${total} waiting on the applicant:`;
 
-	return ok(
-		`${heading}\n\n` +
-			requests.map((r) => `- [${r.request_id}] ${r.capability} on "${r.target}"`).join('\n'),
-		{ requests, total }
-	);
+	const lines = requests.map((r) => {
+		// A verb whose whole proposal is naming a row has no field to diff — see
+		// describeProposalChanges. Saying so beats printing an empty list, and a
+		// request this build can no longer apply has to say that instead.
+		const changes = !r.supported
+			? '\n    (this kind of change is no longer supported — it can only be rejected)'
+			: r.changes.length > 0
+				? r.changes.map((c) => `\n    ${c.label}: ${c.from} → ${c.to}`).join('')
+				: '\n    (no fields — naming the entry is the whole change)';
+		return `- [${r.request_id}] ${r.title} on "${r.target}"\n    why: ${r.rationale}${changes}`;
+	});
+
+	return ok(`${heading}\n\n${lines.join('\n')}`, { requests, total });
 }
 
 /**

@@ -33,7 +33,6 @@ import { readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
 import { CAPABILITIES, executeCapability } from '$lib/server/ai-chat/capabilities';
 import { callTool } from '$lib/server/mcp/call';
 import { createMcpKey } from '$lib/server/mcp/keys';
-import { approveRequest } from '$lib/server/mcp/requests';
 import { toolsFor } from '$lib/server/mcp/tools';
 import type { VerifiedMcpKey } from '$lib/server/mcp/keys';
 
@@ -401,21 +400,19 @@ async function main() {
 			},
 			KEY
 		);
-		const statusRequestId = moved.structuredContent?.request_id as number | undefined;
+		const statusEditId = moved.structuredContent?.change_id as number | undefined;
 		check(
-			'a status move needs approval even on a write key',
-			moved.structuredContent?.applied === false && statusRequestId !== undefined
+			'a move that leaves the application live is written directly',
+			moved.structuredContent?.applied === true && statusEditId !== undefined,
+			text(moved).split('\n')[0]
 		);
 
-		const approved =
-			statusRequestId !== undefined ? await approveRequest(statusRequestId, actor) : null;
-		const statusEditId = approved?.ok === true ? approved.editId : null;
 		const afterMove = await CAPABILITIES.update_application_status.current(
 			{ id: application.id, label: 'application' },
 			actor
 		);
 		check(
-			'approving it moves the application',
+			'and the whole state lands, not only the status',
 			afterMove.status === 'interviewing' &&
 				afterMove.status_step === 'Technical interview' &&
 				afterMove.status_action === 'Awaiting result',
@@ -431,7 +428,7 @@ async function main() {
 			.from(application_status_log)
 			.where(eq(application_status_log.application, application.id));
 		check(
-			'and records the move on the timeline',
+			'the move is on the timeline as well as on the row',
 			timeline.length === 1 &&
 				timeline[0].from_status === 'draft' &&
 				timeline[0].to_status === 'interviewing' &&
@@ -439,7 +436,8 @@ async function main() {
 			JSON.stringify(timeline)
 		);
 
-		const statusBack = statusEditId !== null && (await revertEdit(statusEditId, actor)).ok === true;
+		const statusBack =
+			statusEditId !== undefined && (await revertEdit(statusEditId, actor)).ok === true;
 		const afterUndoStatus = await CAPABILITIES.update_application_status.current(
 			{ id: application.id, label: 'application' },
 			actor
@@ -461,6 +459,30 @@ async function main() {
 			'and takes the timeline row back with it',
 			timelineAfterUndo.length === 0,
 			JSON.stringify(timelineAfterUndo)
+		);
+
+		// The half the tier split keeps behind a person: closing an application
+		// takes it off the board they work from, whatever the key says.
+		const closed = await callTool(
+			'update_application_status',
+			{
+				profile_id: profileId,
+				application_id: application.id,
+				status: 'rejected',
+				rationale: 'Verification script.'
+			},
+			KEY
+		);
+		const closedNow = await CAPABILITIES.update_application_status.current(
+			{ id: application.id, label: 'application' },
+			actor
+		);
+		check(
+			'closing one still needs approval on a write key',
+			closed.structuredContent?.applied === false &&
+				closed.structuredContent?.request_id !== undefined &&
+				closedNow.status === 'draft',
+			text(closed).split('\n')[0]
 		);
 
 		/* --- refusals ------------------------------------------------------- */

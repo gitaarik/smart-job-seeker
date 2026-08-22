@@ -568,6 +568,11 @@ Use it to avoid re-doing something the applicant already reverted.`,
 		name: 'list_pending_changes',
 		description: `Changes you have asked for that are waiting on the applicant.
 
+Each one carries the rationale it was asked with and the fields it would change,
+as "before → after" — enough for the applicant to decide from without opening
+anything. A value longer than 200 characters is cut and says its true length;
+the card at "review_at" has both sides in full.
+
 There is no tool that approves one, and asking again does not help — a second
 request for the same thing is a second thing for them to read. If something you
 asked for is still pending, say so and move on.

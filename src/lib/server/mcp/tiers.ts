@@ -13,6 +13,13 @@
  *   does not write. It records a request and returns a deep link; a human
  *   approves in the app.
  *
+ * The grading below reads a call against what the row currently holds, which is
+ * the right question for a column holding content and the wrong one for a column
+ * holding a *state*: a status is never blank, so every move through the pipeline
+ * scored as an overwrite. A capability that knows better says so through
+ * `CapabilityDef.tierFor`, and that hook is asked after the burst ceiling and
+ * before everything else — it may reclassify its own write, never lift the cap.
+ *
  * **Tier 1 deliberately does not go through approval.** If adding a skill needs
  * a click, people set the key to `write` to make the annoyance stop, and a
  * graded system becomes an ungraded one. Tier 1's protection is that it is
@@ -129,6 +136,12 @@ export function tierForWrite(opts: {
 				`agent in the last hour, so further changes need approval.`
 		};
 	}
+
+	// The capability's own answer, where it has one. Below the burst ceiling on
+	// purpose: a capability may say its write is cheap, never that the
+	// twenty-first one in an hour still is.
+	const declared = CAPABILITIES[capability]?.tierFor?.(fields, current);
+	if (declared) return declared;
 
 	if (capability.startsWith('add_')) {
 		return { tier: 1, reason: 'Adding an entry does not replace anything.' };

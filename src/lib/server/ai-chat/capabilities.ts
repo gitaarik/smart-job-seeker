@@ -52,7 +52,12 @@ import {
 	recordTypeValues,
 	today
 } from '$lib/application-records';
-import { actionsByPhase, isFinishedStatus, stepsByPhase } from '$lib/application-status';
+import {
+	actionsByPhase,
+	getStatusLabel,
+	isFinishedStatus,
+	stepsByPhase
+} from '$lib/application-status';
 import {
 	actionsFor,
 	applicationStatusError,
@@ -62,6 +67,7 @@ import {
 	writeApplicationStatus
 } from '$lib/server/applications/status';
 import type { EditSource } from './edit-log';
+import type { TierDecision } from '$lib/server/mcp/tiers';
 import { deriveRecordMetadata } from './record-derivation';
 import { summarizeApplication } from './application-summary';
 
@@ -219,6 +225,27 @@ export interface CapabilityDef {
 	 * write.
 	 */
 	writesOneState?: boolean;
+	/**
+	 * How much friction one write of this capability earns, where the generic
+	 * grading gets it wrong. Return null to fall through to it.
+	 *
+	 * `tierForWrite` grades a call by what it replaces: filling a blank is
+	 * additive, writing over a value someone chose is not. That is the right
+	 * question for a column holding prose, and the wrong one for a column holding
+	 * a *state*. `applications.status` is notNull with a default, so it is never
+	 * blank and every move through the pipeline scored as an overwrite — which
+	 * put "they invited me to a second interview" behind the same approval as
+	 * rewriting a summary. The generic rule was not wrong about the mechanics; it
+	 * had no way to know that one of those is undone with a click and visible the
+	 * moment it happens, and the other is not.
+	 *
+	 * Only MCP asks. The chat proposes everything regardless of what this says.
+	 *
+	 * The burst ceiling is checked BEFORE this and cannot be overridden — a
+	 * capability may say its own write is cheap; it may not say that the
+	 * twenty-first one in an hour still is.
+	 */
+	tierFor?(fields: Record<string, unknown>, current: Record<string, unknown>): TierDecision | null;
 	/** Checks the schema can't express. Runs before apply, and before storing a proposal. */
 	validate(
 		fields: Record<string, unknown>,
@@ -994,15 +1021,21 @@ const MAX_STATUS_NOTE = 300;
  * shape and nothing else in common: one is a correction, the other is an
  * assertion that the world moved.
  *
- * ## Why it is never a direct write
+ * ## Which moves need a person, and which do not
  *
- * `tierForWrite` grades this Tier 2 without being told to, because `status` is
- * `notNull` with a default and so is never blank — every change to it replaces
- * something. That arithmetic happens to land on the right answer, and the
- * reason is worth stating rather than leaving to it: "you were rejected" is a
- * claim about an employer, it moves the application out of the list the
- * applicant works from, and it lands in a history that is read back later as
- * evidence. An agent may ask for it; a person answers.
+ * `tierForWrite` would grade every one of them Tier 2, because `status` is
+ * `notNull` with a default and so is never blank. That is the overwrite rule
+ * doing its job on a column it was not written for: a status is a state, not
+ * authored content, and moving one is undone with a click and visible the
+ * moment it happens — which is precisely what Tier 1 says its protection is.
+ *
+ * So `tierFor` splits it. A move that leaves the application live —
+ * applying → interviewing → negotiating, or back again — is Tier 1: written
+ * directly on a `write` key, logged, notified, undoable. The three statuses
+ * that FINISH it are not, because they take it off the board the applicant
+ * works from and each one is a claim about a decision somebody else made.
+ * "You were rejected" is worth a person reading before it lands; "they booked
+ * a second interview" is worth a notification.
  */
 const updateApplicationStatus: CapabilityDef = {
 	title: "Update the application's status",
@@ -1035,6 +1068,20 @@ const updateApplicationStatus: CapabilityDef = {
 	// The stage is cleared by a status move that does not name one, so a stage
 	// that WAS named must reach `apply` even when it matches the row.
 	writesOneState: true,
+	tierFor: (fields, current) => {
+		const next = nextStatusFields(fields, current);
+		return isFinishedStatus(next.status)
+			? {
+					tier: 2,
+					reason:
+						`Marking an application "${getStatusLabel(next.status)}" closes it and takes ` +
+						`it off their active list.`
+				}
+			: {
+					tier: 1,
+					reason: 'Moving an application through the pipeline is undone with one click.'
+				};
+	},
 	contract: `Where this application stands. It is what moves it between the user's
 lists, so propose it when they say something HAPPENED — not when they say what
 they are hoping for or about to do.
@@ -1550,6 +1597,51 @@ export function pickCapabilityFields(
 }
 
 /**
+ * The escaping set, and deliberately not any `&word;`.
+ *
+ * This must never refuse a sentence someone wrote, so it matches only the
+ * characters an HTML escaper produces, named and numeric. Measured zero matches
+ * across every profile text column in the database when it was added.
+ */
+const HTML_ENTITY =
+	/&(?:amp|lt|gt|quot|apos|nbsp|#0*(?:34|38|39|60|62)|#[xX]0*(?:22|26|27|3[cCeE]));/;
+
+/**
+ * An HTML entity in a value that is going onto a CV.
+ *
+ * Nothing downstream renders markup — the resume components have no `{@html}`,
+ * so Svelte escapes on output and a stored `&amp;` reaches the page as those
+ * five characters. The applicant reads `Lit &amp; Web Components` on a document
+ * they are about to send to someone.
+ *
+ * It gets in when a model copies text out of its own rendered output instead of
+ * composing it, and every later stage is blind to it: the value is a valid
+ * string, `validate` has no opinion about it, and the diff renders it
+ * faithfully — so the proposal a person reads looks exactly like what they
+ * meant. The one place it currently fails loudly is by accident, when the text
+ * happens to be a name something else has to match: a category called
+ * "AI &amp; LLM engineering" resolves to nothing. Free text has no such luck.
+ *
+ * Returns the message rather than throwing, because both call sites already
+ * have a refusal shape and the agent that sent it can fix it and retry.
+ */
+export function htmlEntityError(fields: Record<string, unknown>): string | null {
+	for (const [name, value] of Object.entries(fields)) {
+		for (const text of Array.isArray(value) ? value : [value]) {
+			if (typeof text !== 'string') continue;
+			const found = text.match(HTML_ENTITY)?.[0];
+			if (found) {
+				return (
+					`${name} contains the HTML entity "${found}", which would be stored and ` +
+					`shown literally on the document. Send the character itself instead.`
+				);
+			}
+		}
+	}
+	return null;
+}
+
+/**
  * One capability's fields as a single object schema — the shape a TOOL has.
  *
  * Distinct from `buildProposalSchema`, which flattens every live capability into
@@ -1596,51 +1688,6 @@ export type CapabilityOutcome =
 			/**
 			 * The `capability_edits` row this write produced — the handle an undo is
 			 * addressed by, and null when the log write itself failed.
-/**
- * The escaping set, and deliberately not any `&word;`.
- *
- * This must never refuse a sentence someone wrote, so it matches only the
- * characters an HTML escaper produces, named and numeric. Measured zero matches
- * across every profile text column in the database when it was added.
- */
-const HTML_ENTITY =
-	/&(?:amp|lt|gt|quot|apos|nbsp|#0*(?:34|38|39|60|62)|#[xX]0*(?:22|26|27|3[cCeE]));/;
-
-/**
- * An HTML entity in a value that is going onto a CV.
- *
- * Nothing downstream renders markup — the resume components have no `{@html}`,
- * so Svelte escapes on output and a stored `&amp;` reaches the page as those
- * five characters. The applicant reads `Lit &amp; Web Components` on a document
- * they are about to send to someone.
- *
- * It gets in when a model copies text out of its own rendered output instead of
- * composing it, and every later stage is blind to it: the value is a valid
- * string, `validate` has no opinion about it, and the diff renders it
- * faithfully — so the proposal a person reads looks exactly like what they
- * meant. The one place it currently fails loudly is by accident, when the text
- * happens to be a name something else has to match: a category called
- * "AI &amp; LLM engineering" resolves to nothing. Free text has no such luck.
- *
- * Returns the message rather than throwing, because both call sites already
- * have a refusal shape and the agent that sent it can fix it and retry.
- */
-export function htmlEntityError(fields: Record<string, unknown>): string | null {
-	for (const [name, value] of Object.entries(fields)) {
-		for (const text of Array.isArray(value) ? value : [value]) {
-			if (typeof text !== 'string') continue;
-			const found = text.match(HTML_ENTITY)?.[0];
-			if (found) {
-				return (
-					`${name} contains the HTML entity "${found}", which would be stored and ` +
-					`shown literally on the document. Send the character itself instead.`
-				);
-			}
-		}
-	}
-	return null;
-}
-
 			 *
 			 * Nullable rather than absent because the write succeeded either way, and
 			 * a caller must not be able to mistake "not logged" for "not written".
@@ -1705,6 +1752,11 @@ export async function executeCapability(
 		return { ok: false, reason: 'empty', error: 'Nothing to change.' };
 	}
 
+	// Before validate, not inside it: no capability has an opinion about this and
+	// every one of them would need the same one.
+	const escaped = htmlEntityError(fields);
+	if (escaped) return { ok: false, reason: 'invalid', error: escaped };
+
 	const valid = def.validate(fields, current);
 	if (!valid.ok) return { ok: false, reason: 'invalid', error: valid.error };
 
@@ -1752,11 +1804,6 @@ export async function executeCapability(
 		});
 	} catch (e) {
 		console.error(`[capabilities] ${capability} applied but was not logged`, e);
-	// Before validate, not inside it: no capability has an opinion about this and
-	// every one of them would need the same one.
-	const escaped = htmlEntityError(fields);
-	if (escaped) return { ok: false, reason: 'invalid', error: escaped };
-
 	}
 
 	return { ok: true, previous, editId, created };
