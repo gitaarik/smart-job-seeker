@@ -2,6 +2,7 @@ import type { LayoutServerLoad } from './$types';
 import { error, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { today } from '$lib/application-records';
 import {
 	application_letters,
 	application_questions,
@@ -140,6 +141,9 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
 		application,
 		cvVersionName,
 		cvVersionExists,
+		// The server's day, so this page and the lists that filtered on it agree
+		// about whether a snooze has elapsed regardless of the browser's timezone.
+		today: today(),
 		profileId: layoutData.selectedProfile.id
 	};
 };

@@ -18,6 +18,7 @@ import { db } from '$lib/server/db';
 import { and, desc, eq } from 'drizzle-orm';
 import { application_records, applications } from '$lib/server/db/schema';
 import { getRecordTypeLabel } from '$lib/application-records';
+import { isSnoozed } from '$lib/application-snooze';
 
 export const APPLICATION_PAGE_DEFAULT = 20;
 export const APPLICATION_PAGE_MAX = 50;
@@ -31,6 +32,15 @@ export interface ProfileApplicationSummary {
 	status: string;
 	status_step: string | null;
 	application_sent_date: string | null;
+	/**
+	 * The day a paused application comes back, or null.
+	 *
+	 * Part of what NAMES an application's state for the same reason the status
+	 * is: an agent asked which applications need chasing would otherwise call a
+	 * deliberately parked one neglected. Only ever set while the pause is still
+	 * ahead — see `$lib/application-snooze`.
+	 */
+	snoozed_until: string | null;
 }
 
 /**
@@ -58,7 +68,8 @@ export async function listProfileApplications(
 			job_id: true,
 			status: true,
 			status_step: true,
-			application_sent_date: true
+			application_sent_date: true,
+			snoozed_until: true
 		},
 		with: { job: { columns: { title: true, company: true } } },
 		orderBy: [desc(applications.date_created), desc(applications.id)],
@@ -72,7 +83,8 @@ export async function listProfileApplications(
 		job_company: row.job?.company ?? null,
 		status: row.status,
 		status_step: row.status_step,
-		application_sent_date: row.application_sent_date
+		application_sent_date: row.application_sent_date,
+		snoozed_until: isSnoozed(row) ? row.snoozed_until : null
 	}));
 }
 
@@ -88,7 +100,8 @@ export async function readProfileApplication(
 			job_id: true,
 			status: true,
 			status_step: true,
-			application_sent_date: true
+			application_sent_date: true,
+			snoozed_until: true
 		},
 		with: { job: { columns: { title: true, company: true } } }
 	});
@@ -101,7 +114,8 @@ export async function readProfileApplication(
 		job_company: row.job?.company ?? null,
 		status: row.status,
 		status_step: row.status_step,
-		application_sent_date: row.application_sent_date
+		application_sent_date: row.application_sent_date,
+		snoozed_until: isSnoozed(row) ? row.snoozed_until : null
 	};
 }
 

@@ -39,6 +39,7 @@ import {
 	rateToHourly
 } from '$lib/salary/conversion';
 import { getStatusLabel, isFinishedStatus } from '$lib/application-status';
+import { isSnoozed } from '$lib/application-snooze';
 import type { OfferTerms } from './application-summary';
 import type { StoredDetail } from '$lib/application-details';
 
@@ -96,6 +97,15 @@ export interface PipelineRow {
 	action: string | null;
 	/** Days since the stage last moved — the highest-signal derived column. */
 	daysInStage: number | null;
+	/**
+	 * The day a paused application comes back, when one is set and still ahead.
+	 *
+	 * The pipeline is rendered WHOLE on purpose, so a snoozed application stays
+	 * in the table rather than being filtered out of it — but `daysInStage` on a
+	 * parked application reads as stalled, and "you have not touched this in 40
+	 * days" is wrong advice about a decision the applicant already made.
+	 */
+	snoozedUntil: string | null;
 	appliedOn: string | null;
 	/** As written, e.g. "EUR 70000-90000/year". Null when the job says nothing. */
 	salary: string | null;
@@ -171,7 +181,14 @@ function renderRow(r: PipelineRow, currency: string): string {
 	const who = [[r.title, r.company].filter(Boolean).join(' at '), `(application ${r.id})`]
 		.filter(Boolean)
 		.join(' ');
-	const stage = [getStatusLabel(r.status), r.step, r.action].filter(Boolean).join(' / ');
+	const stage = [
+		getStatusLabel(r.status),
+		r.step,
+		r.action,
+		r.snoozedUntil ? `SNOOZED until ${r.snoozedUntil}` : null
+	]
+		.filter(Boolean)
+		.join(' / ');
 	const stalled = r.daysInStage !== null ? `${r.daysInStage}d in stage` : 'age unknown';
 	const pay = r.salary
 		? r.salaryAnnual
@@ -547,6 +564,7 @@ export async function loadPipelineRows(
 			status_step: true,
 			status_action: true,
 			status_action_date: true,
+			snoozed_until: true,
 			application_sent_date: true,
 			date_updated: true,
 			date_created: true,
@@ -619,6 +637,9 @@ export async function loadPipelineRows(
 			// The stage's own date first: date_updated moves on any edit, so it
 			// would report a freshly retitled note as "the stage just changed".
 			daysInStage: daysSince(a.status_action_date ?? a.date_updated ?? a.date_created),
+			// Only while it is still ahead: an elapsed snooze is not one, and
+			// stating a date in the past would read as a pause still in force.
+			snoozedUntil: isSnoozed(a) ? a.snoozed_until : null,
 			appliedOn: a.application_sent_date,
 			salary: a.job ? describeSalary(a.job) : null,
 			salaryAnnual: a.job ? annualise(a.job, 'EUR', rates) : null,

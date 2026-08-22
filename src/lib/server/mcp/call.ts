@@ -481,6 +481,10 @@ async function listApplications(args: Args, key: VerifiedMcpKey): Promise<ToolRe
 				(app) =>
 					`- [${app.id}] ${app.job_title ?? 'Untitled'}` +
 					`${app.job_company ? ` at ${app.job_company}` : ''} — ${app.status}` +
+					// Stated in the list and not only on the record: an agent asked
+					// which applications are going stale reads this line and nothing
+					// else, and a parked one is not a neglected one.
+					`${app.snoozed_until ? `, snoozed until ${app.snoozed_until}` : ''}` +
 					`${app.job_id === null ? '' : ` (job ${app.job_id})`}`
 			)
 			.join('\n'),
@@ -522,6 +526,7 @@ async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolRes
 		`Application ${application.id} — ${application.job_title ?? 'Untitled'}` +
 			`${application.job_company ? ` at ${application.job_company}` : ''}\n` +
 			`status: ${application.status}${application.status_step ? ` (${application.status_step})` : ''}\n` +
+			`${application.snoozed_until ? `snoozed: the applicant paused this until ${application.snoozed_until}\n` : ''}` +
 			// The job in the text and not only in `structuredContent`, which plenty
 			// of clients never surface. An agent handed an application id directly
 			// otherwise has no route to the posting but list_jobs and a guess, and

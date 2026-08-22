@@ -1,13 +1,15 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
-import { eq, and, inArray, isNotNull, ne, desc } from 'drizzle-orm';
+import { eq, and, inArray, isNotNull, isNull, gt, lte, ne, or, desc } from 'drizzle-orm';
 import { applications, application_letters, job_platforms } from '$lib/server/db/schema';
 import { applicationStatusError, writeApplicationStatus } from '$lib/server/applications/status';
+import { writeApplicationSnooze } from '$lib/server/applications/snooze';
+import { activeStatuses, finishedStatuses } from '$lib/application-status';
+import { snoozeError } from '$lib/application-snooze';
+import { today } from '$lib/application-records';
 import { getSelectedProfileId } from '../../profile/utils';
 
-const activeStatuses = ['applying', 'interviewing', 'negotiating'];
-const finishedStatuses = ['accepted', 'withdrawn', 'rejected'];
 const waitingActions = ['Awaiting response', 'Awaiting result'];
 
 export const load: PageServerLoad = async ({ parent, url }) => {
@@ -24,8 +26,16 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
 	const conditions = [eq(applications.profile_id, layoutData.selectedProfile.id)];
 
+	// A snooze that has run out is not a snooze: the column keeps its date, and
+	// the comparison against today is the whole of "it comes back on its own".
+	const day = today();
+	const notSnoozed = or(isNull(applications.snoozed_until), lte(applications.snoozed_until, day))!;
+
 	if (group === 'active' || group === 'action') {
 		conditions.push(inArray(applications.status, activeStatuses));
+		// Both groups mean "what I am working on", which a paused application is
+		// not — it is reachable under its own group and under All.
+		conditions.push(notSnoozed);
 		if (group === 'action') {
 			conditions.push(isNotNull(applications.status_action));
 			conditions.push(ne(applications.status_action, ''));
@@ -36,6 +46,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		}
 	} else if (group === 'finished') {
 		conditions.push(inArray(applications.status, finishedStatuses));
+	} else if (group === 'snoozed') {
+		conditions.push(gt(applications.snoozed_until, day));
 	}
 
 	if (phase) {
@@ -93,6 +105,16 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 				})
 			: [];
 
+	// Counted separately from the list because the point of the chip is to say
+	// what is parked while you are looking at something else.
+	const snoozedCount = await db.$count(
+		applications,
+		and(
+			eq(applications.profile_id, layoutData.selectedProfile.id),
+			gt(applications.snoozed_until, day)
+		)
+	);
+
 	return {
 		applications: filteredApplications,
 		platforms,
@@ -100,6 +122,10 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		currentPhase: phase,
 		currentPlatform: platform,
 		currentSearch: search,
+		snoozedCount,
+		// The server's day, so a card and the query that selected it never
+		// disagree because the browser's clock is in another timezone.
+		today: day,
 		profileId: layoutData.selectedProfile.id
 	};
 };
@@ -155,6 +181,49 @@ export const actions: Actions = {
 			actionDate: null,
 			description: null
 		});
+		if (!written) return fail(404, { error: 'Application not found' });
+
+		return { success: true };
+	},
+
+	// Pausing from the list rather than only from the application page: the case
+	// this exists for is having too many in flight at once, which is a judgement
+	// made while looking at all of them.
+	snooze: async ({ request, locals, cookies }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const formData = await request.formData();
+		const id = parseInt(formData.get('id') as string);
+		if (isNaN(id)) return fail(400, { error: 'Invalid application ID' });
+
+		const until = ((formData.get('until') as string) ?? '').trim();
+		const problem = snoozeError(until);
+		if (problem) return fail(400, { error: problem });
+
+		const reason = ((formData.get('reason') as string) ?? '').trim() || null;
+
+		const written = await writeApplicationSnooze(id, profileId, { until, reason });
+		if (!written) return fail(404, { error: 'Application not found' });
+
+		return { success: true };
+	},
+
+	resume: async ({ request, locals, cookies }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const formData = await request.formData();
+		const id = parseInt(formData.get('id') as string);
+		if (isNaN(id)) return fail(400, { error: 'Invalid application ID' });
+
+		const written = await writeApplicationSnooze(id, profileId, { until: null });
 		if (!written) return fail(404, { error: 'Application not found' });
 
 		return { success: true };

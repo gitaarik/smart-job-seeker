@@ -4,6 +4,8 @@ import { dbDirect as db } from '$lib/server/db';
 import { and, eq } from 'drizzle-orm';
 import { applications } from '$lib/server/db/schema';
 import { applicationStatusError, writeApplicationStatus } from '$lib/server/applications/status';
+import { writeApplicationSnooze } from '$lib/server/applications/snooze';
+import { snoozeError } from '$lib/application-snooze';
 import { getSelectedProfileId } from '../../profile/utils';
 
 export const actions: Actions = {
@@ -52,6 +54,39 @@ export const actions: Actions = {
 			// move — see the option's own note.
 			{ collapseInitialEntry: true }
 		);
+		if (!written) return fail(404, { error: 'Application not found' });
+
+		return { success: true };
+	},
+
+	/**
+	 * Pause or resume. The list has the presets; this is the one that takes an
+	 * arbitrary date and a reason, and an empty `until` is how you resume —
+	 * "no date" and "not paused" are the same state in the column.
+	 */
+	updateSnooze: async ({ request, locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
+
+		const formData = await request.formData();
+		const until = ((formData.get('until') as string) ?? '').trim();
+		const reason = ((formData.get('reason') as string) ?? '').trim() || null;
+
+		if (until) {
+			const problem = snoozeError(until);
+			if (problem) return fail(400, { error: problem });
+		}
+
+		const written = await writeApplicationSnooze(appId, profileId, {
+			until: until || null,
+			reason
+		});
 		if (!written) return fail(404, { error: 'Application not found' });
 
 		return { success: true };

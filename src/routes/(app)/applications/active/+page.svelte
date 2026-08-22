@@ -1,6 +1,10 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
 	import { goto } from '$app/navigation';
+	import { enhance } from '$app/forms';
+	// Only the link added with the snooze menu: the rule wants new internal
+	// links checked at build time, and the older ones here sit in the baseline.
+	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faBuilding,
@@ -14,7 +18,9 @@
 		faLayerGroup,
 		faMapMarkerAlt,
 		faMoneyBillWave,
+		faMugHot,
 		faPaperPlane,
+		faPlay,
 		faPlus,
 		faSearch,
 		faTimes
@@ -29,6 +35,7 @@
 		getStatusColor,
 		getStatusDotColor
 	} from '$lib/application-status';
+	import { describeSnooze, isSnoozed, snoozePresets, snoozeUntil } from '$lib/application-snooze';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -49,12 +56,17 @@
 		searchInput = data.currentSearch;
 	});
 
-	const groupOptions = [
+	// "Snoozed" is only offered once something is in it — an empty group is a
+	// filter that can only ever disappoint.
+	let groupOptions = $derived([
 		{ value: 'all', label: 'All' },
 		{ value: 'active', label: 'Active' },
 		{ value: 'action', label: 'Needs Action' },
+		...(data.snoozedCount > 0
+			? [{ value: 'snoozed', label: `Snoozed (${data.snoozedCount})` }]
+			: []),
 		{ value: 'finished', label: 'Finished' }
-	];
+	]);
 
 	let hasActiveFilters = $derived(
 		groupFilter !== 'all' || phaseFilter !== '' || platformFilter !== '' || searchInput !== ''
@@ -421,133 +433,238 @@
 				{@const workLocations = asStringArray(job?.work_location)}
 				{@const jobTypes = asStringArray(job?.job_types)}
 				{@const experienceLevels = asStringArray(job?.experience_levels)}
-				<a
-					href="/applications/{app.id}"
-					data-app-id={app.id}
-					class="block overflow-hidden rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] transition-all hover:border-[var(--dash-primary)] hover:ring-2 hover:ring-[var(--dash-primary)]/20"
-				>
-					<div class="p-3 sm:p-4">
-						<!-- Title (full width) -->
-						<h3
-							class="line-clamp-2 text-sm font-medium text-[var(--dash-text)] sm:truncate sm:text-base"
-						>
-							{job?.title || 'Unknown Position'}
-						</h3>
+				{@const snoozed = isSnoozed(app, data.today)}
+				<!-- Relative wrapper so the snooze control can sit OUTSIDE the anchor:
+				     the card is one link, and a button nested in it would be a second
+				     interactive element inside the first. -->
+				<div class="relative">
+					<a
+						href="/applications/{app.id}"
+						data-app-id={app.id}
+						class="block overflow-hidden rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] transition-all hover:border-[var(--dash-primary)] hover:ring-2 hover:ring-[var(--dash-primary)]/20 {snoozed
+							? 'opacity-60'
+							: ''}"
+					>
+						<div class="p-3 sm:p-4">
+							<!-- Title (full width) -->
+							<h3
+								class="line-clamp-2 pr-9 text-sm font-medium text-[var(--dash-text)] sm:truncate sm:text-base"
+							>
+								{job?.title || 'Unknown Position'}
+							</h3>
 
-						<!-- Details + Status widget row -->
-						<div class="mt-1 flex items-start gap-3">
-							<!-- Details -->
-							<div class="min-w-0 flex-1">
-								<!-- Company, location, platform -->
-								<div
-									class="flex flex-wrap items-center gap-2 text-xs text-[var(--dash-text-secondary)] sm:gap-3 sm:text-sm"
-								>
-									{#if job?.company}
-										<span class="flex items-center gap-1">
-											<FontAwesomeIcon icon={faBuilding} class="h-3 w-3" />
-											<span class="max-w-[120px] truncate sm:max-w-none">{job.company}</span>
-										</span>
-									{/if}
-									{#if job?.office_location}
-										<span class="flex items-center gap-1">
-											<FontAwesomeIcon icon={faMapMarkerAlt} class="h-3 w-3" />
-											<span class="max-w-[100px] truncate sm:max-w-none">{job.office_location}</span
-											>
-										</span>
-									{/if}
-									{#if job?.job_platform}
-										<span class="flex items-center gap-1">
-											<FontAwesomeIcon
-												icon={faGlobe}
-												class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
-											/>
-											{job.job_platform.name}
-										</span>
-									{/if}
-								</div>
-
-								<!-- Tags: work location, job type, experience level -->
-								{#if workLocations.length > 0 || jobTypes.length > 0 || experienceLevels.length > 0}
-									<div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-										{#each workLocations as loc}
-											<CategoryPill category="work_location" value={loc} />
-										{/each}
-										{#each jobTypes as type}
-											<CategoryPill category="job_type" value={type} />
-										{/each}
-										{#each experienceLevels as level}
-											<CategoryPill category="experience_level" value={level} />
-										{/each}
-									</div>
-								{/if}
-
-								<!-- Salary and Date row -->
-								<div class="mt-1.5 flex items-center justify-between sm:mt-2">
-									<div class="flex flex-wrap items-center gap-2 text-xs sm:gap-4 sm:text-sm">
-										{#if salaryText}
-											<span class="flex items-center gap-1 text-[var(--dash-success)]">
-												<FontAwesomeIcon icon={faMoneyBillWave} class="h-3 w-3" />
-												<span class="max-w-[140px] truncate sm:max-w-none">{salaryText}</span>
-											</span>
-										{/if}
-										{#if app.date_created}
-											<span class="flex items-center gap-1 text-[var(--dash-text-secondary)]">
-												<FontAwesomeIcon icon={faCalendar} class="h-3 w-3" />
-												{timeAgo(app.date_created)}
-												<span class="opacity-50">{formatDate(app.date_created)}</span>
-											</span>
-										{/if}
-									</div>
-								</div>
-							</div>
-
-							<!-- Status widget (right side) -->
-							<div class="flex-shrink-0 self-center">
-								<div
-									class="flex flex-col items-center justify-center gap-1 rounded-xl border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2.5"
+							{#if snoozed && app.snoozed_until}
+								<p
+									class="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-[var(--dash-text-muted)]"
 								>
 									<span
-										class="text-xs font-semibold tracking-wide uppercase {getStatusDotColor(
-											app.status
-										)} whitespace-nowrap"
+										class="inline-flex items-center gap-1 rounded-full bg-[var(--dash-bg)] px-2 py-0.5 font-medium"
 									>
-										{getStatusLabel(app.status)}
+										<FontAwesomeIcon icon={faMugHot} class="h-3 w-3" />
+										Snoozed — {describeSnooze(app.snoozed_until, data.today)}
 									</span>
-									{#if app.status_step}
-										<span
-											class="text-xs whitespace-nowrap text-[var(--dash-text-secondary)] italic"
-										>
-											{app.status_step}
-										</span>
+									{#if app.snooze_reason}
+										<span class="italic">{app.snooze_reason}</span>
 									{/if}
-									{#if app.status_action}
-										{@const isWaiting = app.status_action.startsWith('Awaiting')}
-										{@const isScheduled = app.status_action === 'Scheduled'}
-										<span
-											class="flex items-center gap-1 text-xs font-medium whitespace-nowrap {isWaiting
-												? 'text-[var(--dash-text-muted)]'
-												: isScheduled
-													? 'text-[var(--dash-success)]'
-													: 'text-[var(--dash-primary)]'}"
-										>
-											{#key app.status_action}
+								</p>
+							{/if}
+
+							<!-- Details + Status widget row -->
+							<div class="mt-1 flex items-start gap-3">
+								<!-- Details -->
+								<div class="min-w-0 flex-1">
+									<!-- Company, location, platform -->
+									<div
+										class="flex flex-wrap items-center gap-2 text-xs text-[var(--dash-text-secondary)] sm:gap-3 sm:text-sm"
+									>
+										{#if job?.company}
+											<span class="flex items-center gap-1">
+												<FontAwesomeIcon icon={faBuilding} class="h-3 w-3" />
+												<span class="max-w-[120px] truncate sm:max-w-none">{job.company}</span>
+											</span>
+										{/if}
+										{#if job?.office_location}
+											<span class="flex items-center gap-1">
+												<FontAwesomeIcon icon={faMapMarkerAlt} class="h-3 w-3" />
+												<span class="max-w-[100px] truncate sm:max-w-none"
+													>{job.office_location}</span
+												>
+											</span>
+										{/if}
+										{#if job?.job_platform}
+											<span class="flex items-center gap-1">
 												<FontAwesomeIcon
-													icon={isWaiting
-														? faClock
-														: isScheduled
-															? faCalendarCheck
-															: faHandPointRight}
-													class="h-3 w-3"
+													icon={faGlobe}
+													class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
 												/>
-											{/key}
-											{app.status_action}
-										</span>
+												{job.job_platform.name}
+											</span>
+										{/if}
+									</div>
+
+									<!-- Tags: work location, job type, experience level -->
+									{#if workLocations.length > 0 || jobTypes.length > 0 || experienceLevels.length > 0}
+										<div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+											{#each workLocations as loc}
+												<CategoryPill category="work_location" value={loc} />
+											{/each}
+											{#each jobTypes as type}
+												<CategoryPill category="job_type" value={type} />
+											{/each}
+											{#each experienceLevels as level}
+												<CategoryPill category="experience_level" value={level} />
+											{/each}
+										</div>
 									{/if}
+
+									<!-- Salary and Date row -->
+									<div class="mt-1.5 flex items-center justify-between sm:mt-2">
+										<div class="flex flex-wrap items-center gap-2 text-xs sm:gap-4 sm:text-sm">
+											{#if salaryText}
+												<span class="flex items-center gap-1 text-[var(--dash-success)]">
+													<FontAwesomeIcon icon={faMoneyBillWave} class="h-3 w-3" />
+													<span class="max-w-[140px] truncate sm:max-w-none">{salaryText}</span>
+												</span>
+											{/if}
+											{#if app.date_created}
+												<span class="flex items-center gap-1 text-[var(--dash-text-secondary)]">
+													<FontAwesomeIcon icon={faCalendar} class="h-3 w-3" />
+													{timeAgo(app.date_created)}
+													<span class="opacity-50">{formatDate(app.date_created)}</span>
+												</span>
+											{/if}
+										</div>
+									</div>
+								</div>
+
+								<!-- Status widget (right side) -->
+								<div class="flex-shrink-0 self-center">
+									<div
+										class="flex flex-col items-center justify-center gap-1 rounded-xl border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2.5"
+									>
+										<span
+											class="text-xs font-semibold tracking-wide uppercase {getStatusDotColor(
+												app.status
+											)} whitespace-nowrap"
+										>
+											{getStatusLabel(app.status)}
+										</span>
+										{#if app.status_step}
+											<span
+												class="text-xs whitespace-nowrap text-[var(--dash-text-secondary)] italic"
+											>
+												{app.status_step}
+											</span>
+										{/if}
+										{#if app.status_action}
+											{@const isWaiting = app.status_action.startsWith('Awaiting')}
+											{@const isScheduled = app.status_action === 'Scheduled'}
+											<span
+												class="flex items-center gap-1 text-xs font-medium whitespace-nowrap {isWaiting
+													? 'text-[var(--dash-text-muted)]'
+													: isScheduled
+														? 'text-[var(--dash-success)]'
+														: 'text-[var(--dash-primary)]'}"
+											>
+												{#key app.status_action}
+													<FontAwesomeIcon
+														icon={isWaiting
+															? faClock
+															: isScheduled
+																? faCalendarCheck
+																: faHandPointRight}
+														class="h-3 w-3"
+													/>
+												{/key}
+												{app.status_action}
+											</span>
+										{/if}
+									</div>
 								</div>
 							</div>
 						</div>
+					</a>
+
+					<!-- Snooze / resume. Inside [data-dropdown] so the window click-outside
+					     handler does not close the menu on the click that opened it. -->
+					<div class="absolute top-2.5 right-2.5" data-dropdown="snooze-{app.id}">
+						<button
+							type="button"
+							onclick={() => toggleDropdown(`snooze-${app.id}`)}
+							title={snoozed ? 'Snoozed' : 'Snooze this application'}
+							aria-label={snoozed ? 'Snoozed' : 'Snooze this application'}
+							class="flex h-7 w-7 items-center justify-center rounded-md text-[var(--dash-text-muted)] transition-colors hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] {snoozed
+								? 'text-[var(--dash-text)]'
+								: ''}"
+						>
+							<FontAwesomeIcon icon={snoozed ? faPlay : faMugHot} class="h-3.5 w-3.5" />
+						</button>
+
+						{#if openDropdown === `snooze-${app.id}`}
+							<div
+								class="absolute top-full right-0 z-20 mt-1 min-w-[170px] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] py-1 shadow-lg"
+							>
+								{#if snoozed}
+									<form
+										method="POST"
+										action="?/resume"
+										use:enhance={() => {
+											openDropdown = null;
+											return async ({ update }) => await update();
+										}}
+									>
+										<input type="hidden" name="id" value={app.id} />
+										<button
+											type="submit"
+											class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
+										>
+											<FontAwesomeIcon icon={faPlay} class="h-3 w-3 opacity-60" />
+											Resume now
+										</button>
+									</form>
+									<div class="my-1 border-t border-[var(--dash-border)]"></div>
+								{/if}
+								<p
+									class="px-3 py-1 text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase"
+								>
+									{snoozed ? 'Snooze again for' : 'Snooze for'}
+								</p>
+								{#each snoozePresets as preset (preset.value)}
+									<form
+										method="POST"
+										action="?/snooze"
+										use:enhance={() => {
+											openDropdown = null;
+											return async ({ update }) => await update();
+										}}
+									>
+										<input type="hidden" name="id" value={app.id} />
+										<input
+											type="hidden"
+											name="until"
+											value={snoozeUntil(preset.days, data.today)}
+										/>
+										<button
+											type="submit"
+											class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
+										>
+											<FontAwesomeIcon icon={faClock} class="h-3 w-3 opacity-60" />
+											{preset.label}
+										</button>
+									</form>
+								{/each}
+								<div class="my-1 border-t border-[var(--dash-border)]"></div>
+								<a
+									href={resolve('/(app)/applications/[id]', { id: String(app.id) })}
+									class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-[var(--dash-text-secondary)] transition-colors hover:bg-[var(--dash-bg)]"
+								>
+									<FontAwesomeIcon icon={faCalendar} class="h-3 w-3 opacity-60" />
+									Pick a date…
+								</a>
+							</div>
+						{/if}
 					</div>
-				</a>
+				</div>
 			{/each}
 		</div>
 	{/if}

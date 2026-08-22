@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
 import { dbDirect as db, queryRaw, sql } from '$lib/server/db';
-import { eq, and, inArray, desc } from 'drizzle-orm';
+import { eq, and, inArray, isNull, lte, or, desc } from 'drizzle-orm';
 import {
 	match_config,
 	profiles,
@@ -9,6 +9,8 @@ import {
 	job_matches,
 	applications
 } from '$lib/server/db/schema';
+import { activeStatuses } from '$lib/application-status';
+import { today } from '$lib/application-records';
 import { getMatchCounts } from '$lib/server/job/match-counts';
 import { getProfileSkillLevels } from '$lib/server/job/match-utils';
 import { saveJob, unsaveJob, rejectJob, unrejectJob } from '$lib/server/job/job-actions';
@@ -61,8 +63,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 	});
 
 	const matchCommunityJobs = matchConfig?.match_community_jobs ?? false;
-
-	const activeApplicationStatuses = ['applying', 'interviewing', 'negotiating'];
 
 	const [
 		profileData,
@@ -193,7 +193,11 @@ export const load: PageServerLoad = async ({ parent }) => {
 		db.query.applications.findMany({
 			where: and(
 				eq(applications.profile_id, profileId),
-				inArray(applications.status, activeApplicationStatuses)
+				inArray(applications.status, activeStatuses),
+				// A snoozed application is deliberately not on the dashboard — that
+				// is the whole point of parking it. It returns on its own when
+				// `snoozed_until` falls due; nothing has to clear the column.
+				or(isNull(applications.snoozed_until), lte(applications.snoozed_until, today()))
 			),
 			with: {
 				job: {

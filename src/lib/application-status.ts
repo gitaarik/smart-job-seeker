@@ -45,6 +45,15 @@ export const resultOptions = [
 
 export const finishedStatuses = ['accepted', 'rejected', 'withdrawn'];
 
+/**
+ * Still in play — the pipeline lists and the home dashboard.
+ *
+ * A status only. Whether an application is being *worked on* is a second
+ * question this does not answer: see `$lib/application-snooze`, which the same
+ * lists apply on top of this one.
+ */
+export const activeStatuses = ['applying', 'interviewing', 'negotiating'];
+
 export function isFinishedStatus(status: string): boolean {
 	return finishedStatuses.includes(status);
 }

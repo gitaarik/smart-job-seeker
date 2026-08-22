@@ -25,6 +25,7 @@ function row(over: Partial<PipelineRow> = {}): PipelineRow {
 		step: 'Technical interview',
 		action: 'Scheduled',
 		daysInStage: 4,
+		snoozedUntil: null,
 		appliedOn: '2026-07-20',
 		salary: 'EUR 70,000-90,000/year',
 		salaryAnnual: 80000,
@@ -42,6 +43,19 @@ function row(over: Partial<PipelineRow> = {}): PipelineRow {
 }
 
 describe('formatPipelineContext', () => {
+	// The pipeline is rendered whole, so a parked application is still a row —
+	// but it accrues days in stage like any other, and without this the model
+	// reads a deliberate pause as neglect.
+	it('marks a snoozed application on its stage line', () => {
+		const out = formatPipelineContext([row({ snoozedUntil: '2026-10-01', daysInStage: 40 })]);
+		expect(out).toContain('SNOOZED until 2026-10-01');
+		expect(out).toContain('40d in stage');
+	});
+
+	it('says nothing about snoozing for an application that is not', () => {
+		expect(formatPipelineContext([row()])).not.toContain('SNOOZED');
+	});
+
 	it('returns empty string when there is no pipeline', () => {
 		expect(formatPipelineContext([])).toBe('');
 	});

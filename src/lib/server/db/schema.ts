@@ -2205,6 +2205,28 @@ export const applications = pgTable(
 		status_step: varchar({ length: 255 }),
 		status_action: varchar({ length: 255 }),
 		status_action_date: date(),
+		/**
+		 * The day this application returns to the active lists, or null if it was
+		 * never paused.
+		 *
+		 * Deliberately NOT a `status`. A status is a position in the pipeline and
+		 * moving it clears the stage and the next action, so pausing through the
+		 * status column would throw away the two fields needed to resume and then
+		 * need a `previous_status` to put them back. Pausing is orthogonal to where
+		 * the employer has got to, so it is stored orthogonally.
+		 *
+		 * A date rather than a flag because a paused application with nothing to
+		 * bring it back is a discontinued one, and there is already a status for
+		 * that. The lists filter on `snoozed_until > today`, which means an elapsed
+		 * snooze resurfaces on its own — no job to run, nothing to clear. The
+		 * elapsed value stays in the column as a true record that this was paused.
+		 *
+		 * No index: this is only ever read alongside `profile_id`, and a profile's
+		 * applications number in the tens.
+		 */
+		snoozed_until: date(),
+		/** One line on why, shown beside the badge. Optional. */
+		snooze_reason: varchar({ length: 255 }),
 		cv_version_sent: varchar({ length: 255 }),
 		/**
 		 * Which presentation template and which language the document went out in.

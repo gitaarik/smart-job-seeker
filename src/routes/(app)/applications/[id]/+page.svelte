@@ -18,7 +18,9 @@
 		faGlobe,
 		faHandPointRight,
 		faMapMarkerAlt,
+		faMugHot,
 		faPencil,
+		faPlay,
 		faMoneyBillWave,
 		faStickyNote,
 		faWrench,
@@ -41,6 +43,7 @@
 	import OfferCard from './OfferCard.svelte';
 	import DetailsCard from './DetailsCard.svelte';
 	import { hasOfferContent } from '$lib/application-offer';
+	import { describeSnooze, isSnoozed, snoozePresets, snoozeUntil } from '$lib/application-snooze';
 	import { formatSalaryRange, isSalarySingleValue, timeAgo } from '$lib/format';
 	import { formatDate as fmtDate } from '$lib/format-date';
 	import { profileDocUrl } from '$lib/utils/profile-doc-url';
@@ -79,6 +82,29 @@
 	let statusSaving = $state(false);
 	let quickSaving = $state(false);
 	let quickActions = $derived(getQuickStatusActions(app.status, app.status_step));
+
+	// Snooze. Beside the status rather than inside it: pausing your own work on
+	// an application says nothing about where the employer has got to.
+	let snoozed = $derived(isSnoozed(app, data.today));
+	let snoozeOpen = $state(false);
+	let snoozeSaving = $state(false);
+	let customUntil = $state('');
+	let snoozeReason = $state('');
+
+	function closeSnooze() {
+		snoozeOpen = false;
+		customUntil = '';
+		snoozeReason = '';
+	}
+
+	const snoozeSubmit = () => {
+		snoozeSaving = true;
+		return async ({ update }: { update: () => Promise<void> }) => {
+			await update();
+			snoozeSaving = false;
+			closeSnooze();
+		};
+	};
 
 	const quickToneClass: Record<string, string> = {
 		advance:
@@ -242,6 +268,128 @@
 					</div>
 				</div>
 			{/if}
+
+			<!-- Snooze: parking your own work on this, which is a different axis from
+			     the status above and so does not touch it. -->
+			<div class="border-t border-[var(--dash-border)] pt-3">
+				{#if snoozed && app.snoozed_until}
+					<div class="flex flex-wrap items-center justify-between gap-2">
+						<div class="min-w-0">
+							<p
+								class="flex items-center gap-1.5 text-sm font-medium text-[var(--dash-text-secondary)]"
+							>
+								<FontAwesomeIcon icon={faMugHot} class="h-3.5 w-3.5" />
+								Snoozed until {formatDate(app.snoozed_until)} — {describeSnooze(
+									app.snoozed_until,
+									data.today
+								)}
+							</p>
+							{#if app.snooze_reason}
+								<p class="mt-0.5 text-xs text-[var(--dash-text-muted)] italic">
+									{app.snooze_reason}
+								</p>
+							{/if}
+						</div>
+						<div class="flex items-center gap-2">
+							<form method="POST" action="?/updateSnooze" use:enhance={snoozeSubmit}>
+								<input type="hidden" name="until" value="" />
+								<button
+									type="submit"
+									disabled={snoozeSaving}
+									class="flex items-center gap-1.5 rounded-lg border border-[var(--dash-primary)] px-3 py-1.5 text-sm font-medium text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary)]/10 disabled:opacity-50"
+								>
+									<FontAwesomeIcon icon={faPlay} class="h-3 w-3" />
+									Resume now
+								</button>
+							</form>
+							<button
+								type="button"
+								onclick={() => (snoozeOpen = !snoozeOpen)}
+								class="text-xs text-[var(--dash-text-muted)] underline-offset-2 hover:underline"
+							>
+								Change
+							</button>
+						</div>
+					</div>
+				{:else}
+					<button
+						type="button"
+						onclick={() => (snoozeOpen = !snoozeOpen)}
+						class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
+					>
+						<FontAwesomeIcon icon={faMugHot} class="h-3 w-3" />
+						Snooze this application
+					</button>
+				{/if}
+
+				{#if snoozeOpen}
+					<form
+						method="POST"
+						action="?/updateSnooze"
+						use:enhance={snoozeSubmit}
+						class="mt-3 space-y-3 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-3"
+					>
+						<div class="flex flex-wrap gap-2">
+							{#each snoozePresets as preset (preset.value)}
+								<button
+									type="button"
+									onclick={() => (customUntil = snoozeUntil(preset.days, data.today))}
+									class="rounded-lg border px-3 py-1.5 text-sm transition-colors {customUntil ===
+									snoozeUntil(preset.days, data.today)
+										? 'border-[var(--dash-primary)] text-[var(--dash-primary)]'
+										: 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
+								>
+									{preset.label}
+								</button>
+							{/each}
+						</div>
+
+						<div class="flex flex-wrap items-end gap-3">
+							<label class="flex flex-col gap-1 text-xs text-[var(--dash-text-muted)]">
+								Comes back on
+								<input
+									type="date"
+									name="until"
+									bind:value={customUntil}
+									min={snoozeUntil(1, data.today)}
+									required
+									class="rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1.5 text-sm text-[var(--dash-text)]"
+								/>
+							</label>
+							<label
+								class="flex min-w-[180px] flex-1 flex-col gap-1 text-xs text-[var(--dash-text-muted)]"
+							>
+								Why (optional)
+								<input
+									type="text"
+									name="reason"
+									bind:value={snoozeReason}
+									maxlength="255"
+									placeholder="Too many in flight right now"
+									class="rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1.5 text-sm text-[var(--dash-text)]"
+								/>
+							</label>
+						</div>
+
+						<div class="flex items-center gap-2">
+							<button
+								type="submit"
+								disabled={snoozeSaving || !customUntil}
+								class="rounded-lg bg-[var(--dash-primary)] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:opacity-50"
+							>
+								{snoozed ? 'Update snooze' : 'Snooze'}
+							</button>
+							<button
+								type="button"
+								onclick={closeSnooze}
+								class="px-2 py-1.5 text-sm text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]"
+							>
+								Cancel
+							</button>
+						</div>
+					</form>
+				{/if}
+			</div>
 		</div>
 	</Card>
 
