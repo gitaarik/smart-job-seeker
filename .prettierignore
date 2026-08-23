@@ -28,5 +28,12 @@ dist-scripts/
 # --- Data, not source --------------------------------------------------------
 
 db-dumps/
-uploads/
-static/uploads/
+
+# Anchored with a leading slash: these name the *storage* directories at the
+# repo root. Written as `uploads/` the pattern matches a directory of that name
+# at any depth, which silently took `src/lib/server/uploads/` (the upload and
+# file-reap code) and `src/routes/uploads/` out of a gate whose whole point is
+# that it reports zero. Four source files were unformatted and unformattable
+# for as long as the line existed.
+/uploads/
+/static/uploads/
