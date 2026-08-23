@@ -49,6 +49,27 @@ export interface ReapResult {
 	failures: { path: string; error: string }[];
 }
 
+/** A `files` row no foreign key reaches, as reported by findOrphanedFiles. */
+export interface OrphanedFile {
+	id: string;
+	/** Bytes live at `uploads/files/<filename_disk>`; null means row-only. */
+	filenameDisk: string | null;
+	/** The name the user uploaded it under — often still identifying. */
+	filenameDownload: string;
+	filesize: number | null;
+	createdOn: Date;
+}
+
+export interface OrphanScanOptions {
+	/** Ignore rows younger than this. See findOrphanedFiles. */
+	minAgeDays?: number;
+	/** Cap the result set; omitted means every orphan. */
+	limit?: number;
+}
+
+/** Long enough that no upload flow can still be mid-link. */
+export const DEFAULT_ORPHAN_MIN_AGE_DAYS = 7;
+
 export const EMPTY_REFS: FileRefs = { fileIds: [], mediaPaths: [] };
 
 function mergeRefs(...refs: FileRefs[]): FileRefs {
@@ -150,6 +171,57 @@ async function referencingColumns(): Promise<{ table: string; column: string }[]
 }
 
 /**
+ * `files` rows nothing points at any more.
+ *
+ * This is the backlog side of the same question `reapFileRefs` asks about one
+ * profile: reachability is the only ownership signal `files` has, so a row no
+ * FK reaches is a row no user can ever see again. Every deletion that happened
+ * before this module existed left some — 334 of dev's 1,145 rows, measured
+ * 2026-08-22.
+ *
+ * **`minAgeDays` is not a nicety.** `uploadFile()` inserts the `files` row and
+ * *then* returns the id for the caller to store, so a row that is seconds old
+ * and unreferenced is an upload in flight, not litter. Anything sweeping this
+ * list must therefore ignore recent rows, and the default here is deliberately
+ * far longer than any upload flow takes.
+ */
+export async function findOrphanedFiles(opts: OrphanScanOptions = {}): Promise<OrphanedFile[]> {
+	const minAgeDays = opts.minAgeDays ?? DEFAULT_ORPHAN_MIN_AGE_DAYS;
+	const cutoff = new Date(Date.now() - minAgeDays * 24 * 60 * 60 * 1000);
+
+	const cols = await referencingColumns();
+	const guards = cols.map(
+		(r) => sql`NOT EXISTS (SELECT 1 FROM ${sql.raw(r.table)} WHERE ${sql.raw(r.column)} = files.id)`
+	);
+	const notReferenced = guards.length ? sql.join(guards, sql` AND `) : sql`true`;
+	const limit = opts.limit ? sql` LIMIT ${opts.limit}` : sql``;
+
+	const rows = await queryRawDirect<{
+		id: string;
+		filename_disk: string | null;
+		filename_download: string;
+		filesize: string | number | null;
+		created_on: string | Date;
+	}>(sql`
+		SELECT id::text AS id, filename_disk, filename_download, filesize, created_on
+		  FROM files
+		 WHERE created_on < ${cutoff}
+		   AND ${notReferenced}
+		 ORDER BY created_on${limit}
+	`);
+
+	return rows.map((r) => ({
+		id: r.id,
+		filenameDisk: r.filename_disk,
+		filenameDownload: r.filename_download,
+		// The driver hands raw SQL back untyped: bigint arrives as a string, and
+		// so does the timestamp — `.toISOString()` on it throws.
+		filesize: r.filesize === null ? null : Number(r.filesize),
+		createdOn: new Date(r.created_on)
+	}));
+}
+
+/**
  * Delete the rows and unlink the bytes.
  *
  * Call this **after** the owning rows are gone. A `files` row is deleted only
@@ -175,9 +247,7 @@ export async function reapFileRefs(refs: FileRefs): Promise<ReapResult> {
 			(r) =>
 				sql`NOT EXISTS (SELECT 1 FROM ${sql.raw(r.table)} WHERE ${sql.raw(r.column)} = files.id)`
 		);
-		const notReferenced = guards.length
-			? sql.join(guards, sql` AND `)
-			: sql`true`;
+		const notReferenced = guards.length ? sql.join(guards, sql` AND `) : sql`true`;
 
 		// Each id binds as its own parameter. Passing the JS array straight to
 		// `ANY($1::uuid[])` looks tidier and fails at runtime — the driver hands
