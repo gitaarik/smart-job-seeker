@@ -5,6 +5,18 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.22.0] - 2026-08-23
+
+9 commits since v0.21.0.
+
+### Added
+
+- Comprehensive user guide pages covering interview prep, salary negotiation, job matching, credits, data export, resume management, and connecting your own AI via MCP
+
+### Fixed
+
+- Search form no longer clears when Escape is pressed unintentionally
+
 ## [0.21.0] - 2026-08-23
 
 2 commits since v0.20.1.
