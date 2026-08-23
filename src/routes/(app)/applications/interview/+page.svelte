@@ -24,6 +24,7 @@
 	import { renderSafeMarkdown } from '$lib/utils/safe-markdown';
 	import { htmlToMarkdown } from '$lib/utils/html-to-markdown';
 	import { goto, invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
 
@@ -356,6 +357,15 @@
 			{@render addMenu()}
 		{/if}
 	</div>
+
+	<p class="text-sm text-[var(--dash-text-secondary)]">
+		Stories and cheat sheets belong to your profile, so they are ready for every interview, not just
+		this one.
+		<a
+			href={resolve('/guide/[slug]', { slug: 'interview-prep' })}
+			class="text-[var(--dash-primary)] hover:underline">Read the guide</a
+		>.
+	</p>
 
 	<!-- Filter tabs -->
 	{#if cheatsheets.length > 0 && stories.length > 0}

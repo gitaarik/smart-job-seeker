@@ -10,6 +10,9 @@ import howItWorks from './how-it-works.md?raw';
 import bestResults from './getting-the-best-results.md?raw';
 import devices from './devices.md?raw';
 import resumes from './resumes-and-cvs.md?raw';
+import sharing from './sharing-your-cv.md?raw';
+import interviewPrep from './interview-prep.md?raw';
+import salaryPrep from './salary-prep.md?raw';
 import assistant from './assistant.md?raw';
 import connectedApps from './connected-apps.md?raw';
 import faq from './faq.md?raw';
@@ -29,6 +32,9 @@ export const guideSections: GuideSection[] = [
 	},
 	{ slug: 'devices', title: 'Devices & sharing', markdown: devices },
 	{ slug: 'resumes-and-cvs', title: 'Resumes & CVs', markdown: resumes },
+	{ slug: 'sharing-your-cv', title: 'Sharing your CV', markdown: sharing },
+	{ slug: 'interview-prep', title: 'Interview prep', markdown: interviewPrep },
+	{ slug: 'salary-prep', title: 'Salary prep', markdown: salaryPrep },
 	{ slug: 'assistant', title: 'The AI assistant', markdown: assistant },
 	{
 		slug: 'connected-apps',

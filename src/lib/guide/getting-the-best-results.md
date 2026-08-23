@@ -85,3 +85,8 @@ send unread.
 Log applications, interviews, and follow-ups as you go. The
 [tracker](/applications) is what turns a pile of tabs into a pipeline you can
 actually manage.
+
+Once something reaches an interview, the answers you'll be asked for are worth
+writing down once rather than improvising each time —
+**[Interview prep](/guide/interview-prep)** — and the number you want is worth
+settling before anyone asks you for it: **[Salary prep](/guide/salary-prep)**.

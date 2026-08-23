@@ -11,6 +11,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../components/Card.svelte';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
+	import { resolve } from '$app/paths';
 	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import {
@@ -330,6 +331,14 @@
 
 <div class="space-y-6">
 	<SectionHeader title="Salary Prep" icon={faMoneyBillWave} />
+
+	<p class="text-sm text-[var(--dash-text-secondary)]">
+		Set this up once and every application measures your ask against it.
+		<a
+			href={resolve('/guide/[slug]', { slug: 'salary-prep' })}
+			class="text-[var(--dash-primary)] hover:underline">Read the guide</a
+		>.
+	</p>
 
 	<!-- Section 1: Region Rates -->
 	<Card padding="lg">

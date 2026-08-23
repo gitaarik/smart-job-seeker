@@ -11,6 +11,7 @@
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../components/SectionHeader.svelte';
+	import { resolve } from '$app/paths';
 	import EmptyState from '../components/EmptyState.svelte';
 	import ConfirmModal from '../components/ConfirmModal.svelte';
 	import ItemCard from '../components/ItemCard.svelte';
@@ -206,6 +207,14 @@
 		addLabel="Create Link"
 		onAdd={() => (showAddForm = true)}
 	/>
+
+	<p class="text-sm text-[var(--dash-text-secondary)]">
+		A private link is for one recipient: it can expire, count its views, and be revoked.
+		<a
+			href={resolve('/guide/[slug]', { slug: 'sharing-your-cv' })}
+			class="text-[var(--dash-primary)] hover:underline">Read the guide</a
+		>.
+	</p>
 
 	{#if form?.error}
 		<div class="rounded-lg border border-[var(--dash-error)] bg-[var(--dash-error-light)] p-4">

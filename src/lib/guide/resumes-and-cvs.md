@@ -67,8 +67,9 @@ Open a version to find:
 - **Contact details** — uncheck a field to keep it off this version's documents.
   Fields you left empty on your profile never appear anyway.
 - **Use as public resume / Use as public CV** — which version answers your
-  public profile link. For links you want to expire or count views, use
-  [Share Links](/profile/share) instead.
+  public profile link. Set neither and that link stops working entirely, leaving
+  your documents reachable only through a private share link. See
+  [Sharing your CV](/guide/sharing-your-cv).
 
 ## Templates, languages, PDFs
 
