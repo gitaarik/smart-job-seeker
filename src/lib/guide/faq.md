@@ -44,6 +44,20 @@ The scraping runs on **your** device (or the device shared with you), using that
 device's own IP — not a shared cloud pool. The device client is open source and
 its releases are signed; you can read exactly what runs on your hardware.
 
+## What costs credits?
+
+Running a job search and asking the AI to write something. Both are metered by
+what they actually did rather than charged as a flat fee, and everything else —
+browsing, matching, editing your profile, tracking applications, exporting your
+data — is free. The breakdown is in **[Credits](/guide/credits)**.
+
+## Can I delete my account?
+
+Yes, from [Delete Account](/data/delete). It's a real deletion, not an
+anonymisation: access stops immediately and the data is removed after 30 days,
+the same window as the backups. There's no self-service undo, so see
+**[Your data](/guide/your-data)** before you start.
+
 ## Can I use my own AI assistant instead of the built-in one?
 
 Yes — anything that speaks MCP (Claude, an AI-enabled editor, your own script)

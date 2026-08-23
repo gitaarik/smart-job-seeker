@@ -55,6 +55,15 @@ Whoever opens it signs in or creates an account right there and can immediately
 scrape through your device. You can revoke their access any time from the same
 dialog.
 
+## Contacts
+
+Sharing works through **[Contacts](/contacts)** — a mutual connection between two
+accounts. Send a request to someone's email address, they accept, and from then
+on either of you can share a device with the other without swapping links.
+
+An invite link is the shortcut for someone who isn't a contact yet, and works
+fine on its own. Contacts are for the people you'll share with more than once.
+
 ## Fair-use limits
 
 A device is a single IP address. If too many searches run through it too fast,

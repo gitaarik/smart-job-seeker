@@ -9,12 +9,15 @@
 import howItWorks from './how-it-works.md?raw';
 import bestResults from './getting-the-best-results.md?raw';
 import devices from './devices.md?raw';
+import matching from './matching.md?raw';
 import resumes from './resumes-and-cvs.md?raw';
 import sharing from './sharing-your-cv.md?raw';
 import interviewPrep from './interview-prep.md?raw';
 import salaryPrep from './salary-prep.md?raw';
 import assistant from './assistant.md?raw';
 import connectedApps from './connected-apps.md?raw';
+import credits from './credits.md?raw';
+import yourData from './your-data.md?raw';
 import faq from './faq.md?raw';
 
 export interface GuideSection {
@@ -31,6 +34,7 @@ export const guideSections: GuideSection[] = [
 		markdown: bestResults
 	},
 	{ slug: 'devices', title: 'Devices & sharing', markdown: devices },
+	{ slug: 'matching', title: 'Matching & alerts', markdown: matching },
 	{ slug: 'resumes-and-cvs', title: 'Resumes & CVs', markdown: resumes },
 	{ slug: 'sharing-your-cv', title: 'Sharing your CV', markdown: sharing },
 	{ slug: 'interview-prep', title: 'Interview prep', markdown: interviewPrep },
@@ -41,6 +45,8 @@ export const guideSections: GuideSection[] = [
 		title: 'Connecting your own AI',
 		markdown: connectedApps
 	},
+	{ slug: 'credits', title: 'Credits', markdown: credits },
+	{ slug: 'your-data', title: 'Your data', markdown: yourData },
 	{ slug: 'faq', title: 'FAQ & troubleshooting', markdown: faq }
 ];
 

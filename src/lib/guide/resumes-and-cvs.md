@@ -79,7 +79,8 @@ You get the built-in **Standard** template plus any custom templates on your
 profile. The language selector only appears once your profile has translations.
 
 Each version offers **Resume** and **CV**, each viewable in the browser or
-downloadable as **PDF**.
+downloadable as **PDF**. Viewing is free; generating a PDF costs one credit, so
+they're kept once made rather than re-rendered each time.
 
 ## Tailoring one to a specific job
 

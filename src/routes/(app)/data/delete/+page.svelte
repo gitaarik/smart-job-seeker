@@ -23,6 +23,14 @@
 <div class="space-y-6">
 	<SectionHeader title="Delete Account" icon={faUserSlash} />
 
+	<p class="text-sm text-[var(--dash-text-secondary)]">
+		Access stops immediately, the data goes after 30 days, and there is no self-service undo.
+		<a
+			href={resolve('/guide/[slug]', { slug: 'your-data' })}
+			class="text-[var(--dash-primary)] hover:underline">Read the guide</a
+		>.
+	</p>
+
 	{#if data.isDemo}
 		<div
 			class="rounded-lg border p-6"

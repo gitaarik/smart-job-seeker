@@ -39,6 +39,28 @@ switch is part of, are covered in
 > feature, give it a moment — the profile snapshot used by AI refreshes shortly
 > after you edit.
 
+### Files and source code
+
+A project — one inside a role, or a side project — can carry the material that
+describes it: source code, documentation, a ZIP, or a note you type yourself.
+Find it on the project's **Files & source code** tab.
+
+What happens to it matters more than that it's stored, because it mostly isn't:
+the text is extracted and summarised into reference notes, and **the original
+files are not kept**. Secrets are redacted on the way in. What survives is a
+summary the app can cite when a job turns out to be relevant to that project —
+so a cover letter can point at the thing you actually built rather than at your
+job title.
+
+The project's Details tab can then propose a description, an outcome and a list
+of technologies from what the scan found, for you to accept or ignore.
+
+If a project has a repository linked, you can **scan it** rather than uploading
+anything. Public repositories work as they are. Private ones need a GitHub
+connection — and when GitHub asks which repositories to grant, choose
+**"Only select repositories"**: it defaults to all of them, and one is all that's
+needed.
+
 ## 2. Finish setting up your Import Tasks
 
 You don't start from a blank slate. **When you first import your profile, SJS
@@ -70,6 +92,10 @@ you rely on **on a schedule** so fresh jobs arrive without you lifting a finger.
 After a scrape, jobs are scored against your profile. Work from your
 [top matches](/jobs?minScore=50) down instead of reading everything. Low scores
 are usually a sign the search is too broad — tighten the Import Task's filters.
+
+Which jobs get scored at all is a separate set of preferences, in
+[Match Config](/jobs/import/config) — including whether jobs other people
+imported are scored for you too. See **[Matching & alerts](/guide/matching)**.
 
 ## 4. Use AI for the writing, not the thinking
 

@@ -5,6 +5,7 @@
 	import Card from '../../../components/Card.svelte';
 	import ToggleSwitch from '../../../components/ToggleSwitch.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { resolve } from '$app/paths';
 	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 
@@ -214,6 +215,14 @@
 		Configure your job scoring preferences. Jobs are filtered based on these settings before being
 		scored by the AI. Jobs must have at least one overlapping skill and meet your job type and work
 		location criteria to be considered for scoring.
+	</p>
+
+	<p class="text-sm text-[var(--dash-text-secondary)]">
+		These are standing preferences, separate from the filters on any one Import Task.
+		<a
+			href={resolve('/guide/[slug]', { slug: 'matching' })}
+			class="text-[var(--dash-primary)] hover:underline">Read the guide</a
+		>.
 	</p>
 
 	<!-- Job Types -->

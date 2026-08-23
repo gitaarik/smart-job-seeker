@@ -41,4 +41,6 @@ never want to deal with the setup.
   **[Sharing your CV](/guide/sharing-your-cv)** when it's time to send one.
 - Got an interview? **[Interview prep](/guide/interview-prep)** and
   **[Salary prep](/guide/salary-prep)**.
+- Deciding which jobs count? **[Matching & alerts](/guide/matching)**.
+- Wondering what things cost? **[Credits](/guide/credits)**.
 - Stuck? Check the **[FAQ](/guide/faq)**.
