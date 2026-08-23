@@ -5,6 +5,17 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.2] - 2026-08-23
+
+9 commits since v0.19.1.
+
+### Fixed
+
+- Client Sentry error tracking now reads DSN from dynamic environment variables
+- Non-UUID asset requests now return 404 instead of 500 errors
+- Matcher now accepts fractional match scores
+- Matcher profile now exports successfully on the first batch
+
 ## [0.19.1] - 2026-08-23
 
 ### Fixed
