@@ -5,6 +5,15 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.1] - 2026-08-23
+
+2 commits since v0.20.0.
+
+### Fixed
+
+- Fixed registration gate incorrectly blocking in-process signups
+- Fixed job region classification gaps
+
 ## [0.20.0] - 2026-08-23
 
 13 commits since v0.19.2.
