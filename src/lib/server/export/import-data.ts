@@ -128,8 +128,8 @@ export async function importExportData(
 			throw new Error('Profile not found or not owned by user');
 		}
 
-		// Delete all child records
-		await deleteProfileChildren(overwriteProfileId);
+		// Clear the child records this payload is able to replace
+		await deleteProfileChildren(overwriteProfileId, data.scope);
 
 		// Generate unique name (excluding self)
 		const baseName = p.name || existingProfile.name || 'Imported Profile';
@@ -213,9 +213,14 @@ export async function importExportData(
 }
 
 /**
- * Delete all child records for a profile
+ * Clear the child records an overwrite import is about to replace.
+ *
+ * Only ever delete what the payload can put back. `importFullAccountEntities`
+ * runs for `scope: 'full'` alone, so anything it restores must be deleted under
+ * the same condition — otherwise a profile-scope import silently empties tables
+ * it never carried. That asymmetry is what cost the salary expectations below.
  */
-async function deleteProfileChildren(profileId: number): Promise<void> {
+async function deleteProfileChildren(profileId: number, scope: ExportData['scope']): Promise<void> {
 	// Documents first — the ones hanging off a work experience would otherwise
 	// survive their parent as unattached rows (ON DELETE SET NULL).
 	await deleteProfileDocuments(profileId);
@@ -230,9 +235,18 @@ async function deleteProfileChildren(profileId: number): Promise<void> {
 	await dbDirect.delete(languages).where(eq(languages.profile_id, profileId));
 	await dbDirect.delete(references).where(eq(references.profile_id, profileId));
 	await dbDirect.delete(certificates).where(eq(certificates.profile_id, profileId));
-	await dbDirect.delete(project_stories).where(eq(project_stories.profile_id, profileId));
-	await dbDirect.delete(cheat_sheets).where(eq(cheat_sheets.profile_id, profileId));
-	await dbDirect.delete(salary_expectations).where(eq(salary_expectations.profile_id, profileId));
+	// Stories and cheat sheets travel in the full-account payload only.
+	if (scope === 'full') {
+		await dbDirect.delete(project_stories).where(eq(project_stories.profile_id, profileId));
+		await dbDirect.delete(cheat_sheets).where(eq(cheat_sheets.profile_id, profileId));
+	}
+	// Not salary_expectations. The April 2026 salary overhaul moved this export's
+	// salary payload to the profile-level `salary_settings` fields and deleted the
+	// reader for the table, but left this delete behind — so an overwrite import
+	// wiped every row and put nothing back. The table outlived that overhaul and
+	// belongs to settings export/import now (`settings-export.ts`), which is the
+	// only thing that should replace it. A pre-overhaul payload that still carries
+	// the rows is handled in `importFullAccountEntities`.
 
 	// Delete tech skills (need to delete skills before categories)
 	const techCats = await dbDirect.query.tech_skill_categories.findMany({
@@ -303,20 +317,25 @@ async function deleteProfileChildren(profileId: number): Promise<void> {
 	}
 	await dbDirect.delete(profile_versions).where(eq(profile_versions.profile_id, profileId));
 
-	// Delete applications and children
-	const apps = await dbDirect.query.applications.findMany({
-		where: eq(applications.profile_id, profileId),
-		columns: { id: true }
-	});
-	for (const app of apps) {
-		await dbDirect
-			.delete(application_letters)
-			.where(eq(application_letters.application_id, app.id));
-		await dbDirect
-			.delete(application_questions)
-			.where(eq(application_questions.application_id, app.id));
+	// Delete applications and children — full-account payloads only, for the same
+	// reason as the stories above. Deleting a profile's whole application history
+	// on an import that cannot restore a single row of it is the worst version of
+	// this mistake available in this function.
+	if (scope === 'full') {
+		const apps = await dbDirect.query.applications.findMany({
+			where: eq(applications.profile_id, profileId),
+			columns: { id: true }
+		});
+		for (const app of apps) {
+			await dbDirect
+				.delete(application_letters)
+				.where(eq(application_letters.application_id, app.id));
+			await dbDirect
+				.delete(application_questions)
+				.where(eq(application_questions.application_id, app.id));
+		}
+		await dbDirect.delete(applications).where(eq(applications.profile_id, profileId));
 	}
-	await dbDirect.delete(applications).where(eq(applications.profile_id, profileId));
 }
 
 /**
@@ -764,6 +783,31 @@ async function importFullAccountEntities(profileId: number, data: FullExportData
 				salary_region_overrides: ss.region_overrides ? (ss.region_overrides as unknown) : undefined
 			})
 			.where(eq(profiles.id, profileId));
+	}
+
+	// Salary expectations (pre-April-2026 format). Nothing writes these any more —
+	// the table belongs to settings export/import — but an archive taken before the
+	// salary overhaul still carries them, and the payload owning them is the one
+	// case where replacing the profile's rows is right. Legacy payloads predate the
+	// `currency` column, so those rows fall back to the column default.
+	if (data.salary_expectations?.length) {
+		await dbDirect.delete(salary_expectations).where(eq(salary_expectations.profile_id, profileId));
+		for (const se of data.salary_expectations) {
+			await dbDirect.insert(salary_expectations).values({
+				profile_id: profileId,
+				sort: se.sort ?? null,
+				job_title: se.job_title || null,
+				company_type: se.company_type || '',
+				employment_type: se.employment_type || '',
+				work_arrangement: se.work_arrangement || '',
+				experience_level: se.experience_level || null,
+				region: se.region || '',
+				hourly_rate: se.hourly_rate ?? null,
+				month_salary: se.month_salary ?? null,
+				year_salary: se.year_salary ?? null,
+				daily_rate: se.daily_rate ?? null
+			});
+		}
 	}
 
 	// Applications. These hang off `jobs`, which is global rather than

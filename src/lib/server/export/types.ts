@@ -475,7 +475,12 @@ export interface FullExportData extends ExportEnvelope {
 	project_stories: ExportedProjectStory[];
 	cheat_sheets: ExportedCheatSheet[];
 	salary_settings?: ExportedSalarySettings;
-	/** @deprecated Legacy format — kept for backward-compatible imports */
+	/**
+	 * @deprecated Read-only. Written by exports taken before the April 2026 salary
+	 * overhaul, which replaced it with `salary_settings`; the table itself lives on
+	 * under settings export/import. Nothing populates this any more, but the
+	 * importer still restores it so those archives do not lose the rows.
+	 */
 	salary_expectations?: ExportedSalaryExpectation[];
 	job_preferences?: ExportedJobPreferences;
 	saved_jobs?: ExportedSavedJob[];

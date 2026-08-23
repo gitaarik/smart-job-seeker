@@ -364,7 +364,7 @@
 						<span class="text-sm text-[var(--dash-text)]">
 							Replace {selectedProfileName || 'the selected profile'}
 							<span class="block text-xs text-[var(--dash-text-secondary)]">
-								Deletes its current content first
+								Deletes the content this archive carries first
 							</span>
 						</span>
 					</label>
@@ -373,8 +373,11 @@
 				{#if importMode === 'overwrite'}
 					<div class="rounded-lg border border-amber-200 bg-amber-50 p-3">
 						<p class="text-xs text-amber-800">
-							Everything currently in {selectedProfileName || 'the selected profile'} — including its
-							uploaded documents — is deleted and replaced by the archive. This cannot be undone.
+							The CV content of {selectedProfileName || 'the selected profile'} — its experience, projects,
+							skills, CV versions and uploaded documents — is deleted and replaced by the archive. A full-account
+							archive replaces applications, stories and cheat sheets too; a profile-only one leaves them
+							alone. Salary expectations and job search settings are never touched here. This cannot be
+							undone.
 						</p>
 					</div>
 				{/if}
