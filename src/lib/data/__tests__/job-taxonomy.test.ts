@@ -16,6 +16,101 @@ import { describe, expect, it } from 'vitest';
 import { classifyRegion, isNonLocation } from '../job-taxonomy';
 
 describe('classifyRegion', () => {
+	describe('the 2026-08-23 audit gaps', () => {
+		// Closed after `audit-job-regions` put dev's defect count at 86 — almost
+		// all bare city names, which the classifier only ever matched as part of
+		// a country-qualified string.
+		it.each([
+			['Brooklyn', 'us'],
+			['Palo Alto', 'us'],
+			['Mountain View', 'us'],
+			['Sunnyvale', 'us'],
+			['Menlo Park', 'us'],
+			['San Bruno', 'us'],
+			['Redwood City', 'us'],
+			['Santa Monica', 'us'],
+			['Sausalito', 'us'],
+			['Pleasanton', 'us'],
+			['Boca Raton', 'us'],
+			['Bothell', 'us'],
+			['Glen Cove', 'us'],
+			['Overland Park', 'us'],
+			['Schaumburg', 'us'],
+			['Eagan', 'us'],
+			['Raleigh', 'us'],
+			['Milwaukee', 'us'],
+			['Louisville', 'us'],
+			['Wilmington', 'us'],
+			['Saint Augustine', 'us'],
+			['Reno', 'us'],
+			['Reston', 'us'],
+			['Swift Current', 'canada'],
+			['St John\u2019s', 'canada'],
+			['Sliedrecht', 'western_europe'],
+			['Meppel, Drenthe', 'western_europe'],
+			['Nerja (On-site)', 'western_europe'],
+			['Marsa', 'western_europe'],
+			['Alice Springs', 'asia_pacific'],
+			['Fulham Gardens', 'asia_pacific'],
+			['Cammeray', 'asia_pacific'],
+			['Carina Heights', 'asia_pacific'],
+			['Parramatta', 'asia_pacific'],
+			['Kazakhstan', 'asia_pacific'],
+			['Newry', 'uk'],
+			['Jerusalem', 'middle_east'],
+			['Algeria', 'africa'],
+			['Lusaka', 'africa'],
+			['Djibouti', 'africa'],
+			['MONTEVIDEO', 'latin_america']
+		])('classifies %s as %s', (location, expected) => {
+			expect(classifyRegion(location)).toBe(expected);
+		});
+
+		it('reads an ISO alpha-3 country code used as a prefix', () => {
+			// "CAN, Windsor" failed because the bare code is an exact alias, which
+			// a qualified string can never reach. One rule per region covers the
+			// whole family, including codes nobody has seen yet.
+			expect(classifyRegion('CAN, Windsor')).toBe('canada');
+			expect(classifyRegion('JPN, Tenri')).toBe('asia_pacific');
+			expect(classifyRegion('CHN, Shanghai; CHN, Shenzhen')).toBe('asia_pacific');
+			expect(classifyRegion('FRA')).toBe('western_europe');
+			expect(classifyRegion('UKR')).toBe('eastern_europe');
+		});
+
+		it('reaches a city buried in a street address or a decoration', () => {
+			// `includes` does this without any extra stripping, which is why
+			// "In office • X" needs no rule of its own.
+			expect(classifyRegion('Zeeweg 80, Overveen')).toBe('western_europe');
+			expect(classifyRegion('In office \u2022 Fort Wayne')).toBe('us');
+			expect(classifyRegion('Oklahoma City, Oklahoma')).toBe('us');
+			expect(classifyRegion('NYC (Onsite)')).toBe('us');
+		});
+
+		it('leaves genuinely ambiguous names unclassified', () => {
+			// Each of these names two places in different regions, and the string
+			// carries nothing to choose between them. A guess here is worse than a
+			// null: null is visible in the audit, a wrong region is not.
+			expect(classifyRegion('Alexandria')).toBeNull(); // Egypt / Virginia
+			expect(classifyRegion('Cambridge')).toBeNull(); // England / Massachusetts
+			expect(classifyRegion('IL')).toBeNull(); // Israel / Illinois
+			expect(classifyRegion('Jamaica')).toBeNull(); // the country / Queens NY
+			// …but the qualified form says which one it means.
+			expect(classifyRegion('Jamaica, Kingston')).toBe('latin_america');
+		});
+
+		it('does not disturb the country-qualified forms', () => {
+			// The regression this file was written for: short patterns reaching
+			// into country names. Re-pinned because 40-odd new ones just landed.
+			expect(classifyRegion('Amsterdam, Netherlands')).toBe('western_europe');
+			expect(classifyRegion('Kyiv, Ukraine')).toBe('eastern_europe');
+			expect(classifyRegion('Copenhagen, Denmark')).toBe('western_europe');
+			expect(classifyRegion('Austin, TX')).toBe('us');
+			expect(classifyRegion('London, UK')).toBe('uk');
+			expect(classifyRegion('Toronto, ON')).toBe('canada');
+			expect(classifyRegion('Ontario, California')).toBe('us');
+		});
+	});
+
 	it('returns null for empty input', () => {
 		expect(classifyRegion(null)).toBeNull();
 		expect(classifyRegion(undefined)).toBeNull();

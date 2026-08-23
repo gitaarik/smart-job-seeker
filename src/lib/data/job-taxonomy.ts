@@ -365,7 +365,8 @@ export const REGIONS: TaxonomyCategory = {
 				// Bare "America" — 6 rows on preview, the single largest gap. Exact
 				// match only, so it cannot claim "Latin America" (which owns its own
 				// exact alias anyway) or "South America".
-				{ text: 'america' }
+				{ text: 'america' },
+				{ text: 'nyc' }
 			],
 			patterns: [
 				// Spelled-out New Mexico. Needed on its own because the state-code
@@ -425,7 +426,39 @@ export const REGIONS: TaxonomyCategory = {
 				// US employment law, no visa for US citizens — even though Guam sits in
 				// the Pacific. Filed by who can take the job, not by longitude.
 				{ pattern: 'puerto rico', mode: 'includes' },
-				{ pattern: 'guam', mode: 'includes' }
+				{ pattern: 'guam', mode: 'includes' },
+				// Bare city names, from auditing dev's 86 unclassified locations. Only
+				// cities whose name does not also name a place elsewhere that this
+				// product plausibly sees — `alexandria` (Egypt), `cambridge` (UK) and
+				// `jamaica` (the country, and a Queens neighbourhood) are deliberately
+				// absent for exactly that reason.
+				{ pattern: 'brooklyn', mode: 'includes' },
+				{ pattern: 'palo alto', mode: 'includes' },
+				{ pattern: 'mountain view', mode: 'includes' },
+				{ pattern: 'sunnyvale', mode: 'includes' },
+				{ pattern: 'menlo park', mode: 'includes' },
+				{ pattern: 'san bruno', mode: 'includes' },
+				{ pattern: 'redwood city', mode: 'includes' },
+				{ pattern: 'santa monica', mode: 'includes' },
+				{ pattern: 'sausalito', mode: 'includes' },
+				{ pattern: 'pleasanton', mode: 'includes' },
+				{ pattern: 'boca raton', mode: 'includes' },
+				{ pattern: 'bothell', mode: 'includes' },
+				{ pattern: 'glen cove', mode: 'includes' },
+				{ pattern: 'overland park', mode: 'includes' },
+				{ pattern: 'schaumburg', mode: 'includes' },
+				{ pattern: 'eagan', mode: 'includes' },
+				{ pattern: 'raleigh', mode: 'includes' },
+				{ pattern: 'milwaukee', mode: 'includes' },
+				{ pattern: 'louisville', mode: 'includes' },
+				{ pattern: 'wilmington', mode: 'includes' },
+				{ pattern: 'saint augustine', mode: 'includes' },
+				{ pattern: 'oklahoma city', mode: 'includes' },
+				{ pattern: 'fort wayne', mode: 'includes' },
+				{ pattern: 'fort atkinson', mode: 'includes' },
+				// Exact only: too short to match as a substring safely.
+				{ pattern: '^reno$', mode: 'regex' },
+				{ pattern: '^reston$', mode: 'regex' }
 			]
 		},
 		{
@@ -465,7 +498,15 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: ', québec', mode: 'includes' },
 				{ pattern: ', british columbia', mode: 'includes' },
 				{ pattern: ', alberta', mode: 'includes' },
-				{ pattern: ', nova scotia', mode: 'includes' }
+				{ pattern: ', nova scotia', mode: 'includes' },
+				// ISO alpha-3 as a prefix: "CAN, Windsor". The bare code is an exact
+				// alias above, which cannot reach a qualified form — and a bare
+				// `windsor` pattern is unavailable here, since Windsor is also English.
+				{ pattern: '^can[,;]', mode: 'regex' },
+				{ pattern: 'swift current', mode: 'includes' },
+				{ pattern: "st john's", mode: 'includes' },
+				{ pattern: 'st. john\u2019s', mode: 'includes' },
+				{ pattern: 'st john\u2019s', mode: 'includes' }
 			]
 		},
 		{
@@ -518,7 +559,9 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: 'oxford, uk', mode: 'includes' },
 				{ pattern: 'leeds, uk', mode: 'includes' },
 				{ pattern: 'cardiff', mode: 'includes' },
-				{ pattern: 'in uk', mode: 'includes' }
+				{ pattern: 'in uk', mode: 'includes' },
+				{ pattern: 'newry', mode: 'includes' },
+				{ pattern: '^gbr[,;]', mode: 'regex' }
 			]
 		},
 		{
@@ -585,7 +628,9 @@ export const REGIONS: TaxonomyCategory = {
 				// pattern ("ita" and "che" both sit inside ordinary words).
 				{ text: 'che' },
 				{ text: 'esp' },
-				{ text: 'ita' }
+				{ text: 'ita' },
+				{ text: 'fra' },
+				{ text: 'marsa' }
 			],
 			patterns: [
 				// Dutch provinces and cities
@@ -790,7 +835,18 @@ export const REGIONS: TaxonomyCategory = {
 				// BEFORE the town. The US writes its five digits last ("Boston, MA
 				// 02101"), which is why this is anchored to the start — otherwise it
 				// would swallow every US address carrying a ZIP.
-				{ pattern: '^[0-9]{5}\\s+[a-zà-ÿ]', mode: 'regex' }
+				{ pattern: '^[0-9]{5}\\s+[a-zà-ÿ]', mode: 'regex' },
+				// Dutch towns the audit turned up, including one that arrives as a
+				// street address ("Zeeweg 80, Overveen") — `includes` reaches it.
+				{ pattern: 'sliedrecht', mode: 'includes' },
+				{ pattern: 'meppel', mode: 'includes' },
+				{ pattern: 'overveen', mode: 'includes' },
+				{ pattern: 'nerja', mode: 'includes' },
+				// ISO alpha-3 prefixes, same family as Canada's above.
+				{
+					pattern: '^(?:fra|nld|deu|esp|ita|bel|prt|che|aut|swe|dnk|nor|fin|irl)[,;]',
+					mode: 'regex'
+				}
 			]
 		},
 		{
@@ -825,7 +881,8 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'rou' },
 				{ text: 'cze' },
 				{ text: 'hun' },
-				{ text: 'alb' }
+				{ text: 'alb' },
+				{ text: 'ukr' }
 			],
 			patterns: [
 				// Country names with word boundaries — see the Western Europe
@@ -867,7 +924,8 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: ', bulgaria', mode: 'includes' },
 				// Czech regional forms — "BRNO-ŽIDENICE, SOUTH MORAVIA" names no country.
 				{ pattern: 'brno', mode: 'includes' },
-				{ pattern: 'moravia', mode: 'includes' }
+				{ pattern: 'moravia', mode: 'includes' },
+				{ pattern: '^(?:ukr|pol|rou|bgr|hrv|svk|svn|hun|cze|ltu|lva|est)[,;]', mode: 'regex' }
 			]
 		},
 		{
@@ -915,7 +973,8 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: 'ramat gan', mode: 'includes' },
 				{ pattern: 'istanbul', mode: 'includes' },
 				{ pattern: 'doha', mode: 'includes' },
-				{ pattern: 'ankara', mode: 'includes' }
+				{ pattern: 'ankara', mode: 'includes' },
+				{ pattern: 'jerusalem', mode: 'includes' }
 			]
 		},
 		{
@@ -952,7 +1011,9 @@ export const REGIONS: TaxonomyCategory = {
 				{ text: 'phl' },
 				{ text: 'idn' },
 				{ text: 'hkg' },
-				{ text: 'hong kong' }
+				{ text: 'hong kong' },
+				{ text: 'jpn' },
+				{ text: 'chn' }
 			],
 			patterns: [
 				// Country names with word boundaries — see the Western Europe
@@ -1008,7 +1069,15 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: 'china', mode: 'includes' },
 				// "IND - Coimbatore (708)" leads with the ISO code. Word-bounded so it
 				// cannot fire inside "index" or "individual".
-				{ pattern: '^ind\\b', mode: 'regex' }
+				{ pattern: '^ind\\b', mode: 'regex' },
+				{ pattern: 'alice springs', mode: 'includes' },
+				{ pattern: 'fulham gardens', mode: 'includes' },
+				{ pattern: 'cammeray', mode: 'includes' },
+				{ pattern: 'carina heights', mode: 'includes' },
+				{ pattern: 'parramatta', mode: 'includes' },
+				{ pattern: 'bunbury', mode: 'includes' },
+				{ pattern: 'kazakhstan', mode: 'includes' },
+				{ pattern: '^(?:jpn|chn|aus|nzl|ind|sgp|kor|idn|phl|tha|vnm|mys)[,;]', mode: 'regex' }
 			]
 		},
 		{
@@ -1031,7 +1100,10 @@ export const REGIONS: TaxonomyCategory = {
 				// ISO alpha-3, exact-match only.
 				{ text: 'per' },
 				{ text: 'bra' },
-				{ text: 'mex' }
+				{ text: 'mex' },
+				// The qualified form only. Bare "Jamaica" is left unclassified because
+				// it is also a neighbourhood in Queens, and the string cannot say which.
+				{ text: 'jamaica, kingston' }
 			],
 			patterns: [
 				// Country names with word boundaries — see the Western Europe
@@ -1061,7 +1133,8 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: 'brazil', mode: 'includes' },
 				// "Remote (LATAM, excluding Brazil…)" — the region shorthand, which
 				// existed as an alias but never as a substring.
-				{ pattern: 'latam', mode: 'includes' }
+				{ pattern: 'latam', mode: 'includes' },
+				{ pattern: 'montevideo', mode: 'includes' }
 			]
 		},
 		{
@@ -1102,7 +1175,10 @@ export const REGIONS: TaxonomyCategory = {
 				{ pattern: ', nigeria', mode: 'includes' },
 				{ pattern: ', kenya', mode: 'includes' },
 				{ pattern: ', egypt', mode: 'includes' },
-				{ pattern: 'uganda', mode: 'includes' }
+				{ pattern: 'uganda', mode: 'includes' },
+				{ pattern: 'algeria', mode: 'includes' },
+				{ pattern: 'lusaka', mode: 'includes' },
+				{ pattern: 'djibouti', mode: 'includes' }
 			]
 		}
 	]
