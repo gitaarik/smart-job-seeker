@@ -37,6 +37,7 @@
  * nothing it does not already get.
  */
 
+import { APP_AREAS } from '$lib/server/ai-chat/ability-manifest';
 import { CAPABILITIES, type Capability } from '$lib/server/ai-chat/capabilities';
 import { PROFILE_CAPABILITY_NAMES } from '$lib/server/ai-chat/profile-capabilities';
 import { ENTITY_CAPABILITY_NAMES, targetingFor } from './entities';
@@ -643,7 +644,17 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
 			`asking again will not help — say it is waiting and carry on.`,
 
 		`Do not invent history. Rewording what the applicant has said is in scope; ` +
-			`adding a role, a date or an employer they have not told you about is not.`
+			`adding a role, a date or an employer they have not told you about is not.`,
+
+		// The gap this closes is the mirror of the chat's: an agent holding fifty
+		// tools reads the absence of a tool as the absence of the feature, and
+		// tells the applicant their own app cannot do a thing it does. Named
+		// areas, so the answer is "that is on this page" rather than a refusal.
+		// Same list the assistant is given in-app — see ability-manifest.ts.
+		`This server is not the whole product, and most of it has no tool here: ` +
+			`${APP_AREAS.map((area) => `${area.name} (${area.path})`).join(', ')}. ` +
+			`When what they want is one of those, name it and say it is theirs to do, ` +
+			`rather than reporting that it cannot be done.`
 	].join('\n\n');
 }
 

@@ -376,10 +376,15 @@ const APPLICATION_SCOPE: RouteScope = {
  * each scope.
  *
  * A scope that can forget them is a scope that will: the whole class of bug
- * these two exist to kill is a route silently not requesting something. Listing
+ * these exist to kill is a route silently not requesting something. Listing
  * them per-scope would reproduce it one level up.
+ *
+ * `abilities` is the one that is not about this user at all — it is fixed text
+ * about the product — and it belongs here for the same reason as the rest: the
+ * page it is most needed on is the page that grants nothing, which is exactly
+ * the page most likely to have been written without thinking about it.
  */
-const ALWAYS: ContextSource[] = ['page_scope', 'activity_manifest', 'profile_edits'];
+const ALWAYS: ContextSource[] = ['page_scope', 'activity_manifest', 'profile_edits', 'abilities'];
 
 const ROUTE_SCOPES: Record<string, RouteScope> = {
 	// Longest prefix wins, so /applications/[id] keeps its own scope and

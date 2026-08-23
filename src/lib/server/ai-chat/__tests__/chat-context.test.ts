@@ -308,6 +308,9 @@ describe('resolveChatContext — orientation blocks', () => {
 
 			expect(ctx.sources, routeId).toContain('activity_manifest');
 			expect(ctx.sources, routeId).toContain('page_scope');
+			// The one that matters most on the routes granting nothing: those are
+			// where "you can't do that" is the whole answer without it.
+			expect(ctx.sources, routeId).toContain('abilities');
 		}
 	});
 

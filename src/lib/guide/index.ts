@@ -9,6 +9,7 @@
 import howItWorks from './how-it-works.md?raw';
 import bestResults from './getting-the-best-results.md?raw';
 import devices from './devices.md?raw';
+import assistant from './assistant.md?raw';
 import faq from './faq.md?raw';
 
 export interface GuideSection {
@@ -25,6 +26,7 @@ export const guideSections: GuideSection[] = [
 		markdown: bestResults
 	},
 	{ slug: 'devices', title: 'Devices & sharing', markdown: devices },
+	{ slug: 'assistant', title: 'The AI assistant', markdown: assistant },
 	{ slug: 'faq', title: 'FAQ & troubleshooting', markdown: faq }
 ];
 

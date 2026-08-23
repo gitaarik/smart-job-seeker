@@ -110,6 +110,13 @@ export type ContextSource =
 	 * exist. See profile-edit-manifest.ts.
 	 */
 	| 'profile_edits'
+	/**
+	 * What the assistant can propose anywhere, and what only the app can do.
+	 * Fixed text, cheap and unconditional, so that "not from this page" and "no
+	 * such thing" stop being the same sentence on every axis except the profile
+	 * — which `profile_edits` already covers. See ability-manifest.ts.
+	 */
+	| 'abilities'
 	| 'projects'
 	| 'stories'
 	| 'application_texts';
@@ -348,6 +355,19 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 		render: async (req) =>
 			(await import('./profile-edit-manifest')).profileEditManifestText(req.profileId)
 	},
+	abilities: {
+		variable: 'assistantAbilities',
+		// Below the two manifests it generalizes, above everything it frames. It
+		// is fixed text with no reads behind it, so it is also the cheapest block
+		// in this registry to keep and the least interesting one to drop.
+		priority: 87,
+		looked: () => true,
+		// Lazy for the reason profile_edits is, and more so: this one reaches
+		// `CAPABILITIES`, which pulls in the jobs, applications and profile write
+		// layers. `generation-context` is imported very widely and none of those
+		// importers wants that graph to merely name a source.
+		render: async () => (await import('./ability-manifest')).abilityManifestText()
+	},
 	activity_manifest: {
 		variable: 'activityManifest',
 		priority: 90,
@@ -546,6 +566,7 @@ const SOURCE_LABELS: Record<ContextSource, string> = {
 	page_scope: 'which page the user is on',
 	activity_manifest: 'the index of everything on record',
 	profile_edits: 'the index of what they can change and where',
+	abilities: 'the list of what you can do and what only the app can do',
 	application_activity: 'the history recorded on this application',
 	application_pipeline: "the applicant's other applications",
 	projects: "the applicant's projects",

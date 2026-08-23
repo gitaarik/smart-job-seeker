@@ -33,3 +33,16 @@ export async function requireConversationProfile(url: URL, userId: string): Prom
 	await requireProfileAccess(profileId, userId);
 	return profileId;
 }
+
+/**
+ * Whether this session may act as staff, from the session and never the body.
+ *
+ * Shared between the two handlers that resolve a chat context rather than
+ * derived twice: it is passed to `resolveChatContext` as the actor, where it
+ * widens what `authorize` allows, and two copies of a security-relevant
+ * derivation are two chances for one of them to drift.
+ */
+export function isStaffUser(user: unknown): boolean {
+	const claims = user as { is_staff?: boolean; is_admin?: boolean };
+	return !!claims?.is_staff || !!claims?.is_admin;
+}

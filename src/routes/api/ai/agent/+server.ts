@@ -13,6 +13,8 @@ import { requireCredits } from '$lib/server/billing/require-credits';
 import type { ChatMessage } from '$lib/server/llm';
 import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
 import { resolveChatContext } from '$lib/server/ai-chat/chat-context';
+import { CHAT_CONTEXT_PLACEHOLDERS } from './placeholders';
+import { isStaffUser } from './scope';
 import {
 	type CapabilityActor,
 	buildProposalSchema,
@@ -51,36 +53,6 @@ const PROFILE_DATA_FIELDS = [
 // Recent turns sent to the model as context (~20 user/assistant exchanges).
 // Older turns are dropped; summarization can be layered on later if needed.
 const MAX_CONTEXT_MESSAGES = 40;
-
-/**
- * Every evidence placeholder the personal_agent_chat templates reference.
- *
- * The provider only returns keys for the sources a route actually requests, but
- * the templates reference all of them — and an un-supplied placeholder ships to
- * the model as the literal text "${jobDetails}". Pre-filling with "" makes the
- * absent ones silently absent, which is what the prompt's own wording assumes.
- *
- * These go to `placeholderDefaults`, never to customVariables. As
- * customVariables they overrode the assembled evidence instead of backfilling
- * it, so every one of these sources was blanked before the model saw it —
- * the assistant reported it "can't access your uploaded documents" on a page
- * whose scope had just fetched them.
- */
-const CHAT_CONTEXT_PLACEHOLDERS = [
-	'jobDetails',
-	'applicationActivity',
-	'applicationPipeline',
-	'pageScope',
-	'activityManifest',
-	'profileEditManifest',
-	'relevantProjects',
-	'relevantStories',
-	'relevantApplicationTexts',
-	// Not a context source — the capability block, which the capable template
-	// references and the plain one doesn't. Pre-filled for the same reason as
-	// the rest: an un-supplied placeholder ships as literal "${capabilities}".
-	'capabilities'
-] as const;
 
 const EMPTY_CONTEXT_VARIABLES: Record<string, string> = Object.fromEntries(
 	CHAT_CONTEXT_PLACEHOLDERS.map((key) => [key, ''])
@@ -491,8 +463,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	// What the user is looking at, and what may be changed there — both resolved
 	// server-side from the route and authorized against this profile. `route` is
 	// client-supplied, so nothing derived from it is taken on trust.
-	const isStaff =
-		!!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
+	const isStaff = isStaffUser(user);
 	const { context, capabilities } = await resolveChatContext({
 		routeId: route,
 		params: routeParams ?? {},

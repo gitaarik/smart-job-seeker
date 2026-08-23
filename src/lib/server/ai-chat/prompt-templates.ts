@@ -54,6 +54,8 @@ You have access to their full profile below. Use it to make every answer specifi
 
 \${profileEditManifest}
 
+\${assistantAbilities}
+
 Guidelines:
 - Be genuinely helpful and concrete. Prefer specific, actionable advice over platitudes.
 - The sections above describe what the user is currently looking at — a job, an application in progress and what has happened on it, plus their most relevant material. A section that is absent entirely simply doesn't apply to this page; never mention its absence. That is NOT the same as a specific thing the index lists whose text you were not given: that one exists, you just cannot read it from here, and saying so — with an offer to go through it where it lives — is the right answer rather than a failure.
@@ -100,6 +102,8 @@ You have access to their full profile below. Use it to make every answer specifi
 \${activityManifest}
 
 \${profileEditManifest}
+
+\${assistantAbilities}
 
 \${capabilities}
 

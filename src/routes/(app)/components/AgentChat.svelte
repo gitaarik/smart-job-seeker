@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { resolve } from '$app/paths';
 	import { tick } from 'svelte';
 	import { browser } from '$app/environment';
 	import { renderSafeMarkdown } from '$lib/utils/safe-markdown';
@@ -105,6 +106,61 @@
 		restored = true;
 		restoreFromPointer();
 	});
+
+	/**
+	 * What this page's assistant could propose, for the empty state to say so.
+	 *
+	 * The panel's whole write half was undiscoverable: nothing anywhere told a
+	 * user that a job page will offer to rewrite the posting, or that an
+	 * application page will move it through its stages. They had to guess, and
+	 * the prompt-side answer to "what can you do" is only reachable by asking.
+	 *
+	 * Resolved server-side per route — the list is what a turn sent from here
+	 * would actually be allowed to do, `authorize` included, rather than what
+	 * the route declares. Fetched once per route while the panel is open and the
+	 * thread is empty, because each entry costs the server a read of the row's
+	 * current values.
+	 */
+	let abilities = $state<{ capability: string; title: string }[]>([]);
+	// Params and not only the route id: /jobs/[id] is one route and two answers,
+	// because one of those jobs may be theirs to edit and the next one not.
+	let abilitiesKey: string | undefined;
+
+	$effect(() => {
+		const route = $page.route.id;
+		const params = $page.params;
+		const profile = profileId;
+		// Reading `messages.length` here is what re-arms this after newChat().
+		if (!isOpen || !profile || messages.length > 0) return;
+		const key = `${profile}|${route}|${JSON.stringify(params)}`;
+		if (abilitiesKey === key) return;
+		abilitiesKey = key;
+		loadAbilities(profile, route ?? null, params);
+	});
+
+	async function loadAbilities(
+		profile: number,
+		route: string | null,
+		params: Record<string, string>
+	) {
+		try {
+			// Built by hand rather than with URLSearchParams: this is a one-shot
+			// string on the way to fetch(), and the reactive replacement the lint
+			// rule asks for is state this never becomes.
+			const query = [
+				`profile_id=${profile}`,
+				`params=${encodeURIComponent(JSON.stringify(params))}`,
+				...(route ? [`route=${encodeURIComponent(route)}`] : [])
+			].join('&');
+			const res = await fetch(`/api/ai/agent/abilities?${query}`);
+			const data = await res.json().catch(() => null);
+			// A failure is silence, not an error: this is an addition to the empty
+			// state, and the sentence it decorates stands on its own.
+			abilities = res.ok && data?.success ? (data.here ?? []) : [];
+		} catch {
+			abilities = [];
+		}
+	}
 
 	async function scrollToBottom() {
 		await tick();
@@ -462,9 +518,30 @@
 			<!-- Messages -->
 			<div bind:this={scrollEl} class="min-h-[120px] flex-1 space-y-3 overflow-y-auto px-4 py-3">
 				{#if messages.length === 0}
-					<p class="py-6 text-center text-sm text-[var(--dash-text-muted)]">
-						Ask me anything about your job search — your profile, this page, or what to do next.
-					</p>
+					<div class="py-6 text-sm text-[var(--dash-text-muted)]">
+						<p class="text-center">
+							Ask me anything about your job search — your profile, this page, or what to do next.
+						</p>
+						{#if abilities.length}
+							<p class="mt-4 text-xs">On this page I can also suggest changes for you to apply:</p>
+							<ul class="mt-1.5 space-y-1 text-xs">
+								{#each abilities as ability (ability.capability)}
+									<li class="flex gap-1.5">
+										<span aria-hidden="true">•</span>
+										<span>{ability.title}</span>
+									</li>
+								{/each}
+							</ul>
+						{/if}
+						<p class="mt-4 text-center text-xs">
+							<a
+								href={resolve('/guide')}
+								class="underline underline-offset-2 hover:text-[var(--dash-text-secondary)]"
+							>
+								What Smart Job Seeker can do
+							</a>
+						</p>
+					</div>
 				{/if}
 				{#each messages as msg}
 					{#if msg.role === 'user'}

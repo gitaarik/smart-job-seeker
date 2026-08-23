@@ -126,6 +126,8 @@ vi.mock('$lib/server/ai-chat/capabilities', () => ({
 }));
 
 import { POST } from '../+server';
+import { CHAT_CONTEXT_PLACEHOLDERS } from '../placeholders';
+import { promptTemplates } from '$lib/server/ai-chat/prompt-templates';
 
 /** The evidence placeholders the chat templates reference. */
 const EVIDENCE_KEYS = [
@@ -186,6 +188,23 @@ describe('evidence placeholders', () => {
 				`${key} must not be sent as a customVariable — it would override the assembled source`
 			).not.toHaveProperty(key);
 			expect(options.placeholderDefaults).toHaveProperty(key, '');
+		}
+	});
+
+	it('covers every placeholder the chat templates reference', async () => {
+		// The list above is hand-written and the templates are hand-written, so
+		// nothing but this connects them. An un-supplied placeholder does not
+		// fail — `interpolatePrompt` leaves it alone — it ships to the model as
+		// the literal text "${assistantAbilities}", which is how a whole context
+		// block can be added, wired, and silently never sent.
+		const assembled = new Set([...CHAT_CONTEXT_PLACEHOLDERS, 'data', 'message']);
+
+		for (const key of ['personal_agent_chat', 'personal_agent_chat_capable'] as const) {
+			const template = promptTemplates[key];
+			const text = `${template.system_prompt}\n${template.user_prompt}`;
+			for (const [, name] of text.matchAll(/\$\{(\w+)\}/g)) {
+				expect(assembled, `${key} references \${${name}}`).toContain(name);
+			}
 		}
 	});
 

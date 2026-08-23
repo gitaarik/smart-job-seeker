@@ -7,6 +7,7 @@
  * fields" by a server that could have said so in the schema.
  */
 import { describe, expect, it } from 'vitest';
+import { APP_AREAS } from '$lib/server/ai-chat/ability-manifest';
 import { CAPABILITIES } from '$lib/server/ai-chat/capabilities';
 import { ENTITY_CAPABILITY_NAMES, targetingFor } from '../entities';
 import {
@@ -162,6 +163,17 @@ describe('what the client is told before it sees a tool', () => {
 		const instructions = instructionsFor('documents');
 		expect(instructions).toContain('read_activity_entry');
 		expect(instructions).toContain('list_documents');
+	});
+
+	it('names the parts of the product that have no tool', () => {
+		// An agent reads a missing tool as a missing feature, and tells the
+		// applicant their own app cannot import jobs. Naming the page turns that
+		// into an answer; the list is the one the in-app assistant is given, so
+		// the two cannot disagree about what the product does.
+		const instructions = instructionsFor('documents');
+		for (const area of APP_AREAS) {
+			expect(instructions, area.name).toContain(`${area.name} (${area.path})`);
+		}
 	});
 
 	it('keeps what is true of every key at either scope', () => {
