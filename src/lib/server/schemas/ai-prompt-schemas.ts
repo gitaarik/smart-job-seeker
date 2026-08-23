@@ -111,7 +111,21 @@ export const extractJobDataSchema = z
  * Evaluates how well a job matches a candidate's profile
  */
 export const scoreJobMatchSchema = z.object({
-	score: z.number().int().min(0).max(100).describe('Overall match score'),
+	/**
+	 * Deliberately NOT `.int()`. gpt-oss answers a "0-100" percentage with a
+	 * fraction whenever the arithmetic produces one — `62.5` for 5 of 8 skills —
+	 * and an int constraint turns that into a Zod failure that discards the
+	 * *whole* match: the job goes unscored rather than scored 62.5. That was
+	 * ~10-14 lost scores a day on preview (GlitchTip 12777, 463 events since
+	 * May) for a value neither field needs to be an integer to produce.
+	 *
+	 * Rounding happens downstream either way, so nothing gains from rejecting
+	 * here: `score` is blended and `Math.round`ed in `calculateMatch`, and the
+	 * model's `skill_match_percentage` is discarded outright in favour of a
+	 * count computed from the validated skill matches. The bounds stay — those
+	 * catch a model answering on the wrong scale, which is a real error.
+	 */
+	score: z.number().min(0).max(100).describe('Overall match score'),
 	summary: z
 		.string()
 		.describe(
@@ -119,7 +133,6 @@ export const scoreJobMatchSchema = z.object({
 		),
 	skill_match_percentage: z
 		.number()
-		.int()
 		.min(0)
 		.max(100)
 		.describe('Percentage of required skills the candidate has'),

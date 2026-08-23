@@ -258,6 +258,21 @@ describe('AI Prompt Schemas', () => {
 			expect(() => scoreJobMatchSchema.parse(invalidScore)).toThrow();
 		});
 
+		// gpt-oss returns a fraction whenever the percentage arithmetic produces
+		// one (5 of 8 skills -> 62.5). Rejecting that used to discard the entire
+		// match rather than the decimal place.
+		it('should accept fractional scores and percentages', () => {
+			const fractional = {
+				score: 74.5,
+				summary: 'Summary',
+				skill_match_percentage: 62.5,
+				strengths: ['Strength 1'],
+				gaps: ['Gap 1'],
+				recommendation: 'recommend'
+			};
+			expect(() => scoreJobMatchSchema.parse(fractional)).not.toThrow();
+		});
+
 		it('should enforce valid recommendation enum', () => {
 			const invalidRecommendation = {
 				score: 85,
