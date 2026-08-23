@@ -48,7 +48,7 @@
  * inputs, and the orchestration lives in `$lib/server/import-tasks/auth-block`.
  */
 
-import { isAuthSetupFailure, isInfrastructureFailure, type FailureKind } from './failure-kinds';
+import { isInfrastructureFailure, needsHumanIntervention, type FailureKind } from './failure-kinds';
 
 /**
  * How many consecutive unattended auth failures before we act at all.
@@ -197,7 +197,7 @@ export function decideAuthBlockRemedy(
 		if (isInfrastructureFailure(run.failure_kind)) continue;
 		if (run.triggered_by === 'user') continue;
 
-		if (!isAuthSetupFailure(run.failure_kind)) {
+		if (!needsHumanIntervention(run.failure_kind)) {
 			bound = 'other-failure';
 			boundingKind = run.failure_kind;
 			break;
@@ -297,6 +297,11 @@ export interface ExplainContext {
 	/** True once the task has actually been switched off, which changes both
 	 *  what happened and what the user has to do about it. */
 	disabled?: boolean;
+	/** Name of the device a run was waiting for, when that is the problem.
+	 *  Someone with two machines registered needs to know which one to go and
+	 *  wake up; the run log already resolves it ("pinning to user's oldest
+	 *  registered key: Lightpunks NAS"). */
+	deviceLabel?: string | null;
 	/** Hours between retries while it stays blocked. */
 	retryInHours?: number;
 }
@@ -369,6 +374,37 @@ export function explainAuthBlock(kind: FailureKind, ctx: ExplainContext): Explan
 		ctx.disabled ? `Switched off — ${blocked}` : `Retrying less often — ${blocked}`;
 
 	switch (kind) {
+		// First, and pointedly not sharing `opening`: every other case here is a
+		// login problem, and telling someone their import "hasn't been able to
+		// log in" when their NAS is switched off sends them to fix the one thing
+		// that isn't broken. That mis-telling is the whole reason this kind
+		// exists — for months these runs reported "Could not connect to
+		// platform", which blames the job site for a machine sitting at home.
+		case 'device_unavailable': {
+			const device = ctx.deviceLabel ? `“${ctx.deviceLabel}”` : 'the device it scrapes with';
+			return {
+				title: `${subject} can't reach your device`,
+				message: ctx.disabled
+					? `Switched off ${ctx.taskLabel ? what : `your ${ctx.platform} import`}. Every run ` +
+						`for weeks has waited for ${device} to come online and given up, so it has ` +
+						`stopped retrying.
+
+` +
+						`Scraping runs on your own machine, so nothing can happen while that machine ` +
+						`is off, asleep, or disconnected. Bring it back online, check it still shows ` +
+						`as connected under Devices, then switch the task back on.`
+					: `${what} has waited for ${device} to come online on its last few scheduled runs ` +
+						`and found nothing there. It will keep trying ${everyN} instead of daily, so ` +
+						`nothing is lost.
+
+` +
+						`Scraping runs on your own machine rather than on our servers, so a run can ` +
+						`only start while that machine is on and connected. Check it is awake and ` +
+						`that it still shows as connected under Devices — the next scheduled run ` +
+						`picks up by itself once it is, and there is nothing to re-enter.`,
+				statusMessage: short('your device was not connected')
+			};
+		}
 		case 'auth_verification': {
 			const relay = ctx.relayAddress
 				? ` If the check is a code sent by email, you can also forward ${ctx.platform}'s ` +

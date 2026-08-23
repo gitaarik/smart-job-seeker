@@ -9,9 +9,15 @@
 	 *
 	 * The copy comes from the same `explainAuthBlock` the notification uses, so
 	 * the two can't drift into saying different things about one task.
+	 *
+	 * The heading is the exception, and deliberately so: the explanation's own
+	 * title repeats the task name, which the row above this already shows. It
+	 * does have to follow the *kind*, though — a device that never came online
+	 * is not a login problem, and this component said "Can't log in" for one
+	 * until 2026-08-23.
 	 */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faRightToBracket } from '@fortawesome/free-solid-svg-icons';
+	import { faPlugCircleXmark, faRightToBracket } from '@fortawesome/free-solid-svg-icons';
 	import { explainAuthBlock } from '$lib/import-tasks/failure-policy';
 	import { toFailureKind } from '$lib/import-tasks/failure-kinds';
 
@@ -28,6 +34,16 @@
 	} = $props();
 
 	let failureKind = $derived(toFailureKind(kind));
+	let isDevice = $derived(failureKind === 'device_unavailable');
+	let heading = $derived(
+		isDevice
+			? disabled
+				? 'Switched off — your device was offline'
+				: "Can't reach your device"
+			: disabled
+				? 'Switched off — login needs you'
+				: "Can't log in — needs you once"
+	);
 	let explanation = $derived(
 		failureKind ? explainAuthBlock(failureKind, { platform, taskLabel, disabled }) : null
 	);
@@ -44,12 +60,12 @@
 		"
 	>
 		<FontAwesomeIcon
-			icon={faRightToBracket}
+			icon={isDevice ? faPlugCircleXmark : faRightToBracket}
 			class="mt-0.5 h-3 w-3 shrink-0 text-amber-600 dark:text-amber-400"
 		/>
 		<div class="min-w-0">
 			<p class="font-semibold text-amber-700 dark:text-amber-400">
-				{disabled ? 'Switched off — login needs you' : "Can't log in — needs you once"}
+				{heading}
 			</p>
 			<p class="mt-0.5">{detail}</p>
 		</div>

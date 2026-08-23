@@ -43,7 +43,19 @@ export const FAILURE_KINDS = [
 	'auth_unknown',
 
 	// --- Everything else ----------------------------------------------------
-	/** Network-level: the platform (or the tunnel to the browser) was unreachable. */
+	/** The device that was supposed to run the browser never showed up: no
+	 *  tunnel connection within the wait, or a socket that was already dead.
+	 *  Distinct from `browser_disconnected`, which is a browser that *was*
+	 *  there and went away mid-run, and from `platform_unreachable`, which is
+	 *  about the far end. Only the user can fix this one, by bringing their
+	 *  machine back — see AUTH_SETUP_FAILURE_KINDS' note on futility. */
+	'device_unavailable',
+	/** Network-level: the platform itself was unreachable. Note that runs
+	 *  recorded before 2026-08-23 use this kind for device failures too — the
+	 *  live classifier matched the word "connection" anywhere in the message,
+	 *  and "Tunnel connection timeout" contains it. Every such run on dev and
+	 *  preview whose logs still existed turned out to be a missing device, not
+	 *  an unreachable platform. */
 	'platform_unreachable',
 	/** Our own automation threw — tunnel clickAt timeout, focus verification, IPC. */
 	'automation_error',
@@ -89,6 +101,33 @@ export const AUTH_SETUP_FAILURE_KINDS: readonly FailureKind[] = [
 /** True for failures that need a one-off human interaction with the platform. */
 export function isAuthSetupFailure(kind: FailureKind | null | undefined): boolean {
 	return kind != null && AUTH_SETUP_FAILURE_KINDS.includes(kind);
+}
+
+/**
+ * Every failure a scheduled run cannot clear by trying again.
+ *
+ * A superset of {@link AUTH_SETUP_FAILURE_KINDS}, and the set the back-off
+ * policy actually arms on. The auth family was the first member and named the
+ * original list, but the property that made it worth acting on was never
+ * "authentication" — it was futility: retrying unattended cannot succeed, so
+ * every scheduled retry is pure waste and the only fix is a person doing
+ * something once.
+ *
+ * A device that never connected has exactly that shape. It differs from an
+ * auth block only in *what* the person has to do — bring a machine back rather
+ * than complete a login — which is a difference in copy, not in policy.
+ *
+ * Deliberately NOT including `platform_unreachable`: a platform that was down
+ * is the case where retrying is precisely the right answer.
+ */
+export const HUMAN_INTERVENTION_FAILURE_KINDS: readonly FailureKind[] = [
+	...AUTH_SETUP_FAILURE_KINDS,
+	'device_unavailable'
+];
+
+/** True for failures no unattended retry can clear. */
+export function needsHumanIntervention(kind: FailureKind | null | undefined): boolean {
+	return kind != null && HUMAN_INTERVENTION_FAILURE_KINDS.includes(kind);
 }
 
 /**
@@ -195,6 +234,19 @@ export function classifyLegacyErrorMessage(message: string | null | undefined): 
 		return 'auth_unknown';
 	}
 
+	// Device failures, before the connection branch below — which is exactly
+	// the ordering the live classifier lacked. Note what this can and cannot
+	// recover: a run whose stored message is the *rendered* sentence "Could
+	// not connect to platform" is indistinguishable from a genuine platform
+	// outage by message alone, so those rows stay where they are. Only the
+	// messages that survived unrendered can be moved.
+	if (
+		m.startsWith('tunnel connection timeout') ||
+		m.startsWith('tunnel device connection is not open') ||
+		(m.includes('scraper timed out') && m.includes('dead tunnel'))
+	) {
+		return 'device_unavailable';
+	}
 	if (m.startsWith('could not connect to platform')) return 'platform_unreachable';
 	if (m.startsWith('local browser disconnected')) return 'browser_disconnected';
 	if (m.startsWith('platform access denied')) return 'access_denied';

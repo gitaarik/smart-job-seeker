@@ -24,6 +24,7 @@
 import { dbDirect as db } from '$lib/server/db';
 import { and, desc, eq, isNull } from 'drizzle-orm';
 import {
+	api_keys,
 	profiles,
 	search_task_runs,
 	search_tasks,
@@ -108,10 +109,13 @@ export async function evaluateAuthBlock(
 	const taskLabel = task.note?.trim() || task.search_term?.trim() || null;
 	const relayAddress =
 		remedy.kind === 'auth_verification' ? await relayAddressFor(task.profile_id) : null;
+	const deviceLabel =
+		remedy.kind === 'device_unavailable' ? await deviceLabelFor(searchTaskId) : null;
 	const explanation = explainAuthBlock(remedy.kind, {
 		platform,
 		taskLabel,
 		relayAddress,
+		deviceLabel,
 		disabled: remedy.act === 'disable',
 		retryInHours: remedy.act === 'backoff' ? remedy.retryInHours : undefined
 	});
@@ -266,6 +270,30 @@ async function relayAddressFor(profileId: number): Promise<string | null> {
 		columns: { full_address: true }
 	});
 	return row?.full_address ?? null;
+}
+
+/**
+ * Name of the device the task's runs have been waiting for.
+ *
+ * Read from the most recent run rather than from the task, because the task
+ * does not pin one: a run resolves a device at start time, and someone with
+ * two machines registered needs to be told which one to go and wake up.
+ * Returns null when the run named no key — the copy falls back to "the device
+ * it scrapes with", which is still true and still actionable.
+ */
+async function deviceLabelFor(searchTaskId: number): Promise<string | null> {
+	const run = await db.query.search_task_runs.findFirst({
+		where: eq(search_task_runs.search_task_id, searchTaskId),
+		orderBy: desc(search_task_runs.started_at),
+		columns: { api_key_id: true }
+	});
+	if (!run?.api_key_id) return null;
+
+	const key = await db.query.api_keys.findFirst({
+		where: eq(api_keys.id, run.api_key_id),
+		columns: { name: true }
+	});
+	return key?.name ?? null;
 }
 
 async function userIdForProfile(profileId: number): Promise<string | null> {

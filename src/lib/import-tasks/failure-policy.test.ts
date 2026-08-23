@@ -32,6 +32,7 @@ function runs(
 }
 
 const authFail = { status: 'error', kind: 'auth_verification' as const };
+const deviceFail = { status: 'error', kind: 'device_unavailable' as const };
 const ok = { status: 'success' };
 /** Fixture runs start at 2026-08-16 and go backwards a day at a time. */
 const NOW = new Date(Date.UTC(2026, 7, 16, 12));
@@ -108,9 +109,11 @@ describe('decideAuthBlockRemedy', () => {
 
 	describe('only unambiguous streaks count', () => {
 		it('refuses when a non-auth cause interrupts the recent failures', () => {
-			// An offline tunnel is not a login problem, and "go complete your
-			// login" would be the wrong instruction. It bounds the streak at 2,
-			// which is below the threshold, so nothing is disabled.
+			// A platform that was down is not a login problem, and "go complete
+			// your login" would be the wrong instruction. It bounds the streak at
+			// 2, which is below the threshold, so nothing is disabled. (An
+			// offline *device* is a different kind now and deliberately does not
+			// bound — see the device_unavailable cases.)
 			const v = decide(
 				runs(authFail, authFail, { kind: 'platform_unreachable' }, authFail, authFail, authFail)
 			);
@@ -273,6 +276,9 @@ describe('decideAuthBlockRemedy', () => {
 		for (const kind of authKinds) {
 			expect(decide(runs({ kind }, { kind }, { kind })).act).toBe('backoff');
 		}
+		// Not an auth failure, but the same futility: no unattended retry can
+		// bring a switched-off machine back, so it arms the same policy.
+		expect(decide(runs(deviceFail, deviceFail, deviceFail)).act).toBe('backoff');
 		const otherKinds: FailureKind[] = [
 			'platform_unreachable',
 			'automation_error',
@@ -291,6 +297,40 @@ describe('decideAuthBlockRemedy', () => {
 
 describe('explainAuthBlock', () => {
 	const ctx = { platform: 'LinkedIn', taskLabel: 'Senior TypeScript' };
+
+	describe('device_unavailable', () => {
+		it('does not tell the user their login is broken', () => {
+			// The whole point of the kind. Every other case here is a login
+			// problem, and sending someone to fix a login when their NAS is off
+			// is the mis-telling this replaced — for months these runs reported
+			// "Could not connect to platform", which blames the job site.
+			const e = explainAuthBlock('device_unavailable', ctx);
+			expect(e.title).not.toMatch(/log ?in/i);
+			expect(e.message).not.toMatch(/complete the check|password/i);
+			expect(e.message).toMatch(/your own machine/i);
+		});
+
+		it('names the device when one is known, and stays useful when not', () => {
+			const named = explainAuthBlock('device_unavailable', {
+				...ctx,
+				deviceLabel: 'Lightpunks NAS'
+			});
+			expect(named.message).toContain('Lightpunks NAS');
+
+			const unnamed = explainAuthBlock('device_unavailable', ctx);
+			expect(unnamed.message).toContain('the device it scrapes with');
+		});
+
+		it('says nothing is lost while it retries, and what changes when it stops', () => {
+			const backing_off = explainAuthBlock('device_unavailable', { ...ctx, retryInHours: 72 });
+			expect(backing_off.message).toMatch(/every 3 days/);
+			expect(backing_off.statusMessage).toMatch(/^Retrying less often/);
+
+			const off = explainAuthBlock('device_unavailable', { ...ctx, disabled: true });
+			expect(off.message).toMatch(/switch the task back on/i);
+			expect(off.statusMessage).toMatch(/^Switched off/);
+		});
+	});
 
 	it('names the task in the title, not just the platform', () => {
 		// Titles used to carry the platform alone, so several blocked tasks on
@@ -401,6 +441,11 @@ describe('classifyLegacyErrorMessage', () => {
 		],
 		['Login failed — Invalid password', 'auth_credentials'],
 		['Could not connect to platform', 'platform_unreachable'],
+		// Tunnel failures, which the live classifier used to file under
+		// platform_unreachable because the sentence contains "connection".
+		['Tunnel connection timeout — device not connected (waited 120000ms)', 'device_unavailable'],
+		['Tunnel device connection is not open', 'device_unavailable'],
+		['Desktop scraper timed out after 1200000ms (likely a dead tunnel)', 'device_unavailable'],
 		['Could not fill the search form', 'interaction_failed'],
 		['An unexpected error occurred', 'unknown'],
 		['Request timed out', 'timeout'],
