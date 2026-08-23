@@ -202,6 +202,25 @@ vi.mock('$lib/server/applications/status', async (importOriginal) => ({
 	revertApplicationStatus: (...a: unknown[]) => mockRevertStatus(...a)
 }));
 
+/**
+ * The application write layer, mocked for the reason the status one above is:
+ * this file asserts what `add_application` decides to create, and what the job
+ * row, the importer link and the match queue then do about it is
+ * `applications/create.ts` and has its own tests.
+ */
+const mockCreateApplication = vi.fn().mockResolvedValue({ applicationId: 501, jobId: 502 });
+const mockParseForNew = vi.fn().mockResolvedValue(null);
+vi.mock('$lib/server/applications/create', () => ({
+	createApplication: (...a: unknown[]) => mockCreateApplication(...a),
+	parseForNewApplication: (...a: unknown[]) => mockParseForNew(...a)
+}));
+
+/** The inventory `add_application` diffs against. Set per test. */
+const mockListApplications = vi.hoisted(() => vi.fn().mockResolvedValue([]));
+vi.mock('$lib/server/applications/profile-applications', () => ({
+	listProfileApplications: mockListApplications
+}));
+
 const mockCanEditJob = vi.fn();
 const mockApplyJobFields = vi.fn().mockResolvedValue(undefined);
 const mockApplyJobTexts = vi.fn().mockResolvedValue(undefined);
@@ -1745,6 +1764,124 @@ describe('add_activity_record', () => {
 	it('does not resolve on a page that is not an application', async () => {
 		expect(await def.resolve({ type: 'job', id: 900 }, ACTOR)).toBeNull();
 		expect(await def.resolve(null, ACTOR)).toBeNull();
+	});
+});
+
+describe('add_application', () => {
+	const def = CAPABILITIES.add_application;
+	const PROFILE_TARGET = { id: 12, label: 'their applications' };
+
+	beforeEach(() => {
+		mockCreateApplication.mockClear();
+		mockParseForNew.mockClear();
+		mockListApplications.mockResolvedValue([]);
+	});
+
+	it('is live where the page is about no single row, and nowhere else', async () => {
+		// MCP has no page at all, so null is the case that has to resolve.
+		expect(await def.resolve(null, ACTOR)).toEqual(PROFILE_TARGET);
+		expect(await def.resolve({ type: 'application', id: 42 }, ACTOR)).toBeNull();
+		expect(await def.resolve({ type: 'job', id: 900 }, ACTOR)).toBeNull();
+	});
+
+	it('refuses a row nobody could identify in a list', () => {
+		expect(def.validate({ application_source_url: 'https://example.com' }, {})).toMatchObject({
+			ok: false
+		});
+		// Whitespace is not a company.
+		expect(def.validate({ application_company: '   ' }, {})).toMatchObject({ ok: false });
+		expect(def.validate({ application_company: 'Citrus Flex B.V.' }, {})).toEqual({ ok: true });
+		expect(def.validate({ application_role: 'Software Engineer' }, {})).toEqual({ ok: true });
+	});
+
+	it('refuses a second application for a role already on the profile', () => {
+		const current = { existing: ['Software Engineer at Citrus Flex B.V. — Applying'] };
+
+		const clash = def.validate(
+			{ application_role: 'software engineer', application_company: 'citrus flex b.v.' },
+			current
+		);
+		expect(clash.ok).toBe(false);
+		if (!clash.ok) expect(clash.error).toContain('already an application');
+
+		// A different role at the same company is a different application.
+		expect(
+			def.validate(
+				{ application_role: 'Tech Lead', application_company: 'Citrus Flex B.V.' },
+				current
+			)
+		).toEqual({ ok: true });
+	});
+
+	it('trims what it was sent and starts no job it was told nothing about', async () => {
+		await def.apply(
+			PROFILE_TARGET,
+			{ application_company: '  Citrus Flex B.V. ', application_role: ' Software Engineer ' },
+			{},
+			ACTOR
+		);
+
+		expect(mockParseForNew).not.toHaveBeenCalled();
+		expect(mockCreateApplication).toHaveBeenCalledWith({
+			profileId: 12,
+			job: {
+				title: 'Software Engineer',
+				company: 'Citrus Flex B.V.',
+				source_url: null,
+				job_description: null
+			},
+			parsed: null
+		});
+	});
+
+	it('parses a pasted posting and hands the result to the writer', async () => {
+		mockParseForNew.mockResolvedValueOnce({ title: 'Parsed' });
+
+		await def.apply(
+			PROFILE_TARGET,
+			{
+				application_company: 'Citrus Flex B.V.',
+				application_job_description: 'a posting',
+				application_source_url: 'https://example.com/job'
+			},
+			{},
+			ACTOR
+		);
+
+		expect(mockParseForNew).toHaveBeenCalledWith('a posting', {
+			profileId: 12,
+			sourceUrl: 'https://example.com/job'
+		});
+		expect(mockCreateApplication).toHaveBeenCalledWith(
+			expect.objectContaining({ parsed: { title: 'Parsed' } })
+		);
+	});
+
+	it('names the application it made, not the profile it was added to', async () => {
+		const made = await def.apply(
+			PROFILE_TARGET,
+			{ application_company: 'Citrus Flex B.V.', application_role: 'Software Engineer' },
+			{},
+			ACTOR
+		);
+
+		expect(made).toEqual({ id: 501, label: 'Software Engineer at Citrus Flex B.V.' });
+	});
+
+	it('shows what it might duplicate, not a diff', async () => {
+		mockListApplications.mockResolvedValueOnce([
+			{ id: 1, job_title: 'Software Engineer', job_company: 'Citrus Flex B.V.', status: 'applying' }
+		]);
+
+		const current = await def.current(PROFILE_TARGET, ACTOR);
+		expect(current.existing).toEqual(['Software Engineer at Citrus Flex B.V. — Applying']);
+		expect(renderCapabilityBlock('add_application', [PROFILE_TARGET], current)).toContain(
+			'Do not add a second'
+		);
+	});
+
+	it('has no revert — an add is undone by deleting the row', () => {
+		expect(def.revert).toBeUndefined();
 	});
 });
 

@@ -40,7 +40,7 @@
 import { APP_AREAS } from '$lib/server/ai-chat/ability-manifest';
 import { CAPABILITIES, type Capability } from '$lib/server/ai-chat/capabilities';
 import { PROFILE_CAPABILITY_NAMES } from '$lib/server/ai-chat/profile-capabilities';
-import { ENTITY_CAPABILITY_NAMES, targetingFor } from './entities';
+import { APPLICATION_COLLECTION, ENTITY_CAPABILITY_NAMES, targetingFor } from './entities';
 import type { McpReadScope, McpScope } from './keys';
 import {
 	APPLICATION_PAGE_DEFAULT,
@@ -109,16 +109,29 @@ export function isReadTool(name: string): name is ReadTool {
 }
 
 /**
+ * The capabilities that MAKE a row rather than reaching one.
+ *
+ * A third group because they fit neither of the others: they are hand-written,
+ * so they are not generated from PROFILE_RESOURCES, and they take no id, so
+ * they are not in ENTITY_TARGETING. `writeTool` and `resolveTarget` already
+ * branch on `add_` for exactly this shape — a profile add names nothing either —
+ * so the only thing missing was the listing.
+ */
+const CREATE_CAPABILITY_NAMES: Capability[] = ['add_application'];
+
+/**
  * Which capabilities this server exposes: all of them.
  *
  * The profile ones are generated and reach rows this profile owns; the entity
  * ones are hand-written and reach a job or an application through
- * `entities.ts`. Nothing in the registry is held back now — which is worth
- * stating, because for one release something was.
+ * `entities.ts`; the create ones make a row that did not exist. Nothing in the
+ * registry is held back now — which is worth stating, because for one release
+ * something was.
  */
 export const MCP_CAPABILITIES: Capability[] = [
 	...PROFILE_CAPABILITY_NAMES,
-	...ENTITY_CAPABILITY_NAMES
+	...ENTITY_CAPABILITY_NAMES,
+	...CREATE_CAPABILITY_NAMES
 ];
 
 export function isMcpCapability(name: string): name is Capability {
@@ -275,6 +288,20 @@ function renderParents(
 		labels.map((label) => `  - ${label}`).join('\n') +
 		inventory
 	);
+}
+
+/**
+ * The MCP-only half of an add's contract: where to read what it might duplicate.
+ *
+ * The contracts are shared with the chat, which shows that inventory under the
+ * block via `renderState`. A tool description has no "below", so an add whose
+ * contract says to check what exists has to be told what to call — the same
+ * sentence `renderParents` appends for a profile add, for the same reason.
+ */
+function inventoryHintFor(capability: Capability): string | undefined {
+	return capability === 'add_application'
+		? 'For what they already have — the list this contract says to check — call list_applications.'
+		: undefined;
 }
 
 function writeTool(capability: Capability, parents?: string): McpTool {
@@ -659,6 +686,79 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
 }
 
 /**
+ * The name of the one write-side tool that is not a capability.
+ *
+ * It writes nothing itself — it hands back a URL, and the bytes that follow are
+ * written by `/api/mcp/upload`. That is why it is not in the registry: there is
+ * no row to diff, no field to overwrite, and nothing for a tier to grade. The
+ * write it enables is additive (a null `file_id` becomes a file) and is graded
+ * where it happens.
+ */
+export const UPLOAD_TOOL = 'request_file_upload';
+
+const uploadTool: McpTool = {
+	name: UPLOAD_TOOL,
+	description: `Get a link for putting a FILE on an activity entry — a PDF, a
+screenshot, an email, a signed contract.
+
+Do not try to send the file to this server as text. A tool argument is paid for
+in the model's own context, so a scanned document would cost more tokens than
+fits in one, and would arrive as base64 nobody can read. This tool exists so the
+bytes never pass through you at all.
+
+Three steps:
+1. Add the entry first with add_activity_record, and keep the id it returns.
+2. Call this with that "entry_id" and the "filename" you will send.
+3. PUT the file's bytes to the "upload_url" this returns, as the raw body —
+   not multipart, not base64, not JSON. Any HTTP client can do it; with curl it
+   is: curl -X PUT --data-binary @<path> -H "authorization: Bearer <your key>"
+   "<upload_url>"
+
+The link is good for 15 minutes, for that one entry, once. An entry that already
+has a file will not take another — add a new entry for a new file. Attaching a
+file does not replace what the entry says: the text is read out of the file and
+added to it, so an entry with a note already on it keeps the note.
+
+If the reply says the file could not be read, that is normal for a photograph or
+a scan with no text layer. The file is attached and downloadable; there was
+simply no text in it to extract.`,
+	inputSchema: {
+		type: 'object',
+		properties: {
+			profile_id: PROFILE_ID_PROPERTY,
+			application_id: {
+				type: 'integer',
+				description: 'Which application, by the id returned from list_applications.'
+			},
+			entry_id: {
+				type: 'integer',
+				description:
+					'Which activity entry the file goes on, by the bracketed id in ' +
+					'read_application. It must not already have a file.'
+			},
+			filename: {
+				type: 'string',
+				description:
+					'The name to store it under, WITH its extension — the extension decides ' +
+					'how the file is typed and how its text is read, and it is signed into ' +
+					'the link, so the bytes you send must match it.'
+			}
+		},
+		required: ['profile_id', 'application_id', 'entry_id', 'filename'],
+		additionalProperties: false
+	},
+	annotations: {
+		title: 'Get a file-upload link',
+		readOnlyHint: false,
+		// It writes nothing on its own, and asking twice returns another link to
+		// the same slot rather than a second attachment.
+		destructiveHint: false,
+		idempotentHint: true,
+		openWorldHint: false
+	}
+};
+
+/**
  * The tool list, filtered by what the credential may do.
  *
  * A `read` key is not shown the write tools at all. Listing a tool that always
@@ -683,7 +783,11 @@ export async function toolsFor(
 	// offers, and the wrong one to serve to an agent, which is why the route
 	// passes the key's profile.
 	const parents = actor ? await parentBlocksFor(actor) : null;
-	return [...tools, ...MCP_CAPABILITIES.map((c) => writeTool(c, parents?.get(c)))];
+	return [
+		...tools,
+		uploadTool,
+		...MCP_CAPABILITIES.map((c) => writeTool(c, parents?.get(c) ?? inventoryHintFor(c)))
+	];
 }
 
 /**
@@ -707,6 +811,12 @@ export function sectionFor(capability: Capability): ProfileResourceName | null {
  * per row, so that answer needs the id and lives in `entities.ts`.
  */
 export function pageFor(capability: Capability): { name: string; path: string } | null {
+	// The create capabilities have no targeting to ask and no section to slice:
+	// the row they make is new, and where it lives is a property of the verb.
+	// Without this the applied-result has no "remove it again from…" line, which
+	// is the only thing that tells the applicant where a wrong row went.
+	if (capability === 'add_application') return APPLICATION_COLLECTION;
+
 	const section = sectionFor(capability);
 	if (!section) return null;
 	const resource = PROFILE_RESOURCES[section];

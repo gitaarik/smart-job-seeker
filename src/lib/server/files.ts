@@ -50,6 +50,21 @@ function getMimeType(filename: string): string {
 	return EXT_TO_MIME[ext] || 'application/octet-stream';
 }
 
+/** The extensions this store can type, as a sentence for a refusal to quote. */
+export const SUPPORTED_UPLOAD_EXTENSIONS = Object.keys(EXT_TO_MIME);
+
+/**
+ * Whether a filename is one this store recognises.
+ *
+ * The same list `getMimeType` reads rather than a second one beside it: a door
+ * that accepted what the store could not type would write `application/
+ * octet-stream` rows that download as unopenable files, and the divergence
+ * would only show up in someone's Downloads folder.
+ */
+export function isSupportedUpload(filename: string): boolean {
+	return extname(filename).toLowerCase() in EXT_TO_MIME;
+}
+
 export async function uploadFile(options: UploadFileOptions): Promise<UploadedFile> {
 	const id = randomUUID();
 	const ext = extname(options.filename).toLowerCase();

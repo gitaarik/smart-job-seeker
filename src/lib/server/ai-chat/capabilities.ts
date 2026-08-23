@@ -68,6 +68,8 @@ import {
 } from '$lib/server/applications/status';
 import type { EditSource } from './edit-log';
 import type { TierDecision } from '$lib/server/mcp/tiers';
+import { createApplication, parseForNewApplication } from '$lib/server/applications/create';
+import { listProfileApplications } from '$lib/server/applications/profile-applications';
 import { deriveRecordMetadata } from './record-derivation';
 import { summarizeApplication } from './application-summary';
 
@@ -84,7 +86,8 @@ type HandWrittenCapability =
 	| 'edit_job_skills'
 	| 'edit_application_details'
 	| 'update_application_status'
-	| 'add_activity_record';
+	| 'add_activity_record'
+	| 'add_application';
 
 /**
  * Everything the assistant may propose. The profile half is generated from
@@ -1420,6 +1423,181 @@ drop the other, and an entry is also the unit the chronology is read in.`,
 	}
 };
 
+/* ------------------------------------------------------------------ *
+ * add_application
+ * ------------------------------------------------------------------ */
+
+/** How many of the existing applications the model sees, so it makes no second. */
+const APPLICATIONS_SHOWN = 30;
+
+/** The trimmed string a field holds, or null — the shape `createApplication` takes. */
+function trimmedOrNull(value: unknown): string | null {
+	const text = typeof value === 'string' ? value.trim() : '';
+	return text === '' ? null : text;
+}
+
+/**
+ * Start an application, with the manually-created job behind it.
+ *
+ * ## Why this one creates a job, when the rest of the registry only reaches one
+ *
+ * Every other entity capability names a row that exists: `jobs` has no owner
+ * column, so an id is a global address and `profile-jobs.ts` is what stops an
+ * agent walking the table. Creating is not that question. The row this makes is
+ * `created_manually`, linked to this profile through `job_importers`, and
+ * reachable by exactly the scope that could already read it — so it widens what
+ * an agent can make, and not one row of what it can see.
+ *
+ * The title and the company are the reason the job is made at all. They live on
+ * `jobs`, so an application without one renders as a blank line in every list —
+ * a fine state to pass through while filling a form in, and a poor one to leave
+ * behind from a call that was told the company's name.
+ *
+ * ## Why it is additive rather than a request
+ *
+ * The generic grading in `tiers.ts` already answers this: an add replaces
+ * nothing. It is worth saying out loud anyway, because an application is a
+ * heavier row than a skill — it carries a status, a log, and a place in the
+ * pipeline. What makes it safe is that all of that starts empty and the row has
+ * a delete button on its own page, so a wrong one costs a click. Nothing here
+ * writes over a judgement the applicant made; the burst ceiling still applies,
+ * so an agent in a loop fills a review queue rather than the pipeline.
+ */
+const addApplication: CapabilityDef = {
+	title: 'Add an application',
+	// Only where the page is about no single row — the applications list, and
+	// every MCP call, which has no page at all. Not offered on a row's own page:
+	// an application page is the tightest prompt budget on the site, and "add
+	// another application" is not what someone reading one is asking for.
+	resolve: async (entity, actor) =>
+		entity ? null : { id: actor.profileId, label: 'their applications' },
+
+	authorize: async (target, actor) => target.id === actor.profileId,
+
+	// Not a diff — there is no row yet. What the model needs is what it might
+	// duplicate, which is the same question `add_*` asks across the profile half.
+	current: async (_target, actor) => {
+		const existing = await listProfileApplications(actor.profileId, {
+			limit: APPLICATIONS_SHOWN
+		});
+		return {
+			existing: existing.map(
+				(row) =>
+					`${applicationLabel({ title: row.job_title, company: row.job_company })} — ` +
+					`${getStatusLabel(row.status)}`
+			)
+		};
+	},
+
+	// Prefixed, because buildProposalSchema merges every live capability's fields
+	// into one object: `title`, `company` and `source_url` are already the job's.
+	fields: {
+		application_company: 'string',
+		application_role: 'string',
+		application_source_url: 'string',
+		application_job_description: 'string'
+	},
+
+	contract: `Start a new application, for a role the applicant has told you they
+are going for.
+
+- "application_company" — who they would be working for.
+- "application_role" — the job title.
+- "application_source_url" — where the posting is, if they gave you one.
+- "application_job_description" — the posting text, if they pasted it. Send it
+  verbatim; it is stored as given and read for skills, seniority and location, so
+  a summary of it makes a worse application than no description at all.
+
+At least one of "application_company" and "application_role" is REQUIRED —
+without either, the result is a row nobody can identify in a list.
+
+It always starts at the beginning of the pipeline: applying, Preparing, "Send
+application". That is what starting one means, and you cannot set it here. If
+they have already sent it, or already heard back, add the application first and
+then move it with update_application_status — that tool keeps the history
+straight, and this one would not.
+
+Do not add one because a role came up in conversation. A posting they are
+reading, a company they are curious about and a job you found for them are none
+of them applications. Add one when they say they are applying, or have applied.
+
+Check what they already have before you add: a second application for a role
+already there is the mistake this is most likely to make, and one whose company
+and title both match an existing application is refused rather than created.
+One call per role — two roles at the same company are two applications.`,
+
+	renderState: (current) => {
+		const existing = (current.existing as string[] | undefined) ?? [];
+		return existing.length > 0
+			? `Already on this profile, most recent first. Do not add a second ` +
+					`application for one of these:\n\n${existing.map((line) => `  - ${line}`).join('\n')}`
+			: 'There are no applications on this profile yet.';
+	},
+
+	validate: (fields, current) => {
+		const company = trimmedOrNull(fields.application_company);
+		const role = trimmedOrNull(fields.application_role);
+		if (!company && !role) {
+			return {
+				ok: false,
+				error:
+					'An application needs at least a company or a role title — without either it ' +
+					'is a blank row in every list.'
+			};
+		}
+
+		// The same guard the profile adds carry, and for the same reason: a second
+		// application for one role is not a card the applicant wants to decline, it
+		// is one they have to find and delete.
+		const label = applicationLabel({ title: role, company }).trim().toLowerCase();
+		const existing = Array.isArray(current.existing) ? (current.existing as string[]) : [];
+		const clash = existing.find(
+			(entry) => String(entry).split(' — ')[0].trim().toLowerCase() === label
+		);
+		if (clash) {
+			return {
+				ok: false,
+				error:
+					`There is already an application for "${applicationLabel({ title: role, company })}" ` +
+					`on this profile (${clash}). Change that one rather than adding a second.`
+			};
+		}
+
+		return { ok: true };
+	},
+
+	apply: async (_target, fields, _current, actor) => {
+		const company = trimmedOrNull(fields.application_company);
+		const role = trimmedOrNull(fields.application_role);
+		const sourceUrl = trimmedOrNull(fields.application_source_url);
+		const description = trimmedOrNull(fields.application_job_description);
+
+		// Same enrichment the form gets, and best-effort in the same way: a parse
+		// failure leaves the posting stored verbatim rather than blocking the write.
+		// `reviewed` stays false, which is the gap-fill semantics this wants — what
+		// the agent sent wins, the parser fills what it left out.
+		const parsed = description
+			? await parseForNewApplication(description, { profileId: actor.profileId, sourceUrl })
+			: null;
+
+		const { applicationId } = await createApplication({
+			profileId: actor.profileId,
+			job: {
+				title: role,
+				company,
+				source_url: sourceUrl,
+				job_description: description
+			},
+			parsed
+		});
+
+		// The application, not the profile it was added to — the target this was
+		// called with names the profile, which is what to authorize against and the
+		// wrong thing to call the change.
+		return { id: applicationId, label: applicationLabel({ title: role, company }) };
+	}
+};
+
 /**
  * The capability registry — the one place a write is taught to the assistant.
  * Add an entry here and every route scope that lists it can propose that edit.
@@ -1431,6 +1609,7 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
 	edit_application_details: editApplicationDetails,
 	update_application_status: updateApplicationStatus,
 	add_activity_record: addActivityRecord,
+	add_application: addApplication,
 	...PROFILE_CAPABILITIES
 };
 

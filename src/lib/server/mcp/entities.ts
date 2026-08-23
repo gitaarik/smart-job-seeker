@@ -104,13 +104,22 @@ const jobTargeting: EntityTargeting = {
 	}
 };
 
+/**
+ * The applications list, named once.
+ *
+ * Shared with `add_application`, which is not in ENTITY_TARGETING — it makes a
+ * row rather than naming one, so it has no targeting to ask where its result
+ * lives, and the answer is the same list either way.
+ */
+export const APPLICATION_COLLECTION = { name: 'Applications', path: '/applications' };
+
 const applicationTargeting: EntityTargeting = {
 	entity: 'application',
 	arg: 'application_id',
 	argDescription: 'Which application, by the id returned from list_applications.',
 	listTool: 'list_applications',
 	page: (id) => ({ name: 'application', path: `/applications/${id}` }),
-	collection: { name: 'Applications', path: '/applications' },
+	collection: APPLICATION_COLLECTION,
 	resolve: async (id, actor) => {
 		const application = await readProfileApplication(id, actor.profileId);
 		if (!application) {

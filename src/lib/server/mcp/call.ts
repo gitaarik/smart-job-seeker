@@ -74,8 +74,13 @@ import {
 	isReadTool,
 	pageFor,
 	sectionFor,
-	MCP_CAPABILITIES
+	MCP_CAPABILITIES,
+	UPLOAD_TOOL
 } from './tools';
+import { GRANT_MAX_AGE_MS, MAX_UPLOAD_BYTES, signUploadGrant } from './upload-grants';
+import { isSupportedUpload, SUPPORTED_UPLOAD_EXTENSIONS } from '$lib/server/files';
+import { findAttachableRecord } from '$lib/server/applications/record-files';
+import { getEnv } from '$lib/tools/get-env';
 import { JOB_CAPABILITIES } from './entities';
 import type { VerifiedMcpKey } from './keys';
 
@@ -922,6 +927,91 @@ function notifyRequest(
  * Entry point
  * ------------------------------------------------------------------ */
 
+/**
+ * Mint a link for putting one file on one entry.
+ *
+ * Everything this checks is checked again at the far end, and deliberately: the
+ * grant is signed, not stored, so the endpoint cannot assume the world still
+ * looks the way it did when the link was made. What this buys is the refusal
+ * arriving in the conversation, where the agent can act on it, rather than
+ * fifteen minutes later in an HTTP status it may not read.
+ */
+async function requestFileUpload(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+	if (key.scope === 'read') {
+		return fail(
+			`This key is read-only, so it cannot attach anything. Its scope is set on ` +
+				`the applicant's MCP keys page.`
+		);
+	}
+
+	const applicationId = argInt(args, 'application_id');
+	if (applicationId === null) {
+		return fail('application_id is required. Call list_applications to find it.');
+	}
+	const recordId = argInt(args, 'entry_id');
+	if (recordId === null) {
+		return fail('entry_id is required. Call read_application for the ids on its log.');
+	}
+
+	const filename = typeof args.filename === 'string' ? args.filename.trim() : '';
+	if (!filename) return fail('filename is required, with its extension.');
+	// A name that walks out of the uploads directory, or arrives without the
+	// extension the store types it by. Checked here rather than only at the far
+	// end so the agent can fix it while it still has the file in hand.
+	if (filename.includes('/') || filename.includes('\\') || filename.includes('..')) {
+		return fail('filename must be a plain name, with no path in it.');
+	}
+	if (!isSupportedUpload(filename)) {
+		return fail(
+			`"${filename}" is not a type this stores. Accepted: ` +
+				`${SUPPORTED_UPLOAD_EXTENSIONS.join(', ')}.`
+		);
+	}
+
+	const application = await readProfileApplication(applicationId, key.profileId);
+	if (!application) {
+		return fail(
+			`There is no application ${applicationId} on this profile. Call ` +
+				`list_applications for the current ids.`
+		);
+	}
+
+	const record = await findAttachableRecord(recordId, applicationId);
+	if (!record) {
+		return fail(
+			`There is no entry ${recordId} on application ${applicationId}. Call ` +
+				`read_application for the ids on its log.`
+		);
+	}
+	if (record.hasFile) {
+		return fail(
+			`Entry ${recordId} ("${record.title}") already has a file, and a file cannot ` +
+				`be replaced once attached. Add a new entry for the new file.`
+		);
+	}
+
+	const grant = signUploadGrant({ profileId: key.profileId, applicationId, recordId }, filename);
+	const base = getEnv('SJS_APP_URL_HOST', 'http://localhost:5173').replace(/\/$/, '');
+	const uploadUrl = `${base}/api/mcp/upload?grant=${encodeURIComponent(grant)}`;
+
+	return ok(
+		`Ready for "${filename}" on entry ${recordId} ("${record.title}").\n\n` +
+			`PUT the raw bytes to:\n${uploadUrl}\n\n` +
+			`Send your API key as the authorization header on that request too — the ` +
+			`link alone is not enough. It is good for ${Math.round(GRANT_MAX_AGE_MS / 60000)} ` +
+			`minutes, once, up to ${Math.round(MAX_UPLOAD_BYTES / (1024 * 1024))}MB. The reply ` +
+			`will say whether any text could be read out of it.`,
+		{
+			upload_url: uploadUrl,
+			method: 'PUT',
+			expires_in_seconds: Math.round(GRANT_MAX_AGE_MS / 1000),
+			max_bytes: MAX_UPLOAD_BYTES,
+			entry_id: recordId,
+			filename
+		}
+	);
+}
+
 export async function callTool(name: string, args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
 	if (name === 'list_profile_sections') {
 		// The only tool that does not take a profile_id, because it is how an agent
@@ -969,6 +1059,8 @@ export async function callTool(name: string, args: Args, key: VerifiedMcpKey): P
 				return listPendingChanges(args, key);
 		}
 	}
+
+	if (name === UPLOAD_TOOL) return requestFileUpload(args, key);
 
 	if (!isMcpCapability(name)) {
 		return fail(`No tool named "${name}".`);

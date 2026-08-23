@@ -6,7 +6,7 @@ import { application_records, applications } from '$lib/server/db/schema';
 import { getSelectedProfileId } from '../../../profile/utils';
 import { deriveRecordTitle, recordTypeValues, today } from '$lib/application-records';
 import { deleteFile, uploadFile } from '$lib/server/files';
-import { extractRecordFile } from '$lib/server/ai-chat/application-activity';
+import { readFileIntoRecord } from '$lib/server/applications/record-files';
 import { deriveRecordMetadata } from '$lib/server/ai-chat/record-derivation';
 import { summarizeApplication } from '$lib/server/ai-chat/application-summary';
 import { Buffer } from 'buffer';
@@ -191,17 +191,12 @@ export const actions: Actions = {
 		});
 		if (!record) return fail(404, { error: 'Record not found' });
 
-		const text = await extractRecordFile(id);
-		// Now there is content to read, so this is where a file-backed entry gets
-		// its real title, type, date and contacts.
-		if (text) {
-			await deriveRecordMetadata(id, resolved.profileId);
-			await summarizeApplication(resolved.app.id, resolved.profileId);
-		}
-		// A file with no extractable text (an image, a scan) is not an error — the
-		// entry and the download still stand. extractRecordFile has already marked
-		// it "skipped" so nothing retries it.
-		return { success: true, extracted: !!text };
+		// Shared with the MCP upload door, which arrives at the same point by a
+		// different route: this is where a file-backed entry gets its real title,
+		// type, date and contacts, and a file with no extractable text (an image,
+		// a scan) is not an error — the entry and the download still stand.
+		const extracted = await readFileIntoRecord(id, resolved.app.id, resolved.profileId);
+		return { success: true, extracted };
 	},
 
 	update: async ({ request, locals, cookies, params }) => {

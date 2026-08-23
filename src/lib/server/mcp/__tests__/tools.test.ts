@@ -15,9 +15,11 @@ import {
 	instructionsFor,
 	isReadTool,
 	MCP_CAPABILITIES,
+	pageFor,
 	READ_TOOLS,
 	sectionFor,
-	toolsFor
+	toolsFor,
+	UPLOAD_TOOL
 } from '../tools';
 
 const write = await toolsFor('write');
@@ -49,6 +51,35 @@ describe('what is exposed', () => {
 	});
 });
 
+describe('the upload door', () => {
+	it('is offered to a key that can write, and to no read key', async () => {
+		expect(byName.get(UPLOAD_TOOL)).toBeDefined();
+
+		const read = await toolsFor('read');
+		expect(read.map((tool) => tool.name)).not.toContain(UPLOAD_TOOL);
+	});
+
+	it('is not a capability, and takes no rationale', () => {
+		// It writes nothing itself — the bytes are written by /api/mcp/upload — so
+		// there is no row to diff and nothing for a tier to grade.
+		expect(MCP_CAPABILITIES).not.toContain(UPLOAD_TOOL);
+		expect(byName.get(UPLOAD_TOOL)!.inputSchema.required).toEqual([
+			'profile_id',
+			'application_id',
+			'entry_id',
+			'filename'
+		]);
+	});
+
+	it('tells the agent not to send the file through itself', () => {
+		// The failure this description exists to prevent: an agent base64ing a
+		// 3MB scan into a tool argument and blowing its own context.
+		const description = byName.get(UPLOAD_TOOL)!.description;
+		expect(description).toContain('never pass through you');
+		expect(description).toContain('PUT');
+	});
+});
+
 describe('how a write names its row', () => {
 	it('gives a job or an application capability its own id argument', () => {
 		for (const capability of ENTITY_CAPABILITY_NAMES) {
@@ -69,6 +100,28 @@ describe('how a write names its row', () => {
 		// An application is not implied by anything.
 		expect(byName.get('add_activity_record')!.inputSchema.required).toContain('application_id');
 		expect(byName.get('add_language')!.inputSchema.required).not.toContain('entry_id');
+	});
+
+	it('makes the one that CREATES an application name nothing at all', () => {
+		// The third shape on this server: not an entity capability, because there
+		// is no row to name, and not a generated profile one either. The key says
+		// which profile, and everything else is a field.
+		const required = byName.get('add_application')!.inputSchema.required ?? [];
+		expect(required).not.toContain('application_id');
+		expect(required).not.toContain('entry_id');
+		expect(required).toEqual(['profile_id', 'rationale']);
+	});
+
+	it('tells the create capability where to read what it might duplicate', () => {
+		// Its contract says to check what exists; the chat shows that list under
+		// the block, and a tool description has no "below" to show it in.
+		expect(byName.get('add_application')!.description).toContain('call list_applications');
+	});
+
+	it('sends a wrongly-created application to the list it lives on', () => {
+		// Without this the applied-result carries no "remove it again from…" line,
+		// because an add has no undo and `sectionFor` has no section to slice.
+		expect(pageFor('add_application')).toEqual({ name: 'Applications', path: '/applications' });
 	});
 
 	it('keeps entry_id for the sections it was written for', () => {

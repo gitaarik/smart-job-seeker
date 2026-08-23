@@ -355,6 +355,21 @@ interface ExtractableRow {
  * recorded as "skipped" so it is never retried, and never fails the caller —
  * context is a bonus, not a precondition.
  */
+/**
+ * Whether extracted text is text, or only the shape of a document.
+ *
+ * `pdf-parse` emits a `-- 1 of 6 --` marker per page whether or not the page
+ * had any text on it, so a scan with no text layer does not come back empty —
+ * it comes back as six markers and nothing else, which a plain truthiness test
+ * reads as success. The entry is then "extracted" with its content set to page
+ * numbers, and nothing anywhere says the file was unreadable.
+ *
+ * Strip what the extractor itself added and see whether anything is left.
+ */
+function hasSubstance(text: string): boolean {
+	return text.replace(/^\s*-{1,3}\s*\d+\s+of\s+\d+\s*-{1,3}\s*$/gim, '').replace(/\s+/g, '') !== '';
+}
+
 async function ensureExtracted(row: ExtractableRow, cached: string | null): Promise<string | null> {
 	if (row.extraction_status === 'extracted') return cached?.trim() || null;
 	if (row.extraction_status === 'skipped') return null;
@@ -372,23 +387,38 @@ async function ensureExtracted(row: ExtractableRow, cached: string | null): Prom
 			.map((f) => f.text)
 			.join('\n\n')
 			.trim();
-		if (!text) {
+		if (!hasSubstance(text)) {
 			await markSkipped(row.id, 'no extractable text');
 			return null;
 		}
-		// The extracted text lands in `content`, where it stays user-editable —
-		// fix bad OCR, trim a quoted reply chain. The file is provenance, not the
-		// source of truth.
+
+		// Whatever the entry already said comes FIRST, and survives.
+		//
+		// This used to be an unconditional overwrite, which was harmless while the
+		// only door was the composer: it attaches a file as the entry is created,
+		// so there was nothing to lose. Both of those assumptions are now false.
+		// The composer takes text and a file in the same entry, and MCP attaches a
+		// file to an entry that already exists — so an overwrite silently ate a
+		// note somebody typed. Measured on a real one: a 2,400-character summary
+		// replaced by 92 characters of page markers.
+		//
+		// The extraction is appended rather than merged because the two are
+		// different kinds of thing: what a person wrote about the file, and what
+		// was in it. Both stay user-editable, which is the point — the file is
+		// provenance, not the source of truth.
+		const existing = cached?.trim() ?? '';
+		const content = existing && existing !== text ? `${existing}\n\n---\n\n${text}` : text;
+
 		await db
 			.update(application_records)
 			.set({
-				content: text,
+				content,
 				extraction_status: 'extracted',
 				extraction_error: null,
 				date_extracted: new Date()
 			})
 			.where(eq(application_records.id, row.id));
-		return text;
+		return content;
 	} catch (err) {
 		await markSkipped(row.id, (err as Error).message);
 		return null;

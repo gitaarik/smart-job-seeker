@@ -13,6 +13,13 @@
  * Getting that backwards silently resurrects extracted values the user
  * deliberately deleted, which is invisible until you inspect the job row —
  * hence the coverage here.
+ *
+ * The merge itself now lives in `$lib/server/applications/create.ts`, shared
+ * with `add_application` over MCP. These stay end-to-end through the action on
+ * purpose: what they assert is the behaviour a person submitting the form gets,
+ * and asserting instead that the action called the writer would leave the two
+ * free to disagree about what a cleared field means. `create.test.ts` covers
+ * the writer's own edges — the ones no form can reach.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -42,18 +49,22 @@ const mockParseCacheKey = vi.fn();
 const mockRecallParse = vi.fn();
 const mockTriggerMatchForImport = vi.fn().mockResolvedValue(undefined);
 
-vi.mock('$lib/server/db', () => ({
-	dbDirect: {
+// One handle behind both names. The action reads the form and `create.ts`
+// writes the rows, and those two reach the database by different exports —
+// `dbDirect` is the route convention, `db` the one every shared writer under
+// $lib/server uses. Mocking only the first is how this suite failed when the
+// inserts moved: nineteen tests, all reporting that `insert` was undefined.
+vi.mock('$lib/server/db', () => {
+	const handle = {
 		query: {
 			job_platforms: {
 				findFirst: (...a: any[]) => mockPlatformFindFirst(...a)
 			}
 		},
 		insert: (...a: any[]) => mockInsert(...a)
-	},
-	queryRaw: vi.fn(),
-	sql: vi.fn()
-}));
+	};
+	return { db: handle, dbDirect: handle, queryRaw: vi.fn(), sql: vi.fn() };
+});
 
 vi.mock('drizzle-orm', () => ({
 	ilike: vi.fn((_c: any, v: any) => v),
