@@ -2,6 +2,7 @@
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { assetUrl, DEFAULT_TEMPLATE_ID } from '$lib/resume-templates';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -177,6 +178,14 @@
 		addLabel="Add Version"
 		onAdd={() => (showAddForm = true)}
 	/>
+
+	<p class="text-sm text-[var(--dash-text-secondary)]">
+		A version decides which parts of your profile a document prints — it is not a separate copy.
+		<a
+			href={resolve('/guide/[slug]', { slug: 'resumes-and-cvs' })}
+			class="text-[var(--dash-primary)] hover:underline">How versions work</a
+		>.
+	</p>
 
 	<!-- Language switcher: re-lenses every doc link + the generate button.
        Shown only when the profile has translations in another language. -->

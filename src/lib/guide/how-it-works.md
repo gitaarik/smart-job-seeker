@@ -37,4 +37,5 @@ never want to deal with the setup.
 - New here? Read
   **[Getting the best results](/guide/getting-the-best-results)**.
 - Want to scrape? Set up **[Devices & sharing](/guide/devices)**.
+- Building documents to send? **[Resumes & CVs](/guide/resumes-and-cvs)**.
 - Stuck? Check the **[FAQ](/guide/faq)**.

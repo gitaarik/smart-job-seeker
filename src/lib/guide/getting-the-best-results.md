@@ -30,7 +30,9 @@ and add it straight to your profile. It starts profile-only.
 
 If one turns out to be worth showing after all, you can put it on **all**
 documents, or on a single resume/CV version — useful when a skill belongs on
-your backend CV but not your frontend one.
+your backend CV but not your frontend one. Versions, and the rest of what that
+switch is part of, are covered in
+**[Resumes & CVs](/guide/resumes-and-cvs)**.
 
 > Adding a skill doesn't re-score jobs you've already matched; it counts from
 > the next match onward. And if you add a skill and immediately run an AI
@@ -72,7 +74,9 @@ are usually a sign the search is too broad — tighten the Import Task's filters
 ## 4. Use AI for the writing, not the thinking
 
 For jobs you like, generate a **cover letter**, **application answers**, or a
-**follow-up** — then edit. The output is a strong first draft tuned to your
+**follow-up** — then edit. (Choosing which resume to send, and tailoring one to
+a posting, is a separate thing and does not rewrite a word: see
+**[Resumes & CVs](/guide/resumes-and-cvs)**.) The output is a strong first draft tuned to your
 profile and that specific job; it's there to save you the blank page, not to
 send unread.
 
