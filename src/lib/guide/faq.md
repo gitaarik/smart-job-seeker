@@ -44,6 +44,17 @@ The scraping runs on **your** device (or the device shared with you), using that
 device's own IP — not a shared cloud pool. The device client is open source and
 its releases are signed; you can read exactly what runs on your hardware.
 
+## Can I use my own AI assistant instead of the built-in one?
+
+Yes — anything that speaks MCP (Claude, an AI-enabled editor, your own script)
+can be pointed at one profile from
+**[Connected Apps](/data/connected-apps)**. You choose what each key may do and
+what it may see, and you can revoke it at any moment. Rewriting what you wrote
+and hiding entries always come back to you for approval, whatever the key is
+allowed to do.
+
+Full walkthrough: [Connecting your own AI](/guide/connected-apps).
+
 ## Can I run the whole thing myself?
 
 Yes — the app is open source (GPLv3). Self-hosting the full platform (app,

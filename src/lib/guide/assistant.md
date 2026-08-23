@@ -43,13 +43,12 @@ and it will point you at the page.
 ## Using your own AI assistant instead
 
 If you already work with an AI assistant elsewhere — Claude, or anything else
-that speaks MCP — you can connect it to your Smart Job Seeker profile from
+that speaks MCP — you can point it at your profile instead, from
 [Connected Apps](/data/connected-apps). It gets the same reading and the same
-suggest-but-never-apply rule: changes it proposes wait for you under Recent
-Changes.
+suggest-but-never-apply rule.
 
-You choose what a key may reach — reading only, or reading and suggesting — and
-you can revoke it at any time.
+You choose what each key may do and what it may see, and you can revoke it at
+any time: **[Connecting your own AI](/guide/connected-apps)**.
 
 ## Costs
 

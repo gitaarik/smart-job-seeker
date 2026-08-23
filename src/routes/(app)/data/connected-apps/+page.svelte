@@ -2,6 +2,7 @@
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faPlug, faTrash } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
@@ -90,6 +91,13 @@
 		Give an AI assistant outside Smart Job Seeker — Claude, an editor, your own script — access to
 		one profile, over the Model Context Protocol. Each key is tied to a single profile and can be
 		revoked on its own.
+	</p>
+
+	<p class="text-sm text-[var(--dash-text-secondary)]">
+		New to this? <a
+			href={resolve('/guide/[slug]', { slug: 'connected-apps' })}
+			class="text-[var(--dash-primary)] hover:underline">Connecting your own AI</a
+		> walks through it, and explains what each choice below actually costs you.
 	</p>
 
 	<div class="rounded-lg border border-[var(--dash-border)] p-4">
