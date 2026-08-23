@@ -5,6 +5,29 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] - 2026-08-23
+
+13 commits since v0.19.2.
+
+### Added
+
+- Daily automatic email pruning to enforce data retention policies
+- Age-capped pre-deploy database dumps
+- Disconnected devices and dead tunnel runs now classified as distinct failure categories
+- Failure causes tracked separately from error messages for better diagnostics
+
+### Changed
+
+- Scraper recovery now resumes by content instead of file position after interruptions
+- Worker monitoring watches for silence instead of elapsed time
+- Run phases structured as steps rather than log prose
+- Prettier configuration now includes upload source files
+
+### Fixed
+
+- Watchdog failure detection no longer treats automatic guesses as evidence
+- Cleanup of orphaned upload rows left behind by past deletions
+
 ## [0.19.2] - 2026-08-23
 
 9 commits since v0.19.1.
