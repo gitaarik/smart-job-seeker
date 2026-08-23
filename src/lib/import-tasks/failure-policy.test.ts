@@ -445,7 +445,10 @@ describe('classifyLegacyErrorMessage', () => {
 		// platform_unreachable because the sentence contains "connection".
 		['Tunnel connection timeout — device not connected (waited 120000ms)', 'device_unavailable'],
 		['Tunnel device connection is not open', 'device_unavailable'],
-		['Desktop scraper timed out after 1200000ms (likely a dead tunnel)', 'device_unavailable'],
+		// The watchdog's message speculates about a dead tunnel; run 1228 fired it
+		// while the tunnel was alive and the scrape was on job 35 of 100. So it is
+		// classified by what is known — it took too long — not by that guess.
+		['Desktop scraper timed out after 1200000ms (likely a dead tunnel)', 'timeout'],
 		['Could not fill the search form', 'interaction_failed'],
 		['An unexpected error occurred', 'unknown'],
 		['Request timed out', 'timeout'],

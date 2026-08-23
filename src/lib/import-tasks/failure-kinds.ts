@@ -242,8 +242,7 @@ export function classifyLegacyErrorMessage(message: string | null | undefined): 
 	// messages that survived unrendered can be moved.
 	if (
 		m.startsWith('tunnel connection timeout') ||
-		m.startsWith('tunnel device connection is not open') ||
-		(m.includes('scraper timed out') && m.includes('dead tunnel'))
+		m.startsWith('tunnel device connection is not open')
 	) {
 		return 'device_unavailable';
 	}
@@ -252,6 +251,13 @@ export function classifyLegacyErrorMessage(message: string | null | undefined): 
 	if (m.startsWith('platform access denied')) return 'access_denied';
 	if (m.startsWith('could not fill the search form')) return 'interaction_failed';
 	if (m.startsWith('request timed out')) return 'timeout';
+	// The worker's own watchdog. Its message guesses — "(likely a dead tunnel)"
+	// — and an earlier version of this function believed it, mapping these to
+	// `device_unavailable`. Run 1228 shows the guess is wrong at least
+	// sometimes: it fired while the scrape was healthily on job 35 of 100 with
+	// a live tunnel, having simply taken longer than the 20-minute cap. What
+	// is actually known is that it took too long, so that is what it says.
+	if (m.includes('scraper timed out')) return 'timeout';
 	if (m.startsWith('ai service')) return 'llm_unavailable';
 	// Assertion failures out of Patchright/CDP were written before the live
 	// classifier had a branch for them, so they landed under the generic

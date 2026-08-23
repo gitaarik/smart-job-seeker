@@ -45,8 +45,11 @@ const TUNNEL_EVIDENCE = sql`(
   l.message ILIKE '%tunnel connection timeout%'
   OR l.message ILIKE '%device not connected%'
   OR l.message ILIKE '%tunnel device connection is not open%'
-  OR (l.message ILIKE '%scraper timed out%' AND l.message ILIKE '%dead tunnel%')
 )`;
+// Deliberately NOT matching the watchdog's "(likely a dead tunnel)". That
+// message guesses, and run 1228 fired it with a live tunnel on job 35 of 100 —
+// so treating it as evidence would launder speculation into a column the retry
+// policy acts on.
 
 /** Mirrors ERROR_MESSAGES.deviceUnavailable in the cloud tree. */
 const DEVICE_MESSAGE = "Your device wasn't connected";
