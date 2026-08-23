@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.19.1] - 2026-08-23
 
-Fixed
+### Fixed
 
-- Export: only delete files that can be restored by an overwrite import, preventing accidental data loss
+- Overwrite import no longer deletes data the archive cannot restore. Importing
+  a profile-scope archive erased the profile's applications, cover letters,
+  interview answers, STAR stories and cheat sheets — none of which that archive
+  carries — because the delete pass ran for every import while the restore ran
+  only for full-account ones. Separately, every overwrite import cleared the
+  salary expectations table, which an earlier release stopped exporting but left
+  the importer deleting; archives taken before that change restore those rows
+  again, and newer ones leave the table to settings import/export.
 
 ## [0.19.0] - 2026-08-22
 
