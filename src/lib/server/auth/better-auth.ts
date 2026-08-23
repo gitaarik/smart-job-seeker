@@ -5,15 +5,14 @@
  */
 
 import { betterAuth } from 'better-auth';
-import { APIError, createAuthMiddleware } from 'better-auth/api';
+import { createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { verifications } from '$lib/server/db/schema';
 import { getEnv } from '$lib/tools/get-env';
 import { sendEmail } from '$lib/server/email';
-import { verifyTurnstileToken } from '$lib/server/auth/turnstile';
-import { registrationOpen } from '$lib/server/auth/registration';
+import { guardSignup } from '$lib/server/auth/signup-gate';
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, { provider: 'pg' }),
@@ -65,44 +64,14 @@ export const auth = betterAuth({
 	 * it does not.
 	 */
 	/**
-	 * Registration is open, so the signup endpoint is now reachable by anything
-	 * that can make an HTTP request. Turnstile gates it **here**, on the
-	 * endpoint, rather than on the page: a form that checks a token and then
-	 * calls `/sign-up/email` itself protects nothing, because the caller can
-	 * skip the form. Anything that reaches the endpoint passes through this.
-	 *
-	 * The token travels as a header rather than a body field — better-auth
-	 * validates the signup body against the user model and an unknown property
-	 * is a 400, and a CAPTCHA nonce has no business being on the user model.
-	 *
-	 * Skipped entirely when no secret is configured; see `turnstile.ts` for why
-	 * that is a deliberate open rather than an oversight.
+	 * Signup is gated on the endpoint, not the page, and in-process callers are
+	 * exempt. Both decisions and the reasoning behind them live in
+	 * `signup-gate.ts`.
 	 */
 	hooks: {
 		before: createAuthMiddleware(async (ctx) => {
 			if (ctx.path !== '/sign-up/email') return;
-
-			// Closing the /signup *route* only hides the form; this is what
-			// actually refuses a registration, and it is the check that matters
-			// because anything can POST here directly.
-			if (!registrationOpen()) {
-				throw new APIError('FORBIDDEN', {
-					message: 'Registration is currently closed.'
-				});
-			}
-
-			const token = ctx.headers?.get('x-turnstile-token');
-			const ip = ctx.headers?.get('cf-connecting-ip') || ctx.headers?.get('x-real-ip') || undefined;
-
-			const result = await verifyTurnstileToken(token, ip);
-			if (!result.success) {
-				console.warn(
-					`[auth] Signup rejected by Turnstile: ${(result.errorCodes ?? []).join(', ') || 'no codes'}`
-				);
-				throw new APIError('BAD_REQUEST', {
-					message: 'Captcha verification failed. Please reload the page and try again.'
-				});
-			}
+			await guardSignup(ctx);
 		})
 	},
 
