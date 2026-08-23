@@ -5,6 +5,12 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.1] - 2026-08-23
+
+Fixed
+
+- Export: only delete files that can be restored by an overwrite import, preventing accidental data loss
+
 ## [0.19.0] - 2026-08-22
 
 9 commits since v0.18.0.
