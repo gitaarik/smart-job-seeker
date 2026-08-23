@@ -63,7 +63,7 @@ vi.mock('$lib/server/ai-chat/capabilities', () => ({
 	executeCapability: (...args: unknown[]) => executeCapability(...args)
 }));
 
-const { approveRequest, rejectRequest, requestPath } = await import('../requests');
+const { approveRequest, rejectRequest, requestPath, requestUrl } = await import('../requests');
 
 const ACTOR = { profileId: 12, isStaff: false };
 
@@ -176,5 +176,18 @@ describe('requestPath', () => {
 		// The link goes into an agent's transcript, and "go and find it" is worse
 		// than no link when the feed is months long.
 		expect(requestPath(101)).toBe('/data/ai-changes#request-101');
+	});
+
+	it('gives an agent outside the browser an absolute one', () => {
+		// A chat client cannot turn "/data/ai-changes#request-101" into a link, and
+		// the person reading it may not know the hostname to put in front of it.
+		expect(requestUrl(101)).toMatch(/^https?:\/\/.+\/data\/ai-changes#request-101$/);
+	});
+
+	it('keeps the in-app notification relative', () => {
+		// It navigates inside the app someone is already looking at; an absolute
+		// URL there would send them out and back in, losing the session's scroll
+		// and, on a different host in preview, the session itself.
+		expect(requestPath(101).startsWith('/')).toBe(true);
 	});
 });

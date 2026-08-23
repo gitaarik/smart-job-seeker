@@ -66,7 +66,7 @@ import { listProfileDocuments, readProfileDocument } from '$lib/server/documents
 import { listProfileJobs, readProfileJob } from '$lib/server/jobs/profile-jobs';
 import { recentDirectWrites } from './burst';
 import { targetingFor } from './entities';
-import { countRequests, createRequest, readRequests, requestPath } from './requests';
+import { countRequests, createRequest, readRequests, requestPath, requestUrl } from './requests';
 import { dispositionFor, isUnchanged, tierForWrite } from './tiers';
 import {
 	DOCUMENT_TOOLS,
@@ -335,7 +335,7 @@ async function listPendingChanges(args: Args, key: VerifiedMcpKey): Promise<Tool
 			changes: changes.map(excerptChange),
 			lines: changes.flatMap(describeChangeLines),
 			asked_at: r.createdAt.toISOString(),
-			review_at: requestPath(r.id)
+			review_at: requestUrl(r.id)
 		};
 	});
 
@@ -818,7 +818,7 @@ async function runWrite(
 		await notifyRequest(key, capability, target, requestId);
 
 		const { text, diff } = renderDiff(previous, fields);
-		const link = requestPath(requestId);
+		const link = requestUrl(requestId);
 
 		return ok(
 			`Not applied — this needs the applicant's approval. ${decision.reason}\n\n` +

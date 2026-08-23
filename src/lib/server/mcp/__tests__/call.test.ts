@@ -854,7 +854,12 @@ describe('tier 2 — nothing is written', () => {
 		expect(executeCapability).not.toHaveBeenCalled();
 		expect(createRequest).toHaveBeenCalled();
 		expect(result.structuredContent?.applied).toBe(false);
-		expect(result.structuredContent?.review_at).toBe('/data/ai-changes#request-101');
+		// Absolute, not a path: the agent reading this is not in a browser, and in a
+		// chat window a bare "/data/ai-changes#request-101" is not a link and cannot
+		// be made into one by whoever has to click it.
+		expect(result.structuredContent?.review_at).toMatch(
+			/^https?:\/\/.+\/data\/ai-changes#request-101$/
+		);
 	});
 
 	it('tells the agent there is no way for it to approve', async () => {

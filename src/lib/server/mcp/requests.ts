@@ -33,6 +33,7 @@ import {
 	type CapabilityActor,
 	type CapabilityTarget
 } from '$lib/server/ai-chat/capabilities';
+import { getEnv } from '$lib/tools/get-env';
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
 
@@ -55,6 +56,25 @@ export interface CapabilityRequest {
 /** Where the applicant goes to decide. Absolute path, for a link an agent hands over. */
 export function requestPath(id: number): string {
 	return `/data/ai-changes#request-${id}`;
+}
+
+/**
+ * The same place, absolute, for an agent that is not in a browser.
+ *
+ * `requestPath` stays relative because that is what an in-app notification
+ * needs — it navigates inside the app someone is already looking at. An MCP
+ * client is somewhere else entirely, often a chat window, where "/data/ai-
+ * changes#request-77" is not a link and cannot be made into one. Telling
+ * someone their change is waiting and handing them a string they have to
+ * reassemble against a hostname they may not know is a worse answer than not
+ * telling them.
+ *
+ * Same host as the upload endpoint hands out, and the same one better-auth
+ * already treats as this app's address.
+ */
+export function requestUrl(id: number): string {
+	const base = getEnv('SJS_APP_URL_HOST', 'http://localhost:5173').replace(/\/$/, '');
+	return `${base}${requestPath(id)}`;
 }
 
 export async function createRequest(opts: {
