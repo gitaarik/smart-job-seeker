@@ -10,7 +10,7 @@
 
 import { createHmac } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
-import { dbDirect as db } from '$lib/server/db';
+import { dbDirect as db, queryRawDirect, sql } from '$lib/server/db';
 import {
 	credential_shares,
 	demo_link_devices,
@@ -138,11 +138,65 @@ async function mintDemoUser(link: DemoLinks): Promise<DemoCredentials> {
 }
 
 /**
- * Clone a profile (+ its search tasks / match config / salary) into a target
- * user, same-DB. Reused by demo provisioning (template → demo user) and by the
- * seed script (an existing profile → the template account). Pass
- * `overwriteProfileId` to re-key an existing profile in place (idempotent seed).
- * Returns the new/updated profile id.
+ * Copy the source profile's job_matches rows to the target. Same-DB only —
+ * job ids mean nothing across databases, which is why this lives here and not
+ * in the general export/import machinery.
+ *
+ * The matcher's entire work queue is the absence of a job_matches row
+ * (getUnmatchedJobs LEFT JOINs and takes `jm.id IS NULL`), so without this a
+ * fresh clone re-scores the whole corpus against the LLM — measured 2026-08-23
+ * on preview at ~11.6k calls and ~5 hours of saturated TPM per clone — to
+ * reproduce scores the source already has. The copy is exactly as valid as a
+ * re-score: the clone carries the source's profile content and match config,
+ * so scoring would compute the same function of the same inputs. Jobs added
+ * after the source was scored have no row either way and still get matched.
+ *
+ * Deliberately NOT carried over: `ai_chat_scoring` (FK into the source
+ * profile's LLM-call log; NULL is already the normal state for ineligible
+ * matches) and a pending `rescore_requested_at` (the copied score is the last
+ * valid one, same as the source displays while its re-score is queued).
+ * Timestamps ARE preserved so "matches since" reads (email digest, matcher
+ * status) keep meaning recently-scored, not recently-minted. DISTINCT ON
+ * folds duplicate (profile_id, job_id) rows — nothing enforces uniqueness on
+ * that pair — and the NOT EXISTS guard makes overwrite re-clones additive
+ * instead of duplicating.
+ */
+export async function copyJobMatches(
+	sourceProfileId: number,
+	targetProfileId: number
+): Promise<number> {
+	const copied = await queryRawDirect<{ id: number }>(sql`
+		INSERT INTO job_matches (
+			score, reasoning, skill_match_percentage, strengths, gaps,
+			recommendation, job_date_updated_when_matched, date_created,
+			date_updated, job_id, profile_id, llm_prompt, ai_chat_scoring,
+			matched_skills, match_summary, rescore_requested_at
+		)
+		SELECT DISTINCT ON (src.job_id)
+			src.score, src.reasoning, src.skill_match_percentage, src.strengths,
+			src.gaps, src.recommendation, src.job_date_updated_when_matched,
+			src.date_created, src.date_updated, src.job_id, ${targetProfileId},
+			src.llm_prompt, NULL, src.matched_skills, src.match_summary, NULL
+		FROM job_matches src
+		WHERE src.profile_id = ${sourceProfileId}
+			AND NOT EXISTS (
+				SELECT 1
+				FROM job_matches dst
+				WHERE dst.profile_id = ${targetProfileId}
+					AND dst.job_id = src.job_id
+			)
+		ORDER BY src.job_id, src.date_updated DESC NULLS LAST
+		RETURNING id
+	`);
+	return copied.length;
+}
+
+/**
+ * Clone a profile (+ its search tasks / match config / salary / job matches)
+ * into a target user, same-DB. Reused by demo provisioning (template → demo
+ * user) and by the seed script (an existing profile → the template account).
+ * Pass `overwriteProfileId` to re-key an existing profile in place (idempotent
+ * seed). Returns the new/updated profile id.
  */
 export async function cloneProfileInto(
 	sourceProfileId: number,
@@ -151,6 +205,14 @@ export async function cloneProfileInto(
 ): Promise<number> {
 	const { data } = await buildProfileExport(sourceProfileId);
 	const { profileId } = await importExportData(data, targetUserId, opts);
+
+	// Before importSettings applies the match config: the matcher treats a
+	// configured profile with missing match rows as work, so the rows must be
+	// in place first (on a first provision this closes the race entirely).
+	const copiedMatches = await copyJobMatches(sourceProfileId, profileId);
+	console.log(
+		`[Demo] Copied ${copiedMatches} job matches from profile ${sourceProfileId} to ${profileId}`
+	);
 
 	const settings = await buildSettingsExport(sourceProfileId);
 	await importSettings(profileId, targetUserId, settings, {
