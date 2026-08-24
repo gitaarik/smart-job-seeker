@@ -2,12 +2,15 @@
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import type { ResolvedPathname } from '$app/types';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronDown,
 		faChevronUp,
 		faDownload,
 		faEllipsisVertical,
+		faFolderPlus,
 		faPaperclip,
 		faPencil,
 		faStream,
@@ -267,6 +270,76 @@
 	const rawId = (id: string) => id.slice(1);
 
 	let deleteForm = $state<HTMLFormElement | null>(null);
+
+	// ---------------------------------------------------------------------
+	// Copy an entry into a project's Files & code
+	// ---------------------------------------------------------------------
+
+	/**
+	 * A copy, not a link: the entry stays here and stays editable, and the
+	 * project keeps what was true when it was copied. The picker offers every
+	 * project of both kinds; a role project's page lives under its role's, which
+	 * is why a target carries its role id.
+	 */
+	let promotingId = $state<string | null>(null);
+	let promoteTarget = $state('');
+	let promoting = $state(false);
+	type ProjectTarget = (typeof data.projectTargets)[number];
+	let promoteResult = $state<
+		{ ok: true; message: string; target: ProjectTarget } | { ok: false; message: string } | null
+	>(null);
+
+	const sideTargets = $derived(data.projectTargets.filter((t) => t.kind === 'side_project'));
+	const roleTargets = $derived(
+		data.projectTargets.filter((t) => t.kind === 'work_experience_project')
+	);
+
+	function startPromote(id: string) {
+		promotingId = id;
+		editingId = null;
+		promoteTarget = '';
+		promoteResult = null;
+		menuOpenId = null;
+	}
+
+	function sourcesHref(target: ProjectTarget): ResolvedPathname {
+		return target.kind === 'side_project'
+			? resolve('/(app)/profile/(data)/side-projects/[id]/sources', { id: String(target.id) })
+			: resolve('/(app)/profile/(data)/work-experience/[id]/projects/[pid]/sources', {
+					id: String(target.workExperienceId),
+					pid: String(target.id)
+				});
+	}
+
+	async function promoteEntry(entryId: string) {
+		const target = data.projectTargets.find((t) => `${t.kind}:${t.id}` === promoteTarget);
+		if (!target || promoting) return;
+		promoting = true;
+		promoteResult = null;
+		try {
+			const res = await fetch(`/api/project-sources/${target.kind}/${target.id}/from-record`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ record_id: Number(rawId(entryId)) })
+			});
+			const body = await res.json().catch(() => ({}));
+			if (!res.ok) {
+				promoteResult = { ok: false, message: body?.message ?? 'Could not copy this entry.' };
+				return;
+			}
+			promoteResult = {
+				ok: true,
+				message: body?.unchanged
+					? `${target.name} already has this entry.`
+					: `Copied to ${target.name}.`,
+				target
+			};
+		} catch {
+			promoteResult = { ok: false, message: 'Could not copy this entry.' };
+		} finally {
+			promoting = false;
+		}
+	}
 </script>
 
 <svelte:window
@@ -517,6 +590,14 @@
 												</button>
 												<button
 													type="button"
+													onclick={() => startPromote(entry.id)}
+													class="flex w-full items-center gap-2 px-3 py-1.5 text-xs whitespace-nowrap text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
+												>
+													<FontAwesomeIcon icon={faFolderPlus} class="h-3 w-3" />
+													Copy to a project
+												</button>
+												<button
+													type="button"
 													onclick={() => {
 														deleteTarget = { id: entry.id, title: entry.title };
 														menuOpenId = null;
@@ -551,6 +632,84 @@
 											Attached file
 											<FontAwesomeIcon icon={faDownload} class="h-2.5 w-2.5" />
 										</a>
+									{/if}
+								</div>
+							{/if}
+
+							{#if promotingId === entry.id}
+								<!--
+                The success line links to where the copy landed: it is
+                invisible from this page, and a change you cannot see land is
+                one you go and check.
+              -->
+								<div class="mt-2 rounded-md border border-[var(--dash-border)] p-2.5">
+									<p class="text-xs text-[var(--dash-text-secondary)]">
+										Copy this entry's text into a project's Files &amp; code, so it counts as
+										evidence for that project in every letter, answer and cheat sheet — not only on
+										this application.
+									</p>
+									{#if data.projectTargets.length === 0}
+										<p class="mt-2 text-xs text-[var(--dash-text-muted)] italic">
+											You have no projects yet. Add one under Work experience or Side projects
+											first.
+										</p>
+									{:else}
+										<div class="mt-2 flex flex-wrap items-center gap-2">
+											<select
+												bind:value={promoteTarget}
+												class="min-w-0 flex-1 rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1.5 text-xs text-[var(--dash-text)]"
+											>
+												<option value="">Choose a project…</option>
+												{#if sideTargets.length > 0}
+													<optgroup label="Side projects">
+														{#each sideTargets as target (target.id)}
+															<option value={`${target.kind}:${target.id}`}>{target.name}</option>
+														{/each}
+													</optgroup>
+												{/if}
+												{#if roleTargets.length > 0}
+													<optgroup label="Work experience">
+														{#each roleTargets as target (target.id)}
+															<option value={`${target.kind}:${target.id}`}>
+																{target.context} · {target.name}
+															</option>
+														{/each}
+													</optgroup>
+												{/if}
+											</select>
+											<button
+												type="button"
+												onclick={() => promoteEntry(entry.id)}
+												disabled={!promoteTarget || promoting}
+												class="rounded-md bg-[var(--dash-primary)] px-3 py-1.5 text-xs text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+											>
+												{promoting ? 'Copying…' : 'Copy to project'}
+											</button>
+											<button
+												type="button"
+												onclick={() => (promotingId = null)}
+												class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-xs text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
+											>
+												{promoteResult?.ok ? 'Done' : 'Cancel'}
+											</button>
+										</div>
+									{/if}
+									{#if promoteResult}
+										<p
+											class="mt-2 text-xs {promoteResult.ok
+												? 'text-[var(--dash-text-secondary)]'
+												: 'text-[var(--dash-error)]'}"
+										>
+											{promoteResult.message}
+											{#if promoteResult.ok}
+												<a
+													href={sourcesHref(promoteResult.target)}
+													class="text-[var(--dash-primary)] hover:underline"
+												>
+													Open its Files &amp; code
+												</a>
+											{/if}
+										</p>
 									{/if}
 								</div>
 							{/if}

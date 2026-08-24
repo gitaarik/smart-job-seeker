@@ -141,41 +141,37 @@ export function deriveNoteTitle(given: string | null | undefined, text: string):
  * README someone else wrote, and the prompt cannot say which to believe.
  */
 function notePath(title: string): string {
+	return `notes/${slugForPath(title, 'note')}.md`;
+}
+
+/** A title as a filename stem: lowercase, dashes, at most 60 characters. */
+export function slugForPath(title: string, fallback: string): string {
 	const slug = title
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-+|-+$/g, '')
 		.slice(0, 60)
 		.replace(/-+$/, '');
-	return `notes/${slug || 'note'}.md`;
+	return slug || fallback;
 }
 
 /**
- * A pasted note as an extracted project.
+ * Text that is already text, as an extracted project — one file, at the path
+ * the caller chose.
  *
- * Redacted like an upload, and for a stronger reason: a paste comes from a
- * terminal or a chat window, not from a tree someone chose to publish, so it is
- * if anything likelier to carry a token.
- *
- * The stored path ends in `.md`, which puts the note ahead of source files in
- * `buildDocumentBlob`'s ordering. That is the right way round — a sentence the
- * applicant wrote about their own work outranks anything inferred from code.
+ * Nothing to sniff and nothing to unpack, but redaction is not skipped: the
+ * callers are a paste and an application entry, and both are likelier than a
+ * published tree to carry a token.
  */
-export function extractNote(input: { title: string; text: string }): ExtractedProject {
+export function extractText(input: { path: string; ext: string; text: string }): ExtractedProject {
 	// eslint-disable-next-line no-control-regex -- matching the control char is the point
 	const raw = input.text.replace(/\u0000/g, '').trim();
-	if (!raw) throw new DocumentExtractError('The note is empty.');
-	if (raw.length > MAX_NOTE_CHARS) {
-		throw new DocumentExtractError(
-			`A note is limited to ${MAX_NOTE_CHARS.toLocaleString('en-US')} characters; ` +
-				`this one is ${raw.length.toLocaleString('en-US')}. Upload it as a file instead.`
-		);
-	}
+	if (!raw) throw new DocumentExtractError('The text is empty.');
 
 	const { text, secretsRedacted } = finalize(raw);
 	const file: ExtractedFile = {
-		path: notePath(input.title),
-		ext: 'md',
+		path: input.path,
+		ext: input.ext,
 		text,
 		chars: text.length,
 		secretsRedacted
@@ -192,6 +188,26 @@ export function extractNote(input: { title: string; text: string }): ExtractedPr
 		totalBytes: Buffer.byteLength(text, 'utf8'),
 		secretsRedacted
 	};
+}
+
+/**
+ * A pasted note as an extracted project.
+ *
+ * The stored path ends in `.md`, which puts the note ahead of source files in
+ * `buildDocumentBlob`'s ordering. That is the right way round — a sentence the
+ * applicant wrote about their own work outranks anything inferred from code.
+ */
+export function extractNote(input: { title: string; text: string }): ExtractedProject {
+	// eslint-disable-next-line no-control-regex -- matching the control char is the point
+	const raw = input.text.replace(/\u0000/g, '').trim();
+	if (!raw) throw new DocumentExtractError('The note is empty.');
+	if (raw.length > MAX_NOTE_CHARS) {
+		throw new DocumentExtractError(
+			`A note is limited to ${MAX_NOTE_CHARS.toLocaleString('en-US')} characters; ` +
+				`this one is ${raw.length.toLocaleString('en-US')}. Upload it as a file instead.`
+		);
+	}
+	return extractText({ path: notePath(input.title), ext: 'md', text: raw });
 }
 
 async function extractLooseFile(filename: string, bytes: Uint8Array): Promise<ExtractedProject> {

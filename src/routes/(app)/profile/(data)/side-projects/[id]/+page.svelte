@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTrash } from '@fortawesome/free-solid-svg-icons';
 	import MediaUpload from '$lib/components/MediaUpload.svelte';
@@ -15,6 +16,7 @@
 	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
 	import VersionTags from '$lib/components/VersionTags.svelte';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
+	import ProjectSourcesPointer from '../../../components/ProjectSourcesPointer.svelte';
 	import Card from '../../../../components/Card.svelte';
 
 	type SaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -25,6 +27,10 @@
 	let bannerUrl = $state(data.bannerUrl);
 
 	let project = $derived(data.project);
+
+	const sourcesHref = $derived(
+		resolve('/(app)/profile/(data)/side-projects/[id]/sources', { id: String(project.id) })
+	);
 
 	// Both child collections save as you type now, through `sectionRows` and
 	// `/api/profile-section/…`. The staged-removal sets that used to require a
@@ -402,6 +408,7 @@
 				placeholder="Brief description of the project..."
 			/>
 		</div>
+		<ProjectSourcesPointer count={data.sourceCount} href={sourcesHref} />
 		<ProjectRepoFetch
 			kind="side_project"
 			projectId={project.id}

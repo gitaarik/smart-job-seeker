@@ -13,8 +13,9 @@
 import type { LayoutServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, count, eq } from 'drizzle-orm';
 import {
+	profile_document_projects,
 	work_experience_project_technologies,
 	work_experience_projects
 } from '$lib/server/db/schema';
@@ -54,9 +55,18 @@ export const load: LayoutServerLoad = async ({ params, parent }) => {
 		redirect(302, `/profile/work-experience/${experienceId}`);
 	}
 
+	// How much is on the Files & code tab — for its label, and for the Details
+	// tab's pointer to it. A count, not the list: the list loads in the tab
+	// that renders it.
+	const [{ sourceCount }] = await db
+		.select({ sourceCount: count() })
+		.from(profile_document_projects)
+		.where(eq(profile_document_projects.work_experience_project_id, project.id));
+
 	return {
 		project,
 		experience: project.work_experience,
-		profileId: layoutData.selectedProfile.id
+		profileId: layoutData.selectedProfile.id,
+		sourceCount
 	};
 };

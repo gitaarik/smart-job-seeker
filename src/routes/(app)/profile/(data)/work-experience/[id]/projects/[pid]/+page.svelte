@@ -13,6 +13,7 @@
 	 * draft/POST/PATCH rules, the body mapping and the per-row indicator.
 	 */
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
 	import ProjectRepoFetch from '$lib/components/ProjectRepoFetch.svelte';
@@ -20,6 +21,7 @@
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import Card from '../../../../../../components/Card.svelte';
 	import ProjectTechnologies from '../../../../../components/ProjectTechnologies.svelte';
+	import ProjectSourcesPointer from '../../../../../components/ProjectSourcesPointer.svelte';
 	import {
 		blankProject,
 		projectBody,
@@ -29,6 +31,13 @@
 	} from '../../../../../components/work-experience-projects';
 
 	let { data }: { data: PageData } = $props();
+
+	const sourcesHref = $derived(
+		resolve('/(app)/profile/(data)/work-experience/[id]/projects/[pid]/sources', {
+			id: String(data.experience.id),
+			pid: String(data.project.id)
+		})
+	);
 
 	const store = sectionRows({
 		resource: 'work_experience_project',
@@ -169,6 +178,7 @@
 			/>
 		</div>
 
+		<ProjectSourcesPointer count={data.sourceCount} href={sourcesHref} />
 		<!--
 			The two proposal surfaces sit with the fields they fill, not on the
 			Files & code tab that feeds them. A proposal you cannot see land is a

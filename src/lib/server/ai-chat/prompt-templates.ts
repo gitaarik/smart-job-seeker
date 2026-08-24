@@ -2037,6 +2037,8 @@ You are given the project's current CV entry and the text of its code and docume
 
 A path beginning "notes/" is different in kind: it is a note the applicant wrote themselves, in this app, about this project. It is first-hand testimony from the person whose CV this is — the most authoritative source you have. Believe it over anything you infer from code, and use it directly.
 
+A path beginning "application/" was copied from one of the applicant's job applications — a brief they were sent, a form they filled in, a message they received, an interview they wrote up — and its first line says which application it came from and what kind of entry it was. Read that line before the rest: a message from the employer stating a result is an outcome you may use, and the applicant's own recap is their testimony, but neither is code and neither describes the whole project.
+
 Return a JSON OBJECT with EXACTLY these four fields: description, outcome, technologies, questions.
 
 ### description (a single STRING)

@@ -9,6 +9,7 @@ import { deleteFile, uploadFile } from '$lib/server/files';
 import { readFileIntoRecord } from '$lib/server/applications/record-files';
 import { deriveRecordMetadata } from '$lib/server/ai-chat/record-derivation';
 import { summarizeApplication } from '$lib/server/ai-chat/application-summary';
+import { projectTargetsForProfile } from '$lib/server/profile/project-targets';
 import { Buffer } from 'buffer';
 
 /**
@@ -19,12 +20,18 @@ import { Buffer } from 'buffer';
  * layout still carries each entry's metadata — this query is the text.
  */
 export const load: PageServerLoad = async ({ parent }) => {
-	const { application } = await parent();
+	const { application, profileId } = await parent();
 
-	const records = await db.query.application_records.findMany({
-		where: eq(application_records.application_id, application.id),
-		columns: { id: true, content: true }
-	});
+	const [records, projectTargets] = await Promise.all([
+		db.query.application_records.findMany({
+			where: eq(application_records.application_id, application.id),
+			columns: { id: true, content: true }
+		}),
+		// For "copy to a project" on an entry: names only, both kinds. Loaded
+		// here rather than on demand because it is two small queries and the
+		// picker would otherwise open empty and fill in.
+		projectTargetsForProfile(profileId)
+	]);
 
 	return {
 		// Keyed by id rather than returned as a list, because the layout already
@@ -33,6 +40,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 			number,
 			string
 		>,
+		projectTargets,
 		// Label for the assistant's "I can see this page" chip. The entries
 		// themselves are resolved server-side — see ai-chat/chat-context.ts.
 		chatContext: { label: 'Application activity' }

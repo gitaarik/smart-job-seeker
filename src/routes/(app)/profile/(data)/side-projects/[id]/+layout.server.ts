@@ -9,8 +9,9 @@
 import type { LayoutServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, count, eq } from 'drizzle-orm';
 import {
+	profile_document_projects,
 	side_project_achievements,
 	side_project_technologies,
 	side_projects
@@ -47,6 +48,14 @@ export const load: LayoutServerLoad = async ({ params, parent }) => {
 		redirect(302, '/profile/side-projects');
 	}
 
+	// How much is on the Files & code tab — for its label, and for the Details
+	// tab's pointer to it. A count, not the list: the list loads in the tab
+	// that renders it.
+	const [{ sourceCount }] = await db
+		.select({ sourceCount: count() })
+		.from(profile_document_projects)
+		.where(eq(profile_document_projects.side_project_id, project.id));
+
 	// Get image URL
 	const imageUrl = project?.image_path ? `/uploads/${project.image_path}` : null;
 
@@ -56,6 +65,7 @@ export const load: LayoutServerLoad = async ({ params, parent }) => {
 	return {
 		project,
 		profileId: layoutData.selectedProfile.id,
+		sourceCount,
 		imageUrl,
 		bannerUrl
 	};

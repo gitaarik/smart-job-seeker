@@ -222,7 +222,7 @@
 			{loading ? 'Reading what you added…' : 'Suggest from what you added'}
 		</button>
 		<span class="text-sm text-[var(--dash-text-secondary)]">
-			Reads the notes, files and code you added below.
+			Reads the notes, files and code on the Files &amp; code tab.
 		</span>
 	</div>
 

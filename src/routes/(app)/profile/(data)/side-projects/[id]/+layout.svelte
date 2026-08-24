@@ -47,7 +47,14 @@
 
 	const tabs = $derived([
 		{ label: 'Details', href: basePath, icon: faListCheck },
-		{ label: 'Files & code', href: `${basePath}/sources`, icon: faFolderOpen },
+		{
+			// The count is the pointer: a tab that says how much is behind it is one a
+			// reader opens, and one that says nothing was overlooked on the very pages
+			// that exist to hold the evidence.
+			label: data.sourceCount > 0 ? `Files & code (${data.sourceCount})` : 'Files & code',
+			href: `${basePath}/sources`,
+			icon: faFolderOpen
+		},
 		{ label: 'Stories', href: `${basePath}/stories`, icon: faBook }
 	]);
 

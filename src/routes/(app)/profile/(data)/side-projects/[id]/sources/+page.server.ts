@@ -30,6 +30,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 			summary: true,
 			keywords: true,
 			skipped: true,
+			source: true,
 			file_count: true,
 			total_bytes: true
 		}

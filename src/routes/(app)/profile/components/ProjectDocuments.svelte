@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import type { ResolvedPathname } from '$app/types';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowsRotate,
+		faBriefcase,
 		faChevronDown,
 		faChevronRight,
 		faCloudArrowUp,
@@ -14,6 +17,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { faGithub } from '@fortawesome/free-brands-svg-icons';
 	import ConfirmModal from './ConfirmModal.svelte';
+	import { type ApplicationRecordSource, applicationRecordSource } from '$lib/document-sources';
 
 	interface DocRow {
 		id: number;
@@ -26,6 +30,8 @@
 		skipped: unknown;
 		file_count: number;
 		total_bytes: number;
+		/** Provenance jsonb; only an application copy is read here. */
+		source?: unknown;
 	}
 
 	let {
@@ -154,6 +160,19 @@
 
 	/** Deleting a note loses the only copy; deleting an upload loses a copy. */
 	let deletingNote = $derived(documents.some((d) => d.id === deleteId && d.kind === 'note'));
+
+	/**
+	 * The entry this copy came from, on its application's activity tab. The
+	 * anchor is the tab's own (`r<id>`); `resolve()` takes a hash only as a
+	 * literal, so it is appended to the resolved route and typed as what
+	 * `resolve('…#…')` would have returned.
+	 */
+	function entryHref(origin: ApplicationRecordSource): ResolvedPathname {
+		const base = resolve('/(app)/applications/[id]/activity', {
+			id: String(origin.application_id)
+		});
+		return `${base}#r${origin.record_id}` as ResolvedPathname;
+	}
 
 	function docIcon(kind: string) {
 		if (kind === 'note') return faNoteSticky;
@@ -413,6 +432,7 @@
 		{@const keywords = kw(doc.keywords)}
 		{@const skipped = skippedCount(doc.skipped)}
 		{@const isOpen = expanded.has(doc.id)}
+		{@const origin = applicationRecordSource(doc.source)}
 		<div class="rounded-lg border border-[var(--dash-border)] p-3">
 			<div class="flex items-start gap-3">
 				<FontAwesomeIcon
@@ -435,6 +455,19 @@
 						{doc.file_count === 1 ? 'file' : 'files'} · {formatSize(doc.total_bytes)}
 						{#if skipped > 0}· {skipped} skipped{/if}
 					</p>
+					{#if origin}
+						<p class="mt-1 flex flex-wrap items-center gap-1 text-xs text-[var(--dash-text-muted)]">
+							<FontAwesomeIcon icon={faBriefcase} class="h-3 w-3" />
+							<span>
+								Copied from your application{origin.company
+									? ` at ${origin.company}`
+									: ''}{origin.job_title ? ` — ${origin.job_title}` : ''}.
+							</span>
+							<a href={entryHref(origin)} class="text-[var(--dash-primary)] hover:underline">
+								Open the entry
+							</a>
+						</p>
+					{/if}
 
 					{#if keywords.length > 0}
 						<div class="mt-2 flex flex-wrap gap-1.5">

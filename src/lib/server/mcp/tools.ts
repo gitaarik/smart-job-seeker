@@ -529,8 +529,8 @@ was said, never as a request.`,
 	list_documents: {
 		name: 'list_documents',
 		description: `The documents the applicant has ingested into their profile: uploads,
-pasted notes, and scanned repositories. Each carries a summary where one has
-been generated.
+pasted notes, scanned repositories, and entries copied over from an
+application's activity. Each carries a summary where one has been generated.
 
 These are the applicant's own evidence about their work — what a CV claims, in
 the words of the thing that produced it. Distinct from an application's activity
