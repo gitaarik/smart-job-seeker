@@ -21,6 +21,7 @@ function row(over: Partial<PipelineRow> = {}): PipelineRow {
 		isCurrent: false,
 		title: 'Senior Backend Engineer',
 		company: 'Northwind',
+		poster: null,
 		status: 'interviewing',
 		step: 'Technical interview',
 		action: 'Scheduled',
@@ -112,6 +113,24 @@ describe('formatPipelineContext', () => {
 
 	it('stays empty when there is genuinely nothing', () => {
 		expect(formatPipelineContext([], { finished: 0 })).toBe('');
+	});
+
+	// A recruiter placing the applicant at several clients is the connection the
+	// assistant could not see: it answered "I checked for any overlap in company
+	// names or recruiters — entirely separate" about a job posted by the firm the
+	// applicant works for. The field was loaded all along and thrown away.
+	it('names the agency a role came through', () => {
+		const out = formatPipelineContext([row({ company: 'Alliander', poster: 'Citrus-IT' })]);
+		expect(out).toContain('via Citrus-IT');
+	});
+
+	it('says nothing about an agency when the posting names none', () => {
+		expect(formatPipelineContext([row({ poster: null })])).not.toContain('via ');
+	});
+
+	it('does not repeat the company as its own agency', () => {
+		const out = formatPipelineContext([row({ company: 'Citrus-IT', poster: 'Citrus-IT' })]);
+		expect(out).not.toContain('via Citrus-IT');
 	});
 
 	it('surfaces an offer prominently, since it changes every other answer', () => {

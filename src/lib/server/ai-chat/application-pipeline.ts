@@ -92,6 +92,22 @@ export interface PipelineRow {
 	isCurrent: boolean;
 	title: string | null;
 	company: string | null;
+	/**
+	 * The intermediary the job came through — agency, staffing firm, named
+	 * recruiter — when the posting names one distinct from the company.
+	 *
+	 * Loaded here since the beginning and, until now, discarded: `company` fell
+	 * back to it and otherwise it went nowhere. So a recruiter placing the
+	 * applicant at five different clients was five unrelated rows, and asked
+	 * whether one application connected to any other the assistant answered "I
+	 * checked for any overlap in company names or recruiters — entirely
+	 * separate" about a job posted by the firm the applicant works for.
+	 *
+	 * It is rendered rather than resolved into an entity, because spotting the
+	 * same string on three rows is what a model is already good at. Build the
+	 * entity when THAT fails.
+	 */
+	poster: string | null;
 	status: string;
 	step: string | null;
 	action: string | null;
@@ -211,9 +227,13 @@ function renderRow(r: PipelineRow, currency: string): string {
 		.filter(Boolean)
 		.join(', ');
 
+	// Deliberately NOT part of `who`: that string has to match the activity
+	// index heading character for character, or one application reads as two.
+	const via = r.poster && r.poster !== r.company ? `via ${r.poster}` : null;
+
 	return [
 		`- ${r.isCurrent ? '**THIS ONE** — ' : ''}${who}`,
-		`  ${stage} · ${stalled} · applied ${dash(r.appliedOn)}`,
+		`  ${[stage, stalled, `applied ${dash(r.appliedOn)}`, via].filter(Boolean).join(' · ')}`,
 		`  ${pay} · ${dash(r.workLocation)} · ${match}`,
 		`  ${depth}`,
 		r.offer ? `  OFFER: ${describeOffer(r.offer)}` : null,
@@ -665,6 +685,7 @@ export async function loadPipelineRows(
 			isCurrent: a.id === currentApplicationId,
 			title: a.job?.title ?? null,
 			company: a.job?.company ?? a.job?.job_poster ?? null,
+			poster: a.job?.job_poster ?? null,
 			status: a.status,
 			step: a.status_step,
 			action: a.status_action,

@@ -87,6 +87,11 @@ export interface ManifestDocument {
 export interface ManifestApplication {
 	id: number;
 	company: string | null;
+	/** The agency or recruiter the posting came through, when distinct from the
+	 *  company. Here as well as on the pipeline row because this is the only
+	 *  block that lists a FINISHED application — and on a profile placed by one
+	 *  agency, the signed contract is exactly the finished one. */
+	poster: string | null;
 	position: string | null;
 	status: string | null;
 	/** True for the application the current page is about, if any. */
@@ -116,7 +121,8 @@ export interface ManifestApplication {
 function heading(app: ManifestApplication): string {
 	const name = [app.position, app.company].filter(Boolean).join(' at ') || 'Untitled application';
 	const status = app.status ? ` — ${getStatusLabel(app.status)}` : '';
-	return `### ${name} (application ${app.id})${status}${
+	const via = app.poster && app.poster !== app.company ? ` · via ${app.poster}` : '';
+	return `### ${name} (application ${app.id})${status}${via}${
 		app.isCurrent ? ' · the one on screen, shown in full above' : ''
 	}`;
 }
@@ -255,6 +261,7 @@ export async function loadActivityManifest(
 			appId: applications.id,
 			status: applications.status,
 			company: jobs.company,
+			poster: jobs.job_poster,
 			position: jobs.title,
 			recordId: application_records.id,
 			recordType: application_records.record_type,
@@ -275,6 +282,7 @@ export async function loadActivityManifest(
 			app = {
 				id: r.appId,
 				company: r.company,
+				poster: r.poster,
 				position: r.position,
 				status: r.status,
 				isCurrent: r.appId === currentApplicationId,

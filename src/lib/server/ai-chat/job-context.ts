@@ -34,9 +34,25 @@ export interface JobDetailsRow {
 export function formatJobDetails(job: JobDetailsRow): string {
 	const lines: string[] = [`**Position:** ${job.title || 'Not specified'}`];
 
-	const employer = job.job_poster || job.company;
-	if (employer) {
-		lines.push(`**Company/Organization:** ${employer} (this is who the applicant is applying to)`);
+	// Both, when the posting names both, and in that order — they are different
+	// facts and picking one loses the other. This used to render the poster
+	// alone, so a job at Alliander advertised by a staffing firm reached the
+	// model as "Company/Organization: Citrus-IT (this is who the applicant is
+	// applying to)", naming the intermediary as the employer. The pipeline block
+	// preferred the opposite field, so the same job had two names depending on
+	// which block you read.
+	if (job.company && job.job_poster && job.company !== job.job_poster) {
+		lines.push(
+			`**Company/Organization:** ${job.company} (this is who the applicant would work for)`
+		);
+		lines.push(`**Posted by:** ${job.job_poster} (agency or recruiter presenting the role)`);
+	} else {
+		const employer = job.company || job.job_poster;
+		if (employer) {
+			lines.push(
+				`**Company/Organization:** ${employer} (this is who the applicant is applying to)`
+			);
+		}
 	}
 	if (job.company_description) {
 		lines.push(`**About the company:** ${job.company_description}`);

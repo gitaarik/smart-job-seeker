@@ -31,6 +31,7 @@ function app(over: Partial<ManifestApplication> = {}): ManifestApplication {
 	return {
 		id: 10,
 		company: 'Acme',
+		poster: null,
 		position: 'Backend Engineer',
 		status: 'applied',
 		isCurrent: false,
@@ -96,6 +97,23 @@ describe('formatActivityManifest', () => {
 
 		expect(out).toContain('(application 27) — Not Selected');
 		expect(out).toContain('(application 28) — Discontinued');
+	});
+
+	// The pipeline drops finished applications, and on a profile placed by one
+	// agency the signed contract is exactly the finished one — so the link is
+	// only visible from here.
+	it('names the agency a role came through', () => {
+		const out = formatActivityManifest([
+			app({ id: 27, company: 'Alliander', poster: 'Citrus-IT' })
+		]);
+		expect(out).toContain('· via Citrus-IT');
+	});
+
+	it('does not repeat the company as its own agency', () => {
+		const out = formatActivityManifest([
+			app({ id: 27, company: 'Citrus-IT', poster: 'Citrus-IT' })
+		]);
+		expect(out).not.toContain('via Citrus-IT');
 	});
 
 	it('omits the dash when an application has no status', () => {
