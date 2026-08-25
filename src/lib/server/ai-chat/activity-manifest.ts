@@ -94,6 +94,16 @@ export interface ManifestApplication {
 	poster: string | null;
 	position: string | null;
 	status: string | null;
+	/**
+	 * The distinct people named across this application's entries.
+	 *
+	 * Here as well as on the pipeline row for the reason the status is: this is
+	 * the only block covering FINISHED applications, and "who have I spoken to
+	 * at X, across everything on record" spans them. Names as written — two
+	 * spellings of one person stay two, because collapsing them is entity
+	 * resolution and a renderer would have to guess.
+	 */
+	contacts: string[];
 	/** True for the application the current page is about, if any. */
 	isCurrent: boolean;
 	entries: ManifestEntry[];
@@ -125,6 +135,20 @@ function heading(app: ManifestApplication): string {
 	return `### ${name} (application ${app.id})${status}${via}${
 		app.isCurrent ? ' · the one on screen, shown in full above' : ''
 	}`;
+}
+
+/**
+ * Capped, because the entry list below is what the trimmer sheds and this line
+ * is not — an uncapped panel of interviewers could push the index over budget
+ * with nothing able to give way.
+ */
+const MAX_CONTACTS_LISTED = 8;
+
+function people(app: ManifestApplication): string[] {
+	if (app.contacts.length === 0) return [];
+	const shown = app.contacts.slice(0, MAX_CONTACTS_LISTED);
+	const rest = app.contacts.length - shown.length;
+	return [`- people: ${shown.join(', ')}${rest > 0 ? `, +${rest} more` : ''}`];
 }
 
 function line(entry: ManifestEntry): string {
@@ -196,6 +220,7 @@ export function formatActivityManifest(
 			.map((a) =>
 				[
 					heading(a),
+					...people(a),
 					...(a.entries.length === 0 ? ['- nothing recorded yet'] : a.entries.map(line))
 				].join('\n')
 			)
@@ -262,6 +287,7 @@ export async function loadActivityManifest(
 			status: applications.status,
 			company: jobs.company,
 			poster: jobs.job_poster,
+			contacts: application_records.contacts,
 			position: jobs.title,
 			recordId: application_records.id,
 			recordType: application_records.record_type,
@@ -286,9 +312,17 @@ export async function loadActivityManifest(
 				position: r.position,
 				status: r.status,
 				isCurrent: r.appId === currentApplicationId,
+				contacts: [],
 				entries: []
 			};
 			byApp.set(r.appId, app);
+		}
+		for (const c of (r.contacts ?? []) as Array<{ name?: unknown; role?: unknown }>) {
+			const name = typeof c?.name === 'string' ? c.name.trim() : '';
+			if (!name) continue;
+			const role = typeof c?.role === 'string' && c.role.trim() ? ` (${c.role.trim()})` : '';
+			const rendered = `${name}${role}`;
+			if (!app.contacts.includes(rendered)) app.contacts.push(rendered);
 		}
 		// An entry with no text yet (a file still extracting) is still worth
 		// listing: it exists, and saying so beats implying it does not.

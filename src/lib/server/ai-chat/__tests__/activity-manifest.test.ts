@@ -33,6 +33,7 @@ function app(over: Partial<ManifestApplication> = {}): ManifestApplication {
 		company: 'Acme',
 		poster: null,
 		position: 'Backend Engineer',
+		contacts: [],
 		status: 'applied',
 		isCurrent: false,
 		entries: [entry()],
@@ -102,6 +103,17 @@ describe('formatActivityManifest', () => {
 	// The pipeline drops finished applications, and on a profile placed by one
 	// agency the signed contract is exactly the finished one — so the link is
 	// only visible from here.
+	it('lists the people named on an application', () => {
+		const out = formatActivityManifest([
+			app({ id: 27, contacts: ['Roman Urbanovski (recruiter)', 'Thay Ribeiro'] })
+		]);
+		expect(out).toContain('- people: Roman Urbanovski (recruiter), Thay Ribeiro');
+	});
+
+	it('says nothing about people when none are named', () => {
+		expect(formatActivityManifest([app({ contacts: [] })])).not.toContain('- people:');
+	});
+
 	it('names the agency a role came through', () => {
 		const out = formatActivityManifest([
 			app({ id: 27, company: 'Alliander', poster: 'Citrus-IT' })

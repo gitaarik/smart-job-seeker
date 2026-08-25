@@ -27,6 +27,7 @@ function row(over: Partial<PipelineRow> = {}): PipelineRow {
 		action: 'Scheduled',
 		daysInStage: 4,
 		snoozedUntil: null,
+		contacts: [],
 		appliedOn: '2026-07-20',
 		salary: 'EUR 70,000-90,000/year',
 		salaryAnnual: 80000,
@@ -119,6 +120,24 @@ describe('formatPipelineContext', () => {
 	// assistant could not see: it answered "I checked for any overlap in company
 	// names or recruiters — entirely separate" about a job posted by the firm the
 	// applicant works for. The field was loaded all along and thrown away.
+	// The names were extracted into a column and then reduced to a boolean, so
+	// the model could say THAT someone had been spoken to and never WHO.
+	it('names the people spoken to, not just that someone was', () => {
+		const out = formatPipelineContext([
+			row({ employerContact: true, contacts: ['Wilko (recruiter)', 'Thea Silayro'] })
+		]);
+		expect(out).toContain('spoke with Wilko (recruiter), Thea Silayro');
+	});
+
+	it('keeps the never-looked distinction when there are no names', () => {
+		expect(formatPipelineContext([row({ employerContact: null, contacts: [] })])).toContain(
+			'employer contact unknown'
+		);
+		expect(formatPipelineContext([row({ employerContact: false, contacts: [] })])).toContain(
+			'no employer contact recorded'
+		);
+	});
+
 	it('names the agency a role came through', () => {
 		const out = formatPipelineContext([row({ company: 'Alliander', poster: 'Citrus-IT' })]);
 		expect(out).toContain('via Citrus-IT');

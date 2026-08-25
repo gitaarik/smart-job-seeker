@@ -155,6 +155,20 @@ export interface PipelineRow {
 	 * two as the same is how a stalled application would look like an active one.
 	 */
 	employerContact: boolean | null;
+	/**
+	 * Who was involved, deduped across every analysed entry on this application.
+	 *
+	 * `employerContact` used to be the whole story — `contacts` was selected and
+	 * then reduced to `.some(… .length > 0)`, so the names were loaded and
+	 * thrown away, and the model could report THAT the applicant had spoken to
+	 * someone but never WHO. Asked who they had spoken to at a named company it
+	 * answered "the names will be in those transcripts… we can go to that
+	 * application's page", about names already extracted into a column.
+	 *
+	 * The tri-state stays: it is what distinguishes "nobody was involved" from
+	 * "nobody has looked yet", and an empty array cannot say which.
+	 */
+	contacts: string[];
 }
 
 const dash = (v: string | number | null | undefined) =>
@@ -221,7 +235,7 @@ function renderRow(r: PipelineRow, currency: string): string {
 		r.employerContact === null
 			? 'employer contact unknown'
 			: r.employerContact
-				? null
+				? `spoke with ${r.contacts.join(', ')}`
 				: 'no employer contact recorded'
 	]
 		.filter(Boolean)
@@ -522,6 +536,39 @@ export function fitPipelineToBudget(
 }
 
 /** Whole days between then and now, or null when there is no date. */
+/**
+ * The distinct people across a set of entries, "Name (role)" where a role is
+ * known, in first-seen order.
+ *
+ * Deduped on the name as written, which is imperfect on purpose: "P Baeten"
+ * and "P. Baeten" are two entries here, as they are two entries in the column.
+ * Collapsing them is entity resolution and belongs in a table, not in a
+ * renderer that would have to guess. Listing both is honest and still lets the
+ * model see the recurrence.
+ *
+ * Capped, because one application can accumulate a whole hiring panel and this
+ * line sits inside the pipeline budget.
+ */
+const MAX_CONTACTS_LISTED = 8;
+
+function namesOf(entries: Array<{ contacts?: unknown }>): string[] {
+	const seen = new Map<string, string>();
+	for (const e of entries) {
+		const list = (e.contacts ?? []) as Array<{ name?: unknown; role?: unknown }>;
+		if (!Array.isArray(list)) continue;
+		for (const c of list) {
+			const name = typeof c?.name === 'string' ? c.name.trim() : '';
+			if (!name || seen.has(name)) continue;
+			const role = typeof c?.role === 'string' && c.role.trim() ? ` (${c.role.trim()})` : '';
+			seen.set(name, `${name}${role}`);
+		}
+	}
+	const all = [...seen.values()];
+	return all.length > MAX_CONTACTS_LISTED
+		? [...all.slice(0, MAX_CONTACTS_LISTED), `+${all.length - MAX_CONTACTS_LISTED} more`]
+		: all;
+}
+
 function daysSince(date: Date | string | null): number | null {
 	if (!date) return null;
 	const then = date instanceof Date ? date : new Date(date);
@@ -719,7 +766,8 @@ export async function loadPipelineRows(
 			employerContact:
 				analysed.length === 0
 					? null
-					: analysed.some((e) => ((e.contacts ?? []) as unknown[]).length > 0)
+					: analysed.some((e) => ((e.contacts ?? []) as unknown[]).length > 0),
+			contacts: namesOf(analysed)
 		};
 	});
 
