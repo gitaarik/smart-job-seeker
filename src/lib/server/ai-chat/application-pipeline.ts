@@ -236,9 +236,13 @@ function renderRow(r: PipelineRow, currency: string): string {
  */
 export function formatPipelineContext(
 	rows: PipelineRow[],
-	opts: { omitted?: number; shed?: number; currency?: string } = {}
+	opts: { omitted?: number; shed?: number; finished?: number; currency?: string } = {}
 ): string {
-	if (rows.length === 0) return '';
+	const finished = opts.finished ?? 0;
+	// An all-finished profile still gets a block. Returning '' there would say
+	// "no applications" to a user who has twenty — which is the same confident
+	// false negative this note exists to prevent, at its most extreme.
+	if (rows.length === 0 && finished === 0) return '';
 
 	const currency = opts.currency ?? 'EUR';
 	const lines = rows.map((r) => renderRow(r, currency));
@@ -270,6 +274,26 @@ export function formatPipelineContext(
 					'empty history: a row with entries but no summary HAS a history you',
 					'cannot see from here. Offer to open that application rather than',
 					'treating it as one where nothing has happened.'
+				]
+			: [];
+
+	// Finished applications are absent by design (see loadPipelineRows), and the
+	// model cannot tell "excluded" from "does not exist" — the failure this file
+	// and activity-manifest.ts have each been patched for once already.
+	//
+	// It is pointed at where they ARE visible rather than just given a count,
+	// because a count alone invites a guess. The activity index lists every
+	// application, finished ones included, and carries the status on each
+	// heading; that is a place to look, not a number to reason from.
+	const excluded =
+		finished > 0
+			? [
+					'',
+					`NOTE: ${finished} finished application(s) — rejected, withdrawn or`,
+					'accepted — are not in the table below. This table is what is IN PLAY,',
+					'not everything that exists. They are listed in the activity index with',
+					'their status, so answer questions about outcomes and history from',
+					'there rather than saying there are none.'
 				]
 			: [];
 
@@ -354,6 +378,7 @@ export function formatPipelineContext(
 		'and never present a conversion as what the employer offered.',
 		...omission,
 		...shedding,
+		...excluded,
 		'',
 		...lines
 	].join('\n');
@@ -395,13 +420,16 @@ export function formatPipelineContext(
 export function fitPipelineToBudget(
 	rows: PipelineRow[],
 	budgetChars: number,
-	currency = 'EUR'
+	currency = 'EUR',
+	/** Counted into the price because the note it drives ships inside the block —
+	 *  measuring without it would budget for a block that is not the one sent. */
+	finished = 0
 ): { rows: PipelineRow[]; omitted: number; shed: number } {
 	// Price by rendering. The block is at most 25 short rows, so measuring the
 	// real thing costs nothing and cannot drift from what actually ships — which
 	// an estimate of header + per-row would, silently, on the next layout edit.
 	const cost = (rs: PipelineRow[], omitted: number, shed: number) =>
-		formatPipelineContext(rs, { omitted, shed, currency }).length;
+		formatPipelineContext(rs, { omitted, shed, finished, currency }).length;
 
 	if (rows.length === 0) return { rows, omitted: 0, shed: 0 };
 	if (cost(rows, 0, 0) <= budgetChars) return { rows, omitted: 0, shed: 0 };
@@ -551,7 +579,7 @@ function annualise(
 export async function loadPipelineRows(
 	profileId: number,
 	currentApplicationId: number | null
-): Promise<PipelineRow[]> {
+): Promise<{ rows: PipelineRow[]; finished: number }> {
 	const rows = await db.query.applications.findMany({
 		where: eq(applications.profile_id, profileId),
 		columns: {
@@ -592,7 +620,13 @@ export async function loadPipelineRows(
 	// "what am I working on". The current one is kept even if finished — the
 	// user is looking at it, so a table that omits it reads as a bug.
 	const live = rows.filter((a) => !isFinishedStatus(a.status) || a.id === currentApplicationId);
-	if (live.length === 0) return [];
+	// The count of what the filter dropped is returned, not swallowed. Excluding
+	// them is right — see the comment above — but doing it SILENTLY is what let
+	// "what patterns come up across my rejected applications?" be answered with
+	// "I don't actually see any that are marked as rejected" on a profile with
+	// four of them. The rows go; the fact that they exist does not.
+	const finished = rows.length - live.length;
+	if (live.length === 0) return { rows: [], finished };
 
 	const ids = live.map((a) => a.id);
 	const [matches, records, rates] = await Promise.all([
@@ -686,12 +720,14 @@ export async function loadPipelineRows(
 			Number(y.isCurrent) - Number(x.isCurrent) || (x.daysInStage ?? 1e9) - (y.daysInStage ?? 1e9)
 	);
 
-	return built;
+	return { rows: built, finished };
 }
 
 /**
- * Load, fit and render. Returns "" when the applicant has no live applications
- * — callers interpolate it blindly.
+ * Load, fit and render. Returns "" only when the applicant has no applications
+ * at all — callers interpolate it blindly. A profile whose applications are all
+ * finished gets the block with an empty table and the note saying so, because
+ * "" there would read as "you have none".
  */
 export async function applicationPipelineText(
 	profileId: number,
@@ -699,16 +735,17 @@ export async function applicationPipelineText(
 	budgetChars: number = DEFAULT_PIPELINE_BUDGET_CHARS
 ): Promise<string> {
 	try {
-		const built = await loadPipelineRows(profileId, currentApplicationId);
+		const { rows: built, finished } = await loadPipelineRows(profileId, currentApplicationId);
 
 		// Two caps in series, and their omissions add up: the hard row cap first,
 		// then the char budget. Reporting only one would understate how partial
 		// the picture is.
 		const capped = built.slice(0, MAX_APPLICATIONS);
-		const fitted = fitPipelineToBudget(capped, budgetChars, 'EUR');
+		const fitted = fitPipelineToBudget(capped, budgetChars, 'EUR', finished);
 		return formatPipelineContext(fitted.rows, {
 			omitted: built.length - capped.length + fitted.omitted,
 			shed: fitted.shed,
+			finished,
 			currency: 'EUR'
 		});
 	} catch {

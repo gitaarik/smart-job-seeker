@@ -45,6 +45,7 @@ import {
 	profile_document_projects
 } from '$lib/server/db/schema';
 import { getRecordTypeLabel } from '$lib/application-records';
+import { getStatusLabel } from '$lib/application-status';
 
 /**
  * A ceiling, because this is an index of an unbounded thing. At ~85 chars a
@@ -97,11 +98,26 @@ export interface ManifestApplication {
  * Named exactly as the pipeline block names it — "title at company (application
  * N)" — because both blocks describe the same applications and the model has to
  * be able to tell that. Two spellings of one application reads as two.
+ *
+ * ## Why the status is here
+ *
+ * Because this is the only block that lists a FINISHED application at all.
+ * `application-pipeline.ts` drops them (`live` filter) and it is the block that
+ * carries status, so between the two the model could see that a rejected
+ * application exists and had no way to learn it was rejected. Asked what
+ * patterns come up across rejected applications, it answered "I don't actually
+ * see any that are marked as rejected" — on a profile with four. A confident
+ * false negative, from a seam between two blocks that were each individually
+ * right.
+ *
+ * Same failure this block was built to remove, one field over: it fixed
+ * EXISTENCE and not STATUS.
  */
 function heading(app: ManifestApplication): string {
 	const name = [app.position, app.company].filter(Boolean).join(' at ') || 'Untitled application';
-	return `### ${name} (application ${app.id})${
-		app.isCurrent ? ' — the one on screen, shown in full above' : ''
+	const status = app.status ? ` — ${getStatusLabel(app.status)}` : '';
+	return `### ${name} (application ${app.id})${status}${
+		app.isCurrent ? ' · the one on screen, shown in full above' : ''
 	}`;
 }
 

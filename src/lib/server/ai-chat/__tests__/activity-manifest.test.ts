@@ -81,8 +81,27 @@ describe('formatActivityManifest', () => {
 			app({ id: 28, company: 'Northwind' })
 		]);
 
-		expect(out).toMatch(/application 27\) — the one on screen/);
-		expect(out).not.toMatch(/application 28\) — the one on screen/);
+		expect(out).toMatch(/application 27\) — Applied · the one on screen/);
+		expect(out).not.toMatch(/application 28\).*the one on screen/);
+	});
+
+	it('puts the status on every heading, finished ones included', () => {
+		// The pipeline block drops finished applications and is the only other
+		// block carrying status, so without this the model can see a rejected
+		// application exists and cannot learn that it was rejected.
+		const out = formatActivityManifest([
+			app({ id: 27, status: 'rejected' }),
+			app({ id: 28, company: 'Northwind', status: 'withdrawn' })
+		]);
+
+		expect(out).toContain('(application 27) — Not Selected');
+		expect(out).toContain('(application 28) — Discontinued');
+	});
+
+	it('omits the dash when an application has no status', () => {
+		const out = formatActivityManifest([app({ id: 27, status: null })]);
+		expect(out).toContain('(application 27)');
+		expect(out).not.toMatch(/application 27\) —/);
 	});
 
 	it('tells the model the index is not the contents', () => {

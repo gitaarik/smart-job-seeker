@@ -89,6 +89,31 @@ describe('formatPipelineContext', () => {
 		expect(formatPipelineContext([row()])).not.toContain('further application');
 	});
 
+	// Excluding finished applications is right; excluding them SILENTLY is what
+	// let "what patterns come up across my rejected applications?" be answered
+	// with "I don't actually see any that are marked as rejected" on a profile
+	// with four of them.
+	it('says how many finished applications the table leaves out', () => {
+		const out = formatPipelineContext([row()], { finished: 4 });
+		expect(out).toContain('4 finished application(s)');
+		expect(out).toContain('activity index');
+	});
+
+	it('says nothing about finished applications when none were excluded', () => {
+		expect(formatPipelineContext([row()])).not.toContain('finished application');
+	});
+
+	// '' here would tell a user with twenty finished applications that they have
+	// none — the same false negative, at its most extreme.
+	it('still renders a block when every application is finished', () => {
+		const out = formatPipelineContext([], { finished: 20 });
+		expect(out).toContain('20 finished application(s)');
+	});
+
+	it('stays empty when there is genuinely nothing', () => {
+		expect(formatPipelineContext([], { finished: 0 })).toBe('');
+	});
+
 	it('surfaces an offer prominently, since it changes every other answer', () => {
 		const out = formatPipelineContext([row({ hasOffer: true })]);
 		expect(out).toContain('OFFER RECORDED');
