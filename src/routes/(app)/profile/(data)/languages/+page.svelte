@@ -18,6 +18,7 @@
 	import ConfirmModal from '../../components/ConfirmModal.svelte';
 	import ItemCard from '../../components/ItemCard.svelte';
 	import Card from '../../../components/Card.svelte';
+	import TranslatableField from '$lib/components/TranslatableField.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -357,19 +358,16 @@
 							<input type="hidden" name="id" value={lang.id} />
 							<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 								<div>
-									<label
-										for="edit-name-{lang.id}"
-										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
-									>
-										Language <span class="text-[var(--dash-error)]">*</span>
-									</label>
-									<input
-										type="text"
-										id="edit-name-{lang.id}"
-										name="name"
-										bind:value={editName}
+									<!-- The form posts the English name; the translation tabs save on their own. -->
+									<input type="hidden" name="name" value={editName} />
+									<TranslatableField
+										entity="language"
+										id={lang.id}
+										field="name"
+										label="Language"
 										required
-										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+										bind:value={editName}
+										hint="Resumes in other languages localize this name automatically; a translation here overrides it."
 									/>
 								</div>
 

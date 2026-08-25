@@ -14,6 +14,7 @@ import { dbDirect as db } from '$lib/server/db';
 import { and, eq } from 'drizzle-orm';
 import {
 	education,
+	languages,
 	profile_translations,
 	side_project_achievements,
 	side_projects,
@@ -29,6 +30,7 @@ import {
 	type TranslatableRow,
 	translationKey
 } from '$lib/resume-translations';
+import { localizeLanguageName } from '$lib/resume-template-labels';
 
 export interface Translator {
 	locale: string;
@@ -99,7 +101,7 @@ export function applyTranslations(
 	if (tr.isBase || !profile) return profile;
 
 	// Profile-level fields key on the profile id itself.
-	for (const f of ['summary', 'headline', 'subtitle', 'title', 'about_me_text']) {
+	for (const f of ['summary', 'headline', 'subtitle', 'title', 'about_me_text', 'location']) {
 		profile[f] = tr.t('profile', profile.id, f, profile[f] ?? null);
 	}
 
@@ -134,6 +136,16 @@ export function applyTranslations(
 		for (const a of sp.side_project_achievements ?? []) {
 			overlay(tr, 'side_project_achievement', a, 'description');
 		}
+	}
+
+	// A language's name has a second source: ICU knows "English" in every
+	// locale, so a row without an overlay is still localized — from its ISO
+	// code, or failing that its English name. An overlay row wins.
+	for (const lang of profile.languages ?? []) {
+		if (!lang || lang.id == null) continue;
+		lang.name =
+			tr.t('language', lang.id, 'name', null) ??
+			localizeLanguageName(lang.name, lang.language_code, tr.locale);
 	}
 
 	return profile;
@@ -247,6 +259,16 @@ export async function isEntityOwned(
 						.limit(1)
 				).length > 0
 			);
+		case 'language':
+			return (
+				(
+					await db
+						.select({ id: languages.id })
+						.from(languages)
+						.where(and(eq(languages.id, id), eq(languages.profile_id, profileId)))
+						.limit(1)
+				).length > 0
+			);
 		default:
 			return false;
 	}
@@ -254,11 +276,11 @@ export async function isEntityOwned(
 
 /**
  * Batch variant of {@link isEntityOwned}: the set of owned entity ids per type
- * for a profile (8 queries, independent of how many rows are being saved).
+ * for a profile (one query per entity type, independent of how many rows are being saved).
  * Used by the overview page which writes many fields at once.
  */
 export async function loadOwnedEntityIds(profileId: number): Promise<Record<string, Set<number>>> {
-	const [we, wea, wep, cats, edu, sp, spa] = await Promise.all([
+	const [we, wea, wep, cats, edu, sp, spa, langs] = await Promise.all([
 		db
 			.select({ id: work_experiences.id })
 			.from(work_experiences)
@@ -292,7 +314,8 @@ export async function loadOwnedEntityIds(profileId: number): Promise<Record<stri
 			.select({ id: side_project_achievements.id })
 			.from(side_project_achievements)
 			.innerJoin(side_projects, eq(side_project_achievements.side_project_id, side_projects.id))
-			.where(eq(side_projects.profile_id, profileId))
+			.where(eq(side_projects.profile_id, profileId)),
+		db.select({ id: languages.id }).from(languages).where(eq(languages.profile_id, profileId))
 	]);
 	return {
 		profile: new Set([profileId]),
@@ -302,7 +325,8 @@ export async function loadOwnedEntityIds(profileId: number): Promise<Record<stri
 		tech_skill_category: new Set(cats.map((r) => r.id)),
 		education: new Set(edu.map((r) => r.id)),
 		side_project: new Set(sp.map((r) => r.id)),
-		side_project_achievement: new Set(spa.map((r) => r.id))
+		side_project_achievement: new Set(spa.map((r) => r.id)),
+		language: new Set(langs.map((r) => r.id))
 	};
 }
 
@@ -419,6 +443,14 @@ export function collectTranslatable(
 				rows
 			});
 		}
+	}
+
+	const languageRows: TranslatableRow[] = [];
+	for (const lang of profile.languages ?? []) {
+		pushRows(languageRows, 'language', lang.id, lang, lang.name || 'Language');
+	}
+	if (languageRows.length) {
+		groups.push({ key: 'languages', title: 'Languages', rows: languageRows });
 	}
 
 	return groups;

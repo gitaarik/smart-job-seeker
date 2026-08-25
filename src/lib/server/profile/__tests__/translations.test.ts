@@ -117,3 +117,76 @@ describe('collectTranslatable — work experience projects', () => {
 		]);
 	});
 });
+
+describe('applyTranslations — languages and location', () => {
+	function profileWith(...languages: Record<string, unknown>[]) {
+		return { id: 1, location: 'Haarlem, The Netherlands', languages };
+	}
+
+	it('localizes a language name from its ISO code without an overlay row', () => {
+		const p = profileWith(
+			{ id: 112, name: 'English', language_code: 'en' },
+			{ id: 111, name: 'Dutch', language_code: 'nl' }
+		);
+		applyTranslations(p, translator({}));
+		expect(p.languages.map((l) => l.name)).toEqual(['Engels', 'Nederlands']);
+	});
+
+	it('matches the English name when the row has no code, and leaves the unknown as typed', () => {
+		const p = profileWith(
+			{ id: 1, name: 'German', language_code: null },
+			{ id: 2, name: 'Klingon', language_code: null }
+		);
+		applyTranslations(p, translator({}));
+		expect(p.languages.map((l) => l.name)).toEqual(['Duits', 'Klingon']);
+	});
+
+	it('lets an overlay row win over ICU', () => {
+		const p = profileWith({ id: 5, name: 'Chinese', language_code: 'zh' });
+		applyTranslations(p, translator({ 'language:5:name': 'Mandarijn' }));
+		expect(p.languages[0].name).toBe('Mandarijn');
+	});
+
+	it('overlays the profile location', () => {
+		const p = profileWith();
+		applyTranslations(p, translator({ 'profile:1:location': 'Haarlem, Nederland' }));
+		expect(p.location).toBe('Haarlem, Nederland');
+	});
+
+	it('keeps both in the vocabulary the API accepts', () => {
+		expect(isTranslatable('language', 'name')).toBe(true);
+		expect(isTranslatable('profile', 'location')).toBe(true);
+	});
+});
+
+describe('collectTranslatable — languages and location', () => {
+	it('lists the location with the profile and each named language on its own', () => {
+		const groups = collectTranslatable({
+			id: 1,
+			location: 'Haarlem, The Netherlands',
+			languages: [
+				{ id: 112, name: 'English', language_code: 'en' },
+				{ id: 3, name: '' }
+			]
+		});
+
+		expect(groups.find((g) => g.key === 'profile')?.rows).toContainEqual(
+			expect.objectContaining({
+				entity: 'profile',
+				id: 1,
+				field: 'location',
+				base: 'Haarlem, The Netherlands',
+				multiline: false
+			})
+		);
+		expect(groups.find((g) => g.key === 'languages')?.rows).toEqual([
+			expect.objectContaining({
+				entity: 'language',
+				id: 112,
+				field: 'name',
+				base: 'English',
+				label: 'English — Language'
+			})
+		]);
+	});
+});

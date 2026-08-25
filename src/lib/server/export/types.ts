@@ -98,7 +98,8 @@ export type TranslationTarget =
 	| { kind: 'side_project'; side_project_index: number }
 	| { kind: 'side_project_achievement'; side_project_index: number; achievement_index: number }
 	| { kind: 'education'; education_index: number }
-	| { kind: 'tech_skill_category'; category_index: number };
+	| { kind: 'tech_skill_category'; category_index: number }
+	| { kind: 'language'; language_index: number };
 
 export interface ExportedTranslation {
 	target: TranslationTarget;

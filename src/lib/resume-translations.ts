@@ -59,6 +59,7 @@ export const TRANSLATABLE_FIELDS: TranslatableField[] = [
 	{ entity: 'profile', field: 'subtitle', label: 'Subtitle' },
 	{ entity: 'profile', field: 'title', label: 'Title' },
 	{ entity: 'profile', field: 'about_me_text', label: 'About me' },
+	{ entity: 'profile', field: 'location', label: 'Location' },
 
 	{ entity: 'work_experience', field: 'position', label: 'Position' },
 	{ entity: 'work_experience', field: 'headline', label: 'Headline' },
@@ -88,7 +89,12 @@ export const TRANSLATABLE_FIELDS: TranslatableField[] = [
 		entity: 'side_project_achievement',
 		field: 'description',
 		label: 'Achievement'
-	}
+	},
+
+	// A language's name is also localized on its own, from the row's ISO code
+	// (localizeLanguageName in resume-template-labels.ts). An overlay row, when
+	// one exists, wins — so "Chinese" can still be overridden with "Mandarijn".
+	{ entity: 'language', field: 'name', label: 'Language' }
 ];
 
 const FIELD_SET = new Set(TRANSLATABLE_FIELDS.map((f) => `${f.entity}:${f.field}`));

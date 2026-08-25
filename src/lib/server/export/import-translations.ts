@@ -22,6 +22,7 @@ export interface CreatedTranslationIds {
 	sideProjectAchievementIdByIndex: Map<string, number>;
 	educationIdByIndex: number[];
 	techSkillCategoryIdByIndex: number[];
+	languageIdByIndex: number[];
 }
 
 export function emptyCreatedTranslationIds(profileId: number): CreatedTranslationIds {
@@ -32,7 +33,8 @@ export function emptyCreatedTranslationIds(profileId: number): CreatedTranslatio
 		sideProjectIdByIndex: [],
 		sideProjectAchievementIdByIndex: new Map(),
 		educationIdByIndex: [],
-		techSkillCategoryIdByIndex: []
+		techSkillCategoryIdByIndex: [],
+		languageIdByIndex: []
 	};
 }
 
@@ -79,6 +81,11 @@ export function resolveTranslationEntity(
 		case 'tech_skill_category': {
 			const id = created.techSkillCategoryIdByIndex[target.category_index];
 			return id === undefined ? null : { entity_type: 'tech_skill_category', entity_id: id };
+		}
+
+		case 'language': {
+			const id = created.languageIdByIndex[target.language_index];
+			return id === undefined ? null : { entity_type: 'language', entity_id: id };
 		}
 
 		default:

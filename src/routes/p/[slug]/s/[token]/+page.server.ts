@@ -6,9 +6,11 @@ import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { profile_tokens, profile_versions } from '$lib/server/db/schema';
 import { DEFAULT_FORMAT, DEFAULT_VIEW_MODE } from '$lib/profile-tokens';
+import { BASE_LOCALE, isKnownLocale } from '$lib/resume-translations';
+import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, getClientAddress }) => {
+export const load: PageServerLoad = async ({ params, url, getClientAddress }) => {
 	const { slug, token: tokenString } = params;
 
 	// Get profile by slug
@@ -66,20 +68,32 @@ export const load: PageServerLoad = async ({ params, getClientAddress }) => {
 	const format = token.format || DEFAULT_FORMAT;
 	const viewMode = token.view_mode || DEFAULT_VIEW_MODE;
 
+	// `?lang=` picks the document language, as on the public resume/CV routes.
+	// The base or an unknown locale renders the English original.
+	const langParam = url.searchParams.get('lang');
+	const locale = isKnownLocale(langParam) && langParam !== BASE_LOCALE ? langParam : null;
+
 	// If view_mode is PDF, redirect to the appropriate PDF route with token
 	if (viewMode === 'pdf') {
 		const pdfPath = format === 'cv' ? 'cv.pdf' : 'resume.pdf';
-		redirect(302, `/p/${slug}/${pdfPath}?t=${tokenString}`);
+		const langQuery = locale ? `&lang=${locale}` : '';
+		redirect(302, `/p/${slug}/${pdfPath}?t=${tokenString}${langQuery}`);
 	}
 
 	// Increment visit counter (for HTML view - PDF view increments in its own route)
 	await incrementTokenVisit(token.id, getClientAddress());
+
+	// Overlay the locale's translations onto the profile tree (in place), as the
+	// public routes do, so ProfileDisplay stays language-agnostic.
+	const translator = await loadTranslator(profile.id, locale);
+	applyTranslations(profile, translator);
 
 	return {
 		profile: {
 			...profile,
 			profile_versions: profile.profile_versions
 		},
+		locale: translator.locale,
 		versionId: token.profile_version,
 		format
 	};

@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { formatDateRangeCompact } from '$lib/tools/date-utils';
+	import {
+		proficiencyLabel,
+		templateLabel,
+		type TemplateLabelKey
+	} from '$lib/resume-template-labels';
 	import ContactItem from './ContactItem.svelte';
 	import { createProfileFilter } from './profile-filter';
 	import { isContactHidden } from '$lib/resume-contact-fields';
@@ -105,9 +110,17 @@
 		profile: Profile;
 		type?: string | null;
 		versionId?: number | null;
+		/** Render locale for the template chrome (headings, labels, "Present"). */
+		locale?: string | null;
 	}
 
-	let { profile, type = null, versionId = null }: Props = $props();
+	let { profile, type = null, versionId = null, locale = null }: Props = $props();
+
+	// The profile tree arrives already overlaid with the locale's translations;
+	// the chrome around it is localized from the static dictionary.
+	const t = (key: TemplateLabelKey) => templateLabel(key, locale);
+	const heading = (key: TemplateLabelKey) => t(key).toUpperCase();
+	const presentLabel = t('present');
 
 	// Use versionId prop if provided, otherwise fall back to URL query param
 	const versionFromUrl: string = page.url.searchParams.get('version') || '';
@@ -170,7 +183,7 @@
 				{#if contactVisible.email}
 					<li class="print:indent-[-3px]">
 						<ContactItem
-							label="Email"
+							label={t('contactEmail')}
 							href={profile.email_address}
 							content={profile.email_address}
 							type="email"
@@ -181,7 +194,7 @@
 				{#if contactVisible.phone}
 					<li class="print:indent-[-3px]">
 						<ContactItem
-							label="Phone"
+							label={t('contactPhone')}
 							href={profile.phone_number}
 							content={profile.phone_number}
 							type="phone"
@@ -191,7 +204,11 @@
 
 				{#if contactVisible.location}
 					<li class="print:indent-[-3px]">
-						<ContactItem label="Location" href={profile.location_url} content={profile.location}>
+						<ContactItem
+							label={t('contactLocation')}
+							href={profile.location_url}
+							content={profile.location}
+						>
 							{#if profile.location_timezone}
 								({profile.location_timezone})
 							{/if}
@@ -202,7 +219,7 @@
 				{#if contactVisible.website}
 					<li class="print:indent-[-3px]">
 						<ContactItem
-							label="Website"
+							label={t('contactWebsite')}
 							href={profile.personal_website}
 							content={profile.personal_website}
 						/>
@@ -236,7 +253,7 @@
 	<!-- Summary -->
 	{#if profile.summary}
 		<section class="my-4">
-			<h2 class="text-sm font-bold">SUMMARY</h2>
+			<h2 class="text-sm font-bold">{heading('summary')}</h2>
 
 			<hr class="mt-1 mb-2" />
 
@@ -247,7 +264,7 @@
 	<!-- Work Experience -->
 	{#if work_experiences.length > 0}
 		<section class="my-4 mb-[-20px]">
-			<h2 class="h-5 text-sm font-bold">WORK EXPERIENCE<br /><br /></h2>
+			<h2 class="h-5 text-sm font-bold">{heading('workExperience')}<br /><br /></h2>
 
 			<hr class="mt-1 mb-2" />
 
@@ -257,11 +274,11 @@
 						{job.name} |
 						{job.location} |
 						{job.position} |
-						{formatDateRangeCompact(job.start_date, job.end_date)}
+						{formatDateRangeCompact(job.start_date, job.end_date, presentLabel)}
 					</div>
 
 					{#if job.note}
-						<p class="text-sm italic"><strong>Note:</strong> {job.note}</p>
+						<p class="text-sm italic"><strong>{t('note')}:</strong> {job.note}</p>
 					{/if}
 
 					{#if job.work_experience_achievements && job.work_experience_achievements.length > 0}
@@ -286,7 +303,7 @@
 	<!-- Skills -->
 	{#if skillGroups.length > 0}
 		<section class="my-4 mb-[-20px] break-inside-avoid">
-			<h2 class="text-sm font-bold">SKILLS</h2>
+			<h2 class="text-sm font-bold">{heading('skills')}</h2>
 
 			<hr class="mt-1 mb-2" />
 
@@ -307,14 +324,18 @@
 	<!-- Side Projects -->
 	{#if filterOnTags(profile.side_projects, OVERRIDE_ENTITIES.sideProject).length > 0}
 		<section class="my-4 break-inside-avoid">
-			<h2 class="h-5 text-sm font-bold">SIDE PROJECTS<br /><br /></h2>
+			<h2 class="h-5 text-sm font-bold">{heading('sideProjects')}<br /><br /></h2>
 
 			<hr class="mt-1 mb-2" />
 
 			{#each filterOnTags(profile.side_projects, OVERRIDE_ENTITIES.sideProject) as project, index (index)}
 				<div class="mb-3">
 					<div class="mb-0 text-xs font-bold">
-						{project.name} | {formatDateRangeCompact(project.start_date, project.end_date)}
+						{project.name} | {formatDateRangeCompact(
+							project.start_date,
+							project.end_date,
+							presentLabel
+						)}
 					</div>
 
 					<div>
@@ -336,7 +357,7 @@
 	<!-- Education -->
 	{#if filterOnTags(profile.educations, OVERRIDE_ENTITIES.education).length > 0}
 		<section class="my-3 mb-[-45px] break-inside-avoid">
-			<h2 class="h-5 text-sm font-bold">EDUCATION<br /><br /></h2>
+			<h2 class="h-5 text-sm font-bold">{heading('education')}<br /><br /></h2>
 
 			<hr class="mt-1 mb-2" />
 
@@ -346,9 +367,9 @@
 						{education.area}, {education.study_type}{#if type === 'cv'},
 
 							{#if education.graduation_year}
-								Graduation Year {education.graduation_year}
+								{t('graduationYear')} {education.graduation_year}
 							{:else}
-								{formatDateRangeCompact(education.start_date, education.end_date)}
+								{formatDateRangeCompact(education.start_date, education.end_date, presentLabel)}
 							{/if}
 						{/if} |
 						{education.institution}, {education.location}
@@ -366,7 +387,7 @@
 	{#if profile.certificates && profile.certificates.length > 0}
 		<!-- Certificates -->
 		<section class="my-3 break-inside-avoid">
-			<h2 class="h-5 text-sm font-bold">CERTIFICATES<br /><br /></h2>
+			<h2 class="h-5 text-sm font-bold">{heading('certificates')}<br /><br /></h2>
 
 			<hr class="mt-1 mb-2" />
 
@@ -382,15 +403,13 @@
 	<!-- Languages -->
 	{#if profile.languages && profile.languages.length > 0}
 		<section class="my-3 break-inside-avoid">
-			<h2 class="h-5 text-sm font-bold">LANGUAGES<br /><br /></h2>
+			<h2 class="h-5 text-sm font-bold">{heading('languages')}<br /><br /></h2>
 
 			<hr class="mt-1 mb-2" />
 
 			{#each profile.languages as language, index (index)}
 				<div>
-					{language.name}: {language.proficiency
-						? language.proficiency.substr(0, 1).toUpperCase() + language.proficiency.substr(1)
-						: ''}
+					{language.name}: {proficiencyLabel(language.proficiency, locale)}
 				</div>
 			{/each}
 		</section>
@@ -399,7 +418,7 @@
 	{#if toggles.includes('nationality')}
 		<!-- Nationality -->
 		<section class="my-3 break-inside-avoid">
-			<h2 class="text-sm font-bold">NATIONALITY</h2>
+			<h2 class="text-sm font-bold">{heading('nationality')}</h2>
 
 			<hr class="mt-1 mb-2" />
 
@@ -411,7 +430,7 @@
 
 	{#if type === 'cv' && profile.references && profile.references.length > 0}
 		<section class="mb-6">
-			<h2 class="text-sm font-bold">REFERENCES</h2>
+			<h2 class="text-sm font-bold">{heading('references')}</h2>
 
 			<hr class="mt-1 mb-2" />
 
@@ -421,7 +440,7 @@
 					<p class="italic">"{reference.text}"</p>
 				</div>
 			{/each}
-			<p class="mt-2 font-semibold">Contact details available upon request</p>
+			<p class="mt-2 font-semibold">{t('referencesOnRequest')}</p>
 		</section>
 	{/if}
 </article>

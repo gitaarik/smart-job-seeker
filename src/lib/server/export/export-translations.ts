@@ -28,6 +28,7 @@ export interface TranslationIndexMaps {
 	sideProjectAchievement: Map<number, { side_project_index: number; achievement_index: number }>;
 	education: Map<number, number>;
 	techSkillCategory: Map<number, number>;
+	language: Map<number, number>;
 }
 
 export function emptyTranslationIndexMaps(profileId: number): TranslationIndexMaps {
@@ -38,7 +39,8 @@ export function emptyTranslationIndexMaps(profileId: number): TranslationIndexMa
 		sideProject: new Map(),
 		sideProjectAchievement: new Map(),
 		education: new Map(),
-		techSkillCategory: new Map()
+		techSkillCategory: new Map(),
+		language: new Map()
 	};
 }
 
@@ -80,6 +82,11 @@ export function resolveTranslationTarget(
 		case 'tech_skill_category': {
 			const index = maps.techSkillCategory.get(entityId);
 			return index === undefined ? null : { kind: 'tech_skill_category', category_index: index };
+		}
+
+		case 'language': {
+			const index = maps.language.get(entityId);
+			return index === undefined ? null : { kind: 'language', language_index: index };
 		}
 
 		default:

@@ -16,6 +16,11 @@
 			locale={data.locale}
 		/>
 	{:else}
-		<ProfileDisplay profile={data.profile} type="resume" versionId={data.versionId} />
+		<ProfileDisplay
+			profile={data.profile}
+			type="resume"
+			versionId={data.versionId}
+			locale={data.locale}
+		/>
 	{/if}
 {/if}

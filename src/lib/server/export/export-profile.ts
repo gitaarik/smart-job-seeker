@@ -194,6 +194,7 @@ export async function buildProfileExport(
 			},
 			languages: {
 				columns: {
+					id: true,
 					status: true,
 					sort: true,
 					name: true,
@@ -350,6 +351,7 @@ export async function buildProfileExport(
 	profile.tech_skill_categories.forEach((cat, index) =>
 		translationMaps.techSkillCategory.set(cat.id, index)
 	);
+	profile.languages.forEach((lang, index) => translationMaps.language.set(lang.id, index));
 
 	const translations = await buildTranslationExport(profileId, translationMaps);
 

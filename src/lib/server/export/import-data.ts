@@ -462,15 +462,19 @@ async function importProfileEntities(
 	}
 
 	// Languages
-	for (const l of p.languages ?? []) {
-		await dbDirect.insert(languages).values({
-			profile_id: profileId,
-			status: l.status || 'draft',
-			sort: l.sort ?? null,
-			name: l.name || null,
-			language_code: l.language_code || null,
-			proficiency: l.proficiency || null
-		});
+	for (const [languageIndex, l] of (p.languages ?? []).entries()) {
+		const [createdLang] = await dbDirect
+			.insert(languages)
+			.values({
+				profile_id: profileId,
+				status: l.status || 'draft',
+				sort: l.sort ?? null,
+				name: l.name || null,
+				language_code: l.language_code || null,
+				proficiency: l.proficiency || null
+			})
+			.returning({ id: languages.id });
+		translated.languageIdByIndex[languageIndex] = createdLang.id;
 	}
 
 	// References

@@ -6,5 +6,10 @@
 </script>
 
 {#if data.profile}
-	<ProfileDisplay profile={data.profile} type={data.format} versionId={data.versionId} />
+	<ProfileDisplay
+		profile={data.profile}
+		type={data.format}
+		versionId={data.versionId}
+		locale={data.locale}
+	/>
 {/if}
