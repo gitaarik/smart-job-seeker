@@ -10,6 +10,7 @@
 	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 	import { assetUrl, type ResumeTemplateConfig } from '$lib/resume-templates';
 	import { templateLabel } from '$lib/resume-template-labels';
+	import { resumeDocumentDescription, resumeDocumentTitle } from '$lib/resume-head';
 
 	interface WorkExperience {
 		name: string | null;
@@ -37,6 +38,7 @@
 	interface Profile {
 		name: string | null;
 		title: string | null;
+		subtitle: string | null;
 		email_address: string | null;
 		phone_number: string | null;
 		location: string | null;
@@ -144,8 +146,18 @@
 		{ icon: 'linkedin', key: 'linkedin', text: contactText('linkedin', profile.linkedin_profile) },
 		{ icon: 'github', key: 'github', text: contactText('github', profile.github_profile) }
 	].filter((c) => !!c.text && !isContactHidden(c.key, toggles));
+
+	// Share-link preview (LinkedIn, Slack, WhatsApp) is built from these two.
+	const headTitle = $derived(resumeDocumentTitle(profile));
+	const headDescription = $derived(resumeDocumentDescription(profile));
 </script>
 
+<svelte:head>
+	<title>{headTitle}</title>
+	<meta name="description" content={headDescription} />
+	<meta property="og:title" content={headTitle} />
+	<meta property="og:description" content={headDescription} />
+</svelte:head>
 {#snippet icon(name: string)}
 	{@const def = (
 		{

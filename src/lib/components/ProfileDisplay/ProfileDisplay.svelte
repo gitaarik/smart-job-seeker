@@ -10,6 +10,7 @@
 	import { createProfileFilter } from './profile-filter';
 	import { isContactHidden } from '$lib/resume-contact-fields';
 	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
+	import { resumeDocumentDescription, resumeDocumentTitle } from '$lib/resume-head';
 
 	interface Profile {
 		name: string | null;
@@ -158,12 +159,18 @@
 		github: showContact('github', profile.github_profile)
 	};
 	const anyContact = Object.values(contactVisible).some(Boolean);
+
+	// Share-link preview (LinkedIn, Slack, WhatsApp) is built from these two.
+	const headTitle = $derived(resumeDocumentTitle(profile));
+	const headDescription = $derived(resumeDocumentDescription(profile));
 </script>
 
 <svelte:head>
-	<title>{profile.name}</title>
+	<title>{headTitle}</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<meta name="description" content={profile.name} />
+	<meta name="description" content={headDescription} />
+	<meta property="og:title" content={headTitle} />
+	<meta property="og:description" content={headDescription} />
 </svelte:head>
 
 <article
