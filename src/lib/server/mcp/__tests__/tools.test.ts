@@ -229,6 +229,15 @@ describe('what the client is told before it sees a tool', () => {
 		}
 	});
 
+	it('hands over the approval link rather than only the news', () => {
+		// The URL comes back on every proposal, but what the standing contract
+		// prescribes is "say it is waiting" — and a batch of proposals summarised
+		// at the end is exactly where the per-call links get dropped.
+		for (const scope of ['record', 'documents'] as const) {
+			expect(instructionsFor(scope), scope).toContain('review_at');
+		}
+	});
+
 	it('keeps what is true of every key at either scope', () => {
 		for (const scope of ['record', 'documents'] as const) {
 			const instructions = instructionsFor(scope);

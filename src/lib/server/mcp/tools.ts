@@ -668,7 +668,10 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
 		`Changes that overwrite something the applicant wrote, and changes that hide ` +
 			`an entry, are not applied by you. They are recorded and the applicant ` +
 			`approves them in their own app. There is no tool that approves one, and ` +
-			`asking again will not help — say it is waiting and carry on.`,
+			`asking again will not help — say it is waiting, give them the "review_at" ` +
+			`URL that came back with it, and carry on. That link is the whole of what ` +
+			`they have to act on, and it is dropped most often when several proposals ` +
+			`are summarised at the end rather than reported as they happen.`,
 
 		`Do not invent history. Rewording what the applicant has said is in scope; ` +
 			`adding a role, a date or an employer they have not told you about is not.`,
