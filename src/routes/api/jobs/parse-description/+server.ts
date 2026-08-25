@@ -47,7 +47,7 @@ export const POST: RequestHandler = async ({ locals, cookies, request }) => {
 
 	let parsed = null;
 	try {
-		parsed = await parseJobDescription(description, { profileId, sourceUrl });
+		parsed = await parseJobDescription(description, { profileId, sourceUrl, recoverHeader: true });
 	} catch (err) {
 		console.warn(`[parse-description] extraction threw for profile ${profileId}:`, err);
 	}
@@ -92,6 +92,12 @@ export const POST: RequestHandler = async ({ locals, cookies, request }) => {
 			salary_period: parsed.salary_period
 				? normalizeSalaryPeriod(parsed.salary_period) || parsed.salary_period
 				: null
+		},
+		// Not extracted, offered: a description of the work to use as the title
+		// when the posting names no role. Kept out of `fields` so the form can
+		// show it as a suggestion rather than as something the posting said.
+		suggestions: {
+			title: parsed.suggested_title
 		},
 		// Extracted detail the form doesn't make editable, shown read-only so the
 		// user can see the parse worked. Editable later on the job page.

@@ -163,7 +163,7 @@ describe('parseForNewApplication', () => {
 		await expect(parseForNewApplication('a posting', { profileId: 7 })).resolves.toBeNull();
 	});
 
-	it('passes the source url through, so the parser can place the posting', async () => {
+	it('passes the source url through, and asks for the header pass', async () => {
 		mockParse.mockResolvedValueOnce({ title: 'Parsed' });
 
 		const parsed = await parseForNewApplication('a posting', {
@@ -171,9 +171,12 @@ describe('parseForNewApplication', () => {
 			sourceUrl: 'https://example.com/job'
 		});
 
+		// A paste is where the header pass earns its keep: the form and MCP both
+		// come through here, and neither has markup to find the title in.
 		expect(mockParse).toHaveBeenCalledWith('a posting', {
 			profileId: 7,
-			sourceUrl: 'https://example.com/job'
+			sourceUrl: 'https://example.com/job',
+			recoverHeader: true
 		});
 		expect(parsed).toEqual({ title: 'Parsed' });
 	});

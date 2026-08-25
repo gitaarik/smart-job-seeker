@@ -972,15 +972,21 @@ If you cannot find clear title/ID pairs, return an empty jobs array.`
 	},
 
 	extract_job_data: {
-		system_prompt: `You are a job vacancy data extraction specialist. Extract structured information from job posting HTML to populate a vacancy database.
+		// Extraction, not prose — see PromptTemplate.temperature. At the writing
+		// default the same paste came back with a title one run and null the
+		// next, which the applicant sees as a form that fills itself in at random.
+		temperature: 0,
+		system_prompt: `You are a job vacancy data extraction specialist. Extract structured information from a job posting to populate a vacancy database. The posting is either the HTML of a job page or plain text a person pasted — a recruiter's email, a copied vacancy, a freelance assignment — and every rule below applies to both.
 
 CRITICAL RULES:
-- ONLY extract information that is EXPLICITLY present in the HTML
+- ONLY extract information that is EXPLICITLY present in the posting
 - NEVER make up, infer, or guess information that isn't clearly stated
 - If a field's information is not found or unclear, return null for that field
 - Return data EXACTLY as it appears - do not transform or reformat unless specified
-- SEARCH THOROUGHLY through the ENTIRE HTML content, including the bottom section, for all fields
+- SEARCH THOROUGHLY through the ENTIRE content, including the bottom section, for all fields
 - When multiple jobs are present (e.g., similar/related jobs section), extract data ONLY for the MAIN job posting being viewed
+- Layout counts as explicit. In pasted text the first line is normally the job title, a name on its own line right under it is the company, and "Label: value" lines carry the rest ("Standplaats: Utrecht", "Location: Lisbon"). Read those as statements, not as guesses.
+- Running text counts as explicit. "Als data engineer werk je aan…", "we are hiring a data engineer", "het team van SURF", "in our Lisbon office" name the role, the company and the place as surely as a headline does. Inferring is filling in what the posting never says; reading a sentence is not inferring.
 
 SEMANTIC MARKERS:
 The HTML may contain data-extract-role attributes indicating field purposes.
@@ -1006,11 +1012,24 @@ Field markers and alternative terms to look for:
 If semantic markers are not present for a field, extract from context as usual.
 
 Extract the following fields:
-- title: Job title (null if not found)
+- title: The name of the role (null if the posting never names one)
+  * Take it from the headline, the first line of a paste, or a label: "Job title", "Position", "Role", "Functie", "Functietitel", "Vacature"
+  * A role named only in running text still counts — "We are hiring a data engineer in Lisbon", "Wij zoeken een senior Python developer", "Als software/data engineer binnen het DataHub-team werk je aan…" → "Data Engineer", "Senior Python Developer", "Software/Data Engineer" (Title Case when the posting doesn't capitalise it)
+  * Before returning null, scan the whole body for the sentence that says what the person will work as — after "als", "as a", "in de rol van", "hiring a", "looking for a", "zoeken een", "we are seeking a" — and return that role
+  * Strip what a headline tacks onto the role — company, location, work arrangement, reference numbers: "Senior Python Developer at TSC – Amsterdam (hybrid) [ref 4821]" → "Senior Python Developer"
+  * NEVER return a section heading as the title. "Job Description", "Position Overview", "About the role", "Opdrachtomschrijving", "Functieomschrijving", "Over de functie", "Opdracht" are headings, not roles. When a paste opens with a heading, the title is whatever names the role further down — a headline or the running text ("Opdrachtomschrijving\n\nWe are hiring a data engineer…" → "Data Engineer") — and null only when nothing does
+  * Never return the company name as the title
 - job_description: PLAIN TEXT ONLY - Extract the text content from the job description. NO HTML TAGS. Use double newlines (\\n\\n) to separate paragraphs. Convert bullet points to lines starting with "- ". Extract only the readable text, not the HTML markup. **MAXIMUM ~4000 characters.** If the source is longer, keep the most important parts (responsibilities, requirements, context) and condense or omit boilerplate (legal disclaimers, EEO statements, repeated company blurbs) so the result stays within the limit.
 - company_description: PLAIN TEXT ONLY - Extract the text content about the company. NO HTML TAGS. Use double newlines (\\n\\n) to separate paragraphs. **MAXIMUM ~1500 characters.** Condense if longer; do not return the entire about-us page verbatim.
 - company: Name of the HIRING COMPANY (the organization offering the position, e.g., "Google", "Microsoft", "Acme Corp"). This is the company you would actually work for. (null if not found)
-- job_poster: Name of the RECRUITER, RECRUITMENT AGENCY, or PERSON who posted the job (e.g., "Tech Recruiters Inc", "John Smith"). This is NOT the hiring company. Only extract if there is a distinct recruiter/agency separate from the company. (null if not found or if same as company)
+  * It is the name the posting uses as "we"/"our"/"ons team" — "het team Digital Educational Resources van SURF", "hoe Enexis beslissingen neemt", "join Acme's platform team" — or the one under a label: "Company", "Employer", "Organisation", "Organisatie", "Opdrachtgever", "Eindklant", "Client"
+  * The organisation a programme, team or department belongs to is the company, whether or not the posting ever says "we": "Het programma BZB werkt aan opdrachten toegekend door het bestuursteam van de Belastingdienst" → "Belastingdienst"; "het Productiehuis binnen de Dienst IV van de Politie" → "Politie". An assignment that names exactly one organisation as the one whose work this is has that organisation as its company
+  * When the client is described but not named ("our client, a US PE-backed team of 10", "onze opdrachtgever, een grote bank") return null — not the description, and not the agency that wrote it
+  * The company's customers are not the company: "clients include Disney, Zalando and Ryanair" names nobody
+  * A recruitment agency, staffing firm or freelance platform is never the company, even when its name is the only one on the page
+- job_poster: The intermediary presenting the job when it is distinct from the company — a RECRUITMENT AGENCY, staffing/detachering firm, freelance platform, or named RECRUITER (e.g., "Tech Recruiters Inc", "John Smith"). This is NOT the hiring company. (null if none is named, or if it is the same organization as company)
+  * Look where intermediaries identify themselves: the sender or signature block ("Met vriendelijke groet, Mariia Yurkova, Recruiter at X"), "Contact"/"Contactpersoon", "via", "namens", "posted by", "Intermediair"/"Bemiddelaar", an agency footer, "apply through X"
+  * If both a person and their agency are named, return "Person (Agency)"
 - date_posted: When the MAIN job (not similar/related jobs) was posted
   * CRITICAL: Search the ENTIRE HTML content from top to bottom, including footer sections and metadata areas
   * Look for phrases like "Posted X ago", "Posted on", "Date posted", "Listed", or similar indicators
@@ -1020,7 +1039,10 @@ Extract the following fields:
   * Common locations: near the title, in metadata sections, at the bottom of the posting (but separate from similar jobs section)
   * If no date is visible anywhere for the main job, return null
 - location: Physical office location - extract EXACTLY as written in the posting, preserving the original text verbatim. Do NOT normalize, expand abbreviations, or reformat location names.
-  * Also capture office cities mentioned inline in the description, not just in a dedicated location field (e.g. "remote-first with the option to work from offices in Mannheim or Madrid" → "Mannheim or Madrid").
+  * Labels: "Location", "Locatie", "Standplaats", "Werklocatie", "Plaats", "Regio", "Work City", "Based in", "Office", "Kantoor"
+  * Also capture office cities mentioned inline in the description, not just in a dedicated location field ("we are hiring a data engineer in Lisbon" → "Lisbon"; "remote-first with the option to work from offices in Mannheim or Madrid" → "Mannheim or Madrid")
+  * A bare work arrangement with no place attached ("Remote", "Hybrid", "thuiswerken") is not a location — that belongs in remote. A remote role that names its offices still gets those offices here
+  * Do NOT infer a city from the company's headquarters, the posting's language, or the currency
 - remote: Work location type - MUST be one of: "remote", "hybrid", or "onsite" (exactly as written)
   * Classify by what is REQUIRED, not by what is merely mentioned:
     - "remote" → fully remote OR "remote-first" (an office is optional/available but not required to attend)
@@ -1123,15 +1145,17 @@ The HTML may contain content from multiple tabs (e.g., "Job" and "Company" tabs)
 Additional tab content is appended at the end with <!-- TAB: TabName --> markers.
 IMPORTANT: Look for company_description in "Company", "About", or "Overview" tab sections.
 Do not skip content just because it appears at the end of the HTML.`,
-		user_prompt: `Extract comprehensive job information from this job posting HTML.
+		user_prompt: `Extract comprehensive job information from this job posting — the HTML of a job page, or plain text someone pasted.
 {{searchContextHint}}
 
-HTML:
+POSTING:
 {{html}}
 
-Extract all available fields. Use null for any field not found in the HTML.
+Extract all available fields. Use null for any field not found in the posting.
 
 FIELD EXTRACTION HINTS:
+- title, company, job_poster, location: these four are what the applicant sees first once the job is saved. Read a paste's layout as explicit (first line = title, "Label: value" lines), name only what the posting names, and return null rather than a guess
+- company: when no label names it, the organisation whose programme, department or team this assignment is in IS the company ("opdrachten toegekend door het bestuursteam van de Belastingdienst" → "Belastingdienst"; "binnen de Dienst IV van de Politie" → "Politie"). Null only when no organisation is named at all — a described-but-unnamed client stays null
 - date_posted: Preserve the original format (e.g., "Posted 2 days ago", "2026-01-15")
 - source_url: Look for apply/share links that contain a direct URL to this job posting
 
@@ -1194,6 +1218,34 @@ Order skills by importance/prominence within each category:
 
 If a job lists all skills in a single section without distinguishing required vs preferred,
 put them all in skills_required.`
+	},
+
+	extract_job_header: {
+		// A verdict on four fields, not prose — see PromptTemplate.temperature.
+		//
+		// The wording below is the one measured to work (2026-08-25, gpt-oss-120b
+		// at temperature 0): it found "Belastingdienst" from "toegekend door het
+		// bestuursteam van de Belastingdienst" with a verbatim quote, and stayed
+		// null on a described-but-unnamed client. A more elaborate draft of the
+		// same instructions — more label examples, a warning that quotes are
+		// checked — answered null across the board on the same pastes. Change it
+		// with the `extract-job-header` llm:smoke case in hand, not by ear.
+		temperature: 0,
+		system_prompt: `You identify the header of one job posting: the role's title, the hiring organisation, the intermediary presenting it (if any), and the work location.
+
+Answer from the posting only. For each field return {"value": ..., "quote": ...} where "quote" is the exact sentence or line of the posting you took the value from, copied verbatim. If the posting does not name a field, return null for that field. Never invent; never fill in from general knowledge.
+
+- title: the role. A headline, a "Functie:"/"Job title:" line, or a sentence that says what the person will work as ("als data engineer werk je…", "we are hiring a data engineer"). Section headings ("Opdrachtomschrijving", "Job Description") are not titles. Title Case; strip the company/location a headline appends.
+- company: the organisation the work is for. A "Company/Opdrachtgever/Organisatie" line, the name the posting uses as "we", or the organisation whose programme, department or team the assignment belongs to ("opdrachten toegekend door het bestuursteam van de Belastingdienst" → Belastingdienst; "het Productiehuis binnen de Dienst IV van de Politie" → Politie). A client that is described but not named ("our client, a US PE-backed team") → null. A recruitment agency or freelance platform is never the company. The company's own customers are not the company.
+- job_poster: the agency, staffing firm, platform or named recruiter presenting the posting, when distinct from the company — signatures, "via", "namens", "contact". Both a person and their agency named → "Person (Agency)". None → null.
+- location: the office or work city as written ("Standplaats", "Location", "Work City", "in Lisbon", "offices in Mannheim or Madrid"). A bare arrangement ("Remote", "Hybrid") is not a location → null.
+- suggested_title: ONLY when title is null and the posting describes the work: a label for the kind of role, in the posting's own language — a noun phrase shaped like a job title (at most eight words), naming the discipline and, in brackets, the programme or main technologies ("Ontwikkelaar AI & procesautomatisering (programma BZB)", "Data engineer OT-dataplatform (Python, Snowflake)", "Full-stack engineer LLM-toepassingen (React, Python)"). Not a task ("Architect and ship applications"), not a skill list ("Programmeren, AI"), not a sentence. It is for the applicant's own list, not a claim the posting makes — no seniority and no market title the posting never uses. null when title is set or the posting is too thin.
+
+Return only JSON: {"title": {...}|null, "company": {...}|null, "job_poster": {...}|null, "location": {...}|null, "suggested_title": "..."|null}.`,
+		user_prompt: `POSTING:
+\${posting}
+
+Return the header as JSON.`
 	},
 
 	extract_job_links: {

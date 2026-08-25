@@ -3,6 +3,7 @@ import {
 	aiPromptSchemas,
 	detectLoginPageSchema,
 	extractJobDataSchema,
+	extractJobHeaderSchema,
 	extractQaPairsSchema,
 	findNextPageButtonSchema,
 	getSchemaForPrompt,
@@ -16,6 +17,7 @@ describe('AI Prompt Schemas', () => {
 	describe('Schema Registry', () => {
 		it('should have all expected schemas in registry', () => {
 			expect(aiPromptSchemas).toHaveProperty('extract_job_data');
+			expect(aiPromptSchemas).toHaveProperty('extract_job_header');
 			expect(aiPromptSchemas).toHaveProperty('score_job_match');
 			expect(aiPromptSchemas).toHaveProperty('detect_login_page');
 			expect(aiPromptSchemas).toHaveProperty('find_next_page_button');
@@ -416,6 +418,31 @@ describe('AI Prompt Schemas', () => {
 				paginationType: 'unknown' // Invalid enum
 			};
 			expect(() => findNextPageButtonSchema.parse(invalidType)).toThrow();
+		});
+	});
+});
+
+describe('extractJobHeaderSchema', () => {
+	it('accepts grounded fields and nulls', () => {
+		const parsed = extractJobHeaderSchema.parse({
+			title: null,
+			company: { value: 'Belastingdienst', quote: 'van de Belastingdienst' },
+			job_poster: 'null',
+			location: { value: null, quote: null }
+		});
+		expect(parsed).toMatchObject({
+			title: null,
+			company: { value: 'Belastingdienst', quote: 'van de Belastingdienst' },
+			job_poster: null,
+			location: { value: null, quote: null }
+		});
+	});
+
+	// A bare string is a value without evidence; it must survive parsing in a
+	// shape the grounding check can reject, not be dropped or coerced into proof.
+	it('keeps a bare string as a value with no quote', () => {
+		expect(extractJobHeaderSchema.parse({ company: 'Belastingdienst' })).toMatchObject({
+			company: { value: 'Belastingdienst', quote: null }
 		});
 	});
 });

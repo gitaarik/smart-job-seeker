@@ -71,15 +71,23 @@ async function reparseAndRescore(
 			job_description: true,
 			source_url: true,
 			title: true,
-			company: true
+			company: true,
+			created_manually: true
 		}
 	});
 	if (!job) return { ok: false, status: 404, error: 'Job not found' };
 
-	// Re-extract from already-stored content — captured HTML preferred, else the
-	// description text. No re-fetch (unlike Rescrape), so this also works for
-	// manual jobs that have no source_url.
-	const text = job.source_html_stripped ?? job.job_description;
+	// Re-extract from already-stored content. No re-fetch (unlike Rescrape), so
+	// this also works for manual jobs that have no source_url.
+	//
+	// For a scraped job the captured page is the best input it has. For a
+	// manually-created one the description IS the paste, and beats the copy
+	// derived from it at creation — which, for jobs created before pasted text
+	// kept its lines, is the version with its lines fused together.
+	const text =
+		(job.created_manually ? job.job_description : null) ??
+		job.source_html_stripped ??
+		job.job_description;
 	if (!text || text.trim() === '') {
 		return {
 			ok: false,
@@ -90,7 +98,9 @@ async function reparseAndRescore(
 
 	const parsed = await parseJobDescription(text, {
 		profileId,
-		sourceUrl: job.source_url
+		sourceUrl: job.source_url,
+		// The header pass is for pastes; a scraped page has its header in markup.
+		recoverHeader: !!job.created_manually
 	});
 	if (!parsed) {
 		return {

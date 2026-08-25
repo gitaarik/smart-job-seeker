@@ -135,7 +135,7 @@ export async function parseForNewApplication(
 	opts: { profileId: number; sourceUrl?: string | null }
 ): Promise<ParsedJobDescription | null> {
 	try {
-		return await parseJobDescription(description, opts);
+		return await parseJobDescription(description, { ...opts, recoverHeader: true });
 	} catch {
 		return null;
 	}

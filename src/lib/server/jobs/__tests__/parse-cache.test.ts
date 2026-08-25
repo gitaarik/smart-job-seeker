@@ -5,6 +5,7 @@ import type { ParsedJobDescription } from '../parse-job-description';
 function makeParsed(title: string): ParsedJobDescription {
 	return {
 		title,
+		suggested_title: null,
 		job_description: null,
 		company_description: null,
 		company: null,

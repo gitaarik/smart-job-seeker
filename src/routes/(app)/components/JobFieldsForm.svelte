@@ -70,6 +70,8 @@
 		idPrefix?: string;
 		/** Render the title at heading size — for editing in place under an h1. */
 		titleSize?: 'normal' | 'heading';
+		/** Optional note under the title, e.g. that the value shown is a suggestion. */
+		titleHint?: string | null;
 		/** Optional note under the date field, e.g. what an empty value falls back to. */
 		datePostedHint?: string | null;
 		disabled?: boolean;
@@ -80,6 +82,7 @@
 		layout = 'cards',
 		idPrefix = 'jf',
 		titleSize = 'normal',
+		titleHint = null,
 		datePostedHint = null,
 		disabled = false
 	}: Props = $props();
@@ -127,6 +130,9 @@
 				placeholder="e.g. Senior Frontend Engineer"
 				class={titleInputClass}
 			/>
+			{#if titleHint}
+				<p class="mt-1 text-xs text-[var(--dash-text-muted)]">{titleHint}</p>
+			{/if}
 		</div>
 		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 			<div>

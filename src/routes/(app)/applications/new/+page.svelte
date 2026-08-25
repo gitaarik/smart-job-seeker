@@ -16,6 +16,7 @@
 		emptyJobFields,
 		type JobFields
 	} from '../../components/JobFieldsForm.svelte';
+	import { today } from '$lib/application-records';
 
 	let { form }: { form: ActionData } = $props();
 
@@ -47,6 +48,11 @@
 		soft_skills: string[];
 	};
 
+	/** Offered rather than extracted — shown in the field, but labelled as such. */
+	type ParsedSuggestions = {
+		title: string | null;
+	};
+
 	let step = $state<'paste' | 'review'>('paste');
 	let parsing = $state(false);
 	let parseWarning = $state<string | null>(null);
@@ -60,6 +66,41 @@
 	let fields = $state<JobFields>(emptyJobFields());
 	let fDescription = $state('');
 	let preview = $state<ParsedPreview | null>(null);
+
+	// Two values the form shows without the posting having said them: a title
+	// suggested from the description when the posting names no role, and
+	// today's date when it doesn't say when it was posted. Each is labelled
+	// under its field for as long as the field still holds the value we put
+	// there — the moment the user edits it, it's theirs and the note goes.
+	let suggestedTitle = $state<string | null>(null);
+	let defaultedDate = $state<string | null>(null);
+	let titleHint = $derived(
+		suggestedTitle && fields.title === suggestedTitle
+			? "Suggested from the description — the posting doesn't name the role. Edit or clear it."
+			: null
+	);
+	let datePostedHint = $derived(
+		defaultedDate && fields.date_posted === defaultedDate
+			? "Set to today — the posting doesn't say when it was posted."
+			: null
+	);
+
+	/**
+	 * Default the date to today when nothing filled it, whichever way the
+	 * review step was reached: a parse that found no date, a parse that failed,
+	 * or "Enter the details manually".
+	 */
+	function defaultDatePosted() {
+		if (fields.date_posted) return;
+		defaultedDate = today();
+		fields.date_posted = defaultedDate;
+	}
+
+	function enterReview() {
+		defaultDatePosted();
+		step = 'review';
+		window.scrollTo({ top: 0 });
+	}
 
 	let previewGroups = $derived(
 		preview
@@ -92,7 +133,7 @@
 				// to the review step and fill it in by hand.
 				parseWarning = body.message ?? "We couldn't read that posting automatically.";
 			} else {
-				applyParsedFields(body.fields as ParsedFields);
+				applyParsedFields(body.fields as ParsedFields, body.suggestions as ParsedSuggestions);
 				preview = body.preview as ParsedPreview;
 				parseToken = body.token;
 				didParse = true;
@@ -101,8 +142,7 @@
 			parseWarning = 'Extraction failed. You can still fill in the details yourself.';
 		} finally {
 			parsing = false;
-			step = 'review';
-			window.scrollTo({ top: 0 });
+			enterReview();
 		}
 	}
 
@@ -113,10 +153,14 @@
 	 * stale values behind. The one exception is a URL the user typed themselves,
 	 * which is more reliable than one recovered from the posting text.
 	 */
-	function applyParsedFields(parsedFields: ParsedFields) {
+	function applyParsedFields(parsedFields: ParsedFields, suggestions?: ParsedSuggestions) {
 		const str = (v: string | number | null) => (v == null ? '' : String(v));
+		// A suggested title fills the box only when extraction found none, and
+		// stays labelled as a suggestion (see titleHint) until it is edited.
+		suggestedTitle = parsedFields.title ? null : (suggestions?.title ?? null);
+		defaultedDate = null;
 		fields = {
-			title: str(parsedFields.title),
+			title: str(parsedFields.title) || str(suggestedTitle),
 			company: str(parsedFields.company),
 			job_poster: str(parsedFields.job_poster),
 			office_location: str(parsedFields.office_location),
@@ -207,7 +251,7 @@
 		<div class="flex items-center justify-between gap-3">
 			<button
 				type="button"
-				onclick={() => (step = 'review')}
+				onclick={enterReview}
 				class="text-sm text-[var(--dash-text-muted)] underline transition-colors hover:text-[var(--dash-text)]"
 			>
 				Enter the details manually
@@ -282,7 +326,7 @@
 				<input type="hidden" name="parse_failed" value="1" />
 			{/if}
 
-			<JobFieldsForm bind:fields idPrefix="na" />
+			<JobFieldsForm bind:fields idPrefix="na" {titleHint} {datePostedHint} />
 
 			<Card padding="responsive">
 				<label for="na-desc" class={labelClass}>Description</label>

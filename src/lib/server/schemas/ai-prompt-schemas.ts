@@ -107,6 +107,48 @@ export const extractJobDataSchema = z
 	.passthrough(); // Allow extra keys LLMs may add like $schema, definitions
 
 /**
+ * One header field as the extract_job_header prompt returns it: the value and
+ * the line of the posting it was read from. A bare string — a model skipping
+ * the object — is kept as a value with no quote, which the grounding check in
+ * extracted-header.ts then rejects, rather than being coerced into evidence
+ * it never had.
+ */
+const groundedField = () =>
+	z.preprocess(
+		(v) => {
+			const c = coerceNull(v);
+			return typeof c === 'string' ? { value: c, quote: null } : c;
+		},
+		z
+			.object({
+				value: optionalNullableString(),
+				quote: optionalNullableString()
+			})
+			.passthrough()
+			.optional()
+			.nullable()
+	);
+
+/**
+ * Schema for extract_job_header prompt — the narrow second pass over a pasted
+ * posting for title, company, recruiter and location, each with the sentence
+ * it was taken from. See header-recovery.ts for why the quote is the point.
+ */
+export const extractJobHeaderSchema = z
+	.object({
+		title: groundedField().describe('The role, with the line it was read from'),
+		company: groundedField().describe('The hiring organisation, with the line it was read from'),
+		job_poster: groundedField().describe(
+			'The agency, platform or recruiter presenting the posting, with the line it was read from'
+		),
+		location: groundedField().describe('The work location, with the line it was read from'),
+		suggested_title: optionalNullableString().describe(
+			'When the posting names no role: a short description of the work, for the applicant to keep or replace'
+		)
+	})
+	.passthrough();
+
+/**
  * Schema for score_job_match prompt
  * Evaluates how well a job matches a candidate's profile
  */
@@ -877,6 +919,7 @@ export const writeAchievementFromAnswerSchema = z
 
 export const aiPromptSchemas = {
 	extract_job_data: extractJobDataSchema,
+	extract_job_header: extractJobHeaderSchema,
 	derive_record_metadata: deriveRecordMetadataSchema,
 	summarize_application: summarizeApplicationSchema,
 	extract_document: extractDocumentSchema,
