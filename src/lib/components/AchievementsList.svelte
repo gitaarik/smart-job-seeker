@@ -13,6 +13,8 @@
 		faBan
 	} from '@fortawesome/free-solid-svg-icons';
 	import { portalToBody } from '$lib/actions/portal';
+	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
+	import type { SaveStatus } from '$lib/components/auto-save.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
 	import { translations } from '$lib/stores/translations.svelte';
 	import { BASE_LOCALE } from '$lib/resume-translations';
@@ -52,14 +54,39 @@
 		onUndoRemove?: (index: number) => void;
 		onFocused?: () => void;
 		/**
-		 * One entry's text or tags changed, after the edit popup was accepted.
+		 * One entry's text or tags changed, as it is edited.
 		 *
 		 * The reordered array already reaches a binding parent on its own; this is
 		 * for the parent that persists per row and needs to know WHICH row, at the
 		 * moment it changed, rather than diffing the array on every keystroke
 		 * elsewhere on the page.
+		 *
+		 * Giving it also puts the edit popup in live mode. The popup used to hold
+		 * an edit until Done and hand it over then — right while removals were
+		 * staged and needed a commit, and wrong once the rows saved themselves:
+		 * the section said "saves as you type", the translation tabs in the same
+		 * popup did, and the English text and tags beside them waited for a
+		 * button that Escape and a click outside skipped. So with a persisting
+		 * parent every keystroke goes through here (and the parent's debounce),
+		 * Done only closes, and the way back is the row's Undo rather than a
+		 * Cancel — the contract the technology chips beside it already keep.
+		 * Without it the popup stages and commits on Done, for a parent that only
+		 * holds the array (the profile wizard).
 		 */
 		onItemChange?: (index: number, item: AchievementItem) => void;
+		/**
+		 * The popup's base field lost focus, or the popup closed — a parent that
+		 * debounces its saves pushes the pending one out. Live mode only.
+		 */
+		onItemBlur?: (index: number) => void;
+		/**
+		 * The save state of one entry, for the pill inside the edit popup.
+		 *
+		 * The section's own indicator sits behind the modal overlay while the
+		 * popup is open, so without this the popup has no way to say "Saving…",
+		 * "Saved · Undo" or "Achievement is required". Live mode only.
+		 */
+		statusFor?: (item: AchievementItem) => SaveStatus | undefined;
 		/**
 		 * Called when a reorder is committed (Save/Done), with the soft-delete
 		 * index set remapped to the new order. The component already writes the
@@ -87,6 +114,8 @@
 		onUndoRemove,
 		onFocused,
 		onItemChange,
+		onItemBlur,
+		statusFor,
 		onReorderCommit,
 		onReorderSave
 	}: Props = $props();
@@ -124,6 +153,9 @@
 	let editTags = $state<string[]>([]);
 	let showVersionTags_popup = $state(false);
 
+	/** Whether the popup writes through as it edits, or stages until Done. */
+	const live = $derived(onItemChange !== undefined);
+
 	const builtinTags = ['resume', 'cv'];
 
 	function hasEditTag(tag: string): boolean {
@@ -155,7 +187,8 @@
 		editTags = [];
 	}
 
-	function saveEdit() {
+	/** Write what the popup holds into the list, and tell the parent which row. */
+	function applyEdit() {
 		if (editingIndex === null) return;
 		const previous = getItem(editingIndex);
 		const next: AchievementItem = {
@@ -166,19 +199,69 @@
 		};
 		setItem(editingIndex, next);
 		onItemChange?.(editingIndex, next);
+	}
+
+	/** Staged mode: Done commits what the popup holds, then closes. */
+	function saveEdit() {
+		applyEdit();
 		closeEdit();
+	}
+
+	/**
+	 * Live mode: everything is written already, so Done only gives the parent
+	 * its chance to push a pending debounce out, then closes.
+	 */
+	function finishEdit() {
+		if (editingIndex !== null) onItemBlur?.(editingIndex);
+		closeEdit();
+	}
+
+	/** Escape and a click outside: a staged edit is dropped, a live one is done. */
+	function dismissEdit() {
+		if (live) finishEdit();
+		else closeEdit();
+	}
+
+	/** The base field lost focus; in live mode that is the parent's flush moment. */
+	function blurEdit() {
+		if (live && editingIndex !== null) onItemBlur?.(editingIndex);
+	}
+
+	function setEditDescription(value: string) {
+		editDescription = value;
+		if (live) applyEdit();
 	}
 
 	function addEditTag(tag: string) {
 		const trimmed = tag.trim();
 		if (trimmed && !editTags.some((t) => t.toLowerCase() === trimmed.toLowerCase())) {
 			editTags = [...editTags, trimmed];
+			if (live) applyEdit();
 		}
 	}
 
 	function removeEditTag(tag: string) {
 		editTags = editTags.filter((t) => t !== tag);
+		if (live) applyEdit();
 	}
+
+	function sameTags(a: string[], b: string[]): boolean {
+		return a.length === b.length && a.every((t, i) => t === b[i]);
+	}
+
+	/**
+	 * Live mode: the entry can change under an open popup. An Undo reverts the
+	 * row through the parent's store and the parent writes it back into
+	 * `achievements`; the popup's own writes keep its copy equal to the entry,
+	 * so a difference is always news from outside and safe to take.
+	 */
+	$effect(() => {
+		if (!live || editingIndex === null || editingIndex >= achievements.length) return;
+		const item = getItem(editingIndex);
+		if (item.description !== editDescription) editDescription = item.description;
+		const tags = item.tags ?? [];
+		if (!sameTags(tags, editTags)) editTags = [...tags];
+	});
 
 	function focusIfNew(node: HTMLElement, isNew: boolean) {
 		if (isNew) {
@@ -446,13 +529,14 @@
 
 <!-- Edit Popup -->
 {#if editingIndex !== null}
+	{@const status = live ? statusFor?.(getItem(editingIndex)) : undefined}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
-		use:portalToBody={{ onClose: closeEdit }}
+		use:portalToBody={{ onClose: dismissEdit }}
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
 		onclick={(e) => {
-			if (e.target === e.currentTarget) closeEdit();
+			if (e.target === e.currentTarget) dismissEdit();
 		}}
 	>
 		<div
@@ -471,7 +555,8 @@
 						label="Description"
 						multiline
 						rows={3}
-						bind:value={editDescription}
+						bind:value={() => editDescription, setEditDescription}
+						onblur={blurEdit}
 						placeholder="Describe your achievement..."
 					/>
 				{:else}
@@ -483,7 +568,8 @@
 					</label>
 					<textarea
 						id="edit-achievement-desc"
-						bind:value={editDescription}
+						bind:value={() => editDescription, setEditDescription}
+						onblur={blurEdit}
 						rows={3}
 						placeholder="Describe your achievement..."
 						class="w-full resize-y rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -577,21 +663,39 @@
 			{/if}
 
 			<!-- Actions -->
-			<div class="flex justify-end gap-2">
-				<button
-					type="button"
-					onclick={closeEdit}
-					class="rounded-lg border border-[var(--dash-border)] px-4 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
-				>
-					Cancel
-				</button>
-				<button
-					type="button"
-					onclick={saveEdit}
-					class="rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
-				>
-					Done
-				</button>
+			<div class="flex items-center justify-end gap-2">
+				{#if live}
+					<!-- Live: the row is saved as it is edited, and this is where it says so. -->
+					<span class="mr-auto">
+						{#if status}
+							<AutoSaveIndicator field={status} idleLabel="Saves as you type" />
+						{:else}
+							<span class="text-xs text-[var(--dash-text-muted)]">Saves as you type</span>
+						{/if}
+					</span>
+					<button
+						type="button"
+						onclick={finishEdit}
+						class="rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
+					>
+						Done
+					</button>
+				{:else}
+					<button
+						type="button"
+						onclick={closeEdit}
+						class="rounded-lg border border-[var(--dash-border)] px-4 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
+					>
+						Cancel
+					</button>
+					<button
+						type="button"
+						onclick={saveEdit}
+						class="rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
+					>
+						Done
+					</button>
+				{/if}
 			</div>
 		</div>
 	</div>

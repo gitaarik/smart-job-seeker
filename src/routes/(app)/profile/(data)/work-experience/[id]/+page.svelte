@@ -111,6 +111,26 @@
 		canCreate: (v: ChildRow) => (v.name ?? '').trim().length > 0
 	});
 
+	/** One store row as the list renders it. */
+	function achievementItem(row: (typeof achievementStore.rows)[number]): AchievementItem {
+		return {
+			key: row.key,
+			id: row.id ?? undefined,
+			description: row.data.description ?? '',
+			tags: row.data.tags.length > 0 ? row.data.tags : null
+		};
+	}
+
+	function sameAchievement(a: AchievementItem, b: AchievementItem): boolean {
+		const [at, bt] = [a.tags ?? [], b.tags ?? []];
+		return (
+			a.id === b.id &&
+			a.description === b.description &&
+			at.length === bt.length &&
+			at.every((t, i) => t === bt[i])
+		);
+	}
+
 	/**
 	 * What `AchievementsList` renders, kept in step with the store by `key`.
 	 *
@@ -119,28 +139,28 @@
 	 * merged without the component growing a second mode, so the array carries
 	 * the key and this page is the one place that knows both.
 	 */
-	let editAchievements = $state<AchievementItem[]>(
-		achievementStore.rows.map((row) => ({
-			key: row.key,
-			id: row.id ?? undefined,
-			description: row.data.description ?? '',
-			tags: row.data.tags.length > 0 ? row.data.tags : null
-		}))
-	);
+	let editAchievements = $state<AchievementItem[]>(achievementStore.rows.map(achievementItem));
 
 	/**
-	 * Ids arrive later for a row that started as a draft, and the list needs them
-	 * — a translated achievement is looked up by id, so without this a newly
-	 * added one would show its base text until the next page load.
+	 * The store is the row's source of truth; the list keeps a copy to render.
+	 *
+	 * Ids arrive late — a draft is created on its first save, and a translated
+	 * achievement is looked up by id — and text can change under the list's
+	 * feet: an Undo reverts the row through the store. Both flow store → list
+	 * here. The list's own edits go the other way, through `changeAchievement`,
+	 * before this runs and never differ from the store when it does, so a
+	 * difference is always news.
 	 */
 	$effect(() => {
-		const ids = new Map(achievementStore.rows.map((row) => [row.key, row.id ?? undefined]));
+		const rows = new Map(achievementStore.rows.map((row) => [row.key, row]));
 		let changed = false;
 		const next = editAchievements.map((item) => {
-			const id = item.key === undefined ? item.id : ids.get(item.key);
-			if (id === item.id) return item;
+			const row = item.key === undefined ? undefined : rows.get(item.key);
+			if (!row) return item;
+			const synced = achievementItem(row);
+			if (sameAchievement(synced, item)) return item;
 			changed = true;
-			return { ...item, id };
+			return synced;
 		});
 		if (changed) editAchievements = next;
 	});
@@ -261,12 +281,17 @@
 		lastAddedAchievementIndex = editAchievements.length - 1;
 	}
 
-	/** The popup was accepted: write the entry the user just edited. */
+	/** The popup edited an entry, as it is typed: write it through. */
 	function changeAchievement(index: number, item: AchievementItem) {
 		const row = achievementRow(item.key);
 		if (row) {
 			achievementStore.update(row, { description: item.description, tags: item.tags ?? [] });
 		}
+	}
+
+	/** The popup's field blurred or the popup closed: push a pending save out now. */
+	function flushAchievement(index: number) {
+		achievementRow(editAchievements[index]?.key)?.field.flush();
 	}
 
 	/**
@@ -685,6 +710,8 @@
 			onAdd={addAchievement}
 			onRemove={removeAchievement}
 			onItemChange={changeAchievement}
+			onItemBlur={flushAchievement}
+			statusFor={(item) => achievementRow(item.key)?.field}
 			onReorderSave={saveAchievementsReorder}
 			onFocused={() => (lastAddedAchievementIndex = null)}
 		/>

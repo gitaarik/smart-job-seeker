@@ -94,15 +94,23 @@
 	let lastAddedTechIndex = $state<number | null>(null);
 	let confirmingAchievement = $state<number | null>(null);
 
-	/** Ids arrive later for a row that started as a draft; translations need them. */
+	/**
+	 * Store → list: ids arrive late for a row that started as a draft, and
+	 * translations need them; text can change under the list's feet when an
+	 * Undo reverts the row through the store. The list's own edits go the other
+	 * way, through `changeAchievement`, before this runs.
+	 */
 	$effect(() => {
-		const ids = new Map(achievementStore.rows.map((row) => [row.key, row.id ?? undefined]));
+		const rows = new Map(achievementStore.rows.map((row) => [row.key, row]));
 		let changed = false;
 		const next = editAchievements.map((item) => {
-			const id = item.key === undefined ? item.id : ids.get(item.key);
-			if (id === item.id) return item;
+			const row = item.key === undefined ? undefined : rows.get(item.key);
+			if (!row) return item;
+			const id = row.id ?? undefined;
+			const description = row.data.description;
+			if (id === item.id && description === item.description) return item;
 			changed = true;
-			return { ...item, id };
+			return { ...item, id, description };
 		});
 		if (changed) editAchievements = next;
 	});
@@ -236,10 +244,15 @@
 		lastAddedAchievementIndex = editAchievements.length - 1;
 	}
 
-	/** The popup was accepted: write the entry the user just edited. */
+	/** The popup edited an entry, as it is typed: write it through. */
 	function changeAchievement(index: number, item: AchievementItem) {
 		const row = achievementRow(item.key);
 		if (row) achievementStore.update(row, { description: item.description });
+	}
+
+	/** The popup's field blurred or the popup closed: push a pending save out now. */
+	function flushAchievement(index: number) {
+		achievementRow(editAchievements[index]?.key)?.field.flush();
 	}
 
 	/**
@@ -472,6 +485,8 @@
 			onAdd={addAchievement}
 			onRemove={removeAchievement}
 			onItemChange={changeAchievement}
+			onItemBlur={flushAchievement}
+			statusFor={(item) => achievementRow(item.key)?.field}
 			onReorderSave={saveAchievementsReorder}
 			onFocused={() => (lastAddedAchievementIndex = null)}
 		/>
