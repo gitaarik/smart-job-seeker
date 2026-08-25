@@ -91,6 +91,7 @@
 				<input
 					type="text"
 					value={tech.data.name}
+					autocomplete="off"
 					oninput={(e) => store.update(tech, { name: e.currentTarget.value })}
 					onblur={tech.field.flush}
 					use:focusNew={added === tech.key}

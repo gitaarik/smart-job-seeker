@@ -91,6 +91,7 @@
 					entity="work_experience_project"
 					id={row.id ?? 0}
 					field="name"
+					autocomplete="off"
 					label="Project Name"
 					required
 					bind:value={() => row.data.name, (v) => set({ name: v })}
@@ -105,6 +106,7 @@
 						id="proj-url"
 						type="url"
 						value={row.data.url}
+						autocomplete="off"
 						oninput={(e) => set({ url: e.currentTarget.value })}
 						onblur={row.field.flush}
 						placeholder="https://…"
@@ -119,6 +121,7 @@
 						id="proj-repo"
 						type="url"
 						value={row.data.repo_url}
+						autocomplete="off"
 						oninput={(e) => set({ repo_url: e.currentTarget.value })}
 						onblur={row.field.flush}
 						placeholder="https://github.com/…"
@@ -157,6 +160,7 @@
 				entity="work_experience_project"
 				id={row.id ?? 0}
 				field="description"
+				autocomplete="off"
 				label="Description"
 				multiline
 				rows={4}
@@ -169,6 +173,7 @@
 				entity="work_experience_project"
 				id={row.id ?? 0}
 				field="outcome"
+				autocomplete="off"
 				label="Outcome"
 				multiline
 				rows={3}

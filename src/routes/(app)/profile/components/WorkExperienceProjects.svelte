@@ -329,6 +329,7 @@
 			<!-- svelte-ignore a11y_autofocus -->
 			<input
 				bind:value={newName}
+				autocomplete="off"
 				autofocus
 				placeholder="Project name"
 				class="min-w-0 flex-1 rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"

@@ -552,6 +552,7 @@
 						{entity}
 						id={itemId}
 						field="description"
+						autocomplete="off"
 						label="Description"
 						multiline
 						rows={3}
@@ -568,6 +569,7 @@
 					</label>
 					<textarea
 						id="edit-achievement-desc"
+						autocomplete="off"
 						bind:value={() => editDescription, setEditDescription}
 						onblur={blurEdit}
 						rows={3}

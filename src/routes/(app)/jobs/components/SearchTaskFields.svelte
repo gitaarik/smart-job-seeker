@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCheck,
@@ -305,7 +306,28 @@
 
 	// Search term — free text, debounced.
 	let searchTermInput = $state<string>(searchTask?.search_term ?? '');
+	// Arm every field on the first real interaction with the form, so a browser
+	// reload/autofill that repopulates a bound input does not trigger a save.
+	function armFields() {
+		for (const f of [
+			searchTermField,
+			maxJobsField,
+			skipExistingField,
+			stopAfterDuplicatesField,
+			skipFirstField,
+			browserConfigField,
+			keepMinimizedField,
+			debugScreenshotsField,
+			scheduleField,
+			browserCountryField,
+			fingerprintField
+		]) {
+			f.arm();
+		}
+	}
+
 	const searchTermField = autoSaveField<string | null>({
+		armOnInteraction: true,
 		initial: searchTask?.search_term ?? null,
 		save: (v) => patchSearchTask({ search_term: v }),
 		onSaved: (v) => {
@@ -327,6 +349,7 @@
 	let maxJobsEnabled = $state<boolean>(searchTask?.max_jobs != null);
 	let maxJobsInput = $state<string>(searchTask?.max_jobs?.toString() ?? '');
 	const maxJobsField = autoSaveField<number | null>({
+		armOnInteraction: true,
 		initial: searchTask?.max_jobs ?? null,
 		save: (v) => patchSearchTask({ max_jobs: v }),
 		onSaved: (v) => {
@@ -344,6 +367,7 @@
 	// Skip existing — boolean toggle.
 	let skipExisting = $state<boolean>(searchTask?.skip_existing ?? false);
 	const skipExistingField = autoSaveField<boolean>({
+		armOnInteraction: true,
 		initial: searchTask?.skip_existing ?? false,
 		save: (v) => patchSearchTask({ skip_existing: v }),
 		onSaved: (v) => {
@@ -362,6 +386,7 @@
 		searchTask?.stop_after_duplicates?.toString() ?? ''
 	);
 	const stopAfterDuplicatesField = autoSaveField<number | null>({
+		armOnInteraction: true,
 		initial: searchTask?.stop_after_duplicates ?? null,
 		save: (v) => patchSearchTask({ stop_after_duplicates: v }),
 		onSaved: (v) => {
@@ -382,6 +407,7 @@
 	let skipFirstEnabled = $state<boolean>(searchTask?.skip_first != null);
 	let skipFirstInput = $state<string>(searchTask?.skip_first?.toString() ?? '');
 	const skipFirstField = autoSaveField<number | null>({
+		armOnInteraction: true,
 		initial: searchTask?.skip_first ?? null,
 		save: (v) => patchSearchTask({ skip_first: v }),
 		onSaved: (v) => {
@@ -406,6 +432,7 @@
 	let browserProvider = $state<string | null>(searchTask?.browser_provider ?? null);
 	let sjsBrowserApiKey = $state<number | null>(searchTask?.sjsbrowser_api_key ?? null);
 	const browserConfigField = autoSaveField<BrowserConfig>({
+		armOnInteraction: true,
 		initial: {
 			provider: searchTask?.browser_provider ?? null,
 			apiKey: searchTask?.sjsbrowser_api_key ?? null
@@ -436,6 +463,7 @@
 	// Keep minimized — boolean toggle.
 	let keepMinimized = $state<boolean>(searchTask?.keep_minimized ?? true);
 	const keepMinimizedField = autoSaveField<boolean>({
+		armOnInteraction: true,
 		initial: searchTask?.keep_minimized ?? true,
 		save: (v) => patchSearchTask({ keep_minimized: v }),
 		onSaved: (v) => {
@@ -453,6 +481,7 @@
 	// crafted request still can't enable this.
 	let debugScreenshots = $state<boolean>(Boolean(searchTask?.debug_screenshots));
 	const debugScreenshotsField = autoSaveField<boolean>({
+		armOnInteraction: true,
 		initial: Boolean(searchTask?.debug_screenshots),
 		save: (v) => patchSearchTask({ debug_screenshots: v }),
 		onSaved: (v) => {
@@ -476,6 +505,7 @@
 	);
 	let schedulePreferredHour = $state<number>(searchTask?.schedule_preferred_hour ?? 9);
 	const scheduleField = autoSaveField<ScheduleConfig>({
+		armOnInteraction: true,
 		initial: {
 			intervalHours: searchTask?.schedule_interval_hours ?? null,
 			preferredHour: searchTask?.schedule_preferred_hour ?? 9
@@ -507,6 +537,7 @@
 	// Browser country (edit) — patches the profile, not the task.
 	let editBrowserCountryCode = $state(initialBrowserCountryCode);
 	const browserCountryField = autoSaveField<string>({
+		armOnInteraction: true,
 		initial: initialBrowserCountryCode,
 		save: (v) => patchProfile({ browser_country_code: v.trim().toUpperCase() || null }),
 		onSaved: (v) => {
@@ -527,6 +558,7 @@
 	let defaultBrowserLanguage = browserFingerprintDefaults.language;
 	let defaultBrowserTimezone = browserFingerprintDefaults.timezone;
 	const fingerprintField = autoSaveField<Fingerprint>({
+		armOnInteraction: true,
 		initial: {
 			language: browserFingerprint.language,
 			timezone: browserFingerprint.timezone
@@ -849,7 +881,7 @@
 	</button>
 {/snippet}
 
-<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-2" use:armOn={armFields}>
 	<!-- Left column: Search, Credentials, Browser Control. Pairs the tallest
        section (Browser) with the shortest (Auth) so both columns end at
        roughly the same height on wide screens. -->
