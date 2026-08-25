@@ -13,7 +13,8 @@ import {
 	formatActivityManifest,
 	MANIFEST_BUDGET_CHARS,
 	type ManifestApplication,
-	type ManifestEntry
+	type ManifestEntry,
+	transcriptGaps
 } from '../activity-manifest';
 
 function entry(over: Partial<ManifestEntry> = {}): ManifestEntry {
@@ -34,6 +35,7 @@ function app(over: Partial<ManifestApplication> = {}): ManifestApplication {
 		poster: null,
 		position: 'Backend Engineer',
 		contacts: [],
+		everInterviewed: false,
 		status: 'applied',
 		isCurrent: false,
 		entries: [entry()],
@@ -103,6 +105,44 @@ describe('formatActivityManifest', () => {
 	// The pipeline drops finished applications, and on a profile placed by one
 	// agency the signed contract is exactly the finished one — so the link is
 	// only visible from here.
+	// Retrieval over transcripts can only report what IS in one. Without this,
+	// "it appears in no transcript" would be read as "it never came up" — and on
+	// a profile where half the interviews are unrecorded, that is confidently
+	// wrong rather than merely thin.
+	it('names the interviews that left no transcript', () => {
+		const out = formatActivityManifest([
+			app({ id: 27, company: 'Rabobank', everInterviewed: true, entries: [] }),
+			app({ id: 28, company: 'Acme', everInterviewed: false, entries: [] })
+		]);
+
+		expect(out).toContain('1 application(s) reached the interview stage');
+		expect(out).toContain('never discussed');
+
+		// Asserted on the block itself: application 28 appears in the index either
+		// way, under its own heading. What matters is that it is not named HERE.
+		const block = transcriptGaps([
+			app({ id: 27, company: 'Rabobank', everInterviewed: true, entries: [] }),
+			app({ id: 28, company: 'Acme', everInterviewed: false, entries: [] })
+		]).join('\n');
+		expect(block).toContain('application 27');
+		expect(block).not.toContain('application 28');
+	});
+
+	it('counts an interview with a transcript as covered', () => {
+		const out = formatActivityManifest([
+			app({
+				id: 27,
+				everInterviewed: true,
+				entries: [entry({ record_type: 'transcript' })]
+			})
+		]);
+		expect(out).not.toContain('Interviews with no transcript');
+	});
+
+	it('says nothing when no interview is missing a transcript', () => {
+		expect(formatActivityManifest([app()])).not.toContain('Interviews with no transcript');
+	});
+
 	it('lists the people named on an application', () => {
 		const out = formatActivityManifest([
 			app({ id: 27, contacts: ['Roman Urbanovski (recruiter)', 'Thay Ribeiro'] })

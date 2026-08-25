@@ -37,9 +37,10 @@
  */
 
 import { db } from '$lib/server/db';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import {
 	application_records,
+	application_status_log,
 	applications,
 	jobs,
 	profile_document_projects
@@ -104,6 +105,21 @@ export interface ManifestApplication {
 	 * resolution and a renderer would have to guess.
 	 */
 	contacts: string[];
+	/**
+	 * Whether this application was ever moved to `interviewing`.
+	 *
+	 * Paired with the transcript count below it answers a question nothing else
+	 * can: an interview happened and there is no record of what was said. That
+	 * is not the same as an application with no interviews, and the index has to
+	 * be able to tell the model which it is looking at.
+	 *
+	 * Neither signal is reliable alone — measured on dev profile 1, three
+	 * applications reached `interviewing` with no transcript AND three carry
+	 * transcripts without ever being moved to it, because the status is not
+	 * always advanced. So this is evidence, not truth, and the note it drives
+	 * says "reached the interview stage" rather than "had an interview".
+	 */
+	everInterviewed: boolean;
 	/** True for the application the current page is about, if any. */
 	isCurrent: boolean;
 	entries: ManifestEntry[];
@@ -207,6 +223,63 @@ function documentSection(
 	];
 }
 
+/**
+ * Applications that reached the interview stage with no transcript on file.
+ *
+ * ## Why this is a block and not an inference
+ *
+ * Because the alternative is the failure this whole file exists to prevent, one
+ * level up. Retrieval over transcripts can only ever report what IS in a
+ * transcript; asked "which of my projects have never come up in an interview",
+ * silence from the corpus is indistinguishable from silence in the room. A
+ * project discussed at length in an unrecorded interview would be reported as
+ * never having come up — confidently, and wrongly.
+ *
+ * Transcripts are uploaded at the applicant's discretion. Nothing enforces one,
+ * so this gap is permanent rather than a backlog: it does not close as coverage
+ * improves, it just gets easier to forget. At 90% coverage the negative claim is
+ * still unsound, only more convincing.
+ *
+ * So the index states the gap. A model that can see "these three interviews have
+ * no record" can answer what it knows and say what it cannot — which is the same
+ * empty-vs-never-looked distinction `derived_at` draws on a record and
+ * `employerContact` draws on a person.
+ *
+ * See planning/SEMANTIC-MATCHING-AND-RAG.md § Still open.
+ */
+const GAPS_NAMED = 10;
+
+export function transcriptGaps(apps: ManifestApplication[]): string[] {
+	const gaps = apps.filter(
+		(a) => a.everInterviewed && !a.entries.some((e) => e.record_type === 'transcript')
+	);
+	if (gaps.length === 0) return [];
+
+	// Capped like every other list here: this block is appended after the
+	// trimmer has finished with `body()`, so nothing downstream can give way if
+	// it grows. The COUNT is always exact — it is what the warning rests on —
+	// and only the naming is abbreviated.
+	const shown = gaps.slice(0, GAPS_NAMED);
+	const named = shown.map(
+		(a) =>
+			`${[a.position, a.company].filter(Boolean).join(' at ') || 'Untitled'} (application ${a.id})`
+	);
+	const rest = gaps.length - shown.length;
+	return [
+		'',
+		'### Interviews with no transcript',
+		'',
+		`${gaps.length} application(s) reached the interview stage with no transcript`,
+		'on file: ' + named.join('; ') + (rest > 0 ? `; and ${rest} more` : '') + '.',
+		'',
+		'Nothing was recorded of what was said there. So "it does not appear in any',
+		'transcript" is NOT evidence that a topic never came up — for these it means',
+		'only that nobody wrote it down. Answer what the transcripts you do have',
+		'show, say how many interviews are unrecorded, and never state that',
+		'something was never discussed.'
+	];
+}
+
 export function formatActivityManifest(
 	apps: ManifestApplication[],
 	budgetChars = MANIFEST_BUDGET_CHARS,
@@ -262,6 +335,7 @@ export function formatActivityManifest(
 			: []),
 		'',
 		body(),
+		...transcriptGaps(working),
 		...documentSection(docs)
 	].join('\n');
 }
@@ -313,6 +387,7 @@ export async function loadActivityManifest(
 				status: r.status,
 				isCurrent: r.appId === currentApplicationId,
 				contacts: [],
+				everInterviewed: false,
 				entries: []
 			};
 			byApp.set(r.appId, app);
@@ -336,6 +411,22 @@ export async function loadActivityManifest(
 			});
 		}
 	}
+
+	// A second query rather than another leftJoin: the select above already fans
+	// out one row per (application × entry), and joining a second one-to-many
+	// would multiply that again for a boolean.
+	const interviewed = await db
+		.selectDistinct({ application: application_status_log.application })
+		.from(application_status_log)
+		.innerJoin(applications, eq(applications.id, application_status_log.application))
+		.where(
+			and(
+				eq(applications.profile_id, profileId),
+				eq(application_status_log.to_status, 'interviewing')
+			)
+		);
+	const everSet = new Set(interviewed.map((r) => r.application));
+	for (const app of byApp.values()) app.everInterviewed = everSet.has(app.id);
 
 	return [...byApp.values()];
 }
