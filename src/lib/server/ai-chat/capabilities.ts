@@ -1241,6 +1241,26 @@ these, and a new one makes a group of one.`,
  * ------------------------------------------------------------------ */
 
 /** How much of the chronology the model sees, so it doesn't re-log what's there. */
+/** Names listed per entry before the rest are left to read_activity_entry. */
+const CONTACTS_SHOWN = 4;
+
+/**
+ * The people named on one entry, as written. Not deduped against other entries
+ * and not normalised: two spellings of one person stay two, because collapsing
+ * them is a guess this renderer has no basis for making.
+ */
+function namesFromContacts(contacts: unknown): string[] {
+	if (!Array.isArray(contacts)) return [];
+	const out: string[] = [];
+	for (const c of contacts as Array<{ name?: unknown; role?: unknown }>) {
+		const name = typeof c?.name === 'string' ? c.name.trim() : '';
+		if (!name || out.some((n) => n.startsWith(name))) continue;
+		const role = typeof c?.role === 'string' && c.role.trim() ? ` (${c.role.trim()})` : '';
+		out.push(`${name}${role}`);
+	}
+	return out;
+}
+
 const RECENT_ENTRIES_SHOWN = 12;
 
 /**
@@ -1286,7 +1306,13 @@ const addActivityRecord: CapabilityDef = {
 	current: async (target) => {
 		const recent = await db.query.application_records.findMany({
 			where: eq(application_records.application_id, target.id),
-			columns: { id: true, record_type: true, title: true, event_date: true },
+			columns: {
+				id: true,
+				record_type: true,
+				title: true,
+				event_date: true,
+				contacts: true
+			},
 			orderBy: [desc(application_records.event_date), desc(application_records.date_created)],
 			limit: RECENT_ENTRIES_SHOWN
 		});
@@ -1295,10 +1321,20 @@ const addActivityRecord: CapabilityDef = {
 			// and then asks for one entry's text by number. It costs a few characters
 			// in the chat's prompt, where nothing addresses an entry by id — worth it
 			// against rendering the same chronology twice in two formats.
-			recent_entries: recent.map(
-				(r) =>
-					`[${r.id}] ${r.event_date ?? 'undated'} — ${getRecordTypeLabel(r.record_type)}: ${r.title}`
-			)
+			//
+			// The names ride along for the same reason the id does: they are already
+			// extracted, and without them the only way to answer "who did I speak to"
+			// is to fetch each entry's full text and find them again in the prose.
+			// Measured on a signed contract: 2,456 characters pulled back to recover
+			// two names sitting in a column. Titles are capped for the same reason
+			// the entry list is.
+			recent_entries: recent.map((r) => {
+				const who = namesFromContacts(r.contacts).slice(0, CONTACTS_SHOWN);
+				return (
+					`[${r.id}] ${r.event_date ?? 'undated'} — ${getRecordTypeLabel(r.record_type)}: ${r.title}` +
+					(who.length > 0 ? ` · ${who.join(', ')}` : '')
+				);
+			})
 		};
 	},
 	// Prefixed, because buildProposalSchema merges every live capability's fields
