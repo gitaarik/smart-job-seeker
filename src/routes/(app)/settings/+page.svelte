@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { armOn } from '$lib/actions/arm-on';
 	import { page } from '$app/stores';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faCog, faEye, faEyeSlash, faPencil } from '@fortawesome/free-solid-svg-icons';
@@ -53,6 +54,7 @@
 	let timeFormat = $state<string | null>(data.timeFormatRaw);
 
 	const displayField = autoSaveField<DisplaySettings>({
+		armOnInteraction: true,
 		initial: { timezone: data.timezone || '', timeFormat: data.timeFormatRaw },
 		save: async (v, prev) => {
 			const changed = diffPayload(
@@ -196,7 +198,7 @@
 
 <SectionHeader title="Account Settings" icon={faCog} />
 
-<div class="space-y-6">
+<div class="space-y-6" use:armOn={displayField.arm}>
 	<Card padding="lg">
 		<div class="space-y-5">
 			<!-- Email row -->

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowLeft, faGraduationCap, faTrash } from '@fortawesome/free-solid-svg-icons';
 	import MediaUpload from '$lib/components/MediaUpload.svelte';
@@ -68,6 +69,7 @@
 		};
 	}
 	const basicsField = autoSaveField<EducationBasics>({
+		armOnInteraction: true,
 		initial: {
 			institution: editInstitution,
 			area: editArea,
@@ -126,7 +128,7 @@
 	<title>{pageTitle} - Education - Smart Job Seeker</title>
 </svelte:head>
 
-<div class="space-y-6">
+<div class="space-y-6" use:armOn={basicsField.arm}>
 	<!-- Header -->
 	<div class="flex items-center gap-4">
 		<a

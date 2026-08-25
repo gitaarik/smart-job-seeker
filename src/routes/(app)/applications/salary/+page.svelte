@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronDown,
@@ -67,6 +68,7 @@
 	// every nested property (so in-place mutations still trigger a save), and it
 	// reduces "did this change?" to a string compare.
 	const regionRatesField = autoSaveField<Record<string, string>>({
+		armOnInteraction: true,
 		initial: {
 			baseRate,
 			currency,
@@ -109,6 +111,7 @@
 	});
 
 	const adjustmentsField = autoSaveField<string>({
+		armOnInteraction: true,
 		initial: JSON.stringify(adjustments),
 		save: (v) => postAction('saveAdjustments', { adjustments: v }),
 		onSaved: (v) => (adjustments = JSON.parse(v)),
@@ -117,6 +120,7 @@
 	$effect(() => adjustmentsField.set(JSON.stringify(adjustments)));
 
 	const incomeField = autoSaveField<string>({
+		armOnInteraction: true,
 		initial: JSON.stringify(incomeAssumptions),
 		save: (v) => postAction('saveIncomeAssumptions', { income_assumptions: v }),
 		onSaved: (v) => (incomeAssumptions = JSON.parse(v)),
@@ -329,7 +333,14 @@
 	<title>Salary Prep - Smart Job Seeker</title>
 </svelte:head>
 
-<div class="space-y-6">
+<div
+	class="space-y-6"
+	use:armOn={() => {
+		regionRatesField.arm();
+		adjustmentsField.arm();
+		incomeField.arm();
+	}}
+>
 	<SectionHeader title="Salary Prep" icon={faMoneyBillWave} />
 
 	<p class="text-sm text-[var(--dash-text-secondary)]">

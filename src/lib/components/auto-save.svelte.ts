@@ -18,6 +18,10 @@ import { onDestroy, untrack } from 'svelte';
  *
  * Behavior:
  *  - set(v) updates the local value and schedules a save after debounceMs.
+ *  - With `armOnInteraction`, set(v) holds off until arm() is first called:
+ *    a value that arrives before the user touches the field (browser form
+ *    restoration after a reload, autofill) is absorbed as the baseline, not
+ *    saved. Wire arm() to a real input/pointer/key event.
  *  - Concurrent saves are serialized by sequence id; older results are
  *    discarded when a newer save starts (latest write wins).
  *  - On success, status flashes "saved" for a few seconds and undo() is
@@ -75,6 +79,14 @@ export interface AutoSaveOptions<T> {
 	/** How long to keep the "Saved · Undo" state visible after a successful
 	 *  save before fading to idle. Default 5000ms. */
 	savedFlashMs?: number;
+	/**
+	 * Hold saves until the first arm() call. While disarmed, set() absorbs its
+	 * argument as the baseline instead of scheduling a save, so a value the
+	 * *browser* wrote into a bound input — form restoration after a dev reload,
+	 * autofill — is never persisted as if the user had typed it. Wire arm() to a
+	 * genuine input/pointer/key event. Default false (armed from the start).
+	 */
+	armOnInteraction?: boolean;
 }
 
 export interface AutoSaveField<T> {
@@ -98,6 +110,12 @@ export interface AutoSaveField<T> {
 	retry: () => void;
 	/** Revert to the value saved before the most recent save. */
 	undo: () => void;
+	/** Enable saving. Call from a real user-interaction handler; only meaningful
+	 *  with `armOnInteraction`, an idempotent no-op otherwise. */
+	arm: () => void;
+	/** Whether saves are enabled yet (see `armOnInteraction`). Always true unless
+	 *  that option is set and arm() has not been called. */
+	readonly armed: boolean;
 	/** Re-seed both `value` and `saved` to a new initial (use from the parent's
 	 *  navigation/reset path). Cancels any pending save and clears state. */
 	reset: (newInitial: T) => void;
@@ -205,6 +223,7 @@ export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
 	const equal = opts.equal ?? Object.is;
 	const debounceMs = opts.debounceMs ?? 0;
 	const savedFlashMs = opts.savedFlashMs ?? 5000;
+	const armOnInteraction = opts.armOnInteraction ?? false;
 
 	let value = $state<T>(opts.initial);
 	let saved = $state<T>(opts.initial);
@@ -212,6 +231,9 @@ export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
 	let status = $state<AutoSaveStatus>('idle');
 	let error = $state<string | null>(null);
 	let canUndo = $state(false);
+	// Plain flag, not $state: it is read only inside set() (an untracked context)
+	// and flipped from an event handler; nothing renders from it.
+	let armed = !armOnInteraction;
 
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 	let flashTimer: ReturnType<typeof setTimeout> | null = null;
@@ -302,12 +324,28 @@ export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
 		get canUndo() {
 			return canUndo;
 		},
+		get armed() {
+			return armed;
+		},
 		set(v: T) {
 			// untrack the equality reads so a caller inside an $effect doesn't
 			// depend on our internal `value`/`saved` — otherwise our own writes
 			// here would re-fire the effect (and for object T, `value = v` always
 			// looks like a change because it's a new proxy reference).
 			if (untrack(() => equal(v, value))) return;
+			if (!armed) {
+				// No user interaction yet: absorb this value as the new baseline instead
+				// of saving it. A dev full-reload or the browser's autofill can push a
+				// value into a bound input with no keystroke behind it, and saving that is
+				// how the profile location got overwritten with a skill name. arm() (wired
+				// to a real event) lifts this.
+				value = v;
+				saved = v;
+				previousSaved = v;
+				error = null;
+				clearDebounce();
+				return;
+			}
 			value = v;
 			error = null;
 			if (untrack(() => equal(v, saved))) {
@@ -337,6 +375,9 @@ export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
 			clearDebounce();
 			void runSave();
 		},
+		arm() {
+			armed = true;
+		},
 		reset(newInitial: T) {
 			clearDebounce();
 			clearFlash();
@@ -347,6 +388,7 @@ export function autoSaveField<T>(opts: AutoSaveOptions<T>): AutoSaveField<T> {
 			status = 'idle';
 			error = null;
 			canUndo = false;
+			armed = !armOnInteraction;
 		},
 		destroy() {
 			clearDebounce();

@@ -16,6 +16,8 @@
 		/** Cap the growth so a long value can't push the save button off-screen. */
 		maxRows?: number;
 		placeholder?: string;
+		/** Forwarded to the text inputs, e.g. "off" to stop browser autofill. */
+		autocomplete?: 'on' | 'off';
 		/** Small helper text under the field. */
 		hint?: string;
 		required?: boolean;
@@ -39,6 +41,7 @@
 		rows = 3,
 		maxRows = 12,
 		placeholder,
+		autocomplete,
 		hint,
 		required = false,
 		onkeydown,
@@ -138,6 +141,7 @@
 				{placeholder}
 				{onkeydown}
 				{onblur}
+				{autocomplete}
 				lang={BASE_LOCALE}
 				bind:value
 				class={inputClass}
@@ -149,6 +153,7 @@
 				{placeholder}
 				{onkeydown}
 				{onblur}
+				{autocomplete}
 				lang={BASE_LOCALE}
 				bind:value
 				class={inputClass}
@@ -169,6 +174,7 @@
 				{maxRows}
 				placeholder="Translation…"
 				lang={active}
+				{autocomplete}
 				value={translations.get(entity, id, field)}
 				oninput={(e) => editTranslation(e.currentTarget.value)}
 				onblur={flush}
@@ -179,6 +185,7 @@
 				type="text"
 				placeholder="Translation…"
 				lang={active}
+				{autocomplete}
 				value={translations.get(entity, id, field)}
 				oninput={(e) => editTranslation(e.currentTarget.value)}
 				onblur={flush}

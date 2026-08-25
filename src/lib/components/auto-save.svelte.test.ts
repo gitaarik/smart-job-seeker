@@ -311,3 +311,47 @@ describe('diffPayload', () => {
 		expect(diffPayload({ a: 1 } as Record<string, unknown>, { a: 1, b: 2 })).toEqual({});
 	});
 });
+
+describe('armOnInteraction', () => {
+	beforeEach(() => vi.useFakeTimers());
+	afterEach(() => vi.useRealTimers());
+
+	it('absorbs values as the baseline until arm(), then saves', async () => {
+		const save = vi.fn().mockResolvedValue(undefined);
+		const field = autoSaveField({ initial: 'server', save, armOnInteraction: true });
+		expect(field.armed).toBe(false);
+
+		// A value the user never typed (form restore / autofill after a reload).
+		field.set('restored');
+		await settle();
+		expect(save).not.toHaveBeenCalled();
+		expect(field.saved).toBe('restored'); // absorbed as baseline, not persisted
+		expect(field.dirty).toBe(false);
+
+		field.arm();
+		expect(field.armed).toBe(true);
+		field.set('typed');
+		await settle();
+		expect(save).toHaveBeenCalledTimes(1);
+		expect(save).toHaveBeenCalledWith('typed', 'restored');
+
+		field.destroy();
+	});
+
+	it('is armed from the start when the option is off', () => {
+		const save = vi.fn().mockResolvedValue(undefined);
+		const field = autoSaveField({ initial: 'a', save });
+		expect(field.armed).toBe(true);
+		field.destroy();
+	});
+
+	it('re-gates after reset()', () => {
+		const save = vi.fn().mockResolvedValue(undefined);
+		const field = autoSaveField({ initial: 'a', save, armOnInteraction: true });
+		field.arm();
+		expect(field.armed).toBe(true);
+		field.reset('b');
+		expect(field.armed).toBe(false);
+		field.destroy();
+	});
+});

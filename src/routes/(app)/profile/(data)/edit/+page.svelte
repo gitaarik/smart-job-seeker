@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCamera,
@@ -70,11 +71,17 @@
 		}
 	}
 
+	// Enable a card's auto-save only once the user actually interacts with it.
+	// A dev full-reload or browser autofill can repopulate the bound inputs with
+	// no keystroke behind them; without this the debounced save would persist
+	// those values (it once overwrote the location with a skill name). pointer,
+	// key and input events all bubble here and none of them fire on restore.
 	// One auto-saved field per card rather than one per input: each card already
 	// PATCHes its fields as a group, and 15 separate indicator pills in a dense
 	// two-column grid would be unreadable. Undo therefore reverts the card's last
 	// burst of edits, not a single input.
 	const personalInfoField = autoSaveField<Record<string, string>>({
+		armOnInteraction: true,
 		initial: { name, slug, title, subtitle, headline, summary },
 		save: saveSection,
 		onSaved: (v) => {
@@ -91,6 +98,7 @@
 	$effect(() => personalInfoField.set({ name, slug, title, subtitle, headline, summary }));
 
 	const contactField = autoSaveField<Record<string, string>>({
+		armOnInteraction: true,
 		initial: {
 			email_address,
 			phone_number,
@@ -126,6 +134,7 @@
 	);
 
 	const socialField = autoSaveField<Record<string, string>>({
+		armOnInteraction: true,
 		initial: {
 			linkedin_profile,
 			github_profile,
@@ -187,7 +196,7 @@
 			Personal Information
 		</h2>
 
-		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-2" use:armOn={personalInfoField.arm}>
 			<div>
 				<label for="name" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
 					Full Name <span class="text-[var(--dash-error)]">*</span>
@@ -196,6 +205,7 @@
 					type="text"
 					id="name"
 					bind:value={name}
+					autocomplete="off"
 					required
 					class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				/>
@@ -211,6 +221,7 @@
 						type="text"
 						id="slug"
 						bind:value={slug}
+						autocomplete="off"
 						placeholder="your-profile-name"
 						class="flex-1 rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 					/>
@@ -225,6 +236,7 @@
 					entity="profile"
 					id={profile.id}
 					field="title"
+					autocomplete="off"
 					label="Professional Title"
 					bind:value={title}
 					placeholder="e.g., Senior Software Engineer"
@@ -236,6 +248,7 @@
 					entity="profile"
 					id={profile.id}
 					field="subtitle"
+					autocomplete="off"
 					label="Subtitle"
 					multiline
 					rows={2}
@@ -250,6 +263,7 @@
 					entity="profile"
 					id={profile.id}
 					field="headline"
+					autocomplete="off"
 					label="Headline"
 					multiline
 					rows={2}
@@ -264,6 +278,7 @@
 					entity="profile"
 					id={profile.id}
 					field="summary"
+					autocomplete="off"
 					label="Professional Summary"
 					multiline
 					rows={4}
@@ -287,7 +302,7 @@
 			Contact Information
 		</h2>
 
-		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-2" use:armOn={contactField.arm}>
 			<div>
 				<label for="email_address" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
 					<FontAwesomeIcon
@@ -300,6 +315,7 @@
 					type="email"
 					id="email_address"
 					bind:value={email_address}
+					autocomplete="off"
 					placeholder="you@example.com"
 					class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				/>
@@ -314,25 +330,21 @@
 					type="tel"
 					id="phone_number"
 					bind:value={phone_number}
+					autocomplete="off"
 					placeholder="+1 (555) 000-0000"
 					class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				/>
 			</div>
 
 			<div>
-				<label for="location" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
-					<FontAwesomeIcon
-						icon={faMapMarkerAlt}
-						class="mr-1 h-4 w-4 text-[var(--dash-text-secondary)]"
-					/>
-					Location
-				</label>
-				<input
-					type="text"
-					id="location"
+				<TranslatableField
+					entity="profile"
+					id={profile.id}
+					field="location"
+					autocomplete="off"
+					label="Location"
 					bind:value={location}
 					placeholder="Amsterdam, Netherlands"
-					class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				/>
 			</div>
 
@@ -348,6 +360,7 @@
 					type="url"
 					id="location_url"
 					bind:value={location_url}
+					autocomplete="off"
 					placeholder="https://maps.google.com/?q=Amsterdam"
 					class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				/>
@@ -371,6 +384,7 @@
 					type="text"
 					id="location_timezone"
 					bind:value={location_timezone}
+					autocomplete="off"
 					placeholder="CET (UTC+1)"
 					class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				/>
@@ -399,6 +413,7 @@
 					type="url"
 					id="personal_website"
 					bind:value={personal_website}
+					autocomplete="off"
 					placeholder="https://yourwebsite.com"
 					class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				/>
@@ -417,7 +432,7 @@
 			Social Profiles
 		</h2>
 
-		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+		<div class="grid grid-cols-1 gap-4 md:grid-cols-2" use:armOn={socialField.arm}>
 			<div>
 				<label
 					for="linkedin_profile"
@@ -430,6 +445,7 @@
 					type="url"
 					id="linkedin_profile"
 					bind:value={linkedin_profile}
+					autocomplete="off"
 					placeholder="https://linkedin.com/in/yourprofile"
 					class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				/>
@@ -444,6 +460,7 @@
 					type="url"
 					id="github_profile"
 					bind:value={github_profile}
+					autocomplete="off"
 					placeholder="https://github.com/yourusername"
 					class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				/>
@@ -461,6 +478,7 @@
 					type="url"
 					id="stackoverflow_profile"
 					bind:value={stackoverflow_profile}
+					autocomplete="off"
 					placeholder="https://stackoverflow.com/users/123456"
 					class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				/>
@@ -475,6 +493,7 @@
 					type="url"
 					id="npm_profile"
 					bind:value={npm_profile}
+					autocomplete="off"
 					placeholder="https://npmjs.com/~yourusername"
 					class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				/>
@@ -489,6 +508,7 @@
 					type="url"
 					id="pypi_profile"
 					bind:value={pypi_profile}
+					autocomplete="off"
 					placeholder="https://pypi.org/user/yourusername"
 					class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 				/>

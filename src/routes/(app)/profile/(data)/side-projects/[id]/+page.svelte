@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { armOn } from '$lib/actions/arm-on';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -148,6 +149,7 @@
 		};
 	}
 	const basicsField = autoSaveField<ProjectBasics>({
+		armOnInteraction: true,
 		initial: {
 			name: editName,
 			url: editUrl,
@@ -330,7 +332,7 @@
 	}
 </script>
 
-<div class="space-y-6">
+<div class="space-y-6" use:armOn={basicsField.arm}>
 	<!-- Basic Info -->
 	<Card padding="lg">
 		<h2 class="mb-4 text-lg font-semibold text-[var(--dash-text)]">Basic Information</h2>

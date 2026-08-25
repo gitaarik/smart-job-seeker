@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { armOn } from '$lib/actions/arm-on';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -85,6 +86,7 @@
 	let isEditingNote = $state(false);
 	let editNoteInput = $state(searchTask.note ?? '');
 	const noteField = autoSaveField<string | null>({
+		armOnInteraction: true,
 		initial: searchTask.note ?? null,
 		save: async (v) => {
 			const res = await fetch(`/api/import-tasks/${searchTask.id}`, {
@@ -2125,7 +2127,7 @@
 	</title>
 </svelte:head>
 
-<div class="space-y-6">
+<div class="space-y-6" use:armOn={noteField.arm}>
 	<!-- Header -->
 	<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
 		<a

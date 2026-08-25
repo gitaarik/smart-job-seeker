@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck } from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
@@ -48,6 +49,7 @@
 		normalizeToOptions(data.config.job_types || [], data.options.jobTypes)
 	);
 	const jobTypesField = autoSaveField<string[]>({
+		armOnInteraction: true,
 		initial: [...jobTypes],
 		save: (v) => patchConfig({ job_types: v }),
 		onSaved: (v) => (jobTypes = [...v]),
@@ -62,6 +64,7 @@
 		normalizeToOptions(data.config.work_location || [], data.options.workLocationOptions)
 	);
 	const workLocationField = autoSaveField<string[]>({
+		armOnInteraction: true,
 		initial: [...workLocation],
 		save: (v) => patchConfig({ work_location: v }),
 		onSaved: (v) => (workLocation = [...v]),
@@ -76,6 +79,7 @@
 		normalizeToOptions(data.config.experience_levels || [], data.options.experienceLevels)
 	);
 	const experienceLevelsField = autoSaveField<string[]>({
+		armOnInteraction: true,
 		initial: [...experienceLevels],
 		save: (v) => patchConfig({ experience_levels: v }),
 		onSaved: (v) => (experienceLevels = [...v]),
@@ -85,6 +89,7 @@
 
 	let locations = $state<string[]>(data.config.locations || []);
 	const locationsField = autoSaveField<string[]>({
+		armOnInteraction: true,
 		initial: [...locations],
 		save: (v) => patchConfig({ locations: v }),
 		onSaved: (v) => (locations = [...v]),
@@ -98,6 +103,7 @@
 	let matchCommunityJobs = $state<boolean>(data.config.match_community_jobs ?? false);
 	let communityMaxAgeDays = $state<number | null>(data.config.community_max_age_days ?? 30);
 	const communityField = autoSaveField<CommunityConfig>({
+		armOnInteraction: true,
 		initial: {
 			enabled: data.config.match_community_jobs ?? false,
 			maxAgeDays: data.config.match_community_jobs
@@ -210,7 +216,16 @@
 	<title>Match Config - Job Import - Smart Job Seeker</title>
 </svelte:head>
 
-<div class="space-y-4">
+<div
+	class="space-y-4"
+	use:armOn={() => {
+		jobTypesField.arm();
+		workLocationField.arm();
+		experienceLevelsField.arm();
+		locationsField.arm();
+		communityField.arm();
+	}}
+>
 	<p class="text-sm text-[var(--dash-text-secondary)]">
 		Configure your job scoring preferences. Jobs are filtered based on these settings before being
 		scored by the AI. Jobs must have at least one overlapping skill and meet your job type and work

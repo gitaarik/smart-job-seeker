@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { armOn } from '$lib/actions/arm-on';
 	import { page } from '$app/stores';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -187,6 +188,7 @@
 		};
 	}
 	const digestField = autoSaveField<DigestSettings>({
+		armOnInteraction: true,
 		initial: {
 			enabled: data.emailDigest.enabled,
 			frequencyDays: data.emailDigest.frequency_days,
@@ -315,7 +317,7 @@
 		</div>
 	{/if}
 
-	<div class="space-y-5" style="max-width: 400px;">
+	<div class="space-y-5" style="max-width: 400px;" use:armOn={digestField.arm}>
 		<ToggleSwitch
 			bind:checked={digestEnabled}
 			disabled={!canEnable}

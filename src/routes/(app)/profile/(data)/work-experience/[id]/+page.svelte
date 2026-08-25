@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowLeft,
@@ -221,6 +222,7 @@
 		};
 	}
 	const basicsField = autoSaveField<ExperienceBasics>({
+		armOnInteraction: true,
 		initial: {
 			name: editName,
 			position: editPosition,
@@ -419,7 +421,7 @@
 	<title>{pageTitle} - Experience - Smart Job Seeker</title>
 </svelte:head>
 
-<div class="space-y-6">
+<div class="space-y-6" use:armOn={basicsField.arm}>
 	<!-- Header -->
 	<div class="flex items-center gap-4">
 		<a
