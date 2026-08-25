@@ -5,7 +5,8 @@
 	import { faCheck, faHistory, faRotateLeft, faXmark } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import ChangeDiff from '$lib/components/ChangeDiff.svelte';
-	import { shrinkage, summarizeValue } from '$lib/utils/change-analysis';
+	import DiffSegments from '$lib/components/DiffSegments.svelte';
+	import { inlineDiff, shrinkage, summarizeValue } from '$lib/utils/change-analysis';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -110,12 +111,23 @@
 						{#if request.changes.length > 0}
 							<dl class="mt-3 space-y-2 text-sm">
 								{#each request.changes as change (change.field)}
+									{@const segments = inlineDiff(change)}
 									<div>
 										<dt class="text-[var(--dash-text-secondary)]">{change.label}</dt>
 										<dd class="break-words">
-											<span class="line-through opacity-60">{summarizeValue(change.from)}</span>
-											<span aria-hidden="true"> → </span>
-											<span>{summarizeValue(change.to)}</span>
+											<!--
+												A small edit reads as a diff: the word that changed is marked, instead
+												of left for the eye to find between two near-identical lines. A
+												rewrite, a value being set or cleared, and anything long fall back to
+												old → new — the long ones get their full diff from ChangeDiff below.
+											-->
+											{#if segments}
+												<DiffSegments {segments} />
+											{:else}
+												<span class="line-through opacity-60">{summarizeValue(change.from)}</span>
+												<span aria-hidden="true"> → </span>
+												<span>{summarizeValue(change.to)}</span>
+											{/if}
 											<!--
 												A replacement shorter than what it replaces is the one shape of
 												edit whose loss is invisible — the new text reads perfectly well,
@@ -213,12 +225,23 @@
 					{#if entry.changes.length > 0}
 						<dl class="mt-3 space-y-2 text-sm">
 							{#each entry.changes as change (change.field)}
+								{@const segments = inlineDiff(change)}
 								<div>
 									<dt class="text-[var(--dash-text-secondary)]">{change.label}</dt>
 									<dd class="break-words">
-										<span class="line-through opacity-60">{summarizeValue(change.from)}</span>
-										<span aria-hidden="true"> → </span>
-										<span>{summarizeValue(change.to)}</span>
+										<!--
+											A small edit reads as a diff: the word that changed is marked, instead
+											of left for the eye to find between two near-identical lines. A
+											rewrite, a value being set or cleared, and anything long fall back to
+											old → new — the long ones get their full diff from ChangeDiff below.
+										-->
+										{#if segments}
+											<DiffSegments {segments} />
+										{:else}
+											<span class="line-through opacity-60">{summarizeValue(change.from)}</span>
+											<span aria-hidden="true"> → </span>
+											<span>{summarizeValue(change.to)}</span>
+										{/if}
 										<!--
 											A replacement shorter than what it replaces is the one shape of
 											edit whose loss is invisible — the new text reads perfectly well,

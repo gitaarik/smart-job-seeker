@@ -23,7 +23,8 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import ChangeDiff from '$lib/components/ChangeDiff.svelte';
-	import { shrinkage, summarizeValue } from '$lib/utils/change-analysis';
+	import DiffSegments from '$lib/components/DiffSegments.svelte';
+	import { inlineDiff, shrinkage, summarizeValue } from '$lib/utils/change-analysis';
 
 	/**
 	 * The consent step between what the assistant suggests and what happens.
@@ -115,7 +116,8 @@
 			</p>
 		{:else}
 			<dl class="space-y-1.5">
-				{#each proposal.changes as change}
+				{#each proposal.changes as change (change.field)}
+					{@const segments = inlineDiff(change)}
 					<div class="text-xs">
 						<dt class="text-[var(--dash-text-muted)]">{change.label}</dt>
 						<dd class="flex items-start gap-1.5 text-[var(--dash-text)]">
@@ -134,16 +136,21 @@
                 that column still have no `from`, and fall through to the same
                 no-arrow branch on their own.
               -->
-							{#if change.from !== '—'}
-								<span class="break-words text-[var(--dash-text-muted)] line-through">
-									{summarizeValue(change.from)}
-								</span>
-								<FontAwesomeIcon
-									icon={faArrowRight}
-									class="mt-1 h-2.5 w-2.5 shrink-0 text-[var(--dash-text-muted)]"
-								/>
+							{#if segments}
+								<!-- A small edit, marked in place; see the approvals page for the why. -->
+								<span class="break-words"><DiffSegments {segments} /></span>
+							{:else}
+								{#if change.from !== '—'}
+									<span class="break-words text-[var(--dash-text-muted)] line-through">
+										{summarizeValue(change.from)}
+									</span>
+									<FontAwesomeIcon
+										icon={faArrowRight}
+										class="mt-1 h-2.5 w-2.5 shrink-0 text-[var(--dash-text-muted)]"
+									/>
+								{/if}
+								<span class="font-medium break-words">{summarizeValue(change.to)}</span>
 							{/if}
-							<span class="font-medium break-words">{summarizeValue(change.to)}</span>
 							<!--
                 Said here rather than left to be worked out from two character
                 counts either side of an arrow. A replacement that is shorter

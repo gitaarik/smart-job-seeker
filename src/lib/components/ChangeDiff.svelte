@@ -2,6 +2,7 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 	import { analyseChanges, asText, isLong, type FieldChange } from '$lib/utils/change-analysis';
+	import DiffSegments from './DiffSegments.svelte';
 
 	/**
 	 * The full text behind a change, on demand, as a diff where that reads.
@@ -13,6 +14,11 @@
 	 * two ends of the same decision, and they were drifting: one had the diff,
 	 * the dropped-run panel and a length warning, the other had `old → new` with
 	 * a line through the old.
+	 *
+	 * This is the long-value half. A short value is read where it is listed:
+	 * the same surfaces render `inlineDiff` through the same `DiffSegments`, so
+	 * a one-word correction is marked in place instead of left for the eye to
+	 * find between two near-identical lines.
 	 *
 	 * Owns its own expanded state. The toggle and the panel belong together, and
 	 * a parent holding the flag only to pass it back down is a prop that exists
@@ -63,13 +69,9 @@
 				>
 					{#if segments}
 						<pre
-							class="text-[11px] leading-relaxed break-words whitespace-pre-wrap text-[var(--dash-text)]">{#each segments as seg, i (i)}{#if seg.type === 'added'}<span
-										class="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
-										>{seg.text}</span
-									>{:else if seg.type === 'removed'}<span
-										class="bg-red-500/20 text-red-700 line-through dark:text-red-300"
-										>{seg.text}</span
-									>{:else}{seg.text}{/if}{/each}</pre>
+							class="text-[11px] leading-relaxed break-words whitespace-pre-wrap text-[var(--dash-text)]"><DiffSegments
+								{segments}
+							/></pre>
 					{:else}
 						<pre
 							class="text-[11px] leading-relaxed break-words whitespace-pre-wrap text-[var(--dash-text)]">{asText(

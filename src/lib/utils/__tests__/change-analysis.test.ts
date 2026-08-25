@@ -5,7 +5,8 @@ import {
 	isLong,
 	LONG_VALUE_CHARS,
 	shrinkage,
-	summarizeValue
+	summarizeValue,
+	inlineDiff
 } from '../change-analysis';
 
 const long = (word: string, times: number) => Array(times).fill(word).join(' ');
@@ -94,5 +95,49 @@ describe('analyseChanges', () => {
 
 		expect(result.segments?.every((s) => s.type === 'added') ?? true).toBe(true);
 		expect(result.dropped).toEqual([]);
+	});
+});
+
+describe('inlineDiff', () => {
+	it('marks the word that changed in a short value', () => {
+		const segments = inlineDiff({
+			from: 'Reduced regression by 90% by setting up TDD.',
+			to: 'Reduced regressions by 90% by setting up TDD.'
+		});
+		expect(segments).not.toBeNull();
+		const of = (type: string) => segments!.filter((s) => s.type === type).map((s) => s.text.trim());
+		expect(of('removed')).toEqual(['regression']);
+		expect(of('added')).toEqual(['regressions']);
+	});
+
+	it('still diffs a rewording that keeps at least half of the line', () => {
+		// 47% of the characters change here; the panel's 30% rule would refuse it,
+		// and on one line it reads better marked in place than as old → new.
+		expect(
+			inlineDiff({
+				from: 'Scaled the platform to handle loads of thousands of orders per minute by optimizing SQL & Python processes up to 60%.',
+				to: 'Scaled the platform to handle thousands of orders per minute by optimizing SQL & Python, making checkout 60% faster.'
+			})
+		).not.toBeNull();
+	});
+
+	it('leaves a rewrite to old → new', () => {
+		expect(
+			inlineDiff({
+				from: 'Supported marketing by sending thousands of emails in a system made with Python, Django, Celery & SendGrid.',
+				to: 'Built the marketing email system (Python, Django, Celery & SendGrid) that delivered thousands of campaign emails.'
+			})
+		).toBeNull();
+	});
+
+	it('leaves a long value to the on-demand panel', () => {
+		const long = 'word '.repeat(30).trim();
+		expect(long.length).toBeGreaterThan(120);
+		expect(inlineDiff({ from: long, to: `${long} more` })).toBeNull();
+	});
+
+	it('has nothing to compare when a value is set or cleared', () => {
+		expect(inlineDiff({ from: '—', to: 'Haarlem, NL' })).toBeNull();
+		expect(inlineDiff({ from: 'Haarlem, NL', to: '' })).toBeNull();
 	});
 });

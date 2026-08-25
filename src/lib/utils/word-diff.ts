@@ -84,13 +84,18 @@ export function computeDiff(oldText: string, newText: string): DiffSegment[] {
 	return segments;
 }
 
-/** True when less than 30% of characters changed — used to auto-expand small diffs. */
-export function isSmallDiff(segments: DiffSegment[]): boolean {
+/**
+ * True when less than `maxChanged` of the characters changed — used to decide
+ * whether a diff is readable at all. The default suits a long text, where a
+ * rewrite turns into a stripe of every word removed and every word added; a
+ * caller showing a one-line value can afford more, see `inlineDiff`.
+ */
+export function isSmallDiff(segments: DiffSegment[], maxChanged = 0.3): boolean {
 	let changedChars = 0;
 	let totalChars = 0;
 	for (const seg of segments) {
 		totalChars += seg.text.length;
 		if (seg.type !== 'same') changedChars += seg.text.length;
 	}
-	return totalChars > 0 && changedChars / totalChars < 0.3;
+	return totalChars > 0 && changedChars / totalChars < maxChanged;
 }

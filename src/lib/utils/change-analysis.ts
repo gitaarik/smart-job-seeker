@@ -40,6 +40,9 @@ export const LONG_VALUE_CHARS = 120;
  */
 export const DROPPED_RUN_CHARS = 80;
 
+/** How much of a short value may change before old → new reads better than a diff. */
+export const SHORT_DIFF_MAX_CHANGED = 0.5;
+
 export interface FieldChange {
 	field: string;
 	label: string;
@@ -61,9 +64,41 @@ export interface AnalysedChange {
 /** "—" is how an unset value is rendered; as diff input it means empty. */
 export const asText = (value: string) => (value === '—' ? '' : value);
 
-/** Rows whose real content a summary would hide. Short ones are already visible. */
+/**
+ * Rows whose real content a summary would hide. Short ones are shown whole —
+ * as a diff where the edit is small, see `inlineDiff`.
+ */
 export function isLong(change: { from: string; to: string }): boolean {
 	return change.from.length > LONG_VALUE_CHARS || change.to.length > LONG_VALUE_CHARS;
+}
+
+/**
+ * The inline diff for a short change, or null when old → new reads better.
+ *
+ * Short values are where a diff is both cheapest and most needed: two lines of
+ * text, and the edit is usually one word — "regression" → "regressions", a
+ * dropped "+", one letter of a product name. Old-struck-through → new leaves
+ * the reader to find that word by eye; the diff points at it.
+ *
+ * Null for a long value (those get the on-demand panel, see `analyseChanges`),
+ * for a value being set or cleared (nothing to compare), and for a rewrite —
+ * once less than half of it is unchanged, old → new reads better than a
+ * stripe of every word removed and every word added. That is a looser line
+ * than the panel's 30%, on purpose: in a one-line value a single changed word
+ * is already 40% of the characters, and the queue this was calibrated on
+ * split cleanly — grammar fixes at 2–16%, rewordings at 33–49% that still
+ * read well marked in place, rewrites at 60% and up.
+ *
+ * Cheap enough to call eagerly, unlike `analyseChanges`: the LCS matrix for
+ * two 120-character values is a few hundred cells.
+ */
+export function inlineDiff(change: { from: string; to: string }): DiffSegment[] | null {
+	if (isLong(change)) return null;
+	const from = asText(change.from);
+	const to = asText(change.to);
+	if (!from || !to) return null;
+	const segments = computeDiff(from, to);
+	return isSmallDiff(segments, SHORT_DIFF_MAX_CHANGED) ? segments : null;
 }
 
 /** A value as it reads in a one-line list: itself, or its shape. */
