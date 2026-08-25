@@ -29,7 +29,7 @@ import { mkdir, writeFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { eq, inArray, sql } from 'drizzle-orm';
 import { db, queryRawDirect } from '$lib/server/db';
-import { files, profile_exports, profiles } from '$lib/server/db/schema';
+import { files, profile_exports, profiles, resume_templates } from '$lib/server/db/schema';
 import {
 	collectProfileFileRefs,
 	DEFAULT_ORPHAN_MIN_AGE_DAYS,
@@ -46,6 +46,7 @@ if (!Number.isInteger(profileId)) {
 /** Everything this run created, so the finally block can undo all of it. */
 const madeFileIds: string[] = [];
 const madeExportIds: number[] = [];
+const madeTemplateIds: number[] = [];
 const madePaths: string[] = [];
 
 let failures = 0;
@@ -208,6 +209,40 @@ async function main() {
 	);
 	check('the scan respects a limit', (await findOrphanedFiles({ limit: 1 })).length <= 1);
 
+	// A template names its assets in jsonb: no foreign key, so the catalog is
+	// blind to it. This is the gap the 2026-08-23 sweep deleted the Citrus
+	// assets through, and a mocked test cannot tell whether the ILIKE/regexp
+	// SQL that closes it actually runs.
+	console.log(`\nsoft references: a file only a template config names`);
+
+	const asset = await makeFile('template-asset');
+	const [template] = await db
+		.insert(resume_templates)
+		.values({
+			profile_id: profileId,
+			name: 'verify-orphan-reap',
+			slug: `verify-orphan-reap-${asset.id.slice(0, 8)}`,
+			config: { assets: { badge: asset.id } }
+		})
+		.returning({ id: resume_templates.id });
+	madeTemplateIds.push(template.id);
+	await backdate(asset.id, DEFAULT_ORPHAN_MIN_AGE_DAYS + 23);
+
+	check(
+		'an old file only a template config names is NOT listed',
+		!(await findOrphanedFiles()).some((f) => f.id === asset.id)
+	);
+	const spared = await reapFileRefs({ fileIds: [asset.id], mediaPaths: [] });
+	check(
+		'and the reap retains it',
+		spared.filesRetained === 1 && (await rowExists(asset.id)),
+		JSON.stringify(spared)
+	);
+	check(
+		'collect finds it through the config',
+		(await collectProfileFileRefs(profileId)).fileIds.includes(asset.id)
+	);
+
 	// And the guard is built from the catalog, so it covers every FK, not a list
 	// someone remembered to update.
 	const fks = await queryRawDirect<{ tbl: string }>(sql`
@@ -223,6 +258,9 @@ async function main() {
 }
 
 async function cleanup() {
+	if (madeTemplateIds.length > 0) {
+		await db.delete(resume_templates).where(inArray(resume_templates.id, madeTemplateIds));
+	}
 	if (madeExportIds.length > 0) {
 		await db.delete(profile_exports).where(inArray(profile_exports.id, madeExportIds));
 	}

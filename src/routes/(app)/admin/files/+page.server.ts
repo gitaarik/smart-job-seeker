@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { dbDirect as db } from '$lib/server/db';
-import { eq, and, like, inArray, desc, count, exists, notExists, type SQL } from 'drizzle-orm';
+import { eq, and, like, inArray, desc, count, exists, type SQL } from 'drizzle-orm';
+import { notReferencedCondition } from '$lib/server/uploads/reap';
 import { sql } from 'drizzle-orm';
 import {
 	files,
@@ -8,7 +9,6 @@ import {
 	application_records,
 	user_feedback_files,
 	profile_exports,
-	applications as applicationsTable,
 	import_logs
 } from '$lib/server/db/schema';
 
@@ -74,40 +74,11 @@ export const load: PageServerLoad = async ({ url }) => {
 			)
 		);
 	} else if (usageFilter === 'orphan') {
-		conditions.push(
-			notExists(
-				db
-					.select({ v: sql`1` })
-					.from(profiles)
-					.where(eq(profiles.profile_picture_id, files.id))
-			),
-			// Orphan is the filter used to decide what is safe to delete, so this
-			// must name every table that can hold a file reference.
-			notExists(
-				db
-					.select({ v: sql`1` })
-					.from(application_records)
-					.where(eq(application_records.file_id, files.id))
-			),
-			notExists(
-				db
-					.select({ v: sql`1` })
-					.from(user_feedback_files)
-					.where(eq(user_feedback_files.file_id, files.id))
-			),
-			notExists(
-				db
-					.select({ v: sql`1` })
-					.from(profile_exports)
-					.where(eq(profile_exports.file_id, files.id))
-			),
-			notExists(
-				db
-					.select({ v: sql`1` })
-					.from(applicationsTable)
-					.where(eq(applicationsTable.cv_file_sent_id, files.id))
-			)
-		);
+		// The same question the sweep asks, from the same place: every foreign key
+		// the catalog reports plus the references it cannot see. A second list here
+		// drifted before — it named five of the nine FKs and no jsonb — so this
+		// page showed as "orphan" files the sweep would (rightly or wrongly) delete.
+		conditions.push(await notReferencedCondition());
 	}
 
 	const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;

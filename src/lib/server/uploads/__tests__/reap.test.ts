@@ -188,13 +188,33 @@ describe('reapFileRefs', () => {
 	it('still deletes when the catalog reports no references at all', async () => {
 		// Only reachable if `files` genuinely has no FK pointing at it. The ids
 		// were resolved by the caller from the rows being deleted, so this is the
-		// intended set either way.
+		// intended set either way — but the references the catalog cannot see
+		// are still guarded.
 		mockQuery.mockResolvedValueOnce([]).mockResolvedValueOnce([{ filename_disk: 'a.pdf' }]);
 
 		const result = await reapFileRefs({ fileIds: ['id-a'], mediaPaths: [] });
 
-		expect(queryAt(1).sql).toContain('AND true');
+		const { sql } = queryAt(1);
+		expect(sql).not.toContain('AND true');
+		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM resume_templates');
 		expect(result.filesDeleted).toBe(1);
+	});
+
+	// The catalog knows every foreign key and nothing else. `resume_templates`
+	// names its assets in jsonb, `profiles.source_cv` and `import_logs.file_id`
+	// never got a constraint — and the 2026-08-23 sweep deleted the Citrus
+	// template's six assets through exactly that gap.
+	it('also guards the references no foreign key declares', async () => {
+		mockQuery.mockResolvedValueOnce(FK_ROWS).mockResolvedValueOnce([]);
+
+		await reapFileRefs({ fileIds: ['id-a'], mediaPaths: [] });
+
+		const { sql } = queryAt(1);
+		expect(sql).toContain(
+			"NOT EXISTS (SELECT 1 FROM resume_templates WHERE config::text ILIKE '%' || files.id::text || '%')"
+		);
+		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM profiles WHERE source_cv = files.id)');
+		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM import_logs WHERE file_id = files.id::text)');
 	});
 });
 
@@ -245,6 +265,22 @@ describe('findOrphanedFiles', () => {
 			'NOT EXISTS (SELECT 1 FROM applications WHERE cv_file_sent_id = files.id)'
 		);
 		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM profile_exports WHERE file_id = files.id)');
+	});
+
+	// A template asset is referenced from jsonb, which no constraint can
+	// express. Any UUID-shaped string anywhere in the config counts — the same
+	// rule the template export uses — so a key added tomorrow is covered too.
+	it('keeps a file a template config names, whatever the key', async () => {
+		mockQuery.mockResolvedValueOnce(FK_ROWS).mockResolvedValueOnce([]);
+
+		await findOrphanedFiles();
+
+		const { sql } = queryAt(1);
+		expect(sql).toContain(
+			"NOT EXISTS (SELECT 1 FROM resume_templates WHERE config::text ILIKE '%' || files.id::text || '%')"
+		);
+		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM profiles WHERE source_cv = files.id)');
+		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM import_logs WHERE file_id = files.id::text)');
 	});
 
 	// The driver hands raw SQL back untyped: bigint arrives as a string and so
@@ -344,10 +380,28 @@ describe('collectProfileFileRefs', () => {
 			'applications',
 			'application_records',
 			'profile_exports',
-			'profile_document_projects'
+			'profile_document_projects',
+			'resume_templates',
+			'import_logs'
 		]) {
 			expect(sql, `${table} is not collected`).toContain(table);
 		}
+	});
+
+	// What the reap refuses to delete for a living profile is exactly what it
+	// must collect for a dying one, or the blobs outlive the row — the failure
+	// this module exists to close.
+	it('collects the references no foreign key declares', async () => {
+		mockQuery.mockResolvedValueOnce([]);
+
+		await collectProfileFileRefs(7);
+
+		const { sql, params } = queryAt(0);
+		expect(sql).toContain('SELECT source_cv, NULL FROM profiles WHERE id = $');
+		expect(sql).toContain('regexp_matches(t.config::text');
+		expect(sql).toContain('FROM import_logs');
+		// The UUID pattern is inlined, not bound: the only parameter is the profile.
+		expect(new Set(params)).toEqual(new Set([7]));
 	});
 });
 
@@ -361,19 +415,37 @@ describe('collectUserFileRefs', () => {
 			// profile 2 — sharing a blob with profile 1
 			.mockResolvedValueOnce([{ file_id: 'id-a', media_path: 'profiles/two.jpg' }])
 			// user_feedback_files
-			.mockResolvedValueOnce([{ file_id: 'id-c' }, { file_id: null }]);
+			.mockResolvedValueOnce([{ file_id: 'id-c' }, { file_id: null }])
+			// import_logs — the uploads kept for re-parsing hang off the user
+			.mockResolvedValueOnce([{ file_id: 'id-d' }]);
 
 		const refs = await collectUserFileRefs('user-1');
 
-		expect(refs.fileIds).toEqual(['id-a', 'id-c']);
+		expect(refs.fileIds).toEqual(['id-a', 'id-c', 'id-d']);
 		expect(refs.mediaPaths).toEqual(['profiles/one.jpg', 'profiles/two.jpg']);
 	});
 
 	it('still collects the account-scoped files of a user with no profile', async () => {
-		mockQuery.mockResolvedValueOnce([]).mockResolvedValueOnce([{ file_id: 'id-c' }]);
+		mockQuery
+			.mockResolvedValueOnce([])
+			.mockResolvedValueOnce([{ file_id: 'id-c' }])
+			.mockResolvedValueOnce([]);
 
 		const refs = await collectUserFileRefs('user-1');
 
 		expect(refs).toEqual({ fileIds: ['id-c'], mediaPaths: [] });
+	});
+
+	// `account/delete.ts` removes `import_logs` by user id before it reaps, so
+	// their files have to be collected here or they outlive the account.
+	it('asks import_logs about the user, not a profile', async () => {
+		mockQuery.mockResolvedValueOnce([]).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+
+		await collectUserFileRefs('user-1');
+
+		const { sql, params } = queryAt(2);
+		expect(sql).toContain('FROM import_logs');
+		expect(sql).toContain('user_id = $');
+		expect(params).toEqual(['user-1']);
 	});
 });

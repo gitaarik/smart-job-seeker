@@ -24,7 +24,7 @@
  * *after* it (before, and the not-referenced check correctly refuses).
  */
 
-import { sql } from 'drizzle-orm';
+import { sql, type SQL } from 'drizzle-orm';
 import { queryRawDirect } from '$lib/server/db';
 import { deleteUpload } from './index';
 
@@ -79,8 +79,16 @@ function mergeRefs(...refs: FileRefs[]): FileRefs {
 	};
 }
 
+/** A file id as it appears inside jsonb or a varchar — see SOFT_REFERENCE_GUARDS. */
+const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+
 /**
  * Every file reachable from one profile.
+ *
+ * Includes the references the catalog cannot see (the template assets named in
+ * `resume_templates.config`, `profiles.source_cv`, `import_logs.file_id`) —
+ * whatever the reap must refuse to delete for a *living* profile is exactly
+ * what it must collect for a dying one.
  *
  * Deliberately *not* including `job_resources`: those hang off `jobs`, which
  * is a table shared between everyone a posting matched and is not deleted with
@@ -113,6 +121,16 @@ export async function collectProfileFileRefs(profileId: number): Promise<FileRef
 		SELECT file_id, NULL FROM profile_exports WHERE profile_id = ${profileId}
 		UNION ALL
 		SELECT file_id, NULL FROM profile_document_projects WHERE profile_id = ${profileId}
+		UNION ALL
+		SELECT source_cv, NULL FROM profiles WHERE id = ${profileId}
+		UNION ALL
+		SELECT m[1]::uuid, NULL
+		  FROM resume_templates t, regexp_matches(t.config::text, ${sql.raw(`'${UUID_PATTERN}'`)}, 'gi') AS m
+		 WHERE t.profile_id = ${profileId}
+		UNION ALL
+		SELECT file_id::uuid, NULL
+		  FROM import_logs
+		 WHERE profile_id = ${profileId} AND file_id ~* ${sql.raw(`'^${UUID_PATTERN}$'`)}
 	`);
 
 	const fileIds = new Set<string>();
@@ -143,12 +161,16 @@ export async function collectUserFileRefs(userId: string): Promise<FileRefs> {
 		  JOIN user_feedback uf ON uf.id = f.user_feedback_id
 		 WHERE uf.user_id = ${userId}
 	`);
-	const feedbackRefs: FileRefs = {
-		fileIds: feedback.map((r) => r.file_id).filter((id): id is string => !!id),
+	const imports = await queryRawDirect<{ file_id: string | null }>(sql`
+		SELECT file_id FROM import_logs
+		 WHERE user_id = ${userId} AND file_id ~* ${sql.raw(`'^${UUID_PATTERN}$'`)}
+	`);
+	const accountRefs: FileRefs = {
+		fileIds: [...feedback, ...imports].map((r) => r.file_id).filter((id): id is string => !!id),
 		mediaPaths: []
 	};
 
-	return mergeRefs(...perProfile, feedbackRefs);
+	return mergeRefs(...perProfile, accountRefs);
 }
 
 /**
@@ -171,6 +193,56 @@ async function referencingColumns(): Promise<{ table: string; column: string }[]
 }
 
 /**
+ * References the catalog cannot report.
+ *
+ * `referencingColumns()` asks `pg_constraint`, which knows every real foreign
+ * key and nothing else. These columns hold `files.id` values without one, and
+ * the sweep of 2026-08-23 deleted the Citrus template's six assets through
+ * exactly that gap: `resume_templates.config` named them in jsonb, no
+ * constraint could see it, and "nothing references this" came back true. The
+ * assets were restored from a profile export archive; the sweep also took the
+ * `source_cv` a profile was created from and the uploads `import_logs` keeps
+ * for re-parsing, which nothing had backed up.
+ *
+ * Each guard is `true` while nothing points at the `files` row being judged.
+ * They are hand-maintained because there is nothing to read them from: a jsonb
+ * blob has no constraint, and the two plain columns never got one (a real
+ * foreign key would move them into the catalog's list — until then they live
+ * here). The match on `config` is deliberately key-agnostic — any UUID-shaped
+ * string anywhere in it counts — because that is the rule the template
+ * export/import already uses to decide what an asset is
+ * (`collectFileIdCandidates` in `export/export-templates.ts`), and hard-coding
+ * today's five keys would re-open the hole for the sixth.
+ *
+ * When a new column stores a file id, give it a foreign key. If that is not
+ * possible, add it here *and* to the collect queries below — one side without
+ * the other either keeps the file for ever or deletes it out from under a row.
+ */
+const SOFT_REFERENCE_GUARDS: SQL[] = [
+	sql`NOT EXISTS (SELECT 1 FROM resume_templates WHERE config::text ILIKE '%' || files.id::text || '%')`,
+	sql`NOT EXISTS (SELECT 1 FROM profiles WHERE source_cv = files.id)`,
+	sql`NOT EXISTS (SELECT 1 FROM import_logs WHERE file_id = files.id::text)`
+];
+
+/**
+ * "Nothing points at this `files` row": every foreign key the catalog reports,
+ * plus the references it cannot see. This is the one definition of *orphan* —
+ * the backlog scan, the per-profile reap and the admin file browser all ask
+ * it, so they cannot disagree about what is safe to delete.
+ */
+export async function notReferencedCondition(): Promise<SQL> {
+	const cols = await referencingColumns();
+	const guards = [
+		...cols.map(
+			(r) =>
+				sql`NOT EXISTS (SELECT 1 FROM ${sql.raw(r.table)} WHERE ${sql.raw(r.column)} = files.id)`
+		),
+		...SOFT_REFERENCE_GUARDS
+	];
+	return sql.join(guards, sql` AND `);
+}
+
+/**
  * `files` rows nothing points at any more.
  *
  * This is the backlog side of the same question `reapFileRefs` asks about one
@@ -189,11 +261,7 @@ export async function findOrphanedFiles(opts: OrphanScanOptions = {}): Promise<O
 	const minAgeDays = opts.minAgeDays ?? DEFAULT_ORPHAN_MIN_AGE_DAYS;
 	const cutoff = new Date(Date.now() - minAgeDays * 24 * 60 * 60 * 1000);
 
-	const cols = await referencingColumns();
-	const guards = cols.map(
-		(r) => sql`NOT EXISTS (SELECT 1 FROM ${sql.raw(r.table)} WHERE ${sql.raw(r.column)} = files.id)`
-	);
-	const notReferenced = guards.length ? sql.join(guards, sql` AND `) : sql`true`;
+	const notReferenced = await notReferencedCondition();
 	const limit = opts.limit ? sql` LIMIT ${opts.limit}` : sql``;
 
 	const rows = await queryRawDirect<{
@@ -242,12 +310,7 @@ export async function reapFileRefs(refs: FileRefs): Promise<ReapResult> {
 	};
 
 	if (refs.fileIds.length > 0) {
-		const refs_ = await referencingColumns();
-		const guards = refs_.map(
-			(r) =>
-				sql`NOT EXISTS (SELECT 1 FROM ${sql.raw(r.table)} WHERE ${sql.raw(r.column)} = files.id)`
-		);
-		const notReferenced = guards.length ? sql.join(guards, sql` AND `) : sql`true`;
+		const notReferenced = await notReferencedCondition();
 
 		// Each id binds as its own parameter. Passing the JS array straight to
 		// `ANY($1::uuid[])` looks tidier and fails at runtime — the driver hands
