@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isValidJobPostingDate, parseRelativeDate } from '../date-utils';
+import { formatDateRangeCompact, isValidJobPostingDate, parseRelativeDate } from '../date-utils';
 
 describe('parseRelativeDate', () => {
 	const referenceDate = new Date('2025-12-28T12:00:00Z');
@@ -299,5 +299,25 @@ describe('isValidJobPostingDate', () => {
 			// Should be rejected since it's in the future
 			expect(isValidJobPostingDate(oneSecondAhead)).toBe(false);
 		});
+	});
+});
+
+describe('formatDateRangeCompact', () => {
+	it('formats a range as MM/YYYY - MM/YYYY', () => {
+		expect(formatDateRangeCompact('2020-11-15', '2023-01-18')).toBe('11/2020 - 01/2023');
+	});
+
+	it('labels an open range as ongoing', () => {
+		expect(formatDateRangeCompact('2025-08-04', null)).toBe('08/2025 - Present');
+		expect(formatDateRangeCompact('2025-08-04', null, 'Heden')).toBe('08/2025 - Heden');
+	});
+
+	it('collapses a range that starts and ends in the same month to one date', () => {
+		expect(formatDateRangeCompact('2014-01-15', '2014-01-15')).toBe('01/2014');
+		expect(formatDateRangeCompact('2014-01-02', '2014-01-30')).toBe('01/2014');
+	});
+
+	it('returns nothing without a start date', () => {
+		expect(formatDateRangeCompact(null)).toBe('');
 	});
 });

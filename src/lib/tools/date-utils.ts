@@ -137,7 +137,9 @@ export function formatDateRangeCompact(
 	if (!startDate) return '';
 	const start = formatDate(startDate);
 	const end = endDate ? formatDate(endDate) : presentLabel;
-	return `${start} - ${end}`;
+	// Started and ended in the same month is one date, not a range:
+	// "01/2014", not "01/2014 - 01/2014".
+	return start === end ? start : `${start} - ${end}`;
 }
 
 export function formatDateRangeYear(
