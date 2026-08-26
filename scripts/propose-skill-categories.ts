@@ -90,6 +90,22 @@ const BATCH = 12;
 const MORE = process.argv.includes('--more-parents');
 
 /**
+ * Ask about a CATEGORY and its members, instead of about one concept.
+ *
+ * Every mode above asks "what category does this belong to?" for one entry at a
+ * time, and a twelve-item batch has no view of the category as a whole. That
+ * produces exactly the gap a reader spots first: `JavaScript framework` held
+ * React and Vue while Svelte sat beside them under the same parent and was never
+ * considered, because nothing ever looked at the category and asked who was
+ * missing.
+ *
+ * Candidates are found structurally rather than by similarity — a concept that
+ * shares a parent with an existing member is already a near-sibling, which is
+ * the same signal a person uses when they say "but Svelte is right there".
+ */
+const FILL = process.argv.includes('--fill-categories');
+
+/**
  * A closed list, so domains cannot sprawl into one-per-skill.
  *
  * "IT" is first because it is most of this vocabulary, and last is the escape
@@ -154,6 +170,36 @@ const Item = z.object({
 
 /** What the model is ASKED for; `coerceIndexedEnvelope` normalises what returns. */
 const Schema = z.object({ items: z.array(Item) });
+
+const FillItem = z.object({
+	item: z.number().int().optional(),
+	belongs: z.boolean(),
+	confidence: z.number().min(0).max(1).optional()
+});
+const FillSchema = z.object({ items: z.array(FillItem) });
+
+const FILL_SYSTEM = `You are given a category, the skills already in it, and some
+candidates. Say which candidates belong in the SAME category.
+
+Belonging means "every X is a kind of the category", the same test the existing
+members pass. Look at what they have in common and apply exactly that.
+
+  Category: JavaScript framework   already in it: React, Vue
+  "Svelte"    belongs      — the same kind of thing as React and Vue
+  "Redux"     does NOT     — a state library used with them, not one of them
+  "Webpack"   does NOT     — a build tool
+  "MUI"       does NOT     — a component library FOR one of them
+
+Being adjacent, being used alongside, or being written in the same language is
+not belonging. When the members share something narrower than the category name
+suggests, follow the members.
+
+Return ONE object with an "items" ARRAY, in input order, each carrying its index:
+
+{"items":[{"item":0,"belongs":true,"confidence":0.95},
+          {"item":1,"belongs":false,"confidence":0.9}]}
+
+Do NOT return an object keyed by index. "items" must be a JSON array.`;
 
 const SYSTEM = `You place each skill under a parent category.
 
@@ -225,6 +271,7 @@ async function main() {
 		sql`SELECT id, slug, label FROM skill_concepts ORDER BY label`
 	);
 	const idBySlug = new Map(concepts.map((c) => [c.slug, c.id]));
+	const byId = new Map(concepts.map((c) => [c.id, c]));
 
 	// The work is every concept with no PARENT — not every concept with no edge.
 	//
@@ -253,10 +300,20 @@ async function main() {
 	const hasParent = new Set(parented.map((r) => r.id));
 
 	/** What each concept is already under, so the prompt can ask for more. */
-	const parentRows = await queryRawDirect<{ from_id: number; label: string }>(sql`
-		SELECT r.from_id, t.label FROM skill_relations r
+	const parentRows = await queryRawDirect<{ from_id: number; to_id: number; label: string }>(sql`
+		SELECT r.from_id, r.to_id, t.label FROM skill_relations r
 		JOIN skill_concepts t ON t.id = r.to_id
 		WHERE r.approved_at IS NOT NULL AND r.relation IN ('broader', 'covers')
+	`);
+
+	// Reachability must walk EVERY matching relation, not just the hierarchy ones.
+	// `requires` carries implication exactly as `broader` does, so Express reaches
+	// JavaScript through `requires Node.js` and proposing `Express broader
+	// JavaScript` adds nothing — but a reachability check built from parentRows
+	// alone cannot see it, and offered exactly that on the first run.
+	const reachRows = await queryRawDirect<{ from_id: number; to_id: number }>(sql`
+		SELECT from_id, to_id FROM skill_relations
+		WHERE approved_at IS NOT NULL AND relation IN ('broader', 'requires', 'covers')
 	`);
 	const parentsOf = new Map<number, string[]>();
 	for (const r of parentRows) {
@@ -365,6 +422,120 @@ async function main() {
 	// So pass 2 re-asks exactly those, with pass 1's categories added to the
 	// offered list. Nothing else is retried: a `trait` or `requirement` verdict
 	// is an answer, not a failure.
+	if (FILL) {
+		const members = new Map<number, number[]>();
+		for (const r of parentRows) {
+			if (!members.has(r.to_id)) members.set(r.to_id, []);
+			members.get(r.to_id)!.push(r.from_id);
+		}
+		const parentsById = new Map<number, Set<number>>();
+		for (const r of parentRows) {
+			if (!parentsById.has(r.from_id)) parentsById.set(r.from_id, new Set());
+			parentsById.get(r.from_id)!.add(r.to_id);
+		}
+
+		/**
+		 * Already reaches it, so there is nothing to add.
+		 *
+		 * Without this the mode is almost pure noise: `Software development` sits
+		 * near the top of the graph, so nearly everything shares a parent with one
+		 * of its members and becomes a candidate, and the model happily agrees that
+		 * Java, PHP and MongoDB belong in it — which they do, transitively, which is
+		 * exactly why the edge should not be written. The first run proposed 12 such
+		 * memberships for that one category and one real one (Svelte) for another.
+		 */
+		const upById = new Map<number, number[]>();
+		for (const r of reachRows) {
+			if (!upById.has(r.from_id)) upById.set(r.from_id, []);
+			upById.get(r.from_id)!.push(r.to_id);
+		}
+		function reaches(from: number, to: number): boolean {
+			const seen = new Set([from]);
+			const queue = [from];
+			while (queue.length > 0) {
+				for (const p of upById.get(queue.shift()!) ?? []) {
+					if (p === to) return true;
+					if (seen.has(p)) continue;
+					seen.add(p);
+					queue.push(p);
+				}
+			}
+			return false;
+		}
+
+		let queued = 0;
+		for (const [catId, memberIds] of members) {
+			// A category worth filling has at least two members: one member is not a
+			// pattern, it is a coincidence, and asking about it invites the model to
+			// invent a class from a single example.
+			if (memberIds.length < 2) continue;
+			const cat = byId.get(catId);
+			if (!cat) continue;
+
+			// Near-siblings: anything sharing a parent with a member, not already in,
+			// and not an ancestor of the category — the last excludes the cycles the
+			// guard would refuse anyway, before spending a call on them.
+			const inCat = new Set(memberIds);
+			const siblingParents = new Set<number>();
+			for (const m of memberIds) for (const p of parentsById.get(m) ?? []) siblingParents.add(p);
+			siblingParents.delete(catId);
+			const candidates = concepts.filter(
+				(c) =>
+					!inCat.has(c.id) &&
+					c.id !== catId &&
+					[...(parentsById.get(c.id) ?? [])].some((p) => siblingParents.has(p)) &&
+					!reaches(c.id, catId) &&
+					!reaches(catId, c.id)
+			);
+			if (candidates.length === 0) continue;
+
+			try {
+				const res = await generateChatCompletionTracked(
+					[
+						{ role: 'system', content: FILL_SYSTEM },
+						{
+							role: 'user',
+							content:
+								`Category: "${cat.label}"\n` +
+								`Already in it: ${memberIds.map((i) => byId.get(i)?.label).join(', ')}\n\n` +
+								`Which of these ALSO belong in it?\n` +
+								candidates.map((c, n) => `${n}. "${c.label}"`).join('\n')
+						}
+					],
+					{ temperature: 0, structuredOutput: { name: 'category_fill', schema: FillSchema } }
+				);
+				for (const { index, value: v } of coerceIndexedEnvelope(
+					JSON.parse(res.content),
+					'items',
+					FillItem
+				)) {
+					const c = candidates[v.item ?? index];
+					if (!c || !v.belongs) continue;
+					if (!APPLY) {
+						console.log(`  ${cat.label} <- ${c.label}  (${(v.confidence ?? 0.5).toFixed(2)})`);
+						queued++;
+						continue;
+					}
+					await db.execute(sql`
+						INSERT INTO skill_relations (from_id, to_id, relation, source, confidence)
+						SELECT ${c.id}, ${catId}, 'broader', 'llm:fill', ${v.confidence ?? 0.5}
+						WHERE NOT EXISTS (
+							SELECT 1 FROM skill_relations x
+							WHERE x.from_id = ${c.id} AND x.to_id = ${catId} AND x.relation = 'broader'
+						)
+					`);
+					console.log(`  ${cat.label} <- ${c.label}`);
+					queued++;
+				}
+			} catch (err) {
+				console.warn(`  "${cat.label}" FAILED: ${err instanceof Error ? err.message : err}`);
+			}
+		}
+		console.log(`\n${queued} membership(s) ${APPLY ? 'queued, unapproved' : 'would be queued'}.`);
+		if (!APPLY) console.log('Pass --apply to write them.');
+		return;
+	}
+
 	let decisions: Decision[];
 	let skipped: Skip[];
 
