@@ -205,10 +205,29 @@ async function main() {
 	);
 	const idBySlug = new Map(concepts.map((c) => [c.slug, c.id]));
 
-	// Orphans are the work; the connected ones are the vocabulary to reuse. A
-	// concept already in the graph has a reviewed place in it, and re-parenting
-	// it is a different and riskier operation than giving an island its first
-	// edge.
+	// The work is every concept with no PARENT — not every concept with no edge.
+	//
+	// This started as "orphans only", on the reasoning that a concept already in
+	// the graph has a reviewed place in it. That was wrong, and Django REST
+	// Framework is the case that shows why: it has exactly one edge, `requires
+	// Django`, so it counted as connected and was never considered — while
+	// nothing in the graph said it is an API framework. A dependency is not a
+	// category. Measured here: 45 concepts have an edge but no parent, 13 of them
+	// with only a `requires` edge, and every one was invisible to the first run.
+	//
+	// Pending proposals count as having a parent too. Otherwise each run re-asks
+	// about everything still sitting in the review queue, and the queue grows by
+	// a duplicate of itself every time this is run.
+	const parented = await queryRawDirect<{ id: number }>(sql`
+		SELECT DISTINCT from_id AS id FROM skill_relations
+		WHERE relation IN ('broader', 'covers')
+	`);
+	const hasParent = new Set(parented.map((r) => r.id));
+
+	// A concept worth offering as a parent is one the graph already uses as one:
+	// anything with an approved edge in either direction. Minted-but-unapproved
+	// categories are deliberately not offered — suggesting a category that no
+	// human has accepted yet would compound one guess onto another.
 	const connected = await queryRawDirect<{ id: number }>(sql`
 		SELECT DISTINCT id FROM (
 			SELECT from_id AS id FROM skill_relations WHERE approved_at IS NOT NULL
@@ -216,11 +235,11 @@ async function main() {
 		) x
 	`);
 	const inGraph = new Set(connected.map((r) => r.id));
-	const orphans = concepts.filter((c) => !inGraph.has(c.id));
+	const orphans = concepts.filter((c) => !hasParent.has(c.id));
 	const offered = concepts.filter((c) => inGraph.has(c.id)).map((c) => c.label);
 
 	console.log(
-		`${concepts.length} concepts: ${orphans.length} orphaned, ` +
+		`${concepts.length} concepts: ${orphans.length} without a parent, ` +
 			`${offered.length} already in the graph and offered as parents.\n`
 	);
 	if (orphans.length === 0) return;
@@ -322,6 +341,50 @@ async function main() {
 		decisions = [...pass1.decisions, ...pass2.decisions];
 		skipped = [...pass1.skipped.filter((s) => s.kind !== 'skill'), ...pass2.skipped];
 		writeFileSync(PLAN, JSON.stringify({ decisions, skipped }, null, '\t'));
+	}
+
+	// Refuse a parent that already reaches the child.
+	//
+	// `Software Architecture broader Software Design` is approved, and this run
+	// proposed `Software Design broader Software Architecture` — a two-node cycle,
+	// from a model that sees one entry at a time and cannot know the graph already
+	// answers the question in the other direction. `expandUpward` would survive it
+	// (the CTE is UNION, not UNION ALL) but every profile touching either concept
+	// would silently gain the other, and the audit would report both edges as
+	// redundant without saying why.
+	//
+	// Checked against APPROVED edges only: a pending proposal is not yet a fact,
+	// and refusing on one would let a wrong proposal veto a right one.
+	const upEdges = await queryRawDirect<{ from_id: number; to_id: number }>(sql`
+		SELECT from_id, to_id FROM skill_relations
+		WHERE approved_at IS NOT NULL AND relation IN ('broader', 'covers')
+	`);
+	const up = new Map<number, number[]>();
+	for (const e of upEdges) {
+		if (!up.has(e.from_id)) up.set(e.from_id, []);
+		up.get(e.from_id)!.push(e.to_id);
+	}
+	function reachesUp(from: number, to: number): boolean {
+		const seen = new Set([from]);
+		const queue = [from];
+		while (queue.length > 0) {
+			for (const next of up.get(queue.shift()!) ?? []) {
+				if (next === to) return true;
+				if (seen.has(next)) continue;
+				seen.add(next);
+				queue.push(next);
+			}
+		}
+		return false;
+	}
+	const cyclic = decisions.filter((d) => {
+		const parentId = idBySlug.get(normalizeSkill(d.parent));
+		return parentId !== undefined && reachesUp(parentId, d.child.id);
+	});
+	if (cyclic.length > 0) {
+		console.log(`\nrefused ${cyclic.length} edge(s) that would close a cycle:`);
+		for (const c of cyclic) console.log(`  ${c.child.label} -> ${c.parent} (already reaches back)`);
+		decisions = decisions.filter((d) => !cyclic.includes(d));
 	}
 
 	// Group by parent: the interesting unit of review is a category and everything
