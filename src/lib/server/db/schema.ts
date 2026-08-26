@@ -598,6 +598,121 @@ export const skill_embeddings = pgTable('skill_embeddings', {
 		.notNull()
 });
 
+/**
+ * The shared skill vocabulary — one row per concept, not per profile.
+ *
+ * "React" is one node for everyone. A vocabulary is not personal data and
+ * duplicating it per profile buys nothing, so this sits on the shared side of
+ * the line planning/KNOWLEDGE-GRAPH.md § Scope draws. Per-profile `tech_skills`
+ * rows keep their own identity and point here through `concept_id`.
+ *
+ * See planning/SKILL-ONTOLOGY.md.
+ */
+export const skill_concepts = pgTable(
+	'skill_concepts',
+	{
+		id: serial().primaryKey().notNull(),
+		/** Lowercased, normalized via normalizeSkill — the lookup key. */
+		slug: varchar({ length: 255 }).notNull(),
+		/** How it should be written when shown to someone: "PostgreSQL", not "postgresql". */
+		label: varchar({ length: 255 }).notNull(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' })
+			.default(sql`now()`)
+			.notNull()
+	},
+	(table) => [uniqueIndex('skill_concepts_slug_key').on(table.slug)]
+);
+
+/**
+ * Surface forms that mean the same concept: "NodeJS", "node.js", "Node".
+ *
+ * Distinct from `skill_relations`, deliberately. An alias is the SAME concept
+ * spelled differently and carries no direction; a relation holds between two
+ * DIFFERENT concepts and its direction is the entire point. Collapsing them
+ * would make "React" an alias of "JavaScript" the first time someone was
+ * sloppy, and every match downstream would inherit it.
+ */
+export const skill_aliases = pgTable(
+	'skill_aliases',
+	{
+		id: serial().primaryKey().notNull(),
+		concept_id: integer().notNull(),
+		/** Normalized the same way as `skill_concepts.slug`. */
+		alias: varchar({ length: 255 }).notNull(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' })
+			.default(sql`now()`)
+			.notNull()
+	},
+	(table) => [
+		uniqueIndex('skill_aliases_alias_key').on(table.alias),
+		index('skill_aliases_concept_idx').on(table.concept_id),
+		foreignKey({
+			columns: [table.concept_id],
+			foreignColumns: [skill_concepts.id],
+			name: 'skill_aliases_concept_foreign'
+		}).onDelete('cascade')
+	]
+);
+
+/**
+ * Typed, DIRECTIONAL relations between concepts. The reason this table exists.
+ *
+ * Cosine similarity is symmetric and skill implication is not: React implies
+ * JavaScript, JavaScript does not imply React, and both sit at the same
+ * distance. Measured on 40 labelled pairs (planning/SKILL-ONTOLOGY.md §
+ * Baseline), the embedding layer matched `Django → Python` AND `Python →
+ * Django` — one symmetric number, both directions, one of them wrong.
+ *
+ * `relation` is a CLOSED vocabulary, and that closed list is the ontology:
+ *
+ *   broader   from is a KIND OF to.        React → JavaScript framework
+ *   requires  from cannot be used without to. Django → Python
+ *
+ * Both are transitive and both license a match upward. A third, `related`
+ * (Docker ↔ Kubernetes), is deliberately NOT here yet: it is symmetric, so
+ * admitting it to the match path would reintroduce the exact false positive
+ * this table exists to remove.
+ *
+ * `approved_at` is null until a human accepts it. Nothing unapproved may
+ * influence matching — a wrong edge is invisible and global, changing every
+ * future match for every profile with nothing to surface it.
+ */
+export const skill_relations = pgTable(
+	'skill_relations',
+	{
+		id: serial().primaryKey().notNull(),
+		from_id: integer().notNull(),
+		to_id: integer().notNull(),
+		relation: varchar({ length: 32 }).notNull(),
+		/** What the proposer thought, 0-1. Kept for tuning the promotion cutoff. */
+		confidence: doublePrecision(),
+		/** How it got here: "llm", "manual", "seed". */
+		source: varchar({ length: 32 }).default('llm').notNull(),
+		approved_at: timestamp({ withTimezone: true, mode: 'date' }),
+		date_created: timestamp({ withTimezone: true, mode: 'date' })
+			.default(sql`now()`)
+			.notNull()
+	},
+	(table) => [
+		// One verdict per ordered pair per relation type. The pair is ORDERED —
+		// (React, JavaScript, broader) and (JavaScript, React, broader) are
+		// different claims and exactly one of them is true.
+		uniqueIndex('skill_relations_edge_key').on(table.from_id, table.to_id, table.relation),
+		index('skill_relations_from_idx').on(table.from_id),
+		index('skill_relations_to_idx').on(table.to_id),
+		foreignKey({
+			columns: [table.from_id],
+			foreignColumns: [skill_concepts.id],
+			name: 'skill_relations_from_foreign'
+		}).onDelete('cascade'),
+		foreignKey({
+			columns: [table.to_id],
+			foreignColumns: [skill_concepts.id],
+			name: 'skill_relations_to_foreign'
+		}).onDelete('cascade')
+	]
+);
+
 export const education = pgTable(
 	'education',
 	{
@@ -1975,10 +2090,25 @@ export const tech_skills = pgTable(
 		level: varchar({ length: 255 }),
 		tech_type_id: integer(),
 		years_experience: integer(),
-		tags: json()
+		tags: json(),
+		/**
+		 * The shared concept this row names, once resolved. Nullable forever:
+		 * the applicant types free text and the vocabulary will never cover all
+		 * of it, so an unresolved skill must keep working exactly as it does
+		 * today rather than falling out of matching.
+		 */
+		concept_id: integer()
 	},
 	(table) => [
 		index('tech_skills_category_idx').on(table.category_id),
+		index('tech_skills_concept_idx').on(table.concept_id),
+		foreignKey({
+			columns: [table.concept_id],
+			foreignColumns: [skill_concepts.id],
+			name: 'tech_skills_concept_foreign'
+			// The vocabulary is shared and rebuildable; a concept disappearing
+			// must not take the applicant's own skill row with it.
+		}).onDelete('set null'),
 		foreignKey({
 			columns: [table.category_id],
 			foreignColumns: [tech_skill_categories.id],
