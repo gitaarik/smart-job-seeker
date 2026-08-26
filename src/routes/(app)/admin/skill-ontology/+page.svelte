@@ -2,7 +2,6 @@
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faXmark, faRightLeft } from '@fortawesome/free-solid-svg-icons';
-	import Card from '../../components/Card.svelte';
 	import type { PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: { error?: string } | null } = $props();
@@ -33,139 +32,155 @@
 
 <svelte:head><title>Skill ontology · Admin</title></svelte:head>
 
-<div class="mx-auto max-w-4xl space-y-6 p-4">
-	<div>
-		<h1 class="text-2xl font-semibold">Skill ontology</h1>
-		<p class="text-base-content/70 mt-1 text-sm">
-			{stats.concepts} concepts · {stats.edges} approved relations · {stats.aliases} approved aliases.
-			Nothing unapproved affects matching.
-		</p>
+{#snippet action(act: string, id: number, label: string, kind: 'yes' | 'no' | 'flip')}
+	<form method="POST" action={act} use:enhance>
+		<input type="hidden" name="id" value={id} />
+		<button
+			class="rounded-md border px-2 py-1 text-xs transition-colors
+				{kind === 'yes'
+				? 'border-[var(--dash-success)] text-[var(--dash-success)] hover:bg-[var(--dash-success-bg)]'
+				: 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]'}"
+			title={label}
+		>
+			<FontAwesomeIcon icon={kind === 'yes' ? faCheck : kind === 'flip' ? faRightLeft : faXmark} />
+		</button>
+	</form>
+{/snippet}
+
+<div class="space-y-4">
+	<div class="flex items-start justify-between gap-4">
+		<div>
+			<h1 class="text-2xl font-semibold text-[var(--dash-text)]">Skill ontology</h1>
+			<p class="mt-1 text-sm text-[var(--dash-text-secondary)]">
+				{stats.concepts} concepts · {stats.edges} approved relations · {stats.aliases} approved aliases.
+				Nothing unapproved affects matching.
+			</p>
+		</div>
+		<a
+			href="/admin/skill-ontology/graph"
+			class="shrink-0 rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
+		>
+			View graph
+		</a>
 	</div>
 
 	<!-- Not decoration. The confidence floor let through two edges scoring 0.90
 	     and 0.95, so the numbers below are a sort order and never a verdict. -->
-	<div class="alert alert-warning text-sm">
-		<span>
-			These relations are shared by <strong>every profile</strong>. Approving a wrong one degrades
-			matching for everyone, silently — and confidence is not accuracy: the two edges that had to be
-			revoked scored 0.90 and 0.95. Read the sentence, not the number.
-		</span>
+	<div
+		class="rounded-lg border border-[var(--dash-warning-border)] bg-[var(--dash-warning-bg)] px-4 py-3 text-sm text-[var(--dash-text)]"
+	>
+		These relations are shared by <strong>every profile</strong> — approving a wrong one degrades matching
+		for everyone, silently. And confidence is not accuracy: the two edges that had to be revoked scored
+		0.90 and 0.95. Read the sentence, not the number.
 	</div>
 
 	{#if form?.error}
-		<div class="alert alert-error text-sm"><span>{form.error}</span></div>
+		<div
+			class="rounded-lg border border-[var(--dash-error)] px-4 py-3 text-sm text-[var(--dash-error)]"
+		>
+			{form.error}
+		</div>
 	{/if}
 
-	<Card>
-		<h2 class="mb-3 text-lg font-medium">
+	<div class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)]">
+		<h2
+			class="border-b border-[var(--dash-border)] px-4 py-2.5 text-sm font-medium text-[var(--dash-text)]"
+		>
 			Pending relations
 			{#if pendingRelations.length > 0}
-				<span class="badge badge-warning ml-2">{pendingRelations.length}</span>
+				<span
+					class="ml-2 rounded-full bg-[var(--dash-warning-bg)] px-2 py-0.5 text-xs text-[var(--dash-text)]"
+					>{pendingRelations.length}</span
+				>
 			{/if}
 		</h2>
-
 		{#if pendingRelations.length === 0}
-			<p class="text-base-content/60 text-sm">Nothing waiting.</p>
+			<p class="px-4 py-4 text-sm text-[var(--dash-text-muted)]">Nothing waiting.</p>
 		{:else}
-			<ul class="divide-base-300 divide-y">
+			<ul>
 				{#each pendingRelations as r (r.id)}
-					<li class="flex items-center gap-3 py-2">
-						<span class="flex-1 text-sm">
+					<li
+						class="flex items-center gap-2 border-b border-[var(--dash-border)] px-4 py-2 last:border-0"
+					>
+						<span class="flex-1 text-sm text-[var(--dash-text)]">
 							{sentence(r.relation, r.from_label, r.to_label)}
-							<span class="text-base-content/50 ml-2 text-xs">
-								{r.relation}{r.confidence != null ? ` · ${r.confidence.toFixed(2)}` : ''} · {r.source}
+							<span class="ml-2 text-xs text-[var(--dash-text-muted)]">
+								{r.relation}{r.confidence != null ? ` · ${r.confidence.toFixed(2)}` : ''}
 							</span>
 						</span>
-						<form method="POST" action="?/approveRelation" use:enhance>
-							<input type="hidden" name="id" value={r.id} />
-							<button class="btn btn-xs btn-success" title="Approve">
-								<FontAwesomeIcon icon={faCheck} />
-							</button>
-						</form>
-						<!-- Inverted direction is the failure this table exists to prevent,
-						     and a flip is one click from correct rather than a delete and a
-						     wait for the model to propose it the other way round. -->
-						<form method="POST" action="?/flipRelation" use:enhance>
-							<input type="hidden" name="id" value={r.id} />
-							<button class="btn btn-xs" title="Swap direction (stays unapproved)">
-								<FontAwesomeIcon icon={faRightLeft} />
-							</button>
-						</form>
-						<form method="POST" action="?/rejectRelation" use:enhance>
-							<input type="hidden" name="id" value={r.id} />
-							<button class="btn btn-xs btn-ghost" title="Leave rejected">
-								<FontAwesomeIcon icon={faXmark} />
-							</button>
-						</form>
+						{@render action('?/approveRelation', r.id, 'Approve', 'yes')}
+						{@render action('?/flipRelation', r.id, 'Swap direction (stays unapproved)', 'flip')}
+						{@render action('?/rejectRelation', r.id, 'Leave rejected', 'no')}
 					</li>
 				{/each}
 			</ul>
 		{/if}
-	</Card>
+	</div>
 
-	<Card>
-		<h2 class="mb-3 text-lg font-medium">
+	<div class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)]">
+		<h2
+			class="border-b border-[var(--dash-border)] px-4 py-2.5 text-sm font-medium text-[var(--dash-text)]"
+		>
 			Pending aliases
 			{#if pendingAliases.length > 0}
-				<span class="badge badge-warning ml-2">{pendingAliases.length}</span>
+				<span
+					class="ml-2 rounded-full bg-[var(--dash-warning-bg)] px-2 py-0.5 text-xs text-[var(--dash-text)]"
+					>{pendingAliases.length}</span
+				>
 			{/if}
 		</h2>
-		<p class="text-base-content/70 mb-3 text-sm">
-			An alias makes one concept answer for another in <em>both</em> directions at once. A larger claim
+		<p class="px-4 pt-3 text-xs text-[var(--dash-text-secondary)]">
+			An alias makes one concept answer for another in <em>both</em> directions at once — a larger claim
 			than a relation, so there is no bulk path for these.
 		</p>
-
 		{#if pendingAliases.length === 0}
-			<p class="text-base-content/60 text-sm">Nothing waiting.</p>
+			<p class="px-4 py-4 text-sm text-[var(--dash-text-muted)]">Nothing waiting.</p>
 		{:else}
-			<ul class="divide-base-300 divide-y">
+			<ul class="mt-2">
 				{#each pendingAliases as a (a.id)}
-					<li class="flex items-center gap-3 py-2">
-						<span class="flex-1 text-sm">
+					<li
+						class="flex items-center gap-2 border-b border-[var(--dash-border)] px-4 py-2 last:border-0"
+					>
+						<span class="flex-1 text-sm text-[var(--dash-text)]">
 							“{a.alias}” is another way of writing <strong>{a.label}</strong>
 						</span>
-						<form method="POST" action="?/approveAlias" use:enhance>
-							<input type="hidden" name="id" value={a.id} />
-							<button class="btn btn-xs btn-success"><FontAwesomeIcon icon={faCheck} /></button>
-						</form>
-						<form method="POST" action="?/rejectAlias" use:enhance>
-							<input type="hidden" name="id" value={a.id} />
-							<button class="btn btn-xs btn-ghost"><FontAwesomeIcon icon={faXmark} /></button>
-						</form>
+						{@render action('?/approveAlias', a.id, 'Approve', 'yes')}
+						{@render action('?/rejectAlias', a.id, 'Leave rejected', 'no')}
 					</li>
 				{/each}
 			</ul>
 		{/if}
-	</Card>
+	</div>
 
-	<Card>
-		<h2 class="mb-3 text-lg font-medium">In use ({approvedRelations.length})</h2>
-		<p class="text-base-content/70 mb-3 text-sm">
-			Revoking one takes effect on the next match — it does not delete the proposal.
+	<div class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)]">
+		<h2
+			class="border-b border-[var(--dash-border)] px-4 py-2.5 text-sm font-medium text-[var(--dash-text)]"
+		>
+			In use ({approvedRelations.length + approvedAliases.length})
+		</h2>
+		<p class="px-4 pt-3 text-xs text-[var(--dash-text-secondary)]">
+			Revoking takes effect on the next match. It does not delete the proposal — a deleted one comes
+			straight back on the next pipeline run.
 		</p>
-		<ul class="divide-base-300 max-h-96 divide-y overflow-y-auto">
+		<ul class="mt-2 max-h-96 overflow-y-auto">
 			{#each approvedRelations as r (r.id)}
-				<li class="flex items-center gap-3 py-1.5">
-					<span class="flex-1 text-sm">{sentence(r.relation, r.from_label, r.to_label)}</span>
-					<form method="POST" action="?/rejectRelation" use:enhance>
-						<input type="hidden" name="id" value={r.id} />
-						<button class="btn btn-xs btn-ghost" title="Revoke">
-							<FontAwesomeIcon icon={faXmark} />
-						</button>
-					</form>
+				<li
+					class="flex items-center gap-2 border-b border-[var(--dash-border)] px-4 py-1.5 last:border-0"
+				>
+					<span class="flex-1 text-sm text-[var(--dash-text)]"
+						>{sentence(r.relation, r.from_label, r.to_label)}</span
+					>
+					{@render action('?/rejectRelation', r.id, 'Revoke', 'no')}
 				</li>
 			{/each}
 			{#each approvedAliases as a (a.id)}
-				<li class="flex items-center gap-3 py-1.5">
-					<span class="flex-1 text-sm">“{a.alias}” = {a.label}</span>
-					<form method="POST" action="?/rejectAlias" use:enhance>
-						<input type="hidden" name="id" value={a.id} />
-						<button class="btn btn-xs btn-ghost" title="Revoke">
-							<FontAwesomeIcon icon={faXmark} />
-						</button>
-					</form>
+				<li
+					class="flex items-center gap-2 border-b border-[var(--dash-border)] px-4 py-1.5 last:border-0"
+				>
+					<span class="flex-1 text-sm text-[var(--dash-text)]">“{a.alias}” = {a.label}</span>
+					{@render action('?/rejectAlias', a.id, 'Revoke', 'no')}
 				</li>
 			{/each}
 		</ul>
-	</Card>
+	</div>
 </div>
