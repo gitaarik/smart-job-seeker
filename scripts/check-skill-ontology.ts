@@ -64,6 +64,20 @@ for (const [from, to, rel] of EDGES) {
 }
 
 try {
+	// An invariant, not a fixture assertion: a concept whose slug is not
+	// normalizeSkill(label) cannot be found by the name it displays. Every
+	// lookup normalises the incoming string, so such a row is reachable only
+	// through an edge and never by someone typing its own name. One row had
+	// drifted this way — a hand-seeded `jsframework` labelled "JavaScript
+	// framework" — and it presented as expandUpward finding a concept that
+	// impliesSkill then could not confirm.
+	const drift = await queryRawDirect<{ slug: string; label: string }>(sql`
+		SELECT slug, label FROM skill_concepts
+		WHERE slug <> regexp_replace(lower(label), '[^a-z0-9+#]', '', 'g')
+	`);
+	check(drift.length === 0, `every concept slug matches its label (${drift.length} drifted)`);
+	for (const d of drift) console.log(`         ${d.slug} vs label "${d.label}"`);
+
 	const chain = await expandUpward(['ZZReact']);
 	check(chain.length === 4, `ZZReact reaches 4 concepts transitively (got ${chain.length})`);
 	check(
