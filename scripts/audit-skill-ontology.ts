@@ -142,6 +142,18 @@ const compoundTargets = edges.filter(
 	(e) => e.relation !== 'covers' && (coveredBy.get(e.to_id)?.length ?? 0) > 0
 );
 
+// ── 7. Compound as source ────────────────────────────────────────────────────
+// The mirror of check 3, and the one that costs recall rather than precision.
+// A compound is an ENTRY; the categories belong on the skills it names. When
+// `Vitest / Jest broader Unit Testing` is written instead of `Jest broader Unit
+// Testing`, only someone who typed the compound reaches Unit Testing — measured
+// here, `Vitest / Jest → Unit Testing` was true while `Jest → Unit Testing` and
+// `Vitest → Unit Testing` were both false. The category attached to the way one
+// person happened to write their CV.
+const compoundSources = edges.filter(
+	(e) => e.relation !== 'covers' && (coveredBy.get(e.from_id)?.length ?? 0) > 0
+);
+
 // ── 4. Redundant edges ───────────────────────────────────────────────────────
 const out = new Map<number, Edge[]>();
 for (const e of edges) {
@@ -194,6 +206,15 @@ section(
 			(coveredBy.get(e.to_id) ?? []).map(name).join(', ')
 	),
 	'--apply retires these; re-point at the part you meant.'
+);
+section(
+	'7. COMPOUND AS SOURCE (the entry carries a category its parts do not)',
+	compoundSources.map(
+		(e) =>
+			`${name(e.from_id)} ${e.relation} ${name(e.to_id)} — belongs on: ` +
+			(coveredBy.get(e.from_id) ?? []).map(name).join(', ')
+	),
+	'--apply retires these and re-proposes the edge from each part.'
 );
 section(
 	'4. REDUNDANT (already reachable without this edge)',
@@ -309,8 +330,26 @@ if (MERGE) {
 	console.log('\nRetiring…');
 	await retire(contradictions, 'audit:contradiction');
 	await retire(compoundTargets, 'audit:compound-target');
+	await retire(compoundSources, 'audit:compound-source');
 
 	console.log('\nQueueing replacements…');
+	// A compound's category moves DOWN to each part: the part is the skill, and
+	// the entry only names it. Unapproved, because "both parts belong here" is
+	// exactly the claim that needs a human — `Svelte / SvelteKit broader Web
+	// frameworks` is true of SvelteKit and not of Svelte.
+	for (const e of compoundSources) {
+		for (const part of coveredBy.get(e.from_id) ?? []) {
+			await db.execute(sql`
+				INSERT INTO skill_relations (from_id, to_id, relation, source, confidence)
+				SELECT ${part}, ${e.to_id}, ${e.relation}, 'audit:split-source', 0.5
+				WHERE NOT EXISTS (
+					SELECT 1 FROM skill_relations x
+					WHERE x.from_id = ${part} AND x.to_id = ${e.to_id} AND x.relation = ${e.relation}
+				)
+			`);
+			console.log(`  queued: ${name(part)} ${e.relation} ${name(e.to_id)}`);
+		}
+	}
 	for (const e of compoundTargets) {
 		for (const part of coveredBy.get(e.to_id) ?? []) {
 			// Unapproved, and only if the pair is new: the point is to make the
