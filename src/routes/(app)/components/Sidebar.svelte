@@ -11,6 +11,7 @@
 		faChartBar,
 		faChartLine,
 		faChevronDown,
+		faDiagramProject,
 		faBinoculars,
 		faBuilding,
 		faChevronRight,
@@ -218,6 +219,11 @@
 					label: 'Matcher',
 					href: '/admin/matcher',
 					icon: faChartBar
+				},
+				{
+					label: 'Skill Ontology',
+					href: '/admin/skill-ontology',
+					icon: faDiagramProject
 				},
 				{
 					label: 'Scraper Agent',
