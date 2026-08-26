@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { RELATION_STYLES, dashFor, edgePath } from './graph-shared';
 	import type { PageData } from './$types';
 
 	/** Every href on this page points back at this route. */
@@ -95,30 +96,10 @@
 
 	let reached = $derived(data.nodes.filter((n) => n.depth > 0).length);
 
-	/**
-	 * One line style per relation, and the legend below lists exactly these.
-	 *
-	 * Solid is the unmarked case because "is a kind of" is most of the graph;
-	 * the two exceptions earn a mark. Dotted rather than a colour: the palette
-	 * is already carrying focus and hover, and a third hue would compete with
-	 * both for no gain on a diagram that is legible in greyscale.
-	 */
-	function dashFor(relation: string): string | undefined {
-		if (relation === 'requires') return '4 3';
-		if (relation === 'covers') return '1 3';
-		return undefined;
-	}
-
 	function path(fromId: number, toId: number): string {
 		const a = layout.pos[fromId];
 		const b = layout.pos[toId];
-		if (!a || !b) return '';
-		const x1 = a.x + NODE_W;
-		const y1 = a.y + NODE_H / 2;
-		const x2 = b.x - 7; // stop short so the arrowhead does not sit under the box
-		const y2 = b.y + NODE_H / 2;
-		const mid = (x1 + x2) / 2;
-		return `M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}`;
+		return a && b ? edgePath(a, b, NODE_W, NODE_H) : '';
 	}
 </script>
 
@@ -133,12 +114,20 @@
 				matcher runs.
 			</p>
 		</div>
-		<a
-			href={resolve('/admin/skill-ontology')}
-			class="shrink-0 rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
-		>
-			Review queue
-		</a>
+		<div class="flex shrink-0 gap-2">
+			<a
+				href={resolve('/admin/skill-ontology/graph/all')}
+				class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
+			>
+				Whole graph
+			</a>
+			<a
+				href={resolve('/admin/skill-ontology')}
+				class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
+			>
+				Review queue
+			</a>
+		</div>
 	</div>
 
 	<div class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] p-4">
@@ -173,7 +162,11 @@
 		<div
 			class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] p-6 text-sm text-[var(--dash-text-secondary)]"
 		>
-			Pick a concept above. {data.concepts.length} in the vocabulary.
+			Pick a concept above — {data.concepts.length} in the vocabulary — or
+			<a
+				class="text-[var(--dash-primary)] underline"
+				href={resolve('/admin/skill-ontology/graph/all')}>see all of them at once</a
+			>.
 		</div>
 	{:else if data.nodes.length <= 1}
 		<div
@@ -187,40 +180,22 @@
 			<div
 				class="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-[var(--dash-border)] px-4 py-2.5 text-xs text-[var(--dash-text-secondary)]"
 			>
-				<span class="flex items-center gap-1.5">
-					<svg width="24" height="8" aria-hidden="true">
-						<line x1="0" y1="4" x2="24" y2="4" stroke="currentColor" stroke-width="1.5" />
-					</svg>
-					is a kind of
-				</span>
-				<span class="flex items-center gap-1.5">
-					<svg width="24" height="8" aria-hidden="true">
-						<line
-							x1="0"
-							y1="4"
-							x2="24"
-							y2="4"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-dasharray="4 3"
-						/>
-					</svg>
-					requires
-				</span>
-				<span class="flex items-center gap-1.5">
-					<svg width="24" height="8" aria-hidden="true">
-						<line
-							x1="0"
-							y1="4"
-							x2="24"
-							y2="4"
-							stroke="currentColor"
-							stroke-width="1.5"
-							stroke-dasharray="1 3"
-						/>
-					</svg>
-					is one entry covering
-				</span>
+				{#each RELATION_STYLES as r (r.relation)}
+					<span class="flex items-center gap-1.5">
+						<svg width="24" height="8" aria-hidden="true">
+							<line
+								x1="0"
+								y1="4"
+								x2="24"
+								y2="4"
+								stroke="currentColor"
+								stroke-width="1.5"
+								stroke-dasharray={r.dash}
+							/>
+						</svg>
+						{r.label}
+					</span>
+				{/each}
 			</div>
 
 			<div class="overflow-x-auto p-2">

@@ -61,7 +61,7 @@
 			</p>
 		</div>
 		<a
-			href={resolve('/admin/skill-ontology/graph')}
+			href={resolve('/admin/skill-ontology/graph/all')}
 			class="shrink-0 rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
 		>
 			View graph

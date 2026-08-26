@@ -1,12 +1,18 @@
 /**
  * A focused view of one concept's neighbourhood in the skill graph.
  *
- * ## Why not the whole graph
+ * ## Why not the whole graph here
  *
- * Because 244 nodes is a hairball, and a hairball answers no question. The
- * questions worth asking here are local — *what does React reach?*, *why did
- * this job match?*, *what feeds into "Backend development"?* — and each is one
- * concept's ancestry plus its children.
+ * Not because the whole graph is too big — it is not, and this comment used to
+ * say otherwise. "244 nodes is a hairball" reasoned from the size of the
+ * vocabulary rather than the size of the graph, and the graph turned out to be
+ * 116 nodes in 18 sparse islands, which `graph/all` draws in one screen.
+ *
+ * It is because the questions differ. The ones worth asking here are local —
+ * *what does React reach?*, *why did this job match?*, *what feeds into
+ * "Backend development"?* — and each is one concept's ancestry plus its
+ * children. `graph/all` answers the question no focused view can, which is
+ * what is **missing**: 131 concepts with no approved edge at all.
  *
  * The shape allows it. Measured on the live vocabulary, the maximum out-degree
  * is **3** and the maximum in-degree is **5**, over a hierarchy bounded at four
