@@ -203,23 +203,53 @@ section(
 
 // ── 6. Undeclared duplicates ─────────────────────────────────────────────────
 // Check 1 only finds duplicates someone already declared by writing an alias.
-// A plural is the one *undeclared* case that is still decidable without an
-// opinion: `api`/`apis` are the same concept in every vocabulary, and the graph
-// currently carries both with edges on each. Anything subtler than this —
-// "frontend" vs "Frontend development", "RAG systems" vs "RAG pipelines" — is a
-// judgement and stays out of a script that claims not to make any.
-const plurals = concepts
-	.filter((c) => bySlug.has(`${c.slug}s`))
-	.map((c) => ({ one: c, many: bySlug.get(`${c.slug}s`)! }))
-	.map((p) => ({
-		...p,
-		oneEdges: edges.filter((e) => e.from_id === p.one.id || e.to_id === p.one.id).length,
-		manyEdges: edges.filter((e) => e.from_id === p.many.id || e.to_id === p.many.id).length
-	}));
+// These are the undeclared ones that are still decidable without an opinion:
+// one slug is the other plus a suffix that never changes what a skill IS.
+//
+// This began as a plural check only, on the reasoning that anything subtler was
+// a judgement — and the comment here used to name "frontend" vs "Frontend
+// development" as an example of what it deliberately would not catch. Both that
+// pair and `Vue`/`Vue.js` were then found by a person reading the graph, each
+// having split its neighbours across two nodes exactly as the alias collisions
+// did: CSS, HTML and React under `frontend`, while CSS3, MUI and Next.js sat
+// under `Frontend development`. A suffix is mechanical after all.
+//
+// Reported, never merged automatically. `net`/`nets` and `web`/`web components`
+// would both trip this, and only a human knows which pairs are one concept.
+const DUP_SUFFIXES = [
+	's', // api / apis
+	'js', // vue / vue.js — normalizeSkill has already stripped the dot
+	'development',
+	'programming',
+	'engineering',
+	'design',
+	'testing',
+	'management'
+];
+const duplicatePairs = concepts.flatMap((c) =>
+	DUP_SUFFIXES.map((suffix) => bySlug.get(`${c.slug}${suffix}`))
+		.filter((other): other is Concept => other !== undefined && other.id !== c.id)
+		.map((other) => ({
+			one: c,
+			many: other,
+			oneEdges: edges.filter((e) => e.from_id === c.id || e.to_id === c.id).length,
+			manyEdges: edges.filter((e) => e.from_id === other.id || e.to_id === other.id).length,
+			joined: edges.some(
+				(e) =>
+					(e.from_id === c.id && e.to_id === other.id) ||
+					(e.from_id === other.id && e.to_id === c.id)
+			)
+		}))
+);
 section(
-	'6. UNDECLARED DUPLICATES (singular and plural both exist as concepts)',
-	plurals.map(
-		(p) => `"${p.one.label}" (${p.oneEdges} edges) vs "${p.many.label}" (${p.manyEdges} edges)`
+	'6. UNDECLARED DUPLICATES (one slug is the other plus a suffix)',
+	duplicatePairs.map(
+		(p) =>
+			`"${p.one.label}" (${p.oneEdges} edges) vs "${p.many.label}" (${p.manyEdges} edges)` +
+			// An edge BETWEEN the two is the strongest signal of all: something
+			// decided one is a kind of the other, which is what you write when they
+			// are nearly the same thing and you cannot say why they differ.
+			(p.joined ? '  [and an edge already joins them]' : '')
 	),
 	'Add an approved alias for one, then re-run --merge-duplicates.'
 );
