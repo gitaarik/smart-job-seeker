@@ -81,7 +81,25 @@ export const MATCHING_RELATIONS = ['broader', 'requires', 'covers'] as const;
  * `MATCHING_RELATIONS` is the whole change — the same door `covers` came
  * through.
  */
-export const GRAPH_RELATIONS = [...MATCHING_RELATIONS, 'inDomain'] as const;
+export const GRAPH_RELATIONS = [...MATCHING_RELATIONS, 'inDomain', 'related'] as const;
+
+/**
+ * Relations that are drawn but never walked. The complement of the above.
+ *
+ * `related` is the one the docstring on MATCHING_RELATIONS predicted and
+ * refused: MariaDB and MySQL, Playwright and Web Scraping, Docker and
+ * Kubernetes. Real connections that a person reading the graph names
+ * immediately, and implications in neither direction — a fork is not a kind of
+ * the thing it forked, and someone who drove a browser to test a page has not
+ * thereby scraped one.
+ *
+ * It exists because the wish for those edges kept arriving and kept being
+ * answered with "that would be wrong". It is not wrong as a drawn line; it is
+ * only wrong as a traversed one. Keeping the two sets separate is what lets the
+ * picture be as rich as the reader wants while a match stays something you can
+ * defend one hop at a time.
+ */
+export const DRAWN_ONLY_RELATIONS = ['inDomain', 'related'] as const;
 
 /**
  * How far a profile skill may reach.

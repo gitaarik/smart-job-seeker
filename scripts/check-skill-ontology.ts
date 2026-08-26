@@ -37,7 +37,8 @@ const EDGES: [string, string, string][] = [
 	['zzdjango', 'zzpython', 'requires'],
 	['zzvitestzzjest', 'zzjest', 'covers'],
 	['zzjest', 'zzunittesting', 'broader'],
-	['zzreact', 'zzit', 'inDomain']
+	['zzreact', 'zzit', 'inDomain'],
+	['zzreact', 'zzdjango', 'related']
 ];
 /** [have, want, shouldMatch] — every asymmetric pair asserted BOTH ways. */
 const CASES: [string, string, boolean][] = [
@@ -61,7 +62,11 @@ const CASES: [string, string, boolean][] = [
 	// whole safety of a single "IT" root over the vocabulary rests on this being
 	// false — traverse it and every technical skill would satisfy a posting that
 	// merely says "IT".
-	['ZZReact', 'ZZIT', false]
+	['ZZReact', 'ZZIT', false],
+	// `related` is the other drawn-but-not-walked relation, and it is the one that
+	// would do the most damage if walked: it is symmetric, so admitting it puts
+	// back exactly the false positives the ontology was built to remove.
+	['ZZReact', 'ZZDjango', false]
 ];
 
 let failures = 0;

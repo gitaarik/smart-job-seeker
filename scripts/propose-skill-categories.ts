@@ -76,6 +76,18 @@ const FROM_AT = process.argv.indexOf('--from');
 const FROM = FROM_AT === -1 ? undefined : process.argv[FROM_AT + 1];
 const PLAN = '/tmp/skill-categories.json';
 const BATCH = 12;
+/**
+ * Look for ADDITIONAL parents on concepts that already have one.
+ *
+ * One parent per concept was never a decision, just what a per-entry prompt
+ * produces — and it is wrong for most of the interesting entries. Playwright is
+ * an end-to-end testing tool AND a scraping tool. MySQL is a database AND SQL.
+ * Measured on dev: MySQL, MariaDB and SQLite each reached `Databases` and
+ * nothing else, while PostgreSQL reached SQL only because it was added by hand,
+ * which is exactly the inconsistency a human notices first when reading the
+ * graph.
+ */
+const MORE = process.argv.includes('--more-parents');
 
 /**
  * A closed list, so domains cannot sprawl into one-per-skill.
@@ -184,6 +196,15 @@ For a skill, give:
 
   domain  one of: ${DOMAINS.join(', ')}. Omit if none fit.
 
+When an entry shows [already under: ...], it HAS a category. Give a genuinely
+DIFFERENT one it also belongs to, or return kind "skill" with no parent. Most
+things have exactly one; the ones worth a second are those that live in two
+worlds at once:
+  MySQL       [already under: Databases]        -> SQL
+  Playwright  [already under: End-to-end testing] -> Web Scraping
+Do NOT restate the category it already has, name something broader than it, or
+name something that category already implies.
+
 confidence: 0-1.
 
 Return ONE object with an "items" ARRAY, in input order, each carrying its index:
@@ -224,6 +245,18 @@ async function main() {
 	`);
 	const hasParent = new Set(parented.map((r) => r.id));
 
+	/** What each concept is already under, so the prompt can ask for more. */
+	const parentRows = await queryRawDirect<{ from_id: number; label: string }>(sql`
+		SELECT r.from_id, t.label FROM skill_relations r
+		JOIN skill_concepts t ON t.id = r.to_id
+		WHERE r.approved_at IS NOT NULL AND r.relation IN ('broader', 'covers')
+	`);
+	const parentsOf = new Map<number, string[]>();
+	for (const r of parentRows) {
+		if (!parentsOf.has(r.from_id)) parentsOf.set(r.from_id, []);
+		parentsOf.get(r.from_id)!.push(r.label);
+	}
+
 	// A concept worth offering as a parent is one the graph already uses as one:
 	// anything with an approved edge in either direction. Minted-but-unapproved
 	// categories are deliberately not offered — suggesting a category that no
@@ -235,11 +268,25 @@ async function main() {
 		) x
 	`);
 	const inGraph = new Set(connected.map((r) => r.id));
-	const orphans = concepts.filter((c) => !hasParent.has(c.id));
+	// `--more-parents` inverts the selection: the work is what already HAS a
+	// parent, and the question becomes "what else is it?" rather than "what is
+	// it?". Categories themselves are excluded — a category's parent is a
+	// taxonomy decision, not a fact about a skill, and the domain layer covers it.
+	const isCategory = new Set(
+		(
+			await queryRawDirect<{ id: number }>(sql`
+				SELECT DISTINCT to_id AS id FROM skill_relations
+				WHERE approved_at IS NOT NULL AND relation = 'broader'
+			`)
+		).map((r) => r.id)
+	);
+	const orphans = MORE
+		? concepts.filter((c) => hasParent.has(c.id) && !isCategory.has(c.id))
+		: concepts.filter((c) => !hasParent.has(c.id));
 	const offered = concepts.filter((c) => inGraph.has(c.id)).map((c) => c.label);
 
 	console.log(
-		`${concepts.length} concepts: ${orphans.length} without a parent, ` +
+		`${concepts.length} concepts: ${orphans.length} ${MORE ? 'to re-examine' : 'without a parent'}, ` +
 			`${offered.length} already in the graph and offered as parents.\n`
 	);
 	if (orphans.length === 0) return;
@@ -252,7 +299,12 @@ async function main() {
 		const skipped: Skip[] = [];
 		for (let i = 0; i < items.length; i += BATCH) {
 			const batch = items.slice(i, i + BATCH);
-			const listed = batch.map((c, n) => `${n}. "${c.label}"`).join('\n');
+			const listed = batch
+				.map((c, n) => {
+					const now = (parentsOf.get(c.id) ?? []).join(', ');
+					return now ? `${n}. "${c.label}"  [already under: ${now}]` : `${n}. "${c.label}"`;
+				})
+				.join('\n');
 			try {
 				const res = await generateChatCompletionTracked(
 					[
@@ -377,6 +429,40 @@ async function main() {
 		}
 		return false;
 	}
+	// A domain is never a `broader` parent.
+	//
+	// Asked for a second category, the model reaches for the widest word it can
+	// see, and "IT" is the widest word in this vocabulary: one --more-parents run
+	// proposed `X broader IT` for 23 concepts including Java, Linux and Redis.
+	// Every one would assert domain membership as subsumption — the exact
+	// confusion `inDomain` was introduced to keep out of MATCHING_RELATIONS — and
+	// approving them would make any posting saying "IT" match almost this whole
+	// vocabulary. The domain layer already says this, in the relation that is
+	// drawn rather than walked.
+	const domainAsParent = decisions.filter((d) =>
+		DOMAINS.some((dom) => normalizeSkill(dom) === normalizeSkill(d.parent))
+	);
+	if (domainAsParent.length > 0) {
+		console.log(`\nrefused ${domainAsParent.length} edge(s) naming a DOMAIN as a broader parent:`);
+		for (const d of domainAsParent) console.log(`  ${d.child.label} -> ${d.parent}`);
+		decisions = decisions.filter((d) => !domainAsParent.includes(d));
+	}
+
+	// Redundant is the other way round, and it matters most in --more-parents:
+	// asked for a SECOND parent, the obvious answers are the ones the first
+	// already implies. `MySQL broader Databases` is approved, so proposing
+	// `MySQL broader Databases` again, or anything Databases already reaches,
+	// adds a line to the picture and nothing to a match.
+	const redundant = decisions.filter((d) => {
+		const parentId = idBySlug.get(normalizeSkill(d.parent));
+		return parentId !== undefined && reachesUp(d.child.id, parentId);
+	});
+	if (redundant.length > 0) {
+		console.log(`\nskipped ${redundant.length} edge(s) already reachable:`);
+		for (const r of redundant) console.log(`  ${r.child.label} -> ${r.parent}`);
+		decisions = decisions.filter((d) => !redundant.includes(d));
+	}
+
 	const cyclic = decisions.filter((d) => {
 		const parentId = idBySlug.get(normalizeSkill(d.parent));
 		return parentId !== undefined && reachesUp(parentId, d.child.id);

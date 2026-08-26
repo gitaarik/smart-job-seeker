@@ -30,6 +30,12 @@ export const RELATION_STYLES = [
 		label: 'in domain (not matched)',
 		verb: 'is in the domain of',
 		dash: '1 5'
+	},
+	{
+		relation: 'related',
+		label: 'related (not matched)',
+		verb: 'is related to',
+		dash: '6 2 2 2'
 	}
 ] as const;
 
