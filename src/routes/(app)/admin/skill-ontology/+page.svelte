@@ -14,11 +14,14 @@
 	// approved edge already connects the same two concepts, either saying this
 	// more precisely or saying the opposite. Neither answer is a decision.
 	// Counting them as review makes the queue look like work.
-	let pendingRelations = $derived(relations.filter((r) => !r.approved && !r.superseded));
-	let supersededRelations = $derived(relations.filter((r) => !r.approved && r.superseded));
+	let open = $derived(relations.filter((r) => !r.approved && !r.rejected));
+	let pendingRelations = $derived(open.filter((r) => !r.superseded));
+	let supersededRelations = $derived(open.filter((r) => r.superseded));
 	let approvedRelations = $derived(relations.filter((r) => r.approved));
-	let pendingAliases = $derived(aliases.filter((a) => !a.approved));
+	let rejectedRelations = $derived(relations.filter((r) => r.rejected));
+	let pendingAliases = $derived(aliases.filter((a) => !a.approved && !a.rejected));
 	let approvedAliases = $derived(aliases.filter((a) => a.approved));
+	let rejectedAliases = $derived(aliases.filter((a) => a.rejected));
 
 	/**
 	 * Rendered as a sentence, not as a row of columns.
@@ -178,8 +181,9 @@
 			In use ({approvedRelations.length + approvedAliases.length})
 		</h2>
 		<p class="px-4 pt-3 text-xs text-[var(--dash-text-secondary)]">
-			Revoking takes effect on the next match. It does not delete the proposal — a deleted one comes
-			straight back on the next pipeline run.
+			Revoking takes effect on the next match and puts the row back in the queue above, undecided —
+			one click to undo. It does not delete the proposal; a deleted one comes straight back on the
+			next pipeline run.
 		</p>
 		<ul class="mt-2 max-h-96 overflow-y-auto">
 			{#each approvedRelations as r (r.id)}
@@ -189,7 +193,7 @@
 					<span class="flex-1 text-sm text-[var(--dash-text)]"
 						>{sentence(r.relation, r.from_label, r.to_label)}</span
 					>
-					{@render action('?/rejectRelation', r.id, 'Revoke', 'no')}
+					{@render action('?/revokeRelation', r.id, 'Revoke', 'no')}
 				</li>
 			{/each}
 			{#each approvedAliases as a (a.id)}
@@ -197,9 +201,50 @@
 					class="flex items-center gap-2 border-b border-[var(--dash-border)] px-4 py-1.5 last:border-0"
 				>
 					<span class="flex-1 text-sm text-[var(--dash-text)]">“{a.alias}” = {a.label}</span>
-					{@render action('?/rejectAlias', a.id, 'Revoke', 'no')}
+					{@render action('?/revokeAlias', a.id, 'Revoke', 'no')}
 				</li>
 			{/each}
 		</ul>
 	</div>
+
+	<!-- Collapsed, because it is a record and not a queue — but it has to be here.
+	     Reject is one click on a list of a hundred-odd rows, so the misclick is a
+	     matter of time, and the row is otherwise unreachable outside SQL: the
+	     proposer will not re-offer it, `ON CONFLICT DO NOTHING` leaves it alone. -->
+	{#if rejectedRelations.length + rejectedAliases.length > 0}
+		<details class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)]">
+			<summary
+				class="cursor-pointer px-4 py-2.5 text-sm font-medium text-[var(--dash-text)] select-none"
+			>
+				Rejected ({rejectedRelations.length + rejectedAliases.length})
+			</summary>
+			<p
+				class="border-t border-[var(--dash-border)] px-4 pt-3 text-xs text-[var(--dash-text-secondary)]"
+			>
+				Kept so the proposer cannot offer them again. Restoring returns one to the queue.
+			</p>
+			<ul class="mt-2 max-h-96 overflow-y-auto">
+				{#each rejectedRelations as r (r.id)}
+					<li
+						class="flex items-center gap-2 border-b border-[var(--dash-border)] px-4 py-1.5 last:border-0"
+					>
+						<span class="flex-1 text-sm text-[var(--dash-text-secondary)]"
+							>{sentence(r.relation, r.from_label, r.to_label)}</span
+						>
+						{@render action('?/restoreRelation', r.id, 'Restore', 'no')}
+					</li>
+				{/each}
+				{#each rejectedAliases as a (a.id)}
+					<li
+						class="flex items-center gap-2 border-b border-[var(--dash-border)] px-4 py-1.5 last:border-0"
+					>
+						<span class="flex-1 text-sm text-[var(--dash-text-secondary)]"
+							>“{a.alias}” = {a.label}</span
+						>
+						{@render action('?/restoreAlias', a.id, 'Restore', 'no')}
+					</li>
+				{/each}
+			</ul>
+		</details>
+	{/if}
 </div>

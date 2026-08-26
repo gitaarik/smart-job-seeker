@@ -183,6 +183,13 @@
       "when": 1787732496219,
       "tag": "0025_mute_karma",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1787774536830,
+      "tag": "0026_regular_silver_surfer",
+      "breakpoints": true
     }
   ]
 }

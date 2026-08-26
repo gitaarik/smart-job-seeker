@@ -61,7 +61,13 @@ interface Pending {
 	confidence: number | null;
 }
 
-/** Unapproved relations, optionally narrowed to one proposal run. */
+/**
+ * Undecided relations, optionally narrowed to one proposal run.
+ *
+ * `rejected_at IS NULL` matters: a rejected row is unapproved too, and without
+ * the filter every `--approve --all` would re-offer everything a reviewer has
+ * already turned down.
+ */
 async function fetchPending(source: string | null = null): Promise<Pending[]> {
 	const scope = source === null ? sql`TRUE` : sql`r.source = ${source}`;
 	return queryRawDirect<Pending>(sql`
@@ -70,7 +76,7 @@ async function fetchPending(source: string | null = null): Promise<Pending[]> {
 		FROM skill_relations r
 		JOIN skill_concepts f ON f.id = r.from_id
 		JOIN skill_concepts t ON t.id = r.to_id
-		WHERE r.approved_at IS NULL AND ${scope}
+		WHERE r.approved_at IS NULL AND r.rejected_at IS NULL AND ${scope}
 		ORDER BY r.confidence DESC NULLS LAST, f.label
 	`);
 }
@@ -105,7 +111,9 @@ async function approveGuarded(rows: Pending[]): Promise<{ ok: number; refused: n
 			);
 			continue;
 		}
-		await db.execute(sql`UPDATE skill_relations SET approved_at = now() WHERE id = ${r.id}`);
+		await db.execute(sql`
+			UPDATE skill_relations SET approved_at = now(), rejected_at = NULL WHERE id = ${r.id}
+		`);
 		ok++;
 	}
 
@@ -132,6 +140,7 @@ if (ALIASES) {
 	}>(sql`
 		SELECT a.id, a.alias, c.label, (a.approved_at IS NOT NULL) AS approved
 		FROM skill_aliases a JOIN skill_concepts c ON c.id = a.concept_id
+		WHERE a.rejected_at IS NULL
 		ORDER BY a.approved_at NULLS FIRST, c.label
 	`);
 	const APPROVE = args.indexOf('--approve');
@@ -145,7 +154,9 @@ if (ALIASES) {
 			.filter((a) => /^\d+$/.test(a))
 			.map(Number);
 		for (const id of ids) {
-			await db.execute(sql`UPDATE skill_aliases SET approved_at = now() WHERE id = ${id}`);
+			await db.execute(sql`
+				UPDATE skill_aliases SET approved_at = now(), rejected_at = NULL WHERE id = ${id}
+			`);
 		}
 		console.log(`Approved ${ids.length} alias(es): ${ids.join(', ')}`);
 		process.exit(0);

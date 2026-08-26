@@ -651,6 +651,8 @@ export const skill_aliases = pgTable(
 		 * directions, with no traversal to inspect.
 		 */
 		approved_at: timestamp({ withTimezone: true, mode: 'date' }),
+		/** Set when a reviewer says no. See `skill_relations.rejected_at`. */
+		rejected_at: timestamp({ withTimezone: true, mode: 'date' }),
 		date_created: timestamp({ withTimezone: true, mode: 'date' })
 			.default(sql`now()`)
 			.notNull()
@@ -706,6 +708,26 @@ export const skill_relations = pgTable(
 		/** How it got here: "llm", "manual", "seed". */
 		source: varchar({ length: 32 }).default('llm').notNull(),
 		approved_at: timestamp({ withTimezone: true, mode: 'date' }),
+		/**
+		 * Set when a reviewer says no — and the reason the queue needs THREE states
+		 * rather than two.
+		 *
+		 * Rejecting used to write `approved_at = NULL`, which is what a pending row
+		 * already holds: the write succeeded, changed nothing, and the row came
+		 * back in the queue looking exactly as it had. The button was dead for the
+		 * only rows anyone presses it on.
+		 *
+		 * Deleting is not the alternative. `propose-skill-relations.ts` inserts
+		 * `ON CONFLICT DO NOTHING`, so a deleted proposal is re-proposed on the next
+		 * run and review becomes Sisyphean. The row stays and carries the verdict
+		 * instead.
+		 *
+		 * Nothing downstream needs to know about it: every consumer filters on
+		 * `approved_at IS NOT NULL`, and a rejected row has none. It is read by the
+		 * review queue, which owes a reviewer the difference between "not looked at
+		 * yet" and "looked at, no".
+		 */
+		rejected_at: timestamp({ withTimezone: true, mode: 'date' }),
 		date_created: timestamp({ withTimezone: true, mode: 'date' })
 			.default(sql`now()`)
 			.notNull()
