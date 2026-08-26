@@ -180,6 +180,23 @@ try {
 		(await refuseNewRelation(id('zzreact'), 2147483000, 'broader'))?.status === 404,
 		'an unknown concept id is refused as not found'
 	);
+
+	// The review queue approves an edge that already exists as a row, so the row
+	// has to be excluded from its own duplicate check. Without `exceptId` every
+	// Approve click would refuse itself, which is the failure the graph editor
+	// never sees because it always inserts something new.
+	const own = await queryRawDirect<{ id: number }>(sql`
+		SELECT r.id FROM skill_relations r
+		JOIN skill_concepts f ON f.id = r.from_id
+		JOIN skill_concepts t ON t.id = r.to_id
+		WHERE f.slug = 'zzreact' AND t.slug = 'zzjsframework' AND r.relation = 'broader'
+	`);
+	check(own.length === 1, 'found the seeded ZZReact → ZZJS framework row');
+	check(
+		(await refuseNewRelation(id('zzreact'), id('zzjsframework'), 'broader', Number(own[0]?.id))) ===
+			null,
+		'a row is not its own duplicate when it is the one being approved'
+	);
 } finally {
 	await db.execute(sql`
 		DELETE FROM skill_relations WHERE from_id IN (SELECT id FROM skill_concepts WHERE slug LIKE 'zz%')

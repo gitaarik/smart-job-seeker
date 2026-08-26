@@ -26,6 +26,7 @@
 import { fail } from '@sveltejs/kit';
 import { sql } from 'drizzle-orm';
 import { dbDirect as db, queryRawDirect } from '$lib/server/db';
+import { refuseNewRelation } from '$lib/server/job/skill-relation-guards';
 import type { Actions, PageServerLoad } from './$types';
 
 export interface PendingRelation {
@@ -105,9 +106,27 @@ function idFrom(form: FormData): number | null {
 }
 
 export const actions: Actions = {
+	/**
+	 * Approve a proposed edge, unless approving it would break the graph.
+	 *
+	 * The same refusals the graph editor applies when one is drawn — a loop
+	 * closed by clicking Approve is the same defect as a loop closed by
+	 * dragging, and nothing downstream reports either: `expandUpward` uses
+	 * UNION, so a cycle terminates quietly rather than surfacing. The row's own
+	 * id is excluded so it cannot be found as its own duplicate.
+	 */
 	approveRelation: async ({ request }) => {
 		const id = idFrom(await request.formData());
 		if (id === null) return fail(400, { error: 'Invalid id' });
+
+		const rows = await queryRawDirect<{ from_id: number; to_id: number; relation: string }>(
+			sql`SELECT from_id, to_id, relation FROM skill_relations WHERE id = ${id}`
+		);
+		if (rows.length === 0) return fail(404, { error: 'Relation not found' });
+
+		const refusal = await refuseNewRelation(rows[0].from_id, rows[0].to_id, rows[0].relation, id);
+		if (refusal) return fail(refusal.status, { error: refusal.error });
+
 		await db.execute(sql`UPDATE skill_relations SET approved_at = now() WHERE id = ${id}`);
 		return { success: true };
 	},

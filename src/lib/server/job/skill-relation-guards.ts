@@ -6,9 +6,10 @@
  * refusals is about the graph contradicting *itself* — none of them is a
  * judgement about whether a relation is true, which is what review is for.
  *
- * `approveRelation` in the review queue does NOT run these yet. Approving a
- * pending edge can still close a loop, and it is the same defect arriving
- * through the other door; wiring it up is a one-line change here away.
+ * Used by both doors an edge can come through: drawing one on the graph, and
+ * approving a proposed one in the review queue. A loop closed by clicking
+ * Approve is the same defect as a loop closed by dragging, and for a while only
+ * the dragging door was guarded.
  */
 import { sql } from 'drizzle-orm';
 import { queryRawDirect } from '$lib/server/db';
@@ -32,7 +33,13 @@ export interface RelationRefusal {
 export async function refuseNewRelation(
 	from: number,
 	to: number,
-	relation: string
+	relation: string,
+	/**
+	 * A row to ignore when looking for an existing edge — the one being approved.
+	 * Without it, approving a row would find itself and refuse as a duplicate.
+	 * The queue's `superseded` flag excludes the row the same way, `o.id <> r.id`.
+	 */
+	exceptId?: number
 ): Promise<RelationRefusal | null> {
 	if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < 1) {
 		return { status: 400, error: 'Invalid concept id.' };
@@ -57,6 +64,7 @@ export async function refuseNewRelation(
 		SELECT relation, (from_id = ${to}) AS reversed
 		FROM skill_relations
 		WHERE approved_at IS NOT NULL
+		  AND id <> ${exceptId ?? -1}
 		  AND ((from_id = ${from} AND to_id = ${to}) OR (from_id = ${to} AND to_id = ${from}))
 		LIMIT 1
 	`);

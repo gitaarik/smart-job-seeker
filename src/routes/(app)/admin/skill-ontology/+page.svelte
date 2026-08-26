@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
+	import { verbFor } from './graph/graph-shared';
 
 	let { data, form }: { data: PageData; form: { error?: string } | null } = $props();
 
@@ -27,11 +28,19 @@
 	 * kind of JavaScript" invites deciding — and direction, which is the thing
 	 * most often wrong, is only legible in prose.
 	 */
+	/**
+	 * The verb comes from `verbFor` so this page and the graph's relation picker
+	 * cannot disagree about what an edge asserts. Hard-coding them here meant a
+	 * relation added elsewhere fell through to `X — inDomain — Y`, which is a
+	 * schema value shown to a person, not a sentence.
+	 *
+	 * `covers` quotes its subject because a compound entry's whole label is the
+	 * thing: “Vitest / Jest” reads as two skills unless the quotes hold it
+	 * together.
+	 */
 	function sentence(relation: string, from: string, to: string): string {
-		if (relation === 'broader') return `${from} is a kind of ${to}`;
-		if (relation === 'requires') return `${from} cannot be used without ${to}`;
-		if (relation === 'covers') return `“${from}” is one entry covering ${to}`;
-		return `${from} — ${relation} — ${to}`;
+		const subject = relation === 'covers' ? `“${from}”` : from;
+		return `${subject} ${verbFor(relation)} ${to}`;
 	}
 </script>
 
