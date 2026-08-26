@@ -19,7 +19,7 @@
 	import '@xyflow/svelte/dist/style.css';
 	import { RELATION_STYLES, dashFor } from '../graph-shared';
 	import ConceptNode, { type ConceptNodeData } from './ConceptNode.svelte';
-	import EdgeDraft from './EdgeDraft.svelte';
+	import EdgeDraft from '../EdgeDraft.svelte';
 	import GraphSearch from './GraphSearch.svelte';
 	import { setGraphHighlight } from './highlight.svelte';
 	import { bestShelfWidth, layoutFullGraph, type Dims } from './island-layout';

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { deserialize } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { RELATION_STYLES, verbFor } from '../graph-shared';
+	import { RELATION_STYLES, verbFor } from './graph-shared';
 
 	export interface DraftEnd {
 		id: number;

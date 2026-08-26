@@ -33,8 +33,10 @@
 import { sql } from 'drizzle-orm';
 import { queryRawDirect } from '$lib/server/db';
 import { normalizeSkill } from '$lib/skills';
-import { MATCHING_RELATIONS, MAX_DEPTH } from '$lib/server/job/skill-ontology';
-import type { PageServerLoad } from './$types';
+import { fail } from '@sveltejs/kit';
+import { GRAPH_RELATIONS, MATCHING_RELATIONS, MAX_DEPTH } from '$lib/server/job/skill-ontology';
+import { createRelation, retireRelation } from '$lib/server/job/skill-relation-edit';
+import type { Actions, PageServerLoad } from './$types';
 
 export interface GraphNode {
 	id: number;
@@ -45,6 +47,8 @@ export interface GraphNode {
 }
 
 export interface GraphEdge {
+	/** Needed to retire it. The edges drawn here are real rows, not derived paths. */
+	id: number;
 	from_id: number;
 	to_id: number;
 	relation: string;
@@ -97,11 +101,18 @@ export const load: PageServerLoad = async ({ url }) => {
 	const nodes = [...ancestors, ...children.filter((c) => !ancestors.some((a) => a.id === c.id))];
 	const ids = nodes.map((n) => n.id);
 
+	// Every edge BETWEEN nodes already in the neighbourhood, and note the relation
+	// filter: it used to be absent, so this drew `inDomain` and `related` lines
+	// between nodes the traversal above had reached without ever walking them.
+	// Harmless while the view was read-only and not harmless now — someone would
+	// retire a domain edge from a view that never claimed to show domains. Named
+	// explicitly so the set is a decision rather than an accident.
 	const edges = ids.length
 		? await queryRawDirect<GraphEdge>(sql`
-				SELECT r.from_id, r.to_id, r.relation
+				SELECT r.id, r.from_id, r.to_id, r.relation
 				FROM skill_relations r
 				WHERE r.approved_at IS NOT NULL
+				  AND r.relation IN (${inList(GRAPH_RELATIONS)})
 				  AND r.from_id IN (${sql.join(
 						ids.map((i) => sql`${i}`),
 						sql`, `
@@ -114,4 +125,15 @@ export const load: PageServerLoad = async ({ url }) => {
 		: [];
 
 	return { concepts, root, nodes, edges };
+};
+
+export const actions: Actions = {
+	createRelation: async ({ request }) => {
+		const r = await createRelation(await request.formData());
+		return r.ok ? { success: true } : fail(r.refusal.status, { error: r.refusal.error });
+	},
+	retireRelation: async ({ request }) => {
+		const r = await retireRelation(await request.formData());
+		return r.ok ? { success: true } : fail(r.refusal.status, { error: r.refusal.error });
+	}
 };

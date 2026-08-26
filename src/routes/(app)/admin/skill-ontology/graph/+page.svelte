@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { RELATION_STYLES, dashFor, edgePath } from './graph-shared';
+	import EdgeDraft from './EdgeDraft.svelte';
+	import { RELATION_STYLES, dashFor, edgePath, verbFor } from './graph-shared';
 	import type { PageData } from './$types';
 
 	/** Every href on this page points back at this route. */
@@ -33,6 +35,67 @@
 	const COL_GAP = 76;
 	const ROW_GAP = 20;
 	const PAD = 28;
+
+	/**
+	 * Editing here is CLICK to connect, not drag.
+	 *
+	 * The whole-graph view drags because its nodes are xyflow's; these are plain
+	 * anchors over an SVG, and click-to-connect is both simpler and the thing that
+	 * makes this view keyboard-operable — the one capability the drag surface
+	 * explicitly does not have. Pick a source, pick a target, choose a relation.
+	 *
+	 * Off by default. This page is read far more often than it is edited, and in
+	 * edit mode the nodes stop being links to other neighbourhoods, which is a
+	 * surprising thing to inflict on someone who only came to look.
+	 */
+	let editing = $state(false);
+	let from = $state<number | null>(null);
+	let draft = $state<{ from: number; to: number } | null>(null);
+	let retiring = $state<{ id: number; label: string } | null>(null);
+	let error = $state<string | null>(null);
+	/** Target chosen from the whole vocabulary, for an edge leaving the neighbourhood. */
+	let farTarget = $state('');
+
+	const labelById = $derived(
+		Object.fromEntries(data.nodes.map((n) => [n.id, n.label])) as Record<number, string>
+	);
+
+	function pick(id: number) {
+		error = null;
+		retiring = null;
+		if (from === null) {
+			from = id;
+		} else if (from === id) {
+			from = null;
+		} else {
+			draft = { from, to: id };
+			from = null;
+		}
+	}
+
+	/**
+	 * Connect to something the neighbourhood does not contain.
+	 *
+	 * Most edges worth adding point OUT of the view — that is usually why they are
+	 * missing. Restricting the target to what happens to be on screen would leave
+	 * exactly the gaps this page is good at revealing.
+	 */
+	function connectFar() {
+		const target = data.concepts.find((c) => c.label === farTarget);
+		if (from === null || !target) return;
+		draft = { from, to: target.id };
+		from = null;
+		farTarget = '';
+	}
+
+	async function retire() {
+		if (!retiring) return;
+		const body = new FormData();
+		body.set('id', String(retiring.id));
+		const res = await fetch('?/retireRelation', { method: 'POST', body });
+		retiring = null;
+		if (res.ok) await invalidateAll();
+	}
 
 	let suggestions = $derived(
 		query.trim().length < 1
@@ -196,7 +259,86 @@
 						{r.label}
 					</span>
 				{/each}
+
+				<button
+					type="button"
+					class="ml-auto rounded-md border px-2.5 py-1 text-xs transition-colors {editing
+						? 'border-[var(--dash-primary)] bg-[var(--dash-primary)] text-white'
+						: 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]'}"
+					onclick={() => {
+						editing = !editing;
+						from = null;
+						draft = null;
+						retiring = null;
+						error = null;
+					}}
+				>
+					{editing ? 'Done editing' : 'Edit'}
+				</button>
 			</div>
+
+			{#if editing}
+				<div
+					class="flex flex-wrap items-center gap-3 border-b border-[var(--dash-border)] bg-[var(--dash-bg)] px-4 py-2.5 text-xs"
+				>
+					{#if draft}
+						<EdgeDraft
+							from={{ id: draft.from, label: labelById[draft.from] ?? '?' }}
+							to={{
+								id: draft.to,
+								label:
+									labelById[draft.to] ?? data.concepts.find((c) => c.id === draft?.to)?.label ?? '?'
+							}}
+							onswap={() => (draft = draft && { from: draft.to, to: draft.from })}
+							oncancel={() => (draft = null)}
+						/>
+					{:else if retiring}
+						<span class="text-[var(--dash-text)]">Retire <strong>{retiring.label}</strong>?</span>
+						<button
+							type="button"
+							class="rounded-md border border-[var(--dash-border)] px-2.5 py-1 text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]"
+							onclick={retire}>Retire</button
+						>
+						<button
+							type="button"
+							class="text-[var(--dash-text-secondary)] underline"
+							onclick={() => (retiring = null)}>Cancel</button
+						>
+						<span class="text-[var(--dash-text-muted)]"
+							>It returns to the review queue, unapproved — not deleted.</span
+						>
+					{:else if from !== null}
+						<span class="text-[var(--dash-text)]"
+							>From <strong>{labelById[from]}</strong> — now pick a target, or</span
+						>
+						<input
+							list="all-concepts"
+							bind:value={farTarget}
+							placeholder="a concept not shown here…"
+							class="rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1 text-[var(--dash-text)]"
+						/>
+						<button
+							type="button"
+							class="rounded-md border border-[var(--dash-border)] px-2.5 py-1 text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)] disabled:opacity-40"
+							disabled={!data.concepts.some((c) => c.label === farTarget)}
+							onclick={connectFar}>Connect</button
+						>
+						<button
+							type="button"
+							class="text-[var(--dash-text-secondary)] underline"
+							onclick={() => (from = null)}>Cancel</button
+						>
+					{:else}
+						<span class="text-[var(--dash-text-secondary)]">
+							Pick a concept to connect from, or click a line to retire it.
+						</span>
+					{/if}
+					{#if error}<span class="text-[var(--dash-danger,#dc2626)]">{error}</span>{/if}
+				</div>
+				<datalist id="all-concepts">
+					{#each data.concepts as c (c.id)}<option value={c.label}></option>{/each}
+				</datalist>
+			{/if}
 
 			<div class="overflow-x-auto p-2">
 				<div class="relative mx-auto" style="width:{layout.width}px;">
@@ -228,7 +370,7 @@
 									<path d="M 0 1 L 7 4 L 0 7 z" fill="currentColor" />
 								</marker>
 							</defs>
-							{#each data.edges as e (`${e.from_id}-${e.to_id}-${e.relation}`)}
+							{#each data.edges as e (e.id)}
 								<path
 									d={path(e.from_id, e.to_id)}
 									fill="none"
@@ -237,20 +379,72 @@
 									stroke-dasharray={dashFor(e.relation)}
 									marker-end="url(#arrow)"
 								/>
+								{#if editing}
+									<!--
+										A second, invisible, much thicker copy of the same curve. A
+										1.5px stroke is a 1.5px hit target, which is not a thing
+										anyone can click; 14px transparent is, and it keeps the
+										drawn line unchanged.
+									-->
+									<path
+										d={path(e.from_id, e.to_id)}
+										fill="none"
+										stroke="transparent"
+										stroke-width="14"
+										class="pointer-events-auto cursor-pointer"
+										role="button"
+										tabindex="0"
+										aria-label="Retire {labelById[e.from_id]} {verbFor(e.relation)} {labelById[
+											e.to_id
+										]}"
+										onclick={() => {
+											from = null;
+											retiring = {
+												id: e.id,
+												label: `${labelById[e.from_id]} ${verbFor(e.relation)} ${labelById[e.to_id]}`
+											};
+										}}
+										onkeydown={(ev) => {
+											if (ev.key !== 'Enter' && ev.key !== ' ') return;
+											ev.preventDefault();
+											from = null;
+											retiring = {
+												id: e.id,
+												label: `${labelById[e.from_id]} ${verbFor(e.relation)} ${labelById[e.to_id]}`
+											};
+										}}
+									/>
+								{/if}
 							{/each}
 						</svg>
 
 						{#each data.nodes as n (n.id)}
 							{@const p = layout.pos[n.id]}
-							{#if p}
+							{@const base =
+								'absolute flex items-center justify-center rounded-md border px-2 text-center text-[13px] leading-tight transition-colors'}
+							{@const tone =
+								n.depth === 0
+									? 'border-[var(--dash-primary)] bg-[var(--dash-primary)] font-semibold text-white'
+									: 'border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)]'}
+							{@const box = `left:${p?.x}px; top:${p?.y}px; width:${NODE_W}px; height:${NODE_H}px;`}
+							{#if p && editing}
+								<button
+									type="button"
+									title={from === null ? `Connect from ${n.label}` : `Connect to ${n.label}`}
+									class="{base} {from === n.id
+										? 'border-[var(--dash-primary)] ring-2 ring-[var(--dash-primary)]'
+										: tone} cursor-pointer"
+									style={box}
+									onclick={() => pick(n.id)}
+								>
+									<span class="line-clamp-2">{n.label}</span>
+								</button>
+							{:else if p}
 								<a
 									href="{GRAPH}?concept={encodeURIComponent(n.slug)}"
 									title={n.label}
-									class="absolute flex items-center justify-center rounded-md border px-2 text-center text-[13px] leading-tight transition-colors
-									{n.depth === 0
-										? 'border-[var(--dash-primary)] bg-[var(--dash-primary)] font-semibold text-white'
-										: 'border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)]'}"
-									style="left:{p.x}px; top:{p.y}px; width:{NODE_W}px; height:{NODE_H}px;"
+									class="{base} {tone}"
+									style={box}
 								>
 									<span class="line-clamp-2">{n.label}</span>
 								</a>
