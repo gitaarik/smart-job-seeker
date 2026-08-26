@@ -26,7 +26,8 @@ const CONCEPTS: [string, string][] = [
 	['zzpython', 'ZZPython'],
 	['zzvitestzzjest', 'ZZVitest / ZZJest'],
 	['zzjest', 'ZZJest'],
-	['zzunittesting', 'ZZUnit Testing']
+	['zzunittesting', 'ZZUnit Testing'],
+	['zzit', 'ZZIT']
 ];
 const EDGES: [string, string, string][] = [
 	['zzreact', 'zzjsframework', 'broader'],
@@ -34,7 +35,8 @@ const EDGES: [string, string, string][] = [
 	['zzjavascript', 'zzfrontend', 'broader'],
 	['zzdjango', 'zzpython', 'requires'],
 	['zzvitestzzjest', 'zzjest', 'covers'],
-	['zzjest', 'zzunittesting', 'broader']
+	['zzjest', 'zzunittesting', 'broader'],
+	['zzreact', 'zzit', 'inDomain']
 ];
 /** [have, want, shouldMatch] — every asymmetric pair asserted BOTH ways. */
 const CASES: [string, string, boolean][] = [
@@ -52,7 +54,13 @@ const CASES: [string, string, boolean][] = [
 	// The reason `covers` joined MATCHING_RELATIONS rather than getting its own
 	// traversal: it composes with `broader` in one walk.
 	['ZZVitest / ZZJest', 'ZZUnit Testing', true],
-	['ZZUnit Testing', 'ZZVitest / ZZJest', false]
+	['ZZUnit Testing', 'ZZVitest / ZZJest', false],
+	// `inDomain` is APPROVED here and must still not be walked. It is the one
+	// relation that exists for the picture rather than for matching, and the
+	// whole safety of a single "IT" root over the vocabulary rests on this being
+	// false — traverse it and every technical skill would satisfy a posting that
+	// merely says "IT".
+	['ZZReact', 'ZZIT', false]
 ];
 
 let failures = 0;

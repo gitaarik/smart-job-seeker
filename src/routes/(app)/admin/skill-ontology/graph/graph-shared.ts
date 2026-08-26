@@ -7,11 +7,20 @@
  * line means — a legend that drifts between two pages is worse than no legend.
  */
 
-/** Relations the matcher traverses, with the line style each is drawn in. */
+/**
+ * Every relation drawn, with the line style each gets.
+ *
+ * The first three are the ones the matcher traverses. `inDomain` is not — it
+ * groups categories under a domain so the graph has a spine, and `expandUpward`
+ * never walks it. It is drawn faintest on purpose: it carries the least
+ * information per line and there are enough of them to swamp the real
+ * hierarchy if they competed for attention.
+ */
 export const RELATION_STYLES = [
 	{ relation: 'broader', label: 'is a kind of', dash: undefined },
 	{ relation: 'requires', label: 'requires', dash: '4 3' },
-	{ relation: 'covers', label: 'is one entry covering', dash: '1 3' }
+	{ relation: 'covers', label: 'is one entry covering', dash: '1 3' },
+	{ relation: 'inDomain', label: 'in domain (not matched)', dash: '1 5' }
 ] as const;
 
 /**

@@ -65,6 +65,25 @@ import { normalizeSkill } from '$lib/skills';
 export const MATCHING_RELATIONS = ['broader', 'requires', 'covers'] as const;
 
 /**
+ * Relations worth DRAWING, which is a wider set than the ones worth walking.
+ *
+ * `inDomain` roots a category under a domain — "Container orchestration" under
+ * "IT". It is deliberately outside `MATCHING_RELATIONS`, because the sentence it
+ * asserts is membership rather than implication: "React is a kind of IT" is the
+ * same category error that put `Guest Relations broader Event Planning` into the
+ * graph and had to be retired. Traversing it would also mean any posting
+ * mentioning "IT" matches anyone holding any technical skill, which trades the
+ * precision this vocabulary is built for against a word no one searches on.
+ *
+ * So it exists for the sake of the picture: it gives the whole-graph view a
+ * spine instead of eighteen unrelated islands, and costs matching nothing. If a
+ * domain ever turns out to be worth matching on, moving the string into
+ * `MATCHING_RELATIONS` is the whole change — the same door `covers` came
+ * through.
+ */
+export const GRAPH_RELATIONS = [...MATCHING_RELATIONS, 'inDomain'] as const;
+
+/**
  * How far a profile skill may reach.
  *
  * Four hops is already generous for a real hierarchy (React → JS framework →
