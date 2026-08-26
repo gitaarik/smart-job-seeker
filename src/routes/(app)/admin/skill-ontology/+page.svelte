@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faCheck, faXmark, faRightLeft } from '@fortawesome/free-solid-svg-icons';
 	import type { PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: { error?: string } | null } = $props();
@@ -36,13 +34,12 @@
 	<form method="POST" action={act} use:enhance>
 		<input type="hidden" name="id" value={id} />
 		<button
-			class="rounded-md border px-2 py-1 text-xs transition-colors
+			class="rounded-md border px-2 py-1 text-xs whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-[var(--dash-primary)] focus-visible:outline-none
 				{kind === 'yes'
 				? 'border-[var(--dash-success)] text-[var(--dash-success)] hover:bg-[var(--dash-success-bg)]'
 				: 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]'}"
-			title={label}
 		>
-			<FontAwesomeIcon icon={kind === 'yes' ? faCheck : kind === 'flip' ? faRightLeft : faXmark} />
+			{label}
 		</button>
 	</form>
 {/snippet}
@@ -89,7 +86,7 @@
 			Pending relations
 			{#if pendingRelations.length > 0}
 				<span
-					class="ml-2 rounded-full bg-[var(--dash-warning-bg)] px-2 py-0.5 text-xs text-[var(--dash-text)]"
+					class="ml-2 rounded-full bg-[var(--dash-bg-inset)] px-2 py-0.5 text-xs font-normal text-[var(--dash-text-secondary)]"
 					>{pendingRelations.length}</span
 				>
 			{/if}
@@ -109,8 +106,8 @@
 							</span>
 						</span>
 						{@render action('?/approveRelation', r.id, 'Approve', 'yes')}
-						{@render action('?/flipRelation', r.id, 'Swap direction (stays unapproved)', 'flip')}
-						{@render action('?/rejectRelation', r.id, 'Leave rejected', 'no')}
+						{@render action('?/flipRelation', r.id, 'Flip', 'flip')}
+						{@render action('?/rejectRelation', r.id, 'Reject', 'no')}
 					</li>
 				{/each}
 			</ul>
@@ -124,7 +121,7 @@
 			Pending aliases
 			{#if pendingAliases.length > 0}
 				<span
-					class="ml-2 rounded-full bg-[var(--dash-warning-bg)] px-2 py-0.5 text-xs text-[var(--dash-text)]"
+					class="ml-2 rounded-full bg-[var(--dash-bg-inset)] px-2 py-0.5 text-xs font-normal text-[var(--dash-text-secondary)]"
 					>{pendingAliases.length}</span
 				>
 			{/if}
@@ -145,7 +142,7 @@
 							“{a.alias}” is another way of writing <strong>{a.label}</strong>
 						</span>
 						{@render action('?/approveAlias', a.id, 'Approve', 'yes')}
-						{@render action('?/rejectAlias', a.id, 'Leave rejected', 'no')}
+						{@render action('?/rejectAlias', a.id, 'Reject', 'no')}
 					</li>
 				{/each}
 			</ul>
