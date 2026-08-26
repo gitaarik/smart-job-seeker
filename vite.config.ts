@@ -13,7 +13,14 @@ export default defineConfig({
 		// to resolve ("Failed to resolve entry for package pdf-parse"); leaving it
 		// external lets Node resolve the exports map natively (used lazily in
 		// src/lib/server/resume/text-extractor.ts for CV upload).
-		external: ['cheerio', 'drizzle-orm', 'bullmq', 'pdf-parse']
+		external: ['cheerio', 'drizzle-orm', 'bullmq', 'pdf-parse'],
+		// @xyflow/svelte ships uncompiled .svelte files in dist. Vite's svelte
+		// plugin normally spots those via the package's `svelte` export condition
+		// and pulls it in automatically, but Sentry's import-in-the-middle hook
+		// gets the load first and hands it to Node, which has no idea what a
+		// .svelte file is — the route 500s on SSR with ERR_UNKNOWN_FILE_EXTENSION.
+		// Naming it here keeps the transform with Vite, where it belongs.
+		noExternal: ['@xyflow/svelte']
 	},
 	server: {
 		allowedHosts: [

@@ -5,14 +5,19 @@
  *
  * The focused view's header says 244 nodes would be a hairball. That was
  * reasoning from the vocabulary rather than from the graph, and it was wrong.
- * Measured on dev: of 247 concepts only **116** are touched by an approved
- * edge, joined by **117** edges — about one edge per node. The result is not a
- * hairball but a forest: **18 connected components**, the largest 29 and 26
- * nodes, everything else 8 or fewer, a DAG four hops deep with a maximum
- * in-degree of 5.
+ * On dev, 2026-08-26: of 238 concepts only **104** are touched by an approved
+ * edge, joined by **103** edges — under one edge per node. The result is not a
+ * hairball but a forest of **16 connected components**, two of them large and
+ * the rest under ten nodes, shallow enough to draw exactly.
  *
- * So the layout can be exact rather than approximate, which is why there is no
- * force simulation here either. Islands are laid out one at a time and packed.
+ * Treat those figures as a reading rather than a constant. They were 247 / 116 /
+ * 117 / 18 four hours earlier in the same afternoon, because the ontology is
+ * actively curated — which is precisely why `bestShelfWidth` below solves for
+ * the packing instead of hard-coding the width that suited one of the readings.
+ *
+ * The claim that does hold is the ratio: roughly one edge per node, in many
+ * small components. That is what lets the layout be exact rather than
+ * approximate, and why there is no force simulation here.
  *
  * ## Why it is a .ts module and not `$derived.by` in the page
  *
@@ -56,6 +61,14 @@ export interface Island {
 
 export interface FullLayout {
 	pos: Record<number, { x: number; y: number }>;
+	/**
+	 * Node id → index into `islands`.
+	 *
+	 * Membership, not geometry. Hit-testing a point against the island boxes
+	 * would answer the same question most of the time and silently wrong at the
+	 * edges, where a box's padding overlaps its neighbour's gap.
+	 */
+	islandOf: Record<number, number>;
 	islands: Island[];
 	width: number;
 	height: number;
@@ -134,6 +147,48 @@ function components(nodes: LayoutNode[], edges: LayoutEdge[]): LayoutNode[][] {
 }
 
 /**
+ * The shelf width whose packing best fills a canvas of the given aspect ratio.
+ *
+ * `maxWidth` used to be a constant picked to fit a scroll container. Once the
+ * view zooms, the right value is instead whichever one wastes the least of a
+ * landscape canvas — and that depends entirely on the data. Tuned by hand
+ * against 116 nodes it read 1800; the ontology dropped to 104 nodes the same
+ * afternoon, which is the whole argument for solving it rather than writing a
+ * number down.
+ *
+ * `fitView` scales by `min(Cw / w, Ch / h)`, so with the canvas normalised to
+ * `aspect x 1` the objective is exactly `min(aspect / w, 1 / h)` — maximise it
+ * and you have maximised how large the graph is drawn. Ties go to the narrowest
+ * candidate, which keeps the choice deterministic and the picture reproducible.
+ */
+export function bestShelfWidth(
+	nodes: LayoutNode[],
+	edges: LayoutEdge[],
+	dims: Omit<Dims, 'maxWidth'>,
+	aspect: number
+): number {
+	// One shelf, no wrapping: the widest the graph can ever be, and so the top of
+	// the search range. Everything narrower folds islands onto more rows.
+	const widest = layoutFullGraph(nodes, edges, { ...dims, maxWidth: Infinity }).width;
+	if (widest === 0) return dims.nodeW;
+
+	let best = widest;
+	let bestZoom = -1;
+	const STEPS = 24;
+	for (let i = 1; i <= STEPS; i++) {
+		const maxWidth = (widest * i) / STEPS;
+		const { width, height } = layoutFullGraph(nodes, edges, { ...dims, maxWidth });
+		if (width === 0 || height === 0) continue;
+		const zoom = Math.min(aspect / width, 1 / height);
+		if (zoom > bestZoom) {
+			bestZoom = zoom;
+			best = maxWidth;
+		}
+	}
+	return best;
+}
+
+/**
  * Place every node, and return a box per island.
  *
  * Islands are packed onto shelves: fill a row left to right until the next one
@@ -145,6 +200,7 @@ function components(nodes: LayoutNode[], edges: LayoutEdge[]): LayoutNode[][] {
 export function layoutFullGraph(nodes: LayoutNode[], edges: LayoutEdge[], dims: Dims): FullLayout {
 	const { nodeW, nodeH, colGap, rowGap, islandPad, islandGap, maxWidth } = dims;
 	const pos: Record<number, { x: number; y: number }> = {};
+	const islandOf: Record<number, number> = {};
 	const islands: Island[] = [];
 
 	const out = new Map<number, number[]>();
@@ -189,11 +245,12 @@ export function layoutFullGraph(nodes: LayoutNode[], edges: LayoutEdge[], dims: 
 			});
 		});
 
+		for (const n of group) islandOf[n.id] = islands.length;
 		islands.push({ x: shelfX, y: shelfY, w: boxW, h: boxH, size: group.length });
 		shelfX += boxW + islandGap;
 		shelfH = Math.max(shelfH, boxH);
 		width = Math.max(width, shelfX - islandGap);
 	}
 
-	return { pos, islands, width, height: shelfY + shelfH };
+	return { pos, islandOf, islands, width, height: shelfY + shelfH };
 }

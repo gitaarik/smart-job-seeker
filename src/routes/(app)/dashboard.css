@@ -17,6 +17,7 @@
 	/* Backgrounds */
 	--dash-bg: #f9fafb; /* gray-50 */
 	--dash-bg-inset: #f3f4f6; /* gray-100 – for inset areas on cards */
+	--dash-bg-hover: #f3f4f6; /* gray-100 – hover fill for bordered buttons/rows */
 	--dash-card: #ffffff; /* white */
 
 	/* Borders */
@@ -54,6 +55,7 @@
 
 	--dash-bg: #111827; /* gray-900 */
 	--dash-bg-inset: #1a2332; /* between gray-900 and gray-800 */
+	--dash-bg-hover: #374151; /* gray-700 – hover fill for bordered buttons/rows */
 	--dash-card: #1f2937; /* gray-800 */
 
 	--dash-border: #4b5563; /* gray-600 */

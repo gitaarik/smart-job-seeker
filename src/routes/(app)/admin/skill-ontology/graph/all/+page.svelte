@@ -1,35 +1,113 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { RELATION_STYLES, dashFor, edgePath } from '../graph-shared';
-	import { layoutFullGraph, type Dims } from './island-layout';
+	import {
+		Background,
+		BackgroundVariant,
+		Controls,
+		MarkerType,
+		MiniMap,
+		SvelteFlow,
+		SvelteFlowProvider,
+		ViewportPortal,
+		type Edge,
+		type Node,
+		type NodeTypes
+	} from '@xyflow/svelte';
+	import '@xyflow/svelte/dist/style.css';
+	import { RELATION_STYLES, dashFor } from '../graph-shared';
+	import ConceptNode, { type ConceptNodeData } from './ConceptNode.svelte';
+	import GraphSearch from './GraphSearch.svelte';
+	import { setGraphHighlight } from './highlight.svelte';
+	import { bestShelfWidth, layoutFullGraph, type Dims } from './island-layout';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	const GRAPH = resolve('/admin/skill-ontology/graph');
 
+	setGraphHighlight();
+
 	/**
 	 * Smaller than the focused view's boxes, deliberately.
 	 *
 	 * There the question is about one concept and a 152px box can spell out its
 	 * name. Here the question is about shape — how many islands, how deep, what
-	 * is missing — and 116 boxes at that size would need scrolling in both
-	 * directions to answer it. A label that truncates is a smaller loss than a
-	 * picture you cannot see at once, and every node links to the view that
-	 * spells it out.
+	 * is missing — so the whole thing wants to fit before you touch anything.
+	 * A label that truncates at rest is a smaller loss than a picture you have to
+	 * assemble from fragments, and now the answer to a truncated label is to zoom
+	 * rather than to leave the page.
 	 */
-	const DIMS: Dims = {
+	const BOX = {
 		nodeW: 124,
 		nodeH: 32,
 		colGap: 44,
 		rowGap: 8,
 		islandPad: 14,
-		islandGap: 22,
-		maxWidth: 980
+		islandGap: 22
 	};
 
-	let layout = $derived(layoutFullGraph(data.nodes, data.edges, DIMS));
-	let counts = $derived({
+	/**
+	 * Roughly the shape of the canvas below, and only roughly on purpose.
+	 *
+	 * The exact ratio is a browser measurement this has no access to at load, and
+	 * chasing it with a resize observer would relayout the whole graph every time
+	 * the window moved. The objective curve is flat near its peak — several shelf
+	 * widths fit within a percent of the best — so an approximate target lands on
+	 * the same answer as an exact one.
+	 */
+	const CANVAS_ASPECT = 1.66;
+
+	const DIMS = $derived<Dims>({
+		...BOX,
+		maxWidth: bestShelfWidth(data.nodes, data.edges, BOX, CANVAS_ASPECT)
+	});
+
+	/**
+	 * Svelte Flow does no layout, which is the entire reason it is the one graph
+	 * library used here: `island-layout.ts` stays the source of every position,
+	 * with its tests, and this file only renders what it decides. Dragging is off
+	 * for the same reason — a node's column is its longest path to a sink, so a
+	 * node moved one column left is a picture telling a lie.
+	 */
+	const nodeTypes: NodeTypes = { concept: ConceptNode };
+
+	const layout = $derived(layoutFullGraph(data.nodes, data.edges, DIMS));
+
+	const nodes = $derived<Node[]>(
+		data.nodes.map((n) => ({
+			id: String(n.id),
+			type: 'concept',
+			position: layout.pos[n.id] ?? { x: 0, y: 0 },
+			// Given rather than measured: the size is already known, and letting
+			// Svelte Flow measure 116 DOM nodes first would draw one frame of
+			// every edge collapsed onto a point.
+			width: DIMS.nodeW,
+			height: DIMS.nodeH,
+			draggable: false,
+			selectable: false,
+			data: {
+				label: n.label,
+				slug: n.slug,
+				island: layout.islandOf[n.id] ?? -1
+			} satisfies ConceptNodeData
+		}))
+	);
+
+	const edges = $derived<Edge[]>(
+		data.edges.map((e) => ({
+			id: `${e.from_id}-${e.to_id}-${e.relation}`,
+			source: String(e.from_id),
+			target: String(e.to_id),
+			selectable: false,
+			focusable: false,
+			markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18 },
+			style: dashFor(e.relation) ? `stroke-dasharray: ${dashFor(e.relation)};` : undefined
+		}))
+	);
+
+	const searchable = $derived(data.nodes.map((n) => ({ id: String(n.id), label: n.label })));
+
+	const counts = $derived({
 		drawn: data.nodes.length,
 		edges: data.edges.length,
 		islands: layout.islands.length,
@@ -44,7 +122,8 @@
 		<div>
 			<h1 class="text-2xl font-semibold text-[var(--dash-text)]">Whole skill graph</h1>
 			<p class="mt-1 text-sm text-[var(--dash-text-secondary)]">
-				Every concept an approved edge touches. Click one to see just its neighbourhood.
+				Every concept an approved edge touches. Scroll to zoom, drag to pan, click one to see just
+				its neighbourhood.
 			</p>
 		</div>
 		<div class="flex shrink-0 gap-2">
@@ -87,101 +166,72 @@
 			No approved relations yet. Nothing to draw until something is approved in the review queue.
 		</div>
 	{:else}
-		<div class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)]">
-			<div
-				class="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-[var(--dash-border)] px-4 py-2.5 text-xs text-[var(--dash-text-secondary)]"
-			>
-				{#each RELATION_STYLES as r (r.relation)}
-					<span class="flex items-center gap-1.5">
-						<svg width="24" height="8" aria-hidden="true">
-							<line
-								x1="0"
-								y1="4"
-								x2="24"
-								y2="4"
-								stroke="currentColor"
-								stroke-width="1.5"
-								stroke-dasharray={r.dash}
-							/>
-						</svg>
-						{r.label}
-					</span>
-				{/each}
-				<span class="ml-auto">Arrows run left to right, specific to general.</span>
-			</div>
-
-			<div class="overflow-x-auto p-3">
+		<SvelteFlowProvider>
+			<div class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)]">
 				<div
-					class="relative"
-					style="width:{layout.width}px; height:{layout.height}px; min-width:100%;"
+					class="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-[var(--dash-border)] px-4 py-2.5 text-xs text-[var(--dash-text-secondary)]"
 				>
-					<svg
-						class="pointer-events-none absolute inset-0 text-[var(--dash-text-muted)]"
-						width={layout.width}
-						height={layout.height}
-						aria-hidden="true"
-					>
-						<defs>
-							<marker
-								id="arrow"
-								viewBox="0 0 8 8"
-								refX="7"
-								refY="4"
-								markerWidth="7"
-								markerHeight="7"
-								orient="auto"
-							>
-								<path d="M 0 1 L 7 4 L 0 7 z" fill="currentColor" />
-							</marker>
-						</defs>
-
-						<!-- Island borders, so eighteen islands look like eighteen islands. -->
-						{#each layout.islands as island (`${island.x}-${island.y}`)}
-							<rect
-								x={island.x}
-								y={island.y}
-								width={island.w}
-								height={island.h}
-								rx="8"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="1"
-								opacity="0.25"
-							/>
-						{/each}
-
-						{#each data.edges as e (`${e.from_id}-${e.to_id}-${e.relation}`)}
-							{@const a = layout.pos[e.from_id]}
-							{@const b = layout.pos[e.to_id]}
-							{#if a && b}
-								<path
-									d={edgePath(a, b, DIMS.nodeW, DIMS.nodeH)}
-									fill="none"
+					{#each RELATION_STYLES as r (r.relation)}
+						<span class="flex items-center gap-1.5">
+							<svg width="24" height="8" aria-hidden="true">
+								<line
+									x1="0"
+									y1="4"
+									x2="24"
+									y2="4"
 									stroke="currentColor"
 									stroke-width="1.5"
-									stroke-dasharray={dashFor(e.relation)}
-									marker-end="url(#arrow)"
+									stroke-dasharray={r.dash}
 								/>
-							{/if}
-						{/each}
-					</svg>
-
-					{#each data.nodes as n (n.id)}
-						{@const p = layout.pos[n.id]}
-						{#if p}
-							<a
-								href="{GRAPH}?concept={encodeURIComponent(n.slug)}"
-								title={n.label}
-								class="absolute flex items-center justify-center rounded-md border border-[var(--dash-border)] bg-[var(--dash-bg)] px-1.5 text-center text-[11px] leading-tight text-[var(--dash-text)] transition-colors hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] focus-visible:ring-2 focus-visible:ring-[var(--dash-primary)] focus-visible:outline-none"
-								style="left:{p.x}px; top:{p.y}px; width:{DIMS.nodeW}px; height:{DIMS.nodeH}px;"
-							>
-								<span class="line-clamp-2">{n.label}</span>
-							</a>
-						{/if}
+							</svg>
+							{r.label}
+						</span>
 					{/each}
+					<div class="ml-auto"><GraphSearch labels={searchable} /></div>
+				</div>
+
+				<div class="skill-flow h-[clamp(460px,calc(100vh-21rem),900px)] w-full">
+					<SvelteFlow
+						{nodes}
+						{edges}
+						{nodeTypes}
+						fitView
+						fitViewOptions={{ maxZoom: 1, padding: 0.06 }}
+						nodesDraggable={false}
+						nodesConnectable={false}
+						elementsSelectable={false}
+						minZoom={0.15}
+						maxZoom={2.5}
+					>
+						<!--
+							Islands are decoration in graph coordinates, so they belong in the
+							viewport's back layer rather than being modelled as nodes. Nodes
+							would put eighteen empty rectangles into the tab order and the
+							minimap, to draw a border.
+						-->
+						<ViewportPortal target="back">
+							{#each layout.islands as island, i (i)}
+								<div
+									class="skill-island"
+									style="left:{island.x}px; top:{island.y}px; width:{island.w}px; height:{island.h}px;"
+								></div>
+							{/each}
+						</ViewportPortal>
+
+						<Background variant={BackgroundVariant.Dots} gap={26} size={1} />
+						<Controls showLock={false} />
+						<!-- 200x150 is the default and it sat on top of a whole island. -->
+						<MiniMap
+							pannable
+							zoomable
+							width={140}
+							height={104}
+							ariaLabel="Whole skill graph minimap"
+						/>
+					</SvelteFlow>
 				</div>
 			</div>
-		</div>
+		</SvelteFlowProvider>
 	{/if}
 
 	{#if data.isolated.length > 0}
@@ -207,3 +257,67 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	/*
+	 * Themed by mapping Svelte Flow's own variables onto the dashboard palette
+	 * rather than by using its `colorMode` prop. The app switches themes with a
+	 * `.theme-dark` class that already flips every `--dash-*`, so one mapping is
+	 * correct in both themes and cannot drift out of step with the app's toggle.
+	 */
+	.skill-flow {
+		--xy-background-color: var(--dash-card);
+		--xy-background-pattern-color: var(--dash-border);
+		--xy-edge-stroke: var(--dash-text-muted);
+		--xy-edge-stroke-width: 1.5;
+		--xy-controls-button-background-color: var(--dash-card);
+		--xy-controls-button-background-color-hover: var(--dash-bg-inset);
+		--xy-controls-button-color: var(--dash-text-secondary);
+		--xy-controls-button-color-hover: var(--dash-primary);
+		--xy-controls-button-border-color: var(--dash-border);
+		--xy-minimap-background-color: var(--dash-card);
+	}
+
+	.skill-island {
+		position: absolute;
+		border: 1px solid var(--dash-text-muted);
+		border-radius: 8px;
+		opacity: 0.25;
+	}
+
+	/* Anchor points only, until step 2 turns on edge drawing. */
+	.skill-flow :global(.svelte-flow__handle) {
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	/*
+	 * Translucent until you want it. There is no free corner — the packed graph
+	 * reaches all four — and at the default zoom the whole graph is already on
+	 * screen, so a solid minimap spends its most-visible moment hiding an island
+	 * to duplicate what is right next to it. It earns its place only once you
+	 * have zoomed in, which is exactly when the pointer is heading for it.
+	 */
+	.skill-flow :global(.svelte-flow__minimap) {
+		opacity: 0.45;
+		transition: opacity 150ms ease;
+	}
+
+	.skill-flow :global(.svelte-flow__minimap:hover) {
+		opacity: 1;
+	}
+
+	.skill-flow :global(.svelte-flow__minimap-node) {
+		fill: var(--dash-text-muted);
+	}
+
+	.skill-flow :global(.svelte-flow__minimap-mask) {
+		fill: var(--dash-bg-inset);
+		fill-opacity: 0.6;
+	}
+
+	/* Nothing here is draggable, so the grab cursor would be a lie. */
+	.skill-flow :global(.svelte-flow__node) {
+		cursor: default;
+	}
+</style>

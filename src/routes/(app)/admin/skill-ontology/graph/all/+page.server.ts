@@ -7,14 +7,16 @@
  * suspect React to ask. This one answers "where is the ontology thin?", which
  * nobody can ask one concept at a time.
  *
- * Measured on dev the day it was written: **131 of 247 concepts have no
- * approved relation at all.** They are in the vocabulary and they match nothing
- * but their own name. The remaining 116 are joined by 117 edges into **18
- * disconnected islands** — the largest 29 and 26 nodes, everything else 8 or
- * fewer. There is no single hierarchy here, and no page said so before this one.
+ * On dev, 2026-08-26: **134 of 238 concepts have no approved relation at all.**
+ * They are in the vocabulary and they match nothing but their own name. The
+ * remaining 104 are joined by 103 edges into **16 disconnected islands**. There
+ * is no single hierarchy here, and no page said so before this one.
  *
- * That sparsity is also what makes it drawable: about one edge per node, a DAG
- * four hops deep, maximum in-degree 5. See `island-layout.ts`.
+ * The counts move — curation runs against this table daily — so the page reads
+ * them live and never repeats them from a comment. The shape is the durable
+ * part: more than half the vocabulary reaches nothing, and what remains is many
+ * small components rather than one. That sparsity is also what makes it
+ * drawable at all; see `island-layout.ts`.
  *
  * ## Approved only, like everywhere else
  *
@@ -23,7 +25,7 @@
  */
 import { sql } from 'drizzle-orm';
 import { queryRawDirect } from '$lib/server/db';
-import { MATCHING_RELATIONS } from '$lib/server/job/skill-ontology';
+import { GRAPH_RELATIONS } from '$lib/server/job/skill-ontology';
 import type { PageServerLoad } from './$types';
 
 export interface FullNode {
@@ -48,7 +50,7 @@ function inList(values: readonly string[]) {
 export const load: PageServerLoad = async () => {
 	const relations = sql`
 		SELECT from_id, to_id, relation FROM skill_relations
-		WHERE approved_at IS NOT NULL AND relation IN (${inList(MATCHING_RELATIONS)})
+		WHERE approved_at IS NOT NULL AND relation IN (${inList(GRAPH_RELATIONS)})
 	`;
 
 	const [edges, nodes, isolated] = await Promise.all([

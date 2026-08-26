@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { layoutFullGraph, type Dims, type LayoutEdge, type LayoutNode } from './island-layout';
+import {
+	bestShelfWidth,
+	layoutFullGraph,
+	type Dims,
+	type LayoutEdge,
+	type LayoutNode
+} from './island-layout';
 
 const DIMS: Dims = {
 	nodeW: 100,
@@ -64,6 +70,34 @@ describe('layoutFullGraph', () => {
 		expect(out.islands[0].x).toBeLessThan(out.islands[1].x);
 	});
 
+	it('reports which island each node landed in', () => {
+		const n = nodes('a', 'b', 'c', 'x', 'y');
+		const out = layoutFullGraph(n, edges([1, 2], [2, 3], [4, 5]), DIMS);
+		expect(out.islandOf).toEqual({ 1: 0, 2: 0, 3: 0, 4: 1, 5: 1 });
+	});
+
+	/**
+	 * Why membership is returned rather than recovered from the boxes: the two can
+	 * never disagree. Hit-testing a node's centre against the island rectangles
+	 * would agree almost always and be silently wrong wherever a box's padding
+	 * meets its neighbour's gap.
+	 */
+	it('puts every node inside the box of the island it claims', () => {
+		const n = nodes(...Array.from({ length: 24 }, (_, i) => `n${i}`));
+		const pairs: [number, number][] = [];
+		for (let i = 1; i <= 24; i += 4) pairs.push([i, i + 1], [i + 1, i + 2], [i + 2, i + 3]);
+		const out = layoutFullGraph(n, edges(...pairs), DIMS);
+
+		for (const [id, p] of Object.entries(out.pos)) {
+			const box = out.islands[out.islandOf[Number(id)]];
+			expect(box).toBeDefined();
+			expect(p.x).toBeGreaterThanOrEqual(box.x);
+			expect(p.y).toBeGreaterThanOrEqual(box.y);
+			expect(p.x + DIMS.nodeW).toBeLessThanOrEqual(box.x + box.w);
+			expect(p.y + DIMS.nodeH).toBeLessThanOrEqual(box.y + box.h);
+		}
+	});
+
 	it('never overlaps two nodes', () => {
 		const n = nodes(...Array.from({ length: 24 }, (_, i) => `n${i}`));
 		// Six 4-node chains, so several islands and several shelves.
@@ -120,5 +154,54 @@ describe('layoutFullGraph', () => {
 		const n = nodes('a', 'b');
 		const out = layoutFullGraph(n, edges([1, 2], [2, 99]), DIMS);
 		expect(out.islands.map((i) => i.size)).toEqual([2]);
+	});
+});
+
+describe('bestShelfWidth', () => {
+	const BOX = { nodeW: 100, nodeH: 30, colGap: 50, rowGap: 10, islandPad: 10, islandGap: 20 };
+	/** What fitView would scale by, on a canvas normalised to `aspect x 1`. */
+	const zoomAt = (n: LayoutNode[], e: LayoutEdge[], maxWidth: number, aspect: number) => {
+		const l = layoutFullGraph(n, e, { ...BOX, maxWidth });
+		return Math.min(aspect / l.width, 1 / l.height);
+	};
+
+	/**
+	 * The point of the whole function: both extremes are bad, and it must land
+	 * strictly between them. All twelve islands on one shelf is a wide ribbon; one
+	 * island per shelf is a tall column. A letterbox canvas wastes most of itself
+	 * on either.
+	 */
+	it('beats both extremes on a letterbox canvas', () => {
+		const n = nodes(...Array.from({ length: 24 }, (_, i) => `n${i}`));
+		const pairs: [number, number][] = [];
+		for (let i = 1; i <= 24; i += 2) pairs.push([i, i + 1]);
+		const e = edges(...pairs);
+
+		const widest = layoutFullGraph(n, e, { ...BOX, maxWidth: Infinity }).width;
+		const chosen = bestShelfWidth(n, e, BOX, 1.66);
+
+		expect(zoomAt(n, e, chosen, 1.66)).toBeGreaterThan(zoomAt(n, e, widest, 1.66));
+		expect(zoomAt(n, e, chosen, 1.66)).toBeGreaterThan(zoomAt(n, e, BOX.nodeW, 1.66));
+		expect(chosen).toBeGreaterThan(0);
+		expect(chosen).toBeLessThanOrEqual(widest);
+	});
+
+	/** A tall canvas wants a narrower packing than a wide one. */
+	it('follows the canvas shape it is given', () => {
+		const n = nodes(...Array.from({ length: 24 }, (_, i) => `n${i}`));
+		const pairs: [number, number][] = [];
+		for (let i = 1; i <= 24; i += 2) pairs.push([i, i + 1]);
+		const e = edges(...pairs);
+		expect(bestShelfWidth(n, e, BOX, 0.5)).toBeLessThan(bestShelfWidth(n, e, BOX, 3));
+	});
+
+	it('is deterministic', () => {
+		const n = nodes('a', 'b', 'c', 'x', 'y');
+		const e = edges([1, 2], [2, 3], [4, 5]);
+		expect(bestShelfWidth(n, e, BOX, 1.66)).toBe(bestShelfWidth(n, e, BOX, 1.66));
+	});
+
+	it('survives an empty graph rather than dividing by zero', () => {
+		expect(bestShelfWidth([], [], BOX, 1.66)).toBe(BOX.nodeW);
 	});
 });
