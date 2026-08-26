@@ -57,7 +57,8 @@ export async function createRelation(form: FormData): Promise<EditResult> {
 	await db.execute(sql`
 		INSERT INTO skill_relations (from_id, to_id, relation, source, approved_at)
 		VALUES (${from}, ${to}, ${relation}, 'manual', now())
-		ON CONFLICT (from_id, to_id, relation) DO UPDATE SET approved_at = now()
+		ON CONFLICT (from_id, to_id, relation)
+		DO UPDATE SET approved_at = now(), rejected_at = NULL
 	`);
 	return { ok: true };
 }
@@ -65,11 +66,15 @@ export async function createRelation(form: FormData): Promise<EditResult> {
 /**
  * Retire an edge.
  *
- * Unapproves, never deletes — the same write `rejectRelation` makes in the
+ * Unapproves, never deletes — the same write `revokeRelation` makes in the
  * queue, for the reason recorded there: a deleted proposal comes straight back
  * on the next run of `propose-skill-relations.ts` and review becomes Sisyphean.
  * The row stays, reappears in the queue as pending, and that is also what makes
  * this reversible in one click.
+ *
+ * Deliberately NOT the queue's Reject, which sets `rejected_at` and takes the
+ * row out of review for good. Retiring an edge from the graph is undoing an
+ * approval, not ruling on the claim.
  */
 export async function retireRelation(form: FormData): Promise<EditResult> {
 	const id = intFrom(form, 'id');

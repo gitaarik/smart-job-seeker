@@ -291,6 +291,10 @@
 							}}
 							onswap={() => (draft = draft && { from: draft.to, to: draft.from })}
 							oncancel={() => (draft = null)}
+							onblocked={(id) => {
+								draft = null;
+								retiring = { id, label: 'the edge already between these two' };
+							}}
 						/>
 					{:else if retiring}
 						<span class="text-[var(--dash-text)]">Retire <strong>{retiring.label}</strong>?</span>
@@ -399,6 +403,7 @@
 										]}"
 										onclick={() => {
 											from = null;
+											draft = null;
 											retiring = {
 												id: e.id,
 												label: `${labelById[e.from_id]} ${verbFor(e.relation)} ${labelById[e.to_id]}`
@@ -408,6 +413,7 @@
 											if (ev.key !== 'Enter' && ev.key !== ' ') return;
 											ev.preventDefault();
 											from = null;
+											draft = null;
 											retiring = {
 												id: e.id,
 												label: `${labelById[e.from_id]} ${verbFor(e.relation)} ${labelById[e.to_id]}`

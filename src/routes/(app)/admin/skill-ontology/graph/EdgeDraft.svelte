@@ -12,11 +12,27 @@
 		from,
 		to,
 		onswap,
-		oncancel
-	}: { from: DraftEnd; to: DraftEnd; onswap: () => void; oncancel: () => void } = $props();
+		oncancel,
+		onblocked
+	}: {
+		from: DraftEnd;
+		to: DraftEnd;
+		onswap: () => void;
+		oncancel: () => void;
+		/**
+		 * The caller's chance to offer a way out of a clash.
+		 *
+		 * A refusal naming an existing edge is the common case here, not an edge
+		 * case: drawing the wrong edge and then the right one is the most likely
+		 * way to use this wrongly, and the second attempt is refused BY the first.
+		 * Without this the message names the problem and strands you.
+		 */
+		onblocked?: (id: number) => void;
+	} = $props();
 
 	let busy = $state(false);
 	let error = $state<string | null>(null);
+	let blocking = $state<number | null>(null);
 
 	/**
 	 * Offered from `RELATION_STYLES`, validated against `GRAPH_RELATIONS`.
@@ -43,6 +59,8 @@
 
 		if (result.type === 'failure') {
 			error = String(result.data?.error ?? 'Could not create that relation.');
+			const id = Number(result.data?.blockingId);
+			blocking = Number.isInteger(id) && id > 0 ? id : null;
 			return;
 		}
 		if (result.type === 'error') {
@@ -104,6 +122,17 @@
 			role="alert"
 		>
 			{error}
+			{#if blocking !== null && onblocked}
+				<button
+					type="button"
+					class="ml-2 underline"
+					onclick={() => {
+						const id = blocking;
+						blocking = null;
+						if (id !== null) onblocked?.(id);
+					}}>Retire that one instead</button
+				>
+			{/if}
 		</p>
 	{/if}
 

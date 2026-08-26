@@ -22,6 +22,16 @@ export interface RelationRefusal {
 	/** HTTP status the caller should fail with. */
 	status: number;
 	error: string;
+	/**
+	 * The approved edge standing in the way, when there is exactly one.
+	 *
+	 * Added because the clash refusal was a dead end: drawing the wrong edge and
+	 * then drawing the right one is the single most likely way to use this UI
+	 * wrongly, and the second attempt is refused BY the mistake. The message named
+	 * the problem and offered no way out, so the caller can now offer to retire
+	 * the blocker instead of leaving someone to find it by hand.
+	 */
+	blockingId?: number;
 }
 
 /**
@@ -60,8 +70,8 @@ export async function refuseNewRelation(
 	// reported after the fact: an approved edge between this pair in EITHER
 	// direction means the question is already answered, and a second one is a
 	// duplicate or — worse, because nothing would say so — a contradiction.
-	const clash = await queryRawDirect<{ relation: string; reversed: boolean }>(sql`
-		SELECT relation, (from_id = ${to}) AS reversed
+	const clash = await queryRawDirect<{ id: number; relation: string; reversed: boolean }>(sql`
+		SELECT id, relation, (from_id = ${to}) AS reversed
 		FROM skill_relations
 		WHERE approved_at IS NOT NULL
 		  AND id <> ${exceptId ?? -1}
@@ -72,6 +82,7 @@ export async function refuseNewRelation(
 		const c = clash[0];
 		return {
 			status: 409,
+			blockingId: c.id,
 			error: c.reversed
 				? `“${b.label}” ${c.relation} “${a.label}” is already approved — the other way round.`
 				: `“${a.label}” ${c.relation} “${b.label}” is already approved.`

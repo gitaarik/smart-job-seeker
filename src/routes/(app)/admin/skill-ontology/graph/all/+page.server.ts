@@ -82,7 +82,9 @@ export const load: PageServerLoad = async () => {
 export const actions: Actions = {
 	createRelation: async ({ request }) => {
 		const r = await createRelation(await request.formData());
-		return r.ok ? { success: true } : fail(r.refusal.status, { error: r.refusal.error });
+		return r.ok
+			? { success: true }
+			: fail(r.refusal.status, { error: r.refusal.error, blockingId: r.refusal.blockingId });
 	},
 	retireRelation: async ({ request }) => {
 		const r = await retireRelation(await request.formData());
