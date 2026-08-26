@@ -15,6 +15,11 @@
  *  - DETERMINISTIC (keyword/skill overlap) as the fallback when embeddings are
  *    unconfigured or the provider fails, so retrieval always works.
  * Both produce the same RankableProject shape, cited by name.
+ *
+ * Ahead of the deterministic ranker, each project's own skills are widened
+ * upward through the skill graph (widenProjectKeywords) — the retrieval half of
+ * GraphRAG. A Svelte project reaches "frontend", so a job written in general
+ * terms finds it, and the ranker itself knows no graph exists.
  * See planning/SEMANTIC-MATCHING-AND-RAG.md.
  */
 
@@ -23,6 +28,8 @@ import { eq } from 'drizzle-orm';
 import { side_projects, work_experiences } from '$lib/server/db/schema';
 import { config } from '$lib/server/config';
 import { type EmbeddableUnit, projectKey, semanticScoreProjects } from './project-embeddings';
+import { expandForRetrieval } from '$lib/server/job/skill-ontology';
+import { normalizeSkill } from '$lib/skills';
 import { profile_document_projects } from '$lib/server/db/schema';
 
 export interface JobLike {
@@ -208,6 +215,57 @@ export interface PinnedProject {
 }
 
 /**
+ * Each project's skills, widened with what they imply — the "Graph" half of
+ * GraphRAG.
+ *
+ * A project is tagged with the specific things it used ("Svelte", "PostgreSQL");
+ * a posting is written in whatever terms its author chose, often general
+ * ("frontend"). Nothing overlaps, and the project is dropped despite being the
+ * right one. Walking the project UP to the terms a posting might use closes that
+ * gap, and it is the same movement getExpandedProfileSkills makes on the other
+ * side of the match — the applicant's specifics reach the employer's generalities.
+ *
+ * Widening the JOB downward instead would work on the same example and is the
+ * wrong shape. Downward fan-out does not converge — measured on the live graph a
+ * bidirectional hop reaches 19 concepts at worst and 170 by depth 4, against 10
+ * for any upward depth — so it would have to be clamped to a single hop. It also
+ * inflates scores, since a project listing four sibling technologies would score
+ * four hits on one requirement. Per project, per profile, it is cacheable and
+ * the job is not.
+ *
+ * ⚠️ This lifts the DETERMINISTIC ranker only. The semantic ranker scores against
+ * vectors built from each project's typed text, which this does not touch.
+ * Putting ancestors in that text would make the graph bite there too, at the risk
+ * of pulling every project toward the same generic terms — a change worth
+ * measuring before making, not assuming.
+ *
+ * Never throws: an unreachable graph costs the raw project skills, not the
+ * ranking.
+ *
+ * Exported for its test — the fallback path is the one that must not regress,
+ * and it is unreachable through relevantProfileProjects without a database.
+ */
+export async function widenProjectKeywords<T extends { keywords: string[] }>(
+	projects: T[]
+): Promise<T[]> {
+	const all = [...new Set(projects.flatMap((p) => p.keywords))];
+	if (all.length === 0) return projects;
+	try {
+		const near = await expandForRetrieval(all);
+		if (near.size === 0) return projects;
+		return projects.map((p) => {
+			const implied = p.keywords.flatMap(
+				(k) => near.get(normalizeSkill(k))?.map((c) => c.label) ?? []
+			);
+			return implied.length ? { ...p, keywords: dedupe([...p.keywords, ...implied]) } : p;
+		});
+	} catch (err) {
+		console.warn('[retrieval] graph expansion failed, ranking on raw project skills:', err);
+		return projects;
+	}
+}
+
+/**
  * Load the applicant's projects (work-experience + side), fold in any attached
  * documents, and return the top-K relevant to `job`.
  *
@@ -352,9 +410,14 @@ export async function relevantProfileProjects(
 		ranked = [];
 	} else {
 		const scores = await semanticScoreProjects(profileId, units, job);
-		ranked = scores
-			? rankBySemanticScores(rest, scores, remaining)
-			: rankProjects(rest, job, remaining);
+		ranked = scores ? rankBySemanticScores(rest, scores, remaining) : [];
+		// Reached when semantic ranking is unavailable, and also when it cleared
+		// nobody — a floor that rejects every project leaves the writer with none
+		// at all, and the graph-widened keywords are a second opinion worth taking
+		// before giving up. Widened lazily: the common path never pays for it.
+		if (ranked.length === 0) {
+			ranked = rankProjects(await widenProjectKeywords(rest), job, remaining);
+		}
 	}
 
 	// The score on the subject is a sort key, not a measurement: nothing ranked it,

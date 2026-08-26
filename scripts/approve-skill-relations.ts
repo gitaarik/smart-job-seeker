@@ -14,9 +14,18 @@
  * otherwise — it is the bulk path for establishing a measurement, and the
  * product path is the applicant approving in the app. See
  * planning/SKILL-ONTOLOGY.md.
+ *
+ * This is the THIRD door an edge can come through, after drawing one on the
+ * graph and approving one in the review queue, and for a while it was the only
+ * unguarded one. It promoted two cycles into the matcher — `DevOps ⇄ Deployment`
+ * and `Containerization ⇄ Container orchestration` — because a batch written as
+ * one `UPDATE … WHERE source = …` checks no row against any other, so a batch
+ * holding both `A→B` and `B→A` approved both. Every path here now goes through
+ * `approveGuarded`.
  */
 import { sql } from 'drizzle-orm';
 import { dbDirect as db, queryRawDirect } from '../src/lib/server/db';
+import { refuseNewRelation } from '../src/lib/server/job/skill-relation-guards';
 
 const args = process.argv.slice(2);
 const minIdx = args.indexOf('--min');
@@ -41,6 +50,72 @@ const sourceIdx = args.indexOf('--source');
 const SOURCE = sourceIdx > -1 ? args[sourceIdx + 1] : null;
 const revokeSourceIdx = args.indexOf('--revoke-source');
 const REVOKE_SOURCE = revokeSourceIdx > -1 ? args[revokeSourceIdx + 1] : null;
+
+interface Pending {
+	id: number;
+	from_id: number;
+	to_id: number;
+	from_label: string;
+	to_label: string;
+	relation: string;
+	confidence: number | null;
+}
+
+/** Unapproved relations, optionally narrowed to one proposal run. */
+async function fetchPending(source: string | null = null): Promise<Pending[]> {
+	const scope = source === null ? sql`TRUE` : sql`r.source = ${source}`;
+	return queryRawDirect<Pending>(sql`
+		SELECT r.id, r.from_id, r.to_id, r.relation, r.confidence,
+		       f.label AS from_label, t.label AS to_label
+		FROM skill_relations r
+		JOIN skill_concepts f ON f.id = r.from_id
+		JOIN skill_concepts t ON t.id = r.to_id
+		WHERE r.approved_at IS NULL AND ${scope}
+		ORDER BY r.confidence DESC NULLS LAST, f.label
+	`);
+}
+
+/**
+ * Approve rows one at a time, refusing any that would contradict the graph.
+ *
+ * The loop is the point. A batch promoted as a single `UPDATE … WHERE source =`
+ * checks no row against any other, so one holding both `A→B` and `B→A` approved
+ * both and nothing said so — which is how `DevOps ⇄ Deployment` and
+ * `Containerization ⇄ Container orchestration` reached the matcher and made
+ * those four skills imply each other in both directions. Approving in sequence
+ * means every row is checked against the ones already approved, its own
+ * batch-mates included.
+ *
+ * Order therefore decides which half of a contradictory pair survives, and that
+ * order is arbitrary — which is exactly why each refusal is printed in full
+ * rather than counted. A batch that silently drops rows reads as one that
+ * applied cleanly, and the pair it dropped is the pair someone needs to look at.
+ */
+async function approveGuarded(rows: Pending[]): Promise<{ ok: number; refused: number }> {
+	let ok = 0;
+	const refusals: string[] = [];
+
+	for (const r of rows) {
+		// `r.id` as `exceptId`: the row being approved must not find itself in the
+		// duplicate check.
+		const refusal = await refuseNewRelation(r.from_id, r.to_id, r.relation, r.id);
+		if (refusal) {
+			refusals.push(
+				`  [${r.id}] ${r.from_label} —${r.relation}→ ${r.to_label}\n        ${refusal.error}`
+			);
+			continue;
+		}
+		await db.execute(sql`UPDATE skill_relations SET approved_at = now() WHERE id = ${r.id}`);
+		ok++;
+	}
+
+	if (refusals.length > 0) {
+		console.log(`\nRefused ${refusals.length} relation(s), left pending:\n`);
+		for (const line of refusals) console.log(line);
+		console.log('');
+	}
+	return { ok, refused: refusals.length };
+}
 
 if (ALIASES && REVOKE !== null) {
 	await db.execute(sql`UPDATE skill_aliases SET approved_at = NULL WHERE id = ${REVOKE}`);
@@ -95,13 +170,10 @@ if (REVOKE_SOURCE !== null) {
 }
 
 if (SOURCE !== null) {
-	const rows = await queryRawDirect<{ n: number }>(sql`
-		WITH done AS (
-			UPDATE skill_relations SET approved_at = now()
-			WHERE source = ${SOURCE} AND approved_at IS NULL RETURNING 1
-		) SELECT count(*)::int AS n FROM done
-	`);
-	console.log(`Promoted ${rows[0]?.n ?? 0} relation(s) from source "${SOURCE}".`);
+	const rows = await fetchPending(SOURCE);
+	const { ok, refused } = await approveGuarded(rows);
+	console.log(`Promoted ${ok} of ${rows.length} relation(s) from source "${SOURCE}".`);
+	if (refused > 0) console.log(`${refused} refused above and still pending.`);
 	console.log('Now run eval-skill-matching.ts. If precision moved, --revoke-source undoes it.');
 	process.exit(0);
 }
@@ -112,20 +184,7 @@ if (REVOKE !== null) {
 	process.exit(0);
 }
 
-const pending = await queryRawDirect<{
-	id: number;
-	from_label: string;
-	to_label: string;
-	relation: string;
-	confidence: number | null;
-}>(sql`
-	SELECT r.id, f.label AS from_label, t.label AS to_label, r.relation, r.confidence
-	FROM skill_relations r
-	JOIN skill_concepts f ON f.id = r.from_id
-	JOIN skill_concepts t ON t.id = r.to_id
-	WHERE r.approved_at IS NULL
-	ORDER BY r.confidence DESC NULLS LAST, f.label
-`);
+const pending = await fetchPending();
 
 if (MIN === null) {
 	console.log(`${pending.length} pending relation(s):\n`);
@@ -140,12 +199,8 @@ if (MIN === null) {
 	process.exit(0);
 }
 
-const promoted = pending.filter((p) => (p.confidence ?? 0) >= MIN);
-for (const p of promoted) {
-	await db.execute(sql`UPDATE skill_relations SET approved_at = now() WHERE id = ${p.id}`);
-}
-console.log(
-	`Promoted ${promoted.length} of ${pending.length} relation(s) at confidence >= ${MIN}.`
-);
-console.log(`${pending.length - promoted.length} left pending.`);
+const overFloor = pending.filter((p) => (p.confidence ?? 0) >= MIN);
+const { ok } = await approveGuarded(overFloor);
+console.log(`Promoted ${ok} of ${pending.length} relation(s) at confidence >= ${MIN}.`);
+console.log(`${pending.length - ok} left pending.`);
 process.exit(0);

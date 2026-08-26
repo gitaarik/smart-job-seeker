@@ -1,4 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const expandForRetrieval = vi.fn();
+vi.mock('$lib/server/job/skill-ontology', () => ({
+	expandForRetrieval: (...args: unknown[]) => expandForRetrieval(...args)
+}));
+
 import {
 	buildDocEvidence,
 	type DocRow,
@@ -6,7 +12,8 @@ import {
 	formatSupportingEvidence,
 	type RankableProject,
 	rankProjects,
-	scoreProjectAgainstJob
+	scoreProjectAgainstJob,
+	widenProjectKeywords
 } from './retrieval';
 
 const proj = (id: number, keywords: string[], text = ''): RankableProject => ({
@@ -195,5 +202,92 @@ describe('buildDocEvidence', () => {
 		const out = buildDocEvidence([doc({ keywords: null })]);
 		expect(out).toBe('- OrderService repo: Distributed payments backend.');
 		expect(out).not.toContain('[');
+	});
+});
+
+describe('widenProjectKeywords (the Graph half of GraphRAG)', () => {
+	/** expandForRetrieval's shape: seed slug -> what it reaches. */
+	const graph = (m: Record<string, string[]>) =>
+		new Map(
+			Object.entries(m).map(([seed, labels]) => [
+				seed,
+				labels.map((label, i) => ({ slug: label.toLowerCase(), label, depth: i }))
+			])
+		);
+
+	beforeEach(() => {
+		expandForRetrieval.mockReset();
+	});
+
+	it('adds what a project skill implies, keeping the original', async () => {
+		expandForRetrieval.mockResolvedValue(
+			graph({ svelte: ['Svelte', 'Frontend development', 'Web development'] })
+		);
+		const [p] = await widenProjectKeywords([{ keywords: ['Svelte'] }]);
+		expect(p.keywords).toEqual(['Svelte', 'Frontend development', 'Web development']);
+	});
+
+	it('widens each project from its OWN skills, not the pooled set', async () => {
+		expandForRetrieval.mockResolvedValue(
+			graph({ svelte: ['Frontend development'], django: ['Python'] })
+		);
+		const [fe, be] = await widenProjectKeywords([
+			{ keywords: ['Svelte'] },
+			{ keywords: ['Django'] }
+		]);
+		expect(fe.keywords).toEqual(['Svelte', 'Frontend development']);
+		expect(be.keywords).toEqual(['Django', 'Python']);
+		// The failure this guards: a flat union would give both projects both terms.
+		expect(fe.keywords).not.toContain('Python');
+	});
+
+	it('resolves a skill through normalizeSkill, not raw text', async () => {
+		expandForRetrieval.mockResolvedValue(graph({ nodejs: ['JavaScript'] }));
+		const [p] = await widenProjectKeywords([{ keywords: ['Node.js'] }]);
+		expect(p.keywords).toEqual(['Node.js', 'JavaScript']);
+	});
+
+	it('does not duplicate a term the project already lists', async () => {
+		expandForRetrieval.mockResolvedValue(graph({ svelte: ['Svelte', 'Frontend development'] }));
+		const [p] = await widenProjectKeywords([{ keywords: ['Svelte', 'Frontend development'] }]);
+		expect(p.keywords).toEqual(['Svelte', 'Frontend development']);
+	});
+
+	it('leaves projects untouched when the graph knows none of their skills', async () => {
+		expandForRetrieval.mockResolvedValue(new Map());
+		const projects = [{ keywords: ['Underwater basket weaving'] }];
+		expect(await widenProjectKeywords(projects)).toBe(projects);
+	});
+
+	it('falls back to the raw project skills when the traversal fails', async () => {
+		expandForRetrieval.mockRejectedValue(new Error('no database'));
+		const projects = [{ keywords: ['Svelte'] }];
+		expect(await widenProjectKeywords(projects)).toBe(projects);
+	});
+
+	it('does not touch the graph when no project lists a skill', async () => {
+		const projects = [{ keywords: [] }];
+		expect(await widenProjectKeywords(projects)).toBe(projects);
+		expect(expandForRetrieval).not.toHaveBeenCalled();
+	});
+
+	it('surfaces a project the raw skills miss — the whole point', async () => {
+		// The job asks for the general term; the project names the specific one.
+		const job = { skills_required: ['Frontend development'] };
+		const project = { keywords: ['Svelte', 'Vite'], text: '' };
+		expect(scoreProjectAgainstJob(project, job)).toBe(0);
+
+		expandForRetrieval.mockResolvedValue(graph({ svelte: ['Frontend development'] }));
+		const [widened] = await widenProjectKeywords([project]);
+		expect(scoreProjectAgainstJob(widened, job)).toBe(3);
+	});
+
+	it('scores one hit per concept, not one per sibling technology', async () => {
+		// Widening the JOB downward would score this project 4x on one requirement.
+		expandForRetrieval.mockResolvedValue(
+			graph({ svelte: ['Frontend development'], react: ['Frontend development'] })
+		);
+		const [widened] = await widenProjectKeywords([{ keywords: ['Svelte', 'React'] }]);
+		expect(scoreProjectAgainstJob(widened, { skills_required: ['Frontend development'] })).toBe(3);
 	});
 });

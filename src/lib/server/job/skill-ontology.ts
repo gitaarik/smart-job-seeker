@@ -210,6 +210,100 @@ export async function expandUpward(
 }
 
 /**
+ * Concepts each of these skills reaches for RETRIEVAL, keyed by the skill that
+ * reached them.
+ *
+ * ## Why this is not just expandUpward
+ *
+ * Two differences, both small on purpose.
+ *
+ * It keeps the **seed attribution**. Retrieval widens one project's skills at a
+ * time, so a flat union is useless — every project would inherit every other
+ * project's ancestors and they would all rank identically.
+ *
+ * It adds **`related`, one hop, from the seeds only**. A sibling is unreachable
+ * upward: MariaDB is not a kind of MySQL, so no chain of `broader` connects
+ * them. That is exactly the edge the match path refuses (symmetric, no `from`
+ * side) and exactly the edge retrieval wants, because surfacing the applicant's
+ * MariaDB project for a MySQL job is a reasonable suggestion rather than a claim
+ * to know MySQL.
+ *
+ * ## The fence
+ *
+ * Nothing on the match path may call this — the `related` hop is precisely what
+ * MATCHING_RELATIONS excludes. `expandUpward` remains the only traversal
+ * eligibility and scoring may use.
+ *
+ * Direction is otherwise unchanged: upward, never downward. The applicant's
+ * skills reach the general terms a posting is written in, which is the same
+ * movement `getExpandedProfileSkills` makes on the other side of the match.
+ * Upward fan-out also converges — measured over the live graph it averages 3.5
+ * concepts and peaks at 10, at any depth from 2 up — so the full MAX_DEPTH is
+ * safe here in a way a bidirectional walk would not be.
+ *
+ * Only APPROVED relations and aliases are walked.
+ */
+export async function expandForRetrieval(
+	skills: string[],
+	maxDepth = MAX_DEPTH
+): Promise<Map<string, { slug: string; label: string; depth: number }[]>> {
+	const out = new Map<string, { slug: string; label: string; depth: number }[]>();
+	const slugs = [...new Set(skills.map(normalizeSkill).filter(Boolean))];
+	if (slugs.length === 0) return out;
+
+	const rows = await queryRawDirect<{
+		seed: string;
+		slug: string;
+		label: string;
+		depth: number;
+	}>(sql`
+		WITH RECURSIVE seed AS (
+			SELECT c.slug AS seed, c.id, 0 AS depth
+			FROM skill_concepts c WHERE c.slug IN (${inList(slugs)})
+			UNION
+			SELECT a.alias AS seed, c.id, 0 AS depth
+			FROM skill_aliases a JOIN skill_concepts c ON c.id = a.concept_id
+			WHERE a.alias IN (${inList(slugs)}) AND a.approved_at IS NOT NULL
+		),
+		up AS (
+			SELECT seed, id, depth FROM seed
+			UNION
+			SELECT up.seed, r.to_id, up.depth + 1
+			FROM up
+			JOIN skill_relations r ON r.from_id = up.id
+			WHERE r.approved_at IS NOT NULL
+			  AND r.relation IN (${inList([...MATCHING_RELATIONS])})
+			  AND up.depth < ${maxDepth}
+		),
+		-- Siblings of the SEEDS, not of everything reached: one hop sideways from
+		-- what the applicant actually has. Hanging it off the upward set instead
+		-- would let a shared ancestor drag in every sibling of every descendant.
+		sideways AS (
+			SELECT s.seed, CASE WHEN r.from_id = s.id THEN r.to_id ELSE r.from_id END AS id, 1 AS depth
+			FROM seed s
+			JOIN skill_relations r ON r.from_id = s.id OR r.to_id = s.id
+			WHERE r.approved_at IS NOT NULL AND r.relation = 'related'
+		),
+		reached AS (
+			SELECT seed, id, depth FROM up
+			UNION
+			SELECT seed, id, depth FROM sideways
+		)
+		SELECT reached.seed, c.slug, c.label, MIN(reached.depth) AS depth
+		FROM reached JOIN skill_concepts c ON c.id = reached.id
+		GROUP BY reached.seed, c.slug, c.label
+		ORDER BY reached.seed, depth, c.slug
+	`);
+
+	for (const r of rows) {
+		const list = out.get(r.seed) ?? [];
+		list.push({ slug: r.slug, label: r.label, depth: Number(r.depth) });
+		out.set(r.seed, list);
+	}
+	return out;
+}
+
+/**
  * Does knowing `have` license claiming `want`?
  *
  * The ordered question the whole module exists to answer. `have` and `want` are
