@@ -13,7 +13,8 @@ import {
 	type RankableProject,
 	rankProjects,
 	scoreProjectAgainstJob,
-	widenProjectKeywords
+	widenProjectKeywords,
+	withGraphPick
 } from './retrieval';
 
 const proj = (id: number, keywords: string[], text = ''): RankableProject => ({
@@ -289,5 +290,86 @@ describe('widenProjectKeywords (the Graph half of GraphRAG)', () => {
 		);
 		const [widened] = await widenProjectKeywords([{ keywords: ['Svelte', 'React'] }]);
 		expect(scoreProjectAgainstJob(widened, { skills_required: ['Frontend development'] })).toBe(3);
+	});
+});
+
+describe('withGraphPick (the union, not a fallback)', () => {
+	const graph = (m: Record<string, string[]>) =>
+		new Map(
+			Object.entries(m).map(([seed, labels]) => [
+				seed,
+				labels.map((label, i) => ({ slug: label.toLowerCase(), label, depth: i }))
+			])
+		);
+	const job = { title: 'Frontend Engineer', skills_required: ['Frontend development'] };
+	const scored = (p: RankableProject, score: number) => ({ ...p, score });
+
+	beforeEach(() => {
+		expandForRetrieval.mockReset();
+		expandForRetrieval.mockResolvedValue(graph({ svelte: ['Frontend development'] }));
+	});
+
+	it('fills a spare slot without displacing anything', async () => {
+		const semantic = [scored(proj(1, ['React']), 0.9)];
+		const out = await withGraphPick(semantic, [proj(1, ['React']), proj(2, ['Svelte'])], job, 3);
+		expect(out.map((p) => p.id)).toEqual([1, 2]);
+		expect(out[1].viaGraph).toBe(true);
+	});
+
+	it('takes the LAST slot when semantic filled them all, never the first', async () => {
+		const semantic = [
+			scored(proj(1, ['React']), 0.9),
+			scored(proj(3, ['Vue']), 0.6),
+			scored(proj(4, ['Angular']), 0.55)
+		];
+		const out = await withGraphPick(
+			semantic,
+			[proj(1, ['React']), proj(3, ['Vue']), proj(4, ['Angular']), proj(2, ['Svelte'])],
+			job,
+			3
+		);
+		expect(out).toHaveLength(3);
+		// The two the semantic ranker was most confident about survive; the third
+		// is the one traded away.
+		expect(out.map((p) => p.id)).toEqual([1, 3, 2]);
+		expect(out[0].viaGraph).toBeUndefined();
+	});
+
+	it('leaves semantic alone when the graph finds nothing it had missed', async () => {
+		const semantic = [scored(proj(2, ['Svelte']), 0.8)];
+		const out = await withGraphPick(semantic, [proj(2, ['Svelte'])], job, 3);
+		expect(out).toBe(semantic);
+	});
+
+	it('leaves semantic alone when widening scores nobody against this job', async () => {
+		expandForRetrieval.mockResolvedValue(graph({ cobol: ['Mainframes'] }));
+		const semantic = [scored(proj(1, ['React']), 0.9)];
+		const out = await withGraphPick(semantic, [proj(1, ['React']), proj(9, ['COBOL'])], job, 3);
+		expect(out).toBe(semantic);
+	});
+
+	it('survives an unreachable graph, since widening never throws', async () => {
+		expandForRetrieval.mockRejectedValue(new Error('no database'));
+		const semantic = [scored(proj(1, ['React']), 0.9)];
+		// proj 2 still scores on its own un-widened keyword, so the union degrades
+		// to plain keyword overlap rather than to nothing.
+		const out = await withGraphPick(
+			semantic,
+			[proj(1, ['React']), proj(2, ['Frontend development'])],
+			job,
+			3
+		);
+		expect(out.map((p) => p.id)).toEqual([1, 2]);
+	});
+
+	it('gives the newcomer the floor score, so appending cannot reorder the list', async () => {
+		const semantic = [scored(proj(1, ['React']), 0.9), scored(proj(3, ['Vue']), 0.61)];
+		const out = await withGraphPick(
+			semantic,
+			[proj(1, ['React']), proj(3, ['Vue']), proj(2, ['Svelte'])],
+			job,
+			3
+		);
+		expect(out[2].score).toBe(0.61);
 	});
 });

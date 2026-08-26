@@ -12,8 +12,8 @@
  * Two rankers, one interface:
  *  - SEMANTIC (embedding cosine) when SJS_EMBEDDING_ENABLED is on — genuine RAG,
  *    catches paraphrase/synonym fit. See project-embeddings.ts.
- *  - DETERMINISTIC (keyword/skill overlap) as the fallback when embeddings are
- *    unconfigured or the provider fails, so retrieval always works.
+ *  - DETERMINISTIC (keyword/skill overlap), which always works, so retrieval
+ *    survives embeddings being unconfigured or the provider failing.
  * Both produce the same RankableProject shape, cited by name.
  *
  * Ahead of the deterministic ranker, each project's own skills are widened
@@ -21,6 +21,13 @@
  * GraphRAG. A Svelte project reaches "frontend", so a job written in general
  * terms finds it, and the ranker itself knows no graph exists.
  * See planning/SEMANTIC-MATCHING-AND-RAG.md.
+ *
+ * The two are a UNION rather than a fallback, and that distinction is the whole
+ * value of the graph here. As a fallback the widened ranker ran only when
+ * embeddings were off or the floor cleared nobody — so with embeddings on, which
+ * is the normal case, the graph affected no request at all. `withGraphPick` now
+ * gives it the last of the K slots on every request, bounded to exactly one so
+ * the change is measurable and reversible.
  */
 
 import { dbDirect as db } from '$lib/server/db';
@@ -42,6 +49,12 @@ export interface JobLike {
 export interface RankableProject {
 	/** Set when the caller named this project rather than the ranker finding it. */
 	pinned?: boolean;
+	/**
+	 * Set when the graph-widened ranker put this here and semantic ranking had
+	 * not. Deliberately NOT shown to the model — it is for measuring whether the
+	 * union earns its query, which is otherwise unanswerable from the outside.
+	 */
+	viaGraph?: boolean;
 	kind: 'side_project' | 'work_experience_project';
 	id: number;
 	title: string;
@@ -403,26 +416,84 @@ export async function relevantProfileProjects(
 	const rest = subject ? projects.filter((p) => p !== subject) : projects;
 	const remaining = subject ? Math.max(0, k - 1) : k;
 
-	// Prefer semantic (embedding) ranking; fall back to deterministic overlap when
-	// embeddings are off or the provider fails (semanticScoreProjects → null).
+	// Semantic (embedding) ranking leads; the graph-widened ranker gets the last
+	// slot. It used to be a pure fallback, which meant that with embeddings on —
+	// the normal case — the graph never affected a single request.
 	let ranked: (RankableProject & { score: number })[];
 	if (remaining === 0) {
 		ranked = [];
 	} else {
 		const scores = await semanticScoreProjects(profileId, units, job);
-		ranked = scores ? rankBySemanticScores(rest, scores, remaining) : [];
-		// Reached when semantic ranking is unavailable, and also when it cleared
-		// nobody — a floor that rejects every project leaves the writer with none
-		// at all, and the graph-widened keywords are a second opinion worth taking
-		// before giving up. Widened lazily: the common path never pays for it.
-		if (ranked.length === 0) {
-			ranked = rankProjects(await widenProjectKeywords(rest), job, remaining);
-		}
+		const semantic = scores ? rankBySemanticScores(rest, scores, remaining) : [];
+		ranked =
+			semantic.length === 0
+				? // Semantic is unavailable, or its floor cleared nobody. A floor that
+					// rejects every project leaves the writer with none at all, so here the
+					// widened keywords are the whole answer rather than a supplement.
+					rankProjects(await widenProjectKeywords(rest), job, remaining)
+				: await withGraphPick(semantic, rest, job, remaining);
 	}
 
 	// The score on the subject is a sort key, not a measurement: nothing ranked it,
 	// and 1 keeps it above the cosine scores it is being listed with.
 	return subject ? [{ ...subject, score: 1, pinned: true }, ...ranked] : ranked;
+}
+
+/**
+ * Let the graph-widened ranker claim the last slot, when it has something
+ * semantic ranking missed.
+ *
+ * ## Why a slot and not a merge
+ *
+ * The two scores are not comparable and cannot be made so: cosine is bounded in
+ * [0, 1] with a configured floor, while the deterministic score is an unbounded
+ * count of keyword hits (+3 a required skill, +1 a mention). Any arithmetic that
+ * puts them on one scale is a fabricated weighting. Ranks are comparable;
+ * numbers are not, so this merges by rank and takes exactly one.
+ *
+ * ## Why exactly one
+ *
+ * Because the change has to be bounded to be reversible. Interleaving the two
+ * lists would hand the graph a third of a K=3 prompt on its first day of
+ * affecting anything. This trades the *last* semantic pick for the graph's
+ * first, so the worst case is one slot, and the projects the semantic ranker was
+ * most confident about are never displaced.
+ *
+ * The cost is one `expandForRetrieval` query per request — the widening no
+ * longer happens lazily, which is the entire point of the change.
+ *
+ * `viaGraph` marks what it added. Without it there is no way to answer "does
+ * this help?", and picking the size of the change before measuring the first one
+ * is how the fallback ended up dark for a week.
+ *
+ * Exported for its test, for the same reason `widenProjectKeywords` is: reaching
+ * it through `relevantProfileProjects` needs a database and an embedding
+ * provider, and the displacement rule is the part that must not regress.
+ */
+export async function withGraphPick(
+	semantic: (RankableProject & { score: number })[],
+	candidates: RankableProject[],
+	job: JobLike,
+	k: number
+): Promise<(RankableProject & { score: number })[]> {
+	const chosen = new Set(semantic.map((p) => projectKey(p.kind, p.id)));
+	const widened = rankProjects(await widenProjectKeywords(candidates), job, k);
+	const newcomer = widened.find((p) => !chosen.has(projectKey(p.kind, p.id)));
+	if (!newcomer) return semantic;
+
+	// `rankProjects` already dropped everything scoring zero, so a newcomer has at
+	// least one real keyword hit against this job rather than merely being next in
+	// an arbitrary order.
+	const kept = semantic.length < k ? semantic : semantic.slice(0, k - 1);
+	console.log(
+		`[retrieval] graph pick: ${newcomer.kind}#${newcomer.id} "${newcomer.title}" ` +
+			`(deterministic ${newcomer.score}), ${semantic.length === kept.length ? 'spare slot' : 'displacing the last semantic pick'}`
+	);
+	// A sort key, not a measurement — the same convention the pinned subject uses.
+	// It sits at the floor of the list it joins because it is appended last and
+	// nothing downstream re-sorts.
+	const floor = semantic[semantic.length - 1].score;
+	return [...kept, { ...newcomer, score: floor, viaGraph: true }];
 }
 
 /**

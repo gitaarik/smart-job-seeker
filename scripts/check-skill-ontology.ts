@@ -15,7 +15,11 @@
  */
 import { sql } from 'drizzle-orm';
 import { dbDirect as db, queryRawDirect } from '../src/lib/server/db';
-import { expandUpward, impliesSkill } from '../src/lib/server/job/skill-ontology';
+import {
+	expandForRetrieval,
+	expandUpward,
+	impliesSkill
+} from '../src/lib/server/job/skill-ontology';
 import { refuseNewRelation } from '../src/lib/server/job/skill-relation-guards';
 
 const CONCEPTS: [string, string][] = [
@@ -89,6 +93,12 @@ for (const [from, to, rel] of EDGES) {
 		ON CONFLICT DO NOTHING
 	`);
 }
+
+await db.execute(sql`
+	INSERT INTO skill_aliases (concept_id, alias, source, approved_at)
+	SELECT c.id, 'zzreactjs', 'seed', now() FROM skill_concepts c WHERE c.slug = 'zzreact'
+	ON CONFLICT DO NOTHING
+`);
 
 try {
 	// An invariant, not a fixture assertion: a concept whose slug is not
@@ -202,7 +212,63 @@ try {
 			null,
 		'a row is not its own duplicate when it is the one being approved'
 	);
+	// --- The retrieval traversal, which is a different walk ------------------
+	//
+	// `expandForRetrieval` answers "is this project worth showing?" rather than
+	// "may this profile claim this skill?", so it takes one `related` hop the
+	// match path refuses. Every assertion here is about the SQL — seed
+	// attribution and a sideways UNION that `expandUpward` has neither — and a
+	// mocked database would answer all of them by construction. `retrieval.test.ts`
+	// mocks this function, so this file is the only place its query runs.
+	const near = await expandForRetrieval(['ZZReact', 'ZZDjango']);
+	const reactReach = (near.get('zzreact') ?? []).map((c) => c.slug);
+	const djangoReach = (near.get('zzdjango') ?? []).map((c) => c.slug);
+
+	check(near.size === 2, `retrieval keys its result by seed, one per input (got ${near.size})`);
+	check(reactReach.includes('zzfrontend'), 'retrieval still walks upward (ZZReact → ZZfrontend)');
+
+	// The `related` hop, and the two ways it must be bounded.
+	check(reactReach.includes('zzdjango'), 'retrieval takes one `related` hop (ZZReact → ZZDjango)');
+	check(djangoReach.includes('zzreact'), '`related` is symmetric: ZZDjango → ZZReact as well');
+	check(
+		!reactReach.includes('zzpython'),
+		'`related` does not compose — ZZReact stops at ZZDjango, short of ZZPython'
+	);
+	check(
+		!djangoReach.includes('zzjsframework'),
+		'the sideways hop does not feed the upward walk in the other direction either'
+	);
+
+	// Seeds must not pool. A flat union would give every project every other
+	// project's ancestors and they would all rank identically.
+	check(
+		!djangoReach.includes('zzfrontend'),
+		"seed attribution holds: ZZDjango does not inherit ZZReact's ancestors"
+	);
+
+	// `related` is the ONLY drawn-only relation retrieval admits. `inDomain` stays
+	// out of both walks, or a project would be widened to "IT".
+	check(!reactReach.includes('zzit'), 'retrieval does not walk inDomain');
+
+	// The fence, stated as a pair: this same approved edge is asserted false for
+	// `impliesSkill` in CASES above. One relation, two functions, opposite answers
+	// — which is the design, and this is where it is held in place.
+	check(
+		reactReach.includes('zzdjango') && !(await impliesSkill('ZZReact', 'ZZDjango')),
+		'the same `related` edge is walked by retrieval and refused by matching'
+	);
+
+	const aliased = await expandForRetrieval(['ZZReactJS']);
+	const aliasReach = (aliased.get('zzreactjs') ?? []).map((c) => c.slug);
+	check(aliased.has('zzreactjs'), 'an alias seed is keyed by the alias, not by its concept');
+	check(
+		aliasReach.includes('zzjavascript'),
+		'an alias seed reaches everything its concept reaches'
+	);
 } finally {
+	await db.execute(sql`
+		DELETE FROM skill_aliases WHERE concept_id IN (SELECT id FROM skill_concepts WHERE slug LIKE 'zz%')
+	`);
 	await db.execute(sql`
 		DELETE FROM skill_relations WHERE from_id IN (SELECT id FROM skill_concepts WHERE slug LIKE 'zz%')
 		   OR to_id IN (SELECT id FROM skill_concepts WHERE slug LIKE 'zz%')
