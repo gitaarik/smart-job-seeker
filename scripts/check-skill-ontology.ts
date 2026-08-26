@@ -16,6 +16,7 @@
 import { sql } from 'drizzle-orm';
 import { dbDirect as db, queryRawDirect } from '../src/lib/server/db';
 import { expandUpward, impliesSkill } from '../src/lib/server/job/skill-ontology';
+import { refuseNewRelation } from '../src/lib/server/job/skill-relation-guards';
 
 const CONCEPTS: [string, string][] = [
 	['zzreact', 'ZZReact'],
@@ -123,6 +124,62 @@ try {
 	for (const [have, want, expected] of CASES) {
 		check((await impliesSkill(have, want)) === expected, `${have} → ${want} is ${expected}`);
 	}
+
+	// --- What the graph editor refuses to draw -------------------------------
+	//
+	// These run against the same seeded hierarchy because every one of them is a
+	// question about the graph, not about a string: whether a pair is already
+	// joined, and whether one end already reaches the other. A mocked database
+	// would answer all of them by construction.
+	const ids = new Map<string, number>(
+		(
+			await queryRawDirect<{ id: number; slug: string }>(
+				sql`SELECT id, slug FROM skill_concepts WHERE slug LIKE 'zz%'`
+			)
+		).map((r) => [r.slug, Number(r.id)])
+	);
+	const id = (slug: string) => ids.get(slug) ?? -1;
+
+	/** [from, to, relation, expect a refusal, what is being asserted] */
+	const GUARDS: [string, string, string, boolean, string][] = [
+		['zzreact', 'zzreact', 'broader', true, 'a concept may not imply itself'],
+		['zzreact', 'zzjsframework', 'sideways', true, 'an unknown relation is refused'],
+		['zzreact', 'zzjsframework', 'broader', true, 'a duplicate of an approved edge is refused'],
+		['zzjsframework', 'zzreact', 'broader', true, 'the REVERSE of an approved edge is refused'],
+		// zzreact reaches zzfrontend in three hops, so this closes a loop even
+		// though the two are not directly joined — the case a duplicate check alone
+		// would wave through.
+		['zzfrontend', 'zzreact', 'broader', true, 'a transitive loop is refused'],
+		// Same loop, drawn with the one relation nothing traverses. Allowed on
+		// purpose: it cannot make anything imply anything.
+		[
+			'zzfrontend',
+			'zzreact',
+			'inDomain',
+			false,
+			'inDomain may close a loop, since it is never walked'
+		],
+		[
+			'zzdjango',
+			'zzfrontend',
+			'broader',
+			false,
+			'an edge joining two unrelated concepts is allowed'
+		]
+	];
+
+	for (const [from, to, relation, refused, what] of GUARDS) {
+		const r = await refuseNewRelation(id(from), id(to), relation);
+		check((r !== null) === refused, `${what} (${from} → ${to} as ${relation})`);
+		if (r !== null && r.status < 400)
+			check(false, `  refusal carried a non-error status ${r.status}`);
+	}
+
+	// A concept that does not exist is a 404, not a crash.
+	check(
+		(await refuseNewRelation(id('zzreact'), 2147483000, 'broader'))?.status === 404,
+		'an unknown concept id is refused as not found'
+	);
 } finally {
 	await db.execute(sql`
 		DELETE FROM skill_relations WHERE from_id IN (SELECT id FROM skill_concepts WHERE slug LIKE 'zz%')

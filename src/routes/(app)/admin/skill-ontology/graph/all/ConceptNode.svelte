@@ -82,11 +82,15 @@
 
 <!--
 	Handles are anchor points, not affordances: they are what the bezier attaches
-	to, and they are invisible until step 2 turns on edge drawing. Target left and
-	source right is not cosmetic — it is what makes every edge leave a node on the
-	general side and arrive on the specific side, matching the layout's columns.
+	to, and the page's CSS hides them until Edit is on. Target left and source
+	right is not cosmetic — it is what makes every edge leave a node on the general
+	side and arrive on the specific side, matching the layout's columns, and it is
+	why dragging rightward draws the relation the right way round.
+
+	Connectability is inherited from the flow's `nodesConnectable` rather than set
+	here, so one toggle governs the whole canvas.
 -->
-<Handle type="target" position={Position.Left} isConnectable={false} />
+<Handle type="target" position={Position.Left} />
 <a
 	href="{GRAPH}?concept={encodeURIComponent(data.slug)}"
 	title={data.label}
@@ -98,4 +102,4 @@
 >
 	<span class="line-clamp-2">{data.label}</span>
 </a>
-<Handle type="source" position={Position.Right} isConnectable={false} />
+<Handle type="source" position={Position.Right} />

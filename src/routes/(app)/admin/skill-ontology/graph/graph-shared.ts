@@ -17,11 +17,39 @@
  * hierarchy if they competed for attention.
  */
 export const RELATION_STYLES = [
-	{ relation: 'broader', label: 'is a kind of', dash: undefined },
-	{ relation: 'requires', label: 'requires', dash: '4 3' },
-	{ relation: 'covers', label: 'is one entry covering', dash: '1 3' },
-	{ relation: 'inDomain', label: 'in domain (not matched)', dash: '1 5' }
+	{ relation: 'broader', label: 'is a kind of', verb: 'is a kind of', dash: undefined },
+	{ relation: 'requires', label: 'requires', verb: 'cannot be used without', dash: '4 3' },
+	{
+		relation: 'covers',
+		label: 'is one entry covering',
+		verb: 'is one entry covering',
+		dash: '1 3'
+	},
+	{
+		relation: 'inDomain',
+		label: 'in domain (not matched)',
+		verb: 'is in the domain of',
+		dash: '1 5'
+	}
 ] as const;
+
+/**
+ * The same relation as a verb you can put between two names.
+ *
+ * `label` and `verb` are separate because they do different jobs, and collapsing
+ * them makes one of the two read badly. A legend wants the shortest thing that
+ * distinguishes a line — "requires". A sentence wants the phrasing that cannot
+ * be read backwards — "cannot be used without", which is why the review queue
+ * writes it that way. Reusing the legend label as a verb produced "Docker in
+ * domain (not matched) Marketplaces" in the relation picker, which is how this
+ * field came to exist.
+ *
+ * The review queue's own `sentence()` still hard-codes three of these and falls
+ * back to "X — inDomain — Y" for the fourth; it should read from here.
+ */
+export function verbFor(relation: string): string {
+	return RELATION_STYLES.find((r) => r.relation === relation)?.verb ?? relation;
+}
 
 /**
  * One line style per relation.

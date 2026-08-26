@@ -23,10 +23,12 @@
  * A picture of proposals would be a picture of something that does not affect
  * anyone's matches. What is drawn is what the matcher walks.
  */
+import { fail } from '@sveltejs/kit';
 import { sql } from 'drizzle-orm';
-import { queryRawDirect } from '$lib/server/db';
+import { dbDirect as db, queryRawDirect } from '$lib/server/db';
 import { GRAPH_RELATIONS } from '$lib/server/job/skill-ontology';
-import type { PageServerLoad } from './$types';
+import { refuseNewRelation } from '$lib/server/job/skill-relation-guards';
+import type { Actions, PageServerLoad } from './$types';
 
 export interface FullNode {
 	id: number;
@@ -35,6 +37,8 @@ export interface FullNode {
 }
 
 export interface FullEdge {
+	/** Needed to retire one: edges are addressed by row, not by pair. */
+	id: number;
 	from_id: number;
 	to_id: number;
 	relation: string;
@@ -49,7 +53,7 @@ function inList(values: readonly string[]) {
 
 export const load: PageServerLoad = async () => {
 	const relations = sql`
-		SELECT from_id, to_id, relation FROM skill_relations
+		SELECT id, from_id, to_id, relation FROM skill_relations
 		WHERE approved_at IS NOT NULL AND relation IN (${inList(GRAPH_RELATIONS)})
 	`;
 
@@ -73,4 +77,69 @@ export const load: PageServerLoad = async () => {
 	]);
 
 	return { nodes, edges, isolated };
+};
+
+function intFrom(form: FormData, key: string): number | null {
+	const raw = form.get(key);
+	if (typeof raw !== 'string') return null;
+	const n = Number(raw);
+	return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+export const actions: Actions = {
+	/**
+	 * Draw an edge between two concepts.
+	 *
+	 * ## Why this approves immediately
+	 *
+	 * The review queue exists to gate the *model's* proposals — the confidence
+	 * floor does not work, and the two edges that had to be revoked scored 0.90
+	 * and 0.95. It does not exist to gate an admin's own assertion. Someone who
+	 * has dragged one concept onto another has made exactly the judgement the
+	 * queue's Approve button records, and sending them to a second screen to press
+	 * it again is ceremony, not review.
+	 *
+	 * The safety property is unchanged, it just lives elsewhere: an accidental
+	 * drag cannot write anything, because the relation has to be picked before the
+	 * write happens and there is no default. What this *does* refuse is in
+	 * `refuseNewRelation` — the ways an edge can make the graph contradict itself,
+	 * which is a different question from whether it is true.
+	 *
+	 * `ON CONFLICT ... DO UPDATE` is the useful case rather than a fallback —
+	 * drawing an edge the proposer already suggested and nobody reviewed approves
+	 * that exact row, instead of failing on the unique index.
+	 */
+	createRelation: async ({ request }) => {
+		const form = await request.formData();
+		const from = intFrom(form, 'from');
+		const to = intFrom(form, 'to');
+		const relation = String(form.get('relation') ?? '');
+		if (from === null || to === null) return fail(400, { error: 'Invalid concept id.' });
+
+		const refusal = await refuseNewRelation(from, to, relation);
+		if (refusal) return fail(refusal.status, { error: refusal.error });
+
+		await db.execute(sql`
+			INSERT INTO skill_relations (from_id, to_id, relation, source, approved_at)
+			VALUES (${from}, ${to}, ${relation}, 'manual', now())
+			ON CONFLICT (from_id, to_id, relation) DO UPDATE SET approved_at = now()
+		`);
+		return { success: true };
+	},
+
+	/**
+	 * Retire an edge.
+	 *
+	 * Unapproves, never deletes — the same write `rejectRelation` makes in the
+	 * queue, for the reason recorded there: a deleted proposal comes straight back
+	 * on the next run of `propose-skill-relations.ts` and review becomes
+	 * Sisyphean. The row stays and reappears in the queue as pending, which is
+	 * also what makes this reversible in one click.
+	 */
+	retireRelation: async ({ request }) => {
+		const id = intFrom(await request.formData(), 'id');
+		if (id === null) return fail(400, { error: 'Invalid id.' });
+		await db.execute(sql`UPDATE skill_relations SET approved_at = NULL WHERE id = ${id}`);
+		return { success: true };
+	}
 };

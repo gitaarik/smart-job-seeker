@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import {
 		Background,
@@ -6,9 +7,11 @@
 		Controls,
 		MarkerType,
 		MiniMap,
+		Panel,
 		SvelteFlow,
 		SvelteFlowProvider,
 		ViewportPortal,
+		type Connection,
 		type Edge,
 		type Node,
 		type NodeTypes
@@ -16,6 +19,7 @@
 	import '@xyflow/svelte/dist/style.css';
 	import { RELATION_STYLES, dashFor } from '../graph-shared';
 	import ConceptNode, { type ConceptNodeData } from './ConceptNode.svelte';
+	import EdgeDraft from './EdgeDraft.svelte';
 	import GraphSearch from './GraphSearch.svelte';
 	import { setGraphHighlight } from './highlight.svelte';
 	import { bestShelfWidth, layoutFullGraph, type Dims } from './island-layout';
@@ -93,12 +97,42 @@
 		}))
 	);
 
+	/**
+	 * Editing is off until asked for, and that is a safety property rather than
+	 * tidiness. With it on, a stray drag between two nodes opens a dialog; with it
+	 * off, dragging a node does nothing at all. One approval here changes matching
+	 * for every profile in the instance.
+	 */
+	let editing = $state(false);
+	let draft = $state<{ from: number; to: number } | null>(null);
+	let retiring = $state<{ id: string; source: string; target: string } | null>(null);
+
+	const labelById = $derived(
+		Object.fromEntries(data.nodes.map((n) => [n.id, n.label])) as Record<number, string>
+	);
+
+	function connected({ source, target }: Connection) {
+		retiring = null;
+		draft = { from: Number(source), to: Number(target) };
+	}
+
+	async function retire() {
+		if (!retiring) return;
+		const body = new FormData();
+		body.set('id', retiring.id);
+		await fetch('?/retireRelation', { method: 'POST', body });
+		retiring = null;
+		await invalidateAll();
+	}
+
 	const edges = $derived<Edge[]>(
 		data.edges.map((e) => ({
-			id: `${e.from_id}-${e.to_id}-${e.relation}`,
+			// The row id, not a synthetic key: retiring one addresses the row, and
+			// a key built from the pair could not tell two relations apart.
+			id: String(e.id),
 			source: String(e.from_id),
 			target: String(e.to_id),
-			selectable: false,
+			selectable: editing,
 			focusable: false,
 			markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18 },
 			style: dashFor(e.relation) ? `stroke-dasharray: ${dashFor(e.relation)};` : undefined
@@ -187,10 +221,26 @@
 							{r.label}
 						</span>
 					{/each}
-					<div class="ml-auto"><GraphSearch labels={searchable} /></div>
+					<div class="ml-auto flex items-center gap-3">
+						<GraphSearch labels={searchable} />
+						<button
+							type="button"
+							aria-pressed={editing}
+							class="rounded-md border px-2.5 py-1.5 text-xs transition-colors {editing
+								? 'border-[var(--dash-primary)] bg-[var(--dash-primary)] text-white'
+								: 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]'}"
+							onclick={() => {
+								editing = !editing;
+								draft = null;
+								retiring = null;
+							}}
+						>
+							{editing ? 'Done editing' : 'Edit'}
+						</button>
+					</div>
 				</div>
 
-				<div class="skill-flow h-[clamp(460px,calc(100vh-21rem),900px)] w-full">
+				<div class="skill-flow h-[clamp(460px,calc(100vh-21rem),900px)] w-full" class:editing>
 					<SvelteFlow
 						{nodes}
 						{edges}
@@ -198,10 +248,16 @@
 						fitView
 						fitViewOptions={{ maxZoom: 1, padding: 0.06 }}
 						nodesDraggable={false}
-						nodesConnectable={false}
-						elementsSelectable={false}
+						nodesConnectable={editing}
+						elementsSelectable={editing}
 						minZoom={0.15}
 						maxZoom={2.5}
+						onconnect={connected}
+						onedgeclick={({ edge }) => {
+							if (!editing) return;
+							draft = null;
+							retiring = { id: edge.id, source: edge.source, target: edge.target };
+						}}
 					>
 						<!--
 							Islands are decoration in graph coordinates, so they belong in the
@@ -217,6 +273,59 @@
 								></div>
 							{/each}
 						</ViewportPortal>
+
+						{#if editing}
+							<Panel position="top-center">
+								{#if draft}
+									<EdgeDraft
+										from={{ id: draft.from, label: labelById[draft.from] ?? '?' }}
+										to={{ id: draft.to, label: labelById[draft.to] ?? '?' }}
+										onswap={() => (draft = draft && { from: draft.to, to: draft.from })}
+										oncancel={() => (draft = null)}
+									/>
+								{:else if retiring}
+									{@const a = labelById[Number(retiring.source)] ?? '?'}
+									{@const b = labelById[Number(retiring.target)] ?? '?'}
+									<div
+										class="w-[26rem] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] p-3 shadow-lg"
+										role="dialog"
+										aria-label="Retire this relation"
+									>
+										<h2 class="text-sm font-medium text-[var(--dash-text)]">
+											Retire this relation?
+										</h2>
+										<p class="mt-1 text-xs text-[var(--dash-text-secondary)]">
+											<span class="font-medium text-[var(--dash-text)]">“{a}” → “{b}”</span>
+											will stop being matched. It is unapproved rather than deleted, so it reappears in
+											the review queue and one click puts it back.
+										</p>
+										<div class="mt-2 flex gap-2">
+											<button
+												type="button"
+												class="rounded-md border border-[var(--dash-error)] px-2.5 py-1.5 text-xs text-[var(--dash-error)] hover:bg-[var(--dash-error-light)]"
+												onclick={retire}
+											>
+												Retire
+											</button>
+											<button
+												type="button"
+												class="rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-xs text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
+												onclick={() => (retiring = null)}
+											>
+												Keep
+											</button>
+										</div>
+									</div>
+								{:else}
+									<p
+										class="rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-1.5 text-xs text-[var(--dash-text-secondary)] shadow-sm"
+									>
+										Drag from a concept's right edge onto another to relate them. Click an edge to
+										retire it.
+									</p>
+								{/if}
+							</Panel>
+						{/if}
 
 						<Background variant={BackgroundVariant.Dots} gap={26} size={1} />
 						<Controls showLock={false} />
@@ -285,10 +394,28 @@
 		opacity: 0.25;
 	}
 
-	/* Anchor points only, until step 2 turns on edge drawing. */
+	/*
+	 * Handles are anchor points while reading and affordances while editing. They
+	 * stay in the DOM either way — Svelte Flow attaches every bezier to them, so
+	 * hiding them with `display: none` would detach every edge on the page.
+	 */
 	.skill-flow :global(.svelte-flow__handle) {
 		opacity: 0;
 		pointer-events: none;
+	}
+
+	.skill-flow.editing :global(.svelte-flow__handle) {
+		opacity: 1;
+		pointer-events: all;
+	}
+
+	.skill-flow.editing :global(.svelte-flow__edge) {
+		cursor: pointer;
+	}
+
+	.skill-flow.editing :global(.svelte-flow__edge:hover .svelte-flow__edge-path) {
+		stroke: var(--dash-error);
+		stroke-width: 2.5;
 	}
 
 	/*
