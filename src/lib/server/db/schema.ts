@@ -639,6 +639,18 @@ export const skill_aliases = pgTable(
 		concept_id: integer().notNull(),
 		/** Normalized the same way as `skill_concepts.slug`. */
 		alias: varchar({ length: 255 }).notNull(),
+		/** What proposed it: "llm", "manual", "seed". */
+		source: varchar({ length: 32 }).default('llm').notNull(),
+		/**
+		 * Null until a human accepts it, and unapproved aliases are not resolved.
+		 *
+		 * Same gate as `skill_relations`, and for the same reason rather than for
+		 * symmetry: a wrong alias is at least as damaging as a wrong relation.
+		 * "React" recorded as an alias of "Vue" would not merely add a bad edge —
+		 * it would make one concept answer for the other everywhere, in both
+		 * directions, with no traversal to inspect.
+		 */
+		approved_at: timestamp({ withTimezone: true, mode: 'date' }),
 		date_created: timestamp({ withTimezone: true, mode: 'date' })
 			.default(sql`now()`)
 			.notNull()

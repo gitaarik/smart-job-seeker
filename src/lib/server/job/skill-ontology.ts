@@ -103,7 +103,7 @@ export async function resolveConcepts(names: string[]): Promise<Map<string, Conc
 		SELECT a.alias AS key, c.id, c.slug, c.label
 		FROM skill_aliases a
 		JOIN skill_concepts c ON c.id = a.concept_id
-		WHERE a.alias IN (${inList(slugs)})
+		WHERE a.alias IN (${inList(slugs)}) AND a.approved_at IS NOT NULL
 	`);
 
 	for (const r of rows) out.set(r.key, { id: r.id, slug: r.slug, label: r.label });
@@ -114,7 +114,7 @@ export async function resolveConcepts(names: string[]): Promise<Map<string, Conc
  * Every concept reachable UPWARD from these skills, including the skills
  * themselves — the set a job's requirement may be satisfied by.
  *
- * Only APPROVED relations are traversed. An unapproved edge is a proposal, and
+ * Only APPROVED relations and aliases are traversed. An unapproved edge is a proposal, and
  * a wrong one is invisible and global: it would change matching for every
  * profile with nothing to surface it. Nothing unapproved may influence a match.
  *
@@ -137,7 +137,7 @@ export async function expandUpward(
 			UNION
 			SELECT c.id, 0 AS depth
 			FROM skill_aliases a JOIN skill_concepts c ON c.id = a.concept_id
-			WHERE a.alias IN (${inList(slugs)})
+			WHERE a.alias IN (${inList(slugs)}) AND a.approved_at IS NOT NULL
 		),
 		up AS (
 			SELECT id, depth FROM seed

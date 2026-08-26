@@ -66,9 +66,10 @@ const VerdictItem = z.object({
 	 * `broader`  — the `from` side is a KIND OF the other.
 	 * `requires` — the `from` side cannot be used without the other.
 	 * `related`  — genuinely associated, neither implies the other.
+	 * `alias`    — two spellings of the SAME skill; `from` is the variant.
 	 * `none`     — no useful relation.
 	 */
-	relation: z.enum(['broader', 'requires', 'related', 'none']),
+	relation: z.enum(['broader', 'requires', 'related', 'alias', 'none']),
 	/** Which side is the specific/dependent one. Null is fine for related/none. */
 	from: z.enum(['a', 'b']).nullable().optional(),
 	confidence: z.number().min(0).max(1).optional()
@@ -108,6 +109,9 @@ relation:
   it. Django requires Python. Django is not a kind of Python.
 - "related": genuinely associated, but neither implies the other. Docker and
   Kubernetes. React and Vue are alternatives — that is "related", not "broader".
+- "alias": the two strings name the SAME skill. An acronym and its expansion
+  ("RAG" / "Retrieval Augmented Generation"), or a spelling variant ("NodeJS" /
+  "Node.js"). NOT two different skills that often appear together.
 - "none": no useful relation. Python and communication.
 
 from: which side is the SPECIFIC or DEPENDENT one — the side that implies the
@@ -124,8 +128,13 @@ other one?" If yes, it is broader or requires. If they might not have, it is
 related or none.
 
 Two skills that are alternatives to each other are NEVER broader — neither
-React nor Vue implies the other. Two spellings of the same skill are "none";
-this task is about different skills, not synonyms.
+React nor Vue implies the other, and they are NOT aliases: they are different
+things. Reserve "alias" for one skill written two ways.
+
+For "alias", set "from" to the ABBREVIATED or less formal spelling — the full
+form is the one worth keeping as the name:
+
+  a="RAG", b="Retrieval Augmented Generation" -> relation "alias", from "a"
 
 confidence: 0-1, how sure you are — of the direction as much as the relation.
 
@@ -248,6 +257,7 @@ async function main() {
 	}
 
 	const useful = verdicts.filter((v) => v.relation === 'broader' || v.relation === 'requires');
+	const aliases = verdicts.filter((v) => v.relation === 'alias');
 	console.log(
 		`\n${verdicts.length} verdicts; ${useful.length} directional ` +
 			`(${verdicts.filter((v) => v.relation === 'related').length} related, ` +
@@ -260,6 +270,16 @@ async function main() {
 		console.log(`  ${from} —${v.relation}→ ${to}  (${v.confidence.toFixed(2)})`);
 	}
 	if (useful.length > 25) console.log(`  … and ${useful.length - 25} more`);
+
+	if (aliases.length > 0) {
+		console.log(`\n${aliases.length} alias pair(s):`);
+		for (const v of aliases.slice(0, 15)) {
+			const variant = v.from === 'a' ? v.pair.a : v.pair.b;
+			const canonical = v.from === 'a' ? v.pair.b : v.pair.a;
+			console.log(`  "${variant}" = "${canonical}"`);
+		}
+		if (aliases.length > 15) console.log(`  … and ${aliases.length - 15} more`);
+	}
 
 	if (!APPLY) {
 		console.log('\nDry run. Pass --apply to write concepts and UNAPPROVED relations.');
@@ -285,7 +305,30 @@ async function main() {
 		`);
 		written++;
 	}
-	console.log(`\nWrote ${bySlug.size} concepts and ${written} UNAPPROVED relations.`);
+	// Aliases point the VARIANT at the concept keeping the fuller name. Both
+	// already exist as concepts — every distinct string became one — and that is
+	// left alone deliberately: merging concepts is destructive and the traversal
+	// does not need it, because `expandUpward` seeds from slug AND alias, so the
+	// variant reaches the canonical concept's ancestors either way.
+	let aliased = 0;
+	for (const v of aliases) {
+		const variant = normalizeSkill(v.from === 'a' ? v.pair.a : v.pair.b);
+		const canonical = normalizeSkill(v.from === 'a' ? v.pair.b : v.pair.a);
+		if (!variant || !canonical || variant === canonical) continue;
+		await db.execute(sql`
+			INSERT INTO skill_aliases (concept_id, alias, source)
+			SELECT c.id, ${variant}, 'llm'
+			FROM skill_concepts c
+			WHERE c.slug = ${canonical}
+			ON CONFLICT (alias) DO NOTHING
+		`);
+		aliased++;
+	}
+
+	console.log(
+		`\nWrote ${bySlug.size} concepts, ${written} UNAPPROVED relations, ` +
+			`${aliased} UNAPPROVED aliases.`
+	);
 	console.log('Nothing influences matching until approved.');
 	process.exit(0);
 }
