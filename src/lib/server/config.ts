@@ -298,7 +298,18 @@ function loadConfig(): AppConfig {
 		// and stays above the noise ceiling. Guarded by skill-threshold.test.ts
 		// against real data — re-tune (and regenerate that fixture) if the model OR
 		// the working dimension changes.
-		embeddingSkillThreshold: parseFloat(getEnv('SJS_EMBEDDING_SKILL_THRESHOLD', '0.68')),
+		// RE-TUNED 2026-08-26, 0.68 -> 0.74. The 0.68 above was correct for a world
+		// where expansion was the ONLY source of recall; the skill ontology
+		// (skill-ontology.ts) now supplies it from curated directional edges, so
+		// this layer's job changed from "find everything related" to "catch what
+		// the ontology has no edge for" — and its optimum moved with it.
+		// Swept against the 40 labelled pairs in planning/SKILL-ONTOLOGY.md:
+		//   0.68  ontology+embeddings  precision 80.0%  recall 70.6%  F1 75.0%
+		//   0.74                       precision 91.7%  recall 64.7%  F1 75.9%
+		//   0.80                       precision 90.9%  recall 58.8%  F1 71.4%
+		// 0.74 is better on precision AND F1; past it the layer contributes
+		// nothing over exact matching and the stack collapses to ontology-only.
+		embeddingSkillThreshold: parseFloat(getEnv('SJS_EMBEDDING_SKILL_THRESHOLD', '0.74')),
 		// Floor cosine for semantic project↔job retrieval (documents/retrieval.ts).
 		// This is job-description-vs-project-text, a DIFFERENT distribution from the
 		// skill-vs-skill threshold above — long-text embeddings have a much higher

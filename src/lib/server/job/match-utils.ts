@@ -6,6 +6,7 @@ import { dbDirect as db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { tech_skills, tech_skill_categories } from '$lib/server/db/schema';
 import { expandProfileSkills } from './skill-embeddings';
+import { expandUpward } from './skill-ontology';
 
 /**
  * Extract tech skills from a profile
@@ -23,15 +24,49 @@ export async function getProfileSkills(profileId: number): Promise<string[]> {
 }
 
 /**
- * Profile skills augmented with semantically-related vocabulary terms via
- * embeddings (so "React" also matches jobs requiring "frontend"). Used by the
- * matcher/eligibility/count paths so semantic recall is consistent everywhere.
+ * Profile skills augmented from two independent sources, so the exact-match
+ * gates downstream benefit without knowing either exists.
  *
- * Degrades to plain getProfileSkills() when embeddings are unconfigured
- * (SJS_EMBEDDING_ENABLED) — safe to call unconditionally.
+ * **Embeddings** add what is semantically near — "React" pulls in "frontend".
+ * Cheap, needs no curation, and symmetric: cosine returns one number for an
+ * unordered pair, so it cannot tell "React implies JavaScript" from
+ * "JavaScript implies React" and admits both.
+ *
+ * **The ontology** adds what is *implied*, upward only, over curated
+ * directional edges. It cannot make the symmetric mistake — there is no edge
+ * pointing back down to follow.
+ *
+ * Measured on 40 labelled pairs (planning/SKILL-ONTOLOGY.md § Result), the
+ * union scores precision 80.0% / recall 70.6% against 70.0% / 41.2% for
+ * embeddings alone: better on both axes, with false negatives halved and no new
+ * false positives.
+ *
+ * ⚠️ One number here is now stale by construction. `embeddingSkillThreshold`
+ * (0.68) was tuned when expansion was the ONLY source of recall; it no longer
+ * is, and the same measurement shows the ontology alone reaching **90.9%**
+ * precision because it drops two false positives that come entirely from the
+ * embedding side. Re-tuning that threshold upward is the open follow-up, and
+ * this is the function whose behaviour it governs.
+ *
+ * Degrades cleanly: embeddings unconfigured returns the input unchanged, an
+ * empty ontology contributes nothing, and neither is allowed to fail the call.
  */
 export async function getExpandedProfileSkills(profileId: number): Promise<string[]> {
-	return expandProfileSkills(await getProfileSkills(profileId));
+	const base = await getProfileSkills(profileId);
+	if (base.length === 0) return base;
+
+	const [viaEmbeddings, viaOntology] = await Promise.all([
+		expandProfileSkills(base),
+		// Never let a traversal failure cost the caller its exact skills —
+		// matching on fewer skills silently returns fewer jobs, which reads as
+		// "nothing matched" rather than as a fault.
+		expandUpward(base).catch((err) => {
+			console.warn('[match-utils] ontology expansion failed, continuing without it:', err);
+			return [];
+		})
+	]);
+
+	return [...new Set([...viaEmbeddings, ...viaOntology.map((c) => c.label)])];
 }
 
 /**
