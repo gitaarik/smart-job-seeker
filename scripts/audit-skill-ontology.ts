@@ -62,6 +62,7 @@ import { splitCompoundSkill } from '../src/lib/skills';
 
 const APPLY = process.argv.includes('--apply');
 const MERGE = process.argv.includes('--merge-duplicates');
+const REDUCE = process.argv.includes('--reduce');
 
 interface Concept {
 	id: number;
@@ -286,6 +287,42 @@ section(
 	'Run propose-skill-splits.ts; some of these are idioms and should stay whole.'
 );
 
+/**
+ * Everything reachable from each node, as a set. The thing a reduction must not
+ * change.
+ */
+function closure(keep: Edge[]): Map<number, Set<number>> {
+	const adj = new Map<number, number[]>();
+	for (const e of keep) {
+		if (!adj.has(e.from_id)) adj.set(e.from_id, []);
+		adj.get(e.from_id)!.push(e.to_id);
+	}
+	const all = new Map<number, Set<number>>();
+	for (const start of new Set(keep.map((e) => e.from_id))) {
+		const seen = new Set<number>();
+		const queue = [start];
+		while (queue.length > 0) {
+			for (const next of adj.get(queue.shift()!) ?? []) {
+				if (seen.has(next)) continue;
+				seen.add(next);
+				queue.push(next);
+			}
+		}
+		all.set(start, seen);
+	}
+	return all;
+}
+
+function sameClosure(a: Map<number, Set<number>>, b: Map<number, Set<number>>): boolean {
+	if (a.size !== b.size) return false;
+	for (const [k, sa] of a) {
+		const sb = b.get(k);
+		if (!sb || sa.size !== sb.size) return false;
+		for (const v of sa) if (!sb.has(v)) return false;
+	}
+	return true;
+}
+
 // ── Write ────────────────────────────────────────────────────────────────────
 async function retire(rows: Edge[], reason: string) {
 	for (const e of rows) {
@@ -297,7 +334,74 @@ async function retire(rows: Edge[], reason: string) {
 	}
 }
 
-if (MERGE) {
+if (REDUCE) {
+	// Redundant edges were called cosmetic and left alone for most of this
+	// project. They are not, once the graph is something a person reads: an edge
+	// that skips a level draws a line straight past the category it belongs to,
+	// and `Golang broader Software development` beside `Golang broader Programming
+	// languages` makes Golang look differently placed from every other language.
+	// It was only redundant at all because `Programming languages broader Software
+	// development` had just been added — a correct edge that made three older ones
+	// noise.
+	//
+	// Retiring them cannot change what matches, by definition, and the script
+	// proves that rather than asserting it: the full reachability closure is
+	// compared before and after IN MEMORY, and nothing is written unless it is
+	// identical. A DAG's transitive reduction is unique, so on this graph the
+	// result does not depend on the order edges are considered — but the check
+	// costs nothing and does not assume the graph is still acyclic tomorrow.
+	// ONE AT A TIME, recomputing after each removal — not the whole `redundant`
+	// set at once. Two edges sharing a (from, to) pair and differing only in
+	// relation are each redundant *via the other*: `PostgreSQL requires SQL` and
+	// `PostgreSQL broader SQL` both appear in check 4, and dropping both together
+	// disconnects PostgreSQL from SQL entirely. The closure check below caught
+	// exactly that on the first run, which is the argument for it existing.
+	const before = closure(edges);
+	const keep = [...edges];
+	const dropped: Edge[] = [];
+	for (;;) {
+		const next = keep.find((e) => {
+			// `covers` is never reduced. It is the only relation here that states a
+			// FACT ABOUT AN ENTRY — "this string names these skills" — rather than a
+			// position in the hierarchy, and that fact stays true however many other
+			// routes exist. `Svelte / SvelteKit covers Svelte` is reachable the long
+			// way via SvelteKit, and dropping it would leave the graph unable to say
+			// what the entry means. Reachability-correct, meaning-wrong.
+			if (e.relation === 'covers') return false;
+			const others = keep.filter((k) => k !== e);
+			const adj = new Map<number, number[]>();
+			for (const o of others) {
+				if (!adj.has(o.from_id)) adj.set(o.from_id, []);
+				adj.get(o.from_id)!.push(o.to_id);
+			}
+			const seen = new Set([e.from_id]);
+			const queue = [e.from_id];
+			while (queue.length > 0) {
+				for (const n of adj.get(queue.shift()!) ?? []) {
+					if (n === e.to_id) return true;
+					if (seen.has(n)) continue;
+					seen.add(n);
+					queue.push(n);
+				}
+			}
+			return false;
+		});
+		if (!next) break;
+		keep.splice(keep.indexOf(next), 1);
+		dropped.push(next);
+	}
+	const after = closure(keep);
+	if (!sameClosure(before, after)) {
+		console.log('\nREFUSED: removing the redundant set changes reachability.');
+		console.log('That means the graph has a cycle, and transitive reduction is not unique.');
+		console.log('Run without --reduce and look at check 2 and the cycle guard first.');
+		process.exit(1);
+	}
+	console.log(`\nreachability identical with ${dropped.length} edge(s) removed. Retiring…`);
+	await retire(dropped, 'audit:redundant');
+	console.log('\nNothing matches differently. Undo with:');
+	console.log('  approve-skill-relations.ts --source audit:redundant');
+} else if (MERGE) {
 	console.log('\nMerging duplicate concepts…');
 	for (const d of duplicates) {
 		// Repoint first, then drop what would become self-loops or exact dupes,
@@ -367,7 +471,7 @@ if (MERGE) {
 	}
 	console.log('\nAll of the above are unapproved and waiting in the review queue.');
 } else {
-	console.log('\nDry run. --apply fixes 2 and 3; --merge-duplicates fixes 1.');
+	console.log('\nDry run. --apply fixes 2, 3 and 7; --merge-duplicates fixes 1; --reduce fixes 4.');
 }
 
 process.exit(0);
