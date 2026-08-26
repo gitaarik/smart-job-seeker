@@ -35,6 +35,7 @@
 import { readFileSync } from 'node:fs';
 import { normalizeSkill } from '../src/lib/skills';
 import { expandProfileSkills } from '../src/lib/server/job/skill-embeddings';
+import { impliesSkill } from '../src/lib/server/job/skill-ontology';
 import { config } from '../src/lib/server/config';
 
 interface Pair {
@@ -47,6 +48,7 @@ interface Pair {
 interface Scored extends Pair {
 	exact: boolean;
 	expanded: boolean;
+	ontology: boolean;
 }
 
 function readPairs(): Pair[] {
@@ -110,12 +112,19 @@ for (const p of pairs) {
 	// One skill in, so the expansion is exactly "what does knowing `have` imply".
 	const expandedSet = await expandProfileSkills([p.have]);
 	const expanded = expandedSet.some((s) => normalizeSkill(s) === wantNorm);
-	rows.push({ ...p, exact, expanded });
+	// Ordered: does knowing `have` license claiming `want`. Approved edges only.
+	const ontology = await impliesSkill(p.have, p.want);
+	rows.push({ ...p, exact, expanded, ontology });
 }
 
 const configs: Array<[string, (r: Scored) => boolean]> = [
 	['exact', (r) => r.exact],
-	['+embeddings', (r) => r.exact || r.expanded]
+	['+embeddings', (r) => r.exact || r.expanded],
+	['+ontology', (r) => r.exact || r.expanded || r.ontology],
+	// The ontology INSTEAD of embeddings, not on top. Worth scoring separately
+	// because the two can disagree, and if structure alone beats the stack then
+	// the expansion layer is costing precision for recall it no longer supplies.
+	['ontology only', (r) => r.exact || r.ontology]
 ];
 
 console.log('config        TP  FP  FN  TN   precision   recall      F1');
@@ -132,13 +141,15 @@ for (const [name, pick] of configs) {
 // The rows that decide whether an ontology is worth building: pairs the
 // embedding layer gets WRONG, split by direction. A false positive here is
 // one no threshold removes, because the correct pair sits at the same cosine.
-const fp = rows.filter((r) => !r.match && (r.exact || r.expanded));
-const fn = rows.filter((r) => r.match && !(r.exact || r.expanded));
-
-console.log(`\nFALSE POSITIVES (+embeddings) — ${fp.length}`);
-for (const r of fp) console.log(`  ${r.have} → ${r.want}${r.why ? `   [${r.why}]` : ''}`);
-
-console.log(`\nFALSE NEGATIVES (+embeddings) — ${fn.length}`);
-for (const r of fn) console.log(`  ${r.have} → ${r.want}${r.why ? `   [${r.why}]` : ''}`);
+for (const [name, pick] of configs) {
+	const fp = rows.filter((r) => !r.match && pick(r));
+	const fn = rows.filter((r) => r.match && !pick(r));
+	if (name === 'exact') continue;
+	console.log(`\n── ${name} ──`);
+	console.log(`FALSE POSITIVES (${fp.length}):`);
+	for (const r of fp) console.log(`  ${r.have} → ${r.want}${r.why ? `   [${r.why}]` : ''}`);
+	console.log(`FALSE NEGATIVES (${fn.length}):`);
+	for (const r of fn) console.log(`  ${r.have} → ${r.want}${r.why ? `   [${r.why}]` : ''}`);
+}
 
 process.exit(0);
