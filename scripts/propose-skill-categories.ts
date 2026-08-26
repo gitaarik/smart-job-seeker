@@ -239,9 +239,16 @@ async function main() {
 	// Pending proposals count as having a parent too. Otherwise each run re-asks
 	// about everything still sitting in the review queue, and the queue grows by
 	// a duplicate of itself every time this is run.
+	//
+	// A REJECTED edge is not a parent. The retirement path keeps the row and only
+	// nulls `approved_at`, so `JavaScript broader frontend` — retired for being a
+	// non-implication — still read as "JavaScript has a parent" and hid the
+	// concept from every run. `audit:` sources are exactly the rows a human or the
+	// auditor decided against, so they are the ones that must not count.
 	const parented = await queryRawDirect<{ id: number }>(sql`
 		SELECT DISTINCT from_id AS id FROM skill_relations
 		WHERE relation IN ('broader', 'covers')
+		  AND (approved_at IS NOT NULL OR coalesce(source, '') NOT LIKE 'audit:%')
 	`);
 	const hasParent = new Set(parented.map((r) => r.id));
 
@@ -270,18 +277,17 @@ async function main() {
 	const inGraph = new Set(connected.map((r) => r.id));
 	// `--more-parents` inverts the selection: the work is what already HAS a
 	// parent, and the question becomes "what else is it?" rather than "what is
-	// it?". Categories themselves are excluded — a category's parent is a
-	// taxonomy decision, not a fact about a skill, and the domain layer covers it.
-	const isCategory = new Set(
-		(
-			await queryRawDirect<{ id: number }>(sql`
-				SELECT DISTINCT to_id AS id FROM skill_relations
-				WHERE approved_at IS NOT NULL AND relation = 'broader'
-			`)
-		).map((r) => r.id)
-	);
+	// it?".
+	//
+	// Categories used to be excluded here, on the reasoning that a category's
+	// parent is a taxonomy decision rather than a fact about a skill. That was
+	// wrong for the same reason "has an edge" was wrong for orphans: being a
+	// parent of something does not stop you needing one. JavaScript is a category
+	// — React and TypeScript are kinds of it — AND a programming language, and
+	// being the first hid the second, so TypeScript sat under Programming
+	// languages while JavaScript did not.
 	const orphans = MORE
-		? concepts.filter((c) => hasParent.has(c.id) && !isCategory.has(c.id))
+		? concepts.filter((c) => hasParent.has(c.id))
 		: concepts.filter((c) => !hasParent.has(c.id));
 	const offered = concepts.filter((c) => inGraph.has(c.id)).map((c) => c.label);
 
