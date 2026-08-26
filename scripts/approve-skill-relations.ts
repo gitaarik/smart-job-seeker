@@ -25,6 +25,22 @@ const revokeIdx = args.indexOf('--revoke');
 const REVOKE = revokeIdx > -1 ? Number(args[revokeIdx + 1]) : null;
 
 const ALIASES = args.includes('--aliases');
+/**
+ * Promote a whole batch by where it came from.
+ *
+ * `--min` cannot separate this vocabulary: of 190 category proposals, 67 sit at
+ * exactly 0.90 and every one of the rest is between 0.90 and 0.99, wrong ones
+ * included. The model is confident about `Groq broader Programming languages`.
+ *
+ * A source is the honest unit instead — it says "this run, which I read as a
+ * whole". Pair it with the eval: 33 negative labels is a far better test of a
+ * batch than a floor on a number the model made up. Undo the batch with
+ * `--revoke-source <source>` if the numbers say to.
+ */
+const sourceIdx = args.indexOf('--source');
+const SOURCE = sourceIdx > -1 ? args[sourceIdx + 1] : null;
+const revokeSourceIdx = args.indexOf('--revoke-source');
+const REVOKE_SOURCE = revokeSourceIdx > -1 ? args[revokeSourceIdx + 1] : null;
 
 if (ALIASES && REVOKE !== null) {
 	await db.execute(sql`UPDATE skill_aliases SET approved_at = NULL WHERE id = ${REVOKE}`);
@@ -67,6 +83,29 @@ if (ALIASES) {
 	process.exit(0);
 }
 
+if (REVOKE_SOURCE !== null) {
+	const rows = await queryRawDirect<{ n: number }>(sql`
+		WITH done AS (
+			UPDATE skill_relations SET approved_at = NULL
+			WHERE source = ${REVOKE_SOURCE} AND approved_at IS NOT NULL RETURNING 1
+		) SELECT count(*)::int AS n FROM done
+	`);
+	console.log(`Revoked ${rows[0]?.n ?? 0} relation(s) from source "${REVOKE_SOURCE}".`);
+	process.exit(0);
+}
+
+if (SOURCE !== null) {
+	const rows = await queryRawDirect<{ n: number }>(sql`
+		WITH done AS (
+			UPDATE skill_relations SET approved_at = now()
+			WHERE source = ${SOURCE} AND approved_at IS NULL RETURNING 1
+		) SELECT count(*)::int AS n FROM done
+	`);
+	console.log(`Promoted ${rows[0]?.n ?? 0} relation(s) from source "${SOURCE}".`);
+	console.log('Now run eval-skill-matching.ts. If precision moved, --revoke-source undoes it.');
+	process.exit(0);
+}
+
 if (REVOKE !== null) {
 	await db.execute(sql`UPDATE skill_relations SET approved_at = NULL WHERE id = ${REVOKE}`);
 	console.log(`Revoked relation ${REVOKE}; the matcher will stop traversing it.`);
@@ -97,6 +136,7 @@ if (MIN === null) {
 		);
 	}
 	console.log('\nPass --min <confidence> to promote, or --revoke <id> to undo one.');
+	console.log('Or --source <source> to promote a whole run, --revoke-source <source> to undo it.');
 	process.exit(0);
 }
 
