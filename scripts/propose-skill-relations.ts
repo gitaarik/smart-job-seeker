@@ -25,6 +25,7 @@ import { dbDirect as db, queryRawDirect } from '../src/lib/server/db';
 import { generateChatCompletionTracked } from '../src/lib/server/llm/langchain';
 import { normalizeSkill } from '../src/lib/skills';
 import { cosineSimilarity } from '../src/lib/server/llm/embeddings';
+import { coerceIndexedEnvelope } from '../src/lib/server/llm/structured-envelope';
 
 const APPLY = process.argv.includes('--apply');
 const limitArg = process.argv.indexOf('--limit');
@@ -56,8 +57,9 @@ const BATCH = 12;
  *    answer to "which side is the specific one" when neither is.
  *
  * Both are reasonable readings of the task and neither is worth another round
- * trip to correct, so the schema accepts them and `coerce` below normalises.
- * A schema is a contract with a model that did not sign it — see
+ * trip to correct, so the schema accepts them and `coerceIndexedEnvelope`
+ * normalises the envelope. A schema is a contract with a model that did not
+ * sign it — see
  * planning/SKILL-ONTOLOGY.md and the gpt-oss structured-output notes.
  */
 const VerdictItem = z.object({
@@ -75,26 +77,8 @@ const VerdictItem = z.object({
 	confidence: z.number().min(0).max(1).optional()
 });
 
+/** What the model is ASKED for. What it returns is normalised by `coerceIndexedEnvelope`. */
 const VerdictSchema = z.object({ verdicts: z.array(VerdictItem) });
-
-/** Normalise either envelope into a positional list. */
-function coerce(raw: unknown): z.infer<typeof VerdictItem>[] {
-	const wrapped = VerdictSchema.safeParse(raw);
-	if (wrapped.success) {
-		return wrapped.data.verdicts.map((v, n) => ({ ...v, pair: v.pair ?? n }));
-	}
-	if (raw && typeof raw === 'object') {
-		const out: z.infer<typeof VerdictItem>[] = [];
-		for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
-			const n = Number(key);
-			if (!Number.isInteger(n)) continue;
-			const item = VerdictItem.safeParse(value);
-			if (item.success) out.push({ ...item.data, pair: item.data.pair ?? n });
-		}
-		if (out.length > 0) return out;
-	}
-	throw new Error(`unrecognised verdict envelope: ${JSON.stringify(raw).slice(0, 200)}`);
-}
 
 const SYSTEM = `You classify the relationship between two software skills.
 
@@ -224,7 +208,7 @@ async function main() {
 			// The TRACKED variant, deliberately: `generateChatCompletion` validates
 			// against the schema itself and throws before a caller can see the body.
 			// The whole point here is to accept a shape the model actually returns,
-			// so the raw content has to reach `coerce`.
+			// so the raw content has to reach `coerceIndexedEnvelope`.
 			const res = await generateChatCompletionTracked(
 				[
 					{ role: 'system', content: SYSTEM },
@@ -235,9 +219,9 @@ async function main() {
 					structuredOutput: { name: 'skill_relations', schema: VerdictSchema }
 				}
 			);
-			const items = coerce(JSON.parse(res.content));
-			for (const v of items) {
-				const p = batch[v.pair ?? -1];
+			const items = coerceIndexedEnvelope(JSON.parse(res.content), 'verdicts', VerdictItem);
+			for (const { index, value: v } of items) {
+				const p = batch[v.pair ?? index];
 				// A directional verdict with no direction is unusable — drop it rather
 				// than guess, since guessing is the one failure this table exists to
 				// prevent.

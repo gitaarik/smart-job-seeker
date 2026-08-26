@@ -23,13 +23,18 @@ const CONCEPTS: [string, string][] = [
 	['zzjavascript', 'ZZJavaScript'],
 	['zzfrontend', 'ZZfrontend'],
 	['zzdjango', 'ZZDjango'],
-	['zzpython', 'ZZPython']
+	['zzpython', 'ZZPython'],
+	['zzvitestzzjest', 'ZZVitest / ZZJest'],
+	['zzjest', 'ZZJest'],
+	['zzunittesting', 'ZZUnit Testing']
 ];
 const EDGES: [string, string, string][] = [
 	['zzreact', 'zzjsframework', 'broader'],
 	['zzjsframework', 'zzjavascript', 'broader'],
 	['zzjavascript', 'zzfrontend', 'broader'],
-	['zzdjango', 'zzpython', 'requires']
+	['zzdjango', 'zzpython', 'requires'],
+	['zzvitestzzjest', 'zzjest', 'covers'],
+	['zzjest', 'zzunittesting', 'broader']
 ];
 /** [have, want, shouldMatch] — every asymmetric pair asserted BOTH ways. */
 const CASES: [string, string, boolean][] = [
@@ -39,7 +44,15 @@ const CASES: [string, string, boolean][] = [
 	['ZZfrontend', 'ZZReact', false],
 	['ZZDjango', 'ZZPython', true],
 	['ZZPython', 'ZZDjango', false],
-	['ZZReact', 'ZZPython', false]
+	['ZZReact', 'ZZPython', false],
+	// `covers` is directional like the other two: one entry naming several
+	// skills claims each of them, and no part claims the entry back.
+	['ZZVitest / ZZJest', 'ZZJest', true],
+	['ZZJest', 'ZZVitest / ZZJest', false],
+	// The reason `covers` joined MATCHING_RELATIONS rather than getting its own
+	// traversal: it composes with `broader` in one walk.
+	['ZZVitest / ZZJest', 'ZZUnit Testing', true],
+	['ZZUnit Testing', 'ZZVitest / ZZJest', false]
 ];
 
 let failures = 0;

@@ -36,6 +36,26 @@ export interface PendingRelation {
 	confidence: number | null;
 	source: string;
 	approved: boolean;
+	/**
+	 * An approved edge already connects these two concepts, in one direction or
+	 * the other, so there is nothing left for a reviewer to decide.
+	 *
+	 * Two cases, both real on dev rather than hypothetical:
+	 *
+	 *  - **Same direction, different relation.** `covers` arrived after the
+	 *    proposer had spent three rounds describing compound entries as
+	 *    hierarchies, and the moment "Vitest / Jest covers Jest" was approved,
+	 *    "Vitest / Jest is a kind of Jest" became a question with no consequence
+	 *    attached to either answer.
+	 *  - **The reverse is approved.** "Agile/Scrum covers Scrum" is in use, so
+	 *    "Scrum is a kind of Agile/Scrum" — which the proposer offered at 0.98 —
+	 *    cannot also be true. Approving it would assert mutual implication, and
+	 *    mutual implication is what `skill_aliases` is for.
+	 *
+	 * They stay in the table, because a deleted proposal comes straight back on
+	 * the next pipeline run. They are simply not review.
+	 */
+	superseded: boolean;
 }
 
 export interface PendingAlias {
@@ -50,7 +70,13 @@ export const load: PageServerLoad = async () => {
 	const [relations, aliases, counts] = await Promise.all([
 		queryRawDirect<PendingRelation>(sql`
 			SELECT r.id, f.label AS from_label, t.label AS to_label, r.relation,
-			       r.confidence, r.source, (r.approved_at IS NOT NULL) AS approved
+			       r.confidence, r.source, (r.approved_at IS NOT NULL) AS approved,
+			       EXISTS (
+			         SELECT 1 FROM skill_relations o
+			         WHERE o.approved_at IS NOT NULL AND o.id <> r.id
+			           AND ((o.from_id = r.from_id AND o.to_id = r.to_id)
+			             OR (o.from_id = r.to_id AND o.to_id = r.from_id))
+			       ) AS superseded
 			FROM skill_relations r
 			JOIN skill_concepts f ON f.id = r.from_id
 			JOIN skill_concepts t ON t.id = r.to_id

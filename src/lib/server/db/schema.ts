@@ -679,11 +679,16 @@ export const skill_aliases = pgTable(
  *
  *   broader   from is a KIND OF to.        React → JavaScript framework
  *   requires  from cannot be used without to. Django → Python
+ *   covers    from is ONE ENTRY naming several skills, to is one of them.
+ *                                              Vitest / Jest → Jest
  *
- * Both are transitive and both license a match upward. A third, `related`
- * (Docker ↔ Kubernetes), is deliberately NOT here yet: it is symmetric, so
- * admitting it to the match path would reintroduce the exact false positive
- * this table exists to remove.
+ * All three license a match upward, because all three mean the same thing to
+ * the traversal: having `from` implies having `to`. `covers` is not a hierarchy
+ * — nobody would call "Vitest / Jest" a kind of Jest — which is why it needed
+ * its own name rather than being squeezed into `broader`, where the proposer
+ * had been putting it. A fourth, `related` (Docker ↔ Kubernetes), is
+ * deliberately NOT here: it is symmetric, so admitting it to the match path
+ * would reintroduce the exact false positive this table exists to remove.
  *
  * `approved_at` is null until a human accepts it. Nothing unapproved may
  * influence matching — a wrong edge is invisible and global, changing every

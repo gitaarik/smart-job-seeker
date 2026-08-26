@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: { error?: string } | null } = $props();
@@ -8,7 +9,12 @@
 	let aliases = $derived(data.aliases);
 	let stats = $derived(data.stats);
 
-	let pendingRelations = $derived(relations.filter((r) => !r.approved));
+	// `superseded` proposals are pending in the table but not in the queue: an
+	// approved edge already connects the same two concepts, either saying this
+	// more precisely or saying the opposite. Neither answer is a decision.
+	// Counting them as review makes the queue look like work.
+	let pendingRelations = $derived(relations.filter((r) => !r.approved && !r.superseded));
+	let supersededRelations = $derived(relations.filter((r) => !r.approved && r.superseded));
 	let approvedRelations = $derived(relations.filter((r) => r.approved));
 	let pendingAliases = $derived(aliases.filter((a) => !a.approved));
 	let approvedAliases = $derived(aliases.filter((a) => a.approved));
@@ -24,6 +30,7 @@
 	function sentence(relation: string, from: string, to: string): string {
 		if (relation === 'broader') return `${from} is a kind of ${to}`;
 		if (relation === 'requires') return `${from} cannot be used without ${to}`;
+		if (relation === 'covers') return `“${from}” is one entry covering ${to}`;
 		return `${from} — ${relation} — ${to}`;
 	}
 </script>
@@ -54,7 +61,7 @@
 			</p>
 		</div>
 		<a
-			href="/admin/skill-ontology/graph"
+			href={resolve('/admin/skill-ontology/graph')}
 			class="shrink-0 rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
 		>
 			View graph
@@ -67,8 +74,8 @@
 		class="rounded-lg border border-[var(--dash-warning-border)] bg-[var(--dash-warning-bg)] px-4 py-3 text-sm text-[var(--dash-text)]"
 	>
 		These relations are shared by <strong>every profile</strong> — approving a wrong one degrades matching
-		for everyone, silently. And confidence is not accuracy: the two edges that had to be revoked scored
-		0.90 and 0.95. Read the sentence, not the number.
+		for everyone, silently. And confidence is not accuracy: every wrong edge found so far scored 0.90
+		or above. Read the sentence, not the number.
 	</div>
 
 	{#if form?.error}
@@ -91,10 +98,16 @@
 				>
 			{/if}
 		</h2>
+		{#if supersededRelations.length > 0}
+			<p class="px-4 pt-3 text-xs text-[var(--dash-text-secondary)]">
+				{supersededRelations.length} more not shown: an approved edge already connects the same two concepts,
+				in one direction or the other, so there is nothing left to decide.
+			</p>
+		{/if}
 		{#if pendingRelations.length === 0}
 			<p class="px-4 py-4 text-sm text-[var(--dash-text-muted)]">Nothing waiting.</p>
 		{:else}
-			<ul>
+			<ul class="mt-2">
 				{#each pendingRelations as r (r.id)}
 					<li
 						class="flex items-center gap-2 border-b border-[var(--dash-border)] px-4 py-2 last:border-0"

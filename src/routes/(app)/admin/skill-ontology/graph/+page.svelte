@@ -1,5 +1,9 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
+
+	/** Every href on this page points back at this route. */
+	const GRAPH = resolve('/admin/skill-ontology/graph');
 
 	let { data }: { data: PageData } = $props();
 
@@ -75,12 +79,15 @@
 			}
 		].filter(Boolean) as { label: string; x: number; w: number }[];
 
-		const pos = new Map<number, { x: number; y: number }>();
+		// A record rather than a Map: this is rebuilt whole on every recompute and
+		// never mutated in place, which is the case `svelte/prefer-svelte-reactivity`
+		// exists to catch, and a plain object says so without the import.
+		const pos: Record<number, { x: number; y: number }> = {};
 		byDepth.forEach((col, ci) => {
 			const colH = col.length * NODE_H + (col.length - 1) * ROW_GAP;
 			const top = (height - colH) / 2;
 			col.forEach((n, ri) => {
-				pos.set(n.id, { x: PAD + ci * (NODE_W + COL_GAP), y: top + ri * (NODE_H + ROW_GAP) });
+				pos[n.id] = { x: PAD + ci * (NODE_W + COL_GAP), y: top + ri * (NODE_H + ROW_GAP) };
 			});
 		});
 		return { pos, width, height, zones };
@@ -88,9 +95,23 @@
 
 	let reached = $derived(data.nodes.filter((n) => n.depth > 0).length);
 
+	/**
+	 * One line style per relation, and the legend below lists exactly these.
+	 *
+	 * Solid is the unmarked case because "is a kind of" is most of the graph;
+	 * the two exceptions earn a mark. Dotted rather than a colour: the palette
+	 * is already carrying focus and hover, and a third hue would compete with
+	 * both for no gain on a diagram that is legible in greyscale.
+	 */
+	function dashFor(relation: string): string | undefined {
+		if (relation === 'requires') return '4 3';
+		if (relation === 'covers') return '1 3';
+		return undefined;
+	}
+
 	function path(fromId: number, toId: number): string {
-		const a = layout.pos.get(fromId);
-		const b = layout.pos.get(toId);
+		const a = layout.pos[fromId];
+		const b = layout.pos[toId];
 		if (!a || !b) return '';
 		const x1 = a.x + NODE_W;
 		const y1 = a.y + NODE_H / 2;
@@ -113,7 +134,7 @@
 			</p>
 		</div>
 		<a
-			href="/admin/skill-ontology"
+			href={resolve('/admin/skill-ontology')}
 			class="shrink-0 rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
 		>
 			Review queue
@@ -138,7 +159,7 @@
 			<div class="mt-2.5 flex flex-wrap gap-1.5">
 				{#each suggestions as s (s.id)}
 					<a
-						href="/admin/skill-ontology/graph?concept={encodeURIComponent(s.slug)}"
+						href="{GRAPH}?concept={encodeURIComponent(s.slug)}"
 						class="rounded-md border border-[var(--dash-border)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)]"
 					>
 						{s.label}
@@ -186,6 +207,20 @@
 					</svg>
 					requires
 				</span>
+				<span class="flex items-center gap-1.5">
+					<svg width="24" height="8" aria-hidden="true">
+						<line
+							x1="0"
+							y1="4"
+							x2="24"
+							y2="4"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-dasharray="1 3"
+						/>
+					</svg>
+					is one entry covering
+				</span>
 			</div>
 
 			<div class="overflow-x-auto p-2">
@@ -224,17 +259,17 @@
 									fill="none"
 									stroke="currentColor"
 									stroke-width="1.5"
-									stroke-dasharray={e.relation === 'requires' ? '4 3' : undefined}
+									stroke-dasharray={dashFor(e.relation)}
 									marker-end="url(#arrow)"
 								/>
 							{/each}
 						</svg>
 
 						{#each data.nodes as n (n.id)}
-							{@const p = layout.pos.get(n.id)}
+							{@const p = layout.pos[n.id]}
 							{#if p}
 								<a
-									href="/admin/skill-ontology/graph?concept={encodeURIComponent(n.slug)}"
+									href="{GRAPH}?concept={encodeURIComponent(n.slug)}"
 									title={n.label}
 									class="absolute flex items-center justify-center rounded-md border px-2 text-center text-[13px] leading-tight transition-colors
 									{n.depth === 0

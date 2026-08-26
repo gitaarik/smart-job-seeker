@@ -26,6 +26,12 @@
  * traversal that walks `to_id → from_id` reintroduces the exact defect this
  * module was written to remove, which is why there is no such function here.
  *
+ * A compound entry is "specific" in the same sense: "Vitest / Jest" claims more
+ * than "Jest" does, so it reaches Jest and Jest does not reach back. Note that
+ * a compound in a JOB POSTING means the opposite — "Vitest / Jest" there is an
+ * either-will-do, satisfied by one part — and that is a downward question this
+ * module deliberately does not answer.
+ *
  * ## What is deliberately absent
  *
  * `related` (Docker ↔ Kubernetes). It is symmetric, so admitting it to the
@@ -46,9 +52,17 @@ import { normalizeSkill } from '$lib/skills';
  * `broader` is "is a kind of" (React → JavaScript framework). `requires` is
  * "cannot be used without" (Django → Python) — a different claim, since Django
  * is not a kind of Python, but it licenses the same inference: someone who has
- * used Django has necessarily used Python.
+ * used Django has necessarily used Python. `covers` is "this one entry names
+ * several skills" (Vitest / Jest → Jest): not a hierarchy at all, but the same
+ * inference again.
+ *
+ * That shared inference is why the three compose in one traversal without the
+ * query knowing which is which. Membership here means exactly one thing —
+ * **having the `from` side implies having the `to` side** — and any relation
+ * with that property may be added; `related` (Docker ↔ Kubernetes) may not,
+ * because it is symmetric and has no `from` side.
  */
-export const MATCHING_RELATIONS = ['broader', 'requires'] as const;
+export const MATCHING_RELATIONS = ['broader', 'requires', 'covers'] as const;
 
 /**
  * How far a profile skill may reach.
