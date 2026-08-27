@@ -33,6 +33,7 @@
 	import EmptyState from '../profile/components/EmptyState.svelte';
 	import JobCard from './components/JobCard.svelte';
 	import SkillPill from './components/SkillPill.svelte';
+	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
 	import ConfirmModal from '../profile/components/ConfirmModal.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -141,6 +142,8 @@
 			score: m.score,
 			skill_match_percentage: m.skill_match_percentage,
 			matched_skills: m.matched_skills as string[] | null,
+			matched_skill_details: m.matched_skill_details,
+			adjacent_skills: m.adjacent_skills,
 			match_summary: m.match_summary as string | null
 		};
 	}
@@ -151,6 +154,14 @@
 	}
 
 	let profileSkillLevels = $derived(data.profileSkillLevels);
+
+	function getSkillVia(jobId: number, skill: string) {
+		return provenanceFor(matchesByJobId[jobId]?.matched_skill_details, skill);
+	}
+
+	function getRelatedFrom(jobId: number, skill: string) {
+		return adjacentFor(matchesByJobId[jobId]?.adjacent_skills, skill);
+	}
 
 	function getSkillMatchStrength(jobId: number, skill: string): 'strong' | 'weak' | null {
 		const match = getMatch(jobId);
@@ -1018,9 +1029,13 @@
 								</p>
 								<div class="flex flex-wrap gap-1">
 									{#each job.skills_required.slice(0, 10) as skill}
+										{@const via = getSkillVia(job.id, skill)}
 										<SkillPill
 											{skill}
 											strength={getSkillMatchStrength(job.id, skill)}
+											via={via?.via ?? null}
+											from={via?.from ?? null}
+											relatedFrom={getRelatedFrom(job.id, skill)}
 											variant="required"
 											size="sm"
 										/>
@@ -1041,9 +1056,13 @@
 								</p>
 								<div class="flex flex-wrap gap-1">
 									{#each job.skills_preferred.slice(0, 10) as skill}
+										{@const via = getSkillVia(job.id, skill)}
 										<SkillPill
 											{skill}
 											strength={getSkillMatchStrength(job.id, skill)}
+											via={via?.via ?? null}
+											from={via?.from ?? null}
+											relatedFrom={getRelatedFrom(job.id, skill)}
 											variant="preferred"
 											size="sm"
 										/>

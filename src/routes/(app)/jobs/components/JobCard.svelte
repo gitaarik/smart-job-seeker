@@ -20,6 +20,7 @@
 	import SkillPill from './SkillPill.svelte';
 	import { formatSalaryRange, timeAgo } from '$lib/format';
 	import { formatDate as fmtDate, formatMonthDay } from '$lib/format-date';
+	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
 
 	interface Job {
 		id: number;
@@ -46,6 +47,8 @@
 		score: number;
 		skill_match_percentage: number | null;
 		matched_skills?: string[] | null;
+		matched_skill_details?: unknown;
+		adjacent_skills?: unknown;
 		match_summary?: string | null;
 		status: string;
 	}
@@ -125,6 +128,15 @@
 	const jobTypes = $derived(asStringArray(job.job_types));
 	const experienceLevels = $derived(asStringArray(job.experience_levels));
 	const matchedSkillsSet = $derived(new Set(match?.matched_skills || []));
+
+	/** HOW it matched — a different axis from strength. Null on pre-column rows. */
+	function getSkillVia(skill: string) {
+		return provenanceFor(match?.matched_skill_details, skill);
+	}
+
+	function getRelatedFrom(skill: string) {
+		return adjacentFor(match?.adjacent_skills, skill);
+	}
 
 	/**
 	 * Returns the match strength for a skill:
@@ -278,9 +290,13 @@
 						</p>
 						<div class="flex flex-wrap gap-1">
 							{#each skillsRequired.slice(0, 15) as skill}
+								{@const via = getSkillVia(skill)}
 								<SkillPill
 									{skill}
 									strength={getSkillMatchStrength(skill)}
+									via={via?.via ?? null}
+									from={via?.from ?? null}
+									relatedFrom={getRelatedFrom(skill)}
 									variant="required"
 									size="sm"
 								/>

@@ -190,6 +190,20 @@
       "when": 1787774536830,
       "tag": "0026_regular_silver_surfer",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1787808643045,
+      "tag": "0027_wealthy_magik",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1787811089502,
+      "tag": "0028_mute_shinko_yamashiro",
+      "breakpoints": true
     }
   ]
 }

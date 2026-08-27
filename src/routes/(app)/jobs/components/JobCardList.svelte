@@ -23,6 +23,8 @@
 		score: number;
 		skill_match_percentage: number | null;
 		matched_skills?: string[] | null;
+		matched_skill_details?: unknown;
+		adjacent_skills?: unknown;
 		match_summary?: string | null;
 	}
 
@@ -32,6 +34,14 @@
 		status?: string;
 		match_summary: string | null;
 		matched_skills: unknown;
+		/**
+		 * Optional, not required: `home/+page.svelte` builds `MatchItem`s from its
+		 * own narrower select, and rows scored before the column existed carry
+		 * null anyway. A required field here would make the caller's shape a
+		 * compile error rather than the missing tooltip it actually is.
+		 */
+		matched_skill_details?: unknown;
+		adjacent_skills?: unknown;
 		skill_match_percentage: number | null;
 		job: Job;
 	}
@@ -93,6 +103,8 @@
 			score: item.score,
 			skill_match_percentage: item.skill_match_percentage,
 			matched_skills: item.matched_skills as string[] | null,
+			matched_skill_details: item.matched_skill_details,
+			adjacent_skills: item.adjacent_skills,
 			match_summary: item.match_summary
 		};
 	}

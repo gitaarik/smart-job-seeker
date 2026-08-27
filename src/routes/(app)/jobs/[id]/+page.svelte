@@ -48,6 +48,7 @@
 	import { page } from '$app/stores';
 	import { formatDateLong, formatDateTime as fmtDateTime } from '$lib/format-date';
 	import type { TimeFormat } from '$lib/format-date';
+	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -195,6 +196,20 @@
 		const level = profileSkillLevels[skill.toLowerCase()];
 		if (level === 'weak') return 'weak';
 		return 'strong';
+	}
+
+	/**
+	 * HOW it matched, which `getSkillMatchStrength` does not answer — that one
+	 * reports the applicant's proficiency. Null on every row scored before
+	 * `matched_skill_details` existed, and the pills render as they always did.
+	 */
+	function getSkillVia(skill: string) {
+		return provenanceFor(match?.matched_skill_details, skill);
+	}
+
+	/** A held skill related to an UNMATCHED one — annotates the gap, never fills it. */
+	function getRelatedFrom(skill: string) {
+		return adjacentFor(match?.adjacent_skills, skill);
 	}
 
 	let profileSkillIndex = $derived(data.profileSkillIndex);
@@ -591,9 +606,13 @@
 							</p>
 							<div class="flex flex-wrap gap-2">
 								{#each job.skills_required as skill}
+									{@const via = getSkillVia(skill)}
 									<AddSkillToProfile
 										{skill}
 										strength={getSkillMatchStrength(skill)}
+										via={via?.via ?? null}
+										from={via?.from ?? null}
+										relatedFrom={getRelatedFrom(skill)}
 										profileSkill={getProfileSkill(skill)}
 										variant="required"
 									/>
@@ -611,9 +630,13 @@
 							</p>
 							<div class="flex flex-wrap gap-2">
 								{#each job.skills_preferred as skill}
+									{@const via = getSkillVia(skill)}
 									<AddSkillToProfile
 										{skill}
 										strength={getSkillMatchStrength(skill)}
+										via={via?.via ?? null}
+										from={via?.from ?? null}
+										relatedFrom={getRelatedFrom(skill)}
 										profileSkill={getProfileSkill(skill)}
 										variant="preferred"
 									/>

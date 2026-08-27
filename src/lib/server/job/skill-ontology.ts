@@ -210,6 +210,90 @@ export async function expandUpward(
 }
 
 /**
+ * Approved alias spellings of these concept slugs.
+ *
+ * The alias table was one-way until this existed. `expandUpward` SEEDS from an
+ * alias, so a profile spelled "React.js" finds React — but nothing resolved an
+ * alias on the JOB side, so a posting spelled "React.js" against a profile
+ * holding "React" matched nothing. Measured on the corpus, 1,308 of 34,359
+ * skill mentions (3.8%) are spelled as an approved alias: `terraform`,
+ * `frontend`, `go`, `ci/cd pipelines`.
+ *
+ * Separate from `expandUpward` rather than folded into it, because an alias is
+ * not a concept and that function answers "which CONCEPTS does this reach" —
+ * `skill-relation-guards.ts` asks it that question when hunting for loops, and
+ * the answer must not quietly grow spellings. This answers the different
+ * question the exact-match gates actually ask: "which STRINGS may stand for
+ * what the applicant holds".
+ *
+ * Returns the normalized alias, which is what the gates compare on.
+ */
+export async function approvedAliasesOf(
+	slugs: string[]
+): Promise<{ alias: string; slug: string }[]> {
+	if (slugs.length === 0) return [];
+	return queryRawDirect<{ alias: string; slug: string }>(sql`
+		SELECT a.alias, c.slug
+		FROM skill_aliases a JOIN skill_concepts c ON c.id = a.concept_id
+		WHERE a.approved_at IS NOT NULL AND a.alias <> c.slug
+		  AND c.slug IN (${inList([...new Set(slugs)])})
+	`);
+}
+
+/**
+ * Concepts one `related` hop from these skills — the adjacency behind
+ * "you don't have Kubernetes, but you have Docker".
+ *
+ * ## Why this is not a match, and must never become one
+ *
+ * `related` is symmetric and implies nothing: Docker does not mean Kubernetes,
+ * which is exactly why `MATCHING_RELATIONS` excludes it and why admitting it to
+ * eligibility would put the old false positives straight back. This answers a
+ * different question — not "does the applicant have what was asked for" but
+ * "is there anything in the profile worth MENTIONING about this gap". A gap
+ * annotated is still a gap; the score must not move, and nothing here may reach
+ * `checkEligibility`, `buildEligibilityFilter` or `skill_match_percentage`.
+ *
+ * ## One hop, from the seeds only
+ *
+ * Not recursive, deliberately, and not merely for cost. Docker ~ Kubernetes is
+ * a useful thing to tell someone; Kubernetes ~ whatever-Kubernetes-is-related-to
+ * is two steps from the applicant and reads as noise. `expandForRetrieval`
+ * takes the same single hop for the same reason, and `check-skill-ontology.ts`
+ * pins it: "`related` does not compose".
+ *
+ * Walked in BOTH directions because the relation is symmetric and stored once
+ * per unordered pair — `propose-skill-relations.ts --with-related` orders the
+ * endpoints lexicographically, so which column a concept lands in says nothing.
+ *
+ * Seeds resolve through approved aliases, like every other traversal here.
+ */
+export async function relatedTo(
+	skills: string[]
+): Promise<{ seed: string; slug: string; label: string }[]> {
+	const slugs = [...new Set(skills.map(normalizeSkill).filter(Boolean))];
+	if (slugs.length === 0) return [];
+
+	return queryRawDirect<{ seed: string; slug: string; label: string }>(sql`
+		WITH seed AS (
+			SELECT c.slug AS seed, c.id FROM skill_concepts c WHERE c.slug IN (${inList(slugs)})
+			UNION
+			SELECT a.alias AS seed, c.id
+			FROM skill_aliases a JOIN skill_concepts c ON c.id = a.concept_id
+			WHERE a.alias IN (${inList(slugs)}) AND a.approved_at IS NOT NULL
+		)
+		SELECT seed.seed, other.slug, other.label
+		FROM seed
+		JOIN skill_relations r
+		  ON (r.from_id = seed.id OR r.to_id = seed.id)
+		JOIN skill_concepts other
+		  ON other.id = CASE WHEN r.from_id = seed.id THEN r.to_id ELSE r.from_id END
+		WHERE r.relation = 'related' AND r.approved_at IS NOT NULL
+		  AND other.id <> seed.id
+	`);
+}
+
+/**
  * Concepts each of these skills reaches for RETRIEVAL, keyed by the skill that
  * reached them.
  *

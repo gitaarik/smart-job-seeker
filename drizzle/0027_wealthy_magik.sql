@@ -1,0 +1,1 @@
+ALTER TABLE "job_matches" ADD COLUMN "matched_skill_details" jsonb;

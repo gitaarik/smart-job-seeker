@@ -95,7 +95,14 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 			? []
 			: await db.query.job_matches.findMany({
 					where: and(eq(job_matches.profile_id, profileId), inArray(job_matches.job_id, jobIds)),
-					columns: { job_id: true, score: true, recommendation: true, matched_skills: true }
+					columns: {
+						job_id: true,
+						score: true,
+						recommendation: true,
+						matched_skills: true,
+						matched_skill_details: true,
+						adjacent_skills: true
+					}
 				});
 	const matchByJobId = new Map(matches.map((m) => [m.job_id, m]));
 	const itemsWithMatch = items.map((item) => ({

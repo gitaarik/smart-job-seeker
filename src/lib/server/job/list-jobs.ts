@@ -339,6 +339,8 @@ export async function listJobs(
 						score: m.score,
 						skill_match_percentage: m.skill_match_percentage,
 						matched_skills: m.matched_skills,
+						matched_skill_details: m.matched_skill_details,
+						adjacent_skills: m.adjacent_skills,
 						match_summary: m.match_summary,
 						recommendation: m.recommendation
 					}
@@ -383,6 +385,8 @@ export async function listJobs(
 					score: true,
 					skill_match_percentage: true,
 					matched_skills: true,
+					matched_skill_details: true,
+					adjacent_skills: true,
 					match_summary: true,
 					recommendation: true
 				}

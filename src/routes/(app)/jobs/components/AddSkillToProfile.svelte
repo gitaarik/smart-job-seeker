@@ -6,6 +6,7 @@
 	import { SKILL_LEVELS } from '$lib/data/field-labels';
 	import { clickOutside, keepInView } from '$lib/actions/popover';
 	import type { ProfileSkillRef } from '$lib/profile-visibility';
+	import { adjacencyExplanation, matchExplanation, type MatchVia } from '$lib/match-provenance';
 
 	/**
 	 * A job's skill pill, which doubles as the shortest path between noticing a
@@ -35,6 +36,11 @@
 	interface Props {
 		skill: string;
 		strength?: Strength;
+		/** Forwarded to the pill unchanged — see `SkillPill`'s `via`/`from`. */
+		via?: MatchVia | null;
+		from?: string | null;
+		/** A held skill `related` to this one, when this one is NOT matched. */
+		relatedFrom?: string | null;
 		variant?: 'required' | 'preferred';
 		/** What the profile holds for this skill, if anything. */
 		profileSkill?: ProfileSkillRef | null;
@@ -50,6 +56,9 @@
 	let {
 		skill,
 		strength = null,
+		via = null,
+		from = null,
+		relatedFrom = null,
 		variant = 'required',
 		profileSkill = null,
 		defaultShowOnCv = false
@@ -218,7 +227,7 @@
 		{:else if editing}
 			<!-- Matched or not, the profile has it — reuse the matched styling so a
            stale match doesn't make an owned skill look missing. -->
-			<SkillPill {skill} strength={strength ?? 'strong'} {variant} size="md" />
+			<SkillPill {skill} strength={strength ?? 'strong'} {via} {from} {variant} size="md" />
 		{:else if strength !== null}
 			<!-- The mirror of the case above, and the one that was missing: the match
            DID count this skill — semantic expansion or the LLM pass reached it
@@ -226,8 +235,13 @@
            but no profile row carries this exact name, so the branch above can't
            fire. Falling through to the plain "add me" pill made a counted skill
            read as one the applicant lacks, contradicting the score right next
-           to it. Dashed, like the profile-only pill: counted, with a caveat. -->
+           to it. Dashed, like the profile-only pill: counted, with a caveat.
+
+           The caveat used to be untitled, so the caveat was all you got. `via`
+           now names the skill that reached it, which is the question this pill
+           raises and could not answer. -->
 			<span
+				title={matchExplanation(via, from)}
 				class="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-[var(--dash-success)]/40 bg-[var(--dash-success-light)]/50 px-3 py-1 text-sm text-[var(--dash-success)]"
 			>
 				<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
@@ -235,7 +249,15 @@
 				<FontAwesomeIcon icon={faPlus} class="h-2.5 w-2.5 opacity-60" />
 			</span>
 		{:else}
+			<!-- A genuine gap. It stays a gap: same colour, no check, same cost to the
+           score. `relatedFrom` only stops it being a DEAD END — "you don't have
+           Kubernetes, but you have Docker" is worth saying in a letter, and
+           saying it here is where the applicant finds out. -->
 			<span
+				title={adjacencyExplanation(relatedFrom)}
+				class:decoration-dotted={!!relatedFrom}
+				class:underline={!!relatedFrom}
+				class:underline-offset-2={!!relatedFrom}
 				class="
           inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 text-sm transition-colors {variant ===
 				'preferred'

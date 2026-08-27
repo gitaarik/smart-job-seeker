@@ -5,7 +5,9 @@
 import { dbDirect as db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { tech_skills, tech_skill_categories } from '$lib/server/db/schema';
-import { expandUpward } from './skill-ontology';
+import { normalizeSkill } from '$lib/skills';
+import type { AdjacentSkill, SkillProvenance } from '$lib/match-provenance';
+import { approvedAliasesOf, expandUpward, expandUpwardBySeed, relatedTo } from './skill-ontology';
 
 /**
  * Extract tech skills from a profile
@@ -81,7 +83,19 @@ export async function getExpandedProfileSkills(profileId: number): Promise<strin
 		return [];
 	});
 
-	return [...new Set([...base, ...viaOntology.map((c) => c.label)])];
+	// Approved alias SPELLINGS of everything reached, so a posting's wording
+	// resolves as well as a profile's does. Without them the alias table only
+	// worked in one direction — see `approvedAliasesOf`. This is the one place
+	// the fix belongs: every gate that filters on skills goes through here, so
+	// putting it anywhere narrower would make eligibility and scoring disagree.
+	const aliases = await approvedAliasesOf(viaOntology.map((c) => c.slug)).catch((err) => {
+		console.warn('[match-utils] alias spellings unavailable, job wordings may miss:', err);
+		return [];
+	});
+
+	return [
+		...new Set([...base, ...viaOntology.map((c) => c.label), ...aliases.map((a) => a.alias)])
+	];
 }
 
 /**
@@ -126,3 +140,175 @@ export async function getProfileSkillLevels(
 	}
 	return result;
 }
+
+/**
+ * Everything one profile's skills can answer, and which skill answers it.
+ *
+ * Depends on the PROFILE only, never the job, so it is computed once and reused
+ * across every job in a run. That is not an optimisation, it is the difference
+ * between one query and thousands: `skill-embeddings.ts` carries an LRU memo for
+ * exactly this shape of mistake, made once already.
+ *
+ * `expanded` is byte-for-byte what `getExpandedProfileSkills` returns — the same
+ * walk, since `expandUpwardBySeed` is `expandUpward` keyed by seed — so a caller
+ * that needs both the flat list and the attribution pays for one query, not two.
+ */
+export interface ProfileReach {
+	/** Normalized profile skill -> the spelling the applicant actually wrote. */
+	spelling: Map<string, string>;
+	/** Concept the profile reaches -> the closest skill that reached it. */
+	byReached: Map<string, { seed: string; depth: number }>;
+	/** The flat expanded skill list, for the exact-match gates downstream. */
+	expanded: string[];
+	/**
+	 * Concept the profile is one `related` hop from -> the skill that is related.
+	 *
+	 * Strictly separate from `byReached`. Nothing in here is a match, and no
+	 * caller may fold it into one — see `relatedTo`.
+	 */
+	adjacent: Map<string, { seed: string }>;
+}
+
+/**
+ * Build a profile's reach. Hoist the call above any per-job loop.
+ *
+ * Degrades exactly as `getExpandedProfileSkills` does: a traversal failure costs
+ * the attribution, never the skills. Matching on fewer skills silently returns
+ * fewer jobs, which reads as "nothing matched" rather than as a fault.
+ */
+export async function profileReach(profileId: number): Promise<ProfileReach> {
+	const base = await getProfileSkills(profileId);
+
+	// First spelling wins. Two rows that normalize the same way are the same
+	// skill, and either spelling answers a job equally well, so the tie is not
+	// worth a decision — but it must be a STABLE tie, not row order dressed up as
+	// one, which is why it is written down rather than left to `new Map`.
+	const spelling = new Map<string, string>();
+	for (const s of base) {
+		const key = normalizeSkill(s);
+		if (key && !spelling.has(key)) spelling.set(key, s);
+	}
+	if (base.length === 0)
+		return { spelling, byReached: new Map(), expanded: base, adjacent: new Map() };
+
+	const reach = await expandUpwardBySeed(base).catch((err) => {
+		console.warn('[match-utils] ontology expansion failed, continuing without it:', err);
+		return new Map<string, { slug: string; label: string; depth: number }[]>();
+	});
+
+	// Invert to reached-concept -> the CLOSEST seed that reached it. Closest,
+	// because a job's "JavaScript" answered by both React (depth 2) and
+	// TypeScript (depth 1) should credit the one making the shorter claim — and
+	// because the alternative, first-seen, makes the answer depend on the order
+	// `getProfileSkills` happened to return rows in.
+	const byReached = new Map<string, { seed: string; depth: number }>();
+	const labels: string[] = [];
+	for (const [seed, reached] of reach) {
+		for (const r of reached) {
+			labels.push(r.label);
+			const prev = byReached.get(r.slug);
+			if (!prev || r.depth < prev.depth) byReached.set(r.slug, { seed, depth: r.depth });
+		}
+	}
+
+	// Approved alias spellings, registered BOTH as attribution keys and into
+	// `expanded`, because `getExpandedProfileSkills` now emits them too and the
+	// two must not disagree about what counts as matched.
+	const aliasRows =
+		byReached.size > 0
+			? await approvedAliasesOf([...byReached.keys()]).catch((err) => {
+					console.warn(
+						'[match-utils] alias spellings unavailable, attribution may over-report llm:',
+						err
+					);
+					return [];
+				})
+			: [];
+	for (const a of aliasRows) {
+		const hit = byReached.get(a.slug);
+		// Never shadow a concept that is itself reachable: if both readings exist,
+		// the one that is a real node wins.
+		if (hit && !byReached.has(a.alias)) byReached.set(a.alias, hit);
+		if (a.alias) labels.push(a.alias);
+	}
+
+	// `base` is spread explicitly for the same reason `getExpandedProfileSkills`
+	// does it: the walk returns only concepts that EXIST in the graph, and
+	// coverage is well short of the whole vocabulary, so dropping the raw skills
+	// here would silently discard most of a profile.
+	// Gap analysis only. Kept out of `expanded` and out of `byReached` by
+	// construction: a symmetric edge that reached either would be a match, which
+	// is the one thing `related` must never be.
+	const adjacent = new Map<string, { seed: string }>();
+	const relatedRows = await relatedTo(base).catch((err) => {
+		console.warn('[match-utils] related hop unavailable, gaps stay unannotated:', err);
+		return [];
+	});
+	for (const r of relatedRows) {
+		if (!adjacent.has(r.slug)) adjacent.set(r.slug, { seed: r.seed });
+	}
+
+	return { spelling, byReached, expanded: [...new Set([...base, ...labels])], adjacent };
+}
+
+/**
+ * Attribute each of a job's skills to how the profile answers it. Pure, so it
+ * runs per job at no query cost once `profileReach` is in hand.
+ *
+ * A skill the profile cannot reach is ABSENT rather than present-and-unmatched:
+ * the caller merges in whatever the LLM pass claimed afterwards, and anything
+ * still unattributed at that point is by definition `llm`.
+ */
+export function attributeSkills(
+	reach: ProfileReach,
+	jobSkills: string[]
+): Map<string, SkillProvenance> {
+	const out = new Map<string, SkillProvenance>();
+	for (const skill of jobSkills) {
+		const key = normalizeSkill(skill);
+		if (!key || out.has(skill)) continue;
+		if (reach.spelling.has(key)) {
+			out.set(skill, { skill, via: 'literal', depth: 0 });
+			continue;
+		}
+		const hit = reach.byReached.get(key);
+		if (!hit) continue;
+		out.set(skill, {
+			skill,
+			via: hit.depth === 0 ? 'alias' : 'ontology',
+			depth: hit.depth,
+			from: reach.spelling.get(hit.seed) ?? hit.seed
+		});
+	}
+	return out;
+}
+
+export type { MatchVia, SkillProvenance } from '$lib/match-provenance';
+
+/**
+ * For each job skill the profile does NOT answer, a related skill it does hold.
+ *
+ * Pure, so it runs per job for free. Takes the matched set explicitly rather
+ * than deriving it, because "unmatched" must mean what the matcher concluded —
+ * including the LLM pass — and not what attribution alone could see.
+ */
+export function adjacentSkills(
+	reach: ProfileReach,
+	jobSkills: string[],
+	matched: Set<string>
+): AdjacentSkill[] {
+	const out: AdjacentSkill[] = [];
+	const seen = new Set<string>();
+	for (const skill of jobSkills) {
+		if (matched.has(skill) || seen.has(skill)) continue;
+		const key = normalizeSkill(skill);
+		if (!key) continue;
+		const hit = reach.adjacent.get(key);
+		if (!hit) continue;
+		seen.add(skill);
+		out.push({ skill, from: reach.spelling.get(hit.seed) ?? hit.seed });
+	}
+	return out;
+}
+
+export type { AdjacentSkill } from '$lib/match-provenance';

@@ -16,6 +16,7 @@
 	import CategoryPill from '$lib/components/CategoryPill.svelte';
 	import ScoreBadge from '../../../components/ScoreBadge.svelte';
 	import SkillPill from '../../../components/SkillPill.svelte';
+	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
 	import SearchTaskFields from '../../../components/SearchTaskFields.svelte';
 	import SourceEditor from '../../components/SourceEditor.svelte';
 	import FilterEditor from '../../components/FilterEditor.svelte';
@@ -316,6 +317,8 @@
 			score: number;
 			recommendation: string | null;
 			matched_skills?: string[] | null;
+			matched_skill_details?: unknown;
+			adjacent_skills?: unknown;
 		} | null;
 	}
 
@@ -1958,9 +1961,13 @@
 												</p>
 												<div class="flex flex-wrap gap-1">
 													{#each job.skills_required.slice(0, 12) as skill}
+														{@const via = provenanceFor(item.match?.matched_skill_details, skill)}
 														<SkillPill
 															{skill}
 															strength={getSkillMatchStrength(skill, matchedSkillsSet)}
+															via={via?.via ?? null}
+															from={via?.from ?? null}
+															relatedFrom={adjacentFor(item.match?.adjacent_skills, skill)}
 															variant="required"
 															size="sm"
 														/>
@@ -1983,9 +1990,13 @@
 												</p>
 												<div class="flex flex-wrap gap-1">
 													{#each job.skills_preferred.slice(0, 12) as skill}
+														{@const via = provenanceFor(item.match?.matched_skill_details, skill)}
 														<SkillPill
 															{skill}
 															strength={getSkillMatchStrength(skill, matchedSkillsSet)}
+															via={via?.via ?? null}
+															from={via?.from ?? null}
+															relatedFrom={adjacentFor(item.match?.adjacent_skills, skill)}
 															variant="preferred"
 															size="sm"
 														/>

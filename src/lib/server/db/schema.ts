@@ -863,6 +863,31 @@ export const job_matches = pgTable(
 		llm_prompt: text(),
 		ai_chat_scoring: integer(),
 		matched_skills: json(),
+		/**
+		 * How each entry in `matched_skills` came to be there — one
+		 * `SkillProvenance` per matched skill (`job/match-utils.ts`).
+		 *
+		 * A sibling column rather than a richer `matched_skills`, deliberately:
+		 * that array is read in nineteen files, and changing its shape is a
+		 * rewrite rather than a feature. Nullable, so every row scored before this
+		 * existed stays valid and the UI falls back to showing no attribution.
+		 * Details fill in as jobs re-score; there is nothing to backfill, because
+		 * the provenance of a match made under the old code is not recoverable.
+		 */
+		matched_skill_details: jsonb(),
+		/**
+		 * Gaps the profile is one `related` hop from — "they asked for Kubernetes,
+		 * you have Docker". One `AdjacentSkill` per UNMATCHED job skill that has
+		 * one.
+		 *
+		 * Separate from `matched_skill_details` on purpose and not merely for
+		 * tidiness: that column hangs off `matched_skills`, so anything written
+		 * there reads as matched, and `related` is symmetric — Docker does not
+		 * imply Kubernetes. These skills are still gaps, still cost the applicant
+		 * the same score, and `MATCHING_RELATIONS` still excludes the edge they
+		 * came from. See `relatedTo` in job/skill-ontology.ts.
+		 */
+		adjacent_skills: jsonb(),
 		match_summary: text(),
 		/**
 		 * Set when this score is deliberately invalidated (rescrape changed the
