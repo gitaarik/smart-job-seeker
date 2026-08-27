@@ -1,6 +1,7 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { json, redirect } from '@sveltejs/kit';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
+import { building } from '$app/environment';
 import { auth } from '$lib/server/auth/better-auth';
 import type { User } from '$lib/server/auth/better-auth';
 import { config } from '$lib/server/config';
@@ -124,31 +125,41 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	// Handle Better Auth routes (e.g., /api/auth/*)
-	// In dev mode, Vite's dev server always uses http://localhost:PORT as the
-	// request origin, which doesn't match the public baseURL behind a reverse
-	// proxy. Bypass better-auth's origin check by calling auth.handler directly.
-	if (import.meta.env.DEV) {
-		const basePath = auth.options.basePath || '/api/auth';
-		if (event.url.pathname.startsWith(basePath)) {
+	const pathname = event.url.pathname;
+
+	// Handle Better Auth routes (e.g., /api/auth/*), and ONLY those.
+	//
+	// `svelteKitHandler` returns `resolve(event)` for any path it does not
+	// recognise as an auth path, so the previous
+	//
+	//     const authResponse = await svelteKitHandler(…);
+	//     if (authResponse) return authResponse;
+	//
+	// matched every request that reached it and ended the hook right there. Every
+	// line below was dead: the /api/* auth gate, the approval and deletion
+	// checks, the AI rate limiter, and the theme transform. Verified rather than
+	// reasoned — a probe log after that block got zero hits on `/login` and
+	// `/api/contacts`, and a `theme=dark` cookie still rendered
+	// `class="theme-light"`.
+	//
+	// In dev, Vite's origin is http://localhost:PORT, which does not match the
+	// public baseURL behind a reverse proxy, so better-auth's origin check has to
+	// be bypassed by calling the handler directly.
+	if (pathname.startsWith(auth.options.basePath || '/api/auth')) {
+		if (import.meta.env.DEV) {
 			return auth.handler(event.request);
 		}
-	}
-
-	try {
-		const authResponse = await svelteKitHandler({ event, resolve, auth });
-		if (authResponse) {
-			return authResponse;
+		try {
+			return await svelteKitHandler({ event, resolve, auth, building });
+		} catch {
+			// Session error (e.g., stale token) - clear session cookie and continue
+			event.locals.user = null;
+			event.locals.session = null;
 		}
-	} catch {
-		// Session error (e.g., stale token) - clear session cookie and continue
-		event.locals.user = null;
-		event.locals.session = null;
 	}
 
 	// Enforce authentication on all /api/* routes by default.
 	// New API routes are secure automatically — only routes in PUBLIC_API_ROUTES skip this.
-	const pathname = event.url.pathname;
 	if (
 		pathname.startsWith('/api/') &&
 		!PUBLIC_API_ROUTES.some((route) => pathname.startsWith(route))
@@ -174,6 +185,32 @@ export const handle: Handle = async ({ event, resolve }) => {
 			if (!aiRateLimiter.tryConsumeKey(event.locals.user.id)) {
 				return createRateLimitResponse(aiRateLimiter.retryAfterSeconds());
 			}
+		}
+	}
+
+	// Enforce admin on every /admin/* route, for the same reason the /api/ gate
+	// above is central — plus one more that only bites here: `requireAdmin` lives
+	// in `(app)/admin/+layout.server.ts`, and SvelteKit runs a form ACTION BEFORE
+	// it runs any load. So the layout guard covers the page and none of the 21
+	// actions underneath it.
+	//
+	// Measured on dev, not deduced: a non-admin session GETs
+	// /admin/skill-ontology and is redirected 302 to /home, then POSTs
+	// `?/rejectRelation` with the same cookie and gets 200 with the write
+	// applied. `admin/users` escaped it only because every one of its actions
+	// repeats the check inline; six other files do not.
+	if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+		const asUser = event.locals.user as { is_admin?: boolean } | null;
+		const asAdmin = event.locals.adminUser as { is_admin?: boolean } | null;
+		if (!asUser?.is_admin && !asAdmin?.is_admin) {
+			// A GET keeps the redirect the layout would have given, so nothing about
+			// browsing changes. Anything that writes gets a refusal instead: a 302
+			// on a POST is indistinguishable from success to a caller that does not
+			// follow it, which is exactly how this went unnoticed.
+			if (event.request.method === 'GET' || event.request.method === 'HEAD') {
+				redirect(302, '/home');
+			}
+			return json({ error: 'Admin access required' }, { status: 403 });
 		}
 	}
 
