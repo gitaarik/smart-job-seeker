@@ -1,4 +1,3 @@
-import type { Page } from 'playwright';
 import { launchBrowser } from '$lib/server/browser/utils';
 import { config } from '$lib/server/config';
 import { dbDirect as db } from '$lib/server/db';
@@ -25,7 +24,14 @@ const APP_INTERNAL_URL = 'http://localhost:5173';
  * measurement. Shared now, for the same reason `pdfSettingsFor` is: two renders
  * that must agree cannot be two copies of the steps.
  */
-export async function settleForPrint(page: Page): Promise<void> {
+/**
+ * The one method this needs, rather than a Page type from a package the OSS tree
+ * does not depend on directly — the browser helper imports `patchright`, not
+ * `playwright`, and naming the concrete type here failed to resolve.
+ */
+type PrintablePage = { evaluate: (fn: () => Promise<void>) => Promise<void> };
+
+export async function settleForPrint(page: PrintablePage): Promise<void> {
 	await page.evaluate(async () => {
 		const images = Array.from(document.querySelectorAll('img'));
 		await Promise.all(

@@ -40,6 +40,49 @@ export const RELATION_STYLES = [
 ] as const;
 
 /**
+ * What each relation asserts, and the mistake it invites — for the review queue,
+ * where somebody is deciding one of these every few seconds.
+ *
+ * Every trap here is one that actually happened. `Selenium broader Web Scraping`
+ * is the shape that put `Guest Relations broader Event Planning` into the graph:
+ * a tool is not a kind of the activity you can do with it, and the profile that
+ * proves it is the one using Selenium for a test suite. `Kubernetes requires
+ * Docker` reads true and is not — Kubernetes removed the Docker runtime in 1.24.
+ */
+export const RELATION_GUIDE = [
+	{
+		relation: 'broader',
+		means: 'the left is A KIND OF the right',
+		example: 'React is a kind of JavaScript framework',
+		trap: 'A tool is not a kind of the activity — Selenium is not a kind of Web Scraping.'
+	},
+	{
+		relation: 'requires',
+		means: 'the left CANNOT BE USED WITHOUT the right',
+		example: 'Django cannot be used without Python',
+		trap: '“Usually used together” is not required — Kubernetes dropped Docker in 1.24.'
+	},
+	{
+		relation: 'covers',
+		means: 'the left is ONE ENTRY NAMING several skills',
+		example: '“Vitest / Jest” is one entry covering Jest',
+		trap: 'About how someone wrote their CV, not about the world. No part claims the whole back.'
+	},
+	{
+		relation: 'inDomain',
+		means: 'the left BELONGS TO the right — drawn only, never matched',
+		example: 'Container orchestration is in the domain of IT',
+		trap: 'Membership, not implication. Traversing it would make “IT” match every technical skill.'
+	},
+	{
+		relation: 'related',
+		means: 'the two sit NEXT TO each other — drawn only, never matched',
+		example: 'Docker is related to Kubernetes',
+		trap: 'Symmetric, so it can never license a match. Prefer a shared parent where one is true.'
+	}
+] as const;
+
+/**
  * The same relation as a verb you can put between two names.
  *
  * `label` and `verb` are separate because they do different jobs, and collapsing

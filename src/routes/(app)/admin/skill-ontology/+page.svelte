@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
-	import { verbFor } from './graph/graph-shared';
+	import { RELATION_GUIDE, verbFor } from './graph/graph-shared';
 
 	interface ImportPreview {
 		have: { concepts: number; aliases: number; relations: number };
@@ -278,6 +278,53 @@
 		for everyone, silently. And confidence is not accuracy: every wrong edge found so far scored 0.90
 		or above. Read the sentence, not the number.
 	</div>
+
+	<!-- Collapsed by default: whoever works this queue daily does not need it, and
+	     an explanation that shouts every visit stops being read. Open, it answers
+	     the two questions every wrong edge so far came down to — which relation
+	     is this, and does the left really imply the right. -->
+	<details
+		class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] px-4 py-3 text-sm"
+	>
+		<summary class="cursor-pointer font-medium text-[var(--dash-text)]">
+			What the relations mean
+		</summary>
+
+		<p class="mt-3 text-[var(--dash-text-secondary)]">
+			One test decides all of them: <strong class="text-[var(--dash-text)]"
+				>if someone has the left skill, do they necessarily have the right one?</strong
+			>
+			If yes it is a match relation and the sentence should read true out loud. If no, it belongs in the
+			picture only — <code>inDomain</code> or <code>related</code> — and the matcher will never walk it.
+		</p>
+
+		<dl class="mt-3 space-y-3">
+			{#each RELATION_GUIDE as g (g.relation)}
+				<div>
+					<dt class="font-mono text-xs text-[var(--dash-text)]">{g.relation}</dt>
+					<dd class="text-[var(--dash-text-secondary)]">
+						{g.means} — <em>{g.example}</em>
+						<br />
+						<span class="text-xs">⚠ {g.trap}</span>
+					</dd>
+				</div>
+			{/each}
+		</dl>
+
+		<p class="mt-3 text-xs text-[var(--dash-text-secondary)]">
+			Two skills that merely feel connected — CSV, JSON, YAML — are usually better joined
+			<strong class="text-[var(--dash-text)]">through a shared parent</strong>
+			than to each other: <code>JSON is a kind of Data formats</code> says why they are related and stays
+			one row per skill, where linking every pair grows with the square of the list.
+		</p>
+
+		<p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
+			Direction is the whole point. Arrows run from the specific thing to the general one and are
+			only ever followed that way, so
+			<code>Django cannot be used without Python</code> credits a Django CV with Python and never the
+			reverse.
+		</p>
+	</details>
 
 	{#if form?.error}
 		<div
