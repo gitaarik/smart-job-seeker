@@ -42,6 +42,8 @@ import { dbDirect as db, queryRawDirect } from '$lib/server/db';
 import { refuseNewRelation } from '$lib/server/job/skill-relation-guards';
 import {
 	applyPlan,
+	collisionAdvice,
+	describeCollisions,
 	exportBundle,
 	parseBundle,
 	plan,
@@ -353,8 +355,10 @@ function summarise(p: ImportPlan) {
 
 function collisionMessage(p: ImportPlan): string {
 	return (
-		`Refused: ${p.collisions.length} concept slug(s) are already an approved alias of a ` +
-		`different concept here, so importing them would make the vocabulary claim both ` +
-		`"same node" and "two nodes". Run scripts/audit-skill-ontology.ts --merge-duplicates first.`
+		`Refused: ${p.collisions.length} string(s) are a concept on one side and an approved ` +
+		`alias on the other, so importing would make the vocabulary claim both "same node" ` +
+		`and "two nodes".\n` +
+		describeCollisions(p.collisions).slice(0, 10).join('\n') +
+		`\n\n${collisionAdvice(p.collisions)}`
 	);
 }

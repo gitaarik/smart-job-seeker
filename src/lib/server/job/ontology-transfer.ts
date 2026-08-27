@@ -143,6 +143,22 @@ async function targetState() {
 	return { concepts, aliases, approvedAliases, relations };
 }
 
+/**
+ * One string that both databases claim, in incompatible ways.
+ *
+ * `direction` matters because the two are repaired at opposite ends. A bundle
+ * CONCEPT the target aliases away is fixed by merging on the target. A bundle
+ * ALIAS the target still holds as a concept is fixed by replaying the merge on
+ * the target — the source has already done it, which is exactly how this arises.
+ */
+export interface Collision {
+	/** The contested string: a concept slug on one side, an alias on the other. */
+	slug: string;
+	/** The concept the alias side says it is really spelling. */
+	aliasOf: string;
+	direction: 'bundle-concept' | 'bundle-alias';
+}
+
 export interface ImportPlan {
 	/** Counts of what the target holds now, for the "from → to" line. */
 	have: { concepts: number; aliases: number; relations: number };
@@ -154,10 +170,10 @@ export interface ImportPlan {
 	/** Of the rows above, how many arrive already approved. THE number to show. */
 	approved: number;
 	/**
-	 * Bundle concept slugs the target already holds as an approved alias of a
-	 * DIFFERENT concept. Non-empty means the import must not run.
+	 * Places where the bundle and the target disagree about whether a string is
+	 * a node or a spelling. Non-empty means the import must not run.
 	 */
-	collisions: { slug: string; aliasOf: string }[];
+	collisions: Collision[];
 }
 
 /**
@@ -185,13 +201,38 @@ export async function plan(bundle: Bundle): Promise<ImportPlan> {
 	// and "these are two nodes", and which one a lookup finds comes down to
 	// `UNION` order. Not theoretical — a proposer run produced twelve on
 	// 2026-08-27. Collected rather than thrown so a UI can render them.
-	const collisions = concepts
-		.map((c) => ({ slug: c.slug, aliasOf: target.approvedAliases.get(c.slug) }))
-		.filter((c): c is { slug: string; aliasOf: string } => !!c.aliasOf && c.aliasOf !== c.slug);
+	const collisions: Collision[] = concepts.flatMap((c) => {
+		const aliasOf = target.approvedAliases.get(c.slug);
+		return aliasOf && aliasOf !== c.slug
+			? [{ slug: c.slug, aliasOf, direction: 'bundle-concept' as const }]
+			: [];
+	});
 
 	const newAliases = bundle.aliases
 		.map((a) => ({ ...a, alias: normalizeSkill(a.alias), concept: normalizeSkill(a.concept) }))
 		.filter((a) => a.alias && a.concept && !target.aliases.has(a.alias));
+
+	// The mirror, and the one this originally missed. A bundle alias whose string
+	// the target still holds as its own CONCEPT is the same defect arriving from
+	// the other side, and `ON CONFLICT (alias) DO NOTHING` does not catch it: the
+	// unique index is on `alias`, and the target has no alias row — it has a
+	// concept row. The import would insert happily and leave the vocabulary
+	// asserting both readings.
+	//
+	// It is the normal consequence of repairing the graph anywhere, because
+	// `applyPlan` only ever ADDS: a merge on the source turns a concept into an
+	// alias, and nothing carries the delete. Dev merged `Vector DBs (pgvector)`
+	// into `Vector Stores` on 2026-08-27 while preview still held it as a
+	// concept, which is how this was found.
+	collisions.push(
+		...newAliases
+			.filter((a) => target.concepts.has(a.alias) && a.alias !== a.concept)
+			.map((a) => ({
+				slug: a.alias,
+				aliasOf: a.concept,
+				direction: 'bundle-alias' as const
+			}))
+	);
 	const newRelations = bundle.relations
 		.map((r) => ({ ...r, from: normalizeSkill(r.from), to: normalizeSkill(r.to) }))
 		.filter((r) => r.from && r.to && !target.relations.has(`${r.from}|${r.to}|${r.relation}`));
@@ -223,6 +264,29 @@ export async function plan(bundle: Bundle): Promise<ImportPlan> {
 }
 
 /**
+ * One line per collision, in the words a person can act on. Shared for the same
+ * reason `plan()` is: the CLI and the admin page must not describe the same
+ * refusal differently.
+ */
+export function describeCollisions(cs: Collision[]): string[] {
+	return cs.map((c) =>
+		c.direction === 'bundle-concept'
+			? `  the bundle mints "${c.slug}", which is already an approved alias of "${c.aliasOf}" here`
+			: `  the bundle spells "${c.slug}" as an alias of "${c.aliasOf}", but "${c.slug}" is still a concept here`
+	);
+}
+
+/** Why the refusal happened and what to do about it, given both directions. */
+export function collisionAdvice(cs: Collision[]): string {
+	const stale = cs.some((c) => c.direction === 'bundle-alias');
+	return stale
+		? `The source has merged concepts this target still holds separately, and an import ` +
+				`cannot carry a merge — it only ever ADDS. Replay the merge here (declare the alias, ` +
+				`then scripts/audit-skill-ontology.ts --merge-duplicates) and import again.`
+		: `Resolve with scripts/audit-skill-ontology.ts --merge-duplicates first.`;
+}
+
+/**
  * Apply a plan. Refuses a plan with collisions rather than letting a caller
  * decide to ignore them — the resulting graph is not repairable by hand
  * afterwards without knowing which reading was meant.
@@ -237,7 +301,8 @@ export async function applyPlan(p: ImportPlan): Promise<{
 }> {
 	if (p.collisions.length > 0) {
 		throw new Error(
-			`refusing to import: ${p.collisions.length} concept slug(s) are already an approved alias here`
+			`refusing to import: ${p.collisions.length} string(s) are a concept on one side and an ` +
+				`alias on the other\n${describeCollisions(p.collisions).join('\n')}`
 		);
 	}
 

@@ -46,6 +46,8 @@
 import { readFileSync } from 'node:fs';
 import {
 	applyPlan,
+	collisionAdvice,
+	describeCollisions,
 	exportBundle,
 	parseBundle,
 	plan
@@ -71,13 +73,11 @@ async function main(): Promise<void> {
 
 	if (p.collisions.length > 0) {
 		console.error(
-			`Refusing to import — ${p.collisions.length} concept slug(s) are already an APPROVED ALIAS ` +
-				`of a different concept here. Importing them would make the vocabulary claim both ` +
-				`"same node" and "two nodes". Resolve with scripts/audit-skill-ontology.ts first:\n` +
-				p.collisions
-					.slice(0, 10)
-					.map((c) => `  "${c.slug}" is an alias of "${c.aliasOf}"`)
-					.join('\n')
+			`Refusing to import — ${p.collisions.length} string(s) are a CONCEPT on one side and an ` +
+				`APPROVED ALIAS on the other. Importing would make the vocabulary claim both ` +
+				`"same node" and "two nodes".\n` +
+				describeCollisions(p.collisions).slice(0, 10).join('\n') +
+				`\n\n${collisionAdvice(p.collisions)}`
 		);
 		process.exit(1);
 	}
