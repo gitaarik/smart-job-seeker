@@ -53,13 +53,33 @@ import {
 	plan
 } from '../src/lib/server/job/ontology-transfer';
 
+/**
+ * Write to stdout and WAIT for the write to flush before returning.
+ *
+ * `process.exit()` does not flush an asynchronous write, and stdout IS
+ * asynchronous whenever it is a pipe — which is every
+ * `docker compose exec -T … --export > file`. The bundle came out cut at
+ * exactly 65536 bytes, the pipe buffer, mid-string.
+ *
+ * It happened to fail loudly at `parseBundle` because the cut landed inside a
+ * string. A cut that landed on a byte closing the JSON would have produced a
+ * VALID bundle missing most of the graph, and `applyPlan` only ever adds — so
+ * the import would have reported a modest number of new rows and looked like a
+ * success.
+ */
+function writeOut(text: string): Promise<void> {
+	return new Promise((resolve, reject) =>
+		process.stdout.write(text, (err) => (err ? reject(err) : resolve()))
+	);
+}
+
 async function main(): Promise<void> {
 	const args = process.argv.slice(2);
 	const apply = args.includes('--apply');
 	const importIdx = args.indexOf('--import');
 
 	if (args.includes('--export')) {
-		process.stdout.write(JSON.stringify(await exportBundle(), null, '\t') + '\n');
+		await writeOut(JSON.stringify(await exportBundle(), null, '\t') + '\n');
 		process.exit(0);
 	}
 
