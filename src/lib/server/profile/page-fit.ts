@@ -19,6 +19,7 @@
  */
 
 import { templateForStorage } from '$lib/resume-templates';
+import { pdfSettingsFor, settleForPrint } from '$lib/server/profile/generate-version-pdfs';
 import { launchBrowser } from '$lib/server/browser/utils';
 import { config } from '$lib/server/config';
 import { dbDirect as db } from '$lib/server/db';
@@ -26,16 +27,6 @@ import { eq } from 'drizzle-orm';
 import { profiles } from '$lib/server/db/schema';
 
 const APP_INTERNAL_URL = 'http://localhost:5173';
-
-/**
- * Matches generate-version-pdfs, so a page count here answers about the file
- * the applicant downloads rather than about a differently-margined render.
- */
-const PDF_SETTINGS = {
-	format: 'A4' as const,
-	margin: { top: '0.4in', right: '0.4in', bottom: '0.4in', left: '0.4in' },
-	printBackground: true
-};
 
 /**
  * A page object in a PDF is `/Type /Page`; the tree root is `/Type /Pages`, so
@@ -104,7 +95,14 @@ export async function countVersionPages(
 		});
 		const route = renderRoute(profile.slug, docType, versionSlug, template);
 		await page.goto(route, { waitUntil: 'networkidle', timeout: 30_000 });
-		return pageCount(Buffer.from(await page.pdf(PDF_SETTINGS)));
+		await settleForPrint(page);
+		// The export's own settings, not a copy of them. This used to be a copy
+		// commented "matches generate-version-pdfs" and it did not: a DB-backed
+		// template renders full-bleed with zero page margin, while the copy forced
+		// 0.4in on every side. Nearly an inch of lost height per page, so the
+		// counter saw three pages where the applicant downloaded two — and the fit
+		// loop cut a nine-year role to fix an overflow nobody had.
+		return pageCount(Buffer.from(await page.pdf(pdfSettingsFor(templateForStorage(template)))));
 	} catch (err) {
 		console.warn('[page-fit] could not render', versionSlug, err);
 		return null;

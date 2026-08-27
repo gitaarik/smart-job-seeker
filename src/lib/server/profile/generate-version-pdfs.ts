@@ -1,3 +1,4 @@
+import type { Page } from 'playwright';
 import { launchBrowser } from '$lib/server/browser/utils';
 import { config } from '$lib/server/config';
 import { dbDirect as db } from '$lib/server/db';
@@ -7,6 +8,39 @@ import { createProfileExport } from '$lib/server/profile/exports';
 import { buildExportUrl } from '$lib/server/utils/export-url-builder';
 
 const APP_INTERNAL_URL = 'http://localhost:5173';
+
+/**
+ * Everything that must finish before a page may be printed.
+ *
+ * `networkidle` is not enough and the difference is a whole page. Images decode
+ * after the requests settle, and — the one that actually bit — **webfonts do
+ * too**: print before `document.fonts.ready` and the text lays out in a fallback
+ * face whose metrics are not the template's, so lines wrap differently and the
+ * document gets longer.
+ *
+ * This lived inline in the export and nowhere else, so `page-fit.ts` printed
+ * straight after `networkidle` and counted a fallback-font render. It reported
+ * three pages for a document the applicant downloaded as two, and the fit loop
+ * trimmed nine years of one role to fix an overflow that existed only in the
+ * measurement. Shared now, for the same reason `pdfSettingsFor` is: two renders
+ * that must agree cannot be two copies of the steps.
+ */
+export async function settleForPrint(page: Page): Promise<void> {
+	await page.evaluate(async () => {
+		const images = Array.from(document.querySelectorAll('img'));
+		await Promise.all(
+			images.map(
+				(img) =>
+					new Promise<void>((resolve) => {
+						if (img.complete) return resolve();
+						img.onload = () => resolve();
+						img.onerror = () => resolve();
+					})
+			)
+		);
+		await document.fonts.ready;
+	});
+}
 
 /**
  * The built-in default renderer (ProfileDisplay) has no `@page` rule, so the
@@ -43,8 +77,16 @@ const TEMPLATE_PDF_SETTINGS = {
 	preferCSSPageSize: false
 };
 
-/** Default renderer uses fixed server margins; DB templates use their own CSS @page. */
-function pdfSettingsFor(template: string | null) {
+/**
+ * Default renderer uses fixed server margins; DB templates use their own CSS @page.
+ *
+ * Exported because `page-fit.ts` has to render with exactly these settings. A
+ * page count taken at different margins is a count of a different document, and
+ * for a branded template the gap is 0.8in of usable height — five or six lines a
+ * page. It measured three pages where the export produced two, and the fit loop
+ * trimmed a career to solve an overflow that only existed in the measurement.
+ */
+export function pdfSettingsFor(template: string | null) {
 	return template ? TEMPLATE_PDF_SETTINGS : DEFAULT_PDF_SETTINGS;
 }
 
@@ -104,21 +146,7 @@ export async function generateVersionPdfs(
 				timeout: 30000
 			});
 
-			await page.evaluate(async () => {
-				const images = Array.from(document.querySelectorAll('img'));
-				await Promise.all(
-					images.map((img) => {
-						return new Promise<void>((resolve) => {
-							if (img.complete) {
-								resolve();
-							} else {
-								img.onload = () => resolve();
-								img.onerror = () => resolve();
-							}
-						});
-					})
-				);
-			});
+			await settleForPrint(page);
 
 			const pdfBuffer = await page.pdf(pdfSettingsFor(template));
 			const buffer = Buffer.from(pdfBuffer);
