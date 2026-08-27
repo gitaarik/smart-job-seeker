@@ -437,3 +437,62 @@ describe('buildCandidates: skills', () => {
 		expect(found[0].visible).toBe(false);
 	});
 });
+
+describe('buildCandidates: a required skill the page already shows under another name', () => {
+	// The applicant keeps the long spelling off their documents and prints the
+	// acronym. A posting that used BOTH — this one did — put each on the required
+	// list, and the pass surfaced the hidden twin to satisfy a requirement its own
+	// visible sibling already met. The document printed the same skill twice.
+	const profileWithSkills = (skills: Array<{ id: number; name: string; tags: string[] | null }>) =>
+		({
+			profile_versions: [{ id: 1, slug: 'base', extension_links: [], toggles: [], overrides: [] }],
+			work_experiences: [],
+			side_projects: [],
+			tech_skill_categories: [{ id: 1, name: 'AI', tags: null, tech_skills: skills }]
+		}) as unknown as Parameters<typeof buildCandidates>[0];
+
+	const PAIR = [
+		{ id: 10, name: 'RAG', tags: null },
+		{ id: 11, name: 'Retrieval Augmented Generation', tags: ['!resume', '!cv'] }
+	];
+	// What resolveConcepts answers for that pair: `rag` is an approved alias of
+	// the long form, so both names key onto one concept slug.
+	const RESOLVED = new Map([
+		['rag', 'retrievalaugmentedgeneration'],
+		['retrievalaugmentedgeneration', 'retrievalaugmentedgeneration']
+	]);
+	const pin = (conceptOf?: Map<string, string>) =>
+		buildCandidates(
+			profileWithSkills(PAIR),
+			'resume',
+			'base',
+			['RAG', 'Retrieval Augmented Generation'],
+			conceptOf
+		).find((c) => c.entityType === OVERRIDE_ENTITIES.skill && c.label.startsWith('Retrieval'));
+
+	it('adds the hidden spelling when nothing tells it the two are one skill', () => {
+		expect(pin()?.pinned).toBe(true);
+		expect(pin()?.visible).toBe(false);
+	});
+
+	it('leaves it alone once the graph says they resolve to the same concept', () => {
+		// `visible` means "the document already shows this" — true, under another
+		// name — so the selector emits no row and nothing is added.
+		expect(pin(RESOLVED)?.visible).toBe(true);
+	});
+
+	it('still adds a required skill the page genuinely lacks', () => {
+		const found = buildCandidates(
+			profileWithSkills([
+				{ id: 10, name: 'RAG', tags: null },
+				{ id: 12, name: 'Ontologies', tags: ['!resume', '!cv'] }
+			]),
+			'resume',
+			'base',
+			['Ontologies'],
+			new Map([...RESOLVED, ['ontologies', 'ontologies']])
+		).find((c) => c.entityType === OVERRIDE_ENTITIES.skill && c.label === 'Ontologies');
+		expect(found?.pinned).toBe(true);
+		expect(found?.visible).toBe(false);
+	});
+});

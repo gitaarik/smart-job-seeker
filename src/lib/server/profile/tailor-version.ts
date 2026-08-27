@@ -57,7 +57,7 @@ import {
 	type ItemRow
 } from '$lib/tailoring';
 import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
-import { expandUpwardBySeed } from '$lib/server/job/skill-ontology';
+import { expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
 import { normalizeSkill } from '$lib/skills';
 import {
 	BASE_TEMPLATE_TAGS,
@@ -187,7 +187,13 @@ export function buildCandidates(
 	profile: ProfileRow,
 	docType: string,
 	baseSlug: string,
-	requiredSkills: string[]
+	requiredSkills: string[],
+	/**
+	 * Normalised skill name → the concept slug it resolves to, for the callers
+	 * that have the graph. Optional: without it the pin check falls back to
+	 * comparing spellings, which is what it did before.
+	 */
+	conceptOf?: Map<string, string>
 ): Candidate[] {
 	const { filterOnTags } = createProfileFilter(
 		(profile.profile_versions ?? []) as never,
@@ -362,6 +368,11 @@ export function buildCandidates(
 
 	// One candidate per required NAME, for the same reason: two rows would mean
 	// two identical "now showing: Python" lines in the diff.
+	// The concepts the document already shows, whatever it calls them.
+	const printedConcepts = new Set(
+		conceptOf ? printedAnywhere.map((n) => conceptOf.get(normalizeSkill(n))).filter(Boolean) : []
+	);
+
 	const claimed = new Set<string>();
 	for (const category of profile.tech_skill_categories ?? []) {
 		// An include on a skill inside a hidden category prints nothing — the
@@ -375,6 +386,22 @@ export function buildCandidates(
 			if (!name || !required.has(name.toLowerCase())) continue;
 			if (claimed.has(name.toLowerCase())) continue;
 			claimed.add(name.toLowerCase());
+			// A required skill the document ALREADY PRINTS under another name is
+			// not a skill to add. `carrierOf` below answers a narrower question —
+			// whether the word appears inside a longer one — and cannot see that
+			// "RAG" and "Retrieval Augmented Generation" are one thing. The graph
+			// can: `rag` is an approved alias of that concept.
+			//
+			// Both spellings sat in one job's required list, because the posting
+			// used both, and the pass surfaced a skill the applicant had
+			// deliberately hidden in order to satisfy a requirement its own visible
+			// twin already met. The result printed the same skill twice.
+			const sameConceptPrinted = conceptOf
+				? (() => {
+						const slug = conceptOf.get(normalizeSkill(name));
+						return !!slug && printedConcepts.has(slug);
+					})()
+				: false;
 			candidates.push({
 				entityType: OVERRIDE_ENTITIES.skill,
 				entityId: skill.id,
@@ -383,6 +410,7 @@ export function buildCandidates(
 				chars: name.length,
 				visible:
 					printedNames.has(name.toLowerCase()) ||
+					sameConceptPrinted ||
 					(visibleSkillsByCategory.get(category.id)?.has(skill.id) ?? false),
 				parentVisible: true,
 				pinned: true,
@@ -674,7 +702,13 @@ export async function tailorVersionForApplication(opts: {
 	// a version with no extension), so the fallback lives at the bottom where
 	// they all pass rather than at each of them.
 	const effectiveBase = baseSlug || (await defaultBaseSlug(profileId, docType));
-	const built = buildCandidates(profile, docType, effectiveBase, requiredSkills);
+	const built = buildCandidates(
+		profile,
+		docType,
+		effectiveBase,
+		requiredSkills,
+		await conceptResolver(profile, requiredSkills)
+	);
 	await markCoverage(built, profile, requiredSkills);
 	const { candidates, ranker, floor } = await scoreCandidates(profileId, built, query);
 
@@ -862,6 +896,36 @@ export async function tailorVersionForApplication(opts: {
 		targetPages: fitted.targetPages,
 		pages: fitted.pages
 	};
+}
+
+/**
+ * Normalised skill name → the concept slug it resolves to, for every name this
+ * run might compare: the job's required skills and the applicant's own.
+ *
+ * One query, resolved through `resolveConcepts`, which already knows both slugs
+ * and approved aliases. It exists so `buildCandidates` can stay synchronous
+ * while still asking a question only the database can answer.
+ *
+ * Empty on failure, and an empty map means the pin check compares spellings —
+ * the behaviour before the graph was consulted at all.
+ */
+async function conceptResolver(
+	profile: { tech_skill_categories?: { tech_skills?: { name?: unknown }[] }[] },
+	requiredSkills: string[]
+): Promise<Map<string, string>> {
+	const names = [
+		...requiredSkills,
+		...(profile.tech_skill_categories ?? []).flatMap((c) =>
+			(c.tech_skills ?? []).map((s) => text(s.name))
+		)
+	].filter(Boolean);
+	try {
+		const resolved = await resolveConcepts(names);
+		return new Map([...resolved].map(([key, concept]) => [key, concept.slug]));
+	} catch (err) {
+		console.warn('[tailor] concepts unresolved, pinning compares spellings only:', err);
+		return new Map();
+	}
 }
 
 /**
