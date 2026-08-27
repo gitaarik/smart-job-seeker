@@ -18,6 +18,7 @@ import { BASE_LOCALE, isKnownLocale, LOCALES } from '$lib/resume-translations';
 import { getLatestExport } from '$lib/server/profile/export-files';
 import { exportKey } from '$lib/utils/profile-doc-url';
 import { getVersionCoverage } from '$lib/server/profile/hidden-required-skills';
+import { specWarning } from '$lib/version-coverage';
 import {
 	decisionsForVersion,
 	describeOverrides,
@@ -362,7 +363,14 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		defaultBase,
 		templates: templates.map((t) => ({ slug: t.slug, name: t.name })),
 		availableLocales,
-		pdfKeys
+		pdfKeys,
+		// Everything on this page keys off the job's required skills, and an empty
+		// list makes every pass quietly do less while producing a document that
+		// looks exactly like a good one. Said out loud rather than left silent.
+		specWarning: specWarning(
+			requiredSkills,
+			(layoutData.application?.job?.job_description ?? '').length
+		)
 	};
 };
 

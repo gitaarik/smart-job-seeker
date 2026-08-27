@@ -4,6 +4,7 @@ import {
 	carriesName,
 	hiddenSkillsKey,
 	recommendBase,
+	specWarning,
 	type VersionCoverage
 } from './version-coverage';
 
@@ -167,5 +168,35 @@ describe('carrierOf', () => {
 
 	it('is null when nothing on the page says the word', () => {
 		expect(carrierOf('Linux', ['Docker', 'Terraform (IaC)', 'Linode'])).toBeNull();
+	});
+});
+
+describe('specWarning', () => {
+	it('flags a job with no required skills at all', () => {
+		expect(specWarning([], 0)?.kind).toBe('empty');
+		expect(specWarning(null, 4000)?.kind).toBe('empty');
+		// Whitespace and non-strings are not skills; an LLM that returns [""] has
+		// returned nothing.
+		expect(specWarning(['', '   '], 3000)?.kind).toBe('empty');
+	});
+
+	it('flags a handful of skills read out of a long description', () => {
+		// The real case: 3 skills against 5,720 characters.
+		expect(specWarning(['Python', 'PHP', 'AWS Redshift'], 5720)?.kind).toBe('thin');
+	});
+
+	it('stays quiet when the description is short too', () => {
+		// A terse posting genuinely has little to extract, and warning about it
+		// would fire on every recruiter one-liner.
+		expect(specWarning(['Python', 'PHP'], 200)).toBeNull();
+	});
+
+	it('stays quiet on a list long enough to tailor against', () => {
+		expect(specWarning(['Python', 'SQL', 'Docker', 'AWS', 'Git'], 6000)).toBeNull();
+	});
+
+	it('says how many it found, so the number is checkable', () => {
+		expect(specWarning(['Python'], 4000)?.message).toContain('1 required skill ');
+		expect(specWarning(['Python', 'SQL'], 4000)?.message).toContain('2 required skills');
 	});
 });

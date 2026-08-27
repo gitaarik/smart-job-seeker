@@ -76,5 +76,6 @@
 	pdfKeys={data.pdfKeys ?? []}
 	{profileSlug}
 	{lastRun}
+	specWarning={data.specWarning ?? null}
 	hasJob={!!app.job}
 />

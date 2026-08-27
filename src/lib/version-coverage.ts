@@ -171,3 +171,60 @@ export function recommendBase(
 		decidedBy: scored.some((c) => c.outOfReach > best.outOfReach) ? 'evidence' : 'skills'
 	};
 }
+
+/**
+ * The job's own spec is the input to everything on this page, and sometimes
+ * there is not enough of it to tailor against.
+ *
+ * Audited ten real applications on 2026-08-27. Most extractions were good —
+ * forty clean technologies off one posting, twenty off another. Two were not:
+ * one job carried **three** required skills against a 5,720-character
+ * description, and one carried **none at all**. Both tailor without complaint
+ * and produce a document that looks exactly like a good one, because every pass
+ * downstream treats "the job asks for nothing" as "nothing to prefer" rather
+ * than as a missing input.
+ *
+ * That silence is the whole reason this exists. The coverage guarantee, the
+ * pinning and the recommender all key off `skills_required`; with an empty list
+ * they quietly do less and say the same thing.
+ *
+ * Deliberately about the LIST, not the entries. The same audit found "excellent
+ * command of Dutch" and "WO work-and-think level" sitting on a required-skills
+ * list, and no counter catches those — telling a requirement from a skill needs
+ * a vocabulary, and this project's covers about a third of skill mentions, so
+ * filtering on it would discard more good entries than bad ones. A count is the
+ * honest thing to check.
+ */
+export interface SpecWarning {
+	kind: 'empty' | 'thin';
+	message: string;
+}
+
+/** A description long enough that a short skill list is suspicious rather than terse. */
+const SUBSTANTIAL_DESCRIPTION = 1500;
+/** At or below this, against such a description, the extraction probably missed. */
+const THIN_SKILLS = 4;
+
+export function specWarning(
+	skillsRequired: unknown,
+	descriptionLength: number
+): SpecWarning | null {
+	const skills = Array.isArray(skillsRequired)
+		? skillsRequired.filter((s) => typeof s === 'string' && s.trim())
+		: [];
+
+	if (skills.length === 0) {
+		return {
+			kind: 'empty',
+			message:
+				'This job lists no required skills, so tailoring has nothing to prefer — it can still trim to fit, but it cannot choose what to lead with. Adding a few by hand on the job will change what the version shows.'
+		};
+	}
+	if (skills.length <= THIN_SKILLS && descriptionLength >= SUBSTANTIAL_DESCRIPTION) {
+		return {
+			kind: 'thin',
+			message: `Only ${skills.length} required skill${skills.length === 1 ? '' : 's'} were read out of a long description, so tailoring is working from very little. Worth a look at the job before trusting what it picks.`
+		};
+	}
+	return null;
+}

@@ -83,7 +83,8 @@
 		templates = [],
 		availableLocales = [],
 		pdfKeys = [],
-		lastRun = null
+		lastRun = null,
+		specWarning = null
 	}: {
 		app: {
 			cv_sent_through: string | null;
@@ -145,6 +146,8 @@
 		/** Which (type, version, template, language) combinations have a PDF on disk. */
 		pdfKeys?: string[];
 		lastRun?: LastRun | null;
+		/** Said when the job's own spec is too thin to tailor against. */
+		specWarning?: { kind: 'empty' | 'thin'; message: string } | null;
 	} = $props();
 
 	const DOC_TYPES: { value: DocType; label: string }[] = [
@@ -827,6 +830,16 @@
 						— which achievements, which side projects, and any skill this job requires that your document
 						would otherwise hide. It never rewrites your words.
 					</p>
+					{#if specWarning}
+						<!-- Before the button, not after the result: every pass below keys off
+						     the job's required skills, and with none it quietly does less and
+						     hands back a document that looks exactly like a good one. -->
+						<p
+							class="mb-3 rounded-lg border border-[var(--dash-warning-border,var(--dash-border))] bg-[var(--dash-warning-bg,var(--dash-bg-hover))] px-3 py-2 text-xs text-[var(--dash-text-secondary)]"
+						>
+							{specWarning.message}
+						</p>
+					{/if}
 					{@render presentationControls()}
 					<button
 						type="submit"
