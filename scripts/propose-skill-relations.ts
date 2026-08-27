@@ -28,6 +28,21 @@ import { cosineSimilarity } from '../src/lib/server/llm/embeddings';
 import { coerceIndexedEnvelope } from '../src/lib/server/llm/structured-envelope';
 
 const APPLY = process.argv.includes('--apply');
+/**
+ * Also persist `related` verdicts.
+ *
+ * Off by default because `related` is symmetric and MUST NOT reach matching —
+ * `MATCHING_RELATIONS` excludes it, and admitting it there puts the false
+ * positives straight back. It is walked by exactly one traversal,
+ * `expandForRetrieval`, one hop and non-composing.
+ *
+ * They were counted and discarded until now, which is why the graph holds 339
+ * `broader` edges and 8 `related` ones: the model has been answering this
+ * question all along and the answers went in the bin. Gap analysis — "one hop
+ * from what they asked for", Docker when the posting says Kubernetes — is the
+ * use the ontology docstring reserved for them, and it needs supply.
+ */
+const WITH_RELATED = process.argv.includes('--with-related');
 const limitArg = process.argv.indexOf('--limit');
 const LIMIT = limitArg > -1 ? Number(process.argv[limitArg + 1]) : 400;
 
@@ -242,6 +257,7 @@ async function main() {
 
 	const useful = verdicts.filter((v) => v.relation === 'broader' || v.relation === 'requires');
 	const aliases = verdicts.filter((v) => v.relation === 'alias');
+	const related = WITH_RELATED ? verdicts.filter((v) => v.relation === 'related') : [];
 	console.log(
 		`\n${verdicts.length} verdicts; ${useful.length} directional ` +
 			`(${verdicts.filter((v) => v.relation === 'related').length} related, ` +
@@ -254,6 +270,14 @@ async function main() {
 		console.log(`  ${from} —${v.relation}→ ${to}  (${v.confidence.toFixed(2)})`);
 	}
 	if (useful.length > 25) console.log(`  … and ${useful.length - 25} more`);
+
+	if (related.length > 0) {
+		console.log(`\n${related.length} related pair(s) — gap analysis only, never matching:`);
+		for (const v of related.slice(0, 15)) {
+			console.log(`  ${v.pair.a} ~ ${v.pair.b}`);
+		}
+		if (related.length > 15) console.log(`  … and ${related.length - 15} more`);
+	}
 
 	if (aliases.length > 0) {
 		console.log(`\n${aliases.length} alias pair(s):`);
@@ -289,6 +313,25 @@ async function main() {
 		`);
 		written++;
 	}
+	// `related` is symmetric, so ONE row per unordered pair, ordered
+	// lexicographically. The model returns `from: null` here — the sensible answer
+	// to "which side is the specific one" when neither is — and `expandForRetrieval`
+	// walks the edge in both directions anyway, so storing a second row would only
+	// be a duplicate the audit would later have to call redundant.
+	let relatedWritten = 0;
+	for (const v of related) {
+		const [from, to] = [normalizeSkill(v.pair.a), normalizeSkill(v.pair.b)].sort();
+		if (!from || !to || from === to) continue;
+		await db.execute(sql`
+			INSERT INTO skill_relations (from_id, to_id, relation, confidence, source)
+			SELECT f.id, t.id, 'related', ${v.confidence}, 'llm'
+			FROM skill_concepts f, skill_concepts t
+			WHERE f.slug = ${from} AND t.slug = ${to}
+			ON CONFLICT DO NOTHING
+		`);
+		relatedWritten++;
+	}
+
 	// Aliases point the VARIANT at the concept keeping the fuller name. Both
 	// already exist as concepts — every distinct string became one — and that is
 	// left alone deliberately: merging concepts is destructive and the traversal
@@ -311,7 +354,7 @@ async function main() {
 
 	console.log(
 		`\nWrote ${bySlug.size} concepts, ${written} UNAPPROVED relations, ` +
-			`${aliased} UNAPPROVED aliases.`
+			`${relatedWritten} UNAPPROVED related edges, ${aliased} UNAPPROVED aliases.`
 	);
 	console.log('Nothing influences matching until approved.');
 	process.exit(0);
