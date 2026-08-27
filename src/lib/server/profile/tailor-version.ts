@@ -43,6 +43,8 @@ import {
 	DEFAULT_SELECTION,
 	DROPPABLE_ENTITIES,
 	FIT_ATTEMPTS,
+	LOOSEN_ATTEMPTS,
+	LOOSEN_EPSILON,
 	PAGE_BUDGETS,
 	PROMOTION_MARGIN,
 	selectForJob,
@@ -55,6 +57,8 @@ import {
 	type ItemRow
 } from '$lib/tailoring';
 import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
+import { expandUpwardBySeed } from '$lib/server/job/skill-ontology';
+import { normalizeSkill } from '$lib/skills';
 import {
 	BASE_TEMPLATE_TAGS,
 	heldBackByTemplate,
@@ -608,6 +612,16 @@ export async function tailorVersionForApplication(opts: {
 	docType: string;
 	/** Library version to build on; '' means the plain base template. */
 	baseSlug: string;
+	/**
+	 * Presentation template the document will be SENT in, so the fit pass counts
+	 * pages of the document that actually goes out rather than of the plain one.
+	 *
+	 * `null` means the default renderer. **Omit it** to fall back to what this
+	 * application already records — the distinction matters, because a caller
+	 * whose form carried no template must not silently claim "default" over a
+	 * branded choice the applicant made earlier.
+	 */
+	template?: string | null;
 }): Promise<TailorResult> {
 	const { profileId, applicationId, docType, baseSlug } = opts;
 
@@ -631,6 +645,8 @@ export async function tailorVersionForApplication(opts: {
 		throw new Error('This application has no job to tailor against.');
 	}
 	const job = application.job;
+	const template =
+		opts.template !== undefined ? opts.template : (application.cv_template_sent ?? null);
 
 	const profile = await getProfileByIdentifier(profileId);
 	if (!profile) throw new Error('Profile not found.');
@@ -659,6 +675,7 @@ export async function tailorVersionForApplication(opts: {
 	// they all pass rather than at each of them.
 	const effectiveBase = baseSlug || (await defaultBaseSlug(profileId, docType));
 	const built = buildCandidates(profile, docType, effectiveBase, requiredSkills);
+	await markCoverage(built, profile, requiredSkills);
 	const { candidates, ranker, floor } = await scoreCandidates(profileId, built, query);
 
 	// The reason carries the counter-argument when there is one: a keyword search
@@ -818,6 +835,7 @@ export async function tailorVersionForApplication(opts: {
 		versionId,
 		versionSlug,
 		docType,
+		template,
 		targetPages,
 		budgetChars,
 		fallback: targetPages === 1 ? { targetPages: 2, budgetChars: PAGE_BUDGETS.two } : null,
@@ -847,12 +865,88 @@ export async function tailorVersionForApplication(opts: {
 }
 
 /**
- * Re-select and re-render until the version fits its page target.
+ * Record, on each candidate, which of the job's required skills its own words
+ * name — directly, or through the skill graph.
+ *
+ * ## Why the ranker cannot do this
+ *
+ * L1 scores how much an item READS LIKE the posting. That is the right question
+ * for prose and the wrong one for a name: this job's posting is in Dutch and
+ * about knowledge graphs, and the bullet *"Scaled the platform to thousands of
+ * orders per minute by optimizing SQL & Python"* reads nothing like it — while
+ * containing two entries from the job's own required list, spelled the same way
+ * the job spells them. Cosine had no way to notice and the page budget trimmed
+ * it. Naming what was asked for is a different kind of evidence from sounding
+ * like it, and it needed its own pass.
+ *
+ * ## Why the graph, and which one
+ *
+ * A job requiring `SQL` is answered by a line naming `PostgreSQL`, and only the
+ * ontology knows that. `expandUpwardBySeed` — upward only, keyed by which skill
+ * reached what — is the traversal for it: coverage is the MATCH question, so the
+ * `related` hop stays out. A MariaDB line is a reasonable suggestion for a MySQL
+ * job and not an answer to a MySQL requirement.
+ *
+ * Degrades to the literal reading if the graph cannot be reached; a bullet that
+ * spells the requirement out is still found.
+ */
+async function markCoverage(
+	candidates: Candidate[],
+	profile: { tech_skill_categories?: { tech_skills?: { name?: unknown }[] }[] },
+	requiredSkills: string[]
+): Promise<void> {
+	if (requiredSkills.length === 0) return;
+
+	// Required skill → the wordings that answer it. The requirement's own
+	// spelling is always one of them, which is what survives a graph failure.
+	const answers = new Map<string, Set<string>>(requiredSkills.map((r) => [r, new Set([r])]));
+
+	const held = [
+		...new Set(
+			(profile.tech_skill_categories ?? [])
+				.flatMap((c) => (c.tech_skills ?? []).map((s) => text(s.name)))
+				.filter(Boolean)
+		)
+	];
+	try {
+		const reach = await expandUpwardBySeed(held);
+		const wanted = new Map(requiredSkills.map((r) => [normalizeSkill(r), r]));
+		for (const name of held) {
+			for (const c of reach.get(normalizeSkill(name)) ?? []) {
+				const req = wanted.get(c.slug);
+				if (req) answers.get(req)?.add(name);
+			}
+		}
+	} catch (err) {
+		console.warn('[tailor] skill graph unreachable, coverage falls back to literal names:', err);
+	}
+
+	for (const candidate of candidates) {
+		// The label carries a bullet's text; detail carries a project's summary.
+		const said = `${candidate.label} ${candidate.detail ?? ''}`;
+		const named = [...answers]
+			.filter(([, wordings]) => [...wordings].some((w) => carriesName(w, said)))
+			.map(([req]) => req);
+		if (named.length > 0) candidate.covers = named;
+	}
+}
+
+/**
+ * Re-select and re-render until the version fits its page target — and then
+ * until it fills it.
  *
  * A run that cannot reach the target falls back to the LARGER one and selects
  * again for it — not to its own first attempt, which was already trimmed for a
  * page it never reached. Half a career removed in pursuit of a page that stayed
  * two is the worst of both, and it is the outcome measuring was meant to end.
+ *
+ * The walk back up exists for the mirror image of that. `tightenBudget`
+ * overshoots deliberately, so the budget that first fits is well under the
+ * largest that would have, and "fits" was the only question asked. On one
+ * tailored version that produced two pages whose second held 32 rendered lines
+ * against a full page's 53 — thirteen achievements dropped to buy whitespace,
+ * on a document whose whole purpose is to be read by a person and scanned by a
+ * matcher. Both want the page used.
  *
  * Returns the decisions left in place, the page count reached, and the target
  * it settled on. A null count means the renderer could not answer; the first
@@ -863,14 +957,16 @@ async function fitToPages(opts: {
 	versionId: number;
 	versionSlug: string;
 	docType: string;
+	/** Rendered in this template, because page height is a property of it. */
+	template: string | null;
 	targetPages: number;
 	budgetChars: number;
 	/** The roomier target to settle for. Null when already at the roomiest. */
 	fallback: { targetPages: number; budgetChars: number } | null;
 	select: (budget: number) => Decision[];
 }): Promise<{ decisions: Decision[] | null; pages: number | null; targetPages: number }> {
-	const { profileId, versionId, versionSlug, docType, targetPages } = opts;
-	const count = () => countVersionPages(profileId, versionSlug, docType);
+	const { profileId, versionId, versionSlug, docType, template, targetPages } = opts;
+	const count = () => countVersionPages(profileId, versionSlug, docType, template);
 
 	let budget = opts.budgetChars;
 	let pages = await count();
@@ -880,12 +976,19 @@ async function fitToPages(opts: {
 		attempt < FIT_ATTEMPTS && pages !== null && pages > targetPages;
 		attempt++
 	) {
+		// The loop only runs while the document is too long, and `pages` was
+		// measured at this budget — so on entry it is by definition the budget that
+		// overflowed, which is the upper bound the walk back up needs.
+		const overflowing = budget;
 		budget = tightenBudget(budget, pages, targetPages);
 		const tighter = opts.select(budget);
 		await persistDecisions(versionId, tighter);
 		pages = await count();
 		if (pages !== null && pages <= targetPages) {
-			return { decisions: tighter, pages, targetPages };
+			return await loosenToFill(opts, count, {
+				fits: { budget, decisions: tighter, pages },
+				overflowing
+			});
 		}
 	}
 
@@ -895,6 +998,54 @@ async function fitToPages(opts: {
 		return { decisions: full, pages: await count(), targetPages: opts.fallback.targetPages };
 	}
 	return { decisions: null, pages, targetPages };
+}
+
+/**
+ * Bisect between the budget that fits and the one that overflowed, keeping the
+ * largest that still fits.
+ *
+ * Rank order is what makes this safe to do blind: `select` at a larger budget
+ * restores the next-most-relevant items, never arbitrary ones, so a bigger
+ * document here is a strictly better-informed one rather than merely a fuller
+ * page.
+ *
+ * The persisted decisions are always the best ones seen. A probe that overflows
+ * writes its selection to the database on the way past, so the winner is
+ * re-persisted before returning — otherwise the document left standing is the
+ * one that did not fit.
+ */
+async function loosenToFill(
+	opts: { versionId: number; targetPages: number; select: (budget: number) => Decision[] },
+	count: () => Promise<number | null>,
+	start: {
+		fits: { budget: number; decisions: Decision[]; pages: number };
+		overflowing: number;
+	}
+): Promise<{ decisions: Decision[]; pages: number | null; targetPages: number }> {
+	const { versionId, targetPages } = opts;
+	let lo = start.fits.budget;
+	let hi = start.overflowing;
+	let best = start.fits;
+	let persisted = lo;
+
+	for (let attempt = 0; attempt < LOOSEN_ATTEMPTS && hi - lo > LOOSEN_EPSILON; attempt++) {
+		const mid = Math.round((lo + hi) / 2);
+		const candidate = opts.select(mid);
+		await persistDecisions(versionId, candidate);
+		persisted = mid;
+		const pages = await count();
+		if (pages !== null && pages <= targetPages) {
+			lo = mid;
+			best = { budget: mid, decisions: candidate, pages };
+		} else {
+			// Includes a null count: an unanswerable render is not evidence that a
+			// roomier document fits, and treating it as one would ship the overflow.
+			hi = mid;
+		}
+	}
+
+	if (persisted !== best.budget) await persistDecisions(versionId, best.decisions);
+	return { decisions: best.decisions, pages: best.pages, targetPages };
 }
 
 /**

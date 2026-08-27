@@ -879,3 +879,73 @@ describe('tightenBudget', () => {
 		expect(tightenBudget(1156, 5, 2)).toBeGreaterThan(0);
 	});
 });
+
+describe('coverage — the last line naming a required skill', () => {
+	const excluded = (ds: ReturnType<typeof selectForJob>) =>
+		ds.filter((d) => d.action === 'exclude').map((d) => d.entityId);
+
+	it('drops something cheaper before the only line naming a required skill', () => {
+		// Two bullets, both droppable, both on the page. The one the ranker likes
+		// LESS is the only evidence for a skill the job asked for by name.
+		const candidates = [
+			bullet(1, 10, 0.9),
+			bullet(2, 10, 0.1, { covers: ['SQL'] }),
+			bullet(3, 10, 0.8),
+			bullet(4, 10, 0.7)
+		];
+		const dropped = excluded(selectForJob(candidates, { ...OPTS, budgetChars: 300 }));
+		expect(dropped).toContain(4);
+		expect(dropped).not.toContain(2);
+	});
+
+	it('protects only the LAST one, so a second line naming it is ordinary', () => {
+		// Both name SQL, so neither is the last evidence while the other survives —
+		// which is what stops a common requirement protecting half a career.
+		const candidates = [
+			bullet(1, 10, 0.9),
+			bullet(2, 10, 0.1, { covers: ['SQL'] }),
+			bullet(3, 10, 0.2, { covers: ['SQL'] }),
+			bullet(4, 10, 0.8)
+		];
+		const dropped = excluded(selectForJob(candidates, { ...OPTS, budgetChars: 300 }));
+		expect(dropped).toContain(2);
+		expect(dropped).not.toContain(3);
+	});
+
+	it('gives the page the last word when nothing cheaper is left', () => {
+		// A guarantee that could overflow the document would move the failure
+		// somewhere the applicant cannot see it.
+		const candidates = [
+			bullet(1, 10, 0.5, { covers: ['SQL'] }),
+			bullet(2, 10, 0.4, { covers: ['Python'] }),
+			bullet(3, 10, 0.3, { covers: ['APIs'] })
+		];
+		const dropped = excluded(selectForJob(candidates, { ...OPTS, budgetChars: 100 }));
+		expect(dropped.length).toBeGreaterThan(0);
+	});
+
+	it('says which requirement it gave up when it has to drop one', () => {
+		// Every bullet is the last evidence for something, so the first pass skips
+		// them all and the page forces the second one. Three, because minPerParent
+		// keeps two and there has to be a third for the budget to take.
+		const decisions = selectForJob(
+			[
+				bullet(1, 10, 0.9, { covers: ['Django'] }),
+				bullet(2, 10, 0.8, { covers: ['APIs'] }),
+				bullet(3, 10, 0.2, { covers: ['SQL', 'Python'] })
+			],
+			{ ...OPTS, budgetChars: 100 }
+		);
+		const row = decisions.find((d) => d.entityId === 3 && d.action === 'exclude');
+		expect(row?.reason).toContain('SQL and Python');
+	});
+
+	it('leaves documents with no job to compare against untouched', () => {
+		// `covers` is unset when there are no required skills, and an unset field
+		// must behave exactly as it did before the guarantee existed.
+		const candidates = [bullet(1, 10, 0.9), bullet(2, 10, 0.1), bullet(3, 10, 0.8)];
+		const dropped = excluded(selectForJob(candidates, { ...OPTS, budgetChars: 200 }));
+		expect(dropped).toContain(2);
+		expect(dropped).not.toContain(1);
+	});
+});

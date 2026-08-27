@@ -399,7 +399,11 @@ export const actions: Actions = {
 				profileId,
 				applicationId: appId,
 				docType,
-				baseSlug
+				baseSlug,
+				// The same presentation the PDF below is rendered in. Withholding it
+				// was the whole bug: the fit pass promised two pages of the plain
+				// template while the applicant downloaded three of a branded one.
+				template: as.template
 			});
 			refreshPdfs(profileId, appId, result.versionSlug, as);
 

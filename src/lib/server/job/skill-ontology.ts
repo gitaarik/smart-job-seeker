@@ -247,6 +247,35 @@ export async function expandForRetrieval(
 	skills: string[],
 	maxDepth = MAX_DEPTH
 ): Promise<Map<string, { slug: string; label: string; depth: number }[]>> {
+	return bySeed(skills, maxDepth, true);
+}
+
+/**
+ * The same seed-keyed walk with the sideways hop OFF — upward only, exactly
+ * what `expandUpward` traverses, but keyed by which skill reached what.
+ *
+ * For questions of the form "does holding this let the applicant claim that",
+ * asked one item at a time. CV tailoring asks it per bullet: a job requiring
+ * `SQL` is answered by a line naming `PostgreSQL`, and the flat set
+ * `expandUpward` returns cannot say WHICH bullet's skill got there.
+ *
+ * `related` is off here and must stay off. It is symmetric, so admitting it
+ * would let a MariaDB line answer a MySQL requirement — a fine suggestion for
+ * retrieval and a false claim for coverage, which is the same distinction the
+ * fence above draws. Same rule, other side of it.
+ */
+export async function expandUpwardBySeed(
+	skills: string[],
+	maxDepth = MAX_DEPTH
+): Promise<Map<string, { slug: string; label: string; depth: number }[]>> {
+	return bySeed(skills, maxDepth, false);
+}
+
+async function bySeed(
+	skills: string[],
+	maxDepth: number,
+	sideways: boolean
+): Promise<Map<string, { slug: string; label: string; depth: number }[]>> {
 	const out = new Map<string, { slug: string; label: string; depth: number }[]>();
 	const slugs = [...new Set(skills.map(normalizeSkill).filter(Boolean))];
 	if (slugs.length === 0) return out;
@@ -283,6 +312,7 @@ export async function expandForRetrieval(
 			FROM seed s
 			JOIN skill_relations r ON r.from_id = s.id OR r.to_id = s.id
 			WHERE r.approved_at IS NOT NULL AND r.relation = 'related'
+			  AND ${sideways}
 		),
 		reached AS (
 			SELECT seed, id, depth FROM up

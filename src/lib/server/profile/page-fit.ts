@@ -9,8 +9,16 @@
  *
  * So the only way to know is to render it. This is the reason a tailored
  * version can promise a page count at all; see fitToPages in tailor-version.ts.
+ *
+ * And it has to be rendered in the template it will be SENT in. That sentence
+ * above — what fits a page depends on the fixed height of the template — was
+ * written here while this function always rendered the default one, so a version
+ * fitted to two pages came out of a branded template at three. Measured on
+ * `app-62`: two pages plain, three with `template=citrus`, same version, same
+ * content. Nothing errored; the promise was simply about a different document.
  */
 
+import { templateForStorage } from '$lib/resume-templates';
 import { launchBrowser } from '$lib/server/browser/utils';
 import { config } from '$lib/server/config';
 import { dbDirect as db } from '$lib/server/db';
@@ -39,6 +47,31 @@ function pageCount(pdf: Buffer): number {
 }
 
 /**
+ * The URL the counter renders.
+ *
+ * Exported because it is a pure string and it is where the bug was: it used to
+ * omit `template` entirely, which is not visible in any test that mocks the
+ * browser and is not visible in the page count either — the number returned was
+ * simply about a different document.
+ *
+ * `templateForStorage` normalises, so "default" and "" both mean the plain
+ * renderer here exactly as they do on `profile_exports.template`.
+ */
+export function renderRoute(
+	profileSlug: string,
+	docType: string,
+	versionSlug: string,
+	template: string | null = null
+): string {
+	const slug = templateForStorage(template);
+	return (
+		`${APP_INTERNAL_URL}/p/${profileSlug}/${docType === 'cv' ? 'cv' : 'resume'}` +
+		`?version=${encodeURIComponent(versionSlug)}` +
+		(slug ? `&template=${encodeURIComponent(slug)}` : '')
+	);
+}
+
+/**
  * Render one version and count its pages, or null when it cannot be rendered.
  *
  * Null is a real answer and every caller has to treat it as "unknown" rather
@@ -48,7 +81,9 @@ function pageCount(pdf: Buffer): number {
 export async function countVersionPages(
 	profileId: number,
 	versionSlug: string,
-	docType: string
+	docType: string,
+	/** Presentation template to render in; null (or 'default') is the plain one. */
+	template: string | null = null
 ): Promise<number | null> {
 	const profile = await db.query.profiles.findFirst({
 		where: eq(profiles.id, profileId),
@@ -67,7 +102,7 @@ export async function countVersionPages(
 			'x-internal-render-secret': config.internalRenderSecret,
 			'x-internal-user-id': profile.user_id
 		});
-		const route = `${APP_INTERNAL_URL}/p/${profile.slug}/${docType === 'cv' ? 'cv' : 'resume'}?version=${encodeURIComponent(versionSlug)}`;
+		const route = renderRoute(profile.slug, docType, versionSlug, template);
 		await page.goto(route, { waitUntil: 'networkidle', timeout: 30_000 });
 		return pageCount(Buffer.from(await page.pdf(PDF_SETTINGS)));
 	} catch (err) {

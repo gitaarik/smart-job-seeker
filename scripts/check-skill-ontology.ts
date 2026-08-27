@@ -18,6 +18,7 @@ import { dbDirect as db, queryRawDirect } from '../src/lib/server/db';
 import {
 	expandForRetrieval,
 	expandUpward,
+	expandUpwardBySeed,
 	impliesSkill
 } from '../src/lib/server/job/skill-ontology';
 import { refuseNewRelation } from '../src/lib/server/job/skill-relation-guards';
@@ -256,6 +257,23 @@ try {
 	check(
 		reactReach.includes('zzdjango') && !(await impliesSkill('ZZReact', 'ZZDjango')),
 		'the same `related` edge is walked by retrieval and refused by matching'
+	);
+
+	// `expandUpwardBySeed` is the same walk with the sideways hop off — the
+	// traversal CV tailoring asks coverage questions with. Asserted as a PAIR
+	// against the same fixture edge, because the only thing separating them is
+	// one UNION and a boolean, and a regression there would be silent: coverage
+	// would start answering a MySQL requirement with a MariaDB line.
+	const upOnly = await expandUpwardBySeed(['ZZReact']);
+	const upOnlyReach = (upOnly.get('zzreact') ?? []).map((c) => c.slug);
+	check(upOnlyReach.includes('zzfrontend'), 'seeded upward walk still reaches ZZfrontend');
+	check(
+		!upOnlyReach.includes('zzdjango'),
+		'seeded upward walk does NOT take the `related` hop that retrieval does'
+	);
+	check(
+		reactReach.includes('zzdjango') && !upOnlyReach.includes('zzdjango'),
+		'the two seeded walks differ by exactly that hop'
 	);
 
 	const aliased = await expandForRetrieval(['ZZReactJS']);

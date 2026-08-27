@@ -141,6 +141,19 @@ export interface Candidate {
 	 * candidates are included whatever their relevance score says.
 	 */
 	pinned: boolean;
+	/**
+	 * Required skills this item NAMES — directly, or through the skill graph.
+	 *
+	 * Pinning answers "is this skill on the page". Nothing answered "is the
+	 * EVIDENCE for it on the page", so a bullet reading *"Scaled the platform to
+	 * thousands of orders per minute by optimizing SQL & Python"* was trimmed off
+	 * a resume for a job whose required list contains both SQL and Python, by
+	 * name. It lost on cosine to lines that read more like the posting — which is
+	 * exactly what cosine is for, and exactly what it cannot see past.
+	 *
+	 * Empty for most items and unset when there is no job to compare against.
+	 */
+	covers?: string[];
 	/** L1 relevance to this job. Comparable within one run, not across runs. */
 	score: number;
 	/**
@@ -232,6 +245,42 @@ const BUDGET_SLACK = 2;
  * without turning a click into a minute.
  */
 export const FIT_ATTEMPTS = 3;
+
+/**
+ * How many times to walk BACK UP once a document fits.
+ *
+ * `tightenBudget` overshoots on purpose, so the first budget that fits is
+ * usually far below the largest one that would have. Only "does it fit?" was
+ * ever asked, and a document that fits with two-fifths of its last page blank
+ * answers that question and still fails the applicant.
+ *
+ * Measured on one tailored version: the tighten pass landed on two pages with
+ * 32 rendered lines on page two, where a full page holds 53. Thirteen
+ * achievements had been dropped to buy whitespace.
+ *
+ * Same cost model as FIT_ATTEMPTS — one render each — and it only runs when the
+ * tighten pass actually cut something, so the common case pays nothing.
+ *
+ * Three, measured rather than reasoned: on that version it took page two from
+ * 32 rendered lines to 41 and its achievements from 11 to 14, and raising it to
+ * five changed neither number. The bracket converges inside three here, so the
+ * extra renders bought nothing.
+ *
+ * It does NOT reach a full page, and the remaining gap is not attempts. The
+ * budget maps onto the selection as a step function — the next budget that
+ * restores anything restores a group — so bisecting it cannot land between two
+ * steps. Closing that needs a different pass: restore from the ranked tail one
+ * item at a time until the render refuses. Not built.
+ */
+export const LOOSEN_ATTEMPTS = 3;
+
+/**
+ * When to stop bisecting, in characters.
+ *
+ * Roughly one bullet. Below this the search is refining a number the renderer
+ * cannot act on: the next item to restore is a whole line or it is nothing.
+ */
+export const LOOSEN_EPSILON = 120;
 
 /**
  * The next budget to try when the document came out too long.
@@ -730,18 +779,54 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	const printedChars = () =>
 		kept.filter((c) => !dropped.has(dropKey(c))).reduce((sum, c) => sum + c.chars, 0);
 	const trimReason = (c: Candidate) =>
-		c.score < floor
-			? `the least relevant thing on a full page, and off-topic for this job (${c.score.toFixed(2)})`
-			: `trimmed to fit the page — the least relevant line left (${c.score.toFixed(2)})`;
+		c.covers?.length
+			? `trimmed to fit the page — the last line naming ${c.covers.join(' and ')}, and nothing cheaper was left`
+			: c.score < floor
+				? `the least relevant thing on a full page, and off-topic for this job (${c.score.toFixed(2)})`
+				: `trimmed to fit the page — the least relevant line left (${c.score.toFixed(2)})`;
 
 	// Worst first, and between two the job values equally, the older one — the
 	// only place age touches what a document already shows, and only as a
 	// tiebreak, so relevance still ranks and the page budget still decides.
-	for (const candidate of [...droppable].sort(
+	const worstFirst = [...droppable].sort(
 		(a, z) => surfaceScore(a, floor) - surfaceScore(z, floor) || (z.age ?? 0) - (a.age ?? 0)
-	)) {
+	);
+
+	/**
+	 * Whether something ELSE still on the page names everything this item names.
+	 *
+	 * The guarantee is "don't drop the last line naming a skill the job asked
+	 * for", not "keep anything that mentions one". The difference is the whole
+	 * design: on one real job, 40 of 66 candidates named a required skill —
+	 * because `Python`, `SQL`, `APIs`, `JSON` and `Git` are on the required list
+	 * and on half a twenty-year career — so protecting all of them protects
+	 * nothing and just re-sorts the same trim. Protecting the LAST one is
+	 * self-limiting: once a requirement has a line of evidence, further lines
+	 * naming it get nothing.
+	 */
+	const coveredElsewhere = (c: Candidate) =>
+		!c.covers?.length ||
+		c.covers.every((req) =>
+			kept.some((k) => k !== c && !dropped.has(dropKey(k)) && k.covers?.includes(req))
+		);
+
+	const lastEvidence: Candidate[] = [];
+	for (const candidate of worstFirst) {
 		if (printedChars() <= budgetChars) break;
 		if (!canDrop(candidate)) continue;
+		if (!coveredElsewhere(candidate)) {
+			lastEvidence.push(candidate);
+			continue;
+		}
+		drop(candidate, trimReason(candidate));
+	}
+
+	// The page wins in the end. A guarantee that could overflow the document
+	// would just move the failure somewhere the applicant cannot see it, so once
+	// everything else is gone these go too — worst first, saying what is being
+	// given up.
+	for (const candidate of lastEvidence) {
+		if (printedChars() <= budgetChars) break;
 		drop(candidate, trimReason(candidate));
 	}
 
