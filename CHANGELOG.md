@@ -5,6 +5,51 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.0] - 2026-08-27
+
+85 commits since v0.23.1.
+
+### Added
+
+- Skill ontology graph: export, import, transfer between environments, full visualization with search and zoom
+- Skill graph review queue with audit for self-contradictions and approval workflows
+- Graph semantics: second parents, "related" relations, typed directional relations between concepts, parent categories rooted by domain
+- Compound skill management: split entries with covers relation, mint from job posting corpus, validate category coverage
+- Ontology-backed skill matching with alias resolution and transitive graph reduction
+- Resume headline in share page OpenGraph title and description
+- Multi-language CV support: translate language names and locations
+- Extract job posting headers from pasted text and suggest missing details
+- Copy application entries into project files and code
+- Achievement popup autosave while typing
+- Interview transcript gaps and participant names in AI chat context
+- Show which agency handled each application
+- Tailoring: restore single dropped items until page won't fit more
+- Inline diff preview for short edits
+
+### Changed
+
+- Skill expansion now uses ontology exclusively instead of fallback
+- Match retrieval unions semantic search instead of fallback behavior
+- Skill categorization asks about category directly
+- Admin pages clarified for ontology management
+
+### Fixed
+
+- Resume printing shares settings and settle step with page counter
+- Stop surfacing required skills already displayed on page
+- Reject workflows have dedicated state instead of null
+- Clash refusals provide recovery options
+- Batch approvals guard against cycles
+- Autosave respects user input when browser restores fields
+- File references validated against schema
+- Duplicate skill detection by suffix
+- AI chat names participants and shows agency source
+- Match scoring resilient to event stream interruption
+
+### Removed
+
+- Unused `score_job_match` response field
+
 ## [0.23.1] - 2026-08-24
 
 **8 commits since v0.23.0.**
