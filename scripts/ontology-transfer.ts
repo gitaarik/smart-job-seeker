@@ -1,9 +1,25 @@
 /**
  * Move the skill graph between environments, from a terminal.
  *
+ * In DEV, where the source tree is mounted:
+ *
  *   docker compose exec -T app npx tsx scripts/ontology-transfer.ts --export > ontology.json
  *   docker compose exec -T app npx tsx scripts/ontology-transfer.ts --import ontology.json
  *   docker compose exec -T app npx tsx scripts/ontology-transfer.ts --import ontology.json --apply
+ *
+ * On a DEPLOYED box, where it does not:
+ *
+ *   docker compose exec -T app node dist-scripts/ontology-transfer.mjs --export > ontology.json
+ *   docker compose exec -T app node dist-scripts/ontology-transfer.mjs --import ontology.json
+ *   docker compose exec -T app node dist-scripts/ontology-transfer.mjs --import ontology.json --apply
+ *
+ * The second form is the one that matters here, and it is written out because
+ * the first one FAILS there rather than degrading: production images ship
+ * `dist-scripts/` and no `src/`, so `npx tsx scripts/…` dies with
+ * `Cannot find module '/app/src/lib/server/job/ontology-transfer'`. Bootstrapping
+ * a fresh environment is this script's whole reason to exist, and a fresh
+ * environment is exactly where the dev invocation does not work — met on
+ * preview's first v0.24.0 deploy.
  *
  * Import is a dry run without `--apply`.
  *
@@ -105,8 +121,11 @@ async function main(): Promise<void> {
 	console.log(
 		`\nWrote ${wrote.concepts} concepts, ${wrote.aliases} aliases, ${wrote.relations} edges.`
 	);
+	// Both forms, because the import that most needs auditing afterwards is the
+	// one into a fresh deployed box, where the tsx form is the one that fails.
 	console.log('Verify the graph did not contradict itself on arrival:');
-	console.log('  npx tsx scripts/audit-skill-ontology.ts');
+	console.log('  npx tsx scripts/audit-skill-ontology.ts       # dev');
+	console.log('  node dist-scripts/audit-skill-ontology.mjs    # deployed');
 	process.exit(0);
 }
 
