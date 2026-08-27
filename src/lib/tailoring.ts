@@ -283,6 +283,27 @@ export const LOOSEN_ATTEMPTS = 3;
 export const LOOSEN_EPSILON = 120;
 
 /**
+ * How many single items the tail pass may try putting back, and how many
+ * failures in a row end it.
+ *
+ * The budget cannot reach the last of a page. `selectForJob` re-runs from
+ * scratch at every budget, so a larger one can restore a whole ROLE — header,
+ * dates, TECH list, every visibleIfParentShown child — which makes the smallest
+ * increment a budget can buy a block rather than a line. Measured on one
+ * tailored version: the largest budget that fits and the smallest that does not
+ * are one bullet's worth of characters apart, and between them page two goes
+ * from 72% full to overflowing. Bisecting a number that moves in blocks cannot
+ * land between two of them.
+ *
+ * So this works on the finished selection instead, one item at a time, which is
+ * the grain of what is actually left over. Six renders is the ceiling; two
+ * misses in a row is the practical end, because the list is ordered by value and
+ * what follows two failures is smaller in every sense.
+ */
+export const TAIL_RESTORE_ATTEMPTS = 6;
+export const TAIL_RESTORE_MISSES = 2;
+
+/**
  * The next budget to try when the document came out too long.
  *
  * Aggressive on purpose. Halving the prose does not halve the pages — the

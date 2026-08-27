@@ -46,6 +46,8 @@ import {
 	LOOSEN_ATTEMPTS,
 	LOOSEN_EPSILON,
 	PAGE_BUDGETS,
+	TAIL_RESTORE_ATTEMPTS,
+	TAIL_RESTORE_MISSES,
 	PROMOTION_MARGIN,
 	selectForJob,
 	surfaceBar,
@@ -870,6 +872,7 @@ export async function tailorVersionForApplication(opts: {
 		versionSlug,
 		docType,
 		template,
+		candidates: selectionCandidates,
 		targetPages,
 		budgetChars,
 		fallback: targetPages === 1 ? { targetPages: 2, budgetChars: PAGE_BUDGETS.two } : null,
@@ -1028,6 +1031,8 @@ async function fitToPages(opts: {
 	/** The roomier target to settle for. Null when already at the roomiest. */
 	fallback: { targetPages: number; budgetChars: number } | null;
 	select: (budget: number) => Decision[];
+	/** What the selection ran over, so the tail pass can value what it cut. */
+	candidates: Candidate[];
 }): Promise<{ decisions: Decision[] | null; pages: number | null; targetPages: number }> {
 	const { profileId, versionId, versionSlug, docType, template, targetPages } = opts;
 	const count = () => countVersionPages(profileId, versionSlug, docType, template);
@@ -1049,10 +1054,12 @@ async function fitToPages(opts: {
 		await persistDecisions(versionId, tighter);
 		pages = await count();
 		if (pages !== null && pages <= targetPages) {
-			return await loosenToFill(opts, count, {
+			const loosened = await loosenToFill(opts, count, {
 				fits: { budget, decisions: tighter, pages },
 				overflowing
 			});
+			const filled = await restoreTail(versionId, opts.candidates, count, targetPages, loosened);
+			return { ...filled, targetPages: loosened.targetPages };
 		}
 	}
 
@@ -1061,7 +1068,112 @@ async function fitToPages(opts: {
 		await persistDecisions(versionId, full);
 		return { decisions: full, pages: await count(), targetPages: opts.fallback.targetPages };
 	}
+
+	// Fit on the first measurement, so nothing was tightened — but the selector
+	// still trimmed to the budget it was handed, and that budget is a character
+	// count guessing at a page. Re-deriving the standing selection is free: the
+	// same pure call over the same candidates the caller already persisted.
+	if (pages !== null && pages <= targetPages) {
+		const standing = opts.select(opts.budgetChars);
+		const filled = await restoreTail(versionId, opts.candidates, count, targetPages, {
+			decisions: standing,
+			pages
+		});
+		return { ...filled, targetPages };
+	}
+
 	return { decisions: null, pages, targetPages };
+}
+
+/**
+ * Put single dropped items back until the page will not take another.
+ *
+ * The budget cannot do this. `selectForJob` re-runs from scratch at each one, so
+ * a larger budget can restore a whole role — header, dates, TECH list, every
+ * child it hides — and the smallest thing a budget can buy is that block. On one
+ * tailored version the largest budget that fits and the smallest that does not
+ * sat one bullet apart, with page two 72% full between them. This works on the
+ * finished selection instead, at the grain of the leftovers.
+ *
+ * ## Only un-excluding
+ *
+ * It restores by DELETING an exclude row, never by adding an include. That is a
+ * deliberate limit and it buys the honest version of this feature: a decision
+ * carries a reason the applicant reads, and "the selector kept this" and "a
+ * later pass put it back" are different claims that would need different
+ * wording. Removing a row makes no claim at all — the document simply agrees
+ * with the version it is built on again, and the diff gets shorter rather than
+ * more confusing. Everything the trim took is reachable this way, because the
+ * trim takes by excluding.
+ *
+ * ## Order
+ *
+ * Requirements with no evidence left on the page first, then by relevance. By
+ * score alone this fills the page with whatever ranked next; uncovered-first
+ * finishes the job the coverage guarantee starts, which is putting evidence on
+ * the page rather than only keeping it there.
+ */
+async function restoreTail(
+	versionId: number,
+	candidates: Candidate[],
+	count: () => Promise<number | null>,
+	targetPages: number,
+	settled: { decisions: Decision[]; pages: number | null }
+): Promise<{ decisions: Decision[]; pages: number | null }> {
+	const key = (d: { entityType: string; entityId: number }) => `${d.entityType}:${d.entityId}`;
+	const byKey = new Map(candidates.map((c) => [key(c), c]));
+	const excluded = settled.decisions.filter((d) => d.action === 'exclude');
+	if (excluded.length === 0) return settled;
+
+	// What the page still says, so "uncovered" means uncovered on the document
+	// rather than uncovered in the profile.
+	const gone = new Set(excluded.map(key));
+	const covered = new Set(
+		candidates.filter((c) => !gone.has(key(c))).flatMap((c) => c.covers ?? [])
+	);
+	const value = (c: Candidate | undefined) => (c?.covers?.some((req) => !covered.has(req)) ? 1 : 0);
+
+	const queue = excluded
+		.map((d) => ({ row: d, candidate: byKey.get(key(d)) }))
+		.filter((x) => x.candidate)
+		.sort(
+			(a, z) =>
+				value(z.candidate) - value(a.candidate) ||
+				(z.candidate?.score ?? 0) - (a.candidate?.score ?? 0)
+		);
+
+	let kept = settled.decisions;
+	let pages = settled.pages;
+	let persisted = kept;
+	let misses = 0;
+
+	for (
+		let attempt = 0;
+		attempt < TAIL_RESTORE_ATTEMPTS && misses < TAIL_RESTORE_MISSES;
+		attempt++
+	) {
+		const next = queue.shift();
+		if (!next) break;
+		const trial = kept.filter((d) => d !== next.row);
+		await persistDecisions(versionId, trial);
+		persisted = trial;
+		const p = await count();
+		if (p !== null && p <= targetPages) {
+			kept = trial;
+			pages = p;
+			misses = 0;
+			// Its coverage now counts, so the next item is valued against a page
+			// that already says this.
+			for (const req of next.candidate?.covers ?? []) covered.add(req);
+		} else {
+			// Includes a null count, for the same reason the loosen pass treats one
+			// as overflow: an unanswerable render is not evidence that more fits.
+			misses++;
+		}
+	}
+
+	if (persisted !== kept) await persistDecisions(versionId, kept);
+	return { decisions: kept, pages };
 }
 
 /**
