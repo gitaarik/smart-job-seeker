@@ -1606,8 +1606,6 @@ Consider these factors:
 
 IMPORTANT: Base the technical skills score strictly on skills the candidate demonstrably has — not skills they could likely learn or that are adjacent to what they know.
 
-CRITICAL for matched_skills: Return an array of skill names that the candidate possesses, selecting ONLY from the exact strings provided in the job's skills_required and skills_preferred lists. Copy the skill names EXACTLY as written - do not paraphrase or use synonyms. For example, if the job lists "JavaScript/TypeScript" and the candidate knows JavaScript, return "JavaScript/TypeScript" (not "JavaScript").
-
 Be objective and constructive. Highlight both strengths and gaps clearly.`,
 		user_prompt: `## Candidate Profile
 
