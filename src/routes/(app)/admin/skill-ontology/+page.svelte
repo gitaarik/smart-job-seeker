@@ -4,7 +4,54 @@
 	import type { PageData } from './$types';
 	import { verbFor } from './graph/graph-shared';
 
-	let { data, form }: { data: PageData; form: { error?: string } | null } = $props();
+	interface ImportPreview {
+		have: { concepts: number; aliases: number; relations: number };
+		concepts: number;
+		aliases: number;
+		relations: number;
+		approved: number;
+		orphans: { aliases: number; relations: number };
+		collisions: { slug: string; aliasOf: string }[];
+		collisionCount: number;
+		sample: { concepts: string[]; aliases: string[]; relations: string[] };
+	}
+
+	let {
+		data,
+		form
+	}: {
+		data: PageData;
+		form: {
+			error?: string;
+			importError?: string;
+			preview?: ImportPreview;
+			filename?: string;
+			imported?: { concepts: number; aliases: number; relations: number };
+			export?: string;
+		} | null;
+	} = $props();
+
+	/**
+	 * The chosen file, kept in the browser between preview and confirm.
+	 *
+	 * Deliberately not parked server-side. Holding a half-finished import in a
+	 * session would mean a confirmation could apply something other than what was
+	 * previewed, and the server re-plans on confirm anyway — so the browser
+	 * simply sends the same file twice.
+	 */
+	let bundleFile = $state<FileList | null>(null);
+	let importOpen = $state(false);
+
+	/** The export action returns the JSON; turn it into a download once. */
+	$effect(() => {
+		if (!form?.export) return;
+		const url = URL.createObjectURL(new Blob([form.export], { type: 'application/json' }));
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'skill-ontology.json';
+		a.click();
+		URL.revokeObjectURL(url);
+	});
 
 	let relations = $derived(data.relations);
 	let aliases = $derived(data.aliases);
@@ -72,13 +119,155 @@
 				Nothing unapproved affects matching.
 			</p>
 		</div>
-		<a
-			href={resolve('/admin/skill-ontology/graph/all')}
-			class="shrink-0 rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
-		>
-			View graph
-		</a>
+		<div class="flex shrink-0 gap-2">
+			<form method="POST" action="?/exportOntology" use:enhance>
+				<button
+					type="submit"
+					class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
+				>
+					Export
+				</button>
+			</form>
+			<button
+				type="button"
+				onclick={() => (importOpen = !importOpen)}
+				class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
+			>
+				Import
+			</button>
+			<a
+				href={resolve('/admin/skill-ontology/graph/all')}
+				class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg-hover)]"
+			>
+				View graph
+			</a>
+		</div>
 	</div>
+
+	{#if importOpen || form?.preview || form?.importError || form?.imported}
+		<!-- Two steps, and the split is the safety rather than a nicety: an import
+		     carries `approved_at`, so one confirm dialog would let hundreds of
+		     approvals through with nobody having seen a number. -->
+		<div class="space-y-3 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-4">
+			<div>
+				<h2 class="text-sm font-semibold text-[var(--dash-text)]">Import a bundle</h2>
+				<p class="mt-1 text-xs text-[var(--dash-text-secondary)]">
+					Only ever adds. Existing concepts keep their labels, and existing aliases and edges are
+					left alone, so running the same bundle twice changes nothing.
+				</p>
+			</div>
+
+			<form method="POST" action="?/previewImport" enctype="multipart/form-data" use:enhance>
+				<div class="flex flex-wrap items-center gap-2">
+					<input
+						type="file"
+						name="bundle"
+						accept="application/json,.json"
+						bind:files={bundleFile}
+						class="text-sm text-[var(--dash-text-secondary)]"
+					/>
+					<button
+						type="submit"
+						disabled={!bundleFile?.length}
+						class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)] disabled:opacity-40"
+					>
+						Preview
+					</button>
+				</div>
+			</form>
+
+			{#if form?.importError}
+				<p
+					class="rounded-md border border-[var(--dash-danger)]/40 bg-[var(--dash-danger-light)] px-3 py-2 text-sm text-[var(--dash-danger)]"
+				>
+					{form.importError}
+				</p>
+			{/if}
+
+			{#if form?.imported}
+				<p
+					class="rounded-md border border-[var(--dash-success)]/40 bg-[var(--dash-success-light)] px-3 py-2 text-sm text-[var(--dash-success)]"
+				>
+					Imported {form.imported.concepts} concepts, {form.imported.aliases} aliases and
+					{form.imported.relations} relations. Run
+					<code>scripts/audit-skill-ontology.ts</code> to confirm the graph did not contradict itself.
+				</p>
+			{/if}
+
+			{#if form?.preview}
+				{@const p = form.preview}
+				<div class="space-y-2 rounded-md border border-[var(--dash-border)] p-3 text-sm">
+					<p class="text-[var(--dash-text-secondary)]">
+						This instance holds {p.have.concepts} concepts, {p.have.aliases} aliases and
+						{p.have.relations} edges.
+					</p>
+					<ul class="space-y-0.5 text-[var(--dash-text)]">
+						<li>Would add <strong>{p.concepts}</strong> concepts</li>
+						<li>Would add <strong>{p.aliases}</strong> aliases</li>
+						<li>Would add <strong>{p.relations}</strong> relations</li>
+					</ul>
+
+					{#if p.orphans.aliases + p.orphans.relations > 0}
+						<p class="text-xs text-[var(--dash-text-muted)]">
+							Skipping {p.orphans.aliases} alias(es) and {p.orphans.relations} edge(s) whose concepts
+							are in neither the bundle nor this instance — the bundle is incomplete.
+						</p>
+					{/if}
+
+					{#if p.sample.concepts.length || p.sample.aliases.length || p.sample.relations.length}
+						<div class="text-xs text-[var(--dash-text-muted)]">
+							{#if p.sample.concepts.length}<p>Concepts: {p.sample.concepts.join(', ')}…</p>{/if}
+							{#if p.sample.aliases.length}<p>Aliases: {p.sample.aliases.join(', ')}…</p>{/if}
+							{#if p.sample.relations.length}<p>Edges: {p.sample.relations.join(', ')}…</p>{/if}
+						</div>
+					{/if}
+
+					{#if p.collisionCount > 0}
+						<!-- Audit defect 1. The graph would assert both "same node" and
+						     "two nodes", and which one a lookup finds comes down to UNION
+						     order, so there is no confirm button for this case. -->
+						<div
+							class="rounded-md border border-[var(--dash-danger)]/40 bg-[var(--dash-danger-light)] px-3 py-2 text-[var(--dash-danger)]"
+						>
+							<p class="font-medium">
+								Cannot import: {p.collisionCount} concept(s) are already an approved alias here.
+							</p>
+							<ul class="mt-1 space-y-0.5 text-xs">
+								{#each p.collisions as c (c.slug)}
+									<li>"{c.slug}" is an alias of "{c.aliasOf}"</li>
+								{/each}
+							</ul>
+							<p class="mt-1 text-xs">
+								Run <code>scripts/audit-skill-ontology.ts --merge-duplicates</code> first.
+							</p>
+						</div>
+					{:else}
+						{#if p.approved > 0}
+							<!-- The consequential number. Everything the proposers write is
+							     inert until reviewed; these rows are not. -->
+							<p
+								class="rounded-md border border-[var(--dash-warning-border)] bg-[var(--dash-warning-bg)] px-3 py-2 text-[var(--dash-text)]"
+							>
+								<strong>{p.approved}</strong> of these arrive already approved and take effect on
+								the next match for <strong>every profile</strong>. That is right when bootstrapping
+								from an instance you trust, and wrong otherwise.
+							</p>
+						{/if}
+						<form method="POST" action="?/importOntology" enctype="multipart/form-data" use:enhance>
+							<input type="file" name="bundle" bind:files={bundleFile} class="hidden" />
+							<button
+								type="submit"
+								disabled={!bundleFile?.length}
+								class="rounded-md bg-[var(--dash-primary)] px-3 py-1.5 text-sm text-white hover:opacity-90 disabled:opacity-40"
+							>
+								Import {p.concepts + p.aliases + p.relations} rows
+							</button>
+						</form>
+					{/if}
+				</div>
+			{/if}
+		</div>
+	{/if}
 
 	<!-- Not decoration. The confidence floor let through two edges scoring 0.90
 	     and 0.95, so the numbers below are a sort order and never a verdict. -->

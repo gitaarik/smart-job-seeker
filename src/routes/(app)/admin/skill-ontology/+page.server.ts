@@ -40,6 +40,13 @@ import { fail } from '@sveltejs/kit';
 import { sql } from 'drizzle-orm';
 import { dbDirect as db, queryRawDirect } from '$lib/server/db';
 import { refuseNewRelation } from '$lib/server/job/skill-relation-guards';
+import {
+	applyPlan,
+	exportBundle,
+	parseBundle,
+	plan,
+	type ImportPlan
+} from '$lib/server/job/ontology-transfer';
 import type { Actions, PageServerLoad } from './$types';
 
 export interface PendingRelation {
@@ -252,5 +259,102 @@ export const actions: Actions = {
 		if (id === null) return fail(400, { error: 'Invalid id' });
 		await db.execute(sql`UPDATE skill_aliases SET rejected_at = NULL WHERE id = ${id}`);
 		return { success: true };
+	},
+
+	/**
+	 * Hand the whole graph back as a file.
+	 *
+	 * A read, and the reason it is a button: the graph is hand-curated data that
+	 * exists in exactly one place, and needing a shell to take a copy of it is
+	 * friction with no safety bought.
+	 */
+	exportOntology: async () => {
+		const bundle = await exportBundle();
+		return { export: JSON.stringify(bundle, null, '\t') };
+	},
+
+	/**
+	 * Say what an upload would change. Writes nothing.
+	 *
+	 * Separate from `importOntology` deliberately, and the separation is the
+	 * whole safety story rather than a nicety. An import carries `approved_at`,
+	 * and approval is the gate this page exists to be — a wrong edge is invisible
+	 * and global. A single confirm dialog would let several hundred approvals
+	 * through on one click with nobody having seen a number.
+	 *
+	 * The file is not held server-side between the two steps. The browser keeps
+	 * it and posts it again to confirm, so there is no half-finished import
+	 * parked in a session, and `importOntology` re-plans from scratch against the
+	 * graph as it is at that moment rather than trusting this one.
+	 */
+	previewImport: async ({ request }) => {
+		const file = (await request.formData()).get('bundle');
+		if (!(file instanceof File) || file.size === 0) {
+			return fail(400, { importError: 'Choose a bundle file first.' });
+		}
+		let preview: ImportPlan;
+		try {
+			preview = await plan(parseBundle(await file.text()));
+		} catch (err) {
+			return fail(400, { importError: (err as Error).message });
+		}
+		return { preview: summarise(preview), filename: file.name };
+	},
+
+	/**
+	 * Apply an upload, having re-planned it here.
+	 *
+	 * Re-planning is not belt-and-braces: the graph can change between a preview
+	 * and a confirmation — another admin approving something, a proposer run —
+	 * and the plan that matters is the one computed against the database being
+	 * written to. `applyPlan` refuses collisions on its own, so a stale preview
+	 * cannot talk it into a duplicate concept.
+	 */
+	importOntology: async ({ request }) => {
+		const file = (await request.formData()).get('bundle');
+		if (!(file instanceof File) || file.size === 0) {
+			return fail(400, { importError: 'Choose a bundle file first.' });
+		}
+		try {
+			const fresh = await plan(parseBundle(await file.text()));
+			if (fresh.collisions.length > 0) {
+				return fail(400, { importError: collisionMessage(fresh), preview: summarise(fresh) });
+			}
+			const wrote = await applyPlan(fresh);
+			return { imported: wrote };
+		} catch (err) {
+			return fail(400, { importError: (err as Error).message });
+		}
 	}
 };
+
+/**
+ * The plan reduced to what a person needs to decide, plus a short sample of
+ * each list. The full lists run to hundreds of rows and nobody reads those in a
+ * page; the counts and the approved figure are what the decision turns on.
+ */
+function summarise(p: ImportPlan) {
+	return {
+		have: p.have,
+		concepts: p.concepts.length,
+		aliases: p.aliases.length,
+		relations: p.relations.length,
+		approved: p.approved,
+		orphans: p.orphans,
+		collisions: p.collisions.slice(0, 20),
+		collisionCount: p.collisions.length,
+		sample: {
+			concepts: p.concepts.slice(0, 8).map((c) => c.label),
+			aliases: p.aliases.slice(0, 8).map((a) => `${a.alias} → ${a.concept}`),
+			relations: p.relations.slice(0, 8).map((r) => `${r.from} —${r.relation}→ ${r.to}`)
+		}
+	};
+}
+
+function collisionMessage(p: ImportPlan): string {
+	return (
+		`Refused: ${p.collisions.length} concept slug(s) are already an approved alias of a ` +
+		`different concept here, so importing them would make the vocabulary claim both ` +
+		`"same node" and "two nodes". Run scripts/audit-skill-ontology.ts --merge-duplicates first.`
+	);
+}
