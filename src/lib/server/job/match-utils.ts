@@ -38,7 +38,7 @@ export async function getProfileSkills(profileId: number): Promise<string[]> {
  * React", and admits both.
  *
  * Re-measured on the 62 labelled pairs (`scripts/eval-skill-matching.ts`, run
- * 2026-08-26) once the graph had grown, the union no longer paid for that:
+ * 2026-08-27) once the graph had grown, the union no longer paid for that:
  *
  *   exact           100.0% precision / 10.7% recall
  *   +embeddings      76.9%            / 35.7%
