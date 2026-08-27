@@ -236,10 +236,16 @@ section(
 // did: CSS, HTML and React under `frontend`, while CSS3, MUI and Next.js sat
 // under `Frontend development`. A suffix is mechanical after all.
 //
+// `ing` joined the list the same way, and a run later: `Code review` and `Code
+// Reviewing` both sat under `Developer tools` and `Software Design`, three
+// spellings of one practice spread over two nodes, and the check walked past
+// them because it only knew how to make a noun plural.
+//
 // Reported, never merged automatically. `net`/`nets` and `web`/`web components`
 // would both trip this, and only a human knows which pairs are one concept.
 const DUP_SUFFIXES = [
 	's', // api / apis
+	'ing', // code review / code reviewing
 	'js', // vue / vue.js — normalizeSkill has already stripped the dot
 	'development',
 	'programming',

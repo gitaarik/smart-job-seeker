@@ -21,7 +21,7 @@
  *
  * Reading the top of the uncovered list, roughly half of it is not missing
  * knowledge at all — the concept is there under another name. `terraform` (136
- * mentions) misses `terraformiac`; `go` (125) misses `golang`; `ci/cd pipelines`
+ * mentions) missed `terraformiac`, since renamed; `go` (125) misses `golang`; `ci/cd pipelines`
  * (105) misses `cicd`. Those want an ALIAS: same concept, different spelling,
  * no new structure, and `expandUpward` seeds from alias as well as slug so they
  * inherit the whole existing chain for free.
@@ -80,7 +80,6 @@ const SOURCE = 'corpus-gap';
  * before it is stored, so "CI/CD pipelines" and "ci/cd pipelines" are one row.
  */
 const ALIASES: { alias: string; concept: string; why: string }[] = [
-	{ alias: 'terraform', concept: 'terraformiac', why: 'concept carries the "(IaC)" suffix' },
 	{ alias: 'go', concept: 'golang', why: 'the language, written both ways' },
 	{ alias: 'ci/cd pipelines', concept: 'cicd', why: 'pluralised activity, same concept' },
 	{ alias: 'artificial intelligence', concept: 'ai', why: 'expanded acronym' },
