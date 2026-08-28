@@ -1855,6 +1855,70 @@ export const profile_translations = pgTable(
 	]
 );
 
+/**
+ * Per-template value overrides — what a field says when ONE presentation
+ * template renders it.
+ *
+ * Same sidecar shape as `profile_translations`, one axis over: a row per
+ * (template, entity_type, entity_id, field, locale), applied in place before
+ * render so the renderers stay unaware of it. The overridable-field vocabulary
+ * lives in $lib/template-overrides.ts.
+ *
+ * It exists because nothing in a profile could say "on Citrus". An item's
+ * `tags` name a base document type (`resume`/`cv`) or a version slug; the
+ * presentation template is chosen independently at render time, so no tag can
+ * reach it. `resume_templates.config.contact` already replaces contact fields
+ * per template — this is the same statement for a field that belongs to a row,
+ * and the case it was built for is a consultancy whose house style says Senior
+ * Engineer where the applicant's own history says Lead Engineer.
+ *
+ * NOT folded into `profile_translations` by treating a template as a locale:
+ * the two are independent axes and a document needs both at once (a document is
+ * identified by (type, version, template, language) everywhere else here), so
+ * one column could not express a Dutch Citrus CV. `locale` is on this table for
+ * the same reason in reverse — an override is a value like any other and needs
+ * its own translations. Rows in the base locale apply to every language until a
+ * locale-specific one exists, which is what keeps a forced title from silently
+ * reverting to a translation of the value it replaced.
+ *
+ * Keyed by template ID, not slug. Everything else addresses a template by slug
+ * (`profile_exports.template`, `applications.cv_template_sent`), and
+ * slug-as-reference is exactly what orphaned rows when a version was renamed.
+ * The FK survives a rename and cascades a deletion. No `profile_id` column: the
+ * template carries one, and a denormalised copy is one more thing that can
+ * disagree with it.
+ */
+export const profile_template_overrides = pgTable(
+	'profile_template_overrides',
+	{
+		id: serial().primaryKey().notNull(),
+		template_id: integer().notNull(),
+		entity_type: varchar({ length: 64 }).notNull(),
+		entity_id: integer().notNull(),
+		field: varchar({ length: 64 }).notNull(),
+		/** Language this override is written in; the base locale covers the rest. */
+		locale: varchar({ length: 16 }).default('en').notNull(),
+		value: text().notNull(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' }),
+		date_updated: timestamp({ withTimezone: true, mode: 'date' })
+	},
+	(table): PgTableExtraConfigValue[] => [
+		uniqueIndex('profile_template_overrides_key').on(
+			table.template_id,
+			table.entity_type,
+			table.entity_id,
+			table.field,
+			table.locale
+		),
+		index('profile_template_overrides_lookup').on(table.template_id, table.locale),
+		foreignKey({
+			columns: [table.template_id],
+			foreignColumns: [resume_templates.id],
+			name: 'profile_template_overrides_template_foreign'
+		}).onDelete('cascade')
+	]
+);
+
 export const side_project_technologies = pgTable(
 	'side_project_technologies',
 	{

@@ -2,6 +2,8 @@ import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { and, asc, eq } from 'drizzle-orm';
+import { getResumeTemplatesForProfile } from '$lib/server/profile/resume-templates';
+import { listTemplateOverridesFor } from '$lib/server/profile/template-overrides';
 import {
 	work_experience_achievements,
 	work_experience_project_technologies,
@@ -62,10 +64,19 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		redirect(302, '/profile/work-experience');
 	}
 
+	// What this profile's templates call this role, if anything — the editor puts
+	// the control under the field it overrides, so it needs both here.
+	const [templates, templateOverrides] = await Promise.all([
+		getResumeTemplatesForProfile(layoutData.selectedProfile.id),
+		listTemplateOverridesFor(layoutData.selectedProfile.id, 'work_experience', id)
+	]);
+
 	return {
 		experience,
 		logoUrl,
 		bannerUrl,
-		profileId: layoutData.selectedProfile.id
+		profileId: layoutData.selectedProfile.id,
+		templates: templates.map((t) => ({ id: t.id, name: t.name })),
+		templateOverrides
 	};
 };

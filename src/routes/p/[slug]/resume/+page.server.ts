@@ -6,6 +6,10 @@ import { getResumeTemplate } from '$lib/server/profile/resume-templates';
 import { DEFAULT_TEMPLATE_ID } from '$lib/resume-templates';
 import { isKnownLocale } from '$lib/resume-translations';
 import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
+import {
+	applyTemplateOverrides,
+	loadTemplateOverrides
+} from '$lib/server/profile/template-overrides';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals, getClientAddress }) => {
@@ -66,6 +70,13 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	const langParam = url.searchParams.get('lang');
 	const translator = await loadTranslator(profile.id, isKnownLocale(langParam) ? langParam : null);
 	applyTranslations(profile, translator);
+
+	// Then the template's own values for the fields it overrides, LAST: an
+	// override is a force ("on Citrus this role is Senior Engineer"), so it has
+	// to win over the translation of the value it replaces. Resolved in the
+	// document's language, falling back to the base one — see
+	// server/profile/template-overrides.ts.
+	applyTemplateOverrides(profile, await loadTemplateOverrides(template?.id, translator.locale));
 
 	return {
 		profile: {

@@ -47,3 +47,19 @@ export async function getResumeTemplate(
 	});
 	return row ? toTemplate(row) : null;
 }
+
+/**
+ * Whether a template id belongs to this profile.
+ *
+ * Write paths take the template id from the client, so every one of them has to
+ * confirm it before storing anything against it — the same reason
+ * `isEntityOwned` exists for translations. Unlike the read helpers above this
+ * does not require `published`: a draft template is still yours to configure.
+ */
+export async function isTemplateOwned(profileId: number, templateId: number): Promise<boolean> {
+	const row = await db.query.resume_templates.findFirst({
+		columns: { id: true },
+		where: and(eq(resume_templates.id, templateId), eq(resume_templates.profile_id, profileId))
+	});
+	return !!row;
+}

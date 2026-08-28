@@ -17,6 +17,7 @@
 	import { autoSaveField, patchBody, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
+	import TemplateOverrideField from '$lib/components/TemplateOverrideField.svelte';
 	import AchievementsList, { type AchievementItem } from '$lib/components/AchievementsList.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import WorkExperienceProjects from '../../../components/WorkExperienceProjects.svelte';
@@ -486,6 +487,19 @@
 					required
 					bind:value={editPosition}
 				/>
+
+				<div class="md:col-span-2">
+					<TemplateOverrideField
+						entity="work_experience"
+						id={experience.id}
+						field="position"
+						base={editPosition}
+						templates={data.templates}
+						overrides={data.templateOverrides}
+						label="Position on a template"
+						hint="For a template whose house style wants a different title. Leave empty to use your own."
+					/>
+				</div>
 
 				<div>
 					<label for="edit-location" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
