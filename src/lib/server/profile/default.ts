@@ -28,7 +28,15 @@ const PROFILE_INCLUDE = {
 			// outcome are translatable — and both the overlay resolver and the
 			// auto-translate endpoint walk the tree this include builds, so a
 			// project left out here is a field the user can never translate.
-			work_experience_projects: { orderBy: asc(work_experience_projects.sort) }
+			//
+			// Their technologies are skill names like any other, and the tailoring
+			// run reads them as part of what the applicant holds: a requirement
+			// answered only by a project's stack was answered by nothing while the
+			// skills block was the sole inventory.
+			work_experience_projects: {
+				with: { work_experience_project_technologies: true },
+				orderBy: asc(work_experience_projects.sort)
+			}
 		},
 		orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)]
 	},

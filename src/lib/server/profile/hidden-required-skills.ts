@@ -16,6 +16,12 @@
  * which is what createProfileFilter already does for the templates. So this
  * runs the same filter server-side, per (base template × version) pair.
  *
+ * Nor is the skills block the only place an answer can render. A role's TECH
+ * line is skill names, and on the templates that print one it is the same page:
+ * asking only the skills block called a skill missing that a reader and a
+ * keyword search both find. Whether it prints is the template's answer, so the
+ * caller passes one — see CoverageScope.template.
+ *
  * Running that filter for every candidate document also answers a second
  * question for free: not just what each one HIDES, but how much of the job it
  * COVERS — which is what lets the application page recommend a version instead
@@ -25,9 +31,16 @@
 
 import { dbDirect as db } from '$lib/server/db';
 import { and, asc, eq, isNull, or } from 'drizzle-orm';
-import { profile_versions, tech_skill_categories, tech_skills } from '$lib/server/db/schema';
+import {
+	profile_versions,
+	tech_skill_categories,
+	tech_skills,
+	work_experience_technologies,
+	work_experiences
+} from '$lib/server/db/schema';
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
 import { BASE_TEMPLATE_TAGS, SHOW_ON_ALL, tagsForShowOn } from '$lib/profile-visibility';
+import { templatePrintsTechnologies } from '$lib/resume-templates';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import {
 	carrierOf,
@@ -51,6 +64,22 @@ export type { HiddenSkill, VersionCoverage };
  */
 export interface CoverageScope {
 	applicationId?: number | null;
+	/**
+	 * The presentation template the document is recorded as going out in.
+	 *
+	 * A skills question with a template answer: the generic renderer prints a
+	 * role's TECH line and the built-in layout prints none, so a required skill
+	 * listed against a role is on the page in one and missing from the other.
+	 *
+	 * It is the RECORDED template, not whatever the picker is currently showing
+	 * — the map is precomputed per (base template × version) and the picker is
+	 * unsaved client state. Flipping to a template of the other kind without
+	 * saving leaves these numbers describing the saved one; saving re-runs the
+	 * load. Making it live means giving the map a third axis, which the sibling
+	 * maps keyed alongside it (`outOfReach`, `exclusions`, `heldBackParents`)
+	 * would have to grow too.
+	 */
+	template?: string | null;
 }
 
 /**
@@ -77,7 +106,10 @@ export async function getVersionCoverage(
 	if (wanted.size === 0) return {};
 
 	const applicationId = scope.applicationId ?? null;
-	const [versions, categories] = await Promise.all([
+	// Only fetched for a template that renders them, which is no profile's
+	// default and most profiles never.
+	const printsTech = templatePrintsTechnologies(scope.template);
+	const [versions, categories, roles] = await Promise.all([
 		db.query.profile_versions.findMany({
 			where: and(
 				eq(profile_versions.profile_id, profileId),
@@ -105,7 +137,20 @@ export async function getVersionCoverage(
 				}
 			},
 			orderBy: asc(tech_skill_categories.sort)
-		})
+		}),
+		printsTech
+			? db.query.work_experiences.findMany({
+					where: eq(work_experiences.profile_id, profileId),
+					columns: { id: true, tags: true },
+					with: {
+						work_experience_technologies: {
+							columns: { id: true, name: true, tags: true },
+							orderBy: asc(work_experience_technologies.sort)
+						}
+					},
+					orderBy: asc(work_experiences.sort)
+				})
+			: Promise.resolve([])
 	]);
 
 	// The profile's own take on each required skill, if it has one at all.
@@ -156,6 +201,23 @@ export async function getVersionCoverage(
 					if (!key) continue;
 					visible.add(key);
 					printed.push(skill.name!);
+				}
+			}
+
+			// The skills block is not the only place a skill name reaches the page.
+			// On a template that renders a role's TECH line, a skill listed there is
+			// shown by this document, and reporting it as hidden asked the applicant
+			// to fix an omission that was not one — then offered a button whose only
+			// effect would be to print the word a second time.
+			for (const role of filterOnTags(roles, OVERRIDE_ENTITIES.workExperience)) {
+				for (const entry of filterOnTags(
+					role.work_experience_technologies,
+					OVERRIDE_ENTITIES.technology
+				)) {
+					const key = entry.name?.trim().toLowerCase();
+					if (!key) continue;
+					visible.add(key);
+					printed.push(entry.name!);
 				}
 			}
 

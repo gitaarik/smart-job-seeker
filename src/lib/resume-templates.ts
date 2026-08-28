@@ -64,3 +64,23 @@ export function templateForStorage(slug: string | null | undefined): string | nu
 	const s = (slug ?? '').trim();
 	return !s || s === DEFAULT_TEMPLATE_ID ? null : s;
 }
+
+/**
+ * Whether this template's renderer prints a role's technology line.
+ *
+ * The generic renderer does (`StructuredResume.tech()`); the built-in default
+ * layout prints no technologies anywhere. It has to be asked outside the
+ * renderer because "is this skill on the page" is a per-template question, and
+ * everything that predicts what a document shows — coverage, and the tailoring
+ * run's decision to surface a required skill — gets a different right answer
+ * per template. Same lesson as `page-fit.ts`: a version fitted to two pages
+ * came out of a branded template at three, and nothing errored, because the
+ * promise was simply about a different document.
+ *
+ * Every DB-backed template goes through the generic renderer, so the predicate
+ * is the same one storage uses. If a template config ever gains a rule that
+ * suppresses the tech line, this is where it is read.
+ */
+export function templatePrintsTechnologies(slug: string | null | undefined): boolean {
+	return templateForStorage(slug) !== null;
+}

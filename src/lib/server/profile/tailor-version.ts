@@ -31,6 +31,7 @@ import {
 	tech_skill_categories,
 	tech_skills,
 	work_experience_achievements,
+	work_experience_technologies,
 	work_experiences
 } from '$lib/server/db/schema';
 import { getProfileByIdentifier } from '$lib/server/profile/default';
@@ -59,6 +60,7 @@ import {
 	type ItemRow
 } from '$lib/tailoring';
 import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
+import { templatePrintsTechnologies } from '$lib/resume-templates';
 import { expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
 import { normalizeSkill } from '$lib/skills';
 import {
@@ -195,7 +197,18 @@ export function buildCandidates(
 	 * that have the graph. Optional: without it the pin check falls back to
 	 * comparing spellings, which is what it did before.
 	 */
-	conceptOf?: Map<string, string>
+	conceptOf?: Map<string, string>,
+	/**
+	 * The presentation template this document renders in — the third part of
+	 * "which document", alongside docType and baseSlug. Only the generic
+	 * renderer prints a role's TECH line, so it is what decides whether a
+	 * required skill named there is already on the page.
+	 *
+	 * Omitted by the callers that want scores or droppable items, neither of
+	 * which the tech line can change; the default is the built-in layout, which
+	 * prints no technologies, so leaving it out keeps the previous answer.
+	 */
+	template?: string | null
 ): Candidate[] {
 	const { filterOnTags } = createProfileFilter(
 		(profile.profile_versions ?? []) as never,
@@ -326,6 +339,60 @@ export function buildCandidates(
 		for (const name of printedInCategory.get(category.id) ?? []) {
 			printedNames.add(name.toLowerCase());
 			printedAnywhere.push(name);
+		}
+	}
+
+	// A role's TECH line prints skill names too, and on the templates that render
+	// one it is part of the same page a reader skims and a keyword search reads.
+	// Leaving it out meant a required skill the applicant lists at a role — but
+	// deliberately keeps out of their skills block — read as missing, and the run
+	// overrode that hold-back to put on a page the word was already on.
+	//
+	// Not added to `printedInCategory`: an anchor is an index into one category's
+	// rendered list, and a name from somewhere else entirely would place a
+	// surfaced skill at a position nothing occupies.
+	if (templatePrintsTechnologies(template)) {
+		for (const role of profile.work_experiences ?? []) {
+			const printsHere = visibleRoles.has(role.id);
+			const visibleTech = new Set(
+				filterOnTags(role.work_experience_technologies ?? [], OVERRIDE_ENTITIES.technology).map(
+					(t) => t.id
+				)
+			);
+			// Every row, not just the printing ones — the same shape as achievements
+			// above. A technology a previous run excluded is filtered out by the
+			// version it decided on, and building only from what survives would
+			// leave it with no candidate, no row in the item panel, and no way back
+			// short of editing the profile every other job shares.
+			for (const entry of role.work_experience_technologies ?? []) {
+				const name = text(entry.name);
+				if (!name) continue;
+				const visible = printsHere && visibleTech.has(entry.id);
+				if (visible) {
+					printedNames.add(name.toLowerCase());
+					printedAnywhere.push(name);
+				}
+				candidates.push({
+					entityType: OVERRIDE_ENTITIES.technology,
+					entityId: entry.id,
+					parentId: role.id,
+					label: name,
+					// Zero for the same reason a skill group is zero: the page budget is
+					// calibrated on prose, and pricing a keyword list against it would
+					// silently re-tune how much of the prose survives. The line leaving
+					// the page is worth real space, and the fit pass collects it by
+					// rendering.
+					chars: 0,
+					visible,
+					parentVisible: printsHere,
+					parentType: OVERRIDE_ENTITIES.workExperience,
+					// Never surfaced and never ranked — a bare name has nothing for an
+					// embedding to read. It is kept or dropped on `covers` alone, which
+					// markCoverage fills in from the skill graph.
+					pinned: false,
+					score: 0
+				});
+			}
 		}
 	}
 
@@ -709,7 +776,8 @@ export async function tailorVersionForApplication(opts: {
 		docType,
 		effectiveBase,
 		requiredSkills,
-		await conceptResolver(profile, requiredSkills)
+		await conceptResolver(profile, requiredSkills),
+		template
 	);
 	await markCoverage(built, profile, requiredSkills);
 	const { candidates, ranker, floor } = await scoreCandidates(profileId, built, query);
@@ -741,6 +809,10 @@ export async function tailorVersionForApplication(opts: {
 			? `${dated}kept for your ${otherLabel} only, and it outranks what it displaces here`
 			: `${dated}not on the version this builds on, and it outranks what it displaces here`;
 	};
+	// A single word, so the reason has to carry the whole case: which line it
+	// left, and that the rule was a lookup rather than a verdict on the word.
+	const technologyDropReason = () =>
+		'this job names nothing this answers, and the tech line reads as a list';
 	// A restored role is the largest thing a run can do, so the row says what
 	// bought it: the role names itself in the diff, and the bullet that earned
 	// it is the part the applicant will want to check.
@@ -764,6 +836,7 @@ export async function tailorVersionForApplication(opts: {
 		pinnedReason,
 		surfacedReason,
 		groupDropReason,
+		technologyDropReason,
 		restoredParentReason
 	});
 
@@ -885,6 +958,7 @@ export async function tailorVersionForApplication(opts: {
 				pinnedReason,
 				surfacedReason,
 				groupDropReason,
+				technologyDropReason,
 				restoredParentReason
 			})
 	});
@@ -902,6 +976,46 @@ export async function tailorVersionForApplication(opts: {
 }
 
 /**
+ * Skill names the profile holds outside its skills block: the technologies
+ * listed against a role, against a role's projects, and against a side project.
+ *
+ * They are the same kind of thing as a `tech_skills` row — a bare skill name —
+ * and until this existed only the skills block was ever consulted, so a
+ * requirement answered by a role's TECH line was answered by nothing at all.
+ *
+ * `scope: 'roles'` narrows to the ones a document can print, which is a role's
+ * own list and nothing below it: no renderer shows a project's stack today, so
+ * a name that appears only there is vocabulary, never evidence that the page
+ * already says it.
+ */
+function heldTechnologies(
+	profile: {
+		work_experiences?: {
+			work_experience_technologies?: { name?: unknown }[];
+			work_experience_projects?: { work_experience_project_technologies?: { name?: unknown }[] }[];
+		}[];
+		side_projects?: { side_project_technologies?: { name?: unknown }[] }[];
+	},
+	scope: 'all' | 'roles' = 'all'
+): string[] {
+	const roles = (profile.work_experiences ?? []).flatMap((role) => [
+		...(role.work_experience_technologies ?? []).map((t) => text(t.name)),
+		...(scope === 'all'
+			? (role.work_experience_projects ?? []).flatMap((p) =>
+					(p.work_experience_project_technologies ?? []).map((t) => text(t.name))
+				)
+			: [])
+	]);
+	if (scope === 'roles') return roles.filter(Boolean);
+	return [
+		...roles,
+		...(profile.side_projects ?? []).flatMap((p) =>
+			(p.side_project_technologies ?? []).map((t) => text(t.name))
+		)
+	].filter(Boolean);
+}
+
+/**
  * Normalised skill name → the concept slug it resolves to, for every name this
  * run might compare: the job's required skills and the applicant's own.
  *
@@ -909,18 +1023,25 @@ export async function tailorVersionForApplication(opts: {
  * and approved aliases. It exists so `buildCandidates` can stay synchronous
  * while still asking a question only the database can answer.
  *
+ * A role's technologies are in it because they can be PRINTED — the concept
+ * check asks whether the document already shows this skill under another name,
+ * and a name with no entry here resolves to nothing and answers no.
+ *
  * Empty on failure, and an empty map means the pin check compares spellings —
  * the behaviour before the graph was consulted at all.
  */
 async function conceptResolver(
-	profile: { tech_skill_categories?: { tech_skills?: { name?: unknown }[] }[] },
+	profile: Parameters<typeof heldTechnologies>[0] & {
+		tech_skill_categories?: { tech_skills?: { name?: unknown }[] }[];
+	},
 	requiredSkills: string[]
 ): Promise<Map<string, string>> {
 	const names = [
 		...requiredSkills,
 		...(profile.tech_skill_categories ?? []).flatMap((c) =>
 			(c.tech_skills ?? []).map((s) => text(s.name))
-		)
+		),
+		...heldTechnologies(profile, 'roles')
 	].filter(Boolean);
 	try {
 		const resolved = await resolveConcepts(names);
@@ -957,9 +1078,11 @@ async function conceptResolver(
  * Degrades to the literal reading if the graph cannot be reached; a bullet that
  * spells the requirement out is still found.
  */
-async function markCoverage(
+export async function markCoverage(
 	candidates: Candidate[],
-	profile: { tech_skill_categories?: { tech_skills?: { name?: unknown }[] }[] },
+	profile: Parameters<typeof heldTechnologies>[0] & {
+		tech_skill_categories?: { tech_skills?: { name?: unknown }[] }[];
+	},
 	requiredSkills: string[]
 ): Promise<void> {
 	if (requiredSkills.length === 0) return;
@@ -968,11 +1091,19 @@ async function markCoverage(
 	// spelling is always one of them, which is what survives a graph failure.
 	const answers = new Map<string, Set<string>>(requiredSkills.map((r) => [r, new Set([r])]));
 
+	// Every wording the applicant holds, not just the ones in their skills block.
+	// This is vocabulary for the graph walk and says nothing about printing: it
+	// decides whether a BULLET naming Kafka counts as evidence for a streaming
+	// requirement, and a profile that records Kafka only against the role where
+	// it was used is the common shape, not the exception.
 	const held = [
 		...new Set(
-			(profile.tech_skill_categories ?? [])
-				.flatMap((c) => (c.tech_skills ?? []).map((s) => text(s.name)))
-				.filter(Boolean)
+			[
+				...(profile.tech_skill_categories ?? []).flatMap((c) =>
+					(c.tech_skills ?? []).map((s) => text(s.name))
+				),
+				...heldTechnologies(profile)
+			].filter(Boolean)
 		)
 	];
 	try {
@@ -1427,7 +1558,7 @@ export async function describeOverrides(
 	const idsOf = (type: string) =>
 		rows.filter((r) => r.entity_type === type).map((r) => r.entity_id);
 
-	const [achievements, projects, skills, groups] = await Promise.all([
+	const [achievements, projects, skills, groups, technologies] = await Promise.all([
 		idsOf(OVERRIDE_ENTITIES.achievement).length
 			? db.query.work_experience_achievements.findMany({
 					where: inArray(work_experience_achievements.id, idsOf(OVERRIDE_ENTITIES.achievement)),
@@ -1452,6 +1583,12 @@ export async function describeOverrides(
 					columns: { id: true, name: true },
 					with: { tech_skills: { columns: { name: true } } }
 				})
+			: [],
+		idsOf(OVERRIDE_ENTITIES.technology).length
+			? db.query.work_experience_technologies.findMany({
+					where: inArray(work_experience_technologies.id, idsOf(OVERRIDE_ENTITIES.technology)),
+					columns: { id: true, name: true, work_experience_id: true }
+				})
 			: []
 	]);
 
@@ -1462,6 +1599,9 @@ export async function describeOverrides(
 	const roleIds = [
 		...new Set([
 			...achievements.map((a) => a.work_experience_id).filter(Boolean),
+			// A dropped technology is one word, and the word alone does not say
+			// which line it left — a profile can list Docker under three roles.
+			...technologies.map((t) => t.work_experience_id).filter(Boolean),
 			...idsOf(OVERRIDE_ENTITIES.workExperience)
 		])
 	];
@@ -1491,6 +1631,13 @@ export async function describeOverrides(
 	}
 	for (const s of skills) {
 		labels.set(`${OVERRIDE_ENTITIES.skill}:${s.id}`, text(s.name));
+	}
+	for (const t of technologies) {
+		// The role is the context, so a diff listing eight of these groups them by
+		// the line they left rather than reading as eight loose words.
+		labels.set(`${OVERRIDE_ENTITIES.technology}:${t.id}`, text(t.name));
+		const role = roleLabels.get(t.work_experience_id);
+		if (role) contexts.set(`${OVERRIDE_ENTITIES.technology}:${t.id}`, role);
 	}
 	for (const g of groups) {
 		// The whole list, because what is leaving the page is the list, and a bare
@@ -1967,7 +2114,18 @@ export async function versionItemStates(opts: {
 	const job = application?.job ?? null;
 	const requiredSkills = job ? asStringArray(job.skills_required) : [];
 
-	const built = buildCandidates(profile, docType, versionSlug, requiredSkills);
+	// The template belongs to "which document" as much as the type and the
+	// version do, and this panel exists to agree with the document: on a template
+	// that prints a role's TECH line, a required skill named there is already
+	// showing, and saying otherwise would have the panel argue with the page.
+	const built = buildCandidates(
+		profile,
+		docType,
+		versionSlug,
+		requiredSkills,
+		undefined,
+		application?.cv_template_sent ?? null
+	);
 
 	let scoreOf = new Map<string, number>();
 	if (job) {
@@ -2051,13 +2209,21 @@ export async function versionItemStates(opts: {
 		filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience).map((w) => w.id)
 	);
 
+	// Bullets first, then the role's TECH line — the order the role renders in,
+	// and the order that keeps a long tech list from burying the prose above it.
+	// Technologies are here at all because the run now decides about them: an
+	// item nobody can reach is one whose only fix is editing the shared profile,
+	// which changes every job that uses this version.
 	const byParent = new Map<number, Candidate[]>();
-	for (const candidate of built) {
-		if (candidate.entityType !== OVERRIDE_ENTITIES.achievement) continue;
-		if (candidate.parentId === null) continue;
-		const list = byParent.get(candidate.parentId) ?? [];
-		list.push(candidate);
-		byParent.set(candidate.parentId, list);
+	const roleParts = [OVERRIDE_ENTITIES.achievement, OVERRIDE_ENTITIES.technology];
+	for (const type of roleParts) {
+		for (const candidate of built) {
+			if (candidate.entityType !== type) continue;
+			if (candidate.parentId === null) continue;
+			const list = byParent.get(candidate.parentId) ?? [];
+			list.push(candidate);
+			byParent.set(candidate.parentId, list);
+		}
 	}
 
 	const groups: ItemGroup[] = [];
@@ -2159,9 +2325,19 @@ export async function setItemStateForApplication(opts: {
 			? createProfileFilter((profile.profile_versions ?? []) as never, docType, null, baseSlug)
 					.filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience)
 					.some((w) => w.id === entityId)
-			: (buildCandidates(profile, docType, baseSlug, []).find(
-					(c) => c.entityType === entityType && c.entityId === entityId
-				)?.visible ?? false);
+			: // With the template, because a technology is only a candidate on a
+				// document that prints one — and without it every one of them looks
+				// hidden, so putting one back would write an `include` where the base
+				// already agrees. A row saying nothing is worse than no row: it is
+				// what stops a later run from deciding about that item at all.
+				(buildCandidates(
+					profile,
+					docType,
+					baseSlug,
+					[],
+					undefined,
+					application.cv_template_sent ?? null
+				).find((c) => c.entityType === entityType && c.entityId === entityId)?.visible ?? false);
 
 	if (on === baseVisible) {
 		await db

@@ -198,6 +198,8 @@ export interface SelectionOptions {
 	surfacedReason?: (candidate: Candidate) => string;
 	/** Why a skill group was dropped whole. */
 	groupDropReason?: (candidate: Candidate) => string;
+	/** Why a technology left a role's TECH line. */
+	technologyDropReason?: (candidate: Candidate) => string;
 	/** Why a hidden parent was brought back, given the item that earned it. */
 	restoredParentReason?: (child: Candidate) => string;
 	/**
@@ -402,6 +404,23 @@ export const PROMOTION_MARGIN = { semantic: 0.02, lexical: 2 } as const;
  * does shrink the section, but not enough to matter: see budgetChars.
  */
 const MIN_SKILL_GROUPS = 2;
+
+/**
+ * How many technologies a role's TECH line keeps whatever the job asks for.
+ *
+ * The line has the same job as the skills block — it is read as a keyword list,
+ * not as prose — and it is diluted the same way: measured on this profile the
+ * eight roles carry 5 to 26 entries each, 119 in total, and the longest renders
+ * to about three printed lines of names nobody asked about. But a role stripped
+ * to the two words a posting happens to use reads as a role with no stack, so
+ * the floor is what stops focus turning into a gap.
+ *
+ * Six, from the same measurement: it leaves the three shortest lines (5, 7 and
+ * 11 entries) untouched, which is the right answer for a line a reader can
+ * already take in at a glance, and it is where the four long ones stop looking
+ * like an inventory.
+ */
+const MIN_TECH_PER_ROLE = 6;
 
 /**
  * The bar a hidden item must clear to be worth surfacing — and the same one the
@@ -781,6 +800,61 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 		});
 	}
 
+	// ── A role's TECH line: the same dilution, one level down ──
+	//
+	// The line is the skills block written again per role, and it was the one
+	// printed list no tailoring decision could touch. Same argument as the group
+	// pass above, and deliberately the same SHAPE: absolute rather than
+	// comparative, because "this job asks nothing about Firebug" is a statement
+	// about the job and not about how full the page is.
+	//
+	// What it is NOT is a relevance score on a single word. That is the objection
+	// that keeps skills include-only, and it holds here too — a bare name has no
+	// content for an embedding to read, which is why these candidates carry no
+	// score at all. The keep rule is a lookup instead: does this name answer
+	// something the posting asked for, itself or through the skill graph
+	// (`covers`, see markCoverage). PostgreSQL answers SQL; Firebug answers
+	// nothing.
+	//
+	// Below `MIN_TECH_PER_ROLE` nothing is touched, and above it the applicant's
+	// own order fills the remaining places — no invented ranking decides which of
+	// two equally-unasked-for names survives.
+	//
+	// Costs the budget nothing directly (chars are zero, as for a skill group),
+	// but a shorter line is genuinely shorter on the page, and the fit pass
+	// renders the document — so the space comes back as pages measured rather
+	// than as characters guessed.
+	//
+	// Skipped entirely when nothing in this run covers anything, which is what a
+	// missing job looks like from here: with no requirements to answer, every
+	// name is equally unasked-for and the rule would empty every line down to the
+	// floor for no reason at all.
+	if (candidates.some((c) => c.covers?.length)) {
+		const byRole = new Map<number | null, Candidate[]>();
+		for (const t of candidates.filter((c) => c.entityType === OVERRIDE_ENTITIES.technology)) {
+			if (!t.visible) continue;
+			byRole.set(t.parentId, [...(byRole.get(t.parentId) ?? []), t]);
+		}
+		for (const line of byRole.values()) {
+			if (line.length <= MIN_TECH_PER_ROLE) continue;
+			let places = MIN_TECH_PER_ROLE - line.filter((t) => t.covers?.length).length;
+			for (const t of line) {
+				if (t.covers?.length) continue;
+				if (places > 0) {
+					places -= 1;
+					continue;
+				}
+				decisions.push({
+					entityType: t.entityType,
+					entityId: t.entityId,
+					action: 'exclude',
+					sort: null,
+					reason: options.technologyDropReason?.(t) ?? 'this job asks nothing about it'
+				});
+			}
+		}
+	}
+
 	// ── L1 + L2: trim the least relevant until the document fits ──
 	//
 	// Relevance decides the ORDER; the page decides how much. These used to be
@@ -824,11 +898,24 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	 * nothing and just re-sorts the same trim. Protecting the LAST one is
 	 * self-limiting: once a requirement has a line of evidence, further lines
 	 * naming it get nothing.
+	 *
+	 * "Something else" means another LINE OF EVIDENCE, which is what the sentence
+	 * above says and what the code did not: a `covers` is set on anything whose
+	 * words name a requirement, and that includes the skills block. A skill
+	 * candidate labelled `Python` names Python by definition, and a skill
+	 * CATEGORY's label lists every skill in the group — so `Backend: Python,
+	 * Django, Node.js, …` names most of a posting on its own. Measured on
+	 * application 65, all seven requirements had a non-prose candidate naming
+	 * them, so this returned true for every item and the guarantee below never
+	 * once fired. A keyword list is the claim; a bullet is the evidence for it,
+	 * and only the second is what this protects.
 	 */
 	const coveredElsewhere = (c: Candidate) =>
 		!c.covers?.length ||
 		c.covers.every((req) =>
-			kept.some((k) => k !== c && !dropped.has(dropKey(k)) && k.covers?.includes(req))
+			kept.some(
+				(k) => k !== c && isDroppable(k) && !dropped.has(dropKey(k)) && k.covers?.includes(req)
+			)
 		);
 
 	const lastEvidence: Candidate[] = [];

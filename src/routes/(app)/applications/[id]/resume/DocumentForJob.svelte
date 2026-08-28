@@ -14,6 +14,7 @@
 		faMagnifyingGlass,
 		faPen,
 		faPlus,
+		faRotate,
 		faSave,
 		faTrash,
 		faWandMagicSparkles,
@@ -567,6 +568,21 @@
 	let saving = $state(false);
 	/** Rendering a PDF for what is already recorded, from the repair button. */
 	let makingPdf = $state(false);
+	/**
+	 * Named for what the click does, which is not the same thing twice: with no
+	 * file it makes the first one, with a file it replaces it. Said in the label
+	 * because the button looks identical either way and the difference is whether
+	 * something already on disk is about to be overwritten.
+	 */
+	let pdfButtonLabel = $derived(
+		makingPdf
+			? recordedHasPdf
+				? 'Regenerating…'
+				: 'Making the PDF…'
+			: recordedHasPdf
+				? 'Regenerate the PDF'
+				: 'Make the PDF'
+	);
 
 	function cancelPicking() {
 		versionSlug = app.cv_version_sent || '';
@@ -693,36 +709,43 @@
 								<FontAwesomeIcon icon={faFilePdf} class="h-3 w-3" />
 								PDF
 							</a>
-						{:else}
-							<!-- No stored export for this combination, so a PDF link here
-							     would 404. Saving normally renders one; this is the way back
-							     when that render failed, or when the record predates the
-							     template and language being part of it. -->
-							<form
-								method="POST"
-								action="?/generatePdfs"
-								use:enhance={() => {
-									makingPdf = true;
-									return async ({ update }) => {
-										await update();
-										makingPdf = false;
-									};
-								}}
-							>
-								<button
-									type="submit"
-									disabled={makingPdf}
-									class="dash-link-ext !bg-amber-500/10 !text-amber-600 hover:!bg-amber-500/20 disabled:opacity-70"
-								>
-									<FontAwesomeIcon
-										icon={makingPdf ? faCircleNotch : faFilePdf}
-										spin={makingPdf}
-										class="h-3 w-3"
-									/>
-									{makingPdf ? 'Making the PDF…' : 'Make the PDF'}
-								</button>
-							</form>
 						{/if}
+						<!-- Offered whether or not a file already exists, because the two
+						     cases the applicant reaches for it in are the same act. With no
+						     stored export the PDF link would 404 and this is the way to one;
+						     with a stale one — a template edited, a translation corrected,
+						     bullets refitted — it is the way to a current one. Nothing else
+						     on this page re-renders in place: every other refresh rides an
+						     edit to the tailored version, the library's own Regenerate button
+						     never lists `app-<id>` versions, and re-saving the same
+						     template and language is a no-op by design. Hiding it once a file
+						     existed left no way at all. -->
+						<form
+							method="POST"
+							action="?/generatePdfs"
+							use:enhance={() => {
+								makingPdf = true;
+								return async ({ update }) => {
+									await update();
+									makingPdf = false;
+								};
+							}}
+						>
+							<button
+								type="submit"
+								disabled={makingPdf}
+								class="dash-link-ext disabled:opacity-70 {recordedHasPdf
+									? 'border border-[var(--dash-border)] !bg-[var(--dash-bg)] !text-[var(--dash-text-secondary)] hover:!bg-[var(--dash-primary)]/10 hover:!text-[var(--dash-primary)]'
+									: '!bg-amber-500/10 !text-amber-600 hover:!bg-amber-500/20'}"
+							>
+								<FontAwesomeIcon
+									icon={makingPdf ? faCircleNotch : recordedHasPdf ? faRotate : faFilePdf}
+									spin={makingPdf}
+									class="h-3 w-3"
+								/>
+								{pdfButtonLabel}
+							</button>
+						</form>
 						<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					{/if}
 					<button

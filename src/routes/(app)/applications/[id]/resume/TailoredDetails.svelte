@@ -189,6 +189,13 @@
 				<form method="POST" action="?/setCvSent" use:enhance={track}>
 					<input type="hidden" name="cv_sent_through" value={docType} />
 					<input type="hidden" name="version_slug" value={tailored.slug} />
+					<!-- Same reason as the regenerate form below: `setCvSent` writes
+					     `cv_template_sent` / `cv_locale_sent` from what it is given, so a
+					     form that names only the version changes the version AND silently
+					     resets the presentation. This button says "send this one instead",
+					     not "and in the default template". -->
+					<input type="hidden" name="template" value={template ?? ''} />
+					<input type="hidden" name="locale" value={locale ?? ''} />
 					<button
 						type="submit"
 						disabled={working}
@@ -404,6 +411,17 @@
 			class="flex items-center gap-2"
 		>
 			<input type="hidden" name="doc_type" value={docType} />
+			<!-- The presentation this application already records, carried back so
+			     the run keeps it. `tailorVersion` reads both off the form and then
+			     WRITES them to `cv_template_sent` / `cv_locale_sent`, so omitting
+			     them was not a missing default — it reset the record to the plain
+			     template in English on every regenerate, and rendered the PDF
+			     there. The Citrus/Dutch file the row above links stayed on disk,
+			     untouched and now stale, which is exactly what "I pressed
+			     Regenerate and nothing happened" looks like. Empty is the storage
+			     form of both defaults, which is what the action expects. -->
+			<input type="hidden" name="template" value={template ?? ''} />
+			<input type="hidden" name="locale" value={locale ?? ''} />
 			<!-- The base is re-offered here, not frozen at creation: regenerating
 			     against a different version of your own is the main reason to
 			     regenerate at all, and the action moves the extension to match.

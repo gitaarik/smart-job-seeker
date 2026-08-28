@@ -949,3 +949,134 @@ describe('coverage — the last line naming a required skill', () => {
 		expect(dropped).not.toContain(1);
 	});
 });
+
+describe('a role’s tech line', () => {
+	const tech = (id: number, roleId: number, label: string, covers?: string[]): Candidate => ({
+		entityType: OVERRIDE_ENTITIES.technology,
+		entityId: id,
+		parentId: roleId,
+		label,
+		chars: 0,
+		visible: true,
+		pinned: false,
+		score: 0,
+		...(covers ? { covers } : {})
+	});
+
+	/** A line of `n` entries, the first `covering` of which answer the job. */
+	const line = (roleId: number, n: number, covering = 0) =>
+		Array.from({ length: n }, (_, i) =>
+			tech(roleId * 100 + i, roleId, `tech ${i}`, i < covering ? ['SQL'] : undefined)
+		);
+
+	const gone = (ds: ReturnType<typeof selectForJob>) =>
+		ds.filter((d) => d.entityType === OVERRIDE_ENTITIES.technology).map((d) => d.entityId);
+
+	/**
+	 * A one-entry line on a role of its own, answering the job.
+	 *
+	 * The pass is skipped when nothing in the run covers anything — that is what
+	 * a missing job looks like from inside the selector — so a test about a line
+	 * of entirely unasked-for names needs something, somewhere, that was asked
+	 * for. Its own line is under the floor and never decided about.
+	 */
+	const ARMED = tech(999, 9, 'SQL', ['SQL']);
+
+	it('drops what the job names nothing about, once the line is long', () => {
+		const decisions = selectForJob(line(1, 10, 3), OPTS);
+		// Three answer the job; three more fill the floor; the last four go.
+		expect(gone(decisions)).toEqual([106, 107, 108, 109]);
+		expect(decisions.every((d) => d.action === 'exclude')).toBe(true);
+	});
+
+	it('keeps every entry that answers the job, however long the line', () => {
+		const decisions = selectForJob(line(1, 20, 14), OPTS);
+		// The floor is already met by the fourteen, so nothing else is kept for it.
+		expect(gone(decisions)).toHaveLength(6);
+		expect(gone(decisions).every((id) => id >= 114)).toBe(true);
+	});
+
+	it('leaves a short line alone entirely', () => {
+		// Six names a reader takes in at a glance is not an inventory, and cutting
+		// one to four says the role had no stack rather than that it had a focus.
+		expect(gone(selectForJob([...line(1, 6, 0), ARMED], OPTS))).toEqual([]);
+		expect(gone(selectForJob([...line(1, 5, 0), ARMED], OPTS))).toEqual([]);
+	});
+
+	it('fills the remaining places in the applicant’s own order', () => {
+		// No invented ranking decides between two names the job asked nothing
+		// about — the order they are written in is the only honest tiebreak.
+		expect(gone(selectForJob([...line(1, 9, 0), ARMED], OPTS))).toEqual([106, 107, 108]);
+	});
+
+	it('decides per role, not per document', () => {
+		const decisions = selectForJob([...line(1, 9, 0), ...line(2, 4, 0), ARMED], OPTS);
+		// Role 2's four entries are under the floor and stay whole.
+		expect(gone(decisions)).toEqual([106, 107, 108]);
+	});
+
+	it('says nothing when there is no job to answer', () => {
+		// Nothing covers anything, so every name is equally unasked-for. Emptying
+		// each line down to the floor on that basis would be a decision made from
+		// the absence of information.
+		expect(gone(selectForJob(line(1, 20, 0), OPTS))).toEqual([]);
+		// And the same twenty names go the moment one of them is asked for.
+		expect(gone(selectForJob([...line(1, 20, 0), ARMED], OPTS))).toHaveLength(14);
+	});
+
+	it('ignores a line the document does not print', () => {
+		const hidden = line(1, 12, 1).map((t) => ({ ...t, visible: false }));
+		// One covering entry keeps `covers` present in the run, so the pass runs.
+		expect(gone(selectForJob(hidden, OPTS))).toEqual([]);
+	});
+
+	it('does not spend the page budget on them', () => {
+		// Zero chars, like a skill group: the budget is calibrated on prose, and a
+		// keyword list priced against it would re-tune how much prose survives.
+		const candidates = [...line(1, 8, 1), bullet(1, 10, 0.9), bullet(2, 10, 0.8)];
+		expect(selectForJob(candidates, { ...OPTS, budgetChars: 0 })).toEqual(
+			selectForJob(candidates, { ...OPTS, budgetChars: 10_000 })
+		);
+	});
+
+	it('carries its own reason', () => {
+		const decisions = selectForJob([...line(1, 8, 0), ARMED], {
+			...OPTS,
+			technologyDropReason: () => 'this job names nothing this answers'
+		});
+		const row = decisions.find((d) => d.entityType === OVERRIDE_ENTITIES.technology);
+		expect(row?.reason).toBe('this job names nothing this answers');
+	});
+});
+
+describe('what counts as evidence for a requirement', () => {
+	it('does not let a keyword list stand in for the line that proves it', () => {
+		// `covers` is set on anything whose words name a requirement, and a skill
+		// CATEGORY's label lists every skill in the group — so on application 65
+		// all seven requirements had a non-prose candidate naming them and the
+		// last-evidence guarantee never fired once. A list is the claim; a bullet
+		// is the evidence.
+		const candidates: Candidate[] = [
+			bullet(1, 10, 0.9),
+			bullet(2, 10, 0.1, { covers: ['SQL'] }),
+			bullet(3, 10, 0.8),
+			bullet(4, 10, 0.7),
+			{
+				entityType: OVERRIDE_ENTITIES.skillCategory,
+				entityId: 50,
+				parentId: null,
+				label: 'Databases: PostgreSQL, SQL, Redis',
+				chars: 0,
+				visible: true,
+				pinned: true,
+				score: 0.9,
+				covers: ['SQL']
+			}
+		];
+		const dropped = selectForJob(candidates, { ...OPTS, budgetChars: 300 })
+			.filter((d) => d.action === 'exclude')
+			.map((d) => d.entityId);
+		expect(dropped).not.toContain(2);
+		expect(dropped).toContain(4);
+	});
+});

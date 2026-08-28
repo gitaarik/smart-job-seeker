@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The module reaches for the database, the model and the embedding provider at
 // import time; none of that is what these tests are about.
@@ -11,14 +11,20 @@ vi.mock('$lib/server/documents/content-embeddings', () => ({
 vi.mock('$lib/server/documents/content-retrieval', () => ({
 	scoreUnitAgainstQuery: vi.fn(() => 0)
 }));
+vi.mock('$lib/server/job/skill-ontology', () => ({
+	expandUpwardBySeed: vi.fn(async () => new Map()),
+	resolveConcepts: vi.fn(async () => new Map())
+}));
 
 import {
 	applyModelOpinions,
 	applyVerdictReasons,
 	buildCandidates,
+	markCoverage,
 	refFor,
 	shortlistFor
 } from '../tailor-version';
+import { expandUpwardBySeed } from '$lib/server/job/skill-ontology';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import type { Candidate, Decision } from '$lib/tailoring';
 
@@ -494,5 +500,186 @@ describe('buildCandidates: a required skill the page already shows under another
 		).find((c) => c.entityType === OVERRIDE_ENTITIES.skill && c.label === 'Ontologies');
 		expect(found?.pinned).toBe(true);
 		expect(found?.visible).toBe(false);
+	});
+});
+
+describe('buildCandidates: a required skill the page already shows at a role', () => {
+	// The skills block is not the only list of skill names on the page. This
+	// profile keeps Kafka off its skills block on purpose and records it where it
+	// was used; a template that prints a role's TECH line prints it there. Asking
+	// only the skills block called it missing, then wrote an include whose whole
+	// effect was to print the word a second time — against the applicant's own
+	// hold-back.
+	const profileWith = (
+		roleTech: Array<{ id: number; name: string; tags?: string[] | null }>,
+		roleTags: string[] | null = null
+	) =>
+		({
+			profile_versions: [{ id: 1, slug: 'base', extension_links: [], toggles: [], overrides: [] }],
+			work_experiences: [
+				{
+					id: 1,
+					position: 'Engineer',
+					name: 'Acme',
+					start_date: '2020-01-01',
+					end_date: null,
+					tags: roleTags,
+					work_experience_achievements: [],
+					work_experience_technologies: roleTech.map((t) => ({ ...t, tags: t.tags ?? null }))
+				}
+			],
+			side_projects: [],
+			tech_skill_categories: [
+				{
+					id: 1,
+					name: 'Backend',
+					tags: null,
+					tech_skills: [
+						{ id: 10, name: 'Python', tags: null },
+						{ id: 11, name: 'Kafka', tags: ['!resume', '!cv'] }
+					]
+				}
+			]
+		}) as unknown as Parameters<typeof buildCandidates>[0];
+
+	const kafka = (profile: Parameters<typeof buildCandidates>[0], template: string | null = null) =>
+		buildCandidates(profile, 'resume', 'base', ['Kafka'], undefined, template).find(
+			(c) => c.entityType === OVERRIDE_ENTITIES.skill && c.label === 'Kafka'
+		);
+
+	const TECH = [{ id: 100, name: 'Kafka' }];
+
+	it('leaves it alone on a template that prints the tech line', () => {
+		// `visible` is "the document already shows this", answered by name — the
+		// same reading that stops a skill held in two categories being added twice.
+		expect(kafka(profileWith(TECH), 'citrus')).toMatchObject({ pinned: true, visible: true });
+	});
+
+	it('still surfaces it on the layout that prints no technologies', () => {
+		// The built-in default renders no TECH line anywhere, so on that document
+		// the word really is missing and the skills block is the only way to say it.
+		expect(kafka(profileWith(TECH))).toMatchObject({ pinned: true, visible: false });
+		expect(kafka(profileWith(TECH), 'default')).toMatchObject({ visible: false });
+	});
+
+	it('does not read a tech line off a role the document omits', () => {
+		// The role is filtered before its technologies are, exactly as the renderer
+		// does it — a hidden role takes its whole TECH list with it.
+		expect(kafka(profileWith(TECH, ['other-version']), 'citrus')?.visible).toBe(false);
+	});
+
+	it('honours a technology held back on this document', () => {
+		expect(kafka(profileWith([{ id: 100, name: 'Kafka', tags: ['cv'] }]), 'citrus')?.visible).toBe(
+			false
+		);
+	});
+
+	it('makes each printed technology a candidate the run can decide about', () => {
+		// Zero chars and no score: it is kept or dropped on `covers` alone. A bare
+		// name has nothing for an embedding to read, which is the same objection
+		// that keeps individual skills include-only.
+		const techs = buildCandidates(
+			profileWith([
+				{ id: 100, name: 'Kafka' },
+				{ id: 101, name: 'Varnish' }
+			]),
+			'resume',
+			'base',
+			['Kafka'],
+			undefined,
+			'citrus'
+		).filter((c) => c.entityType === OVERRIDE_ENTITIES.technology);
+		expect(techs.map((c) => c.label)).toEqual(['Kafka', 'Varnish']);
+		expect(techs[0]).toMatchObject({
+			entityId: 100,
+			parentId: 1,
+			chars: 0,
+			visible: true,
+			score: 0
+		});
+	});
+
+	it('offers none of them on a template that prints no tech line', () => {
+		// Nothing to decide about something the document does not show, and a row
+		// saying otherwise would claim a change the applicant cannot see.
+		expect(
+			buildCandidates(profileWith(TECH), 'resume', 'base', ['Kafka']).filter(
+				(c) => c.entityType === OVERRIDE_ENTITIES.technology
+			)
+		).toEqual([]);
+	});
+
+	it('does not let a tech name anchor a skill inside a category', () => {
+		// An anchor is an index into ONE category's rendered list. A name from a
+		// role's tech line has no position there, and using it as one would slot
+		// the surfaced skill where nothing is.
+		const found = kafka(profileWith([{ id: 100, name: 'Kafka Streams' }]), 'citrus');
+		expect(found?.visible).toBe(false);
+		expect(found?.anchor).toBeNull();
+		// It is still on the page inside a longer name, which the reason says.
+		expect(found?.carriedBy).toBe('Kafka Streams');
+	});
+});
+
+describe('markCoverage: what the applicant holds, and where it is written down', () => {
+	// A requirement is answered by the words an item says, and the graph is what
+	// knows PostgreSQL answers SQL. What it can answer for is whatever it was
+	// seeded with — and the seed used to be the skills block alone, so a profile
+	// that records a technology against the role where it was used held it as far
+	// as this pass was concerned nowhere at all.
+	const profile = {
+		tech_skill_categories: [{ tech_skills: [{ name: 'Python' }] }],
+		work_experiences: [
+			{
+				work_experience_technologies: [{ name: 'PostgreSQL' }],
+				work_experience_projects: [
+					{ work_experience_project_technologies: [{ name: 'Kubernetes' }] }
+				]
+			}
+		],
+		side_projects: [{ side_project_technologies: [{ name: 'Svelte' }] }]
+	};
+
+	const bulletSaying = (text: string): Candidate => ({
+		entityType: OVERRIDE_ENTITIES.achievement,
+		entityId: 1,
+		parentId: 1,
+		label: text,
+		chars: text.length,
+		visible: true,
+		pinned: false,
+		score: 0
+	});
+
+	beforeEach(() => {
+		vi.mocked(expandUpwardBySeed).mockReset();
+		vi.mocked(expandUpwardBySeed).mockResolvedValue(new Map());
+	});
+
+	it('seeds the graph with every place a skill name is written down', async () => {
+		await markCoverage([bulletSaying('did things')], profile, ['SQL']);
+		expect(vi.mocked(expandUpwardBySeed).mock.calls[0][0].sort()).toEqual([
+			'Kubernetes',
+			'PostgreSQL',
+			'Python',
+			'Svelte'
+		]);
+	});
+
+	it('credits a bullet naming a technology the profile only lists at a role', async () => {
+		// Upward only: PostgreSQL reaches SQL, and a SQL requirement is answered.
+		vi.mocked(expandUpwardBySeed).mockResolvedValue(
+			new Map([['postgresql', [{ slug: 'sql' }]]]) as never
+		);
+		const bullet = bulletSaying('Cut checkout latency by tuning PostgreSQL');
+		await markCoverage([bullet], profile, ['SQL']);
+		expect(bullet.covers).toEqual(['SQL']);
+	});
+
+	it('still reads a requirement spelled out, when the graph cannot be reached', async () => {
+		vi.mocked(expandUpwardBySeed).mockRejectedValue(new Error('graph down'));
+		const bullet = bulletSaying('Ran the Python side of the pipeline');
+		await markCoverage([bullet], profile, ['Python']);
+		expect(bullet.covers).toEqual(['Python']);
 	});
 });

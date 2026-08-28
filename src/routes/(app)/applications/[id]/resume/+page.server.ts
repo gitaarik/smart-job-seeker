@@ -153,7 +153,13 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 			getVersionCoverage(
 				layoutData.selectedProfile.id,
 				Array.isArray(requiredSkills) ? (requiredSkills as string[]) : [],
-				{ applicationId: isNaN(applicationId) ? null : applicationId }
+				{
+					applicationId: isNaN(applicationId) ? null : applicationId,
+					// Whether a role's technologies print is the template's answer, and
+					// the recorded one is the document this application is sending —
+					// same reference point as the PDF links and the diff below.
+					template: layoutData.application?.cv_template_sent ?? null
+				}
 			),
 			// What this profile sends when nobody names a version — the sensible thing
 			// to build a tailored version ON. The plain, version-less document is not:

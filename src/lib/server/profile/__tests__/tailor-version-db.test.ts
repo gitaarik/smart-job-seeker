@@ -53,6 +53,7 @@ const {
 		job_matches: { findFirst: vi.fn() },
 		work_experiences: { findMany: vi.fn() },
 		work_experience_achievements: { findMany: vi.fn() },
+		work_experience_technologies: { findMany: vi.fn() },
 		side_projects: { findMany: vi.fn() },
 		tech_skills: { findMany: vi.fn() },
 		tech_skill_categories: { findMany: vi.fn() }
@@ -615,6 +616,22 @@ describe('describeOverrides', () => {
 		});
 	});
 
+	// One word, and a profile can list Docker under three roles — so the word
+	// alone does not say which line it left.
+	it('names the role a dropped technology left', async () => {
+		find.work_experience_technologies.findMany.mockResolvedValue([
+			{ id: 7, name: 'Varnish', work_experience_id: 1 }
+		]);
+		find.work_experiences.findMany.mockResolvedValue([
+			{ id: 1, position: 'Engineer', name: 'Acme' }
+		]);
+
+		const [described] = await describeOverrides([row(OVERRIDE_ENTITIES.technology, 7)]);
+
+		expect(described.label).toBe('Varnish');
+		expect(described.context).toBe('Engineer at Acme');
+	});
+
 	it('asks only about the types it was given rows for', async () => {
 		find.tech_skills.findMany.mockResolvedValue([{ id: 8, name: 'Python' }]);
 
@@ -624,6 +641,7 @@ describe('describeOverrides', () => {
 		expect(find.side_projects.findMany).not.toHaveBeenCalled();
 		expect(find.work_experience_achievements.findMany).not.toHaveBeenCalled();
 		expect(find.tech_skill_categories.findMany).not.toHaveBeenCalled();
+		expect(find.work_experience_technologies.findMany).not.toHaveBeenCalled();
 	});
 });
 

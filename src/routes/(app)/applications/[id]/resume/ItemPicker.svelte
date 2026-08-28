@@ -8,7 +8,8 @@
 		faCircleNotch,
 		faEyeSlash
 	} from '@fortawesome/free-solid-svg-icons';
-	import type { ItemGroup } from '$lib/tailoring';
+	import type { ItemGroup, ItemRow } from '$lib/tailoring';
+	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 	import type { DocType } from '$lib/utils/profile-doc-url';
 
 	/**
@@ -49,6 +50,19 @@
 	let showing = $derived(
 		items.reduce((n, g) => n + (g.on ? g.rows.filter((r) => r.on).length : 0), 0)
 	);
+
+	/**
+	 * A role's rows, split by what they are.
+	 *
+	 * Prose and the TECH line share a role but not a shape: a bullet is a
+	 * sentence worth its own line, a technology is one word, and stacking
+	 * twenty-six of those under four bullets buries the prose the panel is
+	 * mostly about. Same switch on each, laid out as the document lays them out.
+	 */
+	const prose = (group: ItemGroup): ItemRow[] =>
+		group.rows.filter((r) => r.entityType !== OVERRIDE_ENTITIES.technology);
+	const techs = (group: ItemGroup): ItemRow[] =>
+		group.rows.filter((r) => r.entityType === OVERRIDE_ENTITIES.technology);
 
 	function track(key: string) {
 		pending = key;
@@ -129,7 +143,7 @@
 				{/if}
 
 				<ul class="mt-1.5 space-y-1 {group.on ? '' : 'opacity-50'}">
-					{#each group.rows as row (rowKey(row.entityType, row.entityId))}
+					{#each prose(group) as row (rowKey(row.entityType, row.entityId))}
 						{@const key = rowKey(row.entityType, row.entityId)}
 						<li class="flex items-start gap-2">
 							<form
@@ -176,6 +190,42 @@
 						</li>
 					{/each}
 				</ul>
+
+				{#if techs(group).length > 0}
+					<!-- The role's TECH line, laid out as the document lays it out: one
+					     wrapped row of names rather than a column of one-word rows. -->
+					<div class="mt-1.5 flex flex-wrap items-center gap-1 {group.on ? '' : 'opacity-50'}">
+						<span class="text-[10px] tracking-wide text-[var(--dash-text-secondary)] uppercase">
+							Tech
+						</span>
+						{#each techs(group) as row (rowKey(row.entityType, row.entityId))}
+							{@const key = rowKey(row.entityType, row.entityId)}
+							<form method="POST" action="?/setItemState" use:enhance={() => track(key)}>
+								<input type="hidden" name="entity_type" value={row.entityType} />
+								<input type="hidden" name="entity_id" value={row.entityId} />
+								<input type="hidden" name="doc_type" value={docType} />
+								<input type="hidden" name="base_slug" value={baseSlug} />
+								<input type="hidden" name="on" value={row.on ? '0' : '1'} />
+								<button
+									type="submit"
+									disabled={pending !== null}
+									title={row.reason ||
+										(row.on ? 'Hide this for this job' : 'Show this for this job')}
+									aria-label={row.on ? `Hide ${row.label}` : `Show ${row.label}`}
+									aria-pressed={row.on}
+									class="rounded border px-1.5 py-0.5 text-[10px] transition-colors disabled:opacity-70 {row.on
+										? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-text)]'
+										: 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] line-through hover:border-[var(--dash-primary)]/60'}"
+								>
+									{#if pending === key}
+										<FontAwesomeIcon icon={faCircleNotch} spin class="h-2 w-2" />
+									{/if}
+									{row.label}
+								</button>
+							</form>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		{/each}
 	{/if}

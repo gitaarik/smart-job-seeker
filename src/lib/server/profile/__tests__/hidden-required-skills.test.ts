@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
 			profile_versions: { findMany: vi.fn() },
-			tech_skill_categories: { findMany: vi.fn() }
+			tech_skill_categories: { findMany: vi.fn() },
+			work_experiences: { findMany: vi.fn() }
 		}
 	}
 }));
@@ -31,6 +32,13 @@ async function getHiddenRequiredSkills(
 }
 import { dbDirect as db } from '$lib/server/db';
 
+/**
+ * The mocked `findMany` for one table. Drizzle's own signature is what the
+ * module under test sees; here it is a spy, and saying so once beats casting
+ * at every call site.
+ */
+const findMany = (table: { findMany: unknown }): Mock => table.findMany as Mock;
+
 const PROFILE_ONLY = ['!resume', '!cv'];
 
 // One standalone version ("backend") and one ("senior") extending it.
@@ -46,8 +54,26 @@ function setup(
 		tech_skills: Array<{ id: number; name: string; tags: string[] | null }>;
 	}>
 ) {
-	(db.query.profile_versions.findMany as any).mockResolvedValue(VERSIONS);
-	(db.query.tech_skill_categories.findMany as any).mockResolvedValue(categories);
+	findMany(db.query.profile_versions).mockResolvedValue(VERSIONS);
+	findMany(db.query.tech_skill_categories).mockResolvedValue(categories);
+	findMany(db.query.work_experiences).mockResolvedValue([]);
+}
+
+/** Roles carrying a TECH line, for the templates that render one. */
+function withRoles(
+	roles: Array<{
+		id: number;
+		tags?: string[] | null;
+		tech: Array<{ id: number; name: string; tags?: string[] | null }>;
+	}>
+) {
+	findMany(db.query.work_experiences).mockResolvedValue(
+		roles.map((r) => ({
+			id: r.id,
+			tags: r.tags ?? null,
+			work_experience_technologies: r.tech.map((t) => ({ ...t, tags: t.tags ?? null }))
+		}))
+	);
 }
 
 function names(hidden: { name: string }[] | undefined): string[] {
@@ -210,5 +236,70 @@ describe('getVersionCoverage — the hidden-skill view', () => {
 
 		const hidden = await getHiddenRequiredSkills(1, ['  kubernetes ']);
 		expect(names(hidden[hiddenSkillsKey('resume', '')])).toEqual(['Kubernetes']);
+	});
+});
+
+describe('getVersionCoverage — a skill printed at a role', () => {
+	beforeEach(() => vi.clearAllMocks());
+
+	const HELD_BACK = [
+		{
+			id: 10,
+			tags: null,
+			tech_skills: [{ id: 100, name: 'Kubernetes', tags: PROFILE_ONLY }]
+		}
+	];
+
+	it('is shown, not hidden, on a template that prints the tech line', async () => {
+		// The applicant keeps it out of their skills block and records it where it
+		// was used. A branded document prints that line, so the word is on the page
+		// — and the button offered here would only have printed it twice.
+		setup(HELD_BACK);
+		withRoles([{ id: 1, tech: [{ id: 500, name: 'Kubernetes' }] }]);
+
+		const coverage = await getVersionCoverage(1, ['Kubernetes'], { template: 'citrus' });
+
+		expect(coverage[hiddenSkillsKey('resume', '')].hidden).toEqual([]);
+		expect(coverage[hiddenSkillsKey('resume', '')].shown).toEqual(['Kubernetes']);
+	});
+
+	it('stays hidden on the layout that prints no technologies', async () => {
+		setup(HELD_BACK);
+		withRoles([{ id: 1, tech: [{ id: 500, name: 'Kubernetes' }] }]);
+
+		for (const template of [null, 'default']) {
+			const coverage = await getVersionCoverage(1, ['Kubernetes'], { template });
+			expect(names(coverage[hiddenSkillsKey('resume', '')].hidden)).toEqual(['Kubernetes']);
+		}
+		// And it never asks for the roles it has no use for.
+		expect(db.query.work_experiences.findMany).not.toHaveBeenCalled();
+	});
+
+	it('reads the tech line through the same filter the renderer uses', async () => {
+		// A role held off this document takes its technologies with it, and a
+		// technology tagged "CV only" is off the resume on its own account.
+		setup(HELD_BACK);
+		withRoles([
+			{ id: 1, tags: ['cv'], tech: [{ id: 500, name: 'Kubernetes' }] },
+			{ id: 2, tech: [{ id: 501, name: 'Kubernetes', tags: ['cv'] }] }
+		]);
+
+		const coverage = await getVersionCoverage(1, ['Kubernetes'], { template: 'citrus' });
+
+		expect(names(coverage[hiddenSkillsKey('resume', '')].hidden)).toEqual(['Kubernetes']);
+		// Both hold-backs are about the resume; the CV prints it either way.
+		expect(coverage[hiddenSkillsKey('cv', '')].hidden).toEqual([]);
+	});
+
+	it('names a role’s technology as the carrier of a skill inside it', async () => {
+		setup(HELD_BACK);
+		withRoles([{ id: 1, tech: [{ id: 500, name: 'Kubernetes operators' }] }]);
+
+		const coverage = await getVersionCoverage(1, ['Kubernetes'], { template: 'citrus' });
+
+		expect(coverage[hiddenSkillsKey('resume', '')].hidden[0]).toMatchObject({
+			name: 'Kubernetes',
+			carriedBy: 'Kubernetes operators'
+		});
 	});
 });
