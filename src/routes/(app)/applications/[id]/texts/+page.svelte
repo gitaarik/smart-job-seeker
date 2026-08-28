@@ -775,8 +775,8 @@
 						</button>
 
 						{#if isExpanded && latestContent}
-							<div class="border-t border-[var(--dash-border)] px-4 py-3">
-								<p class="line-clamp-8 text-sm whitespace-pre-wrap text-[var(--dash-text)]">
+							<div class="max-h-96 overflow-y-auto border-t border-[var(--dash-border)] px-4 py-3">
+								<p class="text-sm break-words whitespace-pre-wrap text-[var(--dash-text)]">
 									{latestContent}
 								</p>
 							</div>
@@ -873,7 +873,7 @@
 										>
 											Answer
 										</p>
-										<p class="line-clamp-8 whitespace-pre-wrap text-[var(--dash-text)]">
+										<p class="break-words whitespace-pre-wrap text-[var(--dash-text)]">
 											{(item as QuestionItem).answer}
 										</p>
 									</div>
