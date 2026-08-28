@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { decodeMarkdownEntities } from '$lib/utils/markdown-entities';
 	import {
 		faBold,
 		faItalic,
@@ -73,7 +74,10 @@
 			...(markdown ? { contentType: 'markdown' as const } : {}),
 			onUpdate: ({ editor: ed }) => {
 				if (markdown) {
-					content = (ed as any).getMarkdown();
+					// The serializer HTML-encodes every text node; callers store this
+					// string and show it as plain text, so undo that. See
+					// `decodeMarkdownEntities`.
+					content = decodeMarkdownEntities((ed as any).getMarkdown());
 				} else {
 					content = ed.getHTML();
 				}
