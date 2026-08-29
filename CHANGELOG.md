@@ -5,6 +5,18 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.25.1] - 2026-08-29
+
+2 commits since v0.25.0.
+
+### Added
+
+- npm shortcuts for corpus proposers and checks
+
+### Changed
+
+- Template override field now collapses when not configured
+
 ## [0.25.0] - 2026-08-28
 
 10 commits since v0.24.0.
