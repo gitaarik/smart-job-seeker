@@ -24,6 +24,7 @@ import { z } from 'zod';
 import { dbDirect as db, queryRawDirect } from '../src/lib/server/db';
 import { generateChatCompletionTracked } from '../src/lib/server/llm/langchain';
 import { normalizeSkill } from '../src/lib/skills';
+import { MAX_DEPTH } from '../src/lib/server/job/skill-ontology';
 import { cosineSimilarity } from '../src/lib/server/llm/embeddings';
 import { coerceIndexedEnvelope } from '../src/lib/server/llm/structured-envelope';
 
@@ -106,8 +107,12 @@ relation:
   framework. PostgreSQL is a kind of SQL database.
 - "requires": one skill CANNOT BE USED WITHOUT the other, but is not a kind of
   it. Django requires Python. Django is not a kind of Python.
-- "related": genuinely associated, but neither implies the other. Docker and
-  Kubernetes. React and Vue are alternatives — that is "related", not "broader".
+- "related": the two are ALTERNATIVES — someone picks one INSTEAD OF the other
+  for the same job. Docker and Kubernetes. React and Vue. MariaDB and MySQL.
+  Skills merely used TOGETHER, or merely from one vendor or family, are "none":
+  AWS Lambda and AWS S3 are both AWS and are used side by side, so neither
+  stands in for the other and "both are AWS" is already recorded elsewhere.
+  Ask "could one stand in for the other?", not "do they go together?".
 - "alias": the two strings name the SAME skill. An acronym and its expansion
   ("RAG" / "Retrieval Augmented Generation"), or a spelling variant ("NodeJS" /
   "Node.js"). NOT two different skills that often appear together.
@@ -124,7 +129,7 @@ answer: decide which skill implies which, then say so.
 
 The test to apply: "if someone has done "from", have they necessarily done the
 other one?" If yes, it is broader or requires. If they might not have, it is
-related or none.
+"related" when the two are alternatives, and "none" otherwise.
 
 Two skills that are alternatives to each other are NEVER broader — neither
 React nor Vue implies the other, and they are NOT aliases: they are different
@@ -257,12 +262,56 @@ async function main() {
 
 	const useful = verdicts.filter((v) => v.relation === 'broader' || v.relation === 'requires');
 	const aliases = verdicts.filter((v) => v.relation === 'alias');
-	const related = WITH_RELATED ? verdicts.filter((v) => v.relation === 'related') : [];
+	const relatedAll = WITH_RELATED ? verdicts.filter((v) => v.relation === 'related') : [];
+
+	// Drop `related` where the graph ALREADY records an implication between the two,
+	// in either direction and at any depth. `Code review related Software Design`
+	// arrived while `Code review broader Software Design` was approved: the second
+	// says one implies the other, the first says neither does, and both were in the
+	// queue at once. That is not a judgement call, it is the graph contradicting
+	// itself, so it is refused here rather than shown to a reviewer.
+	//
+	// Note what this deliberately does NOT do: drop every pair sharing a parent.
+	// Two concepts under one parent are the case `related` EXISTS for when they are
+	// alternatives (Azure DevOps and GitLab CI/CD, both under CI/CD), and no query
+	// tells an alternative apart from a mere co-occurrence. The co-occurrence half
+	// (AWS Lambda and AWS S3, both AWS and used side by side) is headed off in the
+	// prompt instead, where the distinction can actually be stated.
+	const ancestry = await queryRawDirect<{ child: string; anc: string }>(sql`
+		WITH RECURSIVE up AS (
+			SELECT from_id AS child, to_id AS anc, 1 AS d
+			FROM skill_relations
+			WHERE relation IN ('broader', 'requires', 'covers') AND approved_at IS NOT NULL
+			UNION
+			SELECT u.child, r.to_id, u.d + 1
+			FROM up u
+			JOIN skill_relations r ON r.from_id = u.anc
+			WHERE r.relation IN ('broader', 'requires', 'covers')
+			  AND r.approved_at IS NOT NULL
+			  AND u.d < ${MAX_DEPTH}
+		)
+		SELECT c.slug AS child, a.slug AS anc
+		FROM up u
+		JOIN skill_concepts c ON c.id = u.child
+		JOIN skill_concepts a ON a.id = u.anc
+	`);
+	const implies = new Set(ancestry.map((r) => `${r.child}|${r.anc}`));
+	const alreadyImplied = (a: string, b: string) => {
+		const [x, y] = [normalizeSkill(a), normalizeSkill(b)];
+		return implies.has(`${x}|${y}`) || implies.has(`${y}|${x}`);
+	};
+	const related = relatedAll.filter((v) => !alreadyImplied(v.pair.a, v.pair.b));
+	const contradictory = relatedAll.length - related.length;
 	console.log(
 		`\n${verdicts.length} verdicts; ${useful.length} directional ` +
 			`(${verdicts.filter((v) => v.relation === 'related').length} related, ` +
 			`${verdicts.filter((v) => v.relation === 'none').length} none)`
 	);
+	if (contradictory > 0) {
+		console.log(
+			`  ${contradictory} related pair(s) skipped: the graph already implies one from the other`
+		);
+	}
 
 	for (const v of useful.slice(0, 25)) {
 		const from = v.from === 'a' ? v.pair.a : v.pair.b;
