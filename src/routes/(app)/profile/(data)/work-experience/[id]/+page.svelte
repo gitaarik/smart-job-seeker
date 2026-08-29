@@ -488,7 +488,8 @@
 					bind:value={editPosition}
 				/>
 
-				<div class="md:col-span-2">
+				<!-- Column 2, under the Position field it overrides, not spanning both. -->
+				<div class="md:col-start-2">
 					<TemplateOverrideField
 						entity="work_experience"
 						id={experience.id}
@@ -496,7 +497,7 @@
 						base={editPosition}
 						templates={data.templates}
 						overrides={data.templateOverrides}
-						label="Position on a template"
+						label="Position"
 						hint="For a template whose house style wants a different title. Leave empty to use your own."
 					/>
 				</div>
