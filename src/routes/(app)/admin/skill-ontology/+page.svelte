@@ -3,6 +3,8 @@
 	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 	import { RELATION_GUIDE, verbFor } from './graph/graph-shared';
+	import ConceptRelations, { type PanelConcept } from './ConceptRelations.svelte';
+	import type { PendingRelation } from './+page.server';
 
 	interface ImportPreview {
 		have: { concepts: number; aliases: number; relations: number };
@@ -71,26 +73,43 @@
 	let rejectedAliases = $derived(aliases.filter((a) => a.rejected));
 
 	/**
-	 * Rendered as a sentence, not as a row of columns.
+	 * The concept whose context is open, and the row it was opened from.
 	 *
-	 * The judgement being asked for is "is this claim true", and a claim reads
-	 * as a claim. `React | broader | JavaScript` invites scanning; "React is a
-	 * kind of JavaScript" invites deciding — and direction, which is the thing
-	 * most often wrong, is only legible in prose.
-	 */
-	/**
-	 * The verb comes from `verbFor` so this page and the graph's relation picker
-	 * cannot disagree about what an edge asserts. Hard-coding them here meant a
-	 * relation added elsewhere fell through to `X — inDomain — Y`, which is a
-	 * schema value shown to a person, not a sentence.
+	 * Keyed by row rather than held once for the page, because the panel renders
+	 * under the claim it explains: a queue this long re-sorts on every verdict,
+	 * and context parked at the top would be about a row that has scrolled away.
 	 *
-	 * `covers` quotes its subject because a compound entry's whole label is the
-	 * thing: “Vitest / Jest” reads as two skills unless the quotes hold it
-	 * together.
+	 * `counterpart` is the other end of that row, so the panel can lead with the
+	 * pair's own history. It is dropped on a pivot, because one hop out you are
+	 * no longer looking at that pair.
 	 */
-	function sentence(relation: string, from: string, to: string): string {
-		const subject = relation === 'covers' ? `“${from}”` : from;
-		return `${subject} ${verbFor(relation)} ${to}`;
+	let selected = $state<{
+		rowId: number;
+		concept: PanelConcept;
+		counterpart: { id: number; label: string } | null;
+	} | null>(null);
+
+	function pick(r: PendingRelation, end: 'from' | 'to') {
+		const concept =
+			end === 'from'
+				? { id: r.from_id, label: r.from_label, slug: r.from_slug }
+				: { id: r.to_id, label: r.to_label, slug: r.to_slug };
+		// Clicking the open concept again closes it, so the same button is the
+		// toggle rather than sending you to the × in the corner.
+		if (selected?.rowId === r.id && selected.concept.id === concept.id) {
+			selected = null;
+			return;
+		}
+		selected = {
+			rowId: r.id,
+			concept,
+			counterpart:
+				end === 'from' ? { id: r.to_id, label: r.to_label } : { id: r.from_id, label: r.from_label }
+		};
+	}
+
+	function isOpen(r: PendingRelation, id: number): boolean {
+		return selected?.rowId === r.id && selected.concept.id === id;
 	}
 </script>
 
@@ -108,6 +127,52 @@
 			{label}
 		</button>
 	</form>
+{/snippet}
+
+<!--
+	The claim, with each concept a button onto everything else said about it.
+
+	Both ends, not just the subject. Half the wrong edges in this queue are wrong
+	because of the OBJECT — "Docker is a kind of Deployment" turns on what
+	"Deployment" is for, and that is the end you cannot guess from the sentence.
+
+	Dotted underline rather than a button that looks like one: there are two of
+	these on every row of a hundred-row list, and rendering them as controls would
+	make the queue read as a form instead of as a series of claims.
+-->
+{#snippet claim(r: PendingRelation, muted = false)}
+	{#snippet end(id: number, label: string, quoted: boolean)}
+		<button
+			type="button"
+			onclick={() => pick(r, id === r.from_id ? 'from' : 'to')}
+			title="What else does the graph say about {label}?"
+			class="underline decoration-dotted underline-offset-2 hover:text-[var(--dash-primary)]
+				{isOpen(r, id)
+				? 'text-[var(--dash-primary)] decoration-[var(--dash-primary)]'
+				: 'decoration-[var(--dash-border)]'}"
+		>
+			{quoted ? `“${label}”` : label}
+		</button>
+	{/snippet}
+	<span class={muted ? 'text-[var(--dash-text-secondary)]' : 'text-[var(--dash-text)]'}>
+		{@render end(r.from_id, r.from_label, r.relation === 'covers')}
+		{verbFor(r.relation)}
+		{@render end(r.to_id, r.to_label, false)}
+	</span>
+{/snippet}
+
+<!-- Rendered inside the `li` it belongs to, so the markup stays a valid list. -->
+{#snippet context(r: PendingRelation)}
+	{#if selected?.rowId === r.id}
+		<ConceptRelations
+			concept={selected.concept}
+			counterpart={selected.counterpart}
+			relations={data.relations}
+			matching={data.matchingRelations}
+			onpivot={(c) => (selected = { rowId: r.id, concept: c, counterpart: null })}
+			onclose={() => (selected = null)}
+		/>
+	{/if}
 {/snippet}
 
 <div class="space-y-4">
@@ -276,7 +341,9 @@
 	>
 		These relations are shared by <strong>every profile</strong> — approving a wrong one degrades matching
 		for everyone, silently. And confidence is not accuracy: every wrong edge found so far scored 0.90
-		or above. Read the sentence, not the number.
+		or above. Read the sentence, not the number, and click either skill in it to see what else the graph
+		already says about that concept — including what has been rejected around it, which is where the standard
+		for these actually lives.
 	</div>
 
 	<!-- Collapsed by default: whoever works this queue daily does not need it, and
@@ -357,18 +424,19 @@
 		{:else}
 			<ul class="mt-2">
 				{#each pendingRelations as r (r.id)}
-					<li
-						class="flex items-center gap-2 border-b border-[var(--dash-border)] px-4 py-2 last:border-0"
-					>
-						<span class="flex-1 text-sm text-[var(--dash-text)]">
-							{sentence(r.relation, r.from_label, r.to_label)}
-							<span class="ml-2 text-xs text-[var(--dash-text-muted)]">
-								{r.relation}{r.confidence != null ? ` · ${r.confidence.toFixed(2)}` : ''}
+					<li class="border-b border-[var(--dash-border)] last:border-0">
+						<div class="flex items-center gap-2 px-4 py-2">
+							<span class="flex-1 text-sm">
+								{@render claim(r)}
+								<span class="ml-2 text-xs text-[var(--dash-text-muted)]">
+									{r.relation}{r.confidence != null ? ` · ${r.confidence.toFixed(2)}` : ''}
+								</span>
 							</span>
-						</span>
-						{@render action('?/approveRelation', r.id, 'Approve', 'yes')}
-						{@render action('?/flipRelation', r.id, 'Flip', 'flip')}
-						{@render action('?/rejectRelation', r.id, 'Reject', 'no')}
+							{@render action('?/approveRelation', r.id, 'Approve', 'yes')}
+							{@render action('?/flipRelation', r.id, 'Flip', 'flip')}
+							{@render action('?/rejectRelation', r.id, 'Reject', 'no')}
+						</div>
+						{@render context(r)}
 					</li>
 				{/each}
 			</ul>
@@ -423,13 +491,12 @@
 		</p>
 		<ul class="mt-2 max-h-96 overflow-y-auto">
 			{#each approvedRelations as r (r.id)}
-				<li
-					class="flex items-center gap-2 border-b border-[var(--dash-border)] px-4 py-1.5 last:border-0"
-				>
-					<span class="flex-1 text-sm text-[var(--dash-text)]"
-						>{sentence(r.relation, r.from_label, r.to_label)}</span
-					>
-					{@render action('?/revokeRelation', r.id, 'Revoke', 'no')}
+				<li class="border-b border-[var(--dash-border)] last:border-0">
+					<div class="flex items-center gap-2 px-4 py-1.5">
+						<span class="flex-1 text-sm">{@render claim(r)}</span>
+						{@render action('?/revokeRelation', r.id, 'Revoke', 'no')}
+					</div>
+					{@render context(r)}
 				</li>
 			{/each}
 			{#each approvedAliases as a (a.id)}
@@ -461,13 +528,12 @@
 			</p>
 			<ul class="mt-2 max-h-96 overflow-y-auto">
 				{#each rejectedRelations as r (r.id)}
-					<li
-						class="flex items-center gap-2 border-b border-[var(--dash-border)] px-4 py-1.5 last:border-0"
-					>
-						<span class="flex-1 text-sm text-[var(--dash-text-secondary)]"
-							>{sentence(r.relation, r.from_label, r.to_label)}</span
-						>
-						{@render action('?/restoreRelation', r.id, 'Restore', 'no')}
+					<li class="border-b border-[var(--dash-border)] last:border-0">
+						<div class="flex items-center gap-2 px-4 py-1.5">
+							<span class="flex-1 text-sm">{@render claim(r, true)}</span>
+							{@render action('?/restoreRelation', r.id, 'Restore', 'no')}
+						</div>
+						{@render context(r)}
 					</li>
 				{/each}
 				{#each rejectedAliases as a (a.id)}

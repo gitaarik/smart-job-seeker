@@ -93,11 +93,31 @@ export const RELATION_GUIDE = [
  * domain (not matched) Marketplaces" in the relation picker, which is how this
  * field came to exist.
  *
- * The review queue's own `sentence()` still hard-codes three of these and falls
- * back to "X — inDomain — Y" for the fourth; it should read from here.
+ * `sentence()` below is the only intended caller for review purposes; use it
+ * rather than assembling a verb and two labels by hand.
  */
 export function verbFor(relation: string): string {
 	return RELATION_STYLES.find((r) => r.relation === relation)?.verb ?? relation;
+}
+
+/**
+ * An edge as a claim you can agree or disagree with.
+ *
+ * The judgement review asks for is "is this true", and a claim has to read as a
+ * claim. `React | broader | JavaScript` invites scanning; "React is a kind of
+ * JavaScript" invites deciding. Direction is the thing most often wrong and it
+ * is only legible in prose.
+ *
+ * Lives here rather than in the review page because the concept panel renders
+ * the same edges beside the row being judged, and two spellings of one claim on
+ * one screen is worse than either spelling alone.
+ *
+ * `covers` quotes its subject because a compound entry's whole label is the
+ * thing: “Vitest / Jest” reads as two skills unless the quotes hold it together.
+ */
+export function sentence(relation: string, from: string, to: string): string {
+	const subject = relation === 'covers' ? `“${from}”` : from;
+	return `${subject} ${verbFor(relation)} ${to}`;
 }
 
 /**

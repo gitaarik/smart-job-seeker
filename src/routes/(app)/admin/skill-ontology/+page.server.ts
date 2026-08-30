@@ -40,6 +40,7 @@ import { fail } from '@sveltejs/kit';
 import { sql } from 'drizzle-orm';
 import { dbDirect as db, queryRawDirect } from '$lib/server/db';
 import { refuseNewRelation } from '$lib/server/job/skill-relation-guards';
+import { MATCHING_RELATIONS } from '$lib/server/job/skill-ontology';
 import {
 	applyPlan,
 	collisionAdvice,
@@ -53,8 +54,22 @@ import type { Actions, PageServerLoad } from './$types';
 
 export interface PendingRelation {
 	id: number;
+	/**
+	 * Concept ids as well as labels, so the page can group its own rows.
+	 *
+	 * The load below already returns every edge in the table, which means the
+	 * evidence for judging any one of them is on the client before anyone clicks:
+	 * what else this concept asserts, and what has been rejected around it. Ids
+	 * are what makes that a filter instead of a round trip. Matching on labels
+	 * would work today and break the first time two concepts share one.
+	 */
+	from_id: number;
+	to_id: number;
 	from_label: string;
 	to_label: string;
+	/** For the link out to the focused graph, which addresses concepts by slug. */
+	from_slug: string;
+	to_slug: string;
 	relation: string;
 	confidence: number | null;
 	source: string;
@@ -95,7 +110,8 @@ export interface PendingAlias {
 export const load: PageServerLoad = async () => {
 	const [relations, aliases, counts] = await Promise.all([
 		queryRawDirect<PendingRelation>(sql`
-			SELECT r.id, f.label AS from_label, t.label AS to_label, r.relation,
+			SELECT r.id, r.from_id, r.to_id, f.label AS from_label, t.label AS to_label,
+			       f.slug AS from_slug, t.slug AS to_slug, r.relation,
 			       r.confidence, r.source, (r.approved_at IS NOT NULL) AS approved,
 			       (r.rejected_at IS NOT NULL) AS rejected,
 			       EXISTS (
@@ -124,7 +140,26 @@ export const load: PageServerLoad = async () => {
 		`)
 	]);
 
-	return { relations, aliases, stats: counts[0] ?? { concepts: 0, edges: 0, aliases: 0 } };
+	return {
+		relations,
+		aliases,
+		stats: counts[0] ?? { concepts: 0, edges: 0, aliases: 0 },
+		/**
+		 * Which relations the matcher actually walks, sent rather than restated.
+		 *
+		 * The concept panel needs it to work out siblings, and a sibling is only
+		 * interesting when the shared parent is one the matcher follows. Counting
+		 * `inDomain` would make every technical skill a sibling of every other
+		 * through "IT", which is 78 edges of nothing.
+		 *
+		 * `EdgeDraft` keeps a second copy of the relation list on purpose, because
+		 * its copy fails closed: an option the server does not know is refused with
+		 * "Unknown relation". A wrong copy here fails silently, by showing a
+		 * plausible sibling list that is not the one matching would produce, so
+		 * this one comes from the constant itself.
+		 */
+		matchingRelations: [...MATCHING_RELATIONS]
+	};
 };
 
 function idFrom(form: FormData): number | null {
