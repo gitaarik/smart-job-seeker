@@ -8,11 +8,18 @@
 	let {
 		tags = $bindable([]),
 		apiUrl,
-		section
+		section,
+		onSaved
 	}: {
 		tags: string[];
 		apiUrl: string;
 		section?: string;
+		/**
+		 * Called after the tags are written. For a page whose copy of the entry
+		 * came from a *layout* load, which SvelteKit keeps across a move between
+		 * that layout's tabs — see `projectDetailDep`.
+		 */
+		onSaved?: () => void;
 	} = $props();
 
 	let savedTags = $state<string[]>([...tags]);
@@ -90,6 +97,7 @@
 				savedTags = [...tags];
 				saveState = 'saved';
 				setTimeout(() => (saveState = 'idle'), 2000);
+				onSaved?.();
 			} else {
 				saveState = 'error';
 				setTimeout(() => (saveState = 'idle'), 3000);

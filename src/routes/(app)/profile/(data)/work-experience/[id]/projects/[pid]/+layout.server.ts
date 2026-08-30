@@ -12,6 +12,7 @@
 
 import type { LayoutServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
+import { projectDetailDep } from '$lib/project-detail';
 import { dbDirect as db } from '$lib/server/db';
 import { and, asc, count, eq } from 'drizzle-orm';
 import {
@@ -20,7 +21,7 @@ import {
 	work_experience_projects
 } from '$lib/server/db/schema';
 
-export const load: LayoutServerLoad = async ({ params, parent }) => {
+export const load: LayoutServerLoad = async ({ params, parent, depends }) => {
 	const layoutData = await parent();
 
 	if (!layoutData.selectedProfile) {
@@ -32,6 +33,12 @@ export const load: LayoutServerLoad = async ({ params, parent }) => {
 	if (isNaN(experienceId) || isNaN(projectId)) {
 		redirect(302, '/profile/work-experience');
 	}
+
+	// Nothing this load reads changes as the user moves between the tabs, so
+	// SvelteKit rightly keeps its result — and the Details tab, which has no load
+	// of its own, would be rebuilt from a row that predates its own saves. The
+	// tab invalidates this after each write. See `projectDetailDep`.
+	depends(projectDetailDep('work_experience_project', projectId));
 
 	// The role is matched too, not just the project: a project id that belongs to
 	// a different role would otherwise render under this role's header and back

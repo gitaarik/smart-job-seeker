@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { armOn } from '$lib/actions/arm-on';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidate, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTrash } from '@fortawesome/free-solid-svg-icons';
@@ -11,6 +11,7 @@
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
 	import AchievementsList, { type AchievementItem } from '$lib/components/AchievementsList.svelte';
+	import { projectDetailDep } from '$lib/project-detail';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import TechnologyTagsEditor from '$lib/components/TechnologyTagsEditor.svelte';
 	import ProjectRepoFetch from '$lib/components/ProjectRepoFetch.svelte';
@@ -32,6 +33,18 @@
 	const sourcesHref = $derived(
 		resolve('/(app)/profile/(data)/side-projects/[id]/sources', { id: String(project.id) })
 	);
+
+	/**
+	 * Re-read the row this editor was built from, once a save has landed.
+	 *
+	 * The project comes from the layout's load, which SvelteKit keeps across a
+	 * move between the tabs — so without this, leaving Details and coming back
+	 * rebuilds the form from the values the page was opened with and the edit
+	 * appears to have been thrown away. See `projectDetailDep`.
+	 */
+	function refresh() {
+		void invalidate(projectDetailDep('side_project', project.id));
+	}
 
 	// Both child collections save as you type now, through `sectionRows` and
 	// `/api/profile-section/…`. The staged-removal sets that used to require a
@@ -59,7 +72,8 @@
 		toData: (a) => ({ description: a.description ?? '' }),
 		blank: () => ({ description: '' }),
 		toBody: (v: { description: string }) => ({ description: v.description.trim() }),
-		canCreate: (v: { description: string }) => v.description.trim().length > 0
+		canCreate: (v: { description: string }) => v.description.trim().length > 0,
+		onChanged: refresh
 	});
 
 	const techStore = sectionRows({
@@ -71,7 +85,8 @@
 		toData: (t) => ({ name: t.name ?? '' }),
 		blank: () => ({ name: '' }),
 		toBody: (v: { name: string }) => ({ name: v.name.trim() }),
-		canCreate: (v: { name: string }) => v.name.trim().length > 0
+		canCreate: (v: { name: string }) => v.name.trim().length > 0,
+		onChanged: refresh
 	});
 
 	/**
@@ -181,6 +196,7 @@
 			editStars = v.stars;
 			editStartDate = v.startDate;
 			editEndDate = v.endDate;
+			refresh();
 		},
 		equal: recordsEqual,
 		debounceMs: 700
@@ -541,7 +557,12 @@
 	</Card>
 
 	<!-- Version Tags -->
-	<VersionTags bind:tags={editTags} apiUrl={`/api/side-project/${project.id}`} section="basic" />
+	<VersionTags
+		bind:tags={editTags}
+		apiUrl={`/api/side-project/${project.id}`}
+		section="basic"
+		onSaved={refresh}
+	/>
 
 	<!-- Danger Zone -->
 	<Card padding="lg">

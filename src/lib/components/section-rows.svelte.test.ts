@@ -43,13 +43,17 @@ const settle = async () => {
 	for (let i = 0; i < 6; i++) await Promise.resolve();
 };
 
-function makeStore(initial: Array<{ id: number; name: string | null }> = []) {
+function makeStore(
+	initial: Array<{ id: number; name: string | null }> = [],
+	onChanged?: () => void
+) {
 	return sectionRows({
 		resource: 'work_experience_project',
 		parentKey: 'work_experience_id',
 		parentId: 8,
 		profileId: 3,
 		initial,
+		onChanged,
 		toData: (r) => ({ name: r.name ?? '', tags: [] as string[] }),
 		blank: () => ({ name: '', tags: [] as string[] }),
 		toBody: (v: { name: string; tags: string[] }) => ({
@@ -201,6 +205,89 @@ describe('sectionRows', () => {
 			}
 		]);
 		expect(draft.id).toBeNull();
+	});
+
+	describe('onChanged', () => {
+		/**
+		 * The hook exists for a page whose rows came from a LAYOUT load. SvelteKit
+		 * keeps that data across a move between the layout's own tabs, so a page
+		 * rebuilt on the way back seeds itself from the row as it was when the page
+		 * was first opened — and an edit that saved perfectly well looks like it
+		 * was thrown away. What matters is that it reports every write and only a
+		 * write: a refresh per keystroke that changed nothing is a request the
+		 * page does not need, and a refresh after a failed save would re-read a
+		 * value the user is still trying to replace.
+		 */
+		function counting(initial: Array<{ id: number; name: string | null }> = []) {
+			let calls = 0;
+			return { store: makeStore(initial, () => calls++), calls: () => calls };
+		}
+
+		it('reports a create and every patch that carried something', async () => {
+			const { store, calls } = counting();
+			const row = store.add();
+
+			store.update(row, { name: 'Migration' });
+			await settle();
+			expect(calls()).toBe(1);
+
+			store.update(row, { name: 'Migration II' });
+			await settle();
+			expect(calls()).toBe(2);
+		});
+
+		it('stays quiet when the diff turns out to be empty', async () => {
+			// `toBody` trims, so retyping the same name with a trailing space is a
+			// real change to the field and no change at all to the row.
+			const { store, calls } = counting([{ id: 1, name: 'Migration' }]);
+
+			store.update(store.rows[0], { name: 'Migration  ' });
+			await settle();
+
+			expect(sent).toHaveLength(0);
+			expect(calls()).toBe(0);
+		});
+
+		it('stays quiet when the save failed', async () => {
+			respond = () => ({ ok: false, status: 500, body: { error: 'nope' } });
+			const { store, calls } = counting([{ id: 1, name: 'Migration' }]);
+
+			store.update(store.rows[0], { name: 'Migration II' });
+			await settle();
+
+			expect(store.rows[0].field.status).toBe('error');
+			expect(calls()).toBe(0);
+		});
+
+		it('reports a delete that reached the server, and not a dropped draft', async () => {
+			const { store, calls } = counting([{ id: 1, name: 'Migration' }]);
+
+			await store.remove(store.add());
+			expect(calls()).toBe(0);
+
+			await store.remove(store.rows[0]);
+			expect(calls()).toBe(1);
+		});
+
+		it('reports a reorder that sent rows', async () => {
+			const { store, calls } = counting([
+				{ id: 1, name: 'A' },
+				{ id: 2, name: 'B' }
+			]);
+			const [a, b] = store.rows;
+
+			await store.reorder([b, a]);
+			expect(calls()).toBe(1);
+		});
+
+		it('stays quiet on a reorder of rows that do not exist yet', async () => {
+			const { store, calls } = counting();
+
+			await store.reorder([store.add()]);
+
+			expect(sent).toHaveLength(0);
+			expect(calls()).toBe(0);
+		});
 	});
 
 	describe('the section summary', () => {

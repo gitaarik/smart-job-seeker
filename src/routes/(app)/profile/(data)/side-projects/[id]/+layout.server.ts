@@ -8,6 +8,7 @@
 
 import type { LayoutServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
+import { projectDetailDep } from '$lib/project-detail';
 import { dbDirect as db } from '$lib/server/db';
 import { and, asc, count, eq } from 'drizzle-orm';
 import {
@@ -17,7 +18,7 @@ import {
 	side_projects
 } from '$lib/server/db/schema';
 
-export const load: LayoutServerLoad = async ({ params, parent }) => {
+export const load: LayoutServerLoad = async ({ params, parent, depends }) => {
 	const layoutData = await parent();
 
 	if (!layoutData.selectedProfile) {
@@ -28,6 +29,12 @@ export const load: LayoutServerLoad = async ({ params, parent }) => {
 	if (isNaN(id)) {
 		redirect(302, '/profile/side-projects');
 	}
+
+	// Nothing this load reads changes as the user moves between the tabs, so
+	// SvelteKit rightly keeps its result — and the Details tab, which has no load
+	// of its own, would be rebuilt from a row that predates its own saves. The
+	// tab invalidates this after each write. See `projectDetailDep`.
+	depends(projectDetailDep('side_project', id));
 
 	const project = await db.query.side_projects.findFirst({
 		where: and(

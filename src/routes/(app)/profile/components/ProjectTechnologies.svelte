@@ -19,11 +19,14 @@
 	let {
 		projectId,
 		profileId,
-		initial = []
+		initial = [],
+		onChanged
 	}: {
 		projectId: number;
 		profileId: number;
 		initial?: Array<{ id: number; name: string | null }>;
+		/** Called after a chip is created, renamed or deleted on the server. */
+		onChanged?: () => void;
 	} = $props();
 
 	const store = sectionRows({
@@ -35,7 +38,8 @@
 		toData: (r) => ({ name: r.name ?? '' }),
 		blank: () => ({ name: '' }),
 		toBody: (v) => ({ name: v.name.trim() }),
-		canCreate: (v) => v.name.trim().length > 0
+		canCreate: (v) => v.name.trim().length > 0,
+		onChanged: () => onChanged?.()
 	});
 
 	let added = $state<number | null>(null);

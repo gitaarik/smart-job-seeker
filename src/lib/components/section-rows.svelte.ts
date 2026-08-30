@@ -75,6 +75,17 @@ export interface SectionRowsOptions<T, R extends { id: number }> {
 	toBody: (value: T) => Record<string, unknown>;
 	/** True once a draft holds enough to be worth creating (its required fields). */
 	canCreate: (value: T) => boolean;
+	/**
+	 * Called after every write this store lands on the server — a create, a
+	 * patch that carried something, a delete, a reorder. Not called for a save
+	 * that turned out to have nothing to send.
+	 *
+	 * For pages whose rows came from a *layout* load. SvelteKit keeps that data
+	 * across a move between the layout's tabs, so a page rebuilt on the way back
+	 * seeds itself from a snapshot that predates everything saved since. The
+	 * hook is where such a page refreshes it; see `projectDetailDep`.
+	 */
+	onChanged?: () => void;
 	/** Wait this long after a keystroke before saving. 700ms suits free text. */
 	debounceMs?: number;
 }
@@ -178,6 +189,7 @@ export function sectionRows<T extends Record<string, unknown>, R extends { id: n
 		if (!response.ok) throw await failure(response);
 		const body = (await response.json()) as { id: number };
 		entry.id = body.id;
+		opts.onChanged?.();
 		return body.id;
 	}
 
@@ -221,6 +233,7 @@ export function sectionRows<T extends Record<string, unknown>, R extends { id: n
 			})
 		});
 		if (!response.ok) throw await failure(response);
+		opts.onChanged?.();
 	}
 
 	/**
@@ -346,6 +359,7 @@ export function sectionRows<T extends Record<string, unknown>, R extends { id: n
 			if (entry.id !== null) {
 				const response = await fetch(`${base}/${entry.id}`, { method: 'DELETE' });
 				if (!response.ok) throw await failure(response);
+				opts.onChanged?.();
 			}
 			entry.field.destroy();
 			const at = entries.indexOf(entry);
@@ -367,6 +381,7 @@ export function sectionRows<T extends Record<string, unknown>, R extends { id: n
 				body: JSON.stringify({ profile_id: opts.profileId, order: ids })
 			});
 			if (!response.ok) throw await failure(response);
+			opts.onChanged?.();
 		}
 	};
 }

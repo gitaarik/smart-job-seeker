@@ -13,7 +13,9 @@
 	 * draft/POST/PATCH rules, the body mapping and the per-row indicator.
 	 */
 	import type { PageData } from './$types';
+	import { invalidate } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { projectDetailDep } from '$lib/project-detail';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
 	import ProjectRepoFetch from '$lib/components/ProjectRepoFetch.svelte';
@@ -39,6 +41,18 @@
 		})
 	);
 
+	/**
+	 * Re-read the row this editor was built from, once a save has landed.
+	 *
+	 * The project comes from the layout's load, which SvelteKit keeps across a
+	 * move between the tabs — so without this, leaving Details and coming back
+	 * rebuilds the form from the values the page was opened with and the edit
+	 * appears to have been thrown away. See `projectDetailDep`.
+	 */
+	function refresh() {
+		void invalidate(projectDetailDep('work_experience_project', data.project.id));
+	}
+
 	const store = sectionRows({
 		resource: 'work_experience_project',
 		parentKey: 'work_experience_id',
@@ -48,7 +62,8 @@
 		toData: toProjectData,
 		blank: blankProject,
 		toBody: projectBody,
-		canCreate: projectIsWorthCreating
+		canCreate: projectIsWorthCreating,
+		onChanged: refresh
 	});
 
 	const row = $derived(store.rows[0]);
@@ -234,6 +249,7 @@
 			projectId={data.project.id}
 			profileId={data.profileId}
 			initial={technologies}
+			onChanged={refresh}
 		/>
 	</Card>
 </div>
