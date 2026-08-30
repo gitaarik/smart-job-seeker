@@ -730,7 +730,31 @@ export const skill_relations = pgTable(
 		rejected_at: timestamp({ withTimezone: true, mode: 'date' }),
 		date_created: timestamp({ withTimezone: true, mode: 'date' })
 			.default(sql`now()`)
-			.notNull()
+			.notNull(),
+		/**
+		 * When this row last changed, set by a DATABASE TRIGGER rather than by the
+		 * code that writes it.
+		 *
+		 * The question it exists to answer is "did a verdict change without me
+		 * changing it", and an application-set timestamp cannot answer that: it
+		 * records only the writes that went through the path you already trust.
+		 * There are twelve `UPDATE skill_relations` statements across the review
+		 * actions, `approve-skill-relations.ts`, `audit-skill-ontology.ts` and
+		 * `skill-relation-edit.ts`, plus whatever anyone types into psql — and the
+		 * write worth catching is by definition the one that skipped the list.
+		 *
+		 * Hence `skill_relations_touch` in migration 0030, which fires on every
+		 * UPDATE regardless of origin. NULL means "not written since 2026-08-29",
+		 * not "never written"; backfilling it from `date_created` would have
+		 * invented an edit history that does not exist.
+		 *
+		 * Caveat worth knowing: `drizzle-kit push` does not create triggers, so a
+		 * database stood up by `push` rather than by the migrations has the column
+		 * and not the trigger. `check-migrations.ts` compares columns, indexes and
+		 * sequences, so it will not notice either. Build dev with
+		 * `migrate-deploy.ts`, which is what the CLAUDE.md flow already says.
+		 */
+		date_updated: timestamp({ withTimezone: true, mode: 'date' })
 	},
 	(table) => [
 		// One verdict per ordered pair per relation type. The pair is ORDERED —
