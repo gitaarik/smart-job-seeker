@@ -260,7 +260,7 @@ async function main() {
 		}
 	}
 
-	const useful = verdicts.filter((v) => v.relation === 'broader' || v.relation === 'requires');
+	const usefulAll = verdicts.filter((v) => v.relation === 'broader' || v.relation === 'requires');
 	const aliases = verdicts.filter((v) => v.relation === 'alias');
 	const relatedAll = WITH_RELATED ? verdicts.filter((v) => v.relation === 'related') : [];
 
@@ -302,11 +302,45 @@ async function main() {
 	};
 	const related = relatedAll.filter((v) => !alreadyImplied(v.pair.a, v.pair.b));
 	const contradictory = relatedAll.length - related.length;
+
+	// The same closure, read directionally, for the directional proposals — and
+	// the reason the queue could sit at 38 rows of which not one added anything.
+	//
+	// A directional verdict has two ways of being already answered, and the model
+	// cannot see either because it is shown a pair, not the graph:
+	//
+	//   forward  `PostgreSQL requires SQL` while `PostgreSQL broader SQL` is
+	//            approved. The unique index is on (from, to, RELATION), so this
+	//            does not conflict — it lands beside the edge it duplicates.
+	//   reverse  `Databases broader NoSQL` while `NoSQL broader Databases` is
+	//            approved. Approving it closes a loop, which `refuseNewRelation`
+	//            would catch at the Approve button — after a human has read it and
+	//            decided yes.
+	//
+	// Both are the graph contradicting or repeating itself rather than a judgement
+	// about the claim, which is the same bar the `related` filter above applies. On
+	// the 2026-08-30 audit these two branches accounted for all 38 pending rows:
+	// 22 forward, 16 reverse.
+	const dir = (v: (typeof usefulAll)[number]) => ({
+		from: normalizeSkill(v.from === 'a' ? v.pair.a : v.pair.b),
+		to: normalizeSkill(v.from === 'a' ? v.pair.b : v.pair.a)
+	});
+	const useful = usefulAll.filter((v) => {
+		const { from, to } = dir(v);
+		return !implies.has(`${from}|${to}`) && !implies.has(`${to}|${from}`);
+	});
+	const settled = usefulAll.length - useful.length;
+
 	console.log(
 		`\n${verdicts.length} verdicts; ${useful.length} directional ` +
 			`(${verdicts.filter((v) => v.relation === 'related').length} related, ` +
 			`${verdicts.filter((v) => v.relation === 'none').length} none)`
 	);
+	if (settled > 0) {
+		console.log(
+			`  ${settled} directional pair(s) skipped: already approved, implied, or the reverse of one`
+		);
+	}
 	if (contradictory > 0) {
 		console.log(
 			`  ${contradictory} related pair(s) skipped: the graph already implies one from the other`
