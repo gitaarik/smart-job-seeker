@@ -90,9 +90,12 @@ export async function refuseNewRelation(
 	}
 
 	// A loop makes each of its members imply the others, and it is the one defect
-	// the traversal survives without complaining: `expandUpward` uses UNION, so a
-	// cycle terminates quietly rather than surfacing anywhere. Checked with that
-	// traversal itself, so the guard cannot drift from the thing it guards.
+	// the traversal survives without complaining: `expandUpward` is bounded by its
+	// depth cap, so a cycle stops at the cap and returns a plausible-looking
+	// answer rather than surfacing anywhere. (Not by its `UNION`, which is what
+	// this comment used to say. The recursive row carries `depth`, so a repeat is
+	// a new row and dedup never fires on it.) Checked with that traversal itself,
+	// so the guard cannot drift from the thing it guards.
 	//
 	// Only for relations the matcher walks. `inDomain` is drawn and never
 	// traversed, so a loop through it costs nothing and refusing one would block

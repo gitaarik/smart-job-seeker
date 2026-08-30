@@ -19,7 +19,8 @@ import {
 	expandForRetrieval,
 	expandUpward,
 	expandUpwardBySeed,
-	impliesSkill
+	impliesSkill,
+	MATCHING_RELATIONS
 } from '../src/lib/server/job/skill-ontology';
 import { refuseNewRelation } from '../src/lib/server/job/skill-relation-guards';
 
@@ -80,6 +81,66 @@ function check(ok: boolean, what: string) {
 	if (!ok) failures++;
 }
 
+/**
+ * A cycle over the relations the matcher walks, as slugs, or `null` if the graph
+ * is acyclic.
+ *
+ * Kahn's peel rather than a recursive CTE, on purpose. Enumerating paths from
+ * every concept to spot a repeat is exponential on a dense DAG, and this runs
+ * against the whole live graph rather than the fixtures. Repeatedly dropping
+ * concepts with nothing left above them strands exactly the ones on a cycle, in
+ * one pass over the edges, and a walk from any survivor closes the loop to name.
+ *
+ * Edges point child to ancestor, so the sinks being peeled are the roots.
+ */
+async function findMatchingCycle(): Promise<string[] | null> {
+	const edges = await queryRawDirect<{ from_slug: string; to_slug: string }>(sql`
+		SELECT f.slug AS from_slug, t.slug AS to_slug
+		FROM skill_relations r
+		JOIN skill_concepts f ON f.id = r.from_id
+		JOIN skill_concepts t ON t.id = r.to_id
+		WHERE r.approved_at IS NOT NULL
+		  AND r.relation IN (${sql.join(
+				MATCHING_RELATIONS.map((rel) => sql`${rel}`),
+				sql`, `
+			)})
+	`);
+
+	const up = new Map<string, string[]>();
+	const down = new Map<string, string[]>();
+	const link = (m: Map<string, string[]>, from: string, to: string) =>
+		m.set(from, [...(m.get(from) ?? []), to]);
+	for (const { from_slug: child, to_slug: ancestor } of edges) {
+		link(up, child, ancestor);
+		link(down, ancestor, child);
+		if (!up.has(ancestor)) up.set(ancestor, []);
+	}
+
+	const remaining = new Map([...up].map(([slug, above]) => [slug, above.length]));
+	const roots = [...remaining].filter(([, n]) => n === 0).map(([slug]) => slug);
+	for (let slug = roots.pop(); slug !== undefined; slug = roots.pop()) {
+		remaining.delete(slug);
+		for (const child of down.get(slug) ?? []) {
+			const n = remaining.get(child);
+			if (n === undefined) continue;
+			remaining.set(child, n - 1);
+			if (n - 1 === 0) roots.push(child);
+		}
+	}
+	if (remaining.size === 0) return null;
+
+	// Every survivor still has somewhere to go among the survivors, so this walk
+	// cannot get stuck and must repeat a slug. The tail before the repeat is a
+	// path INTO the cycle, not part of it, so report from the repeat onward.
+	const path: string[] = [];
+	let slug: string | undefined = [...remaining.keys()][0];
+	while (slug !== undefined && !path.includes(slug)) {
+		path.push(slug);
+		slug = (up.get(slug) ?? []).find((next) => remaining.has(next));
+	}
+	return slug === undefined ? null : [...path.slice(path.indexOf(slug)), slug];
+}
+
 for (const [slug, label] of CONCEPTS) {
 	await db.execute(
 		sql`INSERT INTO skill_concepts (slug, label) VALUES (${slug}, ${label}) ON CONFLICT (slug) DO NOTHING`
@@ -115,6 +176,22 @@ try {
 	`);
 	check(drift.length === 0, `every concept slug matches its label (${drift.length} drifted)`);
 	for (const d of drift) console.log(`         ${d.slug} vs label "${d.label}"`);
+
+	// The other whole-graph invariant, and the one the traversal cannot defend
+	// itself against: what the matcher walks has to be acyclic. `expandUpward` is
+	// bounded by depth, not by cycle detection, so a loop does not hang or error,
+	// it just makes every concept on it imply every other and reports that as an
+	// ordinary answer.
+	//
+	// `refuseNewRelation` guards both doors a person can draw an edge through, so
+	// this is not checking that guard. It is checking the door with no guard on
+	// it: `importOntology` inserts rows with `approved_at` already set, so a cycle
+	// can arrive whole from another instance without anything asking.
+	//
+	// MATCHING_RELATIONS only. `inDomain` may close a loop deliberately (asserted
+	// below) and nothing traverses it.
+	const cycle = await findMatchingCycle();
+	check(cycle === null, `the matching graph is acyclic${cycle ? `: ${cycle.join(' -> ')}` : ''}`);
 
 	const chain = await expandUpward(['ZZReact']);
 	check(chain.length === 4, `ZZReact reaches 4 concepts transitively (got ${chain.length})`);
@@ -213,6 +290,56 @@ try {
 			null,
 		'a row is not its own duplicate when it is the one being approved'
 	);
+
+	// --- What a cycle does once one is in ------------------------------------
+	//
+	// The complement of the acyclicity check above: not "is there a loop" but
+	// "what happens when there is". Inserted with raw SQL precisely because
+	// `createRelation` would refuse it, which is the shape `importOntology` has.
+	//
+	// Nothing here detects the loop. The traversal terminates on its depth cap,
+	// returns a sane-looking set, and cheerfully reports that ZZfrontend implies
+	// ZZReact. That is the whole reason acyclicity has to be asserted separately:
+	// there is no answer this walk gives that would tell you.
+	await db.execute(sql`
+		INSERT INTO skill_relations (from_id, to_id, relation, source, approved_at)
+		SELECT f.id, t.id, 'broader', 'seed', now()
+		FROM skill_concepts f, skill_concepts t
+		WHERE f.slug = 'zzfrontend' AND t.slug = 'zzreact'
+		ON CONFLICT DO NOTHING
+	`);
+	try {
+		const capped = await expandUpward(['ZZReact'], 1);
+		check(capped.length === 2, `the depth cap truncates the walk (got ${capped.length}, want 2)`);
+
+		// 32 is LOOP_SEARCH_DEPTH, the depth the loop guard itself walks at, and so
+		// the one that has to stay survivable on a graph that already has a loop.
+		const deep = await expandUpward(['ZZReact'], 32);
+		check(
+			deep.length === 4,
+			`a cycle terminates at depth 32 with the same 4 concepts (got ${deep.length})`
+		);
+		check(
+			deep.every((c) => c.depth < 4),
+			'looping does not inflate the reported depths, since MIN() takes the short path'
+		);
+		check(
+			await impliesSkill('ZZfrontend', 'ZZReact'),
+			'and the loop silently reverses an implication, which is the damage'
+		);
+	} finally {
+		await db.execute(sql`
+			DELETE FROM skill_relations
+			WHERE relation = 'broader'
+			  AND from_id = (SELECT id FROM skill_concepts WHERE slug = 'zzfrontend')
+			  AND to_id = (SELECT id FROM skill_concepts WHERE slug = 'zzreact')
+		`);
+	}
+	check(
+		!(await impliesSkill('ZZfrontend', 'ZZReact')),
+		'the loop fixture is gone again before the rest of the file runs'
+	);
+
 	// --- The retrieval traversal, which is a different walk ------------------
 	//
 	// `expandForRetrieval` answers "is this project worth showing?" rather than

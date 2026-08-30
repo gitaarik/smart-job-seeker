@@ -178,10 +178,17 @@ export async function expandUpward(
 	const slugs = [...new Set(skills.map(normalizeSkill).filter(Boolean))];
 	if (slugs.length === 0) return [];
 
-	// `UNION` rather than `UNION ALL`: it dedupes the working set each round, so
-	// a diamond in the graph (two paths to one ancestor) cannot blow up, and a
-	// cycle someone approved by mistake terminates instead of running until the
-	// depth guard catches it.
+	// `UNION` rather than `UNION ALL`: it drops a row already produced, so a
+	// diamond in the graph (two paths to one ancestor) is expanded once where
+	// both paths are the same length.
+	//
+	// It is NOT cycle protection, which the previous version of this comment
+	// claimed. The row carries `depth`, so a revisited concept is a distinct row
+	// every lap and dedup never sees the repeat: on a cycle this walks until
+	// `up.depth < maxDepth` stops it, and that cap is the whole of what
+	// terminates the query. `scripts/check-skill-ontology.ts` asserts both halves:
+	// that the live graph is acyclic, and that a cycle which got in anyway still
+	// terminates here.
 	const rows = await queryRawDirect<{ slug: string; label: string; depth: number }>(sql`
 		WITH RECURSIVE seed AS (
 			SELECT c.id, 0 AS depth FROM skill_concepts c WHERE c.slug IN (${inList(slugs)})
