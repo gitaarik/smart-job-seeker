@@ -210,9 +210,14 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 		// useful for debugging the scraper, but the capture path runs on shared
 		// worker infrastructure and the resulting files surface in the
 		// dashboard log view. Keep it behind a staff toggle for now.
+		//
+		// `locals.adminUser` is the impersonating admin, if any. Without it an
+		// admin acting as a user cannot turn this on for the task they are
+		// debugging, which is the case the toggle exists for.
 		const isStaff =
 			(user as { is_staff?: boolean }).is_staff ||
 			(user as { is_admin?: boolean }).is_admin ||
+			!!(locals.adminUser as { is_admin?: boolean } | null)?.is_admin ||
 			false;
 		if (!isStaff) {
 			throw error(403, 'debug_screenshots is a staff-only setting');

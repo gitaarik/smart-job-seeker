@@ -184,7 +184,18 @@ export async function importSettings(
 				login_mode: t.login_mode,
 				search_location: t.search_location,
 				search_filters: t.search_filters,
-				debug_screenshots: t.debug_screenshots
+				// `debug_screenshots` is deliberately NOT taken from the file.
+				//
+				// It is staff-only everywhere else — the PATCH in
+				// `api/import-tasks/[id]/+server.ts` 403s a non-staff user who
+				// tries to set it — and this route has no staff check at all
+				// (`requireAuth` only; `validateSettingsExport` inspects scope,
+				// version and array-ness, nothing more). Carrying the field
+				// through made export-edit-import a working bypass of that gate
+				// for any user: it capture-screenshots every browser action onto
+				// shared worker disk. A new task starts with the column default,
+				// false, and staff turn it on where the gate can see them.
+				debug_screenshots: false
 			});
 			summary.tasksInserted += 1;
 		}

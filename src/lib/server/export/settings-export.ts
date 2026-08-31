@@ -66,7 +66,11 @@ export async function buildSettingsExport(
 			login_mode: task.login_mode,
 			search_location: task.search_location,
 			search_filters: task.search_filters,
-			debug_screenshots: task.debug_screenshots
+			// Not carried: import refuses it, so emitting it would promise a
+			// round-trip that does not happen. It is per-debugging-session state
+			// rather than a setting worth moving between profiles or
+			// environments. See settings-import.ts.
+			debug_screenshots: false
 		}));
 	}
 

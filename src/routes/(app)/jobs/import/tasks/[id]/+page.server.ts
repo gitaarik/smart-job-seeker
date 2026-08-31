@@ -110,10 +110,20 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		}
 	}
 
-	// Check if user is staff or admin
+	// Check if user is staff or admin.
+	//
+	// `layoutData.adminUser` is the OR that matters. Impersonation replaces the
+	// identity rather than layering on it — `hooks.server.ts` moves the admin
+	// into `locals.adminUser` and puts the target user in `locals.user` — so an
+	// admin debugging someone's import task is, to every check that reads
+	// `user` alone, that non-staff someone. Which is precisely when you want
+	// the screenshots. Same shape as `api/resume/reparse/+server.ts`, and the
+	// PATCH gate in `api/import-tasks/[id]/+server.ts` must agree with this or
+	// the checkbox renders and then 403s on save.
 	const isStaff =
 		(user as { is_staff?: boolean })?.is_staff ||
 		(user as { is_admin?: boolean })?.is_admin ||
+		!!(layoutData.adminUser as { is_admin?: boolean } | null | undefined)?.is_admin ||
 		false;
 
 	// Demo users get a read-only browser view — no interactive/VNC control over
