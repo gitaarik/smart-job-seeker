@@ -5,6 +5,30 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.26.0] - 2026-08-31
+
+14 commits since v0.25.2.
+
+### Added
+
+- Import tasks now support custom sites
+- Job platform management: add and delete platforms with referential integrity checks
+- Document uploads now accept images
+- Job platforms now have explicit owners
+
+### Changed
+
+- Database: file references are now indexed foreign keys
+
+### Fixed
+
+- Import: validate browser_provider and reject non-public scraper URLs
+- Admin: preserve form values on save and use dropdown lists for status/type
+- Assets: serve only publicly referenced files
+- Scripts: discover ops scripts by their imports
+- Docker: Chrome can reach the app; scraper browser isolated from database
+- Scraper: honor task-specific search URLs over platform defaults
+
 ## [0.25.2] - 2026-08-30
 
 8 commits since v0.25.1.
