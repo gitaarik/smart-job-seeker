@@ -644,6 +644,23 @@ describe('profile edit and save', () => {
 	const titleInput = () => b.page.locator('input[placeholder="e.g., Senior Software Engineer"]');
 
 	/**
+	 * Type into the title, the way a person does.
+	 *
+	 * `fill()` alone is not enough: the card's autoSaveField is created with
+	 * `armOnInteraction: true`, and `src/lib/actions/arm-on.ts` arms on
+	 * `pointerdown`/`keydown` only — it excludes `input` on purpose, because form
+	 * restoration and autofill both surface as `input` and must not be persisted
+	 * as if they were typed. `fill()` dispatches exactly that one excluded event,
+	 * so an unclicked field absorbs the value as its new baseline and never
+	 * saves, and the "Saved" pill this suite waits for never appears. Click
+	 * first, which is what arms it for a real user too.
+	 */
+	async function typeTitle(value: string) {
+		await titleInput().click();
+		await titleInput().fill(value);
+	}
+
+	/**
 	 * Basic Info auto-saves on a 700ms debounce — there is no Save button. Blur to
 	 * flush the pending save, then wait for the indicator to settle.
 	 */
@@ -672,14 +689,14 @@ describe('profile edit and save', () => {
 	it('can edit and save the professional title', async () => {
 		originalTitle = await titleInput().inputValue();
 
-		await titleInput().fill(testTitle);
+		await typeTitle(testTitle);
 		await saveAndReload();
 
 		expect(await titleInput().inputValue()).toBe(testTitle);
 	});
 
 	it('restores the original title', async () => {
-		await titleInput().fill(originalTitle);
+		await typeTitle(originalTitle);
 		await saveAndReload();
 
 		expect(await titleInput().inputValue()).toBe(originalTitle);

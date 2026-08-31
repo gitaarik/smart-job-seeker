@@ -23,7 +23,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { loginViaUI, useBrowser } from './browser';
+import { commitPickedVersion, loginViaUI, useBrowser } from './browser';
 import type { Page } from 'patchright';
 
 const APP_ID = 16;
@@ -41,8 +41,7 @@ async function ensureTailored(page: Page) {
 	if (!(await page.getByRole('button', { name: /What's on it/ }).count())) {
 		await page.getByRole('button', { name: /Or send one of my versions as it is/ }).click();
 		await page.getByLabel('Version to send').selectOption({ index: 1 });
-		await page.getByRole('button', { name: /^Set$/ }).click();
-		await page.waitForLoadState('networkidle');
+		await commitPickedVersion(page);
 	}
 	await page.getByRole('button', { name: /What's on it/ }).click();
 	await page.locator('button[aria-label^="Hide "]').first().click();

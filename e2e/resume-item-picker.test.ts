@@ -17,7 +17,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { loginViaUI, useBrowser } from './browser';
+import { commitPickedVersion, loginViaUI, useBrowser } from './browser';
 
 const APP_ID = 16;
 
@@ -50,8 +50,7 @@ describe('what is on it', () => {
 	it('describes the library version you record', async () => {
 		await b.page.getByRole('button', { name: /Or send one of my versions as it is/ }).click();
 		await b.page.getByLabel('Version to send').selectOption({ index: 1 });
-		await b.page.getByRole('button', { name: /^Set$/ }).click();
-		await b.page.waitForLoadState('networkidle');
+		await commitPickedVersion(b.page);
 
 		const opener = b.page.getByRole('button', { name: /What's on it/ });
 		await opener.waitFor({ state: 'visible' });

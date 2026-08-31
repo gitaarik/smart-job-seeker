@@ -125,3 +125,29 @@ export async function loginViaUI(
 		}
 	}
 }
+
+/**
+ * Commit the version chosen in "Or send one of my versions as it is".
+ *
+ * The commit button is labelled
+ * `{recorded ? 'Save' : 'Set'}{pickedHasPdf ? '' : ' & make the PDF'}` in
+ * DocumentForJob.svelte, so it answers to a plain "Set" only while the picked
+ * version already has a rendered PDF. Pick one that does not — the normal case,
+ * since the button's whole job there is to offer the render — and an exact
+ * `/^Set$/` stops matching. That is what hung seven resume tests on a button
+ * sitting right there under a different name, so match the family instead.
+ *
+ * Clicking may then start that render, which is not an in-flight request the
+ * whole time and so can slip past `networkidle`; wait for the button to stop
+ * saying it is working before treating the write as done.
+ */
+export async function commitPickedVersion(page: Page) {
+	await page.getByRole('button', { name: /^(Set|Save)( & make the PDF)?$/ }).click();
+	await page
+		.getByRole('button', { name: /^(Making the PDF…|Saving…)$/ })
+		.waitFor({ state: 'detached', timeout: 60000 })
+		.catch(() => {
+			/* already finished before we looked — the common case */
+		});
+	await page.waitForLoadState('networkidle');
+}
