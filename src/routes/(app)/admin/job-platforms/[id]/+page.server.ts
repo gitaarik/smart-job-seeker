@@ -1,9 +1,14 @@
 import type { Actions, PageServerLoad } from './$types';
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { desc, eq } from 'drizzle-orm';
 import { job_platform_changes, job_platforms, search_form_probe_runs } from '$lib/server/db/schema';
-import { updatePlatformWithAudit } from '$lib/server/job-platforms/admin';
+import {
+	countPlatformReferences,
+	deletePlatform,
+	describePlatformReferences,
+	updatePlatformWithAudit
+} from '$lib/server/job-platforms/admin';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const platformId = parseInt(params.id, 10);
@@ -17,7 +22,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const user = locals.user;
 	if (!user) error(401, 'Not authenticated');
 
-	const [history, discoveryRuns] = await Promise.all([
+	const [history, discoveryRuns, references] = await Promise.all([
 		db.query.job_platform_changes.findMany({
 			where: eq(job_platform_changes.platform_id, platformId),
 			orderBy: desc(job_platform_changes.changed_at),
@@ -27,13 +32,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			where: eq(search_form_probe_runs.platform_id, platformId),
 			orderBy: desc(search_form_probe_runs.started_at),
 			limit: 10
-		})
+		}),
+		countPlatformReferences(platformId).then(describePlatformReferences)
 	]);
 
 	return {
 		platform,
 		history,
-		discoveryRuns
+		discoveryRuns,
+		references
 	};
 };
 
@@ -74,6 +81,31 @@ export const actions: Actions = {
 				error: err instanceof Error ? err.message : 'Save failed'
 			});
 		}
+	},
+
+	/**
+	 * Remove the platform. Refused while anything would be orphaned by it —
+	 * see `deletePlatform`, which owns that decision so the same rule applies
+	 * wherever it is called from.
+	 */
+	delete: async ({ params, locals }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const platformId = parseInt(params.id ?? '', 10);
+		if (isNaN(platformId)) return fail(400, { error: 'Invalid platform id' });
+
+		let result: Awaited<ReturnType<typeof deletePlatform>>;
+		try {
+			result = await deletePlatform(platformId);
+		} catch (err) {
+			return fail(500, { error: err instanceof Error ? err.message : 'Delete failed' });
+		}
+		if (!result.ok) return fail(409, { error: result.error });
+
+		// The platform's own page is gone with it, so there is nowhere to
+		// return to but the list.
+		redirect(303, '/admin/job-platforms');
 	},
 
 	/**

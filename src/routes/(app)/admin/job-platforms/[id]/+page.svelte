@@ -56,6 +56,15 @@
 		return value.length > max ? value.slice(0, max) + '…' : value;
 	}
 
+	// What still points at this platform, already worded by the server —
+	// `blockers` is the SET NULL side, which the database would let through
+	// while silently stripping the references, so the delete action refuses
+	// instead. `cascades` is what goes with the platform when it does.
+	let blockers = $derived(data.references.blockers);
+	let cascades = $derived(data.references.cascades);
+
+	let deleting = $state(false);
+
 	// Tuples of (canonical, value-keys) recorded as unsupported on this
 	// platform — drives the per-row Clear buttons below.
 	let unsupportedEntries = $derived(
@@ -483,6 +492,59 @@
 					</div>
 				{/each}
 			</div>
+		{/if}
+	</div>
+
+	<!-- Danger zone -->
+	<div class="rounded-lg border border-red-200 bg-[var(--dash-card)] p-4 dark:border-red-900">
+		<div class="mb-2 flex items-center gap-2">
+			<FontAwesomeIcon icon={faTrash} class="h-4 w-4 text-red-600 dark:text-red-400" />
+			<h3 class="text-sm font-medium text-[var(--dash-text)]">Delete platform</h3>
+		</div>
+
+		{#if blockers.length > 0}
+			<p class="text-xs text-[var(--dash-text-secondary)]">
+				Referenced by {blockers.join(', ')}. Deleting would strip those references rather than fail,
+				so it is refused.
+				{#if data.platform.status === 'published'}
+					Set the status to <code>draft</code> above to retire it without deleting.
+				{:else}
+					Remove what references it first, or leave it as the draft it already is.
+				{/if}
+			</p>
+		{:else}
+			<p class="text-xs text-[var(--dash-text-secondary)]">
+				Nothing references this platform.
+				{#if cascades.length > 0}
+					Deleting it also removes {cascades.join(', ')}.
+				{/if}
+				There is no undo.
+			</p>
+			<form
+				method="POST"
+				action="?/delete"
+				class="mt-3 text-right"
+				use:enhance={({ cancel }) => {
+					const also = cascades.length > 0 ? `\n\nThis also removes ${cascades.join(', ')}.` : '';
+					if (!confirm(`Delete ${data.platform.name} permanently?${also}`)) {
+						cancel();
+						return;
+					}
+					deleting = true;
+					return async ({ update }) => {
+						await update();
+						deleting = false;
+					};
+				}}
+			>
+				<button
+					type="submit"
+					disabled={deleting}
+					class="rounded border border-red-300 px-3 py-1.5 text-xs text-red-700 hover:bg-red-50 disabled:opacity-60 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/30"
+				>
+					{deleting ? 'Deleting…' : 'Delete platform'}
+				</button>
+			</form>
 		{/if}
 	</div>
 </div>
