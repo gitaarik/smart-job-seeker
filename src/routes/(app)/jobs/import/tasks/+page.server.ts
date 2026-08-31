@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
-import { and, asc, desc, eq, isNotNull, like, or } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNotNull, or } from 'drizzle-orm';
 import {
 	api_keys,
 	job_platforms,
@@ -97,18 +97,40 @@ export const load: PageServerLoad = async ({ parent }) => {
 		}
 	}
 
-	// Platforms the add-task form will offer: any published platform with a
-	// `search_page_url` configured (so the scraper knows where to drive the
-	// search form).
+	// Platforms the add-task form will offer.
+	//
+	// `search_page_url` used to be required here, on the assumption that every
+	// import drives a search form. Curated-listing sites don't have one — their
+	// landing page *is* the job list — and the requirement silently hid 12 of
+	// the 26 published platforms, SvelteJobs among them, even though the form's
+	// own help text names it as the example of a leave-keywords-empty site. The
+	// scraper falls back to `url` for exactly this case, so the form can too.
+	//
+	// The second half of the union is a user's own custom sites: those are
+	// created as `draft` (see getOrCreatePlatform) so they stay out of everyone
+	// else's dropdown, but the profile that added one should get it back when
+	// adding a second task rather than re-pasting the URL.
+	const ownPlatformIds = await db
+		.selectDistinct({ id: search_tasks.platform_id })
+		.from(search_tasks)
+		.where(and(eq(search_tasks.profile_id, profileId), isNotNull(search_tasks.platform_id)));
+	const ownIds = ownPlatformIds.map((r) => r.id).filter((id): id is number => id !== null);
+
 	const importablePlatforms = await db
 		.select({
 			id: job_platforms.id,
 			key: job_platforms.key,
 			name: job_platforms.name,
-			url: job_platforms.url
+			url: job_platforms.url,
+			search_page_url: job_platforms.search_page_url
 		})
 		.from(job_platforms)
-		.where(and(isNotNull(job_platforms.search_page_url), eq(job_platforms.status, 'published')))
+		.where(
+			or(
+				eq(job_platforms.status, 'published'),
+				ownIds.length > 0 ? inArray(job_platforms.id, ownIds) : undefined
+			)
+		)
 		.orderBy(asc(job_platforms.id));
 
 	return {
@@ -150,17 +172,21 @@ async function getOrCreatePlatform(
 
 	if (!platformUrl) return null;
 
-	// Try to find existing platform by URL
-	const parsed = new URL(platformUrl);
-	const domain = parsed.hostname.replace(/^www\./, '');
+	const domain = hostKey(platformUrl);
+	if (!domain) return null;
 
-	const existing = await db.query.job_platforms.findFirst({
-		where: or(
-			like(job_platforms.url, `%${domain}%`),
-			like(job_platforms.key, `%${domain.split('.')[0]}%`)
-		)
-	});
-
+	// Match on the host, exactly. This used to be
+	// `url LIKE '%domain%' OR key LIKE '%first-label%'`, which binds a custom
+	// site to any unrelated platform that happens to share a substring: a URL
+	// on `jobs.acme.com` matches every existing row whose key contains "jobs".
+	// Binding to the wrong platform is not cosmetic — the task inherits that
+	// platform's login page and credential requirements. The table is small and
+	// admin-curated, so comparing parsed hosts in JS beats an approximation in
+	// SQL.
+	const candidates = await db
+		.select({ id: job_platforms.id, url: job_platforms.url })
+		.from(job_platforms);
+	const existing = candidates.find((p) => hostKey(p.url) === domain);
 	if (existing) {
 		return existing.id;
 	}
@@ -178,12 +204,32 @@ async function getOrCreatePlatform(
 			url: platformUrl,
 			key: `${key}-${Date.now().toString(36)}`, // Ensure unique key
 			login_page_url: loginPageUrl || null,
-			status: 'published',
+			// `draft`, not `published`: job_platforms is global and has no owner
+			// column yet, so a published row created here would show up in every
+			// other user's add-task dropdown. Draft keeps a user's custom site to
+			// themselves (the load query unions in the platforms their own tasks
+			// reference) and leaves "promote to published" as an admin decision
+			// once a site proves itself.
+			status: 'draft',
 			date_created: new Date()
 		})
 		.returning();
 
 	return platform.id;
+}
+
+/**
+ * Normalised host for platform identity: lowercased, `www.` stripped.
+ * Returns null when the input isn't a parseable absolute URL — callers treat
+ * that as "no platform", which beats throwing a 500 out of a form action.
+ */
+function hostKey(rawUrl: string | null): string | null {
+	if (!rawUrl) return null;
+	try {
+		return new URL(rawUrl).hostname.toLowerCase().replace(/^www\./, '');
+	} catch {
+		return null;
+	}
 }
 
 /**
@@ -337,6 +383,15 @@ export const actions: Actions = {
 			platformIsNew,
 			loginPageUrl
 		);
+
+		// A custom site that resolved to nothing means the URL wasn't parseable.
+		// getOrCreatePlatform answers null for that, and a task with no platform
+		// can never run (the scraper loads the platform row by id, and the run
+		// endpoint refuses without one), so refuse here rather than hand back a
+		// task that looks saved and is permanently stuck.
+		if (platformUrl && !resolvedPlatformId) {
+			return fail(400, { error: `Could not read a site address from "${platformUrl}".` });
+		}
 
 		// Get or create credentials
 		let resolvedCredentialId: number | null = null;
@@ -511,6 +566,15 @@ export const actions: Actions = {
 			platformIsNew,
 			loginPageUrl
 		);
+
+		// A custom site that resolved to nothing means the URL wasn't parseable.
+		// getOrCreatePlatform answers null for that, and a task with no platform
+		// can never run (the scraper loads the platform row by id, and the run
+		// endpoint refuses without one), so refuse here rather than hand back a
+		// task that looks saved and is permanently stuck.
+		if (platformUrl && !resolvedPlatformId) {
+			return fail(400, { error: `Could not read a site address from "${platformUrl}".` });
+		}
 
 		// Get or create credentials
 		let resolvedCredentialId: number | null = null;

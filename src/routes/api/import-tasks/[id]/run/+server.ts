@@ -98,12 +98,18 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		throw error(400, 'Job search has no platform configured');
 	}
 
-	// The scraper needs *some* URL to navigate to: either the legacy pre-built
-	// search_url on the task, or the platform's search_page_url that the
-	// form-fill flow drives. Without either the scraper has no starting page.
-	const effectiveSearchUrl = searchTask.search_url || searchTask.job_platform?.search_page_url;
+	// The scraper needs *some* URL to navigate to, in precedence order: the
+	// task's own search_url (a URL the user pasted, which wins over form-fill),
+	// the platform's search_page_url that the form-fill flow drives, else the
+	// platform's base url — curated-listing sites have no search entry page
+	// because their landing page *is* the job list. Mirrors the scheduler in
+	// worker.ts and computeImportTaskBlockers; change all three together.
+	const effectiveSearchUrl =
+		searchTask.search_url ||
+		searchTask.job_platform?.search_page_url ||
+		searchTask.job_platform?.url;
 	if (!effectiveSearchUrl) {
-		throw error(400, 'Job search has no search URL and the platform has no search page configured');
+		throw error(400, 'Job search has no search URL and the platform has no URL configured');
 	}
 
 	// Refuse to start a task that isn't fully configured (e.g. needs a connected
@@ -123,6 +129,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		platformName: searchTask.job_platform?.name ?? null,
 		taskSearchUrl: searchTask.search_url,
 		platformSearchPageUrl: searchTask.job_platform?.search_page_url ?? null,
+		platformUrl: searchTask.job_platform?.url ?? null,
 		platformLoginPageUrl: searchTask.job_platform?.login_page_url ?? null,
 		loginMode: searchTask.login_mode,
 		hasCredential: searchTask.platform_profile_id != null,

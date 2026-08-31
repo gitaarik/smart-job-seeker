@@ -33,6 +33,13 @@ export interface ImportTaskReadinessInput {
 	taskSearchUrl: string | null;
 	/** The platform's configured search entry page (`job_platforms.search_page_url`). */
 	platformSearchPageUrl: string | null;
+	/**
+	 * The platform's base URL (`job_platforms.url`). Last-resort navigation
+	 * target for curated-listing sites (SvelteJobs, X-Team) whose landing page
+	 * *is* the job list, so there is no separate search entry page to configure.
+	 * Optional so existing callers that predate the fallback still type-check.
+	 */
+	platformUrl?: string | null;
 	/** The platform's login page (`job_platforms.login_page_url`); null ⇒ public. */
 	platformLoginPageUrl: string | null;
 	/** `search_tasks.login_mode`: "auto" | "manual" | "none". */
@@ -81,7 +88,11 @@ export function computeImportTaskBlockers(input: ImportTaskReadinessInput): Impo
 		return blockers;
 	}
 
-	const effectiveSearchUrl = input.taskSearchUrl || input.platformSearchPageUrl;
+	// Same precedence the worker and the run endpoint use to pick a starting
+	// page. Keep the three in step: a task the UI calls runnable but the worker
+	// then skips is worse than a task that never offered to run.
+	const effectiveSearchUrl =
+		input.taskSearchUrl || input.platformSearchPageUrl || input.platformUrl;
 	if (!effectiveSearchUrl) {
 		blockers.push({
 			key: 'search_url',

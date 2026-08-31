@@ -462,6 +462,7 @@
 			platformName: searchTask.job_platform?.name ?? null,
 			taskSearchUrl: (searchTask as any).search_url ?? null,
 			platformSearchPageUrl: searchTask.job_platform?.search_page_url ?? null,
+			platformUrl: searchTask.job_platform?.url ?? null,
 			platformLoginPageUrl: searchTask.job_platform?.login_page_url ?? null,
 			loginMode: (searchTask as any).login_mode ?? null,
 			hasCredential: (searchTask as any).platform_credential_id != null,

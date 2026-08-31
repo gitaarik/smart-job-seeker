@@ -59,6 +59,25 @@ describe('computeImportTaskBlockers', () => {
 		).toEqual([]);
 	});
 
+	it('accepts the platform base URL for a site with no search entry page', () => {
+		// Curated-listing sites (SvelteJobs, X-Team) have no search form: their
+		// landing page is the job list, so `url` is a legitimate starting point.
+		// The worker and the run endpoint fall back the same way.
+		expect(
+			keys({
+				...ready,
+				platformSearchPageUrl: null,
+				platformUrl: 'https://sveltejobs.com/'
+			})
+		).toEqual([]);
+	});
+
+	it('still flags a missing search URL when the platform has no URL either', () => {
+		expect(keys({ ...ready, platformSearchPageUrl: null, platformUrl: null })).toEqual([
+			'search_url'
+		]);
+	});
+
 	it('requires a connected device only for the tunnel provider', () => {
 		const tunnel = {
 			...ready,
