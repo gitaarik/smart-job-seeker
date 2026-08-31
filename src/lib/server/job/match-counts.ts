@@ -123,9 +123,13 @@ export async function getEligibleUnmatchedCount(
 		matchCommunityJobs,
 		matchConfig?.community_max_age_days
 	);
+	// profileId so the count exempts the applicant's own imports exactly as the
+	// matcher does. Without it this over-reports nothing and under-reports the
+	// own-imported jobs the matcher will in fact score.
 	const eligibilityFilter = buildEligibilityFilter(
 		{ work_location: workLocations, job_types: jobTypes, experience_levels: experienceLevels },
-		profileSkills
+		profileSkills,
+		profileId
 	);
 
 	const result = await queryRaw<{ cnt: number }>(sql`

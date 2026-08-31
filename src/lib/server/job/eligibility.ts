@@ -39,7 +39,18 @@ const jobTypeFamilies = buildFamilyMap(JOB_TYPES);
  * - skills overlap in required OR preferred (NULL/json-null = any)
  * - experience_level bucket overlap (only when config.experience_levels is set)
  */
-export function buildEligibilityFilter(config: EligibilityConfig, profileSkills: string[]): SQL {
+export function buildEligibilityFilter(
+	config: EligibilityConfig,
+	profileSkills: string[],
+	/**
+	 * Profile whose own imports are exempt from the skill-overlap clause.
+	 *
+	 * Omit and nothing is exempt, which is the old behaviour. See the clause
+	 * itself for why importing a job counts as evidence the skill strings do not
+	 * have.
+	 */
+	profileId?: number
+): SQL {
 	if (!config.work_location || config.work_location.length === 0) {
 		throw new Error('Work location config is required for job matching');
 	}
@@ -96,6 +107,36 @@ export function buildEligibilityFilter(config: EligibilityConfig, profileSkills:
     )`
 			: sql``;
 
+	/**
+	 * A job the applicant imported themselves is never dropped for skill overlap.
+	 *
+	 * The comparison above is exact string equality against the profile's skill
+	 * rows — no ontology path, no LLM, no synonyms — so a zero means "these two
+	 * lists share no literal string", not "this job is irrelevant". That is a
+	 * fine cost filter over the community pool, where the alternative is scoring
+	 * thousands of postings nobody asked for. It is the wrong question entirely
+	 * for a job the applicant went and imported: they ran the search, they chose
+	 * the board, and the import IS the relevance signal. Vetoing it on a string
+	 * comparison discards the one piece of evidence that did not come from
+	 * guessing.
+	 *
+	 * Measured on preview 2026-08-31: of the jobs rejected pre-LLM for nothing
+	 * but this clause, ALL 25 of profile 58's and 459 of profile 1's were the
+	 * applicant's own imports. Profiles matching mostly community jobs are
+	 * untouched, so the gate keeps doing the job it is actually good at.
+	 *
+	 * EXISTS rather than a join condition because two of the three callers do
+	 * not join `job_importers` at all (`filterEligibleJobs` selects from `jobs`
+	 * alone). `job_importers_profile_job_idx` covers this lookup.
+	 */
+	const ownImportEscape =
+		profileId === undefined
+			? sql``
+			: sql`OR EXISTS (
+        SELECT 1 FROM job_importers ji_elig
+        WHERE ji_elig.job_id = j.id AND ji_elig.profile_id = ${profileId}
+      )`;
+
 	return sql`
     -- Minimum data: job must have a description OR at least one skill
     (
@@ -134,6 +175,7 @@ export function buildEligibilityFilter(config: EligibilityConfig, profileSkills:
       OR jsonb_array_length(j.skills_preferred::jsonb) = 0
       OR j.skills_required::jsonb ?| array[${sqlJoin(profileSkills)}]::text[]
       OR j.skills_preferred::jsonb ?| array[${sqlJoin(profileSkills)}]::text[]
+      ${ownImportEscape}
     )
     ${experienceClause}
   `;
