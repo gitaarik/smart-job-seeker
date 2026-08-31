@@ -10,13 +10,63 @@
  * A template whose assets are missing from the archive still imports — it keeps
  * its original ids and renders without those images, which beats losing the
  * layout, fonts and colours too.
+ *
+ * The rewritten ids are then lifted out of the config into
+ * `resume_template_assets`, where they live now. This happens on import rather
+ * than in the archive format because an archive written before that table
+ * existed has to import into it too: the file still carries the ids in the
+ * config, and this is the one place that turns them into rows. Whatever is not
+ * recognised as an asset stays in the config untouched.
  */
 
 import { dbDirect } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
-import { resume_templates } from '$lib/server/db/schema';
+import { eq, inArray } from 'drizzle-orm';
+import { files, resume_template_assets, resume_templates } from '$lib/server/db/schema';
 import { uploadFile } from '$lib/server/files';
 import type { ExportedResumeTemplate } from './types';
+import type { ResumeTemplateConfig } from '$lib/resume-templates';
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * The asset slots a config names, as `{ key, fileId }`, and the config without
+ * them.
+ *
+ * Only the two shapes the format has ever used are read: `config.assets.*` and
+ * the top-level `thumbnail`. This is deliberately narrower than the export's
+ * walk-anything-uuid-shaped rule — that rule exists so an unknown key still
+ * *travels*, and a value this does not recognise is left in the config, where
+ * it stays exportable and does no harm.
+ */
+export function splitConfigAssets(config: unknown): {
+	config: unknown;
+	assets: { key: string; fileId: string }[];
+} {
+	if (!config || typeof config !== 'object' || Array.isArray(config)) return { config, assets: [] };
+
+	const rest = { ...(config as ResumeTemplateConfig) };
+	const assets: { key: string; fileId: string }[] = [];
+
+	if (typeof rest.thumbnail === 'string' && UUID_RE.test(rest.thumbnail)) {
+		assets.push({ key: 'thumbnail', fileId: rest.thumbnail });
+		delete rest.thumbnail;
+	}
+
+	if (rest.assets && typeof rest.assets === 'object' && !Array.isArray(rest.assets)) {
+		const remaining: Record<string, string> = {};
+		for (const [key, value] of Object.entries(rest.assets as Record<string, unknown>)) {
+			if (typeof value === 'string' && UUID_RE.test(value) && key !== 'thumbnail') {
+				assets.push({ key, fileId: value });
+			} else if (typeof value === 'string') {
+				remaining[key] = value;
+			}
+		}
+		if (Object.keys(remaining).length > 0) rest.assets = remaining;
+		else delete rest.assets;
+	}
+
+	return { config: rest, assets };
+}
 
 /** Replace each old file id with its new one throughout the config. */
 export function rewriteConfigFileIds(config: unknown, idMap: Map<string, string>): unknown {
@@ -71,16 +121,51 @@ export async function importResumeTemplates(
 				.replace(/(^-|-$)/g, '') ||
 			'imported-template';
 
-		await dbDirect.insert(resume_templates).values({
-			profile_id: profileId,
-			name,
-			slug,
-			status: template.status || 'draft',
-			sort: template.sort ?? null,
-			config: rewriteConfigFileIds(template.config, idMap),
-			date_created: now,
-			date_updated: now
-		});
+		const { config, assets } = splitConfigAssets(rewriteConfigFileIds(template.config, idMap));
+
+		const [row] = await dbDirect
+			.insert(resume_templates)
+			.values({
+				profile_id: profileId,
+				name,
+				slug,
+				status: template.status || 'draft',
+				sort: template.sort ?? null,
+				config,
+				date_created: now,
+				date_updated: now
+			})
+			.returning({ id: resume_templates.id });
+
+		// `file_id` is a real foreign key, so an id the archive named but never
+		// restored (a missing asset, or an export from an instance whose file
+		// store had already lost it) would fail the insert and take the whole
+		// template with it. Only ids that exist become rows; the rest are dropped,
+		// which is what a broken reference was already worth.
+		if (assets.length > 0) {
+			const known = new Set(
+				(
+					await dbDirect.query.files.findMany({
+						where: inArray(
+							files.id,
+							assets.map((a) => a.fileId)
+						),
+						columns: { id: true }
+					})
+				).map((f) => f.id)
+			);
+			const rows = assets
+				.filter((a) => known.has(a.fileId))
+				.map((a) => ({
+					template_id: row.id,
+					key: a.key,
+					file_id: a.fileId,
+					date_created: now
+				}));
+			if (rows.length > 0) {
+				await dbDirect.insert(resume_template_assets).values(rows).onConflictDoNothing();
+			}
+		}
 
 		imported++;
 	}

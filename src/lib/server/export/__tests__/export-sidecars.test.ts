@@ -22,7 +22,8 @@ vi.mock('$lib/server/files', () => ({
 import { emptyTranslationIndexMaps, resolveTranslationTarget } from '../export-translations';
 import { emptyCreatedTranslationIds, resolveTranslationEntity } from '../import-translations';
 import { collectFileIdCandidates } from '../export-templates';
-import { rewriteConfigFileIds } from '../import-templates';
+import { rewriteConfigFileIds, splitConfigAssets } from '../import-templates';
+import { foldAssetsIntoConfig } from '$lib/server/profile/resume-templates';
 
 describe('translation targets', () => {
 	function exportMaps() {
@@ -123,5 +124,69 @@ describe('template assets', () => {
 	it('leaves the config untouched when nothing was reuploaded', () => {
 		const config = { assets: { badge: BADGE }, fonts: { body: 'Carlito' } };
 		expect(rewriteConfigFileIds(config, new Map())).toEqual(config);
+	});
+});
+
+/**
+ * The archive keeps the ids in the config; the database keeps them in rows.
+ *
+ * That split is the compatibility story: an export written before
+ * `resume_template_assets` existed is the same file as one written after, so
+ * the import has to turn config into rows, and the export has to turn rows
+ * back into config. These two functions are the seam, and the property worth
+ * asserting is that they compose back to where they started.
+ */
+describe('template assets across the archive boundary', () => {
+	const BADGE = '8306a313-6958-4bba-b325-3a4fcd9ceffd';
+	const THUMB = '696aa4ad-010a-4e85-8cf2-87d77a1ea5f1';
+
+	it('lifts both shapes of asset reference out of a config', () => {
+		const { config, assets } = splitConfigAssets({
+			accent: '#FFD400',
+			assets: { badge: BADGE },
+			thumbnail: THUMB
+		});
+
+		expect(assets).toEqual(
+			expect.arrayContaining([
+				{ key: 'badge', fileId: BADGE },
+				{ key: 'thumbnail', fileId: THUMB }
+			])
+		);
+		// What is left is the config without any file references in it.
+		expect(config).toEqual({ accent: '#FFD400' });
+	});
+
+	it('round-trips: split then fold is the config it started as', () => {
+		const original = { accent: '#FFD400', assets: { badge: BADGE }, thumbnail: THUMB };
+		const { config, assets } = splitConfigAssets(original);
+
+		expect(
+			foldAssetsIntoConfig(
+				config,
+				assets.map((a) => ({ key: a.key, file_id: a.fileId }))
+			)
+		).toEqual(original);
+	});
+
+	// The export's rule is deliberately wider than the import's: it collects any
+	// uuid-shaped string so an asset under a key nobody anticipated still
+	// travels. A value the import does not recognise as a slot has to stay in
+	// the config rather than vanish, or the next export would not find it.
+	it('leaves an unrecognised reference in the config', () => {
+		const { config, assets } = splitConfigAssets({
+			assets: { badge: BADGE, notAUuid: 'poppins' },
+			somethingElse: THUMB
+		});
+
+		expect(assets).toEqual([{ key: 'badge', fileId: BADGE }]);
+		expect(config).toEqual({ assets: { notAUuid: 'poppins' }, somethingElse: THUMB });
+		// And the wider export rule still sees it, so it is still exportable.
+		expect(collectFileIdCandidates(config)).toEqual([THUMB]);
+	});
+
+	it('passes a config with no assets through unchanged', () => {
+		const config = { accent: '#FFD400', fonts: { body: 'Carlito' } };
+		expect(splitConfigAssets(config)).toEqual({ config, assets: [] });
 	});
 });

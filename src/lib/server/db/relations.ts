@@ -26,6 +26,8 @@ import {
 	highlights,
 	inbound_emails,
 	job_importers,
+	resume_template_assets,
+	resume_templates,
 	job_match_history,
 	job_matches,
 	job_platforms,
@@ -106,7 +108,27 @@ export const filesRelations = relations(files, ({ one, many }) => ({
 	applications: many(applications),
 	profiles: many(profiles),
 	user_feedback_files: many(user_feedback_files),
-	profile_document_projects: many(profile_document_projects)
+	profile_document_projects: many(profile_document_projects),
+	resume_template_assets: many(resume_template_assets)
+}));
+
+export const resume_template_assetsRelations = relations(resume_template_assets, ({ one }) => ({
+	template: one(resume_templates, {
+		fields: [resume_template_assets.template_id],
+		references: [resume_templates.id]
+	}),
+	file: one(files, {
+		fields: [resume_template_assets.file_id],
+		references: [files.id]
+	})
+}));
+
+export const resume_templatesRelations = relations(resume_templates, ({ one, many }) => ({
+	profile: one(profiles, {
+		fields: [resume_templates.profile_id],
+		references: [profiles.id]
+	}),
+	resume_template_assets: many(resume_template_assets)
 }));
 
 export const collected_dataRelations = relations(collected_data, ({ one }) => ({

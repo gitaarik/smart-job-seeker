@@ -1,25 +1,69 @@
 /**
  * Server-side loading of per-profile resume/CV templates.
+ *
+ * A template's artwork lives in `resume_template_assets`, one row per slot,
+ * and is folded back into `config` here. That fold is the whole reason the
+ * normalization cost nothing downstream: the renderer, the thumbnail strip and
+ * the export all still read `config.assets.badge` and `config.thumbnail`, and
+ * none of them had to learn where the ids actually come from.
+ *
+ * Rows win over anything still in the jsonb. A config written before the move
+ * may carry both, and the table is the one with a foreign key.
  */
 
 import { dbDirect as db } from '$lib/server/db';
 import { eq, and, asc } from 'drizzle-orm';
 import { resume_templates } from '$lib/server/db/schema';
-import type { ResumeTemplate, ResumeTemplateConfig } from '$lib/resume-templates';
+import type {
+	ResumeTemplate,
+	ResumeTemplateAssets,
+	ResumeTemplateConfig
+} from '$lib/resume-templates';
+
+/** The asset rows as the config keys they used to be. */
+export function foldAssetsIntoConfig(
+	config: ResumeTemplateConfig,
+	rows: { key: string; file_id: string }[]
+): ResumeTemplateConfig {
+	if (rows.length === 0) return config;
+
+	const assets: Record<string, string> = {};
+	let thumbnail: string | undefined;
+	for (const row of rows) {
+		if (row.key === 'thumbnail') thumbnail = row.file_id;
+		else assets[row.key] = row.file_id;
+	}
+
+	const folded: ResumeTemplateConfig = { ...config };
+	if (Object.keys(assets).length > 0) {
+		folded.assets = { ...(config.assets ?? {}), ...assets } as ResumeTemplateAssets;
+	}
+	if (thumbnail) folded.thumbnail = thumbnail;
+	return folded;
+}
 
 function toTemplate(r: {
 	id: number;
 	name: string;
 	slug: string;
 	config: unknown;
+	resume_template_assets?: { key: string; file_id: string }[];
 }): ResumeTemplate {
 	return {
 		id: r.id,
 		name: r.name,
 		slug: r.slug,
-		config: (r.config ?? {}) as ResumeTemplateConfig
+		config: foldAssetsIntoConfig(
+			(r.config ?? {}) as ResumeTemplateConfig,
+			r.resume_template_assets ?? []
+		)
 	};
 }
+
+/** Every template read here needs its artwork; there is no reader that does not. */
+const withAssets = {
+	resume_template_assets: { columns: { key: true, file_id: true } }
+} as const;
 
 /** All published templates for a profile, in sort order. */
 export async function getResumeTemplatesForProfile(profileId: number): Promise<ResumeTemplate[]> {
@@ -28,7 +72,8 @@ export async function getResumeTemplatesForProfile(profileId: number): Promise<R
 			eq(resume_templates.profile_id, profileId),
 			eq(resume_templates.status, 'published')
 		),
-		orderBy: asc(resume_templates.sort)
+		orderBy: asc(resume_templates.sort),
+		with: withAssets
 	});
 	return rows.map(toTemplate);
 }
@@ -43,7 +88,8 @@ export async function getResumeTemplate(
 			eq(resume_templates.profile_id, profileId),
 			eq(resume_templates.slug, slug),
 			eq(resume_templates.status, 'published')
-		)
+		),
+		with: withAssets
 	});
 	return row ? toTemplate(row) : null;
 }

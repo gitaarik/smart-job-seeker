@@ -29,7 +29,13 @@ import { mkdir, writeFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { eq, inArray, sql } from 'drizzle-orm';
 import { db, queryRawDirect } from '$lib/server/db';
-import { files, profile_exports, profiles, resume_templates } from '$lib/server/db/schema';
+import {
+	files,
+	profile_exports,
+	profiles,
+	resume_template_assets,
+	resume_templates
+} from '$lib/server/db/schema';
 import {
 	collectProfileFileRefs,
 	DEFAULT_ORPHAN_MIN_AGE_DAYS,
@@ -209,11 +215,13 @@ async function main() {
 	);
 	check('the scan respects a limit', (await findOrphanedFiles({ limit: 1 })).length <= 1);
 
-	// A template names its assets in jsonb: no foreign key, so the catalog is
-	// blind to it. This is the gap the 2026-08-23 sweep deleted the Citrus
-	// assets through, and a mocked test cannot tell whether the ILIKE/regexp
-	// SQL that closes it actually runs.
-	console.log(`\nsoft references: a file only a template config names`);
+	// A template's artwork used to be uuids inside `config`, which no foreign key
+	// could see: that is the gap the 2026-08-23 sweep deleted the Citrus assets
+	// through, and it was closed by hand-written ILIKE/regexp guards. The assets
+	// are rows with a real foreign key since 2026-08-31, so what this now proves
+	// is that the constraint reaches the catalog — `referencingColumns()` has to
+	// actually be picking the new table up, which a mocked test cannot tell.
+	console.log(`\nreferences: a file only a template's artwork names`);
 
 	const asset = await makeFile('template-asset');
 	const [template] = await db
@@ -222,14 +230,17 @@ async function main() {
 			profile_id: profileId,
 			name: 'verify-orphan-reap',
 			slug: `verify-orphan-reap-${asset.id.slice(0, 8)}`,
-			config: { assets: { badge: asset.id } }
+			config: {}
 		})
 		.returning({ id: resume_templates.id });
 	madeTemplateIds.push(template.id);
+	await db
+		.insert(resume_template_assets)
+		.values({ template_id: template.id, key: 'badge', file_id: asset.id });
 	await backdate(asset.id, DEFAULT_ORPHAN_MIN_AGE_DAYS + 23);
 
 	check(
-		'an old file only a template config names is NOT listed',
+		"an old file only a template's artwork names is NOT listed",
 		!(await findOrphanedFiles()).some((f) => f.id === asset.id)
 	);
 	const spared = await reapFileRefs({ fileIds: [asset.id], mediaPaths: [] });
@@ -239,7 +250,7 @@ async function main() {
 		JSON.stringify(spared)
 	);
 	check(
-		'collect finds it through the config',
+		"collect finds it through the template's asset rows",
 		(await collectProfileFileRefs(profileId)).fileIds.includes(asset.id)
 	);
 

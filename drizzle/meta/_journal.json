@@ -218,6 +218,20 @@
       "when": 1788030007541,
       "tag": "0030_easy_violations",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1788167417562,
+      "tag": "0031_green_gressill",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1788167551395,
+      "tag": "0032_heavy_rumiko_fujikawa",
+      "breakpoints": true
     }
   ]
 }

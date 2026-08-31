@@ -196,25 +196,36 @@ describe('reapFileRefs', () => {
 
 		const { sql } = queryAt(1);
 		expect(sql).not.toContain('AND true');
-		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM resume_templates');
+		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM profiles WHERE source_cv = files.id)');
 		expect(result.filesDeleted).toBe(1);
 	});
 
-	// The catalog knows every foreign key and nothing else. `resume_templates`
-	// names its assets in jsonb, `profiles.source_cv` and `import_logs.file_id`
-	// never got a constraint — and the 2026-08-23 sweep deleted the Citrus
-	// template's six assets through exactly that gap.
+	// The catalog knows every foreign key and nothing else. `profiles.source_cv`
+	// and `import_logs.file_id` never got a constraint, and the 2026-08-23 sweep
+	// deleted files through exactly that gap.
 	it('also guards the references no foreign key declares', async () => {
 		mockQuery.mockResolvedValueOnce(FK_ROWS).mockResolvedValueOnce([]);
 
 		await reapFileRefs({ fileIds: ['id-a'], mediaPaths: [] });
 
 		const { sql } = queryAt(1);
-		expect(sql).toContain(
-			"NOT EXISTS (SELECT 1 FROM resume_templates WHERE config::text ILIKE '%' || files.id::text || '%')"
-		);
 		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM profiles WHERE source_cv = files.id)');
 		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM import_logs WHERE file_id = files.id::text)');
+	});
+
+	// Template artwork was the third of these until 2026-08-31, guarded by an
+	// ILIKE over `resume_templates.config` because the ids sat in jsonb. It is
+	// `resume_template_assets` now, with a foreign key, so the catalog reports
+	// it and the hand-written guard is gone. Asserted as an absence because
+	// that is the whole benefit: a guard that no longer has to be maintained.
+	it('no longer hand-guards template artwork, which the catalog now reports', async () => {
+		mockQuery.mockResolvedValueOnce(FK_ROWS).mockResolvedValueOnce([]);
+
+		await reapFileRefs({ fileIds: ['id-a'], mediaPaths: [] });
+
+		const { sql } = queryAt(1);
+		expect(sql).not.toContain('resume_templates');
+		expect(sql).not.toContain('config::text');
 	});
 });
 
@@ -267,18 +278,14 @@ describe('findOrphanedFiles', () => {
 		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM profile_exports WHERE file_id = files.id)');
 	});
 
-	// A template asset is referenced from jsonb, which no constraint can
-	// express. Any UUID-shaped string anywhere in the config counts — the same
-	// rule the template export uses — so a key added tomorrow is covered too.
-	it('keeps a file a template config names, whatever the key', async () => {
+	// The scan asks the same question the reap does, so it carries the same
+	// guards for the references no constraint declares.
+	it('keeps a file only an unconstrained column names', async () => {
 		mockQuery.mockResolvedValueOnce(FK_ROWS).mockResolvedValueOnce([]);
 
 		await findOrphanedFiles();
 
 		const { sql } = queryAt(1);
-		expect(sql).toContain(
-			"NOT EXISTS (SELECT 1 FROM resume_templates WHERE config::text ILIKE '%' || files.id::text || '%')"
-		);
 		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM profiles WHERE source_cv = files.id)');
 		expect(sql).toContain('NOT EXISTS (SELECT 1 FROM import_logs WHERE file_id = files.id::text)');
 	});
@@ -398,8 +405,11 @@ describe('collectProfileFileRefs', () => {
 
 		const { sql, params } = queryAt(0);
 		expect(sql).toContain('SELECT source_cv, NULL FROM profiles WHERE id = $');
-		expect(sql).toContain('regexp_matches(t.config::text');
 		expect(sql).toContain('FROM import_logs');
+		// Template artwork is collected by an ordinary join now, not by fishing
+		// uuid-shaped strings out of the config with `regexp_matches`.
+		expect(sql).toContain('FROM resume_template_assets a');
+		expect(sql).not.toContain('regexp_matches');
 		// The UUID pattern is inlined, not bound: the only parameter is the profile.
 		expect(new Set(params)).toEqual(new Set([7]));
 	});

@@ -800,6 +800,7 @@ export const education = pgTable(
 		banner_path: varchar({ length: 255 })
 	},
 	(table) => [
+		index('education_logo_idx').on(table.logo_id),
 		foreignKey({
 			columns: [table.logo_id],
 			foreignColumns: [files.id],
@@ -970,6 +971,7 @@ export const job_resources = pgTable(
 		job_id: integer().notNull()
 	},
 	(table) => [
+		index('job_resources_file_idx').on(table.file_id),
 		foreignKey({
 			columns: [table.file_id],
 			foreignColumns: [files.id],
@@ -1498,6 +1500,7 @@ export const profile_exports = pgTable(
 		source_url: varchar({ length: 512 })
 	},
 	(table) => [
+		index('profile_exports_file_idx').on(table.file_id),
 		foreignKey({
 			columns: [table.file_id],
 			foreignColumns: [files.id],
@@ -2465,6 +2468,7 @@ export const work_experiences = pgTable(
 		banner_path: varchar({ length: 255 })
 	},
 	(table) => [
+		index('work_experiences_logo_idx').on(table.logo_id),
 		foreignKey({
 			columns: [table.logo_id],
 			foreignColumns: [files.id],
@@ -2500,6 +2504,54 @@ export const resume_templates = pgTable(
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
 			name: 'resume_templates_profile_foreign'
+		}).onDelete('cascade')
+	]
+);
+
+// A template's artwork, as rows rather than uuids inside `config`.
+//
+// They used to live in the config jsonb (`config.assets.badge`, and a
+// top-level `thumbnail`), which meant they were file references no foreign key
+// could see. Everything that needed to know about them had to go looking for
+// uuid-shaped strings: the reaper matched `config::text ILIKE '%<id>%'`, the
+// export walked the parsed object, the import string-replaced the serialised
+// one, and the public asset route asked the same ILIKE. Four hand-written
+// answers to a question the catalog answers for free.
+//
+// It also cost real data. The sweep of 2026-08-23 asked "does anything
+// reference this file" of `pg_constraint`, which could not see jsonb, and
+// deleted the Citrus template's six assets; they were restored from a profile
+// export archive, which happened to be the only copy.
+//
+// `key` rather than a column per asset, because the renderer's asset names are
+// a template concern and a seventh one should not need a migration. It is the
+// same key that used to sit in the jsonb, so the config the renderer receives
+// is rebuilt from these rows and nothing downstream changed shape.
+export const resume_template_assets = pgTable(
+	'resume_template_assets',
+	{
+		id: serial().primaryKey().notNull(),
+		template_id: integer().notNull(),
+		/** Asset slot: badge | screenBackground | printBackground | footer | divider | thumbnail. */
+		key: varchar({ length: 64 }).notNull(),
+		file_id: uuid().notNull(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' })
+	},
+	(table) => [
+		// One file per slot per template — the shape the jsonb object had.
+		unique('resume_template_assets_template_key_unique').on(table.template_id, table.key),
+		// "Which templates use this file", asked by the public asset route on
+		// every cold fetch and by the orphan reaper for every file it examines.
+		index('resume_template_assets_file_idx').on(table.file_id),
+		foreignKey({
+			columns: [table.template_id],
+			foreignColumns: [resume_templates.id],
+			name: 'resume_template_assets_template_foreign'
+		}).onDelete('cascade'),
+		foreignKey({
+			columns: [table.file_id],
+			foreignColumns: [files.id],
+			name: 'resume_template_assets_file_foreign'
 		}).onDelete('cascade')
 	]
 );
@@ -2636,6 +2688,7 @@ export const applications = pgTable(
 			.notNull()
 	},
 	(table) => [
+		index('applications_cv_file_sent_idx').on(table.cv_file_sent_id),
 		index('applications_profile_status_updated_idx').on(
 			table.profile_id,
 			table.status,
@@ -3586,6 +3639,7 @@ export const profiles = pgTable(
 		email_digest_send_to: varchar({ length: 20 }).default('profile')
 	},
 	(table) => [
+		index('profiles_profile_picture_idx').on(table.profile_picture_id),
 		index('profiles_user_id_idx').using('btree', table.user_id.asc().nullsLast()),
 		foreignKey({
 			columns: [table.profile_picture_id],
@@ -3992,6 +4046,7 @@ export const user_feedback_files = pgTable(
 		file_id: uuid().notNull()
 	},
 	(table) => [
+		index('user_feedback_files_file_idx').on(table.file_id),
 		index('user_feedback_files_feedback_idx').using(
 			'btree',
 			table.user_feedback_id.asc().nullsLast()
@@ -4660,6 +4715,7 @@ export const profile_document_projects = pgTable(
 		date_updated: timestamp({ withTimezone: true, mode: 'date' })
 	},
 	(table) => [
+		index('profile_document_projects_file_idx').on(table.file_id),
 		index('profile_document_projects_profile_idx').on(table.profile_id),
 		foreignKey({
 			columns: [table.profile_id],

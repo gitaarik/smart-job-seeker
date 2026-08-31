@@ -7,15 +7,25 @@
  * config for anything that looks like a file id and checks it against the file
  * store, so an asset added under a new key still travels.
  *
- * The config itself is exported verbatim, ids and all; the importer rewrites
+ * The config itself is exported with the ids in it, and the importer rewrites
  * them once the assets have new ids. That keeps a template with no assets a
  * byte-exact round trip.
+ *
+ * Those ids no longer *live* in the config — they are rows in
+ * `resume_template_assets` since 2026-08-31 — but they are folded back into it
+ * on the way out, deliberately. The archive format is the one thing here that
+ * outlives the schema: an export written last year still has to import, so
+ * moving the ids in the database is not a reason to move them in the file.
+ * `getResumeTemplatesForProfile` does the folding, which is also why this reads
+ * through it rather than querying the table.
  */
 
 import { dbDirect } from '$lib/server/db';
 import { asc, eq, inArray } from 'drizzle-orm';
 import { files, resume_templates } from '$lib/server/db/schema';
 import { getFile } from '$lib/server/files';
+import { foldAssetsIntoConfig } from '$lib/server/profile/resume-templates';
+import type { ResumeTemplateConfig } from '$lib/resume-templates';
 import type { ExportedResumeTemplate, ExportedTemplateAsset, TemplateAssetPayload } from './types';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -46,9 +56,13 @@ export async function buildTemplateExport(
 	profileId: number,
 	includeAssets: boolean
 ): Promise<{ templates: ExportedResumeTemplate[]; assetPayloads: TemplateAssetPayload[] }> {
+	// Every template, not only the published ones — a draft is still the
+	// author's work — so this cannot use `getResumeTemplatesForProfile`, which
+	// filters by status. It borrows that function's fold instead.
 	const rows = await dbDirect.query.resume_templates.findMany({
 		where: eq(resume_templates.profile_id, profileId),
-		orderBy: [asc(resume_templates.sort), asc(resume_templates.id)]
+		orderBy: [asc(resume_templates.sort), asc(resume_templates.id)],
+		with: { resume_template_assets: { columns: { key: true, file_id: true } } }
 	});
 
 	const templates: ExportedResumeTemplate[] = [];
@@ -56,9 +70,13 @@ export async function buildTemplateExport(
 
 	for (const [index, row] of rows.entries()) {
 		const assets: ExportedTemplateAsset[] = [];
+		const config = foldAssetsIntoConfig(
+			(row.config ?? {}) as ResumeTemplateConfig,
+			row.resume_template_assets
+		);
 
 		if (includeAssets) {
-			const candidates = collectFileIdCandidates(row.config);
+			const candidates = collectFileIdCandidates(config);
 
 			// One query decides which candidates are real files; a UUID in the
 			// config that isn't in the file store is left alone.
@@ -88,7 +106,7 @@ export async function buildTemplateExport(
 			slug: row.slug || undefined,
 			status: row.status || undefined,
 			sort: row.sort,
-			config: row.config,
+			config,
 			assets
 		});
 	}

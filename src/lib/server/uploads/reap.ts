@@ -79,16 +79,18 @@ function mergeRefs(...refs: FileRefs[]): FileRefs {
 	};
 }
 
-/** A file id as it appears inside jsonb or a varchar — see SOFT_REFERENCE_GUARDS. */
+/** A file id as it appears inside a varchar column — see SOFT_REFERENCE_GUARDS. */
 const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
 
 /**
  * Every file reachable from one profile.
  *
- * Includes the references the catalog cannot see (the template assets named in
- * `resume_templates.config`, `profiles.source_cv`, `import_logs.file_id`) —
- * whatever the reap must refuse to delete for a *living* profile is exactly
- * what it must collect for a dying one.
+ * Includes the references the catalog cannot see (`profiles.source_cv`,
+ * `import_logs.file_id`) — whatever the reap must refuse to delete for a
+ * *living* profile is exactly what it must collect for a dying one. Template
+ * artwork is collected here too, but by an ordinary join: it has a real
+ * foreign key since 2026-08-31, where it used to be uuids inside jsonb that
+ * this query had to go fishing for with `regexp_matches`.
  *
  * Deliberately *not* including `job_resources`: those hang off `jobs`, which
  * is a table shared between everyone a posting matched and is not deleted with
@@ -124,8 +126,9 @@ export async function collectProfileFileRefs(profileId: number): Promise<FileRef
 		UNION ALL
 		SELECT source_cv, NULL FROM profiles WHERE id = ${profileId}
 		UNION ALL
-		SELECT m[1]::uuid, NULL
-		  FROM resume_templates t, regexp_matches(t.config::text, ${sql.raw(`'${UUID_PATTERN}'`)}, 'gi') AS m
+		SELECT a.file_id, NULL
+		  FROM resume_template_assets a
+		  JOIN resume_templates t ON t.id = a.template_id
 		 WHERE t.profile_id = ${profileId}
 		UNION ALL
 		SELECT file_id::uuid, NULL
@@ -204,22 +207,23 @@ async function referencingColumns(): Promise<{ table: string; column: string }[]
  * `source_cv` a profile was created from and the uploads `import_logs` keeps
  * for re-parsing, which nothing had backed up.
  *
+ * **That first one is no longer here, and its absence is the point.** Template
+ * artwork moved into `resume_template_assets` on 2026-08-31, with a foreign
+ * key, so `referencingColumns()` reports it like anything else and the guard
+ * that stood in for the missing constraint could be deleted rather than
+ * maintained. The remaining two are the ones still waiting for the same
+ * treatment.
+ *
  * Each guard is `true` while nothing points at the `files` row being judged.
- * They are hand-maintained because there is nothing to read them from: a jsonb
- * blob has no constraint, and the two plain columns never got one (a real
- * foreign key would move them into the catalog's list — until then they live
- * here). The match on `config` is deliberately key-agnostic — any UUID-shaped
- * string anywhere in it counts — because that is the rule the template
- * export/import already uses to decide what an asset is
- * (`collectFileIdCandidates` in `export/export-templates.ts`), and hard-coding
- * today's five keys would re-open the hole for the sixth.
+ * They are hand-maintained because there is nothing to read them from: the two
+ * plain columns never got a constraint, and a real foreign key would move them
+ * into the catalog's list.
  *
  * When a new column stores a file id, give it a foreign key. If that is not
  * possible, add it here *and* to the collect queries below — one side without
  * the other either keeps the file for ever or deletes it out from under a row.
  */
 const SOFT_REFERENCE_GUARDS: SQL[] = [
-	sql`NOT EXISTS (SELECT 1 FROM resume_templates WHERE config::text ILIKE '%' || files.id::text || '%')`,
 	sql`NOT EXISTS (SELECT 1 FROM profiles WHERE source_cv = files.id)`,
 	sql`NOT EXISTS (SELECT 1 FROM import_logs WHERE file_id = files.id::text)`
 ];
@@ -229,6 +233,12 @@ const SOFT_REFERENCE_GUARDS: SQL[] = [
  * plus the references it cannot see. This is the one definition of *orphan* —
  * the backlog scan, the per-profile reap and the admin file browser all ask
  * it, so they cannot disagree about what is safe to delete.
+ *
+ * It is also the reason every column referencing `files` carries an index.
+ * Postgres does not create one for a foreign key, and eight of the nine did not
+ * have one until 2026-08-31: this builds an `EXISTS` per column and the orphan
+ * scan runs it over the whole table, so a missing index here is a sequential
+ * scan of `work_experiences` per file examined. Add the index with the column.
  */
 export async function notReferencedCondition(): Promise<SQL> {
 	const cols = await referencingColumns();
