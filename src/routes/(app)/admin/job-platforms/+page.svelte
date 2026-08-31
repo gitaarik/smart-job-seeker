@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
+	import { PLATFORM_STATUSES, PLATFORM_TYPES } from '$lib/job-platforms/taxonomy';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faExternalLinkAlt,
@@ -37,12 +38,6 @@
 			.replace(/[^a-z0-9]+/g, '-')
 			.replace(/^-+|-+$/g, '');
 	}
-
-	// Free-text in the schema, so offer what the existing rows already use
-	// instead of inventing an enum the rest of the app doesn't enforce.
-	let knownTypes = $derived(
-		[...new Set(data.platforms.map((p) => p.type).filter((t): t is string => !!t))].sort()
-	);
 
 	function resetCreateForm() {
 		showCreate = false;
@@ -105,8 +100,10 @@
 			class="space-y-4 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] p-4"
 			use:enhance={() => {
 				creating = true;
+				// Not `update()`: its default reset sends every bound input back
+				// to an empty defaultValue, wiping what was typed on a refusal.
 				return async ({ update }) => {
-					await update();
+					await update({ reset: false });
 					creating = false;
 				};
 			}}
@@ -179,8 +176,9 @@
 						bind:value={status}
 						class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
 					>
-						<option value="draft">draft</option>
-						<option value="published">published</option>
+						{#each PLATFORM_STATUSES as option (option)}
+							<option value={option}>{option}</option>
+						{/each}
 					</select>
 					<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
 						Draft keeps it out of the suggestion flow until the search page is configured.
@@ -191,20 +189,17 @@
 						class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
 						for="new-type">Type</label
 					>
-					<input
+					<select
 						id="new-type"
 						name="type"
-						type="text"
 						bind:value={type}
-						list="platform-types"
-						placeholder="job_boards / vetted_platforms / …"
 						class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
-					/>
-					<datalist id="platform-types">
-						{#each knownTypes as t (t)}
-							<option value={t}></option>
+					>
+						<option value="">(none)</option>
+						{#each PLATFORM_TYPES as option (option)}
+							<option value={option}>{option}</option>
 						{/each}
-					</datalist>
+					</select>
 				</div>
 				<div class="md:col-span-2">
 					<label

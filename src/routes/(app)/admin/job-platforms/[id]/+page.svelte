@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
+	import { PLATFORM_STATUSES, PLATFORM_TYPES, withCurrent } from '$lib/job-platforms/taxonomy';
 	import { invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -28,6 +29,11 @@
 	let status = $state(data.platform.status);
 	let loginPageUrl = $state(data.platform.login_page_url ?? '');
 	let searchPageUrl = $state(data.platform.search_page_url ?? '');
+
+	// A row with a value outside the vocabulary keeps it as an option, so
+	// saving an unrelated field cannot quietly rewrite it.
+	let statusOptions = $derived(withCurrent(PLATFORM_STATUSES, data.platform.status));
+	let typeOptions = $derived(withCurrent(PLATFORM_TYPES, data.platform.type));
 
 	function discoveryStatusColor(s: string) {
 		if (s === 'success') return 'text-green-600 dark:text-green-400';
@@ -121,8 +127,12 @@
 		class="space-y-4 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] p-4"
 		use:enhance={() => {
 			saving = true;
+			// `update()` resets the form by default, and a reset sends every
+			// input back to its `defaultValue` — empty, since these are bound
+			// rather than server-rendered with a value attribute. The fields
+			// blanked out on save and only came back on a reload.
 			return async ({ update }) => {
-				await update();
+				await update({ reset: false });
 				saving = false;
 			};
 		}}
@@ -188,28 +198,38 @@
 					class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
 					for="field-status">Status</label
 				>
-				<input
+				<select
 					id="field-status"
 					name="status"
-					type="text"
 					bind:value={status}
 					required
 					class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
-				/>
+				>
+					{#each statusOptions as option (option)}
+						<option value={option}>{option}</option>
+					{/each}
+				</select>
+				<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+					Only <code>published</code> is acted on: it is what the suggestion flow, the jobs page and the
+					add-task list filter for.
+				</p>
 			</div>
 			<div>
 				<label
 					class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
 					for="field-type">Type</label
 				>
-				<input
+				<select
 					id="field-type"
 					name="type"
-					type="text"
 					bind:value={type}
-					placeholder="job_boards / vetted_platforms / …"
 					class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
-				/>
+				>
+					<option value="">(none)</option>
+					{#each typeOptions as option (option)}
+						<option value={option}>{option}</option>
+					{/each}
+				</select>
 			</div>
 			<div class="md:col-span-2">
 				<label
