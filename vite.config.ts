@@ -30,9 +30,19 @@ export default defineConfig({
 		],
 		hmr: process.env.SJS_HOSTNAME
 			? { host: process.env.SJS_HOSTNAME, protocol: 'wss', clientPort: 443 }
-			: undefined,
-		fs: {
-			allow: ['uploads']
-		}
+			: undefined
+		// No `fs.allow` for `uploads/`.
+		//
+		// It was here so the dev server could hand back `/uploads/...` straight
+		// from disk, which worked and quietly made dev the only environment where
+		// the `/uploads/[...path]` route never runs: Vite's static middleware
+		// answered first. That route is what refuses `uploads/files/`, the private
+		// blob store behind the `files` table — so on dev, and only on dev, every
+		// CV, export and project image was readable by anyone who knew its
+		// filename, and no test on dev could have shown it.
+		//
+		// The route reads the files itself with `node:fs`, which `fs.allow` has no
+		// say over, so serving still works here. It just goes the same way it goes
+		// everywhere else.
 	}
 });

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
+	import type { ResolvedPathname } from '$app/types';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faFileAlt,
@@ -10,6 +12,19 @@
 	import Card from '../../components/Card.svelte';
 
 	let { data }: { data: PageData } = $props();
+
+	/**
+	 * The admin-only download door. `/assets/<id>` used to serve this and served
+	 * it to everyone; it now answers only for files something public points at,
+	 * which is every file this page is for except the ones it is most for.
+	 *
+	 * The query string is appended to a resolved path and cast back — `resolve()`
+	 * takes route params, not a query — so the route id is still checked.
+	 */
+	function downloadHref(fileId: string): ResolvedPathname {
+		const base = resolve('/(app)/admin/files/download');
+		return `${base}?fileId=${encodeURIComponent(fileId)}` as ResolvedPathname;
+	}
 
 	let files = $derived((data as any).files);
 	let total = $derived((data as any).total);
@@ -225,7 +240,7 @@
 
 							<!-- Download -->
 							<a
-								href="/assets/{file.id}"
+								href={downloadHref(file.id)}
 								class="flex-shrink-0 p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
 								title="Download"
 								onclick={(e) => e.stopPropagation()}

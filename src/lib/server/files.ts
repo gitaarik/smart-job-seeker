@@ -65,6 +65,24 @@ export function isSupportedUpload(filename: string): boolean {
 	return extname(filename).toLowerCase() in EXT_TO_MIME;
 }
 
+/**
+ * A `Content-Disposition` value for a stored file.
+ *
+ * The name comes from `filename_download`, which is whatever the uploader
+ * called their file — so it can hold quotes and newlines, and a header built by
+ * concatenation would either break or carry them. Both forms are emitted: the
+ * quoted one for old clients, `filename*` for anything with a non-ASCII name.
+ */
+export function contentDisposition(name: string | null | undefined, inline = false): string {
+	const clean =
+		(name ?? '')
+			.split(/[\\/]/)
+			.pop()
+			?.replace(/["\r\n]/g, '')
+			.trim() || 'file';
+	return `${inline ? 'inline' : 'attachment'}; filename="${clean}"; filename*=UTF-8''${encodeURIComponent(clean)}`;
+}
+
 export async function uploadFile(options: UploadFileOptions): Promise<UploadedFile> {
 	const id = randomUUID();
 	const ext = extname(options.filename).toLowerCase();
