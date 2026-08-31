@@ -19,6 +19,7 @@ import { hasDeviceAccess, listSharedWithMe } from '$lib/server/device-shares';
 import { getSelectedProfileId } from '../../../profile/utils';
 import { adoptAutoTaskIfManaged } from '$lib/server/import-tasks/reconcile';
 import { triggerAutoImportReconcile } from '$lib/server/import-tasks/trigger';
+import { checkPublicHttpUrl } from '$lib/server/net/public-url';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();
@@ -375,6 +376,20 @@ export const actions: Actions = {
 		// scraper checks for keywords/filters at run time and skips form-fill
 		// when there's nothing to apply.
 
+		// Both of these end up as a navigation target for a real browser, so
+		// neither may point inside our own network. See public-url.ts.
+		for (const [label, candidate] of [
+			['site address', platformUrl],
+			['search URL', search_url],
+			['login page URL', loginPageUrl]
+		] as const) {
+			if (!candidate?.trim()) continue;
+			const verdict = checkPublicHttpUrl(candidate);
+			if (!verdict.ok) {
+				return fail(400, { error: `That ${label} can't be used: ${verdict.reason}` });
+			}
+		}
+
 		// Get or create platform
 		const resolvedPlatformId = await getOrCreatePlatform(
 			platformId,
@@ -556,6 +571,20 @@ export const actions: Actions = {
 
 		if (!existing) {
 			return fail(404, { error: 'Job search not found' });
+		}
+
+		// Both of these end up as a navigation target for a real browser, so
+		// neither may point inside our own network. See public-url.ts.
+		for (const [label, candidate] of [
+			['site address', platformUrl],
+			['search URL', search_url],
+			['login page URL', loginPageUrl]
+		] as const) {
+			if (!candidate?.trim()) continue;
+			const verdict = checkPublicHttpUrl(candidate);
+			if (!verdict.ok) {
+				return fail(400, { error: `That ${label} can't be used: ${verdict.reason}` });
+			}
 		}
 
 		// Get or create platform

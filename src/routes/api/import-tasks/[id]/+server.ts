@@ -15,6 +15,7 @@ import { hasDeviceAccess } from '$lib/server/device-shares';
 import { hasCredentialAccess } from '$lib/server/credential-shares';
 import { encryptCredential } from '$lib/server/auth/crypto';
 import { triggerAutoImportReconcile } from '$lib/server/import-tasks/trigger';
+import { checkPublicHttpUrl } from '$lib/server/net/public-url';
 
 /**
  * Calculate next scheduled run at the preferred hour in the user's timezone.
@@ -133,7 +134,14 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 	} = {};
 
 	if (body.note !== undefined) data.note = body.note || null;
-	if (body.search_url !== undefined) data.search_url = body.search_url || null;
+	if (body.search_url !== undefined) {
+		// Same navigation target the create action guards, reachable here too.
+		if (body.search_url) {
+			const verdict = checkPublicHttpUrl(body.search_url);
+			if (!verdict.ok) throw error(400, `That search URL can't be used: ${verdict.reason}`);
+		}
+		data.search_url = body.search_url || null;
+	}
 	if (body.search_term !== undefined) {
 		data.search_term = body.search_term?.trim() || null;
 	}
