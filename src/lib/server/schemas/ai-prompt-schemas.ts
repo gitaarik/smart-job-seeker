@@ -86,10 +86,10 @@ export const extractJobDataSchema = z
 			'For project/fixed-price jobs: estimated duration in weeks. null for periodic salaries.'
 		),
 		skills_required: optionalNullableArray().describe(
-			'Array of REQUIRED TECHNICAL skills/technologies, ordered by importance (most critical first)'
+			'Array of REQUIRED skills the job asks for, ordered by importance (most critical first). Short noun phrases naming a capability, in any field — not only technologies, and never a requirement sentence.'
 		),
 		skills_preferred: optionalNullableArray().describe(
-			'Array of PREFERRED/nice-to-have TECHNICAL skills, ordered by importance (most desired first)'
+			'Array of PREFERRED/nice-to-have skills, ordered by importance (most desired first). Same form as skills_required.'
 		),
 		responsibilities: optionalNullableArray().describe(
 			'Array of key job responsibilities/duties, ordered by importance'

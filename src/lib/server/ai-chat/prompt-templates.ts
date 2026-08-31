@@ -1113,9 +1113,30 @@ Examples of complete salary extraction:
 - skills_required: Array of skills explicitly marked as REQUIRED, MUST HAVE, ESSENTIAL, or listed without any qualifier
 - skills_preferred: Array of skills marked as NICE TO HAVE, PREFERRED, BONUS, DESIRED, or similar optional language
 
+   A SKILL IS A SHORT NOUN PHRASE NAMING A CAPABILITY, NOT A REQUIREMENT SENTENCE.
+   Extract the capability and drop the wrapper the posting puts around it:
+   - "At least 10 years of relevant experience in public finance" → "Public Finance"
+   - "Advanced degree in Economics or a related field" → "Economics"
+   - "Strong understanding of Zambian public finance management systems" → "Public Financial Management"
+   - "Proven track record of building React applications at scale" → "React"
+   A clause naming several capabilities becomes several entries:
+   - "Excellent analytical, facilitation and report-writing skills" → "Analysis", "Facilitation", "Report Writing"
+   Never emit a years-of-experience clause, a degree or diploma requirement, a
+   seniority level, a location, or a whole sentence. Keep every entry under 40
+   characters; if it will not fit, you have kept the wrapper.
+
+   POSTINGS WITH NO REQUIREMENTS SECTION STILL HAVE SKILLS.
+   Public-sector, NGO, research, academic, clinical and consultancy postings
+   routinely state what they want in running prose with no "Requirements"
+   heading and no bullet list. Read the responsibilities and qualifications
+   paragraphs and name the capabilities they describe:
+   - "conduct political economy analyses and identify financing mechanisms" → "Political Economy Analysis", "Public Finance"
+   - "coordinate project development and manage technical assistance activities" → "Project Coordination", "Technical Assistance"
+   Return an empty array ONLY when the content is not a job posting at all.
+
    SKILL FORMATTING:
    - Use the official/proper casing for well-known technologies (e.g., "JavaScript", "TypeScript", "Node.js", "iOS", "macOS", "NumPy", "GraphQL", "PostgreSQL")
-   - Keep acronyms uppercase: AI, API, AWS, SQL, HTML, CSS, REST, CI/CD, DevOps
+   - Keep acronyms uppercase: AI, API, AWS, SQL, HTML, CSS, REST, CI/CD, DevOps, ESG, IFRS, GAAP, HACCP, SEO, CRM, M&E
    - For general skills or unknown terms, use Title Case (capitalize first letter of each word)
    - Examples: "JavaScript", "REST API", "Machine Learning", "Data Analysis", "React Native", "Node.js"
 - status: Whether the job is currently accepting applications - MUST be either "hiring" (actively accepting applications) or "closed" (no longer accepting applications)
@@ -1183,11 +1204,18 @@ These are the main tasks and duties of the position - NOT skills or requirements
 Order by importance (primary duties first).
 
 SKILLS CATEGORIZATION:
-skills_required and skills_preferred are for TECHNICAL skills only:
+skills_required and skills_preferred are for LEARNED, VERIFIABLE capabilities,
+in whatever field the posting is in:
   • Programming languages, frameworks, libraries (Python, React, Node.js)
-  • Tools and platforms (AWS, Docker, Kubernetes, Git)
-  • Certifications and methodologies (Agile, Scrum, PMP)
-  • Technical domain knowledge (machine learning, databases, security)
+  • Tools and platforms (AWS, Docker, Kubernetes, Git, Salesforce, Figma, SAP)
+  • Certifications and methodologies (Agile, Scrum, PMP, HACCP, PRINCE2)
+  • Domain knowledge and professional practice, technical or not
+    (machine learning, databases, security, ESG Reporting, Public Financial
+    Management, Grant Writing, Curriculum Design, Patient Care, Payroll
+    Administration, Contract Law, Stakeholder Engagement)
+  • Languages a role requires, named plainly: "English", "French"
+Do not restrict this to software. A posting in finance, health, education,
+logistics, law or development work has skills too, and they belong here.
 
 soft_skills are for INTERPERSONAL/BEHAVIORAL traits:
   • Communication, leadership, teamwork, collaboration
@@ -1195,13 +1223,25 @@ soft_skills are for INTERPERSONAL/BEHAVIORAL traits:
   • "People-centered", "strategic thinking", "self-motivated"
   • Personality characteristics and work style traits
 
-TECHNICAL SKILLS CATEGORIZATION:
-Carefully categorize technical skills based on the language used in the job posting:
+The line between the two is whether it names a body of practice someone was
+trained in. "Stakeholder Engagement", "Facilitation" and "Report Writing" are
+learned professional practice and belong in skills_required; "collaborative",
+"self-motivated" and "strong communicator" are traits and belong in soft_skills.
+When a posting offers only traits, soft_skills carries them and
+skills_required is still filled from what the role actually does.
+
+REQUIRED vs PREFERRED:
+Categorize based on the language used in the job posting:
 
 skills_required - Extract from sections or phrases indicating MANDATORY skills:
   • "Required", "Must have", "Essential", "Mandatory", "Requirements"
   • "Qualifications", "What you need", "You must have", "We require"
   • Skills listed without any qualifier (default to required)
+
+  • A posting with none of these markers anywhere — only a description of what
+    the role does — still yields skills: derive them from the duties and put
+    ALL of them in skills_required. An empty skills_required is a failed
+    extraction, not a posting without requirements.
 
 skills_preferred - Extract from sections or phrases indicating OPTIONAL skills:
   • "Nice to have", "Preferred", "Desired", "Bonus", "Plus"
