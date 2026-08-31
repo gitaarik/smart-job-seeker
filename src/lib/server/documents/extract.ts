@@ -24,7 +24,7 @@ import {
 import { extractTextFromFile } from '../resume/text-extractor';
 import { parseEmailToText } from './extract-email';
 import { redactSecrets } from './scan-secrets';
-import { extOf, sniffUploadKind } from './sniff';
+import { extOf, MEDIA_EXTENSIONS, sniffUploadKind } from './sniff';
 
 export interface ExtractedFile {
 	/** Basename for a loose file; sanitized archive-relative path for members. */
@@ -101,8 +101,22 @@ export async function extractUpload(
 	limits: SafeUnzipLimits = DEFAULT_EXTRACT_LIMITS
 ): Promise<ExtractedProject> {
 	const kind = sniffUploadKind(input.bytes, input.filename);
+	if (kind === 'media') {
+		// Images are kept rather than read (see `media.ts`), and storing them means
+		// holding on to bytes this function does not return. A caller that wants
+		// them has to take that branch before calling; one that does not gets a
+		// refusal it can show, the same as any other file it cannot read.
+		throw new DocumentExtractError('Images are stored as attachments, not read as text.');
+	}
 	if (kind === 'unknown') {
-		throw new DocumentExtractError(`Unsupported or unrecognized file: ${input.filename}`);
+		// Names what IS accepted: the refusal is shown next to the filename that
+		// caused it, so repeating the name here says it twice. The image list is
+		// read from the classifier rather than written out again, so the sentence
+		// cannot promise a format the sniffer refuses.
+		throw new DocumentExtractError(
+			'Not a file we can read. Add source code, text or docs (PDF, DOCX, HTML, Markdown), ' +
+				`a ZIP of those, or an image (${MEDIA_EXTENSIONS.map((e) => `.${e}`).join(', ')}).`
+		);
 	}
 	if (kind === 'zip') return extractArchive(input.bytes, limits);
 	return extractLooseFile(input.filename, input.bytes);
@@ -231,7 +245,7 @@ async function extractLooseFile(filename: string, bytes: Uint8Array): Promise<Ex
 
 	const { text, secretsRedacted } = finalize(raw);
 	if (!text) {
-		throw new DocumentExtractError(`No text could be extracted from ${filename}`);
+		throw new DocumentExtractError('No text could be extracted from it.');
 	}
 
 	const file: ExtractedFile = {

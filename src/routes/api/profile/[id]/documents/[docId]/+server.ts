@@ -3,7 +3,8 @@
  *
  *   GET    /api/profile/[id]/documents/[docId]  — read a note's text (notes only)
  *   PATCH  /api/profile/[id]/documents/[docId]  — rewrite a note (notes only)
- *   DELETE /api/profile/[id]/documents/[docId]  — remove it and its extracted files
+ *   DELETE /api/profile/[id]/documents/[docId]  — remove it, its extracted files
+ *                                                and any blob it was holding
  *
  * GET and PATCH are note-only on purpose. Every other kind is a *record of
  * something that exists elsewhere* — an upload can be uploaded again, a
@@ -24,6 +25,7 @@ import { requireDocumentQuota } from '$lib/server/billing/require-document-quota
 import { deriveNoteTitle, DocumentExtractError, extractNote } from '$lib/server/documents/extract';
 import { replaceNoteContent, setProjectSummary } from '$lib/server/documents/store';
 import { summarizeProject } from '$lib/server/documents/summarize';
+import { reapFileRefs } from '$lib/server/uploads/reap';
 
 /** The note, or a 404/400 — scoped to the profile so nobody reads another's. */
 async function requireNote(docId: number, profileId: number) {
@@ -114,8 +116,21 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 				eq(profile_document_projects.profile_id, profileId)
 			)
 		)
-		.returning({ id: profile_document_projects.id });
+		.returning({
+			id: profile_document_projects.id,
+			file_id: profile_document_projects.file_id
+		});
 
 	if (!deleted) error(404, 'Document not found');
+
+	// Deleting the row does not delete the bytes: the FK cascade cannot reach
+	// the disk. `RETURNING` is what makes this possible at all — after the
+	// delete there is nothing left to read the file id from, and the reap has
+	// to run after it, because a `files` row is only removed once nothing
+	// points at it any more.
+	if (deleted.file_id) {
+		await reapFileRefs({ fileIds: [deleted.file_id], mediaPaths: [] });
+	}
+
 	return json({ success: true });
 };

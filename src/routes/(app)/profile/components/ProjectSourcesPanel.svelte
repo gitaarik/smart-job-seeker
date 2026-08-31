@@ -27,6 +27,8 @@
 		skipped: unknown;
 		file_count: number;
 		total_bytes: number;
+		file_id?: string | null;
+		file?: { filesize: number | null } | null;
 	}
 
 	let {
@@ -48,10 +50,11 @@
 <div>
 	<h2 class="mb-1 text-lg font-semibold text-[var(--dash-text)]">Files & source code</h2>
 	<p class="mb-4 text-sm text-[var(--dash-text-secondary)]">
-		Anything that describes this project: its source, its docs, or a note you write yourself. We
-		extract the text and summarize it into reference notes we can cite when a job matches — and the
-		Details tab can propose a description, an outcome and technologies from it. Original files
-		aren't stored and secrets are redacted.
+		Anything that describes this project: its source, its docs, an image, or a note you write
+		yourself. We extract the text and summarize it into reference notes we can cite when a job
+		matches — and the Details tab can propose a description, an outcome and technologies from it.
+		Original files aren't stored and secrets are redacted. Images are kept as they are, private to
+		you, for your own record of the work.
 	</p>
 	<ProjectDocuments {profileId} {workExperienceProjectId} {sideProjectId} {repoUrl} {documents} />
 </div>

@@ -32,8 +32,13 @@ export const load: PageServerLoad = async ({ parent }) => {
 			skipped: true,
 			source: true,
 			file_count: true,
-			total_bytes: true
-		}
+			total_bytes: true,
+			file_id: true
+		},
+		// An image keeps its bytes, and its size lives on the `files` row rather
+		// than in `total_bytes` — that column counts extracted text, of which an
+		// image has none. Joined here so the list can say how big it is.
+		with: { file: { columns: { filesize: true } } }
 	});
 
 	return { documents };

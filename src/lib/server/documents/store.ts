@@ -1,10 +1,13 @@
 /**
- * Persistence for extracted document projects.
+ * Persistence for document projects.
  *
  * Writes one `profile_document_projects` row (the upload/archive unit) plus a
- * `profile_document_files` row per extracted source file. The raw upload is not
- * stored — only extracted text. The per-project `summary` is filled later by
- * the summarizer step.
+ * `profile_document_files` row per extracted source file. For everything that
+ * is read, the raw upload is not stored — only extracted text — and the
+ * per-project `summary` is filled later by the summarizer step.
+ *
+ * `saveMediaProject` is the other half: an image is kept and not read, so it
+ * writes the same row pointing at a stored blob, with no text rows under it.
  */
 
 import { dbDirect as db } from '$lib/server/db';
@@ -36,6 +39,29 @@ export interface SaveDocumentProjectInput {
 	 * they are for a plain upload.
 	 */
 	kind?: string;
+	source?: Record<string, unknown>;
+}
+
+/**
+ * Status of a stored image.
+ *
+ * Not "extracted": nothing was. The extraction statuses are claims about text
+ * that was read out of a file, and an image has none to read — so it gets a
+ * word of its own rather than borrowing one that would be false. A vision pass
+ * would fill `summary` without changing this.
+ */
+export const MEDIA_STATUS = 'stored';
+
+export interface SaveMediaProjectInput {
+	profileId: number;
+	/** `files.id` of the normalized image this row is a record of. */
+	fileId: string;
+	/** The name it was uploaded under. */
+	filename: string;
+	title?: string | null;
+	workExperienceId?: number | null;
+	workExperienceProjectId?: number | null;
+	sideProjectId?: number | null;
 	source?: Record<string, unknown>;
 }
 
@@ -107,6 +133,62 @@ export async function saveExtractedProject(
 		truncated: extracted.truncated,
 		skippedCount: extracted.skipped.length,
 		secretsRedacted: extracted.secretsRedacted
+	};
+}
+
+/**
+ * An image, kept as an image.
+ *
+ * Its own function rather than an `ExtractedProject` with an empty `files`
+ * array, because the two differ in every field that matters: there is a blob
+ * to point at, there is no text, and `status` is not a claim about extraction.
+ * Squeezing it through `saveExtractedProject` would mean a function called
+ * "extracted" writing rows where nothing was.
+ *
+ * `total_bytes` stays 0. It is the extracted-text quota unit, and the stored
+ * image's size lives on the `files` row — mixing disk bytes into a text budget
+ * would make one column mean two things and every sum over it wrong.
+ */
+export async function saveMediaProject(
+	input: SaveMediaProjectInput
+): Promise<SavedDocumentProject> {
+	const now = new Date();
+	const title = input.title?.trim() || input.filename || 'Untitled';
+
+	const [project] = await db
+		.insert(profile_document_projects)
+		.values({
+			profile_id: input.profileId,
+			work_experience_id: input.workExperienceId ?? null,
+			work_experience_project_id: input.workExperienceProjectId ?? null,
+			side_project_id: input.sideProjectId ?? null,
+			file_id: input.fileId,
+			kind: 'media',
+			title,
+			// The name it was uploaded under, not the `.webp` it was re-encoded to:
+			// this is the label, and the user is looking for the file they sent.
+			original_filename: input.filename,
+			source: input.source ?? { type: 'media', filename: input.filename },
+			status: MEDIA_STATUS,
+			file_count: 1,
+			total_chars: 0,
+			total_bytes: 0,
+			date_created: now,
+			date_updated: now
+		})
+		.returning({ id: profile_document_projects.id });
+
+	return {
+		id: project.id,
+		status: MEDIA_STATUS,
+		kind: 'media',
+		title,
+		fileCount: 1,
+		totalChars: 0,
+		totalBytes: 0,
+		truncated: false,
+		skippedCount: 0,
+		secretsRedacted: 0
 	};
 }
 

@@ -9,8 +9,10 @@
 		faChevronDown,
 		faChevronRight,
 		faCloudArrowUp,
+		faDownload,
 		faFileLines,
 		faFileZipper,
+		faImage,
 		faNoteSticky,
 		faPenToSquare,
 		faTrash
@@ -32,6 +34,13 @@
 		total_bytes: number;
 		/** Provenance jsonb; only an application copy is read here. */
 		source?: unknown;
+		/** The stored blob, on an image. Null for everything that was read instead. */
+		file_id?: string | null;
+		/**
+		 * Size of the stored image. It is not `total_bytes` — that counts extracted
+		 * text, which an image has none of — so the two never describe one row.
+		 */
+		file?: { filesize: number | null } | null;
 	}
 
 	let {
@@ -160,6 +169,7 @@
 
 	/** Deleting a note loses the only copy; deleting an upload loses a copy. */
 	let deletingNote = $derived(documents.some((d) => d.id === deleteId && d.kind === 'note'));
+	let deletingMedia = $derived(documents.some((d) => d.id === deleteId && d.kind === 'media'));
 
 	/**
 	 * The entry this copy came from, on its application's activity tab. The
@@ -176,7 +186,30 @@
 
 	function docIcon(kind: string) {
 		if (kind === 'note') return faNoteSticky;
+		if (kind === 'media') return faImage;
 		return kind === 'archive' ? faFileZipper : faFileLines;
+	}
+
+	/**
+	 * An image is kept rather than read, which is the whole difference in this
+	 * list: it has bytes to show and to download, and no notes to regenerate.
+	 */
+	const isMedia = (doc: DocRow): boolean => doc.kind === 'media' && !!doc.file_id;
+
+	/**
+	 * The stored image, through the route that checks who is asking.
+	 *
+	 * `?inline=1` is appended to a resolved path and cast back, the way
+	 * `entryHref` appends its anchor: `resolve()` takes neither a query nor a
+	 * hash, and building the string by hand instead would leave the route id
+	 * unchecked.
+	 */
+	function downloadHref(docId: number, inline = false): ResolvedPathname {
+		const base = resolve('/api/profile/[id]/documents/[docId]/download', {
+			id: String(profileId),
+			docId: String(docId)
+		});
+		return (inline ? `${base}?inline=1` : base) as ResolvedPathname;
 	}
 
 	function formatSize(bytes: number): string {
@@ -335,10 +368,11 @@
 		<p class="mt-1 text-sm text-[var(--dash-text)]">
 			{uploading
 				? 'Uploading and analyzing…'
-				: 'Drop source code, docs, or a ZIP here — or click to choose'}
+				: 'Drop source code, docs, a ZIP or images here — or click to choose'}
 		</p>
 		<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
 			We extract the text and summarize it; original files aren't stored, secrets are redacted.
+			Images are the exception — there is no text to keep instead, so the picture itself is kept.
 		</p>
 		<input
 			type="file"
@@ -435,10 +469,30 @@
 		{@const origin = applicationRecordSource(doc.source)}
 		<div class="rounded-lg border border-[var(--dash-border)] p-3">
 			<div class="flex items-start gap-3">
-				<FontAwesomeIcon
-					icon={docIcon(doc.kind)}
-					class="mt-0.5 h-4 w-4 text-[var(--dash-text-muted)]"
-				/>
+				{#if isMedia(doc)}
+					<!-- Its own preview, since that is what an image is for. Opens full size
+					     in a tab; `inline=1` is what makes the download route render rather
+					     than save, and it is offered only for images. -->
+					<a
+						href={downloadHref(doc.id, true)}
+						target="_blank"
+						rel="noopener"
+						class="shrink-0"
+						aria-label="Open {doc.title || doc.original_filename || 'image'} full size"
+					>
+						<img
+							src={downloadHref(doc.id, true)}
+							alt=""
+							loading="lazy"
+							class="h-12 w-12 rounded border border-[var(--dash-border)] object-cover"
+						/>
+					</a>
+				{:else}
+					<FontAwesomeIcon
+						icon={docIcon(doc.kind)}
+						class="mt-0.5 h-4 w-4 text-[var(--dash-text-muted)]"
+					/>
+				{/if}
 				<div class="min-w-0 flex-1">
 					<div class="flex flex-wrap items-center gap-2">
 						<span class="truncate text-sm font-medium text-[var(--dash-text)]">
@@ -451,9 +505,13 @@
 						>
 					</div>
 					<p class="mt-0.5 text-xs text-[var(--dash-text-secondary)]">
-						{doc.file_count}
-						{doc.file_count === 1 ? 'file' : 'files'} · {formatSize(doc.total_bytes)}
-						{#if skipped > 0}· {skipped} skipped{/if}
+						{#if isMedia(doc)}
+							Image · {formatSize(doc.file?.filesize ?? 0)}
+						{:else}
+							{doc.file_count}
+							{doc.file_count === 1 ? 'file' : 'files'} · {formatSize(doc.total_bytes)}
+							{#if skipped > 0}· {skipped} skipped{/if}
+						{/if}
 					</p>
 					{#if origin}
 						<p class="mt-1 flex flex-wrap items-center gap-1 text-xs text-[var(--dash-text-muted)]">
@@ -512,20 +570,33 @@
 							<FontAwesomeIcon icon={faPenToSquare} class="h-3.5 w-3.5" />
 						</button>
 					{/if}
-					<button
-						type="button"
-						onclick={() => reparse(doc.id)}
-						disabled={reparsingId === doc.id}
-						class="p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)] disabled:opacity-50"
-						aria-label="Regenerate notes"
-						title="Regenerate reference notes"
-					>
-						<FontAwesomeIcon
-							icon={faArrowsRotate}
-							spin={reparsingId === doc.id}
-							class="h-3.5 w-3.5"
-						/>
-					</button>
+					{#if isMedia(doc)}
+						<a
+							href={downloadHref(doc.id)}
+							class="p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
+							aria-label="Download image"
+							title="Download this image"
+						>
+							<FontAwesomeIcon icon={faDownload} class="h-3.5 w-3.5" />
+						</a>
+					{:else}
+						<!-- Nothing to regenerate from an image: the notes come from extracted
+						     text, and there is none. -->
+						<button
+							type="button"
+							onclick={() => reparse(doc.id)}
+							disabled={reparsingId === doc.id}
+							class="p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)] disabled:opacity-50"
+							aria-label="Regenerate notes"
+							title="Regenerate reference notes"
+						>
+							<FontAwesomeIcon
+								icon={faArrowsRotate}
+								spin={reparsingId === doc.id}
+								class="h-3.5 w-3.5"
+							/>
+						</button>
+					{/if}
 					<button
 						type="button"
 						onclick={() => (deleteId = doc.id)}
@@ -542,10 +613,12 @@
 
 <ConfirmModal
 	isOpen={deleteId !== null}
-	title={deletingNote ? 'Delete note' : 'Delete document'}
+	title={deletingNote ? 'Delete note' : deletingMedia ? 'Delete image' : 'Delete document'}
 	message={deletingNote
 		? 'Permanently delete this note? Nothing else holds this text — it was written here, not uploaded — so it cannot be recovered.'
-		: 'Permanently delete this document and its extracted notes? This cannot be undone.'}
+		: deletingMedia
+			? 'Permanently delete this image? The stored copy goes with it, so you will need the original to add it again.'
+			: 'Permanently delete this document and its extracted notes? This cannot be undone.'}
 	confirmLabel="Delete"
 	onCancel={() => (deleteId = null)}
 	onConfirm={doDelete}

@@ -12,6 +12,12 @@
  * the same thing to everything downstream: extracted text attached to a
  * project, summarized, retrieved and cited alongside the files. Only its
  * provenance differs, and that is a column.
+ *
+ * Images are the exception to "raw uploads are NOT retained". There is no text
+ * in a screenshot to keep instead of it, so the file itself is what is worth
+ * having: it is re-encoded to a bounded WebP (`documents/media.ts`) and stored,
+ * and the row points at it. Same endpoint, same drop zone, because from where
+ * the user stands they are attaching a file to a project either way.
  */
 
 import { error, json } from '@sveltejs/kit';
@@ -33,10 +39,19 @@ import {
 } from '$lib/server/documents/extract';
 import {
 	type SaveDocumentProjectInput,
+	type SaveMediaProjectInput,
 	saveExtractedProject,
+	saveMediaProject,
 	setProjectSummary
 } from '$lib/server/documents/store';
 import { summarizeProject } from '$lib/server/documents/summarize';
+import { extOf, isMediaExtension, sniffUploadKind } from '$lib/server/documents/sniff';
+import {
+	MAX_MEDIA_UPLOAD_BYTES,
+	type NormalizedImage,
+	normalizeImage
+} from '$lib/server/documents/media';
+import { uploadFile } from '$lib/server/files';
 
 // Raw-upload safety cap (per file). Per-plan limits apply to extracted text.
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
@@ -66,9 +81,6 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	const user = requireAuth(locals);
 	const profileId = parseIntParam(params.id, 'profile');
 	await requireProfileAccess(profileId, user.id);
-	// Pre-flight affordability floor for the per-project summarization LLM cost;
-	// the real per-token charge happens inside summarizeProject.
-	await requireCredits(user.id, 3);
 
 	const form = await request.formData();
 	const uploads: File[] = form
@@ -93,13 +105,34 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		await assertProjectOwned('side_project', sideProjectId, profileId);
 	}
 
+	// Affordability, before the work rather than after it.
+	//
+	// Only the text path summarizes, so an image-only upload is charged nothing
+	// and must not be refused for an empty balance — a bill for keeping a
+	// screenshot the user can already see. But the authoritative answer to "is
+	// this an image" needs the bytes, and reading and extracting them is the
+	// expensive part this check exists to come before. So the *cost* question is
+	// asked of the extensions, which is enough to be conservative: anything that
+	// does not look like an image counts as possibly needing the LLM.
+	const mightSummarize = !!noteText || uploads.some((f) => !isMediaExtension(extOf(f.name)));
+	if (mightSummarize) {
+		// Pre-flight floor for the per-project summarization cost; the real
+		// per-token charge happens inside summarizeProject.
+		await requireCredits(user.id, 3);
+	}
+
 	// Extract everything first so we can total the extracted bytes and gate on
-	// the storage quota before writing any rows.
-	const pending: {
-		input: SaveDocumentProjectInput;
-		extracted: ExtractedProject;
-	}[] = [];
+	// the storage quota before writing any rows — and, for an image, before a
+	// blob is written to disk that a refused upload would leave behind.
+	type Pending =
+		| { kind: 'text'; input: SaveDocumentProjectInput; extracted: ExtractedProject }
+		| { kind: 'media'; input: Omit<SaveMediaProjectInput, 'fileId'>; image: NormalizedImage };
+	const pending: Pending[] = [];
 	const errors: { filename: string; error: string }[] = [];
+
+	// A user-supplied title only makes sense for a single upload, and a note in
+	// the same post has already claimed it.
+	const uploadTitle = uploads.length === 1 && !noteText ? title : null;
 
 	for (const file of uploads) {
 		if (file.size > MAX_UPLOAD_BYTES) {
@@ -111,14 +144,38 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		}
 		try {
 			const bytes = new Uint8Array(await file.arrayBuffer());
+			// Classified once here so the two paths cannot disagree about what a
+			// file is; `extractUpload` sniffs again on its own, which costs a read
+			// of the first bytes and keeps it correct when called from elsewhere.
+			if (sniffUploadKind(bytes, file.name) === 'media') {
+				if (file.size > MAX_MEDIA_UPLOAD_BYTES) {
+					errors.push({
+						filename: file.name,
+						error: `Image exceeds the ${Math.round(MAX_MEDIA_UPLOAD_BYTES / (1024 * 1024))}MB limit.`
+					});
+					continue;
+				}
+				pending.push({
+					kind: 'media',
+					input: {
+						profileId,
+						filename: file.name,
+						title: uploadTitle,
+						workExperienceId,
+						workExperienceProjectId,
+						sideProjectId
+					},
+					image: await normalizeImage({ filename: file.name, bytes })
+				});
+				continue;
+			}
 			const extracted = await extractUpload({ filename: file.name, bytes });
 			pending.push({
+				kind: 'text',
 				input: {
 					profileId,
 					filename: file.name,
-					// A user-supplied title only makes sense for a single upload, and a
-					// note in the same post has already claimed it.
-					title: uploads.length === 1 && !noteText ? title : null,
+					title: uploadTitle,
 					workExperienceId,
 					workExperienceProjectId,
 					sideProjectId
@@ -138,6 +195,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		try {
 			const noteTitle = deriveNoteTitle(title, noteText);
 			pending.push({
+				kind: 'text',
 				input: {
 					profileId,
 					filename: null,
@@ -161,9 +219,30 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 
 	const created = [];
 	if (pending.length > 0) {
-		const totalBytes = pending.reduce((s, p) => s + p.extracted.totalBytes, 0);
+		// Images add no extracted text, so they cost nothing against the byte
+		// budget — but each is still a document project, and the per-plan cap on
+		// how many of those a profile may hold counts them like anything else.
+		const totalBytes = pending.reduce(
+			(sum, p) => sum + (p.kind === 'text' ? p.extracted.totalBytes : 0),
+			0
+		);
 		await requireDocumentQuota(user.id, totalBytes, pending.length);
+
 		for (const p of pending) {
+			if (p.kind === 'media') {
+				// The blob lands before the row that names it. The reverse would
+				// point a row at a file that does not exist yet; this way a failure
+				// between the two leaves an unreferenced `files` row, which is
+				// exactly what the orphan sweep is for.
+				const stored = await uploadFile({
+					filename: p.image.filename,
+					buffer: p.image.bytes,
+					title: p.input.title ?? p.input.filename
+				});
+				const saved = await saveMediaProject({ ...p.input, fileId: stored.id });
+				created.push({ ...saved, summary: null, keywords: null });
+				continue;
+			}
 			const saved = await saveExtractedProject(p.input, p.extracted);
 			// Summarize into reference notes + keywords (best-effort; the upload
 			// still succeeds if the LLM step fails).
