@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	computeImportTaskBlockers,
+	isTaskBrowserProvider,
 	type ImportTaskReadinessInput,
 	isImportTaskRunnable,
 	providerRequiresDevice
@@ -34,6 +35,24 @@ describe('providerRequiresDevice', () => {
 	it('falls back to the server default when the task has no provider', () => {
 		expect(providerRequiresDevice(null, 'tunnel')).toBe(true);
 		expect(providerRequiresDevice(null, 'local')).toBe(false);
+	});
+});
+
+describe('isTaskBrowserProvider', () => {
+	it('accepts the three providers a task may name', () => {
+		for (const p of ['local', 'hosted', 'tunnel']) {
+			expect(isTaskBrowserProvider(p), p).toBe(true);
+		}
+	});
+
+	it('rejects goLogin, which is a server-config value rather than a task one', () => {
+		expect(isTaskBrowserProvider('goLogin')).toBe(false);
+	});
+
+	it('rejects unknown strings and non-strings', () => {
+		for (const p of ['', 'LOCAL', 'docker', null, undefined, 1, {}]) {
+			expect(isTaskBrowserProvider(p), String(p)).toBe(false);
+		}
 	});
 });
 

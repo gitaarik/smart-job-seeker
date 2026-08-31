@@ -182,6 +182,12 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 	if (body.skip_first !== undefined) data.skip_first = body.skip_first;
 	if (body.login_mode !== undefined) data.login_mode = body.login_mode;
 	if (body.browser_provider !== undefined) {
+		// No check here on purpose: searchTaskUpdateSchema types this field as
+		// z.enum(['hosted', 'tunnel']).optional().nullable(), so parseBody has
+		// already rejected anything else — "local" included — before this line.
+		// Re-checking below the schema only adds a weaker rule under a stricter
+		// one. The create action has no such schema and does validate; see
+		// TASK_BROWSER_PROVIDERS in $lib/import-tasks/readiness.
 		data.browser_provider = body.browser_provider;
 	}
 	if (body.keep_minimized !== undefined) {

@@ -20,6 +20,7 @@ import { getSelectedProfileId } from '../../../profile/utils';
 import { adoptAutoTaskIfManaged } from '$lib/server/import-tasks/reconcile';
 import { triggerAutoImportReconcile } from '$lib/server/import-tasks/trigger';
 import { checkPublicHttpUrl } from '$lib/server/net/public-url';
+import { isTaskBrowserProvider } from '$lib/import-tasks/readiness';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();
@@ -427,6 +428,18 @@ export const actions: Actions = {
 
 		// Scraping options
 		const browserProvider = formData.get('browser_provider') as string;
+		// Same allowlist the PATCH endpoint applies: an unknown provider string
+		// reaches getBrowserProvider() as an override and silently becomes the
+		// local Chrome container, and "local" itself must respect
+		// SJS_LOCAL_BROWSER_ALLOWED rather than only being hidden from the picker.
+		if (browserProvider) {
+			if (!isTaskBrowserProvider(browserProvider)) {
+				return fail(400, { error: `Unknown browser provider "${browserProvider}".` });
+			}
+			if (browserProvider === 'local' && !config.localBrowserAllowed) {
+				return fail(400, { error: 'The local browser is not available on this server.' });
+			}
+		}
 		const sjsBrowserApiKeyRaw = formData.get('sjsbrowser_api_key') as string;
 		const maxJobsRaw = formData.get('max_jobs') as string;
 		const skipFirstRaw = formData.get('skip_first') as string;
