@@ -1242,9 +1242,32 @@ export const job_platforms = pgTable(
 		// preferences. Keys are SearchFilterName, values are arrays of canonical
 		// value_keys observed-as-missing.
 		unsupported_filters: jsonb().$type<Record<string, string[]>>().default({}).notNull(),
-		unsupported_filters_at: timestamp({ withTimezone: true, mode: 'date' })
+		unsupported_filters_at: timestamp({ withTimezone: true, mode: 'date' }),
+		/** Who added this platform through the import-task form, null for the
+		 *  admin-curated ones. This table is global — a row created by one user
+		 *  is visible to every query that does not filter — so the add-task
+		 *  dropdown offers `status = 'published' OR created_by_user_id = me`.
+		 *  Before this column existed, the stopgap was to create user platforms
+		 *  as `draft` and union in whatever the profile's own tasks referenced,
+		 *  which kept them private but could not say whose they were.
+		 *
+		 *  `set null` rather than `cascade`: deleting the person who first
+		 *  pasted a URL must not delete a platform that other users' tasks and
+		 *  jobs may now reference. The row simply becomes unowned. */
+		created_by_user_id: text()
 	},
-	(table) => [unique('job_platforms_key_unique').on(table.key)]
+	(table) => [
+		unique('job_platforms_key_unique').on(table.key),
+		index('idx_job_platforms_created_by_user').using(
+			'btree',
+			table.created_by_user_id.asc().nullsLast()
+		),
+		foreignKey({
+			columns: [table.created_by_user_id],
+			foreignColumns: [users.id],
+			name: 'job_platforms_created_by_user_id_fkey'
+		}).onDelete('set null')
+	]
 );
 
 // Audit log of platform edits made via the admin UI. One row per changed

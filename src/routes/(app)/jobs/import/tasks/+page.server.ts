@@ -108,10 +108,11 @@ export const load: PageServerLoad = async ({ parent }) => {
 	// own help text names it as the example of a leave-keywords-empty site. The
 	// scraper falls back to `url` for exactly this case, so the form can too.
 	//
-	// The second half of the union is a user's own custom sites: those are
-	// created as `draft` (see getOrCreatePlatform) so they stay out of everyone
-	// else's dropdown, but the profile that added one should get it back when
-	// adding a second task rather than re-pasting the URL.
+	// Plus the user's own custom sites, by ownership rather than by inference.
+	// `created_by_user_id` is the authority; the third clause only keeps a
+	// platform visible when one of this profile's existing tasks already points
+	// at it, so a task created before the column existed does not lose its entry
+	// in the dropdown.
 	const ownPlatformIds = await db
 		.selectDistinct({ id: search_tasks.platform_id })
 		.from(search_tasks)
@@ -130,6 +131,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 		.where(
 			or(
 				eq(job_platforms.status, 'published'),
+				eq(job_platforms.created_by_user_id, user.id),
 				ownIds.length > 0 ? inArray(job_platforms.id, ownIds) : undefined
 			)
 		)
@@ -156,7 +158,8 @@ async function getOrCreatePlatform(
 	platformUrl: string | null,
 	platformName: string | null,
 	isNew: boolean,
-	loginPageUrl: string | null = null
+	loginPageUrl: string | null = null,
+	createdByUserId: string | null = null
 ): Promise<number | null> {
 	// Fast path: existing platform_id, no creation needed (AI suggestions hit
 	// this — they pass platform_id directly without a URL).
@@ -206,12 +209,14 @@ async function getOrCreatePlatform(
 			url: platformUrl,
 			key: `${key}-${Date.now().toString(36)}`, // Ensure unique key
 			login_page_url: loginPageUrl || null,
-			// `draft`, not `published`: job_platforms is global and has no owner
-			// column yet, so a published row created here would show up in every
-			// other user's add-task dropdown. Draft keeps a user's custom site to
-			// themselves (the load query unions in the platforms their own tasks
-			// reference) and leaves "promote to published" as an admin decision
-			// once a site proves itself.
+			// Ownership, so the dropdown can ask "published OR mine" directly
+			// rather than inferring it from which platforms a profile's tasks
+			// happen to reference.
+			created_by_user_id: createdByUserId,
+			// `draft`, not `published`: this row is global and unvetted. Draft
+			// keeps it out of the curated list that every other user sees, and
+			// leaves "promote to published" as an admin decision once a site
+			// proves itself.
 			status: 'draft',
 			date_created: new Date()
 		})
@@ -397,7 +402,8 @@ export const actions: Actions = {
 			platformUrl,
 			platformName,
 			platformIsNew,
-			loginPageUrl
+			loginPageUrl,
+			user.id
 		);
 
 		// A custom site that resolved to nothing means the URL wasn't parseable.
@@ -498,6 +504,19 @@ export const actions: Actions = {
 				.where(eq(profiles.id, profileId));
 		}
 
+		// The configured default is operator input rather than user input, so it
+		// is not rejected the way the form field is — but a server that forbids
+		// the local browser should not have its own default write "local" either,
+		// which is the shape the two settings disagreed in: the create action
+		// refused a user asking for local while still defaulting to it. Null is
+		// the honest answer, deferring to whatever the server resolves at run
+		// time (worker.ts / the run endpoint), which is also what the UI's
+		// "Local" button sends.
+		const defaultBrowserProvider =
+			config.defaultBrowserProvider === 'local' && !config.localBrowserAllowed
+				? null
+				: config.defaultBrowserProvider;
+
 		// Schedule
 		const scheduleRaw = formData.get('schedule_interval_hours') as string;
 		const scheduleIntervalHours = scheduleRaw ? parseInt(scheduleRaw) : null;
@@ -516,7 +535,7 @@ export const actions: Actions = {
 				is_active,
 				profile_id: profileId,
 				status: 'idle',
-				browser_provider: browserProvider || config.defaultBrowserProvider,
+				browser_provider: browserProvider || defaultBrowserProvider,
 				sjsbrowser_api_key: resolvedSjsBrowserApiKey,
 				max_jobs: isNaN(maxJobs as number) ? null : maxJobs,
 				skip_first: isNaN(skipFirst as number) ? null : skipFirst,
@@ -606,7 +625,8 @@ export const actions: Actions = {
 			platformUrl,
 			platformName,
 			platformIsNew,
-			loginPageUrl
+			loginPageUrl,
+			user.id
 		);
 
 		// A custom site that resolved to nothing means the URL wasn't parseable.
