@@ -5,6 +5,17 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.26.3] - 2026-09-01
+
+5 commits since v0.26.2.
+
+### Fixed
+
+- Setup checklist now remains visible even when matching performs poorly
+- Matcher now considers languages applicants speak
+- Applicants' own imports now correctly handled in matching validation
+- Admins can now toggle debug screenshots while impersonating users
+
 ## [0.26.2] - 2026-08-31
 
 4 commits since v0.26.1.
