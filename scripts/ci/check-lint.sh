@@ -69,7 +69,20 @@ set -euo pipefail
 # over pre-analysed changes. One require-each-key, earned rather than waived: the
 # block had to be rebuilt anyway to carry what a rewrite dropped, and a keyless
 # each over a reordering list is exactly the latent bug that rule is about.
-BASELINE=1464
+#
+# 1,464 -> 1,457 on 2026-09-01, and only 2 of those 7 were earned here. The tree
+# already measured 1,459 before this change: five had gone from work that never
+# lowered the number behind it, which is the drift this nag exists to catch. The
+# two are match-counts.ts's `SQL` and `dbDirect` imports, unused since before
+# they were touched and removed while adding getSkillVocabularyReach to the file.
+#
+# One new error was accepted in the same change: the skill-reach banner's
+# `href="/profile/skills"` trips svelte/no-navigation-without-resolve. That rule
+# has 239 hits, eight of them in the very file the banner lives in, and
+# `resolve()` from $app/paths is used nowhere in this codebase — so adopting it
+# for a single link would make that file inconsistent with itself to move a
+# counter by one. It belongs to whoever takes the rule on as a whole.
+BASELINE=1457
 
 npx svelte-kit sync
 

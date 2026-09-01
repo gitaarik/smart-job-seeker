@@ -58,7 +58,7 @@ Two things worth knowing:
 | ---------------- | --------------------- | ----------------- |
 | `svelte-check`   | `ci/check.sh`         | 31 errors         |
 | `scripts/` types | `ci/check-scripts.sh` | 26 errors         |
-| eslint           | `ci/check-lint.sh`    | 1,464 errors      |
+| eslint           | `ci/check-lint.sh`    | 1,457 errors      |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
 The three counts are ratchets: they may only ever go **down**, and each script
