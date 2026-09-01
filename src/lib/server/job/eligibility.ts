@@ -15,6 +15,47 @@ import { sqlJoin, sql } from '$lib/server/db';
 import { type SQL } from 'drizzle-orm';
 import { JOB_TYPES, WORK_LOCATIONS, buildFamilyMap } from '$lib/data/job-taxonomy';
 import { expandExperienceBuckets, toExperienceBuckets } from '$lib/job-platforms/search-filters';
+import { normalizeSkill } from '$lib/skills';
+
+/**
+ * Does the skill-overlap gate get a vote on this job?
+ *
+ * THE shared rule. `checkEligibility` in cloud/src/server/job/matcher.ts
+ * imports this rather than re-deciding, because the two used to disagree and
+ * the disagreement was not academic. This one skipped the gate when EITHER
+ * skill list was empty; the in-memory one skipped it only when BOTH were. On
+ * preview 2026-09-01, 2,466 of 5,271 skill-carrying jobs (47%) list no
+ * preferred skills, so for those the cycle path (SQL, this file) scored the job
+ * while the import path (in-memory) wrote it off at 0. Same job, same profile,
+ * different verdict depending on which queue it arrived through. Profile 58 had
+ * 2,414 jobs in that disputed set — for a thin profile the two paths agreed
+ * about almost nothing.
+ *
+ * ## Why the lenient rule won
+ *
+ * Making both sides strict is the tidier-looking fix and it is the wrong one.
+ * Of profile 1's jobs that reach the LLM only because this clause let them
+ * past, 11 scored >= 70 and one scored 98. The exact-string gate has good
+ * PRECISION (it vetoes a population 10-14x less likely to be a strong match,
+ * for a profile whose vocabulary the corpus shares) and bad RECALL: 9,581 of
+ * the corpus's 14,657 distinct skill strings occur exactly once, so a zero
+ * means "these lists share no literal string", never "this job is irrelevant".
+ *
+ * So the empty-preferred escape is load-bearing by accident. That is worth
+ * saying plainly rather than dressing up: "both lists are non-empty" is not a
+ * principled statement about when skills are comparable, it is a proxy that
+ * happens to disable a lossy gate on the half of the corpus where it does most
+ * of its damage. It stays until the gate is replaced by something with real
+ * recall, and then this goes with it.
+ *
+ * Tolerates non-arrays because the columns are jsonb and carry SQL NULL, JSON
+ * null and arrays; the SQL side guards the same three shapes.
+ */
+export function skillGateApplies(skillsRequired: unknown, skillsPreferred: unknown): boolean {
+	const required = Array.isArray(skillsRequired) ? skillsRequired : [];
+	const preferred = Array.isArray(skillsPreferred) ? skillsPreferred : [];
+	return required.length > 0 && preferred.length > 0;
+}
 
 export interface EligibilityConfig {
 	work_location: string[] | null;
@@ -58,6 +99,17 @@ export function buildEligibilityFilter(
 		throw new Error('Job types config is required for job matching');
 	}
 	if (!profileSkills || profileSkills.length === 0) {
+		throw new Error('Profile must have at least one skill for job matching');
+	}
+
+	// Normalized once for the skill clause below. The empty-string filter is
+	// load-bearing: a skill written "---" normalizes to "", and an "" in this
+	// array would answer every job skill that also normalizes to "" — turning a
+	// junk profile row into blanket eligibility.
+	const normalizedProfileSkills = [
+		...new Set(profileSkills.map(normalizeSkill).filter((s) => s.length > 0))
+	];
+	if (normalizedProfileSkills.length === 0) {
 		throw new Error('Profile must have at least one skill for job matching');
 	}
 
@@ -138,11 +190,20 @@ export function buildEligibilityFilter(
       )`;
 
 	return sql`
-    -- Minimum data: job must have a description OR at least one skill
+    -- Minimum data: job must have a description OR at least one skill.
+    -- CASE for the same reason as the skill clause below: jsonb_array_length()
+    -- raises on JSON null, and the IS NOT NULL / != 'null' tests in front of it
+    -- are not a guarantee that it runs second.
     (
       (j.job_description IS NOT NULL AND TRIM(j.job_description) != '')
-      OR (j.skills_required IS NOT NULL AND j.skills_required::text != 'null' AND jsonb_array_length(j.skills_required::jsonb) > 0)
-      OR (j.skills_preferred IS NOT NULL AND j.skills_preferred::text != 'null' AND jsonb_array_length(j.skills_preferred::jsonb) > 0)
+      OR (CASE
+            WHEN jsonb_typeof(j.skills_required::jsonb) IS DISTINCT FROM 'array' THEN FALSE
+            ELSE jsonb_array_length(j.skills_required::jsonb) > 0
+          END)
+      OR (CASE
+            WHEN jsonb_typeof(j.skills_preferred::jsonb) IS DISTINCT FROM 'array' THEN FALSE
+            ELSE jsonb_array_length(j.skills_preferred::jsonb) > 0
+          END)
     )
     -- Work location overlap — normalized (case + separator insensitive)
     -- Uses prefix matching to handle variants like "Hybrid (up to 3 remote days p/w)",
@@ -164,17 +225,45 @@ export function buildEligibilityFilter(
         WHERE regexp_replace(lower(elem), '[-_ ]', '', 'g') = ANY(array[${sqlJoin(jobTypes)}]::text[])
       )
     )
-    -- Skills overlap (AT LEAST ONE match in required OR preferred)
-    -- Skip if either skills array is NULL, JSON null, or empty (no skill data = eligible)
+    -- Skills overlap (AT LEAST ONE match in required OR preferred).
+    --
+    -- CASE, not an OR chain, and that is a correctness requirement rather than
+    -- a style: jsonb_array_length() RAISES on a jsonb scalar, JSON null is a
+    -- scalar, and 17 preview jobs store exactly that. An OR chain reads as if
+    -- the type branches shield the length calls, but Postgres is free to
+    -- reorder AND/OR operands and does — this same predicate written that way
+    -- fails with "cannot get array length of a scalar" as soon as the planner
+    -- picks a different order. CASE is documented to evaluate its WHENs in
+    -- order and is the construct for guarding an expression that can error, so
+    -- by the third WHEN both columns are known to be arrays.
+    --
+    -- IS DISTINCT FROM rather than <>, because jsonb_typeof() of a SQL NULL is
+    -- NULL and NULL <> 'array' is itself NULL, which falls through instead of
+    -- standing the gate down.
+    --
+    -- The first four WHENs are skillGateApplies() in SQL. See it for why the
+    -- gate stands down when either list is empty.
     AND (
-      j.skills_required IS NULL
-      OR j.skills_preferred IS NULL
-      OR j.skills_required::text = 'null'
-      OR j.skills_preferred::text = 'null'
-      OR jsonb_array_length(j.skills_required::jsonb) = 0
-      OR jsonb_array_length(j.skills_preferred::jsonb) = 0
-      OR j.skills_required::jsonb ?| array[${sqlJoin(profileSkills)}]::text[]
-      OR j.skills_preferred::jsonb ?| array[${sqlJoin(profileSkills)}]::text[]
+      (CASE
+        WHEN jsonb_typeof(j.skills_required::jsonb) IS DISTINCT FROM 'array' THEN TRUE
+        WHEN jsonb_typeof(j.skills_preferred::jsonb) IS DISTINCT FROM 'array' THEN TRUE
+        WHEN jsonb_array_length(j.skills_required::jsonb) = 0 THEN TRUE
+        WHEN jsonb_array_length(j.skills_preferred::jsonb) = 0 THEN TRUE
+        -- normalizeSkill() in SQL, matching findExactSkillMatches() on the
+        -- in-memory side. This used to be the jsonb any-key operator, which is
+        -- raw byte equality: "Node.JS" did not answer "Node.js" here while it
+        -- did there. Only 23 of profile 1's 5,349 jobs turn on it, but a gate
+        -- that means two different things in two places is worth more than 23
+        -- jobs. Both columns are arrays by this point, so the concatenation
+        -- needs no guard of its own.
+        ELSE EXISTS (
+          SELECT 1 FROM jsonb_array_elements_text(
+            j.skills_required::jsonb || j.skills_preferred::jsonb
+          ) AS elem
+          WHERE regexp_replace(lower(elem), '[^a-z0-9+#]', '', 'g')
+                = ANY(array[${sqlJoin(normalizedProfileSkills)}]::text[])
+        )
+      END)
       ${ownImportEscape}
     )
     ${experienceClause}
