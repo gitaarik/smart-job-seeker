@@ -2,7 +2,12 @@
 	import type { PageData } from './$types';
 	import { onMount, onDestroy } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faCircle, faQuestionCircle, faRotate } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faCircle,
+		faQuestionCircle,
+		faRotate,
+		faTriangleExclamation
+	} from '@fortawesome/free-solid-svg-icons';
 	import ScoreBadge from '../../components/ScoreBadge.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { portalToBody } from '$lib/actions/portal';
@@ -60,6 +65,22 @@
 	let showRematchModal = $state(false);
 
 	// Derived
+	// From the page load, not the 3s status poll: a full-corpus jsonb scan on the
+	// poll is ~4% of a core per open tab forever, and this number moves when
+	// someone edits their skills, not second to second.
+	let skillReach = $derived(data.skillReach ?? null);
+
+	// Warn only from inside the empty band. Across preview's profiles this number
+	// clusters at 67-76% or at 0-9% with nothing between, so 25 separates the two
+	// populations without sitting near either. The corpus floor keeps a brand-new
+	// account with four imported jobs from being told its skills are the problem.
+	let skillReachIsLow = $derived(
+		skillReach !== null &&
+			skillReach.percentage !== null &&
+			skillReach.jobsWithSkills >= 20 &&
+			skillReach.percentage < 25
+	);
+
 	let evaluatedCount = $derived(matchedCount + noMatchCount);
 	let evaluatedProgress = $derived(totalJobs > 0 ? (evaluatedCount / totalJobs) * 100 : 0);
 
@@ -196,6 +217,60 @@
 </svelte:head>
 
 <div>
+	<!--
+		Outside the loading gate on purpose. `loading` tracks the 3s status poll,
+		but this comes from the page load and is already in hand when the HTML is
+		built, so gating it on the poll would hide it through the first round trip
+		and keep it out of the server-rendered markup entirely.
+	-->
+	{#if skillReachIsLow && skillReach}
+		<!--
+			The failure this makes visible is otherwise invisible: matching compares
+			the profile's skills to each posting's as literal strings, so a profile
+			whose vocabulary the corpus does not share is filtered out one job at a
+			time, each with its own plausible-looking "No skill overlap" reason. The
+			per-job wording invites the reading that those jobs were wrong. It is the
+			test that is inapplicable, and only the aggregate says so.
+		-->
+		<div
+			class="mt-4 rounded-lg border border-[var(--dash-warning)] bg-[var(--dash-card)] p-4"
+			data-testid="skill-reach-warning"
+		>
+			<div class="flex items-start gap-3">
+				<FontAwesomeIcon
+					icon={faTriangleExclamation}
+					class="mt-0.5 h-4 w-4 shrink-0 text-[var(--dash-warning)]"
+				/>
+				<div class="min-w-0">
+					<div class="text-sm font-semibold text-[var(--dash-text-primary)]">
+						Your skills match {skillReach.percentage}% of these job postings
+					</div>
+					<!--
+						Deliberately not "your N skills": profileSkillCount is the expanded,
+						normalized list (it folds in working languages and ontology parents),
+						so it does not equal the number of rows on the skills page and
+						quoting it invites the reader to go and fail to reconcile the two.
+					-->
+					<p class="mt-1 text-xs text-[var(--dash-text-secondary)]">
+						Your listed skills appear on {skillReach.reachedJobs} of {skillReach.jobsWithSkills} postings
+						that name any skills. Matching compares those names literally, so most jobs are set aside
+						before they are scored — not because they are a poor fit, but because the posting names the
+						work differently than your profile does.
+					</p>
+					<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+						Adding the terms your field actually uses is the fastest fix. Look at the skills listed
+						on jobs you want and add the ones you genuinely have.
+					</p>
+					<a
+						href="/profile/skills"
+						class="mt-2 inline-flex rounded border border-[var(--dash-border)] px-2 py-0.5 text-xs whitespace-nowrap text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
+						>Edit skills</a
+					>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	{#if loading}
 		<div class="flex items-center justify-center py-12">
 			<Spinner size="w-6 h-6" color="var(--dash-primary)" />
