@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { track } from '$lib/tools/analytics';
+	import { isSetupComplete } from '$lib/profile-completeness';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowRight,
@@ -39,6 +40,10 @@
 	const activeApplications = $derived(data.activeApplications);
 
 	const hasMatches = $derived((matchStats?.total ?? 0) > 0);
+
+	const setupComplete = $derived(
+		!!completeness && isSetupComplete(completeness, (searchTasks?.totalCount ?? 0) > 0, hasMatches)
+	);
 
 	function formatDate(date: Date | string | null): string {
 		if (!date) return '';
@@ -102,8 +107,21 @@
 		</div>
 	{/if}
 
-	<!-- Getting Started (shown when not fully set up yet) -->
-	{#if completeness && !hasMatches}
+	<!--
+		Getting Started, shown until the setup it describes is actually done.
+
+		This used to be `completeness && !hasMatches`, which hid the card the
+		moment a single job was scored — at any score. That is backwards: the
+		first bad match is the earliest evidence the profile needs work, and it
+		was the trigger for removing the only screen that says so. A user with
+		seven skills and a top match of 30 had been told, permanently, that they
+		were set up correctly.
+
+		Step 4 is "Get matched!" and is done when `hasMatches`, so a fully set-up
+		user still sees the card disappear — just for having finished, rather than
+		for having started.
+	-->
+	{#if completeness && !setupComplete}
 		<GettingStartedFlow
 			{completeness}
 			hasSearchTasks={(searchTasks?.totalCount ?? 0) > 0}

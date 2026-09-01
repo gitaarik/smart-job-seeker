@@ -2,32 +2,36 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowRight, faCheck } from '@fortawesome/free-solid-svg-icons';
 	import Card from './Card.svelte';
-
-	interface Completeness {
-		hasSkills: boolean;
-		skillCount: number;
-		hasMatchConfig: boolean;
-		hasWorkExperience: boolean;
-		hasEducation: boolean;
-		hasExperienceOrEducation: boolean;
-		hasTitle: boolean;
-		hasHeadline: boolean;
-		hasLocation: boolean;
-	}
+	import {
+		MIN_SKILLS_FOR_MATCHING,
+		isProfileReadyForMatching,
+		type ProfileCompleteness
+	} from '$lib/profile-completeness';
 
 	interface Props {
-		completeness: Completeness;
+		completeness: ProfileCompleteness;
 		hasSearchTasks: boolean;
 		hasMatches: boolean;
 	}
 
 	let { completeness, hasSearchTasks, hasMatches }: Props = $props();
 
-	const profileComplete = $derived(completeness.hasSkills && completeness.hasExperienceOrEducation);
+	const enoughSkills = $derived(completeness.skillCount >= MIN_SKILLS_FOR_MATCHING);
+	const profileComplete = $derived(isProfileReadyForMatching(completeness));
 
 	const profileMissing = $derived(() => {
 		const missing: string[] = [];
-		if (!completeness.hasSkills) missing.push('at least one tech skill');
+		// Not "tech skill". The vocabulary is whatever the applicant's field uses
+		// — Stakeholder Engagement, Patient Care, HACCP — and calling it technical
+		// tells someone in a non-technical field that this product is not for
+		// them, on the one screen whose job is to get them started.
+		if (!completeness.hasSkills) {
+			missing.push('your skills');
+		} else if (!enoughSkills) {
+			missing.push(
+				`more skills (you have ${completeness.skillCount}; ${MIN_SKILLS_FOR_MATCHING} or more matches noticeably better)`
+			);
+		}
 		if (!completeness.hasExperienceOrEducation)
 			missing.push('at least one work experience or education item');
 		return missing;
@@ -39,9 +43,9 @@
 			: `To get good matches, add ${profileMissing().join(' and ')}.`
 	);
 
-	const profileHref = $derived(!completeness.hasSkills ? '/profile/skills' : '/profile/edit');
+	const profileHref = $derived(!enoughSkills ? '/profile/skills' : '/profile/edit');
 
-	const profileActionLabel = $derived(!completeness.hasSkills ? 'Add Skills' : 'Edit Profile');
+	const profileActionLabel = $derived(!enoughSkills ? 'Add Skills' : 'Edit Profile');
 
 	const steps = $derived([
 		{
