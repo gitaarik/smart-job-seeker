@@ -4,24 +4,63 @@
 
 import { dbDirect as db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { tech_skills, tech_skill_categories } from '$lib/server/db/schema';
+import { languages, tech_skills, tech_skill_categories } from '$lib/server/db/schema';
 import { normalizeSkill } from '$lib/skills';
 import type { AdjacentSkill, SkillProvenance } from '$lib/match-provenance';
 import { approvedAliasesOf, expandUpward, expandUpwardBySeed, relatedTo } from './skill-ontology';
 
 /**
- * Extract tech skills from a profile
+ * Proficiencies at which a language is a skill someone can be hired for.
+ *
+ * `basic` and `conversational` are left out on purpose: a posting that lists a
+ * language is asking someone to work in it, and claiming a requirement on the
+ * strength of a holiday phrasebook is the kind of false positive the exact
+ * layer exists to avoid. A null proficiency counts — the field is optional in
+ * the UI and an applicant who bothered to list the language at all is making a
+ * claim; nothing else in the profile treats a blank as a denial.
+ */
+const WORKING_PROFICIENCIES = new Set(['native', 'fluent', 'proficient']);
+
+/**
+ * Extract the skills a profile can be matched on.
+ *
+ * Two sources, because the profile stores them in two places and postings do
+ * not distinguish. `tech_skills` is the obvious one. Languages are the other,
+ * and leaving them out was a real gap rather than a design decision: the
+ * scoring LLM has always seen them (`profile/export.ts` puts them in the blob
+ * `loadCollectedData` feeds it), while every deterministic gate — eligibility,
+ * `skill_match_percentage`, the ontology seed — read `tech_skills` alone. So a
+ * posting asking for English could never be answered by an applicant who had
+ * recorded English, and the two halves of the same match disagreed about a
+ * fact the profile states plainly.
+ *
+ * Measured on preview 2026-08-31: "English" is a required skill on 52 of one
+ * applicant's 158 matched jobs, Spanish on 10, and she had recorded both. It
+ * is 320 jobs across the corpus — small in aggregate, concentrated almost
+ * entirely in international-development postings, which is exactly the kind of
+ * profile the technical vocabulary already serves worst.
+ *
  * @param profileId - Profile ID to extract skills from
  * @returns Array of skill names
  */
 export async function getProfileSkills(profileId: number): Promise<string[]> {
-	const rows = await db
-		.select({ name: tech_skills.name })
-		.from(tech_skills)
-		.innerJoin(tech_skill_categories, eq(tech_skills.category_id, tech_skill_categories.id))
-		.where(eq(tech_skill_categories.profile_id, profileId));
+	const [skillRows, languageRows] = await Promise.all([
+		db
+			.select({ name: tech_skills.name })
+			.from(tech_skills)
+			.innerJoin(tech_skill_categories, eq(tech_skills.category_id, tech_skill_categories.id))
+			.where(eq(tech_skill_categories.profile_id, profileId)),
+		db
+			.select({ name: languages.name, proficiency: languages.proficiency })
+			.from(languages)
+			.where(eq(languages.profile_id, profileId))
+	]);
 
-	return rows.map((s) => s.name).filter((name): name is string => !!name);
+	const spoken = languageRows
+		.filter((l) => !l.proficiency || WORKING_PROFICIENCIES.has(l.proficiency.toLowerCase()))
+		.map((l) => l.name);
+
+	return [...skillRows.map((s) => s.name), ...spoken].filter((name): name is string => !!name);
 }
 
 /**

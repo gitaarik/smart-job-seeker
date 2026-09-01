@@ -12,6 +12,7 @@ const expandUpwardBySeed = vi.fn();
 const getProfileSkillsRows = vi.fn();
 const approvedAliasesOf = vi.fn();
 const relatedTo = vi.fn();
+const getProfileLanguageRows = vi.fn();
 
 vi.mock('../skill-ontology', () => ({
 	expandUpward: vi.fn(),
@@ -19,16 +20,22 @@ vi.mock('../skill-ontology', () => ({
 	approvedAliasesOf: (...a: unknown[]) => approvedAliasesOf(...a),
 	relatedTo: (...a: unknown[]) => relatedTo(...a)
 }));
+// `getProfileSkills` runs two queries: tech skills join their category,
+// languages hang straight off the profile. `from()` answers both shapes.
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		select: () => ({
-			from: () => ({ innerJoin: () => ({ where: () => getProfileSkillsRows() }) })
+			from: () => ({
+				innerJoin: () => ({ where: () => getProfileSkillsRows() }),
+				where: () => getProfileLanguageRows()
+			})
 		})
 	}
 }));
 vi.mock('$lib/server/db/schema', () => ({
 	tech_skills: { name: 'name', category_id: 'category_id' },
-	tech_skill_categories: { id: 'id', profile_id: 'profile_id' }
+	tech_skill_categories: { id: 'id', profile_id: 'profile_id' },
+	languages: { name: 'name', proficiency: 'proficiency', profile_id: 'profile_id' }
 }));
 
 import { adjacentSkills, attributeSkills, profileReach, type ProfileReach } from '../match-utils';
@@ -103,6 +110,7 @@ describe('profileReach', () => {
 		vi.clearAllMocks();
 		approvedAliasesOf.mockResolvedValue([]);
 		relatedTo.mockResolvedValue([]);
+		getProfileLanguageRows.mockResolvedValue([]);
 	});
 
 	it('credits the CLOSEST skill when two reach the same concept', async () => {

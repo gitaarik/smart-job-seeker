@@ -4,10 +4,17 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Mock Drizzle-style select chain
+// Mock Drizzle-style select chains. Two shapes, because `getProfileSkills`
+// runs two queries: tech skills join their category, languages hang straight
+// off the profile. `from()` therefore has to answer both `.innerJoin().where()`
+// and `.where()`.
 const mockWhere = vi.fn();
+const mockLanguageWhere = vi.fn();
 const mockInnerJoin = vi.fn().mockReturnValue({ where: mockWhere });
-const mockFrom = vi.fn().mockReturnValue({ innerJoin: mockInnerJoin });
+const mockFrom = vi.fn().mockReturnValue({
+	innerJoin: mockInnerJoin,
+	where: mockLanguageWhere
+});
 const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 
 vi.mock('$lib/server/db', () => ({
@@ -30,6 +37,11 @@ vi.mock('$lib/server/db/schema', () => ({
 	tech_skill_categories: {
 		id: 'tech_skill_categories.id',
 		profile_id: 'tech_skill_categories.profile_id'
+	},
+	languages: {
+		name: 'languages.name',
+		proficiency: 'languages.proficiency',
+		profile_id: 'languages.profile_id'
 	}
 }));
 
@@ -39,8 +51,44 @@ describe('getProfileSkills', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		// Reset the chain
-		mockFrom.mockReturnValue({ innerJoin: mockInnerJoin });
+		mockFrom.mockReturnValue({ innerJoin: mockInnerJoin, where: mockLanguageWhere });
 		mockInnerJoin.mockReturnValue({ where: mockWhere });
+		// Most cases are about tech skills; default the language half to none so
+		// each test only has to say what it is actually testing.
+		mockLanguageWhere.mockResolvedValue([]);
+	});
+
+	// Languages were invisible to every deterministic gate until 2026-09-01,
+	// while the scoring LLM saw them all along via the profile export. A posting
+	// asking for English could not be answered by an applicant who had recorded
+	// English.
+	it('includes languages the applicant can work in', async () => {
+		mockWhere.mockResolvedValueOnce([{ name: 'Stakeholder Engagement' }]);
+		mockLanguageWhere.mockResolvedValueOnce([
+			{ name: 'English', proficiency: 'fluent' },
+			{ name: 'Dutch', proficiency: 'native' },
+			{ name: 'Spanish', proficiency: 'proficient' }
+		]);
+		const skills = await getProfileSkills(1);
+		expect(skills).toEqual(['Stakeholder Engagement', 'English', 'Dutch', 'Spanish']);
+	});
+
+	it('leaves out a language nobody would be hired to work in', async () => {
+		mockWhere.mockResolvedValueOnce([]);
+		mockLanguageWhere.mockResolvedValueOnce([
+			{ name: 'German', proficiency: 'basic' },
+			{ name: 'Italian', proficiency: 'conversational' },
+			{ name: 'French', proficiency: 'fluent' }
+		]);
+		expect(await getProfileSkills(1)).toEqual(['French']);
+	});
+
+	it('counts a language with no proficiency recorded', async () => {
+		// The field is optional in the UI, and listing the language at all is a
+		// claim. Nothing else in the profile reads a blank as a denial.
+		mockWhere.mockResolvedValueOnce([]);
+		mockLanguageWhere.mockResolvedValueOnce([{ name: 'Portuguese', proficiency: null }]);
+		expect(await getProfileSkills(1)).toEqual(['Portuguese']);
 	});
 
 	it('returns skill names', async () => {
