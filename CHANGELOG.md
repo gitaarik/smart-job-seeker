@@ -5,6 +5,19 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.27.0] - 2026-09-01
+
+7 commits since v0.26.3.
+
+### Added
+
+- Warn when a profile's skills match almost no job postings
+
+### Fixed
+
+- Matcher now references shared eligibility gate rule instead of duplicating logic
+- Worker no longer bundles OSS billing stubs when cloud overlay is available
+
 ## [0.26.3] - 2026-09-01
 
 5 commits since v0.26.2.
