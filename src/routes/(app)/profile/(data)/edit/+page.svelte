@@ -24,6 +24,8 @@
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
 	import AutoTranslateProfile from '$lib/components/AutoTranslateProfile.svelte';
+	import FieldVariants from '$lib/components/FieldVariants.svelte';
+	import { groupVariantsByField, type FieldVariant } from '$lib/field-variants';
 	import CountrySelect from '../../../jobs/components/CountrySelect.svelte';
 	import { getProfilePhotoUrl } from '$lib/utils/profile-photo-url';
 
@@ -39,6 +41,24 @@
 	let subtitle = $state(data.profile?.subtitle || '');
 	let headline = $state(data.profile?.headline || '');
 	let summary = $state(data.profile?.summary || '');
+
+	// Alternative wordings for the four fields above. Fetched once for all of
+	// them rather than per field, so opening this page costs one request no
+	// matter how many alternatives exist.
+	let variants = $state<FieldVariant[]>([]);
+	const variantsByField = $derived(groupVariantsByField(variants));
+
+	async function loadVariants() {
+		try {
+			const res = await fetch('/api/field-variants');
+			if (res.ok) variants = (await res.json()).variants ?? [];
+		} catch {
+			// The fields still work without them; the control just stays empty.
+		}
+	}
+	$effect(() => {
+		void loadVariants();
+	});
 
 	// Form values - Contact Information
 	let email_address = $state(data.profile?.email_address || '');
@@ -241,6 +261,12 @@
 					bind:value={title}
 					placeholder="e.g., Senior Software Engineer"
 				/>
+				<FieldVariants
+					field="title"
+					variants={variantsByField.get('title') ?? []}
+					defaultValue={title}
+					onchange={loadVariants}
+				/>
 			</div>
 
 			<div>
@@ -255,6 +281,12 @@
 					bind:value={subtitle}
 					placeholder="e.g., Full-Stack Developer"
 					hint="One sentence describing your role or specialty"
+				/>
+				<FieldVariants
+					field="subtitle"
+					variants={variantsByField.get('subtitle') ?? []}
+					defaultValue={subtitle}
+					onchange={loadVariants}
 				/>
 			</div>
 
@@ -271,6 +303,12 @@
 					placeholder="A short tagline about yourself"
 					hint="One sentence summarizing your professional focus"
 				/>
+				<FieldVariants
+					field="headline"
+					variants={variantsByField.get('headline') ?? []}
+					defaultValue={headline}
+					onchange={loadVariants}
+				/>
 			</div>
 
 			<div class="md:col-span-2">
@@ -284,6 +322,12 @@
 					rows={4}
 					bind:value={summary}
 					placeholder="Write a brief professional summary..."
+				/>
+				<FieldVariants
+					field="summary"
+					variants={variantsByField.get('summary') ?? []}
+					defaultValue={summary}
+					onchange={loadVariants}
 				/>
 			</div>
 		</div>

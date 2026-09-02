@@ -1969,6 +1969,58 @@ export const profile_template_overrides = pgTable(
 	]
 );
 
+/**
+ * Alternative wordings for the handful of profile fields that are single
+ * values — the professional title, subtitle, headline and summary.
+ *
+ * Every other kind of tailoring this product does is a filter: an item's `tags`
+ * decide which documents it belongs on, and `profile_version_overrides` decide
+ * which of them one job's version prints and in what order. None of that can
+ * reach a scalar column. There is exactly one `profiles.summary`, so the only
+ * way to say a different thing to a backend team than to an agency was to edit
+ * the profile before each send and edit it back afterwards.
+ *
+ * So: the column stays the default, and these are the alternatives to it. A
+ * profile with no rows here renders exactly as it did — absence means "use the
+ * profile's own value", which is also what a version says by simply not
+ * picking one.
+ *
+ * Which one a version uses is NOT stored here, because it is not a property of
+ * the variant: the same variant can be picked by several versions. That
+ * decision is a `profile_version_overrides` row naming this table's entity type
+ * (see $lib/version-overrides.ts), which buys the `reason` and `source` columns
+ * a generated pick needs and the cascade that cleans it up.
+ *
+ * `note` is what the tailoring run matches against. A variant's own prose says
+ * what the applicant is; the note says when to reach for it ("agency and
+ * consultancy roles"), which is the part a job description can be compared to.
+ */
+export const profile_field_variants = pgTable(
+	'profile_field_variants',
+	{
+		id: serial().primaryKey().notNull(),
+		profile_id: integer().notNull(),
+		/** Column on `profiles` this varies. Vocabulary: $lib/field-variants.ts. */
+		field: varchar({ length: 64 }).notNull(),
+		/** What the applicant calls it in the picker ("Backend-leaning"). */
+		label: varchar({ length: 255 }).notNull(),
+		value: text().notNull(),
+		/** When to use it, in the applicant's words. Read by the tailoring run. */
+		note: text(),
+		sort: integer(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' }),
+		date_updated: timestamp({ withTimezone: true, mode: 'date' })
+	},
+	(table): PgTableExtraConfigValue[] => [
+		index('profile_field_variants_lookup').on(table.profile_id, table.field),
+		foreignKey({
+			columns: [table.profile_id],
+			foreignColumns: [profiles.id],
+			name: 'profile_field_variants_profile_foreign'
+		}).onDelete('cascade')
+	]
+);
+
 export const side_project_technologies = pgTable(
 	'side_project_technologies',
 	{

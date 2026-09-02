@@ -13,6 +13,7 @@
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
+	import VersionWordings from '$lib/components/VersionWordings.svelte';
 	import ConfirmModal from '../../components/ConfirmModal.svelte';
 	import { CONTACT_FIELDS, isContactHidden } from '$lib/resume-contact-fields';
 
@@ -298,6 +299,23 @@
 			</div>
 		</Card>
 	</form>
+
+	<!-- Which of the profile's alternative wordings this version prints. Above
+	     Tagged Items because it is the same question one level up: tags decide
+	     which ITEMS this version shows, this decides what its header SAYS. -->
+	{#if data.fieldVariants.length > 0}
+		<Card padding="responsive">
+			<h3 class="mb-3 text-sm font-semibold tracking-wide text-[var(--dash-text)] uppercase">
+				Wording
+			</h3>
+			<VersionWordings
+				versionId={version.id}
+				variants={data.fieldVariants}
+				picks={data.wordingPicks}
+				defaults={data.wordingDefaults}
+			/>
+		</Card>
+	{/if}
 
 	<!-- Tagged Items -->
 	<Card padding="responsive">

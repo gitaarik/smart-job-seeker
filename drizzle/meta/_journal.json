@@ -239,6 +239,13 @@
       "when": 1788184837180,
       "tag": "0033_noisy_magma",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1788341115561,
+      "tag": "0034_slow_purifiers",
+      "breakpoints": true
     }
   ]
 }

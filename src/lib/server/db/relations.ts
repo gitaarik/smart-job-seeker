@@ -43,6 +43,7 @@ import {
 	profile_document_projects,
 	profile_exports,
 	profile_version_extensions,
+	profile_field_variants,
 	profile_version_overrides,
 	profile_versions,
 	profiles,
@@ -215,7 +216,8 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
 	job_match_histories: many(job_match_history),
 	job_importers: many(job_importers),
 	verification_email_addresses: many(verification_email_addresses),
-	certificates: many(certificates)
+	certificates: many(certificates),
+	field_variants: many(profile_field_variants)
 }));
 
 export const configRelations = relations(config, ({ one }) => ({
@@ -492,6 +494,13 @@ export const profile_version_overridesRelations = relations(
 		})
 	})
 );
+
+export const profile_field_variantsRelations = relations(profile_field_variants, ({ one }) => ({
+	profile: one(profiles, {
+		fields: [profile_field_variants.profile_id],
+		references: [profiles.id]
+	})
+}));
 
 export const side_project_technologiesRelations = relations(
 	side_project_technologies,

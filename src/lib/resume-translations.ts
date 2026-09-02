@@ -61,6 +61,15 @@ export const TRANSLATABLE_FIELDS: TranslatableField[] = [
 	{ entity: 'profile', field: 'about_me_text', label: 'About me' },
 	{ entity: 'profile', field: 'location', label: 'Location' },
 
+	// An alternative wording is prose the applicant wrote, exactly like the
+	// column it stands in for, so it needs the same treatment in a non-English
+	// document. Keyed on the variant's own id rather than on the field it
+	// belongs to: the field's translation is the translation of the DEFAULT
+	// value, and a variant replacing it would otherwise be silently reverted to
+	// English on every translated document. See server/profile/field-variants.ts
+	// for why the overlay order makes that the only workable key.
+	{ entity: 'profile_field_variant', field: 'value', label: 'Wording' },
+
 	{ entity: 'work_experience', field: 'position', label: 'Position' },
 	{ entity: 'work_experience', field: 'headline', label: 'Headline' },
 	{ entity: 'work_experience', field: 'summary', label: 'Summary' },

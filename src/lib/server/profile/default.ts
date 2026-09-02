@@ -5,12 +5,33 @@
 
 import { dbDirect as db } from '$lib/server/db';
 import { asc, eq } from 'drizzle-orm';
-import { profiles, config, work_experience_projects } from '$lib/server/db/schema';
+import {
+	profiles,
+	config,
+	profile_field_variants,
+	work_experience_projects
+} from '$lib/server/db/schema';
 
 /**
  * Standard include structure used across all profile queries
  * Matches the pattern from profile-loader.ts and portfolio page
  */
+/**
+ * Hoisted, not inlined, and that is load-bearing: PROFILE_INCLUDE is `as const`,
+ * which turns an inline array literal into a READONLY tuple. Drizzle's `with`
+ * rejects that, and the failure is not local — the whole include stops
+ * satisfying the expected shape, so the query's return type silently degrades to
+ * the bare `profiles` row and every consumer loses `work_experiences`,
+ * `educations` and the rest. Measured: 40 new type errors across the public
+ * routes from this one property. A `const` declared out here keeps its mutable
+ * `SQL[]` type when referenced.
+ *
+ * The other entries dodge it by taking an untyped callback, which costs two
+ * `no-explicit-any` lint errors each; the single-value form
+ * (`work_experience_projects`) dodges it by not being an array at all.
+ */
+const FIELD_VARIANT_ORDER = [asc(profile_field_variants.sort), asc(profile_field_variants.id)];
+
 const PROFILE_INCLUDE = {
 	languages: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
 	highlights: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
@@ -50,6 +71,13 @@ const PROFILE_INCLUDE = {
 	},
 	references: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
 	certificates: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
+	// Alternative wordings for the scalar profile fields. In the tree rather
+	// than fetched by the resolver alone, for the same reason a role's projects
+	// are: the auto-translate endpoint walks THIS include to find what can be
+	// translated, and a variant left out of it is prose the applicant could
+	// never translate — which on a Dutch document reads as the wrong language,
+	// not as a missing feature.
+	field_variants: { orderBy: FIELD_VARIANT_ORDER },
 	profile_versions: {
 		columns: {
 			id: true,

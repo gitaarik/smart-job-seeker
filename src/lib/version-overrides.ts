@@ -30,7 +30,23 @@ export const OVERRIDE_ENTITIES = {
 	skillCategory: 'tech_skill_category',
 	skill: 'tech_skill',
 	sideProject: 'side_project',
-	education: 'education'
+	education: 'education',
+	/**
+	 * Not an item the document includes or excludes — a choice of WORDING for
+	 * one of the profile's scalar fields (see $lib/field-variants.ts). It is in
+	 * this vocabulary because the decision has the same shape as the others and
+	 * wants the same three columns: a `reason` the applicant can read, a
+	 * `source` that stops a regeneration from undoing a hand-made pick, and the
+	 * cascade that removes it with the version.
+	 *
+	 * The one rule it does not share: at most ONE row per field may be included
+	 * per version, since the field holds one value. Nothing in the schema can
+	 * say that — the unique key is per entity id — so /api/field-variants/pick
+	 * clears a field's other picks before adding one, and the resolver reads
+	 * picks newest-first so the last writer wins if two ever survive. See
+	 * pickedVariantIds in server/profile/field-variants.ts.
+	 */
+	fieldVariant: 'profile_field_variant'
 } as const;
 
 export type OverrideEntity = (typeof OVERRIDE_ENTITIES)[keyof typeof OVERRIDE_ENTITIES];
@@ -58,7 +74,8 @@ export const OVERRIDE_ENTITY_LABELS: Record<OverrideEntity, string> = {
 	[OVERRIDE_ENTITIES.skillCategory]: 'Skill category',
 	[OVERRIDE_ENTITIES.skill]: 'Skill',
 	[OVERRIDE_ENTITIES.sideProject]: 'Side project',
-	[OVERRIDE_ENTITIES.education]: 'Education'
+	[OVERRIDE_ENTITIES.education]: 'Education',
+	[OVERRIDE_ENTITIES.fieldVariant]: 'Wording'
 };
 
 /** The label, falling back to the raw type so an unknown row still says what it is. */

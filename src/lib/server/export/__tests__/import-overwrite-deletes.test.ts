@@ -31,6 +31,7 @@ const TABLES = [
 	'highlights',
 	'education',
 	'languages',
+	'profile_field_variants',
 	'references',
 	'certificates',
 	'project_stories',
@@ -266,6 +267,11 @@ describe('overwrite import at profile scope', () => {
 				'highlights',
 				'education',
 				'languages',
+				// Alternative wordings are replaced with the rest of the CV content.
+				// They are keyed by profile id and their translations hang off their
+				// row ids, so leaving them would strand overlays on ids the import is
+				// about to reissue.
+				'profile_field_variants',
 				'certificates',
 				'work_experiences',
 				'side_projects',

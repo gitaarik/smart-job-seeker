@@ -9,6 +9,7 @@ import {
 	highlights,
 	education,
 	languages,
+	profile_field_variants,
 	references,
 	certificates,
 	project_stories,
@@ -233,6 +234,9 @@ async function deleteProfileChildren(profileId: number, scope: ExportData['scope
 	await dbDirect.delete(highlights).where(eq(highlights.profile_id, profileId));
 	await dbDirect.delete(education).where(eq(education.profile_id, profileId));
 	await dbDirect.delete(languages).where(eq(languages.profile_id, profileId));
+	await dbDirect
+		.delete(profile_field_variants)
+		.where(eq(profile_field_variants.profile_id, profileId));
 	await dbDirect.delete(references).where(eq(references.profile_id, profileId));
 	await dbDirect.delete(certificates).where(eq(certificates.profile_id, profileId));
 	// Stories and cheat sheets travel in the full-account payload only.
@@ -475,6 +479,27 @@ async function importProfileEntities(
 			})
 			.returning({ id: languages.id });
 		translated.languageIdByIndex[languageIndex] = createdLang.id;
+	}
+
+	// Alternative wordings. Their positions feed the translation overlay, so
+	// they are inserted in export order and indexed as they land — a variant
+	// whose translation cannot find it would print English on a Dutch document.
+	for (const [variantIndex, v] of (p.field_variants ?? []).entries()) {
+		if (!v?.field || !v?.value) continue;
+		const [createdVariant] = await dbDirect
+			.insert(profile_field_variants)
+			.values({
+				profile_id: profileId,
+				field: v.field,
+				label: v.label || 'Alternative',
+				value: v.value,
+				note: v.note || null,
+				sort: v.sort ?? variantIndex,
+				date_created: new Date(),
+				date_updated: new Date()
+			})
+			.returning({ id: profile_field_variants.id });
+		translated.fieldVariantIdByIndex[variantIndex] = createdVariant.id;
 	}
 
 	// References

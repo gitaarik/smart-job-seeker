@@ -99,13 +99,23 @@ export type TranslationTarget =
 	| { kind: 'side_project_achievement'; side_project_index: number; achievement_index: number }
 	| { kind: 'education'; education_index: number }
 	| { kind: 'tech_skill_category'; category_index: number }
-	| { kind: 'language'; language_index: number };
+	| { kind: 'language'; language_index: number }
+	| { kind: 'field_variant'; field_variant_index: number };
 
 export interface ExportedTranslation {
 	target: TranslationTarget;
 	field: string;
 	locale: string;
 	value: string;
+}
+
+// --- Alternative field wordings (profile_field_variants) ---
+export interface ExportedFieldVariant {
+	field: string;
+	label: string;
+	value: string;
+	note?: string;
+	sort?: number | null;
 }
 
 // --- Resume templates (resume_templates) ---
@@ -213,6 +223,18 @@ export interface ExportedProfileData {
 	side_projects: ExportedSideProject[];
 	education: ExportedEducation[];
 	languages: ExportedLanguage[];
+	/**
+	 * Alternative wordings for the scalar fields (profile_field_variants).
+	 *
+	 * Optional because an export written before the feature has none, and an
+	 * importer reading one must not treat that as "delete them all".
+	 *
+	 * Which VERSION picked which is deliberately not here. A pick is a
+	 * profile_version_overrides row, and this export carries no version
+	 * overrides at all — so exporting the picks would mean writing rows that
+	 * point at versions the import may not have recreated.
+	 */
+	field_variants?: ExportedFieldVariant[];
 	references: ExportedReference[];
 	certificates: ExportedCertificate[];
 }

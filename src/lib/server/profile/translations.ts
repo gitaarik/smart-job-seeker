@@ -15,6 +15,7 @@ import { and, eq } from 'drizzle-orm';
 import {
 	education,
 	languages,
+	profile_field_variants,
 	profile_translations,
 	side_project_achievements,
 	side_projects,
@@ -31,6 +32,7 @@ import {
 	translationKey
 } from '$lib/resume-translations';
 import { localizeLanguageName } from '$lib/resume-template-labels';
+import { variantFieldLabel } from '$lib/field-variants';
 
 export interface Translator {
 	locale: string;
@@ -138,6 +140,14 @@ export function applyTranslations(
 		}
 	}
 
+	// A variant's wording is translated on its OWN key, not on the field it can
+	// stand in for — the field's key holds the translation of the default. See
+	// server/profile/field-variants.ts for why replacing one has to bring its
+	// own language with it.
+	for (const v of profile.field_variants ?? []) {
+		overlay(tr, 'profile_field_variant', v, 'value');
+	}
+
 	// A language's name has a second source: ICU knows "English" in every
 	// locale, so a row without an overlay is still localized — from its ISO
 	// code, or failing that its English name. An overlay row wins.
@@ -166,6 +176,20 @@ export async function isEntityOwned(
 	switch (entity) {
 		case 'profile':
 			return id === profileId;
+		case 'profile_field_variant':
+			return (
+				(
+					await db
+						.select({ id: profile_field_variants.id })
+						.from(profile_field_variants)
+						.where(
+							and(
+								eq(profile_field_variants.id, id),
+								eq(profile_field_variants.profile_id, profileId)
+							)
+						)
+				).length > 0
+			);
 		case 'work_experience':
 			return (
 				(
@@ -443,6 +467,26 @@ export function collectTranslatable(
 				rows
 			});
 		}
+	}
+
+	// One group for every alternative wording, labelled by the field it varies
+	// so the editor reads "Professional Summary — Backend-leaning" rather than
+	// four rows called "Wording".
+	const variantRows: TranslatableRow[] = [];
+	for (const v of profile.field_variants ?? []) {
+		const base = (v?.value ?? '').toString();
+		if (!base.trim()) continue;
+		variantRows.push({
+			entity: 'profile_field_variant',
+			id: v.id,
+			field: 'value',
+			label: `${variantFieldLabel(v.field)} — ${v.label || 'Alternative'}`,
+			base,
+			multiline: true
+		});
+	}
+	if (variantRows.length) {
+		groups.push({ key: 'field-variants', title: 'Alternative wordings', rows: variantRows });
 	}
 
 	const languageRows: TranslatableRow[] = [];

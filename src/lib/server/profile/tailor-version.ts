@@ -23,6 +23,7 @@ import { dbDirect as db, queryRaw } from '$lib/server/db';
 import {
 	applications,
 	job_matches,
+	profile_field_variants,
 	profile_version_extensions,
 	profile_version_overrides,
 	profile_versions,
@@ -60,6 +61,8 @@ import {
 	type ItemRow
 } from '$lib/tailoring';
 import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
+import { variantFieldLabel, variantPreview } from '$lib/field-variants';
+import { isVariantOwned } from '$lib/server/profile/field-variants';
 import { templatePrintsTechnologies } from '$lib/resume-templates';
 import { expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
 import { normalizeSkill } from '$lib/skills';
@@ -77,6 +80,7 @@ import {
 } from '$lib/server/documents/content-embeddings';
 import { scoreUnitAgainstQuery } from '$lib/server/documents/content-retrieval';
 import { countVersionPages } from '$lib/server/profile/page-fit';
+import { chooseFieldVariants, variantDecisions } from '$lib/server/profile/tailor-field-variants';
 import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
 import { config } from '$lib/server/config';
 
@@ -901,6 +905,24 @@ export async function tailorVersionForApplication(opts: {
 
 	applyVerdictReasons(decisions, modelVerdicts);
 
+	// The profile's scalar fields — title, subtitle, headline, summary — cannot
+	// be tailored by including and excluding, because each holds one value. If
+	// the applicant has written alternatives, the best-fitting one is chosen
+	// here and travels as a decision like any other. Kept out of the layers
+	// above deliberately: a wording is not an item, so it has no page cost, no
+	// parent to keep alive and nothing to reorder, and folding it into the
+	// selector would mean teaching every rule about a candidate that answers to
+	// none of them. See tailor-field-variants.ts.
+	const variantPicks = variantDecisions(
+		await chooseFieldVariants({
+			profileId,
+			profile: profile as unknown as Record<string, unknown>,
+			query,
+			queryUnit: { unitType: 'job_query', unitId: job.id }
+		})
+	);
+	decisions = [...decisions, ...variantPicks];
+
 	const versionId = await upsertTailoredVersion({
 		profileId,
 		applicationId,
@@ -949,8 +971,12 @@ export async function tailorVersionForApplication(opts: {
 		targetPages,
 		budgetChars,
 		fallback: targetPages === 1 ? { targetPages: 2, budgetChars: PAGE_BUDGETS.two } : null,
-		select: (budget) =>
-			selectForJob(selectionCandidates, {
+		// The wording picks ride along with every re-selection, because each one
+		// is persisted in full: persistDecisions deletes this version's generated
+		// rows and re-inserts what it is handed, so a selection that omitted them
+		// would silently drop the chosen summary on the first budget tightening.
+		select: (budget) => [
+			...selectForJob(selectionCandidates, {
 				floor,
 				...DEFAULT_SELECTION,
 				promotionMargin: PROMOTION_MARGIN[ranker],
@@ -960,7 +986,9 @@ export async function tailorVersionForApplication(opts: {
 				groupDropReason,
 				technologyDropReason,
 				restoredParentReason
-			})
+			}),
+			...variantPicks
+		]
 	});
 
 	return {
@@ -1558,7 +1586,7 @@ export async function describeOverrides(
 	const idsOf = (type: string) =>
 		rows.filter((r) => r.entity_type === type).map((r) => r.entity_id);
 
-	const [achievements, projects, skills, groups, technologies] = await Promise.all([
+	const [achievements, projects, skills, groups, technologies, wordings] = await Promise.all([
 		idsOf(OVERRIDE_ENTITIES.achievement).length
 			? db.query.work_experience_achievements.findMany({
 					where: inArray(work_experience_achievements.id, idsOf(OVERRIDE_ENTITIES.achievement)),
@@ -1588,6 +1616,12 @@ export async function describeOverrides(
 			? db.query.work_experience_technologies.findMany({
 					where: inArray(work_experience_technologies.id, idsOf(OVERRIDE_ENTITIES.technology)),
 					columns: { id: true, name: true, work_experience_id: true }
+				})
+			: [],
+		idsOf(OVERRIDE_ENTITIES.fieldVariant).length
+			? db.query.profile_field_variants.findMany({
+					where: inArray(profile_field_variants.id, idsOf(OVERRIDE_ENTITIES.fieldVariant)),
+					columns: { id: true, field: true, label: true, value: true }
 				})
 			: []
 	]);
@@ -1647,6 +1681,21 @@ export async function describeOverrides(
 		if (names.length > 0) {
 			contexts.set(`${OVERRIDE_ENTITIES.skillCategory}:${g.id}`, names.join(', '));
 		}
+	}
+
+	for (const w of wordings) {
+		// The field it varies, then the applicant's name for this wording: "your
+		// Professional Summary, Backend-leaning". The label alone would be the
+		// name, which says nothing about what changed on the page.
+		labels.set(
+			`${OVERRIDE_ENTITIES.fieldVariant}:${w.id}`,
+			`${variantFieldLabel(w.field)} — ${text(w.label) || 'Alternative'}`
+		);
+		// The wording itself is the context, because the decision IS the text:
+		// unlike a dropped bullet, nothing else on the page shows what was
+		// chosen, and a diff that named it without quoting it could not be
+		// checked.
+		contexts.set(`${OVERRIDE_ENTITIES.fieldVariant}:${w.id}`, variantPreview(text(w.value), 200));
 	}
 
 	return rows
@@ -2288,6 +2337,20 @@ export async function setItemStateForApplication(opts: {
 	on: boolean;
 }): Promise<{ versionSlug: string; created: boolean }> {
 	const { profileId, applicationId, docType, baseSlug, entityType, entityId, on } = opts;
+
+	// A wording is the one entity here that is not reachable from the profile
+	// tree below, so nothing further down would notice an id belonging to
+	// somebody else. The render resolver is scoped by profile and would print
+	// nothing, but the review diff labels a row by looking the id up on its own
+	// — so the check belongs where the row is written rather than where it is
+	// read. Picks made from the version page go through /api/field-variants/pick,
+	// which validates the same thing plus the field.
+	if (
+		entityType === OVERRIDE_ENTITIES.fieldVariant &&
+		!(await isVariantOwned(entityId, profileId))
+	) {
+		throw new Error('Wording not found');
+	}
 
 	const profile = await getProfileByIdentifier(profileId);
 	if (!profile) throw new Error('Profile not found');

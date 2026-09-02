@@ -8,6 +8,11 @@ import { profile_tokens, profile_versions } from '$lib/server/db/schema';
 import { DEFAULT_FORMAT, DEFAULT_VIEW_MODE } from '$lib/profile-tokens';
 import { BASE_LOCALE, isKnownLocale } from '$lib/resume-translations';
 import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
+import {
+	applyFieldVariants,
+	loadFieldVariants,
+	withoutFieldVariants
+} from '$lib/server/profile/field-variants';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, getClientAddress }) => {
@@ -88,9 +93,20 @@ export const load: PageServerLoad = async ({ params, url, getClientAddress }) =>
 	const translator = await loadTranslator(profile.id, locale);
 	applyTranslations(profile, translator);
 
+	// Then the wording the shared version picked, after those translations. This
+	// route has no template, so the third overlay does not apply here — see
+	// server/profile/field-variants.ts for the order the other two keep.
+	applyFieldVariants(
+		profile,
+		await loadFieldVariants(profile.id, token.profile_version, translator)
+	);
+
 	return {
+		// Stripped of the wording library before it is serialised into the page:
+		// the variants are in the tree for the server's benefit only, and a
+		// public document must not carry the alternatives it did not use.
 		profile: {
-			...profile,
+			...withoutFieldVariants(profile),
 			profile_versions: profile.profile_versions
 		},
 		locale: translator.locale,

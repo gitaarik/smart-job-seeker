@@ -10,6 +10,11 @@ import {
 	applyTemplateOverrides,
 	loadTemplateOverrides
 } from '$lib/server/profile/template-overrides';
+import {
+	applyFieldVariants,
+	loadFieldVariants,
+	withoutFieldVariants
+} from '$lib/server/profile/field-variants';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals, getClientAddress }) => {
@@ -71,6 +76,12 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	const translator = await loadTranslator(profile.id, isKnownLocale(langParam) ? langParam : null);
 	applyTranslations(profile, translator);
 
+	// Then the wording this version picked for the profile's scalar fields, if
+	// it picked any — after the translations whose language it has to match, and
+	// before the template's overrides, which are a force that outranks a choice.
+	// See server/profile/field-variants.ts for the full order.
+	applyFieldVariants(profile, await loadFieldVariants(profile.id, versionId, translator));
+
 	// Then the template's own values for the fields it overrides, LAST: an
 	// override is a force ("on Citrus this role is Senior Engineer"), so it has
 	// to win over the translation of the value it replaces. Resolved in the
@@ -79,8 +90,11 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	applyTemplateOverrides(profile, await loadTemplateOverrides(template?.id, translator.locale));
 
 	return {
+		// Stripped of the wording library before it is serialised into the page:
+		// the variants are in the tree for the server's benefit only, and a
+		// public document must not carry the alternatives it did not use.
 		profile: {
-			...profile,
+			...withoutFieldVariants(profile),
 			profile_versions: profile.profile_versions
 		},
 		locale: translator.locale,

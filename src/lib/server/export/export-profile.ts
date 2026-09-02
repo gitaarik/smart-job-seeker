@@ -3,8 +3,8 @@
  */
 
 import { dbDirect } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
+import { asc, eq } from 'drizzle-orm';
+import { profile_field_variants, profiles } from '$lib/server/db/schema';
 import { buildDocumentExport, type ProjectIndexMaps } from './export-documents';
 import { buildTranslationExport, emptyTranslationIndexMaps } from './export-translations';
 import { buildTemplateExport } from './export-templates';
@@ -203,6 +203,17 @@ export async function buildProfileExport(
 				},
 				orderBy: (t: any, { asc }: any) => asc(t.sort)
 			},
+			field_variants: {
+				columns: {
+					id: true,
+					field: true,
+					label: true,
+					value: true,
+					note: true,
+					sort: true
+				},
+				orderBy: [asc(profile_field_variants.sort), asc(profile_field_variants.id)]
+			},
 			references: {
 				columns: {
 					status: true,
@@ -352,6 +363,12 @@ export async function buildProfileExport(
 		translationMaps.techSkillCategory.set(cat.id, index)
 	);
 	profile.languages.forEach((lang, index) => translationMaps.language.set(lang.id, index));
+	// Same positional treatment as everything else the overlay can name: the
+	// variant's translated wording has to survive the round trip, or a
+	// re-imported profile prints English on every translated document.
+	(profile.field_variants ?? []).forEach((v: { id: number }, index: number) =>
+		translationMaps.fieldVariant.set(v.id, index)
+	);
 
 	const translations = await buildTranslationExport(profileId, translationMaps);
 
@@ -523,6 +540,22 @@ export async function buildProfileExport(
 			language_code: l.language_code || undefined,
 			proficiency: l.proficiency || undefined
 		})),
+
+		field_variants: (profile.field_variants ?? []).map(
+			(v: {
+				field: string;
+				label: string;
+				value: string;
+				note: string | null;
+				sort: number | null;
+			}) => ({
+				field: v.field,
+				label: v.label,
+				value: v.value,
+				note: v.note || undefined,
+				sort: v.sort
+			})
+		),
 
 		references: profile.references.map((r) => ({
 			status: r.status || undefined,
