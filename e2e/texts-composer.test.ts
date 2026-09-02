@@ -29,6 +29,7 @@ import { loginViaUI, useBrowser } from './browser';
 /** The test user's seeded application, which already has one of each text. */
 const APP_ID = 16;
 const PROBE = 'E2E composer probe — safe to delete';
+const EDIT_PROBE = 'E2E inline-edit probe — safe to delete';
 
 describe('texts composer — no AI thread yet', () => {
 	const b = useBrowser();
@@ -156,5 +157,96 @@ describe('texts composer — thread in progress', () => {
 				})
 				.isVisible()
 		).toBe(true);
+	});
+});
+
+describe('texts composer — editing a version inline', () => {
+	const b = useBrowser();
+
+	// Deliberately disjoint, so the second version is far past isSmallDiff's
+	// threshold: the diff that shows afterwards can then only have been opened
+	// on purpose, never by the auto-show.
+	const V1 = 'Version one, typed by hand so this probe never spends a token.';
+	const V2 = 'Completely different wording; nothing from that first draft survives.';
+
+	it('writes a first version by hand', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto(`/applications/${APP_ID}/texts`);
+		await b.page.waitForLoadState('networkidle');
+
+		await b.page.getByRole('button', { name: /^Add$/ }).first().click();
+		await b.page.getByRole('button', { name: /Application Question/i }).click();
+		await b.page.locator('#new-question').fill(EDIT_PROBE);
+		await b.page.getByRole('button', { name: /Add & open editor/i }).click();
+
+		await b.page.waitForURL('**/texts/questions/**', { timeout: 10000 });
+
+		// Through the composer rather than the AI, so this costs nothing to run.
+		await b.page.getByRole('button', { name: /Write \/ paste my own version/i }).click();
+		await b.page.locator('[contenteditable="true"]').last().fill(V1);
+		await b.page.getByRole('button', { name: /Save my version/i }).click();
+		await b.page.waitForLoadState('networkidle');
+
+		expect(
+			await b.page
+				.getByText(/Version 1/)
+				.first()
+				.isVisible()
+		).toBe(true);
+	});
+
+	it('says which version the edit will be saved as', async () => {
+		await b.page
+			.getByRole('button', { name: /^Edit$/ })
+			.first()
+			.click();
+
+		// Unchanged content records no version, so nothing promises one yet.
+		expect(await b.page.getByRole('button', { name: /^Save$/ }).isVisible()).toBe(true);
+		expect(await b.page.getByRole('button', { name: /Save as version/ }).count()).toBe(0);
+
+		await b.page.locator('[contenteditable="true"]').first().fill(V2);
+
+		// The whole point: an inline edit appends, and says so before you commit it.
+		expect(await b.page.getByRole('button', { name: /Save as version 2/ }).isVisible()).toBe(true);
+		expect(await b.page.getByText(/Saves as version 2/).isVisible()).toBe(true);
+		expect(await b.page.getByRole('button', { name: /^Save$/ }).count()).toBe(0);
+
+		// The one-step review reaches the inline editor, not just the composer.
+		expect(await b.page.getByRole('button', { name: /Save & AI review/i }).isVisible()).toBe(true);
+	});
+
+	it('keeps the edited version and opens the diff on the new one', async () => {
+		await b.page.getByRole('button', { name: /Save as version 2/ }).click();
+		await b.page.waitForLoadState('networkidle');
+
+		// Version 1 survived the edit; it is behind the collapse bar, not gone.
+		expect(await b.page.getByRole('button', { name: /Show full conversation/ }).isVisible()).toBe(
+			true
+		);
+
+		// "Hide changes" means the diff is already open. This rewrite is far too
+		// large for the auto-show, so only the post-save reveal can have done it.
+		expect(
+			await b.page
+				.getByRole('button', { name: /Hide changes/i })
+				.first()
+				.isVisible()
+		).toBe(true);
+	});
+
+	it('removes the probe question', async () => {
+		await b.page.goto(`/applications/${APP_ID}/texts`);
+		await b.page.waitForLoadState('networkidle');
+
+		await b.page
+			.locator('button', { hasText: EDIT_PROBE })
+			.getByLabel('Delete question')
+			.first()
+			.click();
+		await b.page.getByRole('button', { name: /^Confirm$/ }).click();
+		await b.page.waitForLoadState('networkidle');
+
+		expect(await b.page.getByText(EDIT_PROBE).count()).toBe(0);
 	});
 });

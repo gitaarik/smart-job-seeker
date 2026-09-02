@@ -271,6 +271,40 @@
 		return false;
 	}
 
+	/**
+	 * The number the edit in progress will be saved as. An inline edit never
+	 * overwrites the version it started from: it is appended as the next one, and
+	 * editing an earlier version trims what came after it, so either way the new
+	 * version follows the one on screen.
+	 */
+	let nextVersionNum = $derived(
+		editingIndex === null ? 0 : (entryVersionNums[editingIndex] ?? 0) + 1
+	);
+
+	// A save that changes nothing records no version (recordVersionIfChanged skips
+	// it), so the labels must not promise one.
+	let editChanged = $derived(
+		editingIndex !== null &&
+			editContent.trim() !== (conversation[editingIndex]?.content ?? '').trim()
+	);
+
+	/**
+	 * Open the newest version's diff after a save, whatever its size. The
+	 * auto-show only fires below isSmallDiff's threshold, which hides exactly the
+	 * rewrites most worth seeing, and the version the edit was based on is behind
+	 * the collapse bar by then. Without this there is nothing on screen saying the
+	 * edit landed as a new version rather than overwriting the old one.
+	 */
+	async function revealLatestDiff() {
+		await tick();
+		const idx = conversation.findLastIndex((e) => e.content);
+		if (idx < 0) return;
+		diffHidden.delete(idx);
+		diffShown.add(idx);
+		diffShown = new Set(diffShown);
+		diffHidden = new Set(diffHidden);
+	}
+
 	function saveEdit() {
 		if (isEditingPreviousVersion()) {
 			const entry = conversation[editingIndex!];
@@ -281,8 +315,24 @@
 			run('followup', async () => {
 				await onSaveVersion(content, {});
 				editingIndex = null;
+				await revealLatestDiff();
 			});
 		}
+	}
+
+	/**
+	 * Commit the edit and ask for a review in one step, mirroring the composer's
+	 * "Save & AI review". onReview persists the content before reviewing, but it
+	 * appends instead of trimming, so this is only offered when the edit is not
+	 * rewinding to an earlier version.
+	 */
+	function saveEditAndReview() {
+		const content = editContent;
+		run('review', async () => {
+			await onReview(content);
+			editingIndex = null;
+			await revealLatestDiff();
+		});
 	}
 
 	function confirmOverwrite() {
@@ -293,6 +343,7 @@
 		run('followup', async () => {
 			await onSaveVersion(pending.content, { deleteAfterVersionId: pending.versionId });
 			editingIndex = null;
+			await revealLatestDiff();
 		});
 	}
 
@@ -500,7 +551,20 @@
 							>&middot; {formatDate(entry.date)}</span
 						>
 					{/if}
-					{#if isCurrentAnswer}
+					{#if isEditingThis}
+						<span
+							class="ml-auto flex items-center gap-1 rounded-full bg-[var(--dash-primary-light)] px-2 py-0.5 font-medium text-[var(--dash-primary)] normal-case"
+						>
+							<FontAwesomeIcon icon={faPencil} class="h-2.5 w-2.5" />
+							{#if !editChanged}
+								Editing
+							{:else if editingPrevious}
+								Saves as version {nextVersionNum}, replacing later ones
+							{:else}
+								Saves as version {nextVersionNum}
+							{/if}
+						</span>
+					{:else if isCurrentAnswer}
 						<span
 							class="ml-auto flex items-center gap-1 rounded-full bg-[var(--dash-success-light)] px-2 py-0.5 font-medium text-[var(--dash-success)] normal-case"
 						>
@@ -543,7 +607,7 @@
 						/>
 					{/if}
 					{#if isEditingThis}
-						<div class="mt-2 flex items-center gap-1.5">
+						<div class="mt-2 flex flex-wrap items-center gap-1.5">
 							{#if editingPrevious}
 								<button
 									type="button"
@@ -560,7 +624,21 @@
 									onclick={saveEdit}
 									class="flex items-center gap-1 rounded bg-[var(--dash-primary)] px-2 py-1 text-xs text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
 								>
-									Save
+									{editChanged ? `Save as version ${nextVersionNum}` : 'Save'}
+								</button>
+								<button
+									type="button"
+									disabled={busy || !editContent.trim()}
+									onclick={saveEditAndReview}
+									class="flex items-center gap-1 rounded border border-[var(--dash-border)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] disabled:cursor-not-allowed disabled:opacity-50"
+								>
+									{#if busy && busyMode === 'review'}
+										<Spinner size="w-2.5 h-2.5" />
+										Reviewing…
+									{:else}
+										<FontAwesomeIcon icon={faRobot} class="h-2.5 w-2.5" />
+										Save & AI review
+									{/if}
 								</button>
 							{/if}
 							<button
