@@ -46,7 +46,10 @@
 </script>
 
 <svelte:head>
-	<title>{app.job?.title || 'Application'} - Applications - Smart Job Seeker</title>
+	<title
+		>{app.job?.title || 'Application'}{app.job?.company ? ` at ${app.job.company}` : ''} - Applications
+		- Smart Job Seeker</title
+	>
 </svelte:head>
 
 <TabNav {tabs} isActive={isTabActive} inset>
@@ -60,8 +63,25 @@
 				<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />
 				<span class="text-sm">All Applications</span>
 			</a>
-			{#if app.job?.title}
-				<h1 class="mt-1 truncate text-sm font-medium text-[var(--dash-text)]">{app.job.title}</h1>
+			{#if app.job?.title || app.job?.company}
+				<!-- Title and company on one line: the title alone doesn't say which
+				     application you're looking at when two employers advertise the
+				     same role. The title truncates first; the company is the shorter
+				     half and the one that disambiguates. -->
+				<h1 class="mt-1 flex min-w-0 items-baseline gap-1.5 text-sm font-medium">
+					{#if app.job?.title}
+						<span class="truncate text-[var(--dash-text)]">{app.job.title}</span>
+					{/if}
+					{#if app.job?.title && app.job?.company}
+						<span class="flex-shrink-0 text-[var(--dash-text-muted)]" aria-hidden="true">·</span>
+					{/if}
+					{#if app.job?.company}
+						<span
+							class="max-w-[45%] flex-shrink-0 truncate font-normal text-[var(--dash-text-secondary)]"
+							>{app.job.company}</span
+						>
+					{/if}
+				</h1>
 			{/if}
 		</div>
 	{/snippet}

@@ -177,9 +177,17 @@
 
 <div class="space-y-6 pb-8">
 	<!-- Title -->
-	<h2 class="text-2xl font-bold text-[var(--dash-text)]">
-		{job?.title || 'Untitled Position'}
-	</h2>
+	<div>
+		<h2 class="text-2xl font-bold text-[var(--dash-text)]">
+			{job?.title || 'Untitled Position'}
+		</h2>
+		{#if job?.company}
+			<p class="mt-1 flex items-center gap-1.5 text-base text-[var(--dash-text-secondary)]">
+				<FontAwesomeIcon icon={faBuilding} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
+				{job.company}
+			</p>
+		{/if}
+	</div>
 
 	<!-- Status Widget (top of page) -->
 	<Card padding="lg">
