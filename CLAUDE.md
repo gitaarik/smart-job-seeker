@@ -77,6 +77,39 @@ Measure with `cloud/scripts/check-oss.sh` instead. It runs these same gates in a
 throwaway container with only `./oss` mounted, so it reports what CI reports.
 Use it before changing any baseline here.
 
+It is also slow — a real `npm ci` every time — and it takes a lock, so two of
+them cannot run at once. For a quick answer on the type gate alone, the dev
+container works if you give node a little more heap than the default:
+
+```bash
+docker compose exec -T -e NODE_OPTIONS=--max-old-space-size=3072 app \
+  npx svelte-check --tsconfig ./tsconfig.json
+```
+
+At the default (~2 GB) this dies partway through and the gate reports it as a
+crash. `svelte-check` is unaffected by the billing overlay, so this number is
+CI's number: 88 s and the same 31 errors.
+
+**Do not raise that number "to be safe."** This host has 7.6 GB and about 3.5 GB
+free once the stack is up. A heap larger than free RAM does not fail — node
+allocates into swap and the machine stops responding at ~400% CPU until it is
+rebooted, which a 6144 default here did twice. The cap is a safety limit, not a
+performance dial: keeping it below free RAM is what makes an over-large
+type-check abort cleanly instead of taking the box down.
+
+**When a gate goes over baseline it now tells you where.** Both `check.sh` and
+`check-lint.sh` list the errors in files the change touched before the full
+backlog (`scripts/ci/changed-files.sh` works out which). Before that, "4 new"
+was followed by forty errors nobody here wrote, and finding the four meant
+re-running eslint file by file.
+
+**A `pre-push` hook runs these before the push**, if you have installed it —
+`sjs-ops/scripts/install-hooks.sh`, the same one that installs `commit-msg`. It
+lints the _lines_ you wrote (file-level gating blocks nearly every push here,
+since most files already carry backlog) and runs the type gate whole, because
+the failure that motivated it appeared only in files the change never opened.
+It fails open when the dev stack is down, and `git push --no-verify` skips it.
+
 Within the eslint backlog, two rules are worth reading rather than counting:
 
 - **`svelte/no-at-html-tags`** — all 10 sites were audited 2026-08-07 and are

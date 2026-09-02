@@ -35,9 +35,38 @@ fi
 
 if [ "$errors" -gt "$BASELINE" ]; then
   echo "::error::svelte-check found $errors errors, baseline is $BASELINE — $((errors - BASELINE)) new."
-  echo "New errors are somewhere in the list below; fix them or, if a baseline"
-  echo "error was legitimately replaced, adjust BASELINE in scripts/ci/check.sh."
-  printf '%s\n' "$output" | grep ' ERROR ' || true
+  echo "Fix them, or if a baseline error was legitimately replaced, adjust"
+  echo "BASELINE in scripts/ci/check.sh."
+  echo
+
+  all_errors=$(printf '%s\n' "$output" | grep ' ERROR ' || true)
+
+  # Errors in files this change touched, first and on their own. The whole list
+  # is the backlog plus yours, and the backlog is 31 lines of libraries and
+  # other people's components — reading it to find your own is the work this
+  # saves. Empty when changed-files.sh cannot tell (see its header), and then
+  # the full list below is all there is.
+  changed=$(./scripts/ci/changed-files.sh 2>/dev/null || true)
+  if [ -n "$changed" ]; then
+    mine=$(printf '%s\n' "$all_errors" | grep -F -f <(printf '%s\n' "$changed" | sed 's/.*/"&"/') || true)
+    if [ -n "$mine" ]; then
+      echo "── In files this change touched ──"
+      printf '%s\n' "$mine"
+      echo
+    else
+      # Worth saying rather than leaving blank: it means the change broke a file
+      # it never edited, which is what a bad type inference does — one bad
+      # property in a shared include can move errors into consumers only.
+      echo "── None of the errors are in files this change touched. ──"
+      echo "   A change can still cause them elsewhere: a shared type that stops"
+      echo "   inferring moves its errors into every consumer. Look for a file"
+      echo "   you edited that others import."
+      echo
+    fi
+  fi
+
+  echo "── All $errors errors ──"
+  printf '%s\n' "$all_errors"
   exit 1
 fi
 

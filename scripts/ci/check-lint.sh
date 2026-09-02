@@ -110,6 +110,30 @@ if [ "$errors" -gt "$BASELINE" ]; then
   echo "::error::eslint found $errors errors, baseline is $BASELINE — $((errors - BASELINE)) new."
   echo "Fix them, or if a baseline error was legitimately replaced, adjust"
   echo "BASELINE in scripts/ci/check-lint.sh."
+  echo
+
+  # Errors in files this change touched. `head -40` of a 1,457-error backlog is
+  # what this replaces: it printed forty errors nobody here wrote, in files the
+  # change never opened, and the four that mattered were not among them.
+  # Re-linting per file by hand was the only way to find them.
+  #
+  # Read out of the JSON already collected rather than a second eslint run —
+  # the tree takes minutes to lint and the answer is in hand.
+  changed=$(./scripts/ci/changed-files.sh 2>/dev/null || true)
+  if [ -n "$changed" ]; then
+    mine=$(printf '%s' "$output" | CHANGED="$changed" node ./scripts/ci/errors-in-changed.mjs)
+    if [ -n "$mine" ]; then
+      echo "── In files this change touched ──"
+      printf '%s\n' "$mine"
+      echo
+      echo "(the rest of the $errors are the existing backlog)"
+      exit 1
+    fi
+    echo "── None of the new errors are in files this change touched. ──"
+    echo "   Falling back to the full list."
+    echo
+  fi
+
   npx eslint . -f stylish 2>/dev/null | grep -E '  error  ' | head -40 || true
   exit 1
 fi
