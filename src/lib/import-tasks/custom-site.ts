@@ -22,6 +22,13 @@
 export const SEARCH_PAGE_URL_MAX = 512;
 export const LOGIN_PAGE_URL_MAX = 255;
 
+/**
+ * Stand-in platform id for "a site we don't have yet", used by the add form's
+ * picker before any platform row exists. Negative so it can never collide with
+ * a real serial id, and shared so the picker and the form cannot drift.
+ */
+export const CUSTOM_PLATFORM_ID = -1;
+
 export interface CustomSiteSearchInput {
 	/** True when the user used the "Other site" branch rather than the dropdown. */
 	platformIsNew: boolean;

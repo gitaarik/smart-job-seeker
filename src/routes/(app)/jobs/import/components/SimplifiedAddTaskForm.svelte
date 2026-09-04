@@ -30,6 +30,8 @@
 	import { track } from '$lib/tools/analytics';
 	import type { SearchFilterValue } from '$lib/job-platforms/search-filters';
 	import FilterPicker from './FilterPicker.svelte';
+	import PlatformCombobox from './PlatformCombobox.svelte';
+	import { CUSTOM_PLATFORM_ID } from '$lib/import-tasks/custom-site';
 
 	export type ImportablePlatform = {
 		id: number;
@@ -64,22 +66,16 @@
 	let { platforms, defaultMaxJobs, preferredDevice, deviceStatusChecked, onCancel }: Props =
 		$props();
 
-	/** Sentinel `<select>` value for the paste-your-own-URL branch. */
-	const CUSTOM = -1;
-
-	// Split by whether the scraper has a search form to drive. Both work, but
-	// they behave differently enough that lumping them into one flat list would
-	// mislead: a listing site imports whatever its page happens to show, with no
-	// keywords and no source-side filtering.
-	const searchable = $derived(platforms.filter((p) => p.search_page_url));
-	const listingOnly = $derived(platforms.filter((p) => !p.search_page_url));
-
-	// Default to a site the keyword box actually works on. Ordering by id put
-	// Turing first once the search_page_url requirement was lifted, which is a
-	// marketing homepage rather than a job list.
-	let platformId = $state<number | null>(
-		platforms.find((p) => p.search_page_url)?.id ?? platforms[0]?.id ?? CUSTOM
-	);
+	/**
+	 * Nothing is selected until the user picks. The old `<select>` had to open
+	 * on something, and "the first platform with a search page" meant Turing,
+	 * which is a marketing homepage that has never returned a job on this
+	 * instance — a default nobody chose and few would notice before submitting.
+	 *
+	 * A search field has no such obligation: empty is a prompt to type, and the
+	 * submit button stays disabled until there is an answer.
+	 */
+	let platformId = $state<number | null>(null);
 	let customUrl = $state('');
 	let customName = $state('');
 	let customLoginUrl = $state('');
@@ -88,8 +84,34 @@
 	let filters = $state<Record<string, SearchFilterValue>>({});
 	let submitting = $state(false);
 
-	const isCustom = $derived(platformId === CUSTOM);
+	const isCustom = $derived(platformId === CUSTOM_PLATFORM_ID);
 	const selectedPlatform = $derived(platforms.find((p) => p.id === platformId) ?? null);
+
+	/**
+	 * Carry what the user typed in the picker into the add-a-site fields, so
+	 * searching for a board we don't have is the first step of adding it rather
+	 * than a dead end they retype their way out of.
+	 *
+	 * Which field it lands in is decided by shape, not by asking. Anything with
+	 * a dot and no spaces is a host, and a host is the one thing we can turn
+	 * into a working URL on its own; everything else is a name. Both stay
+	 * editable, and an existing value is never overwritten — the picker can be
+	 * reopened after the URL is typed, and losing it to a second visit would be
+	 * the kind of bug that only shows up when someone changes their mind.
+	 */
+	function adoptTypedSite(typed: string) {
+		const q = typed.trim();
+		if (!q) return;
+		if (/^https?:\/\//i.test(q)) {
+			if (!customUrl.trim()) customUrl = q;
+			return;
+		}
+		if (/^[^\s/]+\.[^\s/]{2,}(\/\S*)?$/.test(q)) {
+			if (!customUrl.trim()) customUrl = `https://${q}`;
+			return;
+		}
+		if (!customName.trim()) customName = q;
+	}
 
 	/**
 	 * Origin of the pasted URL, used as the platform's base URL. Also doubles as
@@ -204,29 +226,12 @@
 			class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
 			for="add-platform">Site</label
 		>
-		<select
+		<PlatformCombobox
 			id="add-platform"
+			{platforms}
 			bind:value={platformId}
-			class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1.5 text-sm text-[var(--dash-text)]"
-		>
-			{#if searchable.length > 0}
-				<optgroup label="Sites we can search">
-					{#each searchable as p (p.id)}
-						<option value={p.id}>{p.name}</option>
-					{/each}
-				</optgroup>
-			{/if}
-			{#if listingOnly.length > 0}
-				<optgroup label="Listing pages (imported as-is)">
-					{#each listingOnly as p (p.id)}
-						<option value={p.id}>{p.name}</option>
-					{/each}
-				</optgroup>
-			{/if}
-			<optgroup label="Anywhere else">
-				<option value={CUSTOM}>Other site (add it yourself)…</option>
-			</optgroup>
-		</select>
+			onCustom={adoptTypedSite}
+		/>
 	</div>
 
 	{#if isCustom}

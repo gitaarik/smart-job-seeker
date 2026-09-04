@@ -94,18 +94,33 @@ describe('SimplifiedAddTaskForm — where the task runs', () => {
 });
 
 describe('SimplifiedAddTaskForm — adding a site we do not have yet', () => {
-	async function pickOtherSite(container: HTMLElement) {
-		const select = screen.getByLabelText('Site') as HTMLSelectElement;
-		const other = screen
+	async function pickOtherSite(container: HTMLElement, typed = '') {
+		const input = screen.getByLabelText('Site');
+		await fireEvent.focus(input);
+		if (typed) await fireEvent.input(input, { target: { value: typed } });
+		const create = screen
 			.getAllByRole('option')
-			.find((o) => /Other site/.test(o.textContent ?? '')) as HTMLOptionElement;
-		await fireEvent.change(select, { target: { value: other.value } });
+			.find((o) => /Add .*(new site|site we don)/.test(o.textContent ?? ''));
+		await fireEvent.click(create!);
 		return container;
 	}
 
 	async function fill(label: RegExp, value: string) {
 		await fireEvent.input(screen.getByLabelText(label), { target: { value } });
 	}
+
+	test('starts with nothing chosen and will not submit until it is', () => {
+		// The old <select> opened on the first platform with a search page,
+		// which is Turing here: a default nobody picked, on a site that has
+		// never returned a job.
+		const container = renderForm(null);
+
+		expect((screen.getByLabelText('Site') as HTMLInputElement).value).toBe('');
+		expect(hiddenValue(container, 'platform_id')).toBeNull();
+		expect((screen.getByRole('button', { name: /Add Task/ }) as HTMLButtonElement).disabled).toBe(
+			true
+		);
+	});
 
 	test('asks for a search URL, a login page and keywords', async () => {
 		const container = renderForm(null);
@@ -151,6 +166,36 @@ describe('SimplifiedAddTaskForm — adding a site we do not have yet', () => {
 		await fill(/Job search URL/, 'https://acme.example.com/jobs');
 
 		expect(hiddenValue(container, 'login_mode')).toBe('none');
+	});
+
+	test('carries a typed host into the search URL', async () => {
+		// Searching for a board we do not have should be the first step of
+		// adding it, not a dead end the user retypes their way out of.
+		const container = renderForm(null);
+		await pickOtherSite(container, 'acme.example.com/jobs');
+
+		expect((screen.getByLabelText(/Job search URL/) as HTMLInputElement).value).toBe(
+			'https://acme.example.com/jobs'
+		);
+	});
+
+	test('carries a typed name into the site name, not the URL', async () => {
+		const container = renderForm(null);
+		await pickOtherSite(container, 'Acme Careers');
+
+		expect((screen.getByLabelText(/Site name/) as HTMLInputElement).value).toBe('Acme Careers');
+		expect((screen.getByLabelText(/Job search URL/) as HTMLInputElement).value).toBe('');
+	});
+
+	test('keeps a URL the user already typed when the picker is reopened', async () => {
+		const container = renderForm(null);
+		await pickOtherSite(container);
+		await fill(/Job search URL/, 'https://acme.example.com/jobs');
+		await pickOtherSite(container, 'somewhere.else.com');
+
+		expect((screen.getByLabelText(/Job search URL/) as HTMLInputElement).value).toBe(
+			'https://acme.example.com/jobs'
+		);
 	});
 
 	test('refuses to submit a login URL that is not absolute', async () => {
