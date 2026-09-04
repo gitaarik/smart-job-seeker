@@ -80,11 +80,11 @@ import { AIMessage } from '@langchain/core/messages';
 import { llmCache } from '../llm/cache';
 
 describe('generateAiChatResponse', () => {
-	beforeEach(() => {
+	beforeEach(async () => {
 		vi.clearAllMocks();
 		mockUpdateWhere.mockResolvedValue({});
 		// Clear LLM cache to prevent cache hits affecting tests
-		llmCache.clear();
+		await llmCache.clear();
 	});
 
 	it('should return error if ai_chats not found', async () => {

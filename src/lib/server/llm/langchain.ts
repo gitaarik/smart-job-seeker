@@ -853,7 +853,7 @@ export async function generateChatCompletionTracked(
 
 	// Check cache first (cached = no usage, already billed)
 	const cacheKey = generateCacheKey(messages, options);
-	const cachedResponse = llmCache.get(cacheKey, model);
+	const cachedResponse = await llmCache.get(cacheKey, model);
 
 	if (cachedResponse) {
 		return { content: cachedResponse, usage: null };
@@ -880,7 +880,7 @@ export async function generateChatCompletionTracked(
 	);
 
 	// Cache the raw content
-	llmCache.set(cacheKey, result.content, model, config.llmCacheTTL);
+	await llmCache.set(cacheKey, result.content, model, config.llmCacheTTL);
 
 	return result;
 }

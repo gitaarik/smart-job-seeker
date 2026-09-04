@@ -61,10 +61,10 @@ import { generateChatCompletion } from '../llm';
 import { llmCache } from '../llm/cache';
 
 describe('generateChatCompletion', () => {
-	beforeEach(() => {
+	beforeEach(async () => {
 		vi.clearAllMocks();
 		// Clear LLM cache to prevent cache hits affecting tests
-		llmCache.clear();
+		await llmCache.clear();
 	});
 
 	it('should generate chat completion with default options', async () => {
@@ -309,8 +309,8 @@ describe('a null structured parse', () => {
 	};
 	const messages: ChatMessage[] = [{ role: 'user', content: 'hi' }];
 
-	beforeEach(() => {
-		llmCache.clear?.();
+	beforeEach(async () => {
+		await llmCache.clear();
 		vi.clearAllMocks();
 	});
 
