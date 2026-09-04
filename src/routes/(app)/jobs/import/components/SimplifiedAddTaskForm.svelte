@@ -21,7 +21,7 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faMagicWandSparkles } from '@fortawesome/free-solid-svg-icons';
+	import { faCloud, faLaptop } from '@fortawesome/free-solid-svg-icons';
 	import { track } from '$lib/tools/analytics';
 	import type { SearchFilterValue } from '$lib/job-platforms/search-filters';
 	import FilterPicker from './FilterPicker.svelte';
@@ -34,13 +34,30 @@
 		search_page_url: string | null;
 	};
 
+	/** The device a run would use, from `/api/tunnel/status/preferred`. */
+	export type PreferredDevice = {
+		apiKeyId: number;
+		apiKeyName: string;
+		isShared: boolean;
+		ownerLabel: string | null;
+	};
+
 	interface Props {
 		platforms: ImportablePlatform[];
 		defaultMaxJobs: number | null;
+		/**
+		 * Connected device to pin the new task to, or null when none is
+		 * connected. The parent already polls tunnel status for the overview
+		 * badges, so this is passed down rather than fetched again.
+		 */
+		preferredDevice: PreferredDevice | null;
+		/** False until the first tunnel-status fetch resolves. */
+		deviceStatusChecked: boolean;
 		onCancel: () => void;
 	}
 
-	let { platforms, defaultMaxJobs, onCancel }: Props = $props();
+	let { platforms, defaultMaxJobs, preferredDevice, deviceStatusChecked, onCancel }: Props =
+		$props();
 
 	/** Sentinel `<select>` value for the paste-your-own-URL branch. */
 	const CUSTOM = -1;
@@ -98,6 +115,28 @@
 	const keywordsApply = $derived(!isCustom && !!selectedPlatform?.search_page_url);
 
 	const canSubmit = $derived(!submitting && (isCustom ? !!customOrigin : platformId !== null));
+
+	/**
+	 * Where the task will run. A connected device wins over the server-side
+	 * browser: it scrapes from the user's own IP, which is the difference
+	 * between working and being blocked on the boards that reject datacenter
+	 * ranges. This mirrors what the auto-import reconciler already does
+	 * (`device ? 'tunnel' : config.defaultBrowserProvider` in reconcile.ts).
+	 * The add form used to hardcode "hosted", so a user with a device connected
+	 * still got the cloud browser.
+	 *
+	 * With no device we send an empty provider rather than naming one, letting
+	 * the create action apply the server's own default. That defers to operator
+	 * config instead of pinning the row to a provider forever.
+	 */
+	const runsOnDevice = $derived(preferredDevice !== null);
+	const deviceLabel = $derived(
+		preferredDevice
+			? preferredDevice.isShared && preferredDevice.ownerLabel
+				? `${preferredDevice.apiKeyName}, shared by ${preferredDevice.ownerLabel}`
+				: preferredDevice.apiKeyName
+			: null
+	);
 </script>
 
 <form
@@ -277,7 +316,12 @@
 	<input type="hidden" name="search_term" value={keywordsApply ? keywords : ''} />
 	<input type="hidden" name="search_filters" value={JSON.stringify(filters)} />
 	<input type="hidden" name="note" value={note} />
-	<input type="hidden" name="browser_provider" value="hosted" />
+	{#if preferredDevice}
+		<input type="hidden" name="browser_provider" value="tunnel" />
+		<input type="hidden" name="sjsbrowser_api_key" value={String(preferredDevice.apiKeyId)} />
+	{:else}
+		<input type="hidden" name="browser_provider" value="" />
+	{/if}
 	<input type="hidden" name="login_mode" value="none" />
 	<input type="hidden" name="max_jobs" value={String(defaultMaxJobs ?? 25)} />
 	<input type="hidden" name="stop_after_duplicates" value="5" />
@@ -286,8 +330,14 @@
 
 	<div class="flex items-center justify-between pt-2">
 		<p class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)]">
-			<FontAwesomeIcon icon={faMagicWandSparkles} class="h-3 w-3" />
-			Runs on our cloud scraper. Edit the task after creation for advanced options.
+			<FontAwesomeIcon icon={runsOnDevice ? faLaptop : faCloud} class="h-3 w-3" />
+			{#if !deviceStatusChecked}
+				Checking for a connected device…
+			{:else if runsOnDevice}
+				Runs on {deviceLabel}. Edit the task after creation for advanced options.
+			{:else}
+				Runs on our cloud browser. Connect a device for sites that block datacenter IPs.
+			{/if}
 		</p>
 		<div class="flex gap-2">
 			<button

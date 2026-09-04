@@ -601,6 +601,8 @@
 		<SimplifiedAddTaskForm
 			platforms={data.importablePlatforms}
 			defaultMaxJobs={data.defaultMaxJobs}
+			{preferredDevice}
+			deviceStatusChecked={desktopStatusChecked}
 			onCancel={resetAddForm}
 		/>
 	{/if}
