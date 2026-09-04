@@ -5,6 +5,30 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.28.0] - 2026-09-04
+
+10 commits since v0.27.0.
+
+### Added
+
+- Import: search for job boards with suggestions ranked by site reliability, plus ability to add new unsupported boards
+- Import tasks now run on connected devices
+- Company names displayed in the applications list
+- Alternative wordings for profile scalar fields
+- Version labeling for saved inline edits
+
+### Changed
+
+- Unattended import-task generation defaults to off
+
+### Performance
+
+- LLM response cache moved to Redis
+
+### Removed
+
+- Removed unused langchain meta-package
+
 ## [0.27.0] - 2026-09-01
 
 7 commits since v0.26.3.
