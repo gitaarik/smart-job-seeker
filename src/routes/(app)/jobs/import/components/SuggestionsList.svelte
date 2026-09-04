@@ -24,6 +24,11 @@
 		accepted?: boolean;
 		/** Local-only flag used while the create POST is in flight. */
 		submitting?: boolean;
+		/** Whether the site needs a sign-in before it can be scraped. */
+		needs_login?: boolean;
+		/** Runs that returned jobs, and runs attempted, across all users. */
+		successes?: number;
+		attempts?: number;
 	};
 </script>
 
@@ -55,6 +60,18 @@
 	/** Per-card "show filter preferences" toggle. Keyed by suggestion._key so
 	 *  it survives rerenders without leaking into the parent's state. */
 	let expandedFilters = $state<Record<number, boolean>>({});
+
+	/**
+	 * How this site has actually done, in one phrase. The suggester ranks on
+	 * this now, but the user should be able to see the same thing rather than
+	 * take the ranking on trust — "you don't really know what's happening" was
+	 * the whole complaint about accepting a suggestion.
+	 */
+	function trackRecord(s: Suggestion): string | null {
+		if (s.attempts === undefined || s.successes === undefined) return null;
+		if (s.attempts === 0) return 'Not tried yet';
+		return `Worked on ${s.successes} of ${s.attempts} runs`;
+	}
 
 	function displayUrl(url: string): string {
 		try {
@@ -120,6 +137,16 @@
 								class="rounded-full bg-[var(--dash-bg)] px-2 py-0.5 text-xs text-[var(--dash-text-muted)]"
 								>Generic</span
 							>
+						{/if}
+						{#if suggestion.needs_login}
+							<span
+								class="rounded-full bg-[var(--dash-bg)] px-2 py-0.5 text-xs text-[var(--dash-text-muted)]"
+								title="This site hides its jobs behind a sign-in. Add a login on the task page, or the run will stop and ask you to sign in yourself."
+								>Needs a sign-in</span
+							>
+						{/if}
+						{#if trackRecord(suggestion)}
+							<span class="text-xs text-[var(--dash-text-muted)]">{trackRecord(suggestion)}</span>
 						{/if}
 					</div>
 					<a

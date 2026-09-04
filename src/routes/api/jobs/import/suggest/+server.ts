@@ -22,7 +22,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
-import { and, asc, eq, isNotNull } from 'drizzle-orm';
+import { and, asc, eq, gt, isNotNull, lt, or } from 'drizzle-orm';
 import { job_platforms, match_config, search_tasks } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/utils/api-helpers';
 import { getSelectedProfileId } from '../../../../(app)/profile/utils';
@@ -45,8 +45,18 @@ type SuggestablePlatform = {
 	name: string;
 	url: string;
 	search_page_url: string | null;
+	login_page_url: string | null;
+	success_count: number;
+	failure_count: number;
 	unsupported_filters: Record<string, string[]>;
 };
+
+/**
+ * Failed runs, with no success ever, that mark a platform as not working.
+ * Low enough to catch a board that has never once produced a job, high
+ * enough that a bad afternoon does not retire a working one.
+ */
+const DEAD_PLATFORM_FAILURES = 10;
 
 type PreferenceConfig = {
 	job_types: string[];
@@ -74,6 +84,25 @@ async function fetchSuggestablePlatforms(
 		isNotNull(job_platforms.search_page_url),
 		eq(job_platforms.status, 'published')
 	];
+	// ...and when it has not already been proven not to work. `success_count`
+	// and `failure_count` have been accumulating on these rows all along and
+	// were never consulted, so the ranking could not tell a working board from
+	// a dead one: X-Team (0/90), We Work Remotely (0/61), Welcome to the
+	// Jungle (0/43) and Arc.dev (0/23) were all live suggestions on 217 runs
+	// that produced no jobs between them.
+	//
+	// The bar is deliberately low. A single success keeps a platform in (a
+	// flaky board is still a board), and one that has never been tried is
+	// unproven rather than dead, so it stays too — with its record in the
+	// prompt so the model can rank it accordingly.
+	if (scopeToPlatformId === undefined) {
+		conditions.push(
+			or(
+				gt(job_platforms.success_count, 0),
+				lt(job_platforms.failure_count, DEAD_PLATFORM_FAILURES)
+			)!
+		);
+	}
 	if (scopeToPlatformId !== undefined) {
 		conditions.push(eq(job_platforms.id, scopeToPlatformId));
 	}
@@ -84,6 +113,9 @@ async function fetchSuggestablePlatforms(
 			name: job_platforms.name,
 			url: job_platforms.url,
 			search_page_url: job_platforms.search_page_url,
+			login_page_url: job_platforms.login_page_url,
+			success_count: job_platforms.success_count,
+			failure_count: job_platforms.failure_count,
 			unsupported_filters: job_platforms.unsupported_filters
 		})
 		.from(job_platforms)
@@ -194,11 +226,29 @@ function renderOverlap(overlap: Record<string, string[]>): string | null {
 	return entries.map(([name, values]) => `${name}: [${values.join(', ')}]`).join('; ');
 }
 
+/**
+ * How this platform has actually performed, in words the prompt can rank on.
+ * Ratios beat raw counts here: "9 of 10 runs" is a judgement the model can
+ * make, where "success_count=9" invites it to treat the number as popularity.
+ */
+function renderTrackRecord(platform: SuggestablePlatform): string {
+	const runs = platform.success_count + platform.failure_count;
+	if (runs === 0) return 'never run yet (unproven — do not rank above a platform with a record)';
+	const rate = Math.round((platform.success_count / runs) * 100);
+	return `${platform.success_count} of ${runs} runs returned jobs (${rate}%)`;
+}
+
 function renderPlatformsForPrompt(plans: PlatformFilterPlan[]): string {
 	const lines: string[] = [];
 	for (const plan of plans) {
 		const { platform } = plan;
 		lines.push(`- platform_id=${platform.id}: "${platform.name}" (key=${platform.key})`);
+		lines.push(`    Track record: ${renderTrackRecord(platform)}`);
+		if (platform.login_page_url) {
+			lines.push(
+				`    Requires a sign-in: the user must add credentials before this can run unattended.`
+			);
+		}
 		lines.push(`    Filters applied by scraper: ${renderFilters(plan.filters)}`);
 		const overlap = renderOverlap(plan.overlap);
 		if (overlap) {
@@ -257,6 +307,11 @@ export interface SuggestedTaskDraft {
 	note: string;
 	relevance: 'high' | 'medium' | 'low';
 	filters: Record<string, SearchFilterValue>;
+	/** Whether the platform has a login page, so the card can say so up front. */
+	needs_login: boolean;
+	/** Runs that returned jobs, and runs attempted. Both zero = never tried. */
+	successes: number;
+	attempts: number;
 }
 
 export interface SuggestResult {
@@ -370,7 +425,10 @@ export async function _runSuggester(
 			keywords: scrubKeywords(task.keywords, plan.filters),
 			note: task.note,
 			relevance: task.relevance,
-			filters: plan.filters
+			filters: plan.filters,
+			needs_login: !!plan.platform.login_page_url,
+			successes: plan.platform.success_count,
+			attempts: plan.platform.success_count + plan.platform.failure_count
 		});
 	}
 	if (droppedIds.length > 0) {
