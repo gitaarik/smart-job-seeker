@@ -253,6 +253,13 @@
       "when": 1788515698975,
       "tag": "0035_fresh_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1788524587796,
+      "tag": "0036_vengeful_stephen_strange",
+      "breakpoints": true
     }
   ]
 }

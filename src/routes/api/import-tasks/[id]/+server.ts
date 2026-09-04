@@ -14,7 +14,6 @@ import { parseBody, searchTaskUpdateSchema } from '$lib/server/validation/api-sc
 import { hasDeviceAccess } from '$lib/server/device-shares';
 import { hasCredentialAccess } from '$lib/server/credential-shares';
 import { encryptCredential } from '$lib/server/auth/crypto';
-import { triggerAutoImportReconcile } from '$lib/server/import-tasks/trigger';
 import { checkPublicHttpUrl } from '$lib/server/net/public-url';
 
 /**
@@ -152,18 +151,17 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 		data.search_filters = body.search_filters;
 	}
 	if (body.is_active !== undefined) {
-		// Pure activation toggle — deliberately does NOT touch auto_managed, so
-		// activating an auto-suggested task from the overview keeps the reconciler
-		// syncing its filters. Only a content edit (the form action) adopts.
 		data.is_active = body.is_active;
-		// Record a deliberate pause so the reconciler never auto-promotes this task
-		// back to active behind the user's back; clear it when they re-activate.
+		// Record a deliberate pause. `auth-block` re-activates a task by itself
+		// once a blocked login recovers, and that is guarded on this column being
+		// null, so a task switched off by hand has to stay off. Cleared when the
+		// user turns it back on.
 		data.user_paused_at = body.is_active ? null : new Date();
 		// Turning it back on is the user answering the "this needs you once"
 		// notification, so retire the auth-block markers with it. Left set,
-		// auto_disabled_at would keep showing the banner and keep blocking
-		// reconciler promotion for a task the user has explicitly re-armed, and
-		// the notified stamp would swallow the next warning.
+		// auto_disabled_at would keep showing the banner and keep the task
+		// disabled after the user has explicitly re-armed it, and the notified
+		// stamp would swallow the next warning.
 		if (body.is_active) {
 			data.auth_block_kind = null;
 			data.auth_block_notified_at = null;
@@ -360,16 +358,6 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
 	if (Object.keys(data).length > 0) {
 		await db.update(search_tasks).set(data).where(eq(search_tasks.id, searchTaskId));
-	}
-
-	// A newly attached login can make this profile's other gated auto proposals
-	// runnable — re-evaluate so they get linked + promoted. Force past the
-	// unchanged input hash; skip top-up (no new suggestions, just promotion).
-	if (data.platform_profile_id != null) {
-		triggerAutoImportReconcile(searchTask.profile_id, {
-			force: true,
-			skipTopUp: true
-		});
 	}
 
 	return json({ ok: true });

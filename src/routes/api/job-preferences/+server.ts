@@ -8,7 +8,6 @@ import {
 	jobPreferencesSchema,
 	parseBody
 } from '$lib/server/validation/api-schemas';
-import { triggerAutoImportReconcile } from '$lib/server/import-tasks/reconcile';
 
 export const PUT: RequestHandler = async ({ request, locals }) => {
 	const user = requireAuth(locals);
@@ -67,9 +66,6 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 			.returning();
 	}
 
-	// Preferences drive the auto-import filters — keep the generated set in sync.
-	triggerAutoImportReconcile(profile_id);
-
 	return json({ success: true, id: result.id });
 };
 
@@ -125,9 +121,6 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 		.set(data)
 		.where(eq(match_config.id, existing.id))
 		.returning();
-
-	// Preferences drive the auto-import filters — keep the generated set in sync.
-	triggerAutoImportReconcile(profile_id);
 
 	return json({ success: true, id: result.id });
 };

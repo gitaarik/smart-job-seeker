@@ -16,7 +16,6 @@ import {
 } from '$lib/server/resume';
 import { importProfileFromJson } from '$lib/server/profile/import-profile-json';
 import { exportProfile } from '$lib/server/profile/export';
-import { triggerAutoImportReconcile } from '$lib/server/import-tasks/reconcile';
 import type { ExportedProfile } from '$lib/server/profile/export-profile-json';
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -164,9 +163,6 @@ export const actions: Actions = {
 			console.warn('[create] import warnings:', result.errors);
 		}
 
-		// Seed a starter set of auto-generated import tasks for the new profile.
-		if (result.profileId) triggerAutoImportReconcile(result.profileId);
-
 		redirect(303, `/home?profile=${result.profileId}&created=true`);
 	},
 
@@ -230,9 +226,6 @@ export const actions: Actions = {
 		// the lazy backfill in createAndGenerateAiChat fires on first use.
 		await exportProfile(profile.id);
 
-		// Seed a starter set of auto-generated import tasks for the new profile.
-		triggerAutoImportReconcile(profile.id);
-
 		redirect(303, `/home?profile=${profile.id}&created=true`);
 	},
 
@@ -282,9 +275,6 @@ export const actions: Actions = {
 			const message = e instanceof Error ? e.message : 'Import failed';
 			return fail(500, { error: message });
 		}
-
-		// Seed a starter set of auto-generated import tasks for the new profile.
-		if (result.profileId) triggerAutoImportReconcile(result.profileId);
 
 		redirect(303, `/home?profile=${result.profileId}&created=true`);
 	}

@@ -148,10 +148,8 @@
 	 * Where the task will run. A connected device wins over the server-side
 	 * browser: it scrapes from the user's own IP, which is the difference
 	 * between working and being blocked on the boards that reject datacenter
-	 * ranges. This mirrors what the auto-import reconciler already does
-	 * (`device ? 'tunnel' : config.defaultBrowserProvider` in reconcile.ts).
-	 * The add form used to hardcode "hosted", so a user with a device connected
-	 * still got the cloud browser.
+	 * ranges. The add form used to hardcode "hosted", so a user with a device
+	 * connected still got the cloud browser.
 	 *
 	 * With no device we send an empty provider rather than naming one, letting
 	 * the create action apply the server's own default. That defers to operator

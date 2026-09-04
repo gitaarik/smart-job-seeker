@@ -564,20 +564,6 @@
 			{/if}
 
 			<div class="ml-auto flex items-center gap-2">
-				<form method="POST" action="?/toggleAutoImport">
-					<input type="hidden" name="enabled" value={data.autoImportEnabled ? 'false' : 'true'} />
-					<button
-						type="submit"
-						title="When on, we keep a starter set of import tasks in sync with your profile and match preferences, without asking. Ones needing no login are activated and scheduled straight away and will spend credits; ones needing a login wait paused. Off by default — use 'Suggest searches for me' to see proposals without any being created."
-						class="
-              rounded-lg px-3 py-1.5 text-xs whitespace-nowrap transition-colors {data.autoImportEnabled
-							? 'bg-purple-500/15 text-purple-600 hover:bg-purple-500/25'
-							: 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] hover:bg-[var(--dash-border)]'}
-            "
-					>
-						Auto-add tasks: {data.autoImportEnabled ? 'On' : 'Off'}
-					</button>
-				</form>
 				<button
 					type="button"
 					onclick={() => (showAddForm = true)}
@@ -779,14 +765,6 @@
 											: "Can't get past the platform's login, so it's retrying less often. Run it once yourself to fix it."}
 									>
 										{search.auto_disabled_at ? 'Login blocked — off' : 'Login blocked'}
-									</span>
-								{/if}
-								{#if search.origin === 'auto'}
-									<span
-										class="rounded-full bg-purple-500/15 px-2 py-0.5 text-xs whitespace-nowrap text-purple-600"
-										title="Auto-suggested from your profile and match preferences. Review and activate to start scraping."
-									>
-										Auto-suggested
 									</span>
 								{/if}
 								{#if search.browser_provider === 'tunnel'}

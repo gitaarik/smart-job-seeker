@@ -7,7 +7,6 @@ import {
 	job_platforms,
 	platform_credentials,
 	platform_profiles,
-	profile_auto_import,
 	profiles,
 	search_tasks
 } from '$lib/server/db/schema';
@@ -17,8 +16,6 @@ import { hasCredentialAccess } from '$lib/server/credential-shares';
 import { listApiKeys } from '$lib/server/auth/api-key';
 import { hasDeviceAccess, listSharedWithMe } from '$lib/server/device-shares';
 import { getSelectedProfileId } from '../../../profile/utils';
-import { adoptAutoTaskIfManaged } from '$lib/server/import-tasks/reconcile';
-import { triggerAutoImportReconcile } from '$lib/server/import-tasks/trigger';
 import { checkPublicHttpUrl } from '$lib/server/net/public-url';
 import { isTaskBrowserProvider } from '$lib/import-tasks/readiness';
 import {
@@ -60,15 +57,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 		})()
 	]);
 	const searchTasks = searchTasksList;
-
-	// Whether unattended generation of import tasks is enabled for this profile.
-	// Off unless the user turned it on; no row means it was never reconciled,
-	// which is the same answer as a row created at the column default.
-	const autoImportState = await db.query.profile_auto_import.findFirst({
-		where: eq(profile_auto_import.profile_id, profileId),
-		columns: { enabled: true }
-	});
-	const autoImportEnabled = autoImportState?.enabled ?? false;
 
 	const uiPrefs = (profile.ui_preferences as Record<string, unknown>) ?? {};
 
@@ -154,8 +142,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 		browserCountryCode: profile.browser_country_code ?? '',
 		defaultCountryCode: profile.country_code ?? '',
 		apiKeyDevices,
-		importablePlatforms,
-		autoImportEnabled
+		importablePlatforms
 	};
 };
 
@@ -665,13 +652,6 @@ export const actions: Actions = {
 			})
 			.returning();
 
-		// A new login attached here can make this profile's existing gated auto
-		// proposals runnable — re-evaluate to link + promote them (no new
-		// suggestions; force past the unchanged input hash).
-		if (resolvedCredentialId !== null) {
-			triggerAutoImportReconcile(profileId, { force: true, skipTopUp: true });
-		}
-
 		return { success: true, taskId: newTask.id };
 	},
 
@@ -785,17 +765,6 @@ export const actions: Actions = {
 			})
 			.where(eq(search_tasks.id, id));
 
-		// A hand-edit means the user has taken ownership: stop auto-managing this
-		// task so the reconciler won't prune or overwrite their changes. No-op
-		// unless it was an auto task.
-		await adoptAutoTaskIfManaged(id);
-
-		// A login attached during the edit can unblock the profile's other gated
-		// auto proposals — re-evaluate to link + promote them.
-		if (resolvedCredentialId !== null) {
-			triggerAutoImportReconcile(profileId, { force: true, skipTopUp: true });
-		}
-
 		return { success: true };
 	},
 
@@ -826,34 +795,6 @@ export const actions: Actions = {
 		}
 
 		await db.delete(search_tasks).where(eq(search_tasks.id, id));
-
-		return { success: true };
-	},
-
-	toggleAutoImport: async ({ request, locals, cookies }) => {
-		const user = locals.user;
-		if (!user) {
-			return fail(401, { error: 'Not authenticated' });
-		}
-
-		const profileId = await getSelectedProfileId(cookies, user.id);
-		if (!profileId) {
-			return fail(400, { error: 'No profile selected' });
-		}
-
-		const formData = await request.formData();
-		const enabled = formData.get('enabled') === 'true';
-
-		// Upsert the per-profile sync-state row's enable flag. Turning it back on
-		// doesn't itself regenerate — the next profile/preference change (or a
-		// forced re-suggest) does, via the input-hash gate.
-		await db
-			.insert(profile_auto_import)
-			.values({ profile_id: profileId, enabled })
-			.onConflictDoUpdate({
-				target: profile_auto_import.profile_id,
-				set: { enabled, date_updated: new Date() }
-			});
 
 		return { success: true };
 	}

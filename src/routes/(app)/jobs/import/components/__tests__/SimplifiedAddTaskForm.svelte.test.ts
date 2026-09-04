@@ -47,8 +47,8 @@ function hiddenValue(container: HTMLElement, name: string): string | null {
 describe('SimplifiedAddTaskForm — where the task runs', () => {
 	// The form used to hardcode browser_provider="hosted", so a user with a
 	// device connected still had every manually-added task sent to the cloud
-	// browser. These lock in the reconciler's rule instead: a connected device
-	// wins, and the server default applies only when there is none.
+	// browser. These lock in the rule instead: a connected device wins, and the
+	// server default applies only when there is none.
 	test('pins the task to a connected device', () => {
 		const container = renderForm(ownDevice());
 
