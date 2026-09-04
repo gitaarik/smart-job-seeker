@@ -13,10 +13,15 @@
 	 * deliberately dropped — SourcePicker owned that UI and went out with the
 	 * URL-template system it was built around, while the server action, the
 	 * `search_tasks.search_url` column and the scraper's direct-navigation path
-	 * all stayed. This re-exposes them: the user pastes the results URL they
-	 * already have open, and the scraper navigates straight to it. Extraction
-	 * is generic (AX tree + LLM identification, no per-site selectors), so an
-	 * arbitrary site works without any platform-specific configuration.
+	 * all stayed. This re-exposes them: the user gives a job search URL, an
+	 * optional login page, and optional keywords. Extraction is generic (AX
+	 * tree + LLM identification, no per-site selectors), so an arbitrary site
+	 * works without any platform-specific configuration.
+	 *
+	 * With keywords, the URL becomes the new platform's `search_page_url` and
+	 * the scraper drives that page's own search form. Without them it is a
+	 * plain navigation target, which is what someone pasting a search they
+	 * already built in their browser wants.
 	 */
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
@@ -77,6 +82,7 @@
 	);
 	let customUrl = $state('');
 	let customName = $state('');
+	let customLoginUrl = $state('');
 	let keywords = $state('');
 	let note = $state('');
 	let filters = $state<Record<string, SearchFilterValue>>({});
@@ -107,14 +113,36 @@
 		isCustom && customUrl.trim() && !customOrigin ? 'Enter a full URL including https://' : null
 	);
 
+	/** Same absolute-URL rule as the search page; the server re-checks both. */
+	const customLoginUrlError = $derived.by(() => {
+		if (!isCustom) return null;
+		const trimmed = customLoginUrl.trim();
+		if (!trimmed) return null;
+		try {
+			const parsed = new URL(trimmed);
+			if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+				return 'Enter a full URL including https://';
+			}
+			return null;
+		} catch {
+			return 'Enter a full URL including https://';
+		}
+	});
+
 	/**
 	 * Curated-listing sites (SvelteJobs, X-Team) have no search entry page, so
-	 * there is no form to type keywords into. Same for a pasted URL, which
-	 * already encodes whatever search the user set up in their own browser.
+	 * there is no form to type keywords into.
+	 *
+	 * A pasted URL does take keywords: the server stores it as the new site's
+	 * search page, and the scraper drives that page's own search form. Leaving
+	 * keywords empty imports the URL exactly as pasted, which is what someone
+	 * who set the search up in their own browser wants.
 	 */
-	const keywordsApply = $derived(!isCustom && !!selectedPlatform?.search_page_url);
+	const keywordsApply = $derived(isCustom || !!selectedPlatform?.search_page_url);
 
-	const canSubmit = $derived(!submitting && (isCustom ? !!customOrigin : platformId !== null));
+	const canSubmit = $derived(
+		!submitting && !customLoginUrlError && (isCustom ? !!customOrigin : platformId !== null)
+	);
 
 	/**
 	 * Where the task will run. A connected device wins over the server-side
@@ -129,6 +157,15 @@
 	 * the create action apply the server's own default. That defers to operator
 	 * config instead of pinning the row to a provider forever.
 	 */
+	/**
+	 * "none" skips the login phase outright (scraper.ts), so a task that carries
+	 * a login URL under it would collect the URL and never visit it. "manual"
+	 * pauses the run and hands the browser over instead, which is the only mode
+	 * that works here: this form collects no password. The task page can switch
+	 * it to "auto" once credentials are saved.
+	 */
+	const loginMode = $derived(isCustom && customLoginUrl.trim() ? 'manual' : 'none');
+
 	const runsOnDevice = $derived(preferredDevice !== null);
 	const deviceLabel = $derived(
 		preferredDevice
@@ -189,7 +226,7 @@
 				</optgroup>
 			{/if}
 			<optgroup label="Anywhere else">
-				<option value={CUSTOM}>Other site (paste a search URL)…</option>
+				<option value={CUSTOM}>Other site (add it yourself)…</option>
 			</optgroup>
 		</select>
 	</div>
@@ -198,7 +235,7 @@
 		<div>
 			<label
 				class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
-				for="add-custom-url">Search results URL</label
+				for="add-custom-url">Job search URL</label
 			>
 			<input
 				id="add-custom-url"
@@ -214,9 +251,36 @@
 				<p class="mt-1 text-xs text-[var(--dash-error)]">{customUrlError}</p>
 			{:else}
 				<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
-					Set the search up in your own browser, then paste the address bar here. We go straight to
-					that page and import what's listed, so any keywords, location and sorting already in the
-					URL are kept exactly as you set them.
+					The page you'd search jobs on, or a search you already set up in your own browser. Add
+					keywords below and we type them into that page's own search box; leave them empty and we
+					import the URL exactly as you pasted it.
+				</p>
+			{/if}
+		</div>
+
+		<div>
+			<label
+				class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
+				for="add-custom-login-url"
+				>Login page URL <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span
+				></label
+			>
+			<input
+				id="add-custom-login-url"
+				type="url"
+				bind:value={customLoginUrl}
+				placeholder="https://example.com/login"
+				aria-invalid={customLoginUrlError ? 'true' : undefined}
+				class="w-full rounded border bg-[var(--dash-bg)] px-2 py-1.5 text-sm text-[var(--dash-text)] {customLoginUrlError
+					? 'border-[var(--dash-error)]'
+					: 'border-[var(--dash-border)]'}"
+			/>
+			{#if customLoginUrlError}
+				<p class="mt-1 text-xs text-[var(--dash-error)]">{customLoginUrlError}</p>
+			{:else}
+				<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+					Only if the site hides its jobs behind a sign-in. Add the credentials on the task page
+					afterwards; without them the run stops and asks you to sign in yourself.
 				</p>
 			{/if}
 		</div>
@@ -263,11 +327,7 @@
 		</div>
 	{:else}
 		<p class="text-xs text-[var(--dash-text-muted)]">
-			{#if isCustom}
-				No keyword box: the URL you paste already carries the search.
-			{:else}
-				{selectedPlatform?.name ?? 'This site'} has no search form — we import its listing page as-is.
-			{/if}
+			{selectedPlatform?.name ?? 'This site'} has no search form, so we import its listing page as-is.
 		</p>
 	{/if}
 
@@ -303,12 +363,14 @@
 	<!-- Hidden fields the server action expects. -->
 	{#if isCustom}
 		<!-- getOrCreatePlatform resolves the origin to an existing platform by
-		     host, or creates a draft one. `search_url` is what the scraper
-		     actually navigates to, and it takes precedence over the platform's
-		     own search page. -->
+		     host, or creates a draft one. For a newly created one the pasted URL
+		     also becomes its `search_page_url`, and the create action then drops
+		     `search_url` from the task: a task-level URL makes the scraper skip
+		     the search form, which would silently discard the keywords. -->
 		<input type="hidden" name="platform_is_new" value="true" />
 		<input type="hidden" name="platform_url" value={customOrigin ?? ''} />
 		<input type="hidden" name="platform_name" value={customName.trim()} />
+		<input type="hidden" name="login_page_url" value={customLoginUrl.trim()} />
 		<input type="hidden" name="search_url" value={customUrl.trim()} />
 	{:else if selectedPlatform}
 		<input type="hidden" name="platform_id" value={selectedPlatform.id} />
@@ -322,7 +384,7 @@
 	{:else}
 		<input type="hidden" name="browser_provider" value="" />
 	{/if}
-	<input type="hidden" name="login_mode" value="none" />
+	<input type="hidden" name="login_mode" value={loginMode} />
 	<input type="hidden" name="max_jobs" value={String(defaultMaxJobs ?? 25)} />
 	<input type="hidden" name="stop_after_duplicates" value="5" />
 	<input type="hidden" name="skip_existing" value="true" />

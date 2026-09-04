@@ -21,6 +21,11 @@ import { adoptAutoTaskIfManaged } from '$lib/server/import-tasks/reconcile';
 import { triggerAutoImportReconcile } from '$lib/server/import-tasks/trigger';
 import { checkPublicHttpUrl } from '$lib/server/net/public-url';
 import { isTaskBrowserProvider } from '$lib/import-tasks/readiness';
+import {
+	LOGIN_PAGE_URL_MAX,
+	SEARCH_PAGE_URL_MAX,
+	resolveCustomSiteSearchUrl
+} from '$lib/import-tasks/custom-site';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();
@@ -153,26 +158,45 @@ export const load: PageServerLoad = async ({ parent }) => {
 	};
 };
 
+interface ResolvedPlatform {
+	id: number;
+	/** Display name, so a refusal can say which site it means. */
+	name: string;
+	/**
+	 * The platform's search entry page after any fill-in below. The caller
+	 * compares it against the URL the user pasted to decide whether the task
+	 * still needs a `search_url` of its own.
+	 */
+	searchPageUrl: string | null;
+}
+
 async function getOrCreatePlatform(
 	platformId: string | null,
 	platformUrl: string | null,
 	platformName: string | null,
 	isNew: boolean,
 	loginPageUrl: string | null = null,
-	createdByUserId: string | null = null
-): Promise<number | null> {
+	createdByUserId: string | null = null,
+	searchPageUrl: string | null = null
+): Promise<ResolvedPlatform | null> {
 	// Fast path: existing platform_id, no creation needed (AI suggestions hit
 	// this — they pass platform_id directly without a URL).
 	if (platformId && !isNew) {
+		const id = parseInt(platformId);
 		if (loginPageUrl !== null) {
 			await db
 				.update(job_platforms)
 				.set({
 					login_page_url: loginPageUrl || null
 				})
-				.where(eq(job_platforms.id, parseInt(platformId)));
+				.where(eq(job_platforms.id, id));
 		}
-		return parseInt(platformId);
+		const row = await db.query.job_platforms.findFirst({
+			where: eq(job_platforms.id, id),
+			columns: { id: true, name: true, search_page_url: true }
+		});
+		if (!row) return null;
+		return { id: row.id, name: row.name, searchPageUrl: row.search_page_url };
 	}
 
 	if (!platformUrl) return null;
@@ -189,11 +213,43 @@ async function getOrCreatePlatform(
 	// admin-curated, so comparing parsed hosts in JS beats an approximation in
 	// SQL.
 	const candidates = await db
-		.select({ id: job_platforms.id, url: job_platforms.url })
+		.select({
+			id: job_platforms.id,
+			name: job_platforms.name,
+			url: job_platforms.url,
+			search_page_url: job_platforms.search_page_url,
+			login_page_url: job_platforms.login_page_url,
+			created_by_user_id: job_platforms.created_by_user_id
+		})
 		.from(job_platforms);
 	const existing = candidates.find((p) => hostKey(p.url) === domain);
 	if (existing) {
-		return existing.id;
+		// The row is shared, so what the user typed only fills gaps, and only on
+		// a row they own. Writing their search page onto a published platform
+		// would redirect every other user's tasks on that site; overwriting a
+		// value that is already there would do the same to their own earlier
+		// setup. Filling an empty column on your own draft is neither.
+		//
+		// This branch used to `return existing.id` outright, which silently
+		// dropped the login URL the user had just typed — the create path a few
+		// lines down stored it, so whether it survived depended on nothing the
+		// user could see.
+		const isOwn = createdByUserId !== null && existing.created_by_user_id === createdByUserId;
+		const fill: Partial<{ search_page_url: string; login_page_url: string }> = {};
+		if (isOwn && !existing.search_page_url && searchPageUrl) {
+			fill.search_page_url = searchPageUrl;
+		}
+		if (isOwn && !existing.login_page_url && loginPageUrl) {
+			fill.login_page_url = loginPageUrl;
+		}
+		if (Object.keys(fill).length > 0) {
+			await db.update(job_platforms).set(fill).where(eq(job_platforms.id, existing.id));
+		}
+		return {
+			id: existing.id,
+			name: existing.name,
+			searchPageUrl: fill.search_page_url ?? existing.search_page_url
+		};
 	}
 
 	// Create new platform
@@ -209,6 +265,11 @@ async function getOrCreatePlatform(
 			url: platformUrl,
 			key: `${key}-${Date.now().toString(36)}`, // Ensure unique key
 			login_page_url: loginPageUrl || null,
+			// The page the scraper drives the search form on. Setting it here is
+			// what lets a user-added site take keywords at all: with it empty,
+			// configureSearchViaForm has nowhere to type and the task can only
+			// navigate to a fixed URL.
+			search_page_url: searchPageUrl || null,
 			// Ownership, so the dropdown can ask "published OR mine" directly
 			// rather than inferring it from which platforms a profile's tasks
 			// happen to reference.
@@ -222,7 +283,11 @@ async function getOrCreatePlatform(
 		})
 		.returning();
 
-	return platform.id;
+	return {
+		id: platform.id,
+		name: platform.name,
+		searchPageUrl: platform.search_page_url
+	};
 }
 
 /**
@@ -396,15 +461,42 @@ export const actions: Actions = {
 			}
 		}
 
+		// `job_platforms.login_page_url` is varchar(255) and there is nowhere
+		// else to put it, so an over-long one is a refusal rather than a 500 on
+		// insert. The search URL has somewhere to fall back to (see below), so
+		// its length is handled there instead.
+		if (loginPageUrl?.trim() && loginPageUrl.trim().length > LOGIN_PAGE_URL_MAX) {
+			return fail(400, {
+				error: `That login page URL is too long (over ${LOGIN_PAGE_URL_MAX} characters).`
+			});
+		}
+
 		// Get or create platform
-		const resolvedPlatformId = await getOrCreatePlatform(
+		// The custom-site branch treats the pasted URL as the site's search page,
+		// so a brand-new platform gets it as `search_page_url` and the keyword
+		// box has somewhere to type. Nothing is passed for a platform picked
+		// from the dropdown: its search page is already curated.
+		//
+		// `search_page_url` is varchar(512) while `search_tasks.search_url` is
+		// text, so a URL past that length can only live on the task. Passing it
+		// anyway would fail the insert; withholding it leaves the platform
+		// without a search page and the task keeps the URL, which is what the
+		// custom branch did before keywords were an option.
+		const pastedSearchUrl = search_url?.trim() || null;
+		const searchPageUrl =
+			platformIsNew && pastedSearchUrl && pastedSearchUrl.length <= SEARCH_PAGE_URL_MAX
+				? pastedSearchUrl
+				: null;
+		const resolvedPlatform = await getOrCreatePlatform(
 			platformId,
 			platformUrl,
 			platformName,
 			platformIsNew,
 			loginPageUrl,
-			user.id
+			user.id,
+			searchPageUrl
 		);
+		const resolvedPlatformId = resolvedPlatform?.id ?? null;
 
 		// A custom site that resolved to nothing means the URL wasn't parseable.
 		// getOrCreatePlatform answers null for that, and a task with no platform
@@ -414,6 +506,26 @@ export const actions: Actions = {
 		if (platformUrl && !resolvedPlatformId) {
 			return fail(400, { error: `Could not read a site address from "${platformUrl}".` });
 		}
+		// Same reasoning for a platform_id that no longer resolves to a row —
+		// deleted between page load and submit, or tampered with. Storing it
+		// would violate the foreign key; storing null would be the stuck task.
+		if (platformId && !resolvedPlatformId) {
+			return fail(400, { error: 'That site is no longer available. Pick another one.' });
+		}
+
+		// Whether the task keeps a `search_url` of its own — see custom-site.ts
+		// for why a URL and keywords cannot both stand.
+		const searchUrlDecision = resolveCustomSiteSearchUrl({
+			platformIsNew,
+			pastedUrl: pastedSearchUrl,
+			platformSearchPageUrl: resolvedPlatform?.searchPageUrl ?? null,
+			platformName: resolvedPlatform?.name ?? 'that site',
+			searchTerm: search_term?.trim() || null
+		});
+		if (!searchUrlDecision.ok) {
+			return fail(400, { error: searchUrlDecision.error });
+		}
+		const resolvedSearchUrl = searchUrlDecision.searchUrl;
 
 		// Get or create credentials
 		let resolvedCredentialId: number | null = null;
@@ -525,7 +637,7 @@ export const actions: Actions = {
 			.insert(search_tasks)
 			.values({
 				note: note?.trim() || null,
-				search_url: search_url?.trim() || null,
+				search_url: resolvedSearchUrl,
 				search_term: search_term?.trim() || null,
 				search_location: search_location?.trim() || null,
 				search_filters,
@@ -620,7 +732,7 @@ export const actions: Actions = {
 		}
 
 		// Get or create platform
-		const resolvedPlatformId = await getOrCreatePlatform(
+		const resolvedPlatform = await getOrCreatePlatform(
 			platformId,
 			platformUrl,
 			platformName,
@@ -628,6 +740,7 @@ export const actions: Actions = {
 			loginPageUrl,
 			user.id
 		);
+		const resolvedPlatformId = resolvedPlatform?.id ?? null;
 
 		// A custom site that resolved to nothing means the URL wasn't parseable.
 		// getOrCreatePlatform answers null for that, and a task with no platform
@@ -636,6 +749,12 @@ export const actions: Actions = {
 		// task that looks saved and is permanently stuck.
 		if (platformUrl && !resolvedPlatformId) {
 			return fail(400, { error: `Could not read a site address from "${platformUrl}".` });
+		}
+		// Same reasoning for a platform_id that no longer resolves to a row —
+		// deleted between page load and submit, or tampered with. Storing it
+		// would violate the foreign key; storing null would be the stuck task.
+		if (platformId && !resolvedPlatformId) {
+			return fail(400, { error: 'That site is no longer available. Pick another one.' });
 		}
 
 		// Get or create credentials
