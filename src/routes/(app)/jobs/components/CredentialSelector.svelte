@@ -16,6 +16,8 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { portalToBody } from '$lib/actions/portal';
+	import LoginModeChooser from './LoginModeChooser.svelte';
+	import { toLoginMode } from '$lib/import-tasks/sign-in';
 
 	interface CredentialEntry {
 		id: number;
@@ -50,6 +52,13 @@
 		 *  "auto"). Used by flows where login is mandatory — e.g. admin
 		 *  discovery, which can't proceed without logging in. */
 		hideLoginMode?: boolean;
+		/**
+		 * Whether the platform has a `login_page_url`. Without one the scraper
+		 * skips the login phase whatever mode is picked, so the chooser says so
+		 * rather than letting the setting look effective. Defaults true because
+		 * the admin caller only reaches this component on gated platforms.
+		 */
+		hasSignInPage?: boolean;
 		onselect?: (credentialId: string) => void;
 		onloginmodechange?: (mode: string) => void;
 		oncredentialadded?: (cred: { id: number; username: string | null }) => void;
@@ -65,6 +74,7 @@
 		platformName = null,
 		disabled = false,
 		hideLoginMode = false,
+		hasSignInPage = true,
 		onselect,
 		onloginmodechange,
 		oncredentialadded,
@@ -317,84 +327,44 @@
 </script>
 
 <div>
-	<div class="mb-3 flex items-center justify-between">
-		<div class="flex items-center gap-2">
-			<FontAwesomeIcon icon={faKey} class="h-4 w-4 text-[var(--dash-text-secondary)]" />
-			<h2 class="text-sm font-medium text-[var(--dash-text)]">Login & Credentials</h2>
-		</div>
-		<div class="flex items-center gap-2">
-			{#if isSaving}
-				<Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
-			{/if}
-			{#if !disabled && loginMode === 'auto'}
-				<button
-					type="button"
-					onclick={() => (showAddForm = !showAddForm)}
-					class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
-				>
-					<FontAwesomeIcon icon={faPlus} class="h-3 w-3" />
-					Add
-				</button>
-			{/if}
-		</div>
-	</div>
-
 	{#if !hideLoginMode}
-		<!-- Login Mode Toggle -->
 		<div class="mb-3">
-			<h3 class="mb-2 text-xs font-medium text-[var(--dash-text-secondary)]">Login Mode</h3>
-			<div class="flex overflow-hidden rounded-md border border-[var(--dash-border)]">
-				<button
-					type="button"
-					{disabled}
-					onclick={() => setLoginMode('auto')}
-					class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
-						loginMode === 'auto'
-							? 'bg-[var(--dash-primary)] text-white'
-							: 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]'
-					} disabled:opacity-60`}
-				>
-					Auto-login
-				</button>
-				<button
-					type="button"
-					{disabled}
-					onclick={() => setLoginMode('manual')}
-					class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
-						loginMode === 'manual'
-							? 'bg-[var(--dash-primary)] text-white'
-							: 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]'
-					} disabled:opacity-60`}
-				>
-					Manual login
-				</button>
-				<button
-					type="button"
-					{disabled}
-					onclick={() => setLoginMode('none')}
-					class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
-						loginMode === 'none'
-							? 'bg-[var(--dash-primary)] text-white'
-							: 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]'
-					} disabled:opacity-60`}
-				>
-					No login
-				</button>
-			</div>
-			<p class="mt-1.5 text-xs text-[var(--dash-text-muted)]">
-				{#if loginMode === 'auto'}
-					The scraper will fill in credentials and log in automatically.
-				{:else if loginMode === 'manual'}
-					The scraper will navigate to the login page and wait for you to log in.
-				{:else}
-					The scraper will go directly to the search page without logging in.
-				{/if}
-			</p>
+			<h3 class="mb-2 text-xs font-medium text-[var(--dash-text-secondary)]">
+				How this task signs in
+			</h3>
+			<LoginModeChooser
+				mode={toLoginMode(loginMode)}
+				{platformName}
+				{hasSignInPage}
+				{disabled}
+				onchange={setLoginMode}
+			/>
 		</div>
 	{/if}
 
-	<!-- Credential list (only for auto-login) -->
+	<!-- Saved logins, which only the automatic mode uses -->
 	{#if loginMode === 'auto'}
+		<div class="mt-3 mb-2 flex items-center justify-between">
+			<div class="flex items-center gap-2">
+				<FontAwesomeIcon icon={faKey} class="h-4 w-4 text-[var(--dash-text-secondary)]" />
+				<h2 class="text-sm font-medium text-[var(--dash-text)]">Saved logins</h2>
+			</div>
+			<div class="flex items-center gap-2">
+				{#if isSaving}
+					<Spinner size="w-3 h-3" color="var(--dash-text-muted)" />
+				{/if}
+				{#if !disabled}
+					<button
+						type="button"
+						onclick={() => (showAddForm = !showAddForm)}
+						class="flex items-center gap-1 rounded px-2 py-1 text-xs text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
+					>
+						<FontAwesomeIcon icon={faPlus} class="h-3 w-3" />
+						Add
+					</button>
+				{/if}
+			</div>
+		</div>
 		<div class="space-y-1.5">
 			{#each credentials as cred}
 				<div

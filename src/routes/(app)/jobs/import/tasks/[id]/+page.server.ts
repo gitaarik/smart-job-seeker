@@ -194,6 +194,27 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		}
 	}
 
+	// May this user edit the platform's sign-in page URL?
+	//
+	// Mirrors the rule in `PATCH /api/platforms/[id]` exactly: staff always,
+	// and a normal user only when no *other* account has a task on the
+	// platform — the row is global, so changing LinkedIn's login page would
+	// redirect everyone's runs. Computed here rather than guessed in the
+	// component, because a field that renders and then 403s on save is the
+	// failure this page has already had once (see the isStaff note above).
+	let canEditSignInPage = isStaff;
+	if (!canEditSignInPage && user && searchTask.platform_id) {
+		const foreignUse = await db
+			.select({ id: search_tasks.id })
+			.from(search_tasks)
+			.innerJoin(profiles, eq(profiles.id, search_tasks.profile_id))
+			.where(
+				and(eq(search_tasks.platform_id, searchTask.platform_id), ne(profiles.user_id, user.id))
+			)
+			.limit(1);
+		canEditSignInPage = foreignUse.length === 0;
+	}
+
 	// Skill proficiency map for the task's profile so the expanded
 	// job-detail panel can highlight matched skills with strong/weak
 	// colour tiers, the same way the job search page does.
@@ -207,6 +228,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		isStaff,
 		isDemo,
 		hasOtherRunning: !!otherRunning,
+		canEditSignInPage,
 		subscriptionRenewDate: subscription?.currentPeriodEnd ?? null,
 		browserCountryCode: profileData?.browser_country_code || '',
 		defaultCountryCode: profileData?.country_code || '',

@@ -5,6 +5,8 @@ import { eq } from 'drizzle-orm';
 import { job_platforms, search_tasks } from '$lib/server/db/schema';
 import { requireAuth, parseIntParam } from '$lib/server/utils/api-helpers';
 import { platformUpdateSchema, parseBody } from '$lib/server/validation/api-schemas';
+import { checkPublicHttpUrl } from '$lib/server/net/public-url';
+import { LOGIN_PAGE_URL_MAX } from '$lib/import-tasks/custom-site';
 
 /**
  * PATCH /api/platforms/[id]
@@ -12,6 +14,13 @@ import { platformUpdateSchema, parseBody } from '$lib/server/validation/api-sche
  * Update platform fields (e.g. login_page_url).
  * Staff can always edit. Normal users can only edit if no other user's
  * accounts reference this platform.
+ *
+ * The two checks below duplicate what the create action does to the same
+ * column, and for the same reasons: the URL becomes a navigation target for a
+ * real browser (see `public-url.ts`), and `job_platforms.login_page_url` is
+ * `varchar(255)`, so an over-long one is a refusal rather than a 500 on write.
+ * Both were absent while this endpoint had no caller in the UI; the sign-in
+ * section on the task page is the first, so they matter now.
  */
 export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 	const user = requireAuth(locals);
@@ -52,6 +61,19 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 	}
 
 	const data = parseBody(platformUpdateSchema, await request.json());
+
+	if (data.login_page_url) {
+		if (data.login_page_url.length > LOGIN_PAGE_URL_MAX) {
+			throw error(
+				400,
+				`That sign-in page URL is too long (over ${LOGIN_PAGE_URL_MAX} characters).`
+			);
+		}
+		const verdict = checkPublicHttpUrl(data.login_page_url);
+		if (!verdict.ok) {
+			throw error(400, `That sign-in page URL can't be used: ${verdict.reason}`);
+		}
+	}
 
 	await db
 		.update(job_platforms)

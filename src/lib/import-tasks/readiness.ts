@@ -130,15 +130,23 @@ export function computeImportTaskBlockers(input: ImportTaskReadinessInput): Impo
 	}
 
 	// A gated platform (has a login page) needs credentials only when the task
-	// auto-logs in. "manual" lets the user sign in live during the run, and
-	// "none" skips login entirely — neither needs stored credentials.
+	// signs in automatically. "manual" lets the user sign in live during the
+	// run, and "none" skips login entirely — neither needs stored credentials.
+	//
+	// Note what is deliberately *not* a blocker: a task set to sign in on a
+	// platform with no `login_page_url`. That combination does nothing at run
+	// time (`handleLoginPhase` returns immediately), but `login_mode` defaults
+	// to "auto" at the column level, so every task ever created on a public
+	// board carries it. Refusing to start those would break tasks that work
+	// today. The sign-in section says so where the setting is edited instead —
+	// see `explainMissingSignInPage` in `sign-in.ts`.
 	const needsLogin = !!input.platformLoginPageUrl;
 	if (needsLogin && input.loginMode === 'auto' && !input.hasCredential) {
 		const name = input.platformName?.trim() || 'This platform';
 		blockers.push({
 			key: 'credentials',
 			title: 'Login credentials required',
-			detail: `${name} requires you to sign in, but no credentials are set. Add a login, or switch the login mode to Manual to sign in yourself during the run.`
+			detail: `${name} asks you to sign in, but this task has no saved login. Add one, or switch it to "I sign in myself" to sign in during the run.`
 		});
 	}
 

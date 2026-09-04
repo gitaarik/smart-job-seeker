@@ -119,7 +119,12 @@ export const load: PageServerLoad = async ({ parent }) => {
 			key: job_platforms.key,
 			name: job_platforms.name,
 			url: job_platforms.url,
-			search_page_url: job_platforms.search_page_url
+			search_page_url: job_platforms.search_page_url,
+			// Whether the site asks for a sign-in. The add form used to pin every
+			// platform picked here to login_mode "none", which on a gated site
+			// produces a task that can never log in and never says so; it now
+			// derives the mode from this column instead.
+			login_page_url: job_platforms.login_page_url
 		})
 		.from(job_platforms)
 		.where(
@@ -171,19 +176,32 @@ async function getOrCreatePlatform(
 	// this — they pass platform_id directly without a URL).
 	if (platformId && !isNew) {
 		const id = parseInt(platformId);
-		if (loginPageUrl !== null) {
-			await db
-				.update(job_platforms)
-				.set({
-					login_page_url: loginPageUrl || null
-				})
-				.where(eq(job_platforms.id, id));
-		}
 		const row = await db.query.job_platforms.findFirst({
 			where: eq(job_platforms.id, id),
-			columns: { id: true, name: true, search_page_url: true }
+			columns: {
+				id: true,
+				name: true,
+				search_page_url: true,
+				login_page_url: true,
+				created_by_user_id: true
+			}
 		});
 		if (!row) return null;
+		// Same fill-gaps-on-your-own-row rule the create branch below applies,
+		// and for the same reason: `job_platforms` is shared. This used to write
+		// whatever the form sent, unconditionally — and because an absent field
+		// arrives as an empty string rather than null, a form that rendered the
+		// input and left it blank would *clear* LinkedIn's sign-in page for every
+		// account on the instance. Nothing in the UI sends it on this path any
+		// more, so this is the belt to that braces: the action is a POST anyone
+		// authenticated can shape.
+		const ownsRow = createdByUserId !== null && row.created_by_user_id === createdByUserId;
+		if (ownsRow && !row.login_page_url && loginPageUrl) {
+			await db
+				.update(job_platforms)
+				.set({ login_page_url: loginPageUrl })
+				.where(eq(job_platforms.id, id));
+		}
 		return { id: row.id, name: row.name, searchPageUrl: row.search_page_url };
 	}
 

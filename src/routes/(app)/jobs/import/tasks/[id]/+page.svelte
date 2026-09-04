@@ -1168,7 +1168,7 @@
 	// dismissing banners, manual logins) persist into the next scrape. Auto-
 	// opens the VNC browser view so the user lands on an interactive
 	// session immediately.
-	async function openBrowser() {
+	async function openBrowser(url?: string) {
 		if (isTunnelMode && !desktopConnected) {
 			openBrowserMessage =
 				'No device is connected. Connect the desktop app or self-hosted tunnel first.';
@@ -1179,7 +1179,12 @@
 		openBrowserMessage = null;
 		try {
 			const res = await fetch(`/api/import-tasks/${searchTask.id}/open-browser`, {
-				method: 'POST'
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				// The endpoint defaults to the platform's search page; the
+				// sign-in button overrides it so the user lands on the login
+				// form rather than on a job list that will bounce them to it.
+				body: JSON.stringify(url ? { url } : {})
 			});
 			const data = await res.json().catch(() => ({}));
 			if (!res.ok) {
@@ -1196,6 +1201,15 @@
 		} finally {
 			isOpeningBrowser = false;
 		}
+	}
+
+	// "Sign in now" from the sign-in section. Same Chrome as the scrape, so the
+	// session created here is the one the next run finds already signed in.
+	const signInPageUrl = $derived(searchTask?.job_platform?.login_page_url ?? null);
+	const canSignInNow = $derived(isTunnelMode && desktopConnected && !!signInPageUrl);
+	function signInNow() {
+		if (!signInPageUrl) return;
+		openBrowser(signInPageUrl);
 	}
 
 	function startPolling() {
@@ -2576,7 +2590,7 @@
 
 				{#if isTunnelMode && !browserLive}
 					<button
-						onclick={openBrowser}
+						onclick={() => openBrowser()}
 						disabled={isOpeningBrowser || (!searchTask.platform_id && !searchTask.search_url)}
 						class="flex items-center justify-center gap-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-2 text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg-hover)] disabled:cursor-not-allowed disabled:opacity-50 sm:justify-start"
 						title="Open the platform in your NAS Chrome for manual interaction (no scrape)"
@@ -2727,6 +2741,9 @@
 				userTimezone={tz || ''}
 				timeFormat={tf}
 				hideSourceFields={true}
+				canEditSignInPage={data.canEditSignInPage}
+				onSignInNow={canSignInNow ? signInNow : null}
+				signingInNow={isOpeningBrowser}
 				isStaff={data.isStaff}
 			/>
 		{/key}

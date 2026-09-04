@@ -28,6 +28,7 @@
 	import ImportTaskBlockerBadge from '../components/ImportTaskBlockerBadge.svelte';
 	import AuthBlockNotice from '../components/AuthBlockNotice.svelte';
 	import { computeImportTaskBlockers, providerRequiresDevice } from '$lib/import-tasks/readiness';
+	import { defaultLoginMode } from '$lib/import-tasks/sign-in';
 	import { track } from '$lib/tools/analytics';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -370,7 +371,11 @@
 		}
 		formData.append('search_filters', JSON.stringify(suggestion.filters ?? {}));
 		formData.append('browser_provider', 'hosted');
-		formData.append('login_mode', 'none');
+		// Same rule the add form uses: a suggestion for a gated board should be
+		// able to sign in, and pinning "none" here is what made suggested
+		// LinkedIn/Indeed tasks come back empty.
+		const suggestedPlatform = data.importablePlatforms.find((p) => p.id === suggestion.platform_id);
+		formData.append('login_mode', defaultLoginMode(!!suggestedPlatform?.login_page_url));
 		formData.append('note', suggestion.note);
 		// Pass the platform_id directly so getOrCreatePlatform can short-circuit
 		// the URL-based lookup. Without a platform_url getOrCreatePlatform would

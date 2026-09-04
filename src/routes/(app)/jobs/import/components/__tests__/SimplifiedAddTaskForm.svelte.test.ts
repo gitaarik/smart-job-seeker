@@ -11,9 +11,26 @@ const platforms: ImportablePlatform[] = [
 		key: 'linkedin',
 		name: 'LinkedIn',
 		url: 'https://www.linkedin.com/',
-		search_page_url: 'https://www.linkedin.com/jobs/search/'
+		search_page_url: 'https://www.linkedin.com/jobs/search/',
+		login_page_url: 'https://www.linkedin.com/login'
+	},
+	{
+		id: 21,
+		key: 'remoteok',
+		name: 'RemoteOK',
+		url: 'https://remoteok.com/',
+		search_page_url: 'https://remoteok.com/remote-dev-jobs',
+		login_page_url: null
 	}
 ];
+
+async function pickPlatform(name: string) {
+	const input = screen.getByLabelText('Site');
+	await fireEvent.focus(input);
+	await fireEvent.input(input, { target: { value: name } });
+	const option = screen.getAllByRole('option').find((o) => o.textContent?.includes(name));
+	await fireEvent.click(option!);
+}
 
 function ownDevice(overrides: Partial<PreferredDevice> = {}): PreferredDevice {
 	return {
@@ -122,45 +139,33 @@ describe('SimplifiedAddTaskForm — adding a site we do not have yet', () => {
 		);
 	});
 
-	test('asks for a search URL, a login page and keywords', async () => {
+	test('asks for a search URL and keywords, and nothing about signing in', async () => {
 		const container = renderForm(null);
 		await pickOtherSite(container);
 
 		expect(screen.getByLabelText(/Job search URL/)).toBeDefined();
-		expect(screen.getByLabelText(/Login page URL/)).toBeDefined();
 		// The keyword box used to be hidden for custom sites, on the assumption
 		// that a pasted URL already carried the search.
 		expect(screen.getByLabelText(/Search keywords/)).toBeDefined();
+		// The login-page field was the wrong question at the wrong time: on its
+		// own it does nothing, and at add time the user rarely knows the answer.
+		expect(screen.queryByLabelText(/Login page URL/)).toBeNull();
 	});
 
-	test('sends the URLs and keywords the user typed', async () => {
+	test('sends the URL and keywords the user typed, and no login page', async () => {
 		const container = renderForm(null);
 		await pickOtherSite(container);
 		await fill(/Job search URL/, 'https://acme.example.com/jobs');
-		await fill(/Login page URL/, 'https://acme.example.com/login');
 		await fill(/Search keywords/, 'python developer');
 
 		expect(hiddenValue(container, 'platform_is_new')).toBe('true');
 		expect(hiddenValue(container, 'platform_url')).toBe('https://acme.example.com');
 		expect(hiddenValue(container, 'search_url')).toBe('https://acme.example.com/jobs');
-		expect(hiddenValue(container, 'login_page_url')).toBe('https://acme.example.com/login');
 		expect(hiddenValue(container, 'search_term')).toBe('python developer');
+		expect(hiddenValue(container, 'login_page_url')).toBeNull();
 	});
 
-	test('switches to manual login when a login page is given', async () => {
-		const container = renderForm(null);
-		await pickOtherSite(container);
-		await fill(/Job search URL/, 'https://acme.example.com/jobs');
-		await fill(/Login page URL/, 'https://acme.example.com/login');
-
-		// "none" makes the scraper skip the login phase outright, so the URL
-		// would be stored and never visited. This form collects no password,
-		// so "manual" (pause and hand over the browser) is the only mode that
-		// can actually use it.
-		expect(hiddenValue(container, 'login_mode')).toBe('manual');
-	});
-
-	test('leaves login off when no login page is given', async () => {
+	test('leaves login off for a site we know nothing about yet', async () => {
 		const container = renderForm(null);
 		await pickOtherSite(container);
 		await fill(/Job search URL/, 'https://acme.example.com/jobs');
@@ -198,14 +203,42 @@ describe('SimplifiedAddTaskForm — adding a site we do not have yet', () => {
 		);
 	});
 
-	test('refuses to submit a login URL that is not absolute', async () => {
+	test('refuses to submit a search URL that is not absolute', async () => {
 		const container = renderForm(null);
 		await pickOtherSite(container);
-		await fill(/Job search URL/, 'https://acme.example.com/jobs');
-		await fill(/Login page URL/, 'acme.example.com/login');
+		await fill(/Job search URL/, 'acme.example.com/jobs');
 
 		expect(screen.getByText(/Enter a full URL including https/)).toBeDefined();
 		const submit = screen.getByRole('button', { name: /Add Task/ }) as HTMLButtonElement;
 		expect(submit.disabled).toBe(true);
+	});
+});
+
+describe('SimplifiedAddTaskForm — sites that ask you to sign in', () => {
+	// The form pinned login_mode="none" for everything picked from the
+	// dropdown, so a LinkedIn task could never log in, no blocker mentioned it,
+	// and the run came back empty.
+	test('a gated platform gets a task that will sign in', async () => {
+		const container = renderForm(null);
+		await pickPlatform('LinkedIn');
+
+		expect(hiddenValue(container, 'platform_id')).toBe('16');
+		expect(hiddenValue(container, 'login_mode')).toBe('manual');
+	});
+
+	test('says so, rather than asking a question the user cannot answer yet', async () => {
+		renderForm(null);
+		await pickPlatform('LinkedIn');
+
+		expect(screen.getByText(/LinkedIn asks you to sign in/)).toBeDefined();
+		expect(screen.queryByLabelText(/Login page URL/)).toBeNull();
+	});
+
+	test('stays out of the way on a public board', async () => {
+		const container = renderForm(null);
+		await pickPlatform('RemoteOK');
+
+		expect(hiddenValue(container, 'login_mode')).toBe('none');
+		expect(screen.queryByText(/asks you to sign in/)).toBeNull();
 	});
 });

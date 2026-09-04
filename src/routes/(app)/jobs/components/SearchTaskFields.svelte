@@ -15,16 +15,19 @@
 		faEyeSlash,
 		faGlobe,
 		faKey,
-		faPenToSquare
+		faPenToSquare,
+		faRightToBracket
 	} from '@fortawesome/free-solid-svg-icons';
 	import CountrySelect from './CountrySelect.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import PlatformLogo from '$lib/components/PlatformLogo.svelte';
 	import CredentialSelector from './CredentialSelector.svelte';
+	import SignInPageField from './SignInPageField.svelte';
 	import BrowserProviderToggle from './BrowserProviderToggle.svelte';
 	import { autoSaveField } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import { buildHourOptions } from '$lib/format-date';
+	import { toLoginMode } from '$lib/import-tasks/sign-in';
 	import type { TimeFormat } from '$lib/format-date';
 
 	interface Props {
@@ -93,6 +96,22 @@
 		 *  page is rendering a SourceEditor that owns those fields, so we
 		 *  don't show them here to avoid duplication. */
 		hideSourceFields?: boolean;
+		/**
+		 * Whether this user may write `job_platforms.login_page_url` for the
+		 * task's platform. Computed server-side with the same rule the PATCH
+		 * endpoint enforces, so the field cannot render and then 403.
+		 */
+		canEditSignInPage?: boolean;
+		/**
+		 * Open the site in the task's own browser so the user can sign in by
+		 * hand. Only the tunnel provider can do this outside a run (the cloud
+		 * browser has no session to open), so the parent passes null when the
+		 * button would not work and the section explains the alternative
+		 * instead of offering a dead control.
+		 */
+		onSignInNow?: (() => void) | null;
+		/** True while that request is in flight. */
+		signingInNow?: boolean;
 		/** Staff flag — unlocks the per-action debug screenshots toggle. */
 		isStaff?: boolean;
 	}
@@ -128,6 +147,9 @@
 		userTimezone = '',
 		timeFormat = '12h',
 		hideSourceFields = false,
+		canEditSignInPage = false,
+		onSignInNow = null,
+		signingInNow = false,
 		isStaff = false
 	}: Props = $props();
 
@@ -594,6 +616,12 @@
 	let credentialDirty = $derived(isEdit && editSelectedCredentialId !== editSavedCredentialId);
 	let isSavingCredential = $state(false);
 
+	// The platform's sign-in page. Mirrored into local state because
+	// SignInPageField can add one while the page is open, and both the mode
+	// chooser's copy and the "sign in now" target depend on it.
+	let signInPageUrl = $state<string | null>(searchTask?.job_platform?.login_page_url ?? null);
+	let hasSignInPage = $derived(!!signInPageUrl);
+
 	// Login mode (edit)
 	let editLoginMode = $state<string>(searchTask?.login_mode ?? 'auto');
 	let editSavedLoginMode = $state<string>(searchTask?.login_mode ?? 'auto');
@@ -754,6 +782,7 @@
 		editSelectedCredentialId = credId;
 		editLoginMode = newData.searchTask.login_mode ?? 'auto';
 		editSavedLoginMode = newData.searchTask.login_mode ?? 'auto';
+		signInPageUrl = newData.searchTask.job_platform?.login_page_url ?? null;
 		sectionOpen = {
 			search: (() => {
 				const v = newData.uiPreferences['task_sections_search'];
@@ -833,6 +862,7 @@
 			editSelectedCredentialId = credId;
 			editLoginMode = searchTask.login_mode ?? 'auto';
 			editSavedLoginMode = searchTask.login_mode ?? 'auto';
+			signInPageUrl = searchTask.job_platform?.login_page_url ?? null;
 		}
 	});
 </script>
@@ -1006,20 +1036,22 @@
 				{/if}
 			{/if}
 
-			<!-- Authentication -->
+			<!-- Signing in -->
 			<div class="space-y-3 border-t border-[var(--dash-border)] pt-4">
 				{#if isEdit}
-					{@render sectionToggle('auth', 'Authentication')}
+					{@render sectionToggle('auth', 'Signing in')}
 				{:else}
 					<h3 class="text-sm font-medium tracking-wide text-[var(--dash-text-muted)] uppercase">
-						Authentication
+						Signing in
 					</h3>
 				{/if}
 
 				{#if isAdd || (isEdit && sectionOpen.auth)}
-					<!-- Login URL (add mode only). The edit page intentionally omits
-               this — login_page_url is a platform-level setting and is
-               edited in the platform admin, not per task. -->
+					<!-- Login URL (add mode only). The edit page renders
+               SignInPageField instead: the column is platform-level, but it
+               is also the thing that decides whether a task ever signs in,
+               so hiding it there left users with no way to fix a task that
+               silently skipped the login. -->
 					{#if isAdd}
 						<div>
 							<h3 class="mb-1 text-xs font-medium text-[var(--dash-text-secondary)]">
@@ -1216,12 +1248,34 @@
 							</div>
 						{/if}
 					{:else}
+						<!-- The platform's sign-in page, which decides whether any of
+						     the settings below do anything at all. It used to be
+						     absent from this page entirely, so a task whose platform
+						     had no URL on file could be set to sign in and simply
+						     never would. -->
+						{#if searchTask?.platform_id}
+							<SignInPageField
+								platformId={searchTask.platform_id}
+								platformName={searchTask?.job_platform?.name}
+								value={signInPageUrl}
+								canEdit={canEditSignInPage}
+								promptForUrl={toLoginMode(editLoginMode) !== 'none'}
+								onSaved={(url) => {
+									signInPageUrl = url;
+									if (searchTask?.job_platform) {
+										searchTask.job_platform.login_page_url = url;
+									}
+								}}
+							/>
+						{/if}
+
 						<CredentialSelector
 							bind:credentials={editPlatformCredentials}
 							bind:selectedId={editSelectedCredentialId}
 							bind:loginMode={editLoginMode}
 							platformId={searchTask?.platform_id}
 							{profileId}
+							{hasSignInPage}
 							platformName={searchTask?.job_platform?.name}
 							oncredentialadded={() => {
 								// Auto-save credential selection when a new one is added via "Add & Select"
@@ -1254,6 +1308,41 @@
 							<p class="mt-2 text-xs text-[var(--dash-error)]" role="alert">
 								{credentialSaveError}
 							</p>
+						{/if}
+
+						<!-- Signing in by hand, without waiting for a run to ask.
+						     The same Chrome scrapes and browses, so the session the
+						     user creates here is the one the next run uses — which is
+						     the whole reason "I sign in myself" is not a worse option
+						     than storing a password, and nothing in the UI said it. -->
+						{#if toLoginMode(editLoginMode) === 'manual' && hasSignInPage}
+							<div class="border-t border-[var(--dash-border)] pt-3">
+								{#if onSignInNow}
+									<button
+										type="button"
+										onclick={onSignInNow}
+										disabled={signingInNow}
+										class="flex items-center gap-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-1.5 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)] disabled:opacity-50"
+									>
+										{#if signingInNow}
+											<Spinner size="w-3.5 h-3.5" />
+											Opening...
+										{:else}
+											<FontAwesomeIcon icon={faRightToBracket} class="h-3.5 w-3.5" />
+											Sign in now
+										{/if}
+									</button>
+									<p class="mt-1.5 text-xs text-[var(--dash-text-muted)]">
+										Opens the sign-in page in this task's browser so you can sign in before the next
+										run, instead of the run stopping to ask.
+									</p>
+								{:else}
+									<p class="text-xs text-[var(--dash-text-muted)]">
+										Start a run and it will stop at the sign-in page, where Browser View lets you
+										sign in. Connect a device to sign in ahead of time instead.
+									</p>
+								{/if}
+							</div>
 						{/if}
 					{/if}
 
