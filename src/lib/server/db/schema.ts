@@ -2968,8 +2968,18 @@ export const profile_auto_import = pgTable(
 	{
 		id: serial().primaryKey().notNull(),
 		profile_id: integer().notNull(),
-		// User off-switch for the whole auto-generation feature.
-		enabled: boolean().default(true).notNull(),
+		// User switch for the whole auto-generation feature. Defaults OFF.
+		//
+		// It shipped defaulting on, which made it the first thing a new profile
+		// met: tasks created and activated before the user had chosen anything,
+		// against a platform list where 10 of the 18 suggestable sites had never
+		// produced a single job (6 never ran at all; X-Team, We Work Remotely,
+		// Welcome to the Jungle and Arc.dev were 0 for 217 attempts). The
+		// suggester ranks on name and filter support alone — success_count and
+		// failure_count sit in job_platforms and never reach the prompt — so it
+		// could not tell the difference. Suggestions are on-demand now; this
+		// turns the unattended half back on for anyone who wants it.
+		enabled: boolean().default(false).notNull(),
 		// Hash of the suggester inputs (title, core_stack, skills, location,
 		// match_config) at the last sync. Unchanged hash → skip the LLM.
 		last_input_hash: text(),

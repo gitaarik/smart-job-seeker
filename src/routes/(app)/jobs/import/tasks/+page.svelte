@@ -568,14 +568,14 @@
 					<input type="hidden" name="enabled" value={data.autoImportEnabled ? 'false' : 'true'} />
 					<button
 						type="submit"
-						title="When on, we keep a starter set of import tasks in sync with your profile and match preferences. New ones are added paused for you to review and activate."
+						title="When on, we keep a starter set of import tasks in sync with your profile and match preferences, without asking. Ones needing no login are activated and scheduled straight away and will spend credits; ones needing a login wait paused. Off by default — use 'Suggest searches for me' to see proposals without any being created."
 						class="
               rounded-lg px-3 py-1.5 text-xs whitespace-nowrap transition-colors {data.autoImportEnabled
 							? 'bg-purple-500/15 text-purple-600 hover:bg-purple-500/25'
 							: 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] hover:bg-[var(--dash-border)]'}
             "
 					>
-						Auto-suggest: {data.autoImportEnabled ? 'On' : 'Off'}
+						Auto-add tasks: {data.autoImportEnabled ? 'On' : 'Off'}
 					</button>
 				</form>
 				<button

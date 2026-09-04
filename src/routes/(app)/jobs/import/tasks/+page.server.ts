@@ -61,13 +61,14 @@ export const load: PageServerLoad = async ({ parent }) => {
 	]);
 	const searchTasks = searchTasksList;
 
-	// Whether auto-generation of import tasks is enabled for this profile.
-	// Defaults to on until the user explicitly turns it off (no row = default).
+	// Whether unattended generation of import tasks is enabled for this profile.
+	// Off unless the user turned it on; no row means it was never reconciled,
+	// which is the same answer as a row created at the column default.
 	const autoImportState = await db.query.profile_auto_import.findFirst({
 		where: eq(profile_auto_import.profile_id, profileId),
 		columns: { enabled: true }
 	});
-	const autoImportEnabled = autoImportState?.enabled ?? true;
+	const autoImportEnabled = autoImportState?.enabled ?? false;
 
 	const uiPrefs = (profile.ui_preferences as Record<string, unknown>) ?? {};
 
