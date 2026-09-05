@@ -61,31 +61,35 @@ connection — and when GitHub asks which repositories to grant, choose
 **"Only select repositories"**: it defaults to all of them, and one is all that's
 needed.
 
-## 2. Finish setting up your Import Tasks
+## 2. Set up your Import Tasks
 
-You don't start from a blank slate. **When you first import your profile, SJS
-automatically suggests a set of Import Tasks** (saved job-board searches) based
-on your experience and match preferences. You'll find them on the
-[Job Import](/jobs/import) page, started **paused** — your job is mostly to
-finish configuring them and switch them on.
+An Import Task is a saved job-board search that SJS runs for you. You don't
+have to invent them: on the [Job Import](/jobs/import) page, **Suggest searches
+for me** reads your experience and match preferences and proposes a set of
+searches, each on a board that has actually produced jobs before. Accept the
+ones you want and each becomes a task — nothing is created until you do. The
+suggestion itself is a model call, so it costs a credit like any other AI
+feature (see [Credits](/guide/credits)); the tasks it proposes are free until
+you run them.
 
-To make a suggested task runnable, clear its two common blockers:
+Two things decide whether a task runs well:
 
-- **Pick a device.** Choose the browser device the task runs on — your own, or
-  one shared with you. (See [Devices & sharing](/guide/devices).)
-- **Handle login for gated boards.** Many boards only show good results when
-  you're signed in. The easiest way is **Manual login**: the first time the task
-  runs, sign in yourself in the live browser. The session persists, so you stay
-  logged in for later runs — **you only log in once.** (Prefer hands-off? Save
-  credentials and use **Auto login**; or **No login** for public boards.)
-
-Then **activate** the task. Activating is also the only step that spends credits
-— the suggestions are generated for free.
+- **Where it runs.** With a device connected — your own, or one shared with
+  you — new tasks run there. Without one they use the cloud browser, which is
+  metered at double rate. (See [Devices & sharing](/guide/devices).)
+- **Signing in.** Many boards only show good results when you're signed in. A
+  task on such a board starts as **I sign in myself**: its first run stops at
+  the sign-in page and you log in through Browser View. With a device connected
+  you can also do it ahead of time with **Sign in now** on the task page. The
+  browser keeps the session, so **you only log in once.** Prefer hands-off,
+  scheduled runs? Save a login and switch the task to **Sign in
+  automatically**. Public boards use **Don't sign in**.
 
 You're not limited to the suggestions — **refine** them (tighten filters,
-rename) or **add your own**: apply the filters on a board's site, copy that
-search URL in, and a tight search beats a broad one every time. Put the tasks
-you rely on **on a schedule** so fresh jobs arrive without you lifting a finger.
+rename) or **add your own**: pick the site, or paste a search URL from a board
+we don't have yet, and a tight search beats a broad one every time. Put the
+tasks you rely on **on a schedule** so fresh jobs arrive without you lifting a
+finger. Only runs spend credits.
 
 ## 3. Let matching do the triage
 

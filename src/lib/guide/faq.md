@@ -8,9 +8,10 @@ search. See [Devices & sharing](/guide/devices).
 
 ## Do I have to set up job searches from scratch?
 
-No. When you first import your profile, SJS **suggests Import Tasks** for you.
-You mostly just finish configuring each one — pick a device and, for boards that
-need signing in, log in once (Manual login) — then activate it. See
+No. On the [Job Import](/jobs/import) page, **Suggest searches for me** proposes
+Import Tasks based on your profile and preferences. Accept the ones you want;
+for boards that need signing in, the first run stops at the sign-in page so you
+can log in once. See
 [Getting the best results](/guide/getting-the-best-results).
 
 ## Why isn't my device connecting?

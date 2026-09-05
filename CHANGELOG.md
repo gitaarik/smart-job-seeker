@@ -17,16 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Alternative wordings for profile scalar fields
 - Version labeling for saved inline edits
 
-### Changed
-
-- Unattended import-task generation defaults to off
-
 ### Performance
 
 - LLM response cache moved to Redis
 
 ### Removed
 
+- Unattended import-task generation: tasks are no longer created for a profile behind the user's back, only proposed on demand by "Suggest searches for me"
 - Removed unused langchain meta-package
 
 ## [0.27.0] - 2026-09-01

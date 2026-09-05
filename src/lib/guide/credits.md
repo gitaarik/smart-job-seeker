@@ -42,9 +42,9 @@ Everything that isn't a browser run or a model call:
 - Exporting your data, and importing it
 - Applying a change the assistant suggested
 
-Import Task **suggestions** are generated free when you first import a profile.
-Activating a task is the step that starts spending, because that's the step that
-runs a browser.
+Asking for Import Task **suggestions** is a model call and is charged like the
+AI writing above — usually a single credit. Creating a task is free; running it
+is the step that starts spending, because that's the step that runs a browser.
 
 ## Spending less
 
