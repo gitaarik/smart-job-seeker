@@ -35,8 +35,10 @@ export const GET: RequestHandler = async ({ params }) => {
 
 	const fullPath = resolve(join(UPLOADS_DIR, filePath));
 
-	// Prevent path traversal
-	if (!fullPath.startsWith(UPLOADS_DIR)) {
+	// Prevent path traversal. The separator matters: a bare prefix test would
+	// also pass `../uploads-anything/x`, which resolves to a sibling directory
+	// whose name happens to start with ours.
+	if (fullPath !== UPLOADS_DIR && !fullPath.startsWith(UPLOADS_DIR + sep)) {
 		throw error(403);
 	}
 
