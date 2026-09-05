@@ -23,6 +23,7 @@ import {
 	SEARCH_PAGE_URL_MAX,
 	resolveCustomSiteSearchUrl
 } from '$lib/import-tasks/custom-site';
+import { toLoginMode } from '$lib/import-tasks/sign-in';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();
@@ -649,7 +650,7 @@ export const actions: Actions = {
 				search_filters,
 				platform_id: resolvedPlatformId,
 				platform_profile_id: resolvedCredentialId,
-				login_mode: ['auto', 'manual', 'none'].includes(loginMode) ? loginMode : 'auto',
+				login_mode: toLoginMode(loginMode),
 				is_active,
 				profile_id: profileId,
 				status: 'idle',

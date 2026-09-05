@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LOGIN_MODES } from '$lib/import-tasks/sign-in';
 import { error as httpError } from '@sveltejs/kit';
 
 const trimmedString = (maxLen = 255) => z.string().trim().max(maxLen);
@@ -264,7 +265,7 @@ export const searchTaskUpdateSchema = z.object({
 	platform_credential_id: z
 		.union([z.null(), z.number().int(), z.string().regex(/^\d+$/).transform(Number)])
 		.optional(),
-	login_mode: z.enum(['auto', 'manual', 'none']).optional(),
+	login_mode: z.enum(LOGIN_MODES).optional(),
 	browser_provider: z.enum(['hosted', 'tunnel']).optional().nullable(),
 	sjsbrowser_api_key: z.union([z.null(), z.number().int()]).optional(),
 	keep_minimized: z.boolean().optional(),
