@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { search_tasks } from '$lib/server/db/schema';
 import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
 import { resolveTunnelDevice } from '$lib/server/sjs-browser-status';
+import { checkPublicHttpUrl } from '$lib/server/net/public-url';
 
 /**
  * POST /api/import-tasks/[id]/open-browser
@@ -46,7 +47,15 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 	} catch {
 		// Empty body is fine — fall through to platform defaults.
 	}
-	if (!url) {
+	if (url) {
+		// The override is a navigation target for a real browser, so it gets
+		// the same check every stored URL passed when it was saved. The
+		// defaults below were validated on write; this one arrives raw.
+		const verdict = checkPublicHttpUrl(url);
+		if (!verdict.ok) {
+			throw error(400, `That URL can't be opened: ${verdict.reason}`);
+		}
+	} else {
 		url =
 			task.job_platform?.search_page_url || task.job_platform?.url || task.search_url || undefined;
 	}

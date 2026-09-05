@@ -11,9 +11,10 @@ import { job_platforms } from '$lib/server/db/schema';
 
 /**
  * Best-effort lookup of a job_platforms row whose URL matches the host of the
- * given job URL, mirroring the domain-candidate matching in
- * /api/platforms/detect. Returns null when the URL is empty/invalid or no
- * platform matches — manual jobs are allowed to have no platform.
+ * given job URL. Candidates are built from the most specific domain down, so
+ * "nl.indeed.com" tries "nl.indeed.com" and then "indeed.com", stopping before
+ * the bare TLD. Returns null when the URL is empty/invalid or no platform
+ * matches — manual jobs are allowed to have no platform.
  */
 export async function detectPlatformId(sourceUrl: string | null): Promise<number | null> {
 	if (!sourceUrl) return null;
