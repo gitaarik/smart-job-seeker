@@ -1,4 +1,14 @@
 <script lang="ts">
+	/**
+	 * The settings half of an import task's page: search term, signing in,
+	 * browser, scraping options, schedule. Every field auto-saves on its own
+	 * through `autoSaveField`, so there is no form and no submit.
+	 *
+	 * This used to double as the add form behind a `mode` prop. That half was
+	 * dead from the day SimplifiedAddTaskForm replaced it (nothing rendered it
+	 * with mode="add"), and it went in 2026-09-05; a task is created there and
+	 * edited here.
+	 */
 	import { onMount } from 'svelte';
 	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -6,21 +16,15 @@
 		faCheck,
 		faChevronDown,
 		faChevronRight,
-		faClock,
 		faCopy,
 		faDesktop,
 		faEnvelope,
-		faExternalLinkAlt,
-		faEye,
-		faEyeSlash,
 		faGlobe,
-		faKey,
 		faPenToSquare,
 		faRightToBracket
 	} from '@fortawesome/free-solid-svg-icons';
 	import CountrySelect from './CountrySelect.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
-	import PlatformLogo from '$lib/components/PlatformLogo.svelte';
 	import CredentialSelector from './CredentialSelector.svelte';
 	import SignInPageField from './SignInPageField.svelte';
 	import BrowserProviderToggle from './BrowserProviderToggle.svelte';
@@ -31,33 +35,8 @@
 	import type { TimeFormat } from '$lib/format-date';
 
 	interface Props {
-		mode: 'add' | 'edit';
 		localBrowserAllowed: boolean;
 		serverBrowserProvider: string;
-		defaultBrowserProvider?: string;
-		defaultMaxJobs?: number | null;
-		// Add mode props
-		searchUrl?: string;
-		searchTerm?: string;
-		loginPageUrl?: string;
-		detectedPlatform?: {
-			id: number;
-			name: string;
-			url: string;
-			loginPageUrl: string | null;
-			isNew: boolean;
-		} | null;
-		detectingPlatform?: boolean;
-		existingCredentials?: Array<{
-			id: number;
-			username: string | null;
-			status: string;
-			shared?: boolean;
-			owner_user_id?: string | null;
-			owner_label?: string | null;
-		}>;
-		onsearchurlinput?: (e: Event) => void;
-		// Edit mode props
 		searchTask?: any;
 		searchTaskId?: number;
 		profileId?: number;
@@ -117,20 +96,8 @@
 	}
 
 	let {
-		mode,
 		localBrowserAllowed,
 		serverBrowserProvider,
-		defaultBrowserProvider = 'tunnel',
-		defaultMaxJobs = 25,
-		// Add mode
-		searchUrl = $bindable(''),
-		searchTerm = $bindable(''),
-		loginPageUrl = $bindable(''),
-		detectedPlatform = null,
-		detectingPlatform = false,
-		existingCredentials = [],
-		onsearchurlinput,
-		// Edit mode
 		searchTask = null,
 		searchTaskId = 0,
 		profileId = 0,
@@ -153,9 +120,6 @@
 		isStaff = false
 	}: Props = $props();
 
-	const isAdd = mode === 'add';
-	const isEdit = mode === 'edit';
-
 	// ── Verification email relay ──
 	let copiedVerifyEmail = $state(false);
 	function copyVerificationEmail() {
@@ -164,72 +128,6 @@
 		copiedVerifyEmail = true;
 		setTimeout(() => (copiedVerifyEmail = false), 2000);
 	}
-
-	// ── Add-mode credential state ──
-	let addLoginMode = $state<string>('auto');
-	let selectedCredentialId = $state<string>('none');
-	let showNewCredentials = $state(false);
-	let newCredUsername = $state('');
-	let newCredPassword = $state('');
-	let newCredSecurityAnswer = $state('');
-	let showPassword = $state(false);
-	let showAdvancedAuth = $state(false);
-
-	// True only when the user explicitly picked "+ Add new credentials" — used
-	// by the auto-select effect below so it can distinguish a real user choice
-	// from the effect itself defaulting to "new" before detection runs.
-	let userPickedNew = $state(false);
-
-	function handleCredentialSelection(value: string) {
-		selectedCredentialId = value;
-		showNewCredentials = value === 'new';
-		userPickedNew = value === 'new';
-	}
-
-	// Credential to default the picker to. Only ever auto-pick a credential the
-	// user owns — never a shared one. A shared credential can only run on a
-	// device owned by its owner (enforced server-side), so auto-selecting one
-	// would silently dead-end the user at save time if no such device is
-	// shared. Shared credentials still appear in the dropdown for deliberate
-	// selection. Returns "new" when the user owns no credential for the
-	// platform.
-	function defaultCredentialId(): string {
-		const owned = existingCredentials.find((c) => !c.shared);
-		return owned ? String(owned.id) : 'new';
-	}
-
-	// Keep the credential selection in sync with platform detection. When
-	// detection delivers an owned credential, default to it so the dropdown
-	// shows a meaningful selection — matching what the Auto-login tab does on
-	// click. Only override "new" when the user didn't pick it explicitly.
-	$effect(() => {
-		if (!isAdd) return;
-		if (addLoginMode !== 'auto') return;
-		if (userPickedNew) return;
-		const matches = existingCredentials.some((c) => String(c.id) === selectedCredentialId);
-		if (matches) return;
-		const next = defaultCredentialId();
-		selectedCredentialId = next;
-		showNewCredentials = next === 'new';
-	});
-
-	// ── Add-mode browser provider ──
-	let addBrowserProvider = $state<string | null>(defaultBrowserProvider || null);
-	let addSjsBrowserApiKey = $state<number | null>(null);
-
-	// ── Add-mode browser country ──
-	let addBrowserCountryCode = $state(initialBrowserCountryCode);
-
-	// ── Add-mode scraping options ──
-	let addMaxJobsEnabled = $state(defaultMaxJobs != null);
-	let addMaxJobsInput = $state(defaultMaxJobs?.toString() ?? '');
-	let addSkipFirstEnabled = $state(false);
-	let addSkipFirstInput = $state('');
-	let addStopAfterDuplicatesEnabled = $state(true);
-	let addStopAfterDuplicatesInput = $state('5');
-	let addSkipExisting = $state(true);
-	let addKeepMinimized = $state(true);
-	let addScheduleInterval = $state('');
 
 	// Schedule options (shared)
 	const SCHEDULE_OPTIONS = [
@@ -243,8 +141,7 @@
 
 	const HOUR_OPTIONS = $derived(buildHourOptions(timeFormat));
 
-	// ── Edit-mode state ──
-	// Collapsible sections
+	// ── Collapsible sections ──
 	function loadSectionOpen(section: string, defaultOpen = true): boolean {
 		const key = `task_sections_${section}`;
 		const val = uiPreferences[key];
@@ -254,7 +151,7 @@
 	function toggleSection(section: string) {
 		const isOpen = sectionOpen[section];
 		sectionOpen[section] = !isOpen;
-		if (isEdit && searchTaskId) {
+		if (searchTaskId) {
 			const key = `task_sections_${section}`;
 			fetch(`/api/import-tasks/${searchTaskId}/ui-preferences`, {
 				method: 'PATCH',
@@ -264,25 +161,14 @@
 		}
 	}
 
-	let sectionOpen = $state<Record<string, boolean>>(
-		isEdit
-			? {
-					search: loadSectionOpen('search'),
-					auth: loadSectionOpen('auth'),
-					options: loadSectionOpen('options'),
-					schedule: loadSectionOpen('schedule'),
-					browser: loadSectionOpen('browser'),
-					advanced: loadSectionOpen('advanced', false)
-				}
-			: {
-					search: true,
-					auth: true,
-					options: true,
-					schedule: true,
-					browser: true,
-					advanced: true
-				}
-	);
+	let sectionOpen = $state<Record<string, boolean>>({
+		search: loadSectionOpen('search'),
+		auth: loadSectionOpen('auth'),
+		options: loadSectionOpen('options'),
+		schedule: loadSectionOpen('schedule'),
+		browser: loadSectionOpen('browser'),
+		advanced: loadSectionOpen('advanced', false)
+	});
 
 	// Parse helpers
 	function parseIntOrNull(val: unknown): number | null {
@@ -291,7 +177,7 @@
 		return isNaN(n) || n < 1 ? null : n;
 	}
 
-	// ── Edit-mode field state ──
+	// ── Field state ──
 	// Each editable field on the edit page is wrapped in an `autoSaveField`
 	// helper: it owns the debounced PATCH, the in-flight state, and the undo
 	// window. The UI just binds inputs and renders <AutoSaveIndicator>.
@@ -360,7 +246,6 @@
 		debounceMs: 700
 	});
 	$effect(() => {
-		if (!isEdit) return;
 		const v = searchTermInput.trim() || null;
 		searchTermField.set(v);
 	});
@@ -382,7 +267,6 @@
 		debounceMs: 400
 	});
 	$effect(() => {
-		if (!isEdit) return;
 		maxJobsField.set(maxJobsEnabled ? parseIntOrNull(maxJobsInput) : null);
 	});
 
@@ -398,7 +282,6 @@
 		}
 	});
 	$effect(() => {
-		if (!isEdit) return;
 		skipExistingField.set(skipExisting);
 	});
 
@@ -419,7 +302,6 @@
 		debounceMs: 400
 	});
 	$effect(() => {
-		if (!isEdit) return;
 		stopAfterDuplicatesField.set(
 			stopAfterDuplicatesEnabled ? parseIntOrNull(stopAfterDuplicatesInput) : null
 		);
@@ -440,7 +322,6 @@
 		debounceMs: 400
 	});
 	$effect(() => {
-		if (!isEdit) return;
 		skipFirstField.set(skipFirstEnabled ? parseIntOrNull(skipFirstInput) : null);
 	});
 
@@ -475,7 +356,6 @@
 		equal: (a, b) => a.provider === b.provider && a.apiKey === b.apiKey
 	});
 	$effect(() => {
-		if (!isEdit) return;
 		browserConfigField.set({
 			provider: browserProvider,
 			apiKey: sjsBrowserApiKey
@@ -494,7 +374,6 @@
 		}
 	});
 	$effect(() => {
-		if (!isEdit) return;
 		keepMinimizedField.set(keepMinimized);
 	});
 
@@ -512,7 +391,6 @@
 		}
 	});
 	$effect(() => {
-		if (!isEdit) return;
 		debugScreenshotsField.set(debugScreenshots);
 	});
 
@@ -549,7 +427,6 @@
 		equal: (a, b) => a.intervalHours === b.intervalHours && a.preferredHour === b.preferredHour
 	});
 	$effect(() => {
-		if (!isEdit) return;
 		scheduleField.set({
 			intervalHours: scheduleEnabled ? parseInt(scheduleIntervalInput) : null,
 			preferredHour: schedulePreferredHour
@@ -568,7 +445,6 @@
 		equal: (a, b) => a.trim().toUpperCase() === b.trim().toUpperCase()
 	});
 	$effect(() => {
-		if (!isEdit) return;
 		browserCountryField.set(editBrowserCountryCode);
 	});
 
@@ -599,7 +475,6 @@
 		debounceMs: 700
 	});
 	$effect(() => {
-		if (!isEdit) return;
 		fingerprintField.set({
 			language: browserLanguage,
 			timezone: browserTimezone
@@ -613,7 +488,7 @@
 	const editInitialCredId = searchTask?.platform_credential_id?.toString() ?? 'none';
 	let editSavedCredentialId = $state<string>(editInitialCredId);
 	let editSelectedCredentialId = $state<string>(editInitialCredId);
-	let credentialDirty = $derived(isEdit && editSelectedCredentialId !== editSavedCredentialId);
+	let credentialDirty = $derived(editSelectedCredentialId !== editSavedCredentialId);
 	let isSavingCredential = $state(false);
 
 	// The platform's sign-in page. Mirrored into local state because
@@ -625,15 +500,12 @@
 	// Login mode (edit)
 	let editLoginMode = $state<string>(searchTask?.login_mode ?? 'auto');
 	let editSavedLoginMode = $state<string>(searchTask?.login_mode ?? 'auto');
-	let loginModeDirty = $derived(isEdit && editLoginMode !== editSavedLoginMode);
+	let loginModeDirty = $derived(editLoginMode !== editSavedLoginMode);
 	let isSavingLoginMode = $state(false);
 
-	// Computed: tunnel mode / hosted mode for conditional sections. In edit
-	// mode this tracks the *saved* provider (what's actually live) rather than
-	// the in-flight user pick.
-	let effectiveBrowserProvider = $derived(
-		isEdit ? browserConfigField.saved.provider : addBrowserProvider
-	);
+	// Computed: tunnel mode / hosted mode for conditional sections. Tracks the
+	// *saved* provider (what's actually live) rather than the in-flight pick.
+	let effectiveBrowserProvider = $derived(browserConfigField.saved.provider);
 	let isHostedMode = $derived(
 		effectiveBrowserProvider === 'hosted' ||
 			(!effectiveBrowserProvider && serverBrowserProvider === 'goLogin')
@@ -713,9 +585,6 @@
 	// Wrappers kept for callers (oncredentialadded auto-save) that target only
 	// one field — they reuse the combined save.
 	async function saveCredential() {
-		await saveLoginAndCredential();
-	}
-	async function saveLoginMode() {
 		await saveLoginAndCredential();
 	}
 
@@ -816,7 +685,7 @@
 	// bind:value picks up. Re-sync UI state from props after mount and re-seed
 	// the auto-save helpers so the $effects don't trip a spurious save.
 	onMount(() => {
-		if (isEdit && searchTask) {
+		if (searchTask) {
 			searchTermInput = searchTask.search_term ?? '';
 			maxJobsEnabled = searchTask.max_jobs != null;
 			maxJobsInput = searchTask.max_jobs?.toString() ?? '';
@@ -916,76 +785,39 @@
        section (Browser) with the shortest (Auth) so both columns end at
        roughly the same height on wide screens. -->
 	<div class="space-y-4">
-		{#if isAdd || searchTask?.platform_id}
+		{#if searchTask?.platform_id}
 			{#if !hideSourceFields}
-				{#if isEdit}
-					{@render sectionToggle('search', 'Search')}
-				{/if}
+				{@render sectionToggle('search', 'Search')}
 
-				{#if isAdd || sectionOpen.search}
+				{#if sectionOpen.search}
 					<div class="space-y-3">
 						<!-- Search URL -->
-						{#if isAdd}
-							<div>
-								<h3 class="mb-1 text-xs font-medium text-[var(--dash-text-secondary)]">
-									Search URL <span class="text-[var(--dash-error)]">*</span>
-								</h3>
-								<div class="relative">
-									<input
-										type="url"
-										name="search_url"
-										value={searchUrl}
-										oninput={onsearchurlinput}
-										placeholder="https://linkedin.com/jobs/search?keywords=frontend..."
-										required
-										class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-									/>
-									{#if detectingPlatform}
-										<div class="absolute top-1/2 right-3 -translate-y-1/2">
-											<Spinner size="w-4 h-4" color="var(--dash-text-secondary)" />
-										</div>
-									{/if}
-								</div>
-								<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
-									Paste a job search URL from LinkedIn, Indeed, or other job platforms
-								</p>
-							</div>
-
-							<!-- Detected Platform Info -->
-							{#if detectedPlatform}
-								<div class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-3">
-									<div class="flex items-center gap-2 text-sm">
-										<PlatformLogo platformUrl={detectedPlatform.url} size="w-5 h-5" />
-										{#if detectedPlatform.isNew}
-											<span class="text-[var(--dash-text)]"
-												>New platform:
-												<strong>{detectedPlatform.name}</strong></span
-											>
-										{:else}
-											<span class="text-[var(--dash-text)]"
-												><strong>{detectedPlatform.name}</strong></span
-											>
-										{/if}
-									</div>
-									<input type="hidden" name="platform_id" value={detectedPlatform.id || ''} />
-									<input type="hidden" name="platform_url" value={detectedPlatform.url} />
-									<input type="hidden" name="platform_name" value={detectedPlatform.name} />
-									<input type="hidden" name="platform_is_new" value={detectedPlatform.isNew} />
-								</div>
-							{/if}
-						{/if}
 
 						<!-- Search Term -->
-						{#if isAdd}
+						<!-- Edit: collapsible advanced search term -->
+						<button
+							type="button"
+							onclick={() => (showAdvancedSearch = !showAdvancedSearch)}
+							class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
+						>
+							{#if showAdvancedSearch}
+								<FontAwesomeIcon icon={faChevronDown} class="h-2.5 w-2.5" />
+							{:else}
+								<FontAwesomeIcon icon={faChevronRight} class="h-2.5 w-2.5" />
+							{/if}
+							Advanced
+						</button>
+
+						{#if showAdvancedSearch}
 							<div>
 								<h3 class="mb-1 text-xs font-medium text-[var(--dash-text-secondary)]">
-									Search Term
-									<span class="font-normal text-[var(--dash-text-muted)]">(optional)</span>
+									Search Term <span class="font-normal">(optional)</span>
 								</h3>
 								<input
 									type="text"
-									name="search_term"
-									bind:value={searchTerm}
+									bind:value={searchTermInput}
+									onblur={searchTermField.flush}
+									autocomplete="off"
 									placeholder="e.g., frontend developer amsterdam"
 									class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
 								/>
@@ -993,44 +825,10 @@
 									For sites that don't support search in the URL. The scraper will type this into
 									the search field.
 								</p>
-							</div>
-						{:else}
-							<!-- Edit: collapsible advanced search term -->
-							<button
-								type="button"
-								onclick={() => (showAdvancedSearch = !showAdvancedSearch)}
-								class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
-							>
-								{#if showAdvancedSearch}
-									<FontAwesomeIcon icon={faChevronDown} class="h-2.5 w-2.5" />
-								{:else}
-									<FontAwesomeIcon icon={faChevronRight} class="h-2.5 w-2.5" />
-								{/if}
-								Advanced
-							</button>
-
-							{#if showAdvancedSearch}
-								<div>
-									<h3 class="mb-1 text-xs font-medium text-[var(--dash-text-secondary)]">
-										Search Term <span class="font-normal">(optional)</span>
-									</h3>
-									<input
-										type="text"
-										bind:value={searchTermInput}
-										onblur={searchTermField.flush}
-										autocomplete="off"
-										placeholder="e.g., frontend developer amsterdam"
-										class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-									/>
-									<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
-										For sites that don't support search in the URL. The scraper will type this into
-										the search field.
-									</p>
-									<div class="mt-2">
-										<AutoSaveIndicator field={searchTermField} />
-									</div>
+								<div class="mt-2">
+									<AutoSaveIndicator field={searchTermField} />
 								</div>
-							{/if}
+							</div>
 						{/if}
 					</div>
 				{/if}
@@ -1038,312 +836,111 @@
 
 			<!-- Signing in -->
 			<div class="space-y-3 border-t border-[var(--dash-border)] pt-4">
-				{#if isEdit}
-					{@render sectionToggle('auth', 'Signing in')}
-				{:else}
-					<h3 class="text-sm font-medium tracking-wide text-[var(--dash-text-muted)] uppercase">
-						Signing in
-					</h3>
-				{/if}
+				{@render sectionToggle('auth', 'Signing in')}
 
-				{#if isAdd || (isEdit && sectionOpen.auth)}
+				{#if sectionOpen.auth}
 					<!-- Login URL (add mode only). The edit page renders
                SignInPageField instead: the column is platform-level, but it
                is also the thing that decides whether a task ever signs in,
                so hiding it there left users with no way to fix a task that
                silently skipped the login. -->
-					{#if isAdd}
-						<div>
-							<h3 class="mb-1 text-xs font-medium text-[var(--dash-text-secondary)]">
-								Login Page URL
-								<span class="font-normal text-[var(--dash-text-muted)]">(optional)</span>
-							</h3>
-							<input
-								type="url"
-								name="login_page_url"
-								bind:value={loginPageUrl}
-								placeholder="https://linkedin.com/login"
-								class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-							/>
-							<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
-								URL of the login page. Used to auto-fill credentials before scraping.
-							</p>
-						</div>
-					{/if}
 
 					<!-- Credentials -->
-					{#if isAdd}
-						<!-- Login Mode (add mode) -->
-						<div class="border-t border-[var(--dash-border)] pt-3">
-							<h3 class="mb-2 text-xs font-medium text-[var(--dash-text-secondary)]">Login Mode</h3>
-
-							<div class="flex overflow-hidden rounded-md border border-[var(--dash-border)]">
-								<button
-									type="button"
-									onclick={() => {
-										addLoginMode = 'auto';
-										if (selectedCredentialId === 'none') {
-											selectedCredentialId = defaultCredentialId();
-										}
-										showNewCredentials = selectedCredentialId === 'new';
-									}}
-									class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
-										addLoginMode === 'auto'
-											? 'bg-[var(--dash-primary)] text-white'
-											: 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]'
-									}`}
-								>
-									Auto-login
-								</button>
-								<button
-									type="button"
-									onclick={() => {
-										addLoginMode = 'manual';
-										selectedCredentialId = 'none';
-										showNewCredentials = false;
-									}}
-									class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
-										addLoginMode === 'manual'
-											? 'bg-[var(--dash-primary)] text-white'
-											: 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]'
-									}`}
-								>
-									Manual login
-								</button>
-								<button
-									type="button"
-									onclick={() => {
-										addLoginMode = 'none';
-										selectedCredentialId = 'none';
-										showNewCredentials = false;
-									}}
-									class={`flex-1 px-3 py-1.5 text-xs font-medium transition-colors ${
-										addLoginMode === 'none'
-											? 'bg-[var(--dash-primary)] text-white'
-											: 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]'
-									}`}
-								>
-									No login
-								</button>
-							</div>
-							<input type="hidden" name="login_mode" value={addLoginMode} />
-							<p class="mt-1.5 text-xs text-[var(--dash-text-muted)]">
-								{#if addLoginMode === 'auto'}
-									The scraper will fill in credentials and log in automatically.
-								{:else if addLoginMode === 'manual'}
-									The scraper will navigate to the login page and wait for you to log in.
-								{:else}
-									The scraper will go directly to the search page without logging in.
-								{/if}
-							</p>
-						</div>
-
-						<!-- Credentials (only for auto-login) -->
-						{#if addLoginMode === 'auto'}
-							<div>
-								<h3 class="mb-2 text-xs font-medium text-[var(--dash-text-secondary)]">
-									Login Credentials
-								</h3>
-
-								<select
-									name="credential_id"
-									value={selectedCredentialId}
-									onchange={(e) => handleCredentialSelection((e.target as HTMLSelectElement).value)}
-									class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
-								>
-									{#each existingCredentials as cred}
-										<option value={String(cred.id)}>
-											{cred.username}{cred.shared
-												? ` (shared by ${cred.owner_label ?? 'a contact'})`
-												: ''}
-										</option>
-									{/each}
-									<option value="new">+ Add new credentials</option>
-								</select>
-
-								{#if showNewCredentials}
-									<div class="mt-3 space-y-3 rounded-lg bg-[var(--dash-bg)] p-3">
-										<div>
-											<label
-												for="add-cred-username"
-												class="mb-1 block text-sm text-[var(--dash-text)]"
-											>
-												Username / Email
-											</label>
-											<input
-												type="text"
-												id="add-cred-username"
-												name="new_credential_username"
-												bind:value={newCredUsername}
-												placeholder="your@email.com"
-												class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-											/>
-										</div>
-										<div>
-											<label
-												for="add-cred-password"
-												class="mb-1 block text-sm text-[var(--dash-text)]"
-											>
-												Password
-											</label>
-											<div class="relative">
-												<input
-													type={showPassword ? 'text' : 'password'}
-													id="add-cred-password"
-													name="new_credential_password"
-													bind:value={newCredPassword}
-													placeholder="Enter password"
-													class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 pr-8 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-												/>
-												<button
-													type="button"
-													onclick={() => (showPassword = !showPassword)}
-													class="absolute top-1/2 right-2 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
-												>
-													<FontAwesomeIcon
-														icon={showPassword ? faEyeSlash : faEye}
-														class="h-4 w-4"
-													/>
-												</button>
-											</div>
-										</div>
-										<!-- Advanced: security answer -->
-										<button
-											type="button"
-											onclick={() => (showAdvancedAuth = !showAdvancedAuth)}
-											class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
-										>
-											{#if showAdvancedAuth}
-												<FontAwesomeIcon icon={faChevronDown} class="h-2.5 w-2.5" />
-											{:else}
-												<FontAwesomeIcon icon={faChevronRight} class="h-2.5 w-2.5" />
-											{/if}
-											Advanced
-										</button>
-										{#if showAdvancedAuth}
-											<div>
-												<label
-													for="add-cred-security-answer"
-													class="mb-1 block text-xs text-[var(--dash-text-secondary)]"
-												>
-													Security Question Answer <span
-														class="font-normal text-[var(--dash-text-muted)]">(optional)</span
-													>
-												</label>
-												<input
-													type="text"
-													id="add-cred-security-answer"
-													name="new_credential_security_answer"
-													bind:value={newCredSecurityAnswer}
-													placeholder="e.g., your mother's maiden name"
-													class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-												/>
-												<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
-													Auto-filled when a site asks a security question after login.
-												</p>
-											</div>
-										{/if}
-									</div>
-								{/if}
-							</div>
-						{/if}
-					{:else}
-						<!-- The platform's sign-in page, which decides whether any of
+					<!-- The platform's sign-in page, which decides whether any of
 						     the settings below do anything at all. It used to be
 						     absent from this page entirely, so a task whose platform
 						     had no URL on file could be set to sign in and simply
 						     never would. -->
-						{#if searchTask?.platform_id}
-							<SignInPageField
-								platformId={searchTask.platform_id}
-								platformName={searchTask?.job_platform?.name}
-								value={signInPageUrl}
-								canEdit={canEditSignInPage}
-								promptForUrl={toLoginMode(editLoginMode) !== 'none'}
-								onSaved={(url) => {
-									signInPageUrl = url;
-									if (searchTask?.job_platform) {
-										searchTask.job_platform.login_page_url = url;
-									}
-								}}
-							/>
-						{/if}
-
-						<CredentialSelector
-							bind:credentials={editPlatformCredentials}
-							bind:selectedId={editSelectedCredentialId}
-							bind:loginMode={editLoginMode}
-							platformId={searchTask?.platform_id}
-							{profileId}
-							{hasSignInPage}
+					{#if searchTask?.platform_id}
+						<SignInPageField
+							platformId={searchTask.platform_id}
 							platformName={searchTask?.job_platform?.name}
-							oncredentialadded={() => {
-								// Auto-save credential selection when a new one is added via "Add & Select"
-								saveCredential();
-							}}
-							oncredentialdeleted={(credId) => {
-								if (searchTask?.platform_credential_id === credId) {
-									searchTask.platform_credential_id = null;
-									editSavedCredentialId = 'none';
+							value={signInPageUrl}
+							canEdit={canEditSignInPage}
+							promptForUrl={toLoginMode(editLoginMode) !== 'none'}
+							onSaved={(url) => {
+								signInPageUrl = url;
+								if (searchTask?.job_platform) {
+									searchTask.job_platform.login_page_url = url;
 								}
 							}}
 						/>
+					{/if}
 
-						{#if loginModeDirty || credentialDirty}
-							<div class="mt-3">
-								{@render saveCancel(
-									true,
-									isSavingLoginMode || isSavingCredential,
-									saveLoginAndCredential,
-									() => {
-										editLoginMode = editSavedLoginMode;
-										editSelectedCredentialId = editSavedCredentialId;
-										credentialSaveError = null;
-									}
-								)}
-							</div>
-						{/if}
+					<CredentialSelector
+						bind:credentials={editPlatformCredentials}
+						bind:selectedId={editSelectedCredentialId}
+						bind:loginMode={editLoginMode}
+						platformId={searchTask?.platform_id}
+						{profileId}
+						{hasSignInPage}
+						platformName={searchTask?.job_platform?.name}
+						oncredentialadded={() => {
+							// Auto-save credential selection when a new one is added via "Add & Select"
+							saveCredential();
+						}}
+						oncredentialdeleted={(credId) => {
+							if (searchTask?.platform_credential_id === credId) {
+								searchTask.platform_credential_id = null;
+								editSavedCredentialId = 'none';
+							}
+						}}
+					/>
 
-						{#if credentialSaveError}
-							<p class="mt-2 text-xs text-[var(--dash-error)]" role="alert">
-								{credentialSaveError}
-							</p>
-						{/if}
+					{#if loginModeDirty || credentialDirty}
+						<div class="mt-3">
+							{@render saveCancel(
+								true,
+								isSavingLoginMode || isSavingCredential,
+								saveLoginAndCredential,
+								() => {
+									editLoginMode = editSavedLoginMode;
+									editSelectedCredentialId = editSavedCredentialId;
+									credentialSaveError = null;
+								}
+							)}
+						</div>
+					{/if}
 
-						<!-- Signing in by hand, without waiting for a run to ask.
+					{#if credentialSaveError}
+						<p class="mt-2 text-xs text-[var(--dash-error)]" role="alert">
+							{credentialSaveError}
+						</p>
+					{/if}
+
+					<!-- Signing in by hand, without waiting for a run to ask.
 						     The same Chrome scrapes and browses, so the session the
 						     user creates here is the one the next run uses — which is
 						     the whole reason "I sign in myself" is not a worse option
 						     than storing a password, and nothing in the UI said it. -->
-						{#if toLoginMode(editLoginMode) === 'manual' && hasSignInPage}
-							<div class="border-t border-[var(--dash-border)] pt-3">
-								{#if onSignInNow}
-									<button
-										type="button"
-										onclick={onSignInNow}
-										disabled={signingInNow}
-										class="flex items-center gap-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-1.5 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)] disabled:opacity-50"
-									>
-										{#if signingInNow}
-											<Spinner size="w-3.5 h-3.5" />
-											Opening...
-										{:else}
-											<FontAwesomeIcon icon={faRightToBracket} class="h-3.5 w-3.5" />
-											Sign in now
-										{/if}
-									</button>
-									<p class="mt-1.5 text-xs text-[var(--dash-text-muted)]">
-										Opens the sign-in page in this task's browser so you can sign in before the next
-										run, instead of the run stopping to ask.
-									</p>
-								{:else}
-									<p class="text-xs text-[var(--dash-text-muted)]">
-										Start a run and it will stop at the sign-in page, where Browser View lets you
-										sign in. Connect a device to sign in ahead of time instead.
-									</p>
-								{/if}
-							</div>
-						{/if}
+					{#if toLoginMode(editLoginMode) === 'manual' && hasSignInPage}
+						<div class="border-t border-[var(--dash-border)] pt-3">
+							{#if onSignInNow}
+								<button
+									type="button"
+									onclick={onSignInNow}
+									disabled={signingInNow}
+									class="flex items-center gap-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-1.5 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)] disabled:opacity-50"
+								>
+									{#if signingInNow}
+										<Spinner size="w-3.5 h-3.5" />
+										Opening...
+									{:else}
+										<FontAwesomeIcon icon={faRightToBracket} class="h-3.5 w-3.5" />
+										Sign in now
+									{/if}
+								</button>
+								<p class="mt-1.5 text-xs text-[var(--dash-text-muted)]">
+									Opens the sign-in page in this task's browser so you can sign in before the next
+									run, instead of the run stopping to ask.
+								</p>
+							{:else}
+								<p class="text-xs text-[var(--dash-text-muted)]">
+									Start a run and it will stop at the sign-in page, where Browser View lets you sign
+									in. Connect a device to sign in ahead of time instead.
+								</p>
+							{/if}
+						</div>
 					{/if}
 
 					<!-- Email Verification Relay -->
@@ -1390,42 +987,19 @@
 
 		<!-- Browser Control -->
 		<hr class="mt-4 border-[var(--dash-border)]" />
-		{#if isEdit}
-			{@render sectionToggle('browser', 'Browser Control')}
-		{:else}
-			<h3 class="text-sm font-medium tracking-wide text-[var(--dash-text-muted)] uppercase">
-				Browser Control
-			</h3>
-		{/if}
+		{@render sectionToggle('browser', 'Browser Control')}
 
-		{#if isAdd || sectionOpen.browser}
+		{#if sectionOpen.browser}
 			<div class="space-y-3">
-				{#if isAdd}
-					<BrowserProviderToggle
-						bind:value={addBrowserProvider}
-						bind:sjsBrowserApiKey={addSjsBrowserApiKey}
-						{localBrowserAllowed}
-						{devices}
-					/>
-					<input type="hidden" name="browser_provider" value={addBrowserProvider ?? ''} />
-					<input
-						type="hidden"
-						name="sjsbrowser_api_key"
-						value={addBrowserProvider === 'tunnel' && addSjsBrowserApiKey != null
-							? String(addSjsBrowserApiKey)
-							: ''}
-					/>
-				{:else}
-					<BrowserProviderToggle
-						bind:value={browserProvider}
-						bind:sjsBrowserApiKey
-						{localBrowserAllowed}
-						{devices}
-					/>
-					<div class="mt-1 min-h-[1rem]">
-						<AutoSaveIndicator field={browserConfigField} />
-					</div>
-				{/if}
+				<BrowserProviderToggle
+					bind:value={browserProvider}
+					bind:sjsBrowserApiKey
+					{localBrowserAllowed}
+					{devices}
+				/>
+				<div class="mt-1 min-h-[1rem]">
+					<AutoSaveIndicator field={browserConfigField} />
+				</div>
 
 				<!-- Desktop connection status -->
 				{#if isTunnelMode && desktopConnected !== null}
@@ -1470,99 +1044,86 @@
 								Browser Location
 							</h3>
 						</div>
-						{#if isAdd}
+						<div class="flex items-center gap-2">
 							<div class="flex-1">
-								<CountrySelect bind:value={addBrowserCountryCode} fallback={defaultCountryCode} />
+								<CountrySelect bind:value={editBrowserCountryCode} fallback={defaultCountryCode} />
 							</div>
-							<input type="hidden" name="browser_country_code" value={addBrowserCountryCode} />
-						{:else}
-							<div class="flex items-center gap-2">
-								<div class="flex-1">
-									<CountrySelect
-										bind:value={editBrowserCountryCode}
-										fallback={defaultCountryCode}
-									/>
-								</div>
-								<AutoSaveIndicator field={browserCountryField} />
-							</div>
-						{/if}
+							<AutoSaveIndicator field={browserCountryField} />
+						</div>
 						<p class="mt-2 text-xs text-[var(--dash-text-muted)]">
 							The country the scraper will appear to browse from. Set this to match your actual
-							location to avoid your account being flagged for logging in from unusual locations.{isEdit
-								? " If empty, your profile's country is used."
-								: ''}
+							location to avoid your account being flagged for logging in from unusual locations. If
+							empty, your profile's country is used.
 						</p>
 
 						<!-- Advanced: browser fingerprint -->
-						{#if isEdit}
-							<button
-								type="button"
-								onclick={() => (showAdvancedBrowser = !showAdvancedBrowser)}
-								class="mt-3 flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
-							>
-								{#if showAdvancedBrowser}
-									<FontAwesomeIcon icon={faChevronDown} class="h-2.5 w-2.5" />
-								{:else}
-									<FontAwesomeIcon icon={faChevronRight} class="h-2.5 w-2.5" />
-								{/if}
-								Advanced
-							</button>
-
+						<button
+							type="button"
+							onclick={() => (showAdvancedBrowser = !showAdvancedBrowser)}
+							class="mt-3 flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
+						>
 							{#if showAdvancedBrowser}
-								<div class="mt-3 space-y-3 border-t border-[var(--dash-border)] pt-3">
-									<div>
-										<label
-											for="browser_language"
-											class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
-										>
-											Language
-										</label>
-										<input
-											type="text"
-											id="browser_language"
-											bind:value={browserLanguage}
-											onblur={fingerprintField.flush}
-											autocomplete="off"
-											placeholder={defaultBrowserLanguage}
-											class="w-full rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-										/>
-										{#if !browserLanguage}
-											<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
-												Defaults to <span class="font-mono">{defaultBrowserLanguage}</span> based on selected
-												country
-											</p>
-										{/if}
-									</div>
-
-									<div>
-										<label
-											for="browser_timezone"
-											class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
-										>
-											Timezone
-										</label>
-										<input
-											type="text"
-											id="browser_timezone"
-											bind:value={browserTimezone}
-											onblur={fingerprintField.flush}
-											autocomplete="off"
-											placeholder={defaultBrowserTimezone}
-											class="w-full rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-										/>
-										{#if !browserTimezone}
-											<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
-												Defaults to <span class="font-mono">{defaultBrowserTimezone}</span> based on selected
-												country
-											</p>
-										{/if}
-									</div>
-
-									<div class="pt-1">
-										<AutoSaveIndicator field={fingerprintField} />
-									</div>
-								</div>
+								<FontAwesomeIcon icon={faChevronDown} class="h-2.5 w-2.5" />
+							{:else}
+								<FontAwesomeIcon icon={faChevronRight} class="h-2.5 w-2.5" />
 							{/if}
+							Advanced
+						</button>
+
+						{#if showAdvancedBrowser}
+							<div class="mt-3 space-y-3 border-t border-[var(--dash-border)] pt-3">
+								<div>
+									<label
+										for="browser_language"
+										class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
+									>
+										Language
+									</label>
+									<input
+										type="text"
+										id="browser_language"
+										bind:value={browserLanguage}
+										onblur={fingerprintField.flush}
+										autocomplete="off"
+										placeholder={defaultBrowserLanguage}
+										class="w-full rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+									/>
+									{#if !browserLanguage}
+										<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
+											Defaults to <span class="font-mono">{defaultBrowserLanguage}</span> based on selected
+											country
+										</p>
+									{/if}
+								</div>
+
+								<div>
+									<label
+										for="browser_timezone"
+										class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
+									>
+										Timezone
+									</label>
+									<input
+										type="text"
+										id="browser_timezone"
+										bind:value={browserTimezone}
+										onblur={fingerprintField.flush}
+										autocomplete="off"
+										placeholder={defaultBrowserTimezone}
+										class="w-full rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+									/>
+									{#if !browserTimezone}
+										<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
+											Defaults to <span class="font-mono">{defaultBrowserTimezone}</span> based on selected
+											country
+										</p>
+									{/if}
+								</div>
+
+								<div class="pt-1">
+									<AutoSaveIndicator field={fingerprintField} />
+								</div>
+							</div>
 						{/if}
 					</div>
 				{/if}
@@ -1575,26 +1136,18 @@
 		<hr class="border-[var(--dash-border)] lg:hidden" />
 
 		<!-- Scraping Options -->
-		{#if isEdit}
-			{@render sectionToggle('options', 'Scraping Options')}
-		{:else}
-			<h3 class="text-sm font-medium tracking-wide text-[var(--dash-text-muted)] uppercase">
-				Scraping Options
-			</h3>
-		{/if}
+		{@render sectionToggle('options', 'Scraping Options')}
 
-		{#if isAdd || sectionOpen.options}
+		{#if sectionOpen.options}
 			<div class="space-y-3">
 				<!-- Max jobs -->
 				<div class="flex flex-wrap items-center gap-3">
 					<label class="flex cursor-pointer items-center gap-2">
 						<input
 							type="checkbox"
-							checked={isAdd ? addMaxJobsEnabled : maxJobsEnabled}
+							checked={maxJobsEnabled}
 							onchange={(e) => {
-								if (isAdd) {
-									addMaxJobsEnabled = (e.target as HTMLInputElement).checked;
-								} else maxJobsEnabled = (e.target as HTMLInputElement).checked;
+								maxJobsEnabled = (e.target as HTMLInputElement).checked;
 							}}
 							class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
 						/>
@@ -1602,29 +1155,17 @@
 							>Max jobs to process</span
 						>
 					</label>
-					{#if isAdd}
-						<input
-							type="number"
-							name="max_jobs"
-							min="1"
-							placeholder="No limit"
-							bind:value={addMaxJobsInput}
-							disabled={!addMaxJobsEnabled}
-							class="w-24 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-						/>
-					{:else}
-						<input
-							type="number"
-							min="1"
-							placeholder="No limit"
-							bind:value={maxJobsInput}
-							onblur={maxJobsField.flush}
-							autocomplete="off"
-							disabled={!maxJobsEnabled}
-							class="w-24 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-						/>
-						<AutoSaveIndicator field={maxJobsField} />
-					{/if}
+					<input
+						type="number"
+						min="1"
+						placeholder="No limit"
+						bind:value={maxJobsInput}
+						onblur={maxJobsField.flush}
+						autocomplete="off"
+						disabled={!maxJobsEnabled}
+						class="w-24 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
+					/>
+					<AutoSaveIndicator field={maxJobsField} />
 				</div>
 
 				<!-- Duplicate jobs behavior -->
@@ -1636,11 +1177,10 @@
 						<button
 							type="button"
 							onclick={() => {
-								if (isAdd) addSkipExisting = false;
-								else skipExisting = false;
+								skipExisting = false;
 							}}
 							class={`px-3 py-1 text-xs font-medium transition-colors ${
-								!(isAdd ? addSkipExisting : skipExisting)
+								!skipExisting
 									? 'bg-[var(--dash-primary)] text-white'
 									: 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]'
 							}`}
@@ -1650,11 +1190,10 @@
 						<button
 							type="button"
 							onclick={() => {
-								if (isAdd) addSkipExisting = true;
-								else skipExisting = true;
+								skipExisting = true;
 							}}
 							class={`px-3 py-1 text-xs font-medium transition-colors ${
-								(isAdd ? addSkipExisting : skipExisting)
+								skipExisting
 									? 'bg-[var(--dash-primary)] text-white'
 									: 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-surface)]'
 							}`}
@@ -1662,11 +1201,7 @@
 							Skip
 						</button>
 					</div>
-					{#if isAdd}
-						<input type="hidden" name="skip_existing" value={addSkipExisting ? 'true' : 'false'} />
-					{:else}
-						<AutoSaveIndicator field={skipExistingField} />
-					{/if}
+					<AutoSaveIndicator field={skipExistingField} />
 				</div>
 
 				<!-- Stop after duplicates -->
@@ -1674,11 +1209,9 @@
 					<label class="flex cursor-pointer items-center gap-2">
 						<input
 							type="checkbox"
-							checked={isAdd ? addStopAfterDuplicatesEnabled : stopAfterDuplicatesEnabled}
+							checked={stopAfterDuplicatesEnabled}
 							onchange={(e) => {
-								if (isAdd) {
-									addStopAfterDuplicatesEnabled = (e.target as HTMLInputElement).checked;
-								} else stopAfterDuplicatesEnabled = (e.target as HTMLInputElement).checked;
+								stopAfterDuplicatesEnabled = (e.target as HTMLInputElement).checked;
 							}}
 							class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
 						/>
@@ -1686,36 +1219,21 @@
 							>Stop after</span
 						>
 					</label>
-					{#if isAdd}
-						<input
-							type="number"
-							name="stop_after_duplicates"
-							min="1"
-							placeholder="Off"
-							bind:value={addStopAfterDuplicatesInput}
-							disabled={!addStopAfterDuplicatesEnabled}
-							class="w-20 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-						/>
-					{:else}
-						<input
-							type="number"
-							min="1"
-							placeholder="Off"
-							bind:value={stopAfterDuplicatesInput}
-							onblur={stopAfterDuplicatesField.flush}
-							autocomplete="off"
-							disabled={!stopAfterDuplicatesEnabled}
-							class="w-20 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-						/>
-					{/if}
+					<input
+						type="number"
+						min="1"
+						placeholder="Off"
+						bind:value={stopAfterDuplicatesInput}
+						onblur={stopAfterDuplicatesField.flush}
+						autocomplete="off"
+						disabled={!stopAfterDuplicatesEnabled}
+						class="w-20 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
+					/>
 					<span
 						class="text-sm text-[var(--dash-text-secondary)]"
-						class:opacity-40={isAdd ? !addStopAfterDuplicatesEnabled : !stopAfterDuplicatesEnabled}
-						>duplicates in a row</span
+						class:opacity-40={!stopAfterDuplicatesEnabled}>duplicates in a row</span
 					>
-					{#if isEdit}
-						<AutoSaveIndicator field={stopAfterDuplicatesField} />
-					{/if}
+					<AutoSaveIndicator field={stopAfterDuplicatesField} />
 				</div>
 
 				<!-- Skip first -->
@@ -1723,11 +1241,9 @@
 					<label class="flex cursor-pointer items-center gap-2">
 						<input
 							type="checkbox"
-							checked={isAdd ? addSkipFirstEnabled : skipFirstEnabled}
+							checked={skipFirstEnabled}
 							onchange={(e) => {
-								if (isAdd) {
-									addSkipFirstEnabled = (e.target as HTMLInputElement).checked;
-								} else skipFirstEnabled = (e.target as HTMLInputElement).checked;
+								skipFirstEnabled = (e.target as HTMLInputElement).checked;
 							}}
 							class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
 						/>
@@ -1735,186 +1251,116 @@
 							>Skip first</span
 						>
 					</label>
-					{#if isAdd}
-						<input
-							type="number"
-							name="skip_first"
-							min="1"
-							placeholder="Off"
-							bind:value={addSkipFirstInput}
-							disabled={!addSkipFirstEnabled}
-							class="w-20 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-						/>
-					{:else}
-						<input
-							type="number"
-							min="1"
-							placeholder="Off"
-							bind:value={skipFirstInput}
-							onblur={skipFirstField.flush}
-							autocomplete="off"
-							disabled={!skipFirstEnabled}
-							class="w-20 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
-						/>
-					{/if}
+					<input
+						type="number"
+						min="1"
+						placeholder="Off"
+						bind:value={skipFirstInput}
+						onblur={skipFirstField.flush}
+						autocomplete="off"
+						disabled={!skipFirstEnabled}
+						class="w-20 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] disabled:opacity-40"
+					/>
 					<span
 						class="text-sm text-[var(--dash-text-secondary)]"
-						class:opacity-40={isAdd ? !addSkipFirstEnabled : !skipFirstEnabled}>jobs</span
+						class:opacity-40={!skipFirstEnabled}>jobs</span
 					>
-					{#if isEdit}
-						<AutoSaveIndicator field={skipFirstField} />
-					{/if}
+					<AutoSaveIndicator field={skipFirstField} />
 				</div>
 			</div>
 		{/if}
 
 		<!-- Schedule -->
 		<hr class="mt-4 border-[var(--dash-border)]" />
-		{#if isEdit}
-			{@render sectionToggle('schedule', 'Schedule')}
-		{:else}
-			<h3 class="text-sm font-medium tracking-wide text-[var(--dash-text-muted)] uppercase">
-				Schedule
-			</h3>
-		{/if}
+		{@render sectionToggle('schedule', 'Schedule')}
 
-		{#if isAdd || sectionOpen.schedule}
+		{#if sectionOpen.schedule}
 			<div class="space-y-3">
-				{#if isAdd}
-					<!-- Add mode: simple toggle + options -->
-					<label class="flex cursor-pointer items-center gap-2">
-						<input
-							type="checkbox"
-							checked={addScheduleInterval !== ''}
-							onchange={(e) => {
-								const checked = (e.target as HTMLInputElement).checked;
-								addScheduleInterval = checked ? '24' : '';
-							}}
-							class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-						/>
-						<span class="text-sm text-[var(--dash-text)]">Enable auto-run</span>
-					</label>
-					{#if addScheduleInterval}
-						<div class="space-y-2 pl-6">
-							<div class="flex items-center gap-2">
-								<span class="text-sm whitespace-nowrap text-[var(--dash-text-secondary)]"
-									>Frequency</span
-								>
-								<select
-									name="schedule_interval_hours"
-									bind:value={addScheduleInterval}
-									class="rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
-								>
-									{#each SCHEDULE_OPTIONS as opt}
-										<option value={opt.value}>{opt.label}</option>
-									{/each}
-								</select>
-							</div>
+				<!-- Edit mode: toggle + frequency + preferred hour -->
+				<label class="flex cursor-pointer items-center gap-2">
+					<input
+						type="checkbox"
+						bind:checked={scheduleEnabled}
+						class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+					/>
+					<span class="text-sm text-[var(--dash-text)]">Enable auto-run</span>
+				</label>
+				{#if scheduleEnabled}
+					<div class="space-y-3 pl-6">
+						<div class="flex items-center gap-2">
+							<span class="text-sm whitespace-nowrap text-[var(--dash-text-secondary)]"
+								>Frequency</span
+							>
+							<select
+								bind:value={scheduleIntervalInput}
+								class="rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
+							>
+								{#each SCHEDULE_OPTIONS as opt}
+									<option value={opt.value}>{opt.label}</option>
+								{/each}
+							</select>
 						</div>
-					{/if}
-				{:else}
-					<!-- Edit mode: toggle + frequency + preferred hour -->
-					<label class="flex cursor-pointer items-center gap-2">
-						<input
-							type="checkbox"
-							bind:checked={scheduleEnabled}
-							class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
-						/>
-						<span class="text-sm text-[var(--dash-text)]">Enable auto-run</span>
-					</label>
-					{#if scheduleEnabled}
-						<div class="space-y-3 pl-6">
+						<div>
+							<span class="mb-1 block text-sm text-[var(--dash-text-secondary)]"
+								>Preferred time</span
+							>
 							<div class="flex items-center gap-2">
-								<span class="text-sm whitespace-nowrap text-[var(--dash-text-secondary)]"
-									>Frequency</span
-								>
 								<select
-									bind:value={scheduleIntervalInput}
+									bind:value={schedulePreferredHour}
 									class="rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
 								>
-									{#each SCHEDULE_OPTIONS as opt}
+									{#each HOUR_OPTIONS as opt}
 										<option value={opt.value}>{opt.label}</option>
 									{/each}
 								</select>
-							</div>
-							<div>
-								<span class="mb-1 block text-sm text-[var(--dash-text-secondary)]"
-									>Preferred time</span
-								>
-								<div class="flex items-center gap-2">
-									<select
-										bind:value={schedulePreferredHour}
-										class="rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
+								{#if userTimezone}
+									<span class="text-xs text-[var(--dash-text-muted)]"
+										>{userTimezone.split('/').pop()?.replace(/_/g, ' ')}</span
 									>
-										{#each HOUR_OPTIONS as opt}
-											<option value={opt.value}>{opt.label}</option>
-										{/each}
-									</select>
-									{#if userTimezone}
-										<span class="text-xs text-[var(--dash-text-muted)]"
-											>{userTimezone.split('/').pop()?.replace(/_/g, ' ')}</span
-										>
-										<a
-											href="/settings#timezone"
-											class="text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
-											title="Change timezone"
-										>
-											<FontAwesomeIcon icon={faPenToSquare} class="h-3 w-3" />
-										</a>
-									{:else}
-										<a
-											href="/settings#timezone"
-											class="text-xs text-[var(--dash-text-muted)] underline hover:text-[var(--dash-primary)]"
-											>Set timezone</a
-										>
-									{/if}
-								</div>
+									<a
+										href="/settings#timezone"
+										class="text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
+										title="Change timezone"
+									>
+										<FontAwesomeIcon icon={faPenToSquare} class="h-3 w-3" />
+									</a>
+								{:else}
+									<a
+										href="/settings#timezone"
+										class="text-xs text-[var(--dash-text-muted)] underline hover:text-[var(--dash-primary)]"
+										>Set timezone</a
+									>
+								{/if}
 							</div>
 						</div>
-					{/if}
-					<AutoSaveIndicator field={scheduleField} />
+					</div>
 				{/if}
+				<AutoSaveIndicator field={scheduleField} />
 			</div>
 		{/if}
 
 		<!-- Advanced (Background mode + staff debug). Only rendered when at least
          one toggle is applicable to this user/task. -->
-		{#if isTunnelMode || (isEdit && isStaff)}
+		{#if isTunnelMode || isStaff}
 			<hr class="mt-4 border-[var(--dash-border)]" />
-			{#if isEdit}
-				{@render sectionToggle('advanced', 'Advanced')}
-			{:else}
-				<h3 class="text-sm font-medium tracking-wide text-[var(--dash-text-muted)] uppercase">
-					Advanced
-				</h3>
-			{/if}
+			{@render sectionToggle('advanced', 'Advanced')}
 
-			{#if isAdd || sectionOpen.advanced}
+			{#if sectionOpen.advanced}
 				<div class="space-y-3">
 					{#if isTunnelMode}
 						<div class="flex flex-wrap items-center gap-3">
 							<label class="flex cursor-pointer items-center gap-2">
 								<input
 									type="checkbox"
-									checked={isAdd ? addKeepMinimized : keepMinimized}
+									checked={keepMinimized}
 									onchange={(e) => {
-										if (isAdd) {
-											addKeepMinimized = (e.target as HTMLInputElement).checked;
-										} else keepMinimized = (e.target as HTMLInputElement).checked;
+										keepMinimized = (e.target as HTMLInputElement).checked;
 									}}
 									class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
 								/>
 								<span class="text-sm text-[var(--dash-text-secondary)]">Background mode</span>
 							</label>
-							{#if isAdd}
-								<input
-									type="hidden"
-									name="keep_minimized"
-									value={addKeepMinimized ? 'true' : 'false'}
-								/>
-							{:else}
-								<AutoSaveIndicator field={keepMinimizedField} />
-							{/if}
+							<AutoSaveIndicator field={keepMinimizedField} />
 						</div>
 						<p class="-mt-1 text-xs text-[var(--dash-text-muted)]">
 							When enabled, Chrome won't steal focus while the scraper runs. Disable to watch tab
@@ -1922,7 +1368,7 @@
 						</p>
 					{/if}
 
-					{#if isEdit && isStaff}
+					{#if isStaff}
 						<div class="flex flex-wrap items-center gap-3">
 							<label class="flex cursor-pointer items-center gap-2">
 								<input

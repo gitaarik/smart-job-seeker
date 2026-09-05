@@ -90,7 +90,13 @@ set -euo pipefail
 # tasks page still carried the state, URL-detection and submit handlers of the
 # inline add form that SimplifiedAddTaskForm replaced, plus four imports and a
 # derived value nothing read. Measured with check-oss.sh, not the dev container.
-BASELINE=1441
+#
+# 1,441 -> 1,431 the same day, when SearchTaskFields lost its add mode: the
+# component doubled as the add form behind a `mode` prop that nothing had
+# passed as "add" since SimplifiedAddTaskForm replaced it, and the ~550 dead
+# lines carried unkeyed each blocks, `any` props and unused imports of their
+# own. Measured with check-oss.sh.
+BASELINE=1431
 
 npx svelte-kit sync
 

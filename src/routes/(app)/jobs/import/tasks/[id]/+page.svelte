@@ -20,13 +20,7 @@
 	import SearchTaskFields from '../../../components/SearchTaskFields.svelte';
 	import SourceEditor from '../../components/SourceEditor.svelte';
 	import FilterEditor from '../../components/FilterEditor.svelte';
-	import {
-		formatJobType,
-		formatSalaryRange,
-		formatWorkLocation,
-		searchTaskDisplayName,
-		timeAgo
-	} from '$lib/format';
+	import { formatSalaryRange, searchTaskDisplayName, timeAgo } from '$lib/format';
 	import { page } from '$app/stores';
 	import { formatDateTime, formatMonthDay, formatTime as fmtTime } from '$lib/format-date';
 	import type { TimeFormat } from '$lib/format-date';
@@ -57,7 +51,6 @@
 		faMoneyBillWave,
 		faPencil,
 		faPlay,
-		faPlus,
 		faStop,
 		faSync,
 		faTerminal,
@@ -917,23 +910,6 @@
 		if (itemPollIntervals[runId]) {
 			clearInterval(itemPollIntervals[runId]);
 			delete itemPollIntervals[runId];
-		}
-	}
-
-	function getItemStatusColor(status: string): string {
-		switch (status) {
-			case 'completed':
-				return 'text-[var(--dash-success)]';
-			case 'processing':
-				return 'text-[var(--dash-primary)]';
-			case 'pending':
-				return 'text-[var(--dash-text-muted)]';
-			case 'skipped':
-				return 'text-[var(--dash-warning)]';
-			case 'error':
-				return 'text-[var(--dash-error)]';
-			default:
-				return 'text-[var(--dash-text-secondary)]';
 		}
 	}
 
@@ -2722,7 +2698,6 @@
 	<Card padding="lg">
 		{#key data.searchTask.id}
 			<SearchTaskFields
-				mode="edit"
 				localBrowserAllowed={data.localBrowserAllowed}
 				serverBrowserProvider={data.browserProvider}
 				{searchTask}
