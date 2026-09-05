@@ -93,6 +93,9 @@ describe('import task site picker', () => {
 		await expect
 			.poll(() => ctx.page.getByLabel(/Job search URL/).inputValue())
 			.toBe('https://acme.example.com');
-		await expect.poll(() => ctx.page.getByLabel(/Login page URL/).isVisible()).toBe(true);
+		await expect.poll(() => ctx.page.getByLabel(/Site name/).isVisible()).toBe(true);
+		// The form deliberately asks nothing about signing in (b2250ab8): that
+		// lives on the task page, where the user can actually answer it.
+		expect(await ctx.page.getByLabel(/Login page URL/).count()).toBe(0);
 	});
 });
