@@ -197,22 +197,29 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	// May this user edit the platform's sign-in page URL?
 	//
 	// Mirrors the rule in `PATCH /api/platforms/[id]` exactly: staff always,
-	// and a normal user only when no *other* account has a task on the
-	// platform — the row is global, so changing LinkedIn's login page would
-	// redirect everyone's runs. Computed here rather than guessed in the
-	// component, because a field that renders and then 403s on save is the
-	// failure this page has already had once (see the isStaff note above).
+	// and a normal user only for a site they added themselves that no *other*
+	// account has a task on. The row is global, and `login_page_url` is where
+	// "auto" mode types other people's stored passwords, so the curated
+	// platforms (no owner) are admin-only whatever their usage. Computed here
+	// rather than guessed in the component, because a field that renders and
+	// then 403s on save is the failure this page has already had once (see the
+	// isStaff note above).
 	let canEditSignInPage = isStaff;
 	if (!canEditSignInPage && user && searchTask.platform_id) {
-		const foreignUse = await db
-			.select({ id: search_tasks.id })
-			.from(search_tasks)
-			.innerJoin(profiles, eq(profiles.id, search_tasks.profile_id))
-			.where(
-				and(eq(search_tasks.platform_id, searchTask.platform_id), ne(profiles.user_id, user.id))
-			)
-			.limit(1);
-		canEditSignInPage = foreignUse.length === 0;
+		const ownsPlatform =
+			!!searchTask.job_platform?.created_by_user_id &&
+			searchTask.job_platform.created_by_user_id === user.id;
+		if (ownsPlatform) {
+			const foreignUse = await db
+				.select({ id: search_tasks.id })
+				.from(search_tasks)
+				.innerJoin(profiles, eq(profiles.id, search_tasks.profile_id))
+				.where(
+					and(eq(search_tasks.platform_id, searchTask.platform_id), ne(profiles.user_id, user.id))
+				)
+				.limit(1);
+			canEditSignInPage = foreignUse.length === 0;
+		}
 	}
 
 	// Skill proficiency map for the task's profile so the expanded
