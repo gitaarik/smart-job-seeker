@@ -5,6 +5,26 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.29.0] - 2026-09-05
+
+13 commits since v0.28.0.
+
+### Added
+
+- Simplified sign-in flow to ask one focused question instead of multiple steps
+
+### Changed
+
+- Removed unused "add mode" from import task fields, simplifying the import interface
+- Import suggestions now consistently read sign-in page configuration from a centralized location
+
+### Fixed
+
+- Upload security: prevent directory traversal when sibling directory names share a prefix
+- Import suggestions now properly execute on the connected device
+- Removed four unused API endpoints (two unguarded) and restricted sign-in page configuration changes to site owners only
+- Scraper: prevent unattended runs from waiting indefinitely for human input
+
 ## [0.28.0] - 2026-09-04
 
 10 commits since v0.27.0.
