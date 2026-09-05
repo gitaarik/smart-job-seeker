@@ -19,10 +19,13 @@ set -euo pipefail
 #
 # Two rules here are worth more attention than their count suggests:
 #
-#   svelte/no-at-html-tags — every one of the 10 remaining sites was audited on
-#     2026-08-07. Four render LLM output through renderSafeMarkdown, three escape
+#   svelte/no-at-html-tags — every one of the 12 sites was audited, 10 on
+#     2026-08-07 and the two added since on 2026-09-05. Six render LLM or
+#     scraped text through renderSafeMarkdown (which escapes raw HTML and
+#     allowlists link schemes — the two newer ones are the job page's posting
+#     and company descriptions, scraped rather than generated), three escape
 #     scraped HTML before highlighting it, one is linkify (escapes first), one is
-#     repo-authored guide markdown, and one is FiveYearVisionSection, which now
+#     repo-authored guide markdown, and one is FiveYearVisionSection, which
 #     escapes before applying its bold rule. A NEW hit on this rule is not
 #     backlog — it is an unreviewed HTML sink, and public portfolio pages render
 #     user-authored content. Read it before raising the baseline.
@@ -82,7 +85,12 @@ set -euo pipefail
 # `resolve()` from $app/paths is used nowhere in this codebase — so adopting it
 # for a single link would make that file inconsistent with itself to move a
 # counter by one. It belongs to whoever takes the rule on as a whole.
-BASELINE=1457
+#
+# 1,457 -> 1,441 on 2026-09-05, all of it code that no longer exists: the
+# tasks page still carried the state, URL-detection and submit handlers of the
+# inline add form that SimplifiedAddTaskForm replaced, plus four imports and a
+# derived value nothing read. Measured with check-oss.sh, not the dev container.
+BASELINE=1441
 
 npx svelte-kit sync
 

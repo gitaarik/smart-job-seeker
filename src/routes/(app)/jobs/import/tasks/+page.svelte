@@ -1,12 +1,11 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
-	import { deserialize, enhance } from '$app/forms';
+	import { deserialize } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { onMount } from 'svelte';
 	import {
-		faArrowUpRightFromSquare,
 		faCalendar,
 		faClock,
 		faDesktop,
@@ -18,11 +17,9 @@
 		faTimes
 	} from '@fortawesome/free-solid-svg-icons';
 	import { getSearchTaskStatusIcon } from '$lib/search-task-status';
-	import { searchTaskDisplayName } from '$lib/format';
 	import { formatDateTime as fmtDateTime } from '$lib/format-date';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import PlatformLogo from '$lib/components/PlatformLogo.svelte';
-	import EmptyState from '../../../profile/components/EmptyState.svelte';
 	import SimplifiedAddTaskForm from '../components/SimplifiedAddTaskForm.svelte';
 	import SuggestionsList, { type Suggestion } from '../components/SuggestionsList.svelte';
 	import ImportTaskBlockerBadge from '../components/ImportTaskBlockerBadge.svelte';
@@ -125,16 +122,6 @@
 	let desktopStatusChecked = $state(false);
 	let desktopConnected = $derived(preferredDevice !== null);
 
-	// Merge the loaded api-key devices with live tunnel-status data so the
-	// add-form's device picker can show per-device "(offline)" markers like
-	// the edit page does.
-	let devicesWithStatus = $derived(
-		data.apiKeyDevices.map((d) => ({
-			...d,
-			connected: connectedDeviceIds.includes(d.apiKeyId)
-		}))
-	);
-
 	let anyTaskUsesDesktop = $derived(searchTasks.some((s) => s.browser_provider === 'tunnel'));
 
 	async function checkDesktopStatus() {
@@ -175,40 +162,6 @@
 		const interval = setInterval(checkDesktopStatus, 15000);
 		return () => clearInterval(interval);
 	});
-
-	// Form states for new entry
-	let newNote = $state('');
-	let newSearchUrl = $state('');
-	let newSearchTerm = $state('');
-	let newLoginPageUrl = $state('');
-
-	// Auto-detected platform state
-	let detectedPlatform = $state<{
-		id: number;
-		name: string;
-		url: string;
-		loginPageUrl: string | null;
-		isNew: boolean;
-	} | null>(null);
-	let detectingPlatform = $state(false);
-
-	// Credentials state for new entry — includes both the user's own
-	// credentials and any shared with them by contacts for the detected
-	// platform. Passwords/security answers stay server-side; only IDs and
-	// usernames cross the wire so the user can pick a credential to use.
-	let existingCredentials = $state<
-		Array<{
-			id: number;
-			username: string | null;
-			status: string;
-			shared?: boolean;
-			owner_user_id?: string | null;
-			owner_label?: string | null;
-		}>
-	>([]);
-
-	// Debounce timer
-	let urlDebounce: ReturnType<typeof setTimeout> | null = null;
 
 	const tz = $derived(($page.data as { userTimezone: string | null }).userTimezone || undefined);
 	const tf = $derived(
@@ -261,60 +214,8 @@
 		});
 	}
 
-	async function detectPlatformFromUrl(searchUrl: string) {
-		if (!searchUrl) {
-			detectedPlatform = null;
-			existingCredentials = [];
-			return;
-		}
-
-		// Extract base URL
-		let baseUrl: string;
-		try {
-			const parsed = new URL(searchUrl.startsWith('http') ? searchUrl : `https://${searchUrl}`);
-			baseUrl = parsed.origin;
-		} catch {
-			return;
-		}
-
-		detectingPlatform = true;
-
-		try {
-			const response = await fetch(
-				`/api/platforms/detect?url=${encodeURIComponent(baseUrl)}&profileId=${data.profileId}`
-			);
-			if (response.ok) {
-				const result = await response.json();
-				detectedPlatform = result.platform;
-				existingCredentials = result.credentials || [];
-				if (result.platform.loginPageUrl) {
-					newLoginPageUrl = result.platform.loginPageUrl;
-				}
-			}
-		} catch {
-			// Ignore errors
-		} finally {
-			detectingPlatform = false;
-		}
-	}
-
-	function handleSearchUrlInput(e: Event) {
-		const value = (e.target as HTMLInputElement).value;
-		newSearchUrl = value;
-
-		// Debounce platform detection
-		if (urlDebounce) clearTimeout(urlDebounce);
-		urlDebounce = setTimeout(() => detectPlatformFromUrl(value), 500);
-	}
-
 	function resetAddForm() {
 		showAddForm = false;
-		newNote = '';
-		newSearchUrl = '';
-		newSearchTerm = '';
-		newLoginPageUrl = '';
-		detectedPlatform = null;
-		existingCredentials = [];
 	}
 
 	// ── Profile-tailored task suggestions ──
@@ -370,7 +271,18 @@
 			formData.append('search_term', suggestion.keywords);
 		}
 		formData.append('search_filters', JSON.stringify(suggestion.filters ?? {}));
-		formData.append('browser_provider', 'hosted');
+		// Where the task runs: the same rule as the add form. A connected
+		// device, own or shared, wins; with none, an empty provider lets the
+		// create action apply the server's default rather than pinning the row
+		// to the cloud browser forever. This path kept a hardcoded "hosted"
+		// after the add form stopped doing that, so an accepted suggestion
+		// ignored the device the user had just connected.
+		if (preferredDevice) {
+			formData.append('browser_provider', 'tunnel');
+			formData.append('sjsbrowser_api_key', String(preferredDevice.apiKeyId));
+		} else {
+			formData.append('browser_provider', '');
+		}
 		// Same rule the add form uses: a suggestion for a gated board should be
 		// able to sign in, and pinning "none" here is what made suggested
 		// LinkedIn/Indeed tasks come back empty.
@@ -431,35 +343,6 @@
 		suggestions = null;
 		suggestionsError = null;
 		suggestionsInfo = null;
-	}
-
-	function handleAddSubmit() {
-		return async ({
-			result
-		}: {
-			result: { type: string; data?: { taskId?: number } };
-			update: () => Promise<void>;
-		}) => {
-			if (result.type === 'success' && result.data?.taskId) {
-				track('search_task_created');
-				resetAddForm();
-				goto(`/jobs/import/tasks/${result.data.taskId}`);
-			}
-		};
-	}
-
-	function getStatusColor(search: (typeof searchTasks)[0]): string {
-		if (search.status === 'running' || search.status === 'queued') {
-			return 'text-blue-500';
-		}
-		if (search.status === 'stopping') return 'text-orange-500';
-		if (search.status === 'blocked' || search.status === 'partial') {
-			return 'text-yellow-600';
-		}
-		if (search.status === 'error') return 'text-red-500';
-		if (search.status === 'success') return 'text-[var(--dash-success)]';
-		if (search.last_run) return 'text-[var(--dash-success)]';
-		return 'text-[var(--dash-text-muted)]';
 	}
 
 	function getStatusBgColor(search: (typeof searchTasks)[0]): string {
