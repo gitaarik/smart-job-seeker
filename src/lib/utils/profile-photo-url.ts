@@ -1,32 +1,12 @@
 /**
- * Generate URL for profile photo
+ * Generate URL for profile photo: "profiles/abc123.jpg" -> "/uploads/profiles/abc123.jpg".
  *
- * Priority:
- * 1. Local upload (profile_photo_path): "profiles/abc123.jpg" → "/uploads/profiles/abc123.jpg"
- * 2. Legacy file UUID (profile_picture_id): "ee492412-..." → "/assets/ee492412-..."
- *
- * @param profile - Object with profile_photo_path and/or profile_picture_id
+ * Had a second branch for `profile_picture_id`, the uuid of a `files` row served
+ * from `/assets/<uuid>`, which is how photos were stored before `uploads/`. That
+ * column is gone; see getEntityMediaUrl for the same story on entity logos.
  */
 export function getProfilePhotoUrl(
-	profile:
-		| {
-				profile_photo_path?: string | null;
-				profile_picture_id?: string | null;
-		  }
-		| null
-		| undefined
+	profile: { profile_photo_path?: string | null } | null | undefined
 ): string | null {
-	if (!profile) return null;
-
-	// Prefer local upload
-	if (profile.profile_photo_path) {
-		return `/uploads/${profile.profile_photo_path}`;
-	}
-
-	// Fall back to legacy file UUID
-	if (profile.profile_picture_id) {
-		return `/assets/${profile.profile_picture_id}`;
-	}
-
-	return null;
+	return profile?.profile_photo_path ? `/uploads/${profile.profile_photo_path}` : null;
 }

@@ -1,32 +1,21 @@
 /**
- * Get URL for entity media
- * Handles both local storage paths and legacy file UUIDs
+ * Get URL for entity media.
+ *
+ * Entity images used to be `files` rows served by id from `/assets/<uuid>`;
+ * they are bytes under `uploads/` named by a `*_path` column now. The move was
+ * lazy and per-row -- `saveEntityMedia` wrote the path and nulled the uuid --
+ * so this took a `legacyUuid` to fall back on until the last row had crossed.
+ * The columns were dropped once none had needed it for some time.
  */
-export function getEntityMediaUrl(
-	localPath: string | null | undefined,
-	legacyUuid?: string | null
-): string | null {
-	// Prefer local path
-	if (localPath) {
-		return `/uploads/${localPath}`;
-	}
-
-	// Fall back to legacy UUID
-	if (legacyUuid) {
-		return `/assets/${legacyUuid}`;
-	}
-
-	return null;
+export function getEntityMediaUrl(localPath: string | null | undefined): string | null {
+	return localPath ? `/uploads/${localPath}` : null;
 }
 
 /**
  * Get work experience logo URL
  */
-export function getWorkExperienceLogoUrl(workExp: {
-	logo_path?: string | null;
-	logo_id?: string | null;
-}): string | null {
-	return getEntityMediaUrl(workExp.logo_path, workExp.logo_id);
+export function getWorkExperienceLogoUrl(workExp: { logo_path?: string | null }): string | null {
+	return getEntityMediaUrl(workExp.logo_path);
 }
 
 /**
@@ -41,11 +30,8 @@ export function getWorkExperienceBannerUrl(workExp: {
 /**
  * Get education logo URL
  */
-export function getEducationLogoUrl(edu: {
-	logo_path?: string | null;
-	logo_id?: string | null;
-}): string | null {
-	return getEntityMediaUrl(edu.logo_path, edu.logo_id);
+export function getEducationLogoUrl(edu: { logo_path?: string | null }): string | null {
+	return getEntityMediaUrl(edu.logo_path);
 }
 
 /**

@@ -794,18 +794,11 @@ export const education = pgTable(
 		end_date: date(),
 		profile_id: integer().notNull(),
 		summary: text(),
-		logo_id: uuid(),
 		tags: json(),
 		logo_path: varchar({ length: 255 }),
 		banner_path: varchar({ length: 255 })
 	},
 	(table) => [
-		index('education_logo_idx').on(table.logo_id),
-		foreignKey({
-			columns: [table.logo_id],
-			foreignColumns: [files.id],
-			name: 'education_logo_foreign'
-		}).onDelete('set null'),
 		foreignKey({
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
@@ -2529,7 +2522,6 @@ export const work_experiences = pgTable(
 		headline: varchar({ length: 255 }),
 		summary: text().notNull(),
 		id: serial().primaryKey().notNull(),
-		logo_id: uuid(),
 		status: varchar({ length: 255 }).default('draft').notNull(),
 		sort: integer(),
 		profile_id: integer().notNull(),
@@ -2543,12 +2535,6 @@ export const work_experiences = pgTable(
 		banner_path: varchar({ length: 255 })
 	},
 	(table) => [
-		index('work_experiences_logo_idx').on(table.logo_id),
-		foreignKey({
-			columns: [table.logo_id],
-			foreignColumns: [files.id],
-			name: 'work_experiences_logo_foreign'
-		}).onDelete('set null'),
 		foreignKey({
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
@@ -3612,7 +3598,6 @@ export const profiles = pgTable(
 		github_profile: varchar({ length: 255 }),
 		stackoverflow_profile: varchar({ length: 255 }),
 		headline: varchar({ length: 255 }),
-		profile_picture_id: uuid(),
 		summary: text(),
 		nationality: varchar({ length: 255 }),
 		location_url: varchar({ length: 255 }),
@@ -3667,13 +3652,7 @@ export const profiles = pgTable(
 		email_digest_send_to: varchar({ length: 20 }).default('profile')
 	},
 	(table) => [
-		index('profiles_profile_picture_idx').on(table.profile_picture_id),
 		index('profiles_user_id_idx').using('btree', table.user_id.asc().nullsLast()),
-		foreignKey({
-			columns: [table.profile_picture_id],
-			foreignColumns: [files.id],
-			name: 'profiles_profile_picture_foreign'
-		}).onDelete('set null'),
 		foreignKey({
 			columns: [table.public_cv_version_id],
 			foreignColumns: [profile_versions.id],

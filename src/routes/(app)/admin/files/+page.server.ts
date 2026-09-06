@@ -38,12 +38,15 @@ export const load: PageServerLoad = async ({ url }) => {
 	}
 
 	if (usageFilter === 'cv') {
+		// "Source CVs" asked `profile_picture_id` until 2026-09-06, so it listed
+		// profile photos under a CV label and the actual source CVs -- the only
+		// thing the filter is named for -- were unreachable from this page.
 		conditions.push(
 			exists(
 				db
 					.select({ v: sql`1` })
 					.from(profiles)
-					.where(eq(profiles.profile_picture_id, files.id))
+					.where(eq(profiles.source_cv, files.id))
 			)
 		);
 	} else if (usageFilter === 'application') {

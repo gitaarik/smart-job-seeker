@@ -303,12 +303,10 @@ async function updateEntityMediaPath(
 			break;
 		case 'work_experience':
 			if (field === 'logo_path') {
-				// Clear both logo_path and legacy logo field when deleting
-				const data: { logo_path: string | null; logo_id?: null } = { logo_path: path };
-				if (path === null) {
-					data.logo_id = null;
-				}
-				await dbDirect.update(work_experiences).set(data).where(eq(work_experiences.id, entityId));
+				await dbDirect
+					.update(work_experiences)
+					.set({ logo_path: path })
+					.where(eq(work_experiences.id, entityId));
 			} else if (field === 'banner_path') {
 				await dbDirect
 					.update(work_experiences)

@@ -14,20 +14,23 @@ const UPLOADS_DIR = join(process.cwd(), 'uploads', 'files');
  * these to readers who are not signed in, and a rendered PDF fetches them the
  * same way. There is no caller to ask about, which is the whole difficulty.
  *
- * **`files` is a shared table and most of it is not public.** Nine columns
- * reference it: profile pictures, the two logo columns and the artwork named
- * inside a resume template's config — and, alongside them, CVs sent with
- * applications, profile export archives, activity-entry attachments, feedback
- * uploads, project images, the CV a profile was created from, and the uploads
- * `import_logs` keeps for re-parsing. This route used to serve a row to anyone
- * who named it, so every one of those was one guessed uuid from being read, at
- * `public, max-age=31536000`.
+ * **`files` is a shared table and most of it is not public.** It holds CVs sent
+ * with applications, profile export archives, activity-entry attachments,
+ * feedback uploads, project images, the CV a profile was created from, and the
+ * uploads `import_logs` keeps for re-parsing. This route used to serve a row to
+ * anyone who named it, so every one of those was one guessed uuid from being
+ * read, at `public, max-age=31536000`.
  *
  * So it answers for a file that is *reachable as a public asset*, and 404s for
  * everything else. An allowlist and not a denylist on purpose: the failure of
  * forgetting to add a shape here is an image that does not load, which someone
  * notices; the failure of forgetting to exclude one is a private file served
  * for a year, which nobody does.
+ *
+ * Only resume template artwork is public now. Profile pictures and the two
+ * entity logo columns were here too, from when images were `files` rows rather
+ * than bytes under `uploads/`; those columns are gone and the clauses went with
+ * them. Anything served from `uploads/` never reaches this route at all.
  *
  * The template check reads `resume_template_assets`, which is an indexed
  * lookup. It used to be `config::text ILIKE '%<id>%'` over the jsonb, because
@@ -40,10 +43,7 @@ const UPLOADS_DIR = join(process.cwd(), 'uploads', 'files');
  * download, and `/admin/files/download` for the file browser.
  */
 const PUBLIC_REFERENCES = sql`
-	   EXISTS (SELECT 1 FROM profiles WHERE profile_picture_id = files.id)
-	OR EXISTS (SELECT 1 FROM work_experiences WHERE logo_id = files.id)
-	OR EXISTS (SELECT 1 FROM education WHERE logo_id = files.id)
-	OR EXISTS (SELECT 1 FROM resume_template_assets WHERE file_id = files.id)
+	EXISTS (SELECT 1 FROM resume_template_assets WHERE file_id = files.id)
 `;
 
 /**

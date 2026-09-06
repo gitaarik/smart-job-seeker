@@ -17,7 +17,6 @@ export interface ProfileSummary {
 	slug: string | null;
 	title: string | null;
 	is_default: boolean | null;
-	profile_picture_id: string | null;
 	profile_photo_path: string | null;
 }
 
@@ -33,7 +32,6 @@ export async function getProfilesByUserId(userId: string): Promise<ProfileSummar
 			slug: true,
 			title: true,
 			is_default: true,
-			profile_picture_id: true,
 			profile_photo_path: true
 		},
 		orderBy: [

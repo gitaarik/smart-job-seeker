@@ -50,12 +50,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		}
 	});
 
-	// Get logo URL (prefer local path, fall back to file UUID)
-	const logoUrl = experience?.logo_path
-		? `/uploads/${experience.logo_path}`
-		: experience?.logo_id
-			? `/assets/${experience.logo_id}`
-			: null;
+	const logoUrl = experience?.logo_path ? `/uploads/${experience.logo_path}` : null;
 
 	// Get banner URL
 	const bannerUrl = experience?.banner_path ? `/uploads/${experience.banner_path}` : null;

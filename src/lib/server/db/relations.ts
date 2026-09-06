@@ -102,11 +102,12 @@ export const applicationsRelations = relations(applications, ({ one, many }) => 
 
 export const filesRelations = relations(files, ({ one, many }) => ({
 	application_records: many(application_records),
-	educations: many(education),
 	job_resources: many(job_resources),
 	profile_exports: many(profile_exports),
-	work_experiences: many(work_experiences),
 	applications: many(applications),
+	// profiles.source_cv: the CV a profile was parsed from. It carries no foreign
+	// key -- see SOFT_REFERENCE_GUARDS in uploads/reap.ts -- but the relation is
+	// what lets the admin file browser name the profile a source CV belongs to.
 	profiles: many(profiles),
 	user_feedback_files: many(user_feedback_files),
 	profile_document_projects: many(profile_document_projects),
@@ -199,8 +200,8 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
 	search_tasks: many(search_tasks),
 	ai_chats: many(ai_chats),
 	job_statuses: many(job_statuses),
-	file: one(files, {
-		fields: [profiles.profile_picture_id],
+	source_cv_file: one(files, {
+		fields: [profiles.source_cv],
 		references: [files.id]
 	}),
 	profile_version_public_cv_version_id: one(profile_versions, {
@@ -228,10 +229,6 @@ export const configRelations = relations(config, ({ one }) => ({
 }));
 
 export const educationRelations = relations(education, ({ one }) => ({
-	file: one(files, {
-		fields: [education.logo_id],
-		references: [files.id]
-	}),
 	profile: one(profiles, {
 		fields: [education.profile_id],
 		references: [profiles.id]
@@ -537,10 +534,6 @@ export const work_experiencesRelations = relations(work_experiences, ({ one, man
 	work_experience_achievements: many(work_experience_achievements),
 	work_experience_projects: many(work_experience_projects),
 	work_experience_technologies: many(work_experience_technologies),
-	file: one(files, {
-		fields: [work_experiences.logo_id],
-		references: [files.id]
-	}),
 	profile: one(profiles, {
 		fields: [work_experiences.profile_id],
 		references: [profiles.id]

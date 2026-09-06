@@ -98,14 +98,14 @@ const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
  */
 export async function collectProfileFileRefs(profileId: number): Promise<FileRefs> {
 	const rows = await queryRawDirect<{ file_id: string | null; media_path: string | null }>(sql`
-		SELECT profile_picture_id AS file_id, profile_photo_path AS media_path
+		SELECT NULL AS file_id, profile_photo_path AS media_path
 		  FROM profiles WHERE id = ${profileId}
 		UNION ALL
-		SELECT logo_id, logo_path FROM work_experiences WHERE profile_id = ${profileId}
+		SELECT NULL, logo_path FROM work_experiences WHERE profile_id = ${profileId}
 		UNION ALL
 		SELECT NULL, banner_path FROM work_experiences WHERE profile_id = ${profileId}
 		UNION ALL
-		SELECT logo_id, logo_path FROM education WHERE profile_id = ${profileId}
+		SELECT NULL, logo_path FROM education WHERE profile_id = ${profileId}
 		UNION ALL
 		SELECT NULL, banner_path FROM education WHERE profile_id = ${profileId}
 		UNION ALL
