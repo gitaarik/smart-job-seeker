@@ -82,6 +82,35 @@ describe('texts composer — no AI thread yet', () => {
 		expect(await b.page.getByRole('button', { name: 'Write a draft' }).isVisible()).toBe(true);
 	});
 
+	it('grows the brief box with the text and caps it', async () => {
+		// The composer is an AutoGrowTextarea, like the assistant input: a long
+		// brief must not be typed into a three-line slot. jsdom can't measure
+		// this (scrollHeight is 0 there), so a browser is the only place it can
+		// be checked — see autogrow-textarea.test.ts for the component's own
+		// coverage. Nothing here sends: the box is filled and then cleared.
+		const composer = b.page.locator('textarea').last();
+		const height = () => composer.evaluate((el: HTMLTextAreaElement) => el.clientHeight);
+		const overflow = () => composer.evaluate((el: HTMLTextAreaElement) => el.style.overflowY);
+
+		await composer.fill('one line');
+		const minimum = await height();
+		expect(await overflow()).toBe('hidden');
+
+		await composer.fill(Array.from({ length: 6 }, (_, i) => `line ${i}`).join('\n'));
+		expect(await height()).toBeGreaterThan(minimum);
+		expect(await overflow()).toBe('hidden');
+
+		// maxRows={12}: past that it scrolls rather than eating the page.
+		await composer.fill(Array.from({ length: 40 }, (_, i) => `line ${i}`).join('\n'));
+		const capped = await height();
+		expect(await overflow()).toBe('auto');
+
+		// And it shrinks back, rather than keeping the height it grew to.
+		await composer.fill('');
+		expect(await height()).toBeLessThan(capped);
+		expect(await height()).toBe(minimum);
+	});
+
 	it('keeps writing your own version one click away', async () => {
 		const own = b.page.getByRole('button', {
 			name: /Write \/ paste my own version/i

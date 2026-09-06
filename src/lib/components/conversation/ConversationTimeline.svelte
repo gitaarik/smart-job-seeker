@@ -26,6 +26,7 @@
 		faRotateRight,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
+	import AutoGrowTextarea from '$lib/components/AutoGrowTextarea.svelte';
 	import { renderSafeMarkdown } from '$lib/utils/safe-markdown';
 	import { computeDiff, isSmallDiff } from '$lib/utils/word-diff';
 	import Card from '../../../routes/(app)/components/Card.svelte';
@@ -431,12 +432,13 @@
 					{/if}
 				</div>
 				{#if editingFeedbackIndex === entryIndex}
-					<textarea
+					<AutoGrowTextarea
 						bind:value={editingFeedbackText}
-						rows={3}
+						minRows={3}
+						maxRows={12}
 						disabled={busy}
-						class="mt-1 w-full resize-y rounded-md border border-[var(--dash-border)] px-2 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none disabled:opacity-50"
-					></textarea>
+						class="mt-1 w-full rounded-md border border-[var(--dash-border)] px-2 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none disabled:opacity-50"
+					/>
 					<div class="mt-1.5 flex items-center gap-1.5">
 						<button
 							type="button"
@@ -766,17 +768,18 @@
      content. -->
 {#snippet composer()}
 	<div class="space-y-2">
-		<textarea
+		<AutoGrowTextarea
 			bind:value={feedbackText}
 			placeholder={hasThread
 				? 'Message the AI — e.g. “make it more concise”, or “write it based on your advice”…'
 				: autoMode
 					? 'Ask for a draft or ask a question — e.g. “write it, keep it under 150 words”, or “what should I emphasize?” Leave blank for a first draft.'
 					: 'Optional — tell the AI what to focus on, e.g. “keep it under 100 words”. Leave blank to let it work from your profile and the job.'}
-			rows={3}
+			minRows={3}
+			maxRows={12}
 			disabled={busy}
-			class="w-full resize-y rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none disabled:opacity-50"
-		></textarea>
+			class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none disabled:opacity-50"
+		/>
 		{#if autoMode && !hasThread}
 			<!-- Starter chips: the old advice/generate kept as one-tap, discoverable
          shortcuts over the single Send (which lets the model decide). -->
