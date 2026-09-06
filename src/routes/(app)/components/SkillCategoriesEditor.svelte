@@ -15,6 +15,7 @@
 		faTimes,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
+	import { onDestroy } from 'svelte';
 	import { dragHandleZone, dragHandle } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import Card from './Card.svelte';
@@ -43,8 +44,10 @@
 		onskillcreate?: (category: CategoryItem, skill: SkillItem) => void;
 		onskillupdate?: (category: CategoryItem, skill: SkillItem) => void;
 		onskillremove?: (category: CategoryItem, skill: SkillItem) => void;
-		onskillreorder?: (category: CategoryItem, skills: SkillItem[]) => void;
-		oncategoryreorder?: (categories: CategoryItem[]) => void;
+		/** Both reorder hooks are awaited: the editor keeps its Save button
+		 *  spinning until the write lands, then leaves reorder mode. */
+		onskillreorder?: (category: CategoryItem, skills: SkillItem[]) => void | Promise<void>;
+		oncategoryreorder?: (categories: CategoryItem[]) => void | Promise<void>;
 	}
 
 	let {
@@ -70,16 +73,21 @@
 		canCategoryReorder = !!oncategoryreorder && categories.length > 1 && !categoryReorderMode;
 	});
 
-	// Shared toggle state across all categories
+	// Shared toggle state across all categories. Which columns are shown is a
+	// property of the page; which list you are dragging is not, so each
+	// SkillTagsEditor owns its own reorder mode.
 	let showLevel = $state(false);
 	let showExperience = $state(false);
 	let showVersionTags = $state(false);
-	let reorderMode = $state(false);
 
 	// Category reorder mode
 	let categoryReorderMode = $state(false);
 	let categoryReorderSaving = $state(false);
 	let categoryReorderSnapshot = $state<CategoryItem[] | null>(null);
+	let categoryOrderSaved = $state(false);
+	let savedFlashTimer: ReturnType<typeof setTimeout> | undefined;
+
+	onDestroy(() => clearTimeout(savedFlashTimer));
 
 	interface DndCategoryItem {
 		id: string;
@@ -109,7 +117,7 @@
 		categoryReorderMode = true;
 	}
 
-	function confirmCategoryReorder() {
+	async function confirmCategoryReorder() {
 		categoryReorderSaving = true;
 		// Rebuild categories from dndCategories to ensure correct order
 		const reordered = dndCategories.map((d) => {
@@ -121,10 +129,16 @@
 			return cat;
 		});
 		categories = reordered;
-		oncategoryreorder?.(reordered);
-		categoryReorderSaving = false;
+		try {
+			await oncategoryreorder?.(reordered);
+		} finally {
+			categoryReorderSaving = false;
+		}
 		categoryReorderSnapshot = null;
 		categoryReorderMode = false;
+		categoryOrderSaved = true;
+		clearTimeout(savedFlashTimer);
+		savedFlashTimer = setTimeout(() => (categoryOrderSaved = false), 3000);
 	}
 
 	function cancelCategoryReorder() {
@@ -323,7 +337,8 @@
 		<button
 			type="button"
 			onclick={cancelCategoryReorder}
-			class="rounded-lg border border-[var(--dash-border)] px-3 py-1 text-xs text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
+			disabled={categoryReorderSaving}
+			class="rounded-lg border border-[var(--dash-border)] px-3 py-1 text-xs text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)] disabled:opacity-70"
 		>
 			Cancel
 		</button>
@@ -419,7 +434,6 @@
 		bind:showLevel
 		bind:showExperience
 		bind:showVersionTags
-		bind:reorderMode
 		oncreate={onskillcreate
 			? (skill) => onskillcreate(categories[categoryIndex], skill)
 			: undefined}
@@ -626,6 +640,14 @@
 			{@render reorderConfirmCancel()}
 		</div>
 	{:else}
+		<!-- The confirm row leaves with reorder mode, so the confirmation that the
+		     new order was saved has to live out here. -->
+		{#if categoryOrderSaved}
+			<div class="flex items-center justify-end gap-1 text-xs text-[var(--dash-success)]">
+				<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
+				Order saved
+			</div>
+		{/if}
 		{#each categories as category, categoryIndex}
 			<Card class="p-3 sm:p-4">
 				<div class="mb-3 flex items-center justify-between gap-2">

@@ -64,8 +64,26 @@
 		for (const [key, value] of Object.entries(data)) {
 			formData.append(key, value);
 		}
-		await fetch(`?/${action}`, { method: 'POST', body: formData });
+		const res = await fetch(`?/${action}`, { method: 'POST', body: formData });
 		await invalidateAll();
+		return res.ok;
+	}
+
+	/**
+	 * Reorder is the one action the editor waits on: it keeps its Save button
+	 * spinning until the write has landed and only then leaves reorder mode. The
+	 * editor runs that spinner itself, so the only thing left to report here is
+	 * a failure — and the reload has already put the stored order back.
+	 */
+	let orderError = $state<string | null>(null);
+
+	async function saveOrder(action: string, data: Record<string, string>) {
+		orderError = null;
+		try {
+			if (!(await postAction(action, data))) throw new Error('Could not save that order');
+		} catch (e) {
+			orderError = e instanceof Error ? e.message : 'Could not save that order';
+		}
 	}
 
 	function handleCategoryCreate(category: CategoryItem) {
@@ -141,7 +159,7 @@
 		const dbCat = category as DbCategoryItem;
 		if (!dbCat.id) return;
 		const ids = skills.map((s) => (s as DbSkillItem).id).filter(Boolean);
-		postAction('reorderSkills', {
+		return saveOrder('reorderSkills', {
 			categoryId: String(dbCat.id),
 			order: JSON.stringify(ids)
 		});
@@ -149,7 +167,7 @@
 
 	function handleCategoryReorder(cats: CategoryItem[]) {
 		const ids = cats.map((c) => (c as DbCategoryItem).id).filter(Boolean);
-		postAction('reorderCategories', {
+		return saveOrder('reorderCategories', {
 			order: JSON.stringify(ids)
 		});
 	}
@@ -175,9 +193,9 @@
 		{/snippet}
 	</SectionHeader>
 
-	{#if form?.error}
+	{#if orderError || form?.error}
 		<div class="rounded-lg border border-[var(--dash-error)] bg-[var(--dash-error-light)] p-4">
-			<p class="text-sm text-[var(--dash-error)]">{form.error}</p>
+			<p class="text-sm text-[var(--dash-error)]">{orderError ?? form?.error}</p>
 		</div>
 	{/if}
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faBan,
@@ -54,11 +55,11 @@
 		showLevel?: boolean;
 		showExperience?: boolean;
 		showVersionTags?: boolean;
-		reorderMode?: boolean;
 		onupdate?: (skill: SkillItem) => void;
 		oncreate?: (skill: SkillItem) => void;
 		onremove?: (skill: SkillItem) => void;
-		onreorder?: (skills: SkillItem[]) => void;
+		/** Awaited: reorder mode stays open, spinning, until the write lands. */
+		onreorder?: (skills: SkillItem[]) => void | Promise<void>;
 	}
 
 	let {
@@ -71,7 +72,6 @@
 		showLevel = $bindable(false),
 		showExperience = $bindable(false),
 		showVersionTags = $bindable(false),
-		reorderMode = $bindable(false),
 		onupdate,
 		oncreate,
 		onremove,
@@ -90,27 +90,49 @@
 	let editingIsNew = $state(false);
 	let showVersionTags_popup = $state(false);
 
+	// Reorder mode belongs to this list alone. Dragging mutates `skills` as it
+	// goes, so leaving the mode without saving restores the snapshot taken on
+	// the way in; a save clears the snapshot first, because the dragged order is
+	// now the stored one.
+	let reorderMode = $state(false);
 	let reorderSnapshot = $state<SkillItem[] | null>(null);
 	let reorderSaving = $state(false);
+	let orderSaved = $state(false);
+	let savedFlashTimer: ReturnType<typeof setTimeout> | undefined;
 
-	// When reorderMode is toggled externally (from another category), take/restore snapshot
-	let prevReorderMode = $state(false);
-	$effect(() => {
-		if (reorderMode && !prevReorderMode) {
-			// Entering reorder mode — take snapshot if we don't have one yet
-			if (!reorderSnapshot) {
-				if (editingIndex !== null) confirmEditing();
-				reorderSnapshot = skills.map((s) => ({ ...s }));
-			}
-		} else if (!reorderMode && prevReorderMode) {
-			// Exiting reorder mode — restore from snapshot if not yet confirmed/cancelled
-			if (reorderSnapshot) {
-				skills = reorderSnapshot;
-				reorderSnapshot = null;
-			}
+	onDestroy(() => clearTimeout(savedFlashTimer));
+
+	function startReorder() {
+		if (editingIndex !== null) confirmEditing();
+		reorderSnapshot = skills.map((s) => ({ ...s }));
+		reorderMode = true;
+	}
+
+	function exitReorder() {
+		if (reorderSnapshot) skills = reorderSnapshot;
+		reorderSnapshot = null;
+		reorderMode = false;
+	}
+
+	/**
+	 * Save the dragged order, then leave reorder mode — the pills going back to
+	 * their normal state is half the confirmation, the pill beside the Reorder
+	 * toggle is the other half. Failures are the caller's to report; the mode
+	 * closes either way, over an order the caller has reloaded from the server.
+	 */
+	async function confirmReorder() {
+		reorderSaving = true;
+		try {
+			await onreorder?.(skills);
+		} finally {
+			reorderSaving = false;
 		}
-		prevReorderMode = reorderMode;
-	});
+		reorderSnapshot = null;
+		reorderMode = false;
+		orderSaved = true;
+		clearTimeout(savedFlashTimer);
+		savedFlashTimer = setTimeout(() => (orderSaved = false), 3000);
+	}
 
 	// Version tag editing state
 	const builtinTags = BASE_TEMPLATE_TAGS;
@@ -364,16 +386,7 @@
 	{#if skills.length > 1}
 		<button
 			type="button"
-			onclick={() => {
-				if (!reorderMode) {
-					if (editingIndex !== null) confirmEditing();
-					reorderSnapshot = skills.map((s) => ({ ...s }));
-					reorderMode = true;
-				} else {
-					// Clicking the toggle again = cancel all reordering
-					reorderMode = false;
-				}
-			}}
+			onclick={() => (reorderMode ? exitReorder() : startReorder())}
 			class="
         inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-medium transition-colors {reorderMode
 				? 'border-amber-500/30 bg-amber-500/15 text-amber-700'
@@ -387,6 +400,19 @@
 			></span>
 			Reorder
 		</button>
+	{/if}
+	<!-- Outlives reorder mode on purpose: the save is what closes it, so the
+	     confirmation has to be somewhere that is still on screen afterwards. -->
+	{#if reorderSaving}
+		<span class="inline-flex items-center gap-1 text-[10px] text-[var(--dash-text-muted)]">
+			<FontAwesomeIcon icon={faCircleNotch} spin class="h-2.5 w-2.5" />
+			Saving…
+		</span>
+	{:else if orderSaved}
+		<span class="inline-flex items-center gap-1 text-[10px] text-[var(--dash-success)]">
+			<FontAwesomeIcon icon={faCheck} class="h-2.5 w-2.5" />
+			Order saved
+		</span>
 	{/if}
 </div>
 
@@ -446,23 +472,15 @@
 		<span class="text-xs text-[var(--dash-text-muted)]">Reorder Skills</span>
 		<button
 			type="button"
-			onclick={() => {
-				if (reorderSnapshot) skills = reorderSnapshot;
-				reorderSnapshot = null;
-				reorderMode = false;
-			}}
-			class="rounded-lg border border-[var(--dash-border)] px-3 py-1 text-xs text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
+			onclick={exitReorder}
+			disabled={reorderSaving}
+			class="rounded-lg border border-[var(--dash-border)] px-3 py-1 text-xs text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)] disabled:opacity-70"
 		>
 			Cancel
 		</button>
 		<button
 			type="button"
-			onclick={() => {
-				reorderSaving = true;
-				onreorder?.(skills);
-				reorderSnapshot = null;
-				reorderSaving = false;
-			}}
+			onclick={confirmReorder}
 			disabled={reorderSaving}
 			class="inline-flex items-center gap-1.5 rounded-lg bg-[var(--dash-success)] px-3 py-1 text-xs text-white transition-colors hover:opacity-90 disabled:opacity-70"
 		>
