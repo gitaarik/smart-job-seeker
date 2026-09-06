@@ -1,16 +1,16 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
-import { eq, and, inArray, isNotNull, isNull, gt, lte, ne, or, desc } from 'drizzle-orm';
+import { eq, and, inArray, isNotNull, isNull, gt, lte, ne, notLike, or, desc } from 'drizzle-orm';
 import { applications, application_letters, job_platforms } from '$lib/server/db/schema';
 import { applicationStatusError, writeApplicationStatus } from '$lib/server/applications/status';
 import { writeApplicationSnooze } from '$lib/server/applications/snooze';
-import { activeStatuses, finishedStatuses } from '$lib/application-status';
+import { attachLastActivity } from '$lib/server/applications/activity';
+import { activeStatuses, finishedStatuses, waitingActionPattern } from '$lib/application-status';
+import { defaultSort, isSortKey, sortApplications } from '$lib/application-ranking';
 import { snoozeError } from '$lib/application-snooze';
 import { today } from '$lib/application-records';
 import { getSelectedProfileId } from '../../profile/utils';
-
-const waitingActions = ['Awaiting response', 'Awaiting result'];
 
 export const load: PageServerLoad = async ({ parent, url }) => {
 	const layoutData = await parent();
@@ -23,6 +23,10 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	const phase = url.searchParams.get('phase') || '';
 	const platform = url.searchParams.get('platform') || '';
 	const search = url.searchParams.get('q') || '';
+	// An unrecognised value falls back rather than erroring: this is a URL people
+	// edit and bookmark, and a bad one should give them the default list.
+	const sortParam = url.searchParams.get('sort');
+	const sort = isSortKey(sortParam) ? sortParam : defaultSort;
 
 	const conditions = [eq(applications.profile_id, layoutData.selectedProfile.id)];
 
@@ -39,10 +43,11 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		if (group === 'action') {
 			conditions.push(isNotNull(applications.status_action));
 			conditions.push(ne(applications.status_action, ''));
-			// Exclude waiting actions
-			for (const wa of waitingActions) {
-				conditions.push(ne(applications.status_action, wa));
-			}
+			// The same test `isWaitingAction` applies in TS, so this group and the
+			// ranking's top tier hold exactly the same rows. It used to name the two
+			// listed values, which meant a custom "Awaiting signed contract" showed
+			// the waiting clock on its card and was counted as needing action here.
+			conditions.push(notLike(applications.status_action, waitingActionPattern));
 		}
 	} else if (group === 'finished') {
 		conditions.push(inArray(applications.status, finishedStatuses));
@@ -69,6 +74,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 				limit: 1
 			}
 		},
+		// Only so the in-memory sort below starts from something deterministic —
+		// the order the page shows is `sortApplications`, not this.
 		orderBy: desc(applications.date_created)
 	});
 
@@ -91,6 +98,11 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 				app.application_notes?.some((n) => n.text.toLowerCase().includes(q))
 		);
 	}
+
+	// Derived after filtering, not before: the two aggregates are over the rows
+	// being shown, and a search that cuts the list to three should not pay for
+	// the other forty.
+	const ranked = sortApplications(await attachLastActivity(filteredApplications), sort, day);
 
 	// Get platforms that have applications for this profile (for the filter)
 	const platformIds = new Set(
@@ -116,12 +128,13 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	);
 
 	return {
-		applications: filteredApplications,
+		applications: ranked,
 		platforms,
 		currentGroup: group,
 		currentPhase: phase,
 		currentPlatform: platform,
 		currentSearch: search,
+		currentSort: sort,
 		snoozedCount,
 		// The server's day, so a card and the query that selected it never
 		// disagree because the browser's clock is in another timezone.

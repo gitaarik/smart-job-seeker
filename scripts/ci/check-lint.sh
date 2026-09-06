@@ -96,7 +96,15 @@ set -euo pipefail
 # passed as "add" since SimplifiedAddTaskForm replaced it, and the ~550 dead
 # lines carried unkeyed each blocks, `any` props and unused imports of their
 # own. Measured with check-oss.sh.
-BASELINE=1431
+#
+# 1,431 -> 1,426 on 2026-09-06, adding the sort control to the pipeline list.
+# Every filter control there called `goto` itself, so a sixth control meant a
+# sixth svelte/no-navigation-without-resolve — the rule going UP to pay for a
+# feature. Routing all six through one `navigate()` resolves the route id once
+# and takes five with it. The one that remains is disabled in place with a
+# reason: `resolve()` returns a pathname and these navigations all carry a query
+# string, which the rule cannot see through. Measured with check-oss.sh.
+BASELINE=1426
 
 npx svelte-kit sync
 

@@ -115,6 +115,28 @@ export const actionsByStep: Record<string, string[]> = {
 	'Counter-offer sent': ['Awaiting response']
 };
 
+/**
+ * The next actions that mean the ball is in the employer's court.
+ *
+ * A prefix rather than a membership test, because the action vocabulary is
+ * advisory: `actionsByStep` populates a dropdown that also offers "Custom…",
+ * so "Awaiting signed contract" is a legitimate value nobody listed. Anything
+ * starting "Awaiting" waits on someone else, by construction.
+ *
+ * Three places asked this question with three different answers before this
+ * existed: the pipeline list's "Needs Action" group tested `!== 'Awaiting
+ * response' && !== 'Awaiting result'` in SQL, and both cards testing whether to
+ * draw the clock icon used `startsWith('Awaiting')`. They agreed on the two
+ * listed values and disagreed on every custom one — a card could show the
+ * waiting clock and still be counted as needing action.
+ */
+export function isWaitingAction(action: string | null | undefined): boolean {
+	return !!action && action.startsWith('Awaiting');
+}
+
+/** The SQL form of `isWaitingAction`, for filtering in the database. */
+export const waitingActionPattern = 'Awaiting%';
+
 export const actionsByPhase: Record<string, string[]> = {
 	applying: [
 		'Send application',

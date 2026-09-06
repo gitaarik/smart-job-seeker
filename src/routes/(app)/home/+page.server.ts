@@ -10,6 +10,8 @@ import {
 	applications
 } from '$lib/server/db/schema';
 import { activeStatuses } from '$lib/application-status';
+import { sortApplications } from '$lib/application-ranking';
+import { attachLastActivity } from '$lib/server/applications/activity';
 import { today } from '$lib/application-records';
 import { getMatchCounts } from '$lib/server/job/match-counts';
 import { getProfileSkillLevels } from '$lib/server/job/match-utils';
@@ -70,7 +72,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 		[sharedMatchCounts, curationStatsRaw],
 		topMatchesRaw,
 		profileSkillLevels,
-		activeApplications
+		activeApplicationRows
 	] = await Promise.all([
 		// Lightweight profile fields for completeness check
 		db.query.profiles.findFirst({
@@ -206,9 +208,20 @@ export const load: PageServerLoad = async ({ parent }) => {
 					}
 				}
 			},
-			orderBy: desc(applications.date_updated)
+			// Ordered by `sortApplications` below, not here. `date_updated` used to
+			// be the order, which put whichever application was last *edited* on
+			// top — a cover letter draft outranking an interview tomorrow.
+			orderBy: desc(applications.date_created)
 		})
 	]);
+
+	// The same rule the pipeline list uses, so the dashboard's shortlist is the
+	// top of that list rather than a second opinion about what matters.
+	const activeApplications = sortApplications(
+		await attachLastActivity(activeApplicationRows),
+		'smart',
+		today()
+	);
 
 	// Process match stats — total from shared getMatchCounts (same as Match Progress page)
 	const curationStats = curationStatsRaw[0];
