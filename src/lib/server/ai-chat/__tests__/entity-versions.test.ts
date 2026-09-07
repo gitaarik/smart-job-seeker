@@ -46,7 +46,7 @@ vi.mock('drizzle-orm', () => ({
 	asc: (c: any) => ({ asc: c }),
 	desc: (c: unknown) => ({ desc: c }),
 	eq: (c: any, v: any) => ({ eq: [c, v] }),
-	gt: (c: any, v: any) => ({ gt: [c, v] }),
+	gt: (c: unknown, v: unknown) => ({ gt: [c, v] }),
 	gte: (c: unknown, v: unknown) => ({ gte: [c, v] }),
 	isNotNull: (c: unknown) => ({ isNotNull: c })
 }));
