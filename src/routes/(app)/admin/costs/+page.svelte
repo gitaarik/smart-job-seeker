@@ -6,6 +6,15 @@
 
 	let { data }: { data: PageData } = $props();
 
+	/**
+	 * Calls that could have cost money. A local llmCache hit never reached a
+	 * provider and a failed call reported no usage, so counting either against
+	 * coverage would report a gap where there is none.
+	 */
+	const billableCalls = $derived(
+		data.summary.totalTransactions - data.summary.cacheHits - data.summary.failedCalls
+	);
+
 	function formatUsd(value: number): string {
 		return value < 0.01 && value > 0 ? `$${value.toFixed(4)}` : `$${value.toFixed(2)}`;
 	}
@@ -77,18 +86,18 @@
 		<Card padding="md">
 			<div class="text-sm text-[var(--dash-text-muted)]">Data Coverage</div>
 			<div class="text-2xl font-semibold text-[var(--dash-text)]">
-				{data.summary.totalTransactions > 0
-					? Math.round(
-							((data.summary.totalTransactions - data.summary.totalMissingCost) /
-								data.summary.totalTransactions) *
-								100
-						)
-					: 0}%
+				{billableCalls > 0
+					? Math.round(((billableCalls - data.summary.totalMissingCost) / billableCalls) * 100)
+					: 100}%
 			</div>
 			<div class="text-xs text-[var(--dash-text-muted)]">
 				{data.summary.totalMissingCost > 0
-					? `${formatNumber(data.summary.totalMissingCost)} missing cost data`
-					: 'All transactions have cost data'}
+					? `${formatNumber(data.summary.totalMissingCost)} priced calls missing a rate`
+					: 'Every billable call is priced'}
+			</div>
+			<div class="text-xs text-[var(--dash-text-muted)]">
+				{formatNumber(data.summary.cacheHits)} cache hits, {formatNumber(data.summary.failedCalls)} failed
+				(free)
 			</div>
 		</Card>
 	</div>
@@ -160,6 +169,42 @@
 							<div class="text-sm text-[var(--dash-text)]">{formatUsd(ps.totalCostUsd)}</div>
 							<div class="text-xs text-[var(--dash-text-muted)]">
 								{formatNumber(ps.transactions)} calls, {formatNumber(ps.totalTokens)} tokens
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</Card>
+
+	<!-- Cost by prompt -->
+	<Card padding="responsive">
+		<h3 class="mb-1 text-lg font-semibold text-[var(--dash-text)]">Cost by Feature</h3>
+		<p class="mb-4 text-xs text-[var(--dash-text-muted)]">
+			Grouped by the stored system prompt. Rows written before a template was last edited no longer
+			match it and show their opening words instead.
+		</p>
+		{#if data.promptStats.length === 0}
+			<p class="text-sm text-[var(--dash-text-muted)]">No AI calls in this period.</p>
+		{:else}
+			<div class="space-y-3">
+				{#each data.promptStats as ps (ps.label)}
+					<div
+						class="flex items-center justify-between gap-4 border-b border-[var(--dash-border)] py-2 last:border-0"
+					>
+						<div class="min-w-0">
+							<span
+								class="font-medium text-[var(--dash-text)] {ps.matched ? 'font-mono text-sm' : ''}"
+								>{ps.label}</span
+							>
+							{#if !ps.matched}
+								<span class="ml-1 text-xs text-[var(--dash-text-muted)]">(retired prompt)</span>
+							{/if}
+						</div>
+						<div class="shrink-0 text-right">
+							<div class="text-sm text-[var(--dash-text)]">{formatUsd(ps.costUsd)}</div>
+							<div class="text-xs text-[var(--dash-text-muted)]">
+								{formatNumber(ps.calls)} calls, {formatNumber(ps.tokens)} tokens
 							</div>
 						</div>
 					</div>

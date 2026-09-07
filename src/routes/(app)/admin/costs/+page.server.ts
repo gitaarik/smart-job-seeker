@@ -1,7 +1,73 @@
+/**
+ * Admin cost dashboard.
+ *
+ * Reads `ai_chats`, which is the log of every LLM call, and NOT
+ * `credit_transactions`, which is the log of every call somebody was CHARGED
+ * for. Those two differ by everything the product does on its own initiative:
+ * matching, scraping, extraction. In August 2026 the charged half was 1.7M of
+ * 427.6M tokens, so this page reported roughly $0.50 against a $64.35 invoice
+ * and there was no way to tell from the app that the matcher was the bill.
+ *
+ * Aggregation happens in SQL. `ai_chats` is ~150k rows on dev and a busy month
+ * is 44k of them, so per-row pricing in JS means reading all of it into memory
+ * for a page nobody loads twice a day. See `estimateGroupCostUsd` for why
+ * summing first is exact rather than approximate.
+ */
 import type { PageServerLoad } from './$types';
 import { dbDirect as db } from '$lib/server/db';
-import { and, inArray, gte, lt, eq, desc, asc } from 'drizzle-orm';
-import { credit_transactions, subscriptions, users as usersTable } from '$lib/server/db/schema';
+import { inArray, desc, sql } from 'drizzle-orm';
+import { subscriptions, users as usersTable } from '$lib/server/db/schema';
+import {
+	estimateGroupCostUsd,
+	LONG_CONTEXT_THRESHOLD_TOKENS
+} from '$lib/server/billing/provider-costs';
+import { promptTemplates } from '$lib/server/ai-chat/prompt-templates';
+
+/** How much of a stored system prompt to group on. */
+const PROMPT_KEY_PREFIX = 120;
+
+/**
+ * `left(system_prompt, N)` -> the prompt key that produced it.
+ *
+ * `createAndGenerateAiChat` stores the template UNinterpolated, so a stored
+ * system prompt is byte-identical to the one in code until someone edits the
+ * template. Rows written before an edit stop matching and fall back to showing
+ * their prefix, which is the honest outcome: they really were a different
+ * prompt.
+ */
+const promptKeyByPrefix = new Map<string, string>(
+	Object.entries(promptTemplates).map(([key, t]) => [
+		t.system_prompt.slice(0, PROMPT_KEY_PREFIX),
+		key
+	])
+);
+
+interface CostRow {
+	input_tokens: number;
+	cached_input_tokens: number;
+	output_tokens: number;
+	calls: number;
+	cache_hits: number;
+	failed: number;
+	long_context: boolean;
+	provider: string | null;
+	model: string | null;
+}
+
+/** Per-group cost, plus the reason there isn't one. */
+function priceRow(row: CostRow): number | null {
+	if (!row.provider || !row.model) return null;
+	return estimateGroupCostUsd(
+		row.provider,
+		row.model,
+		{
+			inputTokens: Number(row.input_tokens),
+			outputTokens: Number(row.output_tokens),
+			cachedInputTokens: Number(row.cached_input_tokens)
+		},
+		row.long_context
+	);
+}
 
 export const load: PageServerLoad = async ({ parent, url }) => {
 	await parent();
@@ -28,21 +94,49 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		periodLabel = periodStart.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
 	}
 
-	// Fetch AI cost transactions for the period
-	const aiTransactions = await db.query.credit_transactions.findMany({
-		where: and(
-			inArray(credit_transactions.operation, ['ai_generation', 'resume_parse_ai']),
-			gte(credit_transactions.created_at, periodStart),
-			lt(credit_transactions.created_at, periodEnd)
-		),
-		columns: {
-			user_id: true,
-			amount: true,
-			operation: true,
-			metadata: true,
-			created_at: true
-		}
-	});
+	// A row with no token counts is not a measurement gap. Either the local
+	// llmCache answered it (generateChatCompletionTracked returns
+	// `usage: null` on a hit, and no API call was made) or the call failed.
+	// Both cost nothing, and lumping them in with "missing cost data" would make
+	// coverage look broken on a page whose whole job is to be trusted.
+	const byUserAndModel = await db.execute(sql`
+		SELECT
+			p.user_id AS user_id,
+			c.provider AS provider,
+			c.model AS model,
+			COALESCE(c.input_tokens, 0) > ${LONG_CONTEXT_THRESHOLD_TOKENS} AS long_context,
+			COUNT(*)::int AS calls,
+			COUNT(*) FILTER (WHERE c.input_tokens IS NULL AND c.error IS NULL)::int AS cache_hits,
+			COUNT(*) FILTER (WHERE c.error IS NOT NULL)::int AS failed,
+			COALESCE(SUM(c.input_tokens), 0)::bigint AS input_tokens,
+			COALESCE(SUM(c.cached_input_tokens), 0)::bigint AS cached_input_tokens,
+			COALESCE(SUM(c.output_tokens), 0)::bigint AS output_tokens,
+			COALESCE(SUM(c.credits_charged), 0)::bigint AS credits
+		FROM ai_chats c
+		LEFT JOIN profiles p ON p.id = c.profile_id
+		WHERE c.date_created >= ${periodStart} AND c.date_created < ${periodEnd}
+		GROUP BY 1, 2, 3, 4
+	`);
+
+	const byPrompt = await db.execute(sql`
+		SELECT
+			LEFT(c.system_prompt, ${PROMPT_KEY_PREFIX}) AS prompt_head,
+			c.provider AS provider,
+			c.model AS model,
+			COALESCE(c.input_tokens, 0) > ${LONG_CONTEXT_THRESHOLD_TOKENS} AS long_context,
+			COUNT(*)::int AS calls,
+			COUNT(*) FILTER (WHERE c.input_tokens IS NULL AND c.error IS NULL)::int AS cache_hits,
+			COUNT(*) FILTER (WHERE c.error IS NOT NULL)::int AS failed,
+			COALESCE(SUM(c.input_tokens), 0)::bigint AS input_tokens,
+			COALESCE(SUM(c.cached_input_tokens), 0)::bigint AS cached_input_tokens,
+			COALESCE(SUM(c.output_tokens), 0)::bigint AS output_tokens
+		FROM ai_chats c
+		WHERE c.date_created >= ${periodStart} AND c.date_created < ${periodEnd}
+		GROUP BY 1, 2, 3, 4
+	`);
+
+	const rows = (byUserAndModel as unknown as { rows?: unknown[] }).rows ?? byUserAndModel;
+	const promptRows = (byPrompt as unknown as { rows?: unknown[] }).rows ?? byPrompt;
 
 	// Fetch active subscriptions to map users to plans
 	const activeSubs = await db.query.subscriptions.findMany({
@@ -61,19 +155,46 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		}
 	}
 
-	// Aggregate by plan
 	type PlanStats = {
 		plan: string;
 		users: Set<string>;
 		totalCredits: number;
 		totalCostUsd: number;
 		transactions: number;
-		missingCost: number; // transactions without providerCostUsd
+		missingCost: number;
 	};
-
 	const planStatsMap = new Map<string, PlanStats>();
 
-	function getOrCreatePlan(plan: string): PlanStats {
+	type ProviderStats = {
+		key: string;
+		provider: string;
+		model: string;
+		totalCostUsd: number;
+		totalTokens: number;
+		transactions: number;
+	};
+	const providerStatsMap = new Map<string, ProviderStats>();
+
+	const userCostMap = new Map<
+		string,
+		{ userId: string; costUsd: number; credits: number; transactions: number }
+	>();
+
+	let cacheHits = 0;
+	let failedCalls = 0;
+
+	for (const raw of rows as (CostRow & { user_id: string | null; credits: number })[]) {
+		const costUsd = priceRow(raw);
+		const calls = Number(raw.calls);
+		const tokens = Number(raw.input_tokens) + Number(raw.output_tokens);
+		cacheHits += Number(raw.cache_hits);
+		failedCalls += Number(raw.failed);
+
+		// A profile with no user is an internal or orphaned one; it still spends
+		// money, so it gets a bucket rather than being dropped from the totals.
+		const userId = raw.user_id ?? 'no-account';
+		const plan = raw.user_id ? (userPlanMap.get(raw.user_id) ?? 'free') : 'no-account';
+
 		let stats = planStatsMap.get(plan);
 		if (!stats) {
 			stats = {
@@ -86,66 +207,60 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 			};
 			planStatsMap.set(plan, stats);
 		}
-		return stats;
-	}
+		stats.users.add(userId);
+		stats.totalCredits += Number(raw.credits);
+		stats.transactions += calls;
+		if (costUsd != null) stats.totalCostUsd += costUsd;
+		// Only a call that actually reached a provider can be missing a price.
+		else stats.missingCost += calls - Number(raw.cache_hits) - Number(raw.failed);
 
-	// Also aggregate by provider/model
-	type ProviderStats = {
-		key: string;
-		provider: string;
-		model: string;
-		totalCostUsd: number;
-		totalTokens: number;
-		transactions: number;
-	};
-	const providerStatsMap = new Map<string, ProviderStats>();
-
-	// Top users by cost
-	const userCostMap = new Map<
-		string,
-		{ userId: string; costUsd: number; credits: number; transactions: number }
-	>();
-
-	for (const tx of aiTransactions) {
-		const plan = userPlanMap.get(tx.user_id) ?? 'free';
-		const stats = getOrCreatePlan(plan);
-		stats.users.add(tx.user_id);
-		stats.totalCredits += Math.abs(tx.amount);
-		stats.transactions++;
-
-		const meta = tx.metadata as Record<string, unknown> | null;
-		const costUsd = meta?.providerCostUsd as number | null;
-		if (costUsd != null) {
-			stats.totalCostUsd += costUsd;
-		} else {
-			stats.missingCost++;
-		}
-
-		// Provider aggregation
-		const provider = meta?.provider as string | undefined;
-		const model = meta?.model as string | undefined;
-		if (provider && model) {
-			const key = `${provider}/${model}`;
+		if (raw.provider && raw.model) {
+			const key = `${raw.provider}/${raw.model}`;
 			let ps = providerStatsMap.get(key);
 			if (!ps) {
-				ps = { key, provider, model, totalCostUsd: 0, totalTokens: 0, transactions: 0 };
+				ps = {
+					key,
+					provider: raw.provider,
+					model: raw.model,
+					totalCostUsd: 0,
+					totalTokens: 0,
+					transactions: 0
+				};
 				providerStatsMap.set(key, ps);
 			}
 			if (costUsd != null) ps.totalCostUsd += costUsd;
-			const tokens = meta?.tokens as { totalTokens?: number } | undefined;
-			if (tokens?.totalTokens) ps.totalTokens += tokens.totalTokens;
-			ps.transactions++;
+			ps.totalTokens += tokens;
+			ps.transactions += calls;
 		}
 
-		// Per-user aggregation
-		let userStats = userCostMap.get(tx.user_id);
+		let userStats = userCostMap.get(userId);
 		if (!userStats) {
-			userStats = { userId: tx.user_id, costUsd: 0, credits: 0, transactions: 0 };
-			userCostMap.set(tx.user_id, userStats);
+			userStats = { userId, costUsd: 0, credits: 0, transactions: 0 };
+			userCostMap.set(userId, userStats);
 		}
-		userStats.credits += Math.abs(tx.amount);
-		userStats.transactions++;
+		userStats.credits += Number(raw.credits);
+		userStats.transactions += calls;
 		if (costUsd != null) userStats.costUsd += costUsd;
+	}
+
+	// Per-feature spend: the view that answers "what is the bill actually FOR".
+	const promptStatsMap = new Map<
+		string,
+		{ label: string; matched: boolean; costUsd: number; tokens: number; calls: number }
+	>();
+	for (const raw of promptRows as (CostRow & { prompt_head: string })[]) {
+		const head = raw.prompt_head ?? '';
+		const key = promptKeyByPrefix.get(head);
+		const label = key ?? `${head.slice(0, 60).replace(/\s+/g, ' ').trim()}…`;
+		let ps = promptStatsMap.get(label);
+		if (!ps) {
+			ps = { label, matched: key != null, costUsd: 0, tokens: 0, calls: 0 };
+			promptStatsMap.set(label, ps);
+		}
+		const costUsd = priceRow(raw);
+		if (costUsd != null) ps.costUsd += costUsd;
+		ps.tokens += Number(raw.input_tokens) + Number(raw.output_tokens);
+		ps.calls += Number(raw.calls);
 	}
 
 	// Plan revenue (monthly price in USD)
@@ -178,6 +293,11 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		}))
 		.sort((a, b) => b.totalCostUsd - a.totalCostUsd);
 
+	const promptStats = Array.from(promptStatsMap.values())
+		.map((s) => ({ ...s, costUsd: Math.round(s.costUsd * 10000) / 10000 }))
+		.sort((a, b) => b.costUsd - a.costUsd)
+		.slice(0, 20);
+
 	// Top 10 users by cost
 	const topUsers = Array.from(userCostMap.values())
 		.sort((a, b) => b.costUsd - a.costUsd)
@@ -185,11 +305,11 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		.map((u) => ({
 			...u,
 			costUsd: Math.round(u.costUsd * 10000) / 10000,
-			plan: userPlanMap.get(u.userId) ?? 'free'
+			plan: u.userId === 'no-account' ? 'no-account' : (userPlanMap.get(u.userId) ?? 'free')
 		}));
 
 	// Fetch user emails for top users
-	const topUserIds = topUsers.map((u) => u.userId);
+	const topUserIds = topUsers.map((u) => u.userId).filter((id) => id !== 'no-account');
 	const topUserRecords =
 		topUserIds.length > 0
 			? await db.query.users.findMany({
@@ -201,7 +321,10 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
 	const topUsersWithInfo = topUsers.map((u) => ({
 		...u,
-		email: userInfoMap.get(u.userId)?.email ?? 'unknown',
+		email:
+			u.userId === 'no-account'
+				? 'profiles with no account'
+				: (userInfoMap.get(u.userId)?.email ?? 'unknown'),
 		name: userInfoMap.get(u.userId)?.name ?? null
 	}));
 
@@ -212,15 +335,15 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	const totalMissingCost = planStats.reduce((sum, p) => sum + p.missingCost, 0);
 
 	// Available months (for period selector)
-	const firstTx = await db.query.credit_transactions.findFirst({
-		where: inArray(credit_transactions.operation, ['ai_generation', 'resume_parse_ai']),
-		orderBy: asc(credit_transactions.created_at),
-		columns: { created_at: true }
-	});
+	const firstRow = await db.execute(sql`
+		SELECT MIN(date_created) AS first FROM ai_chats WHERE date_created IS NOT NULL
+	`);
+	const firstAt = ((firstRow as unknown as { rows?: { first: string | Date | null }[] }).rows ??
+		(firstRow as unknown as { first: string | Date | null }[]))[0]?.first;
 
 	const availableMonths: { value: string; label: string }[] = [];
-	if (firstTx?.created_at) {
-		const start = new Date(firstTx.created_at);
+	if (firstAt) {
+		const start = new Date(firstAt);
 		const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
 		while (cursor <= now) {
 			const value = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`;
@@ -237,12 +360,15 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		availableMonths,
 		planStats,
 		providerStats,
+		promptStats,
 		topUsers: topUsersWithInfo,
 		summary: {
 			totalCostUsd: Math.round(totalCostUsd * 10000) / 10000,
 			totalRevenueUsd,
 			totalTransactions,
-			totalMissingCost
+			totalMissingCost,
+			cacheHits,
+			failedCalls
 		}
 	};
 };

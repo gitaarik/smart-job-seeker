@@ -26,6 +26,18 @@ interface TokenRates {
 	cachedInput?: number;
 }
 
+/**
+ * The single input-token count above which a long-context tier takes over.
+ *
+ * One constant rather than a per-model number because a caller that aggregates
+ * before pricing (the admin cost page groups thousands of calls in SQL) has to
+ * split its groups on the same boundary the table prices on, and it can only do
+ * that with a value it can put in a WHERE clause. Every `longContext` entry
+ * below uses this, and `estimateGroupCostUsd` documents what to do if that ever
+ * stops being true.
+ */
+export const LONG_CONTEXT_THRESHOLD_TOKENS = 200_000;
+
 interface TokenCost extends TokenRates {
 	/**
 	 * Rates that REPLACE the ones above once a prompt exceeds `thresholdTokens`.
@@ -85,7 +97,7 @@ const PROVIDER_COSTS: Record<string, TokenCost> = {
 		output: 10.0e-6,
 		cachedInput: 0.125e-6,
 		longContext: {
-			thresholdTokens: 200_000,
+			thresholdTokens: LONG_CONTEXT_THRESHOLD_TOKENS,
 			input: 2.5e-6,
 			output: 15.0e-6,
 			cachedInput: 0.25e-6
@@ -154,6 +166,47 @@ export function estimateProviderCostUsd(
 
 	return (
 		fresh * rates.input + cached * (rates.cachedInput ?? rates.input) + outputTokens * rates.output
+	);
+}
+
+/**
+ * Price a GROUP of calls that share a provider, model and rate tier.
+ *
+ * Rates are linear within a tier, so summing tokens first and pricing once is
+ * exactly equal to pricing each call and adding the results up. That is what
+ * lets the admin cost page aggregate in SQL: `ai_chats` is six figures of rows
+ * on a busy month and reading them all into memory to call
+ * `estimateProviderCostUsd` per row is the shape that made the old page slow
+ * enough to be worth avoiding.
+ *
+ * The equality holds ONLY when every call in the group is on the same tier,
+ * which is why `longContext` is an explicit argument rather than something
+ * derived from the summed total: a group of ten 30k-token calls sums to 300k
+ * and must not be billed at the long-context rate. Group on
+ * {@link LONG_CONTEXT_THRESHOLD_TOKENS} and pass the answer in. If a second,
+ * different threshold ever enters the table, this argument has to become
+ * per-model and the grouping with it.
+ *
+ * Returns null for an unpriced provider/model, same as the per-call function.
+ */
+export function estimateGroupCostUsd(
+	provider: string,
+	model: string,
+	totals: { inputTokens: number; outputTokens: number; cachedInputTokens?: number },
+	longContext = false
+): number | null {
+	const key = `${provider}/${model}`;
+	const cost = PROVIDER_COSTS[key];
+	if (!cost) return null;
+
+	const rates = longContext && cost.longContext ? cost.longContext : cost;
+	const cached = Math.min(Math.max(totals.cachedInputTokens ?? 0, 0), totals.inputTokens);
+	const fresh = totals.inputTokens - cached;
+
+	return (
+		fresh * rates.input +
+		cached * (rates.cachedInput ?? rates.input) +
+		totals.outputTokens * rates.output
 	);
 }
 
