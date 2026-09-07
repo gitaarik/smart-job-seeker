@@ -1,13 +1,24 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
-import { eq, and, inArray, isNotNull, isNull, gt, lte, ne, notLike, or, desc } from 'drizzle-orm';
-import { applications, application_letters, job_platforms } from '$lib/server/db/schema';
+import { eq, and, inArray, isNull, gt, lte, or, desc } from 'drizzle-orm';
+import {
+	applications,
+	application_letters,
+	application_records,
+	job_platforms
+} from '$lib/server/db/schema';
 import { applicationStatusError, writeApplicationStatus } from '$lib/server/applications/status';
 import { writeApplicationSnooze } from '$lib/server/applications/snooze';
 import { attachLastActivity } from '$lib/server/applications/activity';
-import { activeStatuses, finishedStatuses, waitingActionPattern } from '$lib/application-status';
-import { defaultSort, isSortKey, sortApplications } from '$lib/application-ranking';
+import { activeStatuses, finishedStatuses } from '$lib/application-status';
+import {
+	applicationTier,
+	defaultSort,
+	isSortKey,
+	sortApplications,
+	tiers
+} from '$lib/application-ranking';
 import { snoozeError } from '$lib/application-snooze';
 import { today } from '$lib/application-records';
 import { getSelectedProfileId } from '../../profile/utils';
@@ -40,15 +51,12 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		// Both groups mean "what I am working on", which a paused application is
 		// not — it is reachable under its own group and under All.
 		conditions.push(notSnoozed);
-		if (group === 'action') {
-			conditions.push(isNotNull(applications.status_action));
-			conditions.push(ne(applications.status_action, ''));
-			// The same test `isWaitingAction` applies in TS, so this group and the
-			// ranking's top tier hold exactly the same rows. It used to name the two
-			// listed values, which meant a custom "Awaiting signed contract" showed
-			// the waiting clock on its card and was counted as needing action here.
-			conditions.push(notLike(applications.status_action, waitingActionPattern));
-		}
+		// "Needs Action" narrows no further in SQL. It used to, on the action
+		// column alone; but half of what needs you is now an application that has
+		// gone quiet, and that is derived from aggregates over two other tables.
+		// Selecting the same rows as `active` and filtering on the tier below is
+		// what keeps the group and the ranking's top two bands identical — a group
+		// that disagreed with the order it is shown in is worse than a slower one.
 	} else if (group === 'finished') {
 		conditions.push(inArray(applications.status, finishedStatuses));
 	} else if (group === 'snoozed') {
@@ -102,7 +110,17 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	// Derived after filtering, not before: the two aggregates are over the rows
 	// being shown, and a search that cuts the list to three should not pay for
 	// the other forty.
-	const ranked = sortApplications(await attachLastActivity(filteredApplications), sort, day);
+	const withActivity = await attachLastActivity(filteredApplications);
+
+	const inGroup =
+		group === 'action'
+			? withActivity.filter((app) => {
+					const tier = applicationTier(app, day);
+					return tier === tiers.action || tier === tiers.followUp;
+				})
+			: withActivity;
+
+	const ranked = sortApplications(inGroup, sort, day);
 
 	// Get platforms that have applications for this profile (for the filter)
 	const platformIds = new Set(
@@ -221,6 +239,50 @@ export const actions: Actions = {
 
 		const written = await writeApplicationSnooze(id, profileId, { until, reason });
 		if (!written) return fail(404, { error: 'Application not found' });
+
+		return { success: true };
+	},
+
+	/**
+	 * Record that a chaser went out, from the card that asked for one.
+	 *
+	 * Writes an activity entry rather than touching the status: nothing about
+	 * where the employer has got to has changed, and the nudge is derived from
+	 * when something last happened — so the entry IS the dismissal, and an
+	 * honest one. It clears the badge because the silence really has ended.
+	 *
+	 * No content and no summariser pass. The entry is a marker the applicant can
+	 * open and write into afterwards; running the LLM summary over an empty one
+	 * would spend a call to learn nothing.
+	 */
+	followedUp: async ({ request, locals, cookies }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const formData = await request.formData();
+		const id = parseInt(formData.get('id') as string);
+		if (isNaN(id)) return fail(400, { error: 'Invalid application ID' });
+
+		const existing = await db.query.applications.findFirst({
+			where: and(eq(applications.id, id), eq(applications.profile_id, profileId)),
+			columns: { id: true, status_step: true }
+		});
+		if (!existing) return fail(404, { error: 'Application not found' });
+
+		await db.insert(application_records).values({
+			application_id: existing.id,
+			// A follow-up is something you sent them, which is what `message` is.
+			record_type: 'message',
+			title: 'Followed up',
+			content: null,
+			step: existing.status_step,
+			event_date: today(),
+			extraction_status: 'none',
+			date_created: new Date()
+		});
 
 		return { success: true };
 	},

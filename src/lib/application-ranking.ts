@@ -12,12 +12,20 @@
  *
  * ## The rule
  *
- * Applications sort into four tiers, and the tier is the primary key:
+ * Applications sort into five tiers, and the tier is the primary key:
  *
  *  0. **Needs you** — a next action that is not a waiting one.
- *  1. **In play** — still live, waiting on the employer.
- *  2. **Snoozed** — deliberately parked.
- *  3. **Finished** — accepted, not selected, discontinued.
+ *  1. **Gone quiet** — waiting on the employer, past the point where silence
+ *     stops being normal. See `isFollowUpDue`.
+ *  2. **In play** — still live, waiting on the employer, within the window.
+ *  3. **Snoozed** — deliberately parked.
+ *  4. **Finished** — accepted, not selected, discontinued.
+ *
+ * The quiet tier is what stops a stale application from simply sinking. Sorting
+ * silence to the bottom is right while nothing is owed — but past a threshold
+ * the silence IS the thing to act on, so it crosses over into work and the
+ * ordering inverts with it: newest-activity-first below, longest-quiet-first
+ * above.
  *
  * Stage is the *second* key, not the first, and that is the one deliberate
  * departure from "furthest along on top". A `negotiating` application sitting
@@ -66,17 +74,20 @@ export interface Rankable extends Snoozable {
 	status_step?: string | null;
 	status_action?: string | null;
 	status_action_date?: string | null;
+	/** Read only to tell an unsent draft from something actually out there. */
+	application_sent_date?: string | null;
 	/** From `attachLastActivity`. Falls back to `date_created` when absent. */
 	last_activity?: Date | string | null;
 	date_created?: Date | string | null;
 }
 
-/** The four bands, in the order they appear. Exported for tests and labels. */
+/** The five bands, in the order they appear. Exported for tests and labels. */
 export const tiers = {
 	action: 0,
-	waiting: 1,
-	snoozed: 2,
-	finished: 3
+	followUp: 1,
+	waiting: 2,
+	snoozed: 3,
+	finished: 4
 } as const;
 
 export type Tier = (typeof tiers)[keyof typeof tiers];
@@ -97,7 +108,93 @@ export function applicationTier(app: Rankable, on: string = today()): Tier {
 	if (finishedStatuses.includes(app.status)) return tiers.finished;
 	if (isSnoozed(app, on)) return tiers.snoozed;
 	if (app.status_action && !isWaitingAction(app.status_action)) return tiers.action;
+	if (isFollowUpDue(app, on)) return tiers.followUp;
 	return tiers.waiting;
+}
+
+/**
+ * How long silence stays normal, per phase, in days since the last activity.
+ *
+ * Per phase because the expectations genuinely differ: a fortnight of nothing
+ * after sending an application is ordinary, a week of nothing after an
+ * interview is worth a polite chase, and an offer conversation going quiet for
+ * five days is worth chasing because offers carry deadlines the applicant
+ * usually cannot see.
+ *
+ * Rounded numbers rather than tuned ones — this decides when a badge appears,
+ * and being a day or two out costs nothing. `result` has no entry on purpose:
+ * a finished application has nobody left to chase.
+ */
+export const followUpAfterDays: Record<string, number> = {
+	applying: 14,
+	interviewing: 7,
+	negotiating: 5
+};
+
+const DAY_MS = 86_400_000;
+
+/**
+ * Whole days of silence, counting from the last activity to `on`.
+ *
+ * Both ends are floored to a UTC day so the answer is a count of days rather
+ * than of 24-hour periods: something that happened late yesterday is 1 day
+ * quiet this morning, not 0.
+ *
+ * Null when there is nothing to count from, which is not the same as 0 — the
+ * callers must not read "no idea" as "just now".
+ */
+export function daysQuiet(app: Rankable, on: string = today()): number | null {
+	const at = ms(app.last_activity) ?? ms(app.date_created);
+	const until = ms(on);
+	if (at === null || until === null) return null;
+	return Math.round((until - Math.floor(at / DAY_MS) * DAY_MS) / DAY_MS);
+}
+
+/**
+ * Has this application actually gone out?
+ *
+ * A follow-up needs someone to follow up WITH, so an unsent draft never earns
+ * one however long it has sat there. That case is already covered from the
+ * other side — a draft carries "Send application" and lands in the top tier —
+ * but a draft whose action somebody cleared would otherwise fall through to
+ * here and be told to chase an employer who has never heard from them.
+ *
+ * `application_sent_date` is filled by `writeApplicationStatus` the first time
+ * an application leaves the Preparing stage; the step is checked too because
+ * rows created before that behaviour existed have a null date and are out
+ * there all the same.
+ */
+function hasBeenSent(app: Rankable): boolean {
+	if (app.application_sent_date) return true;
+	if (getStepperPhase(app.status) !== 'applying') return true;
+	return !!app.status_step && app.status_step !== 'Preparing';
+}
+
+/**
+ * Is this application overdue a nudge?
+ *
+ * True only for something live, sent, not parked, and waiting on the employer:
+ * an application with work outstanding on your side is not stalled, it is
+ * yours to move, and a snooze is the applicant saying "not now" in as many
+ * words — turning that into a badge would be arguing with them.
+ *
+ * Exported because the card needs the same answer the ranking used. Deriving
+ * this rather than writing a `Follow up` into `status_action` is deliberate:
+ * the action column is the applicant's, a derived nudge needs no migration and
+ * no job to run, and it clears itself the moment anything happens — including
+ * the follow-up itself being recorded.
+ */
+export function isFollowUpDue(app: Rankable, on: string = today()): boolean {
+	if (finishedStatuses.includes(app.status)) return false;
+	if (isSnoozed(app, on)) return false;
+	if (app.status_action && !isWaitingAction(app.status_action)) return false;
+	if (!hasBeenSent(app)) return false;
+
+	const after = followUpAfterDays[getStepperPhase(app.status)];
+	if (after === undefined) return false;
+
+	const quiet = daysQuiet(app, on);
+	return quiet !== null && quiet >= after;
 }
 
 const phaseRank: Record<string, number> = {
@@ -150,6 +247,18 @@ function byActivity(a: Rankable, b: Rankable): number {
 }
 
 /**
+ * Longest quiet first — the inverse of `byActivity`, and deliberately so.
+ *
+ * Below the threshold, silence means nothing is happening and the row sinks.
+ * Above it, the silence is the reason the row is actionable at all, so more of
+ * it means more urgency. The same fact reads in opposite directions on either
+ * side of the line, which is the point of having the line.
+ */
+function byQuietest(a: Rankable, b: Rankable): number {
+	return activityMs(a) - activityMs(b);
+}
+
+/**
  * Soonest first, undated last.
  *
  * Overdue dates are the smallest values, so they lead without a special case:
@@ -188,6 +297,8 @@ export function compareApplications(a: Rankable, b: Rankable, on: string = today
 	switch (applicationTier(a, on)) {
 		case tiers.action:
 			return byStage || byActionDate(a, b) || byActivity(a, b) || b.id - a.id;
+		case tiers.followUp:
+			return byStage || byQuietest(a, b) || b.id - a.id;
 		case tiers.waiting:
 			return byStage || byActivity(a, b) || b.id - a.id;
 		case tiers.snoozed:

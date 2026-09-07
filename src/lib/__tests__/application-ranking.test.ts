@@ -11,7 +11,10 @@ import { describe, expect, it } from 'vitest';
 import {
 	applicationTier,
 	compareApplications,
+	daysQuiet,
 	defaultSort,
+	followUpAfterDays,
+	isFollowUpDue,
 	isSortKey,
 	sortApplications,
 	stageRank,
@@ -31,10 +34,24 @@ function app(over: Partial<Rankable> = {}): Rankable {
 		status_action: null,
 		status_action_date: null,
 		snoozed_until: null,
+		application_sent_date: null,
 		last_activity: null,
 		date_created: new Date('2026-01-01'),
 		...over
 	};
+}
+
+/** A sent application whose last activity was `days` before DAY. */
+function quietFor(days: number, over: Partial<Rankable> = {}): Rankable {
+	const at = new Date(Date.parse(`${DAY}T00:00:00Z`) - days * 86_400_000);
+	return app({
+		status: 'applying',
+		status_step: 'Applied through job platform',
+		status_action: 'Awaiting response',
+		application_sent_date: '2026-01-05',
+		last_activity: at,
+		...over
+	});
 }
 
 /** Ids in the order they come back, so expectations read as a sequence. */
@@ -74,6 +91,75 @@ describe('applicationTier', () => {
 			const done = app({ status, status_action: 'Send application' });
 			expect(applicationTier(done, DAY)).toBe(tiers.finished);
 		}
+	});
+});
+
+describe('isFollowUpDue', () => {
+	it('stays quiet inside the phase window and fires once past it', () => {
+		expect(isFollowUpDue(quietFor(followUpAfterDays.applying - 1), DAY)).toBe(false);
+		expect(isFollowUpDue(quietFor(followUpAfterDays.applying), DAY)).toBe(true);
+	});
+
+	it('gives each phase its own patience', () => {
+		// 8 days of silence: ordinary after applying, overdue after an interview.
+		const applying = quietFor(8);
+		const interviewing = quietFor(8, {
+			status: 'interviewing',
+			status_step: 'Technical interview',
+			status_action: 'Awaiting result'
+		});
+
+		expect(isFollowUpDue(applying, DAY)).toBe(false);
+		expect(isFollowUpDue(interviewing, DAY)).toBe(true);
+	});
+
+	it('never nudges an unsent draft', () => {
+		// Nobody to follow up with. The action column is cleared so it cannot
+		// reach the top tier from the other side either.
+		const draft = quietFor(90, {
+			status_step: 'Preparing',
+			status_action: null,
+			application_sent_date: null
+		});
+
+		expect(isFollowUpDue(draft, DAY)).toBe(false);
+		expect(applicationTier(draft, DAY)).toBe(tiers.waiting);
+	});
+
+	it('treats an old row with no applied date as sent once it is past Preparing', () => {
+		const legacy = quietFor(30, { application_sent_date: null });
+		expect(isFollowUpDue(legacy, DAY)).toBe(true);
+	});
+
+	it('does not argue with a snooze', () => {
+		const parked = quietFor(90, { snoozed_until: '2026-12-01' });
+		expect(isFollowUpDue(parked, DAY)).toBe(false);
+		expect(applicationTier(parked, DAY)).toBe(tiers.snoozed);
+	});
+
+	it('does not nudge something that is already your move', () => {
+		const yours = quietFor(90, { status_action: 'Send application' });
+		expect(isFollowUpDue(yours, DAY)).toBe(false);
+		expect(applicationTier(yours, DAY)).toBe(tiers.action);
+	});
+
+	it('does not nudge a finished application', () => {
+		expect(isFollowUpDue(quietFor(90, { status: 'rejected' }), DAY)).toBe(false);
+	});
+});
+
+describe('daysQuiet', () => {
+	it('counts whole days, not 24-hour periods', () => {
+		const lateYesterday = app({ last_activity: '2026-09-05T23:30:00Z' });
+		expect(daysQuiet(lateYesterday, DAY)).toBe(1);
+	});
+
+	it('falls back to the creation date', () => {
+		expect(daysQuiet(app({ last_activity: null, date_created: new Date(DAY) }), DAY)).toBe(0);
+	});
+
+	it('answers null rather than 0 when there is nothing to count from', () => {
+		expect(daysQuiet(app({ last_activity: null, date_created: null }), DAY)).toBeNull();
 	});
 });
 
@@ -128,17 +214,67 @@ describe('the tiers', () => {
 		expect(order([negotiating, draft])).toEqual([draft.id, negotiating.id]);
 	});
 
-	it('orders the four tiers', () => {
+	it('orders the five tiers', () => {
 		const finished = app({ status: 'rejected' });
 		const snoozed = app({ status: 'interviewing', snoozed_until: '2026-10-01' });
-		const waiting = app({ status: 'interviewing', status_action: 'Awaiting result' });
+		const waiting = quietFor(2, {
+			status: 'interviewing',
+			status_step: 'Screening call',
+			status_action: 'Awaiting result'
+		});
+		const quiet = quietFor(40);
 		const needsYou = app({ status: 'applying', status_action: 'Send application' });
 
-		expect(order([finished, snoozed, waiting, needsYou])).toEqual([
+		expect(order([finished, snoozed, waiting, quiet, needsYou])).toEqual([
 			needsYou.id,
+			quiet.id,
 			waiting.id,
 			snoozed.id,
 			finished.id
+		]);
+	});
+
+	it('lifts a stale application above a fresher one further along', () => {
+		// The inversion the quiet tier exists for. Under a plain stage sort the
+		// interview wins; but it is two days into a normal wait and needs nothing,
+		// while the application has heard nothing for six weeks.
+		const freshInterview = quietFor(2, {
+			status: 'interviewing',
+			status_step: 'Screening call',
+			status_action: 'Awaiting result'
+		});
+		const staleApplication = quietFor(42);
+
+		expect(order([freshInterview, staleApplication])).toEqual([
+			staleApplication.id,
+			freshInterview.id
+		]);
+	});
+
+	it('orders the quiet tier longest-silent first, inverting the waiting tier', () => {
+		const quieter = quietFor(60);
+		const quiet = quietFor(20);
+
+		expect(order([quiet, quieter])).toEqual([quieter.id, quiet.id]);
+
+		// The same two facts, one side of the threshold down, come back the other
+		// way round: nothing is owed, so recent activity leads.
+		const recent = quietFor(3);
+		const older = quietFor(10);
+		expect(order([older, recent])).toEqual([recent.id, older.id]);
+	});
+
+	it('still ranks stage above silence inside the quiet tier', () => {
+		const longQuietApplication = quietFor(60);
+		const shortQuietInterview = quietFor(10, {
+			status: 'interviewing',
+			status_step: 'Technical interview',
+			status_action: 'Awaiting result'
+		});
+
+		expect(order([longQuietApplication, shortQuietInterview])).toEqual([
+			shortQuietInterview.id,
+			longQuietApplication.id
 		]);
 	});
 
@@ -180,41 +316,33 @@ describe('the tiers', () => {
 	});
 
 	it('orders the waiting tier by stage, then by last activity', () => {
-		const staleInterview = app({
+		// All three inside their phase windows, so none of them has crossed into
+		// the quiet tier and stage still leads.
+		const olderInterview = quietFor(5, {
 			status: 'interviewing',
-			status_action: 'Awaiting result',
-			last_activity: new Date('2026-07-01')
+			status_step: 'Screening call',
+			status_action: 'Awaiting result'
 		});
-		const freshInterview = app({
+		const newerInterview = quietFor(1, {
 			status: 'interviewing',
-			status_action: 'Awaiting result',
-			last_activity: new Date('2026-09-04')
+			status_step: 'Screening call',
+			status_action: 'Awaiting result'
 		});
-		const freshApplying = app({
-			status: 'applying',
-			status_action: 'Awaiting response',
-			last_activity: new Date('2026-09-05')
-		});
+		const newerApplying = quietFor(1);
 
-		expect(order([staleInterview, freshApplying, freshInterview])).toEqual([
-			freshInterview.id,
-			staleInterview.id,
-			freshApplying.id
+		expect(order([olderInterview, newerApplying, newerInterview])).toEqual([
+			newerInterview.id,
+			olderInterview.id,
+			newerApplying.id
 		]);
 	});
 
-	it('sends the long-silent application to the bottom of its stage', () => {
-		// Rik's case: applied weeks ago, nothing since.
-		const silent = app({
-			status: 'applying',
-			status_action: 'Awaiting response',
-			last_activity: new Date('2026-07-15')
-		});
-		const replied = app({
-			status: 'applying',
-			status_action: 'Awaiting response',
-			last_activity: new Date('2026-09-05')
-		});
+	it('sinks the quieter of two applications while nothing is owed', () => {
+		// Rik's case, on the near side of the threshold: nothing has happened on
+		// either, neither is overdue a nudge yet, so the staler one goes down.
+		// Past the threshold this order inverts — see the quiet-tier tests.
+		const silent = quietFor(10);
+		const replied = quietFor(1);
 
 		expect(order([silent, replied])).toEqual([replied.id, silent.id]);
 	});
@@ -253,8 +381,8 @@ describe('last activity', () => {
 	});
 
 	it('accepts a date string as well as a Date', () => {
-		const a = app({ status_action: 'Awaiting response', last_activity: '2026-09-05' });
-		const b = app({ status_action: 'Awaiting response', last_activity: '2026-06-05' });
+		const a = quietFor(1, { last_activity: '2026-09-05' });
+		const b = quietFor(3, { last_activity: '2026-09-03' });
 
 		expect(order([b, a])).toEqual([a.id, b.id]);
 	});

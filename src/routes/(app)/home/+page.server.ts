@@ -287,7 +287,10 @@ export const load: PageServerLoad = async ({ parent }) => {
 		matchStats,
 		topMatches,
 		profileSkillLevels,
-		activeApplications
+		activeApplications,
+		// The server's day, so the nudge a card draws and the ranking that placed
+		// it there cannot disagree because the browser sits in another timezone.
+		today: today()
 	};
 };
 

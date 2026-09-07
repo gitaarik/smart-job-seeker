@@ -8,6 +8,7 @@
 		faArrowDownWideShort,
 		faBuilding,
 		faCalendar,
+		faBell,
 		faCalendarCheck,
 		faChevronDown,
 		faClock,
@@ -35,7 +36,7 @@
 		getStatusColor,
 		getStatusDotColor
 	} from '$lib/application-status';
-	import { sortOptions } from '$lib/application-ranking';
+	import { daysQuiet, isFollowUpDue, sortOptions } from '$lib/application-ranking';
 	import { describeSnooze, isSnoozed, snoozePresets, snoozeUntil } from '$lib/application-snooze';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -516,6 +517,8 @@
 				{@const workLocations = asStringArray(job?.work_location)}
 				{@const jobTypes = asStringArray(job?.job_types)}
 				{@const experienceLevels = asStringArray(job?.experience_levels)}
+				{@const followUp = isFollowUpDue(app, data.today)}
+				{@const quiet = daysQuiet(app, data.today)}
 				{@const snoozed = isSnoozed(app, data.today)}
 				<!-- Relative wrapper so the snooze control can sit OUTSIDE the anchor:
 				     the card is one link, and a button nested in it would be a second
@@ -549,6 +552,21 @@
 									{#if app.snooze_reason}
 										<span class="italic">{app.snooze_reason}</span>
 									{/if}
+								</p>
+							{/if}
+
+							<!-- The nudge. Text only: this sits inside the card's anchor, so
+							     the button that acts on it lives in the menu outside, next to
+							     snooze — the same reason that control is positioned the way
+							     it is. -->
+							{#if followUp}
+								<p class="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
+									<span
+										class="inline-flex items-center gap-1 rounded-full bg-[var(--dash-warning-light)] px-2 py-0.5 font-medium text-[var(--dash-warning)]"
+									>
+										<FontAwesomeIcon icon={faBell} class="h-3 w-3" />
+										No reply in {quiet} days — worth a nudge
+									</span>
 								</p>
 							{/if}
 
@@ -683,13 +701,26 @@
 						<button
 							type="button"
 							onclick={() => toggleDropdown(`snooze-${app.id}`)}
-							title={snoozed ? 'Snoozed' : 'Snooze this application'}
-							aria-label={snoozed ? 'Snoozed' : 'Snooze this application'}
-							class="flex h-7 w-7 items-center justify-center rounded-md text-[var(--dash-text-muted)] transition-colors hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] {snoozed
+							title={snoozed
+								? 'Snoozed'
+								: followUp
+									? 'Follow up or snooze'
+									: 'Snooze this application'}
+							aria-label={snoozed
+								? 'Snoozed'
+								: followUp
+									? 'Follow up or snooze'
+									: 'Snooze this application'}
+							class="flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] {snoozed
 								? 'text-[var(--dash-text)]'
-								: ''}"
+								: followUp
+									? 'text-[var(--dash-warning)]'
+									: 'text-[var(--dash-text-muted)]'}"
 						>
-							<FontAwesomeIcon icon={snoozed ? faPlay : faMugHot} class="h-3.5 w-3.5" />
+							<FontAwesomeIcon
+								icon={snoozed ? faPlay : followUp ? faBell : faMugHot}
+								class="h-3.5 w-3.5"
+							/>
 						</button>
 
 						{#if openDropdown === `snooze-${app.id}`}
@@ -712,6 +743,26 @@
 										>
 											<FontAwesomeIcon icon={faPlay} class="h-3 w-3 opacity-60" />
 											Resume now
+										</button>
+									</form>
+									<div class="my-1 border-t border-[var(--dash-border)]"></div>
+								{/if}
+								{#if followUp}
+									<form
+										method="POST"
+										action="?/followedUp"
+										use:enhance={() => {
+											openDropdown = null;
+											return async ({ update }) => await update();
+										}}
+									>
+										<input type="hidden" name="id" value={app.id} />
+										<button
+											type="submit"
+											class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
+										>
+											<FontAwesomeIcon icon={faBell} class="h-3 w-3 opacity-60" />
+											Mark followed up
 										</button>
 									</form>
 									<div class="my-1 border-t border-[var(--dash-border)]"></div>

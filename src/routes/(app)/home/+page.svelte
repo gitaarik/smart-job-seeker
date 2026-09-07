@@ -18,6 +18,7 @@
 	import JobCardList from '../jobs/components/JobCardList.svelte';
 	import Card from '../components/Card.svelte';
 	import { getStatusColor, getStatusLabel } from '$lib/application-status';
+	import { daysQuiet, isFollowUpDue } from '$lib/application-ranking';
 
 	let { data }: { data: PageData } = $props();
 
@@ -38,6 +39,7 @@
 	const topMatches = $derived(data.topMatches);
 	const profileSkillLevels = $derived(data.profileSkillLevels);
 	const activeApplications = $derived(data.activeApplications);
+	const today = $derived(data.today);
 
 	const hasMatches = $derived((matchStats?.total ?? 0) > 0);
 
@@ -189,6 +191,11 @@
 											{#if app.status_action === 'Scheduled' && app.status_action_date}
 												— {formatDate(app.status_action_date)}
 											{/if}
+										</p>
+									{/if}
+									{#if isFollowUpDue(app, today)}
+										<p class="mt-1 text-xs font-medium text-[var(--dash-warning)]">
+											No reply in {daysQuiet(app, today)} days
 										</p>
 									{/if}
 								</div>
