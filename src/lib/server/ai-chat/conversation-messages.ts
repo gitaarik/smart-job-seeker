@@ -98,7 +98,16 @@ function turnsToBaseMessages(turns: VersionTurn[], opts: HistoryOptions): BaseMe
 			continue;
 		}
 
-		if (turn.user_request) messages.push(new HumanMessage(turn.user_request));
+		// A review is a step the editor runs, not something the applicant typed, so
+		// it carries no message of its own. Narrate the click — the same treatment
+		// the opening draft gets below. Without it `mergeMessageRuns` folds the
+		// critique into the previous assistant turn, where it reads as part of the
+		// answer rather than as a verdict on it.
+		if (turn.source === 'ai_review' && !turn.user_request) {
+			messages.push(new HumanMessage(`Review the ${noun} and tell me what to improve.`));
+		} else if (turn.user_request) {
+			messages.push(new HumanMessage(turn.user_request));
+		}
 
 		const reply: string[] = [];
 		if (turn.ai_feedback) reply.push(turn.ai_feedback);

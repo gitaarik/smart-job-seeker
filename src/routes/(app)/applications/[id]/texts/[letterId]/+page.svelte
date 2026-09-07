@@ -7,7 +7,7 @@
 	import { track } from '$lib/tools/analytics';
 	import ConversationTimeline from '$lib/components/conversation/ConversationTimeline.svelte';
 	import ConfirmModal from '../../../../profile/components/ConfirmModal.svelte';
-	import type { VersionSource } from '$lib/server/ai-chat/entity-versions';
+	import type { DeleteScope, VersionSource } from '$lib/server/ai-chat/entity-versions';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -166,12 +166,14 @@
 		await invalidateAll();
 	}
 
-	// Delete a turn's AI response but keep the message (rewind to it).
-	async function onClearResponse(versionId: number) {
+	// Remove one entry from the version trail, rewinding the thread to just
+	// before it. 'response' keeps the message that produced it.
+	async function onDelete(versionId: number, scope: DeleteScope) {
 		if (isNew) return;
 		const fd = new FormData();
 		fd.set('versionId', String(versionId));
-		await postAction(letter.id, 'clearResponse', fd);
+		fd.set('scope', scope);
+		await postAction(letter.id, 'deleteEntry', fd);
 		await invalidateAll();
 	}
 
@@ -246,7 +248,7 @@
 		{onReview}
 		{onSendFollowup}
 		{onSaveVersion}
-		{onClearResponse}
+		{onDelete}
 		autoMode={true}
 		generating={data.generating}
 	/>

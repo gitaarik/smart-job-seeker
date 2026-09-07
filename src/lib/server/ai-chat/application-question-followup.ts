@@ -183,13 +183,18 @@ export async function createApplicationQuestionFollowup(
 						aiFeedback = aiChatResponse;
 					}
 				}
+				// No userRequest: the review request is wording this module supplies,
+				// not something the applicant typed, and recording it put a message
+				// they never wrote in the thread's "Your feedback" bubble — editable,
+				// resendable, and (before deletes reached message-only turns) stuck
+				// there for good. The replay narrates the step instead; see
+				// conversation-messages.ts.
 				await recordVersion(QUESTION_VERSIONS, {
 					entityId: id,
 					content: revisedText,
 					source: 'ai_review',
 					aiChatId,
-					aiFeedback,
-					userRequest: followupRequest
+					aiFeedback
 				});
 			} else if (updateContent && answer) {
 				// The model wrote/changed the answer → a new version, and it becomes the
@@ -220,6 +225,18 @@ export async function createApplicationQuestionFollowup(
 					source: 'ai_advice',
 					aiChatId,
 					aiFeedback: revisionFeedback,
+					userRequest: followupRequest
+				});
+			} else if (updateContent) {
+				// The provider came back with nothing usable. Record the turn anyway,
+				// so the message the applicant sent stays in the thread — with
+				// "Regenerate" beside it and a delete of its own — instead of
+				// disappearing behind a success that changed nothing.
+				await recordVersion(QUESTION_VERSIONS, {
+					entityId: id,
+					content: null,
+					source: 'ai_advice',
+					aiChatId,
 					userRequest: followupRequest
 				});
 			}

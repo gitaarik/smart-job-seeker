@@ -7,8 +7,9 @@ import { getSelectedProfileId } from '../../../../profile/utils';
 import {
 	buildConversation,
 	type ConversationEntry,
-	deleteResponse,
+	deleteVersionEntry,
 	ensureBaselineVersion,
+	type DeleteScope,
 	LETTER_VERSIONS,
 	recordVersion,
 	recordVersionIfChanged,
@@ -159,11 +160,15 @@ export const actions: Actions = {
 		const source = (formData.get('source') as string) || 'manual_edit';
 		const deleteAfterVersionId = formData.get('deleteAfterVersionId');
 
-		// If saving a previous version, delete all versions after it first
+		// If saving a previous version, delete all versions after it first. What the
+		// save is then a change *to* is the version it rewound onto, not the letter
+		// the trimmed versions had left behind.
+		let previousContent = letter.content;
 		if (deleteAfterVersionId) {
 			const afterId = parseInt(deleteAfterVersionId as string);
 			if (!isNaN(afterId)) {
-				await trimVersionsAfter(LETTER_VERSIONS, letterId, afterId);
+				const { remainingContent } = await trimVersionsAfter(LETTER_VERSIONS, letterId, afterId);
+				previousContent = remainingContent;
 			}
 		}
 
@@ -183,14 +188,16 @@ export const actions: Actions = {
 		await recordVersionIfChanged(LETTER_VERSIONS, {
 			entityId: letterId,
 			newContent: content || null,
-			previousContent: letter.content,
+			previousContent,
 			source: source as VersionSource
 		});
 
 		return { success: true };
 	},
 
-	clearResponse: async ({ request, locals, cookies, params }) => {
+	// Remove one entry from the letter's version trail, rewinding the thread to
+	// just before it. `scope` says whether the applicant's own message survives.
+	deleteEntry: async ({ request, locals, cookies, params }) => {
 		const user = locals.user;
 		if (!user) return fail(401, { error: 'Not authenticated' });
 
@@ -219,11 +226,13 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const versionId = parseInt(formData.get('versionId') as string);
 		if (isNaN(versionId)) return fail(400, { error: 'Invalid version' });
+		const scope: DeleteScope = formData.get('scope') === 'response' ? 'response' : 'turn';
 
-		const { existed, keptMessage, aiChatId, liveContent } = await deleteResponse(
+		const { existed, aiChatId, liveContent, rewind } = await deleteVersionEntry(
 			LETTER_VERSIONS,
 			letterId,
-			versionId
+			versionId,
+			{ scope, committedContent: letter.content }
 		);
 		if (!existed) return fail(404, { error: 'Version not found' });
 
@@ -231,7 +240,9 @@ export const actions: Actions = {
 			.update(application_letters)
 			.set({
 				ai_chat_id: aiChatId,
-				...(keptMessage ? {} : { content: liveContent })
+				// The letter only moves when the delete took the version it was
+				// showing; a deliberate pick further back stands.
+				...(rewind ? { content: liveContent, date_updated: new Date() } : {})
 			})
 			.where(eq(application_letters.id, letterId));
 

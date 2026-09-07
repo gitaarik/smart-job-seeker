@@ -44,7 +44,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	// same kind of turn with the edited message as its brief instead.
 	let restartMode: 'generate' | 'advice' | null = null;
 	if (replaceVersionId) {
-		const { existed, removedSource, last } = await trimVersionsFrom(
+		const { existed, removedSource, aiChatId } = await trimVersionsFrom(
 			STORY_VERSIONS,
 			storyId,
 			replaceVersionId
@@ -60,10 +60,10 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		await db
 			.update(project_stories)
 			.set({
-				ai_chat_id: last?.ai_chat ?? null
+				ai_chat_id: aiChatId
 			})
 			.where(eq(project_stories.id, storyId));
-		if (!last?.ai_chat) {
+		if (!aiChatId) {
 			restartMode = removedSource === 'ai_advice' ? 'advice' : 'generate';
 		}
 	}

@@ -8,9 +8,10 @@ import { touchProfile } from '$lib/server/profile/touch-profile';
 import {
 	buildConversation,
 	type ConversationEntry,
-	deleteResponse,
+	deleteVersionEntry,
 	ensureBaselineVersion,
 	recordVersionIfChanged,
+	type DeleteScope,
 	STORY_VERSIONS,
 	trimVersionsAfter,
 	type VersionSource
@@ -150,15 +151,20 @@ export const actions: Actions = {
 		const source: VersionSource =
 			sourceRaw === 'ai_generation' || sourceRaw === 'ai_revision' ? sourceRaw : 'manual_edit';
 
+		const previousStar = serializeStarMarkdown(story) || null;
+
+		// Rewinding onto an earlier version makes *that* version what the save is a
+		// change to, not the STAR fields the trimmed versions had left behind.
+		let previousContent = previousStar;
 		if (deleteAfterVersionId) {
 			const afterId = parseInt(deleteAfterVersionId as string);
 			if (!isNaN(afterId)) {
-				await trimVersionsAfter(STORY_VERSIONS, storyId, afterId);
+				const { remainingContent } = await trimVersionsAfter(STORY_VERSIONS, storyId, afterId);
+				previousContent = remainingContent;
 			}
 		}
 
-		const previousStar = serializeStarMarkdown(story);
-		await ensureBaselineVersion(STORY_VERSIONS, storyId, previousStar || null);
+		await ensureBaselineVersion(STORY_VERSIONS, storyId, previousStar);
 
 		await db
 			.update(project_stories)
@@ -171,7 +177,7 @@ export const actions: Actions = {
 		await recordVersionIfChanged(STORY_VERSIONS, {
 			entityId: storyId,
 			newContent: content,
-			previousContent: previousStar || null,
+			previousContent,
 			source
 		});
 
@@ -202,21 +208,23 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	// Delete a turn's AI response but keep the user's message (rewind to it), or,
-	// for a message-less turn, delete it and rewind the story to the last version.
-	clearResponse: async ({ request, locals, cookies, params }) => {
+	// Remove one entry from the story's version trail, rewinding the thread to
+	// just before it. `scope` says whether the applicant's own message survives.
+	deleteEntry: async ({ request, locals, cookies, params }) => {
 		const owned = await loadOwnedStory(locals, cookies, params.id);
 		if ('fail' in owned) return owned.fail;
-		const { storyId, profileId } = owned;
+		const { story, storyId, profileId } = owned;
 
 		const formData = await request.formData();
 		const versionId = parseInt(formData.get('versionId') as string);
 		if (isNaN(versionId)) return fail(400, { error: 'Invalid version' });
+		const scope: DeleteScope = formData.get('scope') === 'response' ? 'response' : 'turn';
 
-		const { existed, keptMessage, aiChatId, liveContent } = await deleteResponse(
+		const { existed, aiChatId, liveContent, rewind } = await deleteVersionEntry(
 			STORY_VERSIONS,
 			storyId,
-			versionId
+			versionId,
+			{ scope, committedContent: serializeStarMarkdown(story) || null }
 		);
 		if (!existed) return fail(404, { error: 'Version not found' });
 
@@ -224,9 +232,9 @@ export const actions: Actions = {
 			.update(project_stories)
 			.set({
 				ai_chat_id: aiChatId,
-				// Keep the columns when a message was kept (regenerate resets them);
-				// rewind them to the last remaining version on a full delete.
-				...(keptMessage ? {} : starColumns(liveContent))
+				// The STAR columns only move when the delete took the version they
+				// were showing; a deliberate pick further back stands.
+				...(rewind ? starColumns(liveContent) : {})
 			})
 			.where(eq(project_stories.id, storyId));
 

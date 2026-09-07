@@ -34,7 +34,11 @@
 	import GenerationStatus from '$lib/components/GenerationStatus.svelte';
 	import SimpleEditor from '$lib/components/SimpleEditor.svelte';
 	import ConfirmModal from '../../../routes/(app)/profile/components/ConfirmModal.svelte';
-	import type { ConversationEntry, VersionSource } from '$lib/server/ai-chat/entity-versions';
+	import type {
+		ConversationEntry,
+		DeleteScope,
+		VersionSource
+	} from '$lib/server/ai-chat/entity-versions';
 
 	type BusyMode = 'generate' | 'advice' | 'auto' | 'followup' | 'review';
 
@@ -48,7 +52,7 @@
 		onSendFollowup,
 		onSaveVersion,
 		onApplyVersion,
-		onClearResponse,
+		onDelete,
 		currentContent = null,
 		applyNoun = 'answer',
 		ownVersionEditor = true,
@@ -83,11 +87,13 @@
 		 */
 		onApplyVersion?: (content: string) => Promise<void>;
 		/**
-		 * Optional: delete a turn's AI response but keep the user's message (rewind
-		 * to it), so it can be edited/regenerated. Enables the per-turn trash +
-		 * "regenerate" affordances.
+		 * Optional: remove one entry from the trail, rewinding the thread to just
+		 * before it. `scope` is 'response' to drop the AI's reply while keeping the
+		 * applicant's message (so it can be edited and sent again), or 'turn' to
+		 * drop the whole exchange. Enables the per-entry delete + "regenerate"
+		 * affordances; without it the timeline is append-only.
 		 */
-		onClearResponse?: (versionId: number) => Promise<void>;
+		onDelete?: (versionId: number, scope: DeleteScope) => Promise<void>;
 		/** The entity's current committed content, used to mark the live version. */
 		currentContent?: string | null;
 		/** Noun for the apply affordance, e.g. "answer". */
@@ -187,6 +193,16 @@
 	// Confirm dialog for saving a previous version (will remove later entries)
 	let showOverwriteConfirm = $state(false);
 	let pendingOverwrite = $state<{ content: string; versionId: number } | null>(null);
+
+	// Confirm dialog for a delete that takes something worth warning about with it
+	// (a version, or the turns recorded after the one being removed).
+	let pendingDelete = $state<{
+		versionId: number;
+		scope: DeleteScope;
+		laterTurns: number;
+		versions: number;
+		keepsMessage: boolean;
+	} | null>(null);
 
 	// Diff view state: manually toggled on/off overrides auto-show
 	let diffShown = $state(new Set<number>());
@@ -348,6 +364,74 @@
 		});
 	}
 
+	/**
+	 * Run a delete and reset the view state that a shorter trail invalidates:
+	 * both the inline editor and the diff toggles are keyed by entry index, so
+	 * after a rewind they would point at whatever moved into that slot.
+	 */
+	function runDelete(versionId: number, scope: DeleteScope) {
+		run('followup', async () => {
+			await onDelete!(versionId, scope);
+			editingIndex = null;
+			editingFeedbackIndex = null;
+			diffShown = new Set();
+			diffHidden = new Set();
+			userExpanded = false;
+		});
+	}
+
+	/** How many versions a delete from this entry takes with it. */
+	function versionsRemovedFrom(entryIndex: number): number {
+		let n = 0;
+		for (let i = entryIndex; i < conversation.length; i++) {
+			if (conversation[i].content) n++;
+		}
+		return n;
+	}
+
+	/**
+	 * Ask first when the delete costs something that cannot be regenerated in a
+	 * click — a version, or the turns recorded after this one. Clearing a
+	 * trailing reply costs neither, so that stays a single click.
+	 */
+	function requestDelete(entryIndex: number, scope: DeleteScope) {
+		const entry = conversation[entryIndex];
+		const laterTurns = conversation.length - 1 - entryIndex;
+		const versions = versionsRemovedFrom(entryIndex);
+		if (laterTurns === 0 && versions === 0) {
+			runDelete(entry.versionId, scope);
+			return;
+		}
+		pendingDelete = {
+			versionId: entry.versionId,
+			scope,
+			laterTurns,
+			versions,
+			keepsMessage: scope === 'response' && !!entry.userRequest
+		};
+	}
+
+	function plural(n: number, one: string, many: string): string {
+		return `${n} ${n === 1 ? one : many}`;
+	}
+
+	let deleteConfirmMessage = $derived.by(() => {
+		const p = pendingDelete;
+		if (!p) return '';
+		const going: string[] = [];
+		if (p.versions > 0) going.push(plural(p.versions, 'version', 'versions'));
+		if (p.laterTurns > 0) going.push(plural(p.laterTurns, 'later turn', 'later turns'));
+		const lines = [
+			going.length
+				? `This removes ${going.join(' and ')} from the conversation.`
+				: 'This removes the turn from the conversation.'
+		];
+		if (p.laterTurns > 0) lines.push('The thread continues from here.');
+		if (p.keepsMessage) lines.push('Your message stays, so you can edit it and send it again.');
+		lines.push('This cannot be undone.');
+		return lines.join(' ');
+	});
+
 	function formatDate(date: Date | string | null): string {
 		if (!date) return '';
 		const d = typeof date === 'string' ? new Date(date) : date;
@@ -375,12 +459,44 @@
 	</div>
 {/if}
 
-{#snippet conversationEntry(
-	entry: ConversationEntry,
-	versionNum: number,
-	isLast: boolean,
-	entryIndex: number
-)}
+<!-- Delete is a rewind: the thread is linear, so removing an entry removes what
+     was written after it too. Which is why it sits on every entry rather than
+     only the last one — "delete from here and carry on" is the move, and before
+     this it was reachable only by deleting the tail one turn at a time, and not
+     at all for a turn that never produced a version (advice, a review with no
+     revision, or a message whose response was already cleared). -->
+{#snippet deleteActions(entry: ConversationEntry, entryIndex: number)}
+	{#if onDelete}
+		{@const hasMessage = !!entry.userRequest}
+		{@const hasReply = !!entry.aiFeedback || !!entry.content}
+		{#if hasMessage && hasReply}
+			<button
+				type="button"
+				onclick={() => requestDelete(entryIndex, 'response')}
+				disabled={busy}
+				title="Delete what the AI produced here and keep your message, so you can edit it and send it again"
+				class="flex items-center gap-1 rounded border border-[var(--dash-border)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] disabled:cursor-not-allowed disabled:opacity-50"
+			>
+				<FontAwesomeIcon icon={faTrash} class="h-2.5 w-2.5" />
+				Delete response
+			</button>
+		{/if}
+		<button
+			type="button"
+			onclick={() => requestDelete(entryIndex, 'turn')}
+			disabled={busy}
+			title={entryIndex === conversation.length - 1
+				? 'Delete this turn'
+				: 'Delete this turn and everything after it'}
+			class="flex items-center gap-1 rounded border border-red-500/30 px-2 py-1 text-xs text-red-500 transition-colors hover:border-red-500/50 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+		>
+			<FontAwesomeIcon icon={faTrash} class="h-2.5 w-2.5" />
+			{hasMessage && hasReply ? 'Delete turn' : entry.content ? 'Delete version' : 'Delete'}
+		</button>
+	{/if}
+{/snippet}
+
+{#snippet conversationEntry(entry: ConversationEntry, versionNum: number, entryIndex: number)}
 	{@const userEntry = isUserEntry(entry)}
 	{@const borderColor = userEntry ? 'border-blue-500/20' : 'border-purple-500/20'}
 	{@const bgColor = userEntry ? 'bg-blue-500/10' : 'bg-purple-500/10'}
@@ -401,7 +517,7 @@
 					</div>
 					{#if editingFeedbackIndex !== entryIndex && !busy}
 						<div class="flex items-center gap-2">
-							{#if onClearResponse && !entry.content && !entry.aiFeedback}
+							{#if onDelete && !entry.content && !entry.aiFeedback}
 								<button
 									type="button"
 									onclick={() =>
@@ -677,7 +793,11 @@
 									Edit
 								</button>
 							{/if}
-							{#if isLast}
+							<!-- Reviewing means reviewing the *latest version*, which is not the
+							     same as the last entry: ask a question after a draft and the
+							     advice turn lands below it. Keyed to conversation.length - 1,
+							     the button then vanished until the next version was written. -->
+							{#if entryIndex === lastContentIndex}
 								<button
 									type="button"
 									onclick={() => run('review', () => onReview(entry.content!))}
@@ -692,23 +812,7 @@
 									AI review
 								</button>
 							{/if}
-							{#if onClearResponse && entryIndex === lastContentIndex}
-								{@const isManual = entry.type === 'manual_edit'}
-								<button
-									type="button"
-									onclick={() => run('followup', () => onClearResponse(entry.versionId))}
-									disabled={busy}
-									title={entry.userRequest
-										? 'Delete this AI response and keep your message'
-										: isManual
-											? 'Delete this version'
-											: 'Delete this AI response'}
-									class="flex items-center gap-1 rounded border border-red-500/30 px-2 py-1 text-xs text-red-500 transition-colors hover:border-red-500/50 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
-								>
-									<FontAwesomeIcon icon={faTrash} class="h-2.5 w-2.5" />
-									{isManual ? 'Delete version' : 'Delete response'}
-								</button>
-							{/if}
+							{@render deleteActions(entry, entryIndex)}
 							{#if onApplyVersion && !isCurrentAnswer}
 								<button
 									type="button"
@@ -723,6 +827,14 @@
 						</div>
 					{/if}
 				</div>
+			</div>
+		{/if}
+		<!-- Turns that produced no version — advice, a review that only commented,
+		     or a message whose response was cleared — have no version box to hang
+		     actions off, so they get their own row. -->
+		{#if !entry.content && !isEditing && onDelete}
+			<div class="flex items-center gap-1.5 {entry.aiFeedback ? '' : 'ml-6'}">
+				{@render deleteActions(entry, entryIndex)}
 			</div>
 		{/if}
 	</div>
@@ -749,10 +861,10 @@
 			{#if !collapsed || i >= lastContentIndex}
 				{#if i === conversation.length - 1}
 					<div bind:this={lastEntryEl} class="scroll-mt-16">
-						{@render conversationEntry(entry, entryVersionNums[i], true, i)}
+						{@render conversationEntry(entry, entryVersionNums[i], i)}
 					</div>
 				{:else}
-					{@render conversationEntry(entry, entryVersionNums[i], false, i)}
+					{@render conversationEntry(entry, entryVersionNums[i], i)}
 				{/if}
 			{/if}
 		{/each}
@@ -983,6 +1095,21 @@
 {:else}
 	{@render composer()}
 {/if}
+
+<!-- Delete Confirmation Modal — only raised for a delete that costs a version
+     or later turns; see requestDelete. -->
+<ConfirmModal
+	isOpen={pendingDelete !== null}
+	title={pendingDelete?.scope === 'response' ? 'Delete response' : 'Delete turn'}
+	message={deleteConfirmMessage}
+	confirmLabel="Delete"
+	onCancel={() => (pendingDelete = null)}
+	onConfirm={() => {
+		const pending = pendingDelete;
+		pendingDelete = null;
+		if (pending) runDelete(pending.versionId, pending.scope);
+	}}
+/>
 
 <!-- Overwrite Previous Version Confirmation Modal -->
 <ConfirmModal

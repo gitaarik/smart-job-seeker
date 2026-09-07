@@ -7,8 +7,9 @@ import { getSelectedProfileId } from '../../../../../profile/utils';
 import {
 	buildConversation,
 	type ConversationEntry,
-	deleteResponse,
+	deleteVersionEntry,
 	ensureBaselineVersion,
+	type DeleteScope,
 	QUESTION_VERSIONS,
 	recordVersionIfChanged,
 	trimVersionsAfter,
@@ -114,11 +115,15 @@ export const actions: Actions = {
 		const source: VersionSource =
 			sourceRaw === 'ai_generation' || sourceRaw === 'ai_revision' ? sourceRaw : 'manual_edit';
 
-		// Saving a previous version removes everything recorded after it.
+		// Saving a previous version removes everything recorded after it. What the
+		// save is then a change *to* is the version it rewound onto, not the answer
+		// the trimmed versions had left behind.
+		let previousContent = question.answer;
 		if (deleteAfterVersionId) {
 			const afterId = parseInt(deleteAfterVersionId as string);
 			if (!isNaN(afterId)) {
-				await trimVersionsAfter(QUESTION_VERSIONS, qid, afterId);
+				const { remainingContent } = await trimVersionsAfter(QUESTION_VERSIONS, qid, afterId);
+				previousContent = remainingContent;
 			}
 		}
 
@@ -136,7 +141,7 @@ export const actions: Actions = {
 		await recordVersionIfChanged(QUESTION_VERSIONS, {
 			entityId: qid,
 			newContent: answer,
-			previousContent: question.answer,
+			previousContent,
 			source
 		});
 
@@ -166,31 +171,33 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	// Delete a turn's AI response but keep the user's message, rewinding to that
-	// message so it can be edited/regenerated. Non-destructive to the message.
-	clearResponse: async ({ request, locals, cookies, params }) => {
+	// Remove one entry from the answer's version trail, rewinding the thread to
+	// just before it. `scope` says whether the applicant's own message survives.
+	deleteEntry: async ({ request, locals, cookies, params }) => {
 		const owned = await loadOwnedQuestion(locals, cookies, params.id, params.qid);
 		if ('fail' in owned) return owned.fail;
-		const { qid } = owned;
+		const { question, qid } = owned;
 
 		const formData = await request.formData();
 		const versionId = parseInt(formData.get('versionId') as string);
 		if (isNaN(versionId)) return fail(400, { error: 'Invalid version' });
+		const scope: DeleteScope = formData.get('scope') === 'response' ? 'response' : 'turn';
 
-		const { existed, keptMessage, aiChatId, liveContent } = await deleteResponse(
+		const { existed, aiChatId, liveContent, rewind } = await deleteVersionEntry(
 			QUESTION_VERSIONS,
 			qid,
-			versionId
+			versionId,
+			{ scope, committedContent: question.answer }
 		);
 		if (!existed) return fail(404, { error: 'Version not found' });
 
-		// Keep the answer when a message was kept (regenerate will set it); rewind
-		// it to the last remaining version on a full delete (null = back to empty).
 		await db
 			.update(application_questions)
 			.set({
 				ai_chat_id: aiChatId,
-				...(keptMessage ? {} : { answer: liveContent })
+				// The answer only moves when the delete took the version it was
+				// showing; a deliberate "use as answer" pick further back stands.
+				...(rewind ? { answer: liveContent, date_updated: new Date() } : {})
 			})
 			.where(eq(application_questions.id, qid));
 

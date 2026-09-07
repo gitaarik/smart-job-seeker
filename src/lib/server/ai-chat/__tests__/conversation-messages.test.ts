@@ -65,6 +65,24 @@ describe('turnsToMessages', () => {
 		expect(messages[1].content).toContain('still needs to be applied');
 	});
 
+	it('narrates a review, which the applicant never types a message for', async () => {
+		// The editor supplies the review request itself. Recording it as the turn's
+		// user_request put words in the applicant's mouth in the UI, so it is no
+		// longer stored — but the model still needs to see a turn asking for the
+		// critique, or mergeMessageRuns folds it into the previous answer.
+		const messages = await turnsToMessages(
+			[
+				turn({ source: 'ai_generation', content: 'Draft one.' }),
+				turn({ source: 'ai_review', ai_feedback: 'The opening buries the ask.' })
+			],
+			{ noun: 'answer' }
+		);
+
+		expect(messages.map((m) => m.role)).toEqual(['user', 'assistant', 'user', 'assistant']);
+		expect(messages[2].content).toBe('Review the answer and tell me what to improve.');
+		expect(messages[3].content).toContain('The opening buries the ask.');
+	});
+
 	it('points at the current draft instead of quoting it a second time', async () => {
 		const current = 'The letter as it stands.';
 		const messages = await turnsToMessages(

@@ -13,7 +13,7 @@
  * and covered by unit tests.
  */
 import { dbDirect as db } from '$lib/server/db';
-import { and, asc, desc, eq, gt, gte, lt } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, isNotNull } from 'drizzle-orm';
 import {
 	cheat_sheet_versions,
 	letter_versions,
@@ -179,62 +179,61 @@ export async function recordVersionIfChanged(
 }
 
 /**
- * "Delete the AI response, keep the message": null out a turn's content and
- * ai_feedback (keeping its user_request), and remove any later versions so this
- * turn's message becomes the latest again. Returns the prior version's ai_chat
- * so the caller can restore the entity's live thread pointer, so a later message
- * chains from the right parent (not the discarded response). Used by the
- * per-turn "delete response" affordance.
+ * The thread pointer an entity should hold given the rows that remain: the
+ * newest `ai_chat` in the trail, skipping rows that carry none.
+ *
+ * Skipping matters. A manual save records a version with a null `ai_chat`, so
+ * "the last row's chat" is null whenever the applicant typed their own version
+ * last — which would reset the editor to its pre-thread state and lose a
+ * conversation that is still sitting on screen. It is also how a kept message
+ * drops out of the reckoning: its own chat is nulled with the reply it lost.
  */
-export async function clearVersionContent(
-	vt: VersionBinding,
-	entityId: number,
-	versionId: number
-): Promise<{ existed: boolean; priorAiChat: number | null }> {
-	const target = await db
-		.select({ id: vt.id })
-		.from(vt.table)
-		.where(and(eq(vt.fk, entityId), eq(vt.id, versionId)))
-		.limit(1);
-	if (target.length === 0) return { existed: false, priorAiChat: null };
-
-	// Rewind: drop everything recorded after this turn.
-	await db.delete(vt.table).where(and(eq(vt.fk, entityId), gt(vt.id, versionId)));
-
-	// Drop the AI response, keep the user's message.
-	await db
-		.update(vt.table)
-		.set({ content: null, ai_feedback: null })
-		.where(and(eq(vt.fk, entityId), eq(vt.id, versionId)));
-
-	// The prior version's chat becomes the live thread again.
-	const prior = await db
+async function latestAiChat(vt: VersionBinding, entityId: number): Promise<number | null> {
+	const rows = await db
 		.select({ ai_chat: vt.table.ai_chat })
 		.from(vt.table)
-		.where(and(eq(vt.fk, entityId), lt(vt.id, versionId)))
+		.where(and(eq(vt.fk, entityId), isNotNull(vt.table.ai_chat)))
 		.orderBy(desc(vt.id))
 		.limit(1);
-	return { existed: true, priorAiChat: prior[0]?.ai_chat ?? null };
+	return rows[0]?.ai_chat ?? null;
 }
 
-/** Delete versions strictly AFTER a given id (rollback-then-save trim). */
+/** Newest remaining content in the trail — null when nothing is left. */
+async function latestContent(vt: VersionBinding, entityId: number): Promise<string | null> {
+	const rows = await db
+		.select({ content: vt.table.content })
+		.from(vt.table)
+		.where(and(eq(vt.fk, entityId), isNotNull(vt.table.content)))
+		.orderBy(desc(vt.id))
+		.limit(1);
+	return rows[0]?.content ?? null;
+}
+
+/**
+ * Delete versions strictly AFTER a given id (rollback-then-save trim). Returns
+ * the newest content that survives, which is what the saved edit should be
+ * compared against — comparing it to the entity's committed value instead would
+ * record a redundant duplicate whenever the applicant rewinds to an older
+ * version and saves it unchanged.
+ */
 export async function trimVersionsAfter(
 	vt: VersionBinding,
 	entityId: number,
 	afterId: number
-): Promise<void> {
+): Promise<{ remainingContent: string | null }> {
 	await db.delete(vt.table).where(and(eq(vt.fk, entityId), gt(vt.id, afterId)));
+	return { remainingContent: await latestContent(vt, entityId) };
 }
 
 /**
  * Delete a version AND everything after it (revert-to-before-this-version).
- * Reports whether the target existed and returns the last remaining version's
- * ai_chat pointer + content, so the caller can restore the entity's ai_chat
- * reference. Used by the "replace this version" followup path.
+ * Reports whether the target existed, the thread pointer that survives it, and
+ * the newest content left behind, so the caller can restore the entity's
+ * `ai_chat` reference. Used by the "replace this version" followup path.
  *
- * Also reports the removed row's `source`: when the trim leaves nothing behind
- * there is no thread to follow up on, and the caller has to restart the same
- * *kind* of turn from scratch (see the followup endpoints' restart path).
+ * Also reports the removed row's `source`: when the trim leaves no thread
+ * behind there is nothing to follow up on, and the caller has to restart the
+ * same *kind* of turn from scratch (see the followup endpoints' restart path).
  */
 export async function trimVersionsFrom(
 	vt: VersionBinding,
@@ -243,7 +242,8 @@ export async function trimVersionsFrom(
 ): Promise<{
 	existed: boolean;
 	removedSource: VersionSource | null;
-	last: { ai_chat: number | null; content: string | null } | null;
+	aiChatId: number | null;
+	remainingContent: string | null;
 }> {
 	const target = await db
 		.select({ id: vt.id, source: vt.table.source })
@@ -251,71 +251,100 @@ export async function trimVersionsFrom(
 		.where(and(eq(vt.fk, entityId), eq(vt.id, fromId)))
 		.limit(1);
 	if (target.length === 0) {
-		return { existed: false, removedSource: null, last: null };
+		return { existed: false, removedSource: null, aiChatId: null, remainingContent: null };
 	}
 
 	await db.delete(vt.table).where(and(eq(vt.fk, entityId), gte(vt.id, fromId)));
 
-	const last = await db
-		.select({ ai_chat: vt.table.ai_chat, content: vt.table.content })
-		.from(vt.table)
-		.where(eq(vt.fk, entityId))
-		.orderBy(desc(vt.id))
-		.limit(1);
 	return {
 		existed: true,
 		removedSource: (target[0].source as VersionSource) ?? null,
-		last: last[0] ?? null
+		aiChatId: await latestAiChat(vt, entityId),
+		remainingContent: await latestContent(vt, entityId)
 	};
 }
 
+/** How much of a turn a delete takes with it. */
+export type DeleteScope =
+	/** Drop the AI's reply and keep the applicant's message, so it can be resent. */
+	| 'response'
+	/** Drop the whole turn, message included. */
+	| 'turn';
+
+export type DeleteOutcome = {
+	existed: boolean;
+	/** Whether the turn's message survived — the entry stays, empty of a reply. */
+	keptMessage: boolean;
+	/** The thread pointer the entity should now hold (null = no thread left). */
+	aiChatId: number | null;
+	/** The newest content left in the trail, for a caller that has to rewind. */
+	liveContent: string | null;
+	/**
+	 * Whether the entity's committed field (answer / content / STAR columns) has
+	 * to be rewound to `liveContent`. True only when what it holds was one of the
+	 * versions this delete removed — a deliberate "use as answer" pick of some
+	 * *other* version is not disturbed by a delete further down the thread.
+	 */
+	rewind: boolean;
+};
+
 /**
- * Per-turn "delete this AI response". If the turn carries a user message, keep
- * the message (clearVersionContent) so it can be regenerated. Otherwise — a
- * message-less first draft or standalone review — delete it and everything
- * after, rewinding to the last remaining version. Returns what the caller
- * should write to the entity: the live ai_chat pointer, and, for a full delete,
- * the content the committed field (answer/content) should rewind to (null =
- * clear, back to the empty state). `keptMessage` tells the caller whether to
- * leave the committed field alone (message kept) or rewind it (full delete).
+ * Delete one entry from a version trail, rewinding the thread to just before it.
+ *
+ * The trail is linear — the editor renders it as one conversation and every
+ * later turn was written in reply to this one — so a delete always takes
+ * everything after it too. `scope` decides only how much of the *target* turn
+ * goes: `'response'` empties it of the AI's reply and its version while keeping
+ * the applicant's message as the new tail (edit it, send again), `'turn'`
+ * removes the row outright. A turn with no message of its own can only be
+ * deleted whole, so `'response'` falls back to `'turn'` there.
+ *
+ * `committedContent` is what the entity currently shows as its live text; it is
+ * only used to decide `rewind` (see DeleteOutcome).
  */
-export async function deleteResponse(
+export async function deleteVersionEntry(
 	vt: VersionBinding,
 	entityId: number,
-	versionId: number
-): Promise<{
-	existed: boolean;
-	keptMessage: boolean;
-	aiChatId: number | null;
-	liveContent: string | null;
-}> {
-	const rows = await db
+	versionId: number,
+	opts: { scope: DeleteScope; committedContent: string | null }
+): Promise<DeleteOutcome> {
+	const target = await db
 		.select({ user_request: vt.table.user_request })
 		.from(vt.table)
 		.where(and(eq(vt.fk, entityId), eq(vt.id, versionId)))
 		.limit(1);
-	if (rows.length === 0) {
-		return {
-			existed: false,
-			keptMessage: false,
-			aiChatId: null,
-			liveContent: null
-		};
+	if (target.length === 0) {
+		return { existed: false, keptMessage: false, aiChatId: null, liveContent: null, rewind: false };
 	}
-	if (rows[0].user_request) {
-		const { priorAiChat } = await clearVersionContent(vt, entityId, versionId);
-		return {
-			existed: true,
-			keptMessage: true,
-			aiChatId: priorAiChat,
-			liveContent: null
-		};
+
+	// Read what is about to disappear before it does, so the caller can tell
+	// whether the entity's live text was one of these versions.
+	const removed = await db
+		.select({ content: vt.table.content })
+		.from(vt.table)
+		.where(and(eq(vt.fk, entityId), gte(vt.id, versionId)));
+
+	const keptMessage = opts.scope === 'response' && !!target[0].user_request;
+
+	if (keptMessage) {
+		await db.delete(vt.table).where(and(eq(vt.fk, entityId), gt(vt.id, versionId)));
+		// The message stays; the reply, its version and the chat that produced it
+		// go, so the next send chains from the parent turn rather than the
+		// discarded one.
+		await db
+			.update(vt.table)
+			.set({ content: null, ai_feedback: null, ai_chat: null })
+			.where(and(eq(vt.fk, entityId), eq(vt.id, versionId)));
+	} else {
+		await db.delete(vt.table).where(and(eq(vt.fk, entityId), gte(vt.id, versionId)));
 	}
-	const { last } = await trimVersionsFrom(vt, entityId, versionId);
+
+	const committed = opts.committedContent;
 	return {
 		existed: true,
-		keptMessage: false,
-		aiChatId: last?.ai_chat ?? null,
-		liveContent: last?.content ?? null
+		keptMessage,
+		aiChatId: await latestAiChat(vt, entityId),
+		liveContent: await latestContent(vt, entityId),
+		rewind: !!committed && removed.some((r) => r.content === committed)
 	};
 }

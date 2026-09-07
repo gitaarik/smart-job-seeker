@@ -47,7 +47,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	// yet". Only generate/advice can start a thread with a message attached.
 	let restartMode: 'generate' | 'advice' | null = null;
 	if (replaceVersionId) {
-		const { existed, removedSource, last } = await trimVersionsFrom(
+		const { existed, removedSource, aiChatId } = await trimVersionsFrom(
 			QUESTION_VERSIONS,
 			questionId,
 			replaceVersionId
@@ -63,10 +63,10 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		await db
 			.update(application_questions)
 			.set({
-				ai_chat_id: last?.ai_chat ?? null
+				ai_chat_id: aiChatId
 			})
 			.where(eq(application_questions.id, questionId));
-		if (!last?.ai_chat) {
+		if (!aiChatId) {
 			restartMode = removedSource === 'ai_advice' ? 'advice' : 'generate';
 		}
 	}

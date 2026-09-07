@@ -24,12 +24,43 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { execSync } from 'child_process';
+import { unlinkSync, writeFileSync } from 'fs';
 import { loginViaUI, useBrowser } from './browser';
 
 /** The test user's seeded application, which already has one of each text. */
 const APP_ID = 16;
 const PROBE = 'E2E composer probe — safe to delete';
 const EDIT_PROBE = 'E2E inline-edit probe — safe to delete';
+const DELETE_PROBE = 'E2E delete probe — safe to delete';
+
+/**
+ * Run SQL against the dev database.
+ *
+ * Used by the delete suite to plant one advice turn. That state — a version row
+ * with feedback but no content — is only reachable through a real generation,
+ * and this file deliberately spends no tokens (see the header), so the row is
+ * seeded instead. Everything the test then asserts still goes through the UI
+ * and the real form actions. Piped from a file because the statements carry
+ * quotes of their own.
+ */
+function sql(query: string): string {
+	const file = `/tmp/sjs-e2e-${Date.now()}-${Math.random().toString(36).slice(2)}.sql`;
+	writeFileSync(file, query);
+	try {
+		return execSync(
+			`npx dotenvx run --quiet -- sh -c 'docker compose exec -T database ` +
+				`psql -U \${SJS_DB_USER:-postgres} -d \${SJS_DB_DATABASE:-smartjobseeker} -t -A' < ${file}`,
+			{
+				cwd: process.env.SJS_CLOUD_DIR || `${process.cwd()}/..`,
+				encoding: 'utf-8',
+				shell: '/bin/bash'
+			}
+		).trim();
+	} finally {
+		unlinkSync(file);
+	}
+}
 
 describe('texts composer — no AI thread yet', () => {
 	const b = useBrowser();
@@ -277,5 +308,103 @@ describe('texts composer — editing a version inline', () => {
 		await b.page.waitForLoadState('networkidle');
 
 		expect(await b.page.getByText(EDIT_PROBE).count()).toBe(0);
+	});
+});
+
+/**
+ * Deleting is how you back out of a turn, so it has to reach every part of one.
+ * It used to sit on the latest *version* only, which left an advice turn — the
+ * common "ask a question first" opener — with no affordance at all: no version,
+ * so no box, so no delete, and a thread pointer that hid the starter chips
+ * behind a composer that could only carry the conversation forward.
+ */
+describe('texts composer — deleting a turn', () => {
+	const b = useBrowser();
+
+	const V1 = 'Delete probe version one, typed by hand so this spends no token.';
+	const V2 = 'Delete probe version two, worded nothing like the first one was.';
+	let questionId = 0;
+
+	it('writes two versions by hand', async () => {
+		await loginViaUI(b.page);
+		await b.page.goto(`/applications/${APP_ID}/texts`);
+		await b.page.waitForLoadState('networkidle');
+
+		await b.page.getByRole('button', { name: /^Add$/ }).first().click();
+		await b.page.getByRole('button', { name: /Application Question/i }).click();
+		await b.page.locator('#new-question').fill(DELETE_PROBE);
+		await b.page.getByRole('button', { name: /Add & open editor/i }).click();
+		await b.page.waitForURL('**/texts/questions/**', { timeout: 10000 });
+		questionId = Number(b.page.url().split('/').pop());
+		expect(questionId).toBeGreaterThan(0);
+
+		for (const version of [V1, V2]) {
+			await b.page.getByRole('button', { name: /Write \/ paste my own version/i }).click();
+			await b.page.locator('[contenteditable="true"]').last().fill(version);
+			await b.page.getByRole('button', { name: /Save my version/i }).click();
+			await b.page.waitForLoadState('networkidle');
+			await b.page.waitForTimeout(400);
+		}
+
+		expect(sql(`SELECT count(*) FROM question_versions WHERE question = ${questionId}`)).toBe('2');
+		expect(sql(`SELECT answer FROM application_questions WHERE id = ${questionId}`)).toBe(V2);
+	});
+
+	it('asks before dropping a version, and rewinds the answer with it', async () => {
+		await b.page.reload();
+		await b.page.waitForLoadState('networkidle');
+
+		await b.page.getByRole('button', { name: 'Delete version' }).click();
+		// A version is going, so it says so rather than acting on the click.
+		expect(await b.page.getByText(/removes 1 version/i).isVisible()).toBe(true);
+		await b.page.getByRole('button', { name: /^Delete$/ }).click();
+		await b.page.waitForLoadState('networkidle');
+		await b.page.waitForTimeout(600);
+
+		expect(sql(`SELECT count(*) FROM question_versions WHERE question = ${questionId}`)).toBe('1');
+		// The committed answer must not keep showing text the trail no longer has.
+		expect(sql(`SELECT answer FROM application_questions WHERE id = ${questionId}`)).toBe(V1);
+	});
+
+	it('offers a way out of an advice turn that produced no version', async () => {
+		sql(
+			`INSERT INTO question_versions (question, content, source, ai_feedback, user_request) ` +
+				`VALUES (${questionId}, NULL, 'ai_advice', 'Lead with the migration.', 'What should I emphasize?')`
+		);
+		sql(`UPDATE application_questions SET ai_chat_id = 1 WHERE id = ${questionId}`);
+		await b.page.reload();
+		await b.page.waitForLoadState('networkidle');
+
+		// A thread exists, so the composer can only carry it forward…
+		expect(await b.page.getByRole('button', { name: 'Get advice' }).count()).toBe(0);
+		// …the review button follows the latest *version*, not the last entry, so
+		// asking a question after a draft does not take it away…
+		expect(await b.page.getByRole('button', { name: 'AI review' }).isVisible()).toBe(true);
+		// …and both halves of the turn are what make backing out possible.
+		expect(await b.page.getByRole('button', { name: 'Delete response' }).isVisible()).toBe(true);
+		await b.page.getByRole('button', { name: 'Delete turn' }).click();
+		await b.page.waitForLoadState('networkidle');
+		await b.page.waitForTimeout(600);
+
+		// Nothing followed it and it held no version, so it went on one click.
+		expect(sql(`SELECT count(*) FROM question_versions WHERE question = ${questionId}`)).toBe('1');
+		// Thread pointer cleared, so the editor is offering to start over.
+		expect(sql(`SELECT ai_chat_id FROM application_questions WHERE id = ${questionId}`)).toBe('');
+		expect(await b.page.getByRole('button', { name: 'Get advice' }).isVisible()).toBe(true);
+	});
+
+	it('removes the probe question', async () => {
+		await b.page.goto(`/applications/${APP_ID}/texts`);
+		await b.page.waitForLoadState('networkidle');
+
+		await b.page
+			.locator('button', { hasText: DELETE_PROBE })
+			.getByLabel('Delete question')
+			.first()
+			.click();
+		await b.page.getByRole('button', { name: /^Confirm$/ }).click();
+		await b.page.waitForLoadState('networkidle');
+
+		expect(await b.page.getByText(DELETE_PROBE).count()).toBe(0);
 	});
 });

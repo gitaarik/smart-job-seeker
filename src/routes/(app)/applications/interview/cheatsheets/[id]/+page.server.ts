@@ -8,8 +8,9 @@ import { touchProfile } from '$lib/server/profile/touch-profile';
 import {
 	buildConversation,
 	CHEATSHEET_VERSIONS,
+	type DeleteScope,
 	type ConversationEntry,
-	deleteResponse,
+	deleteVersionEntry,
 	ensureBaselineVersion,
 	recordVersionIfChanged,
 	trimVersionsAfter,
@@ -107,16 +108,25 @@ export const actions: Actions = {
 		const source: VersionSource =
 			sourceRaw === 'ai_generation' || sourceRaw === 'ai_revision' ? sourceRaw : 'manual_edit';
 
-		if (deleteAfterVersionId) {
-			const afterId = parseInt(deleteAfterVersionId as string);
-			if (!isNaN(afterId)) {
-				await trimVersionsAfter(CHEATSHEET_VERSIONS, cheatSheetId, afterId);
-			}
-		}
-
 		// Normalize the pre-existing (possibly HTML) content to the Markdown the
 		// trail stores, so the baseline round-trips with later versions.
 		const previous = htmlToMarkdown(sheet.content) || null;
+
+		// Rewinding onto an earlier version makes *that* version what the save is a
+		// change to, not the sheet the trimmed versions had left behind.
+		let previousContent = previous;
+		if (deleteAfterVersionId) {
+			const afterId = parseInt(deleteAfterVersionId as string);
+			if (!isNaN(afterId)) {
+				const { remainingContent } = await trimVersionsAfter(
+					CHEATSHEET_VERSIONS,
+					cheatSheetId,
+					afterId
+				);
+				previousContent = remainingContent;
+			}
+		}
+
 		await ensureBaselineVersion(CHEATSHEET_VERSIONS, cheatSheetId, previous);
 
 		await db
@@ -130,7 +140,7 @@ export const actions: Actions = {
 		await recordVersionIfChanged(CHEATSHEET_VERSIONS, {
 			entityId: cheatSheetId,
 			newContent: content,
-			previousContent: previous,
+			previousContent,
 			source
 		});
 
@@ -161,21 +171,23 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	// Delete a turn's AI response but keep the user's message (rewind to it), or,
-	// for a message-less turn, delete it and rewind the sheet to the last version.
-	clearResponse: async ({ request, locals, cookies, params }) => {
+	// Remove one entry from the sheet's version trail, rewinding the thread to
+	// just before it. `scope` says whether the applicant's own message survives.
+	deleteEntry: async ({ request, locals, cookies, params }) => {
 		const owned = await loadOwnedSheet(locals, cookies, params.id);
 		if ('fail' in owned) return owned.fail;
-		const { cheatSheetId, profileId } = owned;
+		const { sheet, cheatSheetId, profileId } = owned;
 
 		const formData = await request.formData();
 		const versionId = parseInt(formData.get('versionId') as string);
 		if (isNaN(versionId)) return fail(400, { error: 'Invalid version' });
+		const scope: DeleteScope = formData.get('scope') === 'response' ? 'response' : 'turn';
 
-		const { existed, keptMessage, aiChatId, liveContent } = await deleteResponse(
+		const { existed, aiChatId, liveContent, rewind } = await deleteVersionEntry(
 			CHEATSHEET_VERSIONS,
 			cheatSheetId,
-			versionId
+			versionId,
+			{ scope, committedContent: htmlToMarkdown(sheet.content) || null }
 		);
 		if (!existed) return fail(404, { error: 'Version not found' });
 
@@ -183,9 +195,9 @@ export const actions: Actions = {
 			.update(cheat_sheets)
 			.set({
 				ai_chat_id: aiChatId,
-				// Keep the content when a message was kept (regenerate resets it);
-				// rewind it to the last remaining version on a full delete.
-				...(keptMessage ? {} : { content: liveContent })
+				// The sheet only moves when the delete took the version it was
+				// showing; a deliberate pick further back stands.
+				...(rewind ? { content: liveContent, date_updated: new Date() } : {})
 			})
 			.where(eq(cheat_sheets.id, cheatSheetId));
 

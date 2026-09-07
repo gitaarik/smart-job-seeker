@@ -8,7 +8,7 @@
 	import Card from '../../../../components/Card.svelte';
 	import ConversationTimeline from '$lib/components/conversation/ConversationTimeline.svelte';
 	import AutoGrowTextarea from '$lib/components/AutoGrowTextarea.svelte';
-	import type { VersionSource } from '$lib/server/ai-chat/entity-versions';
+	import type { DeleteScope, VersionSource } from '$lib/server/ai-chat/entity-versions';
 	import { serializeStarMarkdown } from '$lib/interview/star';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -204,11 +204,13 @@
 		await invalidateAll();
 	}
 
-	// Delete a turn's AI response but keep the message (rewind to it).
-	async function onClearResponse(versionId: number) {
+	// Remove one entry from the version trail, rewinding the thread to just
+	// before it. 'response' keeps the message that produced it.
+	async function onDelete(versionId: number, scope: DeleteScope) {
 		const fd = new FormData();
 		fd.set('versionId', String(versionId));
-		await postAction('clearResponse', fd);
+		fd.set('scope', scope);
+		await postAction('deleteEntry', fd);
 		await invalidateAll();
 	}
 
@@ -467,7 +469,7 @@
 			{onSendFollowup}
 			{onSaveVersion}
 			{onApplyVersion}
-			{onClearResponse}
+			{onDelete}
 			currentContent={data.currentStar}
 			applyNoun="story"
 		/>
