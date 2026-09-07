@@ -57,8 +57,71 @@ vi.mock('@langchain/groq', () => ({
 	}
 }));
 
-import { generateChatCompletion } from '../llm';
+import { generateChatCompletion, generateChatCompletionTracked } from '../llm';
 import { llmCache } from '../llm/cache';
+
+describe('cached input tokens', () => {
+	beforeEach(async () => {
+		vi.clearAllMocks();
+		await llmCache.clear();
+	});
+
+	// Groq fills usage_metadata but omits `input_token_details` from it, putting
+	// the cache read in the raw OpenAI-compatible shape on response_metadata
+	// instead. Reading only the standard path scored every Groq call as
+	// uncached, which is how 155M half-price tokens went unrecorded across an
+	// entire month. Probed against the live API 2026-09-07.
+	it('reads a Groq cache hit off response_metadata', async () => {
+		mockInvoke.mockResolvedValueOnce(
+			new AIMessage({
+				content: 'OK',
+				usage_metadata: { input_tokens: 30090, output_tokens: 22, total_tokens: 30112 },
+				response_metadata: {
+					usage: {
+						prompt_tokens: 30090,
+						completion_tokens: 22,
+						prompt_tokens_details: { cached_tokens: 29952 }
+					}
+				}
+			})
+		);
+
+		const result = await generateChatCompletionTracked([{ role: 'user', content: 'hi' }]);
+		expect(result.usage?.cachedInputTokens).toBe(29952);
+	});
+
+	it('reports zero for a provider that says nothing about caching', async () => {
+		mockInvoke.mockResolvedValueOnce(
+			new AIMessage({
+				content: 'OK',
+				usage_metadata: { input_tokens: 12, output_tokens: 3, total_tokens: 15 }
+			})
+		);
+
+		const result = await generateChatCompletionTracked([{ role: 'user', content: 'no cache' }]);
+		expect(result.usage?.cachedInputTokens).toBe(0);
+	});
+
+	// The standard shape has to keep winning, or fixing Groq would quietly
+	// re-break every provider that reports it where LangChain says to.
+	it('still prefers the standard input_token_details path', async () => {
+		mockInvoke.mockResolvedValueOnce(
+			new AIMessage({
+				content: 'OK',
+				usage_metadata: {
+					input_tokens: 500,
+					output_tokens: 5,
+					total_tokens: 505,
+					input_token_details: { cache_read: 400 }
+				},
+				response_metadata: { usage: { prompt_tokens_details: { cached_tokens: 111 } } }
+			})
+		);
+
+		const result = await generateChatCompletionTracked([{ role: 'user', content: 'both' }]);
+		expect(result.usage?.cachedInputTokens).toBe(400);
+	});
+});
 
 describe('generateChatCompletion', () => {
 	beforeEach(async () => {

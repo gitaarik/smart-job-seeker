@@ -477,9 +477,24 @@ function extractTokenUsage(result: any): TokenUsage | null {
 			inputTokens: usage.input_tokens ?? 0,
 			outputTokens: usage.output_tokens ?? 0,
 			totalTokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
-			// Standard LangChain shape. Providers that don't cache omit the whole
-			// `input_token_details` object rather than reporting a zero.
-			cachedInputTokens: usage.input_token_details?.cache_read ?? 0
+			// Standard LangChain shape first. Providers that don't cache omit the
+			// whole `input_token_details` object rather than reporting a zero.
+			//
+			// Groq is neither: it caches, discounts, and reports — just not here.
+			// It fills `usage_metadata` (so this branch returns) while leaving
+			// `input_token_details` off it entirely, and puts the number in the raw
+			// OpenAI-compatible shape on response_metadata instead. Reading only the
+			// standard path recorded 0 cached tokens on every Groq call ever made,
+			// against an August 2026 invoice billing 155M of them at half price.
+			//
+			// Probed 2026-09-07 on gpt-oss-120b: a 30k-token prefix repeated three
+			// times reported cached_tokens 0, 0, then 29952, with prompt_time
+			// falling 1.27s -> 0.04s on the hit. A 4k prefix never cached at all, so
+			// there is a size floor as well as a warm-up.
+			cachedInputTokens:
+				usage.input_token_details?.cache_read ??
+				result?.response_metadata?.usage?.prompt_tokens_details?.cached_tokens ??
+				0
 		};
 	}
 
