@@ -1477,14 +1477,24 @@ Be STRICT about the following:
 
 Return ONLY the job skill strings (copied exactly from the provided list) that the candidate matches.
 Do NOT return the candidate's skill names — return the job's skill names.`,
-		user_prompt: `Here are the skills from the job listing:
-{{job.skills}}
+		// Profile FIRST, job skills last, and it matters for the bill rather than
+		// the answer. Groq caches a repeated prompt PREFIX at half price, and this
+		// prompt runs once per job against an unchanging profile: with the job's
+		// skills on top, the cacheable prefix ended after the system prompt and the
+		// 60-90k-char blob under it was re-read at full price every time. Over
+		// August 2026 the invoice cached 155M of 443M input tokens, which is close
+		// to `score_job_match` (profile-first) alone and leaves nothing for this
+		// one. Anything that varies per job belongs BELOW the blob.
+		user_prompt: `Candidate Profile:
+\${data}
+
+---
+
+Here are the skills from the job listing:
+\${job.skills}
 
 Which of these job skills does the candidate have? Only include skills where the candidate has clear, demonstrable experience — not vague or generic matches.
-Return the matched skills as a JSON object with a "matched_skills" array containing the exact job skill strings from the list above.
-
-Candidate Profile:
-{{profile.data}}`
+Return the matched skills as a JSON object with a "matched_skills" array containing the exact job skill strings from the list above.`
 	},
 
 	tailor_resume_selection: {

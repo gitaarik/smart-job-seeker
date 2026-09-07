@@ -74,11 +74,17 @@ export function applySkillVisibility(
  * `documentSafe` drops skills the applicant keeps off their documents. Callers
  * that generate user-facing text set it; anything analysing the applicant must
  * not, or it reasons about a profile smaller than the real one.
+ *
+ * `exclude` is the same filter from the other end: keep everything EXCEPT these
+ * keys. It exists because `fields` fails unsafely for a caller that wants most
+ * of the blob — a key added to the export later is silently absent from an
+ * allow-list, and the prompt quietly stops seeing evidence it used to have.
+ * Applied after `fields`, so passing both means "these, minus those".
  */
 export async function loadProfileData(
 	profileId: number,
 	fields?: string[],
-	options?: { documentSafe?: boolean }
+	options?: { documentSafe?: boolean; exclude?: string[] }
 ): Promise<ProfileData> {
 	let record = await db.query.collected_data.findFirst({
 		where: eq(collected_data.profile_id, profileId),
@@ -130,8 +136,75 @@ export async function loadProfileData(
 		}
 	}
 
+	if (options?.exclude?.length) {
+		const drop = new Set(options.exclude);
+		dataJson = Object.fromEntries(Object.entries(dataJson).filter(([k]) => !drop.has(k)));
+		if (schemaJson.fields || schemaJson.relations) {
+			const filteredSchema: Record<string, unknown> = { ...schemaJson };
+			if (schemaJson.fields) {
+				filteredSchema.fields = Object.fromEntries(
+					Object.entries(schemaJson.fields).filter(([k]) => !drop.has(k))
+				);
+			}
+			if (schemaJson.relations) {
+				filteredSchema.relations = Object.fromEntries(
+					Object.entries(schemaJson.relations).filter(([k]) => !drop.has(k))
+				);
+			}
+			schemaJson = filteredSchema;
+		}
+	}
+
 	return { data: dataJson, schema: schemaJson };
 }
+
+/**
+ * Blob keys that can never answer "does the candidate have this skill", removed
+ * from `extract_matched_skills` so that prompt stops paying for them once per
+ * job. Salary rows are excluded from match scoring by design, references are
+ * somebody else's prose about the applicant, and the rest is contact PII this
+ * question has no use for.
+ *
+ * A DROP list rather than a keep list, and that is the whole design: recall is
+ * the sensitive direction here, so a field added to the export later must
+ * arrive in this prompt by default and be removed deliberately, not go missing
+ * because nobody remembered to add it to an allow-list.
+ *
+ * ## Why it stops here
+ *
+ * The obvious bigger cut is `cheat_sheets` + `project_stories`, 33% of the
+ * compact blob between them. Measured instead of assumed (12 replayed pairs,
+ * `temperature: 0`, against the pre-change prompt as baseline):
+ *
+ *   compact_full     lost 14  gained 15   21.1% smaller   <- noise floor
+ *   drop_never       lost 12  gained  9   31.6% smaller   <- this list
+ *   drop_cheatsheets lost 18  gained  8   46.5% smaller
+ *   drop_stories     lost 16  gained  9   42.4% smaller
+ *   drop_both        lost 24  gained 10   57.4% smaller
+ *
+ * `compact_full` changes no content at all, only whitespace and the position of
+ * the job-skill list, and it still disagrees with the baseline 14 times: that is
+ * this prompt's sensitivity to formatting, not a regression, and it is the bar
+ * everything else has to clear. This list sits under it. Dropping cheat sheets
+ * or stories does not, which fits what those fields hold — a skill named only in
+ * an interview note or a STAR story is exactly the recall the LLM pass exists to
+ * find, since `getProfileSkills` reads `tech_skills` and `languages` alone.
+ */
+export const NON_SKILL_FIELDS = [
+	'email_address',
+	'github_profile',
+	'linkedin_profile',
+	'location',
+	'location_timezone',
+	'location_url',
+	'name',
+	'nationality',
+	'personal_website',
+	'phone_number',
+	'references',
+	'salary_expectations',
+	'stackoverflow_profile'
+];
 
 /** What a trim pass removed, for the note appended to the rendered blob. */
 export interface ProfileTrim {

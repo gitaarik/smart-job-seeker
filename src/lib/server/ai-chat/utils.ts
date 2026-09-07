@@ -271,6 +271,14 @@ export async function createAndGenerateAiChat(
 		/** Top-level profile data keys to include. If omitted, all data is included. */
 		profileDataFields?: string[];
 		/**
+		 * Top-level profile data keys to REMOVE, applied after
+		 * `profileDataFields`. For a prompt that wants nearly the whole blob but
+		 * demonstrably not one or two parts of it, this is the safe direction to
+		 * express that: an allow-list silently starves the prompt the next time
+		 * the export grows a field. See NON_SKILL_FIELDS in profile-data.ts.
+		 */
+		profileDataExclude?: string[];
+		/**
 		 * Evidence to assemble for this generation — which sources, what it's
 		 * about, how big a budget. Assembled here and merged into the interpolation
 		 * variables, so a call site declares intent instead of hand-wiring
@@ -364,7 +372,8 @@ export async function createAndGenerateAiChat(
 		// off documents. Everything else — scoring above all — needs the whole
 		// profile, or it reports a skill the applicant just added as a gap.
 		const profileBlob = await loadProfileData(profileId, profileDataFields, {
-			documentSafe: WRITING_PROMPT_KEYS.has(promptKey)
+			documentSafe: WRITING_PROMPT_KEYS.has(promptKey),
+			exclude: options?.profileDataExclude
 		});
 		const schemaJson = profileBlob.schema;
 		const dataJson = profileBlob.data;

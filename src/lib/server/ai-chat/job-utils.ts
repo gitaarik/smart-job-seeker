@@ -11,6 +11,12 @@ import { eq } from 'drizzle-orm';
 import { search_tasks } from '$lib/server/db/schema';
 
 /**
+ * The options bag `createAndGenerateAiChat` accepts, derived rather than
+ * restated so this cannot drift from the thing it forwards to.
+ */
+export type AiChatOptions = NonNullable<Parameters<typeof createAndGenerateAiChat>[4]>;
+
+/**
  * Result type for job scraping AI chat operations
  */
 export interface JobScrapingAiChatResult<T> {
@@ -44,15 +50,24 @@ export async function getProfileIdForSearchTask(searchTaskId: number): Promise<n
  * @param profileId - Profile whose `collected_data` seeds the prompt
  * @param promptKey - Key into `promptTemplates` in prompt-templates.ts
  * @param customVariables - Variables to interpolate into the prompt template
+ * @param options - Passed through to {@link createAndGenerateAiChat}; the
+ *   matcher uses `profileDataExclude` to narrow the blob per prompt
  * @returns Result with parsed response and aiChatId for database linking
  */
 export async function runProfileAiChat<T>(
 	profileId: number,
 	promptKey: string,
-	customVariables: Record<string, unknown>
+	customVariables: Record<string, unknown>,
+	options?: AiChatOptions
 ): Promise<JobScrapingAiChatResult<T>> {
 	try {
-		const result = await createAndGenerateAiChat(profileId, promptKey, customVariables);
+		const result = await createAndGenerateAiChat(
+			profileId,
+			promptKey,
+			customVariables,
+			undefined,
+			options
+		);
 
 		if (!result.success || !result.aiChat) {
 			return {
@@ -143,12 +158,14 @@ export async function createJobScrapingAiChat<T>(
  * @param profileId - User's profile ID
  * @param promptKey - Key into `promptTemplates` in prompt-templates.ts
  * @param customVariables - Variables to interpolate (job data, preferences, etc.)
+ * @param options - Passed through to {@link createAndGenerateAiChat}
  * @returns Result with parsed response and aiChatId for database linking
  */
 export async function createJobMatchingAiChat<T>(
 	profileId: number,
 	promptKey: string,
-	customVariables: Record<string, unknown>
+	customVariables: Record<string, unknown>,
+	options?: AiChatOptions
 ): Promise<JobScrapingAiChatResult<T>> {
-	return runProfileAiChat<T>(profileId, promptKey, customVariables);
+	return runProfileAiChat<T>(profileId, promptKey, customVariables, options);
 }
