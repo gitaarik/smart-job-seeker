@@ -246,3 +246,71 @@ describe('what the client is told before it sees a tool', () => {
 		}
 	});
 });
+
+describe('the version verbs', () => {
+	const kinds = ['letter', 'question', 'story', 'cheat_sheet'] as const;
+
+	it('can all be reached by an id', () => {
+		// Asserted here rather than at module load, where a throw would take the
+		// whole server down. A kind added without targeting would ship a tool
+		// whose id argument does not exist, and nothing else would notice.
+		for (const kind of kinds) {
+			const targeting = targetingFor(`add_${kind}_version`);
+			expect(targeting?.arg, kind).toBe('text_id');
+			expect(targeting?.listTool, kind).toBe('list_texts');
+		}
+	});
+
+	it('asks for the id, the whole text and a reason', () => {
+		const tool = byName.get('add_letter_version');
+		expect(tool?.inputSchema.required).toEqual([
+			'profile_id',
+			'text_id',
+			'letter_content',
+			'rationale'
+		]);
+	});
+
+	it('keeps each kind’s fields to itself', () => {
+		// The chat merges every live capability's fields into one object for the
+		// provider, so four capabilities all offering `content` would be one
+		// collision away from a story landing in a cover letter.
+		const fields = kinds.flatMap((kind) => Object.keys(CAPABILITIES[`add_${kind}_version`].fields));
+		expect(new Set(fields).size).toBe(fields.length);
+	});
+
+	it('says in every contract that the text does not change', () => {
+		for (const kind of kinds) {
+			expect(CAPABILITIES[`add_${kind}_version`].contract, kind).toMatch(/does not change the/i);
+		}
+	});
+
+	it('is annotated as adding rather than destroying', () => {
+		for (const kind of kinds) {
+			expect(byName.get(`add_${kind}_version`)?.annotations.destructiveHint, kind).toBe(false);
+		}
+	});
+});
+
+describe('the texts, in the tool list', () => {
+	it('offers both reads to a read key', async () => {
+		const read = await toolsFor('read');
+		const names = read.map((tool) => tool.name);
+		expect(names).toContain('list_texts');
+		expect(names).toContain('read_text');
+	});
+
+	it('is not one of the document tools', () => {
+		// The documents scope is about material the applicant COLLECTED. A cover
+		// letter is their own writing about their own record.
+		expect(DOCUMENT_TOOLS).not.toContain('list_texts');
+		expect(DOCUMENT_TOOLS).not.toContain('read_text');
+	});
+
+	it('tells a client that the areas list is not the whole truth', () => {
+		// APP_AREAS says Interview Prep and the application's documents have no
+		// tool here, which stopped being true. An agent that believes it refuses
+		// work it can do.
+		expect(instructionsFor()).toContain('list_texts');
+	});
+});

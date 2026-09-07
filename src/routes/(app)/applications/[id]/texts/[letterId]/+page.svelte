@@ -28,7 +28,8 @@
 		ai_generation: 'AI assisted letter',
 		ai_advice: 'AI recommendations',
 		ai_review: 'AI review',
-		ai_revision: 'AI revised letter'
+		ai_revision: 'AI revised letter',
+		agent_revision: 'Connected app revised letter'
 	};
 
 	let typeLabel = $derived(letterTypes[letter.letter_type] || letter.letter_type);

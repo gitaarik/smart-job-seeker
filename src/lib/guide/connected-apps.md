@@ -62,8 +62,9 @@ not be what runs you out of room.
 ## What may it see?
 
 - **Your own record** _(recommended)_ — your profile, your jobs, your
-  applications and their history. That includes what each attachment is
-  _called_, but not what it says.
+  applications and their history, and the texts you have written yourself: cover
+  letters, answers to application questions, interview stories and cheat sheets.
+  That includes what each attachment is _called_, but not what it says.
 - **Everything you have collected** — also the _text_ of what you attached and
   were sent: interview transcripts, recruiter emails, offers, uploaded
   documents.
@@ -96,6 +97,13 @@ forgotten about is visible rather than silent.
 ## What a connected app can't do
 
 It gets your record and the profile edits — not the whole product. Running job
-searches, writing tailored CVs and cover letters, interview and salary prep,
-share links, import and export all stay yours to do in the app. Ask a connected
-assistant for one of those and it should tell you so, and name the page.
+searches, writing tailored CVs, interview and salary prep, share links, import
+and export all stay yours to do in the app. Ask a connected assistant for one of
+those and it should tell you so, and name the page.
+
+Your written texts sit in between, and it is worth knowing exactly where. An app
+can read a cover letter, an answer, a story or a cheat sheet, and it can write a
+**new version** of one. That version lands in that text's own timeline, beside
+the ones the app's own editor writes, with a diff and a delete on it — and the
+text itself does not change. Until you save one of its versions, your letter
+says exactly what it said before.

@@ -105,6 +105,15 @@ function turnsToBaseMessages(turns: VersionTurn[], opts: HistoryOptions): BaseMe
 		// answer rather than as a verdict on it.
 		if (turn.source === 'ai_review' && !turn.user_request) {
 			messages.push(new HumanMessage(`Review the ${noun} and tell me what to improve.`));
+		} else if (turn.source === 'agent_revision' && !turn.user_request) {
+			// Narrated for the same reason a review is, and it carries no
+			// `user_request` for a stronger one: what the applicant asked an outside
+			// agent for was said to that agent, not to us, and putting it in their
+			// bubble here would be a message they never wrote in this thread. So the
+			// step is stated instead — without it `mergeMessageRuns` folds the
+			// agent's draft into the previous assistant turn, where it reads as
+			// something this editor produced.
+			messages.push(new HumanMessage(`An app I connected rewrote the ${noun}.`));
 		} else if (turn.user_request) {
 			messages.push(new HumanMessage(turn.user_request));
 		}

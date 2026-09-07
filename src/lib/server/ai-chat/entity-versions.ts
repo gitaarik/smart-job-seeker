@@ -13,7 +13,7 @@
  * and covered by unit tests.
  */
 import { dbDirect as db } from '$lib/server/db';
-import { and, asc, desc, eq, gt, gte, isNotNull } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gt, gte, inArray, isNotNull, max } from 'drizzle-orm';
 import {
 	cheat_sheet_versions,
 	letter_versions,
@@ -21,9 +21,20 @@ import {
 	story_versions
 } from '$lib/server/db/schema';
 
-/** Provenance of a version. Plain varchar in the DB; enforced here in TS. */
+/**
+ * Provenance of a version. Plain varchar in the DB; enforced here in TS.
+ *
+ * `agent_revision` is the one that did not come from this app: an outside agent
+ * wrote it through the MCP server, with no thread of ours behind it and no
+ * `ai_chat` row to point at. It is a separate value rather than another
+ * `ai_revision` because the badge it drives is the only thing on screen at the
+ * moment the applicant decides whether to keep the text, and "my editor wrote
+ * this" and "the agent I gave a key to wrote this" are not the same claim. The
+ * labels are typed `Record<VersionSource, string>` in all four editors, so
+ * adding one here is a compile error until each of them names it.
+ */
 export type VersionSource =
-	'manual_edit' | 'ai_generation' | 'ai_revision' | 'ai_review' | 'ai_advice';
+	'manual_edit' | 'ai_generation' | 'ai_revision' | 'ai_review' | 'ai_advice' | 'agent_revision';
 
 /** One entry in the reconstructed thread the editor renders. */
 export type ConversationEntry = {
@@ -102,6 +113,85 @@ export async function buildConversation(
 		userRequest: v.user_request,
 		date: v.date_created
 	}));
+}
+
+/** How many versions an entity has, and what the newest one is. */
+export interface VersionTrailSummary {
+	count: number;
+	latest: {
+		id: number;
+		content: string | null;
+		source: VersionSource;
+		date: Date | null;
+	};
+}
+
+/**
+ * The shape of several entities' trails, without reading any of them in full.
+ *
+ * What a list needs is "how many versions, and is the newest one the text this
+ * row actually holds" — which is two aggregates and one row per entity, not
+ * every version of every entity. Two queries rather than a lateral join
+ * because the second is bounded by the first: one row per entity, fetched by
+ * primary key.
+ *
+ * **Rows carrying no content are not counted and are never the newest.** An
+ * advice turn changed nothing, so it is a turn in the thread rather than a
+ * version of the text, and treating it as one would report the newest version
+ * as empty and the text as unchanged on the same breath. This is the rule
+ * `application-letter-followup.ts` already revises against — its "latest
+ * version" query carries `isNotNull(content)` — and the two must agree, or an
+ * agent revises one text while the editor revises another.
+ */
+export async function summarizeVersions(
+	vt: VersionBinding,
+	entityIds: number[]
+): Promise<Map<number, VersionTrailSummary>> {
+	const summaries = new Map<number, VersionTrailSummary>();
+	if (entityIds.length === 0) return summaries;
+
+	const grouped = await db
+		.select({ entity: vt.fk, versions: count(), latest: max(vt.id) })
+		.from(vt.table)
+		.where(and(inArray(vt.fk, entityIds), isNotNull(vt.table.content)))
+		.groupBy(vt.fk);
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const latestIds = (grouped as any[])
+		.map((row) => row.latest as number | null)
+		.filter((id): id is number => id !== null);
+	if (latestIds.length === 0) return summaries;
+
+	const newest = await db
+		.select({
+			id: vt.id,
+			entity: vt.fk,
+			content: vt.table.content,
+			source: vt.table.source,
+			date_created: vt.table.date_created
+		})
+		.from(vt.table)
+		.where(inArray(vt.id, latestIds));
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const byEntity = new Map((newest as any[]).map((row) => [row.entity as number, row]));
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	for (const row of grouped as any[]) {
+		const latest = byEntity.get(row.entity as number);
+		if (!latest) continue;
+		summaries.set(row.entity as number, {
+			count: Number(row.versions),
+			latest: {
+				id: latest.id,
+				content: latest.content,
+				source: latest.source as VersionSource,
+				date: latest.date_created
+			}
+		});
+	}
+
+	return summaries;
 }
 
 /**

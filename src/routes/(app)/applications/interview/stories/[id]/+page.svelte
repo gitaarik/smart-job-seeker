@@ -97,7 +97,8 @@
 		ai_generation: 'AI drafted story',
 		ai_advice: 'AI recommendations',
 		ai_review: 'AI review',
-		ai_revision: 'AI revised story'
+		ai_revision: 'AI revised story',
+		agent_revision: 'Connected app revised story'
 	};
 
 	async function apiGenerate(

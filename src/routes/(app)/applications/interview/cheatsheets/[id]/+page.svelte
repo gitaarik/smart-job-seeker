@@ -34,7 +34,8 @@
 		ai_generation: 'AI drafted sheet',
 		ai_advice: 'AI recommendations',
 		ai_review: 'AI review',
-		ai_revision: 'AI revised sheet'
+		ai_revision: 'AI revised sheet',
+		agent_revision: 'Connected app revised sheet'
 	};
 
 	const placeholder = 'Write or paste your cheat sheet here…';

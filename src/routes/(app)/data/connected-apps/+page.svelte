@@ -54,8 +54,9 @@
 			value: 'record',
 			label: 'Your own record (recommended)',
 			blurb:
-				'Your profile, your jobs, your applications and their history — including what each ' +
-				'entry is called, but not what it says.'
+				'Your profile, your jobs, your applications and their history, and the texts you ' +
+				'wrote yourself — cover letters, answers, stories, cheat sheets. Including what ' +
+				'each entry is called, but not what it says.'
 		},
 		{
 			value: 'documents',

@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { formatAbilityManifest, APP_AREAS } from '../ability-manifest';
 import { CAPABILITIES, type Capability } from '../capabilities';
 import { PROFILE_CAPABILITY_NAMES } from '../profile-capabilities';
+import { TEXT_CAPABILITY_NAMES, isTextCapability } from '../text-version-capabilities';
 import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/resources';
 
 const TEXT = formatAbilityManifest();
@@ -65,9 +66,26 @@ describe('formatAbilityManifest', () => {
 		// come out somewhere.
 		const generated = new Set<string>(PROFILE_CAPABILITY_NAMES);
 		for (const capability of Object.keys(CAPABILITIES) as Capability[]) {
-			if (generated.has(capability)) continue;
+			if (generated.has(capability) || isTextCapability(capability)) continue;
 			expect(TEXT, capability).toContain(CAPABILITIES[capability].title);
 		}
+	});
+
+	it('leaves out the verbs the assistant cannot reach', () => {
+		// The one exception to the rule above, and it is the same rule read
+		// carefully: this block is what the ASSISTANT can propose. The text-version
+		// verbs resolve from no page — a letter, a story and a cheat sheet each
+		// have a conversational editor of their own, which is where this happens in
+		// the app — so listing them would promise a verb the chat can never offer.
+		// A version of one that DOES resolve from a page has to be added here on
+		// purpose rather than by inheriting this exclusion.
+		for (const capability of TEXT_CAPABILITY_NAMES) {
+			expect(TEXT, capability).not.toContain(CAPABILITIES[capability].title);
+		}
+
+		// And the pages themselves are still named, which is the answer a person
+		// asking "can it rewrite my cover letter" should get.
+		expect(TEXT).toContain('/applications/interview');
 	});
 
 	it('says where each one becomes possible', () => {

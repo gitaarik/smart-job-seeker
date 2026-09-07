@@ -49,6 +49,12 @@ import {
 import { JOB_PAGE_DEFAULT, JOB_PAGE_MAX } from '$lib/server/jobs/profile-jobs';
 import { DOCUMENT_PAGE_DEFAULT, DOCUMENT_PAGE_MAX } from '$lib/server/documents/read';
 import {
+	TEXT_KIND_NAMES,
+	TEXT_PAGE_DEFAULT,
+	TEXT_PAGE_MAX,
+	TEXT_READ_CHARS
+} from '$lib/server/texts/profile-texts';
+import {
 	PROFILE_RESOURCE_NAMES,
 	PROFILE_RESOURCES,
 	type ProfileResource,
@@ -96,6 +102,8 @@ export const READ_TOOLS = [
 	'read_job',
 	'list_applications',
 	'read_application',
+	'list_texts',
+	'read_text',
 	'read_activity_entry',
 	'list_documents',
 	'read_document',
@@ -133,6 +141,12 @@ export const MCP_CAPABILITIES: Capability[] = [
 	...ENTITY_CAPABILITY_NAMES,
 	...CREATE_CAPABILITY_NAMES
 ];
+
+// The four version verbs are already in ENTITY_CAPABILITY_NAMES: they name a
+// row by id, so their targeting lives in `entities.ts` beside the job's and the
+// application's. A kind added there without targeting would ship a tool whose
+// id argument does not exist — asserted in tools.test.ts rather than here,
+// because a check that throws at module load takes the whole server with it.
 
 export function isMcpCapability(name: string): name is Capability {
 	return (MCP_CAPABILITIES as string[]).includes(name);
@@ -335,6 +349,10 @@ function writeTool(capability: Capability, parents?: string): McpTool {
 		properties[name] = jsonType(kind);
 	}
 
+	// Before the rationale, so the required list reads in the order the schema
+	// declares: which profile, which row, what to write, and why.
+	required.push(...(def.requiredFields ?? []));
+
 	properties.rationale = RATIONALE_PROPERTY;
 	required.push('rationale');
 
@@ -456,10 +474,11 @@ send keeps its value, and each skill list is replaced whole.`,
 		description: `The applicant's applications, newest first, with the job each one is for
 and where it stands.
 
-The id from here is what the three application tools take:
+The id from here is what the application tools take:
 edit_application_details for how and when it was sent,
-update_application_status for where it stands now, and add_activity_record,
-which files an entry UNDER an application rather than changing it.`,
+update_application_status for where it stands now, add_activity_record, which
+files an entry UNDER an application rather than changing it, and list_texts for
+the letters and question answers written on it.`,
 		inputSchema: {
 			type: 'object',
 			properties: {
@@ -485,7 +504,10 @@ first.
 
 Read the log before proposing an entry. An entry repeating something already
 there is the failure this tool exists to prevent — the chronology is read as
-evidence of what happened, and the same call logged twice reads as two calls.`,
+evidence of what happened, and the same call logged twice reads as two calls.
+
+What was WRITTEN for this application — the cover letter, the answers to its
+questions — is not here. That is list_texts, with this application_id.`,
 		inputSchema: {
 			type: 'object',
 			properties: {
@@ -496,6 +518,91 @@ evidence of what happened, and the same call logged twice reads as two calls.`,
 			additionalProperties: false
 		},
 		annotations: readToolAnnotations('Read one application')
+	},
+	list_texts: {
+		name: 'list_texts',
+		description: `The texts the applicant is drafting with the app's own AI editors: cover
+letters and answers to application questions, and — from Interview Prep — STAR
+stories and interview cheat sheets.
+
+Each is a text with an append-only timeline of versions beside it. The
+applicant keeps or discards versions from that timeline, which is why a version
+written by you changes nothing until they do.
+
+Two fields decide what is worth doing:
+- "latest_is_current" false means a version is ALREADY waiting that nobody has
+  taken. Do not write another on top of it.
+- "chars" is the length of the text as it stands, which is the newest version
+  where there is one and the saved text otherwise.
+
+Ids are per kind. Letter 12, question 12 and story 12 are three unrelated
+things, so an id is only ever usable with the kind it came back under. Note
+also that a letter's own type can be "cheat sheet" — that is a letter on an
+application, and it is not one of the Interview Prep cheat sheets.`,
+		inputSchema: {
+			type: 'object',
+			properties: {
+				profile_id: PROFILE_ID_PROPERTY,
+				kind: {
+					type: 'string',
+					enum: TEXT_KIND_NAMES as unknown as string[],
+					description: 'Only this kind. Omit for all four.'
+				},
+				application_id: {
+					type: 'integer',
+					description:
+						'Only the texts on this application, by the id from list_applications. ' +
+						'Letters and answers only — stories and cheat sheets belong to the ' +
+						'profile rather than to one application, so they are not returned.'
+				},
+				limit: {
+					type: 'integer',
+					description:
+						`How many of each kind, newest first. Default ${TEXT_PAGE_DEFAULT}, ` +
+						`max ${TEXT_PAGE_MAX}.`
+				}
+			},
+			required: ['profile_id'],
+			additionalProperties: false
+		},
+		annotations: readToolAnnotations('List their application texts')
+	},
+	read_text: {
+		name: 'read_text',
+		description: `One text in full, plus the shape of its version history.
+
+What comes back as "text" is what the app's own editor would revise: the newest
+version in the timeline, or the saved text where there is no timeline yet. When
+"latest_is_current" is false those are two different things — the newest version
+is not what the letter says, because nobody has taken it.
+
+"trail" is one line per version: where it came from, how long it was, and what
+the editor said about it. Version CONTENT is not returned — the current text is
+above it, and the applicant compares the rest in the app.
+
+Long texts come back in ${TEXT_READ_CHARS}-character slices; the result says
+whether there is more and at what offset to continue. A text longer than one
+slice cannot have a version written for it here at all: rewriting what you have
+only partly read would drop the rest.`,
+		inputSchema: {
+			type: 'object',
+			properties: {
+				profile_id: PROFILE_ID_PROPERTY,
+				kind: {
+					type: 'string',
+					enum: TEXT_KIND_NAMES as unknown as string[],
+					description: 'Which kind the id belongs to, from list_texts.'
+				},
+				text_id: { type: 'integer', description: 'The id from list_texts, for that kind.' },
+				offset: {
+					type: 'integer',
+					description: 'Where to resume, for a text longer than one slice. Default 0.'
+				}
+			},
+			required: ['profile_id', 'kind', 'text_id'],
+			additionalProperties: false
+		},
+		annotations: readToolAnnotations('Read one application text')
 	},
 	read_activity_entry: {
 		name: 'read_activity_entry',
@@ -684,7 +791,17 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
 		`This server is not the whole product, and most of it has no tool here: ` +
 			`${APP_AREAS.map((area) => `${area.name} (${area.path})`).join(', ')}. ` +
 			`When what they want is one of those, name it and say it is theirs to do, ` +
-			`rather than reporting that it cannot be done.`
+			`rather than reporting that it cannot be done.`,
+
+		// The one place that list is not the whole truth. Two of those areas are
+		// partly reachable — enough that an agent told they are out of bounds would
+		// refuse work it can do, and little enough that one told they are in bounds
+		// would promise a tailored CV it cannot write.
+		`Two of those overlap with tools here. The letters and answers on an ` +
+			`application's texts tab, and the stories and cheat sheets in Interview Prep, ` +
+			`are readable with list_texts and read_text, and each can take a NEW VERSION ` +
+			`— which is a proposal in that text's timeline, not a change to the text. The ` +
+			`rest of those pages, and everything else listed above, is theirs to do.`
 	].join('\n\n');
 }
 

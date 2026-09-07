@@ -14,6 +14,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { PROFILE_CAPABILITY_NAMES } from '../profile-capabilities';
+import { isTextCapability } from '../text-version-capabilities';
 
 let applicationRow: unknown = null;
 let jobRow: unknown = null;
@@ -112,6 +113,20 @@ vi.mock('$lib/server/db/schema', () => ({
 	// against, and these strings are what makes a `where` argument readable in an
 	// assertion. A new section failing here is the intended signal.
 	profiles: { id: 'profiles.id', user_id: 'profiles.user_id' },
+	// The four texts and their version trails, reached because the registry now
+	// carries the verb that appends a version to one. Placeholders like the rest:
+	// nothing in this file writes one, and the trail engine's own tests do.
+	application_letters: { id: 'application_letters.id' },
+	application_questions: { id: 'application_questions.id' },
+	project_stories: { id: 'project_stories.id' },
+	cheat_sheets: { id: 'cheat_sheets.id' },
+	letter_versions: { id: 'letter_versions.id', letter: 'letter_versions.letter' },
+	question_versions: { id: 'question_versions.id', question: 'question_versions.question' },
+	story_versions: { id: 'story_versions.id', story: 'story_versions.story' },
+	cheat_sheet_versions: {
+		id: 'cheat_sheet_versions.id',
+		cheat_sheet: 'cheat_sheet_versions.cheat_sheet'
+	},
 	work_experiences: { id: 'work_experiences.id', sort: 'work_experiences.sort' },
 	education: { id: 'education.id', sort: 'education.sort' },
 	side_projects: { id: 'side_projects.id', sort: 'side_projects.sort' },
@@ -1294,8 +1309,19 @@ describe('the registry as a whole', () => {
 		// five. It deliberately does NOT measure every capability at once — that
 		// is a state no route can reach, and the arrangements that ARE reachable
 		// are asserted below.
+		//
+		// The text-version verbs are out for the strongest form of that reason:
+		// they resolve from no page at all, so they are live on none of them. They
+		// are also the first capabilities written for MCP rather than for the chat,
+		// where a tool description is paid once per connection instead of per turn
+		// — which is why four contracts of that size can exist without this budget
+		// having an opinion. One of them becoming page-resolvable is a change that
+		// has to come back here.
 		const live = (Object.keys(CAPABILITIES) as Capability[])
-			.filter((capability) => !PROFILE_CAPABILITY_NAMES.includes(capability as never))
+			.filter(
+				(capability) =>
+					!PROFILE_CAPABILITY_NAMES.includes(capability as never) && !isTextCapability(capability)
+			)
 			.map((capability) => ({ capability, targets: [{ id: 1, label: 'x' }], current: {} }));
 
 		expect(renderCapabilityPrompt(live).length).toBeLessThanOrEqual(CAPABILITY_PROMPT_BUDGET_CHARS);

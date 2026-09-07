@@ -48,21 +48,35 @@ import {
 } from '$lib/server/ai-chat/capabilities';
 import { readProfileApplication } from '$lib/server/applications/profile-applications';
 import { readProfileJob } from '$lib/server/jobs/profile-jobs';
+import { TEXT_KINDS, readOwnedText, type TextKind } from '$lib/server/texts/profile-texts';
+import {
+	TEXT_CAPABILITY_NAMES,
+	kindForTextCapability,
+	type TextCapability
+} from '$lib/server/ai-chat/text-version-capabilities';
 
 /** A resolved row, or the sentence to hand back to the agent instead. */
 export type EntityResolution = { target: CapabilityTarget } | { error: string };
 
 export interface EntityTargeting {
-	entity: 'job' | 'application';
+	entity: 'job' | 'application' | TextKind;
 	/** The argument that names the row. Domain-named, because it is one. */
-	arg: 'job_id' | 'application_id';
+	arg: 'job_id' | 'application_id' | 'text_id';
 	/** The schema description for that argument. */
 	argDescription: string;
 	/** The tool that hands out ids, named in every refusal that needs one. */
-	listTool: 'list_jobs' | 'list_applications';
+	listTool: 'list_jobs' | 'list_applications' | 'list_texts';
 	resolve(id: number, actor: CapabilityActor): Promise<EntityResolution>;
-	/** Where a person changes this by hand — for a result that has to say so. */
-	page(id: number): { name: string; path: string };
+	/**
+	 * Where a person changes this by hand — for a result that has to say so.
+	 *
+	 * Takes the resolved target rather than its id, because for two of the four
+	 * text kinds the id is not enough: a cover letter's page is under the
+	 * application it belongs to, which only the row knows. Those resolvers put
+	 * the path on the target (see `CapabilityTarget.path`); a job and an
+	 * application still build theirs from the id and ignore the rest.
+	 */
+	page(target: CapabilityTarget): { name: string; path: string };
 	/**
 	 * The list the row lives on, named the way the sidebar names it.
 	 *
@@ -79,7 +93,7 @@ const jobTargeting: EntityTargeting = {
 		'Which job, by the id returned from list_jobs. Only jobs the applicant ' +
 		'added by hand can be changed; call read_job first to see whether this one can.',
 	listTool: 'list_jobs',
-	page: (id) => ({ name: 'job', path: `/jobs/${id}` }),
+	page: (target) => ({ name: 'job', path: `/jobs/${target.id}` }),
 	collection: { name: 'Jobs', path: '/jobs' },
 	resolve: async (id, actor) => {
 		const job = await readProfileJob(id, actor.profileId);
@@ -118,7 +132,7 @@ const applicationTargeting: EntityTargeting = {
 	arg: 'application_id',
 	argDescription: 'Which application, by the id returned from list_applications.',
 	listTool: 'list_applications',
-	page: (id) => ({ name: 'application', path: `/applications/${id}` }),
+	page: (target) => ({ name: 'application', path: `/applications/${target.id}` }),
 	collection: APPLICATION_COLLECTION,
 	resolve: async (id, actor) => {
 		const application = await readProfileApplication(id, actor.profileId);
@@ -142,6 +156,71 @@ const applicationTargeting: EntityTargeting = {
 };
 
 /**
+ * One kind of application text, named by an id that means nothing without it.
+ *
+ * The four kinds keep separate id spaces — letter 12, question 12 and story 12
+ * all exist and are unrelated — so unlike a job or an application, the id alone
+ * does not say what it names. The capability supplies the kind, which is the
+ * same answer `ContextEntity` gives for profile sections and for the same
+ * reason: seven of those share an id space too.
+ *
+ * Ownership is asked twice over, once per shape. A story and a cheat sheet
+ * carry `profile_id`; a letter and a question hang off an application and reach
+ * the profile through it. `readOwnedText` is where that split lives, and both
+ * halves end the same way — a row outside this profile reads exactly like one
+ * that was never there.
+ */
+function textTargeting(kind: TextKind): EntityTargeting {
+	const def = TEXT_KINDS[kind];
+
+	return {
+		entity: kind,
+		arg: 'text_id',
+		argDescription:
+			`Which ${def.noun}, by the id returned from list_texts for kind "${kind}". ` +
+			`Ids are per kind: the ${def.noun} numbered 12 has nothing to do with any ` +
+			`other kind's 12.`,
+		listTool: 'list_texts',
+		page: (target) => ({ name: def.noun, path: target.path ?? def.collection.path }),
+		collection: def.collection,
+		resolve: async (id, actor) => {
+			const row = await readOwnedText(kind, id, actor.profileId);
+			if (!row) {
+				return {
+					error:
+						`There is no ${def.noun} ${id} on this profile. Call list_texts with kind ` +
+						`"${kind}" for the ids you can use.`
+				};
+			}
+
+			// A letter or an answer is named by what it belongs to as much as by
+			// what it is: "Cover letter" alone names one of five on a profile, and
+			// the label is what the applicant reads in the notification and on the
+			// approval card. A story carries its own title and needs no help.
+			let label = row.label;
+			if (row.applicationId !== null) {
+				const application = await readProfileApplication(row.applicationId, actor.profileId);
+				if (application) {
+					label = `${row.label} — ${applicationLabel({
+						title: application.job_title,
+						company: application.job_company
+					})}`;
+				}
+			}
+
+			return { target: { id: row.id, label, path: row.path } };
+		}
+	};
+}
+
+const TEXT_TARGETING = Object.fromEntries(
+	TEXT_CAPABILITY_NAMES.map((capability) => [
+		capability,
+		textTargeting(kindForTextCapability(capability))
+	])
+) as Record<TextCapability, EntityTargeting>;
+
+/**
  * The hand-written capabilities, and what each one's id argument names.
  *
  * `add_activity_record` is the odd one and worth reading twice: its argument
@@ -155,7 +234,11 @@ export const ENTITY_TARGETING: Partial<Record<Capability, EntityTargeting>> = {
 	edit_job_skills: jobTargeting,
 	edit_application_details: applicationTargeting,
 	update_application_status: applicationTargeting,
-	add_activity_record: applicationTargeting
+	add_activity_record: applicationTargeting,
+	// Generated, one per kind. They are `add_` verbs that still name a row —
+	// the same shape as `add_activity_record`, whose argument names the
+	// application an entry is filed under rather than a row being changed.
+	...TEXT_TARGETING
 };
 
 export const ENTITY_CAPABILITY_NAMES = Object.keys(ENTITY_TARGETING) as Capability[];

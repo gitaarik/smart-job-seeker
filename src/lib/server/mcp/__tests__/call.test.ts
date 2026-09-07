@@ -216,6 +216,82 @@ vi.mock('$lib/server/documents/read', () => ({
 }));
 
 /**
+ * One letter on the application above, and one story on the profile.
+ *
+ * The letter's trail has a version nobody has taken, because that is the state
+ * the read tool exists to make visible: "the text" is then not what the letter
+ * says, and an agent that cannot tell writes a second proposal on top of the
+ * first.
+ */
+const LETTER_TEXT = {
+	kind: 'letter' as const,
+	id: 3,
+	label: 'Cover letter',
+	application_id: 44,
+	prompt: null,
+	chars: 27,
+	versions: 2,
+	latest_version_id: 99,
+	latest_version_source: 'ai_revision' as const,
+	latest_is_current: false,
+	path: '/applications/44/texts/3'
+};
+
+const LETTER_ROW = {
+	id: 3,
+	label: 'Cover letter',
+	applicationId: 44,
+	committed: 'The letter as it was saved.',
+	path: '/applications/44/texts/3'
+};
+
+vi.mock('$lib/server/texts/profile-texts', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/texts/profile-texts')>()),
+	listProfileTexts: (profileId: number) => Promise.resolve(profileId === 12 ? [LETTER_TEXT] : []),
+	readProfileText: (kind: string, id: number, profileId: number) =>
+		Promise.resolve(
+			kind === 'letter' && id === 3 && profileId === 12
+				? {
+						...LETTER_TEXT,
+						text: 'A version nobody has taken.',
+						offset: 0,
+						returned_chars: 27,
+						more: false,
+						trail: [
+							{
+								version_id: 98,
+								source: 'manual_edit' as const,
+								chars: 27,
+								feedback: null,
+								request: null,
+								at: '2026-08-01T10:00:00.000Z'
+							}
+						]
+					}
+				: null
+		),
+	readOwnedText: (kind: string, id: number, profileId: number) =>
+		Promise.resolve(kind === 'letter' && id === 3 && profileId === 12 ? LETTER_ROW : null),
+	summarizeTextVersions: (_kind: string, ids: number[]) =>
+		Promise.resolve(
+			new Map(
+				ids.map((id) => [
+					id,
+					{
+						count: 2,
+						latest: {
+							id: 99,
+							content: 'A version nobody has taken.',
+							source: 'ai_revision' as const,
+							date: null
+						}
+					}
+				])
+			)
+		)
+}));
+
+/**
  * Only the reads the job and application capabilities do for themselves.
  *
  * `executeCapability` is mocked, so nothing here writes — what runs against
@@ -1281,5 +1357,101 @@ describe('the read scope', () => {
 
 		expect(result.content[0].text).toContain('writes: write');
 		expect(result.content[0].text).toContain('reads: record');
+	});
+});
+
+describe('the texts an applicant is drafting', () => {
+	it('lists them with the id and kind a write tool takes', async () => {
+		const result = await callTool('list_texts', { profile_id: 12 }, KEY);
+		expect(result.content[0].text).toContain('[letter 3] Cover letter');
+	});
+
+	it('says when a version is already waiting, in the list and in the read', async () => {
+		// The whole point of surfacing it: a second proposal on top of an unread
+		// one is not twice the help.
+		const list = await callTool('list_texts', { profile_id: 12 }, KEY);
+		expect(list.content[0].text).toContain('newest version NOT taken yet');
+
+		const read = await callTool('read_text', { profile_id: 12, kind: 'letter', text_id: 3 }, KEY);
+		expect(read.content[0].text).toContain('not what the letter holds');
+	});
+
+	it('refuses a kind it does not have and names the ones it does', async () => {
+		const result = await callTool('list_texts', { profile_id: 12, kind: 'resume' }, KEY);
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('cheat_sheet');
+	});
+
+	it('answers for an application on another profile as though it does not exist', async () => {
+		const result = await callTool('list_texts', { profile_id: 12, application_id: 999 }, KEY);
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('no application 999');
+	});
+
+	it('is not behind the documents read scope — it is the applicant’s own writing', async () => {
+		const result = await callTool('list_texts', { profile_id: 12 }, withReadScope('record'));
+		expect(result.isError).toBeUndefined();
+	});
+
+	it('refuses an id from the wrong kind rather than reaching a row', async () => {
+		const result = await callTool('read_text', { profile_id: 12, kind: 'story', text_id: 3 }, KEY);
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('Ids are per kind');
+	});
+});
+
+describe('writing a version of a text', () => {
+	const version = {
+		profile_id: 12,
+		text_id: 3,
+		letter_content: 'A tighter opening, and the numbers kept.',
+		letter_note: 'Cut the throat-clearing.',
+		rationale: 'They asked for something shorter.'
+	};
+
+	it('writes it directly on a write key, because it replaces nothing', async () => {
+		const result = await callTool('add_letter_version', version, KEY);
+		expect(result.isError).toBeUndefined();
+		expect(executeCapability).toHaveBeenCalled();
+		expect(createRequest).not.toHaveBeenCalled();
+	});
+
+	it('never reports the letter as changed', async () => {
+		// The result an agent quotes back to the applicant. "Applied" and "tell
+		// them you made it" would both be false: the letter still says what it
+		// said, and a version is a proposal in its timeline.
+		const result = await callTool('add_letter_version', version, KEY);
+		const text = result.content[0].text;
+
+		expect(text).not.toContain('Applied to');
+		expect(text).not.toContain('Tell them you made it');
+		expect(text).toContain('Nothing on the letter has changed yet');
+		expect(text).toContain('/applications/44/texts/3');
+	});
+
+	it('names the letter by the application it belongs to', async () => {
+		// "Cover letter" alone names one of several on a profile, and this label
+		// is what the applicant reads on the notification.
+		const result = await callTool('add_letter_version', version, KEY);
+		expect(result.content[0].text).toContain('Data Engineer at Acme');
+	});
+
+	it('refuses an id this profile cannot reach, and writes nothing', async () => {
+		const result = await callTool('add_letter_version', { ...version, text_id: 404 }, KEY);
+		expect(result.isError).toBe(true);
+		expect(executeCapability).not.toHaveBeenCalled();
+	});
+
+	it('asks for approval on a propose key like every other write', async () => {
+		const result = await callTool('add_letter_version', version, withScope('propose'));
+		expect(createRequest).toHaveBeenCalled();
+		expect(result.structuredContent?.review_at).toBeDefined();
+	});
+
+	it('does not echo a whole text back at the agent that just sent it', async () => {
+		const long = 'A tighter opening. '.repeat(200);
+		const result = await callTool('add_letter_version', { ...version, letter_content: long }, KEY);
+		expect(result.content[0].text).toContain('characters in total');
+		expect(result.content[0].text.length).toBeLessThan(long.length);
 	});
 });

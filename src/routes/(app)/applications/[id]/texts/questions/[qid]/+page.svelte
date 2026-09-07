@@ -28,7 +28,8 @@
 		ai_generation: 'AI drafted answer',
 		ai_advice: 'AI recommendations',
 		ai_review: 'AI review',
-		ai_revision: 'AI revised answer'
+		ai_revision: 'AI revised answer',
+		agent_revision: 'Connected app revised answer'
 	};
 
 	const placeholder = 'Write or paste your answer here…';

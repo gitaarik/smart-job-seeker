@@ -36,6 +36,7 @@ import { application_records, applications, jobs } from '$lib/server/db/schema';
 import type { ContextEntity } from './generation-context';
 import { coerceValue, WIRE_TYPES, type FieldKind } from '$lib/server/utils/field-kinds';
 import { PROFILE_CAPABILITIES, type ProfileCapability } from './profile-capabilities';
+import { TEXT_CAPABILITIES, type TextCapability } from './text-version-capabilities';
 import { rowsNamedInMessage } from './profile-matching';
 import {
 	applyJobFields,
@@ -92,9 +93,10 @@ type HandWrittenCapability =
 /**
  * Everything the assistant may propose. The profile half is generated from
  * `PROFILE_RESOURCES` — see profile-capabilities.ts for why those are not
- * written out here.
+ * written out here — and the text half from the four kinds in
+ * `texts/profile-texts.ts`, for the same reason.
  */
-export type Capability = HandWrittenCapability | ProfileCapability;
+export type Capability = HandWrittenCapability | ProfileCapability | TextCapability;
 
 /** The concrete row a capability acts on, once resolved from the page entity. */
 export interface CapabilityTarget {
@@ -112,6 +114,17 @@ export interface CapabilityTarget {
 	 * Python matched all 33 rows of Backend, which is not narrowing at all.
 	 */
 	match?: string;
+	/**
+	 * Where a person opens this row, for the rows whose id does not say.
+	 *
+	 * A job is at /jobs/{id} and an application at /applications/{id}, so both
+	 * are a template away from the id and neither sets this. A cover letter is at
+	 * /applications/{application}/texts/{id}, and the application half is only
+	 * known to whoever read the row — which is the resolver, long before anything
+	 * needs the URL. So it travels on the target rather than being looked up
+	 * again by a caller that has already paid for the read.
+	 */
+	path?: string;
 }
 
 /** Who is asking. Passed to authorize; never taken from the client. */
@@ -195,6 +208,20 @@ export interface CapabilityDef {
 	 * renderCapabilityPrompt, not n times in the prompt.
 	 */
 	contract: string;
+	/**
+	 * The fields a call is worthless without, for the tool schema to say so.
+	 *
+	 * Absent for every capability that patches columns, and correctly: an edit is
+	 * a partial patch, so any subset of its fields is a valid call and a schema
+	 * claiming otherwise would refuse the ordinary case. It is set where the
+	 * capability's whole content is ONE value — a version of a text is the text —
+	 * and a call without it is not a smaller change but no change at all.
+	 *
+	 * The schema is the only place this can be said in time. `validate` refuses
+	 * the same call, but a refusal arrives after the model has already committed
+	 * to it; a required field is read while it is still deciding what to send.
+	 */
+	requiredFields?: string[];
 	/**
 	 * This capability's current state, for the model to propose against.
 	 *
@@ -320,6 +347,22 @@ export interface CapabilityDef {
 		previous: Record<string, unknown>,
 		actor: CapabilityActor
 	): Promise<void>;
+	/**
+	 * What to tell the agent once the write has landed, where the generic answer
+	 * would be wrong rather than merely thin.
+	 *
+	 * MCP's applied-result ends by saying how the applicant takes the change
+	 * back: an undo from the feed where there is a `revert`, and otherwise the
+	 * page holding the delete button. Both sentences assume the write changed
+	 * what somebody reads, and a version written into a text's timeline has not —
+	 * the letter still says what it said. An agent that reports that as an
+	 * updated letter has told the applicant something false about their own
+	 * application, so the capability that knows better says so itself.
+	 *
+	 * Only MCP asks, the same as `tierFor`: the chat's proposals are applied from
+	 * a card the applicant is already looking at.
+	 */
+	appliedNote?(target: CapabilityTarget, page: { name: string; path: string } | null): string;
 }
 
 /* ------------------------------------------------------------------ *
@@ -1646,7 +1689,8 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
 	update_application_status: updateApplicationStatus,
 	add_activity_record: addActivityRecord,
 	add_application: addApplication,
-	...PROFILE_CAPABILITIES
+	...PROFILE_CAPABILITIES,
+	...TEXT_CAPABILITIES
 };
 
 /** A capability that resolved and authorized for this turn. */

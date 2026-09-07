@@ -63,6 +63,12 @@ import {
 	readProfileApplication
 } from '$lib/server/applications/profile-applications';
 import { listProfileDocuments, readProfileDocument } from '$lib/server/documents/read';
+import {
+	isTextKind,
+	listProfileTexts,
+	readProfileText,
+	TEXT_KIND_NAMES
+} from '$lib/server/texts/profile-texts';
 import { listProfileJobs, readProfileJob } from '$lib/server/jobs/profile-jobs';
 import { recentDirectWrites } from './burst';
 import { targetingFor } from './entities';
@@ -630,6 +636,138 @@ async function readDocument(args: Args, key: VerifiedMcpKey): Promise<ToolResult
 	);
 }
 
+/** Narrowing helper, so the kind reaches the reader as its own type. */
+function asTextKind(value: unknown) {
+	return isTextKind(value) ? value : undefined;
+}
+
+/**
+ * The texts an applicant drafts, listed.
+ *
+ * Not behind the documents read scope, and the line is where it always was:
+ * that scope covers material the applicant COLLECTED — an employer's email, a
+ * recruiter's brief, a transcript of somebody else talking. A cover letter is
+ * their own writing about their own record, which is what a base `record` key
+ * is for.
+ */
+async function listTexts(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+	const kind = asTextKind(args.kind);
+	if (args.kind !== undefined && !kind) {
+		return fail(`"${String(args.kind)}" is not a kind. One of: ${TEXT_KIND_NAMES.join(', ')}.`);
+	}
+
+	const applicationId = args.application_id === undefined ? null : argInt(args, 'application_id');
+	if (args.application_id !== undefined && applicationId === null) {
+		return fail('application_id must be the integer id from list_applications.');
+	}
+
+	// An application has letters and answers; stories and cheat sheets belong to
+	// the profile. Asking for one of those ON an application is a question with
+	// no answer, and an empty list would read as "they have written none" — the
+	// same empty-versus-never-looked confusion the activity manifest exists to
+	// stop. Refused with what to ask instead.
+	if (applicationId !== null && (kind === 'story' || kind === 'cheat_sheet')) {
+		return fail(
+			`A ${kind === 'story' ? 'story' : 'cheat sheet'} belongs to the applicant rather ` +
+				`than to one application, so there are none "on" application ${applicationId}. ` +
+				`Call list_texts with kind "${kind}" and no application_id.`
+		);
+	}
+
+	// Scoped before the read rather than by it, so an application on somebody
+	// else's profile answers "no such application" instead of an empty list that
+	// reads as "they have written nothing".
+	if (applicationId !== null) {
+		const application = await readProfileApplication(applicationId, key.profileId);
+		if (!application) {
+			return fail(
+				`There is no application ${applicationId} on this profile. Call ` +
+					`list_applications for the current ids.`
+			);
+		}
+	}
+
+	const texts = await listProfileTexts(key.profileId, {
+		kind,
+		applicationId: applicationId ?? undefined,
+		limit: argInt(args, 'limit') ?? undefined
+	});
+
+	if (texts.length === 0) {
+		return ok(
+			applicationId !== null
+				? `Nothing has been written on application ${applicationId} yet.`
+				: 'This applicant has not written any letters, answers, stories or cheat sheets yet.',
+			{ texts }
+		);
+	}
+
+	return ok(
+		texts
+			.map(
+				(text) =>
+					`- [${text.kind} ${text.id}] ${text.label} — ${text.chars} chars, ` +
+					`${text.versions} ${text.versions === 1 ? 'version' : 'versions'}` +
+					(text.latest_is_current ? '' : ', newest version NOT taken yet') +
+					(text.application_id === null ? '' : ` (application ${text.application_id})`)
+			)
+			.join('\n'),
+		{ texts }
+	);
+}
+
+async function readText(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+	const kind = asTextKind(args.kind);
+	if (!kind) {
+		return fail(
+			`kind is required, as one of: ${TEXT_KIND_NAMES.join(', ')}. Call list_texts for ` +
+				`what this applicant has.`
+		);
+	}
+
+	const id = argInt(args, 'text_id');
+	if (id === null) return fail('text_id is required. Call list_texts for the ids.');
+
+	const text = await readProfileText(kind, id, key.profileId, {
+		offset: argInt(args, 'offset') ?? 0
+	});
+	if (!text) {
+		return fail(
+			`There is no ${kind} ${id} on this profile. Ids are per kind — call list_texts ` +
+				`with kind "${kind}" for the ones you can use.`
+		);
+	}
+
+	const more = text.more
+		? `\n\n[…${text.offset + text.returned_chars} of this text read. Call again with ` +
+			`offset ${text.offset + text.returned_chars} for the rest.]`
+		: '';
+
+	const trail = text.trail.length
+		? `\n\nVersions, oldest first:\n` +
+			text.trail
+				.map(
+					(entry) =>
+						`  [${entry.version_id}] ${entry.at ?? 'undated'} ${entry.source}` +
+						`${entry.chars ? ` — ${entry.chars} chars` : ' — no new text'}` +
+						`${entry.feedback ? `\n      note: ${entry.feedback}` : ''}`
+				)
+				.join('\n')
+		: '\n\nNo versions recorded yet.';
+
+	const waiting = text.latest_is_current
+		? ''
+		: `\n\nThe text above is the newest VERSION, and it is not what the ${kind} holds — ` +
+			`the applicant has not taken it. Do not write another version on top of it.`;
+
+	return ok(
+		`${text.label}${text.application_id === null ? '' : ` (application ${text.application_id})`}` +
+			`${text.prompt ? `\n\nThe question asked: ${text.prompt}` : ''}\n\n` +
+			`${text.text || '(nothing written yet)'}${more}${waiting}${trail}`,
+		{ text }
+	);
+}
+
 /* ------------------------------------------------------------------ *
  * Writes
  * ------------------------------------------------------------------ */
@@ -689,6 +827,28 @@ async function resolveTarget(
 	return { target };
 }
 
+/**
+ * How much of one value the applied result and the request card echo back.
+ *
+ * Far more generous than the queue's 200, because this is one change rather
+ * than a list of them and the whole of a rewritten summary is worth reading.
+ * Bounded at all because the values here can be a WHOLE TEXT: a capability
+ * writing a new version of a cover letter carries the letter, and echoing
+ * 60,000 characters back at the agent that just sent them is context spent on
+ * information it already has. Cut values say their true length, so an excerpt
+ * is never mistaken for the whole value — and the untouched original is a read
+ * tool away either side.
+ */
+const DIFF_VALUE_CHARS = 1000;
+
+function diffValue(value: unknown, blank: string): string {
+	if (value === null || value === undefined || value === '') return blank;
+	const text = String(value);
+	return text.length > DIFF_VALUE_CHARS
+		? `${text.slice(0, DIFF_VALUE_CHARS)}… (${text.length} characters in total)`
+		: text;
+}
+
 /** `before → after`, for the field values that are actually changing. */
 function renderDiff(
 	previous: Record<string, unknown>,
@@ -700,9 +860,8 @@ function renderDiff(
 	}
 
 	const lines = Object.entries(diff).map(([name, { before, after }]) => {
-		const from =
-			before === null || before === undefined || before === '' ? '(empty)' : String(before);
-		const to = after === null || after === undefined || after === '' ? '(cleared)' : String(after);
+		const from = diffValue(before, '(empty)');
+		const to = diffValue(after, '(cleared)');
 		return `  ${name}:\n    before: ${from}\n    after:  ${to}`;
 	});
 
@@ -858,28 +1017,42 @@ async function runWrite(
 	// A section has one page for its whole list; a job or an application has one
 	// per row, and only the resolved target knows which row.
 	const targeting = targetingFor(capability);
-	const page = targeting ? targeting.page(target.id) : pageFor(capability);
+	const page = targeting ? targeting.page(target) : pageFor(capability);
 
-	// How they take it back, which is not the same question for both verbs. An
+	// How they take it back, which is not the same question for every verb. An
 	// edit is undoable from the feed, because only its before-image has what it
 	// replaced. An add is not — the registry has no delete, deliberately — so the
 	// honest answer is the page with the delete button on it. Telling an agent to
 	// send them to an Undo that is not there is worse than saying nothing.
-	const reversal = def.revert
-		? `The applicant can undo this from /data/ai-changes (change ${outcome.editId}).`
-		: page
-			? `They can remove it again from their ${page.name} page (${page.path}).`
-			: '';
+	//
+	// And a capability whose write did not change anything anybody reads says so
+	// itself: both sentences below would report a version proposed into a
+	// timeline as a letter that now says something different. See
+	// CapabilityDef.appliedNote.
+	const note = def.appliedNote?.(target, page) ?? null;
+	const reversal =
+		note ??
+		(def.revert
+			? `The applicant can undo this from /data/ai-changes (change ${outcome.editId}).`
+			: page
+				? `They can remove it again from their ${page.name} page (${page.path}).`
+				: '');
 
+	// "Applied" and "tell them you made it" are the right words for a write that
+	// changed what somebody reads, and the wrong ones for a proposal recorded
+	// beside a text nobody has looked at yet. A capability with its own note has
+	// already said what happened, and appending the generic closing to it would
+	// undo the distinction it was written to draw.
 	return ok(
-		`Applied to "${target.label}".\n` +
+		`${note ? `Recorded on "${target.label}".` : `Applied to "${target.label}".`}\n` +
 			(text ? `\n${text}\n` : '') +
-			`\n${reversal} Tell them you made it.`.replace('  ', ' '),
+			`\n${reversal}${note ? '' : ' Tell them you made it.'}`.replace('  ', ' '),
 		{
 			applied: true,
 			change_id: outcome.editId,
 			undoable: !!def.revert,
 			target: target.label,
+			...(note ? { note } : {}),
 			diff
 		}
 	);
@@ -1047,6 +1220,10 @@ export async function callTool(name: string, args: Args, key: VerifiedMcpKey): P
 				return listApplications(args, key);
 			case 'read_application':
 				return readApplication(args, key);
+			case 'list_texts':
+				return listTexts(args, key);
+			case 'read_text':
+				return readText(args, key);
 			case 'read_activity_entry':
 				return readActivityEntry(args, key);
 			case 'list_documents':

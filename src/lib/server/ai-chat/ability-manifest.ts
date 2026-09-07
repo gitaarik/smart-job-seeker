@@ -51,6 +51,7 @@ import { CAPABILITIES, type Capability } from './capabilities';
 import { PROFILE_CAPABILITY_NAMES, verbsFor } from './profile-capabilities';
 import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/resources';
 import { targetingFor } from '$lib/server/mcp/entities';
+import { isTextCapability } from './text-version-capabilities';
 
 /** One area of the app, as the navigation names it. */
 export interface AppArea {
@@ -135,10 +136,24 @@ export const APP_AREAS: readonly AppArea[] = [
 	}
 ];
 
-/** The capabilities that are not generated from a profile section. */
+/**
+ * The capabilities that are not generated from a profile section, minus the
+ * ones the chat cannot reach.
+ *
+ * This manifest describes what the ASSISTANT can do. The text-version verbs are
+ * in the registry because MCP writes through it, but they resolve from no page:
+ * a letter, a story and a cheat sheet each have a conversational editor of
+ * their own, which is where a person does this in the app. Listing them here
+ * would promise the chat a verb it can never offer — the opposite of the gap
+ * this block exists to close, and worse than it, because "your app cannot do
+ * that" sends someone looking while "I can do that" does not. The pages
+ * themselves are named in APP_AREAS, which is the honest answer.
+ */
 function entityCapabilities(): Capability[] {
 	const generated = new Set<string>(PROFILE_CAPABILITY_NAMES);
-	return (Object.keys(CAPABILITIES) as Capability[]).filter((c) => !generated.has(c));
+	return (Object.keys(CAPABILITIES) as Capability[]).filter(
+		(c) => !generated.has(c) && !isTextCapability(c)
+	);
 }
 
 /**
@@ -153,7 +168,9 @@ function byEntity(): { job: string[]; application: string[]; other: string[] } {
 	const groups = { job: [] as string[], application: [] as string[], other: [] as string[] };
 	for (const capability of entityCapabilities()) {
 		const entity = targetingFor(capability)?.entity;
-		groups[entity ?? 'other'].push(CAPABILITIES[capability].title);
+		groups[entity === 'job' || entity === 'application' ? entity : 'other'].push(
+			CAPABILITIES[capability].title
+		);
 	}
 	return groups;
 }
