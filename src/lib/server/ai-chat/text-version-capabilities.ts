@@ -32,10 +32,14 @@
  * there is no undo tool on this server: an agent that can approve its own
  * proposal has not been through an approval.
  *
- * **Create the text itself.** A letter, a story or a cheat sheet that does not
- * exist yet is made in the app, with a type and a title the applicant picks.
- * Proposing versions of things nobody asked for is how a timeline fills with
- * work nobody wanted.
+ * **Create the text itself.** These verbs reach a row that exists and do
+ * nothing else. A letter and a question are still made only in the app, because
+ * both are claims about an employer. A story and a cheat sheet can now be
+ * started from outside, in `text-create-capabilities.ts`, but by a separate verb
+ * that sets a title and leaves the text empty, so the words still arrive here,
+ * as a version somebody takes. Proposing versions of things nobody asked for is
+ * how a timeline fills with work nobody wanted, and the guard against it is the
+ * duplicate check on the create rather than the absence of one.
  *
  * **Rewrite what it has not read.** A text longer than one `read_text` slice is
  * refused rather than rewritten from the part that fit — see `validate`.

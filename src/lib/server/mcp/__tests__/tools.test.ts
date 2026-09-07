@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { APP_AREAS } from '$lib/server/ai-chat/ability-manifest';
 import { CAPABILITIES } from '$lib/server/ai-chat/capabilities';
 import { ENTITY_CAPABILITY_NAMES, targetingFor } from '../entities';
+import { TEXT_CREATE_CAPABILITY_NAMES } from '$lib/server/ai-chat/text-create-capabilities';
 import {
 	DOCUMENT_TOOLS,
 	instructionsFor,
@@ -122,6 +123,35 @@ describe('how a write names its row', () => {
 		// Without this the applied-result carries no "remove it again from…" line,
 		// because an add has no undo and `sectionFor` has no section to slice.
 		expect(pageFor('add_application')).toEqual({ name: 'Applications', path: '/applications' });
+	});
+
+	it('makes the ones that START an interview-prep text name nothing either', () => {
+		// Same third shape as add_application: no row to name, and the key says
+		// which profile. A required id here would be an id of the thing being
+		// created, which does not exist yet.
+		for (const capability of TEXT_CREATE_CAPABILITY_NAMES) {
+			const required = byName.get(capability)!.inputSchema.required ?? [];
+			const kind = capability.slice('add_'.length);
+			// The title IS required, unlike add_application, which takes either a
+			// company or a role and decides between them in validate. A titleless
+			// text is a blank line on the list it lives on.
+			expect(required, capability).toEqual(['profile_id', `${kind}_title`, 'rationale']);
+			expect(required, capability).not.toContain('entry_id');
+			expect(required, capability).not.toContain('text_id');
+			expect(required, capability).not.toContain('application_id');
+		}
+	});
+
+	it('sends a wrongly-started text to the page it lives on', () => {
+		// Without this the applied-result carries no "remove it again from…" line,
+		// and `sectionFor` has no section to slice: "cheat_sheet" is not a profile
+		// resource, so the generic path answers null.
+		for (const capability of TEXT_CREATE_CAPABILITY_NAMES) {
+			expect(pageFor(capability), capability).toEqual({
+				name: 'Interview Prep',
+				path: '/applications/interview'
+			});
+		}
 	});
 
 	it('keeps entry_id for the sections it was written for', () => {

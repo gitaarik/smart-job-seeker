@@ -63,6 +63,7 @@ import {
 	type VersionTrailSummary
 } from '$lib/server/ai-chat/entity-versions';
 import { serializeStarMarkdown } from '$lib/interview/star';
+import { touchProfile } from '$lib/server/profile/touch-profile';
 
 /** How much of one text comes back in a single read. Same slice as a document. */
 export const TEXT_READ_CHARS = 60000;
@@ -72,6 +73,27 @@ export const TEXT_PAGE_MAX = 50;
 
 export const TEXT_KIND_NAMES = ['letter', 'question', 'story', 'cheat_sheet'] as const;
 export type TextKind = (typeof TEXT_KIND_NAMES)[number];
+
+/**
+ * The kinds an agent may START, as opposed to append a version to.
+ *
+ * A policy, written out rather than derived from which defs happen to carry a
+ * `create`. The question "which of these may something outside the app bring
+ * into existence" is a decision, and a decision that reads as a side effect of
+ * an implementation detail is one nobody revisits on purpose. A test binds the
+ * two, so a kind listed here without a `create` fails rather than ships.
+ *
+ * The two that are here own nothing but themselves: a story and a cheat sheet
+ * hang off the profile, hold prep the applicant writes for their own use, and
+ * are deleted with one click from the page they live on.
+ *
+ * The two that are NOT here are both claims about the outside world. A letter
+ * is a document on an application, and a question asserts that an employer
+ * asked something, and inventing one is inventing history, which is the line this
+ * whole surface is drawn around. They are still made in the app.
+ */
+export const TEXT_CREATE_KIND_NAMES = ['story', 'cheat_sheet'] as const;
+export type CreatableTextKind = (typeof TEXT_CREATE_KIND_NAMES)[number];
 
 export function isTextKind(value: unknown): value is TextKind {
 	return typeof value === 'string' && (TEXT_KIND_NAMES as readonly string[]).includes(value);
@@ -106,6 +128,18 @@ export interface TextKindDef {
 	versions: VersionBinding;
 	list(profileId: number, opts: { applicationId?: number; limit: number }): Promise<TextRow[]>;
 	read(id: number, profileId: number): Promise<TextRow | null>;
+	/**
+	 * Make an empty one under this profile, titled, and return it as any other
+	 * read would. Absent for a kind that may not be created from outside the app;
+	 * see TEXT_CREATE_KIND_NAMES for which and why.
+	 *
+	 * Empty deliberately: the title is the whole of what a create decides, and
+	 * the text arrives afterwards as a version the applicant takes. A create
+	 * that accepted content would put a whole document on the profile that no
+	 * timeline ever showed anyone, which is the one property the version verbs
+	 * exist to preserve.
+	 */
+	create?(profileId: number, title: string): Promise<TextRow>;
 }
 
 /* ------------------------------------------------------------------ *
@@ -128,6 +162,27 @@ const LETTER_TYPE_LABELS: Record<string, string> = {
  */
 function letterLabel(letterType: string): string {
 	return LETTER_TYPE_LABELS[letterType] ?? letterType;
+}
+
+/**
+ * Where a newly created row goes in the applicant's own ordering: last.
+ *
+ * Both creatable kinds are hand-orderable lists, and both API routes that
+ * create one compute this the same way. Reproducing it slightly differently
+ * here is how an agent's cheat sheet would land somewhere the applicant's own
+ * button never puts one.
+ */
+async function nextSort(
+	table: typeof cheat_sheets | typeof project_stories,
+	profileId: number
+): Promise<number> {
+	const [last] = await db
+		.select({ sort: table.sort })
+		.from(table)
+		.where(eq(table.profile_id, profileId))
+		.orderBy(desc(table.sort))
+		.limit(1);
+	return (last?.sort ?? -1) + 1;
 }
 
 /** Trim a question down to something that fits on one line of a list. */
@@ -311,6 +366,30 @@ const storyKind: TextKindDef = {
 			committed: serializeStarMarkdown(row) || null,
 			path: `/applications/interview/stories/${row.id}`
 		};
+	},
+	create: async (profileId, title) => {
+		const [row] = await db
+			.insert(project_stories)
+			.values({
+				title,
+				profile_id: profileId,
+				sort: await nextSort(project_stories, profileId),
+				date_created: new Date()
+			})
+			.returning({ id: project_stories.id, title: project_stories.title });
+
+		await touchProfile(profileId);
+
+		return {
+			id: row.id,
+			label: row.title || 'Untitled story',
+			applicationId: null,
+			// Every STAR section is empty, so there is nothing to serialize. Null
+			// rather than "" for the same reason the reads use it: it is what an
+			// unwritten text holds, and `currentText` compares against it.
+			committed: null,
+			path: `/applications/interview/stories/${row.id}`
+		};
 	}
 };
 
@@ -345,6 +424,28 @@ const cheatSheetKind: TextKindDef = {
 			label: row.title || 'Untitled cheat sheet',
 			applicationId: null,
 			committed: row.content,
+			path: `/applications/interview/cheatsheets/${row.id}`
+		};
+	},
+	create: async (profileId, title) => {
+		const [row] = await db
+			.insert(cheat_sheets)
+			.values({
+				title,
+				content: null,
+				profile_id: profileId,
+				sort: await nextSort(cheat_sheets, profileId),
+				date_created: new Date()
+			})
+			.returning({ id: cheat_sheets.id, title: cheat_sheets.title });
+
+		await touchProfile(profileId);
+
+		return {
+			id: row.id,
+			label: row.title || 'Untitled cheat sheet',
+			applicationId: null,
+			committed: null,
 			path: `/applications/interview/cheatsheets/${row.id}`
 		};
 	}

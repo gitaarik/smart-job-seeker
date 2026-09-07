@@ -1014,8 +1014,24 @@ async function runWrite(
 	}
 
 	const { text, diff } = renderDiff(outcome.previous, fields);
+
+	// The row the write PRODUCED, where it produced one, and the row it was
+	// addressed to otherwise. `executeCapability` already settled this question
+	// for the edit log: an add is named by what it made, because "their Interview
+	// Prep" says only which list grew. The two answering it differently is
+	// how a result reports a cheat sheet as the page it landed on.
+	//
+	// It is not cosmetic for a create: `appliedNote` hands the agent an id for its
+	// follow-up call, and the addressed target's id is the PROFILE's. An agent
+	// told to write version 1 of cheat sheet 1 writes it onto somebody's first
+	// cheat sheet.
+	const written = outcome.created ?? target;
+
 	// A section has one page for its whole list; a job or an application has one
-	// per row, and only the resolved target knows which row.
+	// per row, and only the resolved target knows which row. Deliberately the
+	// addressed target and not `written`: an activity entry is filed UNDER an
+	// application, so its page is that application's and not one keyed by the
+	// entry's own id.
 	const targeting = targetingFor(capability);
 	const page = targeting ? targeting.page(target) : pageFor(capability);
 
@@ -1029,7 +1045,7 @@ async function runWrite(
 	// itself: both sentences below would report a version proposed into a
 	// timeline as a letter that now says something different. See
 	// CapabilityDef.appliedNote.
-	const note = def.appliedNote?.(target, page) ?? null;
+	const note = def.appliedNote?.(written, page) ?? null;
 	const reversal =
 		note ??
 		(def.revert
@@ -1044,14 +1060,14 @@ async function runWrite(
 	// already said what happened, and appending the generic closing to it would
 	// undo the distinction it was written to draw.
 	return ok(
-		`${note ? `Recorded on "${target.label}".` : `Applied to "${target.label}".`}\n` +
+		`${note ? `Recorded on "${written.label}".` : `Applied to "${written.label}".`}\n` +
 			(text ? `\n${text}\n` : '') +
 			`\n${reversal}${note ? '' : ' Tell them you made it.'}`.replace('  ', ' '),
 		{
 			applied: true,
 			change_id: outcome.editId,
 			undoable: !!def.revert,
-			target: target.label,
+			target: written.label,
 			...(note ? { note } : {}),
 			diff
 		}

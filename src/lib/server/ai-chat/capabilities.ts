@@ -67,6 +67,7 @@ import {
 	stepsFor,
 	writeApplicationStatus
 } from '$lib/server/applications/status';
+import { TEXT_CREATE_CAPABILITIES, type TextCreateCapability } from './text-create-capabilities';
 import type { EditSource } from './edit-log';
 import type { TierDecision } from '$lib/server/mcp/tiers';
 import { createApplication, parseForNewApplication } from '$lib/server/applications/create';
@@ -92,11 +93,13 @@ type HandWrittenCapability =
 
 /**
  * Everything the assistant may propose. The profile half is generated from
- * `PROFILE_RESOURCES` — see profile-capabilities.ts for why those are not
- * written out here — and the text half from the four kinds in
- * `texts/profile-texts.ts`, for the same reason.
+ * `PROFILE_RESOURCES` (see profile-capabilities.ts for why those are not
+ * written out here) and the text half from the kinds in
+ * `texts/profile-texts.ts`, for the same reason: a version verb per kind, and a
+ * create verb for the two kinds an agent may start rather than only append to.
  */
-export type Capability = HandWrittenCapability | ProfileCapability | TextCapability;
+export type Capability =
+	HandWrittenCapability | ProfileCapability | TextCapability | TextCreateCapability;
 
 /** The concrete row a capability acts on, once resolved from the page entity. */
 export interface CapabilityTarget {
@@ -1690,7 +1693,8 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
 	add_activity_record: addActivityRecord,
 	add_application: addApplication,
 	...PROFILE_CAPABILITIES,
-	...TEXT_CAPABILITIES
+	...TEXT_CAPABILITIES,
+	...TEXT_CREATE_CAPABILITIES
 };
 
 /** A capability that resolved and authorized for this turn. */

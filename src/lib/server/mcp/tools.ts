@@ -41,6 +41,12 @@ import { APP_AREAS } from '$lib/server/ai-chat/ability-manifest';
 import { CAPABILITIES, type Capability } from '$lib/server/ai-chat/capabilities';
 import { PROFILE_CAPABILITY_NAMES } from '$lib/server/ai-chat/profile-capabilities';
 import { APPLICATION_COLLECTION, ENTITY_CAPABILITY_NAMES, targetingFor } from './entities';
+import {
+	TEXT_CREATE_CAPABILITY_NAMES,
+	isTextCreateCapability,
+	kindForTextCreateCapability
+} from '$lib/server/ai-chat/text-create-capabilities';
+import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
 import type { McpReadScope, McpScope } from './keys';
 import {
 	APPLICATION_PAGE_DEFAULT,
@@ -125,7 +131,7 @@ export function isReadTool(name: string): name is ReadTool {
  * branch on `add_` for exactly this shape — a profile add names nothing either —
  * so the only thing missing was the listing.
  */
-const CREATE_CAPABILITY_NAMES: Capability[] = ['add_application'];
+const CREATE_CAPABILITY_NAMES: Capability[] = ['add_application', ...TEXT_CREATE_CAPABILITY_NAMES];
 
 /**
  * Which capabilities this server exposes: all of them.
@@ -936,6 +942,9 @@ export function pageFor(capability: Capability): { name: string; path: string } 
 	// Without this the applied-result has no "remove it again from…" line, which
 	// is the only thing that tells the applicant where a wrong row went.
 	if (capability === 'add_application') return APPLICATION_COLLECTION;
+	if (isTextCreateCapability(capability)) {
+		return TEXT_KINDS[kindForTextCreateCapability(capability)].collection;
+	}
 
 	const section = sectionFor(capability);
 	if (!section) return null;
