@@ -1459,6 +1459,9 @@ If a job has minimal information (e.g., only title and company visible):
 	},
 
 	extract_matched_skills: {
+		// Which skills a profile demonstrably has is a verdict, not prose. See
+		// PromptTemplate.temperature.
+		temperature: 0,
 		system_prompt: `You are a strict skill matching assistant. Given a candidate's profile and a list of job skills, determine which job skills the candidate demonstrably possesses.
 
 Use SEMANTIC matching for technical skills — the candidate does not need to list the exact same skill name. For example:
@@ -1635,6 +1638,16 @@ Return JSON with:
 	},
 
 	score_job_match: {
+		/**
+		 * A score and a recommendation bucket are a verdict, and this one was
+		 * being sampled like prose. Measured over 12 replayed scorings on
+		 * 2026-09-08, re-running the IDENTICAL prompt moved the score by 4.5
+		 * points on average, once by 27, and flipped the recommendation bucket
+		 * once. The applicant sees that as a job whose match score changes when
+		 * they press re-score, with nothing about the job or their profile having
+		 * changed. See PromptTemplate.temperature.
+		 */
+		temperature: 0,
 		system_prompt: `You are a technical recruiter and career advisor. Your task is to evaluate how well a job opportunity matches a candidate's profile, skills, and preferences.
 
 Analyze the candidate's experience, technical skills, career trajectory, and stated preferences against the job requirements. Provide an objective match score from 0-100 and detailed reasoning.

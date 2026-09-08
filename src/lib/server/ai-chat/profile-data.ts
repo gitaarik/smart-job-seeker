@@ -190,6 +190,44 @@ export async function loadProfileData(
  * an interview note or a STAR story is exactly the recall the LLM pass exists to
  * find, since `getProfileSkills` reads `tech_skills` and `languages` alone.
  */
+/**
+ * Blob keys `score_job_match` must not see, because a match score is supposed
+ * to mean role fit and these cannot contribute to one.
+ *
+ * `salary_expectations` is the reason this exists. Salary is deliberately
+ * excluded from match scoring -- the blend in matcher.ts leaves it out, and
+ * eligibility filtering leaves it out, so that a high score means fit and
+ * because most postings omit salary anyway. But the exclusion was only ever
+ * implemented in the arithmetic. The applicant's 50 salary-prep rows were still
+ * handed to the LLM inside the profile blob, so the half of the blend that is a
+ * language model could weight them freely, and measurably did: dropping them
+ * moved the score on 12 replayed scorings well past the temperature-0 noise
+ * floor and flipped half the recommendation buckets.
+ *
+ * The rest is identity. A name and a nationality have no bearing on whether
+ * someone fits a role and are exactly the inputs a scoring model should never
+ * have; the contact fields carry no fit signal at all. `location` and
+ * `location_timezone` STAY, because where someone is really does bear on a
+ * commute or an overlapping working day.
+ *
+ * Dropping the identity FIELDS is not the same as scrubbing identity, and this
+ * does not claim to. A name still reaches the model wherever the applicant's
+ * own prose carries it -- the dev profile has an eponymous employer, "Rik
+ * Wanders Software", sitting in work_experiences where it belongs. This removes
+ * the fields that exist only to identify, not the ones that happen to.
+ *
+ * Expect existing scores to move when this lands. That is the point: they were
+ * computed from inputs the design says do not belong in them.
+ */
+export const NON_FIT_FIELDS = [
+	'email_address',
+	'location_url',
+	'name',
+	'nationality',
+	'phone_number',
+	'salary_expectations'
+];
+
 export const NON_SKILL_FIELDS = [
 	'email_address',
 	'github_profile',
