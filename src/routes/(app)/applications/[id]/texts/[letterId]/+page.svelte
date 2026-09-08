@@ -167,6 +167,15 @@
 		await invalidateAll();
 	}
 
+	// Non-destructive: make a chosen version the live letter without trimming.
+	async function onApplyVersion(content: string) {
+		if (isNew) return;
+		const fd = new FormData();
+		fd.set('content', content);
+		await postAction(letter.id, 'applyVersion', fd);
+		await invalidateAll();
+	}
+
 	// Remove one entry from the version trail, rewinding the thread to just
 	// before it. 'response' keeps the message that produced it.
 	async function onDelete(versionId: number, scope: DeleteScope) {
@@ -249,7 +258,10 @@
 		{onReview}
 		{onSendFollowup}
 		{onSaveVersion}
+		{onApplyVersion}
 		{onDelete}
+		currentContent={letter.content}
+		applyNoun={typeLabel.toLowerCase()}
 		autoMode={true}
 		generating={data.generating}
 	/>

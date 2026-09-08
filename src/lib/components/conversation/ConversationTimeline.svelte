@@ -83,7 +83,8 @@
 		/**
 		 * Optional: commit a specific version's content as the entity's live value
 		 * (the question's answer) without trimming later versions. When omitted, the
-		 * "use as answer" affordance is hidden (e.g. letters don't opt in).
+		 * "use as answer" affordance is hidden, and so is the badge that marks which
+		 * version is live — both hang off this prop.
 		 */
 		onApplyVersion?: (content: string) => Promise<void>;
 		/**

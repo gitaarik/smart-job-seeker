@@ -195,6 +195,50 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
+	// Apply a specific version's content as the live letter, without trimming any
+	// later versions — a non-destructive "use this version" pointer update. The
+	// content already exists as a version, so no new version is recorded.
+	applyVersion: async ({ request, locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
+
+		const letterId = parseInt(params.letterId);
+		if (isNaN(letterId)) return fail(400, { error: 'Invalid letter ID' });
+
+		const existing = await db.query.applications.findFirst({
+			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId))
+		});
+		if (!existing) return fail(404, { error: 'Application not found' });
+
+		const letter = await db.query.application_letters.findFirst({
+			where: and(
+				eq(application_letters.id, letterId),
+				eq(application_letters.application_id, appId)
+			)
+		});
+		if (!letter) return fail(404, { error: 'Letter not found' });
+
+		const formData = await request.formData();
+		const content = (formData.get('content') as string | null)?.trim() || null;
+		if (!content) return fail(400, { error: 'Nothing to apply' });
+
+		await db
+			.update(application_letters)
+			.set({
+				content,
+				date_updated: new Date()
+			})
+			.where(eq(application_letters.id, letterId));
+
+		return { success: true };
+	},
+
 	// Remove one entry from the letter's version trail, rewinding the thread to
 	// just before it. `scope` says whether the applicant's own message survives.
 	deleteEntry: async ({ request, locals, cookies, params }) => {
