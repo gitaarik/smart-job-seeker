@@ -5,6 +5,36 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.30.0] - 2026-09-08
+
+15 commits since v0.29.0.
+
+### Added
+
+- MCP: ability to start stories or cheat sheets that don't exist yet
+- Admin dashboard now prices costs from AI chats instead of credit charges
+- Application nudges for employers who have gone quiet
+- MCP: read and write application text versions
+- Application text composer now auto-grows
+- Application pipeline now ranked by priority (what needs you) instead of date added
+
+### Changed
+
+- Job matching performance improved by not overriding compact profile blob
+- Worker refactored to register periodic jobs instead of hand-managing timers
+
+### Fixed
+
+- Demo mode no longer scores jobs
+- Job matching now scores consistently and excludes salary rows
+- Application text editor no longer records review requests as applicant messages
+- Skills reorder mode now closes after saving
+- Groq cached input tokens are now recorded
+
+### Removed
+
+- Legacy file-uuid path for entity images
+
 ## [0.29.0] - 2026-09-05
 
 13 commits since v0.28.0.
