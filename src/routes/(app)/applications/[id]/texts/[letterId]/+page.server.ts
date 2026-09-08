@@ -17,6 +17,7 @@ import {
 	type VersionSource
 } from '$lib/server/ai-chat/entity-versions';
 import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
+import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
 
 // Version `source` values and the ConversationEntry shape live in the shared
 // engine; re-export the type so +page.svelte keeps importing it from here.
@@ -228,13 +229,11 @@ export const actions: Actions = {
 		const content = (formData.get('content') as string | null)?.trim() || null;
 		if (!content) return fail(400, { error: 'Nothing to apply' });
 
-		await db
-			.update(application_letters)
-			.set({
-				content,
-				date_updated: new Date()
-			})
-			.where(eq(application_letters.id, letterId));
+		// One definition of "put this text on the row", shared with the MCP verb
+		// that asks for the same thing. Four copies of this update is what it
+		// replaces, and the story's was the one worth not having twice: its
+		// markdown has to fan back out into five columns.
+		await TEXT_KINDS.letter.setText(letterId, profileId, content);
 
 		return { success: true };
 	},

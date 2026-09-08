@@ -99,6 +99,7 @@ import {
 	ensureBaselineVersion,
 	LETTER_VERSIONS,
 	QUESTION_VERSIONS,
+	readVersion,
 	recordVersion,
 	recordVersionIfChanged,
 	deleteVersionEntry,
@@ -143,6 +144,36 @@ describe('entity-versions engine', () => {
 				ai_chat: 3
 			})
 		);
+	});
+
+	it('reads one version only through the entity it hangs off', async () => {
+		// The scoping is the whole of this function. Version ids are per TABLE, so
+		// a lookup by id alone reaches whatever row that number names — including
+		// a version of somebody else's letter. Asserted on the WHERE rather than
+		// on the row it returned, because a mock hands back whatever it is given
+		// and would pass just as happily without the entity clause.
+		mockLimit.mockResolvedValue([
+			{ id: 9, content: 'the text', source: 'agent_revision', date_created: null }
+		]);
+
+		expect(await readVersion(LETTER_VERSIONS, 7, 9)).toEqual({
+			id: 9,
+			content: 'the text',
+			source: 'agent_revision',
+			date: null
+		});
+
+		expect(mockSelectWhere).toHaveBeenCalledWith({
+			and: [{ eq: ['lv.letter', 7] }, { eq: ['lv.id', 9] }]
+		});
+	});
+
+	it('answers null for a version the entity does not have', async () => {
+		// Not an error and not an empty version: indistinguishable from one that
+		// was never there, which is the same answer `readOwnedText` gives for a row
+		// outside the profile.
+		mockLimit.mockResolvedValue([]);
+		expect(await readVersion(QUESTION_VERSIONS, 7, 9)).toBeNull();
 	});
 
 	it('records a version only when content changed and is non-empty', async () => {

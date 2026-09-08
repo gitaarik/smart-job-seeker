@@ -322,6 +322,54 @@ describe('the version verbs', () => {
 	});
 });
 
+describe('the commit verbs', () => {
+	const kinds = ['letter', 'question', 'story', 'cheat_sheet'] as const;
+
+	it('can all be reached by an id', () => {
+		// Same assertion the version verbs get, and needed for the same reason: a
+		// kind added without targeting ships a tool whose id argument does not
+		// exist, and a check that threw at module load would take the server down
+		// rather than fail a test.
+		for (const kind of kinds) {
+			const targeting = targetingFor(`use_${kind}_version`);
+			expect(targeting?.arg, kind).toBe('text_id');
+			expect(targeting?.listTool, kind).toBe('list_texts');
+		}
+	});
+
+	it('asks for the id, the version and a reason', () => {
+		const tool = byName.get('use_cheat_sheet_version');
+		expect(tool?.inputSchema.required).toEqual([
+			'profile_id',
+			'text_id',
+			'cheat_sheet_version_id',
+			'rationale'
+		]);
+	});
+
+	it('says in the title that it needs approving', () => {
+		// The one thing a client reading only `tools/list` can be told, since
+		// every other capability's tier depends on values nobody has read yet at
+		// that point. These are Tier 2 whatever the row holds, so the promise is
+		// safe to make here — and the schema is one integer, which says nothing at
+		// all about what it replaces.
+		for (const kind of kinds) {
+			expect(byName.get(`use_${kind}_version`)?.annotations.title, kind).toContain(
+				'needs your approval'
+			);
+		}
+	});
+
+	it('is annotated as destroying rather than adding', () => {
+		// It overwrites prose the applicant may have written. Repeating it lands
+		// the same text, which is what idempotent means here.
+		for (const kind of kinds) {
+			expect(byName.get(`use_${kind}_version`)?.annotations.destructiveHint, kind).toBe(true);
+			expect(byName.get(`use_${kind}_version`)?.annotations.idempotentHint, kind).toBe(true);
+		}
+	});
+});
+
 describe('the texts, in the tool list', () => {
 	it('offers both reads to a read key', async () => {
 		const read = await toolsFor('read');

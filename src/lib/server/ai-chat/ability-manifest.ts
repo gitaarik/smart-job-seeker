@@ -52,6 +52,7 @@ import { PROFILE_CAPABILITY_NAMES, verbsFor } from './profile-capabilities';
 import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/resources';
 import { targetingFor } from '$lib/server/mcp/entities';
 import { isTextCapability } from './text-version-capabilities';
+import { isTextCommitCapability } from './text-commit-capabilities';
 
 /** One area of the app, as the navigation names it. */
 export interface AppArea {
@@ -148,11 +149,16 @@ export const APP_AREAS: readonly AppArea[] = [
  * this block exists to close, and worse than it, because "your app cannot do
  * that" sends someone looking while "I can do that" does not. The pages
  * themselves are named in APP_AREAS, which is the honest answer.
+ *
+ * The commit verbs (`use_<kind>_version`) drop out on exactly those terms.
+ * Their button is the one in that same editor, three lines under the version it
+ * commits, so a chat offering to press it is offering to do the thing the
+ * applicant is already looking at.
  */
 function entityCapabilities(): Capability[] {
 	const generated = new Set<string>(PROFILE_CAPABILITY_NAMES);
 	return (Object.keys(CAPABILITIES) as Capability[]).filter(
-		(c) => !generated.has(c) && !isTextCapability(c)
+		(c) => !generated.has(c) && !isTextCapability(c) && !isTextCommitCapability(c)
 	);
 }
 

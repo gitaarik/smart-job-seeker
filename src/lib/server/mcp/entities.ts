@@ -54,6 +54,11 @@ import {
 	kindForTextCapability,
 	type TextCapability
 } from '$lib/server/ai-chat/text-version-capabilities';
+import {
+	TEXT_COMMIT_CAPABILITY_NAMES,
+	kindForTextCommitCapability,
+	type TextCommitCapability
+} from '$lib/server/ai-chat/text-commit-capabilities';
 
 /** A resolved row, or the sentence to hand back to the agent instead. */
 export type EntityResolution = { target: CapabilityTarget } | { error: string };
@@ -221,6 +226,21 @@ const TEXT_TARGETING = Object.fromEntries(
 ) as Record<TextCapability, EntityTargeting>;
 
 /**
+ * The commit verbs name a row exactly as the version verbs do.
+ *
+ * Same kind, same id space, same `list_texts` — so the same targeting, built
+ * from the same function rather than described a second time. What differs
+ * between `add_<kind>_version` and `use_<kind>_version` is what they do to the
+ * row they both reach, and none of that is targeting's business.
+ */
+const TEXT_COMMIT_TARGETING = Object.fromEntries(
+	TEXT_COMMIT_CAPABILITY_NAMES.map((capability) => [
+		capability,
+		textTargeting(kindForTextCommitCapability(capability))
+	])
+) as Record<TextCommitCapability, EntityTargeting>;
+
+/**
  * The hand-written capabilities, and what each one's id argument names.
  *
  * `add_activity_record` is the odd one and worth reading twice: its argument
@@ -238,7 +258,9 @@ export const ENTITY_TARGETING: Partial<Record<Capability, EntityTargeting>> = {
 	// Generated, one per kind. They are `add_` verbs that still name a row —
 	// the same shape as `add_activity_record`, whose argument names the
 	// application an entry is filed under rather than a row being changed.
-	...TEXT_TARGETING
+	...TEXT_TARGETING,
+	// And one per kind again for the verb that commits one of those versions.
+	...TEXT_COMMIT_TARGETING
 };
 
 export const ENTITY_CAPABILITY_NAMES = Object.keys(ENTITY_TARGETING) as Capability[];

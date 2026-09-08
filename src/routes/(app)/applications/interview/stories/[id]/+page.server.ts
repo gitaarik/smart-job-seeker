@@ -18,6 +18,7 @@ import {
 } from '$lib/server/ai-chat/entity-versions';
 import { parseStarMarkdown, serializeStarMarkdown } from '$lib/interview/star';
 import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
+import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
 
 export const load: PageServerLoad = async ({ parent, params }) => {
 	const { selectedProfile } = await parent();
@@ -196,15 +197,12 @@ export const actions: Actions = {
 		const content = (formData.get('content') as string | null)?.trim() || null;
 		if (!content) return fail(400, { error: 'Nothing to apply' });
 
-		await db
-			.update(project_stories)
-			.set({
-				...starColumns(content),
-				date_updated: new Date()
-			})
-			.where(eq(project_stories.id, storyId));
+		// One definition of "put this text on the row", shared with the MCP verb
+		// that asks for the same thing. Four copies of this update is what it
+		// replaces, and the story's was the one worth not having twice: its
+		// markdown has to fan back out into five columns.
+		await TEXT_KINDS.story.setText(storyId, profileId, content);
 
-		await touchProfile(profileId);
 		return { success: true };
 	},
 

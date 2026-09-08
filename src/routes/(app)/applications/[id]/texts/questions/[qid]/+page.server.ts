@@ -16,6 +16,7 @@ import {
 	type VersionSource
 } from '$lib/server/ai-chat/entity-versions';
 import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
+import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
 
 export const load: PageServerLoad = async ({ parent, params }) => {
 	const layoutData = await parent();
@@ -94,7 +95,7 @@ async function loadOwnedQuestion(
 		return { fail: fail(404, { error: 'Question not found' }) } as const;
 	}
 
-	return { question, qid } as const;
+	return { question, qid, profileId } as const;
 }
 
 export const actions: Actions = {
@@ -154,19 +155,17 @@ export const actions: Actions = {
 	applyVersion: async ({ request, locals, cookies, params }) => {
 		const owned = await loadOwnedQuestion(locals, cookies, params.id, params.qid);
 		if ('fail' in owned) return owned.fail;
-		const { qid } = owned;
+		const { qid, profileId } = owned;
 
 		const formData = await request.formData();
 		const content = (formData.get('content') as string | null)?.trim() || null;
 		if (!content) return fail(400, { error: 'Nothing to apply' });
 
-		await db
-			.update(application_questions)
-			.set({
-				answer: content,
-				date_updated: new Date()
-			})
-			.where(eq(application_questions.id, qid));
+		// One definition of "put this text on the row", shared with the MCP verb
+		// that asks for the same thing. Four copies of this update is what it
+		// replaces, and the story's was the one worth not having twice: its
+		// markdown has to fan back out into five columns.
+		await TEXT_KINDS.question.setText(qid, profileId, content);
 
 		return { success: true };
 	},

@@ -560,7 +560,9 @@ describe('hiding an entry', () => {
 		// back.
 		state.row = { id: 5, profile_id: 12, position: 'Engineer', name: 'Acme', tags: ['senior'] };
 
-		expect(await hide.beforeImage?.({ id: 5, label: 'Acme' }, {}, ACTOR)).toEqual({
+		// `{}` is not a stand-in here: a hide writes no fields, so it is exactly
+		// what `executeCapability` hands the hook.
+		expect(await hide.beforeImage?.({ id: 5, label: 'Acme' }, {}, ACTOR, {})).toEqual({
 			tags: ['senior']
 		});
 	});

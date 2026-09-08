@@ -128,8 +128,14 @@ async function currentState(
  * — which is how the timeline decides whether a version is the live one. Text
  * with no recognizable heading degrades to the whole blob in Situation rather
  * than being dropped, which is `star.ts`'s rule and not this file's.
+ *
+ * Exported for `text-commit-capabilities.ts`, which asks the same question from
+ * the other end: whether a version in the trail is the text the row already
+ * holds. Two copies of this would answer that differently for exactly the kind
+ * it exists for, and the disagreement would read as a story that can never be
+ * committed because it never matches itself.
  */
-function normalizeForKind(kind: TextKind, content: string): string {
+export function normalizeForKind(kind: TextKind, content: string): string {
 	return kind === 'story' ? serializeStarMarkdown(parseStarMarkdown(content)) || content : content;
 }
 

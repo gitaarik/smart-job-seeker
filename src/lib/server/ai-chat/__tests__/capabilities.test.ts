@@ -15,6 +15,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { PROFILE_CAPABILITY_NAMES } from '../profile-capabilities';
 import { isTextCapability } from '../text-version-capabilities';
+import { isTextCommitCapability } from '../text-commit-capabilities';
 
 let applicationRow: unknown = null;
 let jobRow: unknown = null;
@@ -1016,7 +1017,9 @@ describe('update_application_status', () => {
 		// The undo case this exists for: the proposal names the status alone, the
 		// write clears the stage as well, and a before-image of the proposed
 		// fields would put the status back with the stage still gone.
-		const before = await def.beforeImage?.({ id: 49, label: 'x' }, APPLYING, ACTOR);
+		const before = await def.beforeImage?.({ id: 49, label: 'x' }, APPLYING, ACTOR, {
+			status: 'interviewing'
+		});
 
 		expect(before).toEqual(APPLYING);
 	});
@@ -1317,10 +1320,19 @@ describe('the registry as a whole', () => {
 		// — which is why four contracts of that size can exist without this budget
 		// having an opinion. One of them becoming page-resolvable is a change that
 		// has to come back here.
+		//
+		// The commit verbs (`use_<kind>_version`) are out on the same terms and
+		// not on a softer version of them: they resolve to null too, they exist
+		// only on the MCP server, and each text's editor is where a person does
+		// this with a button. Adding them to the union WITHOUT this line put the
+		// measurement at 23,113 against a 22,000 ceiling, which is the number this
+		// exclusion has to be worth stating.
 		const live = (Object.keys(CAPABILITIES) as Capability[])
 			.filter(
 				(capability) =>
-					!PROFILE_CAPABILITY_NAMES.includes(capability as never) && !isTextCapability(capability)
+					!PROFILE_CAPABILITY_NAMES.includes(capability as never) &&
+					!isTextCapability(capability) &&
+					!isTextCommitCapability(capability)
 			)
 			.map((capability) => ({ capability, targets: [{ id: 1, label: 'x' }], current: {} }));
 

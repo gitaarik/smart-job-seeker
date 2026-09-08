@@ -20,6 +20,7 @@ import { formatAbilityManifest, APP_AREAS } from '../ability-manifest';
 import { CAPABILITIES, type Capability } from '../capabilities';
 import { PROFILE_CAPABILITY_NAMES } from '../profile-capabilities';
 import { TEXT_CAPABILITY_NAMES, isTextCapability } from '../text-version-capabilities';
+import { TEXT_COMMIT_CAPABILITY_NAMES, isTextCommitCapability } from '../text-commit-capabilities';
 import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/resources';
 
 const TEXT = formatAbilityManifest();
@@ -67,6 +68,7 @@ describe('formatAbilityManifest', () => {
 		const generated = new Set<string>(PROFILE_CAPABILITY_NAMES);
 		for (const capability of Object.keys(CAPABILITIES) as Capability[]) {
 			if (generated.has(capability) || isTextCapability(capability)) continue;
+			if (isTextCommitCapability(capability)) continue;
 			expect(TEXT, capability).toContain(CAPABILITIES[capability].title);
 		}
 	});
@@ -79,7 +81,7 @@ describe('formatAbilityManifest', () => {
 		// the app — so listing them would promise a verb the chat can never offer.
 		// A version of one that DOES resolve from a page has to be added here on
 		// purpose rather than by inheriting this exclusion.
-		for (const capability of TEXT_CAPABILITY_NAMES) {
+		for (const capability of [...TEXT_CAPABILITY_NAMES, ...TEXT_COMMIT_CAPABILITY_NAMES]) {
 			expect(TEXT, capability).not.toContain(CAPABILITIES[capability].title);
 		}
 

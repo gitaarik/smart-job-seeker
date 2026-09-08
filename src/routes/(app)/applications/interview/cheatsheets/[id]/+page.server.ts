@@ -17,6 +17,7 @@ import {
 	type VersionSource
 } from '$lib/server/ai-chat/entity-versions';
 import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
+import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
 import { htmlToMarkdown } from '$lib/utils/html-to-markdown';
 
 export const load: PageServerLoad = async ({ parent, params }) => {
@@ -159,15 +160,12 @@ export const actions: Actions = {
 		const content = (formData.get('content') as string | null)?.trim() || null;
 		if (!content) return fail(400, { error: 'Nothing to apply' });
 
-		await db
-			.update(cheat_sheets)
-			.set({
-				content,
-				date_updated: new Date()
-			})
-			.where(eq(cheat_sheets.id, cheatSheetId));
+		// One definition of "put this text on the row", shared with the MCP verb
+		// that asks for the same thing. Four copies of this update is what it
+		// replaces, and the story's was the one worth not having twice: its
+		// markdown has to fan back out into five columns.
+		await TEXT_KINDS.cheat_sheet.setText(cheatSheetId, profileId, content);
 
-		await touchProfile(profileId);
 		return { success: true };
 	},
 

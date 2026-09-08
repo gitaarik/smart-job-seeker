@@ -41,6 +41,7 @@ import { APP_AREAS } from '$lib/server/ai-chat/ability-manifest';
 import { CAPABILITIES, type Capability } from '$lib/server/ai-chat/capabilities';
 import { PROFILE_CAPABILITY_NAMES } from '$lib/server/ai-chat/profile-capabilities';
 import { APPLICATION_COLLECTION, ENTITY_CAPABILITY_NAMES, targetingFor } from './entities';
+import { isTextCommitCapability } from '$lib/server/ai-chat/text-commit-capabilities';
 import {
 	TEXT_CREATE_CAPABILITY_NAMES,
 	isTextCreateCapability,
@@ -153,6 +154,8 @@ export const MCP_CAPABILITIES: Capability[] = [
 // application's. A kind added there without targeting would ship a tool whose
 // id argument does not exist — asserted in tools.test.ts rather than here,
 // because a check that throws at module load takes the whole server with it.
+// The four commit verbs (`use_<kind>_version`) arrive the same way and for the
+// same reason: they name one of that text's versions and reach the text by id.
 
 export function isMcpCapability(name: string): name is Capability {
 	return (MCP_CAPABILITIES as string[]).includes(name);
@@ -328,6 +331,11 @@ function writeTool(capability: Capability, parents?: string): McpTool {
 	const def = CAPABILITIES[capability];
 	const isAdd = capability.startsWith('add_');
 	const isHide = capability.startsWith('hide_');
+	// The two verbs that are Tier 2 whatever the row holds: a hide takes an entry
+	// off every document, and a commit replaces a text the applicant is going to
+	// send. Every other capability's tier depends on values nobody has read yet
+	// at `tools/list` time, so only these two can promise it in a title.
+	const alwaysAsks = isHide || isTextCommitCapability(capability);
 
 	const properties: Record<string, unknown> = { profile_id: PROFILE_ID_PROPERTY };
 	const required = ['profile_id'];
@@ -380,8 +388,9 @@ function writeTool(capability: Capability, parents?: string): McpTool {
 		annotations: {
 			...annotationsFor(capability),
 			// A hide writes nothing but tags, so an agent reading only the schema
-			// would see a tool with no fields and no clue what it does.
-			title: isHide ? `${def.title} (needs your approval)` : def.title
+			// would see a tool with no fields and no clue what it does. A commit
+			// writes one integer, which says even less about what it replaces.
+			title: alwaysAsks ? `${def.title} (needs your approval)` : def.title
 		}
 	};
 }
@@ -537,7 +546,9 @@ written by you changes nothing until they do.
 
 Two fields decide what is worth doing:
 - "latest_is_current" false means a version is ALREADY waiting that nobody has
-  taken. Do not write another on top of it.
+  taken. Do not write another on top of it. What you CAN do is ask for it to be
+  taken: use_<kind>_version with "latest_version_id" puts that decision on their
+  Recent Changes page, where the two texts are shown side by side.
 - "chars" is the length of the text as it stands, which is the newest version
   where there is one and the saved text otherwise.
 
@@ -584,7 +595,9 @@ is not what the letter says, because nobody has taken it.
 
 "trail" is one line per version: where it came from, how long it was, and what
 the editor said about it. Version CONTENT is not returned — the current text is
-above it, and the applicant compares the rest in the app.
+above it, and the applicant compares the rest in the app. Its "version_id" is
+the handle use_<kind>_version takes, which is how you ask for one of these to
+become the text.
 
 Long texts come back in ${TEXT_READ_CHARS}-character slices; the result says
 whether there is more and at what offset to continue. A text longer than one
@@ -806,8 +819,12 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
 		`Two of those overlap with tools here. The letters and answers on an ` +
 			`application's texts tab, and the stories and cheat sheets in Interview Prep, ` +
 			`are readable with list_texts and read_text, and each can take a NEW VERSION ` +
-			`— which is a proposal in that text's timeline, not a change to the text. The ` +
-			`rest of those pages, and everything else listed above, is theirs to do.`
+			`— which is a proposal in that text's timeline, not a change to the text. ` +
+			`Making one of those versions the text is a separate verb again ` +
+			`(use_<kind>_version), and it is a request every time: it replaces prose ` +
+			`they are going to send, so it goes to them to approve like any other ` +
+			`overwrite. The rest of those pages, and everything else listed above, is ` +
+			`theirs to do.`
 	].join('\n\n');
 }
 

@@ -970,7 +970,7 @@ async function runWrite(
 			capability,
 			target,
 			fields,
-			previous: def.beforeImage ? await def.beforeImage(target, current, actor) : previous,
+			previous: def.beforeImage ? await def.beforeImage(target, current, actor, fields) : previous,
 			rationale
 		});
 

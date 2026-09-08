@@ -62,7 +62,7 @@ import {
 	type VersionSource,
 	type VersionTrailSummary
 } from '$lib/server/ai-chat/entity-versions';
-import { serializeStarMarkdown } from '$lib/interview/star';
+import { parseStarMarkdown, serializeStarMarkdown } from '$lib/interview/star';
 import { touchProfile } from '$lib/server/profile/touch-profile';
 
 /** How much of one text comes back in a single read. Same slice as a document. */
@@ -140,6 +140,24 @@ export interface TextKindDef {
 	 * exist to preserve.
 	 */
 	create?(profileId: number, title: string): Promise<TextRow>;
+	/**
+	 * Put a text on the row itself, replacing what it holds.
+	 *
+	 * The one write here that changes what anybody reads, and the reason it is a
+	 * member rather than one update over a binding: what "the text" means is
+	 * different per kind. Two keep it in `content`, a question calls it `answer`,
+	 * and a story has no single column at all — its markdown fans back out into
+	 * the five STAR ones. Touching the profile is per kind too: a story and a
+	 * cheat sheet hang off it and invalidate its caches, a letter and an answer
+	 * hang off an application and never did.
+	 *
+	 * Records no version, deliberately. Every caller is committing a string that
+	 * is ALREADY in the trail — that is what "use this version" means — and
+	 * recording it again would put a second identical entry in the timeline the
+	 * applicant chose from. The four pages' own `applyVersion` actions are the
+	 * original of that rule and now call this.
+	 */
+	setText(id: number, profileId: number, content: string | null): Promise<void>;
 }
 
 /* ------------------------------------------------------------------ *
@@ -256,6 +274,13 @@ const letterKind: TextKindDef = {
 			committed: row.content,
 			path: `/applications/${row.application_id}/texts/${row.id}`
 		};
+	},
+
+	setText: async (id, _profileId, content) => {
+		await db
+			.update(application_letters)
+			.set({ content, date_updated: new Date() })
+			.where(eq(application_letters.id, id));
 	}
 };
 
@@ -306,6 +331,13 @@ const questionKind: TextKindDef = {
 			prompt: row.question,
 			path: `/applications/${row.application_id}/texts/questions/${row.id}`
 		};
+	},
+
+	setText: async (id, _profileId, content) => {
+		await db
+			.update(application_questions)
+			.set({ answer: content, date_updated: new Date() })
+			.where(eq(application_questions.id, id));
 	}
 };
 
@@ -390,6 +422,26 @@ const storyKind: TextKindDef = {
 			committed: null,
 			path: `/applications/interview/stories/${row.id}`
 		};
+	},
+
+	setText: async (id, profileId, content) => {
+		// The one kind with no column to write. Parsed back into its five, which is
+		// the exact inverse of the `serializeStarMarkdown` its reads go out through
+		// — so a version committed here round-trips to the text it was taken from.
+		const star = parseStarMarkdown(content);
+		await db
+			.update(project_stories)
+			.set({
+				situation: star.situation,
+				task: star.task,
+				action: star.action,
+				result: star.result,
+				reflection: star.reflection,
+				date_updated: new Date()
+			})
+			.where(eq(project_stories.id, id));
+
+		await touchProfile(profileId);
 	}
 };
 
@@ -448,6 +500,15 @@ const cheatSheetKind: TextKindDef = {
 			committed: null,
 			path: `/applications/interview/cheatsheets/${row.id}`
 		};
+	},
+
+	setText: async (id, profileId, content) => {
+		await db
+			.update(cheat_sheets)
+			.set({ content, date_updated: new Date() })
+			.where(eq(cheat_sheets.id, id));
+
+		await touchProfile(profileId);
 	}
 };
 

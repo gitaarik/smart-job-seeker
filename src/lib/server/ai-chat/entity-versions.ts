@@ -115,6 +115,56 @@ export async function buildConversation(
 	}));
 }
 
+/** One version's own row, for a caller that holds an id rather than a thread. */
+export interface StoredVersion {
+	id: number;
+	content: string | null;
+	source: VersionSource;
+	date: Date | null;
+}
+
+/**
+ * One version, by id, scoped to the entity it belongs to.
+ *
+ * The scoping is the point rather than a shortcut past a second query. Version
+ * ids are per TABLE — every letter on the site numbers its versions out of one
+ * sequence — so a lookup by id alone reads whatever row that number happens to
+ * name, including another applicant's draft. Asking for the pair makes a
+ * version outside this entity indistinguishable from one that was never there,
+ * which is the rule `mcp/entities.ts` states for jobs and applications.
+ *
+ * `buildConversation` answers the same question for a caller that wants the
+ * whole trail. This exists for the one that already knows which version it
+ * means and would otherwise read every version of the text to find it.
+ */
+export async function readVersion(
+	vt: VersionBinding,
+	entityId: number,
+	versionId: number
+): Promise<StoredVersion | null> {
+	const rows = await db
+		.select({
+			id: vt.id,
+			content: vt.table.content,
+			source: vt.table.source,
+			date_created: vt.table.date_created
+		})
+		.from(vt.table)
+		.where(and(eq(vt.fk, entityId), eq(vt.id, versionId)))
+		.limit(1);
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const row = (rows as any[])[0];
+	if (!row) return null;
+
+	return {
+		id: row.id,
+		content: row.content,
+		source: row.source as VersionSource,
+		date: row.date_created
+	};
+}
+
 /** How many versions an entity has, and what the newest one is. */
 export interface VersionTrailSummary {
 	count: number;

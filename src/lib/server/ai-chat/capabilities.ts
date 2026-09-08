@@ -68,6 +68,7 @@ import {
 	writeApplicationStatus
 } from '$lib/server/applications/status';
 import { TEXT_CREATE_CAPABILITIES, type TextCreateCapability } from './text-create-capabilities';
+import { TEXT_COMMIT_CAPABILITIES, type TextCommitCapability } from './text-commit-capabilities';
 import type { EditSource } from './edit-log';
 import type { TierDecision } from '$lib/server/mcp/tiers';
 import { createApplication, parseForNewApplication } from '$lib/server/applications/create';
@@ -99,7 +100,11 @@ type HandWrittenCapability =
  * create verb for the two kinds an agent may start rather than only append to.
  */
 export type Capability =
-	HandWrittenCapability | ProfileCapability | TextCapability | TextCreateCapability;
+	| HandWrittenCapability
+	| ProfileCapability
+	| TextCapability
+	| TextCreateCapability
+	| TextCommitCapability;
 
 /** The concrete row a capability acts on, once resolved from the page entity. */
 export interface CapabilityTarget {
@@ -330,8 +335,38 @@ export interface CapabilityDef {
 	beforeImage?(
 		target: CapabilityTarget,
 		current: Record<string, unknown>,
-		actor: CapabilityActor
+		actor: CapabilityActor,
+		/**
+		 * The write about to happen, for the before-image that depends on it.
+		 *
+		 * Last, so the implementations that do not need it do not name it. Only
+		 * `use_<kind>_version` reads it: its field is a version id, and both what
+		 * that write replaces and what it puts there are rows this has to fetch —
+		 * neither is in `current`, which counts the trail rather than reading it.
+		 */
+		fields: Record<string, unknown>
 	): Promise<Record<string, unknown>>;
+	/**
+	 * The before and after this write should be REVIEWED as, where its fields are
+	 * not it.
+	 *
+	 * `describeProposalChanges` pairs each field a call sent with the value the
+	 * row held, which is the right review of a column patch and useless for a
+	 * write whose field is a *handle*. `use_cheat_sheet_version` sends one
+	 * integer, and a card reading "Version id: 2 → 4" asks somebody to approve a
+	 * text nobody showed them — on the one surface whose whole purpose is that
+	 * they read it first.
+	 *
+	 * Synchronous, and reads nothing. Both callers are renderers holding a stored
+	 * row and no database: the approval card built in `/data/ai-changes` and the
+	 * history feed under it. A capability that needs more than its fields carry
+	 * puts it in `beforeImage`, which runs once, at the moment the request is
+	 * recorded, and reads it back here.
+	 */
+	describeChanges?(
+		fields: Record<string, unknown>,
+		previous: Record<string, unknown>
+	): ProposedChange[];
 	/**
 	 * Put back what this capability's write replaced, from the log's before-image.
 	 *
@@ -1694,7 +1729,8 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
 	add_application: addApplication,
 	...PROFILE_CAPABILITIES,
 	...TEXT_CAPABILITIES,
-	...TEXT_CREATE_CAPABILITIES
+	...TEXT_CREATE_CAPABILITIES,
+	...TEXT_COMMIT_CAPABILITIES
 };
 
 /** A capability that resolved and authorized for this turn. */
@@ -2032,7 +2068,7 @@ export async function executeCapability(
 	// carries no fields, so the narrowing would give `{}` and an undo would have
 	// nothing to put back. See CapabilityDef.beforeImage.
 	const previous = def.beforeImage
-		? await def.beforeImage(target, current, actor)
+		? await def.beforeImage(target, current, actor, fields)
 		: Object.fromEntries(
 				Object.keys(fields)
 					.filter((key) => key in current)
@@ -2236,11 +2272,17 @@ export function describeProposalChanges(
 	fields: Record<string, unknown>,
 	current: Record<string, unknown>
 ): ProposedChange[] {
+	// A capability whose fields are a handle rather than the change describes
+	// itself. See CapabilityDef.describeChanges — without it a version commit
+	// renders as one integer replacing another.
+	const def = CAPABILITIES[capability];
+	if (def.describeChanges) return def.describeChanges(fields, current);
+
 	// Filtered on what the proposal actually WROTE, not on the union below: a
 	// proposal's `previous` holds the old value of every written field, so the
 	// two are the same set here — and `hide_*` writes none at all, where a union
 	// would start describing the tag array it recorded as a change nobody made.
-	return Object.keys(CAPABILITIES[capability].fields)
+	return Object.keys(def.fields)
 		.filter((field) => field in fields)
 		.map((field) => ({
 			field,
