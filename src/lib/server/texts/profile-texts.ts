@@ -64,6 +64,7 @@ import {
 } from '$lib/server/ai-chat/entity-versions';
 import { parseStarMarkdown, serializeStarMarkdown } from '$lib/interview/star';
 import { touchProfile } from '$lib/server/profile/touch-profile';
+import { sameText } from '$lib/utils/same-text';
 
 /** How much of one text comes back in a single read. Same slice as a document. */
 export const TEXT_READ_CHARS = 60000;
@@ -578,7 +579,7 @@ function currentText(
 	// A version carrying no content is an advice turn: it changed nothing, so
 	// what the entity holds is still current.
 	if (!newest) return { text: committed, latestIsCurrent: true };
-	return { text: newest, latestIsCurrent: newest.trim() === committed.trim() };
+	return { text: newest, latestIsCurrent: sameText(newest, committed) };
 }
 
 async function summarize(def: TextKindDef, rows: TextRow[]): Promise<ProfileTextSummary[]> {

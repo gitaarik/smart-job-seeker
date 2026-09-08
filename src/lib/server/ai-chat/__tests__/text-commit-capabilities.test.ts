@@ -205,6 +205,15 @@ describe('which version the text is already showing', () => {
 		expect((await stateFor()).cheat_sheet_version_id).toBeNull();
 	});
 
+	it('counts a version that differs only in line endings as the live one', async () => {
+		// The case this whole rule was found on: a sheet stored with CRLF and a
+		// version of it written with LF are the same words, and reading them as a
+		// rewrite offers a commit that changes nothing a person can see.
+		committed = 'first line\r\nsecond line';
+		trail = [version(4, 'first line\nsecond line')];
+		expect((await stateFor()).cheat_sheet_version_id).toBe(4);
+	});
+
 	it('takes the newest of two versions holding the same words', async () => {
 		// A text committed, revised and committed back has two matches, and the
 		// badge in the editor sits on the later one.

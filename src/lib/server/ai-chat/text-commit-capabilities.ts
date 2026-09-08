@@ -50,6 +50,7 @@ import {
 	type TextKind
 } from '$lib/server/texts/profile-texts';
 import { normalizeForKind } from './text-version-capabilities';
+import { sameText } from '$lib/utils/same-text';
 import type { VersionSource } from './entity-versions';
 import type {
 	CapabilityActor,
@@ -118,7 +119,7 @@ async function currentState(
 	const row = await readOwnedText(kind, target.id, actor.profileId);
 	if (!row) return { [field]: null, text: '', versions: [] };
 
-	const committed = normalizeForKind(kind, row.committed ?? '').trim();
+	const committed = normalizeForKind(kind, row.committed ?? '');
 	const trail = await buildConversation(TEXT_KINDS[kind].versions, target.id);
 
 	// A version carrying no content is an advice turn: a turn in the thread
@@ -140,7 +141,7 @@ async function currentState(
 	const live =
 		[...withText]
 			.reverse()
-			.find((entry) => normalizeForKind(kind, entry.content ?? '').trim() === committed) ?? null;
+			.find((entry) => sameText(normalizeForKind(kind, entry.content ?? ''), committed)) ?? null;
 
 	return {
 		[field]: live?.versionId ?? null,
@@ -306,7 +307,7 @@ function capabilityFor(kind: TextKind): CapabilityDef {
 		describeChanges: (_fields, previous): ProposedChange[] => {
 			const from = typeof previous.text === 'string' ? previous.text : '';
 			const to = typeof previous.version_text === 'string' ? previous.version_text : '';
-			if (from.trim() === to.trim()) return [];
+			if (sameText(from, to)) return [];
 
 			// One change and not two: an id moving from 2 to 4 is the mechanism,
 			// and the text is the decision. `field` is the render key only.

@@ -29,6 +29,7 @@
 	import AutoGrowTextarea from '$lib/components/AutoGrowTextarea.svelte';
 	import { renderSafeMarkdown } from '$lib/utils/safe-markdown';
 	import { computeDiff, isSmallDiff } from '$lib/utils/word-diff';
+	import { sameText } from '$lib/utils/same-text';
 	import Card from '../../../routes/(app)/components/Card.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import GenerationStatus from '$lib/components/GenerationStatus.svelte';
@@ -640,9 +641,7 @@
 			{@const editingPrevious = isEditingPreviousVersion()}
 			{@const hasPrevious = getPreviousContent(entryIndex) !== null}
 			{@const isCurrentAnswer =
-				!!onApplyVersion &&
-				!!entry.content &&
-				entry.content.trim() === (currentContent ?? '').trim()}
+				!!onApplyVersion && !!entry.content && sameText(entry.content, currentContent)}
 			{@const showingDiff =
 				!isEditingThis &&
 				hasPrevious &&

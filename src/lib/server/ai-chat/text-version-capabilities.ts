@@ -55,6 +55,7 @@ import {
 	type TextKind
 } from '$lib/server/texts/profile-texts';
 import { parseStarMarkdown, serializeStarMarkdown } from '$lib/interview/star';
+import { sameText } from '$lib/utils/same-text';
 import type { CapabilityActor, CapabilityDef, CapabilityTarget } from './capabilities';
 
 /** The provenance every version written from this server carries. */
@@ -277,7 +278,11 @@ function capabilityFor(kind: TextKind): CapabilityDef {
 				};
 			}
 
-			if (normalizeForKind(kind, proposed).trim() === existing.trim()) {
+			// Line endings folded with the trim, because a version that differs from
+			// the text only in CRLF is not a proposal — it is the same words, and
+			// letting one through is what put a "waiting version" on a sheet that
+			// already said it. See same-text.ts.
+			if (sameText(normalizeForKind(kind, proposed), existing)) {
 				return { ok: false, error: `That is word for word what the ${def.noun} already says.` };
 			}
 
