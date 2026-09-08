@@ -17,6 +17,7 @@ import {
 import { getSchemaForPrompt } from '$lib/server/schemas/ai-prompt-schemas';
 import { promptTemplates } from './prompt-templates.js';
 import { tokensToCost } from '$lib/server/billing/credits';
+import { describeSpendBlock, getSpendEligibility } from '$lib/server/account/spend-eligibility';
 import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
 import { assembleGenerationContext, type ContextRequest } from './generation-context';
 import { applySkillVisibility, loadProfileData, renderProfileData } from './profile-data';
@@ -339,12 +340,24 @@ export async function createAndGenerateAiChat(
 	let aiChatId: number | undefined;
 
 	try {
-		// Check credits before doing any work
+		// Two questions before doing any work, and they are not the same one.
+		// "May this account cause spend at all" fails for an expired demo, an
+		// unapproved account and a pending erasure; all three still pass the
+		// budget check below, and matching charges no credits anyway. Asked
+		// first, so a profile whose owner is gone never reaches getBalance,
+		// which upserts into credit_balances and throws on the missing FK.
 		const profile = await db.query.profiles.findFirst({
 			where: eq(profiles.id, profileId),
 			columns: { user_id: true }
 		});
 		if (profile?.user_id) {
+			const eligibility = await getSpendEligibility(profile.user_id);
+			if (!eligibility.allowed) {
+				return {
+					success: false,
+					message: `AI operations are disabled for this account: ${describeSpendBlock(eligibility.reason)}.`
+				};
+			}
 			const { getBalance } = await import('$lib/server/billing/credits');
 			const balance = await getBalance(profile.user_id);
 			if (balance.available <= 0) {
