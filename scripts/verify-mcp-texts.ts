@@ -13,7 +13,8 @@
  * before.
  *
  * It creates its own job, application, letter, question, story and cheat sheet,
- * does everything to them, and deletes them again.
+ * does everything to them — including starting the texts the create verbs start —
+ * and deletes them again.
  *
  *   npx dotenvx run -f /app/.env -- npx tsx scripts/verify-mcp-texts.ts <profileId>
  */
@@ -277,6 +278,113 @@ async function main() {
 			console.log('  --   only one profile exists, so cross-profile scope is untested');
 		}
 
+		/* --- starting one that does not exist yet --------------------------- */
+
+		const startedLetter = await callTool(
+			'add_letter',
+			{
+				profile_id: profileId,
+				application_id: application.id,
+				letter_type: 'cheat_sheet',
+				rationale: 'They asked for notes to take into the interview.'
+			},
+			KEY
+		);
+		check('a letter can be started under an application', startedLetter.isError === undefined);
+		// The half a mock cannot check: which row it landed under, and that it is
+		// empty. A create that passed the profile id where the application id goes
+		// would write onto a stranger's application rather than failing.
+		const made = await db
+			.select({ id: application_letters.id, content: application_letters.content })
+			.from(application_letters)
+			.where(
+				and(
+					eq(application_letters.application_id, application.id),
+					eq(application_letters.letter_type, 'cheat_sheet')
+				)
+			);
+		check('it is on that application, once', made.length === 1);
+		check(
+			'and it is empty, so the text still has to arrive as a version',
+			made[0]?.content == null
+		);
+		check(
+			'the result hands back the id the second call needs',
+			made[0] !== undefined && text(startedLetter).includes(String(made[0].id)),
+			text(startedLetter).slice(0, 80)
+		);
+
+		const duplicateLetter = await callTool(
+			'add_letter',
+			{
+				profile_id: profileId,
+				application_id: application.id,
+				letter_type: 'cover_letter',
+				rationale: 'Writing the cover letter.'
+			},
+			KEY
+		);
+		check(
+			'a second letter of a type the application has is refused',
+			duplicateLetter.isError === true && text(duplicateLetter).includes('add_letter_version'),
+			text(duplicateLetter).slice(0, 80)
+		);
+
+		const badType = await callTool(
+			'add_letter',
+			{
+				profile_id: profileId,
+				application_id: application.id,
+				letter_type: 'thank_you_note',
+				rationale: 'A type that does not exist.'
+			},
+			KEY
+		);
+		check('a letter type the list has no name for is refused', badType.isError === true);
+
+		const unownedApplication = await callTool(
+			'add_letter',
+			{
+				profile_id: profileId,
+				// An application id is a global address the way a profile id is not.
+				application_id: application.id + 10_000_000,
+				letter_type: 'cover_letter',
+				rationale: 'An application this key cannot reach.'
+			},
+			KEY
+		);
+		check(
+			'an application this profile does not own is refused',
+			unownedApplication.isError === true
+		);
+
+		const startedSheet = await callTool(
+			'add_cheat_sheet',
+			{
+				profile_id: profileId,
+				cheat_sheet_title: 'ZZ Verify Started Sheet',
+				rationale: 'Checking the profile-owned branch still names the profile.'
+			},
+			KEY
+		);
+		check(
+			'a profile-owned text still starts with no application',
+			startedSheet.isError === undefined
+		);
+		const madeSheet = await db
+			.select({ id: cheat_sheets.id, content: cheat_sheets.content })
+			.from(cheat_sheets)
+			.where(
+				and(
+					eq(cheat_sheets.profile_id, profileId),
+					eq(cheat_sheets.title, 'ZZ Verify Started Sheet')
+				)
+			);
+		check(
+			'and lands on the profile, empty',
+			madeSheet.length === 1 && madeSheet[0].content == null
+		);
+
 		/* --- the write, and what it must not touch -------------------------- */
 
 		const wrote = await callTool(
@@ -448,7 +556,21 @@ async function main() {
 		await db.delete(question_versions).where(eq(question_versions.question, question.id));
 		await db.delete(story_versions).where(eq(story_versions.story, story.id));
 		await db.delete(cheat_sheet_versions).where(eq(cheat_sheet_versions.cheat_sheet, sheet.id));
-		await db.delete(application_letters).where(eq(application_letters.id, letter.id));
+		// Every letter on the scratch application, not only the fixture: the create
+		// verb makes one of its own, and the cascade from `applications` would take
+		// it either way — deleted here so a missing cascade shows up as a failure
+		// rather than as rows nobody looks at.
+		await db
+			.delete(application_letters)
+			.where(eq(application_letters.application_id, application.id));
+		await db
+			.delete(cheat_sheets)
+			.where(
+				and(
+					eq(cheat_sheets.profile_id, profileId),
+					eq(cheat_sheets.title, 'ZZ Verify Started Sheet')
+				)
+			);
 		await db.delete(application_questions).where(eq(application_questions.id, question.id));
 		await db.delete(project_stories).where(eq(project_stories.id, story.id));
 		await db.delete(cheat_sheets).where(eq(cheat_sheets.id, sheet.id));

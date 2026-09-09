@@ -10,7 +10,11 @@ import { describe, expect, it } from 'vitest';
 import { APP_AREAS } from '$lib/server/ai-chat/ability-manifest';
 import { CAPABILITIES } from '$lib/server/ai-chat/capabilities';
 import { ENTITY_CAPABILITY_NAMES, targetingFor } from '../entities';
-import { TEXT_CREATE_CAPABILITY_NAMES } from '$lib/server/ai-chat/text-create-capabilities';
+import {
+	TEXT_CREATE_CAPABILITY_NAMES,
+	kindForTextCreateCapability,
+	textCreateOwner
+} from '$lib/server/ai-chat/text-create-capabilities';
 import {
 	DOCUMENT_TOOLS,
 	instructionsFor,
@@ -125,13 +129,15 @@ describe('how a write names its row', () => {
 		expect(pageFor('add_application')).toEqual({ name: 'Applications', path: '/applications' });
 	});
 
-	it('makes the ones that START an interview-prep text name nothing either', () => {
+	it('makes the ones that START a profile-owned text name nothing either', () => {
 		// Same third shape as add_application: no row to name, and the key says
 		// which profile. A required id here would be an id of the thing being
 		// created, which does not exist yet.
 		for (const capability of TEXT_CREATE_CAPABILITY_NAMES) {
+			const kind = kindForTextCreateCapability(capability);
+			if (textCreateOwner(kind) !== 'profile') continue;
+
 			const required = byName.get(capability)!.inputSchema.required ?? [];
-			const kind = capability.slice('add_'.length);
 			// The title IS required, unlike add_application, which takes either a
 			// company or a role and decides between them in validate. A titleless
 			// text is a blank line on the list it lives on.
@@ -142,16 +148,33 @@ describe('how a write names its row', () => {
 		}
 	});
 
+	it('makes the one that starts a text UNDER an application name that application', () => {
+		// The exception to the shape above, and the same one add_activity_record
+		// is: a letter hangs off an application, so the key does not imply which
+		// row it belongs to. `text_id` would be the id of the letter being made,
+		// which does not exist yet.
+		const required = byName.get('add_letter')!.inputSchema.required ?? [];
+		expect(required).toEqual(['profile_id', 'application_id', 'letter_type', 'rationale']);
+		expect(required).not.toContain('text_id');
+	});
+
 	it('sends a wrongly-started text to the page it lives on', () => {
 		// Without this the applied-result carries no "remove it again from…" line,
 		// and `sectionFor` has no section to slice: "cheat_sheet" is not a profile
-		// resource, so the generic path answers null.
+		// resource, so the generic path answers null. A letter's answer comes from
+		// its targeting instead, which knows the application it was made under.
 		for (const capability of TEXT_CREATE_CAPABILITY_NAMES) {
+			if (textCreateOwner(kindForTextCreateCapability(capability)) !== 'profile') continue;
 			expect(pageFor(capability), capability).toEqual({
 				name: 'Interview Prep',
 				path: '/applications/interview'
 			});
 		}
+
+		expect(targetingFor('add_letter')!.page({ id: 74, label: 'x' })).toEqual({
+			name: 'application',
+			path: '/applications/74'
+		});
 	});
 
 	it('keeps entry_id for the sections it was written for', () => {

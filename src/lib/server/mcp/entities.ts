@@ -59,6 +59,12 @@ import {
 	kindForTextCommitCapability,
 	type TextCommitCapability
 } from '$lib/server/ai-chat/text-commit-capabilities';
+import {
+	TEXT_CREATE_CAPABILITY_NAMES,
+	kindForTextCreateCapability,
+	textCreateOwner,
+	type TextCreateCapability
+} from '$lib/server/ai-chat/text-create-capabilities';
 
 /** A resolved row, or the sentence to hand back to the agent instead. */
 export type EntityResolution = { target: CapabilityTarget } | { error: string };
@@ -241,6 +247,23 @@ const TEXT_COMMIT_TARGETING = Object.fromEntries(
 ) as Record<TextCommitCapability, EntityTargeting>;
 
 /**
+ * A create whose row hangs off an application, which names that application.
+ *
+ * `add_letter` is the only one today. It is an `add_` that still takes an id,
+ * for exactly the reason `add_activity_record` does: the id is the application
+ * the new row is filed under, not a row being changed. A story and a cheat
+ * sheet hang off the profile instead, so they name nothing and are not here —
+ * and that is read off the same declaration the capability itself branches on,
+ * rather than listed a second time. Without targeting, an application-owned
+ * create would ship a tool with no way to say which application it meant.
+ */
+const TEXT_CREATE_TARGETING = Object.fromEntries(
+	TEXT_CREATE_CAPABILITY_NAMES.filter(
+		(capability) => textCreateOwner(kindForTextCreateCapability(capability)) === 'application'
+	).map((capability) => [capability, applicationTargeting])
+) as Partial<Record<TextCreateCapability, EntityTargeting>>;
+
+/**
  * The hand-written capabilities, and what each one's id argument names.
  *
  * `add_activity_record` is the odd one and worth reading twice: its argument
@@ -260,7 +283,9 @@ export const ENTITY_TARGETING: Partial<Record<Capability, EntityTargeting>> = {
 	// application an entry is filed under rather than a row being changed.
 	...TEXT_TARGETING,
 	// And one per kind again for the verb that commits one of those versions.
-	...TEXT_COMMIT_TARGETING
+	...TEXT_COMMIT_TARGETING,
+	// And the creates that name an application to be started under.
+	...TEXT_CREATE_TARGETING
 };
 
 export const ENTITY_CAPABILITY_NAMES = Object.keys(ENTITY_TARGETING) as Capability[];

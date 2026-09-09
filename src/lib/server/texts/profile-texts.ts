@@ -69,6 +69,15 @@ import { sameText } from '$lib/utils/same-text';
 /** How much of one text comes back in a single read. Same slice as a document. */
 export const TEXT_READ_CHARS = 60000;
 
+/**
+ * Longest title the two title columns hold, both `varchar(255)`.
+ *
+ * Here rather than in the capability that refuses it, so the limit sits with the
+ * columns it describes. Refused before the insert either way: a driver error is
+ * not something an agent can act on.
+ */
+export const TITLE_MAX = 255;
+
 export const TEXT_PAGE_DEFAULT = 20;
 export const TEXT_PAGE_MAX = 50;
 
@@ -81,19 +90,28 @@ export type TextKind = (typeof TEXT_KIND_NAMES)[number];
  * A policy, written out rather than derived from which defs happen to carry a
  * `create`. The question "which of these may something outside the app bring
  * into existence" is a decision, and a decision that reads as a side effect of
- * an implementation detail is one nobody revisits on purpose. A test binds the
- * two, so a kind listed here without a `create` fails rather than ships.
+ * an implementation detail is one nobody revisits on purpose. The type binds
+ * the two, so a kind listed here without a `create` fails to compile.
  *
- * The two that are here own nothing but themselves: a story and a cheat sheet
- * hang off the profile, hold prep the applicant writes for their own use, and
- * are deleted with one click from the page they live on.
+ * A story and a cheat sheet own nothing but themselves: they hang off the
+ * profile, hold prep the applicant writes for their own use, and are deleted
+ * with one click from the page they live on.
  *
- * The two that are NOT here are both claims about the outside world. A letter
- * is a document on an application, and a question asserts that an employer
- * asked something, and inventing one is inventing history, which is the line this
- * whole surface is drawn around. They are still made in the app.
+ * A letter is here for a narrower reason, and was not for one release. It hangs
+ * off an application, so it can only be started under one the applicant already
+ * made, and what a create decides is its TYPE — a cover letter or an interview
+ * cheat sheet — out of the two values the page's own New button offers. The row
+ * lands empty, so nothing it produces claims anything about the employer; the
+ * words still arrive as a version somebody takes. What it removes is a dead end:
+ * an agent asked for a cover letter had nowhere to put one, and the applicant
+ * had to go and click New before the work could start.
+ *
+ * A QUESTION is the one that stays out, and the distinction is not technical. A
+ * question's label IS what the employer asked, so minting one asserts that a
+ * company said something. That is inventing history, which is the line this
+ * whole surface is drawn around, and an empty row does not make it safe.
  */
-export const TEXT_CREATE_KIND_NAMES = ['story', 'cheat_sheet'] as const;
+export const TEXT_CREATE_KIND_NAMES = ['letter', 'story', 'cheat_sheet'] as const;
 export type CreatableTextKind = (typeof TEXT_CREATE_KIND_NAMES)[number];
 
 export function isTextKind(value: unknown): value is TextKind {
@@ -120,6 +138,33 @@ interface TextRow {
 	path: string;
 }
 
+/**
+ * What a create decides, for the kinds an agent may start.
+ *
+ * One value, and never the text. A create that accepted content would walk
+ * around the property the version verbs exist to preserve: on a new row the
+ * content IS the text, with no version and no diff, so a whole document would
+ * land on the record having been read by nobody.
+ *
+ * Two shapes, because the three creatable kinds are named two different ways. A
+ * story and a cheat sheet are named by a subject the applicant supplies, so the
+ * field is free text bounded by the column. A letter has no title column at
+ * all — `letter_type` is what names it in a list — so the field is a choice
+ * between the same two values the page's own New button offers, and `label` is
+ * what that list will call it.
+ */
+export type TextCreateDef = {
+	/** Whose row it is: the profile itself, or one application on it. */
+	owner: 'profile' | 'application';
+	/** The wire field carrying that decision. Prefixed, as every field here is. */
+	field: string;
+	/** Make the empty row under `ownerId`, and return it as any read would. */
+	insert(ownerId: number, value: string): Promise<TextRow>;
+} & (
+	| { decides: 'title'; maxLength: number }
+	| { decides: 'choice'; choices: readonly { value: string; label: string }[] }
+);
+
 export interface TextKindDef {
 	kind: TextKind;
 	/** Singular, for prose that has to name one. */
@@ -130,17 +175,14 @@ export interface TextKindDef {
 	list(profileId: number, opts: { applicationId?: number; limit: number }): Promise<TextRow[]>;
 	read(id: number, profileId: number): Promise<TextRow | null>;
 	/**
-	 * Make an empty one under this profile, titled, and return it as any other
-	 * read would. Absent for a kind that may not be created from outside the app;
-	 * see TEXT_CREATE_KIND_NAMES for which and why.
+	 * How to start an empty one from outside the app. Absent for the kind that
+	 * may not be; see TEXT_CREATE_KIND_NAMES for which and why.
 	 *
-	 * Empty deliberately: the title is the whole of what a create decides, and
-	 * the text arrives afterwards as a version the applicant takes. A create
-	 * that accepted content would put a whole document on the profile that no
-	 * timeline ever showed anyone, which is the one property the version verbs
-	 * exist to preserve.
+	 * Optional on the interface and required of every kind the policy lists —
+	 * `TEXT_KINDS` is typed so that a name added to TEXT_CREATE_KIND_NAMES
+	 * without one fails the type check rather than shipping a tool that throws.
 	 */
-	create?(profileId: number, title: string): Promise<TextRow>;
+	create?: TextCreateDef;
 	/**
 	 * Put a text on the row itself, replacing what it holds.
 	 *
@@ -160,6 +202,16 @@ export interface TextKindDef {
 	 */
 	setText(id: number, profileId: number, content: string | null): Promise<void>;
 }
+
+/**
+ * A kind that carries a create, which is what TEXT_CREATE_KIND_NAMES lists.
+ *
+ * The whole of the binding between the policy and the implementation: TEXT_KINDS
+ * is typed to hold one of these at every name the policy lists, so adding a name
+ * there without writing its create is a type error rather than a tool that
+ * throws on its first call.
+ */
+type CreatableKindDef = TextKindDef & { create: TextCreateDef };
 
 /* ------------------------------------------------------------------ *
  * The four kinds
@@ -184,12 +236,25 @@ function letterLabel(letterType: string): string {
 }
 
 /**
+ * The types a letter can be, in the order the page's New menu offers them.
+ *
+ * Read off the labels above rather than listed a second time: what a person
+ * picks from and what an agent may start are the same two values, and a third
+ * added to one and not the other is a letter the list has no name for.
+ */
+const LETTER_TYPE_CHOICES = Object.entries(LETTER_TYPE_LABELS).map(([value, label]) => ({
+	value,
+	label
+}));
+
+/**
  * Where a newly created row goes in the applicant's own ordering: last.
  *
- * Both creatable kinds are hand-orderable lists, and both API routes that
- * create one compute this the same way. Reproducing it slightly differently
- * here is how an agent's cheat sheet would land somewhere the applicant's own
- * button never puts one.
+ * The two profile-owned creatable kinds are hand-orderable lists, and both API
+ * routes that create one compute this the same way. Reproducing it slightly
+ * differently here is how an agent's cheat sheet would land somewhere the
+ * applicant's own button never puts one. Letters have no `sort` column and are
+ * listed newest-first, so they never reach this.
  */
 async function nextSort(
 	table: typeof cheat_sheets | typeof project_stories,
@@ -230,7 +295,7 @@ const NEWEST_QUESTIONS = [desc(application_questions.id)];
 const NEWEST_STORIES = [desc(project_stories.id)];
 const NEWEST_SHEETS = [desc(cheat_sheets.id)];
 
-const letterKind: TextKindDef = {
+const letterKind: CreatableKindDef = {
 	kind: 'letter',
 	noun: 'letter',
 	collection: { name: 'Applications', path: '/applications' },
@@ -275,6 +340,43 @@ const letterKind: TextKindDef = {
 			committed: row.content,
 			path: `/applications/${row.application_id}/texts/${row.id}`
 		};
+	},
+	/**
+	 * The one create whose owner is not the profile: a letter belongs to an
+	 * application, so the id it is made under is that application's, and the
+	 * capability authorizes it as such.
+	 *
+	 * The columns are the ones the page's own create writes — `status` is notNull
+	 * and 'draft' is what a letter with no content is — so a row started from
+	 * here is indistinguishable from one started by the New button. It records no
+	 * version: an empty letter has nothing to put in a timeline, and the first
+	 * version is the point of the second call.
+	 */
+	create: {
+		owner: 'application',
+		field: 'letter_type',
+		decides: 'choice',
+		choices: LETTER_TYPE_CHOICES,
+		insert: async (applicationId, letterType) => {
+			const [row] = await db
+				.insert(application_letters)
+				.values({
+					application_id: applicationId,
+					letter_type: letterType,
+					content: null,
+					status: 'draft',
+					date_created: new Date()
+				})
+				.returning({ id: application_letters.id, letter_type: application_letters.letter_type });
+
+			return {
+				id: row.id,
+				label: letterLabel(row.letter_type),
+				applicationId,
+				committed: null,
+				path: `/applications/${applicationId}/texts/${row.id}`
+			};
+		}
 	},
 
 	setText: async (id, _profileId, content) => {
@@ -350,7 +452,7 @@ const questionKind: TextKindDef = {
  * "is the newest version what the story says" only means anything through
  * `serializeStarMarkdown`. See $lib/interview/star.
  */
-const storyKind: TextKindDef = {
+const storyKind: CreatableKindDef = {
 	kind: 'story',
 	noun: 'story',
 	collection: { name: 'Interview Prep', path: '/applications/interview' },
@@ -400,29 +502,35 @@ const storyKind: TextKindDef = {
 			path: `/applications/interview/stories/${row.id}`
 		};
 	},
-	create: async (profileId, title) => {
-		const [row] = await db
-			.insert(project_stories)
-			.values({
-				title,
-				profile_id: profileId,
-				sort: await nextSort(project_stories, profileId),
-				date_created: new Date()
-			})
-			.returning({ id: project_stories.id, title: project_stories.title });
+	create: {
+		owner: 'profile',
+		field: 'story_title',
+		decides: 'title',
+		maxLength: TITLE_MAX,
+		insert: async (profileId, title) => {
+			const [row] = await db
+				.insert(project_stories)
+				.values({
+					title,
+					profile_id: profileId,
+					sort: await nextSort(project_stories, profileId),
+					date_created: new Date()
+				})
+				.returning({ id: project_stories.id, title: project_stories.title });
 
-		await touchProfile(profileId);
+			await touchProfile(profileId);
 
-		return {
-			id: row.id,
-			label: row.title || 'Untitled story',
-			applicationId: null,
-			// Every STAR section is empty, so there is nothing to serialize. Null
-			// rather than "" for the same reason the reads use it: it is what an
-			// unwritten text holds, and `currentText` compares against it.
-			committed: null,
-			path: `/applications/interview/stories/${row.id}`
-		};
+			return {
+				id: row.id,
+				label: row.title || 'Untitled story',
+				applicationId: null,
+				// Every STAR section is empty, so there is nothing to serialize. Null
+				// rather than "" for the same reason the reads use it: it is what an
+				// unwritten text holds, and `currentText` compares against it.
+				committed: null,
+				path: `/applications/interview/stories/${row.id}`
+			};
+		}
 	},
 
 	setText: async (id, profileId, content) => {
@@ -446,7 +554,7 @@ const storyKind: TextKindDef = {
 	}
 };
 
-const cheatSheetKind: TextKindDef = {
+const cheatSheetKind: CreatableKindDef = {
 	kind: 'cheat_sheet',
 	noun: 'cheat sheet',
 	collection: { name: 'Interview Prep', path: '/applications/interview' },
@@ -480,27 +588,33 @@ const cheatSheetKind: TextKindDef = {
 			path: `/applications/interview/cheatsheets/${row.id}`
 		};
 	},
-	create: async (profileId, title) => {
-		const [row] = await db
-			.insert(cheat_sheets)
-			.values({
-				title,
-				content: null,
-				profile_id: profileId,
-				sort: await nextSort(cheat_sheets, profileId),
-				date_created: new Date()
-			})
-			.returning({ id: cheat_sheets.id, title: cheat_sheets.title });
+	create: {
+		owner: 'profile',
+		field: 'cheat_sheet_title',
+		decides: 'title',
+		maxLength: TITLE_MAX,
+		insert: async (profileId, title) => {
+			const [row] = await db
+				.insert(cheat_sheets)
+				.values({
+					title,
+					content: null,
+					profile_id: profileId,
+					sort: await nextSort(cheat_sheets, profileId),
+					date_created: new Date()
+				})
+				.returning({ id: cheat_sheets.id, title: cheat_sheets.title });
 
-		await touchProfile(profileId);
+			await touchProfile(profileId);
 
-		return {
-			id: row.id,
-			label: row.title || 'Untitled cheat sheet',
-			applicationId: null,
-			committed: null,
-			path: `/applications/interview/cheatsheets/${row.id}`
-		};
+			return {
+				id: row.id,
+				label: row.title || 'Untitled cheat sheet',
+				applicationId: null,
+				committed: null,
+				path: `/applications/interview/cheatsheets/${row.id}`
+			};
+		}
 	},
 
 	setText: async (id, profileId, content) => {
@@ -513,7 +627,8 @@ const cheatSheetKind: TextKindDef = {
 	}
 };
 
-export const TEXT_KINDS: Record<TextKind, TextKindDef> = {
+export const TEXT_KINDS: Record<TextKind, TextKindDef> &
+	Record<CreatableTextKind, CreatableKindDef> = {
 	letter: letterKind,
 	question: questionKind,
 	story: storyKind,

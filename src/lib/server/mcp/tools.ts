@@ -124,15 +124,24 @@ export function isReadTool(name: string): name is ReadTool {
 }
 
 /**
- * The capabilities that MAKE a row rather than reaching one.
+ * The capabilities that MAKE a row rather than reaching one, and name nothing.
  *
  * A third group because they fit neither of the others: they are hand-written,
  * so they are not generated from PROFILE_RESOURCES, and they take no id, so
  * they are not in ENTITY_TARGETING. `writeTool` and `resolveTarget` already
  * branch on `add_` for exactly this shape — a profile add names nothing either —
  * so the only thing missing was the listing.
+ *
+ * Filtered rather than listed, because a create is only in this group while
+ * nothing owns its row but the profile. `add_letter` starts a row under an
+ * application, so it names one, and `entities.ts` has already put it in
+ * ENTITY_CAPABILITY_NAMES — listing it here as well would offer the same tool
+ * twice.
  */
-const CREATE_CAPABILITY_NAMES: Capability[] = ['add_application', ...TEXT_CREATE_CAPABILITY_NAMES];
+const CREATE_CAPABILITY_NAMES: Capability[] = [
+	'add_application',
+	...TEXT_CREATE_CAPABILITY_NAMES.filter((capability) => !targetingFor(capability))
+];
 
 /**
  * Which capabilities this server exposes: all of them.
