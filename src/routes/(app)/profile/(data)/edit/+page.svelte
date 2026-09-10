@@ -19,6 +19,7 @@
 	} from '@fortawesome/free-brands-svg-icons';
 	import SectionHeader from '../../components/SectionHeader.svelte';
 	import Card from '../../../components/Card.svelte';
+	import CopyButton from '../../../components/CopyButton.svelte';
 	import MediaUpload from '$lib/components/MediaUpload.svelte';
 	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
@@ -41,8 +42,9 @@
 	let subtitle = $state(data.profile?.subtitle || '');
 	let headline = $state(data.profile?.headline || '');
 	let summary = $state(data.profile?.summary || '');
+	let about_me_text = $state(data.profile?.about_me_text || '');
 
-	// Alternative wordings for the four fields above. Fetched once for all of
+	// Alternative wordings for the prose fields above. Fetched once for all of
 	// them rather than per field, so opening this page costs one request no
 	// matter how many alternatives exist.
 	let variants = $state<FieldVariant[]>([]);
@@ -102,7 +104,7 @@
 	// burst of edits, not a single input.
 	const personalInfoField = autoSaveField<Record<string, string>>({
 		armOnInteraction: true,
-		initial: { name, slug, title, subtitle, headline, summary },
+		initial: { name, slug, title, subtitle, headline, summary, about_me_text },
 		save: saveSection,
 		onSaved: (v) => {
 			name = v.name;
@@ -111,11 +113,14 @@
 			subtitle = v.subtitle;
 			headline = v.headline;
 			summary = v.summary;
+			about_me_text = v.about_me_text;
 		},
 		equal: recordsEqual,
 		debounceMs: 700
 	});
-	$effect(() => personalInfoField.set({ name, slug, title, subtitle, headline, summary }));
+	$effect(() =>
+		personalInfoField.set({ name, slug, title, subtitle, headline, summary, about_me_text })
+	);
 
 	const contactField = autoSaveField<Record<string, string>>({
 		armOnInteraction: true,
@@ -327,6 +332,45 @@
 					field="summary"
 					variants={variantsByField.get('summary') ?? []}
 					defaultValue={summary}
+					onchange={loadVariants}
+				/>
+			</div>
+
+			<!--
+				The long bio, and the one field on this page no document prints. It
+				is here because the places that DO take it — a LinkedIn About, a
+				portfolio page, a conference bio — are places the applicant fills in
+				by hand, and keeping the text anywhere else means keeping it twice.
+				Hence the copy button: pasting it somewhere is the whole workflow,
+				and the counter is next to it because every one of those places has
+				a limit and none of them tell you before you paste.
+			-->
+			<div class="md:col-span-2">
+				<TranslatableField
+					entity="profile"
+					id={profile.id}
+					field="about_me_text"
+					autocomplete="off"
+					label="About Me"
+					multiline
+					rows={8}
+					maxRows={24}
+					bind:value={about_me_text}
+					placeholder="The longer bio you use on LinkedIn, a portfolio site, a personal page..."
+					hint="A few paragraphs about you, for profile pages rather than resumes. Not printed on any resume or CV."
+				/>
+				{#if about_me_text.trim()}
+					<div class="mt-1 flex items-center justify-between gap-3">
+						<span class="text-xs text-[var(--dash-text-secondary)]">
+							{about_me_text.length.toLocaleString()} characters
+						</span>
+						<CopyButton text={about_me_text} size="sm" label="Copy" title="Copy the About text" />
+					</div>
+				{/if}
+				<FieldVariants
+					field="about_me_text"
+					variants={variantsByField.get('about_me_text') ?? []}
+					defaultValue={about_me_text}
 					onchange={loadVariants}
 				/>
 			</div>

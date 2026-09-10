@@ -281,6 +281,13 @@
       "when": 1789035172663,
       "tag": "0039_reference_contact_details",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1789044530037,
+      "tag": "0040_about_me_text_to_plain_text",
+      "breakpoints": true
     }
   ]
 }

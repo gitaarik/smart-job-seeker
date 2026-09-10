@@ -47,6 +47,14 @@ export const CORE_PROFILE_FIELDS = [
  * laying the two out for an email a recruiter asked for, is squarely this one's
  * job.
  *
+ * `about_me_text` is here and not in CORE, which is the same budget argument at
+ * a smaller scale. It is the long bio the applicant keeps for their profile
+ * pages, so asking the assistant to shorten it for LinkedIn or draft one from
+ * the career is work only this caller is ever asked to do — and it is a
+ * near-duplicate of `summary` plus the work history, so a cover letter that
+ * spent a thousand characters of its budget on it would be paying twice for
+ * what it already has.
+ *
  * NOT here, and deliberately: `project_stories` and `cheat_sheets`. The chat
  * already requests the ranked `stories` source, which cites the relevant ones
  * rather than pasting all of them. On dev those two fields are 50k of a 116k
@@ -58,7 +66,8 @@ export const ASSISTANT_PROFILE_FIELDS = [
 	...CORE_PROFILE_FIELDS,
 	'location',
 	'languages',
-	'references'
+	'references',
+	'about_me_text'
 ];
 
 /**

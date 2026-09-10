@@ -303,6 +303,12 @@ export const profileUpdateSchema = z.object({
 	subtitle: optionalTrimmedString(),
 	headline: optionalTrimmedString(),
 	summary: optionalTrimmedString(10000),
+	// Longer than the summary on purpose: this is the multi-paragraph bio a
+	// profile site takes, and the cap is a sanity bound rather than a format.
+	// Nothing here enforces a platform's own limit (LinkedIn's About is 2,600
+	// characters) — that belongs to the wording the applicant keeps for it, not
+	// to the column every wording is stored in.
+	about_me_text: optionalTrimmedString(20000),
 	email_address: optionalTrimmedString(),
 	phone_number: optionalTrimmedString(),
 	personal_website: optionalTrimmedString(),

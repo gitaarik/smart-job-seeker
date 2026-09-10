@@ -22,7 +22,7 @@ import {
 import { requireAuth } from '$lib/server/utils/api-helpers';
 import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
 import { touchProfile } from '$lib/server/profile/touch-profile';
-import { isVariantField, variantFieldLabel } from '$lib/field-variants';
+import { isPrintedVariantField, variantFieldLabel } from '$lib/field-variants';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 
 /** The ids of this profile's variants for one field. */
@@ -56,7 +56,10 @@ export const PUT: RequestHandler = async ({ locals, cookies, request }) => {
 	if (!Number.isInteger(versionId)) error(400, 'Invalid version');
 
 	const field = String(body.field ?? '');
-	if (!isVariantField(field)) error(400, 'Field cannot have variants');
+	// Printed fields only. A field the library carries but no document renders
+	// has a variant to store and no version to store it against; accepting the
+	// pick would write a row nothing ever reads.
+	if (!isPrintedVariantField(field)) error(400, 'Field cannot be picked per version');
 
 	const variantId = body.variantId == null ? null : Number(body.variantId);
 	if (variantId !== null && !Number.isInteger(variantId)) error(400, 'Invalid variant');

@@ -24,6 +24,7 @@ const PROFILE_FIELDS: Record<string, FieldKind> = {
 	subtitle: 'string',
 	headline: 'string',
 	summary: 'string',
+	about_me_text: 'string',
 	email_address: 'string',
 	phone_number: 'string',
 	personal_website: 'string',

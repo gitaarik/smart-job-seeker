@@ -16,7 +16,7 @@ import { requireCredits } from '$lib/server/billing/require-credits';
 import { buildToggles } from '$lib/resume-contact-fields';
 import { isTailoredSlug } from '$lib/version-overrides';
 import { listFieldVariants, pickedVariantIds } from '$lib/server/profile/field-variants';
-import { VARIANT_FIELDS } from '$lib/field-variants';
+import { PRINTED_VARIANT_FIELDS } from '$lib/field-variants';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
 	const layoutData = await parent();
@@ -128,7 +128,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	// pickedIds is newest-first, so the first match per field is the pick that
 	// stands — the same rule the render resolver applies. See field-variants.ts.
 	const wordingPicks: Record<string, number | null> = {};
-	for (const f of VARIANT_FIELDS) {
+	for (const f of PRINTED_VARIANT_FIELDS) {
 		wordingPicks[f.field] =
 			pickedIds.find((picked) =>
 				fieldVariants.some((v) => v.id === picked && v.field === f.field)

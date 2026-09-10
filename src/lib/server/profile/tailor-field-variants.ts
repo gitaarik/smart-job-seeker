@@ -42,7 +42,7 @@
 import { profile_field_variants } from '$lib/server/db/schema';
 import { dbDirect as db } from '$lib/server/db';
 import { asc, eq } from 'drizzle-orm';
-import { VARIANT_FIELDS, variantFieldLabel, type FieldVariant } from '$lib/field-variants';
+import { PRINTED_VARIANT_FIELDS, variantFieldLabel, type FieldVariant } from '$lib/field-variants';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import type { Decision } from '$lib/tailoring';
 import {
@@ -154,7 +154,7 @@ export async function chooseFieldVariants(opts: {
 	if (variants.length === 0) return [];
 
 	const defaults = new Map<string, string>();
-	for (const f of VARIANT_FIELDS) {
+	for (const f of PRINTED_VARIANT_FIELDS) {
 		const base = typeof profile[f.field] === 'string' ? (profile[f.field] as string).trim() : '';
 		if (base) defaults.set(f.field, base);
 	}
@@ -163,8 +163,13 @@ export async function chooseFieldVariants(opts: {
 	// profile leaves empty is still a candidate — it beats nothing, which is the
 	// right answer when the applicant wrote one summary and marked it as being
 	// for a kind of job.
+	//
+	// Printed fields only, so an unprinted one is not merely undecided here but
+	// unscored: the alternatives an applicant keeps for their LinkedIn About are
+	// a real library, and embedding every one of them against every job would
+	// buy a Decision the document has no way to act on.
 	const fields = [...new Set(variants.map((v) => v.field))].filter((f) =>
-		VARIANT_FIELDS.some((vf) => vf.field === f)
+		PRINTED_VARIANT_FIELDS.some((vf) => vf.field === f)
 	);
 	if (fields.length === 0) return [];
 

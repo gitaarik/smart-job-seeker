@@ -24,6 +24,20 @@ export interface VariantField {
 	field: string;
 	/** Human label, matching the profile editor's own heading for the field. */
 	label: string;
+	/**
+	 * Whether a resume or CV prints this field.
+	 *
+	 * The library is one thing and picking from it is another. Every field here
+	 * gets the editor control, because writing down two wordings is useful
+	 * wherever the prose is; only a printed field gets the version picker and a
+	 * tailoring decision, because those choose which wording a DOCUMENT uses and
+	 * there is nothing to choose for a field no document renders.
+	 *
+	 * Required rather than defaulted: the wrong answer is silent either way (a
+	 * picker over a field that never prints, or a printed field the tailoring run
+	 * skips), so the next field added has to say which it is.
+	 */
+	printed: boolean;
 	/** Rendered as a textarea, and how tall. */
 	multiline?: boolean;
 	rows?: number;
@@ -42,9 +56,15 @@ export interface VariantField {
  *
  * That is what rules out the rest of the profile. A role's dates, an
  * employer's name and a skill's spelling are facts, not emphases; a role's
- * achievements are already tailorable by picking which of them print. Adding
- * `about_me_text` here would be defensible — it is the same kind of prose —
- * and it is left out only because no document prints it beside these four.
+ * achievements are already tailorable by picking which of them print.
+ *
+ * `about_me_text` is the one entry no document prints. It is the long bio a
+ * profile SITE wants — a LinkedIn About, a portfolio page — which is prose
+ * about the applicant in exactly the sense above, and having two of them (one
+ * for a network that shows five lines, one for a page with room) is the same
+ * need the other four have. What it does not have is a document to be chosen
+ * by, so it carries `printed: false` and the version picker and the tailoring
+ * run both skip it. Whoever re-enables /p/[slug] should flip that flag.
  *
  * The `field` strings are persisted, so renaming one orphans rows. Append-only.
  */
@@ -52,11 +72,13 @@ export const VARIANT_FIELDS: VariantField[] = [
 	{
 		field: 'title',
 		label: 'Professional Title',
+		printed: true,
 		placeholder: 'e.g., Senior Software Engineer'
 	},
 	{
 		field: 'subtitle',
 		label: 'Subtitle',
+		printed: true,
 		multiline: true,
 		rows: 2,
 		placeholder: 'e.g., Full-Stack Developer'
@@ -64,6 +86,7 @@ export const VARIANT_FIELDS: VariantField[] = [
 	{
 		field: 'headline',
 		label: 'Headline',
+		printed: true,
 		multiline: true,
 		rows: 2,
 		placeholder: 'A short tagline about yourself'
@@ -71,19 +94,53 @@ export const VARIANT_FIELDS: VariantField[] = [
 	{
 		field: 'summary',
 		label: 'Professional Summary',
+		printed: true,
 		multiline: true,
 		rows: 4,
 		placeholder: 'Write a brief professional summary...'
+	},
+	{
+		field: 'about_me_text',
+		label: 'About Me',
+		printed: false,
+		multiline: true,
+		rows: 8,
+		placeholder: 'The longer bio you use on LinkedIn, a portfolio site, a personal page...'
 	}
 ];
 
 /** Field names only, in editor order. */
 export const VARIANT_FIELD_NAMES: string[] = VARIANT_FIELDS.map((f) => f.field);
 
+/**
+ * The subset a document version can pick a wording for.
+ *
+ * Every version-scoped consumer reads this rather than VARIANT_FIELDS: the
+ * picker on a resume version, and the tailoring run that scores one wording
+ * against another. Both are answering "which of these does this document say",
+ * and a field no document says has no answer to give — offering one would put a
+ * dead control in the version editor and spend an embedding per run on prose
+ * that never reaches the page.
+ */
+export const PRINTED_VARIANT_FIELDS: VariantField[] = VARIANT_FIELDS.filter((f) => f.printed);
+
 const BY_FIELD = new Map(VARIANT_FIELDS.map((f) => [f.field, f]));
 
 export function isVariantField(field: unknown): field is string {
 	return typeof field === 'string' && BY_FIELD.has(field);
+}
+
+/**
+ * Whether a document version may pick a wording for this field.
+ *
+ * Narrower than `isVariantField` on purpose. Storing an alternative is allowed
+ * for every field in the vocabulary; choosing one on behalf of a resume is
+ * allowed only where a resume renders it, because a pick for a field nothing
+ * prints resolves to nothing at render time — which is the failure the pick
+ * endpoint's own id checks exist to prevent, arriving by a different route.
+ */
+export function isPrintedVariantField(field: unknown): field is string {
+	return typeof field === 'string' && (BY_FIELD.get(field)?.printed ?? false);
 }
 
 export function variantField(field: string): VariantField | undefined {

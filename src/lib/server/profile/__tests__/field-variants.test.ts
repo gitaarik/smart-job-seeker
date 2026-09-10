@@ -20,8 +20,10 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import {
+	PRINTED_VARIANT_FIELDS,
 	VARIANT_FIELDS,
 	groupVariantsByField,
+	isPrintedVariantField,
 	isVariantField,
 	variantPreview
 } from '$lib/field-variants';
@@ -78,20 +80,53 @@ function profile() {
 }
 
 describe('the vocabulary', () => {
-	it('names the four scalar profile fields and nothing else', () => {
+	it('names the scalar profile fields and nothing else', () => {
 		expect(VARIANT_FIELDS.map((f) => f.field)).toEqual([
+			'title',
+			'subtitle',
+			'headline',
+			'summary',
+			'about_me_text'
+		]);
+	});
+
+	it('offers a version only the fields a document prints', () => {
+		// The library is wider than the picker. `about_me_text` is prose the
+		// applicant keeps alternatives of — a LinkedIn About and a portfolio
+		// version of the same bio — but no resume renders it, so a version has
+		// nothing to decide and the tailoring run has nothing to score. Both
+		// wrong answers here are silent: a picker whose choice never reaches a
+		// document, or a printed field the run stops considering.
+		expect(PRINTED_VARIANT_FIELDS.map((f) => f.field)).toEqual([
 			'title',
 			'subtitle',
 			'headline',
 			'summary'
 		]);
+		expect(VARIANT_FIELDS.every((f) => typeof f.printed === 'boolean')).toBe(true);
 	});
 
 	it('rejects a field that is not in it', () => {
 		expect(isVariantField('summary')).toBe(true);
+		// Unprinted is still a variant field — the editor stores alternatives for
+		// it, so the write API must accept the name that the picker declines.
+		expect(isVariantField('about_me_text')).toBe(true);
 		expect(isVariantField('position')).toBe(false);
 		expect(isVariantField('')).toBe(false);
 		expect(isVariantField(null)).toBe(false);
+	});
+
+	it('separates storing a variant from picking one', () => {
+		// The two guards the API uses, and the whole reason there are two. Writing
+		// an alternative is a library edit; picking one is a document edit, and a
+		// pick for a field no document prints writes a row that nothing will ever
+		// read back.
+		expect(isPrintedVariantField('summary')).toBe(true);
+		expect(isPrintedVariantField('about_me_text')).toBe(false);
+		expect(isPrintedVariantField('position')).toBe(false);
+		expect(isPrintedVariantField(null)).toBe(false);
+		// Every pickable field is storable. The reverse does not hold.
+		for (const f of PRINTED_VARIANT_FIELDS) expect(isVariantField(f.field)).toBe(true);
 	});
 
 	it('keeps every default unit type inside content_embeddings.unit_type', () => {
@@ -111,6 +146,16 @@ describe('the vocabulary', () => {
 		const types = VARIANT_FIELDS.map((f) => defaultUnitType(f.field));
 		expect(new Set(types).size).toBe(types.length);
 	});
+
+	it('gives every field an editor spec, printed or not', () => {
+		// FieldVariants reads multiline/rows off the spec to render the control,
+		// and falls back to a single-line input when it finds none. A multi-
+		// paragraph bio in a one-line box is usable enough that nobody would file
+		// it, and unpleasant enough that nobody would use the field.
+		const about = VARIANT_FIELDS.find((f) => f.field === 'about_me_text');
+		expect(about?.multiline).toBe(true);
+		expect(about?.rows).toBeGreaterThan(4);
+	});
 });
 
 describe('grouping and preview', () => {
@@ -121,7 +166,13 @@ describe('grouping and preview', () => {
 			{ id: 3, field: 'title', sort: 0 },
 			{ id: 4, field: 'not_a_field', sort: 0 }
 		]);
-		expect([...grouped.keys()]).toEqual(['title', 'subtitle', 'headline', 'summary']);
+		expect([...grouped.keys()]).toEqual([
+			'title',
+			'subtitle',
+			'headline',
+			'summary',
+			'about_me_text'
+		]);
 		expect(grouped.get('summary')?.map((v) => v.id)).toEqual([1, 2]);
 		expect(grouped.get('title')?.map((v) => v.id)).toEqual([3]);
 		// A row naming a field the vocabulary dropped is ignored rather than

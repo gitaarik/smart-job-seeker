@@ -16,28 +16,49 @@ interface SchemaNode {
 }
 
 /**
+ * The profile columns the snapshot selects, and — via the mapping below — the
+ * profile fields the `${schema}` describes.
+ *
+ * One list because it was two, and the two could disagree in a direction
+ * nothing reports: the mapping builds the schema every prompt is shown, the
+ * query builds the `${data}` beside it, and a field named in the first but not
+ * selected by the second tells the model about a field that is always empty.
+ * That is the `education`/`educations` failure arriving from the other side,
+ * and it is what adding `about_me_text` to the mapping alone actually did.
+ *
+ * Shaped as Drizzle's `columns` argument rather than an array of names because
+ * the query infers its whole return type from this literal; an
+ * `Object.fromEntries` in its place widens the row without erroring anywhere.
+ */
+const PROFILE_SNAPSHOT_COLUMNS = {
+	name: true,
+	title: true,
+	location: true,
+	phone_number: true,
+	email_address: true,
+	personal_website: true,
+	subtitle: true,
+	core_stack: true,
+	linkedin_profile: true,
+	github_profile: true,
+	stackoverflow_profile: true,
+	headline: true,
+	summary: true,
+	about_me_text: true,
+	nationality: true,
+	location_url: true,
+	location_timezone: true
+} as const;
+
+/** Field names only, for the schema mapping and the test that pins the two together. */
+export const PROFILE_SNAPSHOT_COLUMN_NAMES: string[] = Object.keys(PROFILE_SNAPSHOT_COLUMNS);
+
+/**
  * Mapping of ExportedProfile structure to database collections and fields
  */
 const PROFILE_SCHEMA_MAPPING = {
 	profiles: {
-		fields: [
-			'name',
-			'title',
-			'location',
-			'phone_number',
-			'email_address',
-			'personal_website',
-			'subtitle',
-			'core_stack',
-			'linkedin_profile',
-			'github_profile',
-			'stackoverflow_profile',
-			'headline',
-			'summary',
-			'nationality',
-			'location_url',
-			'location_timezone'
-		],
+		fields: PROFILE_SNAPSHOT_COLUMN_NAMES,
 		relations: {
 			highlights: {
 				fields: ['text']
@@ -183,24 +204,7 @@ function buildSchemaNode(
 async function fetchProfileData(profileId: number) {
 	const profile = await db.query.profiles.findFirst({
 		where: eq(profiles.id, profileId),
-		columns: {
-			name: true,
-			title: true,
-			location: true,
-			phone_number: true,
-			email_address: true,
-			personal_website: true,
-			subtitle: true,
-			core_stack: true,
-			linkedin_profile: true,
-			github_profile: true,
-			stackoverflow_profile: true,
-			headline: true,
-			summary: true,
-			nationality: true,
-			location_url: true,
-			location_timezone: true
-		},
+		columns: PROFILE_SNAPSHOT_COLUMNS,
 		with: {
 			highlights: {
 				columns: { text: true },

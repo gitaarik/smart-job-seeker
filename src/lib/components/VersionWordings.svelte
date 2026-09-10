@@ -11,9 +11,13 @@
 	Fields with no alternatives are not shown at all. The whole control
 	disappears for a profile that has never made one, rather than showing four
 	rows of "Default" with nothing to switch to.
+
+	Printed fields only. A field the library carries but no document renders
+	(`about_me_text`) has nothing for a version to decide, and a picker over it
+	would claim otherwise.
 -->
 <script lang="ts">
-	import { VARIANT_FIELDS, variantPreview, type FieldVariant } from '$lib/field-variants';
+	import { PRINTED_VARIANT_FIELDS, variantPreview, type FieldVariant } from '$lib/field-variants';
 	import { groupVariantsByField } from '$lib/field-variants';
 
 	interface Props {
@@ -38,7 +42,9 @@
 	let error = $state('');
 
 	const grouped = $derived(groupVariantsByField(variants));
-	const fields = $derived(VARIANT_FIELDS.filter((f) => (grouped.get(f.field) ?? []).length > 0));
+	const fields = $derived(
+		PRINTED_VARIANT_FIELDS.filter((f) => (grouped.get(f.field) ?? []).length > 0)
+	);
 
 	async function pick(field: string, variantId: number | null) {
 		const previous = picks[field] ?? null;
