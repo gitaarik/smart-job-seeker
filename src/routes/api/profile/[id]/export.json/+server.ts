@@ -225,6 +225,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 					sort: true,
 					author: true,
 					author_position: true,
+					author_email: true,
+					author_phone: true,
 					text: true
 				},
 				orderBy: (t, { asc }) => asc(t.sort)

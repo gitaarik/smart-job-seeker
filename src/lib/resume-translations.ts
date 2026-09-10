@@ -103,7 +103,14 @@ export const TRANSLATABLE_FIELDS: TranslatableField[] = [
 	// A language's name is also localized on its own, from the row's ISO code
 	// (localizeLanguageName in resume-template-labels.ts). An overlay row, when
 	// one exists, wins — so "Chinese" can still be overridden with "Mandarijn".
-	{ entity: 'language', field: 'name', label: 'Language' }
+	{ entity: 'language', field: 'name', label: 'Language' },
+
+	// A referee's own words, and the job title they held when they wrote them.
+	// The referee's NAME is not here on purpose: a person is called what they
+	// are called in every language, and an overlay on it would be a second place
+	// for a name to drift out of sync with the one in the quote.
+	{ entity: 'reference', field: 'author_position', label: 'Position' },
+	{ entity: 'reference', field: 'text', label: 'Reference' }
 ];
 
 const FIELD_SET = new Set(TRANSLATABLE_FIELDS.map((f) => `${f.entity}:${f.field}`));

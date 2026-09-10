@@ -327,6 +327,8 @@ export async function importProfileFromJson(
 			sort: r.sort ?? null,
 			author: r.author || '',
 			author_position: r.author_position || null,
+			author_email: r.author_email || null,
+			author_phone: r.author_phone || null,
 			text: r.text || null
 		});
 	}

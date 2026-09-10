@@ -1540,6 +1540,15 @@ export const references = pgTable(
 		date_updated: timestamp({ withTimezone: true, mode: 'date' }),
 		author: varchar({ length: 255 }).notNull(),
 		author_position: varchar({ length: 255 }),
+		// How a recruiter reaches the referee. Optional, and stored on the row
+		// rather than only in the quote, because "send us two references" asks
+		// for people who can be contacted — a testimonial without a way to reach
+		// its author does not answer it. Deliberately NOT rendered on a public
+		// CV: see ProfileDisplay, which shows the quote and "references on
+		// request", so someone else's phone number is not published by a share
+		// link.
+		author_email: varchar({ length: 255 }),
+		author_phone: varchar({ length: 50 }),
 		text: text(),
 		profile_id: integer().notNull()
 	},

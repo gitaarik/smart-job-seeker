@@ -2244,6 +2244,8 @@ const FIELD_LABELS: Record<string, string> = {
 	stars: 'GitHub stars',
 	language_code: 'Language code',
 	author_position: 'Their role',
+	author_email: 'Their email',
+	author_phone: 'Their phone',
 	institution: 'School'
 };
 

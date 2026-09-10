@@ -149,6 +149,8 @@ export interface ExportedProfile {
 			sort?: number | null;
 			author?: string;
 			author_position?: string;
+			author_email?: string;
+			author_phone?: string;
 			text?: string;
 		}>;
 		certificates: Array<{
@@ -319,7 +321,15 @@ export async function buildProfileJsonExport(
 				orderBy: (t: any, { asc }: any) => asc(t.sort)
 			},
 			references: {
-				columns: { status: true, sort: true, author: true, author_position: true, text: true },
+				columns: {
+					status: true,
+					sort: true,
+					author: true,
+					author_position: true,
+					author_email: true,
+					author_phone: true,
+					text: true
+				},
 				orderBy: (t: any, { asc }: any) => asc(t.sort)
 			},
 			certificates: {

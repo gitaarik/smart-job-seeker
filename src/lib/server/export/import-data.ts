@@ -502,16 +502,25 @@ async function importProfileEntities(
 		translated.fieldVariantIdByIndex[variantIndex] = createdVariant.id;
 	}
 
-	// References
-	for (const r of p.references ?? []) {
-		await dbDirect.insert(references).values({
-			profile_id: profileId,
-			status: r.status || 'draft',
-			sort: r.sort ?? null,
-			author: r.author || '',
-			author_position: r.author_position || null,
-			text: r.text || null
-		});
+	// References. Indexed as they land, like every other entity the translation
+	// overlay can name — the referee's position and quote are translatable, so a
+	// round trip that lost the positions would print English on a translated
+	// document.
+	for (const [referenceIndex, r] of (p.references ?? []).entries()) {
+		const [createdReference] = await dbDirect
+			.insert(references)
+			.values({
+				profile_id: profileId,
+				status: r.status || 'draft',
+				sort: r.sort ?? null,
+				author: r.author || '',
+				author_position: r.author_position || null,
+				author_email: r.author_email || null,
+				author_phone: r.author_phone || null,
+				text: r.text || null
+			})
+			.returning({ id: references.id });
+		translated.referenceIdByIndex[referenceIndex] = createdReference.id;
 	}
 
 	// Certificates

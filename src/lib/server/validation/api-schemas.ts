@@ -460,6 +460,8 @@ export const languageBasicSchema = z.object({
 export const referenceBasicSchema = z.object({
 	author: requiredTrimmedString('Author name').optional(),
 	author_position: optionalTrimmedString(),
+	author_email: optionalTrimmedString(),
+	author_phone: optionalTrimmedString(50),
 	text: optionalTrimmedString(10000)
 });
 

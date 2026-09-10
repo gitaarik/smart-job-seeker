@@ -97,7 +97,7 @@ const PROFILE_SCHEMA_MAPPING = {
 				fields: ['name', 'language_code', 'proficiency']
 			},
 			references: {
-				fields: ['author', 'author_position', 'text']
+				fields: ['author', 'author_position', 'author_email', 'author_phone', 'text']
 			},
 			project_stories: {
 				fields: ['title', 'situation', 'task', 'action', 'result', 'reflection', 'category']
@@ -308,6 +308,8 @@ async function fetchProfileData(profileId: number) {
 				columns: {
 					author: true,
 					author_position: true,
+					author_email: true,
+					author_phone: true,
 					text: true
 				},
 				orderBy: (t: any, { asc }: any) => asc(t.sort)

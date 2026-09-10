@@ -29,6 +29,7 @@ export interface TranslationIndexMaps {
 	education: Map<number, number>;
 	techSkillCategory: Map<number, number>;
 	language: Map<number, number>;
+	reference: Map<number, number>;
 	fieldVariant: Map<number, number>;
 }
 
@@ -42,6 +43,7 @@ export function emptyTranslationIndexMaps(profileId: number): TranslationIndexMa
 		education: new Map(),
 		techSkillCategory: new Map(),
 		language: new Map(),
+		reference: new Map(),
 		fieldVariant: new Map()
 	};
 }
@@ -89,6 +91,11 @@ export function resolveTranslationTarget(
 		case 'language': {
 			const index = maps.language.get(entityId);
 			return index === undefined ? null : { kind: 'language', language_index: index };
+		}
+
+		case 'reference': {
+			const index = maps.reference.get(entityId);
+			return index === undefined ? null : { kind: 'reference', reference_index: index };
 		}
 
 		case 'profile_field_variant': {

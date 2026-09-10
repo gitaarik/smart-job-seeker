@@ -190,3 +190,81 @@ describe('collectTranslatable — languages and location', () => {
 		]);
 	});
 });
+
+describe('references in the translation layer', () => {
+	function profileWith(...refs: Record<string, unknown>[]) {
+		return { id: 1, references: refs };
+	}
+
+	const elmar = {
+		id: 13,
+		author: 'Elmar Krack',
+		author_position: 'Co-founder of Tender-it',
+		author_email: 'elmar@tender-it.example',
+		author_phone: '+31 6 1234 5678',
+		text: 'Rik built our entire platform from the ground up.'
+	};
+
+	it('overlays the position and the quote', () => {
+		const p = profileWith({ ...elmar });
+		applyTranslations(
+			p,
+			translator({
+				'reference:13:author_position': 'Medeoprichter van Tender-it',
+				'reference:13:text': 'Rik heeft ons hele platform vanaf nul gebouwd.'
+			})
+		);
+		expect(p.references[0].author_position).toBe('Medeoprichter van Tender-it');
+		expect(p.references[0].text).toBe('Rik heeft ons hele platform vanaf nul gebouwd.');
+	});
+
+	// A name is a name in every language, and the contact fields are not prose.
+	// An overlay on any of them would be a second place for them to drift.
+	it('leaves the name and the contact details alone', () => {
+		const p = profileWith({ ...elmar });
+		applyTranslations(
+			p,
+			translator({
+				'reference:13:author': 'Elmar de Kraker',
+				'reference:13:author_email': 'nee@example.com',
+				'reference:13:author_phone': '+31 0 0000 0000'
+			})
+		);
+		expect(p.references[0].author).toBe('Elmar Krack');
+		expect(p.references[0].author_email).toBe('elmar@tender-it.example');
+		expect(p.references[0].author_phone).toBe('+31 6 1234 5678');
+		expect(isTranslatable('reference', 'author')).toBe(false);
+		expect(isTranslatable('reference', 'author_email')).toBe(false);
+		expect(isTranslatable('reference', 'author_phone')).toBe(false);
+	});
+
+	it('keeps both fields in the vocabulary the API accepts', () => {
+		expect(isTranslatable('reference', 'author_position')).toBe(true);
+		expect(isTranslatable('reference', 'text')).toBe(true);
+	});
+
+	it('gives each referee its own editor group, with the quote as a textarea', () => {
+		const groups = collectTranslatable(profileWith({ ...elmar }, { id: 14, author: 'Michael' }));
+
+		expect(groups.find((g) => g.key === 'ref-13')).toEqual({
+			key: 'ref-13',
+			title: 'Reference — Elmar Krack',
+			rows: [
+				expect.objectContaining({
+					field: 'author_position',
+					label: 'Position',
+					base: 'Co-founder of Tender-it',
+					multiline: false
+				}),
+				expect.objectContaining({
+					field: 'text',
+					label: 'Reference',
+					base: elmar.text,
+					multiline: true
+				})
+			]
+		});
+		// Nothing to translate on a referee who is only a name.
+		expect(groups.find((g) => g.key === 'ref-14')).toBeUndefined();
+	});
+});

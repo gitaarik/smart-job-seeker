@@ -18,6 +18,7 @@
 	import ConfirmModal from '../../components/ConfirmModal.svelte';
 	import ItemCard from '../../components/ItemCard.svelte';
 	import Card from '../../../components/Card.svelte';
+	import TranslatableField from '$lib/components/TranslatableField.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -29,13 +30,19 @@
 	// Form states
 	let newAuthor = $state('');
 	let newAuthorPosition = $state('');
+	let newAuthorEmail = $state('');
+	let newAuthorPhone = $state('');
 	let newText = $state('');
 
 	let editAuthor = $state('');
 	let editAuthorPosition = $state('');
+	let editAuthorEmail = $state('');
+	let editAuthorPhone = $state('');
 	let editText = $state('');
 	let originalAuthor = $state('');
 	let originalAuthorPosition = $state('');
+	let originalAuthorEmail = $state('');
+	let originalAuthorPhone = $state('');
 	let originalText = $state('');
 	let showDiscardConfirm = $state(false);
 
@@ -43,6 +50,8 @@
 		return (
 			editAuthor !== originalAuthor ||
 			editAuthorPosition !== originalAuthorPosition ||
+			editAuthorEmail !== originalAuthorEmail ||
+			editAuthorPhone !== originalAuthorPhone ||
 			editText !== originalText
 		);
 	}
@@ -60,9 +69,13 @@
 			if (ref) {
 				editAuthor = ref.author || '';
 				editAuthorPosition = ref.author_position || '';
+				editAuthorEmail = ref.author_email || '';
+				editAuthorPhone = ref.author_phone || '';
 				editText = ref.text || '';
 				originalAuthor = editAuthor;
 				originalAuthorPosition = editAuthorPosition;
+				originalAuthorEmail = editAuthorEmail;
+				originalAuthorPhone = editAuthorPhone;
 				originalText = editText;
 			}
 		}
@@ -77,6 +90,8 @@
 		showAddForm = false;
 		newAuthor = '';
 		newAuthorPosition = '';
+		newAuthorEmail = '';
+		newAuthorPhone = '';
 		newText = '';
 	}
 
@@ -224,6 +239,44 @@
 					</div>
 				</div>
 
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<div>
+						<label for="new-email" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+							Email Address
+						</label>
+						<input
+							type="email"
+							id="new-email"
+							name="author_email"
+							bind:value={newAuthorEmail}
+							placeholder="e.g., john@company.com"
+							autocomplete="off"
+							class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+						/>
+					</div>
+
+					<div>
+						<label for="new-phone" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+							Phone Number
+						</label>
+						<input
+							type="tel"
+							id="new-phone"
+							name="author_phone"
+							bind:value={newAuthorPhone}
+							placeholder="e.g., +31 6 1234 5678"
+							autocomplete="off"
+							class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+						/>
+					</div>
+				</div>
+
+				<p class="text-xs text-[var(--dash-text-muted)]">
+					Contact details are for you to hand to a recruiter who asks for references. They are never
+					shown on a shared CV or resume — that keeps a quote public without publishing someone
+					else's phone number.
+				</p>
+
 				<div>
 					<label for="new-text" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
 						Reference Text
@@ -351,6 +404,11 @@
 						{#if ref.author_position}
 							{ref.author_position}
 						{/if}
+						{#if ref.author_email || ref.author_phone}
+							<span class="mt-0.5 block text-xs text-[var(--dash-text-muted)]">
+								{[ref.author_email, ref.author_phone].filter(Boolean).join(' · ')}
+							</span>
+						{/if}
 					{/snippet}
 
 					{#snippet dateline()}
@@ -396,36 +454,73 @@
 									</div>
 
 									<div>
+										<!-- The form posts the English value; the translation tabs save on their own. -->
+										<input type="hidden" name="author_position" value={editAuthorPosition} />
+										<TranslatableField
+											entity="reference"
+											id={ref.id}
+											field="author_position"
+											label="Position"
+											bind:value={editAuthorPosition}
+											placeholder="e.g., CTO at Company Inc."
+										/>
+									</div>
+								</div>
+
+								<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+									<div>
 										<label
-											for="edit-position-{ref.id}"
+											for="edit-email-{ref.id}"
 											class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
 										>
-											Position
+											Email Address
 										</label>
 										<input
-											type="text"
-											id="edit-position-{ref.id}"
-											name="author_position"
-											bind:value={editAuthorPosition}
+											type="email"
+											id="edit-email-{ref.id}"
+											name="author_email"
+											bind:value={editAuthorEmail}
+											placeholder="e.g., john@company.com"
+											autocomplete="off"
+											class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+										/>
+									</div>
+
+									<div>
+										<label
+											for="edit-phone-{ref.id}"
+											class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+										>
+											Phone Number
+										</label>
+										<input
+											type="tel"
+											id="edit-phone-{ref.id}"
+											name="author_phone"
+											bind:value={editAuthorPhone}
+											placeholder="e.g., +31 6 1234 5678"
+											autocomplete="off"
 											class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 										/>
 									</div>
 								</div>
 
+								<p class="text-xs text-[var(--dash-text-muted)]">
+									Contact details are for you to hand to a recruiter who asks for references. They
+									are never shown on a shared CV or resume.
+								</p>
+
 								<div>
-									<label
-										for="edit-text-{ref.id}"
-										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
-									>
-										Reference Text
-									</label>
-									<textarea
-										id="edit-text-{ref.id}"
-										name="text"
-										bind:value={editText}
+									<input type="hidden" name="text" value={editText} />
+									<TranslatableField
+										entity="reference"
+										id={ref.id}
+										field="text"
+										label="Reference Text"
+										multiline
 										rows={4}
-										class="w-full resize-y rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-									></textarea>
+										bind:value={editText}
+									/>
 								</div>
 							</div>
 

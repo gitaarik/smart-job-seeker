@@ -35,6 +35,7 @@ describe('translation targets', () => {
 		maps.education.set(500, 3);
 		maps.techSkillCategory.set(600, 2);
 		maps.language.set(700, 1);
+		maps.reference.set(800, 2);
 		return maps;
 	}
 
@@ -47,6 +48,7 @@ describe('translation targets', () => {
 		created.educationIdByIndex = [940, 941, 942, 943];
 		created.techSkillCategoryIdByIndex = [950, 951, 952];
 		created.languageIdByIndex = [960, 961];
+		created.referenceIdByIndex = [970, 971, 972];
 		return created;
 	}
 
@@ -60,7 +62,8 @@ describe('translation targets', () => {
 		['side_project_achievement', 400, 'side_project_achievement', 930],
 		['education', 500, 'education', 943],
 		['tech_skill_category', 600, 'tech_skill_category', 952],
-		['language', 700, 'language', 961]
+		['language', 700, 'language', 961],
+		['reference', 800, 'reference', 972]
 	])('round-trips %s', (entityType, entityId, expectedType, expectedId) => {
 		const target = resolveTranslationTarget(entityType as string, entityId as number, exportMaps());
 		expect(target).not.toBeNull();

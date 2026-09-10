@@ -216,10 +216,16 @@ export async function buildProfileExport(
 			},
 			references: {
 				columns: {
+					// `id` for the translation index map below: a referee's position
+					// and quote are translatable, so the overlay names this row by
+					// its position in the exported array.
+					id: true,
 					status: true,
 					sort: true,
 					author: true,
 					author_position: true,
+					author_email: true,
+					author_phone: true,
 					text: true
 				},
 				orderBy: (t: any, { asc }: any) => asc(t.sort)
@@ -363,6 +369,7 @@ export async function buildProfileExport(
 		translationMaps.techSkillCategory.set(cat.id, index)
 	);
 	profile.languages.forEach((lang, index) => translationMaps.language.set(lang.id, index));
+	profile.references.forEach((ref, index) => translationMaps.reference.set(ref.id, index));
 	// Same positional treatment as everything else the overlay can name: the
 	// variant's translated wording has to survive the round trip, or a
 	// re-imported profile prints English on every translated document.
@@ -562,6 +569,8 @@ export async function buildProfileExport(
 			sort: r.sort,
 			author: r.author || undefined,
 			author_position: r.author_position || undefined,
+			author_email: r.author_email || undefined,
+			author_phone: r.author_phone || undefined,
 			text: r.text || undefined
 		})),
 

@@ -17,6 +17,7 @@ import {
 	languages,
 	profile_field_variants,
 	profile_translations,
+	references,
 	side_project_achievements,
 	side_projects,
 	tech_skill_categories,
@@ -137,6 +138,12 @@ export function applyTranslations(
 		}
 		for (const a of sp.side_project_achievements ?? []) {
 			overlay(tr, 'side_project_achievement', a, 'description');
+		}
+	}
+
+	for (const ref of profile.references ?? []) {
+		for (const f of ['author_position', 'text']) {
+			overlay(tr, 'reference', ref, f);
 		}
 	}
 
@@ -293,6 +300,16 @@ export async function isEntityOwned(
 						.limit(1)
 				).length > 0
 			);
+		case 'reference':
+			return (
+				(
+					await db
+						.select({ id: references.id })
+						.from(references)
+						.where(and(eq(references.id, id), eq(references.profile_id, profileId)))
+						.limit(1)
+				).length > 0
+			);
 		default:
 			return false;
 	}
@@ -304,7 +321,7 @@ export async function isEntityOwned(
  * Used by the overview page which writes many fields at once.
  */
 export async function loadOwnedEntityIds(profileId: number): Promise<Record<string, Set<number>>> {
-	const [we, wea, wep, cats, edu, sp, spa, langs] = await Promise.all([
+	const [we, wea, wep, cats, edu, sp, spa, langs, refs] = await Promise.all([
 		db
 			.select({ id: work_experiences.id })
 			.from(work_experiences)
@@ -339,7 +356,8 @@ export async function loadOwnedEntityIds(profileId: number): Promise<Record<stri
 			.from(side_project_achievements)
 			.innerJoin(side_projects, eq(side_project_achievements.side_project_id, side_projects.id))
 			.where(eq(side_projects.profile_id, profileId)),
-		db.select({ id: languages.id }).from(languages).where(eq(languages.profile_id, profileId))
+		db.select({ id: languages.id }).from(languages).where(eq(languages.profile_id, profileId)),
+		db.select({ id: references.id }).from(references).where(eq(references.profile_id, profileId))
 	]);
 	return {
 		profile: new Set([profileId]),
@@ -350,12 +368,22 @@ export async function loadOwnedEntityIds(profileId: number): Promise<Record<stri
 		education: new Set(edu.map((r) => r.id)),
 		side_project: new Set(sp.map((r) => r.id)),
 		side_project_achievement: new Set(spa.map((r) => r.id)),
-		language: new Set(langs.map((r) => r.id))
+		language: new Set(langs.map((r) => r.id)),
+		reference: new Set(refs.map((r) => r.id))
 	};
 }
 
 /** Longer fields get a textarea in the editor; the rest a single-line input. */
-const MULTILINE_FIELDS = new Set(['summary', 'description', 'outcome', 'note', 'about_me_text']);
+const MULTILINE_FIELDS = new Set([
+	'summary',
+	'description',
+	'outcome',
+	'note',
+	'about_me_text',
+	// A reference is a paragraph someone else wrote; `text` is translatable on
+	// no other entity, so this does not widen anything else.
+	'text'
+]);
 
 /** Append a registered entity's non-empty fields as editor rows. */
 function pushRows(
@@ -487,6 +515,18 @@ export function collectTranslatable(
 	}
 	if (variantRows.length) {
 		groups.push({ key: 'field-variants', title: 'Alternative wordings', rows: variantRows });
+	}
+
+	for (const ref of profile.references ?? []) {
+		const rows: TranslatableRow[] = [];
+		pushRows(rows, 'reference', ref.id, ref);
+		if (rows.length) {
+			groups.push({
+				key: `ref-${ref.id}`,
+				title: `Reference — ${ref.author || ''}`.trim(),
+				rows
+			});
+		}
 	}
 
 	const languageRows: TranslatableRow[] = [];

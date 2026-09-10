@@ -964,6 +964,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		fields: {
 			author: { kind: 'string', note: 'who gave the reference' },
 			author_position: { kind: 'string', note: 'their role, and where' },
+			author_email: { kind: 'string', note: 'how a recruiter can reach them, if they agreed' },
+			author_phone: { kind: 'string', note: 'their phone number, if they agreed' },
 			text: { kind: 'string', note: 'what they said, in their words' }
 		},
 		required: ['author'],

@@ -100,6 +100,7 @@ export type TranslationTarget =
 	| { kind: 'education'; education_index: number }
 	| { kind: 'tech_skill_category'; category_index: number }
 	| { kind: 'language'; language_index: number }
+	| { kind: 'reference'; reference_index: number }
 	| { kind: 'field_variant'; field_variant_index: number };
 
 export interface ExportedTranslation {
@@ -390,6 +391,8 @@ export interface ExportedReference {
 	sort?: number | null;
 	author?: string;
 	author_position?: string;
+	author_email?: string;
+	author_phone?: string;
 	text?: string;
 }
 
