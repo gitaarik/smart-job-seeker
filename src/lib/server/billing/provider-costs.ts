@@ -60,12 +60,29 @@ interface TokenCost extends TokenRates {
  * directories' exported *symbols*, not their contents — it would not notice a
  * rate that had been fixed on one side only. Change both, keep them identical.
  *
- * Last updated: 2026-08-06
+ * Last updated: 2026-09-08
  */
 const PROVIDER_COSTS: Record<string, TokenCost> = {
-	// Groq — https://groq.com/pricing
-	'groq/openai/gpt-oss-120b': { input: 0.15e-6, output: 0.6e-6 },
-	'groq/openai/gpt-oss-20b': { input: 0.075e-6, output: 0.3e-6 },
+	/**
+	 * Groq — https://groq.com/pricing
+	 *
+	 * `cachedInput` was missing here for as long as the model has been the app
+	 * provider, so every token Groq served from a repeated prefix was priced at
+	 * the full rate: /admin/costs sums `cached_input_tokens` and handed it to a
+	 * pricer that had nowhere to put it. August 2026's invoice cached 155M of
+	 * 443M input tokens, so the page was over-stating Groq input by roughly a
+	 * sixth — and the profile-first ordering of `score_job_match` and
+	 * `extract_matched_skills`, which is what earned that discount, showed up as
+	 * no saving at all.
+	 *
+	 * Half the input rate: Groq documents a flat 50% discount on cached input
+	 * tokens, for every model (console.groq.com/docs/prompt-caching, read
+	 * 2026-09-08). Nothing model-specific to look up, so a new Groq entry gets
+	 * `input / 2` and needs no separate check.
+	 */
+	'groq/openai/gpt-oss-120b': { input: 0.15e-6, output: 0.6e-6, cachedInput: 0.075e-6 },
+	// Same discount, same source.
+	'groq/openai/gpt-oss-20b': { input: 0.075e-6, output: 0.3e-6, cachedInput: 0.0375e-6 },
 	// llama-4-scout decommissioned 2026-07-17; keep for historical backfill
 	'groq/meta-llama/llama-4-scout-17b-16e-instruct': { input: 0.11e-6, output: 0.34e-6 },
 	'groq/meta-llama/llama-4-maverick-17b-128e-instruct': { input: 0.5e-6, output: 0.77e-6 },
@@ -103,6 +120,36 @@ const PROVIDER_COSTS: Record<string, TokenCost> = {
 			cachedInput: 0.25e-6
 		}
 	},
+	/**
+	 * The 3.x line, priced 2026-09-08 off the pricing page above.
+	 *
+	 * None of these is the writing model. `gemini-3.5-flash-lite` was pinned as
+	 * one on 2026-09-08 — replayed over nine stored turns it came out ~4x cheaper
+	 * than 2.5-pro with no measurable quality regression — and unpinned again on
+	 * 2026-09-10, because those nine turns were all PROSE. On the capability
+	 * path, where the model has to name a field rather than write a sentence, it
+	 * returns a proposal with an empty `changes` array: llm:smoke
+	 * "agent-capability (profile section -> namespaced field)" fails 5/5 on
+	 * flash-lite and passes 3/3 on 2.5-pro, with the prompts held constant. A
+	 * writing model is chosen on both halves or not at all.
+	 *
+	 * They stay priced anyway. An unpriced model does not fail — it records
+	 * providerCostUsd: null and disappears from /admin/costs, which is precisely
+	 * how 2.5-pro went unmeasured above — and these three are the ones a retune
+	 * would reach for.
+	 *
+	 * No `cachedInput` on the lite pair: the pricing page lists context caching
+	 * as unavailable for 3.5-flash-lite, and cached tokens then bill at the full
+	 * input rate, which is the safe direction to be wrong in.
+	 *
+	 * ⚠️ 3.8-flash is on an introductory rate that DOUBLES to 1.5e-6 / 7.5e-6 on
+	 * 2027-01-01. It also spends roughly as many hidden thinking tokens as
+	 * visible output ones, all billed at the output rate, so its real cost runs
+	 * near double what this table computes from a recorded output count.
+	 */
+	'gemini/gemini-3.8-flash': { input: 0.75e-6, output: 3.75e-6, cachedInput: 0.075e-6 },
+	'gemini/gemini-3.5-flash-lite': { input: 0.3e-6, output: 2.5e-6 },
+	'gemini/gemini-3.1-flash-lite': { input: 0.25e-6, output: 1.5e-6 },
 
 	// Cerebras — https://cerebras.ai/pricing
 	// llama-3.3-70b deprecated Feb 2026; keeping for backfill of historical data
