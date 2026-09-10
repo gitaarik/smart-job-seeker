@@ -70,6 +70,7 @@
 		}>;
 		references: Array<{
 			author: string | null;
+			author_position: string | null;
 			text: string | null;
 		}>;
 		tech_skill_categories: Array<{
@@ -443,7 +444,17 @@
 
 			{#each profile.references as reference, index (index)}
 				<div class="mb-2">
-					<h3 class="font-bold">{reference.author}</h3>
+					<!--
+						Name and role on one line, comma-separated, the way the References
+						page labels the same row (`rowLabel` in profile/resources.ts) — a
+						referee is "Elmar Krack, Co-founder of Tender-it" everywhere they
+						appear. The role is translated by applyTranslations before this
+						renders, so a non-English CV gets the overlay for free; the name is
+						deliberately not translatable.
+					-->
+					<h3 class="font-bold">
+						{reference.author}{#if reference.author_position}, {reference.author_position}{/if}
+					</h3>
 					<p class="italic">"{reference.text}"</p>
 				</div>
 			{/each}
