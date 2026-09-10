@@ -124,6 +124,21 @@ const PROFILE_SCHEMA_MAPPING = {
 };
 
 /**
+ * Every top-level key `exportProfile` can put in `collected_data`.
+ *
+ * Exists so a prompt's `profileDataFields` list can be checked against it.
+ * That list is a set-membership filter, so a name that is not one of these
+ * keys reads as "the applicant has none" rather than as a typo: `education`
+ * was in every generator's list for as long as they existed, against an export
+ * that writes `educations`, and nothing anywhere said so. See
+ * ai-chat/profile-fields.ts.
+ */
+export const EXPORTED_PROFILE_KEYS: readonly string[] = [
+	...PROFILE_SCHEMA_MAPPING.profiles.fields,
+	...Object.keys(PROFILE_SCHEMA_MAPPING.profiles.relations)
+];
+
+/**
  * Build a schema node with field notes
  */
 function buildSchemaNode(

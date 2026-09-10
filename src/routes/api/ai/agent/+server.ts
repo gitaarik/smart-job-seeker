@@ -30,25 +30,7 @@ import {
 	type ProposalOutcome,
 	renderProposalOutcomes
 } from '$lib/server/ai-chat/proposal-outcomes';
-
-// Profile fields the agent is allowed to reason over. Mirrors the cover-letter
-// feature's set — enough to give grounded, personal advice without leaking
-// billing/scraper internals into the prompt.
-const PROFILE_DATA_FIELDS = [
-	'name',
-	'title',
-	'headline',
-	'subtitle',
-	'summary',
-	'location',
-	'core_stack',
-	'highlights',
-	'work_experiences',
-	'side_projects',
-	'education',
-	'tech_skill_categories',
-	'languages'
-];
+import { ASSISTANT_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
 
 // Recent turns sent to the model as context (~20 user/assistant exchanges).
 // Older turns are dropped; summarization can be layered on later if needed.
@@ -490,7 +472,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		},
 		undefined,
 		{
-			profileDataFields: PROFILE_DATA_FIELDS,
+			profileDataFields: ASSISTANT_PROFILE_FIELDS,
 			context,
 			// Fallbacks, NOT customVariables: passed as customVariables these blank
 			// every source the line above just assembled, because customVariables are
