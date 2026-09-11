@@ -20,6 +20,7 @@ import { tokensToCost } from '$lib/server/billing/credits';
 import { describeSpendBlock, getSpendEligibility } from '$lib/server/account/spend-eligibility';
 import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
 import { assembleGenerationContext, type ContextRequest } from './generation-context';
+import type { ExportedProfileKey } from '$lib/server/profile/export';
 import type { RetrievalRecord } from '$lib/server/documents/retrieval-record';
 import { applySkillVisibility, loadProfileData, renderProfileData } from './profile-data';
 
@@ -271,7 +272,7 @@ export async function createAndGenerateAiChat(
 	followupTo?: number,
 	options?: {
 		/** Top-level profile data keys to include. If omitted, all data is included. */
-		profileDataFields?: string[];
+		profileDataFields?: ExportedProfileKey[];
 		/**
 		 * Top-level profile data keys to REMOVE, applied after
 		 * `profileDataFields`. For a prompt that wants nearly the whole blob but
@@ -279,7 +280,7 @@ export async function createAndGenerateAiChat(
 		 * express that: an allow-list silently starves the prompt the next time
 		 * the export grows a field. See NON_SKILL_FIELDS in profile-data.ts.
 		 */
-		profileDataExclude?: string[];
+		profileDataExclude?: ExportedProfileKey[];
 		/**
 		 * Evidence to assemble for this generation — which sources, what it's
 		 * about, how big a budget. Assembled here and merged into the interpolation

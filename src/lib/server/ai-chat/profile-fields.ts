@@ -1,3 +1,5 @@
+import type { ExportedProfileKey } from '$lib/server/profile/export';
+
 /**
  * Shared profile-blob field selection for AI generation.
  *
@@ -11,13 +13,14 @@
  * Order is irrelevant — `profileDataFields` is applied as a set membership
  * filter over `collected_data` (see utils.ts), not as an ordering.
  *
- * A name that is not a `collected_data` key is not an error, it is silently no
- * data. `education` sat here from the start and the export key is `educations`,
- * so every generator built from this CORE — cover letters, STAR stories, cheat
- * sheets, application answers — has been writing without ever seeing a degree.
- * Check a new entry against `PROFILE_SCHEMA_MAPPING` in profile/export.ts.
+ * A name that is not a `collected_data` key used to be no error at all, just
+ * silently no data. `education` sat here from the start against an export that
+ * writes `educations`, so every generator built from this CORE — cover letters,
+ * STAR stories, cheat sheets, application answers — wrote without ever seeing a
+ * degree. Every list here is `ExportedProfileKey[]` now (profile/export.ts), so
+ * that typo is a compile error at the line that writes it.
  */
-export const CORE_PROFILE_FIELDS = [
+export const CORE_PROFILE_FIELDS: ExportedProfileKey[] = [
 	'name',
 	'title',
 	'headline',
@@ -62,7 +65,7 @@ export const CORE_PROFILE_FIELDS = [
  * stories — it would push the blob past the cap and have fitProfileToBudget drop
  * work experience to pay for them.
  */
-export const ASSISTANT_PROFILE_FIELDS = [
+export const ASSISTANT_PROFILE_FIELDS: ExportedProfileKey[] = [
 	...CORE_PROFILE_FIELDS,
 	'location',
 	'languages',
@@ -76,4 +79,38 @@ export const ASSISTANT_PROFILE_FIELDS = [
  * definition instead of each declaring their own copy. Not exported from a
  * generator, so nothing external depends on its location.
  */
-export const LETTER_PROFILE_FIELDS = [...CORE_PROFILE_FIELDS, 'location', 'languages'];
+export const LETTER_PROFILE_FIELDS: ExportedProfileKey[] = [
+	...CORE_PROFILE_FIELDS,
+	'location',
+	'languages'
+];
+
+/**
+ * The import suggester, which proposes search tasks rather than writing
+ * anything.
+ *
+ * Not composed from CORE, and narrower than it on purpose: picking platforms
+ * and filters needs what the applicant does and where they can do it, not who
+ * they are or what they achieved, so `name`, `highlights`, `side_projects` and
+ * `educations` are all left out and `location` and `languages` added.
+ *
+ * Lived as a literal in the route, where no test reached it — which is how
+ * `city`, `region`, `country_code` and `remote_start_year` sat in it, asking
+ * the export for four keys it did not write. Resolved 2026-09-11 in both
+ * directions: the first three went with the `profiles.city`/`region` columns,
+ * and `remote_start_year` was added to the snapshot instead, because that one
+ * was worth having rather than a leftover. The type on this line is what stops
+ * the next one going unnoticed either way.
+ */
+export const SUGGEST_PROFILE_FIELDS: ExportedProfileKey[] = [
+	'title',
+	'headline',
+	'subtitle',
+	'summary',
+	'core_stack',
+	'location',
+	'remote_start_year',
+	'tech_skill_categories',
+	'languages',
+	'work_experiences'
+];

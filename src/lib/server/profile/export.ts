@@ -47,7 +47,19 @@ const PROFILE_SNAPSHOT_COLUMNS = {
 	about_me_text: true,
 	nationality: true,
 	location_url: true,
-	location_timezone: true
+	location_timezone: true,
+	/**
+	 * The year they started working remotely, as a number.
+	 *
+	 * Here and not its two siblings (`dev_start_year`, `python_js_start_year`)
+	 * because remote experience is the one of the three that is not already in
+	 * the blob: how long someone has written code, and in what, is what
+	 * `work_experiences` and `tech_skill_categories` say at length. Where they
+	 * have done it from is said nowhere else, and the import suggester asked for
+	 * it from the day it was written — against a snapshot that did not carry it,
+	 * so it has never once been answered.
+	 */
+	remote_start_year: true
 } as const;
 
 /** Field names only, for the schema mapping and the test that pins the two together. */
@@ -158,6 +170,24 @@ export const EXPORTED_PROFILE_KEYS: readonly string[] = [
 	...PROFILE_SCHEMA_MAPPING.profiles.fields,
 	...Object.keys(PROFILE_SCHEMA_MAPPING.profiles.relations)
 ];
+
+/**
+ * The same set as `EXPORTED_PROFILE_KEYS`, as a type.
+ *
+ * The array can only be checked by a test that imports the list being checked,
+ * and that is the gap `profileDataFields` kept falling through. The lists in
+ * ai-chat/profile-fields.ts are pinned against it; the one the import suggester
+ * declared inline at its call site was not, so `city`, `region`, `country_code`
+ * and `remote_start_year` sat in it for as long as it existed, asking for four
+ * keys the snapshot above did not carry and getting silence back.
+ *
+ * Annotating a field list with this moves the check to the compiler, where an
+ * inline literal is no harder to catch than a named constant. Both halves stay:
+ * the array is still what a runtime filter needs.
+ */
+export type ExportedProfileKey =
+	| keyof typeof PROFILE_SNAPSHOT_COLUMNS
+	| keyof (typeof PROFILE_SCHEMA_MAPPING)['profiles']['relations'];
 
 /**
  * Build a schema node with field notes

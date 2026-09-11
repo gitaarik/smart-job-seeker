@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
 	ASSISTANT_PROFILE_FIELDS,
 	CORE_PROFILE_FIELDS,
-	LETTER_PROFILE_FIELDS
+	LETTER_PROFILE_FIELDS,
+	SUGGEST_PROFILE_FIELDS
 } from '../profile-fields';
 import { EXPORTED_PROFILE_KEYS, PROFILE_SNAPSHOT_COLUMN_NAMES } from '$lib/server/profile/export';
 import { STORY_PROFILE_FIELDS } from '../profile-story';
@@ -15,12 +16,18 @@ import { QUESTION_PROFILE_FIELDS } from '../application-question';
 // delta (or a changed CORE) silently degrades a generator's ${data} with no
 // error — these catch that.
 //
-// They cannot catch a name that is not a collected_data key at all, which is the
-// other half of the same failure: pinned as `education` for as long as they have
-// existed, while the export writes `educations`, so all four lists agreed
-// precisely on a key that was never in the blob. Corrected 2026-09-10. A name
-// added here has to exist in `PROFILE_SCHEMA_MAPPING` (profile/export.ts) —
-// nothing in this file proves that.
+// The pins alone cannot catch a name that is not a collected_data key at all,
+// which is the other half of the same failure: pinned as `education` for as long
+// as they have existed, while the export writes `educations`, so all four lists
+// agreed precisely on a key that was never in the blob. Corrected 2026-09-10.
+//
+// The membership test at the bottom covers that, but only for lists this file
+// imports — a caller that declares its own list inline is out of its reach, and
+// the import suggester did exactly that with four names the export has never
+// written. So the real guard is the `ExportedProfileKey[]` annotation on each
+// list (profile/export.ts), which the compiler applies wherever a list is
+// written. This file is the second line: it would still fail if that type were
+// widened or cast past.
 const set = (a: readonly string[]) => new Set(a);
 
 describe('profile field lists (composed from CORE)', () => {
@@ -156,7 +163,8 @@ describe('profile field lists (composed from CORE)', () => {
 			['CHEATSHEET', CHEATSHEET_PROFILE_FIELDS],
 			['LETTER', LETTER_PROFILE_FIELDS],
 			['QUESTION', QUESTION_PROFILE_FIELDS],
-			['ASSISTANT', ASSISTANT_PROFILE_FIELDS]
+			['ASSISTANT', ASSISTANT_PROFILE_FIELDS],
+			['SUGGEST', SUGGEST_PROFILE_FIELDS]
 		] as const) {
 			const unknown = list.filter((f) => !exported.has(f));
 			expect(unknown, `${name} asks for keys exportProfile never writes`).toEqual([]);

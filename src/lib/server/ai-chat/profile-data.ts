@@ -12,7 +12,7 @@
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { collected_data } from '$lib/server/db/schema';
-import { exportProfile } from '$lib/server/profile/export';
+import { exportProfile, type ExportedProfileKey } from '$lib/server/profile/export';
 import { PROFILE_ONLY_FLAG } from '$lib/profile-visibility';
 
 export interface ProfileData {
@@ -83,8 +83,8 @@ export function applySkillVisibility(
  */
 export async function loadProfileData(
 	profileId: number,
-	fields?: string[],
-	options?: { documentSafe?: boolean; exclude?: string[] }
+	fields?: ExportedProfileKey[],
+	options?: { documentSafe?: boolean; exclude?: ExportedProfileKey[] }
 ): Promise<ProfileData> {
 	let record = await db.query.collected_data.findFirst({
 		where: eq(collected_data.profile_id, profileId),
@@ -110,7 +110,10 @@ export async function loadProfileData(
 			return { data: {}, schema: {} };
 		}
 
-		const fieldSet = new Set(fields);
+		// Widened deliberately: `fields` is checked against the export at the
+		// caller, but the keys it is tested against here come out of parsed JSON
+		// and are plain strings.
+		const fieldSet: Set<string> = new Set(fields);
 
 		// Filter data: keep only requested top-level keys.
 		const filteredData: Record<string, unknown> = {};
@@ -137,7 +140,7 @@ export async function loadProfileData(
 	}
 
 	if (options?.exclude?.length) {
-		const drop = new Set(options.exclude);
+		const drop: Set<string> = new Set(options.exclude);
 		dataJson = Object.fromEntries(Object.entries(dataJson).filter(([k]) => !drop.has(k)));
 		if (schemaJson.fields || schemaJson.relations) {
 			const filteredSchema: Record<string, unknown> = { ...schemaJson };
@@ -219,7 +222,7 @@ export async function loadProfileData(
  * Expect existing scores to move when this lands. That is the point: they were
  * computed from inputs the design says do not belong in them.
  */
-export const NON_FIT_FIELDS = [
+export const NON_FIT_FIELDS: ExportedProfileKey[] = [
 	'email_address',
 	'location_url',
 	'name',
@@ -228,7 +231,7 @@ export const NON_FIT_FIELDS = [
 	'salary_expectations'
 ];
 
-export const NON_SKILL_FIELDS = [
+export const NON_SKILL_FIELDS: ExportedProfileKey[] = [
 	'email_address',
 	'github_profile',
 	'linkedin_profile',

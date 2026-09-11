@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm';
 import { ai_chats, application_letters, application_questions } from '$lib/server/db/schema';
 import type { ChatMessage } from '$lib/server/llm';
 import type { GenerationContextOption } from './generation-context';
+import type { ExportedProfileKey } from '$lib/server/profile/export';
 import { createAndGenerateAiChat, interpolatePrompt } from './utils';
 
 /**
@@ -38,7 +39,7 @@ export async function createFollowupAiChat(
 		includeOriginalContext?: boolean;
 		promptType?: string;
 		customVariables?: Record<string, unknown>;
-		profileDataFields?: string[];
+		profileDataFields?: ExportedProfileKey[];
 		/** Evidence to assemble for this turn — see generation-context.ts. */
 		context?: GenerationContextOption;
 		/** Prior turns of this thread, replayed as real messages. */

@@ -77,12 +77,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 		// Lightweight profile fields for completeness check
 		db.query.profiles.findFirst({
 			where: eq(profiles.id, profileId),
-			columns: {
-				title: true,
-				headline: true,
-				city: true,
-				country_code: true
-			},
+			columns: { id: true },
 			with: {
 				tech_skill_categories: {
 					columns: { id: true },
@@ -253,10 +248,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 			((matchConfig.work_location as string[]) ?? []).length > 0,
 		hasWorkExperience,
 		hasEducation,
-		hasExperienceOrEducation: hasWorkExperience || hasEducation,
-		hasTitle: !!profileData?.title,
-		hasHeadline: !!profileData?.headline,
-		hasLocation: !!(profileData?.city && profileData?.country_code)
+		hasExperienceOrEducation: hasWorkExperience || hasEducation
 	};
 
 	// Process search tasks

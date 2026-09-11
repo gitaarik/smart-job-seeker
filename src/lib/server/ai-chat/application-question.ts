@@ -9,10 +9,11 @@ import { application_questions } from '$lib/server/db/schema';
 import { createAndGenerateAiChat, instructionsBlock } from './utils';
 import { type ContextSource, type RelevanceQuery } from './generation-context';
 import { CORE_PROFILE_FIELDS } from './profile-fields';
+import type { ExportedProfileKey } from '$lib/server/profile/export';
 import { ensureBaselineVersion, QUESTION_VERSIONS, recordVersion } from './entity-versions';
 
 /** Profile data fields relevant for answering application questions */
-export const QUESTION_PROFILE_FIELDS = [
+export const QUESTION_PROFILE_FIELDS: ExportedProfileKey[] = [
 	...CORE_PROFILE_FIELDS,
 	'location',
 	'languages',

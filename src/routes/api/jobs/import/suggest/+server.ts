@@ -27,6 +27,7 @@ import { job_platforms, match_config, search_tasks } from '$lib/server/db/schema
 import { requireAuth } from '$lib/server/utils/api-helpers';
 import { getSelectedProfileId } from '../../../../(app)/profile/utils';
 import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
+import { SUGGEST_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
 import { suggestImportTasksSchema } from '$lib/server/schemas/ai-prompt-schemas';
 import {
 	SEARCH_FILTER_DEFINITIONS,
@@ -366,21 +367,7 @@ export async function _runSuggester(
 		},
 		undefined,
 		{
-			profileDataFields: [
-				'title',
-				'headline',
-				'subtitle',
-				'summary',
-				'core_stack',
-				'location',
-				'city',
-				'region',
-				'country_code',
-				'remote_start_year',
-				'tech_skill_categories',
-				'languages',
-				'work_experiences'
-			]
+			profileDataFields: SUGGEST_PROFILE_FIELDS
 		}
 	);
 

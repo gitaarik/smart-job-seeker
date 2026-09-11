@@ -46,6 +46,7 @@ import { applicationPipelineText } from './application-pipeline';
 import { jobDetailsText } from './job-context';
 import { formatPageScope, type PageScope } from './page-scope';
 import type { ProfileResourceName } from '$lib/server/profile/resources';
+import type { ExportedProfileKey } from '$lib/server/profile/export';
 import {
 	fitProfileToBudget,
 	formatTrimNote,
@@ -167,7 +168,7 @@ export interface ContextRequest {
 	/** Which evidence sources to assemble. Order is irrelevant. */
 	sources: ContextSource[];
 	/** Top-level profile keys the `profile` source renders. Omit for all of them. */
-	profileFields?: string[];
+	profileFields?: ExportedProfileKey[];
 	/**
 	 * Already-loaded profile blob, so a caller that needed it anyway (i.e.
 	 * createAndGenerateAiChat, which interpolates `${schema}` from the same row)

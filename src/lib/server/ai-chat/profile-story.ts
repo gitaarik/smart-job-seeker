@@ -18,10 +18,14 @@ import { ensureBaselineVersion, recordVersion, STORY_VERSIONS } from './entity-v
 import { parseStarMarkdown, serializeStarMarkdown, type StarFields } from '$lib/interview/star';
 import type { GenerationContextOption } from './generation-context';
 import { CORE_PROFILE_FIELDS } from './profile-fields';
+import type { ExportedProfileKey } from '$lib/server/profile/export';
 import { pinnedProjectForStory } from '$lib/server/profile/project-stories';
 
 /** Profile data fields relevant for building a behavioural STAR story. */
-export const STORY_PROFILE_FIELDS = [...CORE_PROFILE_FIELDS, 'project_stories'];
+export const STORY_PROFILE_FIELDS: ExportedProfileKey[] = [
+	...CORE_PROFILE_FIELDS,
+	'project_stories'
+];
 
 /** Maps generation mode to the prompt template name. */
 const STORY_MODE_TO_PROMPT: Record<string, string> = {

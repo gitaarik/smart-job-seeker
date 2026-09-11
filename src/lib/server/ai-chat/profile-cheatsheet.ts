@@ -22,9 +22,13 @@ import { CHEATSHEET_VERSIONS, ensureBaselineVersion, recordVersion } from './ent
 import { htmlToMarkdown } from '$lib/utils/html-to-markdown';
 import type { GenerationContextOption } from './generation-context';
 import { CORE_PROFILE_FIELDS } from './profile-fields';
+import type { ExportedProfileKey } from '$lib/server/profile/export';
 
 /** Profile data fields relevant for building an interview cheat sheet. */
-export const CHEATSHEET_PROFILE_FIELDS = [...CORE_PROFILE_FIELDS, 'languages'];
+export const CHEATSHEET_PROFILE_FIELDS: ExportedProfileKey[] = [
+	...CORE_PROFILE_FIELDS,
+	'languages'
+];
 
 /** Maps generation mode to the prompt template name. */
 const CHEATSHEET_MODE_TO_PROMPT: Record<string, string> = {

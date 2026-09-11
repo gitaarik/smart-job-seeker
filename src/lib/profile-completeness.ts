@@ -35,9 +35,6 @@ export interface ProfileCompleteness {
 	hasWorkExperience: boolean;
 	hasEducation: boolean;
 	hasExperienceOrEducation: boolean;
-	hasTitle: boolean;
-	hasHeadline: boolean;
-	hasLocation: boolean;
 }
 
 /** Step 1 of Getting Started: enough profile to be matched on. */
