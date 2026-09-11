@@ -99,6 +99,122 @@ describe('fitToBudget', () => {
 	});
 });
 
+describe('fitToBudget — the ranked floor', () => {
+	// Named like the real ones so a failure reads as the situation it models.
+	const scoped = (source: string, priority: number, len: number) => ({
+		source: source as 'job',
+		priority,
+		text: 'x'.repeat(len)
+	});
+	const ranked = (source: string, priority: number, len: number) => ({
+		source: source as 'projects',
+		priority,
+		text: 'y'.repeat(len)
+	});
+	const isRanked = (b: { source: string }) =>
+		['projects', 'stories', 'application_texts'].includes(b.source);
+	const floor = (chars: number) => ({ applies: isRanked, chars });
+	const sources = (kept: { source: string }[]) => kept.map((b) => b.source);
+
+	it('keeps retrieval alive when one scoped block would have taken everything', () => {
+		// Application 73, to the character: a 21,663-char job description against a
+		// 24,000 budget. Without the floor all three ranked sources were dropped
+		// after finding real matches, and the draft was written from the posting
+		// alone.
+		const blocks = [
+			scoped('job', 50, 21663),
+			ranked('projects', 10, 2437),
+			ranked('stories', 8, 2852),
+			ranked('application_texts', 6, 3221)
+		];
+		expect(sources(fitToBudget(blocks, 24000))).toEqual(['job']);
+		expect(sources(fitToBudget(blocks, 24000, floor(8000)))).toEqual(['job', 'projects']);
+	});
+
+	it('still drops the job for nothing — the posting is never sacrificed', () => {
+		// The floor must not turn into "retrieval outranks the thing being applied
+		// to". A scoped block over its share is kept, and the total goes over
+		// budget by that one block, exactly as it could before the floor existed.
+		const kept = fitToBudget(
+			[scoped('job', 50, 21663), ranked('projects', 10, 2437)],
+			24000,
+			floor(8000)
+		);
+		expect(sources(kept)).toContain('job');
+	});
+
+	it('holds back nothing when the scoped blocks leave room anyway', () => {
+		// A floor, not an allocation: an ordinary application is packed exactly as
+		// it was before, so this change is invisible on the common case.
+		const blocks = [
+			scoped('job', 50, 5132),
+			scoped('application_activity', 40, 6183),
+			ranked('projects', 10, 2846),
+			ranked('stories', 8, 2852),
+			ranked('application_texts', 6, 2543)
+		];
+		expect(sources(fitToBudget(blocks, 24000, floor(8000)))).toEqual(
+			sources(fitToBudget(blocks, 24000))
+		);
+	});
+
+	it('lets the ranked sources spend more than the floor when it is free', () => {
+		// 3 × 4k of retrieval against a 4k job and a 20k budget: the reserve is
+		// 8k but there is 16k going spare, and holding them to the floor would
+		// throw away room nobody else wants.
+		const blocks = [
+			scoped('job', 50, 4000),
+			ranked('projects', 10, 4000),
+			ranked('stories', 8, 4000),
+			ranked('application_texts', 6, 4000)
+		];
+		expect(fitToBudget(blocks, 20000, floor(8000))).toHaveLength(4);
+	});
+
+	it('does not reserve more than the ranked blocks can use', () => {
+		// One small ranked block must not cost the scoped ones the whole reserve.
+		const blocks = [scoped('job', 50, 9000), ranked('projects', 10, 500)];
+		expect(fitToBudget(blocks, 10000, floor(8000))).toHaveLength(2);
+	});
+
+	it('returns blocks in priority order regardless of which group kept them', () => {
+		const kept = fitToBudget(
+			[ranked('projects', 10, 100), scoped('job', 50, 100), ranked('stories', 8, 100)],
+			24000,
+			floor(8000)
+		);
+		expect(sources(kept)).toEqual(['job', 'projects', 'stories']);
+	});
+
+	it('is the old behaviour exactly when the floor is zero', () => {
+		const blocks = [scoped('job', 50, 21663), ranked('projects', 10, 2437)];
+		expect(fitToBudget(blocks, 24000, floor(0))).toEqual(fitToBudget(blocks, 24000));
+	});
+});
+
+describe('queryToJobLike', () => {
+	it('maps text onto title (clipped) and description, skills onto skills_required', () => {
+		const job = queryToJobLike({
+			text: 'distributed systems',
+			skills: ['Kafka']
+		});
+		expect(job.title).toBe('distributed systems');
+		expect(job.job_description).toBe('distributed systems');
+		expect(job.skills_required).toEqual(['Kafka']);
+	});
+
+	it('clips an overlong topic to 200 chars for the title but keeps it whole in the description', () => {
+		const long = 'a'.repeat(500);
+		const job = queryToJobLike({ text: long });
+		expect(job.title).toHaveLength(200);
+		expect(job.job_description).toHaveLength(500);
+	});
+
+	it('passes null skills through when none are given', () => {
+		expect(queryToJobLike({ text: 'topic' }).skills_required).toBeNull();
+	});
+});
+
 describe('assembleGenerationContext', () => {
 	it('gives every requested source a variable key even when it renders nothing', async () => {
 		// The key must exist either way — an unsupplied placeholder ships to the
@@ -232,8 +348,8 @@ describe('assembleGenerationContext', () => {
 		});
 
 		// Stories rank below projects, so stories is the one that gives way.
-		expect(ctx.droppedSources).toEqual(['projects']);
-		expect(ctx.variables.relevantProjects).toContain('could not be included');
+		expect(ctx.droppedSources).toEqual(['stories']);
+		expect(ctx.variables.relevantStories).toContain('could not be included');
 		// It must not read as an absence — that is the whole point.
 		expect(ctx.variables.relevantStories).not.toBe('');
 		expect(ctx.variables.relevantProjects).toBe('P'.repeat(4000));
@@ -412,17 +528,19 @@ describe('scoped sources', () => {
 		});
 		mockJobDetails.mockResolvedValue('j'.repeat(500));
 		mockRelevantProjects.mockResolvedValue(blk('y'.repeat(500)));
+		mockRelevantStories.mockResolvedValue(blk('s'.repeat(500)));
 
 		const ctx = await assembleGenerationContext({
 			profileId: 1,
 			query: { text: 'anything' },
 			entity: { type: 'application', id: 42 },
-			sources: ['profile', 'job', 'projects'],
+			sources: ['profile', 'job', 'projects', 'stories'],
 			budgetChars: 600
 		});
 
-		// Only one 500-char evidence block fits; the job outranks retrieval.
-		expect(ctx.usedSources.sort()).toEqual(['job', 'profile']);
+		// The floor guarantees retrieval a seat, not the whole row: the job and the
+		// best-ranked source are kept and the next one still gives way.
+		expect(ctx.usedSources.sort()).toEqual(['job', 'profile', 'projects']);
 		// The loser is announced rather than blanked: an empty section reads to the
 		// model as "this doesn't exist", which is how the assistant came to tell a
 		// user it had no access to documents it had just been handed.

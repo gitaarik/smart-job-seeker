@@ -202,6 +202,12 @@ export interface ContextRequest {
 	 * cannot clip JSON mid-string), which is its own piece of work.
 	 */
 	budgetChars?: number;
+	/**
+	 * Chars of `budgetChars` the ranked sources cannot be squeezed out of by the
+	 * scoped ones. Defaults to DEFAULT_RANKED_FLOOR_CHARS; 0 restores the old
+	 * straight-priority behaviour. See fitToBudget.
+	 */
+	rankedFloorChars?: number;
 	/** How many items each ranked source may cite. Source-specific default if unset. */
 	perSourceK?: number;
 	/**
@@ -317,6 +323,18 @@ interface SourceDef {
 	 * Omitted means never — silence is the safe default.
 	 */
 	looked?(req: ContextRequest): boolean;
+	/**
+	 * Whether this source RETRIEVES its content (ranks many candidates and cites
+	 * the best few) rather than being handed one known thing.
+	 *
+	 * Marked here because the budget treats the two families differently: a
+	 * scoped block is as big as the thing it describes and nobody chose its size,
+	 * so without a floor one long job posting silently takes the whole budget and
+	 * every retrieved source is dropped. Measured on application 73: a
+	 * 21,663-char job description against a 24,000 budget dropped projects,
+	 * stories and past writing whole, after all three had found real matches.
+	 */
+	ranked?: boolean;
 }
 
 /**
@@ -487,6 +505,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 	projects: {
 		variable: 'relevantProjects',
 		priority: 10,
+		ranked: true,
 		// A pinned project needs no query: the caller has already said which one
 		// this is about, and that is a lookup that can always be performed.
 		looked: (req) => hasQuery(req) || !!pinnedProject(req),
@@ -506,6 +525,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 	stories: {
 		variable: 'relevantStories',
 		priority: 8,
+		ranked: true,
 		looked: (req) => hasQuery(req),
 		render: async (req) => {
 			if (!hasQuery(req)) return '';
@@ -515,6 +535,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 	application_texts: {
 		variable: 'relevantApplicationTexts',
 		priority: 6,
+		ranked: true,
 		looked: (req) => hasQuery(req),
 		render: async (req) => {
 			if (!hasQuery(req)) return '';
@@ -558,6 +579,16 @@ export function queryToJobLike(q: RelevanceQuery): JobLike {
 	};
 }
 
+/**
+ * Chars of the evidence budget the ranked sources cannot be squeezed out of.
+ *
+ * Sized against what retrieval actually produces: measured across real
+ * generations the three ranked blocks run 2.4–3.2k each, so 8k is "all three,
+ * comfortably" rather than a guess. It is a floor, not an allocation — when the
+ * scoped sources leave more room the ranked ones take it, exactly as before.
+ */
+export const DEFAULT_RANKED_FLOOR_CHARS = 8000;
+
 /** A rendered source block, before budget packing. */
 interface RenderedBlock {
 	source: ContextSource;
@@ -566,26 +597,78 @@ interface RenderedBlock {
 }
 
 /**
- * Pack rendered blocks into a char budget, dropping lowest-priority-first. Pure
- * — the budget behaviour is directly unit-testable, no DB.
+ * Pack blocks into a budget, highest priority first, dropping what will not fit.
  *
- * Empty blocks are filtered out. Highest-priority blocks are added while they
- * fit; the single highest-priority block is always kept even if it alone
- * exceeds the budget (dropping everything is worse, and each source is already
- * internally clipped), so an over-budget request degrades to "the most important
- * source only" rather than to nothing.
+ * `keepFirst` keeps the single highest-priority block even when it alone exceeds
+ * the budget: dropping everything is worse, and each source is already
+ * internally clipped, so an over-budget group degrades to "its most important
+ * block only" rather than to nothing. It is what makes the floor a floor, and
+ * it is off for a group that was promised no reserve — otherwise a caller
+ * asking for no floor would still get one block of it.
  */
-export function fitToBudget(blocks: RenderedBlock[], budgetChars: number): RenderedBlock[] {
-	const ranked = blocks.filter((b) => b.text.trim()).sort((a, z) => z.priority - a.priority);
-
+function pack(blocks: RenderedBlock[], budgetChars: number, keepFirst = true): RenderedBlock[] {
 	const kept: RenderedBlock[] = [];
 	let used = 0;
-	for (const b of ranked) {
-		if (kept.length > 0 && used + b.text.length > budgetChars) continue;
+	for (const b of blocks) {
+		if ((kept.length > 0 || !keepFirst) && used + b.text.length > budgetChars) continue;
 		kept.push(b);
 		used += b.text.length;
 	}
 	return kept;
+}
+
+const totalChars = (blocks: RenderedBlock[]) => blocks.reduce((n, b) => n + b.text.length, 0);
+
+/**
+ * Pack rendered blocks into a char budget, dropping lowest-priority-first. Pure
+ * — the budget behaviour is directly unit-testable, no DB.
+ *
+ * ## The floor
+ *
+ * Priority alone decides this badly, because the two families of source are not
+ * comparable. A SCOPED block is as large as the thing it describes and nobody
+ * chose its size; a RANKED block is a top-K the retriever deliberately kept
+ * small. Straight priority therefore lets one long job posting take the entire
+ * budget: measured on application 73, a 21,663-char description against a 24,000
+ * budget dropped projects (2.4k), stories (2.9k) and past writing (3.2k) whole,
+ * after every one of them had found real matches. The draft was written from the
+ * posting and the profile blob alone, and nothing said so.
+ *
+ * `floorChars` reserves a slice the scoped blocks may not spend, so retrieval
+ * always reaches the model. It is a floor and not an allocation: whatever the
+ * scoped sources leave unspent is still available to the ranked ones, and a
+ * reserve larger than the ranked blocks can use is trimmed to what they need, so
+ * nothing is held back for nobody.
+ *
+ * The guarantee is deliberately "at least the best ranked block", not "at least
+ * `floorChars` of them" — `pack` keeps its first block regardless of size, in
+ * both groups. So a pathological scoped block can still push the total over
+ * budget by one block, exactly as it could before this existed. That is the
+ * intended trade: a floor that yields nothing whenever the posting is huge is
+ * not a floor, and the case where it binds hardest is the case it exists for.
+ */
+export function fitToBudget(
+	blocks: RenderedBlock[],
+	budgetChars: number,
+	floor?: { applies: (block: RenderedBlock) => boolean; chars: number }
+): RenderedBlock[] {
+	const byPriority = (a: RenderedBlock, z: RenderedBlock) => z.priority - a.priority;
+	const present = blocks.filter((b) => b.text.trim()).sort(byPriority);
+	if (!floor) return pack(present, budgetChars);
+
+	const reserved = present.filter(floor.applies);
+	const open = present.filter((b) => !floor.applies(b));
+
+	// Never hold back more than the ranked blocks can actually use.
+	const held = Math.min(floor.chars, totalChars(reserved));
+	const openKept = pack(open, Math.max(0, budgetChars - held));
+
+	// Whatever the scoped blocks left, not merely the reserve. The guarantee
+	// rides on `held`: reserve nothing and the ranked blocks simply compete for
+	// what is left, which is the pre-floor behaviour.
+	const reservedKept = pack(reserved, Math.max(0, budgetChars - totalChars(openKept)), held > 0);
+
+	return [...openKept, ...reservedKept].sort(byPriority);
 }
 
 /** What the user would call each source, for the dropped-for-budget note. */
@@ -669,7 +752,12 @@ export async function assembleGenerationContext(req: ContextRequest): Promise<As
 	const profileBlock = rendered.find((b) => b.source === 'profile');
 	const evidence = rendered.filter((b) => b.source !== 'profile');
 
-	const kept = new Map(fitToBudget(evidence, budget).map((b) => [b.source, b.text]));
+	const kept = new Map(
+		fitToBudget(evidence, budget, {
+			applies: (b) => !!SOURCES[b.source].ranked,
+			chars: req.rankedFloorChars ?? DEFAULT_RANKED_FLOOR_CHARS
+		}).map((b) => [b.source, b.text])
+	);
 	if (profileBlock?.text) kept.set('profile', profileBlock.text);
 
 	const variables: Record<string, string> = {};
