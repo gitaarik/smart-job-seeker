@@ -864,7 +864,7 @@ describe('update_application_status', () => {
 	const def = CAPABILITIES.update_application_status;
 	const APPLYING = {
 		status: 'applying',
-		status_step: 'Applied through job platform',
+		status_step: 'Applied',
 		status_action: 'Awaiting response',
 		status_action_date: null
 	};
@@ -977,7 +977,7 @@ describe('update_application_status', () => {
 			ACTOR.profileId,
 			expect.objectContaining({
 				status: 'applying',
-				step: 'Applied through job platform',
+				step: 'Applied',
 				action: 'Awaiting response',
 				actionDate: '2026-09-01'
 			})
@@ -1029,7 +1029,7 @@ describe('update_application_status', () => {
 
 		expect(mockRevertStatus).toHaveBeenCalledWith(49, ACTOR.profileId, {
 			status: 'applying',
-			step: 'Applied through job platform',
+			step: 'Applied',
 			action: 'Awaiting response',
 			actionDate: null,
 			description: null

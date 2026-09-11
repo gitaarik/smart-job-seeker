@@ -60,7 +60,7 @@ import {
 	finishedStatuses,
 	getStepperPhase,
 	isWaitingAction,
-	stepsByPhase
+	stageRanks
 } from '$lib/application-status';
 
 /**
@@ -207,11 +207,18 @@ const phaseRank: Record<string, number> = {
 /**
  * How far along an application is. Higher is further.
  *
- * The phase carries the coarse position and `stepsByPhase` refines it, so a
+ * The phase carries the coarse position and `stageRanks` refines it, so a
  * "Hiring manager call" sorts above a "Screening call" without the two phases
  * ever being able to interleave. Legacy statuses (`preparing`, `sent`,
  * `offered`, `draft`) go through `getStepperPhase` rather than a second switch
  * that would have to be kept in step with it.
+ *
+ * The refinement is a lookup rather than the step's position in `stepsByPhase`,
+ * which is what it used to be. Reading the index made every stage outrank every
+ * stage listed before it, including the ones that are alternatives rather than
+ * progress: a screening call and an AI interview are one position, and so are an
+ * assessment, a coding challenge and a take-home. They share a rank now, and the
+ * dropdown can be reordered without silently reordering the pipeline.
  *
  * A step the vocabulary does not list scores 0 — the start of its phase. The
  * step list is advisory (the editor offers "Custom…"), and an unknown label
@@ -220,8 +227,7 @@ const phaseRank: Record<string, number> = {
  */
 export function stageRank(status: string, step?: string | null): number {
 	const phase = getStepperPhase(status);
-	const known = step ? (stepsByPhase[phase] ?? []).indexOf(step) : -1;
-	return (phaseRank[phase] ?? 0) * 100 + Math.max(known, 0);
+	return (phaseRank[phase] ?? 0) * 100 + (step ? (stageRanks[phase]?.[step] ?? 0) : 0);
 }
 
 /**

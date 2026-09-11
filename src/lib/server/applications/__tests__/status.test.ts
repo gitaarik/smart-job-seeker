@@ -143,7 +143,7 @@ describe('writeApplicationStatus', () => {
 		const result = await writeApplicationStatus(
 			APP,
 			PROFILE,
-			move({ status: 'applying', step: 'E-mail sent', action: 'Awaiting response' })
+			move({ status: 'applying', step: 'Applied', action: 'Awaiting response' })
 		);
 
 		// A date string, not a Date: the column is a Drizzle `date()` in string
@@ -176,7 +176,7 @@ describe('writeApplicationStatus', () => {
 		const result = await writeApplicationStatus(
 			APP,
 			PROFILE,
-			move({ status: 'applying', step: 'E-mail sent', action: 'Awaiting response' }),
+			move({ status: 'applying', step: 'Applied', action: 'Awaiting response' }),
 			{ collapseInitialEntry: true }
 		);
 
@@ -205,7 +205,7 @@ describe('writeApplicationStatus', () => {
 		const result = await writeApplicationStatus(
 			APP,
 			PROFILE,
-			move({ status: 'applying', step: 'E-mail sent', action: 'Awaiting response' }),
+			move({ status: 'applying', step: 'Applied', action: 'Awaiting response' }),
 			{ collapseInitialEntry: true }
 		);
 
@@ -224,7 +224,7 @@ describe('writeApplicationStatus', () => {
 describe('revertApplicationStatus', () => {
 	const before = {
 		status: 'applying',
-		step: 'Applied through job platform',
+		step: 'Applied',
 		action: 'Awaiting response',
 		actionDate: null,
 		description: null
@@ -238,7 +238,7 @@ describe('revertApplicationStatus', () => {
 
 		expect(written()).toMatchObject({
 			status: 'applying',
-			status_step: 'Applied through job platform',
+			status_step: 'Applied',
 			status_action: 'Awaiting response'
 		});
 		expect(deletes).toEqual(['application_status_log']);

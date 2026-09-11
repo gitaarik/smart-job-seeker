@@ -114,7 +114,7 @@ describe('tierForWrite', () => {
 		// point of the feature, so it is pinned here rather than in the registry.
 		const APPLYING = {
 			status: 'applying',
-			status_step: 'Applied through job platform',
+			status_step: 'Applied',
 			status_action: 'Awaiting response',
 			status_action_date: null
 		};

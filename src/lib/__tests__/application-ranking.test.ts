@@ -46,7 +46,7 @@ function quietFor(days: number, over: Partial<Rankable> = {}): Rankable {
 	const at = new Date(Date.parse(`${DAY}T00:00:00Z`) - days * 86_400_000);
 	return app({
 		status: 'applying',
-		status_step: 'Applied through job platform',
+		status_step: 'Applied',
 		status_action: 'Awaiting response',
 		application_sent_date: '2026-01-05',
 		last_activity: at,
@@ -166,7 +166,7 @@ describe('daysQuiet', () => {
 describe('stageRank', () => {
 	it('orders the phases without letting them interleave', () => {
 		// The last step of a phase still sits below the first step of the next.
-		expect(stageRank('applying', 'Resume / CV submitted')).toBeLessThan(
+		expect(stageRank('applying', 'Applied')).toBeLessThan(
 			stageRank('interviewing', 'Screening call')
 		);
 		expect(stageRank('interviewing', 'Team interview')).toBeLessThan(
@@ -191,7 +191,7 @@ describe('stageRank', () => {
 		expect(custom).toBe(stageRank('interviewing', 'Screening call'));
 		// Inside its own phase at either end, never spilling into a neighbouring one.
 		expect(custom).toBeLessThan(stageRank('interviewing', 'Team interview'));
-		expect(custom).toBeGreaterThan(stageRank('applying', 'Resume / CV submitted'));
+		expect(custom).toBeGreaterThan(stageRank('applying', 'Applied'));
 	});
 });
 

@@ -307,7 +307,7 @@ const APPLICATION_ROW = {
 	id: 44,
 	profile_id: 12,
 	status: 'applying',
-	status_step: 'E-mail sent',
+	status_step: 'Applied',
 	status_action: 'Awaiting response',
 	status_action_date: null,
 	cv_sent_through: null,
@@ -850,7 +850,7 @@ describe('tier 1 — direct writes', () => {
 				profile_id: 12,
 				application_id: 44,
 				status: 'applying',
-				status_step: 'E-mail sent',
+				status_step: 'Applied',
 				status_action: 'Awaiting response',
 				rationale: 'Restating where it stands.'
 			},
