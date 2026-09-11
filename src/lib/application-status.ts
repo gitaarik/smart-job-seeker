@@ -200,10 +200,15 @@ export const actionsByStep: Record<string, string[]> = {
 	'Final interview': ['Need to schedule', 'Scheduled', 'Need to complete', 'Awaiting result'],
 	'Reference check': ['Provide references', 'Awaiting result'],
 	// Negotiating
-	'Offer received': ['Reply to offer', 'Provide references', 'Awaiting response'],
+	'Offer received': [
+		'Reply to offer',
+		'Provide references',
+		'Awaiting response',
+		'Awaiting contract'
+	],
 	'Counter-offer sent': ['Awaiting response'],
 	'Revised offer received': ['Reply to offer', 'Awaiting response'],
-	'Background check': ['Submit documents', 'Awaiting result'],
+	'Background check': ['Submit documents', 'Awaiting result', 'Awaiting contract'],
 	'Contract review': ['Review terms', 'Request changes', 'Sign', 'Awaiting response']
 };
 
@@ -263,7 +268,12 @@ export const actionsByPhase: Record<string, string[]> = {
 		'Request changes',
 		'Sign',
 		'Awaiting response',
-		'Awaiting result'
+		'Awaiting result',
+		// Waiting on a document rather than a reply, which is most of the gap between a
+		// vetting gate closing and the contract landing. Not a stage: that gap changes
+		// nothing you can DO, and ranking it would assert the order `stageRanks`
+		// deliberately declines to assert between 'Background check' and 'Contract review'.
+		'Awaiting contract'
 	]
 };
 
