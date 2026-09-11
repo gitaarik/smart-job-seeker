@@ -20,6 +20,7 @@ import { tokensToCost } from '$lib/server/billing/credits';
 import { describeSpendBlock, getSpendEligibility } from '$lib/server/account/spend-eligibility';
 import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
 import { assembleGenerationContext, type ContextRequest } from './generation-context';
+import type { RetrievalRecord } from '$lib/server/documents/retrieval-record';
 import { applySkillVisibility, loadProfileData, renderProfileData } from './profile-data';
 
 /**
@@ -395,6 +396,11 @@ export async function createAndGenerateAiChat(
 		// key (empty string when it found nothing), so a template referencing a
 		// placeholder never ships a literal `${…}` to the model.
 		let assembled: Record<string, string> = {};
+		// What retrieval picked, kept aside for the row. It is stored separately
+		// from `context` (which carries the same evidence as rendered prose) so it
+		// survives the retention pass that nulls the bulky prompt columns — the
+		// questions it answers are asked long after the generation.
+		let retrieval: RetrievalRecord | null = null;
 		if (options?.context) {
 			const ctx = await assembleGenerationContext({
 				...options.context,
@@ -404,6 +410,7 @@ export async function createAndGenerateAiChat(
 				preloadedProfile: profileBlob
 			});
 			assembled = ctx.variables;
+			retrieval = ctx.retrieval;
 		}
 
 		// Step 4: Prepare context (raw variables as JSON objects)
@@ -459,6 +466,7 @@ export async function createAndGenerateAiChat(
 				system_prompt: promptTemplate.system_prompt,
 				user_prompt: promptTemplate.user_prompt,
 				context: JSON.parse(JSON.stringify(context)),
+				retrieval,
 				followup_to: followupTo,
 				date_created: new Date(),
 				provider: activeProvider,

@@ -28,12 +28,18 @@
 import {
 	type JobLike,
 	type PinnedProject,
-	relevantProjectsText
+	relevantProjectsBlock
 } from '$lib/server/documents/retrieval';
 import {
-	relevantApplicationTextsText,
-	relevantStoriesText
+	relevantApplicationTextsBlock,
+	relevantStoriesBlock
 } from '$lib/server/documents/content-retrieval';
+import {
+	QUERY_CLIP_CHARS,
+	type RankerKind,
+	type RetrievalItem,
+	type RetrievalRecord
+} from '$lib/server/documents/retrieval-record';
 import { applicationActivityText } from './application-activity';
 import { activityManifestText } from './activity-manifest';
 import { applicationPipelineText } from './application-pipeline';
@@ -239,6 +245,13 @@ export interface AssembledContext {
 	 * 2–4× everything else combined.
 	 */
 	profileChars: number;
+	/**
+	 * The durable record of this assembly: what was picked, by which ranker, at
+	 * what score, and what was requested and did not make it. Small enough to
+	 * store on the `ai_chats` row and outlive the prompt columns retention nulls.
+	 * See documents/retrieval-record.ts.
+	 */
+	retrieval: RetrievalRecord;
 }
 
 /** Generous default: ~6k tokens of evidence. Tunable per call via budgetChars. */
@@ -292,7 +305,7 @@ interface SourceDef {
 	/** Lower = sacrificed first when the combined budget is exceeded. */
 	priority: number;
 	/** Render this source to a self-contained prompt block ("" when nothing fits). */
-	render(req: ContextRequest): Promise<string>;
+	render(req: ContextRequest): Promise<SourceRender>;
 	/**
 	 * Whether this request actually performed a lookup, as opposed to declining
 	 * to (no entity of the right type, no query to rank against).
@@ -304,6 +317,25 @@ interface SourceDef {
 	 * Omitted means never — silence is the safe default.
 	 */
 	looked?(req: ContextRequest): boolean;
+}
+
+/**
+ * What one source hands back.
+ *
+ * A source that RANKS also reports what it picked and which ranker picked it,
+ * for the retrieval record. The scoped ones have nothing of the sort to report
+ * and hand back their block alone; the union keeps that asymmetry where it is
+ * rather than making eleven sources wrap a string to satisfy the three.
+ */
+type SourceRender = string | { text: string; items: RetrievalItem[]; ranker: RankerKind };
+
+/** One shape for the packer, whichever form the source returned. */
+function normalizeRender(r: SourceRender): {
+	text: string;
+	items: RetrievalItem[];
+	ranker?: RankerKind;
+} {
+	return typeof r === 'string' ? { text: r, items: [] } : r;
 }
 
 /** The project the caller pinned for this generation, if any. */
@@ -463,7 +495,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 			// No query and nothing pinned → nothing to rank against; skip the
 			// retrieval (and its embedding search) entirely rather than rank noise.
 			if (!hasQuery(req) && !pinned) return '';
-			return relevantProjectsText(
+			return relevantProjectsBlock(
 				req.profileId,
 				queryToJobLike(req.query ?? { text: '' }),
 				req.perSourceK ?? 3,
@@ -477,7 +509,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 		looked: (req) => hasQuery(req),
 		render: async (req) => {
 			if (!hasQuery(req)) return '';
-			return relevantStoriesText(req.profileId, req.query!, req.perSourceK ?? 3);
+			return relevantStoriesBlock(req.profileId, req.query!, req.perSourceK ?? 3);
 		}
 	},
 	application_texts: {
@@ -486,7 +518,7 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 		looked: (req) => hasQuery(req),
 		render: async (req) => {
 			if (!hasQuery(req)) return '';
-			return relevantApplicationTextsText(
+			return relevantApplicationTextsBlock(
 				req.profileId,
 				req.query!,
 				req.perSourceK ?? 3,
@@ -617,16 +649,20 @@ function emptyNote(source: ContextSource): string {
 export async function assembleGenerationContext(req: ContextRequest): Promise<AssembledContext> {
 	const budget = req.budgetChars ?? DEFAULT_BUDGET_CHARS;
 
-	const rendered: RenderedBlock[] = await Promise.all(
-		req.sources.map(async (source) => {
-			const def = SOURCES[source];
-			return {
-				source,
-				priority: def.priority,
-				text: (await def.render(req)).trim()
-			};
-		})
-	);
+	const rendered: (RenderedBlock & { items: RetrievalItem[]; ranker?: RankerKind })[] =
+		await Promise.all(
+			req.sources.map(async (source) => {
+				const def = SOURCES[source];
+				const out = normalizeRender(await def.render(req));
+				return {
+					source,
+					priority: def.priority,
+					text: out.text.trim(),
+					items: out.items,
+					ranker: out.ranker
+				};
+			})
+		);
 
 	// The profile is who the applicant IS — it goes in whole, and the budget
 	// rations the evidence layered on top of it. See ContextRequest.budgetChars.
@@ -639,6 +675,7 @@ export async function assembleGenerationContext(req: ContextRequest): Promise<As
 	const variables: Record<string, string> = {};
 	const usedSources: ContextSource[] = [];
 	const droppedSources: ContextSource[] = [];
+	const emptySources: ContextSource[] = [];
 	for (const source of req.sources) {
 		const text = kept.get(source) ?? '';
 		if (text) {
@@ -661,13 +698,81 @@ export async function assembleGenerationContext(req: ContextRequest): Promise<As
 			// Requested and empty is NOT the same as never looked, and the model
 			// has to be told which one it is holding. Only a source that ran its
 			// lookup gets to say "there is none"; anything else stays silent.
-			variables[SOURCES[source].variable] = SOURCES[source].looked?.(req) ? emptyNote(source) : '';
+			const looked = SOURCES[source].looked?.(req) ?? false;
+			if (looked) emptySources.push(source);
+			variables[SOURCES[source].variable] = looked ? emptyNote(source) : '';
 		}
 	}
+
+	const profileChars = profileBlock?.text.length ?? 0;
 	return {
 		variables,
 		usedSources,
 		droppedSources,
-		profileChars: profileBlock?.text.length ?? 0
+		profileChars,
+		retrieval: buildRetrievalRecord(req, {
+			rendered,
+			used: usedSources,
+			dropped: droppedSources,
+			empty: emptySources,
+			profileChars,
+			budget
+		})
+	};
+}
+
+/**
+ * Distil one assembly into the record that outlives it.
+ *
+ * `items` carries only what the model actually SAW: a ranked source that
+ * rendered and then lost the budget race contributed nothing to the answer, and
+ * listing its picks would tell an applicant their draft drew on a story it was
+ * never shown. That the source ran at all is recorded in `dropped` and
+ * `rankers`, which is where a question about it belongs.
+ */
+function buildRetrievalRecord(
+	req: ContextRequest,
+	parts: {
+		rendered: (RenderedBlock & { items: RetrievalItem[]; ranker?: RankerKind })[];
+		used: ContextSource[];
+		dropped: ContextSource[];
+		empty: ContextSource[];
+		profileChars: number;
+		budget: number;
+	}
+): RetrievalRecord {
+	const usedSet = new Set<ContextSource>(parts.used);
+	const chars: Record<string, number> = {};
+	const rankers: Record<string, RankerKind> = {};
+	const items: RetrievalItem[] = [];
+
+	for (const block of parts.rendered) {
+		if (block.source !== 'profile' && block.text) chars[block.source] = block.text.length;
+		// A ranker that ran is worth recording whether or not its block survived,
+		// and whether or not it found anything — an empty list from a live
+		// embedding search and one from a provider that never answered are the
+		// same absence and different problems.
+		if (block.ranker) rankers[block.source] = block.ranker;
+		if (usedSet.has(block.source)) items.push(...block.items);
+	}
+
+	return {
+		requested: [...req.sources],
+		used: [...parts.used],
+		dropped: [...parts.dropped],
+		empty: [...parts.empty],
+		chars,
+		profileChars: parts.profileChars,
+		budgetChars: parts.budget,
+		rankers,
+		...(req.query
+			? {
+					query: {
+						text: req.query.text.slice(0, QUERY_CLIP_CHARS),
+						...(req.query.skills?.length ? { skills: req.query.skills } : {})
+					}
+				}
+			: {}),
+		items
 	};
 }

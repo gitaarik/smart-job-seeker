@@ -18,9 +18,10 @@ import {
 } from '$lib/server/ai-chat/entity-versions';
 import { parseStarMarkdown, serializeStarMarkdown } from '$lib/interview/star';
 import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
+import { isStaffViewer } from '$lib/server/auth/guards';
 import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
 
-export const load: PageServerLoad = async ({ parent, params }) => {
+export const load: PageServerLoad = async ({ parent, params, locals }) => {
 	const { selectedProfile } = await parent();
 	if (!selectedProfile) error(404, 'No profile selected');
 
@@ -43,7 +44,9 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 	if (!story) error(404, 'Story not found');
 
 	// The version trail (oldest→newest) drives the timeline editor.
-	let conversation = await buildConversation(STORY_VERSIONS, storyId);
+	let conversation = await buildConversation(STORY_VERSIONS, storyId, {
+		includeRetrievalDetail: isStaffViewer(locals)
+	});
 
 	// A story authored via the manual form (before any AI turn) has no version
 	// rows — surface its STAR content as an initial manual version so the timeline

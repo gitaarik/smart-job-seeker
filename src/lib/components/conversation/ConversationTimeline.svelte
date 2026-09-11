@@ -33,6 +33,7 @@
 	import Card from '../../../routes/(app)/components/Card.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import GenerationStatus from '$lib/components/GenerationStatus.svelte';
+	import RetrievalSources from './RetrievalSources.svelte';
 	import SimpleEditor from '$lib/components/SimpleEditor.svelte';
 	import ConfirmModal from '../../../routes/(app)/profile/components/ConfirmModal.svelte';
 	import type {
@@ -828,6 +829,20 @@
 					{/if}
 				</div>
 			</div>
+		{/if}
+		<!-- What this turn was built from: the applicant's own projects, stories and
+		     past application writing that retrieval put in front of the model. Under
+		     the turn rather than beside it, because it is an attribute of that
+		     answer — a later turn retrieves against a different query and gets a
+		     different set. Renders nothing for a manual edit, which retrieved
+		     nothing to report. -->
+		{#if !userEntry}
+			<RetrievalSources
+				sources={entry.sources}
+				empty={!!entry.sourcesEmpty}
+				crowdedOut={!!entry.sourcesCrowdedOut}
+				retrieval={entry.retrieval ?? null}
+			/>
 		{/if}
 		<!-- Turns that produced no version — advice, a review that only commented,
 		     or a message whose response was cleared — have no version box to hang

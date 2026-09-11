@@ -17,13 +17,14 @@ import {
 	type VersionSource
 } from '$lib/server/ai-chat/entity-versions';
 import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
+import { isStaffViewer } from '$lib/server/auth/guards';
 import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
 
 // Version `source` values and the ConversationEntry shape live in the shared
 // engine; re-export the type so +page.svelte keeps importing it from here.
 export type { ConversationEntry } from '$lib/server/ai-chat/entity-versions';
 
-export const load: PageServerLoad = async ({ parent, params, url }) => {
+export const load: PageServerLoad = async ({ parent, params, url, locals }) => {
 	const layoutData = await parent();
 	const application = layoutData.application;
 
@@ -58,7 +59,9 @@ export const load: PageServerLoad = async ({ parent, params, url }) => {
 		error(404, 'Letter not found');
 	}
 
-	let conversation = await buildConversation(LETTER_VERSIONS, letterId);
+	let conversation = await buildConversation(LETTER_VERSIONS, letterId, {
+		includeRetrievalDetail: isStaffViewer(locals)
+	});
 
 	// Letters written before the version trail existed have no rows — surface the
 	// saved content as an initial version so the timeline isn't blank. The first

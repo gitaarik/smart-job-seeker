@@ -22,6 +22,7 @@ import { dbDirect as db } from '$lib/server/db';
 import { applications, project_stories } from '$lib/server/db/schema';
 import { config } from '$lib/server/config';
 import { type ContentUnit, poolKey, semanticScoreUnits } from './content-embeddings';
+import type { RankerKind, RetrievalItem, RetrievedBlock } from './retrieval-record';
 
 /** A rankable profile content unit. */
 export interface RankableUnit {
@@ -39,6 +40,12 @@ export interface RankableUnit {
 	citation: string;
 	/** What gets embedded for semantic ranking (title + context + body). */
 	embedText: string;
+	/**
+	 * The row this unit hangs off, where its page needs two ids — the application
+	 * a past letter or answer belongs to. Unset for units addressed by their own
+	 * id. Ids, not a URL: see RetrievalItem.parentId.
+	 */
+	parentId?: number;
 }
 
 /** What a unit is ranked against — a topic, a job, a competency, a question. */
@@ -191,14 +198,19 @@ function rankUnitsBySemantic(
  * Rank units against a query, preferring semantic (embedding) scoring and
  * falling back to deterministic overlap when embeddings are off or the provider
  * fails. Same output shape either way.
+ *
+ * Reports which ranker ran alongside the picks, because that fact outlives an
+ * empty result and the picks do not: a floor that cleared nobody and a provider
+ * that never answered are both "no units", and only one of them is a bug. See
+ * the same split in rankedProfileProjects.
  */
-export async function relevantUnits(
+export async function rankedUnits(
 	profileId: number,
 	query: UnitQuery,
 	units: RankableUnit[],
 	k = 3
-): Promise<(RankableUnit & { score: number })[]> {
-	if (units.length === 0) return [];
+): Promise<{ ranked: (RankableUnit & { score: number })[]; ranker: RankerKind }> {
+	if (units.length === 0) return { ranked: [], ranker: 'none' };
 	const contentUnits: ContentUnit[] = units.map((u) => ({
 		unitType: u.type,
 		unitId: u.id,
@@ -207,8 +219,45 @@ export async function relevantUnits(
 	}));
 	const queryText = [query.text, ...(query.skills ?? [])].filter(Boolean).join('\n');
 	const scores = await semanticScoreUnits(profileId, contentUnits, queryText);
-	if (scores) return rankUnitsBySemantic(units, scores, k);
-	return rankUnits(units, query, k);
+	if (scores) return { ranked: rankUnitsBySemantic(units, scores, k), ranker: 'semantic' };
+	return { ranked: rankUnits(units, query, k), ranker: 'overlap' };
+}
+
+/**
+ * The top-K units relevant to `query` — the picks alone, for callers with no use
+ * for which ranker chose them.
+ */
+export async function relevantUnits(
+	profileId: number,
+	query: UnitQuery,
+	units: RankableUnit[],
+	k = 3
+): Promise<(RankableUnit & { score: number })[]> {
+	return (await rankedUnits(profileId, query, units, k)).ranked;
+}
+
+/**
+ * Turn one source's ranked units into retrieval-record items.
+ *
+ * `via` comes from the source's ranker rather than the item: unlike projects,
+ * no unit type has a second ranker claiming a slot, so every pick in one list
+ * was made the same way.
+ */
+function unitItems(
+	source: string,
+	ranked: (RankableUnit & { score: number })[],
+	ranker: RankerKind
+): RetrievalItem[] {
+	return ranked.map((u) => ({
+		source,
+		kind: u.type,
+		id: u.id,
+		...(u.parentId === undefined ? {} : { parentId: u.parentId }),
+		title: u.title,
+		...(u.context ? { context: u.context } : {}),
+		score: u.score,
+		via: ranker === 'semantic' ? ('semantic' as const) : ('overlap' as const)
+	}));
 }
 
 /**
@@ -320,22 +369,24 @@ async function loadStoryUnits(profileId: number): Promise<RankableUnit[]> {
 
 /**
  * One-call convenience: the applicant's top-K STAR stories relevant to `query`,
- * as a ready-to-interpolate block ("" if none). Mirrors relevantProjectsText.
+ * as a ready-to-interpolate block ("" if none) plus the record of what it cites.
+ * Mirrors relevantProjectsBlock.
  */
-export async function relevantStoriesText(
+export async function relevantStoriesBlock(
 	profileId: number,
 	query: UnitQuery,
 	k = 3
-): Promise<string> {
+): Promise<RetrievedBlock> {
 	const units = await loadStoryUnits(profileId);
-	const ranked = await relevantUnits(profileId, query, units, k);
-	return formatUnitCitations(ranked, {
+	const { ranked, ranker } = await rankedUnits(profileId, query, units, k);
+	const text = formatUnitCitations(ranked, {
 		header: 'Relevant interview stories the applicant has prepared',
 		intro:
 			"These are the applicant's OWN prepared STAR stories (situation / task / " +
 			'action / result). Draw on the ones that fit this topic; ground every ' +
 			'claim only in the notes here, do not invent.'
 	});
+	return { text, ranker, items: unitItems('stories', ranked, ranker) };
 }
 
 // ---------------------------------------------------------------------------
@@ -351,11 +402,13 @@ function buildTextUnit(
 	id: number,
 	title: string,
 	context: string,
-	text: string
+	text: string,
+	applicationId: number
 ): RankableUnit {
 	return {
 		type,
 		id,
+		parentId: applicationId,
 		title,
 		context,
 		keywords: [],
@@ -410,7 +463,8 @@ async function loadApplicationTextUnits(
 					l.id,
 					role ? `Cover letter — ${role}` : 'Cover letter',
 					role ? `application for ${role}` : 'past cover letter',
-					content
+					content,
+					app.id
 				)
 			);
 		}
@@ -425,7 +479,8 @@ async function loadApplicationTextUnits(
 					q.id,
 					clip(question, 90), // the question itself is a naturally-unique title
 					role ? `application answer — ${role}` : 'application answer',
-					`Q: ${question}\nA: ${answer}`
+					`Q: ${question}\nA: ${answer}`,
+					app.id
 				)
 			);
 		}
@@ -435,18 +490,19 @@ async function loadApplicationTextUnits(
 
 /**
  * One-call convenience: the applicant's top-K past application texts relevant to
- * `query`, ready to interpolate ("" if none). The intro frames them as a
- * voice/phrasing reference, NOT claims to copy across jobs.
+ * `query`, ready to interpolate ("" if none), plus the record of what it cites.
+ * The intro frames them as a voice/phrasing reference, NOT claims to copy across
+ * jobs.
  */
-export async function relevantApplicationTextsText(
+export async function relevantApplicationTextsBlock(
 	profileId: number,
 	query: UnitQuery,
 	k = 3,
 	excludeApplicationId?: number
-): Promise<string> {
+): Promise<RetrievedBlock> {
 	const units = await loadApplicationTextUnits(profileId, excludeApplicationId);
-	const ranked = await relevantUnits(profileId, query, units, k);
-	return formatUnitCitations(ranked, {
+	const { ranked, ranker } = await rankedUnits(profileId, query, units, k);
+	const text = formatUnitCitations(ranked, {
 		header: "The applicant's own past application writing",
 		intro:
 			'Excerpts the applicant previously wrote for job applications (cover ' +
@@ -454,4 +510,5 @@ export async function relevantApplicationTextsText(
 			'describe their experience in their OWN voice — draw on relevant phrasing ' +
 			'and facts, but do NOT copy claims tied to a different job.'
 	});
+	return { text, ranker, items: unitItems('application_texts', ranked, ranker) };
 }

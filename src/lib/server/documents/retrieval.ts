@@ -38,6 +38,7 @@ import { type EmbeddableUnit, projectKey, semanticScoreProjects } from './projec
 import { expandForRetrieval } from '$lib/server/job/skill-ontology';
 import { normalizeSkill } from '$lib/skills';
 import { profile_document_projects } from '$lib/server/db/schema';
+import type { RankerKind, RetrievalItem, RetrievalVia, RetrievedBlock } from './retrieval-record';
 
 export interface JobLike {
 	title?: string | null;
@@ -55,8 +56,21 @@ export interface RankableProject {
 	 * union earns its query, which is otherwise unanswerable from the outside.
 	 */
 	viaGraph?: boolean;
+	/**
+	 * How this pick was made, stamped on the way out of rankedProfileProjects for
+	 * the retrieval record. Like `viaGraph` it is NOT shown to the model: it
+	 * describes the retrieval, not the applicant.
+	 */
+	via?: RetrievalVia;
 	kind: 'side_project' | 'work_experience_project';
 	id: number;
+	/**
+	 * The work experience a work_experience_project hangs off, so the retrieval
+	 * record can link to it — `/profile/work-experience/[id]/projects/[pid]`
+	 * needs both halves and the project id alone does not carry the first.
+	 * Unset for side projects, which are addressed by their own id.
+	 */
+	parentId?: number;
 	title: string;
 	/** e.g. "at Acme Corp" for a work-experience project; "" for a side project. */
 	context: string;
@@ -280,17 +294,24 @@ export async function widenProjectKeywords<T extends { keywords: string[] }>(
 
 /**
  * Load the applicant's projects (work-experience + side), fold in any attached
- * documents, and return the top-K relevant to `job`.
+ * documents, and return the top-K relevant to `job` together with the ranker
+ * that chose them.
  *
  * `pinned` names a project the caller already knows this is about — it is
  * always included, always first, and takes one of the K slots.
+ *
+ * The `ranker` is reported separately from the picks because it survives an
+ * EMPTY result, and that is the case worth recording: "embeddings ran and the
+ * floor cleared nobody" and "embeddings were off and no keyword hit" are the
+ * same empty list and very different bugs. Callers that only want the projects
+ * use `relevantProfileProjects`.
  */
-export async function relevantProfileProjects(
+export async function rankedProfileProjects(
 	profileId: number,
 	job: JobLike,
 	k = 3,
 	pinned?: PinnedProject
-): Promise<(RankableProject & { score: number })[]> {
+): Promise<{ ranked: (RankableProject & { score: number })[]; ranker: RankerKind }> {
 	const docCols = {
 		id: true,
 		title: true,
@@ -334,13 +355,15 @@ export async function relevantProfileProjects(
 		context: string,
 		description: string,
 		techs: string[],
-		docs: DocRow[]
+		docs: DocRow[],
+		parentId?: number
 	) => {
 		const docKeywords = docs.flatMap((d) => asStrings(d.keywords));
 		const docSummaries = docs.map((d) => d.summary ?? '').filter(Boolean);
 		projects.push({
 			kind,
 			id,
+			...(parentId === undefined ? {} : { parentId }),
 			title,
 			context,
 			keywords: dedupe([...techs, ...docKeywords]),
@@ -400,7 +423,8 @@ export async function relevantProfileProjects(
 				we.name ? `at ${we.name}` : '',
 				description,
 				techs,
-				wep.profile_document_projects
+				wep.profile_document_projects,
+				we.id
 			);
 		}
 	}
@@ -420,23 +444,54 @@ export async function relevantProfileProjects(
 	// slot. It used to be a pure fallback, which meant that with embeddings on —
 	// the normal case — the graph never affected a single request.
 	let ranked: (RankableProject & { score: number })[];
-	if (remaining === 0) {
+	let ranker: RankerKind;
+	if (remaining === 0 || rest.length === 0) {
+		// Nothing was ranked — the pinned subject took the only slot, or the profile
+		// has no other projects. Neither is "we ranked and nothing cleared".
 		ranked = [];
+		ranker = 'none';
 	} else {
 		const scores = await semanticScoreProjects(profileId, units, job);
 		const semantic = scores ? rankBySemanticScores(rest, scores, remaining) : [];
-		ranked =
-			semantic.length === 0
-				? // Semantic is unavailable, or its floor cleared nobody. A floor that
-					// rejects every project leaves the writer with none at all, so here the
-					// widened keywords are the whole answer rather than a supplement.
-					rankProjects(await widenProjectKeywords(rest), job, remaining)
-				: await withGraphPick(semantic, rest, job, remaining);
+		if (semantic.length === 0) {
+			// Semantic is unavailable, or its floor cleared nobody. A floor that
+			// rejects every project leaves the writer with none at all, so here the
+			// widened keywords are the whole answer rather than a supplement.
+			ranked = rankProjects(await widenProjectKeywords(rest), job, remaining);
+			ranker = 'overlap';
+		} else {
+			ranked = await withGraphPick(semantic, rest, job, remaining);
+			ranker = 'semantic';
+		}
 	}
+
+	// Stamp how each pick was made while the answer is still in scope. The graph's
+	// reserved slot is scored deterministically even on a semantic list, so `via`
+	// is per item and `ranker` is per source; neither reaches the model.
+	const stamped: (RankableProject & { score: number })[] = ranked.map((p) => ({
+		...p,
+		via: p.viaGraph ? 'graph' : ranker === 'semantic' ? 'semantic' : 'overlap'
+	}));
 
 	// The score on the subject is a sort key, not a measurement: nothing ranked it,
 	// and 1 keeps it above the cosine scores it is being listed with.
-	return subject ? [{ ...subject, score: 1, pinned: true }, ...ranked] : ranked;
+	return {
+		ranked: subject ? [{ ...subject, score: 1, pinned: true, via: 'pinned' }, ...stamped] : stamped,
+		ranker
+	};
+}
+
+/**
+ * The top-K projects relevant to `job` — the picks alone, for callers that have
+ * no use for how they were chosen (match scoring, the cover-letter subject).
+ */
+export async function relevantProfileProjects(
+	profileId: number,
+	job: JobLike,
+	k = 3,
+	pinned?: PinnedProject
+): Promise<(RankableProject & { score: number })[]> {
+	return (await rankedProfileProjects(profileId, job, k, pinned)).ranked;
 }
 
 /**
@@ -543,19 +598,45 @@ export function formatProjectCitations(ranked: RankableProject[]): string {
 }
 
 /**
- * One-call convenience for prompt call sites: load + rank + format the top-K
- * projects relevant to a job, returning a ready-to-interpolate string ("" if
- * none). `job.skills_required` may be passed straight from the (untyped json)
- * jobs column — cast it to string[] | null at the call site.
+ * The applicant's own page for a ranked project, so the retrieval record can
+ * link to what it cited. Undefined when there is nowhere to send them — a
+ * work-experience project loaded before `parentId` existed has no addressable
+ * page, and a dead link is worse than a plain name.
  */
-export async function relevantProjectsText(
+export function projectHref(p: RankableProject): string | undefined {
+	if (p.kind === 'side_project') return `/profile/side-projects/${p.id}`;
+	if (p.parentId === undefined) return undefined;
+	return `/profile/work-experience/${p.parentId}/projects/${p.id}`;
+}
+
+/**
+ * One-call convenience for prompt call sites: load + rank + format the top-K
+ * projects relevant to a job, returning the ready-to-interpolate block ("" if
+ * none) and the record of what it cites. `job.skills_required` may be passed
+ * straight from the (untyped json) jobs column — cast it to string[] | null at
+ * the call site.
+ */
+export async function relevantProjectsBlock(
 	profileId: number,
 	job: JobLike,
 	k = 3,
 	pinned?: PinnedProject
-): Promise<string> {
-	const ranked = await relevantProfileProjects(profileId, job, k, pinned);
-	return formatProjectCitations(ranked);
+): Promise<RetrievedBlock> {
+	const { ranked, ranker } = await rankedProfileProjects(profileId, job, k, pinned);
+	return {
+		text: formatProjectCitations(ranked),
+		ranker,
+		items: ranked.map((p): RetrievalItem => ({
+			source: 'projects',
+			kind: p.kind,
+			id: p.id,
+			...(p.parentId === undefined ? {} : { parentId: p.parentId }),
+			title: p.title,
+			...(p.context ? { context: p.context } : {}),
+			score: p.score,
+			via: p.via ?? (ranker === 'semantic' ? 'semantic' : 'overlap')
+		}))
+	};
 }
 
 /**

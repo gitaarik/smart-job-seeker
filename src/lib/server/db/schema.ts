@@ -2954,6 +2954,19 @@ export const ai_chats = pgTable(
 		full_prompt: text(),
 		response: text(),
 		context: json(),
+		/**
+		 * What retrieval actually put in front of the model for this call: the
+		 * projects, stories and past application texts it cited, the ranker and
+		 * score behind each, and the sources that were requested and dropped or
+		 * came back empty. See documents/retrieval-record.ts.
+		 *
+		 * A separate column from `context` (which holds the same evidence as
+		 * rendered prose, among everything else) precisely so it OUTLIVES it:
+		 * ai-chats/retention.ts nulls `full_prompt` and `context` on old rows
+		 * because together they are ~45 kB of a 47 kB row, and this is a few
+		 * hundred bytes answering the questions that get asked afterwards.
+		 */
+		retrieval: json(),
 		followup_to: integer(),
 		error: text(),
 		provider: varchar({ length: 255 }),

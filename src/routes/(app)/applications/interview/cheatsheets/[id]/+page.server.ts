@@ -17,10 +17,11 @@ import {
 	type VersionSource
 } from '$lib/server/ai-chat/entity-versions';
 import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
+import { isStaffViewer } from '$lib/server/auth/guards';
 import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
 import { htmlToMarkdown } from '$lib/utils/html-to-markdown';
 
-export const load: PageServerLoad = async ({ parent, params }) => {
+export const load: PageServerLoad = async ({ parent, params, locals }) => {
 	const { selectedProfile } = await parent();
 	if (!selectedProfile) error(404, 'No profile selected');
 
@@ -37,7 +38,9 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 	const currentContent = htmlToMarkdown(sheet.content);
 
 	// The version trail (oldest→newest) drives the timeline editor.
-	let conversation = await buildConversation(CHEATSHEET_VERSIONS, cheatSheetId);
+	let conversation = await buildConversation(CHEATSHEET_VERSIONS, cheatSheetId, {
+		includeRetrievalDetail: isStaffViewer(locals)
+	});
 
 	// A sheet authored before the version trail existed has no version rows —
 	// surface its content as an initial manual version so the timeline isn't

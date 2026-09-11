@@ -29,7 +29,10 @@ const mockSelectWhere = vi.fn().mockImplementation(() => ({
 	limit: mockLimit,
 	then: (res: Resolve, rej: Resolve) => mockWhereRows().then(res, rej)
 }));
-const mockFrom = vi.fn().mockReturnValue({ where: mockSelectWhere });
+// buildConversation joins each turn to the ai_chats row that produced it, so
+// `.from()` has to offer `.leftJoin()` as well as `.where()`.
+const mockLeftJoin = vi.fn().mockReturnValue({ where: mockSelectWhere });
+const mockFrom = vi.fn().mockReturnValue({ where: mockSelectWhere, leftJoin: mockLeftJoin });
 const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 
 vi.mock('$lib/server/db', () => ({
@@ -91,6 +94,10 @@ vi.mock('$lib/server/db/schema', () => ({
 		ai_feedback: 'csv.aif',
 		user_request: 'csv.ur',
 		ai_chat: 'csv.chat'
+	},
+	ai_chats: {
+		id: 'ac.id',
+		retrieval: 'ac.retrieval'
 	}
 }));
 

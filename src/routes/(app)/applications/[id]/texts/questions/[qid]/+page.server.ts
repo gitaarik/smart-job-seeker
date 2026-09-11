@@ -16,9 +16,10 @@ import {
 	type VersionSource
 } from '$lib/server/ai-chat/entity-versions';
 import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
+import { isStaffViewer } from '$lib/server/auth/guards';
 import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
 
-export const load: PageServerLoad = async ({ parent, params }) => {
+export const load: PageServerLoad = async ({ parent, params, locals }) => {
 	const layoutData = await parent();
 	const application = layoutData.application;
 
@@ -29,7 +30,9 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 	if (!question) error(404, 'Question not found');
 
 	// The version trail (oldest→newest) drives the timeline editor.
-	let conversation = await buildConversation(QUESTION_VERSIONS, qid);
+	let conversation = await buildConversation(QUESTION_VERSIONS, qid, {
+		includeRetrievalDetail: isStaffViewer(locals)
+	});
 
 	// Answers created before the version trail existed (question_versions is new)
 	// have no rows — surface the saved answer as an initial manual version so the

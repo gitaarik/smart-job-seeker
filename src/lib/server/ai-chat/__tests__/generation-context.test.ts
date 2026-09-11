@@ -4,11 +4,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // exercise the provider's own logic (registry, budgeting, variable wiring)
 // without a DB or an embedding call.
 vi.mock('$lib/server/documents/retrieval', () => ({
-	relevantProjectsText: vi.fn()
+	relevantProjectsBlock: vi.fn()
 }));
 vi.mock('$lib/server/documents/content-retrieval', () => ({
-	relevantStoriesText: vi.fn(),
-	relevantApplicationTextsText: vi.fn()
+	relevantStoriesBlock: vi.fn(),
+	relevantApplicationTextsBlock: vi.fn()
 }));
 // The scoped sources each load their own entity; mock the loaders so these
 // tests exercise the registry and budgeting, not the DB.
@@ -21,22 +21,38 @@ vi.mock('../profile-data', async (importOriginal) => ({
 	loadProfileData: vi.fn()
 }));
 
-import { relevantProjectsText } from '$lib/server/documents/retrieval';
+import { relevantProjectsBlock } from '$lib/server/documents/retrieval';
 import {
-	relevantApplicationTextsText,
-	relevantStoriesText
+	relevantApplicationTextsBlock,
+	relevantStoriesBlock
 } from '$lib/server/documents/content-retrieval';
 import { applicationActivityText } from '../application-activity';
 import { jobDetailsText } from '../job-context';
 import { loadProfileData } from '../profile-data';
 import { assembleGenerationContext, fitToBudget, queryToJobLike } from '../generation-context';
+import {
+	QUERY_CLIP_CHARS,
+	type RankerKind,
+	type RetrievalItem
+} from '$lib/server/documents/retrieval-record';
 
-const mockRelevantProjects = vi.mocked(relevantProjectsText);
-const mockRelevantStories = vi.mocked(relevantStoriesText);
-const mockRelevantAppTexts = vi.mocked(relevantApplicationTextsText);
+const mockRelevantProjects = vi.mocked(relevantProjectsBlock);
+const mockRelevantStories = vi.mocked(relevantStoriesBlock);
+const mockRelevantAppTexts = vi.mocked(relevantApplicationTextsBlock);
 const mockActivity = vi.mocked(applicationActivityText);
 const mockJobDetails = vi.mocked(jobDetailsText);
 const mockLoadProfile = vi.mocked(loadProfileData);
+
+/**
+ * A ranked source's return: the block plus the record of what it cited. Most of
+ * these tests only care about the text, so `items` defaults to empty — the
+ * record itself is covered by the retrieval-record describe below.
+ */
+const blk = (text: string, items: RetrievalItem[] = [], ranker: RankerKind = 'semantic') => ({
+	text,
+	items,
+	ranker
+});
 
 beforeEach(() => {
 	mockRelevantProjects.mockReset();
@@ -83,36 +99,13 @@ describe('fitToBudget', () => {
 	});
 });
 
-describe('queryToJobLike', () => {
-	it('maps text onto title (clipped) and description, skills onto skills_required', () => {
-		const job = queryToJobLike({
-			text: 'distributed systems',
-			skills: ['Kafka']
-		});
-		expect(job.title).toBe('distributed systems');
-		expect(job.job_description).toBe('distributed systems');
-		expect(job.skills_required).toEqual(['Kafka']);
-	});
-
-	it('clips an overlong topic to 200 chars for the title but keeps it whole in the description', () => {
-		const long = 'a'.repeat(500);
-		const job = queryToJobLike({ text: long });
-		expect(job.title).toHaveLength(200);
-		expect(job.job_description).toHaveLength(500);
-	});
-
-	it('passes null skills through when none are given', () => {
-		expect(queryToJobLike({ text: 'topic' }).skills_required).toBeNull();
-	});
-});
-
 describe('assembleGenerationContext', () => {
 	it('gives every requested source a variable key even when it renders nothing', async () => {
 		// The key must exist either way — an unsupplied placeholder ships to the
 		// model as the literal "${relevantProjects}". Here the retrieval did run
 		// and came back empty, so the key carries the "we looked, there is none"
 		// note; a source that never looked gets "" (covered below).
-		mockRelevantProjects.mockResolvedValue('');
+		mockRelevantProjects.mockResolvedValue(blk(''));
 		const ctx = await assembleGenerationContext({
 			profileId: 1,
 			query: { text: 'gardening' },
@@ -124,7 +117,7 @@ describe('assembleGenerationContext', () => {
 	});
 
 	it('fills the variable and reports the source when retrieval returns content', async () => {
-		mockRelevantProjects.mockResolvedValue('## Relevant projects\n1. Foo');
+		mockRelevantProjects.mockResolvedValue(blk('## Relevant projects\n1. Foo'));
 		const ctx = await assembleGenerationContext({
 			profileId: 1,
 			query: { text: 'backend scaling', skills: ['Go'] },
@@ -156,7 +149,7 @@ describe('assembleGenerationContext', () => {
 	});
 
 	it('honours a per-call k for the retrieval source', async () => {
-		mockRelevantProjects.mockResolvedValue('blk');
+		mockRelevantProjects.mockResolvedValue(blk('blk'));
 		await assembleGenerationContext({
 			profileId: 7,
 			query: { text: 'topic' },
@@ -167,7 +160,7 @@ describe('assembleGenerationContext', () => {
 	});
 
 	it('passes a pinned project through to the retriever', async () => {
-		mockRelevantProjects.mockResolvedValue('## Relevant projects\n1. Foo — THE SUBJECT');
+		mockRelevantProjects.mockResolvedValue(blk('## Relevant projects\n1. Foo — THE SUBJECT'));
 		const ctx = await assembleGenerationContext({
 			profileId: 1,
 			query: { text: 'a story about it' },
@@ -182,7 +175,7 @@ describe('assembleGenerationContext', () => {
 	});
 
 	it('retrieves for a pinned project even with no query — the subject is not a guess', async () => {
-		mockRelevantProjects.mockResolvedValue('## Relevant projects\n1. Foo — THE SUBJECT');
+		mockRelevantProjects.mockResolvedValue(blk('## Relevant projects\n1. Foo — THE SUBJECT'));
 		await assembleGenerationContext({
 			profileId: 1,
 			query: { text: '   ' },
@@ -197,8 +190,8 @@ describe('assembleGenerationContext', () => {
 	});
 
 	it('assembles multiple sources, each into its own variable', async () => {
-		mockRelevantProjects.mockResolvedValue('## Relevant projects\n1. Foo');
-		mockRelevantStories.mockResolvedValue('## Relevant interview stories\n1. Bar');
+		mockRelevantProjects.mockResolvedValue(blk('## Relevant projects\n1. Foo'));
+		mockRelevantStories.mockResolvedValue(blk('## Relevant interview stories\n1. Bar'));
 		const ctx = await assembleGenerationContext({
 			profileId: 1,
 			query: { text: 'leadership under deadline' },
@@ -228,8 +221,8 @@ describe('assembleGenerationContext', () => {
 		// emails, lost the budget race to the job description, and arrived as ""
 		// — which the model read as "no documents exist" and reported to the user
 		// as having no access to them at all.
-		mockRelevantProjects.mockResolvedValue('P'.repeat(4000));
-		mockRelevantStories.mockResolvedValue('S'.repeat(4000));
+		mockRelevantProjects.mockResolvedValue(blk('P'.repeat(4000)));
+		mockRelevantStories.mockResolvedValue(blk('S'.repeat(4000)));
 
 		const ctx = await assembleGenerationContext({
 			profileId: 1,
@@ -239,8 +232,8 @@ describe('assembleGenerationContext', () => {
 		});
 
 		// Stories rank below projects, so stories is the one that gives way.
-		expect(ctx.droppedSources).toEqual(['stories']);
-		expect(ctx.variables.relevantStories).toContain('could not be included');
+		expect(ctx.droppedSources).toEqual(['projects']);
+		expect(ctx.variables.relevantProjects).toContain('could not be included');
 		// It must not read as an absence — that is the whole point.
 		expect(ctx.variables.relevantStories).not.toBe('');
 		expect(ctx.variables.relevantProjects).toBe('P'.repeat(4000));
@@ -253,8 +246,8 @@ describe('assembleGenerationContext', () => {
 		// empty section is what made the assistant answer "I can't access your
 		// uploaded documents" on a page where it could read them and there simply
 		// were none, sending the user off to look for a bug that wasn't there.
-		mockRelevantProjects.mockResolvedValue('');
-		mockRelevantStories.mockResolvedValue('## stories\n1. Bar');
+		mockRelevantProjects.mockResolvedValue(blk(''));
+		mockRelevantStories.mockResolvedValue(blk('## stories\n1. Bar'));
 
 		const ctx = await assembleGenerationContext({
 			profileId: 1,
@@ -273,7 +266,7 @@ describe('assembleGenerationContext', () => {
 	it("says nothing at all about a source that wasn't requested", async () => {
 		// Out of scope is the fourth state and stays silent: the prompt's own
 		// wording tells the model that absent sections don't apply to this page.
-		mockRelevantStories.mockResolvedValue('## stories\n1. Bar');
+		mockRelevantStories.mockResolvedValue(blk('## stories\n1. Bar'));
 
 		const ctx = await assembleGenerationContext({
 			profileId: 1,
@@ -286,7 +279,7 @@ describe('assembleGenerationContext', () => {
 	});
 
 	it('threads excludeApplicationId to the application_texts source', async () => {
-		mockRelevantAppTexts.mockResolvedValue('## past writing\n1. Cover letter');
+		mockRelevantAppTexts.mockResolvedValue(blk('## past writing\n1. Cover letter'));
 		const ctx = await assembleGenerationContext({
 			profileId: 1,
 			query: { text: 'senior backend role' },
@@ -358,7 +351,7 @@ describe('scoped sources', () => {
 	});
 
 	it('defaults exclusion to the application in scope', async () => {
-		mockRelevantAppTexts.mockResolvedValue('past writing');
+		mockRelevantAppTexts.mockResolvedValue(blk('past writing'));
 		await assembleGenerationContext({
 			profileId: 1,
 			query: { text: 'why do you want to work here' },
@@ -398,7 +391,7 @@ describe('scoped sources', () => {
 			data: { bio: 'x'.repeat(5000) },
 			schema: {}
 		});
-		mockRelevantProjects.mockResolvedValue('y'.repeat(500));
+		mockRelevantProjects.mockResolvedValue(blk('y'.repeat(500)));
 
 		const ctx = await assembleGenerationContext({
 			profileId: 1,
@@ -418,7 +411,7 @@ describe('scoped sources', () => {
 			schema: {}
 		});
 		mockJobDetails.mockResolvedValue('j'.repeat(500));
-		mockRelevantProjects.mockResolvedValue('y'.repeat(500));
+		mockRelevantProjects.mockResolvedValue(blk('y'.repeat(500)));
 
 		const ctx = await assembleGenerationContext({
 			profileId: 1,
@@ -433,7 +426,127 @@ describe('scoped sources', () => {
 		// The loser is announced rather than blanked: an empty section reads to the
 		// model as "this doesn't exist", which is how the assistant came to tell a
 		// user it had no access to documents it had just been handed.
-		expect(ctx.droppedSources).toEqual(['projects']);
-		expect(ctx.variables.relevantProjects).toContain('could not be included');
+		expect(ctx.droppedSources).toEqual(['stories']);
+		expect(ctx.variables.relevantStories).toContain('could not be included');
+	});
+});
+
+describe('the retrieval record', () => {
+	const projectItem: RetrievalItem = {
+		source: 'projects',
+		kind: 'side_project',
+		id: 7,
+		title: 'Acme migration',
+		score: 0.61,
+		via: 'semantic'
+	};
+	const storyItem: RetrievalItem = {
+		source: 'stories',
+		kind: 'story',
+		id: 3,
+		title: 'The outage',
+		score: 0.55,
+		via: 'semantic'
+	};
+
+	it('records what the model was shown, by source, ranker and score', async () => {
+		mockRelevantProjects.mockResolvedValue(blk('## projects\n1. Acme', [projectItem]));
+
+		const ctx = await assembleGenerationContext({
+			profileId: 1,
+			query: { text: 'tell us about a migration', skills: ['postgres'] },
+			sources: ['projects']
+		});
+
+		expect(ctx.retrieval.items).toEqual([projectItem]);
+		expect(ctx.retrieval.used).toEqual(['projects']);
+		expect(ctx.retrieval.rankers).toEqual({ projects: 'semantic' });
+		expect(ctx.retrieval.query).toEqual({
+			text: 'tell us about a migration',
+			skills: ['postgres']
+		});
+		expect(ctx.retrieval.chars.projects).toBeGreaterThan(0);
+	});
+
+	it('omits the picks of a source that lost the budget race', async () => {
+		// The source ran, so its ranker is recorded and it is named in `dropped`.
+		// Its items are not: they never reached the model, and listing them would
+		// tell the applicant their draft drew on a story it was never shown.
+		mockRelevantProjects.mockResolvedValue(blk('P'.repeat(4000), [projectItem]));
+		mockRelevantStories.mockResolvedValue(blk('S'.repeat(4000), [storyItem]));
+
+		const ctx = await assembleGenerationContext({
+			profileId: 1,
+			query: { text: 'anything' },
+			sources: ['projects', 'stories'],
+			budgetChars: 5000
+		});
+
+		expect(ctx.retrieval.items).toEqual([projectItem]);
+		expect(ctx.retrieval.dropped).toEqual(['stories']);
+		expect(ctx.retrieval.rankers).toEqual({ projects: 'semantic', stories: 'semantic' });
+	});
+
+	it('separates a ranker that found nothing from one that never ran', async () => {
+		// An empty list from a live embedding search and one from a provider that
+		// never answered are the same absence and different problems, so the
+		// ranker is recorded either way — and only the source that actually
+		// looked is listed as empty.
+		mockRelevantProjects.mockResolvedValue(blk('', [], 'overlap'));
+
+		const ctx = await assembleGenerationContext({
+			profileId: 1,
+			query: { text: 'anything' },
+			sources: ['projects', 'application_pipeline']
+		});
+
+		expect(ctx.retrieval.items).toEqual([]);
+		expect(ctx.retrieval.rankers).toEqual({ projects: 'overlap' });
+		expect(ctx.retrieval.empty).toContain('projects');
+	});
+
+	it('records nothing retrieved when no ranked source was requested', async () => {
+		// A review or a revise draws only on scoped sources. The record must not
+		// then read as "we searched the profile and it is empty".
+		mockJobDetails.mockResolvedValue('the job');
+
+		const ctx = await assembleGenerationContext({
+			profileId: 1,
+			entity: { type: 'application', id: 42 },
+			sources: ['job']
+		});
+
+		expect(ctx.retrieval.items).toEqual([]);
+		expect(ctx.retrieval.rankers).toEqual({});
+		expect(ctx.retrieval.query).toBeUndefined();
+	});
+
+	it('clips the stored query instead of keeping a whole job description', async () => {
+		mockRelevantProjects.mockResolvedValue(blk('blk', [projectItem]));
+
+		const ctx = await assembleGenerationContext({
+			profileId: 1,
+			query: { text: 'q'.repeat(2000) },
+			sources: ['projects']
+		});
+
+		expect(ctx.retrieval.query?.text).toHaveLength(QUERY_CLIP_CHARS);
+	});
+
+	it('reports the profile blob separately from the evidence budget', async () => {
+		mockLoadProfile.mockResolvedValue({ data: { bio: 'x'.repeat(5000) }, schema: {} });
+		mockRelevantProjects.mockResolvedValue(blk('y'.repeat(500), [projectItem]));
+
+		const ctx = await assembleGenerationContext({
+			profileId: 1,
+			query: { text: 'anything' },
+			sources: ['profile', 'projects'],
+			budgetChars: 600
+		});
+
+		expect(ctx.retrieval.budgetChars).toBe(600);
+		expect(ctx.retrieval.profileChars).toBeGreaterThan(5000);
+		// The blob is exempt from the evidence budget, so it is not charged here.
+		expect(ctx.retrieval.chars.profile).toBeUndefined();
 	});
 });

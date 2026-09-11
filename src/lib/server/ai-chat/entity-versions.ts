@@ -15,11 +15,19 @@
 import { dbDirect as db } from '$lib/server/db';
 import { and, asc, count, desc, eq, gt, gte, inArray, isNotNull, max } from 'drizzle-orm';
 import {
+	ai_chats,
 	cheat_sheet_versions,
 	letter_versions,
 	question_versions,
 	story_versions
 } from '$lib/server/db/schema';
+import {
+	crowdedOut,
+	lookedAndFoundNothing,
+	mentionsFor,
+	type RetrievalMention,
+	type RetrievalRecord
+} from '$lib/server/documents/retrieval-record';
 
 /**
  * Provenance of a version. Plain varchar in the DB; enforced here in TS.
@@ -44,6 +52,31 @@ export type ConversationEntry = {
 	aiFeedback?: string | null;
 	userRequest?: string | null;
 	date: Date | null;
+	/**
+	 * What this turn's generation drew on, as the applicant may see it: names and
+	 * links, never scores. Absent on manual edits, on agent revisions (no thread
+	 * of ours behind them) and on turns generated before the record existed.
+	 */
+	sources?: RetrievalMention[];
+	/**
+	 * True when retrieval ran for this turn and came back with nothing — which is
+	 * NOT the same as a turn that never retrieved, and is the more useful of the
+	 * two to say out loud. See lookedAndFoundNothing.
+	 */
+	sourcesEmpty?: boolean;
+	/**
+	 * True when retrieval DID find material and the budget left no room for it.
+	 * A third state, kept apart from `sourcesEmpty` because collapsing them tells
+	 * the applicant their profile is empty when it is in fact full — see
+	 * crowdedOut.
+	 */
+	sourcesCrowdedOut?: boolean;
+	/**
+	 * The whole record — scores, rankers, budgets, what was dropped. Staff only,
+	 * and only when the caller asks: it says how the machine works, which is our
+	 * diagnostic and nobody else's business.
+	 */
+	retrieval?: RetrievalRecord;
 };
 
 /** Binds the engine to one entity's versions table. */
@@ -86,10 +119,23 @@ export const CHEATSHEET_VERSIONS: VersionBinding = {
 	fkName: 'cheat_sheet'
 };
 
-/** Reconstruct the ordered (oldest→newest) thread from the versions table. */
+/**
+ * Reconstruct the ordered (oldest→newest) thread from the versions table.
+ *
+ * Each AI turn is joined to the `ai_chats` row that produced it, for the
+ * retrieval record it carries — which projects, stories and past texts the model
+ * was actually shown. It rides along on the thread rather than being fetched per
+ * turn because the editor renders the whole trail at once, and a turn's evidence
+ * is part of that turn the same way its feedback is.
+ *
+ * `includeRetrievalDetail` is the staff/applicant line: without it an entry gets
+ * names and links, with it the whole record. Pass it from the page load, where
+ * the viewer is known — never from a component.
+ */
 export async function buildConversation(
 	vt: VersionBinding,
-	entityId: number
+	entityId: number,
+	opts?: { includeRetrievalDetail?: boolean }
 ): Promise<ConversationEntry[]> {
 	const rows = await db
 		.select({
@@ -98,21 +144,31 @@ export async function buildConversation(
 			content: vt.table.content,
 			source: vt.table.source,
 			ai_feedback: vt.table.ai_feedback,
-			user_request: vt.table.user_request
+			user_request: vt.table.user_request,
+			retrieval: ai_chats.retrieval
 		})
 		.from(vt.table)
+		.leftJoin(ai_chats, eq(vt.table.ai_chat, ai_chats.id))
 		.where(eq(vt.fk, entityId))
 		.orderBy(asc(vt.id));
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	return rows.map((v: any) => ({
-		versionId: v.id,
-		type: v.source as VersionSource,
-		content: v.content,
-		aiFeedback: v.ai_feedback,
-		userRequest: v.user_request,
-		date: v.date_created
-	}));
+	return rows.map((v: any) => {
+		const record = (v.retrieval as RetrievalRecord | null) ?? null;
+		const mentions = mentionsFor(record);
+		return {
+			versionId: v.id,
+			type: v.source as VersionSource,
+			content: v.content,
+			aiFeedback: v.ai_feedback,
+			userRequest: v.user_request,
+			date: v.date_created,
+			...(mentions.length ? { sources: mentions } : {}),
+			...(lookedAndFoundNothing(record) ? { sourcesEmpty: true } : {}),
+			...(crowdedOut(record).length > 0 ? { sourcesCrowdedOut: true } : {}),
+			...(opts?.includeRetrievalDetail && record ? { retrieval: record } : {})
+		};
+	});
 }
 
 /** One version's own row, for a caller that holds an id rather than a thread. */

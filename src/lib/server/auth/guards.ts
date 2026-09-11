@@ -47,6 +47,20 @@ export function requireAdmin(event: RequestEvent) {
 }
 
 /**
+ * Whether this viewer gets the staff-only detail layered onto an ordinary page —
+ * the retrieval record under a generated draft, the scoring internals on a job.
+ *
+ * Not a guard: it never redirects, because the page belongs to the applicant
+ * either way and only the extra detail is gated. `is_staff || is_admin` is the
+ * line /jobs and /data/ai-changes already draw for exactly this.
+ */
+export function isStaffViewer(locals: App.Locals): boolean {
+	const user = locals.user as { is_staff?: boolean; is_admin?: boolean } | null;
+	const impersonating = locals.adminUser as { is_admin?: boolean } | null;
+	return !!user?.is_staff || !!user?.is_admin || !!impersonating?.is_admin;
+}
+
+/**
  * Redirect if already authenticated. Use in login/signup pages.
  */
 export function redirectIfAuthenticated(event: RequestEvent, to = '/') {
