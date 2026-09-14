@@ -789,10 +789,16 @@
 								</p>
 							{:else if entry.content}
 								{#if expanded[entry.id]}
+									<!--
+                `breaks` because most of what lands here was never written as
+                markdown: an extracted email or transcript, a note typed into a
+                textarea. Without it their single line breaks reflow into one
+                paragraph, and a signature reads as a run-on sentence.
+              -->
 									<div
-										class="prose prose-sm mt-2 max-h-96 max-w-none overflow-y-auto rounded-md bg-[var(--dash-bg)] px-2.5 py-2 text-[var(--dash-text)]"
+										class="entry-md mt-2 max-h-96 overflow-y-auto rounded-md bg-[var(--dash-bg)] px-2.5 py-2 text-sm text-[var(--dash-text)]"
 									>
-										{@html renderSafeMarkdown(entry.content)}
+										{@html renderSafeMarkdown(entry.content, { breaks: true })}
 									</div>
 								{:else}
 									<p class="mt-1.5 text-xs break-words text-[var(--dash-text-secondary)]">
@@ -848,3 +854,86 @@
 	onCancel={() => (deleteTarget = null)}
 	onConfirm={() => deleteForm?.requestSubmit()}
 />
+
+<style>
+	/*
+	  Entry text. This used `prose prose-sm`, but @tailwindcss/typography was never
+	  installed, so those classes styled nothing and preflight left the markdown
+	  bare: lists without bullets, headings at body size, no paragraph spacing.
+	  Same approach as `.posting-md` on the job page.
+	*/
+	.entry-md :global(p) {
+		margin: 0 0 0.6rem;
+	}
+	.entry-md :global(p:last-child) {
+		margin-bottom: 0;
+	}
+	.entry-md :global(ul),
+	.entry-md :global(ol) {
+		margin: 0.25rem 0 0.6rem;
+		padding-left: 1.25rem;
+		list-style: revert;
+	}
+	.entry-md :global(li) {
+		margin: 0.15rem 0;
+	}
+	.entry-md :global(h1),
+	.entry-md :global(h2),
+	.entry-md :global(h3),
+	.entry-md :global(h4) {
+		margin: 0.9rem 0 0.35rem;
+		font-weight: 600;
+		font-size: 1em;
+	}
+	.entry-md :global(h1),
+	.entry-md :global(h2) {
+		font-size: 1.1em;
+	}
+	.entry-md > :global(:first-child) {
+		margin-top: 0;
+	}
+	.entry-md :global(strong) {
+		font-weight: 600;
+	}
+	.entry-md :global(a) {
+		color: var(--dash-primary);
+		text-decoration: underline;
+	}
+	.entry-md :global(blockquote) {
+		margin: 0.25rem 0 0.6rem;
+		padding-left: 0.75rem;
+		border-left: 2px solid var(--dash-border);
+		color: var(--dash-text-secondary);
+	}
+	.entry-md :global(code) {
+		background: var(--dash-card);
+		padding: 0.05rem 0.3rem;
+		border-radius: 0.25rem;
+		font-size: 0.9em;
+	}
+	.entry-md :global(pre) {
+		margin: 0.25rem 0 0.6rem;
+		padding: 0.5rem;
+		background: var(--dash-card);
+		border-radius: 0.375rem;
+		overflow-x: auto;
+	}
+	.entry-md :global(pre code) {
+		padding: 0;
+		background: none;
+	}
+	.entry-md :global(hr) {
+		margin: 0.75rem 0;
+		border-color: var(--dash-border);
+	}
+	.entry-md :global(table) {
+		margin: 0.25rem 0 0.6rem;
+		border-collapse: collapse;
+	}
+	.entry-md :global(th),
+	.entry-md :global(td) {
+		padding: 0.2rem 0.45rem;
+		border: 1px solid var(--dash-border);
+		text-align: left;
+	}
+</style>
