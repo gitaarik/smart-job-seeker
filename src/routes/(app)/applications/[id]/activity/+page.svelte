@@ -794,10 +794,15 @@
                 markdown: an extracted email or transcript, a note typed into a
                 textarea. Without it their single line breaks reflow into one
                 paragraph, and a signature reads as a run-on sentence.
+
+                The sink is one of the ten audited on 2026-08-07:
+                renderSafeMarkdown escapes raw HTML and allowlists link schemes,
+                and `breaks` adds nothing but <br>.
               -->
 									<div
 										class="entry-md mt-2 max-h-96 overflow-y-auto rounded-md bg-[var(--dash-bg)] px-2.5 py-2 text-sm text-[var(--dash-text)]"
 									>
+										<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 										{@html renderSafeMarkdown(entry.content, { breaks: true })}
 									</div>
 								{:else}

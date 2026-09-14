@@ -199,7 +199,7 @@
 							</div>
 
 							<!-- Expandable sections -->
-							{#each [{ key: 'system_prompt', label: 'System Prompt', value: expandedDetail.system_prompt as string | null }, { key: 'user_prompt', label: 'User Prompt', value: expandedDetail.user_prompt as string | null }, { key: 'full_prompt', label: 'Full Prompt', value: expandedDetail.full_prompt as string | null }, { key: 'response', label: 'Response', value: expandedDetail.response as string | null }, { key: 'context', label: 'Context', value: expandedDetail.context ? formatJson(expandedDetail.context) : null }, { key: 'retrieval', label: 'Retrieval', value: expandedDetail.retrieval ? formatJson(expandedDetail.retrieval) : null }, { key: 'error', label: 'Error', value: expandedDetail.error as string | null }] as section}
+							{#each [{ key: 'system_prompt', label: 'System Prompt', value: expandedDetail.system_prompt as string | null }, { key: 'user_prompt', label: 'User Prompt', value: expandedDetail.user_prompt as string | null }, { key: 'full_prompt', label: 'Full Prompt', value: expandedDetail.full_prompt as string | null }, { key: 'response', label: 'Response', value: expandedDetail.response as string | null }, { key: 'context', label: 'Context', value: expandedDetail.context ? formatJson(expandedDetail.context) : null }, { key: 'retrieval', label: 'Retrieval', value: expandedDetail.retrieval ? formatJson(expandedDetail.retrieval) : null }, { key: 'error', label: 'Error', value: expandedDetail.error as string | null }] as section (section.key)}
 								{#if section.value}
 									<div class="overflow-hidden rounded-lg border border-[var(--dash-border)]">
 										<button
