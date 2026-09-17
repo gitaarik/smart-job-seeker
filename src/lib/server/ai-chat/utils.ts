@@ -6,6 +6,7 @@ import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { ai_chats, collected_data, profiles } from '$lib/server/db/schema';
 import { config } from '$lib/server/config';
+import { errorTracker } from '$lib/server/monitoring/error-tracker';
 import {
 	type ChatMessage,
 	generateChatCompletionTracked,
@@ -23,6 +24,7 @@ import { assembleGenerationContext, type ContextRequest } from './generation-con
 import type { ExportedProfileKey } from '$lib/server/profile/export';
 import type { RetrievalRecord } from '$lib/server/documents/retrieval-record';
 import { applySkillVisibility, loadProfileData, renderProfileData } from './profile-data';
+import { promptValues, renderPrompt, unfilledVariables } from './render-prompt';
 
 /**
  * User-facing writing prompts run on the writing provider/model
@@ -88,23 +90,6 @@ export function instructionsBlock(text?: string | null): string {
 Follow this as far as it makes sense. It does NOT override the output format required above.
 
 ${trimmed}`;
-}
-
-/**
- * Interpolate variables in a prompt string
- * Replaces ${variableName} placeholders with provided values
- * Supports any number of variables passed as key-value pairs
- */
-export function interpolatePrompt(text: string, variables: Record<string, string>): string {
-	let result = text;
-	for (const [key, value] of Object.entries(variables)) {
-		// Support both ${variable} and {{variable}} syntax
-		const dollarRegex = new RegExp(`\\$\\{${key}\\}`, 'g');
-		const mustacheRegex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
-		result = result.replace(dollarRegex, value);
-		result = result.replace(mustacheRegex, value);
-	}
-	return result;
 }
 
 /**
@@ -202,7 +187,8 @@ function documentSafeData(stored: string | null | undefined): string {
 
 /**
  * Fetch and interpolate prompts for an AI chat
- * Returns system_prompt and user_prompt with ${schema} and ${data} replaced
+ * Returns system_prompt and user_prompt with ${schema} and ${data} replaced,
+ * and any other placeholder left empty
  */
 export async function getInterpolatedPrompts(aiChatId: number): Promise<{
 	systemPrompt: string;
@@ -236,9 +222,9 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<{
 		data: documentSafeData(collectedDataRecord?.data)
 	};
 
-	// Interpolate variables in both prompts
-	const systemPrompt = interpolatePrompt(aiChat.system_prompt, variables);
-	const userPrompt = interpolatePrompt(aiChat.user_prompt, variables);
+	// Interpolate variables in both prompts. A stored template, so a gap is blank.
+	const systemPrompt = renderPrompt(aiChat.system_prompt, variables, { blankMissing: true });
+	const userPrompt = renderPrompt(aiChat.user_prompt, variables, { blankMissing: true });
 
 	return {
 		systemPrompt,
@@ -313,8 +299,9 @@ export async function createAndGenerateAiChat(
 		 *
 		 * The distinction matters, and getting it wrong is silent. A caller whose
 		 * template references every context placeholder has to pre-fill them with
-		 * "" or an unsupplied one ships to the model as the literal text
-		 * "${jobDetails}". Doing that through `customVariables` looks equivalent
+		 * "" or the call fails outside production (an unsupplied one used to ship
+		 * to the model as the literal text "${jobDetails}"). Doing that through
+		 * `customVariables` looks equivalent
 		 * and is not: customVariables are the deliberate override and win over
 		 * assembled evidence, so the empties blank the very sources the call just
 		 * paid to assemble. That is exactly what happened to the personal
@@ -426,30 +413,60 @@ export async function createAndGenerateAiChat(
 		// Step 5: Prepare variables for interpolation (stringified for prompts).
 		// Layered lowest-to-highest: placeholder fallbacks, then the base blob,
 		// then assembled evidence (the `profile` source renders `data` under the
-		// budget), then explicit customVariables, which are the override.
+		// budget), then explicit customVariables, which are the override. A
+		// customVariable that is undefined or null overrides nothing: promptValues
+		// leaves it out rather than sending the model "undefined" or "null".
 		const interpolationVariables: Record<string, string> = {
 			...(options?.placeholderDefaults || {}),
 			schema: JSON.stringify(schemaJson, null, 2),
 			data: renderProfileData(dataJson),
 			...assembled,
-			...(customVariables
-				? Object.fromEntries(
-						Object.entries(customVariables).map(([key, value]) => [
-							key,
-							typeof value === 'string' ? value : JSON.stringify(value, null, 2)
-						])
-					)
-				: {})
+			...promptValues(customVariables ?? {})
 		};
 
-		// Step 6: Interpolate both prompts with stringified variables
-		const interpolatedSystemPrompt = interpolatePrompt(
+		// Step 5b: Every placeholder the template uses must have a value by now,
+		// even if it is only the "" a placeholderDefaults entry gives it. The
+		// renderer would refuse a gap on its own, but it names only the first
+		// one and not the prompt, so the whole list is worked out here.
+		// Outside production a gap fails the call, so the caller is fixed while
+		// someone is looking at it. In production the answer is still worth
+		// having, so the gap is reported and rendered as "".
+		const unfilled = [
+			...new Set([
+				...unfilledVariables(promptTemplate.system_prompt, interpolationVariables),
+				...unfilledVariables(promptTemplate.user_prompt, interpolationVariables)
+			])
+		];
+		if (unfilled.length > 0) {
+			// Say which ones the caller did pass, as undefined or null: the fix for
+			// those is wherever the value came from, not the call.
+			const described = unfilled.map((name) => {
+				const passed = customVariables?.[name];
+				return customVariables && name in customVariables && passed == null
+					? `${name} (passed as ${passed})`
+					: name;
+			});
+			const problem = new Error(
+				`Prompt '${promptKey}' has no value for: ${described.join(', ')}. ` +
+					`Supply it from the caller, or pass "" through placeholderDefaults.`
+			);
+			if (!config.isProduction) throw problem;
+			errorTracker.logError('Unfilled prompt placeholders', problem, {
+				operation: 'createAndGenerateAiChat',
+				metadata: { promptKey, unfilled }
+			});
+		}
+
+		// Step 6: Fill both prompts with the stringified variables (render-prompt.ts)
+		const interpolatedSystemPrompt = renderPrompt(
 			promptTemplate.system_prompt,
-			interpolationVariables
+			interpolationVariables,
+			{ blankMissing: config.isProduction }
 		);
-		const interpolatedUserPrompt = interpolatePrompt(
+		const interpolatedUserPrompt = renderPrompt(
 			promptTemplate.user_prompt,
-			interpolationVariables
+			interpolationVariables,
+			{ blankMissing: config.isProduction }
 		);
 
 		// Resolve provider/model by prompt type: user-facing writing runs on the

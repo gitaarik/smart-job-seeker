@@ -12,8 +12,9 @@
  * Every evidence placeholder the personal_agent_chat templates reference.
  *
  * The provider only returns keys for the sources a route actually requests, but
- * the templates reference all of them — and an un-supplied placeholder ships to
- * the model as the literal text "${jobDetails}". Pre-filling with "" makes the
+ * the templates reference all of them — and createAndGenerateAiChat refuses an
+ * un-supplied placeholder outside production, where it used to ship to the
+ * model as the literal text "${jobDetails}". Pre-filling with "" makes the
  * absent ones silently absent, which is what the prompt's own wording assumes.
  *
  * These go to `placeholderDefaults`, never to customVariables. As
@@ -35,6 +36,18 @@ export const CHAT_CONTEXT_PLACEHOLDERS = [
 	'relevantApplicationTexts',
 	// Not a context source — the capability block, which the capable template
 	// references and the plain one doesn't. Pre-filled for the same reason as
-	// the rest: an un-supplied placeholder ships as literal "${capabilities}".
+	// the rest.
 	'capabilities'
 ] as const;
+
+/**
+ * Every placeholder above as "", which is what `placeholderDefaults` must be
+ * given by anything that generates a chat turn: this route, and the scripts
+ * that stand in for it. A script that leaves it out fails on every source its
+ * route did not request. Before that check existed,
+ * scripts/eval-assistant-questions.ts left it out and sent each of them to the
+ * model as literal "${jobDetails}" text, on every list-page question.
+ */
+export const EMPTY_CONTEXT_VARIABLES: Record<string, string> = Object.fromEntries(
+	CHAT_CONTEXT_PLACEHOLDERS.map((key) => [key, ''])
+);

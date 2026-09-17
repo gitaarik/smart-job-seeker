@@ -30,15 +30,7 @@ vi.mock('$lib/server/db', () => ({
 
 // Mock ai-chat-utils
 vi.mock('$lib/server/ai-chat/utils', () => ({
-	createAndGenerateAiChat: vi.fn(),
-	interpolatePrompt: vi.fn((template, vars) => {
-		// Simple mock interpolation
-		let result = template;
-		for (const [key, value] of Object.entries(vars)) {
-			result = result.replace(new RegExp(`\\$\\{${key}\\}`, 'g'), String(value));
-		}
-		return result;
-	})
+	createAndGenerateAiChat: vi.fn()
 }));
 
 vi.mock('drizzle-orm', () => ({
@@ -52,7 +44,7 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 import { db } from '$lib/server/db';
-import { createAndGenerateAiChat, interpolatePrompt } from '$lib/server/ai-chat/utils';
+import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
 import { createFollowupAiChat } from '../ai-chat/create-followup';
 
 describe('createFollowupAiChat', () => {
@@ -123,7 +115,7 @@ describe('createFollowupAiChat', () => {
 	});
 
 	describe('followup creation without original context', () => {
-		it('should create followup with escaped placeholders by default', async () => {
+		it('should pass the original prompts through as stored by default', async () => {
 			(db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockParentAiChat);
 
 			const mockCreateAndGenerateAiChat = createAndGenerateAiChat as any;
@@ -145,9 +137,10 @@ describe('createFollowupAiChat', () => {
 				expect.objectContaining({
 					previousResponse: mockParentAiChat.response,
 					followupRequest: 'Make it more concise',
-					// Placeholders should be escaped
-					originalSystemPrompt: expect.stringContaining('\\${jobTitle}'),
-					originalUserPrompt: expect.stringContaining('\\${company}')
+					// Unrendered and unescaped: the renderer never reads a value back,
+					// so these placeholders cannot be filled in by the followup's own.
+					originalSystemPrompt: mockParentAiChat.system_prompt,
+					originalUserPrompt: mockParentAiChat.user_prompt
 				}),
 				1, // parent ai_chats id
 				{ profileDataFields: [] }
@@ -199,22 +192,67 @@ describe('createFollowupAiChat', () => {
 				includeOriginalContext: true
 			});
 
-			// Verify interpolatePrompt was called with parent's context
-			const mockInterpolate = interpolatePrompt as any;
-			expect(mockInterpolate).toHaveBeenCalledWith(
-				mockParentAiChat.system_prompt,
+			// The parent's prompts, rendered with the parent's own context
+			expect(createAndGenerateAiChat).toHaveBeenCalledWith(
+				123,
+				'followup',
 				expect.objectContaining({
-					jobTitle: 'Senior Developer',
-					company: 'Acme Corp'
-				})
+					originalSystemPrompt: 'You are a helpful assistant. Job: Senior Developer',
+					originalUserPrompt: 'Write a cover letter for Acme Corp'
+				}),
+				1,
+				{ profileDataFields: [] }
 			);
+		});
 
-			expect(mockInterpolate).toHaveBeenCalledWith(
-				mockParentAiChat.user_prompt,
-				expect.objectContaining({
-					jobTitle: 'Senior Developer',
-					company: 'Acme Corp'
-				})
+		it('should render a placeholder the stored context lacks as empty', async () => {
+			vi.mocked(db.query.ai_chats.findFirst).mockResolvedValueOnce({
+				...mockParentAiChat,
+				context: { jobTitle: 'Senior Developer' }
+			} as never);
+			vi.mocked(createAndGenerateAiChat).mockResolvedValueOnce({
+				success: true,
+				message: 'Follow-up created',
+				aiChat: mockCreatedAiChat
+			});
+			vi.mocked(db.query.application_letters.findMany).mockResolvedValueOnce([]);
+			vi.mocked(db.query.application_questions.findMany).mockResolvedValueOnce([]);
+
+			const result = await createFollowupAiChat(1, 'Make it better', {
+				includeOriginalContext: true
+			});
+
+			expect(result.success).toBe(true);
+			expect(createAndGenerateAiChat).toHaveBeenCalledWith(
+				123,
+				'followup',
+				expect.objectContaining({ originalUserPrompt: 'Write a cover letter for ' }),
+				1,
+				{ profileDataFields: [] }
+			);
+		});
+
+		it('should render a value stored as null as empty, not as "null"', async () => {
+			vi.mocked(db.query.ai_chats.findFirst).mockResolvedValueOnce({
+				...mockParentAiChat,
+				context: { jobTitle: 'Senior Developer', company: null }
+			} as never);
+			vi.mocked(createAndGenerateAiChat).mockResolvedValueOnce({
+				success: true,
+				message: 'Follow-up created',
+				aiChat: mockCreatedAiChat
+			});
+			vi.mocked(db.query.application_letters.findMany).mockResolvedValueOnce([]);
+			vi.mocked(db.query.application_questions.findMany).mockResolvedValueOnce([]);
+
+			await createFollowupAiChat(1, 'Make it better', { includeOriginalContext: true });
+
+			expect(createAndGenerateAiChat).toHaveBeenCalledWith(
+				123,
+				'followup',
+				expect.objectContaining({ originalUserPrompt: 'Write a cover letter for ' }),
+				1,
+				{ profileDataFields: [] }
 			);
 		});
 
@@ -227,7 +265,9 @@ describe('createFollowupAiChat', () => {
 
 			(db.query.ai_chats.findFirst as any).mockResolvedValueOnce({
 				...mockParentAiChat,
-				context: complexContext
+				context: complexContext,
+				system_prompt: 'Skills: ${skills}',
+				user_prompt: 'Salary for ${jobTitle}: ${salary}'
 			});
 
 			const mockCreateAndGenerateAiChat = createAndGenerateAiChat as any;
@@ -244,15 +284,10 @@ describe('createFollowupAiChat', () => {
 				includeOriginalContext: true
 			});
 
-			const mockInterpolate = interpolatePrompt as any;
-			expect(mockInterpolate).toHaveBeenCalledWith(
-				expect.any(String),
-				expect.objectContaining({
-					jobTitle: 'Senior Developer',
-					skills: expect.stringContaining('React'),
-					salary: expect.stringContaining('80000')
-				})
-			);
+			const [, , customVariables] = vi.mocked(createAndGenerateAiChat).mock.calls[0];
+			expect(customVariables?.originalSystemPrompt).toContain('"React"');
+			expect(customVariables?.originalUserPrompt).toContain('Salary for Senior Developer: {');
+			expect(customVariables?.originalUserPrompt).toContain('80000');
 		});
 	});
 

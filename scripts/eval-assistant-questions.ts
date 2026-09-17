@@ -46,6 +46,7 @@ import {
 	buildProposalSchema,
 	renderCapabilityPrompt
 } from '../src/lib/server/ai-chat/capabilities';
+import { EMPTY_CONTEXT_VARIABLES } from '../src/routes/api/ai/agent/placeholders';
 
 interface EvalQuestion {
 	q: string;
@@ -126,6 +127,7 @@ async function ask(item: EvalQuestion, n: number) {
 		{
 			profileDataFields: PROFILE_DATA_FIELDS,
 			context,
+			placeholderDefaults: EMPTY_CONTEXT_VARIABLES,
 			historyMessages: [],
 			...(capable
 				? { responseSchema: buildProposalSchema(capabilities.map((c) => c.capability)) }

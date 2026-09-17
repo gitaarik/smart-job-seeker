@@ -2236,9 +2236,6 @@ Return ONLY the JSON object described above.`
 	},
 	/**
 	 * Project code → profile proposals.
-	 *
-	 * Placeholders use ${...} deliberately: the llm:smoke preflight only scans
-	 * for that syntax, so a {{mustache}} slot would escape the fixture check.
 	 */
 	propose_project_from_code: {
 		system_prompt: `You are helping an applicant describe one of their own projects on their CV, using that project's own files as the only evidence.

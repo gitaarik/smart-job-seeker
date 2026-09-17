@@ -13,7 +13,7 @@ import { requireCredits } from '$lib/server/billing/require-credits';
 import type { ChatMessage } from '$lib/server/llm';
 import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
 import { resolveChatContext } from '$lib/server/ai-chat/chat-context';
-import { CHAT_CONTEXT_PLACEHOLDERS } from './placeholders';
+import { EMPTY_CONTEXT_VARIABLES } from './placeholders';
 import { isStaffUser } from './scope';
 import {
 	type CapabilityActor,
@@ -35,10 +35,6 @@ import { ASSISTANT_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
 // Recent turns sent to the model as context (~20 user/assistant exchanges).
 // Older turns are dropped; summarization can be layered on later if needed.
 const MAX_CONTEXT_MESSAGES = 40;
-
-const EMPTY_CONTEXT_VARIABLES: Record<string, string> = Object.fromEntries(
-	CHAT_CONTEXT_PLACEHOLDERS.map((key) => [key, ''])
-);
 
 /**
  * What each of a window's turns proposed and whether it was applied, grouped by

@@ -67,6 +67,7 @@ import { resolveChatContext } from '$lib/server/ai-chat/chat-context';
 import { buildProposalSchema, renderCapabilityPrompt } from '$lib/server/ai-chat/capabilities';
 import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
 import type { ChatMessage } from '$lib/server/llm';
+import { EMPTY_CONTEXT_VARIABLES } from '../src/routes/api/ai/agent/placeholders';
 
 const PROFILE_ID = Number(process.env.REPRO_PROFILE_ID ?? 12);
 const ROLE_ID = Number(process.env.REPRO_ROLE_ID ?? 35);
@@ -147,6 +148,7 @@ async function main() {
 			undefined,
 			{
 				context,
+				placeholderDefaults: EMPTY_CONTEXT_VARIABLES,
 				historyMessages: history,
 				responseSchema: buildProposalSchema(capabilities.map((c) => c.capability))
 			}

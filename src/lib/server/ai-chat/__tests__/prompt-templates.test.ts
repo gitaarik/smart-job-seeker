@@ -2,20 +2,25 @@
  * Regression guard for prompt-template ↔ caller placeholder drift.
  *
  * The `score_job_match` template is interpolated by `calculateMatch()` in the
- * cloud tree (cloud/src/server/job/matcher.ts). Because `interpolatePrompt`
- * leaves any unmatched `${placeholder}` untouched (see its own unit test), a
- * template placeholder whose key the caller never supplies silently ships the
- * literal `${...}` text to the LLM — with no error anywhere.
+ * cloud tree (cloud/src/server/job/matcher.ts). A template placeholder whose key
+ * the caller never supplies used to ship to the LLM as the literal `${...}`
+ * text, with no error anywhere.
  *
  * This exact bug happened: the candidate work-location preference key was
  * renamed `remote_options` → `work_location` in the matcher, but the template
  * kept `${preferences.remote_options}`, so the preference never reached the
- * model. This test would have caught it.
+ * model.
+ *
+ * createAndGenerateAiChat now refuses such a call outside production, which
+ * covers both directions but only once the matcher runs. This catches a template
+ * edit without running anything, against a list of the matcher's keys kept by
+ * hand, because oss cannot import the cloud tree. A rename in the matcher gets
+ * past it unless that list is updated too.
  */
 
 import { describe, expect, it } from 'vitest';
 import { promptTemplates } from '../prompt-templates';
-import { interpolatePrompt } from '../utils';
+import { promptVariables, renderPrompt } from '../render-prompt';
 
 /**
  * The variable keys `calculateMatch()` supplies to `createJobMatchingAiChat`
@@ -44,14 +49,6 @@ const MATCHER_SUPPLIED_KEYS = new Set([
 	'supportingEvidence'
 ]);
 
-/** Extract every `${...}` and `{{...}}` placeholder name from a template string. */
-function extractPlaceholders(text: string): string[] {
-	const names = new Set<string>();
-	for (const m of text.matchAll(/\$\{([^}]+)\}/g)) names.add(m[1]);
-	for (const m of text.matchAll(/\{\{([^}]+)\}\}/g)) names.add(m[1]);
-	return [...names];
-}
-
 describe('score_job_match template', () => {
 	const template = promptTemplates['score_job_match'];
 	const fullText = `${template.system_prompt}\n${template.user_prompt}`;
@@ -61,23 +58,19 @@ describe('score_job_match template', () => {
 	});
 
 	it('references no placeholder the matcher fails to supply', () => {
-		const unsupplied = extractPlaceholders(fullText).filter(
-			(name) => !MATCHER_SUPPLIED_KEYS.has(name)
-		);
+		const unsupplied = promptVariables(fullText).filter((name) => !MATCHER_SUPPLIED_KEYS.has(name));
 		// A non-empty list means the template drifted from the matcher's keys
-		// (e.g. a rename the template missed) — those placeholders would leak as
-		// literal `${...}` text into the prompt.
+		// (e.g. a rename the template missed) — every match would fail outside
+		// production, and render those placeholders blank in it.
 		expect(unsupplied).toEqual([]);
 	});
 
-	it("interpolates with the matcher's keys leaving no unresolved placeholder", () => {
+	it("renders with the matcher's keys alone", () => {
 		const vars: Record<string, string> = {};
 		for (const key of MATCHER_SUPPLIED_KEYS) vars[key] = `<${key}>`;
 
-		const rendered = interpolatePrompt(fullText, vars);
-
-		expect(rendered).not.toMatch(/\$\{[^}]+\}/);
-		expect(rendered).not.toMatch(/\{\{[^}]+\}\}/);
+		// renderPrompt throws on a placeholder with no value.
+		expect(() => renderPrompt(fullText, vars)).not.toThrow();
 	});
 
 	it('carries the candidate work-location preference (regression: was remote_options)', () => {
@@ -92,10 +85,10 @@ describe('score_job_match template', () => {
  * correspondence, interview rounds, feedback, briefs, offers, and the extracted
  * text of attached documents. It is supplied by four separate callers, so it is
  * easy for a template and its caller to drift apart in either direction, and
- * `interpolatePrompt` reports neither:
+ * neither shows up until a generation runs, if at all:
  *
- *   - template has the placeholder, caller doesn't supply it → the literal
- *     text "${applicationActivity}" is sent to the model;
+ *   - template has the placeholder, caller doesn't supply it → the call fails
+ *     outside production (it used to send the literal "${applicationActivity}");
  *   - caller supplies it, template doesn't reference it → a DB query runs on
  *     every generation and the result is silently discarded.
  *
@@ -153,7 +146,7 @@ describe('${applicationActivity} template \u2194 caller wiring', () => {
 
 	it('is supplied by a caller for every template that references it', () => {
 		const unsupplied = referencing.filter((key) => !(key in APPLICATION_ACTIVITY_SUPPLIED_BY));
-		// Non-empty means the placeholder would ship as literal text to the model.
+		// Non-empty means those generations would fail outside production.
 		expect(unsupplied).toEqual([]);
 	});
 
@@ -211,7 +204,8 @@ describe('${applicationActivity} template \u2194 caller wiring', () => {
  * trap: `review_application_question` and the letter review prompts are ALSO
  * reached through the followup builders, which assemble their own variables.
  * A placeholder added to a template the followup path doesn't supply would
- * ship the literal `${additionalContext}` to the model on every review.
+ * fail every review outside production (it used to ship the literal
+ * `${additionalContext}` to the model).
  */
 const ADDITIONAL_CONTEXT_SUPPLIED_BY: Record<string, string> = {
 	// ai-chat/application-letter.ts — all letter types and modes share
@@ -336,8 +330,8 @@ describe('${relevantProjects} template ↔ caller wiring', () => {
 /**
  * `${relevantStories}` is Top-K retrieval over the applicant's OWN prepared STAR
  * stories via the generic content-retrieval layer (Feature 5). Same drift risk
- * as ${relevantProjects}: a referencing template must be supplied it (else a
- * literal placeholder ships), and a supplying caller must have a template that
+ * as ${relevantProjects}: a referencing template must be supplied it (else the
+ * generation fails outside production), and a supplying caller must have a template that
  * interpolates it (else an embedding search runs and is thrown away).
  */
 const RELEVANT_STORIES_SUPPLIED_BY: Record<string, string> = {

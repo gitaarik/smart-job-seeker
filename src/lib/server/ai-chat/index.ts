@@ -3,12 +3,8 @@
  */
 
 // Core utilities
-export {
-	createAndGenerateAiChat,
-	getInterpolatedPrompts,
-	interpolatePrompt,
-	makeFullPrompt
-} from './utils';
+export { createAndGenerateAiChat, getInterpolatedPrompts, makeFullPrompt } from './utils';
+export { promptValues, promptVariables, renderPrompt, unfilledVariables } from './render-prompt';
 
 // Response generation
 export { generateAiChatResponse } from './response-generate';

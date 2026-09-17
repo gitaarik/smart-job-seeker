@@ -8,15 +8,8 @@ import { ai_chats, application_letters, application_questions } from '$lib/serve
 import type { ChatMessage } from '$lib/server/llm';
 import type { GenerationContextOption } from './generation-context';
 import type { ExportedProfileKey } from '$lib/server/profile/export';
-import { createAndGenerateAiChat, interpolatePrompt } from './utils';
-
-/**
- * Escape variable placeholders in a string to prevent auto-interpolation
- * Converts ${variableName} to \${variableName}
- */
-function escapePlaceholders(text: string): string {
-	return text.replace(/\$\{/g, '\\${');
-}
+import { createAndGenerateAiChat } from './utils';
+import { promptValues, renderPrompt } from './render-prompt';
 
 /**
  * Create a follow-up ai_chats instance to refine a previous AI-generated response
@@ -136,20 +129,23 @@ export async function createFollowupAiChat(
 
 	if (includeOriginalContext) {
 		// Convert root context to string format for interpolation
-		const rootContextForInterpolation: Record<string, string> = Object.fromEntries(
-			Object.entries(rootContext).map(([key, value]) => [
-				key,
-				typeof value === 'string' ? value : JSON.stringify(value, null, 2)
-			])
-		);
+		const rootContextForInterpolation = promptValues(rootContext);
 
-		// Interpolate the ROOT's prompts with its own context
-		originalSystemPrompt = interpolatePrompt(root.system_prompt, rootContextForInterpolation);
-		originalUserPrompt = interpolatePrompt(root.user_prompt, rootContextForInterpolation);
+		// Interpolate the ROOT's prompts with its own context. A row older than a
+		// placeholder its template gained has no value for it, and a value stored
+		// as null has none either; both render blank.
+		originalSystemPrompt = renderPrompt(root.system_prompt, rootContextForInterpolation, {
+			blankMissing: true
+		});
+		originalUserPrompt = renderPrompt(root.user_prompt, rootContextForInterpolation, {
+			blankMissing: true
+		});
 	} else {
-		// Escape placeholders to prevent auto-interpolation
-		originalSystemPrompt = escapePlaceholders(root.system_prompt);
-		originalUserPrompt = escapePlaceholders(root.user_prompt);
+		// The templates as stored, placeholders and all. They used to be escaped
+		// (`\${name}`) so the followup's own interpolation would not fill them in;
+		// render-prompt.ts never reads an inserted value back, so that cannot happen.
+		originalSystemPrompt = root.system_prompt;
+		originalUserPrompt = root.user_prompt;
 	}
 
 	// Extract letter text from structured JSON responses (e.g. { letter: "...", summary: "..." })
