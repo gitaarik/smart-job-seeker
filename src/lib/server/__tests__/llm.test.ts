@@ -59,6 +59,39 @@ vi.mock('@langchain/groq', () => ({
 
 import { generateChatCompletion, generateChatCompletionTracked } from '../llm';
 import { llmCache } from '../llm/cache';
+import { LLMRateLimitError, parseRetryAfterSeconds } from '../llm/langchain';
+import { isRetryableError } from '../utils/retry';
+
+describe('parseRetryAfterSeconds', () => {
+	it.each([
+		['Please try again in 75.36ms.', 1],
+		['Please try again in 3.2s.', 4],
+		['Please try again in 30s', 30],
+		['Please try again in 5m19.3344s.', 320],
+		['Please try again in 2h15m', 8100],
+		['Please try again in 1h2m3s', 3723]
+	])('reads %j as %i seconds', (message, seconds) => {
+		expect(parseRetryAfterSeconds(message)).toBe(seconds);
+	});
+
+	it('returns undefined when the provider names no wait', () => {
+		expect(parseRetryAfterSeconds('Rate limit exceeded')).toBeUndefined();
+	});
+
+	it("makes Groq's millisecond token-per-minute blip retryable", () => {
+		// The real message that failed a matcher golden-set call on 2026-09-17.
+		const message =
+			'Rate limit reached for model `openai/gpt-oss-120b` on tokens per minute (TPM): ' +
+			'Limit 250000, Used 223573, Requested 26741. Please try again in 75.36ms.';
+		const error = new LLMRateLimitError(
+			message,
+			'groq',
+			'openai/gpt-oss-120b',
+			parseRetryAfterSeconds(message)
+		);
+		expect(isRetryableError(error)).toBe(true);
+	});
+});
 
 describe('cached input tokens', () => {
 	beforeEach(async () => {

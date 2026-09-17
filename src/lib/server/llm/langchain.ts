@@ -105,6 +105,27 @@ export function isLLMOutputValidationMessage(message: string): boolean {
 /**
  * Parse API errors and throw appropriate LLM error types
  */
+/**
+ * Seconds until a rate limit lifts, read from the provider's "try again in" text.
+ *
+ * Groq writes the wait as a run of units: "5m19.3344s", "3.2s", "2h15m", and for a
+ * per-minute token blip "75.36ms". The pattern this replaced required a seconds
+ * component, so it missed milliseconds (and "2h15m"). A 429 without a parsed wait is
+ * not retried (see isRetryableError), so the shortest, most harmless rate limits
+ * were exactly the ones that failed the call: 1 of 240 matcher golden-set calls on
+ * 2026-09-17. Rounded up to whole seconds, so a sub-second wait still reads as short.
+ */
+export function parseRetryAfterSeconds(message: string): number | undefined {
+	const run = message.match(/try again in ((?:\d+(?:\.\d+)?(?:ms|h|m|s))+)/i);
+	if (!run) return undefined;
+	const unitSeconds: Record<string, number> = { h: 3600, m: 60, s: 1, ms: 0.001 };
+	let seconds = 0;
+	for (const [, value, unit] of run[1].matchAll(/(\d+(?:\.\d+)?)(ms|h|m|s)/gi)) {
+		seconds += parseFloat(value) * unitSeconds[unit.toLowerCase()];
+	}
+	return Math.ceil(seconds);
+}
+
 function handleLLMError(error: unknown, provider: string, model: string): never {
 	const originalMessage = error instanceof Error ? error.message : String(error);
 	const messageLower = originalMessage.toLowerCase();
@@ -174,29 +195,18 @@ function handleLLMError(error: unknown, provider: string, model: string): never 
 			}
 		}
 
-		// Try to extract retry time from error message
-		// Groq format: "Please try again in 5m19.3344s"
-		// OpenAI format: might include "Please try again in X seconds"
-		let retryAfter: number | undefined;
+		const retryAfter = parseRetryAfterSeconds(originalMessage);
 		let retryMessage = '';
-
-		// Match patterns like "5m19.3344s", "24m40.2048s", "30s", "2h15m"
-		const retryMatch = originalMessage.match(/try again in (\d+h)?(\d+m)?(\d+(?:\.\d+)?s)/i);
-		if (retryMatch) {
-			const hours = retryMatch[1] ? parseInt(retryMatch[1]) : 0;
-			const minutes = retryMatch[2] ? parseInt(retryMatch[2]) : 0;
-			const seconds = retryMatch[3] ? parseFloat(retryMatch[3]) : 0;
-
-			// Convert to total seconds
-			retryAfter = Math.ceil(hours * 3600 + minutes * 60 + seconds);
-
-			// Format user-friendly message
+		if (retryAfter !== undefined) {
+			const hours = Math.floor(retryAfter / 3600);
+			const minutes = Math.floor((retryAfter % 3600) / 60);
+			const seconds = retryAfter % 60;
 			if (hours > 0) {
 				retryMessage = ` Retry in ${hours}h ${minutes}m.`;
 			} else if (minutes > 0) {
-				retryMessage = ` Retry in ${minutes}m ${Math.ceil(seconds)}s.`;
+				retryMessage = ` Retry in ${minutes}m ${seconds}s.`;
 			} else {
-				retryMessage = ` Retry in ${Math.ceil(seconds)}s.`;
+				retryMessage = ` Retry in ${seconds}s.`;
 			}
 		}
 
