@@ -13,6 +13,7 @@
 	 */
 	import { afterNavigate } from '$app/navigation';
 	import { tick } from 'svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCheck,
@@ -208,8 +209,8 @@
 	} | null>(null);
 
 	// Diff view state: manually toggled on/off overrides auto-show
-	let diffShown = $state(new Set<number>());
-	let diffHidden = $state(new Set<number>());
+	const diffShown = new SvelteSet<number>();
+	const diffHidden = new SvelteSet<number>();
 
 	// Scroll to last entry on page load / navigation
 	afterNavigate(async () => {
@@ -261,8 +262,6 @@
 			diffHidden.delete(entryIndex);
 			diffShown.add(entryIndex);
 		}
-		diffShown = new Set(diffShown);
-		diffHidden = new Set(diffHidden);
 	}
 
 	async function startEdit(content: string, index: number) {
@@ -321,8 +320,6 @@
 		if (idx < 0) return;
 		diffHidden.delete(idx);
 		diffShown.add(idx);
-		diffShown = new Set(diffShown);
-		diffHidden = new Set(diffHidden);
 	}
 
 	function saveEdit() {
@@ -377,8 +374,8 @@
 			await onDelete!(versionId, scope);
 			editingIndex = null;
 			editingFeedbackIndex = null;
-			diffShown = new Set();
-			diffHidden = new Set();
+			diffShown.clear();
+			diffHidden.clear();
 			userExpanded = false;
 		});
 	}

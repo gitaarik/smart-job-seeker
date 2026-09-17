@@ -51,8 +51,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	);
 
 	// Filter by type
-	let items: typeof letters | typeof questions | ((typeof letters)[0] | (typeof questions)[0])[] =
-		[];
+	let items: typeof letters | typeof questions | ((typeof letters)[0] | (typeof questions)[0])[];
 	if (type === 'letters') {
 		items = letters;
 	} else if (type === 'questions') {

@@ -23,7 +23,7 @@ vi.mock('$lib/server/db', () => ({
 
 // Mock remove-markdown
 vi.mock('remove-markdown', () => ({
-	default: (text: string) => text.replace(/[#*_`\[\]]/g, '')
+	default: (text: string) => text.replace(/[#*_`[\]]/g, '')
 }));
 
 import { exportProfile } from '../profile/export';

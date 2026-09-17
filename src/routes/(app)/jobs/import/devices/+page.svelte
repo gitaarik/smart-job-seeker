@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { onDestroy, onMount } from 'svelte';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -48,12 +49,12 @@
 	const STALE_LAST_USED_DAYS = 30;
 
 	let duplicateNames = $derived.by(() => {
-		const counts = new Map<string, number>();
+		const counts = new SvelteMap<string, number>();
 		for (const k of apiKeys) {
 			if (k.revoked) continue;
 			counts.set(k.name, (counts.get(k.name) ?? 0) + 1);
 		}
-		const dupes = new Set<string>();
+		const dupes = new SvelteSet<string>();
 		for (const [name, count] of counts) {
 			if (count > 1) dupes.add(name);
 		}
@@ -220,7 +221,7 @@
 				}
 			})
 		);
-		const next = new Map<number, DeviceStatus>();
+		const next = new SvelteMap<number, DeviceStatus>();
 		for (const [id, dev] of results) {
 			if (dev) next.set(id, dev);
 		}

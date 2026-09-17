@@ -152,7 +152,7 @@ export async function listJobs(
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let jobs: any[] = [];
-	let totalCount = 0;
+	let totalCount: number;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let matchesByJobId: Record<number, any> = {};
 	let savedJobIds: number[] = [];

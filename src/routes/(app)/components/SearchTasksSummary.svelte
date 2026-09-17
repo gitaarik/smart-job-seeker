@@ -20,8 +20,6 @@
 		tasks: SearchTask[];
 		totalCount: number;
 		activeCount: number;
-		lastRun: Date | string | null;
-		totalJobsFound: number;
 	}
 
 	interface Props {

@@ -1,5 +1,6 @@
 import { getWindowVariable } from '$lib/tools/window';
 import { browser } from '$app/environment';
+import { SvelteDate } from 'svelte/reactivity';
 
 type ThemePreference = 'light' | 'dark' | 'auto';
 type ActualTheme = 'light' | 'dark';
@@ -121,7 +122,7 @@ export function saveToCookie(preference: ThemePreference) {
 
 	const document = getWindowVariable('document');
 	if (document) {
-		const expires = new Date();
+		const expires = new SvelteDate();
 		expires.setFullYear(expires.getFullYear() + 1);
 		document.cookie = `theme=${preference}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
 	}

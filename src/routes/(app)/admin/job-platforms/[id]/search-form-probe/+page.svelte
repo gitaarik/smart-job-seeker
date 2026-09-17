@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { onDestroy, onMount } from 'svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -60,8 +61,8 @@
 
 	// Run history: pre-expand the most recent run so the page is useful on
 	// first load. Each row toggles independently after that.
-	let expandedRunIds = $state<Set<number>>(
-		new Set(initialMostRecentRun ? [initialMostRecentRun.id] : [])
+	const expandedRunIds = new SvelteSet<number>(
+		initialMostRecentRun ? [initialMostRecentRun.id] : []
 	);
 
 	function toggleRun(runId: number) {
@@ -70,7 +71,6 @@
 		} else {
 			expandedRunIds.add(runId);
 		}
-		expandedRunIds = new Set(expandedRunIds);
 	}
 
 	function isTerminal(status: string | undefined): boolean {
@@ -140,7 +140,7 @@
 			const json = await res.json();
 			featuredRun = json.run;
 			// Auto-expand the new run in the history.
-			expandedRunIds = new Set([json.run.id, ...expandedRunIds]);
+			expandedRunIds.add(json.run.id);
 			await invalidateAll();
 			startFeaturedPolling();
 		} finally {

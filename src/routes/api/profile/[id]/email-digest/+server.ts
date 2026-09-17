@@ -123,7 +123,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	if (body.reset_last_sent === true) {
 		const freq = body.frequency_days ?? profileUpdate.email_digest_frequency_days;
 		// Look up current frequency if not in this request
-		let frequencyDays = 7;
+		let frequencyDays: number;
 		if (typeof freq === 'number') {
 			frequencyDays = freq;
 		} else {

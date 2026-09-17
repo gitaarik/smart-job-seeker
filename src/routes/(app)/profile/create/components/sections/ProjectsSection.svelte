@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SvelteSet } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronDown,
@@ -19,7 +20,7 @@
 	let { projects = $bindable() }: Props = $props();
 
 	let isExpanded = $state(false);
-	let expandedItems = $state<Set<number>>(new Set());
+	const expandedItems = new SvelteSet<number>();
 
 	function toggleItem(index: number) {
 		if (expandedItems.has(index)) {
@@ -29,7 +30,6 @@
 			if (!projects[index].achievements) projects[index].achievements = [];
 			expandedItems.add(index);
 		}
-		expandedItems = new Set(expandedItems);
 	}
 
 	function removeItem(index: number) {
@@ -47,7 +47,6 @@
 			}
 		];
 		expandedItems.add(projects.length - 1);
-		expandedItems = new Set(expandedItems);
 		isExpanded = true;
 	}
 </script>

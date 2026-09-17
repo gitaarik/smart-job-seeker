@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SvelteSet } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { getAllIcons } from '$lib/data/job-icons';
 	import CategoryPill from '$lib/components/CategoryPill.svelte';
@@ -268,7 +269,7 @@
 		{ value: 'introduction', label: 'Introduction' }
 	];
 
-	let checkboxValues = $state<Set<string>>(new Set(['frontend', 'typescript']));
+	const checkboxValues = new SvelteSet<string>(['frontend', 'typescript']);
 
 	const checkboxOptions = [
 		{ value: 'frontend', label: 'Frontend' },
@@ -285,7 +286,6 @@
 		} else {
 			checkboxValues.add(value);
 		}
-		checkboxValues = new Set(checkboxValues);
 	}
 
 	// Checkbox demo

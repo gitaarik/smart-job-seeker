@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowDownWideShort,
@@ -83,7 +84,7 @@
 	);
 
 	function buildUrl(overrides: Record<string, string> = {}) {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		const g = overrides.group ?? groupFilter;
 		const p = overrides.phase ?? phaseFilter;
 		const pl = overrides.platform ?? platformFilter;

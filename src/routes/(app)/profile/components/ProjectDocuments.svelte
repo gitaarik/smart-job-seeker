@@ -2,6 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { ResolvedPathname } from '$app/types';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowsRotate,
@@ -235,8 +236,12 @@
 	const skippedCount = (v: unknown): number => (Array.isArray(v) ? v.length : 0);
 
 	function toggle(id: number) {
-		const next = new Set(expanded);
-		next.has(id) ? next.delete(id) : next.add(id);
+		const next = new SvelteSet(expanded);
+		if (next.has(id)) {
+			next.delete(id);
+		} else {
+			next.add(id);
+		}
 		expanded = next;
 	}
 

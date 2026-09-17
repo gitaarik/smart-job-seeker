@@ -58,7 +58,7 @@ Two things worth knowing:
 | ---------------- | --------------------- | ----------------- |
 | `svelte-check`   | `ci/check.sh`         | 31 errors         |
 | `scripts/` types | `ci/check-scripts.sh` | 25 errors         |
-| eslint           | `ci/check-lint.sh`    | 1,094 errors      |
+| eslint           | `ci/check-lint.sh`    | 1,038 errors      |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
 The three counts are ratchets: they may only ever go **down**, and each script
@@ -110,7 +110,11 @@ since most files already carry backlog) and runs the type gate whole, because
 the failure that motivated it appeared only in files the change never opened.
 It fails open when the dev stack is down, and `git push --no-verify` skips it.
 
-Within the eslint backlog, three rules are worth reading rather than counting:
+What remains is two rules and a handful of deliberate exceptions: 731
+`@typescript-eslint/no-explicit-any` (210 of them in test mocks, 128 in
+`src/lib/server/profile`) and 224 `svelte/no-navigation-without-resolve`.
+Everything else has been worked down. Four rules are worth reading rather than
+counting:
 
 - **`svelte/no-at-html-tags`** — all 10 sites were audited 2026-08-07 and are
   sound. A new hit is an unreviewed HTML sink, not backlog, and `/p/[slug]`
@@ -121,6 +125,12 @@ Within the eslint backlog, three rules are worth reading rather than counting:
   all were keyed on 2026-09-17. Key by a value only when it cannot repeat (a
   primary key, a hardcoded list): Svelte 5 throws on a duplicate key. Otherwise
   key by index, which is what an unkeyed block already does.
+- **`svelte/prefer-svelte-reactivity`**, cleared 2026-09-17. `$state` does not
+  proxy `Map`/`Set`/`Date`/`URLSearchParams`, so this code used to reassign a
+  fresh copy after each mutation. Those are now `SvelteSet`/`SvelteMap` in a
+  `const`, mutated in place. Do the same in new code, and do not wrap them in
+  `$state` — `svelte/no-unnecessary-state-wrap` flags that, and the two rules
+  will trade errors back and forth if you satisfy only one.
 - **`@typescript-eslint/no-unused-vars`** — cleared on 2026-09-17 down to what
   sat in uncommitted files, so a hit is usually yours. Two shapes are not dead
   code and must not be deleted: `const { [key]: _, ...rest }` omits a property

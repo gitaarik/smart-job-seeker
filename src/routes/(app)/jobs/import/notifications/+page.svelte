@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import { armOn } from '$lib/actions/arm-on';
 	import { page } from '$app/stores';
+	import { SvelteDate } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCalendarAlt,
@@ -68,7 +69,7 @@
 	);
 	const nextSendDate = $derived.by(() => {
 		if (!lastSentDate) return null;
-		const next = new Date(lastSentDate);
+		const next = new SvelteDate(lastSentDate);
 		next.setDate(next.getDate() + digestFrequency);
 		// Snap to the preferred hour in the user's timezone
 		const tz = digestTimezone || undefined;

@@ -205,15 +205,16 @@
 		}))
 	);
 
-	// Reactive wrapper for dndzone (needs id field)
-	let dndWrapped = $state<{ id: string; skill: SkillItem; index: number }[]>([]);
-	$effect(() => {
-		dndWrapped = dndItems.map((s, i) => ({
+	// Reactive wrapper for dndzone (needs id field). Assignable, because the drag
+	// handlers below write the in-flight order straight back into it; a change to
+	// `skills` re-derives it, which is what ends a drag.
+	let dndWrapped = $derived<{ id: string; skill: SkillItem; index: number }[]>(
+		dndItems.map((s, i) => ({
 			id: s._dndId,
 			skill: s,
 			index: i
-		}));
-	});
+		}))
+	);
 
 	const flipDurationMs = 150;
 

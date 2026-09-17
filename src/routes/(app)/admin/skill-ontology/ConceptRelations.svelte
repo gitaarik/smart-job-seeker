@@ -50,6 +50,7 @@
 	 * this lists them flat rather than paging or collapsing.
 	 */
 	import { resolve } from '$app/paths';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { sentence, verbFor } from './graph/graph-shared';
 	import type { PendingRelation } from './+page.server';
 
@@ -136,7 +137,7 @@
 		const parents = relations.filter(
 			(r) => r.approved && r.from_id === concept.id && matching.includes(r.relation)
 		);
-		const out = new Map<number, { id: number; label: string; slug: string; via: string }>();
+		const out = new SvelteMap<number, { id: number; label: string; slug: string; via: string }>();
 		for (const p of parents) {
 			for (const r of relations) {
 				if (!r.approved || r.to_id !== p.to_id || r.from_id === concept.id) continue;

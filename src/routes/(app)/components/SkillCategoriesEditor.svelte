@@ -18,6 +18,7 @@
 	import { onDestroy } from 'svelte';
 	import { dragHandleZone, dragHandle } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
+	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import Card from './Card.svelte';
 	import SkillTagsEditor from './SkillTagsEditor.svelte';
 	import type { LevelOption, SkillItem } from './SkillTagsEditor.svelte';
@@ -156,7 +157,7 @@
 	let hasAnyVersionTags = $derived(versionSlugs.length > 0);
 
 	// Compact mode: track expanded items
-	let expandedItems = $state<Set<number>>(new Set());
+	const expandedItems = new SvelteSet<number>();
 
 	function toggleItem(index: number) {
 		if (expandedItems.has(index)) {
@@ -164,14 +165,13 @@
 		} else {
 			expandedItems.add(index);
 		}
-		expandedItems = new Set(expandedItems);
 	}
 
 	// Track which categories are newly added (not yet persisted)
-	let newIndices = $state(new Set<number>());
+	const newIndices = new SvelteSet<number>();
 	// Track original name + note for revert/dirty detection while editing
-	let originalNames = $state(new Map<number, string>());
-	let originalNotes = $state(new Map<number, string>());
+	const originalNames = new SvelteMap<number, string>();
+	const originalNotes = new SvelteMap<number, string>();
 	// Track which category (name + note) is being edited inline
 	let editingNameIndex = $state<number | null>(null);
 
@@ -179,17 +179,17 @@
 		const newCat: CategoryItem = { name: '', note: '', skills: [] };
 		categories = [...categories, newCat];
 		const idx = categories.length - 1;
-		newIndices = new Set([...newIndices, idx]);
+		newIndices.add(idx);
 		editingNameIndex = idx;
-		if (compact) expandedItems = new Set([...expandedItems, idx]);
+		if (compact) expandedItems.add(idx);
 	}
 
 	function startEditingName(index: number) {
 		if (!newIndices.has(index)) {
 			if (!originalNames.has(index)) {
-				originalNames = new Map([...originalNames, [index, categories[index].name]]);
+				originalNames.set(index, categories[index].name);
 			}
-			originalNotes = new Map([...originalNotes, [index, categories[index].note ?? '']]);
+			originalNotes.set(index, categories[index].note ?? '');
 		}
 		editingNameIndex = index;
 	}
@@ -203,25 +203,16 @@
 		if (newIndices.has(index)) {
 			// New unsaved category — remove it
 			categories = categories.filter((_, i) => i !== index);
-			const updatedNew = new Set<number>();
-			for (const ni of newIndices) {
-				if (ni < index) updatedNew.add(ni);
-				else if (ni > index) updatedNew.add(ni - 1);
-			}
-			newIndices = updatedNew;
+			shiftIndices(newIndices, index);
 		} else {
 			// Revert name + note to their snapshots
 			if (originalNames.has(index)) {
 				categories[index].name = originalNames.get(index)!;
-				const m = new Map(originalNames);
-				m.delete(index);
-				originalNames = m;
+				originalNames.delete(index);
 			}
 			if (originalNotes.has(index)) {
 				categories[index].note = originalNotes.get(index)!;
-				const m = new Map(originalNotes);
-				m.delete(index);
-				originalNotes = m;
+				originalNotes.delete(index);
 			}
 		}
 		editingNameIndex = null;
@@ -234,19 +225,27 @@
 			onremove?.(cat);
 		}
 		categories = categories.filter((_, i) => i !== index);
-		// Reindex tracking sets
-		const updatedNew = new Set<number>();
-		for (const ni of newIndices) {
-			if (ni < index) updatedNew.add(ni);
-			else if (ni > index) updatedNew.add(ni - 1);
-		}
-		newIndices = updatedNew;
-		const updatedNames = new Map<number, string>();
-		for (const [ni, name] of originalNames) {
-			if (ni < index) updatedNames.set(ni, name);
-			else if (ni > index) updatedNames.set(ni - 1, name);
-		}
-		originalNames = updatedNames;
+		shiftIndices(newIndices, index);
+		shiftKeys(originalNames, index);
+	}
+
+	// These collections are keyed by category position, so dropping a row has to
+	// shift every entry after it down. Which collections get shifted is left
+	// exactly as it was: originalNotes never is, and cancel shifts only
+	// newIndices. Both read like oversights, and both belong to the change that
+	// takes on this component's position-keyed state, not to a lint pass.
+	function shiftIndices(set: SvelteSet<number>, removed: number) {
+		const shifted = [...set].filter((i) => i !== removed).map((i) => (i > removed ? i - 1 : i));
+		set.clear();
+		for (const i of shifted) set.add(i);
+	}
+
+	function shiftKeys<V>(map: SvelteMap<number, V>, removed: number) {
+		const shifted = [...map]
+			.filter(([i]) => i !== removed)
+			.map(([i, v]) => [i > removed ? i - 1 : i, v] as const);
+		map.clear();
+		for (const [i, v] of shifted) map.set(i, v);
 	}
 
 	function cloneCategory(index: number) {
@@ -260,9 +259,7 @@
 		if (newIndices.has(index)) {
 			if (cat.name.trim()) {
 				oncreate?.(cat); // persists name + note
-				const updated = new Set(newIndices);
-				updated.delete(index);
-				newIndices = updated;
+				newIndices.delete(index);
 			}
 		} else {
 			const origName = originalNames.get(index);
@@ -272,27 +269,18 @@
 			if (cat.name.trim() && (nameChanged || noteChanged)) {
 				onrename?.(cat); // updates name + note together
 			}
-			if (originalNames.has(index)) {
-				const m = new Map(originalNames);
-				m.delete(index);
-				originalNames = m;
-			}
-			if (originalNotes.has(index)) {
-				const m = new Map(originalNotes);
-				m.delete(index);
-				originalNotes = m;
-			}
+			originalNames.delete(index);
+			originalNotes.delete(index);
 		}
 	}
 
 	// Category version tags
 	const builtinTags = ['resume', 'cv'];
-	let tagsExpanded = $state<Set<number>>(new Set());
+	const tagsExpanded = new SvelteSet<number>();
 
 	function toggleTagExpand(index: number) {
 		if (tagsExpanded.has(index)) tagsExpanded.delete(index);
 		else tagsExpanded.add(index);
-		tagsExpanded = new Set(tagsExpanded);
 	}
 
 	function catTags(index: number): string[] {

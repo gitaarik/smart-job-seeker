@@ -25,12 +25,10 @@
 	let dropdown: HeaderDropdown;
 	let notifications = $state<Notification[]>([]);
 	let loading = $state(false);
-	let localUnread = $state(unreadCount);
-
-	// Sync with server data on navigation
-	$effect(() => {
-		localUnread = unreadCount;
-	});
+	// Assignable $derived: the optimistic writes below (mark read / mark all
+	// read) stand until the server's count changes on navigation, which re-syncs
+	// it.
+	let localUnread = $derived(unreadCount);
 
 	async function loadNotifications() {
 		loading = true;
@@ -92,7 +90,7 @@
 	};
 </script>
 
-<HeaderDropdown bind:this={dropdown} id="notifications" width="w-80" onopen={loadNotifications}>
+<HeaderDropdown bind:this={dropdown} width="w-80" onopen={loadNotifications}>
 	{#snippet trigger()}
 		<div class="relative rounded-lg p-2 transition-colors hover:bg-white/10">
 			<FontAwesomeIcon icon={faBell} class="h-5 w-5 text-[var(--dash-chrome-text)]" />

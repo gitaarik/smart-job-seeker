@@ -83,7 +83,6 @@ const readEntry = tool(
 	}
 );
 
-let loopOk = false;
 try {
 	const bound = model.bindTools([readEntry]);
 	const first = await bound.invoke([
@@ -115,7 +114,7 @@ try {
 		// SPACE, so a literal /March 2028/ scored a correct answer as a failure.
 		// Anything asserting on model prose has to fold unicode spaces.
 		const text = String(second.content).replace(/[\u00a0\u202f\u2009]/g, ' ');
-		loopOk = /March 2028/.test(text);
+		const loopOk = /March 2028/.test(text);
 		report('3. tool result fed back', loopOk, text.slice(0, 160));
 	}
 } catch (e) {

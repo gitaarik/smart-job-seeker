@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import type { ResolvedPathname } from '$app/types';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faFileAlt,
@@ -71,7 +72,7 @@
 
 	function buildUrl(params: Record<string, string>): string {
 		const base = '/admin/files';
-		const search = new URLSearchParams();
+		const search = new SvelteURLSearchParams();
 		const merged = { type: typeFilter, usage: usageFilter, page: '1', ...params };
 		for (const [k, v] of Object.entries(merged)) {
 			if (v) search.set(k, v);

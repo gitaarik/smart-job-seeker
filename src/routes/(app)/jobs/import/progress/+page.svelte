@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { onMount, onDestroy } from 'svelte';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCircle,
@@ -93,7 +94,7 @@
 
 	async function loadStatus() {
 		try {
-			const params = new URLSearchParams({ profileId: String(data.profileId) });
+			const params = new SvelteURLSearchParams({ profileId: String(data.profileId) });
 			if (showNoMatch) params.set('includeIneligible', 'true');
 			const response = await fetch(`/api/matcher/status?${params}`);
 			if (response.ok) {

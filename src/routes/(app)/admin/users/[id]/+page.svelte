@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
+	import { SvelteDate } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowLeft,
@@ -60,7 +61,7 @@
 			subExpiresAt = new Date(subscription.currentPeriodEnd).toISOString().split('T')[0];
 		} else {
 			// Default: 1 month from now
-			const d = new Date();
+			const d = new SvelteDate();
 			d.setMonth(d.getMonth() + 1);
 			subExpiresAt = d.toISOString().split('T')[0];
 		}

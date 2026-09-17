@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faSearch,
@@ -71,7 +72,7 @@
 
 	async function loadRuns() {
 		try {
-			const params = new URLSearchParams({ limit: '50' });
+			const params = new SvelteURLSearchParams({ limit: '50' });
 			if (statusFilter) params.set('status', statusFilter);
 			const response = await fetch(`/api/admin/scraper?${params}`);
 			if (response.ok) {

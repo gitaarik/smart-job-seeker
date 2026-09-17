@@ -26,7 +26,6 @@
 		title: string | null;
 		company: string | null;
 		office_location: string | null;
-		source_url: string | null;
 		job_description: string | null;
 		salary_min: number | null;
 		salary_max: number | null;

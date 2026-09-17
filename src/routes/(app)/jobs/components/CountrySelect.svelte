@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	// Import only the JSON locale data — no runtime library needed.
 	// Vite handles JSON imports natively for both SSR and client builds.
@@ -45,7 +46,7 @@
 
 		return Object.keys(enCountries)
 			.map((code) => {
-				const searchSet = new Set<string>();
+				const searchSet = new SvelteSet<string>();
 
 				// Collect names from all locales (English first, then others)
 				for (const locale of locales) {

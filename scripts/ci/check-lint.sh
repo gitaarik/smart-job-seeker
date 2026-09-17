@@ -143,7 +143,39 @@ set -euo pipefail
 # 1,094 is CI's 1,199 minus those 105, in files otherwise identical to their
 # commits. The tree still carries ~52 no-unused-vars in files that held other
 # uncommitted work when this ran.
-BASELINE=1094
+#
+# 1,094 -> 1,038 on 2026-09-17, taking every rule left outside the two large
+# ones: 35 prefer-svelte-reactivity, 7 no-unused-props, 6 no-useless-assignment,
+# 3 prefer-const, 2 prefer-writable-derived, 2 no-unused-expressions and 1
+# no-useless-escape. Measured per file, before and after, across the 39 files.
+#
+# prefer-svelte-reactivity was the substance. Svelte 5's $state deep-proxies
+# objects and arrays but not Map/Set/Date/URLSearchParams, so this code held
+# them and reassigned a fresh copy after every mutation to force an update. They
+# are now SvelteSet/SvelteMap from svelte/reactivity, held in `const` and
+# mutated: the reassignments are gone, and so is the $state wrapper, which the
+# sibling rule svelte/no-unnecessary-state-wrap flags once the collection is
+# reactive by itself. Fixing only what was flagged would have traded one rule
+# for the other — eslint reports a collection's FIRST construction only, so a
+# variable built in several places moves its error rather than losing it.
+#
+# Four sites were left, and each is worth more than the count:
+#   no-useless-assignment on SkillCategoriesEditor's `canCategoryReorder` is a
+#     rule artefact. svelte-eslint-parser gives a $bindable prop a synthetic
+#     read+write reference at the declaration itself, which carries the rule
+#     past its "no reads, not my job" exit but can never satisfy it. It reports
+#     any $bindable a component writes and never reads, and deleting the default
+#     would not clear it.
+#   prefer-writable-derived on login/+page.svelte: `hydrated` works precisely
+#     BECAUSE $effect does not run during SSR. A $derived(true) is true on the
+#     server too, which un-gates the submit button before hydration and brings
+#     back the native POST to /login that the comment above it describes.
+#   prefer-writable-derived on profile/(data)/skills: `mappedCategories` is
+#     bound into SkillCategoriesEditor, which mutates it deeply. $state proxies
+#     those objects, $derived does not, so every deep write would quietly stop
+#     being reactive.
+#   no-at-html-tags on ConversationTimeline is one of the audited sinks above.
+BASELINE=1038
 
 npx svelte-kit sync
 

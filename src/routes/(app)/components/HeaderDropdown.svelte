@@ -8,7 +8,6 @@
 		trigger: Snippet<[{ isOpen: boolean }]>;
 		children: Snippet;
 		width?: string;
-		id?: string;
 		onopen?: () => void;
 	}
 
@@ -17,7 +16,7 @@
 
 	// Close on navigation
 	$effect(() => {
-		$page.url;
+		void $page.url;
 		untrack(() => close());
 	});
 

@@ -12,7 +12,7 @@ export interface ScoreColors {
 export function getScoreGradient(score: number): ScoreColors {
 	const s = Math.max(0, Math.min(100, score));
 
-	let h: number, sat: number, lightBg: number, lightText: number;
+	let h: number;
 
 	if (s <= 50) {
 		h = 210 - (s / 50) * 30;
@@ -22,9 +22,9 @@ export function getScoreGradient(score: number): ScoreColors {
 		h = 140;
 	}
 
-	sat = 60 + (Math.min(s, 80) / 80) * 20;
-	lightBg = 92 - (Math.min(s, 80) / 80) * 10;
-	lightText = 35 - (Math.min(s, 80) / 80) * 10;
+	const sat = 60 + (Math.min(s, 80) / 80) * 20;
+	const lightBg = 92 - (Math.min(s, 80) / 80) * 10;
+	const lightText = 35 - (Math.min(s, 80) / 80) * 10;
 
 	let glow: string | null = null;
 	if (s >= 80) {

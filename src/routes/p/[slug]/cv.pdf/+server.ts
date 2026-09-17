@@ -58,7 +58,7 @@ export const GET: RequestHandler = async ({ params, url, locals, getClientAddres
 
 	// Query latest CV PDF export from profile_exports
 	// Try with raw version name first (new format), then fall back to transformed format (old exports)
-	let exportWithFile = null;
+	let exportWithFile: Awaited<ReturnType<typeof getLatestExportWithFile>>;
 
 	if (effectiveVersion) {
 		// Try raw version name first (new format)

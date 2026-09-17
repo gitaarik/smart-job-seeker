@@ -3,10 +3,9 @@
 	export type Proposal = {
 		/** agent_message_proposals row — one turn can carry several. */
 		id: number;
-		capability: string;
 		title: string;
 		rationale: string;
-		target: { id: number; label: string };
+		target: { label: string };
 		changes: { field: string; label: string; from: string; to: string }[];
 		applied_at: string | null;
 	};

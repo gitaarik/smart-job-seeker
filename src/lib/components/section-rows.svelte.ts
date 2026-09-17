@@ -39,6 +39,7 @@
  * the section's order is one write, not one per row.
  */
 
+import { SvelteMap } from 'svelte/reactivity';
 import { autoSaveField, type AutoSaveField, type SaveStatus } from './auto-save.svelte';
 
 /** One row, its server identity, and the save that keeps them in step. */
@@ -368,7 +369,7 @@ export function sectionRows<T extends Record<string, unknown>, R extends { id: n
 		async reorder(order) {
 			// Local first, so the list settles where it was dropped whatever the
 			// request does; a failure surfaces as a thrown error the caller reports.
-			const byKey = new Map(entries.map((e) => [e.key, e]));
+			const byKey = new SvelteMap(entries.map((e) => [e.key, e]));
 			const next = order.map((row) => byKey.get(row.key)).filter((e): e is Entry => !!e);
 			entries.splice(0, entries.length, ...next);
 

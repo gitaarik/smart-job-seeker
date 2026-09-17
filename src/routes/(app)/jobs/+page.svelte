@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { navigating } from '$app/stores';
 	import { tick } from 'svelte';
+	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faBookmark,
@@ -224,7 +225,7 @@
 	let importedByString = $derived([...selectedImportedBy].join(','));
 
 	function buildUrl(overrides: Record<string, string | undefined> = {}) {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		const st = overrides.status ?? statusString;
 		const q = overrides.search ?? searchInput;
 		const p = overrides.platform ?? platformString;
@@ -264,7 +265,7 @@
 	}
 
 	function toggleSetValue(set: Set<string>, value: string): Set<string> {
-		const next = new Set(set);
+		const next = new SvelteSet(set);
 		if (next.has(value)) {
 			next.delete(value);
 		} else {

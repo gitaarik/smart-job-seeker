@@ -12,7 +12,7 @@
 	import HeaderDropdown from './HeaderDropdown.svelte';
 
 	interface Props {
-		user: { id: string; name: string | null; email: string };
+		user: { name: string | null; email: string };
 	}
 
 	let { user }: Props = $props();
@@ -21,7 +21,7 @@
 	const initial = $derived(displayName.charAt(0).toUpperCase());
 </script>
 
-<HeaderDropdown id="user" width="w-56">
+<HeaderDropdown width="w-56">
 	{#snippet trigger({ isOpen })}
 		<div class="flex items-center gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-white/10">
 			<div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
