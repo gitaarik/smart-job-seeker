@@ -11,18 +11,22 @@
 		faEyeSlash,
 		faFileAlt,
 		faFilePdf,
+		faLayerGroup,
+		faListCheck,
 		faMagnifyingGlass,
+		faPaperPlane,
 		faPen,
 		faPlus,
 		faRotate,
 		faSave,
-		faTrash,
 		faWandMagicSparkles,
 		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import Card from '../../../components/Card.svelte';
 	import AddSkillToProfile from '../../../jobs/components/AddSkillToProfile.svelte';
 	import ItemPicker from './ItemPicker.svelte';
+	import TailoredActions from './TailoredActions.svelte';
 	import TailoredDetails from './TailoredDetails.svelte';
 	import type { Decision, LastRun } from './types';
 	import type { ItemGroup } from '$lib/tailoring';
@@ -61,9 +65,16 @@
 	 * with separate fixes; collapsing them into one "gaps" list would lose which
 	 * lever applies.
 	 *
+	 * Three sections, one question each: what is being sent, how it holds up
+	 * against this job, and what is on the version built for it. They were one
+	 * card, and nothing marked where one question ended and the next began, so a
+	 * switch in the last read as an edit to the document named in the first. It
+	 * is that only when the record names the tailored version, which is why the
+	 * first section now says so whenever it doesn't.
+	 *
 	 * The host page must expose `setCvSent`, `clearCvSent`, `tailorVersion`,
-	 * `includeInTailored`, `discardTailored`, `keepDecision`, `rejectDecision`
-	 * and `promoteTailored`.
+	 * `includeInTailored`, `discardTailored`, `keepDecision`, `rejectDecision`,
+	 * `promoteTailored`, `setItemState` and `generatePdfs`.
 	 */
 	let {
 		app,
@@ -184,7 +195,6 @@
 
 	let working = $state(false);
 	let cvSaved = $state(false);
-	let confirmingDiscard = $state(false);
 
 	/**
 	 * The library picker, opened by "Change" or by the disclosure under the
@@ -413,6 +423,11 @@
 	/** Hidden skills whose name the document already prints inside another. */
 	let carried = $derived(hiddenSkills.filter((s) => s.carriedBy));
 
+	/** Everything the checks raise, across all four. */
+	let checkCount = $derived(
+		hiddenEvidence.length + hiddenSkills.length + creditedNotNamed.length + heldBackRoles.length
+	);
+
 	/**
 	 * Whether "no version" names something sendable.
 	 *
@@ -584,6 +599,37 @@
 				: 'Make the PDF'
 	);
 
+	/** The document the checks describe, by name: the picker's while it is open. */
+	let checkedLabel = $derived(
+		picking
+			? versionSlug
+				? nameOf(versionSlug) || versionSlug
+				: `your plain ${docLabel}`
+			: recordedLabel
+	);
+
+	/**
+	 * Which view of the contents is showing. Everything by default, because that
+	 * is where the switches are; a run that has just finished opens on what it
+	 * changed, which is the part worth reading right then.
+	 */
+	let contentsView = $state<'everything' | 'changes'>('everything');
+	$effect(() => {
+		if (lastRun) contentsView = 'changes';
+	});
+	let itemTotal = $derived(items.reduce((n, group) => n + group.rows.length, 0));
+	/** Counted against what actually prints: a row inside a hidden role does not. */
+	let itemsShowing = $derived(
+		items.reduce((n, group) => n + (group.on ? group.rows.filter((r) => r.on).length : 0), 0)
+	);
+	/** Decisions that change the document; see Decision.keptAsBase. */
+	let changeCount = $derived(decisions.filter((d) => !d.keptAsBase).length);
+	let tailoredBaseName = $derived(tailored?.baseSlug ? nameOf(tailored.baseSlug) : '');
+	let tailoredHasPdf = $derived(
+		!!tailored &&
+			pdfKeys.includes(exportKey(docType, tailored.slug, app.cv_template_sent, app.cv_locale_sent))
+	);
+
 	function cancelPicking() {
 		versionSlug = app.cv_version_sent || '';
 		docType = app.cv_sent_through === 'cv' ? 'cv' : 'resume';
@@ -642,63 +688,54 @@
 	{/if}
 {/snippet}
 
+{#snippet sectionHeading(icon: IconDefinition, title: string, detail = '')}
+	<div class="mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+		<h3 class="flex items-center gap-2 text-sm font-semibold text-[var(--dash-text)]">
+			<FontAwesomeIcon {icon} class="h-3.5 w-3.5 text-[var(--dash-primary)]" />
+			{title}
+		</h3>
+		{#if detail}
+			<span class="text-xs text-[var(--dash-text-secondary)]">{detail}</span>
+		{/if}
+	</div>
+{/snippet}
+
 <div>
 	<div class="mb-3 flex items-center gap-2">
 		<FontAwesomeIcon icon={faFileAlt} class="h-5 w-5 text-[var(--dash-primary)]" />
 		<h2 class="text-lg font-semibold text-[var(--dash-text)]">Document for this job</h2>
 	</div>
 
-	<Card padding="lg">
-		{#if recorded && !picking}
-			<!-- The answer, not the question. Open, PDF and Delete live here rather
-			     than in a footer below the warnings: they act on this document, and
-			     putting them beside its name is what makes the row read as a
-			     record. -->
-			<div
-				class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-3"
-			>
-				<div class="min-w-0">
-					<p
-						class="text-[10px] font-semibold tracking-wide text-[var(--dash-text-secondary)] uppercase"
-					>
-						Sending
-					</p>
-					<p class="truncate text-sm font-medium text-[var(--dash-text)]">
-						{recordedLabel}<span class="font-normal text-[var(--dash-text-secondary)]">
-							· {app.cv_sent_through === 'cv' ? 'CV' : 'Resume'}{sentTemplateName
-								? ` · ${sentTemplateName}`
-								: ''}{sentLocaleName ? ` · ${sentLocaleName}` : ''}{choseTailored
-								? ' · tailored for this job'
-								: ''}</span
-						>
-					</p>
-				</div>
-				<div class="flex shrink-0 flex-wrap items-center gap-3">
-					{#if app.cv_version_sent && app.cv_sent_through && profileSlug}
-						{@const dt = app.cv_sent_through as DocType}
-						<!-- eslint-disable svelte/no-navigation-without-resolve -->
-						<a
-							href={profileDocUrl({
-								profileSlug,
-								docType: dt,
-								versionSlug: app.cv_version_sent,
-								template: app.cv_template_sent,
-								locale: app.cv_locale_sent
-							})}
-							target="_blank"
-							rel="noopener"
-							class="dash-link-ext"
-						>
-							<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3" />
-							Open
-						</a>
-						{#if recordedHasPdf}
+	<div class="space-y-4">
+		<Card padding="lg">
+			{@render sectionHeading(faPaperPlane, 'Sending')}
+			{#if recorded && !picking}
+				<!-- The answer, not the question. Open and PDF live here rather than in a
+			     footer below the checks: they act on this document, and putting them
+			     beside its name is what makes the row read as a record. -->
+				<div
+					class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-3"
+				>
+					<div class="min-w-0">
+						<p class="truncate text-sm font-medium text-[var(--dash-text)]">
+							{recordedLabel}<span class="font-normal text-[var(--dash-text-secondary)]">
+								· {app.cv_sent_through === 'cv' ? 'CV' : 'Resume'}{sentTemplateName
+									? ` · ${sentTemplateName}`
+									: ''}{sentLocaleName ? ` · ${sentLocaleName}` : ''}{choseTailored
+									? ' · tailored for this job'
+									: ''}</span
+							>
+						</p>
+					</div>
+					<div class="flex flex-wrap items-center gap-3">
+						{#if app.cv_version_sent && app.cv_sent_through && profileSlug}
+							{@const dt = app.cv_sent_through as DocType}
+							<!-- eslint-disable svelte/no-navigation-without-resolve -->
 							<a
 								href={profileDocUrl({
 									profileSlug,
 									docType: dt,
 									versionSlug: app.cv_version_sent,
-									pdf: true,
 									template: app.cv_template_sent,
 									locale: app.cv_locale_sent
 								})}
@@ -706,11 +743,28 @@
 								rel="noopener"
 								class="dash-link-ext"
 							>
-								<FontAwesomeIcon icon={faFilePdf} class="h-3 w-3" />
-								PDF
+								<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3" />
+								Open
 							</a>
-						{/if}
-						<!-- Offered whether or not a file already exists, because the two
+							{#if recordedHasPdf}
+								<a
+									href={profileDocUrl({
+										profileSlug,
+										docType: dt,
+										versionSlug: app.cv_version_sent,
+										pdf: true,
+										template: app.cv_template_sent,
+										locale: app.cv_locale_sent
+									})}
+									target="_blank"
+									rel="noopener"
+									class="dash-link-ext"
+								>
+									<FontAwesomeIcon icon={faFilePdf} class="h-3 w-3" />
+									PDF
+								</a>
+							{/if}
+							<!-- Offered whether or not a file already exists, because the two
 						     cases the applicant reaches for it in are the same act. With no
 						     stored export the PDF link would 404 and this is the way to one;
 						     with a stale one — a template edited, a translation corrected,
@@ -720,615 +774,748 @@
 						     never lists `app-<id>` versions, and re-saving the same
 						     template and language is a no-op by design. Hiding it once a file
 						     existed left no way at all. -->
-						<form
-							method="POST"
-							action="?/generatePdfs"
-							use:enhance={() => {
-								makingPdf = true;
-								return async ({ update }) => {
-									await update();
-									makingPdf = false;
-								};
-							}}
-						>
-							<button
-								type="submit"
-								disabled={makingPdf}
-								class="dash-link-ext disabled:opacity-70 {recordedHasPdf
-									? 'border border-[var(--dash-border)] !bg-[var(--dash-bg)] !text-[var(--dash-text-secondary)] hover:!bg-[var(--dash-primary)]/10 hover:!text-[var(--dash-primary)]'
-									: '!bg-amber-500/10 !text-amber-600 hover:!bg-amber-500/20'}"
+							<form
+								method="POST"
+								action="?/generatePdfs"
+								use:enhance={() => {
+									makingPdf = true;
+									return async ({ update }) => {
+										await update();
+										makingPdf = false;
+									};
+								}}
 							>
-								<FontAwesomeIcon
-									icon={makingPdf ? faCircleNotch : recordedHasPdf ? faRotate : faFilePdf}
-									spin={makingPdf}
-									class="h-3 w-3"
-								/>
-								{pdfButtonLabel}
-							</button>
-						</form>
-						<!-- eslint-enable svelte/no-navigation-without-resolve -->
-					{/if}
-					<button
-						type="button"
-						onclick={() => {
-							picking = true;
-							touched = false;
-						}}
-						class="inline-flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)]/60 hover:text-[var(--dash-primary)]"
-					>
-						<FontAwesomeIcon icon={faPen} class="h-3 w-3" />
-						Change
-					</button>
-					{#if choseTailored}
-						<!-- Deleting the artifact this row names belongs beside opening it.
-						     A card that routinely lists a dozen decisions put this a screen
-						     and a half down, where nobody found it. -->
+								<button
+									type="submit"
+									disabled={makingPdf}
+									class="dash-link-ext disabled:opacity-70 {recordedHasPdf
+										? 'border border-[var(--dash-border)] !bg-[var(--dash-bg)] !text-[var(--dash-text-secondary)] hover:!bg-[var(--dash-primary)]/10 hover:!text-[var(--dash-primary)]'
+										: '!bg-amber-500/10 !text-amber-600 hover:!bg-amber-500/20'}"
+								>
+									<FontAwesomeIcon
+										icon={makingPdf ? faCircleNotch : recordedHasPdf ? faRotate : faFilePdf}
+										spin={makingPdf}
+										class="h-3 w-3"
+									/>
+									{pdfButtonLabel}
+								</button>
+							</form>
+							<!-- eslint-enable svelte/no-navigation-without-resolve -->
+						{/if}
 						<button
 							type="button"
-							onclick={() => (confirmingDiscard = true)}
-							disabled={working}
-							title="Delete this tailored version"
-							class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)] disabled:opacity-70"
+							onclick={() => {
+								picking = true;
+								touched = false;
+							}}
+							class="inline-flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)]/60 hover:text-[var(--dash-primary)]"
 						>
-							<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
-							Delete
+							<FontAwesomeIcon icon={faPen} class="h-3 w-3" />
+							Change
 						</button>
-					{/if}
+					</div>
 				</div>
-			</div>
-			{#if cvSaved}
-				<p class="mt-2 flex items-center gap-1.5 text-[10px] text-[var(--dash-success)]">
-					<FontAwesomeIcon icon={faCheck} class="h-2.5 w-2.5" />
-					Saved
-				</p>
-			{/if}
-
-			{#if confirmingDiscard && tailored}
-				<div
-					class="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--dash-error)]/30 bg-[var(--dash-error)]/5 p-3"
-				>
-					<p class="flex-1 text-xs text-[var(--dash-text)]">
-						Delete this version and its {decisions.length}
-						{decisions.length === 1 ? 'change' : 'changes'}? Your own versions and your profile stay
-						as they are, but the record of what you're sending clears with it.
+				{#if cvSaved}
+					<p class="mt-2 flex items-center gap-1.5 text-[10px] text-[var(--dash-success)]">
+						<FontAwesomeIcon icon={faCheck} class="h-2.5 w-2.5" />
+						Saved
 					</p>
-					<form
-						method="POST"
-						action="?/discardTailored"
-						use:enhance={() => {
-							const done = track();
-							confirmingDiscard = false;
-							return done;
-						}}
-					>
+				{/if}
+			{:else}
+				<!-- Nothing chosen yet, or the applicant asked to change it. The document
+			     type governs everything below: what gets tailored, what the warnings
+			     answer about, and what the links open. -->
+				<div class="mb-4 inline-flex overflow-hidden rounded-lg border border-[var(--dash-border)]">
+					{#each DOC_TYPES as opt, i (opt.value)}
+						<button
+							type="button"
+							onclick={() => {
+								docType = opt.value;
+								touched = true;
+							}}
+							class="px-3 py-1.5 text-sm transition-colors {docType === opt.value
+								? 'bg-[var(--dash-primary)]/10 font-medium text-[var(--dash-primary)]'
+								: 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0
+								? 'border-l border-[var(--dash-border)]'
+								: ''}"
+						>
+							{opt.label}
+						</button>
+					{/each}
+				</div>
+
+				{#if !pickerOpen}
+					<!-- The offer. One button, and the base stated under it rather than
+				     asked in front of it. -->
+					<form method="POST" action="?/tailorVersion" use:enhance={track}>
+						<input type="hidden" name="doc_type" value={docType} />
+						<input type="hidden" name="base_slug" value={baseSlug} />
+						<p class="mb-3 text-xs text-[var(--dash-text-secondary)]">
+							Build a {docLabel} for this job: it picks what to <em>show</em> from everything on your
+							profile — which achievements, which side projects, and any skill this job requires that
+							your document would otherwise hide. It never rewrites your words.
+						</p>
+						{#if specWarning}
+							<!-- Before the button, not after the result: every pass below keys off
+						     the job's required skills, and with none it quietly does less and
+						     hands back a document that looks exactly like a good one. -->
+							<p
+								class="mb-3 rounded-lg border border-[var(--dash-warning-border,var(--dash-border))] bg-[var(--dash-warning-bg,var(--dash-bg-hover))] px-3 py-2 text-xs text-[var(--dash-text-secondary)]"
+							>
+								{specWarning.message}
+							</p>
+						{/if}
+						{@render presentationControls()}
 						<button
 							type="submit"
 							disabled={working}
-							class="inline-flex items-center gap-1.5 rounded-lg bg-[var(--dash-error)] px-3 py-1.5 text-xs text-white hover:opacity-90 disabled:opacity-70"
+							class="flex items-center justify-center gap-2 rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:opacity-70"
 						>
-							<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
-							Delete it
+							{#if working}
+								<FontAwesomeIcon icon={faCircleNotch} spin class="h-3.5 w-3.5" />
+								Working…
+							{:else}
+								<FontAwesomeIcon icon={faWandMagicSparkles} class="h-3.5 w-3.5" />
+								Tailor a {docLabel} for this job
+							{/if}
 						</button>
-					</form>
-					<button
-						type="button"
-						onclick={() => (confirmingDiscard = false)}
-						class="text-xs text-[var(--dash-text-secondary)] hover:underline"
-					>
-						Cancel
-					</button>
-				</div>
-			{/if}
-		{:else}
-			<!-- Nothing chosen yet, or the applicant asked to change it. The document
-			     type governs everything below: what gets tailored, what the warnings
-			     answer about, and what the links open. -->
-			<div class="mb-4 inline-flex overflow-hidden rounded-lg border border-[var(--dash-border)]">
-				{#each DOC_TYPES as opt, i (opt.value)}
-					<button
-						type="button"
-						onclick={() => {
-							docType = opt.value;
-							touched = true;
-						}}
-						class="px-3 py-1.5 text-sm transition-colors {docType === opt.value
-							? 'bg-[var(--dash-primary)]/10 font-medium text-[var(--dash-primary)]'
-							: 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'} {i > 0
-							? 'border-l border-[var(--dash-border)]'
-							: ''}"
-					>
-						{opt.label}
-					</button>
-				{/each}
-			</div>
-
-			{#if !pickerOpen}
-				<!-- The offer. One button, and the base stated under it rather than
-				     asked in front of it. -->
-				<form method="POST" action="?/tailorVersion" use:enhance={track}>
-					<input type="hidden" name="doc_type" value={docType} />
-					<input type="hidden" name="base_slug" value={baseSlug} />
-					<p class="mb-3 text-xs text-[var(--dash-text-secondary)]">
-						Build a {docLabel} for this job: it picks what to <em>show</em> from everything on your profile
-						— which achievements, which side projects, and any skill this job requires that your document
-						would otherwise hide. It never rewrites your words.
-					</p>
-					{#if specWarning}
-						<!-- Before the button, not after the result: every pass below keys off
-						     the job's required skills, and with none it quietly does less and
-						     hands back a document that looks exactly like a good one. -->
-						<p
-							class="mb-3 rounded-lg border border-[var(--dash-warning-border,var(--dash-border))] bg-[var(--dash-warning-bg,var(--dash-bg-hover))] px-3 py-2 text-xs text-[var(--dash-text-secondary)]"
-						>
-							{specWarning.message}
-						</p>
-					{/if}
-					{@render presentationControls()}
-					<button
-						type="submit"
-						disabled={working}
-						class="flex items-center justify-center gap-2 rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:opacity-70"
-					>
-						{#if working}
-							<FontAwesomeIcon icon={faCircleNotch} spin class="h-3.5 w-3.5" />
-							Working…
-						{:else}
-							<FontAwesomeIcon icon={faWandMagicSparkles} class="h-3.5 w-3.5" />
-							Tailor a {docLabel} for this job
-						{/if}
-					</button>
-					<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
-						<!-- A fact and a link, not an explanation. Basing on the version you
+						<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
+							<!-- A fact and a link, not an explanation. Basing on the version you
 						     already send is the obvious thing to do, and saying why the
 						     obvious thing was done is noise in front of a button — the
 						     sentence that lived here explained the base at length and was
 						     read as "this decides the contents" twice by the person who
 						     built it. `baseWhy` is set only when the ranking overrode that
 						     default, which is the one time the choice is worth a word. -->
-						Based on
-						<strong class="font-medium">{baseName || `your plain ${docLabel}`}</strong>{#if baseWhy}
-							— {baseWhy}{/if}.
-						{#if versions.length > 0}
-							<button
-								type="button"
-								onclick={() => (showBasePicker = !showBasePicker)}
-								class="text-[var(--dash-primary)] hover:underline"
-							>
-								{showBasePicker ? 'Never mind' : 'Change'}
-							</button>
-						{/if}
-					</p>
-					{#if showBasePicker}
-						<!-- A real choice, not a formality. A run can reach a bullet, a
+							Based on
+							<strong class="font-medium">{baseName || `your plain ${docLabel}`}</strong
+							>{#if baseWhy}
+								— {baseWhy}{/if}.
+							{#if versions.length > 0}
+								<button
+									type="button"
+									onclick={() => (showBasePicker = !showBasePicker)}
+									class="text-[var(--dash-primary)] hover:underline"
+								>
+									{showBasePicker ? 'Never mind' : 'Change'}
+								</button>
+							{/if}
+						</p>
+						{#if showBasePicker}
+							<!-- A real choice, not a formality. A run can reach a bullet, a
 						     held-back skill, and a role hidden only by a version tag — but
 						     never a skill group it leaves out, nor a role kept off this
 						     document on purpose. That is what the count beside each option
 						     is: what this base puts past reach. -->
-						<select
-							value={baseSlug}
-							onchange={(e) => (chosenBase = e.currentTarget.value)}
-							aria-label="Version to start from"
-							class="mt-2 rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-xs focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-						>
-							<option value="">Your plain {docLabel}{reachLabel('')}</option>
-							{#each versions as v (v.slug)}
-								<option value={v.slug}>{v.name}{reachLabel(v.slug)}</option>
-							{/each}
-						</select>
-					{/if}
-				</form>
+							<select
+								value={baseSlug}
+								onchange={(e) => (chosenBase = e.currentTarget.value)}
+								aria-label="Version to start from"
+								class="mt-2 rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-xs focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+							>
+								<option value="">Your plain {docLabel}{reachLabel('')}</option>
+								{#each versions as v (v.slug)}
+									<option value={v.slug}>{v.name}{reachLabel(v.slug)}</option>
+								{/each}
+							</select>
+						{/if}
+					</form>
 
-				<!-- The other case, kept quiet: a job that isn't really in here, or one
+					<!-- The other case, kept quiet: a job that isn't really in here, or one
 				     that doesn't need its own document. -->
-				<div class="mt-4 border-t border-[var(--dash-border)] pt-3">
-					<button
-						type="button"
-						onclick={() => (picking = true)}
-						class="text-xs text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
-					>
-						Or send one of my versions as it is →
-					</button>
-				</div>
-			{:else}
-				{#if !hasJob}
-					<p class="mb-3 text-xs text-[var(--dash-text-secondary)]">
-						Link a job to this application to tailor a {docLabel} for it. Until then, record which of
-						your versions you're sending.
-					</p>
-				{/if}
-				<form method="POST" action="?/setCvSent" use:enhance={handleCvSubmit}>
-					<input type="hidden" name="cv_sent_through" value={docType} />
-					{@render presentationControls()}
-					<div class="flex flex-col gap-2 sm:flex-row">
-						<select
-							name="version_slug"
-							bind:value={versionSlug}
-							onchange={() => (touched = true)}
-							aria-label="Version to send"
-							class="flex-1 rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+					<div class="mt-4 border-t border-[var(--dash-border)] pt-3">
+						<button
+							type="button"
+							onclick={() => (picking = true)}
+							class="text-xs text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 						>
-							{#if offerPlain}
-								<option value="">Your plain {docLabel} (no version){covLabel('')}</option>
-							{/if}
-							{#each versions as v (v.slug)}
-								<option value={v.slug}>{v.name}{covLabel(v.slug)}</option>
-							{/each}
-							{#if tailored}
-								<option value={tailored.slug}>
-									{tailored.name} — tailored for this job{covLabel(tailored.slug)}
-								</option>
-							{/if}
-						</select>
-						<!-- The label says when the save is also a render. Exports are
+							Or send one of my versions as it is →
+						</button>
+					</div>
+				{:else}
+					{#if !hasJob}
+						<p class="mb-3 text-xs text-[var(--dash-text-secondary)]">
+							Link a job to this application to tailor a {docLabel} for it. Until then, record which of
+							your versions you're sending.
+						</p>
+					{/if}
+					<form method="POST" action="?/setCvSent" use:enhance={handleCvSubmit}>
+						<input type="hidden" name="cv_sent_through" value={docType} />
+						{@render presentationControls()}
+						<div class="flex flex-col gap-2 sm:flex-row">
+							<select
+								name="version_slug"
+								bind:value={versionSlug}
+								onchange={() => (touched = true)}
+								aria-label="Version to send"
+								class="flex-1 rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+							>
+								{#if offerPlain}
+									<option value="">Your plain {docLabel} (no version){covLabel('')}</option>
+								{/if}
+								{#each versions as v (v.slug)}
+									<option value={v.slug}>{v.name}{covLabel(v.slug)}</option>
+								{/each}
+								{#if tailored}
+									<option value={tailored.slug}>
+										{tailored.name} — tailored for this job{covLabel(tailored.slug)}
+									</option>
+								{/if}
+							</select>
+							<!-- The label says when the save is also a render. Exports are
 						     keyed by version, template and language together, so a
 						     combination nobody has exported yet has no PDF — and the save
 						     makes one rather than leaving a dead link behind. It takes
 						     seconds, which is worth a word in front of the click. -->
-						<button
-							type="submit"
-							disabled={saving}
-							class="flex items-center justify-center gap-2 rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:opacity-70"
-						>
-							<FontAwesomeIcon
-								icon={saving ? faCircleNotch : faSave}
-								spin={saving}
-								class="h-3.5 w-3.5"
-							/>
-							{#if saving}
-								{pickedHasPdf ? 'Saving…' : 'Making the PDF…'}
-							{:else}
-								{recorded ? 'Save' : 'Set'}{pickedHasPdf ? '' : ' & make the PDF'}
+							<button
+								type="submit"
+								disabled={saving}
+								class="flex items-center justify-center gap-2 rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:opacity-70"
+							>
+								<FontAwesomeIcon
+									icon={saving ? faCircleNotch : faSave}
+									spin={saving}
+									class="h-3.5 w-3.5"
+								/>
+								{#if saving}
+									{pickedHasPdf ? 'Saving…' : 'Making the PDF…'}
+								{:else}
+									{recorded ? 'Save' : 'Set'}{pickedHasPdf ? '' : ' & make the PDF'}
+								{/if}
+							</button>
+							<!-- eslint-disable svelte/no-navigation-without-resolve -->
+							{#if previewUrl(versionSlug)}
+								<a
+									href={previewUrl(versionSlug)}
+									target="_blank"
+									rel="noopener"
+									class="flex items-center justify-center gap-1.5 rounded-lg border border-[var(--dash-border)] px-3 py-2 text-sm text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)]/60 hover:text-[var(--dash-primary)]"
+								>
+									<FontAwesomeIcon icon={faEye} class="h-3.5 w-3.5" />
+									Preview
+								</a>
 							{/if}
-						</button>
-						<!-- eslint-disable svelte/no-navigation-without-resolve -->
-						{#if previewUrl(versionSlug)}
+							<!-- eslint-enable svelte/no-navigation-without-resolve -->
+							{#if recorded || picking}
+								<button
+									type="button"
+									onclick={cancelPicking}
+									class="flex items-center justify-center rounded-lg px-3 py-2 text-sm text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-text)]"
+								>
+									Cancel
+								</button>
+							{/if}
+						</div>
+					</form>
+				{/if}
+			{/if}
+
+			{#if tailored && !choseTailored && !picking}
+				<!-- The version built for this job, when the record names something
+			     else. The contents section edits THAT version whatever the record
+			     says, and without a word here a switch there reads as an edit to the
+			     document named above. It did, to the person who built it. -->
+				<div
+					class="mt-3 rounded-lg border border-[var(--dash-primary)]/30 bg-[var(--dash-primary)]/5 p-3"
+				>
+					<p class="text-xs text-[var(--dash-text)]">
+						{#if recorded}
+							You also have a {docLabel} tailored for this job,
+							<strong class="font-medium">{tailored.name}</strong>, but you're sending {recordedLabel}.
+							“What's on it” below edits the tailored one.
+						{:else}
+							You have a {docLabel} tailored for this job:
+							<strong class="font-medium">{tailored.name}</strong>.
+						{/if}
+					</p>
+					<div class="mt-2 flex flex-wrap items-center gap-3">
+						<form method="POST" action="?/setCvSent" use:enhance={handleCvSubmit}>
+							<input type="hidden" name="cv_sent_through" value={docType} />
+							<input type="hidden" name="version_slug" value={tailored.slug} />
+							<!-- `setCvSent` writes the template and language from what it is
+						     given, so a form naming only the version would change the
+						     version AND silently reset the presentation. -->
+							<input type="hidden" name="template" value={app.cv_template_sent ?? ''} />
+							<input type="hidden" name="locale" value={app.cv_locale_sent ?? ''} />
+							<button
+								type="submit"
+								disabled={saving}
+								class="inline-flex items-center gap-1.5 rounded border border-[var(--dash-primary)]/40 bg-[var(--dash-card)] px-2 py-1 text-xs text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary)]/10 disabled:opacity-70"
+							>
+								<FontAwesomeIcon
+									icon={saving ? faCircleNotch : faCheck}
+									spin={saving}
+									class="h-2.5 w-2.5"
+								/>
+								{recorded ? 'Send this one instead' : 'Send this one'}
+							</button>
+						</form>
+						{#if profileSlug}
+							<!-- eslint-disable svelte/no-navigation-without-resolve -->
 							<a
-								href={previewUrl(versionSlug)}
+								href={profileDocUrl({
+									profileSlug,
+									docType,
+									versionSlug: tailored.slug,
+									template: app.cv_template_sent,
+									locale: app.cv_locale_sent
+								})}
 								target="_blank"
 								rel="noopener"
-								class="flex items-center justify-center gap-1.5 rounded-lg border border-[var(--dash-border)] px-3 py-2 text-sm text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)]/60 hover:text-[var(--dash-primary)]"
+								class="dash-link-ext"
 							>
-								<FontAwesomeIcon icon={faEye} class="h-3.5 w-3.5" />
-								Preview
+								<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3" />
+								Open
 							</a>
+							{#if tailoredHasPdf}
+								<a
+									href={profileDocUrl({
+										profileSlug,
+										docType,
+										versionSlug: tailored.slug,
+										pdf: true,
+										template: app.cv_template_sent,
+										locale: app.cv_locale_sent
+									})}
+									target="_blank"
+									rel="noopener"
+									class="dash-link-ext"
+								>
+									<FontAwesomeIcon icon={faFilePdf} class="h-3 w-3" />
+									PDF
+								</a>
+							{/if}
+							<!-- eslint-enable svelte/no-navigation-without-resolve -->
 						{/if}
-						<!-- eslint-enable svelte/no-navigation-without-resolve -->
-						{#if recorded || picking}
+					</div>
+				</div>
+			{/if}
+
+			{#if recorded}
+				<div class="mt-4">
+					{#if confirmingClear}
+						<div class="inline-flex flex-wrap items-center gap-2">
+							<span class="text-[10px] text-[var(--dash-text-secondary)]">
+								Forget that you're sending {recordedLabel}?
+							</span>
+							<form
+								method="POST"
+								action="?/clearCvSent"
+								use:enhance={() => {
+									const done = handleClear();
+									confirmingClear = false;
+									return done;
+								}}
+							>
+								<button type="submit" class="text-[10px] text-[var(--dash-error)] hover:underline">
+									Clear
+								</button>
+							</form>
 							<button
 								type="button"
-								onclick={cancelPicking}
-								class="flex items-center justify-center rounded-lg px-3 py-2 text-sm text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-text)]"
+								onclick={() => (confirmingClear = false)}
+								class="text-[10px] text-[var(--dash-text-secondary)] hover:underline"
 							>
 								Cancel
 							</button>
-						{/if}
-					</div>
-				</form>
+						</div>
+					{:else}
+						<button
+							type="button"
+							onclick={() => (confirmingClear = true)}
+							title="Forget what was recorded here"
+							class="inline-flex items-center gap-1.5 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)]"
+						>
+							<FontAwesomeIcon icon={faXmark} class="h-2.5 w-2.5" />
+							Clear this record
+						</button>
+					{/if}
+				</div>
 			{/if}
-		{/if}
+		</Card>
 
-		<!-- Evidence, not vocabulary. The skills strip below answers "does this
+		{#if hasJob}
+			<Card padding="lg">
+				{@render sectionHeading(
+					faListCheck,
+					'Check against the job',
+					describing ? `for ${checkedLabel}` : ''
+				)}
+				{#if !describing && creditedNotNamed.length === 0}
+					<p class="text-xs text-[var(--dash-text-secondary)]">
+						Once you choose what you're sending, it's checked against this job here.
+					</p>
+				{:else if checkCount === 0 && lifted.length === 0}
+					<p class="text-xs text-[var(--dash-text-secondary)]">Nothing to flag.</p>
+				{/if}
+				<div class="space-y-3">
+					<!-- Evidence, not vocabulary. The skills strip below answers "does this
 		     document say the words this job asks for"; this one answers "does it
 		     show the work". A missing keyword costs you a search hit, a missing
 		     bullet costs you the proof. The bar is comparative: only things
 		     ranking above half of what this document DOES show, so a sensible
 		     selection says nothing at all. -->
-		{#if hiddenEvidence.length > 0}
-			<div class="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
-				<p class="flex items-start gap-2 text-xs text-[var(--dash-text)]">
-					<FontAwesomeIcon icon={faEyeSlash} class="mt-0.5 h-3 w-3 shrink-0 text-amber-600" />
-					<span>
-						This {docLabel} leaves out
-						{hiddenEvidence.length === 1 ? 'something' : `${hiddenEvidence.length} things`} that
-						{hiddenEvidence.length === 1 ? 'speaks' : 'speak'} to this job more than half of what it does
-						show.
-					</span>
-				</p>
+					{#if hiddenEvidence.length > 0}
+						<div class="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+							<p class="flex items-start gap-2 text-xs text-[var(--dash-text)]">
+								<FontAwesomeIcon icon={faEyeSlash} class="mt-0.5 h-3 w-3 shrink-0 text-amber-600" />
+								<span>
+									This {docLabel} leaves out
+									{hiddenEvidence.length === 1 ? 'something' : `${hiddenEvidence.length} things`} that
+									{hiddenEvidence.length === 1 ? 'speaks' : 'speak'} to this job more than half of what
+									it does show.
+								</span>
+							</p>
 
-				<ul class="mt-2 space-y-1.5">
-					{#each hiddenEvidence as item (item.entityType + item.entityId)}
-						<li
-							class="flex items-start justify-between gap-2 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] p-2"
-						>
-							<span class="min-w-0 flex-1 text-[11px] text-[var(--dash-text-secondary)]">
-								{item.label.length > 110 ? item.label.slice(0, 110).trimEnd() + '…' : item.label}
-							</span>
-							{#if activeIsTailored}
-								<form method="POST" action="?/includeInTailored" use:enhance={() => () => {}}>
-									<input type="hidden" name="entity_type" value={item.entityType} />
-									<input type="hidden" name="entity_id" value={item.entityId} />
-									<button
-										type="submit"
-										title="Show this on the version tailored for this job"
-										class="shrink-0 rounded border border-[var(--dash-border)] px-1.5 py-0.5 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:border-amber-500/50 hover:text-amber-700"
+							<ul class="mt-2 space-y-1.5">
+								{#each hiddenEvidence as item (item.entityType + item.entityId)}
+									<li
+										class="flex items-start justify-between gap-2 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] p-2"
 									>
-										Put it back
-									</button>
-								</form>
-							{/if}
-						</li>
-					{/each}
-				</ul>
+										<span class="min-w-0 flex-1 text-[11px] text-[var(--dash-text-secondary)]">
+											{item.label.length > 110
+												? item.label.slice(0, 110).trimEnd() + '…'
+												: item.label}
+										</span>
+										{#if activeIsTailored}
+											<form method="POST" action="?/includeInTailored" use:enhance={() => () => {}}>
+												<input type="hidden" name="entity_type" value={item.entityType} />
+												<input type="hidden" name="entity_id" value={item.entityId} />
+												<button
+													type="submit"
+													title="Show this on the version tailored for this job"
+													class="shrink-0 rounded border border-[var(--dash-border)] px-1.5 py-0.5 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:border-amber-500/50 hover:text-amber-700"
+												>
+													Put it back
+												</button>
+											</form>
+										{/if}
+									</li>
+								{/each}
+							</ul>
 
-				{#if !activeIsTailored}
-					<!-- No one-click fix here on purpose: this version's tags belong to
+							{#if !activeIsTailored}
+								<!-- No one-click fix here on purpose: this version's tags belong to
 					     every job that uses it, so "put it back" would be a change to
 					     all of them. Tailoring makes the exception job-local. -->
-					<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
-						Putting these back on <strong>{liftTarget}</strong> itself would change it for every job
-						that uses it — a {docLabel} tailored for this one keeps the exception here.
-					</p>
-				{/if}
-			</div>
-		{/if}
+								<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
+									Putting these back on <strong>{liftTarget}</strong> itself would change it for
+									every job that uses it — a {docLabel} tailored for this one keeps the exception here.
+								</p>
+							{/if}
+						</div>
+					{/if}
 
-		<!-- Credited by the match, absent from the document as a word. Distinct
+					<!-- Credited by the match, absent from the document as a word. Distinct
 		     from the strip below, and shown whether or not a version has been
 		     picked: this one is not about which document you send — no version of
 		     a profile that never says "SQL" says it. The match counts it through
 		     MySQL and PostgreSQL, and a recruiter searching the file for the word
 		     finds nothing. -->
-		{#if creditedNotNamed.length > 0}
-			<div class="mt-4 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-3">
-				<p class="flex items-start gap-2 text-xs text-[var(--dash-text)]">
-					<FontAwesomeIcon icon={faMagnifyingGlass} class="mt-0.5 h-3 w-3 shrink-0 opacity-60" />
-					<span>
-						This job's match already credits you with
-						{creditedNotNamed.length === 1 ? 'this' : 'these'}, through related skills you have —
-						but
-						{creditedNotNamed.length === 1 ? 'the word' : 'the words'} never {creditedNotNamed.length ===
-						1
-							? 'appears'
-							: 'appear'} on your {docLabel}, so a keyword search of it finds nothing.
-					</span>
-				</p>
+					{#if creditedNotNamed.length > 0}
+						<div class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-3">
+							<p class="flex items-start gap-2 text-xs text-[var(--dash-text)]">
+								<FontAwesomeIcon
+									icon={faMagnifyingGlass}
+									class="mt-0.5 h-3 w-3 shrink-0 opacity-60"
+								/>
+								<span>
+									This job's match already credits you with
+									{creditedNotNamed.length === 1 ? 'this' : 'these'}, through related skills you
+									have — but
+									{creditedNotNamed.length === 1 ? 'the word' : 'the words'} never {creditedNotNamed.length ===
+									1
+										? 'appears'
+										: 'appear'} on your {docLabel}, so a keyword search of it finds nothing.
+								</span>
+							</p>
 
-				<div class="mt-2 flex flex-wrap gap-1.5">
-					{#each creditedNotNamed as skill (skill)}
-						<AddSkillToProfile {skill} strength="strong" variant="required" defaultShowOnCv />
-					{/each}
-				</div>
+							<div class="mt-2 flex flex-wrap gap-1.5">
+								{#each creditedNotNamed as skill (skill)}
+									<AddSkillToProfile {skill} strength="strong" variant="required" defaultShowOnCv />
+								{/each}
+							</div>
 
-				<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
-					Adding one puts the word on your profile and, unless you say otherwise, on the documents
-					you send.
-				</p>
-			</div>
-		{/if}
+							<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
+								Adding one puts the word on your profile and, unless you say otherwise, on the
+								documents you send.
+							</p>
+						</div>
+					{/if}
 
-		<!-- Required skills the applicant has but this document won't print.
+					<!-- Required skills the applicant has but this document won't print.
 		     Profile-only skills are invisible by design and are stripped from the
 		     AI snapshot too, so a generated letter won't raise them either — when
 		     the job *requires* one, that silence is the wrong default. -->
-		{#if hiddenSkills.length > 0}
-			<div class="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
-				<p class="flex items-start gap-2 text-xs text-[var(--dash-text)]">
-					<FontAwesomeIcon icon={faEyeSlash} class="mt-0.5 h-3 w-3 shrink-0 text-amber-600" />
-					<span>
-						This job requires {hiddenSkills.length === 1
-							? 'a skill'
-							: `${hiddenSkills.length} skills`} you have, but
-						{hiddenSkills.length === 1 ? 'it' : 'they'} won't appear on the {docLabel} you're sending.
-					</span>
-				</p>
+					{#if hiddenSkills.length > 0}
+						<div class="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+							<p class="flex items-start gap-2 text-xs text-[var(--dash-text)]">
+								<FontAwesomeIcon icon={faEyeSlash} class="mt-0.5 h-3 w-3 shrink-0 text-amber-600" />
+								<span>
+									This job requires {hiddenSkills.length === 1
+										? 'a skill'
+										: `${hiddenSkills.length} skills`} you have, but
+									{hiddenSkills.length === 1 ? 'it' : 'they'} won't appear on the {docLabel} you're sending.
+								</span>
+							</p>
 
-				<div class="mt-2 flex flex-wrap gap-1.5">
-					{#each hiddenSkills as skill (skill.id)}
-						{#if skill.liftable && activeIsTailored}
-							<!-- On the tailored version, say it the way the generator says it:
+							<div class="mt-2 flex flex-wrap gap-1.5">
+								{#each hiddenSkills as skill (skill.id)}
+									{#if skill.liftable && activeIsTailored}
+										<!-- On the tailored version, say it the way the generator says it:
 							     an override row, keyed by the version's id. The tag route below
 							     edits the SKILL, so it survives the version it was meant for and
 							     names that version by slug — which "Keep in my versions"
 							     renames. Same visible result here, a job-local decision that
 							     travels with the version. -->
-							<form
-								method="POST"
-								action="?/includeInTailored"
-								use:enhance={() =>
-									async ({ update }) => {
-										await update();
-										lifted = [...lifted, skill.id];
-									}}
-							>
-								<input type="hidden" name="entity_type" value={OVERRIDE_ENTITIES.skill} />
-								<input type="hidden" name="entity_id" value={skill.id} />
-								<button
-									type="submit"
-									title="Show {skill.name} on this job's version"
-									class="inline-flex items-center gap-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-amber-500/50 hover:text-amber-700"
-								>
-									<FontAwesomeIcon icon={faPlus} class="h-2.5 w-2.5" />
-									{skill.name}
-								</button>
-							</form>
-						{:else if skill.liftable}
-							<button
-								type="button"
-								onclick={() => lift(skill)}
-								disabled={lifting !== null}
-								title="Add {skill.name} to {liftTarget}"
-								class="inline-flex items-center gap-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-amber-500/50 hover:text-amber-700 disabled:opacity-70"
-							>
-								{#if lifting === skill.id}
-									<FontAwesomeIcon icon={faCircleNotch} spin class="h-2.5 w-2.5" />
-								{:else}
-									<FontAwesomeIcon icon={faPlus} class="h-2.5 w-2.5" />
-								{/if}
-								{skill.name}
-							</button>
-						{:else}
-							<!-- Something other than the profile-only pair holds it back (a
+										<form
+											method="POST"
+											action="?/includeInTailored"
+											use:enhance={() =>
+												async ({ update }) => {
+													await update();
+													lifted = [...lifted, skill.id];
+												}}
+										>
+											<input type="hidden" name="entity_type" value={OVERRIDE_ENTITIES.skill} />
+											<input type="hidden" name="entity_id" value={skill.id} />
+											<button
+												type="submit"
+												title="Show {skill.name} on this job's version"
+												class="inline-flex items-center gap-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-amber-500/50 hover:text-amber-700"
+											>
+												<FontAwesomeIcon icon={faPlus} class="h-2.5 w-2.5" />
+												{skill.name}
+											</button>
+										</form>
+									{:else if skill.liftable}
+										<button
+											type="button"
+											onclick={() => lift(skill)}
+											disabled={lifting !== null}
+											title="Add {skill.name} to {liftTarget}"
+											class="inline-flex items-center gap-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-amber-500/50 hover:text-amber-700 disabled:opacity-70"
+										>
+											{#if lifting === skill.id}
+												<FontAwesomeIcon icon={faCircleNotch} spin class="h-2.5 w-2.5" />
+											{:else}
+												<FontAwesomeIcon icon={faPlus} class="h-2.5 w-2.5" />
+											{/if}
+											{skill.name}
+										</button>
+									{:else}
+										<!-- Something other than the profile-only pair holds it back (a
 							     hidden category, or a "CV only" tag on a resume), so the
 							     one-click lift wouldn't reveal it — don't pretend. -->
-							<span
-								title="Held back by another rule — edit it in your profile skills"
-								class="inline-flex items-center gap-1 rounded border border-dashed border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text-secondary)]"
-							>
-								{skill.name}
-							</span>
-						{/if}
-					{/each}
-				</div>
+										<span
+											title="Held back by another rule — edit it in your profile skills"
+											class="inline-flex items-center gap-1 rounded border border-dashed border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text-secondary)]"
+										>
+											{skill.name}
+										</span>
+									{/if}
+								{/each}
+							</div>
 
-				<!-- The case against adding them, where there is one. A keyword search
+							<!-- The case against adding them, where there is one. A keyword search
 				     for "SQL" already hits "SQL optimization" — so this is a judgement
 				     about human readers, and the applicant is better placed to make it
 				     than a substring rule is. Stated, not acted on. -->
-				{#if carried.length > 0}
-					<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
-						Already on the page inside another skill:
-						{#each carried as skill, i (skill.id)}<span
-								>{i > 0 ? ', ' : ''}<strong>{skill.name}</strong> in “{skill.carriedBy}”</span
-							>{/each}. A keyword search finds
-						{carried.length === 1 ? 'it' : 'them'} there; a reader may not.
-					</p>
-				{/if}
+							{#if carried.length > 0}
+								<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
+									Already on the page inside another skill:
+									{#each carried as skill, i (skill.id)}<span
+											>{i > 0 ? ', ' : ''}<strong>{skill.name}</strong> in “{skill.carriedBy}”</span
+										>{/each}. A keyword search finds
+									{carried.length === 1 ? 'it' : 'them'} there; a reader may not.
+								</p>
+							{/if}
 
-				<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
-					{#if activeIsTailored}
-						Adding shows the skill on this job's version only — your other documents are untouched.
-					{:else}
-						Adding puts the skill on <strong>{liftTarget}</strong>.
+							<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
+								{#if activeIsTailored}
+									Adding shows the skill on this job's version only — your other documents are
+									untouched.
+								{:else}
+									Adding puts the skill on <strong>{liftTarget}</strong>.
+								{/if}
+								Skills you can't add here are held back by another rule — change them in
+								<a href={resolve('/(app)/profile/(data)/skills')} class="dash-link">your skills</a>.
+							</p>
+
+							{#if liftError}
+								<p class="mt-1 text-[10px] text-[var(--dash-error)]">{liftError}</p>
+							{/if}
+						</div>
+					{:else if lifted.length > 0}
+						<p class="flex items-center gap-2 text-xs text-[var(--dash-success)]">
+							<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
+							Every skill this job requires now appears on the document you're sending.
+						</p>
 					{/if}
-					Skills you can't add here are held back by another rule — change them in
-					<a href={resolve('/(app)/profile/(data)/skills')} class="dash-link">your skills</a>.
-				</p>
 
-				{#if liftError}
-					<p class="mt-1 text-[10px] text-[var(--dash-error)]">{liftError}</p>
-				{/if}
-			</div>
-		{:else if lifted.length > 0}
-			<p class="mt-4 flex items-center gap-2 text-xs text-[var(--dash-success)]">
-				<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
-				Every skill this job requires now appears on the document you're sending.
-			</p>
-		{/if}
-
-		<!-- Last, and in the card's own colours rather than amber. The two above
+					<!-- Last, and in the card's own colours rather than amber. The two above
 		     are failures of the document being sent — a required skill it hides,
 		     proof it leaves out. This is not: it is the applicant's own decision
 		     about which era their resume covers, reported back because tailoring
 		     cannot reach past it. Amber said "something is wrong here" about a
 		     choice that is usually right, and it said it above the strips that
 		     genuinely are wrong. -->
-		{#if heldBackRoles.length > 0}
-			<div class="mt-4 rounded-lg border border-[var(--dash-border)] p-3">
-				<p class="flex items-start gap-2 text-xs text-[var(--dash-text-secondary)]">
-					<FontAwesomeIcon
-						icon={faEyeSlash}
-						class="mt-0.5 h-3 w-3 shrink-0 text-[var(--dash-text-secondary)]"
-					/>
-					<span>
-						{heldBackRoles.length === 1 ? 'A role' : `${heldBackRoles.length} roles`} you keep off this
-						{docLabel}
-						{heldBackRoles.length === 1 ? 'holds' : 'hold'}
-						{heldBackItems === 1 ? 'a bullet' : `${heldBackItems} bullets`} this job asks about. Tailoring
-						cannot reach {heldBackRoles.length === 1 ? 'it' : 'them'}: everything under a role the
-						document leaves out stays out with it.
-					</span>
-				</p>
+					{#if heldBackRoles.length > 0}
+						<div class="rounded-lg border border-[var(--dash-border)] p-3">
+							<p class="flex items-start gap-2 text-xs text-[var(--dash-text-secondary)]">
+								<FontAwesomeIcon
+									icon={faEyeSlash}
+									class="mt-0.5 h-3 w-3 shrink-0 text-[var(--dash-text-secondary)]"
+								/>
+								<span>
+									{heldBackRoles.length === 1 ? 'A role' : `${heldBackRoles.length} roles`} you keep off
+									this
+									{docLabel}
+									{heldBackRoles.length === 1 ? 'holds' : 'hold'}
+									{heldBackItems === 1 ? 'a bullet' : `${heldBackItems} bullets`} this job asks about.
+									Tailoring cannot reach {heldBackRoles.length === 1 ? 'it' : 'them'}: everything
+									under a role the document leaves out stays out with it.
+								</span>
+							</p>
 
-				<ul class="mt-2 space-y-1.5">
-					{#each heldBackRoles as role (role.entityType + role.entityId)}
-						<li
-							class="flex items-start justify-between gap-2 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] p-2"
+							<ul class="mt-2 space-y-1.5">
+								{#each heldBackRoles as role (role.entityType + role.entityId)}
+									<li
+										class="flex items-start justify-between gap-2 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] p-2"
+									>
+										<span class="min-w-0 flex-1 text-[11px] text-[var(--dash-text-secondary)]">
+											<strong class="font-medium text-[var(--dash-text)]">{role.label}</strong>
+											— {role.count === 1 ? '1 bullet' : `${role.count} bullets`} for this job,
+											{role.reason === 'profile'
+												? 'kept off all your documents'
+												: `kept for your ${docType === 'cv' ? 'resume' : 'CV'} only`}
+										</span>
+										<form method="POST" action="?/setItemState" use:enhance={() => () => {}}>
+											<input type="hidden" name="entity_type" value={role.entityType} />
+											<input type="hidden" name="entity_id" value={role.entityId} />
+											<input type="hidden" name="doc_type" value={docType} />
+											<input type="hidden" name="base_slug" value={pickerBase} />
+											<input type="hidden" name="on" value="1" />
+											<button
+												type="submit"
+												title="Show this role on the version tailored for this job"
+												class="shrink-0 rounded border border-[var(--dash-border)] px-1.5 py-0.5 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)]"
+											>
+												Put this role on
+											</button>
+										</form>
+									</li>
+								{/each}
+							</ul>
+
+							<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
+								This changes {activeIsTailored
+									? 'the version built for this job'
+									: "this job's own version"} only — your {docLabel} keeps {heldBackRoles.length ===
+								1
+									? 'it'
+									: 'them'} off everywhere else.
+							</p>
+						</div>
+					{/if}
+				</div>
+			</Card>
+		{/if}
+
+		{#if items.length > 0 || tailored}
+			<Card padding="lg">
+				<div class="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+					<h3 class="flex items-center gap-2 text-sm font-semibold text-[var(--dash-text)]">
+						<FontAwesomeIcon icon={faLayerGroup} class="h-3.5 w-3.5 text-[var(--dash-primary)]" />
+						What's on it
+					</h3>
+					{#if tailored}
+						<!-- Two answers about one document: what prints, and what was changed
+					     against the version it builds on. They were two lists, one above
+					     the other, and read as two things. -->
+						<div
+							role="tablist"
+							aria-label="What to list"
+							class="inline-flex overflow-hidden rounded-lg border border-[var(--dash-border)] text-xs"
 						>
-							<span class="min-w-0 flex-1 text-[11px] text-[var(--dash-text-secondary)]">
-								<strong class="font-medium text-[var(--dash-text)]">{role.label}</strong>
-								— {role.count === 1 ? '1 bullet' : `${role.count} bullets`} for this job,
-								{role.reason === 'profile'
-									? 'kept off all your documents'
-									: `kept for your ${docType === 'cv' ? 'resume' : 'CV'} only`}
-							</span>
-							<form method="POST" action="?/setItemState" use:enhance={() => () => {}}>
-								<input type="hidden" name="entity_type" value={role.entityType} />
-								<input type="hidden" name="entity_id" value={role.entityId} />
-								<input type="hidden" name="doc_type" value={docType} />
-								<input type="hidden" name="base_slug" value={pickerBase} />
-								<input type="hidden" name="on" value="1" />
-								<button
-									type="submit"
-									title="Show this role on the version tailored for this job"
-									class="shrink-0 rounded border border-[var(--dash-border)] px-1.5 py-0.5 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)]"
-								>
-									Put this role on
-								</button>
-							</form>
-						</li>
-					{/each}
-				</ul>
-
-				<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
-					This changes {activeIsTailored
-						? 'the version built for this job'
-						: "this job's own version"} only — your {docLabel} keeps {heldBackRoles.length === 1
-						? 'it'
-						: 'them'} off everywhere else.
-				</p>
-			</div>
-		{/if}
-
-		{#if items.length > 0}
-			<ItemPicker {items} {docType} baseSlug={pickerBase} />
-		{/if}
-
-		{#if tailored}
-			<TailoredDetails
-				{tailored}
-				{decisions}
-				{gaps}
-				{versions}
-				{docType}
-				{profileSlug}
-				{lastRun}
-				{profileMovedOn}
-				recordedHere={choseTailored}
-				template={app.cv_template_sent}
-				locale={app.cv_locale_sent}
-			/>
-		{/if}
-
-		{#if recorded}
-			<div class="mt-4">
-				{#if confirmingClear}
-					<div class="inline-flex flex-wrap items-center gap-2">
-						<span class="text-[10px] text-[var(--dash-text-secondary)]">
-							Forget that you're sending {recordedLabel}?
-						</span>
-						<form
-							method="POST"
-							action="?/clearCvSent"
-							use:enhance={() => {
-								const done = handleClear();
-								confirmingClear = false;
-								return done;
-							}}
-						>
-							<button type="submit" class="text-[10px] text-[var(--dash-error)] hover:underline">
-								Clear
+							<button
+								type="button"
+								role="tab"
+								aria-selected={contentsView === 'everything'}
+								onclick={() => (contentsView = 'everything')}
+								class="px-3 py-1.5 transition-colors {contentsView === 'everything'
+									? 'bg-[var(--dash-primary)]/10 font-medium text-[var(--dash-primary)]'
+									: 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'}"
+							>
+								Everything <span class="text-[10px] opacity-80">{itemsShowing} of {itemTotal}</span>
 							</button>
-						</form>
-						<button
-							type="button"
-							onclick={() => (confirmingClear = false)}
-							class="text-[10px] text-[var(--dash-text-secondary)] hover:underline"
-						>
-							Cancel
-						</button>
-					</div>
-				{:else}
-					<button
-						type="button"
-						onclick={() => (confirmingClear = true)}
-						title="Forget what was recorded here"
-						class="inline-flex items-center gap-1.5 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)]"
-					>
-						<FontAwesomeIcon icon={faXmark} class="h-2.5 w-2.5" />
-						Clear this record
-					</button>
+							<button
+								type="button"
+								role="tab"
+								aria-selected={contentsView === 'changes'}
+								onclick={() => (contentsView = 'changes')}
+								class="border-l border-[var(--dash-border)] px-3 py-1.5 transition-colors {contentsView ===
+								'changes'
+									? 'bg-[var(--dash-primary)]/10 font-medium text-[var(--dash-primary)]'
+									: 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]'}"
+							>
+								Changes <span class="text-[10px] opacity-80">{changeCount}</span>
+							</button>
+						</div>
+					{:else}
+						<span class="text-xs text-[var(--dash-text-secondary)]">
+							{itemsShowing} of {itemTotal} items print
+						</span>
+					{/if}
+				</div>
+
+				<!-- Which document the switches below edit, said before the first one.
+			     Everything else on this page is about the document being SENT; this
+			     section is about the tailored version whether or not it is sent. -->
+				<p class="text-xs text-[var(--dash-text-secondary)]">
+					{#if tailored}
+						<span class="font-medium text-[var(--dash-text)]">{tailored.name}</span>, the {docLabel}
+						tailored for this job{#if !choseTailored}, which you aren't sending right now{/if}.
+						Changes here apply to this job only; your versions and your profile stay as they are.
+					{:else}
+						<span class="font-medium text-[var(--dash-text)]">{recordedLabel}</span>. Changing
+						anything here makes a version of it just for this job, and {recordedLabel} itself stays as
+						it is.
+					{/if}
+				</p>
+
+				{#if tailored}
+					<TailoredActions
+						{tailored}
+						{versions}
+						{docType}
+						{changeCount}
+						recordedHere={choseTailored}
+						{profileMovedOn}
+						template={app.cv_template_sent}
+						locale={app.cv_locale_sent}
+					/>
 				{/if}
-			</div>
+
+				<div class="mt-4 border-t border-[var(--dash-border)] pt-4">
+					{#if tailored && contentsView === 'changes'}
+						<TailoredDetails
+							{tailored}
+							{decisions}
+							{gaps}
+							{docType}
+							baseName={tailoredBaseName}
+							{lastRun}
+						/>
+					{:else if items.length > 0}
+						<ItemPicker {items} {docType} baseSlug={pickerBase} />
+					{:else}
+						<p class="text-xs text-[var(--dash-text-secondary)]">
+							Nothing on this {docLabel} to list yet.
+						</p>
+					{/if}
+				</div>
+			</Card>
 		{/if}
-	</Card>
+	</div>
 </div>

@@ -1,10 +1,11 @@
 /**
- * Browser E2E for the "What's on it" panel.
+ * Browser E2E for the "What's on it" section.
  *
- * The panel is the only place an item nothing decided about can be reached: no
- * pass surfaced it and no pass dropped it, so it has no row in the diff, and
+ * The section is the only place an item nothing decided about can be reached:
+ * no pass surfaced it and no pass dropped it, so it has no row in the diff, and
  * the alternative was editing tags on the profile — which changes every job
- * that uses the version.
+ * that uses the version. For skills that is nearly all of them, since a run only
+ * reaches the ones a job requires.
  *
  * Its other job is the one worth testing hardest: a toggle on a plain library
  * version creates this application's own version and records it. That is the
@@ -18,8 +19,19 @@
 
 import { describe, expect, it } from 'vitest';
 import { commitPickedVersion, loginViaUI, useBrowser } from './browser';
+import type { Page } from 'patchright';
 
 const APP_ID = 16;
+
+/**
+ * One part of the list, by its heading. The last match is the innermost, so a
+ * page-level section that happens to contain the heading doesn't win.
+ */
+const section = (page: Page, title: string) =>
+	page
+		.locator('section')
+		.filter({ has: page.getByRole('heading', { name: title, exact: true }) })
+		.last();
 
 describe('what is on it', () => {
 	const b = useBrowser();
@@ -43,8 +55,8 @@ describe('what is on it', () => {
 			await b.page.waitForLoadState('networkidle');
 		}
 
-		// There is no document to describe, so the panel stays away.
-		expect(await b.page.getByRole('button', { name: /What's on it/ }).count()).toBe(0);
+		// There is no document to describe, so the section stays away.
+		expect(await b.page.getByRole('heading', { name: "What's on it" }).count()).toBe(0);
 	});
 
 	it('describes the library version you record', async () => {
@@ -52,16 +64,17 @@ describe('what is on it', () => {
 		await b.page.getByLabel('Version to send').selectOption({ index: 1 });
 		await commitPickedVersion(b.page);
 
-		const opener = b.page.getByRole('button', { name: /What's on it/ });
-		await opener.waitFor({ state: 'visible' });
-		expect(await opener.innerText()).toMatch(/\d+ of \d+ items/);
-		await opener.click();
-		// A row per item, plus one per role for the role itself.
+		await b.page.getByRole('heading', { name: "What's on it" }).waitFor({ state: 'visible' });
+		expect(await b.page.getByText(/\d+ of \d+ items print/).isVisible()).toBe(true);
+		// A row per item, plus one per role and skill group for the group itself.
 		expect(await b.page.locator('form[action="?/setItemState"]').count()).toBeGreaterThan(1);
 	});
 
 	it("makes the version this job's own on the first toggle", async () => {
-		const first = b.page.locator('button[aria-label^="Hide "]').first();
+		// Roles start folded; a bullet is the item with the most to say about itself.
+		const experience = section(b.page, 'Experience');
+		await experience.locator('button[aria-expanded="false"]').first().click();
+		const first = experience.locator('button[aria-label^="Hide "]').first();
 		moved = await first.getAttribute('aria-label');
 		await first.click();
 		await b.page.waitForLoadState('networkidle');
@@ -75,14 +88,22 @@ describe('what is on it', () => {
 		expect(await b.page.getByText('· yours').count()).toBe(1);
 	});
 
-	it('drops the override when an item goes back to what the base says', async () => {
+	// Putting an item back used to delete the row, so the next regeneration was
+	// free to hide it again. It is the applicant's choice now, and the changes
+	// view tells it apart from a change.
+	it('keeps putting an item back as your choice, without calling it a change', async () => {
 		const back = b.page.locator(`button[aria-label="${moved?.replace('Hide ', 'Show ')}"]`);
 		await back.click();
 		await b.page.waitForLoadState('networkidle');
 		await b.page.locator(`button[aria-label="${moved}"]`).waitFor({ state: 'visible' });
-		// The sidecar is a diff: agreeing with the base means no row at all, which
-		// is what leaves a later regeneration free to decide about it again.
-		expect(await b.page.getByText('· yours').count()).toBe(0);
+		expect(await b.page.getByText('· yours').count()).toBe(1);
+
+		await b.page.getByRole('tab', { name: /Changes/ }).click();
+		await b.page.getByText('Put back the way it was').waitFor({ state: 'visible' });
+		// A string, not a regex: only string matches collapse the line break after the count.
+		expect(await b.page.getByText('0 changes against').count()).toBe(1);
+
+		await b.page.getByRole('tab', { name: /Everything/ }).click();
 	});
 
 	it('turns a whole role off and on, which tailoring itself may not', async () => {
@@ -98,5 +119,24 @@ describe('what is on it', () => {
 		// have one. Wait for the offer to put THIS one back to go away.
 		await back.waitFor({ state: 'detached' });
 		expect(await b.page.getByText(/nothing under it prints until the role does/).count()).toBe(0);
+	});
+
+	// A run never reaches a skill the job doesn't require, and hiding one used to
+	// ask the run's candidate list whether the base printed it, which said no for
+	// every such skill and saved nothing at all.
+	it('hides and shows a skill for this job', async () => {
+		const chip = section(b.page, 'Skills').locator('button[aria-pressed="true"]').first();
+		const label = await chip.getAttribute('aria-label');
+		expect(label).toMatch(/^Hide /);
+
+		await chip.click();
+		// First, because a skill can sit in two groups under one name.
+		const shown = b.page
+			.locator(`button[aria-label="${label?.replace('Hide ', 'Show ')}"]`)
+			.first();
+		await shown.waitFor({ state: 'visible' });
+
+		await shown.click();
+		await b.page.locator(`button[aria-label="${label}"]`).first().waitFor({ state: 'visible' });
 	});
 });

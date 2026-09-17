@@ -22,15 +22,18 @@ import { specWarning } from '$lib/version-coverage';
 import {
 	decisionsForVersion,
 	describeOverrides,
+	includeInTailoredVersion,
 	jobMatchRead,
 	promoteToLibrary,
 	relevantExclusionsByVersion,
 	retagVersionSlug,
 	setItemStateForApplication,
 	tailorVersionForApplication,
+	undoDecision,
 	versionItemStates,
 	type VersionReach
 } from '$lib/server/profile/tailor-version';
+import { baseOnByItem, keptAsBase } from '$lib/tailoring';
 import { isOverrideEntity } from '$lib/version-overrides';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
 
@@ -349,8 +352,19 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 					profileId: layoutData.selectedProfile.id,
 					applicationId: isNaN(applicationId) ? null : applicationId,
 					docType: panelType,
-					versionSlug: panelSlug
+					versionSlug: panelSlug,
+					// What "the way it was" means for each row: the version the tailored
+					// one extends, or, with nothing tailored yet, the version itself.
+					baseSlug: tailored ? tailored.baseSlug : undefined
 				});
+
+	/**
+	 * Which of the applicant's own decisions put an item back the way the base has
+	 * it. Every toggle is recorded now, so that a regeneration leaves it alone,
+	 * and the review would otherwise list "you put this back" under what the
+	 * document gained.
+	 */
+	const baseOn = baseOnByItem(items);
 
 	return {
 		versions: usable
@@ -360,7 +374,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		tailored,
 		profileMovedOn,
 		coverage,
-		decisions,
+		decisions: decisions.map((d) => ({ ...d, keptAsBase: keptAsBase(d, baseOn) })),
 		gaps: matchRead.gaps,
 		creditedNotNamed,
 		exclusions: reach.exclusions,
@@ -447,9 +461,9 @@ export const actions: Actions = {
 	},
 
 	/**
-	 * Reject one proposed decision. Deleting the row is the whole undo: the item
-	 * falls back to what the applicant's own tags say, which is where it was
-	 * before anything was generated.
+	 * Take back one decision, durably. Tailoring's decisions become the
+	 * applicant's own reversal, so the next regeneration can't make the same call
+	 * again; the applicant's own decisions are simply deleted. See undoDecision.
 	 */
 	rejectDecision: async ({ request, locals, cookies, params }) => {
 		const user = locals.user;
@@ -463,27 +477,19 @@ export const actions: Actions = {
 		const decisionId = parseInt((formData.get('decision_id') as string) || '');
 		if (isNaN(decisionId) || isNaN(appId)) return fail(400, { error: 'Invalid decision' });
 
-		// Ownership: the row must belong to a version owned by THIS application,
-		// which must belong to the selected profile.
-		const version = await db.query.profile_versions.findFirst({
-			where: and(
-				eq(profile_versions.profile_id, profileId),
-				eq(profile_versions.application_id, appId)
-			),
-			columns: { id: true, slug: true }
-		});
-		if (!version) return fail(404, { error: 'No tailored version for this application' });
-
-		await db
-			.delete(profile_version_overrides)
-			.where(
-				and(
-					eq(profile_version_overrides.id, decisionId),
-					eq(profile_version_overrides.version_id, version.id)
-				)
-			);
-		refreshPdfs(profileId, appId, version.slug);
-		return { success: true };
+		try {
+			const { versionSlug } = await undoDecision({
+				profileId,
+				applicationId: appId,
+				decisionId
+			});
+			refreshPdfs(profileId, appId, versionSlug);
+			return { success: true };
+		} catch (error) {
+			return fail(404, {
+				error: error instanceof Error ? error.message : 'Could not undo that change.'
+			});
+		}
 	},
 
 	/**
@@ -582,45 +588,19 @@ export const actions: Actions = {
 			return fail(400, { error: 'Invalid item' });
 		}
 
-		const version = await db.query.profile_versions.findFirst({
-			where: and(
-				eq(profile_versions.profile_id, profileId),
-				eq(profile_versions.application_id, appId)
-			),
-			columns: { id: true, slug: true }
-		});
-		if (!version) return fail(404, { error: 'No tailored version for this application' });
-
-		const now = new Date();
-		await db
-			.insert(profile_version_overrides)
-			.values({
-				version_id: version.id,
-				entity_type: entityType,
-				entity_id: entityId,
-				action: 'include',
-				reason: 'you asked for this back',
-				source: 'user',
-				date_created: now,
-				date_updated: now
-			})
-			.onConflictDoUpdate({
-				target: [
-					profile_version_overrides.version_id,
-					profile_version_overrides.entity_type,
-					profile_version_overrides.entity_id
-				],
-				set: {
-					action: 'include',
-					sort: null,
-					reason: 'you asked for this back',
-					source: 'user',
-					date_updated: now
-				}
+		try {
+			const { versionSlug } = await includeInTailoredVersion({
+				profileId,
+				applicationId: appId,
+				entityType,
+				entityId
 			});
-
-		refreshPdfs(profileId, appId, version.slug);
-		return { success: true };
+			refreshPdfs(profileId, appId, versionSlug);
+			return { success: true };
+		} catch (error) {
+			const message = error instanceof Error ? error.message : 'Could not put that back.';
+			return fail(message.startsWith('No tailored version') ? 404 : 400, { error: message });
+		}
 	},
 
 	/** Throw the tailored version away; its decisions cascade with it. */
@@ -657,7 +637,6 @@ export const actions: Actions = {
 			const result = await setItemStateForApplication({
 				profileId,
 				applicationId: appId,
-				docType,
 				baseSlug,
 				entityType,
 				entityId,

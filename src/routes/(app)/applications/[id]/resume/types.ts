@@ -17,6 +17,11 @@ export interface Decision {
 	label: string;
 	/** Which role a bullet came from; null for things that name themselves. */
 	context: string | null;
+	/**
+	 * The applicant's own decision to leave the item the way the base version
+	 * has it: recorded so a regeneration leaves it alone, but not a change.
+	 */
+	keptAsBase?: boolean;
 }
 
 /** What one run reported about itself, shown only while it is still the news. */

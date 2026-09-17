@@ -22,6 +22,7 @@ import { and, asc, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
 import { dbDirect as db, queryRaw } from '$lib/server/db';
 import {
 	applications,
+	education,
 	job_matches,
 	profile_field_variants,
 	profile_version_extensions,
@@ -55,6 +56,7 @@ import {
 	surfaceBar,
 	surfaceScore,
 	tightenBudget,
+	undoneDecision,
 	type Candidate,
 	type Decision,
 	type ItemGroup,
@@ -63,7 +65,7 @@ import {
 import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
 import { variantFieldLabel, variantPreview } from '$lib/field-variants';
 import { isVariantOwned } from '$lib/server/profile/field-variants';
-import { templatePrintsTechnologies } from '$lib/resume-templates';
+import { templateForStorage, templatePrintsTechnologies } from '$lib/resume-templates';
 import { expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
 import { normalizeSkill } from '$lib/skills';
 import {
@@ -1586,45 +1588,54 @@ export async function describeOverrides(
 	const idsOf = (type: string) =>
 		rows.filter((r) => r.entity_type === type).map((r) => r.entity_id);
 
-	const [achievements, projects, skills, groups, technologies, wordings] = await Promise.all([
-		idsOf(OVERRIDE_ENTITIES.achievement).length
-			? db.query.work_experience_achievements.findMany({
-					where: inArray(work_experience_achievements.id, idsOf(OVERRIDE_ENTITIES.achievement)),
-					columns: { id: true, description: true, work_experience_id: true }
-				})
-			: [],
-		idsOf(OVERRIDE_ENTITIES.sideProject).length
-			? db.query.side_projects.findMany({
-					where: inArray(side_projects.id, idsOf(OVERRIDE_ENTITIES.sideProject)),
-					columns: { id: true, name: true }
-				})
-			: [],
-		idsOf(OVERRIDE_ENTITIES.skill).length
-			? db.query.tech_skills.findMany({
-					where: inArray(tech_skills.id, idsOf(OVERRIDE_ENTITIES.skill)),
-					columns: { id: true, name: true }
-				})
-			: [],
-		idsOf(OVERRIDE_ENTITIES.skillCategory).length
-			? db.query.tech_skill_categories.findMany({
-					where: inArray(tech_skill_categories.id, idsOf(OVERRIDE_ENTITIES.skillCategory)),
-					columns: { id: true, name: true },
-					with: { tech_skills: { columns: { name: true } } }
-				})
-			: [],
-		idsOf(OVERRIDE_ENTITIES.technology).length
-			? db.query.work_experience_technologies.findMany({
-					where: inArray(work_experience_technologies.id, idsOf(OVERRIDE_ENTITIES.technology)),
-					columns: { id: true, name: true, work_experience_id: true }
-				})
-			: [],
-		idsOf(OVERRIDE_ENTITIES.fieldVariant).length
-			? db.query.profile_field_variants.findMany({
-					where: inArray(profile_field_variants.id, idsOf(OVERRIDE_ENTITIES.fieldVariant)),
-					columns: { id: true, field: true, label: true, value: true }
-				})
-			: []
-	]);
+	const [achievements, projects, skills, groups, technologies, wordings, schooling] =
+		await Promise.all([
+			idsOf(OVERRIDE_ENTITIES.achievement).length
+				? db.query.work_experience_achievements.findMany({
+						where: inArray(work_experience_achievements.id, idsOf(OVERRIDE_ENTITIES.achievement)),
+						columns: { id: true, description: true, work_experience_id: true }
+					})
+				: [],
+			idsOf(OVERRIDE_ENTITIES.sideProject).length
+				? db.query.side_projects.findMany({
+						where: inArray(side_projects.id, idsOf(OVERRIDE_ENTITIES.sideProject)),
+						columns: { id: true, name: true }
+					})
+				: [],
+			idsOf(OVERRIDE_ENTITIES.skill).length
+				? db.query.tech_skills.findMany({
+						where: inArray(tech_skills.id, idsOf(OVERRIDE_ENTITIES.skill)),
+						columns: { id: true, name: true }
+					})
+				: [],
+			idsOf(OVERRIDE_ENTITIES.skillCategory).length
+				? db.query.tech_skill_categories.findMany({
+						where: inArray(tech_skill_categories.id, idsOf(OVERRIDE_ENTITIES.skillCategory)),
+						columns: { id: true, name: true },
+						with: { tech_skills: { columns: { name: true } } }
+					})
+				: [],
+			idsOf(OVERRIDE_ENTITIES.technology).length
+				? db.query.work_experience_technologies.findMany({
+						where: inArray(work_experience_technologies.id, idsOf(OVERRIDE_ENTITIES.technology)),
+						columns: { id: true, name: true, work_experience_id: true }
+					})
+				: [],
+			idsOf(OVERRIDE_ENTITIES.fieldVariant).length
+				? db.query.profile_field_variants.findMany({
+						where: inArray(profile_field_variants.id, idsOf(OVERRIDE_ENTITIES.fieldVariant)),
+						columns: { id: true, field: true, label: true, value: true }
+					})
+				: [],
+			// Reachable from the item panel now, so a toggle on one has to be
+			// reviewable: a row with no label is dropped below.
+			idsOf(OVERRIDE_ENTITIES.education).length
+				? db.query.education.findMany({
+						where: inArray(education.id, idsOf(OVERRIDE_ENTITIES.education)),
+						columns: { id: true, area: true, study_type: true, institution: true }
+					})
+				: []
+		]);
 
 	// One more round-trip, for the roles: a bullet needs the role it sits under
 	// to be identifiable, and a run can now decide about a role itself — the
@@ -1681,6 +1692,10 @@ export async function describeOverrides(
 		if (names.length > 0) {
 			contexts.set(`${OVERRIDE_ENTITIES.skillCategory}:${g.id}`, names.join(', '));
 		}
+	}
+
+	for (const entry of schooling) {
+		labels.set(`${OVERRIDE_ENTITIES.education}:${entry.id}`, educationLabel(entry));
 	}
 
 	for (const w of wordings) {
@@ -2116,6 +2131,59 @@ function yearOf(value: unknown): string {
 }
 
 /**
+ * What one document prints of the items the panel lists beyond the run's
+ * candidates: every role, every skill group and skill, and every education
+ * entry. Asked of the same filter the renderer uses, for the reason the
+ * candidates are: a panel that disagreed with the page would be worse than no
+ * panel.
+ *
+ * A skill's answer is its own, not its group's. The group is a switch of its
+ * own in the panel, and "what prints once I put the group back" is the thing an
+ * applicant looking at a hidden group wants to see.
+ */
+function printedByFilter(profile: ProfileRow, docType: string, versionSlug: string) {
+	const { filterOnTags } = createProfileFilter(
+		(profile.profile_versions ?? []) as never,
+		docType,
+		null,
+		versionSlug
+	);
+	const idsOf = (list: Array<{ id: number }>) => new Set(list.map((item) => item.id));
+	const groups = profile.tech_skill_categories ?? [];
+	return {
+		roles: idsOf(filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience)),
+		categories: idsOf(filterOnTags(groups, OVERRIDE_ENTITIES.skillCategory)),
+		skills: idsOf(
+			groups.flatMap((group) => filterOnTags(group.tech_skills ?? [], OVERRIDE_ENTITIES.skill))
+		),
+		education: idsOf(filterOnTags(profile.educations ?? [], OVERRIDE_ENTITIES.education))
+	};
+}
+
+/**
+ * Whether this template prints side projects at all.
+ *
+ * The mirror image of `templatePrintsTechnologies`: the built-in layout has a
+ * projects section, and the generic renderer every DB-backed template goes
+ * through has none. Local rather than beside that one, because only the panel
+ * asks it: nothing ranks or fits a document differently because of it.
+ */
+function templatePrintsSideProjects(template: string | null): boolean {
+	return templateForStorage(template) === null;
+}
+
+/** An education entry as the applicant reviews it: what, then where. */
+function educationLabel(entry: {
+	id: number;
+	area?: unknown;
+	study_type?: unknown;
+	institution?: unknown;
+}): string {
+	const what = text(entry.area) || text(entry.study_type);
+	return [what, text(entry.institution)].filter(Boolean).join(' at ') || `education ${entry.id}`;
+}
+
+/**
  * Every item a document could print, with whether it does and why.
  *
  * The diff answers "what did tailoring change"; this answers "what is on it",
@@ -2124,6 +2192,10 @@ function yearOf(value: unknown): string {
  * dropped left no row anywhere, so the only way to reach it was to go and edit
  * the tags on your profile — which changes every job that uses that version,
  * the one thing a per-job document exists to avoid.
+ *
+ * Skills and education are the clearest case. A run never drops a single skill
+ * and never touches an education entry, so for most of them this panel is the
+ * only per-job control there is.
  *
  * It reads the same three layers the renderer does, in the same order, through
  * the same filter: the item's tags, the version's, and the override sidecar.
@@ -2135,8 +2207,16 @@ export async function versionItemStates(opts: {
 	applicationId: number | null;
 	docType: string;
 	versionSlug: string;
+	/**
+	 * The version `versionSlug` builds on, which every row's `baseOn` answers
+	 * about. Omit it when the document described is itself the base (a library
+	 * version nothing has tailored yet); pass null when a tailored version's base
+	 * can't be resolved, and then no row claims to know.
+	 */
+	baseSlug?: string | null;
 }): Promise<ItemGroup[]> {
 	const { profileId, applicationId, docType, versionSlug } = opts;
+	const baseSlug = opts.baseSlug === undefined ? versionSlug : opts.baseSlug;
 
 	const profile = await getProfileByIdentifier(profileId);
 	if (!profile) return [];
@@ -2162,18 +2242,34 @@ export async function versionItemStates(opts: {
 		: null;
 	const job = application?.job ?? null;
 	const requiredSkills = job ? asStringArray(job.skills_required) : [];
-
 	// The template belongs to "which document" as much as the type and the
 	// version do, and this panel exists to agree with the document: on a template
 	// that prints a role's TECH line, a required skill named there is already
 	// showing, and saying otherwise would have the panel argue with the page.
-	const built = buildCandidates(
-		profile,
-		docType,
-		versionSlug,
-		requiredSkills,
-		undefined,
-		application?.cv_template_sent ?? null
+	const template = application?.cv_template_sent ?? null;
+
+	const built = buildCandidates(profile, docType, versionSlug, requiredSkills, undefined, template);
+	const printed = printedByFilter(profile, docType, versionSlug);
+
+	// The same two questions asked of the base, so a decision can be told apart
+	// from a change: a toggle that puts an item back the way the base has it is
+	// recorded, but it is not something the document gained or lost.
+	const baseBuilt =
+		baseSlug === null
+			? []
+			: baseSlug === versionSlug
+				? built
+				: buildCandidates(profile, docType, baseSlug, requiredSkills, undefined, template);
+	const basePrinted =
+		baseSlug === null
+			? null
+			: baseSlug === versionSlug
+				? printed
+				: printedByFilter(profile, docType, baseSlug);
+	// A bullet's own answer rather than its role's: an override names the bullet,
+	// so whether it agrees with the base is a question about the bullet.
+	const baseVisible = new Map(
+		baseBuilt.map((c) => [refKey(c), c.visibleIfParentShown ?? c.visible])
 	);
 
 	let scoreOf = new Map<string, number>();
@@ -2225,6 +2321,7 @@ export async function versionItemStates(opts: {
 					? candidate.label.slice(stripPrefix.length + 2)
 					: candidate.label,
 			on: candidate.visible,
+			baseOn: baseVisible.get(key),
 			reason: '',
 			source: 'base',
 			score: scoreOf.get(key) ?? null
@@ -2246,17 +2343,48 @@ export async function versionItemStates(opts: {
 		return row;
 	}
 
-	// Role visibility through the same filter buildCandidates uses. A role with
-	// no achievements produces no candidates, so it cannot be read off them.
-	const { filterOnTags } = createProfileFilter(
-		(profile.profile_versions ?? []) as never,
-		docType,
-		null,
-		versionSlug
-	);
-	const visibleRoles = new Set(
-		filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience).map((w) => w.id)
-	);
+	/**
+	 * A row for an item that is not a candidate: a skill no job requires, or an
+	 * education entry. Same precedence as `describe` — an override says who
+	 * decided and why, and without one the tags did.
+	 */
+	function describeItem(item: {
+		entityType: string;
+		entityId: number;
+		label: string;
+		tags: unknown;
+		on: boolean;
+		baseOn: boolean | undefined;
+		parentOn: boolean;
+	}): ItemRow {
+		const key = `${item.entityType}:${item.entityId}`;
+		const tags = asStringArray(item.tags);
+		const row: ItemRow = {
+			entityType: item.entityType,
+			entityId: item.entityId,
+			label: item.label,
+			on: item.on,
+			baseOn: item.baseOn,
+			reason: '',
+			source: 'base',
+			score: scoreOf.get(key) ?? null,
+			profileOnly: isProfileOnly(tags)
+		};
+		const override = overrideOf.get(key);
+		if (override) {
+			row.source = override.source === 'user' ? 'user' : 'tailoring';
+			row.reason = text(override.reason);
+			return row;
+		}
+		if (!item.on && item.parentOn) {
+			row.reason = isProfileOnly(tags)
+				? 'kept off your documents'
+				: heldBackByTemplate(tags, docType)
+					? `only on your ${docType === 'cv' ? 'resume' : 'CV'}`
+					: 'not on this version';
+		}
+		return row;
+	}
 
 	// Bullets first, then the role's TECH line — the order the role renders in,
 	// and the order that keeps a long tech list from burying the prose above it.
@@ -2279,9 +2407,10 @@ export async function versionItemStates(opts: {
 	for (const role of profile.work_experiences ?? []) {
 		const title = [role.position, role.name].filter(Boolean).join(' at ') || `role ${role.id}`;
 		const rows = (byParent.get(role.id) ?? []).map((c) => describe(c, title));
-		if (rows.length === 0 && visibleRoles.has(role.id)) continue;
+		if (rows.length === 0 && printed.roles.has(role.id)) continue;
 		groups.push({
 			key: `${OVERRIDE_ENTITIES.workExperience}:${role.id}`,
+			section: 'experience',
 			entityType: OVERRIDE_ENTITIES.workExperience,
 			entityId: role.id,
 			title,
@@ -2289,7 +2418,8 @@ export async function versionItemStates(opts: {
 				[yearOf(role.start_date), role.end_date ? yearOf(role.end_date) : 'now']
 					.filter(Boolean)
 					.join(' – ') || null,
-			on: visibleRoles.has(role.id),
+			on: printed.roles.has(role.id),
+			baseOn: basePrinted?.roles.has(role.id),
 			rows
 		});
 	}
@@ -2298,16 +2428,110 @@ export async function versionItemStates(opts: {
 	if (projects.length > 0) {
 		groups.push({
 			key: 'side-projects',
+			section: 'projects',
 			entityType: null,
 			entityId: null,
 			title: 'Side projects',
 			subtitle: null,
 			on: true,
+			// Switches that change nothing on the page read as switches that are
+			// broken, so the panel says why before anyone tries one.
+			note: templatePrintsSideProjects(template)
+				? null
+				: "This template doesn't print side projects, so these change nothing on it.",
 			rows: projects.map((c) => describe(c))
 		});
 	}
 
+	// Every skill, not just the ones a job requires. Those are the only skills a
+	// run can reach, so the rest had no per-job control anywhere.
+	for (const category of profile.tech_skill_categories ?? []) {
+		const skills = category.tech_skills ?? [];
+		if (skills.length === 0) continue;
+		const on = printed.categories.has(category.id);
+		groups.push({
+			key: `${OVERRIDE_ENTITIES.skillCategory}:${category.id}`,
+			section: 'skills',
+			entityType: OVERRIDE_ENTITIES.skillCategory,
+			entityId: category.id,
+			title: text(category.name) || 'Skills',
+			subtitle: null,
+			on,
+			baseOn: basePrinted?.categories.has(category.id),
+			rows: skills.map((skill) =>
+				describeItem({
+					entityType: OVERRIDE_ENTITIES.skill,
+					entityId: skill.id,
+					label: text(skill.name) || `skill ${skill.id}`,
+					tags: skill.tags,
+					on: printed.skills.has(skill.id),
+					baseOn: basePrinted?.skills.has(skill.id),
+					parentOn: on
+				})
+			)
+		});
+	}
+
+	const educations = profile.educations ?? [];
+	if (educations.length > 0) {
+		groups.push({
+			key: 'education',
+			section: 'education',
+			entityType: null,
+			entityId: null,
+			title: 'Education',
+			subtitle: null,
+			on: true,
+			rows: educations.map((entry) =>
+				describeItem({
+					entityType: OVERRIDE_ENTITIES.education,
+					entityId: entry.id,
+					label: educationLabel(entry),
+					tags: entry.tags,
+					on: printed.education.has(entry.id),
+					baseOn: basePrinted?.education.has(entry.id),
+					parentOn: true
+				})
+			)
+		});
+	}
+
 	return groups;
+}
+
+/**
+ * Whether this profile holds the item an override is about to name.
+ *
+ * An override names its item by id alone, and the review diff prints the item's
+ * text by looking that id up with no profile in the question (see
+ * describeOverrides). A row written for somebody else's bullet would put their
+ * words on this applicant's page. The renderer is scoped by the tree and prints
+ * nothing for it, which is how the gap went unnoticed. A wording's owner is
+ * checked the same way, where the row is written rather than where it is read.
+ */
+function profileHoldsItem(profile: ProfileRow, entityType: string, entityId: number): boolean {
+	const holds = (list: ReadonlyArray<{ id: number }> | null | undefined) =>
+		(list ?? []).some((item) => item.id === entityId);
+	const roles = profile.work_experiences ?? [];
+	const groups = profile.tech_skill_categories ?? [];
+	switch (entityType) {
+		case OVERRIDE_ENTITIES.workExperience:
+			return holds(roles);
+		case OVERRIDE_ENTITIES.achievement:
+			return roles.some((role) => holds(role.work_experience_achievements));
+		case OVERRIDE_ENTITIES.technology:
+			return roles.some((role) => holds(role.work_experience_technologies));
+		case OVERRIDE_ENTITIES.sideProject:
+			return holds(profile.side_projects);
+		case OVERRIDE_ENTITIES.skillCategory:
+			return holds(groups);
+		case OVERRIDE_ENTITIES.skill:
+			return groups.some((group) => holds(group.tech_skills));
+		case OVERRIDE_ENTITIES.education:
+			return holds(profile.educations);
+		default:
+			return false;
+	}
 }
 
 /**
@@ -2322,29 +2546,28 @@ export async function versionItemStates(opts: {
  * fills in the rest without touching it, because this is recorded as the
  * applicant's own.
  *
- * An override is only written when the answer differs from what the base
- * already does. Setting something back to the base's own answer deletes the row
- * instead, so the sidecar stays a diff and a later regeneration is free to
- * decide about that item again.
+ * Every toggle is recorded, including one that puts an item back the way the
+ * base version has it. That one used to delete the row instead, to keep the
+ * sidecar a pure diff, and it made "put it back" the one choice a regeneration
+ * could overrule: the run had hidden a bullet once, nothing stood in its way,
+ * and it hid it again. A row that agrees with the base is how the applicant says
+ * "I looked at this one", which is the one thing a run has to respect. The
+ * review tells those rows apart from changes (see `keptAsBase`).
  */
 export async function setItemStateForApplication(opts: {
 	profileId: number;
 	applicationId: number;
-	docType: string;
 	baseSlug: string;
 	entityType: string;
 	entityId: number;
 	on: boolean;
 }): Promise<{ versionSlug: string; created: boolean }> {
-	const { profileId, applicationId, docType, baseSlug, entityType, entityId, on } = opts;
+	const { profileId, applicationId, baseSlug, entityType, entityId, on } = opts;
 
 	// A wording is the one entity here that is not reachable from the profile
-	// tree below, so nothing further down would notice an id belonging to
-	// somebody else. The render resolver is scoped by profile and would print
-	// nothing, but the review diff labels a row by looking the id up on its own
-	// — so the check belongs where the row is written rather than where it is
-	// read. Picks made from the version page go through /api/field-variants/pick,
-	// which validates the same thing plus the field.
+	// tree below, so it is checked on its own. Picks made from the version page
+	// go through /api/field-variants/pick, which validates the same thing plus
+	// the field.
 	if (
 		entityType === OVERRIDE_ENTITIES.fieldVariant &&
 		!(await isVariantOwned(entityId, profileId))
@@ -2354,6 +2577,12 @@ export async function setItemStateForApplication(opts: {
 
 	const profile = await getProfileByIdentifier(profileId);
 	if (!profile) throw new Error('Profile not found');
+	if (
+		entityType !== OVERRIDE_ENTITIES.fieldVariant &&
+		!profileHoldsItem(profile, entityType, entityId)
+	) {
+		throw new Error('Item not found');
+	}
 
 	const application = await db.query.applications.findFirst({
 		where: and(eq(applications.id, applicationId), eq(applications.profile_id, profileId)),
@@ -2380,41 +2609,6 @@ export async function setItemStateForApplication(opts: {
 		}));
 	const versionSlug = existing?.slug ?? tailoredSlugFor(applicationId);
 
-	// What the version this one extends does about it, so an override is only
-	// written for a genuine difference. A role is not a candidate — nothing may
-	// drop one — so its visibility comes from the filter directly.
-	const baseVisible =
-		entityType === OVERRIDE_ENTITIES.workExperience
-			? createProfileFilter((profile.profile_versions ?? []) as never, docType, null, baseSlug)
-					.filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience)
-					.some((w) => w.id === entityId)
-			: // With the template, because a technology is only a candidate on a
-				// document that prints one — and without it every one of them looks
-				// hidden, so putting one back would write an `include` where the base
-				// already agrees. A row saying nothing is worse than no row: it is
-				// what stops a later run from deciding about that item at all.
-				(buildCandidates(
-					profile,
-					docType,
-					baseSlug,
-					[],
-					undefined,
-					application.cv_template_sent ?? null
-				).find((c) => c.entityType === entityType && c.entityId === entityId)?.visible ?? false);
-
-	if (on === baseVisible) {
-		await db
-			.delete(profile_version_overrides)
-			.where(
-				and(
-					eq(profile_version_overrides.version_id, versionId),
-					eq(profile_version_overrides.entity_type, entityType),
-					eq(profile_version_overrides.entity_id, entityId)
-				)
-			);
-		return { versionSlug, created: !existing };
-	}
-
 	const now = new Date();
 	const action = on ? 'include' : 'exclude';
 	const reason = on ? 'you chose to show this' : 'you chose to hide this';
@@ -2440,4 +2634,125 @@ export async function setItemStateForApplication(opts: {
 		});
 
 	return { versionSlug, created: !existing };
+}
+
+/**
+ * Put one item back on the version already tailored for this application.
+ *
+ * The one-click fixes in the page's checks ("Put it back", a required skill the
+ * document hides) are only offered once that version is the one being sent, so
+ * unlike a toggle this never creates a version. A missing one means the page is
+ * out of date, and making one here would record a document nobody looked at.
+ */
+export async function includeInTailoredVersion(opts: {
+	profileId: number;
+	applicationId: number;
+	entityType: string;
+	entityId: number;
+}): Promise<{ versionSlug: string | null }> {
+	const { profileId, applicationId, entityType, entityId } = opts;
+
+	const profile = await getProfileByIdentifier(profileId);
+	if (!profile) throw new Error('Profile not found');
+	if (!profileHoldsItem(profile, entityType, entityId)) throw new Error('Item not found');
+
+	const version = await db.query.profile_versions.findFirst({
+		where: and(
+			eq(profile_versions.profile_id, profileId),
+			eq(profile_versions.application_id, applicationId)
+		),
+		columns: { id: true, slug: true }
+	});
+	if (!version) throw new Error('No tailored version for this application');
+
+	const now = new Date();
+	await db
+		.insert(profile_version_overrides)
+		.values({
+			version_id: version.id,
+			entity_type: entityType,
+			entity_id: entityId,
+			action: 'include',
+			reason: 'you asked for this back',
+			source: 'user',
+			date_created: now,
+			date_updated: now
+		})
+		.onConflictDoUpdate({
+			target: [
+				profile_version_overrides.version_id,
+				profile_version_overrides.entity_type,
+				profile_version_overrides.entity_id
+			],
+			set: {
+				action: 'include',
+				sort: null,
+				reason: 'you asked for this back',
+				source: 'user',
+				date_updated: now
+			}
+		});
+
+	return { versionSlug: version.slug };
+}
+
+/**
+ * Take back one decision on this application's version, and keep it taken back.
+ *
+ * Tailoring's decisions are reversed into the applicant's own. Deleting the row,
+ * which is what this used to do, returned the item to the base and left the
+ * next regeneration free to make the same call again, so an "Undo" held only
+ * until somebody pressed Regenerate. What the reversal is depends on what was
+ * decided; see `undoneDecision`.
+ *
+ * The applicant's own decision is deleted instead. It is theirs to take back,
+ * and what the item falls back to is the base as it stands.
+ */
+export async function undoDecision(opts: {
+	profileId: number;
+	applicationId: number;
+	decisionId: number;
+}): Promise<{ versionSlug: string | null }> {
+	const { profileId, applicationId, decisionId } = opts;
+
+	// Ownership: the row must belong to a version owned by THIS application,
+	// which must belong to the selected profile.
+	const version = await db.query.profile_versions.findFirst({
+		where: and(
+			eq(profile_versions.profile_id, profileId),
+			eq(profile_versions.application_id, applicationId)
+		),
+		columns: { id: true, slug: true }
+	});
+	if (!version) throw new Error('No tailored version for this application');
+
+	const thisRow = () =>
+		and(
+			eq(profile_version_overrides.id, decisionId),
+			eq(profile_version_overrides.version_id, version.id)
+		);
+	const row = await db.query.profile_version_overrides.findFirst({
+		where: thisRow(),
+		columns: { id: true, entity_type: true, action: true, sort: true, source: true }
+	});
+	// Already gone, from a second tab or a regeneration in between.
+	if (!row) return { versionSlug: version.slug };
+
+	if (row.source === 'user') {
+		await db.delete(profile_version_overrides).where(thisRow());
+		return { versionSlug: version.slug };
+	}
+
+	const undone = undoneDecision(row);
+	await db
+		.update(profile_version_overrides)
+		.set({
+			action: undone.action,
+			sort: null,
+			reason: undone.reason,
+			source: 'user',
+			date_updated: new Date()
+		})
+		.where(thisRow());
+	return { versionSlug: version.slug };
 }

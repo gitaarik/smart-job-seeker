@@ -1062,17 +1062,33 @@ export interface ItemRow {
 	label: string;
 	/** Whether this document prints it. */
 	on: boolean;
+	/**
+	 * Whether the version this document builds on prints it: what "back the way
+	 * it was" means for this item. Absent when that version can't be resolved,
+	 * which is different from "it doesn't print there".
+	 */
+	baseOn?: boolean;
 	/** Why it is in that state, in terms the applicant can act on. */
 	reason: string;
 	/** Who put it there: the version's own tags, this feature, or the applicant. */
 	source: 'base' | 'tailoring' | 'user';
 	/** Relevance to this job, or null when nothing scored it. */
 	score: number | null;
+	/**
+	 * Kept off every document by the applicant's own tags. A skills block has
+	 * dozens of these, and listing them beside the ones that print buries the
+	 * list, so the panel folds them away.
+	 */
+	profileOnly?: boolean;
 }
+
+/** The parts of a document the panel lists, in the order it lists them. */
+export type ItemSection = 'experience' | 'projects' | 'skills' | 'education';
 
 export interface ItemGroup {
 	/** Stable key for the UI, and the parent this group's rows hang off. */
 	key: string;
+	section: ItemSection;
 	entityType: string | null;
 	entityId: number | null;
 	title: string;
@@ -1080,5 +1096,79 @@ export interface ItemGroup {
 	subtitle: string | null;
 	/** Whether the section itself prints. A section that doesn't takes its rows with it. */
 	on: boolean;
+	/** Whether the base prints the group itself. See ItemRow.baseOn. */
+	baseOn?: boolean;
+	/**
+	 * Said instead of letting the switches imply something false, like side
+	 * projects on a template that has no projects section.
+	 */
+	note?: string | null;
 	rows: ItemRow[];
+}
+
+/**
+ * What taking back one of tailoring's decisions leaves behind, recorded as the
+ * applicant's own decision so the next regeneration can't make it again.
+ *
+ * Not always the opposite action. A "moved up" row is an include carrying a
+ * position, and taking it back means "leave it where I had it", not "hide it":
+ * the include stays and the position goes. A skill's position is where a
+ * surfaced skill slots in beside its relatives, not a promotion, so taking one
+ * back hides it again. And a wording pick taken back is the default wording,
+ * which is an exclude on the pick.
+ */
+export function undoneDecision(row: { entity_type: string; action: string; sort: number | null }): {
+	action: OverrideAction;
+	reason: string;
+} {
+	if (row.entity_type === OVERRIDE_ENTITIES.fieldVariant) {
+		return { action: 'exclude', reason: 'you kept your own wording' };
+	}
+	if (row.action === 'exclude') return { action: 'include', reason: 'you put this back' };
+	if (row.sort !== null && row.entity_type !== OVERRIDE_ENTITIES.skill) {
+		return { action: 'include', reason: 'you kept your own order' };
+	}
+	return { action: 'exclude', reason: 'you took this back off' };
+}
+
+/** What the base prints, per item and per group, keyed like an override row. */
+export function baseOnByItem(groups: ItemGroup[]): Map<string, boolean> {
+	const index = new Map<string, boolean>();
+	for (const group of groups) {
+		if (group.entityType && group.entityId !== null && group.baseOn !== undefined) {
+			index.set(`${group.entityType}:${group.entityId}`, group.baseOn);
+		}
+		for (const row of group.rows) {
+			if (row.baseOn !== undefined) index.set(`${row.entityType}:${row.entityId}`, row.baseOn);
+		}
+	}
+	return index;
+}
+
+/**
+ * Whether a decision leaves its item exactly the way the base version has it.
+ *
+ * Only the applicant writes these: a toggle or an undo that puts something back.
+ * They are decisions, because a regeneration has to leave them alone, but they
+ * are not changes, and a review listing them under "Now showing" would claim
+ * the document gained something it always had. An item the panel doesn't list
+ * has no known base, so its row counts as a change, as every row did before.
+ */
+export function keptAsBase(
+	decision: {
+		entityType: string;
+		entityId: number;
+		action: string;
+		sort: number | null;
+		source: string;
+	},
+	baseOn: Map<string, boolean>
+): boolean {
+	if (decision.source !== 'user') return false;
+	// A wording has no base to agree with except "no pick", which is what an
+	// exclude on a pick says.
+	if (decision.entityType === OVERRIDE_ENTITIES.fieldVariant) return decision.action === 'exclude';
+	if (decision.sort !== null) return false;
+	const base = baseOn.get(`${decision.entityType}:${decision.entityId}`);
+	return base !== undefined && base === (decision.action === 'include');
 }

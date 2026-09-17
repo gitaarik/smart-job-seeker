@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	baseOnByItem,
 	beyondReach,
 	canBringBack,
 	canSurface,
@@ -15,7 +16,10 @@ import {
 	tightenBudget,
 	selectForJob,
 	surfaceBar,
-	type Candidate
+	keptAsBase,
+	undoneDecision,
+	type Candidate,
+	type ItemGroup
 } from './tailoring';
 import { OVERRIDE_ENTITIES } from './version-overrides';
 
@@ -1078,5 +1082,129 @@ describe('what counts as evidence for a requirement', () => {
 			.map((d) => d.entityId);
 		expect(dropped).not.toContain(2);
 		expect(dropped).toContain(4);
+	});
+});
+
+describe('taking a decision back', () => {
+	const undo = (entity_type: string, action: string, sort: number | null = null) =>
+		undoneDecision({ entity_type, action, sort });
+
+	it('shows what tailoring hid, and hides what it surfaced', () => {
+		expect(undo(OVERRIDE_ENTITIES.achievement, 'exclude')).toEqual({
+			action: 'include',
+			reason: 'you put this back'
+		});
+		expect(undo(OVERRIDE_ENTITIES.sideProject, 'include')).toEqual({
+			action: 'exclude',
+			reason: 'you took this back off'
+		});
+	});
+
+	// "Moved up" taken back means "leave it where I had it", not "hide it".
+	it('keeps a moved item on the page, without the position it was given', () => {
+		expect(undo(OVERRIDE_ENTITIES.achievement, 'include', 0)).toEqual({
+			action: 'include',
+			reason: 'you kept your own order'
+		});
+	});
+
+	// A skill's position is where a surfaced skill slots in, not a promotion.
+	it('hides a surfaced skill even though it carries a position', () => {
+		expect(undo(OVERRIDE_ENTITIES.skill, 'include', 3).action).toBe('exclude');
+	});
+
+	it('takes a wording pick back to the default wording', () => {
+		expect(undo(OVERRIDE_ENTITIES.fieldVariant, 'include')).toEqual({
+			action: 'exclude',
+			reason: 'you kept your own wording'
+		});
+	});
+});
+
+describe('keptAsBase', () => {
+	const base = new Map([
+		[`${OVERRIDE_ENTITIES.achievement}:10`, true],
+		[`${OVERRIDE_ENTITIES.skill}:40`, false]
+	]);
+	const decision = (over = {}) => ({
+		entityType: OVERRIDE_ENTITIES.achievement as string,
+		entityId: 10,
+		action: 'include',
+		sort: null as number | null,
+		source: 'user',
+		...over
+	});
+
+	it('is the applicant leaving an item the way the base has it', () => {
+		expect(keptAsBase(decision(), base)).toBe(true);
+		expect(
+			keptAsBase(
+				decision({ entityType: OVERRIDE_ENTITIES.skill, entityId: 40, action: 'exclude' }),
+				base
+			)
+		).toBe(true);
+	});
+
+	it('is never a change the document shows', () => {
+		expect(keptAsBase(decision({ action: 'exclude' }), base)).toBe(false);
+		// Tailoring's own rows are its decisions to review, whatever the base does.
+		expect(keptAsBase(decision({ source: 'ai' }), base)).toBe(false);
+		// A position is a change even on an item the base prints.
+		expect(keptAsBase(decision({ sort: 0 }), base)).toBe(false);
+	});
+
+	// Unknown is a change, which is what every row counted as before.
+	it('counts an item with no known base as a change', () => {
+		expect(keptAsBase(decision({ entityId: 99 }), base)).toBe(false);
+	});
+
+	it('treats a wording taken back as the default, and a pick as a change', () => {
+		const wording = { entityType: OVERRIDE_ENTITIES.fieldVariant, entityId: 3 };
+		expect(keptAsBase(decision({ ...wording, action: 'exclude' }), base)).toBe(true);
+		expect(keptAsBase(decision(wording), base)).toBe(false);
+	});
+});
+
+describe('baseOnByItem', () => {
+	it('indexes groups and rows, and leaves out what it cannot answer', () => {
+		const groups: ItemGroup[] = [
+			{
+				key: `${OVERRIDE_ENTITIES.workExperience}:1`,
+				section: 'experience',
+				entityType: OVERRIDE_ENTITIES.workExperience,
+				entityId: 1,
+				title: 'Engineer',
+				subtitle: null,
+				on: true,
+				baseOn: false,
+				rows: [
+					{
+						entityType: OVERRIDE_ENTITIES.achievement,
+						entityId: 10,
+						label: 'Shipped it',
+						on: true,
+						baseOn: true,
+						reason: '',
+						source: 'base',
+						score: null
+					},
+					{
+						entityType: OVERRIDE_ENTITIES.achievement,
+						entityId: 11,
+						label: 'Unknown base',
+						on: false,
+						reason: '',
+						source: 'base',
+						score: null
+					}
+				]
+			}
+		];
+
+		const index = baseOnByItem(groups);
+
+		expect(index.get(`${OVERRIDE_ENTITIES.workExperience}:1`)).toBe(false);
+		expect(index.get(`${OVERRIDE_ENTITIES.achievement}:10`)).toBe(true);
+		expect(index.has(`${OVERRIDE_ENTITIES.achievement}:11`)).toBe(false);
 	});
 });

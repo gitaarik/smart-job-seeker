@@ -45,6 +45,14 @@ export interface FixtureCategory {
 	tech_skills: FixtureSkill[];
 }
 
+export interface FixtureEducation {
+	id: number;
+	area: string;
+	study_type: string | null;
+	institution: string;
+	tags: string[];
+}
+
 export interface FixtureVersion {
 	id: number;
 	slug: string;
@@ -96,6 +104,15 @@ export function category(
 	return { id, name, tags, tech_skills: skills };
 }
 
+export function education(
+	id: number,
+	area: string,
+	institution: string,
+	tags: string[] = []
+): FixtureEducation {
+	return { id, area, study_type: null, institution, tags };
+}
+
 export function version(
 	id: number,
 	slug: string,
@@ -109,6 +126,7 @@ export interface ProfileFixture {
 	work_experiences: FixtureRole[];
 	side_projects: FixtureProject[];
 	tech_skill_categories: FixtureCategory[];
+	educations: FixtureEducation[];
 	profile_versions: FixtureVersion[];
 }
 
@@ -118,6 +136,7 @@ export function profileFixture(over: Partial<ProfileFixture> = {}): ProfileFixtu
 		work_experiences: [],
 		side_projects: [],
 		tech_skill_categories: [],
+		educations: [],
 		profile_versions: [],
 		...over
 	};

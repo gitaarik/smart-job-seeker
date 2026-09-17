@@ -3,17 +3,12 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowUp,
-		faBoxArchive,
 		faCheck,
-		faCircleNotch,
-		faExternalLinkAlt,
 		faEye,
 		faEyeSlash,
-		faFilePdf,
-		faRotate,
-		faTrash
+		faRotateLeft
 	} from '@fortawesome/free-solid-svg-icons';
-	import { profileDocUrl, type DocType } from '$lib/utils/profile-doc-url';
+	import type { DocType } from '$lib/utils/profile-doc-url';
 	import { overrideEntityLabel, OVERRIDE_ENTITIES } from '$lib/version-overrides';
 	import type { Decision, LastRun } from './types';
 
@@ -21,64 +16,33 @@
 	 * How the tailored version came to look the way it does — every decision,
 	 * with the reason that produced it.
 	 *
-	 * A section rather than a card of its own. It used to be the second of two
-	 * panels, which read as an alternative to the version picker above it; it is
-	 * not an alternative, it is the provenance of the document that card names.
+	 * The "Changes" view of the page's contents section, beside "Everything". The
+	 * two answer different questions about the same document: what is on it, and
+	 * what tailoring (or the applicant) changed against the version it builds on.
 	 *
 	 * A tailored version is a SELECTION over what the applicant already wrote —
 	 * it can hide a bullet, surface a held-back skill and reorder within a role,
-	 * but it never writes a word. That is what makes this panel possible: each
+	 * but it never writes a word. That is what makes this list possible: each
 	 * decision is auditable in one line, against text the applicant recognises.
 	 *
-	 * The host page must expose `tailorVersion`, `rejectDecision`, `keepDecision`,
-	 * `promoteTailored`, `setCvSent` and `discardTailored`.
+	 * The host page must expose `rejectDecision` and `keepDecision`.
 	 */
 	let {
 		tailored,
 		decisions,
 		gaps,
-		versions,
 		docType,
-		profileSlug,
-		recordedHere,
-		profileMovedOn = false,
-		template = null,
-		locale = null,
+		baseName,
 		lastRun = null
 	}: {
-		tailored: { slug: string; name: string; baseSlug?: string | null };
+		/** Only where it was built from: the plain document ignores every version tag. */
+		tailored: { baseSlug?: string | null };
 		decisions: Decision[];
 		/** What the match found missing — what a selection cannot fix. */
 		gaps: string[];
-		versions: { slug: string; name: string }[];
 		docType: DocType;
-		profileSlug: string | undefined;
-		/**
-		 * Whether the send-record names this version. When it does, the row above
-		 * owns opening and deleting it and this header stays quiet; when it does
-		 * not, there is nowhere else to reach the document from.
-		 */
-		recordedHere: boolean;
-		/**
-		 * Whether the profile changed since a run last decided this document.
-		 *
-		 * Not a warning: what was added is already printing — the version is a
-		 * sidecar of decisions over live data, not a snapshot. What is out of date
-		 * is the deciding, and the page budget it was fitted to. Said here because
-		 * the button that fixes it is one line below.
-		 */
-		profileMovedOn?: boolean;
-		/**
-		 * How this application's document is presented — the template it renders
-		 * in and the language it is written in, both in storage form (null is the
-		 * built-in template / base English).
-		 *
-		 * Read off the application rather than chosen here: the PDF that exists on
-		 * disk for this version was rendered in that pair, so linking any other
-		 * one links a document nobody made.
-		 */
-		template?: string | null;
-		locale?: string | null;
+		/** The library version this one builds on, by name; empty for the plain document. */
+		baseName: string;
 		/**
 		 * The run that just finished, when one did. Shown only here, at the moment
 		 * it can still be acted on: the decisions are stored and read the same
@@ -87,19 +51,15 @@
 		lastRun?: LastRun | null;
 	} = $props();
 
-	// Follows the version's real base until the applicant overrides it — a plain
-	// $state(...) would freeze whatever the first render saw and then ignore a
-	// rebase after the page invalidates.
-	let chosenBase = $state<string | null>(null);
-	let baseSlug = $derived(chosenBase ?? tailored.baseSlug ?? '');
-	let baseName = $derived(versions.find((v) => v.slug === tailored.baseSlug)?.name ?? '');
 	let working = $state(false);
+
 	/**
-	 * Deleting destroys a generated version and every decision on it, and the
-	 * only way back is another model call. One click is too few for that, and
-	 * the notes list on this page already asks twice for the same reason.
+	 * The applicant's own "leave it the way it was" decisions. Recorded so a
+	 * regeneration can't redo what they took back, but listing them as changes
+	 * would say the document gained or lost something it didn't.
 	 */
-	let confirmingDiscard = $state(false);
+	let kept = $derived(decisions.filter((d) => d.keptAsBase));
+	let changes = $derived(decisions.filter((d) => !d.keptAsBase));
 
 	// A skill is only ever surfaced, never promoted: it carries a sort so it
 	// lands beside its relatives rather than at the end of its category, and
@@ -108,10 +68,12 @@
 	// where it would be the only row whose item wasn't there before.
 	let isSkill = (d: Decision) => d.entityType === OVERRIDE_ENTITIES.skill;
 	let included = $derived(
-		decisions.filter((d) => d.action === 'include' && (d.sort === null || isSkill(d)))
+		changes.filter((d) => d.action === 'include' && (d.sort === null || isSkill(d)))
 	);
-	let excluded = $derived(decisions.filter((d) => d.action === 'exclude'));
-	let reordered = $derived(decisions.filter((d) => d.sort !== null && !isSkill(d)));
+	let excluded = $derived(changes.filter((d) => d.action === 'exclude'));
+	let reordered = $derived(changes.filter((d) => d.sort !== null && !isSkill(d)));
+
+	let docLabel = $derived(docType === 'cv' ? 'CV' : 'resume');
 
 	function track() {
 		working = true;
@@ -124,137 +86,17 @@
 	const clip = (s: string, n = 90) => (s.length > n ? s.slice(0, n).trimEnd() + '…' : s);
 </script>
 
-<div class="mt-5 border-t border-[var(--dash-border)] pt-4">
-	<div class="flex flex-wrap items-start justify-between gap-2">
-		<div class="min-w-0">
-			<p class="text-[10px] font-semibold tracking-wide text-[var(--dash-text)] uppercase">
-				Tailored for this job
-			</p>
-			<!-- Name the base. "Against the version it builds on" was true and
-			     useless: a version built on the plain document shows none of the
-			     applicant's version tags — four side projects vanished here — and
-			     nothing on the page said which document the diff was a diff
-			     against. -->
-			<p class="mt-0.5 text-[10px] text-[var(--dash-text-secondary)]">
-				{decisions.length}
-				{decisions.length === 1 ? 'change' : 'changes'} against
-				{#if baseName}<strong class="font-medium">{baseName}</strong>{:else}your plain {docType ===
-					'cv'
-						? 'CV'
-						: 'resume'}{/if}.
-			</p>
-		</div>
-		{#if !recordedHere}
-			<!-- The record points somewhere else, so this section is the only way to
-			     reach the document at all — and the one-click way back to sending
-			     it, which is otherwise a trip through the picker above. -->
-			<div class="flex shrink-0 flex-wrap items-center gap-3">
-				{#if profileSlug}
-					<!-- profileDocUrl builds a public /p/[slug] URL with a query string at
-					     runtime, which resolve() cannot express. -->
-					<!-- eslint-disable svelte/no-navigation-without-resolve -->
-					<a
-						href={profileDocUrl({
-							profileSlug,
-							docType,
-							versionSlug: tailored.slug,
-							template,
-							locale
-						})}
-						target="_blank"
-						rel="noopener"
-						class="dash-link-ext"
-					>
-						<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3" />
-						Open
-					</a>
-					<a
-						href={profileDocUrl({
-							profileSlug,
-							docType,
-							versionSlug: tailored.slug,
-							pdf: true,
-							template,
-							locale
-						})}
-						target="_blank"
-						rel="noopener"
-						class="dash-link-ext"
-					>
-						<FontAwesomeIcon icon={faFilePdf} class="h-3 w-3" />
-						PDF
-					</a>
-					<!-- eslint-enable svelte/no-navigation-without-resolve -->
-				{/if}
-				<form method="POST" action="?/setCvSent" use:enhance={track}>
-					<input type="hidden" name="cv_sent_through" value={docType} />
-					<input type="hidden" name="version_slug" value={tailored.slug} />
-					<!-- Same reason as the regenerate form below: `setCvSent` writes
-					     `cv_template_sent` / `cv_locale_sent` from what it is given, so a
-					     form that names only the version changes the version AND silently
-					     resets the presentation. This button says "send this one instead",
-					     not "and in the default template". -->
-					<input type="hidden" name="template" value={template ?? ''} />
-					<input type="hidden" name="locale" value={locale ?? ''} />
-					<button
-						type="submit"
-						disabled={working}
-						class="inline-flex items-center gap-1.5 rounded border border-[var(--dash-primary)]/40 px-2 py-1 text-xs text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary)]/10 disabled:opacity-70"
-					>
-						<FontAwesomeIcon icon={faCheck} class="h-2.5 w-2.5" />
-						Send this instead
-					</button>
-				</form>
-				<button
-					type="button"
-					onclick={() => (confirmingDiscard = true)}
-					disabled={working}
-					title="Delete this tailored version"
-					class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)] disabled:opacity-70"
-				>
-					<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
-					Delete
-				</button>
-			</div>
-		{/if}
-	</div>
-
-	{#if confirmingDiscard}
-		<div
-			class="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-[var(--dash-error)]/30 bg-[var(--dash-error)]/5 p-3"
-		>
-			<p class="flex-1 text-xs text-[var(--dash-text)]">
-				Delete this version and its {decisions.length}
-				{decisions.length === 1 ? 'change' : 'changes'}? Your own versions and your profile stay as
-				they are{recordedHere ? ', but the record of what you sent clears with it' : ''}.
-			</p>
-			<form
-				method="POST"
-				action="?/discardTailored"
-				use:enhance={() => {
-					const done = track();
-					confirmingDiscard = false;
-					return done;
-				}}
-			>
-				<button
-					type="submit"
-					disabled={working}
-					class="inline-flex items-center gap-1.5 rounded-lg bg-[var(--dash-error)] px-3 py-1.5 text-xs text-white hover:opacity-90 disabled:opacity-70"
-				>
-					<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
-					Delete it
-				</button>
-			</form>
-			<button
-				type="button"
-				onclick={() => (confirmingDiscard = false)}
-				class="text-xs text-[var(--dash-text-secondary)] hover:underline"
-			>
-				Cancel
-			</button>
-		</div>
-	{/if}
+<div>
+	<!-- Name the base. "Against the version it builds on" was true and useless:
+	     a version built on the plain document shows none of the applicant's
+	     version tags — four side projects vanished here — and nothing on the
+	     page said which document the diff was a diff against. -->
+	<p class="text-xs text-[var(--dash-text-secondary)]">
+		{changes.length}
+		{changes.length === 1 ? 'change' : 'changes'} against
+		{#if baseName}<strong class="font-medium text-[var(--dash-text)]">{baseName}</strong>{:else}your
+			plain {docLabel}{/if}.
+	</p>
 
 	{#if lastRun && (lastRun.ranker === 'lexical' || lastRun.pages)}
 		<!-- What the run that just finished did with the page, and whether it had
@@ -295,8 +137,8 @@
 		     Regenerating from a real version fixes it. -->
 		<div class="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
 			<p class="text-xs text-[var(--dash-text)]">
-				This was built on your plain {docType === 'cv' ? 'CV' : 'resume'}, so none of your version
-				tags apply — anything you put on a specific version won't print here.
+				This was built on your plain {docLabel}, so none of your version tags apply — anything you
+				put on a specific version won't print here.
 			</p>
 			<p class="mt-1 text-[10px] text-[var(--dash-text-secondary)]">
 				Pick a version under “Built on” below and regenerate.
@@ -304,7 +146,7 @@
 		</div>
 	{/if}
 
-	{#if decisions.length === 0}
+	{#if changes.length === 0 && kept.length === 0}
 		<p class="mt-3 text-xs text-[var(--dash-text-secondary)]">
 			Nothing to change — the version this builds on already reads well for this job.
 		</p>
@@ -363,8 +205,9 @@
 										<input type="hidden" name="decision_id" value={row.id} />
 										<button
 											type="submit"
+											disabled={working}
 											title="Keep this through future regenerations"
-											class="rounded px-1.5 py-1 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-success)]"
+											class="rounded px-1.5 py-1 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-success)] disabled:opacity-70"
 										>
 											Keep
 										</button>
@@ -372,10 +215,16 @@
 								{/if}
 								<form method="POST" action="?/rejectDecision" use:enhance={track}>
 									<input type="hidden" name="decision_id" value={row.id} />
+									<!-- Taking back one of tailoring's changes is recorded as yours, so
+									     regenerating doesn't make it again. Taking back your own just
+									     removes it. -->
 									<button
 										type="submit"
-										title="Undo this change"
-										class="rounded px-1.5 py-1 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)]"
+										disabled={working}
+										title={row.source === 'user'
+											? 'Undo your change'
+											: "Undo this change. Regenerating won't make it again."}
+										class="rounded px-1.5 py-1 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)] disabled:opacity-70"
 									>
 										Undo
 									</button>
@@ -387,6 +236,47 @@
 			</div>
 		{/if}
 	{/each}
+
+	{#if kept.length > 0}
+		<!-- Quiet on purpose: none of these changes the document. They are listed
+		     because they are still decisions, and handing one back to tailoring is
+		     a real choice the applicant may want. -->
+		<div class="mt-4">
+			<p class="mb-1 text-[10px] font-semibold tracking-wide text-[var(--dash-text)] uppercase">
+				Put back the way it was
+			</p>
+			<p class="mb-2 text-[10px] text-[var(--dash-text-secondary)]">
+				These match {baseName || `your plain ${docLabel}`}. They're kept as your choice, so
+				regenerating leaves them alone.
+			</p>
+			<ul class="space-y-1">
+				{#each kept as row (row.id)}
+					<li class="flex items-center gap-2 text-[11px] text-[var(--dash-text-secondary)]">
+						<span
+							class="shrink-0 rounded border border-[var(--dash-border)] px-1 py-0.5 text-[10px] leading-none tracking-wide uppercase"
+						>
+							{overrideEntityLabel(row.entityType)}
+						</span>
+						<span class="min-w-0 flex-1 truncate">
+							{clip(row.label, 80)}{row.context ? ` · ${row.context}` : ''}
+						</span>
+						<form method="POST" action="?/rejectDecision" use:enhance={track} class="shrink-0">
+							<input type="hidden" name="decision_id" value={row.id} />
+							<button
+								type="submit"
+								disabled={working}
+								title="Let tailoring decide about this again"
+								class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] transition-colors hover:text-[var(--dash-primary)] disabled:opacity-70"
+							>
+								<FontAwesomeIcon icon={faRotateLeft} class="h-2.5 w-2.5" />
+								Let tailoring decide
+							</button>
+						</form>
+					</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
 
 	<!-- What no amount of reshuffling closes. Shown here so a tidier document
 	     doesn't read as a stronger application. -->
@@ -402,77 +292,4 @@
 			</ul>
 		</div>
 	{/if}
-
-	<div class="mt-4 flex flex-wrap items-center gap-3 border-t border-[var(--dash-border)] pt-3">
-		<form
-			method="POST"
-			action="?/tailorVersion"
-			use:enhance={track}
-			class="flex items-center gap-2"
-		>
-			<input type="hidden" name="doc_type" value={docType} />
-			<!-- The presentation this application already records, carried back so
-			     the run keeps it. `tailorVersion` reads both off the form and then
-			     WRITES them to `cv_template_sent` / `cv_locale_sent`, so omitting
-			     them was not a missing default — it reset the record to the plain
-			     template in English on every regenerate, and rendered the PDF
-			     there. The Citrus/Dutch file the row above links stayed on disk,
-			     untouched and now stale, which is exactly what "I pressed
-			     Regenerate and nothing happened" looks like. Empty is the storage
-			     form of both defaults, which is what the action expects. -->
-			<input type="hidden" name="template" value={template ?? ''} />
-			<input type="hidden" name="locale" value={locale ?? ''} />
-			<!-- The base is re-offered here, not frozen at creation: regenerating
-			     against a different version of your own is the main reason to
-			     regenerate at all, and the action moves the extension to match.
-			     Down here rather than in front of the first run — it is a real
-			     choice, but not the one to open with. -->
-			{#if profileMovedOn}
-				<span class="text-[10px] text-[var(--dash-text-secondary)]">
-					Your profile changed since this was built — new items already show; the choices below
-					don't know about them.
-				</span>
-			{/if}
-			<label for="tailor-rebase-slug" class="text-[10px] text-[var(--dash-text-secondary)]">
-				Built on
-			</label>
-			<select
-				id="tailor-rebase-slug"
-				name="base_slug"
-				value={baseSlug}
-				onchange={(e) => (chosenBase = e.currentTarget.value)}
-				class="rounded-md border border-[var(--dash-border)] px-2 py-1 text-xs focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-			>
-				<option value="">Your plain {docType === 'cv' ? 'CV' : 'resume'}</option>
-				{#each versions as v (v.slug)}
-					<option value={v.slug}>{v.name}</option>
-				{/each}
-			</select>
-			<button
-				type="submit"
-				disabled={working}
-				class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline disabled:opacity-70"
-			>
-				<FontAwesomeIcon icon={working ? faCircleNotch : faRotate} spin={working} class="h-3 w-3" />
-				Regenerate
-			</button>
-		</form>
-		<form
-			method="POST"
-			action="?/promoteTailored"
-			use:enhance={track}
-			class="flex items-center gap-2"
-		>
-			<input type="hidden" name="name" value={tailored.name} />
-			<button
-				type="submit"
-				disabled={working}
-				title="Keep this as one of your own versions, decisions and all"
-				class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] disabled:opacity-70"
-			>
-				<FontAwesomeIcon icon={faBoxArchive} class="h-3 w-3" />
-				Keep in my versions
-			</button>
-		</form>
-	</div>
 </div>

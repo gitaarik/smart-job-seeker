@@ -49,14 +49,15 @@ const {
 		applications: { findFirst: vi.fn() },
 		profiles: { findFirst: vi.fn() },
 		profile_versions: { findFirst: vi.fn(), findMany: vi.fn() },
-		profile_version_overrides: { findMany: vi.fn() },
+		profile_version_overrides: { findFirst: vi.fn(), findMany: vi.fn() },
 		job_matches: { findFirst: vi.fn() },
 		work_experiences: { findMany: vi.fn() },
 		work_experience_achievements: { findMany: vi.fn() },
 		work_experience_technologies: { findMany: vi.fn() },
 		side_projects: { findMany: vi.fn() },
 		tech_skills: { findMany: vi.fn() },
-		tech_skill_categories: { findMany: vi.fn() }
+		tech_skill_categories: { findMany: vi.fn() },
+		education: { findMany: vi.fn() }
 	};
 
 	const inserts: Write[] = [];
@@ -133,13 +134,25 @@ import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import type { Candidate } from '$lib/tailoring';
 import {
 	describeOverrides,
+	includeInTailoredVersion,
 	jobMatchRead,
 	promoteToLibrary as promote,
 	retagVersionSlug,
 	scoreCandidates,
-	setItemStateForApplication
+	setItemStateForApplication,
+	undoDecision,
+	versionItemStates
 } from '../tailor-version';
-import { bullet, profileFixture, role, version } from './version-fixtures';
+import {
+	bullet,
+	category,
+	education,
+	profileFixture,
+	project,
+	role,
+	skill,
+	version
+} from './version-fixtures';
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -157,6 +170,7 @@ beforeEach(() => {
 	find.side_projects.findMany.mockResolvedValue([]);
 	find.tech_skills.findMany.mockResolvedValue([]);
 	find.tech_skill_categories.findMany.mockResolvedValue([]);
+	find.education.findMany.mockResolvedValue([]);
 	mockQueryRaw.mockResolvedValue([]);
 });
 
@@ -401,6 +415,10 @@ describe('setItemStateForApplication', () => {
 				bullet(11, 'Hid this one', ['!resume'])
 			])
 		],
+		tech_skill_categories: [
+			category(4, 'Backend', [skill(40, 'Python'), skill(41, 'Django', ['!resume', '!cv'])])
+		],
+		educations: [education(7, 'Software Development', 'Nova College')],
 		profile_versions: [version(3, 'base')]
 	});
 
@@ -408,7 +426,6 @@ describe('setItemStateForApplication', () => {
 		return setItemStateForApplication({
 			profileId: 1,
 			applicationId: 12,
-			docType: 'resume',
 			baseSlug: 'base',
 			entityType: OVERRIDE_ENTITIES.achievement,
 			entityId: 10,
@@ -435,14 +452,32 @@ describe('setItemStateForApplication', () => {
 		await expect(toggle()).rejects.toThrow('Application not found');
 	});
 
-	// The sidecar is a diff. A row that agrees with the base is not a decision,
-	// and leaving one there would stop a later run deciding about the item.
-	it('deletes the override when the answer matches the base', async () => {
+	// The review diff prints an item's text by looking its id up with no profile
+	// in the question, so a row naming somebody else's bullet would put their
+	// words on this applicant's page.
+	it('refuses an item that is not on this profile', async () => {
+		await expect(toggle({ entityId: 999 })).rejects.toThrow('Item not found');
+		// Ids are per table: a bullet's id is not a skill's.
+		await expect(toggle({ entityType: OVERRIDE_ENTITIES.skill, entityId: 10 })).rejects.toThrow(
+			'Item not found'
+		);
+		expect(inserts).toHaveLength(0);
+	});
+
+	// Putting an item back used to delete the row, to keep the sidecar a pure
+	// diff, and nothing then stopped the next run hiding it again.
+	it('records putting an item back the way the base has it, so a rerun leaves it alone', async () => {
 		const result = await toggle({ entityId: 10, on: true });
 
-		expect(inserts).toHaveLength(0);
-		expect(deletes).toHaveLength(1);
-		expect(deletes[0].table).toBe(profile_version_overrides);
+		expect(deletes).toHaveLength(0);
+		expect(inserts[0].values).toMatchObject({
+			version_id: 5,
+			entity_type: OVERRIDE_ENTITIES.achievement,
+			entity_id: 10,
+			action: 'include',
+			reason: 'you chose to show this',
+			source: 'user'
+		});
 		expect(result).toEqual({ versionSlug: 'app-12', created: false });
 	});
 
@@ -476,25 +511,23 @@ describe('setItemStateForApplication', () => {
 		});
 	});
 
-	// A role is not a candidate — nothing may drop one — so its base state comes
-	// from the filter directly.
-	it('reads a role’s base state through the document filter', async () => {
-		const hidden = profileFixture({
-			work_experiences: [role(2, 'Contractor', [], { tags: ['!resume'] })],
-			profile_versions: [version(3, 'base')]
-		});
-		mockGetProfile.mockResolvedValue(hidden);
+	// None of these is a candidate a run ranks: a run only reaches the skills a
+	// job requires, and never an education entry. Hiding a skill used to ask the
+	// candidate list whether the base showed it, got "no" for every skill no job
+	// required, and wrote nothing at all.
+	it('takes a skill, a skill group and an education entry', async () => {
+		await toggle({ entityType: OVERRIDE_ENTITIES.skill, entityId: 40, on: false });
+		await toggle({ entityType: OVERRIDE_ENTITIES.skill, entityId: 41, on: true });
+		await toggle({ entityType: OVERRIDE_ENTITIES.skillCategory, entityId: 4, on: false });
+		await toggle({ entityType: OVERRIDE_ENTITIES.education, entityId: 7, on: false });
 
-		await toggle({ entityType: OVERRIDE_ENTITIES.workExperience, entityId: 2, on: true });
-		expect(inserts[0].values).toMatchObject({
-			entity_type: OVERRIDE_ENTITIES.workExperience,
-			action: 'include'
-		});
-
-		inserts.length = 0;
-		await toggle({ entityType: OVERRIDE_ENTITIES.workExperience, entityId: 2, on: false });
-		expect(inserts).toHaveLength(0);
-		expect(deletes).toHaveLength(1);
+		expect(deletes).toHaveLength(0);
+		expect(inserts.map((i) => i.values)).toMatchObject([
+			{ entity_type: OVERRIDE_ENTITIES.skill, entity_id: 40, action: 'exclude' },
+			{ entity_type: OVERRIDE_ENTITIES.skill, entity_id: 41, action: 'include' },
+			{ entity_type: OVERRIDE_ENTITIES.skillCategory, entity_id: 4, action: 'exclude' },
+			{ entity_type: OVERRIDE_ENTITIES.education, entity_id: 7, action: 'exclude' }
+		]);
 	});
 
 	// Noticing the gap and fixing it IS tailoring; making someone generate a
@@ -510,6 +543,253 @@ describe('setItemStateForApplication', () => {
 		expect(inserts.find((i) => i.table === profile_version_overrides)?.values).toMatchObject({
 			version_id: 77
 		});
+	});
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// includeInTailoredVersion
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('includeInTailoredVersion', () => {
+	function include(entityType: string = OVERRIDE_ENTITIES.skill, entityId = 41) {
+		return includeInTailoredVersion({ profileId: 1, applicationId: 12, entityType, entityId });
+	}
+
+	beforeEach(() => {
+		mockGetProfile.mockResolvedValue(
+			profileFixture({
+				tech_skill_categories: [category(4, 'Backend', [skill(41, 'Django', ['!resume', '!cv'])])]
+			})
+		);
+		find.profile_versions.findFirst.mockResolvedValue({ id: 5, slug: 'app-12' });
+	});
+
+	it('refuses an item that is not on this profile', async () => {
+		await expect(include(OVERRIDE_ENTITIES.skill, 999)).rejects.toThrow('Item not found');
+		expect(inserts).toHaveLength(0);
+	});
+
+	// Offered only once the tailored version is what goes out, so a missing one
+	// means the page is out of date, not that one should be made.
+	it('never creates a version', async () => {
+		find.profile_versions.findFirst.mockResolvedValue(undefined);
+
+		await expect(include()).rejects.toThrow('No tailored version');
+		expect(inserts).toHaveLength(0);
+	});
+
+	it('records the item as the applicant’s own', async () => {
+		expect(await include()).toEqual({ versionSlug: 'app-12' });
+		expect(inserts[0].values).toMatchObject({
+			version_id: 5,
+			entity_type: OVERRIDE_ENTITIES.skill,
+			entity_id: 41,
+			action: 'include',
+			source: 'user'
+		});
+	});
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// undoDecision
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('undoDecision', () => {
+	const undo = (decisionId = 9) => undoDecision({ profileId: 1, applicationId: 12, decisionId });
+	const decision = (over = {}) => ({
+		id: 9,
+		entity_type: OVERRIDE_ENTITIES.achievement,
+		action: 'exclude',
+		sort: null,
+		source: 'ai',
+		...over
+	});
+
+	beforeEach(() => {
+		find.profile_versions.findFirst.mockResolvedValue({ id: 5, slug: 'app-12' });
+	});
+
+	it('refuses without a version for this application', async () => {
+		find.profile_versions.findFirst.mockResolvedValue(undefined);
+		await expect(undo()).rejects.toThrow('No tailored version');
+	});
+
+	// Deleting the row put the item back only until the next Regenerate, which
+	// made the same call again.
+	it('turns a decision tailoring made into the applicant’s reversal of it', async () => {
+		find.profile_version_overrides.findFirst.mockResolvedValue(decision());
+
+		expect(await undo()).toEqual({ versionSlug: 'app-12' });
+
+		expect(deletes).toHaveLength(0);
+		expect(updates[0].table).toBe(profile_version_overrides);
+		expect(updates[0].set).toMatchObject({
+			action: 'include',
+			sort: null,
+			reason: 'you put this back',
+			source: 'user'
+		});
+	});
+
+	it('deletes a decision the applicant made', async () => {
+		find.profile_version_overrides.findFirst.mockResolvedValue(decision({ source: 'user' }));
+
+		await undo();
+
+		expect(updates).toHaveLength(0);
+		expect(deletes).toHaveLength(1);
+		expect(deletes[0].table).toBe(profile_version_overrides);
+	});
+
+	// A second tab, or a regeneration in between.
+	it('does nothing about a row that is already gone', async () => {
+		find.profile_version_overrides.findFirst.mockResolvedValue(undefined);
+
+		expect(await undo()).toEqual({ versionSlug: 'app-12' });
+		expect(updates).toHaveLength(0);
+		expect(deletes).toHaveLength(0);
+	});
+
+	// The id comes from the form. Without the version in every query, a
+	// decision on somebody else's version could be read and rewritten.
+	it('only reads and writes a row on this application’s version', async () => {
+		find.profile_version_overrides.findFirst.mockResolvedValue(decision());
+
+		await undo(9);
+
+		const read = find.profile_version_overrides.findFirst.mock.calls[0][0] as { where: SQL };
+		expect(render(read.where).params).toEqual(expect.arrayContaining([9, 5]));
+		expect(render(updates[0].where!).params).toEqual(expect.arrayContaining([9, 5]));
+	});
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// versionItemStates
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('versionItemStates', () => {
+	const base = version(3, 'base');
+	const tailored = version(5, 'app-12', {
+		extension_links: [{ extended_id: 3 }],
+		overrides: [{ entity_type: OVERRIDE_ENTITIES.skill, entity_id: 40, action: 'exclude' }]
+	});
+	const profile = profileFixture({
+		side_projects: [project(20, 'Monkful')],
+		tech_skill_categories: [
+			category(4, 'Backend', [skill(40, 'Python'), skill(41, 'Django', ['!resume', '!cv'])]),
+			category(6, 'Frontend', [skill(60, 'Vue')], ['!resume'])
+		],
+		educations: [education(7, 'Software Development', 'Nova College')],
+		profile_versions: [base, tailored]
+	});
+
+	function states(over: Partial<Parameters<typeof versionItemStates>[0]> = {}) {
+		return versionItemStates({
+			profileId: 1,
+			applicationId: 12,
+			docType: 'resume',
+			versionSlug: 'app-12',
+			baseSlug: 'base',
+			...over
+		});
+	}
+	const group = (groups: Awaited<ReturnType<typeof states>>, key: string) =>
+		groups.find((g) => g.key === key);
+	const row = (groups: Awaited<ReturnType<typeof states>>, key: string) =>
+		groups.flatMap((g) => g.rows).find((r) => `${r.entityType}:${r.entityId}` === key);
+
+	beforeEach(() => {
+		mockGetProfile.mockResolvedValue(profile);
+		// No job, so nothing is scored and the test stays about visibility.
+		find.applications.findFirst.mockResolvedValue({ id: 12, cv_template_sent: null, job: null });
+		find.profile_versions.findFirst.mockResolvedValue({ id: 5 });
+		find.profile_version_overrides.findMany.mockResolvedValue([
+			{
+				entity_type: OVERRIDE_ENTITIES.skill,
+				entity_id: 40,
+				action: 'exclude',
+				reason: 'you chose to hide this',
+				source: 'user'
+			}
+		]);
+	});
+
+	// A run only ever reaches the skills a job requires, so for every other skill
+	// this list is the only per-job control there is.
+	it('lists every skill by group, in the parts of the document they print in', async () => {
+		const groups = await states();
+
+		expect(groups.map((g) => [g.section, g.title])).toEqual([
+			['projects', 'Side projects'],
+			['skills', 'Backend'],
+			['skills', 'Frontend'],
+			['education', 'Education']
+		]);
+		expect(group(groups, 'tech_skill_category:4')?.rows.map((r) => r.label)).toEqual([
+			'Python',
+			'Django'
+		]);
+	});
+
+	it('says what prints, who decided, and what the base does', async () => {
+		const groups = await states();
+
+		expect(row(groups, 'tech_skill:40')).toMatchObject({
+			on: false,
+			baseOn: true,
+			source: 'user',
+			reason: 'you chose to hide this'
+		});
+		expect(row(groups, 'tech_skill:41')).toMatchObject({
+			on: false,
+			baseOn: false,
+			source: 'base',
+			reason: 'kept off your documents',
+			profileOnly: true
+		});
+	});
+
+	// The group is its own switch. What its skills would do once it prints is
+	// the thing to see while it doesn't, and the group says why they don't.
+	it('keeps a hidden group’s skills at their own answer, without a reason each', async () => {
+		const groups = await states();
+
+		expect(group(groups, 'tech_skill_category:6')).toMatchObject({ on: false, baseOn: false });
+		expect(row(groups, 'tech_skill:60')).toMatchObject({ on: true, reason: '' });
+	});
+
+	it('lists education, named by what and where', async () => {
+		expect(row(await states(), 'education:7')).toMatchObject({
+			label: 'Software Development at Nova College',
+			on: true,
+			baseOn: true
+		});
+	});
+
+	// Switches that change nothing on the page read as switches that are broken.
+	it('says when the template has no projects section', async () => {
+		expect(group(await states(), 'side-projects')?.note).toBeNull();
+
+		find.applications.findFirst.mockResolvedValue({
+			id: 12,
+			cv_template_sent: 'citrus',
+			job: null
+		});
+		expect(group(await states(), 'side-projects')?.note).toMatch(/doesn't print side projects/);
+	});
+
+	it('claims nothing about a base it cannot resolve', async () => {
+		const groups = await states({ baseSlug: null });
+
+		expect(row(groups, 'tech_skill:40')?.baseOn).toBeUndefined();
+		expect(group(groups, 'tech_skill_category:4')?.baseOn).toBeUndefined();
+	});
+
+	// A library version nothing has tailored yet is its own base.
+	it('answers a version against itself when no base is named', async () => {
+		const groups = await states({ baseSlug: undefined });
+
+		for (const r of groups.flatMap((g) => g.rows)) expect(r.baseOn).toBe(r.on);
 	});
 });
 
@@ -630,6 +910,16 @@ describe('describeOverrides', () => {
 
 		expect(described.label).toBe('Varnish');
 		expect(described.context).toBe('Engineer at Acme');
+	});
+
+	it('names an education entry by what and where', async () => {
+		find.education.findMany.mockResolvedValue([
+			{ id: 7, area: null, study_type: 'Dutch MBO', institution: 'Nova College' }
+		]);
+
+		const [described] = await describeOverrides([row(OVERRIDE_ENTITIES.education, 7)]);
+
+		expect(described.label).toBe('Dutch MBO at Nova College');
 	});
 
 	it('asks only about the types it was given rows for', async () => {
