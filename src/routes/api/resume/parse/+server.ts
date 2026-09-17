@@ -15,7 +15,6 @@ import {
 	parseResumeWithLLM,
 	validateJsonResume
 } from '$lib/server/resume';
-import type { ResumeData } from '$lib/server/resume/types';
 import { uploadFile } from '$lib/server/files';
 import { logImportEvent } from '$lib/server/import-log';
 import { requireCredits } from '$lib/server/billing/require-credits';

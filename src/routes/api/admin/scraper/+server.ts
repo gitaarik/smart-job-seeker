@@ -13,8 +13,7 @@ import {
 	search_task_runs,
 	search_task_run_items,
 	search_tasks,
-	users,
-	jobs
+	users
 } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/utils/api-helpers';
 import { searchTaskDisplayName } from '$lib/format';

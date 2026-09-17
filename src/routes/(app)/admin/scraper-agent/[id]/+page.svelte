@@ -22,8 +22,7 @@
 		stageLabel,
 		stageColor,
 		formatTime,
-		progressPct,
-		isActive
+		progressPct
 	} from '../shared';
 
 	let { data } = $props();

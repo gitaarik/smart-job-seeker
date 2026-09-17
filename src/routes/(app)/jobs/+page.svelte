@@ -6,14 +6,11 @@
 	import { tick } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
-		faBan,
 		faBookmark,
 		faBriefcase,
 		faCalendarDays,
 		faCheck,
 		faChevronDown,
-		faChevronLeft,
-		faChevronRight,
 		faEllipsisVertical,
 		faGauge,
 		faGlobe,
@@ -21,13 +18,11 @@
 		faLocationDot,
 		faSearch,
 		faSitemap,
-		faStar as faStarSolid,
 		faSync,
 		faTag,
 		faTimes,
 		faUser
 	} from '@fortawesome/free-solid-svg-icons';
-	import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import SectionHeader from '../profile/components/SectionHeader.svelte';
 	import EmptyState from '../profile/components/EmptyState.svelte';
@@ -355,10 +350,6 @@
 				page: '1'
 			})
 		);
-	}
-
-	function goToPage(page: number) {
-		goto(buildUrl({ page: page.toString() }));
 	}
 
 	async function toggleExpand(id: number) {

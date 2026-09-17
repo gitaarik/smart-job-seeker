@@ -83,7 +83,7 @@ export async function runProfileAiChat<T>(
 		if (result.aiChat.response) {
 			try {
 				parsedResponse = JSON.parse(result.aiChat.response) as T;
-			} catch (_parseError) {
+			} catch {
 				return {
 					success: false,
 					message: `Failed to parse AI response as JSON (ai_chat ID: ${result.aiChat.id})`,

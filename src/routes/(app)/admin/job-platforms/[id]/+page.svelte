@@ -9,13 +9,9 @@
 		faChartLine,
 		faCheck,
 		faExternalLinkAlt,
-		faFlask,
 		faHistory,
-		faPenToSquare,
-		faPlus,
 		faTrash,
-		faTriangleExclamation,
-		faXmark
+		faTriangleExclamation
 	} from '@fortawesome/free-solid-svg-icons';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();

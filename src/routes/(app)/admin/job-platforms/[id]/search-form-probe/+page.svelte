@@ -11,7 +11,6 @@
 		faClock,
 		faCloud,
 		faDesktop,
-		faExclamationTriangle,
 		faPlay,
 		faStop,
 		faTimes,

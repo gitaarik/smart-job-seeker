@@ -12,7 +12,6 @@
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import { formatTzLabel, TIMEZONE_OPTIONS } from '$lib/timezone';
 	import { defaultTimeFormat, isHour12, resolveTimeFormat } from '$lib/format-date';
-	import type { TimeFormat } from '$lib/format-date';
 
 	let { data }: { data: PageData } = $props();
 

@@ -29,7 +29,7 @@
  */
 
 import { db } from '$lib/server/db';
-import { and, eq, inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { application_records, applications, job_matches } from '$lib/server/db/schema';
 import { getFxRates } from '$lib/server/salary/fx';
 import {

@@ -10,7 +10,6 @@ import { encryptCredential } from '../crypto';
 
 // Mock the db module with Drizzle-style API
 const mockFindFirst = vi.fn();
-const mockUpdateReturning = vi.fn();
 
 vi.mock('$lib/server/db', () => ({
 	db: {

@@ -8,8 +8,7 @@ import {
 	validateBatchJobImport,
 	safeValidateJobImport,
 	safeValidateBatchJobImport,
-	formatValidationError,
-	jobImportRequestSchema
+	formatValidationError
 } from '../validation';
 import { ZodError } from 'zod';
 

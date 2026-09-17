@@ -177,7 +177,6 @@ describe('parseRelativeDate', () => {
 		it('should use current time as default reference date', () => {
 			const before = new Date();
 			const result = parseRelativeDate('1 day ago');
-			const after = new Date();
 
 			// Result should be approximately 1 day before now
 			expect(result).toBeInstanceOf(Date);

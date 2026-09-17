@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { hashToken } from '../token-generator';
 
 const mockFindFirstToken = vi.fn();
 const mockFindFirstVersion = vi.fn();

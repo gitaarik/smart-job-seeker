@@ -20,15 +20,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import type { ResumeData } from '$lib/server/resume/types';
-	import {
-		diffResumeData,
-		countEnabledChanges,
-		type ResumeDataDiff,
-		type FieldDiff,
-		type ItemDiff,
-		type SkillCategoryDiff,
-		type SkillItemDiff
-	} from '$lib/resume-diff';
+	import { diffResumeData, countEnabledChanges, type ResumeDataDiff } from '$lib/resume-diff';
 	import type { DiffApplyPayload } from '$lib/server/resume/apply-diff';
 	import DiffSectionCard from './DiffSectionCard.svelte';
 	import DiffFieldRow from './DiffFieldRow.svelte';

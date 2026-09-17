@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { requireAuth, redirectIfAuthenticated } from '../guards';
-import { redirect } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 
 function createMockEvent(user: any = null, pathname = '/home', search = ''): RequestEvent {

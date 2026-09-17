@@ -40,14 +40,6 @@ class ErrorTracker {
 				}
 			: context;
 
-		const logEntry: LogContext = {
-			level: 'error',
-			message,
-			error,
-			timestamp: new Date(),
-			...enrichedContext
-		};
-
 		console.error(`[ErrorTracker] ${message}`, {
 			name: error.name,
 			message: error.message,
@@ -66,13 +58,6 @@ class ErrorTracker {
 	 * Log a warning
 	 */
 	logWarning(message: string, context?: ErrorContext): void {
-		const logEntry: LogContext = {
-			level: 'warn',
-			message,
-			timestamp: new Date(),
-			...context
-		};
-
 		console.warn(`[Warning] ${message}`, context);
 	}
 
@@ -80,13 +65,6 @@ class ErrorTracker {
 	 * Log info message
 	 */
 	logInfo(message: string, context?: ErrorContext): void {
-		const logEntry: LogContext = {
-			level: 'info',
-			message,
-			timestamp: new Date(),
-			...context
-		};
-
 		console.log(`[Info] ${message}`, context);
 	}
 
@@ -95,13 +73,6 @@ class ErrorTracker {
 	 */
 	logDebug(message: string, context?: ErrorContext): void {
 		if (!config.isProduction) {
-			const logEntry: LogContext = {
-				level: 'debug',
-				message,
-				timestamp: new Date(),
-				...context
-			};
-
 			console.debug(`[Debug] ${message}`, context);
 		}
 	}

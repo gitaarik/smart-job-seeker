@@ -5,13 +5,18 @@ set -euo pipefail
 # check-scripts.sh (scripts/ type-check).
 #
 # eslint has never run in CI, and the backlog reflects that. It is overwhelmingly
-# style rather than defect:
+# style rather than defect. The shape when this gate was added:
 #
 #     758  @typescript-eslint/no-explicit-any
 #     239  svelte/no-navigation-without-resolve
 #     236  svelte/require-each-key
 #     164  @typescript-eslint/no-unused-vars
 #      10  svelte/no-at-html-tags
+#
+# require-each-key and no-unused-vars have since been worked down to what sat in
+# other people's uncommitted files; the two large rules are untouched. The
+# ratchet history at the bottom of this comment is what each change actually
+# cost or earned.
 #
 # Almost none of it is auto-fixable — 5 of 1,509 carried a fix — so `--fix` is
 # not a way out of it. Gating on zero would fail every PR; gating on the COUNT
@@ -119,7 +124,26 @@ set -euo pipefail
 # profile/create, and SkillCategoriesEditor. 1,214 is CI's 1,419 minus the 205,
 # all in files identical to their commits; the 7 between 1,426 and 1,419 came
 # from work that never lowered the number.
-BASELINE=1214
+#
+# 1,199 -> 1,094 on 2026-09-17, clearing @typescript-eslint/no-unused-vars: 95
+# of the 97 sites outside other people's uncommitted files, plus 9 `any`
+# annotations and one `goto` that went with the deleted code. Mostly dead
+# imports and leftovers of replaced features, and several were the fingerprint
+# of a half-written one — a parsed-but-unused `area` in apply-diff.ts's
+# education removal (it deletes every degree at an institution), a `user` bound
+# and never checked in the rescrape endpoints, a slugged `profileName` the
+# export filename never uses. Those are left for their own change.
+#
+# Three sites could not be deleted. `const { [k]: _, ...rest }` is the idiom for
+# omitting a key, and this rule's `ignoreRestSiblings` defaults to false, so the
+# binding is reported although removing it changes behaviour; they became
+# copy-then-delete, which the salary page already used elsewhere. Two more are
+# unused `$props()` names, which belong to svelte/no-unused-props, not here.
+#
+# 1,094 is CI's 1,199 minus those 105, in files otherwise identical to their
+# commits. The tree still carries ~52 no-unused-vars in files that held other
+# uncommitted work when this ran.
+BASELINE=1094
 
 npx svelte-kit sync
 

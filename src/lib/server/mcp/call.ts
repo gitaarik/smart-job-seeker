@@ -371,7 +371,11 @@ async function listPendingChanges(args: Args, key: VerifiedMcpKey): Promise<Tool
 	});
 
 	return ok(`${heading}\n\n${lines.join('\n')}`, {
-		requests: requests.map(({ lines: _lines, ...rest }) => rest),
+		requests: requests.map((r) => {
+			const rest: Partial<typeof r> = { ...r };
+			delete rest.lines;
+			return rest;
+		}),
 		total
 	});
 }

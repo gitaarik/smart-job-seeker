@@ -6,7 +6,6 @@
 		faBook,
 		faChevronRight,
 		faCircleNotch,
-		faFileAlt,
 		faGripVertical,
 		faLayerGroup,
 		faPencil,
@@ -17,7 +16,6 @@
 	import { dragHandleZone, dragHandle } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import Card from '../../components/Card.svelte';
-	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import EmptyState from '../../profile/components/EmptyState.svelte';
 	import ConfirmModal from '../../profile/components/ConfirmModal.svelte';
 	import FilterTabs from '../../components/FilterTabs.svelte';
@@ -224,7 +222,6 @@
 		[key: string]: unknown;
 	}
 	let dndItems = $state<DndItem[]>([]);
-	let reorderSnapshot = $state<Item[] | null>(null);
 	const flipDurationMs = 150;
 
 	// Determine the effective reorder type: when only one type exists, use it
@@ -249,7 +246,6 @@
 			reorderType === 'cheatsheets'
 				? cheatsheets.map((s) => ({ ...s, itemType: 'cheatsheet' as const, key: `cs-${s.id}` }))
 				: stories.map((s) => ({ ...s, itemType: 'story' as const, key: `st-${s.id}` }));
-		reorderSnapshot = [...items];
 		dndItems = items.map((item) => ({
 			id: String(item.id),
 			item
@@ -280,12 +276,10 @@
 			// silently fail
 		}
 		reorderSaving = false;
-		reorderSnapshot = null;
 		reorderMode = false;
 	}
 
 	function cancelReorder() {
-		reorderSnapshot = null;
 		reorderMode = false;
 	}
 

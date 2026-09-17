@@ -327,7 +327,7 @@ describe('createApplicationLetterFollowup', () => {
 			});
 
 			// Should still work, validation is done in createFollowupAiChat
-			const result = await createApplicationLetterFollowup(100, '');
+			await createApplicationLetterFollowup(100, '');
 
 			expect(mockCreateFollowup).toHaveBeenCalledWith(
 				1,

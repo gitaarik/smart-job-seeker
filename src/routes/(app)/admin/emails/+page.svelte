@@ -5,8 +5,7 @@
 		faPaperPlane,
 		faChevronDown,
 		faChevronUp,
-		faExclamationTriangle,
-		faCheckCircle
+		faExclamationTriangle
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../components/Card.svelte';
 

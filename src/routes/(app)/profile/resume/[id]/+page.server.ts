@@ -328,7 +328,7 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	delete: async ({ request, locals, cookies, params }) => {
+	delete: async ({ locals, cookies, params }) => {
 		const user = locals.user;
 		if (!user) {
 			return fail(401, { error: 'Not authenticated' });

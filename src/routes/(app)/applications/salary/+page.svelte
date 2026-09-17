@@ -191,7 +191,8 @@
 	}
 
 	function removeRegionOverride(region: string) {
-		const { [region]: _, ...rest } = regionOverrides;
+		const rest = { ...regionOverrides };
+		delete rest[region];
 		regionOverrides = rest;
 	}
 

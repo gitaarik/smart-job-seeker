@@ -23,7 +23,6 @@ import {
 	references
 } from '$lib/server/db/schema';
 import type {
-	ResumeData,
 	ResumeBasics,
 	WorkExperience,
 	Education,
@@ -375,7 +374,7 @@ export async function applyDiffToProfile(
 		}
 
 		for (const key of payload.education.removed ?? []) {
-			const [institution, area] = key.split('|||');
+			const [institution] = key.split('|||');
 			await dbDirect
 				.delete(education)
 				.where(and(eq(education.profile_id, profileId), eq(education.institution, institution)));

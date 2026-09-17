@@ -12,7 +12,6 @@
 		defaultActionByStep,
 		resultOptions,
 		getStepperPhase,
-		getStatusColor,
 		isFinishedStatus
 	} from '$lib/application-status';
 

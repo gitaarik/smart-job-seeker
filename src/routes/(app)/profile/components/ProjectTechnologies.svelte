@@ -12,10 +12,6 @@
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 
-	interface TechData extends Record<string, unknown> {
-		name: string;
-	}
-
 	let {
 		projectId,
 		profileId,

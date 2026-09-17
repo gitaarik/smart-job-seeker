@@ -23,7 +23,7 @@ import {
  * POST - Trigger rescrape for a job
  */
 export const POST: RequestHandler = async ({ params, locals, request }) => {
-	const user = requireAuth(locals);
+	requireAuth(locals);
 	const jobId = parseIntParam(params.id, 'job');
 
 	// Parse optional overrides from request body
@@ -137,7 +137,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
  * GET - Check rescrape status + run history
  */
 export const GET: RequestHandler = async ({ params, locals }) => {
-	const user = requireAuth(locals);
+	requireAuth(locals);
 	const jobId = parseIntParam(params.id, 'job');
 
 	const job = await db.query.jobs.findFirst({

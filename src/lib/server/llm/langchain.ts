@@ -13,7 +13,6 @@ import { z } from 'zod';
 import { getEnv } from '$lib/tools/get-env';
 import { llmCache } from './cache.js';
 import { isRetryableError, withRetry } from '$lib/server/utils/retry';
-import { errorTracker } from '$lib/server/monitoring/error-tracker';
 import { config } from '$lib/server/config';
 
 /**
@@ -217,7 +216,6 @@ function handleLLMError(error: unknown, provider: string, model: string): never 
 		if (usageMatch) {
 			const limit = parseInt(usageMatch[1]);
 			const used = parseInt(usageMatch[2]);
-			const requested = parseInt(usageMatch[3]);
 			const remaining = limit - used;
 			const percentUsed = ((used / limit) * 100).toFixed(1);
 

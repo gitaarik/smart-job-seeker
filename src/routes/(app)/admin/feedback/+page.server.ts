@@ -4,7 +4,6 @@ import { dbDirect as db } from '$lib/server/db';
 import { eq, and, inArray, desc, asc, count } from 'drizzle-orm';
 import {
 	user_feedback,
-	user_feedback_files,
 	user_feedback_subscribers,
 	feedback_replies,
 	users as usersTable

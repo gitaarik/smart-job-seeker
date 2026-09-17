@@ -6,7 +6,6 @@
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { collected_data, profiles } from '$lib/server/db/schema';
-import removeMd from 'remove-markdown';
 import { isProfileOnly, PROFILE_ONLY_FLAG } from '$lib/profile-visibility';
 
 interface SchemaNode {

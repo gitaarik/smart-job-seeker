@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
-	import { untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowLeft,
@@ -33,7 +32,6 @@
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import ScoreBadge from '../components/ScoreBadge.svelte';
 	import AddSkillToProfile from '../components/AddSkillToProfile.svelte';
-	import PlatformLogo from '$lib/components/PlatformLogo.svelte';
 	import RescrapeMonitor from '../../components/RescrapeMonitor.svelte';
 	import Card from '../../components/Card.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';

@@ -320,7 +320,7 @@ describe('createApplicationQuestionFollowup', () => {
 			});
 
 			// Should still work, validation is done in createFollowupAiChat
-			const result = await createApplicationQuestionFollowup(200, '');
+			await createApplicationQuestionFollowup(200, '');
 
 			expect(mockCreateFollowup).toHaveBeenCalledWith(
 				5,

@@ -2,12 +2,7 @@ import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
 import { and, eq, isNotNull } from 'drizzle-orm';
-import {
-	job_platforms,
-	platform_credentials,
-	platform_profiles,
-	profiles
-} from '$lib/server/db/schema';
+import { platform_credentials, platform_profiles, profiles } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/utils/api-helpers';
 
 /**

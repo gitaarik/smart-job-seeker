@@ -150,7 +150,6 @@ export async function saveEntityMedia(
 
 		// Convert to JPEG for consistency (except for PNGs with transparency)
 		let ext = '.jpg';
-		let mimeType = 'image/jpeg';
 
 		if (file.type === 'image/png') {
 			// Check if PNG has transparency
@@ -158,7 +157,6 @@ export async function saveEntityMedia(
 			if (hasAlpha) {
 				processed = processed.png({ quality: opts.quality });
 				ext = '.png';
-				mimeType = 'image/png';
 			} else {
 				processed = processed.jpeg({ quality: opts.quality });
 			}

@@ -32,13 +32,13 @@ const { mockInvoke, mockWithStructuredOutput, mockGeminiInvoke, mockGeminiStruct
 
 vi.mock('@langchain/google-genai', () => ({
 	ChatGoogleGenerativeAI: class ChatGoogleGenerativeAI {
-		constructor(config: any) {}
-		async invoke(messages: any, options?: any) {
+		constructor() {}
+		async invoke(messages: unknown) {
 			return mockGeminiInvoke(messages);
 		}
 		// Everything except Groq and Cerebras goes through withStructuredOutput,
 		// so this is the path the writing model actually takes.
-		withStructuredOutput(_schema: any, _options?: any) {
+		withStructuredOutput() {
 			return { invoke: (m: any) => mockGeminiStructuredInvoke(m) };
 		}
 	}
@@ -47,8 +47,8 @@ vi.mock('@langchain/google-genai', () => ({
 // Mock LangChain Groq
 vi.mock('@langchain/groq', () => ({
 	ChatGroq: class ChatGroq {
-		constructor(config: any) {}
-		async invoke(messages: any, options?: any) {
+		constructor() {}
+		async invoke(messages: unknown) {
 			return mockInvoke(messages);
 		}
 		withStructuredOutput(schema: any, options?: any) {

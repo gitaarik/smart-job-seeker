@@ -253,7 +253,7 @@
 		}
 	}
 
-	function handlePopState(e: PopStateEvent) {
+	function handlePopState() {
 		if (editingIndex !== null) {
 			historyPushed = false; // Already popped by the browser
 			confirmEditing();

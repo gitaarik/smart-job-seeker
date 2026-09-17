@@ -9,13 +9,7 @@
 	let loading = $state(false);
 
 	function handleSubmit() {
-		return async ({
-			result,
-			update
-		}: {
-			result: { type: string };
-			update: () => Promise<void>;
-		}) => {
+		return async ({ update }: { update: () => Promise<void> }) => {
 			await update();
 			loading = false;
 		};

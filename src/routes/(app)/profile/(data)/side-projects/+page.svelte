@@ -2,13 +2,7 @@
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import {
-		faExternalLink,
-		faLightbulb,
-		faPencil,
-		faStar,
-		faTrash
-	} from '@fortawesome/free-solid-svg-icons';
+	import { faExternalLink, faLightbulb, faPencil, faStar } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../components/SectionHeader.svelte';
 	import EmptyState from '../../components/EmptyState.svelte';
 	import ConfirmModal from '../../components/ConfirmModal.svelte';

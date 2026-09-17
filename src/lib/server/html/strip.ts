@@ -4,7 +4,6 @@
  */
 
 import * as cheerio from 'cheerio';
-import type { Element } from 'domhandler';
 
 /**
  * Options for HTML stripping

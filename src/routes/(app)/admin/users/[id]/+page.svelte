@@ -4,18 +4,14 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowLeft,
-		faCheck,
 		faCreditCard,
 		faEnvelope,
 		faGaugeHigh,
 		faPencil,
-		faSave,
 		faSync,
-		faTimes,
 		faTrash,
 		faUserSecret
 	} from '@fortawesome/free-solid-svg-icons';
-	import SectionHeader from '../../../profile/components/SectionHeader.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import ConfirmModal from '../../../profile/components/ConfirmModal.svelte';
 	import Card from '../../../components/Card.svelte';

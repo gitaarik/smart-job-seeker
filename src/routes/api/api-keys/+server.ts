@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/utils/api-helpers';
 import { createApiKey, listApiKeys } from '$lib/server/auth/api-key';

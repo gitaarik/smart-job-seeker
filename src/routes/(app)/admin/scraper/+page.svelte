@@ -134,7 +134,8 @@
 		} catch (err) {
 			console.error(`Action ${action} failed:`, err);
 		} finally {
-			const { [run.id]: _, ...rest } = actionInProgress;
+			const rest = { ...actionInProgress };
+			delete rest[run.id];
 			actionInProgress = rest;
 		}
 	}

@@ -6,7 +6,6 @@
 		faCheck,
 		faLightbulb,
 		faPencil,
-		faPlus,
 		faStar,
 		faTimes,
 		faTrash
@@ -72,21 +71,6 @@
 			await update();
 			if (result.type === 'success') {
 				editingId = null;
-			}
-		};
-	}
-
-	function handleDeleteSubmit() {
-		return async ({
-			result,
-			update
-		}: {
-			result: { type: string };
-			update: () => Promise<void>;
-		}) => {
-			await update();
-			if (result.type === 'success') {
-				deleteId = null;
 			}
 		};
 	}

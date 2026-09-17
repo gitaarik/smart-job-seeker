@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { and, count, eq, gt, type SQL } from 'drizzle-orm';
+import { and, count, eq, gt } from 'drizzle-orm';
 import { dbDirect as db, queryRaw, sql, sqlJoin } from '$lib/server/db';
 import {
 	accounts,
@@ -11,7 +11,6 @@ import {
 	users as usersTable,
 	verifications
 } from '$lib/server/db/schema';
-import { auth } from '$lib/server/auth/better-auth';
 import { cancelAccountDeletion, requestAccountDeletion } from '$lib/server/account/delete';
 import { sendEmail } from '$lib/server/email';
 import { getEnv } from '$lib/tools/get-env';
@@ -26,7 +25,7 @@ import {
 import crypto from 'crypto';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
-	const layoutData = await parent();
+	await parent();
 
 	const user = await db.query.users.findFirst({
 		where: eq(usersTable.id, params.id)

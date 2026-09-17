@@ -22,7 +22,7 @@
 
 import { eq, isNull } from 'drizzle-orm';
 import { dbDirect as db } from '$lib/server/db';
-import { job_platform_search_presets, search_tasks } from '$lib/server/db/schema';
+import { search_tasks } from '$lib/server/db/schema';
 
 const FALLBACK_PARAM_NAMES = ['keywords', 'q', 'query', 'search', 'kw'];
 

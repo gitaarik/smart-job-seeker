@@ -27,7 +27,6 @@ console.log('✓ ResponseFormat type compiles correctly');
 console.log('✓ Schema structure:', JSON.stringify(testFormat, null, 2));
 
 // Test 2: Verify optional format field
-const optionalFormat: ResponseFormat | undefined = undefined;
 console.log('✓ Optional format compiles correctly');
 
 // Test 3: Verify JSON schema from database would work

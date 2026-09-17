@@ -6,7 +6,6 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTrash } from '@fortawesome/free-solid-svg-icons';
 	import MediaUpload from '$lib/components/MediaUpload.svelte';
-	import SectionSaveButton from '$lib/components/SectionSaveButton.svelte';
 	import { autoSaveField, patchBody, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
@@ -20,8 +19,6 @@
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
 	import ProjectSourcesPointer from '../../../components/ProjectSourcesPointer.svelte';
 	import Card from '../../../../components/Card.svelte';
-
-	type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 	let { data }: { data: PageData } = $props();
 

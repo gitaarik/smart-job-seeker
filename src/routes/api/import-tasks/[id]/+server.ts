@@ -43,7 +43,6 @@ function calculateNextScheduledRun(
 	const tzYear = get('year');
 	const tzMonth = get('month');
 	const tzDay = get('day');
-	const tzHour = get('hour');
 
 	// Build "today at preferred hour" in the user's timezone using a temp date trick:
 	// Create an ISO-like string and resolve via the timezone offset

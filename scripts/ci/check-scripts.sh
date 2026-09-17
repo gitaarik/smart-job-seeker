@@ -35,7 +35,13 @@ set -euo pipefail
 # ratchet on a count cannot tell a stale error from a live one within its
 # budget. It surfaced only when build-ops-scripts.mjs was widened to bundle
 # relative-path importers and the build failed outright.
-BASELINE=26
+#
+# 26 -> 25 on 2026-09-17, free, while clearing eslint's no-unused-vars backlog:
+# migrate-search-terms.ts imported `job_platform_search_presets` from the schema,
+# which exports no such table. The import was unused, so removing it removed the
+# error — and the same shape as the note above: a live TS2305 sitting inside the
+# tolerated budget, found by a different tool looking for something else.
+BASELINE=25
 
 npx svelte-kit sync
 

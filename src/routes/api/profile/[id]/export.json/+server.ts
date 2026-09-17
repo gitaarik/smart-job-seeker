@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { error, json } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { profiles } from '$lib/server/db/schema';
 import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
 
@@ -344,8 +344,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 				: undefined
 		}
 	};
-
-	const profileName = baseProfile.name?.replace(/\s+/g, '-').toLowerCase() || 'profile';
 
 	return json(exportData, {
 		headers: {

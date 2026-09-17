@@ -53,7 +53,8 @@ export function applySkillVisibility(
 			return {
 				...(category as Record<string, unknown>),
 				tech_skills: kept.map((skill) => {
-					const { [PROFILE_ONLY_FLAG]: _flag, ...rest } = skill as Record<string, unknown>;
+					const rest = { ...(skill as Record<string, unknown>) };
+					delete rest[PROFILE_ONLY_FLAG];
 					return rest;
 				})
 			};

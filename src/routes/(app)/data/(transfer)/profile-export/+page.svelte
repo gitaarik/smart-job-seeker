@@ -61,13 +61,7 @@
 
 	function handleExport() {
 		exporting = true;
-		return async ({
-			result,
-			update
-		}: {
-			result: { type: string };
-			update: () => Promise<void>;
-		}) => {
+		return async ({ update }: { update: () => Promise<void> }) => {
 			await update();
 			exporting = false;
 		};

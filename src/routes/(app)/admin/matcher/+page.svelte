@@ -72,10 +72,6 @@
 		return matcherStates.find((s) => s.profileId === profileId);
 	}
 
-	function getProfileName(profileId: number): string {
-		return profiles.find((p) => p.id === profileId)?.name ?? `Profile ${profileId}`;
-	}
-
 	function formatRelativeTime(date: string | null): string {
 		if (!date) return '';
 		const d = new Date(date);

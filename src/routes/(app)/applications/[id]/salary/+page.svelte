@@ -5,7 +5,6 @@
 	import {
 		faArrowDown,
 		faArrowUp,
-		faCheck,
 		faEquals,
 		faExternalLinkAlt,
 		faInfoCircle,

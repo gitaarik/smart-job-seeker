@@ -110,10 +110,6 @@ function normalize(value: unknown): string | undefined {
 	return String(value).trim();
 }
 
-function valuesEqual(a: unknown, b: unknown): boolean {
-	return normalize(a) === normalize(b);
-}
-
 function diffField(field: string, label: string, current: unknown, incoming: unknown): FieldDiff {
 	const c = normalize(current);
 	const i = normalize(incoming);
@@ -568,7 +564,7 @@ function diffReferences(current: Reference[], incoming: Reference[]): ItemDiff<R
 
 // --- Stats ---
 
-function countDiffType<T>(diffs: { type: ItemDiffType }[]): {
+function countDiffType(diffs: { type: ItemDiffType }[]): {
 	added: number;
 	modified: number;
 	removed: number;

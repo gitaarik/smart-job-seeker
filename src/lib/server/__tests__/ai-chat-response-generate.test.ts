@@ -58,7 +58,7 @@ const { mockInvoke } = vi.hoisted(() => ({
 // Mock LangChain Groq
 vi.mock('@langchain/groq', () => ({
 	ChatGroq: class ChatGroq {
-		constructor(config: any) {}
+		constructor() {}
 		async invoke(messages: any) {
 			return mockInvoke(messages);
 		}

@@ -6,7 +6,6 @@
 		faBan,
 		faBuilding,
 		faCalendar,
-		faCheck,
 		faChevronRight,
 		faGlobe,
 		faMapMarkerAlt,
@@ -19,7 +18,7 @@
 	import ScoreBadge from './ScoreBadge.svelte';
 	import SkillPill from './SkillPill.svelte';
 	import { formatSalaryRange, timeAgo } from '$lib/format';
-	import { formatDate as fmtDate, formatMonthDay } from '$lib/format-date';
+	import { formatMonthDay } from '$lib/format-date';
 	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
 
 	interface Job {
@@ -104,10 +103,6 @@
 	): string {
 		const result = formatSalaryRange(min, max, currency, period);
 		return result === 'Not specified' ? '' : result;
-	}
-
-	function formatDate(date: Date | string | null): string {
-		return fmtDate(date, { fallback: '' });
 	}
 
 	function truncate(text: string | null, maxLength: number): string {

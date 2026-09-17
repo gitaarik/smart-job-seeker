@@ -9,8 +9,7 @@
 		faPlus,
 		faTags,
 		faTimes,
-		faTrash,
-		faUndo
+		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import MediaUpload from '$lib/components/MediaUpload.svelte';
 	import SectionSaveButton from '$lib/components/SectionSaveButton.svelte';

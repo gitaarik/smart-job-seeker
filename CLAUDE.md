@@ -57,8 +57,8 @@ Two things worth knowing:
 | Gate             | Script                | Baseline          |
 | ---------------- | --------------------- | ----------------- |
 | `svelte-check`   | `ci/check.sh`         | 31 errors         |
-| `scripts/` types | `ci/check-scripts.sh` | 26 errors         |
-| eslint           | `ci/check-lint.sh`    | 1,214 errors      |
+| `scripts/` types | `ci/check-scripts.sh` | 25 errors         |
+| eslint           | `ci/check-lint.sh`    | 1,094 errors      |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
 The three counts are ratchets: they may only ever go **down**, and each script
@@ -110,7 +110,7 @@ since most files already carry backlog) and runs the type gate whole, because
 the failure that motivated it appeared only in files the change never opened.
 It fails open when the dev stack is down, and `git push --no-verify` skips it.
 
-Within the eslint backlog, two rules are worth reading rather than counting:
+Within the eslint backlog, three rules are worth reading rather than counting:
 
 - **`svelte/no-at-html-tags`** — all 10 sites were audited 2026-08-07 and are
   sound. A new hit is an unreviewed HTML sink, not backlog, and `/p/[slug]`
@@ -121,6 +121,13 @@ Within the eslint backlog, two rules are worth reading rather than counting:
   all were keyed on 2026-09-17. Key by a value only when it cannot repeat (a
   primary key, a hardcoded list): Svelte 5 throws on a duplicate key. Otherwise
   key by index, which is what an unkeyed block already does.
+- **`@typescript-eslint/no-unused-vars`** — cleared on 2026-09-17 down to what
+  sat in uncommitted files, so a hit is usually yours. Two shapes are not dead
+  code and must not be deleted: `const { [key]: _, ...rest }` omits a property
+  (this config reports the binding anyway — write copy-then-`delete` instead),
+  and an unused `$props()` name is the component's public shape, which is
+  `svelte/no-unused-props`. Everything else was a dead import or the leftover of
+  a replaced feature, and several marked a half-written one.
 
 ## Testing with Playwright MCP
 

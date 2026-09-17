@@ -27,7 +27,7 @@
 	const emptyProfile: ResumeData = { basics: { name: '' } };
 	const currentData = $derived(data.currentProfileData ?? emptyProfile);
 
-	function handleParsed(parsed: ResumeData, source: 'upload' | 'import' | 'jsonResume') {
+	function handleParsed(parsed: ResumeData) {
 		incomingData = parsed;
 		showDiffReview = true;
 		error = null;
@@ -80,7 +80,7 @@
 
 			const result = await res.json();
 			if (result.success && result.parsedData) {
-				handleParsed(result.parsedData as ResumeData, 'upload');
+				handleParsed(result.parsedData as ResumeData);
 			} else {
 				error = 'Failed to parse file';
 			}

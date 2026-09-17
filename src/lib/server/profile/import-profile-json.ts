@@ -12,7 +12,6 @@ import {
 	salary_expectations,
 	tech_skill_categories,
 	tech_skills,
-	tech_skill_types,
 	work_experiences,
 	work_experience_achievements,
 	work_experience_technologies,

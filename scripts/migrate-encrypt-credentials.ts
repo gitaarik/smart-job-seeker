@@ -49,7 +49,6 @@ async function migrate() {
 			if (value == null) continue;
 
 			const decrypted = decryptCredential(value);
-			const reEncrypted = encryptCredential(decrypted);
 
 			// If the value is already encrypted, decrypting and re-encrypting
 			// should give us a different base64 string (due to random nonce),
