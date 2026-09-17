@@ -45,7 +45,7 @@
 					<span class="mb-1 block font-semibold text-[var(--dash-text)]">Work location</span>
 					{#if workLocations.length > 0}
 						<div class="flex flex-wrap gap-1.5">
-							{#each workLocations as loc}
+							{#each workLocations as loc, i (i)}
 								<CategoryPill category="work_location" value={loc} />
 							{/each}
 						</div>
@@ -57,7 +57,7 @@
 					<span class="mb-1 block font-semibold text-[var(--dash-text)]">Job type</span>
 					{#if jobTypes.length > 0}
 						<div class="flex flex-wrap gap-1.5">
-							{#each jobTypes as type}
+							{#each jobTypes as type, i (i)}
 								<CategoryPill category="job_type" value={type} />
 							{/each}
 						</div>
@@ -69,7 +69,7 @@
 					<span class="mb-1 block font-semibold text-[var(--dash-text)]">Experience</span>
 					{#if experienceLevels.length > 0}
 						<div class="flex flex-wrap gap-1.5">
-							{#each experienceLevels as level}
+							{#each experienceLevels as level, i (i)}
 								<CategoryPill category="experience_level" value={level} />
 							{/each}
 						</div>
@@ -81,7 +81,7 @@
 					<div>
 						<span class="mb-1 block font-semibold text-[var(--dash-text)]">Locations</span>
 						<div class="flex flex-wrap gap-1.5">
-							{#each locations as loc}
+							{#each locations as loc, i (i)}
 								<span
 									class="rounded border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-amber-700"
 								>

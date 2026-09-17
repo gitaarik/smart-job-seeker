@@ -167,7 +167,7 @@
 			{:else}
 				<!-- Category selector -->
 				<div class="mb-3 flex flex-wrap gap-1.5">
-					{#each categories as cat}
+					{#each categories as cat (cat.value)}
 						<button
 							type="button"
 							onclick={() => (category = cat.value)}
@@ -192,7 +192,7 @@
 				<!-- Attached files -->
 				{#if files.length > 0}
 					<div class="mt-2 space-y-1">
-						{#each files as file, i}
+						{#each files as file, i (i)}
 							<div
 								class="flex items-center justify-between rounded bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text-secondary)]"
 							>

@@ -84,7 +84,7 @@
 			bind:value={minLevel}
 			class="rounded border border-[var(--dash-border)] bg-[var(--dash-card)] px-1.5 py-0.5 text-xs text-[var(--dash-text)] focus:ring-1 focus:ring-[var(--dash-primary)] focus:outline-none"
 		>
-			{#each LOG_LEVELS as level}
+			{#each LOG_LEVELS as level (level)}
 				<option value={level}>{level.toUpperCase()}+</option>
 			{/each}
 		</select>

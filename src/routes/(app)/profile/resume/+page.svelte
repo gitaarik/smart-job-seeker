@@ -332,7 +332,7 @@
 							<div>
 								<p class="mb-2 block text-sm font-medium text-[var(--dash-text)]">Extends</p>
 								<div class="flex flex-wrap gap-x-4 gap-y-2">
-									{#each versions as v}
+									{#each versions as v (v.id)}
 										<label
 											class="flex cursor-pointer items-center gap-1.5 text-sm text-[var(--dash-text)]"
 										>

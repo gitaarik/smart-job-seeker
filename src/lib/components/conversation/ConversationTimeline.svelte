@@ -708,7 +708,7 @@
 						{@const prevContent = getPreviousContent(entryIndex)}
 						{@const segments = computeDiff(prevContent || '', entry.content || '')}
 						<pre
-							class="text-xs leading-relaxed whitespace-pre-wrap text-[var(--dash-text)]">{#each segments as seg}{#if seg.type === 'added'}<span
+							class="text-xs leading-relaxed whitespace-pre-wrap text-[var(--dash-text)]">{#each segments as seg, i (i)}{#if seg.type === 'added'}<span
 										class="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
 										>{seg.text}</span
 									>{:else if seg.type === 'removed'}<span
@@ -872,7 +872,7 @@
 		</div>
 	{/if}
 	<div class="space-y-3">
-		{#each conversation as entry, i}
+		{#each conversation as entry, i (i)}
 			{#if !collapsed || i >= lastContentIndex}
 				{#if i === conversation.length - 1}
 					<div bind:this={lastEntryEl} class="scroll-mt-16">

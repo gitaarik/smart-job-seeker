@@ -571,7 +571,7 @@
 						<h3 class="text-sm font-medium text-[var(--dash-text-secondary)]">Run History</h3>
 					</div>
 					<div class="space-y-1.5">
-						{#each history as run}
+						{#each history as run, i (i)}
 							<div
 								class="flex items-center gap-3 rounded-md bg-[var(--dash-bg)] px-3 py-1.5 text-xs"
 							>

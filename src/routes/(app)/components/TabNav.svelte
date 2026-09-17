@@ -159,7 +159,7 @@
 			class="invisible absolute flex h-0 overflow-hidden"
 			aria-hidden="true"
 		>
-			{#each tabs as tab}
+			{#each tabs as tab, i (i)}
 				<span class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap">
 					{#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="h-4 w-4" />{/if}
 					{tab.label}
@@ -177,7 +177,7 @@
 		{#if !overflows}
 			<!-- Single row: standard underline tabs -->
 			<div class="flex border-b border-[var(--dash-border)]">
-				{#each tabs as tab}
+				{#each tabs as tab, i (i)}
 					<a
 						href={tab.href}
 						class="
@@ -201,7 +201,7 @@
 			<!-- Multi-row: tabs stretch down to bottom border, lower rows overlap upper -->
 			{@const rowCount = rows.length}
 			<div class="relative">
-				{#each rows as row, rowIdx}
+				{#each rows as row, rowIdx (rowIdx)}
 					{@const rowsBelow = rowCount - 1 - rowIdx}
 					{@const isBottomRow = rowsBelow === 0}
 					<div
@@ -209,7 +209,7 @@
 						style="margin-bottom: {isBottomRow ? 0 : -rowsBelow * rowH}px; padding-left: {16 +
 							rowsBelow * 3}px;"
 					>
-						{#each row as tab, tabIdx}
+						{#each row as tab, tabIdx (tabIdx)}
 							{@const active = isActive(tab.href)}
 							<a
 								href={tab.href}

@@ -213,7 +213,7 @@
 		<fieldset>
 			<legend class="{labelClass} mb-2">Work arrangement</legend>
 			<div class="flex flex-wrap gap-2">
-				{#each workLocationOptions as opt}
+				{#each workLocationOptions as opt (opt.value)}
 					<label class="cursor-pointer">
 						<input
 							type="checkbox"
@@ -232,7 +232,7 @@
 		<fieldset>
 			<legend class="{labelClass} mb-2">Employment type</legend>
 			<div class="flex flex-wrap gap-2">
-				{#each jobTypeOptions as opt}
+				{#each jobTypeOptions as opt (opt.value)}
 					<label class="cursor-pointer">
 						<input
 							type="checkbox"
@@ -251,7 +251,7 @@
 		<fieldset>
 			<legend class="{labelClass} mb-2">Experience level</legend>
 			<div class="flex flex-wrap gap-2">
-				{#each experienceLevelOptions as opt}
+				{#each experienceLevelOptions as opt (opt.value)}
 					<label class="cursor-pointer">
 						<input
 							type="checkbox"

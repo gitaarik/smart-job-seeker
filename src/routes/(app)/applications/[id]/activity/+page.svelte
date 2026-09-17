@@ -476,7 +476,7 @@
 			>
 				All
 			</button>
-			{#each presentTypes as type}
+			{#each presentTypes as type (type.value)}
 				<button
 					type="button"
 					onclick={() => (typeFilter = typeFilter === type.value ? null : type.value)}
@@ -617,7 +617,7 @@
 								<div
 									class="mt-1.5 flex flex-wrap items-center gap-3 text-[11px] text-[var(--dash-text-muted)]"
 								>
-									{#each entry.contacts as contact}
+									{#each entry.contacts as contact, i (i)}
 										<span>{contactLabel(contact)}</span>
 									{/each}
 									{#if entry.step}
@@ -739,7 +739,7 @@
 											bind:value={editType}
 											class="rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1.5 text-xs text-[var(--dash-text)]"
 										>
-											{#each recordTypes as type}
+											{#each recordTypes as type (type.value)}
 												<option value={type.value}>{type.label}</option>
 											{/each}
 										</select>

@@ -490,7 +490,7 @@
 	</div>
 {:else}
 	<div class="flex flex-wrap gap-2">
-		{#each skills as skill, index}
+		{#each skills as skill, index (index)}
 			{@const profileOnly = isProfileOnly(skill.tags)}
 			<div class="relative">
 				<button
@@ -567,7 +567,7 @@
 								class="w-full cursor-pointer rounded border border-[var(--dash-border)] bg-transparent px-2 py-1.5 text-sm text-[var(--dash-text)] focus:ring-1 focus:ring-[var(--dash-primary)] focus:outline-none"
 							>
 								<option value={undefined}>--</option>
-								{#each levelOptions as opt}
+								{#each levelOptions as opt, i (i)}
 									<option value={opt.value}>{opt.label}</option>
 								{/each}
 							</select>
@@ -646,7 +646,7 @@
 								{#if showVersionTags_popup}
 									{#if editingTags.length > 0}
 										<div class="mb-1.5 flex flex-wrap gap-1.5">
-											{#each editingTags as tag}
+											{#each editingTags as tag, i (i)}
 												{@const isNeg = tag.startsWith('!')}
 												<button
 													type="button"
@@ -675,7 +675,7 @@
 											{editingProfileOnly ? 'Show anyway on' : 'Show only on'}
 										</p>
 										<div class="mb-2 flex flex-wrap gap-1.5">
-											{#each allSuggestions as suggestion}
+											{#each allSuggestions as suggestion, i (i)}
 												<button
 													type="button"
 													onclick={() => addSkillTag(suggestion)}
@@ -692,7 +692,7 @@
 											Exclude from
 										</p>
 										<div class="flex flex-wrap gap-1.5">
-											{#each allSuggestions as suggestion}
+											{#each allSuggestions as suggestion, i (i)}
 												<button
 													type="button"
 													onclick={() => addSkillTag('!' + suggestion)}

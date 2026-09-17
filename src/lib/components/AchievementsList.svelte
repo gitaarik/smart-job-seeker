@@ -454,7 +454,7 @@
 	<p class="text-sm text-[var(--dash-text-secondary)]">No achievements added yet.</p>
 {:else}
 	<div class="overflow-hidden rounded-md border border-[var(--dash-border)]">
-		{#each achievements as _, index}
+		{#each achievements, index (index)}
 			{@const item = getItem(index)}
 			{@const isDeleted = deletedIndices.has(index)}
 			{@const shown = shownDescription(item)}
@@ -607,7 +607,7 @@
 						<!-- Current tags -->
 						{#if editTags.length > 0}
 							<div class="mb-2 flex flex-wrap gap-1.5">
-								{#each editTags as tag}
+								{#each editTags as tag, i (i)}
 									{@const isExclude = tag.startsWith('!')}
 									<button
 										type="button"
@@ -633,7 +633,7 @@
 								Show only on
 							</p>
 							<div class="mb-3 flex flex-wrap gap-1.5">
-								{#each availableSuggestions as suggestion}
+								{#each availableSuggestions as suggestion, i (i)}
 									<button
 										type="button"
 										onclick={() => addEditTag(suggestion)}
@@ -648,7 +648,7 @@
 							<!-- Hide from (exclude) -->
 							<p class="mb-1.5 text-xs font-medium text-[var(--dash-text-secondary)]">Hide from</p>
 							<div class="flex flex-wrap gap-1.5">
-								{#each availableSuggestions as suggestion}
+								{#each availableSuggestions as suggestion, i (i)}
 									<button
 										type="button"
 										onclick={() => addEditTag(`!${suggestion}`)}

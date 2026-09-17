@@ -77,7 +77,7 @@
 						name="profile_id"
 						class="mt-1 block rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)]"
 					>
-						{#each data.myProfiles as p}
+						{#each data.myProfiles as p (p.id)}
 							<option value={p.id}>{p.name}</option>
 						{/each}
 					</select>
@@ -130,7 +130,7 @@
 				</p>
 			{:else}
 				<div class="space-y-1">
-					{#each data.devices as device}
+					{#each data.devices as device (device.id)}
 						<label class="flex items-center gap-2 text-sm text-[var(--dash-text)]">
 							<input type="checkbox" name="device_ids" value={device.id} />
 							{device.name}
@@ -147,7 +147,7 @@
 					name="ttl_seconds"
 					class="mt-1 block rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)]"
 				>
-					{#each TTL_OPTIONS as opt}
+					{#each TTL_OPTIONS as opt (opt.seconds)}
 						<option value={opt.seconds} selected={opt.seconds === 604800}>
 							{opt.label}
 						</option>
@@ -189,7 +189,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each data.links as link}
+				{#each data.links as link (link.id)}
 					<tr class="border-t border-[var(--dash-border)] text-[var(--dash-text)]">
 						<td class="px-4 py-2">{statusLabel(link)}</td>
 						<td class="px-4 py-2">

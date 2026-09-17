@@ -366,7 +366,7 @@
 			</div>
 		</div>
 		<div class="space-y-1.5">
-			{#each credentials as cred}
+			{#each credentials as cred, i (i)}
 				<div
 					class="
             rounded-md transition-colors {selectedId === String(cred.id)

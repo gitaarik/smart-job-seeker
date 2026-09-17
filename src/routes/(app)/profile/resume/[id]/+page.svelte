@@ -181,7 +181,7 @@
 								<div>
 									<p class="mb-2 block text-sm font-medium text-[var(--dash-text)]">Extends</p>
 									<div class="flex flex-wrap gap-x-4 gap-y-2">
-										{#each data.allVersions as v}
+										{#each data.allVersions as v (v.id)}
 											<label
 												class="flex cursor-pointer items-center gap-1.5 text-sm text-[var(--dash-text)]"
 											>
@@ -269,7 +269,7 @@
 						your profile never appear regardless.
 					</p>
 					<div class="flex flex-wrap gap-x-4 gap-y-2">
-						{#each CONTACT_FIELDS as field}
+						{#each CONTACT_FIELDS as field (field.key)}
 							<label
 								class="flex cursor-pointer items-center gap-1.5 text-sm text-[var(--dash-text)]"
 							>
@@ -343,7 +343,7 @@
 							>
 						</div>
 						<div class="flex flex-wrap gap-2">
-							{#each tagUsage.workExperiences as item}
+							{#each tagUsage.workExperiences as item (item.id)}
 								<a href="/profile/work-experience/{item.id}" class="dash-link-ext"
 									>{item.name || 'Untitled'}</a
 								>
@@ -365,7 +365,7 @@
 							>
 						</div>
 						<div class="flex flex-wrap gap-2">
-							{#each tagUsage.education as item}
+							{#each tagUsage.education as item (item.id)}
 								<a href="/profile/education/{item.id}" class="dash-link-ext"
 									>{item.name || 'Untitled'}</a
 								>
@@ -387,7 +387,7 @@
 							>
 						</div>
 						<div class="flex flex-wrap gap-2">
-							{#each tagUsage.sideProjects as item}
+							{#each tagUsage.sideProjects as item (item.id)}
 								<a href="/profile/side-projects/{item.id}" class="dash-link-ext"
 									>{item.name || 'Untitled'}</a
 								>
@@ -409,7 +409,7 @@
 							>
 						</div>
 						<div class="flex flex-wrap gap-2">
-							{#each tagUsage.skills as item}
+							{#each tagUsage.skills as item (item.id)}
 								<a href="/profile/skills" class="dash-link-ext">{item.name || 'Untitled'}</a>
 							{/each}
 						</div>
@@ -429,7 +429,7 @@
 							>
 						</div>
 						<div class="flex flex-wrap gap-2">
-							{#each tagUsage.achievements as item}
+							{#each tagUsage.achievements as item (item.id)}
 								<a href="/profile/work-experience/{item.work_experience_id}" class="dash-link-ext"
 									>{item.name || 'Untitled'}</a
 								>

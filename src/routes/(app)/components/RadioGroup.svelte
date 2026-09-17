@@ -18,7 +18,7 @@
 </script>
 
 <div class="flex flex-wrap gap-x-4 gap-y-2 {disabled ? 'pointer-events-none opacity-50' : ''}">
-	{#each options as option}
+	{#each options as option, i (i)}
 		<label class="flex cursor-pointer items-center gap-1.5 text-sm text-[var(--dash-text)]">
 			<input
 				type="radio"

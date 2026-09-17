@@ -187,7 +187,7 @@
 							<!-- Attachments -->
 							{#if entry.user_feedback_files?.length > 0}
 								<div class="flex flex-wrap gap-2">
-									{#each entry.user_feedback_files as fileRecord}
+									{#each entry.user_feedback_files as fileRecord (fileRecord.id)}
 										{#if fileRecord.file}
 											<a
 												href="/api/feedback/{entry.id}/files?fileId={fileRecord.file.id}"
@@ -212,7 +212,7 @@
 							<!-- Reply thread -->
 							{#if entry.feedback_replies.length > 0}
 								<div class="space-y-3 border-t border-[var(--dash-border)] pt-3">
-									{#each entry.feedback_replies as reply}
+									{#each entry.feedback_replies as reply (reply.id)}
 										<div class="flex gap-3 {reply.is_admin ? 'pl-0' : 'pl-0'}">
 											<div
 												class="flex-1 rounded-lg p-3 text-sm {reply.is_admin

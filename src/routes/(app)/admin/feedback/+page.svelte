@@ -105,7 +105,7 @@
 
 	<!-- Status filter tabs -->
 	<div class="flex flex-wrap gap-2">
-		{#each statusTabs as tab}
+		{#each statusTabs as tab (tab.value)}
 			<a
 				href="/admin/feedback{tab.value ? `?status=${tab.value}` : ''}{categoryFilter
 					? `${tab.value ? '&' : '?'}category=${categoryFilter}`
@@ -129,7 +129,7 @@
 				: 'border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-text-muted)]'}"
 			>All categories</a
 		>
-		{#each Object.entries(categoryLabels) as [value, label]}
+		{#each Object.entries(categoryLabels) as [value, label] (value)}
 			<a
 				href="/admin/feedback?{statusFilter ? `status=${statusFilter}&` : ''}category={value}"
 				class="rounded-full border px-2 py-0.5 text-xs transition-colors {categoryFilter === value
@@ -205,7 +205,7 @@
 						<!-- Attachments -->
 						{#if entry.user_feedback_files?.length > 0}
 							<div class="flex flex-wrap gap-2">
-								{#each entry.user_feedback_files as fileRecord}
+								{#each entry.user_feedback_files as fileRecord (fileRecord.id)}
 									{#if fileRecord.files}
 										<a
 											href="/admin/feedback?fileId={fileRecord.files.id}&feedbackId={entry.id}"
@@ -249,7 +249,7 @@
 						<!-- Reply thread -->
 						{#if entry.feedback_replies?.length > 0}
 							<div class="space-y-2 border-t border-[var(--dash-border)] pt-3">
-								{#each entry.feedback_replies as reply}
+								{#each entry.feedback_replies as reply (reply.id)}
 									<div
 										class="rounded-lg p-2.5 text-sm {reply.is_admin
 											? 'border border-blue-200 bg-blue-50 dark:border-blue-800/40 dark:bg-blue-950/30'
@@ -411,7 +411,7 @@
 
 						<!-- Actions -->
 						<div class="flex items-center gap-2 border-t border-[var(--dash-border)] pt-1">
-							{#each ['new', 'reviewed', 'waiting', 'resolved'] as s}
+							{#each ['new', 'reviewed', 'waiting', 'resolved'] as s (s)}
 								{#if entry.status !== s}
 									<form method="POST" action="?/updateStatus" use:enhance class="inline">
 										<input type="hidden" name="id" value={entry.id} />

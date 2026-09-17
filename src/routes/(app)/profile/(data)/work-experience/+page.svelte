@@ -321,7 +321,7 @@
 										Technologies
 									</p>
 									<div class="flex flex-wrap gap-1">
-										{#each exp.work_experience_technologies as tech}
+										{#each exp.work_experience_technologies as tech (tech.id)}
 											<span
 												class="rounded bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text)]"
 												>{tech.name}</span
@@ -337,7 +337,7 @@
 										Achievements
 									</p>
 									<ul class="space-y-1 text-sm text-[var(--dash-text)]">
-										{#each exp.work_experience_achievements as achievement}
+										{#each exp.work_experience_achievements as achievement (achievement.id)}
 											<li class="flex items-start gap-2">
 												<span class="mt-1 text-[var(--dash-primary)]">•</span>
 												<span>{achievement.description}</span>

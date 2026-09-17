@@ -225,7 +225,7 @@
 
 				{#if preview.counts.length > 0}
 					<div class="flex flex-wrap gap-1.5 sm:gap-2">
-						{#each preview.counts as { label, count }}
+						{#each preview.counts as { label, count } (label)}
 							<span
 								class="inline-flex items-center gap-1 rounded-full border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-0.5 text-xs font-medium text-[var(--dash-text-secondary)] sm:px-2.5 sm:py-1"
 							>

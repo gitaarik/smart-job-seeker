@@ -32,7 +32,8 @@ set -euo pipefail
 #
 #   svelte/require-each-key — unkeyed {#each} blocks mismatch component state
 #     when a list reorders, and this app has drag-reordering throughout
-#     (svelte-dnd-action). Some of these 236 are latent bugs, not lint noise.
+#     (svelte-dnd-action). Nearly all were keyed on 2026-09-17 (see below); a
+#     new hit over a list that reorders is the latent bug, not backlog.
 #
 # DO NOT set this from a count taken in the dev app container. It will be wrong.
 # docker-compose.yml bind-mounts cloud's billing overlay over OSS's stubs:
@@ -104,7 +105,21 @@ set -euo pipefail
 # and takes five with it. The one that remains is disabled in place with a
 # reason: `resolve()` returns a pathname and these navigations all carry a query
 # string, which the rule cannot see through. Measured with check-oss.sh.
-BASELINE=1426
+#
+# 1,426 -> 1,214 on 2026-09-17, keying 205 {#each} blocks: every
+# svelte/require-each-key except 15 in six files that held other uncommitted
+# work. Svelte 5 throws on a duplicate key, so a block is keyed by a value only
+# when it cannot repeat: a primary key, or a hardcoded list. Scraped, typed and
+# AI-written strings can repeat and are keyed by index, which is what an unkeyed
+# block already does, so those change nothing at runtime. So are lists whose
+# state is kept by position (expanded sets, inputs bound by index): keying them
+# by id would move rows away from their state. Where such a list also loses
+# items from the middle, that is a real bug a key cannot fix, and it was left
+# for its own change: the Education, Projects, References and Work sections of
+# profile/create, and SkillCategoriesEditor. 1,214 is CI's 1,419 minus the 205,
+# all in files identical to their commits; the 7 between 1,426 and 1,419 came
+# from work that never lowered the number.
+BASELINE=1214
 
 npx svelte-kit sync
 

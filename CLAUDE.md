@@ -58,7 +58,7 @@ Two things worth knowing:
 | ---------------- | --------------------- | ----------------- |
 | `svelte-check`   | `ci/check.sh`         | 31 errors         |
 | `scripts/` types | `ci/check-scripts.sh` | 26 errors         |
-| eslint           | `ci/check-lint.sh`    | 1,457 errors      |
+| eslint           | `ci/check-lint.sh`    | 1,214 errors      |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
 The three counts are ratchets: they may only ever go **down**, and each script
@@ -116,9 +116,11 @@ Within the eslint backlog, two rules are worth reading rather than counting:
   sound. A new hit is an unreviewed HTML sink, not backlog, and `/p/[slug]`
   renders user-authored content publicly. Two sites there were injectable until
   that audit.
-- **`svelte/require-each-key`** (236) — an unkeyed `{#each}` mismatches
-  component state when a list reorders, and this UI has drag-reordering
-  throughout. Some of those are latent bugs rather than noise.
+- **`svelte/require-each-key`** — an unkeyed `{#each}` mismatches component
+  state when a list reorders, and this UI has drag-reordering throughout. Nearly
+  all were keyed on 2026-09-17. Key by a value only when it cannot repeat (a
+  primary key, a hardcoded list): Svelte 5 throws on a duplicate key. Otherwise
+  key by index, which is what an unkeyed block already does.
 
 ## Testing with Playwright MCP
 

@@ -230,13 +230,13 @@
 					<!-- Tags: work location, job type, experience level -->
 					{#if workLocations.length > 0 || jobTypes.length > 0 || experienceLevels.length > 0}
 						<div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-							{#each workLocations as loc}
+							{#each workLocations as loc, i (i)}
 								<CategoryPill category="work_location" value={loc} />
 							{/each}
-							{#each jobTypes as type}
+							{#each jobTypes as type, i (i)}
 								<CategoryPill category="job_type" value={type} />
 							{/each}
-							{#each experienceLevels as level}
+							{#each experienceLevels as level, i (i)}
 								<CategoryPill category="experience_level" value={level} />
 							{/each}
 						</div>
@@ -289,7 +289,7 @@
 							Required Skills
 						</p>
 						<div class="flex flex-wrap gap-1">
-							{#each skillsRequired.slice(0, 15) as skill}
+							{#each skillsRequired.slice(0, 15) as skill, i (i)}
 								{@const via = getSkillVia(skill)}
 								<SkillPill
 									{skill}

@@ -221,7 +221,7 @@
 						<div
 							class="absolute top-full left-0 z-20 mt-1 min-w-[160px] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] py-1 shadow-lg"
 						>
-							{#each groupOptions as opt}
+							{#each groupOptions as opt (opt.value)}
 								<button
 									type="button"
 									onclick={() => {
@@ -285,7 +285,7 @@
 								</span>
 								<span class="text-[var(--dash-text)]">Any phase</span>
 							</button>
-							{#each statusOptions as opt}
+							{#each statusOptions as opt (opt.value)}
 								<button
 									type="button"
 									onclick={() => {
@@ -354,7 +354,7 @@
 									</span>
 									<span class="text-[var(--dash-text)]">Any platform</span>
 								</button>
-								{#each data.platforms as plat}
+								{#each data.platforms as plat (plat.id)}
 									<button
 										type="button"
 										onclick={() => {
@@ -606,13 +606,13 @@
 									<!-- Tags: work location, job type, experience level -->
 									{#if workLocations.length > 0 || jobTypes.length > 0 || experienceLevels.length > 0}
 										<div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-											{#each workLocations as loc}
+											{#each workLocations as loc, i (i)}
 												<CategoryPill category="work_location" value={loc} />
 											{/each}
-											{#each jobTypes as type}
+											{#each jobTypes as type, i (i)}
 												<CategoryPill category="job_type" value={type} />
 											{/each}
-											{#each experienceLevels as level}
+											{#each experienceLevels as level, i (i)}
 												<CategoryPill category="experience_level" value={level} />
 											{/each}
 										</div>

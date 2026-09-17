@@ -529,7 +529,7 @@
 
 					{#if keywords.length > 0}
 						<div class="mt-2 flex flex-wrap gap-1.5">
-							{#each keywords as k}
+							{#each keywords as k, i (i)}
 								<span
 									class="rounded-full border border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/10 px-2 py-0.5 text-xs text-[var(--dash-primary)]"
 									>{k}</span

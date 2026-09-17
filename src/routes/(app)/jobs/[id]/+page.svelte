@@ -366,17 +366,17 @@
 							</span>
 						{/if}
 						{#if job.job_types && Array.isArray(job.job_types)}
-							{#each job.job_types as type}
+							{#each job.job_types as type, i (i)}
 								<CategoryPill category="job_type" value={type} />
 							{/each}
 						{/if}
 						{#if job.work_location && Array.isArray(job.work_location)}
-							{#each job.work_location as loc}
+							{#each job.work_location as loc, i (i)}
 								<CategoryPill category="work_location" value={loc} />
 							{/each}
 						{/if}
 						{#if job.experience_levels && Array.isArray(job.experience_levels)}
-							{#each job.experience_levels as level}
+							{#each job.experience_levels as level, i (i)}
 								<CategoryPill category="experience_level" value={level} />
 							{/each}
 						{/if}
@@ -605,7 +605,7 @@
 								Required
 							</p>
 							<div class="flex flex-wrap gap-2">
-								{#each job.skills_required as skill}
+								{#each job.skills_required as skill, i (i)}
 									{@const via = getSkillVia(skill)}
 									<AddSkillToProfile
 										{skill}
@@ -629,7 +629,7 @@
 								Preferred
 							</p>
 							<div class="flex flex-wrap gap-2">
-								{#each job.skills_preferred as skill}
+								{#each job.skills_preferred as skill, i (i)}
 									{@const via = getSkillVia(skill)}
 									<AddSkillToProfile
 										{skill}
@@ -878,7 +878,7 @@
 
 					{#if match.gaps && Array.isArray(match.gaps) && match.gaps.length > 0}
 						<ul class="space-y-2">
-							{#each match.gaps as gap}
+							{#each match.gaps as gap, i (i)}
 								<li class="flex items-start gap-2 text-sm">
 									<FontAwesomeIcon icon={faTimes} class="mt-1 h-3 w-3 flex-shrink-0 text-red-500" />
 									<span class="text-[var(--dash-text)]">{gap}</span>
@@ -892,7 +892,7 @@
 						<div class="mb-4">
 							<p class="mb-2 text-sm text-[var(--dash-text-secondary)]">Strengths</p>
 							<ul class="space-y-1">
-								{#each match.strengths as strength}
+								{#each match.strengths as strength, i (i)}
 									<li class="flex items-start gap-2 text-sm">
 										<FontAwesomeIcon
 											icon={faCheck}
@@ -909,7 +909,7 @@
 						<div>
 							<p class="mb-2 text-sm text-[var(--dash-text-secondary)]">Gaps</p>
 							<ul class="space-y-1">
-								{#each match.gaps as gap}
+								{#each match.gaps as gap, i (i)}
 									<li class="flex items-start gap-2 text-sm">
 										<FontAwesomeIcon
 											icon={faTimes}
@@ -1146,7 +1146,7 @@
 						<div class="mt-4">
 							<p class="mb-2 text-sm text-[var(--dash-text-secondary)]">Imported By</p>
 							<ul class="space-y-1 text-sm text-[var(--dash-text)]">
-								{#each data.importers as imp}
+								{#each data.importers as imp (imp.profileName)}
 									<li>
 										<span class="font-medium">{imp.profileName}</span>
 										{#if imp.scrapedAt}
@@ -1165,7 +1165,7 @@
 						<div class="mt-4">
 							<p class="mb-2 text-sm text-[var(--dash-text-secondary)]">Match History</p>
 							<ul class="space-y-2 text-sm">
-								{#each data.matchHistory as entry}
+								{#each data.matchHistory as entry, i (i)}
 									<li class="flex items-start justify-between gap-2">
 										<div class="text-[var(--dash-text)]">
 											<span class="font-medium">{entry.score}/100</span>
@@ -1214,7 +1214,7 @@
 						<div class="mt-4">
 							<p class="mb-2 text-sm text-[var(--dash-text-secondary)]">Scrape History</p>
 							<ul class="space-y-1 text-sm text-[var(--dash-text)]">
-								{#each data.scrapeHistory as entry}
+								{#each data.scrapeHistory as entry, i (i)}
 									<li>{formatDateTime(entry.processed_at)}</li>
 								{/each}
 							</ul>

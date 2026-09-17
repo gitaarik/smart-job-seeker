@@ -418,7 +418,7 @@
 									required
 									class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 								>
-									{#each currencies as curr}
+									{#each currencies as curr (curr.value)}
 										<option value={curr.value}>{curr.label} ({curr.symbol})</option>
 									{/each}
 								</select>
@@ -437,7 +437,7 @@
 									required
 									class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 								>
-									{#each periods as period}
+									{#each periods as period (period.value)}
 										<option value={period.value}>{period.label}</option>
 									{/each}
 								</select>
@@ -448,7 +448,7 @@
 							<div class="border-t border-[var(--dash-border)] pt-2">
 								<p class="mb-2 text-xs text-[var(--dash-text-muted)]">Use calculated rate:</p>
 								<div class="flex flex-wrap gap-2">
-									{#each [{ period: 'hour' as SalaryPeriod, label: 'Hourly', amount: suggestedRates.hourly }, { period: 'day' as SalaryPeriod, label: 'Daily', amount: suggestedRates.daily }, { period: 'month' as SalaryPeriod, label: 'Monthly', amount: suggestedRates.monthly }, { period: 'year' as SalaryPeriod, label: 'Yearly', amount: suggestedRates.yearly }] as rate}
+									{#each [{ period: 'hour' as SalaryPeriod, label: 'Hourly', amount: suggestedRates.hourly }, { period: 'day' as SalaryPeriod, label: 'Daily', amount: suggestedRates.daily }, { period: 'month' as SalaryPeriod, label: 'Monthly', amount: suggestedRates.monthly }, { period: 'year' as SalaryPeriod, label: 'Yearly', amount: suggestedRates.yearly }] as rate (rate.period)}
 										<button
 											type="button"
 											onclick={() => useSuggested(rate.period)}
@@ -521,7 +521,7 @@
 							</p>
 						{/if}
 						<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-							{#each [{ period: 'hour' as SalaryPeriod, label: 'Hourly', amount: suggestedRates.hourly }, { period: 'day' as SalaryPeriod, label: 'Daily', amount: suggestedRates.daily }, { period: 'month' as SalaryPeriod, label: 'Monthly', amount: suggestedRates.monthly }, { period: 'year' as SalaryPeriod, label: 'Yearly', amount: suggestedRates.yearly }] as rate}
+							{#each [{ period: 'hour' as SalaryPeriod, label: 'Hourly', amount: suggestedRates.hourly }, { period: 'day' as SalaryPeriod, label: 'Daily', amount: suggestedRates.daily }, { period: 'month' as SalaryPeriod, label: 'Monthly', amount: suggestedRates.monthly }, { period: 'year' as SalaryPeriod, label: 'Yearly', amount: suggestedRates.yearly }] as rate (rate.period)}
 								<button
 									type="button"
 									onclick={() => useSuggested(rate.period)}

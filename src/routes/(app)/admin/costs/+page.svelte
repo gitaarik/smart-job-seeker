@@ -34,7 +34,7 @@
 	<!-- Period selector -->
 	<div class="flex flex-wrap items-center gap-3">
 		<span class="text-sm text-[var(--dash-text-muted)]">Period:</span>
-		{#each data.availableMonths as month}
+		{#each data.availableMonths as month (month.value)}
 			<a
 				href="?period={month.value}"
 				class="rounded-md px-3 py-1 text-sm transition-colors {data.currentPeriod === month.value
@@ -109,7 +109,7 @@
 			<p class="text-sm text-[var(--dash-text-muted)]">No AI transactions in this period.</p>
 		{:else}
 			<div class="space-y-3">
-				{#each data.planStats as plan}
+				{#each data.planStats as plan (plan.plan)}
 					<div
 						class="flex items-center justify-between border-b border-[var(--dash-border)] py-2 last:border-0"
 					>
@@ -157,7 +157,7 @@
 			</p>
 		{:else}
 			<div class="space-y-3">
-				{#each data.providerStats as ps}
+				{#each data.providerStats as ps (ps.key)}
 					<div
 						class="flex items-center justify-between border-b border-[var(--dash-border)] py-2 last:border-0"
 					>
@@ -220,7 +220,7 @@
 			<p class="text-sm text-[var(--dash-text-muted)]">No user cost data available.</p>
 		{:else}
 			<div class="space-y-3">
-				{#each data.topUsers as user, i}
+				{#each data.topUsers as user, i (user.userId)}
 					<div
 						class="flex items-center justify-between border-b border-[var(--dash-border)] py-2 last:border-0"
 					>

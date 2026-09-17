@@ -281,7 +281,7 @@
 						<FontAwesomeIcon icon={faExclamationTriangle} class="h-4 w-4 text-amber-500" />
 						System Health
 					</div>
-					{#each healthChecks as issue}
+					{#each healthChecks as issue, i (i)}
 						<div class="flex items-center justify-between gap-4">
 							<div
 								class="flex items-start gap-2 text-sm {issue.severity === 'error'

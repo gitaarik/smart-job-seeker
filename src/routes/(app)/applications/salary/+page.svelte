@@ -382,7 +382,7 @@
 					<div
 						class="ml-2 inline-flex overflow-hidden rounded-md border border-[var(--dash-border)]"
 					>
-						{#each currencies as opt, i}
+						{#each currencies as opt, i (opt.value)}
 							<button
 								type="button"
 								onclick={() => (currency = opt.value)}
@@ -409,7 +409,7 @@
 			</div>
 
 			<!-- Region override rows -->
-			{#each Object.entries(regionOverrides) as [region, override]}
+			{#each Object.entries(regionOverrides) as [region, override] (region)}
 				{@const regionLabel = predefinedRegions.find((r) => r.value === region)?.label ?? region}
 				<div class="space-y-2 rounded-lg bg-[var(--dash-bg)] px-4 py-3">
 					<div class="flex items-center justify-between">
@@ -436,7 +436,7 @@
 						<div
 							class="ml-2 inline-flex overflow-hidden rounded-md border border-[var(--dash-border)]"
 						>
-							{#each currencies as opt, i}
+							{#each currencies as opt, i (opt.value)}
 								<button
 									type="button"
 									onclick={() => updateRegionCurrency(region, opt.value)}
@@ -477,7 +477,7 @@
 						class="max-w-[200px] flex-1 rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 					>
 						<option value="">Add region...</option>
-						{#each availableRegions as region}
+						{#each availableRegions as region (region.value)}
 							<option value={region.value}>{region.label}</option>
 						{/each}
 					</select>
@@ -513,7 +513,7 @@
 		</p>
 
 		<div class="space-y-2">
-			{#each commonAdjustments as adj}
+			{#each commonAdjustments as adj (adj.value)}
 				{@const isAgency = adj.key === 'company_type' && adj.value === 'agency'}
 				{@const val = getAdjustmentValue(adj.key, adj.value)}
 				{@const numVal = val !== '' ? parseInt(val) : null}
@@ -571,7 +571,7 @@
 
 		{#if showAdvanced}
 			<div class="mt-2 space-y-2">
-				{#each advancedAdjustments as adj}
+				{#each advancedAdjustments as adj (adj.value)}
 					{@const isAgency = adj.key === 'company_type' && adj.value === 'agency'}
 					{@const val = getAdjustmentValue(adj.key, adj.value)}
 					{@const numVal = val !== '' ? parseInt(val) : null}
@@ -774,7 +774,7 @@
 					Rate by scenario
 				</div>
 				<div class="space-y-2">
-					{#each exampleScenarios as scenario}
+					{#each exampleScenarios as scenario, i (i)}
 						<div class="flex items-center justify-between rounded-lg bg-[var(--dash-bg)] px-3 py-2">
 							<div>
 								<span class="text-sm font-medium text-[var(--dash-text)]">{scenario.label}</span>

@@ -629,7 +629,7 @@
 			defaultExpanded={basicsChangedCount > 0}
 		>
 			<div class="space-y-1 p-3 sm:p-4">
-				{#each diff.basics as _, i}
+				{#each diff.basics, i (i)}
 					<DiffFieldRow bind:diff={diff.basics[i]} {showUnchanged} />
 				{/each}
 			</div>
@@ -649,7 +649,7 @@
 			defaultExpanded={diff.work.some((d) => d.type !== 'unchanged') || partialWork}
 		>
 			<div class="divide-y divide-[var(--dash-border)]">
-				{#each diff.work as _, i}
+				{#each diff.work, i (i)}
 					{@const item = diff.work[i]}
 					<DiffItemRow
 						type={item.type}
@@ -686,7 +686,7 @@
 			defaultExpanded={diff.education.some((d) => d.type !== 'unchanged') || partialEducation}
 		>
 			<div class="divide-y divide-[var(--dash-border)]">
-				{#each diff.education as _, i}
+				{#each diff.education, i (i)}
 					{@const item = diff.education[i]}
 					<DiffItemRow
 						type={item.type}
@@ -718,7 +718,7 @@
 			defaultExpanded={diff.skills.some((d) => d.type !== 'unchanged') || partialSkills}
 		>
 			<div class="divide-y divide-[var(--dash-border)]">
-				{#each diff.skills as _, i}
+				{#each diff.skills, i (i)}
 					{@const cat = diff.skills[i]}
 					<DiffItemRow
 						type={cat.type}
@@ -752,7 +752,7 @@
 			defaultExpanded={diff.languages.some((d) => d.type !== 'unchanged') || partialLanguages}
 		>
 			<div class="divide-y divide-[var(--dash-border)]">
-				{#each diff.languages as _, i}
+				{#each diff.languages, i (i)}
 					{@const item = diff.languages[i]}
 					<DiffItemRow
 						type={item.type}
@@ -784,7 +784,7 @@
 			defaultExpanded={diff.projects.some((d) => d.type !== 'unchanged') || partialProjects}
 		>
 			<div class="divide-y divide-[var(--dash-border)]">
-				{#each diff.projects as _, i}
+				{#each diff.projects, i (i)}
 					{@const item = diff.projects[i]}
 					<DiffItemRow
 						type={item.type}
@@ -817,7 +817,7 @@
 			defaultExpanded={diff.certificates.some((d) => d.type !== 'unchanged') || partialCertificates}
 		>
 			<div class="divide-y divide-[var(--dash-border)]">
-				{#each diff.certificates as _, i}
+				{#each diff.certificates, i (i)}
 					{@const item = diff.certificates[i]}
 					<DiffItemRow
 						type={item.type}
@@ -849,7 +849,7 @@
 			defaultExpanded={diff.references.some((d) => d.type !== 'unchanged') || partialReferences}
 		>
 			<div class="divide-y divide-[var(--dash-border)]">
-				{#each diff.references as _, i}
+				{#each diff.references, i (i)}
 					{@const item = diff.references[i]}
 					<DiffItemRow
 						type={item.type}
@@ -927,7 +927,7 @@
 							Parsed sections:
 						</p>
 						<div class="flex flex-wrap gap-1.5">
-							{#each debugSections as section}
+							{#each debugSections as section (section.name)}
 								{#if section.name === 'Basics'}
 									<span
 										class="rounded border px-2 py-0.5 text-xs {section.fields > 1

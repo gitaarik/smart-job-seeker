@@ -210,7 +210,7 @@
 			bind:this={dropdownEl}
 			class="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] shadow-lg"
 		>
-			{#each filtered as country, i}
+			{#each filtered as country, i (i)}
 				<button
 					type="button"
 					onclick={() => select(country)}

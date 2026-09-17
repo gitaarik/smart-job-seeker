@@ -238,7 +238,7 @@
 				</p>
 			{:else}
 				<div class="space-y-2">
-					{#each [...state.recentErrors].reverse() as err}
+					{#each [...state.recentErrors].reverse() as err, i (i)}
 						<div class="rounded-lg border border-[var(--dash-error)]/20 bg-[var(--dash-bg)] p-3">
 							<div class="flex items-start justify-between gap-2">
 								<div class="flex min-w-0 items-start gap-2">

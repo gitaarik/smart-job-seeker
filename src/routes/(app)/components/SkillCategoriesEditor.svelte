@@ -472,7 +472,7 @@
 			{#if expanded}
 				{#if tags.length > 0}
 					<div class="mb-1.5 flex flex-wrap gap-1.5">
-						{#each tags as tag}
+						{#each tags as tag, i (i)}
 							{@const isNeg = tag.startsWith('!')}
 							<button
 								type="button"
@@ -499,7 +499,7 @@
 						Show only on
 					</p>
 					<div class="mb-2 flex flex-wrap gap-1.5">
-						{#each suggestions as suggestion}
+						{#each suggestions as suggestion, i (i)}
 							<button
 								type="button"
 								onclick={() => addCategoryTag(categoryIndex, suggestion)}
@@ -514,7 +514,7 @@
 						Exclude from
 					</p>
 					<div class="flex flex-wrap gap-1.5">
-						{#each suggestions as suggestion}
+						{#each suggestions as suggestion, i (i)}
 							<button
 								type="button"
 								onclick={() => addCategoryTag(categoryIndex, '!' + suggestion)}
@@ -533,7 +533,7 @@
 
 {#if compact}
 	<div class="divide-y divide-[var(--dash-border)]">
-		{#each categories as category, categoryIndex}
+		{#each categories, categoryIndex (categoryIndex)}
 			<div
 				class={expandedItems.has(categoryIndex) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}
 			>
@@ -648,7 +648,7 @@
 				Order saved
 			</div>
 		{/if}
-		{#each categories as category, categoryIndex}
+		{#each categories, categoryIndex (categoryIndex)}
 			<Card class="p-3 sm:p-4">
 				<div class="mb-3 flex items-center justify-between gap-2">
 					{@render categoryHeader(categoryIndex)}

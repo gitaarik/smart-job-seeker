@@ -435,7 +435,7 @@
 			{#if searchTasks.length > 1}
 				<div class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]">
 					<FontAwesomeIcon icon={faSortAmountDown} class="h-3 w-3" />
-					{#each [{ value: 'added', label: 'Date added' }, { value: 'last_run', label: 'Last run' }, { value: 'alpha', label: 'A–Z' }] as opt}
+					{#each [{ value: 'added', label: 'Date added' }, { value: 'last_run', label: 'Last run' }, { value: 'alpha', label: 'A–Z' }] as opt (opt.value)}
 						<button
 							type="button"
 							onclick={() => setSortBy(opt.value as SortOption)}

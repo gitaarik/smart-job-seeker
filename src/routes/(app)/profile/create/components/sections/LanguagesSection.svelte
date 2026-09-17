@@ -61,7 +61,7 @@
 	{#if isExpanded}
 		<div class="border-t border-[var(--dash-border)] p-3 sm:p-4">
 			<div class="inline-flex flex-col gap-3">
-				{#each languages as lang, index}
+				{#each languages, index (index)}
 					<div class="flex items-center gap-3">
 						<input
 							type="text"
@@ -75,7 +75,7 @@
 							class="rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 						>
 							<option value="">Proficiency</option>
-							{#each proficiencyOptions as option}
+							{#each proficiencyOptions as option (option.value)}
 								<option value={option.value}>{option.label}</option>
 							{/each}
 						</select>

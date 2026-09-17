@@ -123,7 +123,7 @@
 		<!-- Current tags -->
 		{#if tags.length > 0}
 			<div class="mb-3 flex flex-wrap gap-1.5">
-				{#each tags as tag}
+				{#each tags as tag, i (i)}
 					<button
 						type="button"
 						onclick={() => removeTag(tag)}
@@ -141,7 +141,7 @@
 		<!-- Suggestions -->
 		{#if allSuggestions.length > 0}
 			<div class="mb-3 flex flex-wrap gap-1.5">
-				{#each allSuggestions as suggestion}
+				{#each allSuggestions as suggestion, i (i)}
 					<button
 						type="button"
 						onclick={() => addTag(suggestion)}

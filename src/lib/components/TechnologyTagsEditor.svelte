@@ -66,7 +66,7 @@
 </script>
 
 <div class="flex flex-wrap gap-2">
-	{#each technologies as tech, index}
+	{#each technologies, index (index)}
 		{@const isDeleted = deletedIndices.has(index)}
 		<div
 			class="flex items-center gap-1 rounded-lg py-1 pr-1 pl-3 {isDeleted

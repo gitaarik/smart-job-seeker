@@ -182,7 +182,7 @@
 							class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)]"
 						>
 							<option value={null}>All users</option>
-							{#each data.users as user}
+							{#each data.users as user (user.id)}
 								<option value={user.id}>{user.name}</option>
 							{/each}
 						</select>
@@ -202,7 +202,7 @@
 							class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)]"
 						>
 							<option value={null}>All profiles</option>
-							{#each filteredProfiles as profile}
+							{#each filteredProfiles as profile (profile.id)}
 								<option value={profile.id}>
 									{profile.name}{createUserId ? '' : ` (${profile.userName || 'No user'})`}
 								</option>
@@ -223,7 +223,7 @@
 							class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)]"
 						>
 							<option value={null}>Select a search task...</option>
-							{#each filteredSearchTasks as task}
+							{#each filteredSearchTasks as task (task.id)}
 								<option value={task.id}>
 									{searchTaskDisplayName(task.platformName, task.note)}{createProfileId
 										? ''

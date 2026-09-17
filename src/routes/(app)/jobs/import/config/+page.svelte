@@ -253,7 +253,7 @@
 			</div>
 		</div>
 		<div class="flex flex-wrap gap-2">
-			{#each data.options.jobTypes as jobType}
+			{#each data.options.jobTypes as jobType (jobType)}
 				<button
 					type="button"
 					onclick={() => (jobTypes = toggleArrayValue(jobTypes, jobType))}
@@ -304,7 +304,7 @@
 			</div>
 		</div>
 		<div class="flex flex-wrap gap-2">
-			{#each data.options.workLocationOptions as option}
+			{#each data.options.workLocationOptions as option (option)}
 				<button
 					type="button"
 					onclick={() => (workLocation = toggleArrayValue(workLocation, option))}
@@ -358,7 +358,7 @@
 			<!-- Location tags -->
 			{#if locations.length > 0}
 				<div class="mb-3 flex flex-wrap gap-2">
-					{#each locations as loc}
+					{#each locations as loc, i (i)}
 						<span
 							class="flex items-center gap-2 rounded-lg bg-[var(--dash-primary-light)] px-3 py-1.5 text-sm text-[var(--dash-primary)]"
 						>
@@ -413,7 +413,7 @@
 			</div>
 		</div>
 		<div class="flex flex-wrap gap-2">
-			{#each data.options.experienceLevels as level}
+			{#each data.options.experienceLevels as level (level)}
 				<button
 					type="button"
 					onclick={() => (experienceLevels = toggleArrayValue(experienceLevels, level))}
@@ -458,7 +458,7 @@
 					Include community jobs from the last:
 				</p>
 				<div class="flex flex-wrap gap-2">
-					{#each communityTimeOptions as opt}
+					{#each communityTimeOptions as opt (opt.value)}
 						<button
 							type="button"
 							onclick={() =>

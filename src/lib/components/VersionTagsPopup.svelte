@@ -85,7 +85,7 @@
 		<!-- Current tags -->
 		{#if tags.length > 0}
 			<div class="mb-4 flex flex-wrap gap-1.5">
-				{#each tags as tag}
+				{#each tags as tag, i (i)}
 					{@const isExclude = tag.startsWith('!')}
 					<button
 						type="button"
@@ -108,7 +108,7 @@
 			<!-- Show only on (whitelist) -->
 			<p class="mb-1.5 text-xs font-medium text-[var(--dash-text-secondary)]">Show only on</p>
 			<div class="mb-3 flex flex-wrap gap-1.5">
-				{#each available as c}
+				{#each available as c, i (i)}
 					<button
 						type="button"
 						onclick={() => addTag(c)}
@@ -123,7 +123,7 @@
 			<!-- Hide from (exclude) -->
 			<p class="mb-1.5 text-xs font-medium text-[var(--dash-text-secondary)]">Hide from</p>
 			<div class="flex flex-wrap gap-1.5">
-				{#each available as c}
+				{#each available as c, i (i)}
 					<button
 						type="button"
 						onclick={() => addTag(`!${c}`)}

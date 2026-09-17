@@ -156,7 +156,7 @@
 			</p>
 
 			<div class="space-y-4">
-				{#each data.debugData as debug}
+				{#each data.debugData as debug (debug.id)}
 					<div class="rounded-lg border border-[var(--dash-border)] p-4">
 						<div class="mb-3 flex items-center justify-between">
 							<div class="flex items-center gap-3">

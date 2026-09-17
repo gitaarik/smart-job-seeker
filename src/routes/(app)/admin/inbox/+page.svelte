@@ -87,7 +87,7 @@
 
 	<!-- Status filter tabs -->
 	<div class="flex flex-wrap gap-2">
-		{#each statusTabs as tab}
+		{#each statusTabs as tab (tab.value)}
 			<a
 				href={filterUrl({ status: tab.value, handler: handlerFilter })}
 				class="rounded-lg border px-3 py-1.5 text-sm transition-colors {statusFilter === tab.value
@@ -109,7 +109,7 @@
 				: 'border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-text-muted)]'}"
 			>All handlers</a
 		>
-		{#each Object.entries(handlerLabels) as [value, label]}
+		{#each Object.entries(handlerLabels) as [value, label] (value)}
 			<a
 				href={filterUrl({ status: statusFilter, handler: value })}
 				class="rounded-full border px-2 py-0.5 text-xs transition-colors {handlerFilter === value

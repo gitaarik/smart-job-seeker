@@ -1814,13 +1814,13 @@
 												{/if}
 												{#if workLocs.length > 0 || jobTyps.length > 0 || expLvls.length > 0}
 													<div class="mt-0.5 flex flex-wrap items-center gap-1.5">
-														{#each workLocs as loc}
+														{#each workLocs as loc, i (i)}
 															<CategoryPill category="work_location" value={loc} />
 														{/each}
-														{#each jobTyps as type}
+														{#each jobTyps as type, i (i)}
 															<CategoryPill category="job_type" value={type} />
 														{/each}
-														{#each expLvls as level}
+														{#each expLvls as level, i (i)}
 															<CategoryPill category="experience_level" value={level} />
 														{/each}
 													</div>
@@ -1951,7 +1951,7 @@
 													Required Skills
 												</p>
 												<div class="flex flex-wrap gap-1">
-													{#each job.skills_required.slice(0, 12) as skill}
+													{#each job.skills_required.slice(0, 12) as skill, i (i)}
 														{@const via = provenanceFor(item.match?.matched_skill_details, skill)}
 														<SkillPill
 															{skill}
@@ -1980,7 +1980,7 @@
 													Preferred Skills
 												</p>
 												<div class="flex flex-wrap gap-1">
-													{#each job.skills_preferred.slice(0, 12) as skill}
+													{#each job.skills_preferred.slice(0, 12) as skill, i (i)}
 														{@const via = provenanceFor(item.match?.matched_skill_details, skill)}
 														<SkillPill
 															{skill}

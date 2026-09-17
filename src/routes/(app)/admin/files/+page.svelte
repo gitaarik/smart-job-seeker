@@ -146,7 +146,7 @@
 
 	<!-- Type filters -->
 	<div class="flex flex-wrap gap-2">
-		{#each typeFilters as f}
+		{#each typeFilters as f (f.value)}
 			<a
 				href={buildUrl({ type: f.value, page: '1' })}
 				class="rounded-lg border px-3 py-1.5 text-sm transition-colors {typeFilter === f.value
@@ -160,7 +160,7 @@
 
 	<!-- Usage filters -->
 	<div class="flex flex-wrap gap-1.5">
-		{#each usageFilters as f}
+		{#each usageFilters as f (f.value)}
 			<a
 				href={buildUrl({ usage: f.value, page: '1' })}
 				class="rounded-full border px-2 py-0.5 text-xs transition-colors {usageFilter === f.value
@@ -202,7 +202,7 @@
 
 							<!-- Usage badges -->
 							<div class="flex flex-shrink-0 items-center gap-1.5">
-								{#each usageLabels as u}
+								{#each usageLabels as u, i (i)}
 									<span
 										class="rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-1.5 py-0.5 text-xs text-[var(--dash-text-muted)]"
 									>
@@ -290,7 +290,7 @@
 								<div>
 									<span class="text-xs text-[var(--dash-text-muted)]">Used by</span>
 									<div class="mt-1 flex flex-wrap gap-1.5">
-										{#each usageLabels as u}
+										{#each usageLabels as u, i (i)}
 											<span
 												class="rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-0.5 text-xs text-[var(--dash-text-secondary)]"
 											>
@@ -307,7 +307,7 @@
 								<div>
 									<span class="text-xs text-[var(--dash-text-muted)]">Import history</span>
 									<div class="mt-1 space-y-1.5">
-										{#each file.importLogs as log}
+										{#each file.importLogs as log, i (i)}
 											<div
 												class="rounded p-2 text-xs {log.event.includes('error')
 													? 'border border-red-200 bg-red-50 dark:border-red-800/30 dark:bg-red-950/20'

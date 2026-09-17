@@ -321,7 +321,7 @@
 										Achievements
 									</p>
 									<ul class="space-y-1 text-sm text-[var(--dash-text)]">
-										{#each project.side_project_achievements as achievement}
+										{#each project.side_project_achievements as achievement (achievement.id)}
 											<li class="flex items-start gap-2">
 												<span class="mt-1 text-[var(--dash-primary)]">•</span>
 												<span>{achievement.description}</span>

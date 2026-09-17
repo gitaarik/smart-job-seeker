@@ -449,7 +449,7 @@
 					class="w-full max-w-xs rounded-md border border-[var(--dash-border-input)] bg-[var(--dash-card)] px-3 py-2 text-sm text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:outline-none"
 					style="--tw-ring-color: var(--dash-primary);"
 				>
-					{#each FREQUENCY_OPTIONS as opt}
+					{#each FREQUENCY_OPTIONS as opt (opt.value)}
 						<option value={opt.value}>{opt.label}</option>
 					{/each}
 				</select>
@@ -465,7 +465,7 @@
 						class="rounded-md border border-[var(--dash-border-input)] bg-[var(--dash-card)] px-3 py-2 text-sm text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:outline-none"
 						style="--tw-ring-color: var(--dash-primary);"
 					>
-						{#each HOUR_OPTIONS as opt}
+						{#each HOUR_OPTIONS as opt (opt.value)}
 							<option value={opt.value}>{opt.label}</option>
 						{/each}
 					</select>
@@ -476,9 +476,9 @@
 						style="--tw-ring-color: var(--dash-primary);"
 					>
 						<option value="">Select timezone...</option>
-						{#each TIMEZONE_OPTIONS as group}
+						{#each TIMEZONE_OPTIONS as group (group.group)}
 							<optgroup label={group.group}>
-								{#each group.zones as tz}
+								{#each group.zones as tz (tz)}
 									<option value={tz}>{formatTzLabel(tz)}</option>
 								{/each}
 							</optgroup>
@@ -504,7 +504,7 @@
 					class="w-full max-w-xs rounded-md border border-[var(--dash-border-input)] bg-[var(--dash-card)] px-3 py-2 text-sm text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:outline-none"
 					style="--tw-ring-color: var(--dash-primary);"
 				>
-					{#each SCORE_OPTIONS as opt}
+					{#each SCORE_OPTIONS as opt (opt.value)}
 						<option value={opt.value}>{opt.label}</option>
 					{/each}
 				</select>

@@ -656,11 +656,11 @@
 	<section>
 		<h2 class="mb-3 text-lg font-semibold text-[var(--dash-text)]">Color Tokens</h2>
 		<div class="space-y-3">
-			{#each colorTokens as group}
+			{#each colorTokens as group (group.group)}
 				<Card padding="responsive">
 					<h3 class="mb-3 text-sm font-medium text-[var(--dash-text)]">{group.group}</h3>
 					<div class="flex flex-wrap gap-3">
-						{#each group.tokens as token}
+						{#each group.tokens as token (token.name)}
 							<div class="flex items-center gap-2">
 								<div
 									class="h-8 w-8 rounded border border-[var(--dash-border)]"
@@ -952,7 +952,7 @@
 					many items — will overflow on mobile.
 				</p>
 				<div class="inline-flex overflow-hidden rounded-lg border border-[var(--dash-border)]">
-					{#each segmentedOptions as opt, i}
+					{#each segmentedOptions as opt, i (opt.value)}
 						<button
 							type="button"
 							onclick={() => (segmentedValue = opt.value)}
@@ -979,7 +979,7 @@
 					dot makes it clearly a selection control, not an action button.
 				</p>
 				<div class="flex flex-wrap gap-2">
-					{#each chipOptions as opt}
+					{#each chipOptions as opt (opt.value)}
 						<button
 							type="button"
 							onclick={() => (chipValue = opt.value)}
@@ -1017,7 +1017,7 @@
 					dot to signal multiple selection.
 				</p>
 				<div class="flex flex-wrap gap-2">
-					{#each checkboxOptions as opt}
+					{#each checkboxOptions as opt (opt.value)}
 						<button
 							type="button"
 							onclick={() => toggleCheckbox(opt.value)}
@@ -1261,7 +1261,7 @@
 					Job Type <span class="text-xs font-normal text-[var(--dash-text-muted)]">— emerald</span>
 				</h3>
 				<div class="flex flex-wrap gap-2">
-					{#each getAllIcons('job_type') as { value }}
+					{#each getAllIcons('job_type') as { value } (value)}
 						<CategoryPill category="job_type" {value} />
 					{/each}
 				</div>
@@ -1275,7 +1275,7 @@
 					>
 				</h3>
 				<div class="flex flex-wrap gap-2">
-					{#each getAllIcons('work_location') as { value }}
+					{#each getAllIcons('work_location') as { value } (value)}
 						<CategoryPill category="work_location" {value} />
 					{/each}
 				</div>
@@ -1289,7 +1289,7 @@
 					>
 				</h3>
 				<div class="flex flex-wrap gap-2">
-					{#each getAllIcons('experience_level') as { value }}
+					{#each getAllIcons('experience_level') as { value } (value)}
 						<CategoryPill category="experience_level" {value} />
 					{/each}
 				</div>
@@ -1478,11 +1478,11 @@
 			FontAwesome 6.7 — all icons currently used in the dashboard.
 		</p>
 		<div class="space-y-3">
-			{#each iconGroups as group}
+			{#each iconGroups as group (group.label)}
 				<Card padding="responsive">
 					<h3 class="mb-3 text-sm font-medium text-[var(--dash-text)]">{group.label}</h3>
 					<div class="flex flex-wrap gap-1.5">
-						{#each group.icons as { name, icon }}
+						{#each group.icons as { name, icon } (name)}
 							<div
 								class="group relative flex h-14 w-14 cursor-default flex-col items-center justify-center rounded-lg transition-colors hover:bg-[var(--dash-bg)]"
 								title={name}

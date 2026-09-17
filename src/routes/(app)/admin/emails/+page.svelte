@@ -103,7 +103,7 @@
 
 	<!-- Type filter tabs -->
 	<div class="flex flex-wrap gap-2">
-		{#each typeTabs as tab}
+		{#each typeTabs as tab, i (i)}
 			<a
 				href={filterUrl({ type: tab.value, status: statusFilter })}
 				class="rounded-lg border px-3 py-1.5 text-sm transition-colors {typeFilter === tab.value
@@ -118,7 +118,7 @@
 
 	<!-- Status filter -->
 	<div class="flex flex-wrap gap-1.5">
-		{#each [{ value: '', label: 'All statuses', count: allCount }, { value: 'sent', label: 'Sent', count: sentCount }, { value: 'failed', label: 'Failed', count: failedCount }] as tab}
+		{#each [{ value: '', label: 'All statuses', count: allCount }, { value: 'sent', label: 'Sent', count: sentCount }, { value: 'failed', label: 'Failed', count: failedCount }] as tab (tab.value)}
 			<a
 				href={filterUrl({ type: typeFilter, status: tab.value })}
 				class="rounded-full border px-2 py-0.5 text-xs transition-colors {statusFilter === tab.value

@@ -16,7 +16,7 @@
 </script>
 
 <div class="flex flex-wrap items-center gap-1.5">
-	{#each filters as filter}
+	{#each filters as filter, i (i)}
 		<button
 			type="button"
 			onclick={() => onchange(filter.value)}

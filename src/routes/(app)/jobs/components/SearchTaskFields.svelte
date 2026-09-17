@@ -1295,7 +1295,7 @@
 								bind:value={scheduleIntervalInput}
 								class="rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
 							>
-								{#each SCHEDULE_OPTIONS as opt}
+								{#each SCHEDULE_OPTIONS as opt (opt.value)}
 									<option value={opt.value}>{opt.label}</option>
 								{/each}
 							</select>
@@ -1309,7 +1309,7 @@
 									bind:value={schedulePreferredHour}
 									class="rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
 								>
-									{#each HOUR_OPTIONS as opt}
+									{#each HOUR_OPTIONS as opt (opt.value)}
 										<option value={opt.value}>{opt.label}</option>
 									{/each}
 								</select>

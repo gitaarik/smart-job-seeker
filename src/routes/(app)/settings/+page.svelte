@@ -440,9 +440,9 @@
 						style="--tw-ring-color: var(--dash-primary);"
 					>
 						<option value="">Select timezone...</option>
-						{#each TIMEZONE_OPTIONS as group}
+						{#each TIMEZONE_OPTIONS as group (group.group)}
 							<optgroup label={group.group}>
-								{#each group.zones as tz}
+								{#each group.zones as tz (tz)}
 									<option value={tz}>{formatTzLabel(tz)}</option>
 								{/each}
 							</optgroup>

@@ -146,7 +146,7 @@
 				onchange={(e) => selectPhase((e.currentTarget as HTMLSelectElement).value)}
 				class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)] focus:border-[var(--dash-primary)] focus:outline-none sm:hidden"
 			>
-				{#each stepperPhases as phase}
+				{#each stepperPhases as phase (phase.value)}
 					<option value={phase.value}>{phase.label}</option>
 				{/each}
 			</select>
@@ -154,7 +154,7 @@
 			<div
 				class="hidden overflow-hidden rounded-lg border border-[var(--dash-border)] sm:inline-flex"
 			>
-				{#each stepperPhases as phase, i}
+				{#each stepperPhases as phase, i (phase.value)}
 					<button
 						type="button"
 						onclick={() => selectPhase(phase.value)}
@@ -177,7 +177,7 @@
 					>Result</label
 				>
 				<div class="grid grid-cols-3 gap-2">
-					{#each resultOptions as option}
+					{#each resultOptions as option (option.value)}
 						<button
 							type="button"
 							onclick={() => (selectedResult = option.value)}
@@ -209,7 +209,7 @@
 						class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)] focus:border-[var(--dash-primary)] focus:outline-none"
 					>
 						<option value="">— None —</option>
-						{#each stepOptions as step}
+						{#each stepOptions as step, i (i)}
 							<option value={step}>{step}</option>
 						{/each}
 						<option value="__custom__">Custom...</option>
@@ -240,7 +240,7 @@
 						class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)] focus:border-[var(--dash-primary)] focus:outline-none"
 					>
 						<option value="">— None —</option>
-						{#each actionOptions as action}
+						{#each actionOptions as action, i (i)}
 							<option value={action}>{action}</option>
 						{/each}
 						<option value="__custom__">Custom...</option>

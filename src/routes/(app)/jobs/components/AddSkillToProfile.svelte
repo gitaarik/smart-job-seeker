@@ -306,7 +306,7 @@
 					class="w-full cursor-pointer rounded border border-[var(--dash-border)] bg-transparent px-2 py-1.5 text-sm text-[var(--dash-text)] focus:ring-1 focus:ring-[var(--dash-primary)] focus:outline-none"
 				>
 					<option value="">--</option>
-					{#each SKILL_LEVELS as opt}
+					{#each SKILL_LEVELS as opt (opt.value)}
 						<option value={opt.value}>{opt.label}</option>
 					{/each}
 				</select>
@@ -323,7 +323,7 @@
 					bind:value={categoryChoice}
 					class="w-full cursor-pointer rounded border border-[var(--dash-border)] bg-transparent px-2 py-1.5 text-sm text-[var(--dash-text)] focus:ring-1 focus:ring-[var(--dash-primary)] focus:outline-none"
 				>
-					{#each categories as cat}
+					{#each categories as cat (cat.id)}
 						<option value={String(cat.id)}>{cat.name}</option>
 					{/each}
 					<option value={NEW_CATEGORY}>+ New category…</option>
@@ -380,7 +380,7 @@
 						Show anyway on
 					</p>
 					<div class="flex flex-wrap gap-1.5">
-						{#each versionSlugs as slug}
+						{#each versionSlugs as slug, i (i)}
 							<button
 								type="button"
 								onclick={() => toggleVersion(slug)}

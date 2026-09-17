@@ -343,7 +343,7 @@
 						class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 					>
 						<option value="">Select a category</option>
-						{#each categories as cat}
+						{#each categories as cat (cat.value)}
 							<option value={cat.value}>{cat.label}</option>
 						{/each}
 					</select>

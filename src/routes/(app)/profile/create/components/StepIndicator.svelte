@@ -12,7 +12,7 @@
 
 <nav aria-label="Progress" class="mb-4 sm:mb-6">
 	<ol class="flex items-center justify-center gap-1 sm:gap-2">
-		{#each steps as step, index}
+		{#each steps as step, index (index)}
 			{@const stepNum = index + 1}
 			{@const isCompleted = stepNum < currentStep}
 			{@const isCurrent = stepNum === currentStep}

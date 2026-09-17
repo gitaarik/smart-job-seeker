@@ -513,7 +513,7 @@
 								</button>
 								<div class="my-1 border-t border-[var(--dash-border)]"></div>
 
-								{#each [{ value: '', label: 'All jobs' }, { value: '90', label: 'Score 90+' }, { value: '80', label: 'Score 80+' }, { value: '70', label: 'Score 70+' }, { value: '60', label: 'Score 60+' }, { value: '50', label: 'Score 50+' }, { value: '1-49', label: 'Score < 50' }, { value: '1', label: 'Score > 0' }, { value: '0', label: 'No match' }, { value: 'unmatched', label: 'Not yet scored' }] as opt}
+								{#each [{ value: '', label: 'All jobs' }, { value: '90', label: 'Score 90+' }, { value: '80', label: 'Score 80+' }, { value: '70', label: 'Score 70+' }, { value: '60', label: 'Score 60+' }, { value: '50', label: 'Score 50+' }, { value: '1-49', label: 'Score < 50' }, { value: '1', label: 'Score > 0' }, { value: '0', label: 'No match' }, { value: 'unmatched', label: 'Not yet scored' }] as opt (opt.value)}
 									{@const selected = minScoreFilter === opt.value && sortFilter !== 'top'}
 									<button
 										type="button"
@@ -568,7 +568,7 @@
 							<div
 								class="absolute top-full left-0 z-20 mt-1 min-w-[140px] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] py-1 shadow-lg"
 							>
-								{#each [{ value: 'saved', label: 'Saved' }, { value: 'rejected', label: 'Not Interested' }] as opt}
+								{#each [{ value: 'saved', label: 'Saved' }, { value: 'rejected', label: 'Not Interested' }] as opt (opt.value)}
 									<button
 										type="button"
 										onclick={() => toggleStatus(opt.value)}
@@ -623,7 +623,7 @@
 							<div
 								class="absolute top-full left-0 z-20 mt-1 min-w-[140px] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] py-1 shadow-lg"
 							>
-								{#each [{ value: '', label: 'Any time' }, { value: '1', label: 'Last 24h' }, { value: '3', label: 'Last 3 days' }, { value: '7', label: 'Last 7 days' }, { value: '30', label: 'Last 30 days' }, { value: '90', label: 'Last 3 months' }] as opt}
+								{#each [{ value: '', label: 'Any time' }, { value: '1', label: 'Last 24h' }, { value: '3', label: 'Last 3 days' }, { value: '7', label: 'Last 7 days' }, { value: '30', label: 'Last 30 days' }, { value: '90', label: 'Last 3 months' }] as opt (opt.value)}
 									<button
 										type="button"
 										onclick={() => {
@@ -678,7 +678,7 @@
 							<div
 								class="absolute top-full left-0 z-20 mt-1 min-w-[140px] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] py-1 shadow-lg"
 							>
-								{#each [{ value: 'full_time', label: 'Full-time' }, { value: 'contract', label: 'Contract' }, { value: 'part_time', label: 'Part-time' }, { value: 'freelance', label: 'Freelance' }] as opt}
+								{#each [{ value: 'full_time', label: 'Full-time' }, { value: 'contract', label: 'Contract' }, { value: 'part_time', label: 'Part-time' }, { value: 'freelance', label: 'Freelance' }] as opt (opt.value)}
 									<button
 										type="button"
 										onclick={() => toggleJobType(opt.value)}
@@ -731,7 +731,7 @@
 							<div
 								class="absolute top-full left-0 z-20 mt-1 min-w-[140px] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] py-1 shadow-lg"
 							>
-								{#each [{ value: 'remote', label: 'Remote' }, { value: 'hybrid', label: 'Hybrid' }, { value: 'onsite', label: 'On-site' }] as opt}
+								{#each [{ value: 'remote', label: 'Remote' }, { value: 'hybrid', label: 'Hybrid' }, { value: 'onsite', label: 'On-site' }] as opt (opt.value)}
 									<button
 										type="button"
 										onclick={() => toggleWorkLocation(opt.value)}
@@ -785,7 +785,7 @@
 								<div
 									class="absolute top-full left-0 z-20 mt-1 min-w-[140px] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] py-1 shadow-lg"
 								>
-									{#each platforms as platform}
+									{#each platforms as platform (platform.id)}
 										<button
 											type="button"
 											onclick={() => togglePlatform(platform.id.toString())}
@@ -839,7 +839,7 @@
 							<div
 								class="absolute top-full left-0 z-20 mt-1 min-w-[140px] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] py-1 shadow-lg"
 							>
-								{#each [{ value: 'me', label: 'Me' }, { value: 'others', label: 'Others' }] as opt}
+								{#each [{ value: 'me', label: 'Me' }, { value: 'others', label: 'Others' }] as opt (opt.value)}
 									<button
 										type="button"
 										onclick={() => toggleImportedBy(opt.value)}
@@ -1028,7 +1028,7 @@
 									Required Skills
 								</p>
 								<div class="flex flex-wrap gap-1">
-									{#each job.skills_required.slice(0, 10) as skill}
+									{#each job.skills_required.slice(0, 10) as skill, i (i)}
 										{@const via = getSkillVia(job.id, skill)}
 										<SkillPill
 											{skill}
@@ -1055,7 +1055,7 @@
 									Preferred Skills
 								</p>
 								<div class="flex flex-wrap gap-1">
-									{#each job.skills_preferred.slice(0, 10) as skill}
+									{#each job.skills_preferred.slice(0, 10) as skill, i (i)}
 										{@const via = getSkillVia(job.id, skill)}
 										<SkillPill
 											{skill}

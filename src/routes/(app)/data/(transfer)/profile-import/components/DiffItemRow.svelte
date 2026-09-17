@@ -130,7 +130,7 @@
 		{#if isExpanded && hasDetails}
 			<div class="ml-7 space-y-1 px-3 pb-4 sm:px-4">
 				{#if changedFields.length > 0 && fieldDiffs}
-					{#each fieldDiffs as _, j}
+					{#each fieldDiffs, j (j)}
 						{#if fieldDiffs[j].changed}
 							<DiffFieldRow bind:diff={fieldDiffs[j]} />
 						{/if}
@@ -138,7 +138,7 @@
 				{/if}
 
 				{#if nestedDiffs}
-					{#each nestedDiffs as _, ni}
+					{#each nestedDiffs, ni (ni)}
 						{@const nested = nestedDiffs[ni]}
 						<div class="mt-2">
 							<div class="mb-1 text-xs font-medium text-[var(--dash-text-secondary)]">
@@ -146,7 +146,7 @@
 							</div>
 							{#if nested.added.length > 0}
 								<div class="space-y-1">
-									{#each nested.added as item, i}
+									{#each nested.added as item, i (i)}
 										<div class="flex items-center gap-2 rounded bg-green-50 px-2 py-1 text-sm">
 											<label class="flex-shrink-0">
 												<input
@@ -163,7 +163,7 @@
 							{/if}
 							{#if nested.removed.length > 0}
 								<div class="mt-1 space-y-1">
-									{#each nested.removed as item, i}
+									{#each nested.removed as item, i (i)}
 										<div class="flex items-center gap-2 rounded bg-red-50 px-2 py-1 text-sm">
 											<label class="flex-shrink-0">
 												<input

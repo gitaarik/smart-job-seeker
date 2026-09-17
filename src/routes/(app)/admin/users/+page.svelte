@@ -244,7 +244,7 @@
 							bind:value={newPlan}
 							class="w-full rounded-md border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)] capitalize focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 						>
-							{#each data.planOptions as plan}
+							{#each data.planOptions as plan (plan)}
 								<option value={plan}>
 									{plan === 'explorer' ? 'Explorer (free — no grant)' : plan}
 								</option>
@@ -265,7 +265,7 @@
 								bind:value={newPlanMonths}
 								class="w-full rounded-md border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 							>
-								{#each data.planDurations as months}
+								{#each data.planDurations as months (months)}
 									<option value={months}>
 										{months} month{months === 1 ? '' : 's'}
 									</option>
@@ -293,7 +293,7 @@
 						</p>
 					{:else}
 						<div class="flex flex-wrap gap-x-4 gap-y-2">
-							{#each devices as device}
+							{#each devices as device (device.id)}
 								<label class="flex items-center gap-2 text-sm text-[var(--dash-text)]">
 									<input
 										type="checkbox"
@@ -376,7 +376,7 @@
 			</button>
 			{#if showPendingInvites}
 				<div class="space-y-2 px-4 pb-4">
-					{#each pendingInvitations as invite}
+					{#each pendingInvitations as invite, i (i)}
 						<div
 							class="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3"
 						>
@@ -404,7 +404,7 @@
 											{invite.plan}{invite.planMonths ? ` · ${invite.planMonths}mo` : ''}
 										</span>
 									{/if}
-									{#each invite.deviceNames as deviceName}
+									{#each invite.deviceNames as deviceName, j (j)}
 										<span
 											class="rounded-full bg-teal-500/15 px-1.5 py-0.5 text-xs text-teal-600 dark:text-teal-400"
 										>

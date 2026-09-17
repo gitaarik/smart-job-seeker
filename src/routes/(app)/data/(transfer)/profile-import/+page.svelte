@@ -203,7 +203,7 @@
 			</button>
 			{#if logsOpen}
 				<div class="mt-3 max-h-[32rem] divide-y divide-[var(--dash-border)] overflow-y-auto">
-					{#each data.importLogs as log}
+					{#each data.importLogs as log (log.id)}
 						{@const isExpanded = expandedLogId === log.id}
 						{@const hasDetails = log.parsed_data || log.changes || log.sections || log.file_id}
 						<div class="py-2">
@@ -311,7 +311,7 @@
 												Parsed sections
 											</p>
 											<div class="flex flex-wrap gap-1.5">
-												{#each Object.entries(log.sections as Record<string, number>) as [name, count]}
+												{#each Object.entries(log.sections as Record<string, number>) as [name, count] (name)}
 													<span
 														class="rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-700"
 													>
@@ -319,7 +319,7 @@
 													</span>
 												{/each}
 												<!-- Show absent sections -->
-												{#each ['work', 'education', 'skills', 'languages', 'projects', 'references'] as name}
+												{#each ['work', 'education', 'skills', 'languages', 'projects', 'references'] as name (name)}
 													{#if !(log.sections as Record<string, unknown>)[name]}
 														<span
 															class="rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-0.5 text-xs text-[var(--dash-text-muted)]"
@@ -341,12 +341,12 @@
 												Applied changes
 											</p>
 											<div class="flex flex-wrap gap-1.5">
-												{#each Object.entries(log.changes as Record<string, Record<string, number>>) as [section, counts]}
+												{#each Object.entries(log.changes as Record<string, Record<string, number>>) as [section, counts] (section)}
 													<span
 														class="rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-700"
 													>
 														{sectionLabels[section] || section}:
-														{#each Object.entries(counts) as [op, n], i}
+														{#each Object.entries(counts) as [op, n], i (op)}
 															{#if i > 0},{/if}
 															{op === 'added'
 																? `+${n}`

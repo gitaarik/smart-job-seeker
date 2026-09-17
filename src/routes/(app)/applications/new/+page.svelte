@@ -352,13 +352,13 @@
 						Also extracted
 					</p>
 					<div class="space-y-3">
-						{#each previewGroups as group}
+						{#each previewGroups as group (group.label)}
 							<div>
 								<p class="mb-1.5 text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase">
 									{group.label}
 								</p>
 								<div class="flex flex-wrap gap-1.5">
-									{#each group.items as item}
+									{#each group.items as item, i (i)}
 										<span
 											class="rounded-full border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-0.5 text-xs text-[var(--dash-text-secondary)]"
 										>

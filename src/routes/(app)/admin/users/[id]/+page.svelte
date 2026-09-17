@@ -370,7 +370,7 @@
 								bind:value={subPlan}
 								class="w-full rounded-md border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 							>
-								{#each data.planOptions as plan}
+								{#each data.planOptions as plan (plan)}
 									<option value={plan}>{plan.charAt(0).toUpperCase() + plan.slice(1)}</option>
 								{/each}
 							</select>
@@ -458,7 +458,7 @@
 			{#if recentTransactions.length > 0}
 				<h4 class="mb-2 text-xs font-medium text-[var(--dash-text-muted)]">Recent Activity</h4>
 				<div class="space-y-1 text-xs">
-					{#each recentTransactions as tx}
+					{#each recentTransactions as tx (tx.id)}
 						<div class="flex justify-between">
 							<span class="text-[var(--dash-text-secondary)]"
 								>{tx.operation}{tx.description ? ` — ${tx.description}` : ''}</span
