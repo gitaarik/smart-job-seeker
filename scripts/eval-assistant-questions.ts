@@ -35,13 +35,14 @@
  *
  * `/api/ai/agent` needs a session and charges credits, so this reproduces its
  * generation path instead — same two calls, same prompt keys, same
- * PROFILE_DATA_FIELDS, same placeholderDefaults — and skips auth, credits and
+ * ASSISTANT_PROFILE_FIELDS, same placeholderDefaults — and skips auth, credits and
  * thread persistence. If that route changes, this drifts silently. Same
  * limitation `replay-agent-turn.ts` carries about itself.
  */
 import { readFileSync } from 'node:fs';
 import { resolveChatContext } from '../src/lib/server/ai-chat/chat-context';
 import { createAndGenerateAiChat } from '../src/lib/server/ai-chat/utils';
+import { ASSISTANT_PROFILE_FIELDS } from '../src/lib/server/ai-chat/profile-fields';
 import {
 	buildProposalSchema,
 	renderCapabilityPrompt
@@ -57,23 +58,6 @@ interface EvalQuestion {
 
 const PROFILE_ID = Number(process.argv[2] ?? 1);
 const ONLY = process.argv[3] ? Number(process.argv[3]) : null;
-
-/** Mirrors PROFILE_DATA_FIELDS in src/routes/api/ai/agent/+server.ts. */
-const PROFILE_DATA_FIELDS = [
-	'name',
-	'title',
-	'headline',
-	'subtitle',
-	'summary',
-	'location',
-	'core_stack',
-	'highlights',
-	'work_experiences',
-	'side_projects',
-	'education',
-	'tech_skill_categories',
-	'languages'
-];
 
 function readQuestions(): EvalQuestion[] {
 	if (process.stdin.isTTY) {
@@ -125,7 +109,7 @@ async function ask(item: EvalQuestion, n: number) {
 		},
 		undefined,
 		{
-			profileDataFields: PROFILE_DATA_FIELDS,
+			profileDataFields: ASSISTANT_PROFILE_FIELDS,
 			context,
 			placeholderDefaults: EMPTY_CONTEXT_VARIABLES,
 			historyMessages: [],
