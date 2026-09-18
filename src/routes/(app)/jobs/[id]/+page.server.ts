@@ -19,6 +19,7 @@ import { getProfileSkillLevels } from '$lib/server/job/match-utils';
 import { getProfileSkillIndex } from '$lib/server/profile/skill-visibility';
 import { addMatchJob } from '$lib/server/queue/match-queue';
 import { getSelectedProfileId } from '../../profile/utils';
+import { isStaffViewer } from '$lib/server/auth/guards';
 import { getGeoConfig } from '$lib/server/browser/geo-utils';
 import { parseJobDescription } from '$lib/server/jobs/parse-job-description';
 import { parseIntOrNull, strArrayOrNull, strOrNull } from '$lib/server/jobs/job-fields';
@@ -177,7 +178,7 @@ async function reparseAndRescore(
 	return { ok: true, title: parsed.title ?? job.title };
 }
 
-export const load: PageServerLoad = async ({ parent, params }) => {
+export const load: PageServerLoad = async ({ parent, params, locals }) => {
 	const layoutData = await parent();
 
 	if (!layoutData.selectedProfile) {
@@ -231,10 +232,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		getProfileSkillIndex(profileId)
 	]);
 
-	// Check staff status
-	const user = layoutData.user;
-	const isStaff =
-		!!(user as { is_staff?: boolean })?.is_staff || !!(user as { is_admin?: boolean })?.is_admin;
+	const isStaff = isStaffViewer(locals);
 
 	const canEditContent = await canEditJobContent(jobId, profileId, job.created_manually, isStaff);
 
@@ -598,8 +596,7 @@ export const actions: Actions = {
 		}
 
 		// Staff-only action
-		const isStaff =
-			!!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
+		const isStaff = isStaffViewer(locals);
 		if (!isStaff) {
 			return fail(403, { error: 'Staff access required' });
 		}
@@ -636,8 +633,7 @@ export const actions: Actions = {
 		}
 
 		// Staff-only action
-		const isStaff =
-			!!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
+		const isStaff = isStaffViewer(locals);
 		if (!isStaff) {
 			return fail(403, { error: 'Staff access required' });
 		}
@@ -702,8 +698,7 @@ export const actions: Actions = {
 			return fail(404, { error: 'Job not found' });
 		}
 
-		const isStaff =
-			!!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
+		const isStaff = isStaffViewer(locals);
 		const allowed = await canEditJobContent(jobId, profileId, job.created_manually, isStaff);
 		if (!allowed) {
 			return fail(403, { error: "This job's details can't be edited" });
@@ -764,8 +759,7 @@ export const actions: Actions = {
 			return fail(404, { error: 'Job not found' });
 		}
 
-		const isStaff =
-			!!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
+		const isStaff = isStaffViewer(locals);
 		const allowed = await canEditJobContent(jobId, profileId, job.created_manually, isStaff);
 		if (!allowed) {
 			return fail(403, { error: "This job's description can't be edited" });
@@ -837,8 +831,7 @@ export const actions: Actions = {
 			return fail(404, { error: 'Job not found' });
 		}
 
-		const isStaff =
-			!!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
+		const isStaff = isStaffViewer(locals);
 		const allowed = await canEditJobContent(jobId, profileId, job.created_manually, isStaff);
 		if (!allowed) {
 			return fail(403, { error: "This job's company profile can't be edited" });
@@ -865,8 +858,7 @@ export const actions: Actions = {
 		}
 
 		// Staff-only action
-		const isStaff =
-			!!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
+		const isStaff = isStaffViewer(locals);
 		if (!isStaff) {
 			return fail(403, { error: 'Staff access required' });
 		}
@@ -902,8 +894,7 @@ export const actions: Actions = {
 		}
 
 		// Staff-only action
-		const isStaff =
-			!!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
+		const isStaff = isStaffViewer(locals);
 		if (!isStaff) {
 			return fail(403, { error: 'Staff access required' });
 		}

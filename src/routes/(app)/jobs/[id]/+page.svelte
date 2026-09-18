@@ -158,9 +158,15 @@
 	let deleteFormEl: HTMLFormElement | undefined = $state();
 	let isArchived = $derived(job.status === 'archived');
 
-	// Rescrape monitor modal — auto-show if a rescrape is in progress
+	// Rescrape monitor modal — auto-show if a rescrape is in progress.
+	//
+	// Staff only, like the button that opens it otherwise: the monitor polls the
+	// rescrape endpoint and offers a Cancel, and `rescrape_status` is a column on
+	// the shared job row, so without this an applicant who opened a job somebody
+	// was rescraping got a modal for a tool that is not theirs — and, once the
+	// endpoint started answering 403, a modal that could only fail.
 	let rescrapeActive = ['queued', 'scraping'].includes(job.rescrape_status ?? '');
-	let showRescrapeMonitor = $state(rescrapeActive);
+	let showRescrapeMonitor = $state(data.isStaff && rescrapeActive);
 
 	// Update status when form action completes
 	$effect(() => {

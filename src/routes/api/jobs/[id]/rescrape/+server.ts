@@ -4,6 +4,19 @@
  * POST /api/jobs/[id]/rescrape - Queue a job for re-scraping
  * GET /api/jobs/[id]/rescrape - Check rescrape status + run history
  * DELETE /api/jobs/[id]/rescrape - Cancel a running or queued rescrape
+ *
+ * Staff only, all three. Rescrape is a staff tool: it is offered from the Staff
+ * Tools card on /jobs/[id] and nowhere else, it spends a real browser run on the
+ * shared scraper queue, and its status lives on the `jobs` row, which is shared
+ * between every profile the posting matched. So a caller who is merely signed in
+ * could queue work against any job id, and cancel a rescrape somebody else was
+ * watching, by writing columns that are not theirs.
+ *
+ * `requireAuth` was the whole check until then, which is the usual shape of this
+ * mistake: the button was gated and the door was not. Note the door cannot be
+ * narrowed to "jobs in your list" instead — the rescrape columns are on the
+ * shared row, so two profiles legitimately holding the same job would still be
+ * able to interrupt each other. Staff is the line the UI already draws.
  */
 
 import { json } from '@sveltejs/kit';
@@ -11,7 +24,7 @@ import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { eq, sql } from 'drizzle-orm';
 import { jobs } from '$lib/server/db/schema';
-import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { parseIntParam, requireStaff } from '$lib/server/utils/api-helpers';
 import {
 	addRescrapeJob,
 	isJobRescraping,
@@ -23,7 +36,7 @@ import {
  * POST - Trigger rescrape for a job
  */
 export const POST: RequestHandler = async ({ params, locals, request }) => {
-	requireAuth(locals);
+	requireStaff(locals);
 	const jobId = parseIntParam(params.id, 'job');
 
 	// Parse optional overrides from request body
@@ -137,7 +150,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
  * GET - Check rescrape status + run history
  */
 export const GET: RequestHandler = async ({ params, locals }) => {
-	requireAuth(locals);
+	requireStaff(locals);
 	const jobId = parseIntParam(params.id, 'job');
 
 	const job = await db.query.jobs.findFirst({
@@ -203,7 +216,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
  * DELETE - Cancel a running or queued rescrape
  */
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-	requireAuth(locals);
+	requireStaff(locals);
 	const jobId = parseIntParam(params.id, 'job');
 
 	// Try to remove from queue if still waiting
