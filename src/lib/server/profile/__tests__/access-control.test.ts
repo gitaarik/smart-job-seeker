@@ -19,7 +19,8 @@ const baseProfile = {
 	id: 1,
 	user_id: 'owner-123',
 	public_cv_version_id: null as number | null,
-	public_resume_version_id: null as number | null
+	public_resume_version_id: null as number | null,
+	public_portfolio_version_id: null as number | null
 } as any;
 
 function opts(overrides: Partial<AccessControlOptions> = {}): AccessControlOptions {
@@ -59,6 +60,51 @@ describe('checkProfileAccess', () => {
 			accessType: 'public',
 			versionId: 20
 		});
+	});
+
+	it('grants public access when public portfolio version is set', async () => {
+		const result = await checkProfileAccess(
+			opts({
+				profile: { ...baseProfile, public_portfolio_version_id: 30 },
+				routeType: 'portfolio'
+			})
+		);
+		expect(result).toMatchObject({
+			allowed: true,
+			accessType: 'public',
+			versionId: 30
+		});
+	});
+
+	// One column per route type, so publishing one surface must not publish
+	// another. The portfolio is the newest of the three and the only one whose
+	// column a profile row could plausibly be selected without.
+	it('denies the portfolio while only the CV is published', async () => {
+		const result = await checkProfileAccess(
+			opts({
+				profile: { ...baseProfile, public_cv_version_id: 10 },
+				routeType: 'portfolio'
+			})
+		);
+		expect(result).toMatchObject({ allowed: false, statusCode: 401 });
+	});
+
+	it('denies the CV while only the portfolio is published', async () => {
+		const result = await checkProfileAccess(
+			opts({
+				profile: { ...baseProfile, public_portfolio_version_id: 30 },
+				routeType: 'cv'
+			})
+		);
+		expect(result).toMatchObject({ allowed: false, statusCode: 401 });
+	});
+
+	it('denies a route whose publish column is missing from the row entirely', async () => {
+		const { public_portfolio_version_id: _omitted, ...withoutColumn } = baseProfile;
+		const result = await checkProfileAccess(
+			opts({ profile: withoutColumn as any, routeType: 'portfolio' })
+		);
+		expect(result.allowed).toBe(false);
 	});
 
 	it('skips public access and uses token when both public version and token are present', async () => {

@@ -6,6 +6,10 @@ import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { profile_tokens, profile_versions } from '$lib/server/db/schema';
 import { DEFAULT_FORMAT, DEFAULT_VIEW_MODE } from '$lib/profile-tokens';
+import {
+	getPortfolioThemeById,
+	getPortfolioThemesForProfile
+} from '$lib/server/profile/portfolio-themes';
 import { BASE_LOCALE, isKnownLocale } from '$lib/resume-translations';
 import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
 import {
@@ -78,8 +82,10 @@ export const load: PageServerLoad = async ({ params, url, getClientAddress }) =>
 	const langParam = url.searchParams.get('lang');
 	const locale = isKnownLocale(langParam) && langParam !== BASE_LOCALE ? langParam : null;
 
-	// If view_mode is PDF, redirect to the appropriate PDF route with token
-	if (viewMode === 'pdf') {
+	// If view_mode is PDF, redirect to the appropriate PDF route with token.
+	// A portfolio has no PDF route — it is a site, not a document — so such a
+	// link renders the site rather than 404ing on a path that does not exist.
+	if (viewMode === 'pdf' && format !== 'portfolio') {
 		const pdfPath = format === 'cv' ? 'cv.pdf' : 'resume.pdf';
 		const langQuery = locale ? `&lang=${locale}` : '';
 		redirect(302, `/p/${slug}/${pdfPath}?t=${tokenString}${langQuery}`);
@@ -101,6 +107,26 @@ export const load: PageServerLoad = async ({ params, url, getClientAddress }) =>
 		await loadFieldVariants(profile.id, token.profile_version, translator)
 	);
 
+	// A portfolio link needs a theme to render with, and the token names a
+	// version, not a theme.
+	//
+	// The published theme first, so a shared portfolio and the public site look
+	// the same and changing the theme changes both. Failing that, the profile's
+	// first portfolio theme: a private link is explicitly the way to show
+	// someone the site BEFORE publishing it, so "nothing published" is a normal
+	// state here, and falling all the way through to the renderer's defaults
+	// would show the recipient a page that looks nothing like the theme the
+	// applicant designed. Only a profile with no themes at all renders bare.
+	//
+	// Both lookups pin kind=portfolio, so neither can reach a CV template.
+	let theme = null;
+	if (format === 'portfolio') {
+		theme = profile.public_portfolio_theme_id
+			? await getPortfolioThemeById(profile.id, profile.public_portfolio_theme_id)
+			: null;
+		if (!theme) theme = (await getPortfolioThemesForProfile(profile.id))[0] ?? null;
+	}
+
 	return {
 		// Stripped of the wording library before it is serialised into the page:
 		// the variants are in the tree for the server's benefit only, and a
@@ -111,6 +137,7 @@ export const load: PageServerLoad = async ({ params, url, getClientAddress }) =>
 		},
 		locale: translator.locale,
 		versionId: token.profile_version,
-		format
+		format,
+		theme
 	};
 };

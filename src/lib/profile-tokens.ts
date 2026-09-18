@@ -1,5 +1,10 @@
 // Valid values for profile token fields
-export const VALID_FORMATS = ['resume', 'cv'] as const;
+/**
+ * What a share link points at. `portfolio` renders the public site behind the
+ * token instead of a document, so a portfolio can be shown to one person
+ * before (or without) the profile's public URL being switched on at all.
+ */
+export const VALID_FORMATS = ['resume', 'cv', 'portfolio'] as const;
 export const VALID_VIEW_MODES = ['html', 'pdf'] as const;
 
 export const DEFAULT_FORMAT = 'resume';

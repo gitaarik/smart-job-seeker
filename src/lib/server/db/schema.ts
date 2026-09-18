@@ -3706,6 +3706,33 @@ export const profiles = pgTable(
 		user_id: text(),
 		public_cv_version_id: integer(),
 		public_resume_version_id: integer(),
+		/**
+		 * The portfolio site's two pointers, the same shape as the pair above:
+		 * which profile version feeds it, and which theme dresses it. Both null
+		 * means the site is not published — there is no separate on/off flag,
+		 * because "published" is exactly "something to show and something to
+		 * show it with".
+		 *
+		 * A theme rather than a template *slug* (which is how a document names
+		 * its template) because a slug only identifies a row together with a
+		 * kind, and a pointer that could silently resolve to a CV template is
+		 * worse than one the database refuses. The FK also survives a rename,
+		 * which slug-as-reference has cost here twice.
+		 */
+		public_portfolio_version_id: integer(),
+		/**
+		 * Declared inline with an `AnyPgColumn` return type rather than in the
+		 * `foreignKey()` block below, and that annotation is load-bearing.
+		 * `presentation_templates` already points at `profiles`, so this edge
+		 * closes a type cycle; without the annotation TypeScript gives up on
+		 * BOTH tables ("implicitly has type 'any' ... referenced in its own
+		 * initializer") and every query against either degrades. Measured: 554
+		 * errors against a baseline of 31, almost none of them in files this
+		 * touched. It is the documented way out of a circular reference.
+		 */
+		public_portfolio_theme_id: integer().references((): AnyPgColumn => presentation_templates.id, {
+			onDelete: 'set null'
+		}),
 		source_cv: uuid(),
 		location: varchar({ length: 255 }),
 		profile_photo_path: varchar({ length: 255 }),
@@ -3742,6 +3769,14 @@ export const profiles = pgTable(
 			columns: [table.public_resume_version_id],
 			foreignColumns: [profile_versions.id],
 			name: 'profiles_public_resume_version_foreign'
+		}).onDelete('set null'),
+		// Both unpublish the site rather than block the delete: losing a version
+		// or a theme is a reason for the site to go dark, not a reason the
+		// applicant cannot delete their own row.
+		foreignKey({
+			columns: [table.public_portfolio_version_id],
+			foreignColumns: [profile_versions.id],
+			name: 'profiles_public_portfolio_version_foreign'
 		}).onDelete('set null'),
 		// Deleting a user reaps their profiles (and everything cascading off them).
 		// Without this FK a hard-deleted user leaves orphaned profile rows the matcher

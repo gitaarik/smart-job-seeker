@@ -24,6 +24,7 @@
 		faEnvelope,
 		faExchangeAlt,
 		faFileAlt,
+		faGlobe,
 		faHistory,
 		faPlug,
 		faWrench,
@@ -143,6 +144,14 @@
 					label: 'Resumes & CVs',
 					href: '/profile/resume',
 					icon: faFileAlt
+				},
+				// A third rendering of the same profile, beside the other two
+				// rather than under Data & Settings: what it produces is a
+				// document for an audience, not configuration.
+				{
+					label: 'Portfolio Site',
+					href: '/profile/portfolio',
+					icon: faGlobe
 				},
 				{
 					label: 'Share Links',

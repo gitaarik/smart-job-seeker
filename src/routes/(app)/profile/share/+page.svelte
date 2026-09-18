@@ -18,6 +18,28 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
+	const FORMAT_LABELS: Record<string, string> = {
+		resume: 'Resume',
+		cv: 'CV',
+		portfolio: 'Portfolio'
+	};
+
+	// A portfolio is a site, not a document: there is no PDF of it, and the
+	// server renders the site rather than redirecting to a route that does not
+	// exist. The picker says so instead of letting someone choose a combination
+	// that quietly does something else.
+	const pdfAllowed = (format: string) => format !== 'portfolio';
+
+	// Switching to portfolio with PDF already chosen would leave a pair the
+	// picker itself no longer offers; snap it back rather than disable the
+	// option under a selected value.
+	$effect(() => {
+		if (!pdfAllowed(newFormat) && newViewMode === 'pdf') newViewMode = 'html';
+	});
+	$effect(() => {
+		if (!pdfAllowed(editFormat) && editViewMode === 'pdf') editViewMode = 'html';
+	});
+
 	let tokens = $derived(data.tokens);
 	let versions = $derived(data.versions);
 	let expandedId = $state<number | null>(null);
@@ -298,6 +320,7 @@
 							>
 								<option value="resume">Resume (compact)</option>
 								<option value="cv">CV (full)</option>
+								<option value="portfolio">Portfolio (site)</option>
 							</select>
 						</div>
 
@@ -316,7 +339,7 @@
 								class="w-full rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-2 text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 							>
 								<option value="html">HTML (web page)</option>
-								<option value="pdf">PDF (download)</option>
+								<option value="pdf" disabled={!pdfAllowed(newFormat)}>PDF (download)</option>
 							</select>
 						</div>
 
@@ -446,7 +469,7 @@
 						{#snippet subtitle()}
 							{token.version?.name || token.version?.slug || 'Unknown version'}
 							<span class="mx-1">•</span>
-							{token.format === 'cv' ? 'CV' : 'Resume'}
+							{FORMAT_LABELS[token.format ?? 'resume'] ?? token.format}
 							<span class="mx-1">•</span>
 							{token.view_mode === 'pdf' ? 'PDF' : 'HTML'}
 							<span class="mx-1">•</span>
@@ -564,6 +587,7 @@
 												>
 													<option value="resume">Resume (compact)</option>
 													<option value="cv">CV (full)</option>
+													<option value="portfolio">Portfolio (site)</option>
 												</select>
 											</div>
 										</div>
@@ -583,7 +607,9 @@
 													class="w-full rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-2 text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 												>
 													<option value="html">HTML (web page)</option>
-													<option value="pdf">PDF (download)</option>
+													<option value="pdf" disabled={!pdfAllowed(editFormat)}
+														>PDF (download)</option
+													>
 												</select>
 											</div>
 

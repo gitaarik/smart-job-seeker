@@ -1,6 +1,8 @@
-<!--
-  Public-profile portfolio page is disabled — `+page.server.ts` throws 404
-  before this template ever renders. The component subtree under
-  `./components/` is preserved for re-enabling the feature later; this file
-  is intentionally minimal so it stays valid as the data contract evolves.
--->
+<script lang="ts">
+	import type { PageData } from './$types';
+	import PortfolioSite from '$lib/components/PortfolioSite/PortfolioSite.svelte';
+
+	let { data }: { data: PageData } = $props();
+</script>
+
+<PortfolioSite profile={data.profile} theme={data.theme} versionId={data.versionId} />

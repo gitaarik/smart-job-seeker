@@ -125,3 +125,67 @@ export async function expectPage(
 
 	return res;
 }
+
+/** Session cookie plus the selected-profile cookie (cached per test suite). */
+let profileSessionCookie: string | null = null;
+
+/**
+ * Sign in AND select a profile, the way opening the app does.
+ *
+ * A form action reads the profile from the `selected_profile_id` cookie rather
+ * than from the layout data, so a POST straight after sign-in fails with "No
+ * profile selected" even though every page renders. Loading /home once is what
+ * sets that cookie, and a browser does it before the user can click anything.
+ */
+export async function signInWithProfile(): Promise<string> {
+	if (profileSessionCookie) return profileSessionCookie;
+
+	const session = await signIn();
+	const res = await fetch(`${BASE_URL}/home`, {
+		headers: { Origin: ORIGIN, Cookie: session },
+		redirect: 'manual'
+	});
+	const selected = res.headers
+		.getSetCookie()
+		.map((c) => c.split(';')[0])
+		.find((c) => c.startsWith('selected_profile_id='));
+
+	profileSessionCookie = selected ? `${session}; ${selected}` : session;
+	return profileSessionCookie;
+}
+
+/**
+ * POST a SvelteKit form action.
+ *
+ * Actions take form encoding; `request` sends JSON, which they reject with 415.
+ * The response body is the action's serialized result, so a caller can tell a
+ * `failure` from a `success` rather than only reading the status.
+ */
+export async function formAction(
+	path: string,
+	fields: Record<string, string | number> = {}
+): Promise<{ status: number; type: string; body: string }> {
+	const cookie = await signInWithProfile();
+	const body = new URLSearchParams();
+	for (const [key, value] of Object.entries(fields)) body.set(key, String(value));
+
+	const res = await fetch(`${BASE_URL}${path}`, {
+		method: 'POST',
+		headers: {
+			Origin: ORIGIN,
+			Cookie: cookie,
+			'Content-Type': 'application/x-www-form-urlencoded'
+		},
+		body,
+		redirect: 'manual'
+	});
+
+	const text = await res.text();
+	let type = 'unknown';
+	try {
+		type = String(JSON.parse(text).type ?? 'unknown');
+	} catch {
+		// A redirect or an HTML error page carries no action envelope.
+	}
+	return { status: res.status, type, body: text };
+}

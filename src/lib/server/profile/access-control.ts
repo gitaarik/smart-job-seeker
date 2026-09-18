@@ -9,7 +9,7 @@ export interface AccessControlOptions {
 	token?: string | null;
 	userId?: string | null;
 	clientIp?: string;
-	routeType: 'cv' | 'resume';
+	routeType: 'cv' | 'resume' | 'portfolio';
 }
 
 export interface AccessControlResult {
@@ -22,7 +22,7 @@ export interface AccessControlResult {
 }
 
 /**
- * Check if a request has access to a profile's resume/CV
+ * Check if a request has access to a profile's resume, CV or portfolio
  * Access is granted in this order:
  * 1. Logged-in user owns the profile (allows ?version param)
  * 2. Public version is set (no auth/token required)
@@ -45,10 +45,21 @@ export async function checkProfileAccess(
 	}
 
 	// 2. Check for public version access
-	const publicVersionId =
-		routeType === 'cv' ? profile.public_cv_version_id : profile.public_resume_version_id;
+	//
+	// One column per route type. A route whose column is null is simply not
+	// published, which is how the portfolio stays dark until someone sets it
+	// — there is no separate enable flag to disagree with this.
+	const PUBLIC_VERSION_COLUMN = {
+		cv: profile.public_cv_version_id,
+		resume: profile.public_resume_version_id,
+		portfolio: profile.public_portfolio_version_id
+	} as const;
+	const publicVersionId = PUBLIC_VERSION_COLUMN[routeType];
 
-	if (publicVersionId !== null && !token) {
+	// A number, not merely "not null": every caller loads the whole profile row
+	// today, but a row selected without the column would read as undefined here,
+	// and `!== null` would let that through as published.
+	if (typeof publicVersionId === 'number' && !token) {
 		return {
 			allowed: true,
 			statusCode: 200,
