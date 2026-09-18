@@ -100,9 +100,10 @@ describe('checkProfileAccess', () => {
 	});
 
 	it('denies a route whose publish column is missing from the row entirely', async () => {
-		const { public_portfolio_version_id: _omitted, ...withoutColumn } = baseProfile;
+		const withoutColumn = { ...baseProfile };
+		delete withoutColumn.public_portfolio_version_id;
 		const result = await checkProfileAccess(
-			opts({ profile: withoutColumn as any, routeType: 'portfolio' })
+			opts({ profile: withoutColumn, routeType: 'portfolio' })
 		);
 		expect(result.allowed).toBe(false);
 	});
