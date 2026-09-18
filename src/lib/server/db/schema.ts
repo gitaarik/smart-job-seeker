@@ -1366,7 +1366,32 @@ export const jobs = pgTable(
 		 * form) rather than imported by the scraper. Orthogonal to job_platform_id:
 		 * a manual job may still carry a real platform when a known URL was given.
 		 */
-		created_manually: boolean().default(false).notNull()
+		created_manually: boolean().default(false).notNull(),
+		/**
+		 * A shortened `job_description`, for prompts that have to fit it into a
+		 * budget beside other evidence. Null on the ~97% of postings short enough
+		 * not to need one — see jobs/compact-description.ts for the threshold and
+		 * why this is generated on demand rather than at import.
+		 *
+		 * NOT a replacement for `job_description`, which stays the record of what
+		 * was posted. Match scoring deliberately keeps reading the full text: a
+		 * summary would make every new score incomparable with every old one, and
+		 * the description is only 3-4% of that prompt anyway.
+		 */
+		description_compact: text(),
+		/**
+		 * SHA-256 of the `job_description` this was made from, so an edited posting
+		 * regenerates instead of serving a summary of text that no longer exists.
+		 * The same hash-gating the embeddings use.
+		 */
+		description_compact_hash: varchar({ length: 64 }),
+		/**
+		 * 'done' | 'skipped' | 'failed'. Null means never attempted; `skipped` is a
+		 * posting under the threshold, recorded so that "short enough not to
+		 * bother" and "we never looked" stay different answers. `failed` stops a
+		 * posting that breaks the model retrying on every generation.
+		 */
+		description_compact_status: varchar({ length: 50 })
 	},
 	(table) => [
 		index('jobs_ai_chat_extraction_idx').on(table.ai_chat_extraction),

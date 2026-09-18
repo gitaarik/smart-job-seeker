@@ -14,6 +14,11 @@
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { applications, jobs } from '$lib/server/db/schema';
+import {
+	COMPACT_COLUMNS,
+	promptJobDescription,
+	type CompactableJob
+} from '$lib/server/jobs/compact-description';
 
 export interface JobDetailsRow {
 	/**
@@ -28,10 +33,25 @@ export interface JobDetailsRow {
 	job_poster: string | null;
 	/** Fallback when the scraper didn't capture a poster. */
 	company?: string | null;
+	/** The shortened description and its cache keys — see compact-description.ts. */
+	description_compact?: string | null;
+	description_compact_hash?: string | null;
+	description_compact_status?: string | null;
 }
 
-/** Format job data as readable text for prompts. */
-export function formatJobDetails(job: JobDetailsRow): string {
+/**
+ * Format job data as readable text for prompts.
+ *
+ * `description` overrides `job.job_description` — that is how the shortened
+ * posting gets in without this function growing a side effect. When it IS the
+ * shortened one, the block says so: a model asked what the posting requires is
+ * entitled to know it is not holding all of it, and the alternative is exactly
+ * the silent substitution this codebase keeps being bitten by.
+ */
+export function formatJobDetails(
+	job: JobDetailsRow,
+	description?: { text: string | null; compacted: boolean }
+): string {
 	const lines: string[] = [`**Position:** ${job.title || 'Not specified'}`];
 
 	// Both, when the posting names both, and in that order — they are different
@@ -57,15 +77,20 @@ export function formatJobDetails(job: JobDetailsRow): string {
 	if (job.company_description) {
 		lines.push(`**About the company:** ${job.company_description}`);
 	}
-	lines.push('', '**Job Description:**', job.job_description || 'Not specified');
+	const body = description ? description.text : job.job_description;
+	const heading = description?.compacted
+		? '**Job Description:** (shortened to fit alongside the rest of this context: ' +
+			"boilerplate removed, requirements and the employer's own wording kept. " +
+			'The full posting is on the job page.)'
+		: '**Job Description:**';
+	lines.push('', heading, body || 'Not specified');
 
 	return lines.join('\n');
 }
 
 const JOB_COLUMNS = {
-	id: true,
+	...COMPACT_COLUMNS,
 	title: true,
-	job_description: true,
 	company_description: true,
 	job_poster: true,
 	company: true
@@ -102,13 +127,23 @@ export async function loadJobDetails(
 /**
  * Load and render. Returns "" when there is no job attached — callers
  * interpolate it blindly.
+ *
+ * `profileId` opts this call into shortening a long posting (see
+ * compact-description.ts), and is the profile the generation it pays for belongs
+ * to. Omit it and the full description is rendered, which is what a caller
+ * reading the job as data wants.
  */
 export async function jobDetailsText(
-	ref: { applicationId: number } | { jobId: number }
+	ref: { applicationId: number } | { jobId: number },
+	opts?: { profileId?: number }
 ): Promise<string> {
 	try {
 		const job = await loadJobDetails(ref);
-		return job ? formatJobDetails(job) : '';
+		if (!job) return '';
+		const description = opts?.profileId
+			? await promptJobDescription(job as CompactableJob, opts.profileId)
+			: undefined;
+		return formatJobDetails(job, description);
 	} catch {
 		// Context is a bonus, never a reason to fail the generation.
 		return '';

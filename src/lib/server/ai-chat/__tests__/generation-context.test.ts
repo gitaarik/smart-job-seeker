@@ -429,7 +429,9 @@ describe('scoped sources', () => {
 		expect(ctx.variables.jobDetails).toContain('Staff Engineer');
 		expect(ctx.variables.applicationActivity).toContain('already happened');
 		expect(ctx.variables.applicationActivity).toContain('offer.pdf');
-		expect(mockJobDetails).toHaveBeenCalledWith({ applicationId: 42 });
+		// The profile rides along because a long posting is shortened on the way
+		// in, and that generation is charged to somebody. See job-context.ts.
+		expect(mockJobDetails).toHaveBeenCalledWith({ applicationId: 42 }, { profileId: 1 });
 		expect(mockActivity).toHaveBeenCalledWith(42, 'compact');
 	});
 
@@ -452,7 +454,7 @@ describe('scoped sources', () => {
 		});
 		expect(mockActivity).not.toHaveBeenCalled();
 		expect(mockActivity).not.toHaveBeenCalled();
-		expect(mockJobDetails).toHaveBeenCalledWith({ jobId: 5 });
+		expect(mockJobDetails).toHaveBeenCalledWith({ jobId: 5 }, { profileId: 1 });
 		expect(ctx.variables.applicationActivity).toBe('');
 	});
 

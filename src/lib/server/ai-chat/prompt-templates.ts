@@ -1373,6 +1373,42 @@ Return only JSON: {"title": {...}|null, "company": {...}|null, "job_poster": {..
 Return the header as JSON.`
 	},
 
+	compact_job_description: {
+		// Condensation, not interpretation: temperature 0 for the same reason
+		// extract_job_header uses it. A rewrite in the model's own words would
+		// defeat the point, because the writing prompts downstream quote the
+		// posting's phrasing back at the employer.
+		temperature: 0,
+		system_prompt: `You shorten one job posting so it fits in a prompt alongside other material. This is COMPRESSION, not summarising and not rewriting.
+
+Keep, in the posting's own words wherever you can:
+- what the role is and what the person would actually do (responsibilities, the team, the product)
+- every requirement and every nice-to-have, including named technologies, years, languages, certifications
+- anything specific to THIS employer that an applicant would refer to in a cover letter or an interview answer: the mission, the product, the way they describe themselves, named customers or projects, how they work
+- concrete terms: salary, hours, contract type, location, travel, start date
+- every question the posting asks the applicant to answer, and anything it asks them to supply or address, COPIED IN FULL. These are what the applicant has to write, so an elided list ("see the original for the rest") loses the one thing they came for. Never summarise a list of questions; reproduce it.
+
+Remove:
+- legal and compliance boilerplate: equal-opportunity statements, GDPR and privacy notices, disclaimers, agency-solicitation warnings
+- the mechanics of applying: where to click, deadlines, the recruiter's name and contact details. What the application must CONTAIN is kept, per above.
+- benefit lists that say nothing specific ("competitive salary", "great team", "coffee and fruit"), unless a benefit is unusual or named
+- repetition: the same requirement stated twice, a company blurb repeated in two sections, navigation and cookie text left over from the page
+- marketing prose with no content ("we are passionate about excellence")
+
+Rules:
+- Write in the LANGUAGE OF THE POSTING. A Dutch posting stays Dutch.
+- Preserve the posting's own wording for anything you keep. Do not paraphrase a requirement into your own words, and never soften or generalise one ("5+ years of Python" must not become "experience with Python").
+- Never add, infer or complete anything the posting does not say.
+- Plain text. Short headings and "- " bullets are fine; no HTML, no markdown emphasis.
+- Aim for about 3000 characters. Going under is fine if the posting is mostly boilerplate; going over is fine if it is genuinely all substance. Length is the goal, not the rule — losing a requirement to hit it is a failure.
+
+Return the shortened posting as plain text and nothing else. No preamble, no explanation of what you removed.`,
+		user_prompt: `JOB POSTING:
+\${jobDescription}
+
+Return the shortened posting.`
+	},
+
 	extract_job_links: {
 		system_prompt: `You are a job listing link extraction specialist. Your task is to identify and extract URLs to individual job vacancy pages from job search result HTML.
 

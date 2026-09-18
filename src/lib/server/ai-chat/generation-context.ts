@@ -450,7 +450,10 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 			return jobDetailsText(
 				req.entity.type === 'application'
 					? { applicationId: req.entity.id }
-					: { jobId: req.entity.id }
+					: { jobId: req.entity.id },
+				// Opts this call into shortening a long posting, and says whose
+				// generation pays for it. See jobs/compact-description.ts.
+				{ profileId: req.profileId }
 			);
 		}
 	},
