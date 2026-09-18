@@ -29,6 +29,12 @@
 	},
 	// scripts/ only. Whatever they import from $lib is pulled in transitively;
 	// listing src/ as roots as well just re-reports the app's own backlog here.
-	"include": ["scripts/**/*.ts"],
+	//
+	// app.d.ts is the exception, because nothing imports it: it is an ambient
+	// declaration, and the one it makes is `App.Locals`. Without it the program
+	// falls back on SvelteKit's empty default, so every transitively-reached
+	// `locals.user` reads as a property that does not exist — thirteen errors
+	// about the app being wrong when the config was.
+	"include": ["scripts/**/*.ts", "src/app.d.ts"],
 	"exclude": ["node_modules/**"]
 }

@@ -41,7 +41,16 @@ set -euo pipefail
 # which exports no such table. The import was unused, so removing it removed the
 # error — and the same shape as the note above: a live TS2305 sitting inside the
 # tolerated budget, found by a different tool looking for something else.
-BASELINE=25
+#
+# 25 -> 23 on 2026-09-18, by adding src/app.d.ts to tsconfig.scripts.json.
+# Thirteen of these errors said `Property 'user' does not exist on type
+# 'Locals'` about app code that is correct: app.d.ts is ambient, nothing imports
+# it, and `include` listed only scripts/, so this program was type-checking
+# every transitively-reached `locals.user` against SvelteKit's empty default
+# Locals. A third gate's worth of the backlog was the gate's own config. Found
+# by adding one import to api-helpers.ts, which pulled auth/guards.ts in and
+# produced ten "new" errors in a file nobody had touched.
+BASELINE=23
 
 npx svelte-kit sync
 
