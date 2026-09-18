@@ -4,6 +4,7 @@ import { dbDirect as db } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { profiles } from '$lib/server/db/schema';
 import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
+import { generateSlug } from '$lib/server/utils/slug-generator';
 
 interface ExportedProfile {
 	profile: {
@@ -345,10 +346,20 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		}
 	};
 
+	// Name the download after whose profile it is. `profile-12.json` says
+	// nothing in a Downloads folder, and an applicant who keeps a profile per
+	// target role ends up with a row of them telling them apart by number.
+	//
+	// The id stays on the end because neither the name nor the export is
+	// unique, and generateSlug drops accents and punctuation, so a name in a
+	// script it cannot transliterate slugs to empty and the id carries it alone.
+	const nameSlug = generateSlug(baseProfile.name ?? '');
+	const filename = nameSlug ? `${nameSlug}-profile-${profileId}.json` : `profile-${profileId}.json`;
+
 	return json(exportData, {
 		headers: {
 			'Content-Type': 'application/json',
-			'Content-Disposition': `attachment; filename="profile-${profileId}.json"`,
+			'Content-Disposition': `attachment; filename="${filename}"`,
 			'Cache-Control': 'no-cache'
 		}
 	});

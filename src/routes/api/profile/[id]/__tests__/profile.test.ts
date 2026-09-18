@@ -151,6 +151,27 @@ describe('PATCH /api/profile/[id]', () => {
 	});
 });
 
+/** The row the export query returns: every relation empty unless a test says otherwise. */
+function exportedProfile(fields: Record<string, unknown> = {}) {
+	return {
+		name: 'Alice',
+		title: 'Developer',
+		email_address: 'alice@example.com',
+		summary: 'A developer',
+		profile_versions: [],
+		highlights: [],
+		tech_skill_categories: [],
+		work_experiences: [],
+		side_projects: [],
+		educations: [],
+		languages: [],
+		references: [],
+		project_stories: [],
+		cheat_sheets: [],
+		...fields
+	};
+}
+
 describe('GET /api/profile/[id]/export.json', () => {
 	beforeEach(() => vi.clearAllMocks());
 
@@ -215,6 +236,31 @@ describe('GET /api/profile/[id]/export.json', () => {
 		expect(data.profile.email_address).toBe('alice@example.com');
 		expect(data.profile.summary).toBe('A developer');
 		expect(data.profile.work_experiences).toEqual([]);
+	});
+
+	/**
+	 * The download lands in a Downloads folder, where `profile-12.json` says
+	 * nothing about whose it is — and an applicant keeping a profile per target
+	 * role gets a row of them telling them apart by number.
+	 */
+	it('names the download after the profile', async () => {
+		mockFindFirst.mockResolvedValueOnce({ id: 1 });
+		mockFindFirst.mockResolvedValueOnce(exportedProfile({ name: 'Alice Doe-Smith' }));
+		const response = await GET(createEvent({}));
+		expect(response.headers.get('content-disposition')).toBe(
+			'attachment; filename="alice-doe-smith-profile-1.json"'
+		);
+	});
+
+	it('falls back to the id when the name slugs to nothing', async () => {
+		// generateSlug drops accents and punctuation, so a name in a script it
+		// cannot transliterate comes back empty rather than as a bare `-`.
+		mockFindFirst.mockResolvedValueOnce({ id: 1 });
+		mockFindFirst.mockResolvedValueOnce(exportedProfile({ name: '海斗' }));
+		const response = await GET(createEvent({}));
+		expect(response.headers.get('content-disposition')).toBe(
+			'attachment; filename="profile-1.json"'
+		);
 	});
 });
 
