@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SvelteSet } from 'svelte/reactivity';
+	import { OpenRows } from '$lib/components/open-rows';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronDown,
@@ -18,19 +18,15 @@
 	let { education = $bindable() }: Props = $props();
 
 	let isExpanded = $state(false);
-	const expandedItems = new SvelteSet<number>();
+	const expandedItems = new OpenRows<Education>();
 
-	function toggleItem(index: number) {
-		if (expandedItems.has(index)) {
-			expandedItems.delete(index);
-		} else {
-			expandedItems.add(index);
-		}
+	function toggleItem(item: Education) {
+		expandedItems.toggle(item);
 	}
 
-	function removeItem(index: number) {
+	function removeItem(item: Education) {
 		if (!confirm('Remove this education entry?')) return;
-		education = education.filter((_, i) => i !== index);
+		education = education.filter((row) => row !== item);
 	}
 
 	function addEducation() {
@@ -40,7 +36,7 @@
 				institution: ''
 			}
 		];
-		expandedItems.add(education.length - 1);
+		expandedItems.open(education[education.length - 1]);
 		isExpanded = true;
 	}
 </script>
@@ -68,14 +64,14 @@
 
 	{#if isExpanded}
 		<div class="divide-y divide-[var(--dash-border)] border-t border-[var(--dash-border)]">
-			{#each education as edu, index (index)}
-				<div class={expandedItems.has(index) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
+			{#each education as edu (edu)}
+				<div class={expandedItems.has(edu) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
 					<div
 						class="flex items-center justify-between transition-colors hover:bg-[var(--dash-bg)]"
 					>
 						<button
 							type="button"
-							onclick={() => toggleItem(index)}
+							onclick={() => toggleItem(edu)}
 							class="flex-1 self-stretch p-3 text-left sm:p-4"
 						>
 							<div class="text-sm font-semibold text-[var(--dash-text)]">
@@ -94,7 +90,7 @@
 						<div class="flex items-center gap-2">
 							<button
 								type="button"
-								onclick={() => removeItem(index)}
+								onclick={() => removeItem(edu)}
 								class="flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-1.5 text-xs text-[var(--dash-text)] transition-colors hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500"
 								aria-label="Remove"
 							>
@@ -103,19 +99,19 @@
 							</button>
 							<button
 								type="button"
-								onclick={() => toggleItem(index)}
+								onclick={() => toggleItem(edu)}
 								class="p-1"
-								aria-label={expandedItems.has(index) ? 'Collapse' : 'Expand'}
+								aria-label={expandedItems.has(edu) ? 'Collapse' : 'Expand'}
 							>
 								<FontAwesomeIcon
-									icon={expandedItems.has(index) ? faChevronUp : faChevronDown}
+									icon={expandedItems.has(edu) ? faChevronUp : faChevronDown}
 									class="h-4 w-4 text-[var(--dash-text-muted)]"
 								/>
 							</button>
 						</div>
 					</div>
 
-					{#if expandedItems.has(index)}
+					{#if expandedItems.has(edu)}
 						<div class="space-y-4 px-3 py-4 sm:px-4">
 							<div class="grid gap-4 md:grid-cols-2">
 								<div>
@@ -124,7 +120,7 @@
 									</label>
 									<input
 										type="text"
-										bind:value={education[index].institution}
+										bind:value={edu.institution}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -135,7 +131,7 @@
 									</label>
 									<input
 										type="text"
-										bind:value={education[index].studyType}
+										bind:value={edu.studyType}
 										placeholder="Bachelor's, Master's, etc."
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
@@ -149,7 +145,7 @@
 									</label>
 									<input
 										type="text"
-										bind:value={education[index].area}
+										bind:value={edu.area}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -160,7 +156,7 @@
 									</label>
 									<input
 										type="text"
-										bind:value={education[index].location}
+										bind:value={edu.location}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -173,7 +169,7 @@
 									</label>
 									<input
 										type="date"
-										bind:value={education[index].startDate}
+										bind:value={edu.startDate}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -184,7 +180,7 @@
 									</label>
 									<input
 										type="date"
-										bind:value={education[index].endDate}
+										bind:value={edu.endDate}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -195,7 +191,7 @@
 									</label>
 									<input
 										type="number"
-										bind:value={education[index].graduationYear}
+										bind:value={edu.graduationYear}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SvelteSet } from 'svelte/reactivity';
+	import { OpenRows } from '$lib/components/open-rows';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronDown,
@@ -20,21 +20,19 @@
 	let { projects = $bindable() }: Props = $props();
 
 	let isExpanded = $state(false);
-	const expandedItems = new SvelteSet<number>();
+	const expandedItems = new OpenRows<SideProject>();
 
-	function toggleItem(index: number) {
-		if (expandedItems.has(index)) {
-			expandedItems.delete(index);
-		} else {
-			if (!projects[index].technologies) projects[index].technologies = [];
-			if (!projects[index].achievements) projects[index].achievements = [];
-			expandedItems.add(index);
-		}
+	function toggleItem(item: SideProject) {
+		// Give the expanded editor its nested lists to bind into. Idempotent,
+		// so it costs nothing on the way closed.
+		if (!item.technologies) item.technologies = [];
+		if (!item.achievements) item.achievements = [];
+		expandedItems.toggle(item);
 	}
 
-	function removeItem(index: number) {
+	function removeItem(item: SideProject) {
 		if (!confirm('Remove this project?')) return;
-		projects = projects.filter((_, i) => i !== index);
+		projects = projects.filter((row) => row !== item);
 	}
 
 	function addProject() {
@@ -46,7 +44,7 @@
 				technologies: []
 			}
 		];
-		expandedItems.add(projects.length - 1);
+		expandedItems.open(projects[projects.length - 1]);
 		isExpanded = true;
 	}
 </script>
@@ -74,14 +72,14 @@
 
 	{#if isExpanded}
 		<div class="divide-y divide-[var(--dash-border)] border-t border-[var(--dash-border)]">
-			{#each projects as project, index (index)}
-				<div class={expandedItems.has(index) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
+			{#each projects as project (project)}
+				<div class={expandedItems.has(project) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
 					<div
 						class="flex items-center justify-between transition-colors hover:bg-[var(--dash-bg)]"
 					>
 						<button
 							type="button"
-							onclick={() => toggleItem(index)}
+							onclick={() => toggleItem(project)}
 							class="flex-1 self-stretch p-3 text-left sm:p-4"
 						>
 							<div class="text-sm font-semibold text-[var(--dash-text)]">
@@ -96,7 +94,7 @@
 						<div class="flex items-center gap-2">
 							<button
 								type="button"
-								onclick={() => removeItem(index)}
+								onclick={() => removeItem(project)}
 								class="flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-1.5 text-xs text-[var(--dash-text)] transition-colors hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500"
 								aria-label="Remove"
 							>
@@ -105,19 +103,19 @@
 							</button>
 							<button
 								type="button"
-								onclick={() => toggleItem(index)}
+								onclick={() => toggleItem(project)}
 								class="p-1"
-								aria-label={expandedItems.has(index) ? 'Collapse' : 'Expand'}
+								aria-label={expandedItems.has(project) ? 'Collapse' : 'Expand'}
 							>
 								<FontAwesomeIcon
-									icon={expandedItems.has(index) ? faChevronUp : faChevronDown}
+									icon={expandedItems.has(project) ? faChevronUp : faChevronDown}
 									class="h-4 w-4 text-[var(--dash-text-muted)]"
 								/>
 							</button>
 						</div>
 					</div>
 
-					{#if expandedItems.has(index)}
+					{#if expandedItems.has(project)}
 						<div class="space-y-4 px-3 py-4 sm:px-4">
 							<div class="grid gap-4 md:grid-cols-2">
 								<div>
@@ -126,7 +124,7 @@
 									</label>
 									<input
 										type="text"
-										bind:value={projects[index].name}
+										bind:value={project.name}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -137,7 +135,7 @@
 									</label>
 									<input
 										type="url"
-										bind:value={projects[index].url}
+										bind:value={project.url}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -148,7 +146,7 @@
 									Summary
 								</label>
 								<textarea
-									bind:value={projects[index].summary}
+									bind:value={project.summary}
 									rows="3"
 									class="w-full resize-none rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 								></textarea>
@@ -158,14 +156,14 @@
 								<label class="mb-2 block text-sm font-medium text-[var(--dash-text)]">
 									Technologies
 								</label>
-								<TechnologyTagsEditor bind:technologies={projects[index].technologies} />
+								<TechnologyTagsEditor bind:technologies={project.technologies} />
 							</div>
 
 							<div>
 								<label class="mb-2 block text-sm font-medium text-[var(--dash-text)]">
 									Achievements
 								</label>
-								<AchievementsList bind:achievements={projects[index].achievements} />
+								<AchievementsList bind:achievements={project.achievements} />
 							</div>
 						</div>
 					{/if}

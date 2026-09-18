@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SvelteSet } from 'svelte/reactivity';
+	import { OpenRows } from '$lib/components/open-rows';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faBriefcase,
@@ -19,20 +19,18 @@
 	let { work = $bindable() }: Props = $props();
 
 	let isExpanded = $state(true);
-	const expandedItems = new SvelteSet<number>([0]);
+	const expandedItems = new OpenRows<WorkExperience>(work.slice(0, 1));
 
-	function toggleItem(index: number) {
-		if (expandedItems.has(index)) {
-			expandedItems.delete(index);
-		} else {
-			if (!work[index].achievements) work[index].achievements = [];
-			expandedItems.add(index);
-		}
+	function toggleItem(item: WorkExperience) {
+		// Give the expanded editor its nested lists to bind into. Idempotent,
+		// so it costs nothing on the way closed.
+		if (!item.achievements) item.achievements = [];
+		expandedItems.toggle(item);
 	}
 
-	function removeItem(index: number) {
+	function removeItem(item: WorkExperience) {
 		if (!confirm('Remove this work experience?')) return;
-		work = work.filter((_, i) => i !== index);
+		work = work.filter((row) => row !== item);
 	}
 
 	function addWork() {
@@ -45,7 +43,7 @@
 				technologies: []
 			}
 		];
-		expandedItems.add(work.length - 1);
+		expandedItems.open(work[work.length - 1]);
 		isExpanded = true;
 	}
 </script>
@@ -73,14 +71,14 @@
 
 	{#if isExpanded}
 		<div class="divide-y divide-[var(--dash-border)] border-t border-[var(--dash-border)]">
-			{#each work as job, index (index)}
-				<div class={expandedItems.has(index) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
+			{#each work as job (job)}
+				<div class={expandedItems.has(job) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
 					<div
 						class="flex items-center justify-between transition-colors hover:bg-[var(--dash-bg)]"
 					>
 						<button
 							type="button"
-							onclick={() => toggleItem(index)}
+							onclick={() => toggleItem(job)}
 							class="flex-1 self-stretch p-3 text-left sm:p-4"
 						>
 							<div class="text-sm font-semibold text-[var(--dash-text)]">
@@ -98,7 +96,7 @@
 						<div class="flex items-center gap-2">
 							<button
 								type="button"
-								onclick={() => removeItem(index)}
+								onclick={() => removeItem(job)}
 								class="flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-1.5 text-xs text-[var(--dash-text)] transition-colors hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500"
 								aria-label="Remove"
 							>
@@ -107,19 +105,19 @@
 							</button>
 							<button
 								type="button"
-								onclick={() => toggleItem(index)}
+								onclick={() => toggleItem(job)}
 								class="p-1"
-								aria-label={expandedItems.has(index) ? 'Collapse' : 'Expand'}
+								aria-label={expandedItems.has(job) ? 'Collapse' : 'Expand'}
 							>
 								<FontAwesomeIcon
-									icon={expandedItems.has(index) ? faChevronUp : faChevronDown}
+									icon={expandedItems.has(job) ? faChevronUp : faChevronDown}
 									class="h-4 w-4 text-[var(--dash-text-muted)]"
 								/>
 							</button>
 						</div>
 					</div>
 
-					{#if expandedItems.has(index)}
+					{#if expandedItems.has(job)}
 						<div class="space-y-4 px-3 py-4 sm:px-4">
 							<div class="grid gap-4 md:grid-cols-2">
 								<div>
@@ -128,7 +126,7 @@
 									</label>
 									<input
 										type="text"
-										bind:value={work[index].position}
+										bind:value={job.position}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -139,7 +137,7 @@
 									</label>
 									<input
 										type="text"
-										bind:value={work[index].name}
+										bind:value={job.name}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -152,7 +150,7 @@
 									</label>
 									<input
 										type="text"
-										bind:value={work[index].location}
+										bind:value={job.location}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -163,7 +161,7 @@
 									</label>
 									<input
 										type="date"
-										bind:value={work[index].startDate}
+										bind:value={job.startDate}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -174,7 +172,7 @@
 									</label>
 									<input
 										type="date"
-										bind:value={work[index].endDate}
+										bind:value={job.endDate}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -185,7 +183,7 @@
 									Summary
 								</label>
 								<textarea
-									bind:value={work[index].summary}
+									bind:value={job.summary}
 									rows="3"
 									class="w-full resize-none rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 								></textarea>
@@ -195,7 +193,7 @@
 								<label class="mb-2 block text-sm font-medium text-[var(--dash-text)]">
 									Achievements
 								</label>
-								<AchievementsList bind:achievements={work[index].achievements} />
+								<AchievementsList bind:achievements={job.achievements} />
 							</div>
 						</div>
 					{/if}

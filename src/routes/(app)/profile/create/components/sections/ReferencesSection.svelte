@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SvelteSet } from 'svelte/reactivity';
+	import { OpenRows } from '$lib/components/open-rows';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronDown,
@@ -18,24 +18,20 @@
 	let { references = $bindable() }: Props = $props();
 
 	let isExpanded = $state(false);
-	const expandedItems = new SvelteSet<number>();
+	const expandedItems = new OpenRows<Reference>();
 
-	function toggleItem(index: number) {
-		if (expandedItems.has(index)) {
-			expandedItems.delete(index);
-		} else {
-			expandedItems.add(index);
-		}
+	function toggleItem(item: Reference) {
+		expandedItems.toggle(item);
 	}
 
-	function removeItem(index: number) {
+	function removeItem(item: Reference) {
 		if (!confirm('Remove this reference?')) return;
-		references = references.filter((_, i) => i !== index);
+		references = references.filter((row) => row !== item);
 	}
 
 	function addReference() {
 		references = [...references, { author: '', text: '' }];
-		expandedItems.add(references.length - 1);
+		expandedItems.open(references[references.length - 1]);
 		isExpanded = true;
 	}
 </script>
@@ -63,14 +59,14 @@
 
 	{#if isExpanded}
 		<div class="divide-y divide-[var(--dash-border)] border-t border-[var(--dash-border)]">
-			{#each references as ref, index (index)}
-				<div class={expandedItems.has(index) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
+			{#each references as ref (ref)}
+				<div class={expandedItems.has(ref) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
 					<div
 						class="flex items-center justify-between transition-colors hover:bg-[var(--dash-bg)]"
 					>
 						<button
 							type="button"
-							onclick={() => toggleItem(index)}
+							onclick={() => toggleItem(ref)}
 							class="flex-1 self-stretch p-3 text-left sm:p-4"
 						>
 							<div class="text-sm font-semibold text-[var(--dash-text)]">
@@ -85,7 +81,7 @@
 						<div class="flex items-center gap-2">
 							<button
 								type="button"
-								onclick={() => removeItem(index)}
+								onclick={() => removeItem(ref)}
 								class="flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-1.5 text-xs text-[var(--dash-text)] transition-colors hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-500"
 								aria-label="Remove"
 							>
@@ -94,19 +90,19 @@
 							</button>
 							<button
 								type="button"
-								onclick={() => toggleItem(index)}
+								onclick={() => toggleItem(ref)}
 								class="p-1"
-								aria-label={expandedItems.has(index) ? 'Collapse' : 'Expand'}
+								aria-label={expandedItems.has(ref) ? 'Collapse' : 'Expand'}
 							>
 								<FontAwesomeIcon
-									icon={expandedItems.has(index) ? faChevronUp : faChevronDown}
+									icon={expandedItems.has(ref) ? faChevronUp : faChevronDown}
 									class="h-4 w-4 text-[var(--dash-text-muted)]"
 								/>
 							</button>
 						</div>
 					</div>
 
-					{#if expandedItems.has(index)}
+					{#if expandedItems.has(ref)}
 						<div class="space-y-4 px-3 py-4 sm:px-4">
 							<div class="grid gap-4 md:grid-cols-2">
 								<div>
@@ -115,7 +111,7 @@
 									</label>
 									<input
 										type="text"
-										bind:value={references[index].author}
+										bind:value={ref.author}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -126,7 +122,7 @@
 									</label>
 									<input
 										type="text"
-										bind:value={references[index].authorPosition}
+										bind:value={ref.authorPosition}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 									/>
 								</div>
@@ -137,7 +133,7 @@
 									Reference Text
 								</label>
 								<textarea
-									bind:value={references[index].text}
+									bind:value={ref.text}
 									rows="3"
 									class="w-full resize-none rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 								></textarea>
