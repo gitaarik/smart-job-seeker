@@ -19,6 +19,7 @@
 	import { dragHandleZone, dragHandle } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+	import { OpenRows } from '$lib/components/open-rows';
 	import Card from './Card.svelte';
 	import SkillTagsEditor from './SkillTagsEditor.svelte';
 	import type { LevelOption, SkillItem } from './SkillTagsEditor.svelte';
@@ -110,7 +111,10 @@
 	}
 
 	export function startCategoryReorder() {
-		categoryReorderSnapshot = categories.map((c) => ({ ...c }));
+		// The snapshot restores the ORDER on cancel, so it copies the array and
+		// not the categories in it. Copying those would hand every collection
+		// keyed by a category a row it no longer holds.
+		categoryReorderSnapshot = [...categories];
 		dndCategories = categories.map((c, i) => ({
 			id: (c as { id?: number }).id ? String((c as { id?: number }).id) : `cat-${i}`,
 			category: c
@@ -120,11 +124,16 @@
 
 	async function confirmCategoryReorder() {
 		categoryReorderSaving = true;
-		// Rebuild categories from dndCategories to ensure correct order
+		// Rebuild categories from dndCategories to ensure correct order, keeping
+		// the category objects themselves. This used to take a shallow copy of
+		// each, which was invisible while the state below was keyed by position
+		// and would defeat it entirely now: a copy is a different row, so every
+		// category would come back from a reorder with its editing state,
+		// snapshots and unsaved marker dropped.
 		const reordered = dndCategories.map((d) => {
-			// Preserve the original DB id on the category object, since
-			// svelte-dnd-action may clone items and lose nested properties
-			const cat = { ...d.category };
+			// Re-attach the DB id: svelte-dnd-action may hand back an item whose
+			// nested category has lost it.
+			const cat = d.category;
 			const numId = parseInt(d.id);
 			if (!isNaN(numId)) (cat as CategoryItem & { id: number }).id = numId;
 			return cat;
@@ -156,135 +165,134 @@
 	let hasAnyExperience = $derived(allSkills.some((s) => s.yearsExperience));
 	let hasAnyVersionTags = $derived(versionSlugs.length > 0);
 
-	// Compact mode: track expanded items
-	const expandedItems = new SvelteSet<number>();
+	// Compact mode: which categories are open, and which have their version tags
+	// open. Both keyed by the category, like everything else here.
+	const expandedItems = new OpenRows<CategoryItem>();
+	const tagsExpanded = new OpenRows<CategoryItem>();
 
-	function toggleItem(index: number) {
-		if (expandedItems.has(index)) {
-			expandedItems.delete(index);
-		} else {
-			expandedItems.add(index);
-		}
+	function toggleItem(category: CategoryItem) {
+		expandedItems.toggle(category);
 	}
 
-	// Track which categories are newly added (not yet persisted)
-	const newIndices = new SvelteSet<number>();
+	function toggleTagExpand(category: CategoryItem) {
+		tagsExpanded.toggle(category);
+	}
+
+	/**
+	 * Categories added here and not yet persisted.
+	 *
+	 * This is the collection that has to be right: it decides whether committing
+	 * an edit CREATES a row or RENAMES one, so an entry naming the wrong
+	 * category writes the wrong thing to the database. A reorder was enough to
+	 * make it name the wrong one, because a set of positions says nothing about
+	 * which category has moved where.
+	 */
+	const unsavedCategories = new SvelteSet<CategoryItem>();
 	// Track original name + note for revert/dirty detection while editing
-	const originalNames = new SvelteMap<number, string>();
-	const originalNotes = new SvelteMap<number, string>();
-	// Track which category (name + note) is being edited inline
-	let editingNameIndex = $state<number | null>(null);
+	const originalNames = new SvelteMap<CategoryItem, string>();
+	const originalNotes = new SvelteMap<CategoryItem, string>();
+	// The category whose name + note is being edited inline
+	let editingCategory = $state<CategoryItem | null>(null);
 
 	function addCategory() {
-		const newCat: CategoryItem = { name: '', note: '', skills: [] };
-		categories = [...categories, newCat];
-		const idx = categories.length - 1;
-		newIndices.add(idx);
-		editingNameIndex = idx;
-		if (compact) expandedItems.add(idx);
+		categories = [...categories, { name: '', note: '', skills: [] }];
+		// Read it back out of `categories`: inside the array it is the $state
+		// proxy, which is the reference every collection here is keyed by.
+		const added = categories[categories.length - 1];
+		unsavedCategories.add(added);
+		editingCategory = added;
+		if (compact) expandedItems.open(added);
 	}
 
-	function startEditingName(index: number) {
-		if (!newIndices.has(index)) {
-			if (!originalNames.has(index)) {
-				originalNames.set(index, categories[index].name);
+	/**
+	 * Drop every note this component keeps about a category that is leaving.
+	 *
+	 * One call rather than a shift pass per collection — which is the whole
+	 * point of keying by the row. The old version needed one per collection and
+	 * had three.
+	 */
+	function forgetCategory(category: CategoryItem) {
+		unsavedCategories.delete(category);
+		originalNames.delete(category);
+		originalNotes.delete(category);
+		expandedItems.close(category);
+		tagsExpanded.close(category);
+		if (editingCategory === category) editingCategory = null;
+	}
+
+	function startEditingName(category: CategoryItem) {
+		if (!unsavedCategories.has(category)) {
+			if (!originalNames.has(category)) {
+				originalNames.set(category, category.name);
 			}
-			originalNotes.set(index, categories[index].note ?? '');
+			originalNotes.set(category, category.note ?? '');
 		}
-		editingNameIndex = index;
+		editingCategory = category;
 	}
 
-	function saveEditingName(index: number) {
-		commitEditing(index);
-		editingNameIndex = null;
+	function saveEditingName(category: CategoryItem) {
+		commitEditing(category);
+		editingCategory = null;
 	}
 
-	function cancelEditingName(index: number) {
-		if (newIndices.has(index)) {
+	function cancelEditingName(category: CategoryItem) {
+		if (unsavedCategories.has(category)) {
 			// New unsaved category — remove it
-			categories = categories.filter((_, i) => i !== index);
-			shiftIndices(newIndices, index);
-		} else {
-			// Revert name + note to their snapshots
-			if (originalNames.has(index)) {
-				categories[index].name = originalNames.get(index)!;
-				originalNames.delete(index);
-			}
-			if (originalNotes.has(index)) {
-				categories[index].note = originalNotes.get(index)!;
-				originalNotes.delete(index);
-			}
+			forgetCategory(category);
+			categories = categories.filter((c) => c !== category);
+			return;
 		}
-		editingNameIndex = null;
+		// Revert name + note to their snapshots
+		if (originalNames.has(category)) {
+			category.name = originalNames.get(category)!;
+			originalNames.delete(category);
+		}
+		if (originalNotes.has(category)) {
+			category.note = originalNotes.get(category)!;
+			originalNotes.delete(category);
+		}
+		editingCategory = null;
 	}
 
-	function removeCategory(index: number) {
+	function removeCategory(category: CategoryItem) {
 		if (!confirm('Remove this skill category?')) return;
-		const cat = categories[index];
-		if (!newIndices.has(index)) {
-			onremove?.(cat);
+		if (!unsavedCategories.has(category)) {
+			onremove?.(category);
 		}
-		categories = categories.filter((_, i) => i !== index);
-		shiftIndices(newIndices, index);
-		shiftKeys(originalNames, index);
+		forgetCategory(category);
+		categories = categories.filter((c) => c !== category);
 	}
 
-	// These collections are keyed by category position, so dropping a row has to
-	// shift every entry after it down. Which collections get shifted is left
-	// exactly as it was: originalNotes never is, and cancel shifts only
-	// newIndices. Both read like oversights, and both belong to the change that
-	// takes on this component's position-keyed state, not to a lint pass.
-	function shiftIndices(set: SvelteSet<number>, removed: number) {
-		const shifted = [...set].filter((i) => i !== removed).map((i) => (i > removed ? i - 1 : i));
-		set.clear();
-		for (const i of shifted) set.add(i);
-	}
-
-	function shiftKeys<V>(map: SvelteMap<number, V>, removed: number) {
-		const shifted = [...map]
-			.filter(([i]) => i !== removed)
-			.map(([i, v]) => [i > removed ? i - 1 : i, v] as const);
-		map.clear();
-		for (const [i, v] of shifted) map.set(i, v);
-	}
-
-	function cloneCategory(index: number) {
+	function cloneCategory(category: CategoryItem) {
 		// Only persisted categories can be cloned server-side.
-		if (newIndices.has(index)) return;
-		onclone?.(categories[index]);
+		if (unsavedCategories.has(category)) return;
+		onclone?.(category);
 	}
 
-	function commitEditing(index: number) {
-		const cat = categories[index];
-		if (newIndices.has(index)) {
-			if (cat.name.trim()) {
-				oncreate?.(cat); // persists name + note
-				newIndices.delete(index);
+	function commitEditing(category: CategoryItem) {
+		if (unsavedCategories.has(category)) {
+			if (category.name.trim()) {
+				oncreate?.(category); // persists name + note
+				unsavedCategories.delete(category);
 			}
 		} else {
-			const origName = originalNames.get(index);
-			const origNote = originalNotes.get(index) ?? '';
-			const nameChanged = origName !== undefined && cat.name !== origName;
-			const noteChanged = (cat.note ?? '') !== origNote;
-			if (cat.name.trim() && (nameChanged || noteChanged)) {
-				onrename?.(cat); // updates name + note together
+			const origName = originalNames.get(category);
+			const origNote = originalNotes.get(category) ?? '';
+			const nameChanged = origName !== undefined && category.name !== origName;
+			const noteChanged = (category.note ?? '') !== origNote;
+			if (category.name.trim() && (nameChanged || noteChanged)) {
+				onrename?.(category); // updates name + note together
 			}
-			originalNames.delete(index);
-			originalNotes.delete(index);
+			originalNames.delete(category);
+			originalNotes.delete(category);
 		}
 	}
 
 	// Category version tags
 	const builtinTags = ['resume', 'cv'];
-	const tagsExpanded = new SvelteSet<number>();
 
-	function toggleTagExpand(index: number) {
-		if (tagsExpanded.has(index)) tagsExpanded.delete(index);
-		else tagsExpanded.add(index);
-	}
-
-	function catTags(index: number): string[] {
-		return categories[index].tags ?? [];
+	function catTags(category: CategoryItem): string[] {
+		return category.tags ?? [];
 	}
 
 	// The version/template slug of a tag, ignoring a leading "!" negation marker.
@@ -292,8 +300,8 @@
 		return tag.replace(/^!/, '').trim().toLowerCase();
 	}
 
-	function catTagSuggestions(index: number): string[] {
-		const used = new Set(catTags(index).map(tagSlug));
+	function catTagSuggestions(category: CategoryItem): string[] {
+		const used = new Set(catTags(category).map(tagSlug));
 		const all = [
 			...builtinTags,
 			...versionSlugs.filter((v) => !builtinTags.includes(v.toLowerCase()))
@@ -301,21 +309,21 @@
 		return all.filter((s) => !used.has(s.toLowerCase()));
 	}
 
-	function addCategoryTag(index: number, tag: string) {
+	function addCategoryTag(category: CategoryItem, tag: string) {
 		const trimmed = tag.trim();
 		if (!trimmed) return;
 		const slug = tagSlug(trimmed);
-		const current = categories[index].tags ?? [];
+		const current = category.tags ?? [];
 		// Skip if this version is already tagged in either include or exclude form.
 		if (current.some((t) => tagSlug(t) === slug)) return;
-		categories[index].tags = [...current, trimmed];
-		oncategorytags?.(categories[index]);
+		category.tags = [...current, trimmed];
+		oncategorytags?.(category);
 	}
 
-	function removeCategoryTag(index: number, tag: string) {
-		const next = (categories[index].tags ?? []).filter((t) => t !== tag);
-		categories[index].tags = next.length ? next : null;
-		oncategorytags?.(categories[index]);
+	function removeCategoryTag(category: CategoryItem, tag: string) {
+		const next = (category.tags ?? []).filter((t) => t !== tag);
+		category.tags = next.length ? next : null;
+		oncategorytags?.(category);
 	}
 </script>
 
@@ -342,27 +350,27 @@
 	</div>
 {/snippet}
 
-{#snippet categoryHeader(categoryIndex: number)}
-	{#if editingNameIndex === categoryIndex}
-		{@const catId = (categories[categoryIndex] as { id?: number }).id ?? 0}
+{#snippet categoryHeader(category: CategoryItem)}
+	{#if editingCategory === category}
+		{@const catId = (category as { id?: number }).id ?? 0}
 		<div class="flex w-full min-w-0 flex-col gap-1.5">
 			<TranslatableField
 				entity="tech_skill_category"
 				id={catId}
 				field="name"
-				bind:value={categories[categoryIndex].name}
+				bind:value={category.name}
 				placeholder="Category name"
 				onkeydown={(e) => {
-					if (e.key === 'Enter') saveEditingName(categoryIndex);
-					if (e.key === 'Escape') cancelEditingName(categoryIndex);
+					if (e.key === 'Enter') saveEditingName(category);
+					if (e.key === 'Escape') cancelEditingName(category);
 				}}
 			/>
 			<input
 				type="text"
-				bind:value={categories[categoryIndex].note}
+				bind:value={category.note}
 				onkeydown={(e) => {
-					if (e.key === 'Enter') saveEditingName(categoryIndex);
-					if (e.key === 'Escape') cancelEditingName(categoryIndex);
+					if (e.key === 'Enter') saveEditingName(category);
+					if (e.key === 'Escape') cancelEditingName(category);
 				}}
 				placeholder="Note (private hint — which versions this is for)"
 				class="w-full rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text)] italic focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none sm:w-72"
@@ -370,7 +378,7 @@
 			<div class="flex flex-shrink-0 items-center gap-1">
 				<button
 					type="button"
-					onclick={() => cancelEditingName(categoryIndex)}
+					onclick={() => cancelEditingName(category)}
 					class="p-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-text)]"
 					aria-label="Cancel"
 				>
@@ -378,7 +386,7 @@
 				</button>
 				<button
 					type="button"
-					onclick={() => saveEditingName(categoryIndex)}
+					onclick={() => saveEditingName(category)}
 					class="p-2 text-[var(--dash-primary)] transition-colors hover:text-[var(--dash-primary-hover)]"
 					aria-label="Save"
 				>
@@ -387,10 +395,10 @@
 			</div>
 		</div>
 	{:else}
-		{@const noteText = categories[categoryIndex].note?.trim()}
+		{@const noteText = category.note?.trim()}
 		<div class="flex min-w-0 items-baseline gap-2">
 			<h3 class="max-w-full flex-shrink-0 truncate text-base font-semibold text-[var(--dash-text)]">
-				{categories[categoryIndex].name || 'Untitled category'}
+				{category.name || 'Untitled category'}
 			</h3>
 			{#if noteText}
 				<span class="text-xs font-normal text-[var(--dash-text-muted)] italic" title={noteText}>
@@ -400,7 +408,7 @@
 			{#if !compact}
 				<button
 					type="button"
-					onclick={() => startEditingName(categoryIndex)}
+					onclick={() => startEditingName(category)}
 					class="flex-shrink-0 self-center p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
 					aria-label="Edit category name and note"
 				>
@@ -411,9 +419,9 @@
 	{/if}
 {/snippet}
 
-{#snippet categorySkills(categoryIndex: number)}
+{#snippet categorySkills(category: CategoryItem)}
 	<SkillTagsEditor
-		bind:skills={categories[categoryIndex].skills}
+		bind:skills={category.skills}
 		{levelOptions}
 		{versionSlugs}
 		{hasAnyLevel}
@@ -422,30 +430,22 @@
 		bind:showLevel
 		bind:showExperience
 		bind:showVersionTags
-		oncreate={onskillcreate
-			? (skill) => onskillcreate(categories[categoryIndex], skill)
-			: undefined}
-		onupdate={onskillupdate
-			? (skill) => onskillupdate(categories[categoryIndex], skill)
-			: undefined}
-		onremove={onskillremove
-			? (skill) => onskillremove(categories[categoryIndex], skill)
-			: undefined}
-		onreorder={onskillreorder
-			? (skills) => onskillreorder(categories[categoryIndex], skills)
-			: undefined}
+		oncreate={onskillcreate ? (skill) => onskillcreate(category, skill) : undefined}
+		onupdate={onskillupdate ? (skill) => onskillupdate(category, skill) : undefined}
+		onremove={onskillremove ? (skill) => onskillremove(category, skill) : undefined}
+		onreorder={onskillreorder ? (skills) => onskillreorder(category, skills) : undefined}
 	/>
 {/snippet}
 
-{#snippet categoryVersionTags(categoryIndex: number)}
+{#snippet categoryVersionTags(category: CategoryItem)}
 	{#if versionSlugs.length > 0}
-		{@const tags = catTags(categoryIndex)}
-		{@const suggestions = catTagSuggestions(categoryIndex)}
-		{@const expanded = tagsExpanded.has(categoryIndex)}
+		{@const tags = catTags(category)}
+		{@const suggestions = catTagSuggestions(category)}
+		{@const expanded = tagsExpanded.has(category)}
 		<div class="mt-5 mb-1">
 			<button
 				type="button"
-				onclick={() => toggleTagExpand(categoryIndex)}
+				onclick={() => toggleTagExpand(category)}
 				class="mb-1 flex items-center gap-1 text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase transition-colors hover:text-[var(--dash-text-secondary)]"
 			>
 				<FontAwesomeIcon icon={expanded ? faChevronDown : faChevronRight} class="h-2 w-2" />
@@ -464,7 +464,7 @@
 							{@const isNeg = tag.startsWith('!')}
 							<button
 								type="button"
-								onclick={() => removeCategoryTag(categoryIndex, tag)}
+								onclick={() => removeCategoryTag(category, tag)}
 								class="inline-flex cursor-pointer items-center gap-1 rounded border px-2 py-1 text-xs transition-colors hover:border-red-500/30 hover:bg-red-500/15 hover:text-red-500 {isNeg
 									? 'border-red-500/25 bg-red-500/10 text-red-600'
 									: 'border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'}"
@@ -490,7 +490,7 @@
 						{#each suggestions as suggestion, i (i)}
 							<button
 								type="button"
-								onclick={() => addCategoryTag(categoryIndex, suggestion)}
+								onclick={() => addCategoryTag(category, suggestion)}
 								class="inline-flex items-center gap-1 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)]"
 							>
 								<FontAwesomeIcon icon={faPlus} class="h-2.5 w-2.5" />
@@ -505,7 +505,7 @@
 						{#each suggestions as suggestion, i (i)}
 							<button
 								type="button"
-								onclick={() => addCategoryTag(categoryIndex, '!' + suggestion)}
+								onclick={() => addCategoryTag(category, '!' + suggestion)}
 								class="inline-flex items-center gap-1 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-red-500/40 hover:text-red-500"
 							>
 								<FontAwesomeIcon icon={faBan} class="h-2.5 w-2.5" />
@@ -521,25 +521,23 @@
 
 {#if compact}
 	<div class="divide-y divide-[var(--dash-border)]">
-		{#each categories, categoryIndex (categoryIndex)}
-			<div
-				class={expandedItems.has(categoryIndex) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}
-			>
+		{#each categories as category (category)}
+			<div class={expandedItems.has(category) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
 				<div class="flex items-center justify-between transition-colors hover:bg-[var(--dash-bg)]">
 					<button
 						type="button"
 						onclick={() => {
-							if (editingNameIndex !== categoryIndex) toggleItem(categoryIndex);
+							if (editingCategory !== category) toggleItem(category);
 						}}
 						class="flex-1 self-stretch p-3 text-left sm:p-4"
 					>
-						{@render categoryHeader(categoryIndex)}
+						{@render categoryHeader(category)}
 					</button>
 					<div class="flex items-center gap-2">
 						{#if onclone}
 							<button
 								type="button"
-								onclick={() => cloneCategory(categoryIndex)}
+								onclick={() => cloneCategory(category)}
 								class="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-1.5 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)]"
 								aria-label="Clone category"
 							>
@@ -549,7 +547,7 @@
 						{/if}
 						<button
 							type="button"
-							onclick={() => removeCategory(categoryIndex)}
+							onclick={() => removeCategory(category)}
 							class="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-500 transition-colors hover:border-red-500/50 hover:bg-red-500/20 hover:text-red-600"
 							aria-label="Remove category"
 						>
@@ -558,22 +556,22 @@
 						</button>
 						<button
 							type="button"
-							onclick={() => toggleItem(categoryIndex)}
+							onclick={() => toggleItem(category)}
 							class="p-1"
-							aria-label={expandedItems.has(categoryIndex) ? 'Collapse' : 'Expand'}
+							aria-label={expandedItems.has(category) ? 'Collapse' : 'Expand'}
 						>
 							<FontAwesomeIcon
-								icon={expandedItems.has(categoryIndex) ? faChevronUp : faChevronDown}
+								icon={expandedItems.has(category) ? faChevronUp : faChevronDown}
 								class="h-4 w-4 text-[var(--dash-text-muted)]"
 							/>
 						</button>
 					</div>
 				</div>
 
-				{#if expandedItems.has(categoryIndex)}
+				{#if expandedItems.has(category)}
 					<div class="px-3 py-4 sm:px-4">
-						{@render categorySkills(categoryIndex)}
-						{@render categoryVersionTags(categoryIndex)}
+						{@render categorySkills(category)}
+						{@render categoryVersionTags(category)}
 					</div>
 				{/if}
 			</div>
@@ -636,15 +634,15 @@
 				Order saved
 			</div>
 		{/if}
-		{#each categories, categoryIndex (categoryIndex)}
+		{#each categories as category (category)}
 			<Card class="p-3 sm:p-4">
 				<div class="mb-3 flex items-center justify-between gap-2">
-					{@render categoryHeader(categoryIndex)}
+					{@render categoryHeader(category)}
 					<div class="flex flex-shrink-0 items-center gap-2">
 						{#if onclone}
 							<button
 								type="button"
-								onclick={() => cloneCategory(categoryIndex)}
+								onclick={() => cloneCategory(category)}
 								class="flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-1.5 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)]"
 								aria-label="Clone category"
 							>
@@ -654,7 +652,7 @@
 						{/if}
 						<button
 							type="button"
-							onclick={() => removeCategory(categoryIndex)}
+							onclick={() => removeCategory(category)}
 							class="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-500 transition-colors hover:border-red-500/50 hover:bg-red-500/20 hover:text-red-600"
 							aria-label="Remove category"
 						>
@@ -664,8 +662,8 @@
 					</div>
 				</div>
 
-				{@render categorySkills(categoryIndex)}
-				{@render categoryVersionTags(categoryIndex)}
+				{@render categorySkills(category)}
+				{@render categoryVersionTags(category)}
 			</Card>
 		{/each}
 
