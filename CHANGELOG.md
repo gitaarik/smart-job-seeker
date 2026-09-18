@@ -5,6 +5,21 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.32.1] - 2026-09-18
+
+13 commits since v0.32.0.
+
+### Fixed
+
+- Admin feedback page: resolve attachment links and render attachments with merged badge and subscriber count
+- Skills editor: fix state management for category editors to key by category instead of position
+- Profile wizard: fix state management for section open rows to key by row instead of position
+- Jobs: prevent CountrySelect from crashing on Enter and secure rescrape endpoint behind authorization gate
+- Monitoring: warnings now reach Sentry as breadcrumbs
+- Profile export: download files named after the profile
+- Interview: report failed reorders instead of silently reverting
+- Resume import: delete only the specified education row instead of all degrees
+
 ## [0.32.0] - 2026-09-18
 
 62 commits since v0.31.0.
