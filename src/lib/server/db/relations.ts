@@ -26,8 +26,6 @@ import {
 	highlights,
 	inbound_emails,
 	job_importers,
-	resume_template_assets,
-	resume_templates,
 	job_match_history,
 	job_matches,
 	job_platforms,
@@ -39,6 +37,8 @@ import {
 	match_config,
 	platform_credentials,
 	platform_profiles,
+	presentation_template_assets,
+	presentation_templates,
 	profile_document_files,
 	profile_document_projects,
 	profile_exports,
@@ -111,27 +111,33 @@ export const filesRelations = relations(files, ({ one, many }) => ({
 	profiles: many(profiles),
 	user_feedback_files: many(user_feedback_files),
 	profile_document_projects: many(profile_document_projects),
-	resume_template_assets: many(resume_template_assets)
+	presentation_template_assets: many(presentation_template_assets)
 }));
 
-export const resume_template_assetsRelations = relations(resume_template_assets, ({ one }) => ({
-	template: one(resume_templates, {
-		fields: [resume_template_assets.template_id],
-		references: [resume_templates.id]
-	}),
-	file: one(files, {
-		fields: [resume_template_assets.file_id],
-		references: [files.id]
+export const presentation_template_assetsRelations = relations(
+	presentation_template_assets,
+	({ one }) => ({
+		template: one(presentation_templates, {
+			fields: [presentation_template_assets.template_id],
+			references: [presentation_templates.id]
+		}),
+		file: one(files, {
+			fields: [presentation_template_assets.file_id],
+			references: [files.id]
+		})
 	})
-}));
+);
 
-export const resume_templatesRelations = relations(resume_templates, ({ one, many }) => ({
-	profile: one(profiles, {
-		fields: [resume_templates.profile_id],
-		references: [profiles.id]
-	}),
-	resume_template_assets: many(resume_template_assets)
-}));
+export const presentation_templatesRelations = relations(
+	presentation_templates,
+	({ one, many }) => ({
+		profile: one(profiles, {
+			fields: [presentation_templates.profile_id],
+			references: [profiles.id]
+		}),
+		presentation_template_assets: many(presentation_template_assets)
+	})
+);
 
 export const collected_dataRelations = relations(collected_data, ({ one }) => ({
 	profile: one(profiles, {

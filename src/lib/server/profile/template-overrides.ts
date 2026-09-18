@@ -24,7 +24,7 @@
 
 import { dbDirect as db } from '$lib/server/db';
 import { and, eq, inArray } from 'drizzle-orm';
-import { profile_template_overrides, resume_templates } from '$lib/server/db/schema';
+import { presentation_templates, profile_template_overrides } from '$lib/server/db/schema';
 import { overridableFieldsFor, templateOverrideKey } from '$lib/template-overrides';
 import { BASE_LOCALE } from '$lib/resume-translations';
 
@@ -143,9 +143,9 @@ export function applyTemplateOverrides<T>(profile: T, ov: TemplateOverrides): T 
 /**
  * Every override the profile's templates hold for one entity, for the editor.
  *
- * Scoped through `resume_templates` rather than by a `profile_id` column on the
- * overrides themselves — the template is what owns them, and a second copy of
- * that fact is a second thing that can be wrong.
+ * Scoped through `presentation_templates` rather than by a `profile_id` column
+ * on the overrides themselves — the template is what owns them, and a second
+ * copy of that fact is a second thing that can be wrong.
  */
 export async function listTemplateOverridesFor(
 	profileId: number,
@@ -160,10 +160,13 @@ export async function listTemplateOverridesFor(
 			value: profile_template_overrides.value
 		})
 		.from(profile_template_overrides)
-		.innerJoin(resume_templates, eq(profile_template_overrides.template_id, resume_templates.id))
+		.innerJoin(
+			presentation_templates,
+			eq(profile_template_overrides.template_id, presentation_templates.id)
+		)
 		.where(
 			and(
-				eq(resume_templates.profile_id, profileId),
+				eq(presentation_templates.profile_id, profileId),
 				eq(profile_template_overrides.entity_type, entity),
 				eq(profile_template_overrides.entity_id, entityId)
 			)

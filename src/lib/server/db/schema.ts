@@ -1506,7 +1506,7 @@ export const profile_exports = pgTable(
 		file_type: varchar({ length: 255 }).notNull(),
 		export_type: varchar({ length: 255 }).notNull(),
 		export_format: varchar({ length: 255 }),
-		// Presentation template slug the export was rendered with (a resume_templates
+		// Presentation template slug the export was rendered with (a presentation_templates
 		// slug); null means the default ProfileDisplay template.
 		template: varchar({ length: 50 }),
 		// Language the export was rendered in (a locale code); null means the base
@@ -1919,7 +1919,7 @@ export const profile_translations = pgTable(
  * It exists because nothing in a profile could say "on Citrus". An item's
  * `tags` name a base document type (`resume`/`cv`) or a version slug; the
  * presentation template is chosen independently at render time, so no tag can
- * reach it. `resume_templates.config.contact` already replaces contact fields
+ * reach it. `presentation_templates.config.contact` already replaces contact fields
  * per template — this is the same statement for a field that belongs to a row,
  * and the case it was built for is a consultancy whose house style says Senior
  * Engineer where the applicant's own history says Lead Engineer.
@@ -1965,7 +1965,7 @@ export const profile_template_overrides = pgTable(
 		index('profile_template_overrides_lookup').on(table.template_id, table.locale),
 		foreignKey({
 			columns: [table.template_id],
-			foreignColumns: [resume_templates.id],
+			foreignColumns: [presentation_templates.id],
 			name: 'profile_template_overrides_template_foreign'
 		}).onDelete('cascade')
 	]
@@ -2552,15 +2552,37 @@ export const work_experiences = pgTable(
 	]
 );
 
-// Per-profile resume/CV presentation templates. The rendering code is a
-// generic, brand-neutral renderer; everything specific to a template (branding,
-// fonts, uploaded asset file refs, layout rules) lives here in `config` so that
-// no consultancy-specific assets or branding are committed to the repo.
-export const resume_templates = pgTable(
-	'resume_templates',
+/**
+ * Per-profile presentation templates: how a profile is dressed for an
+ * audience. The rendering code is a generic, brand-neutral renderer;
+ * everything specific to a template (branding, fonts, uploaded asset file
+ * refs, layout rules) lives here in `config` so that no consultancy-specific
+ * assets or branding are committed to the repo.
+ *
+ * `kind` is what the config means. A `document` template dresses a printed
+ * resume/CV; a `portfolio` theme dresses the public site. They share this
+ * table rather than having one each because the table never interpreted
+ * `config` in the first place, and the asset slots below are already keyed by
+ * a free-form string for the same reason. What actually hangs off a template
+ * id is worth keeping single: the asset rows, the orphan reaper's join
+ * (uploads/reap.ts), the export/import pair, and profile_template_overrides.
+ * A second table is a second chance to forget the reaper join, which is
+ * precisely how the Citrus assets were deleted on 2026-08-23.
+ *
+ * Was `resume_templates` until the portfolio kind arrived; renamed in
+ * migration 0044 because a table holding both could not keep that name.
+ *
+ * Callers never pass `kind` — the accessors in server/profile/ are one per
+ * kind and each pins its own, so no call site can forget the filter and show
+ * a portfolio theme in the CV template switcher.
+ */
+export const presentation_templates = pgTable(
+	'presentation_templates',
 	{
 		id: serial().primaryKey().notNull(),
 		profile_id: integer().notNull(),
+		/** What this template dresses: 'document' (resume/CV) | 'portfolio'. */
+		kind: varchar({ length: 32 }).default('document').notNull(),
 		name: varchar({ length: 255 }).notNull(),
 		slug: varchar({ length: 255 }).notNull(),
 		status: varchar({ length: 255 }).default('published').notNull(),
@@ -2570,10 +2592,26 @@ export const resume_templates = pgTable(
 		date_updated: timestamp({ withTimezone: true, mode: 'date' })
 	},
 	(table) => [
+		/**
+		 * A template is addressed by slug from outside this table
+		 * (`profile_exports.template`, `applications.cv_template_sent`), and
+		 * until now nothing stopped two rows from answering to the same one —
+		 * the slug lookup is a `findFirst`, so a duplicate silently picked a
+		 * winner. Same defect `profile_versions` had, and the same fix.
+		 *
+		 * `kind` is in the key so a document template and a portfolio theme
+		 * may both be called "citrus", which is the point of them being
+		 * separate kinds.
+		 */
+		uniqueIndex('presentation_templates_profile_kind_slug_key').on(
+			table.profile_id,
+			table.kind,
+			table.slug
+		),
 		foreignKey({
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
-			name: 'resume_templates_profile_foreign'
+			name: 'presentation_templates_profile_foreign'
 		}).onDelete('cascade')
 	]
 );
@@ -2596,32 +2634,40 @@ export const resume_templates = pgTable(
 // `key` rather than a column per asset, because the renderer's asset names are
 // a template concern and a seventh one should not need a migration. It is the
 // same key that used to sit in the jsonb, so the config the renderer receives
-// is rebuilt from these rows and nothing downstream changed shape.
-export const resume_template_assets = pgTable(
-	'resume_template_assets',
+// is rebuilt from these rows and nothing downstream changed shape. That
+// freedom is what let the portfolio kind arrive here without a migration: its
+// slots are simply different strings.
+export const presentation_template_assets = pgTable(
+	'presentation_template_assets',
 	{
 		id: serial().primaryKey().notNull(),
 		template_id: integer().notNull(),
-		/** Asset slot: badge | screenBackground | printBackground | footer | divider | thumbnail. */
+		/**
+		 * Asset slot. Which names are meaningful depends on the template's
+		 * `kind`, and nothing here enforces that: a document template reads
+		 * badge | screenBackground | printBackground | footer | divider |
+		 * thumbnail, a portfolio theme reads logo | hero | ogImage | favicon |
+		 * thumbnail.
+		 */
 		key: varchar({ length: 64 }).notNull(),
 		file_id: uuid().notNull(),
 		date_created: timestamp({ withTimezone: true, mode: 'date' })
 	},
 	(table) => [
 		// One file per slot per template — the shape the jsonb object had.
-		unique('resume_template_assets_template_key_unique').on(table.template_id, table.key),
+		unique('presentation_template_assets_template_key_unique').on(table.template_id, table.key),
 		// "Which templates use this file", asked by the public asset route on
 		// every cold fetch and by the orphan reaper for every file it examines.
-		index('resume_template_assets_file_idx').on(table.file_id),
+		index('presentation_template_assets_file_idx').on(table.file_id),
 		foreignKey({
 			columns: [table.template_id],
-			foreignColumns: [resume_templates.id],
-			name: 'resume_template_assets_template_foreign'
+			foreignColumns: [presentation_templates.id],
+			name: 'presentation_template_assets_template_foreign'
 		}).onDelete('cascade'),
 		foreignKey({
 			columns: [table.file_id],
 			foreignColumns: [files.id],
-			name: 'resume_template_assets_file_foreign'
+			name: 'presentation_template_assets_file_foreign'
 		}).onDelete('cascade')
 	]
 );

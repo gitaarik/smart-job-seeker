@@ -47,7 +47,7 @@ import {
 	importTranslations,
 	type CreatedTranslationIds
 } from './import-translations';
-import { deleteProfileResumeTemplates, importResumeTemplates } from './import-templates';
+import { deleteProfilePresentationTemplates, importResumeTemplates } from './import-templates';
 import type { ExportData, ExportedProfileData, FullExportData } from './types';
 
 // Helper to convert JSON value for database insert
@@ -228,7 +228,7 @@ async function deleteProfileChildren(profileId: number, scope: ExportData['scope
 
 	// Sidecars keyed by entity id: stale rows would point at recreated entities.
 	await deleteProfileTranslations(profileId);
-	await deleteProfileResumeTemplates(profileId);
+	await deleteProfilePresentationTemplates(profileId);
 
 	// Delete simple child records
 	await dbDirect.delete(highlights).where(eq(highlights.profile_id, profileId));

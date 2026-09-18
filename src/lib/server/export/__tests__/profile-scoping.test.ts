@@ -45,7 +45,7 @@ vi.mock('$lib/server/db', () => {
 		'cheat_sheets',
 		'applications',
 		'profile_document_projects',
-		'resume_templates',
+		'presentation_templates',
 		'profile_translations',
 		'files'
 	];

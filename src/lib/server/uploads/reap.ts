@@ -145,9 +145,15 @@ export async function collectProfileFileRefs(profileId: number): Promise<FileRef
 		UNION ALL
 		SELECT source_cv, NULL FROM profiles WHERE id = ${profileId}
 		UNION ALL
+		-- Deliberately not filtered by template kind: a CV template's badge and
+		-- a portfolio theme's logo are both files this profile still uses, and
+		-- the question here is only whether anything references them. The two
+		-- kinds sharing one table is what keeps this a single join — a separate
+		-- table per kind would need a second one here, and forgetting it is
+		-- exactly how the Citrus assets were deleted on 2026-08-23.
 		SELECT a.file_id, NULL
-		  FROM resume_template_assets a
-		  JOIN resume_templates t ON t.id = a.template_id
+		  FROM presentation_template_assets a
+		  JOIN presentation_templates t ON t.id = a.template_id
 		 WHERE t.profile_id = ${profileId}
 		UNION ALL
 		SELECT file_id::uuid, NULL
@@ -220,14 +226,14 @@ async function referencingColumns(): Promise<{ table: string; column: string }[]
  * `referencingColumns()` asks `pg_constraint`, which knows every real foreign
  * key and nothing else. These columns hold `files.id` values without one, and
  * the sweep of 2026-08-23 deleted the Citrus template's six assets through
- * exactly that gap: `resume_templates.config` named them in jsonb, no
+ * exactly that gap: `presentation_templates.config` named them in jsonb, no
  * constraint could see it, and "nothing references this" came back true. The
  * assets were restored from a profile export archive; the sweep also took the
  * `source_cv` a profile was created from and the uploads `import_logs` keeps
  * for re-parsing, which nothing had backed up.
  *
  * **That first one is no longer here, and its absence is the point.** Template
- * artwork moved into `resume_template_assets` on 2026-08-31, with a foreign
+ * artwork moved into `presentation_template_assets` on 2026-08-31, with a foreign
  * key, so `referencingColumns()` reports it like anything else and the guard
  * that stood in for the missing constraint could be deleted rather than
  * maintained. The remaining two are the ones still waiting for the same

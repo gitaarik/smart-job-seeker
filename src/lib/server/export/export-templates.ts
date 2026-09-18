@@ -1,5 +1,5 @@
 /**
- * Export custom CV templates (`resume_templates`).
+ * Export a profile's presentation templates (`presentation_templates`).
  *
  * A template is config plus a handful of images the config points at by file
  * id — `config.assets.*` and `config.thumbnail` today, but the shape is the
@@ -12,7 +12,7 @@
  * byte-exact round trip.
  *
  * Those ids no longer *live* in the config — they are rows in
- * `resume_template_assets` since 2026-08-31 — but they are folded back into it
+ * `presentation_template_assets` since 2026-08-31 — but they are folded back into it
  * on the way out, deliberately. The archive format is the one thing here that
  * outlives the schema: an export written last year still has to import, so
  * moving the ids in the database is not a reason to move them in the file.
@@ -22,9 +22,9 @@
 
 import { dbDirect } from '$lib/server/db';
 import { asc, eq, inArray } from 'drizzle-orm';
-import { files, resume_templates } from '$lib/server/db/schema';
+import { files, presentation_templates } from '$lib/server/db/schema';
 import { getFile } from '$lib/server/files';
-import { foldAssetsIntoConfig } from '$lib/server/profile/resume-templates';
+import { foldAssetsIntoConfig } from '$lib/server/profile/presentation-templates';
 import type { ResumeTemplateConfig } from '$lib/resume-templates';
 import type { ExportedResumeTemplate, ExportedTemplateAsset, TemplateAssetPayload } from './types';
 
@@ -59,10 +59,10 @@ export async function buildTemplateExport(
 	// Every template, not only the published ones — a draft is still the
 	// author's work — so this cannot use `getResumeTemplatesForProfile`, which
 	// filters by status. It borrows that function's fold instead.
-	const rows = await dbDirect.query.resume_templates.findMany({
-		where: eq(resume_templates.profile_id, profileId),
-		orderBy: [asc(resume_templates.sort), asc(resume_templates.id)],
-		with: { resume_template_assets: { columns: { key: true, file_id: true } } }
+	const rows = await dbDirect.query.presentation_templates.findMany({
+		where: eq(presentation_templates.profile_id, profileId),
+		orderBy: [asc(presentation_templates.sort), asc(presentation_templates.id)],
+		with: { presentation_template_assets: { columns: { key: true, file_id: true } } }
 	});
 
 	const templates: ExportedResumeTemplate[] = [];
@@ -72,7 +72,7 @@ export async function buildTemplateExport(
 		const assets: ExportedTemplateAsset[] = [];
 		const config = foldAssetsIntoConfig(
 			(row.config ?? {}) as ResumeTemplateConfig,
-			row.resume_template_assets
+			row.presentation_template_assets
 		);
 
 		if (includeAssets) {
@@ -104,6 +104,7 @@ export async function buildTemplateExport(
 		templates.push({
 			name: row.name || undefined,
 			slug: row.slug || undefined,
+			kind: row.kind || undefined,
 			status: row.status || undefined,
 			sort: row.sort,
 			config,

@@ -214,8 +214,8 @@ describe('reapFileRefs', () => {
 	});
 
 	// Template artwork was the third of these until 2026-08-31, guarded by an
-	// ILIKE over `resume_templates.config` because the ids sat in jsonb. It is
-	// `resume_template_assets` now, with a foreign key, so the catalog reports
+	// ILIKE over `presentation_templates.config` because the ids sat in jsonb. It is
+	// `presentation_template_assets` now, with a foreign key, so the catalog reports
 	// it and the hand-written guard is gone. Asserted as an absence because
 	// that is the whole benefit: a guard that no longer has to be maintained.
 	it('no longer hand-guards template artwork, which the catalog now reports', async () => {
@@ -224,7 +224,7 @@ describe('reapFileRefs', () => {
 		await reapFileRefs({ fileIds: ['id-a'], mediaPaths: [] });
 
 		const { sql } = queryAt(1);
-		expect(sql).not.toContain('resume_templates');
+		expect(sql).not.toContain('presentation_templates');
 		expect(sql).not.toContain('config::text');
 	});
 });
@@ -414,7 +414,7 @@ describe('collectProfileFileRefs', () => {
 			'application_records',
 			'profile_exports',
 			'profile_document_projects',
-			'resume_templates',
+			'presentation_templates',
 			'import_logs'
 		]) {
 			expect(sql, `${table} is not collected`).toContain(table);
@@ -434,7 +434,7 @@ describe('collectProfileFileRefs', () => {
 		expect(sql).toContain('FROM import_logs');
 		// Template artwork is collected by an ordinary join now, not by fishing
 		// uuid-shaped strings out of the config with `regexp_matches`.
-		expect(sql).toContain('FROM resume_template_assets a');
+		expect(sql).toContain('FROM presentation_template_assets a');
 		expect(sql).not.toContain('regexp_matches');
 		// The UUID pattern is inlined, not bound: the only parameter is the profile.
 		expect(new Set(params)).toEqual(new Set([7]));

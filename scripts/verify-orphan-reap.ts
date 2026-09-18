@@ -33,8 +33,8 @@ import {
 	files,
 	profile_exports,
 	profiles,
-	resume_template_assets,
-	resume_templates
+	presentation_template_assets,
+	presentation_templates
 } from '$lib/server/db/schema';
 import {
 	collectProfileFileRefs,
@@ -225,17 +225,17 @@ async function main() {
 
 	const asset = await makeFile('template-asset');
 	const [template] = await db
-		.insert(resume_templates)
+		.insert(presentation_templates)
 		.values({
 			profile_id: profileId,
 			name: 'verify-orphan-reap',
 			slug: `verify-orphan-reap-${asset.id.slice(0, 8)}`,
 			config: {}
 		})
-		.returning({ id: resume_templates.id });
+		.returning({ id: presentation_templates.id });
 	madeTemplateIds.push(template.id);
 	await db
-		.insert(resume_template_assets)
+		.insert(presentation_template_assets)
 		.values({ template_id: template.id, key: 'badge', file_id: asset.id });
 	await backdate(asset.id, DEFAULT_ORPHAN_MIN_AGE_DAYS + 23);
 
@@ -270,7 +270,9 @@ async function main() {
 
 async function cleanup() {
 	if (madeTemplateIds.length > 0) {
-		await db.delete(resume_templates).where(inArray(resume_templates.id, madeTemplateIds));
+		await db
+			.delete(presentation_templates)
+			.where(inArray(presentation_templates.id, madeTemplateIds));
 	}
 	if (madeExportIds.length > 0) {
 		await db.delete(profile_exports).where(inArray(profile_exports.id, madeExportIds));

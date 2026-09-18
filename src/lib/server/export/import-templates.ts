@@ -1,5 +1,5 @@
 /**
- * Restore custom CV templates.
+ * Restore a profile's presentation templates, of both kinds.
  *
  * Assets are re-uploaded, which mints new file ids, so the config's references
  * have to be rewritten. The rewrite is a string substitution over the
@@ -12,8 +12,8 @@
  * layout, fonts and colours too.
  *
  * The rewritten ids are then lifted out of the config into
- * `resume_template_assets`, where they live now. This happens on import rather
- * than in the archive format because an archive written before that table
+ * `presentation_template_assets`, where they live now. This happens on import
+ * rather than in the archive format because an archive written before that table
  * existed has to import into it too: the file still carries the ids in the
  * config, and this is the one place that turns them into rows. Whatever is not
  * recognised as an asset stays in the config untouched.
@@ -21,12 +21,16 @@
 
 import { dbDirect } from '$lib/server/db';
 import { eq, inArray } from 'drizzle-orm';
-import { files, resume_template_assets, resume_templates } from '$lib/server/db/schema';
+import { files, presentation_template_assets, presentation_templates } from '$lib/server/db/schema';
 import { uploadFile } from '$lib/server/files';
 import type { ExportedResumeTemplate } from './types';
 import type { ResumeTemplateConfig } from '$lib/resume-templates';
+import { DEFAULT_TEMPLATE_KIND, isTemplateKind } from '$lib/presentation-templates';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Unambiguous key for the (kind, slug) uniqueness the table enforces. */
+const slugKey = (kind: string, slug: string) => JSON.stringify([kind, slug]);
 
 /**
  * The asset slots a config names, as `{ key, fileId }`, and the config without
@@ -88,6 +92,30 @@ export async function importResumeTemplates(
 	let imported = 0;
 	let assetsRestored = 0;
 
+	// (kind, slug) is unique per profile since migration 0044, and this import
+	// is not always preceded by a delete: only an overwrite clears the existing
+	// templates first, so a merge lands next to whatever is already there. Two
+	// rows wanting one slug used to be allowed and merely ambiguous — the slug
+	// lookup is a `findFirst` — and would now abort the whole import on a
+	// constraint violation. Rather than refuse, take the next free slug, which
+	// is what the rest of this file does with every other missing or unusable
+	// field.
+	const taken = new Set(
+		(
+			await dbDirect.query.presentation_templates.findMany({
+				where: eq(presentation_templates.profile_id, profileId),
+				columns: { kind: true, slug: true }
+			})
+		).map((r) => slugKey(r.kind, r.slug))
+	);
+
+	function claimSlug(kind: string, wanted: string): string {
+		let slug = wanted;
+		for (let n = 2; taken.has(slugKey(kind, slug)); n++) slug = `${wanted}-${n}`;
+		taken.add(slugKey(kind, slug));
+		return slug;
+	}
+
 	for (const template of templates) {
 		const idMap = new Map<string, string>();
 
@@ -113,7 +141,7 @@ export async function importResumeTemplates(
 
 		// name and slug are NOT NULL; fall back rather than refuse the import.
 		const name = template.name?.trim() || 'Imported template';
-		const slug =
+		const wantedSlug =
 			template.slug?.trim() ||
 			name
 				.toLowerCase()
@@ -123,19 +151,29 @@ export async function importResumeTemplates(
 
 		const { config, assets } = splitConfigAssets(rewriteConfigFileIds(template.config, idMap));
 
+		// An archive written before the kinds split carries no `kind`, and
+		// everything in one is a CV template — which is what the column
+		// defaults to. An unrecognised value is treated the same way rather
+		// than stored: the unique key is (profile, kind, slug), so a typo here
+		// would quietly create a template nothing can ever look up.
+		const declaredKind = template.kind ?? '';
+		const kind = isTemplateKind(declaredKind) ? declaredKind : DEFAULT_TEMPLATE_KIND;
+		const slug = claimSlug(kind, wantedSlug);
+
 		const [row] = await dbDirect
-			.insert(resume_templates)
+			.insert(presentation_templates)
 			.values({
 				profile_id: profileId,
 				name,
 				slug,
+				kind,
 				status: template.status || 'draft',
 				sort: template.sort ?? null,
 				config,
 				date_created: now,
 				date_updated: now
 			})
-			.returning({ id: resume_templates.id });
+			.returning({ id: presentation_templates.id });
 
 		// `file_id` is a real foreign key, so an id the archive named but never
 		// restored (a missing asset, or an export from an instance whose file
@@ -163,7 +201,7 @@ export async function importResumeTemplates(
 					date_created: now
 				}));
 			if (rows.length > 0) {
-				await dbDirect.insert(resume_template_assets).values(rows).onConflictDoNothing();
+				await dbDirect.insert(presentation_template_assets).values(rows).onConflictDoNothing();
 			}
 		}
 
@@ -173,6 +211,9 @@ export async function importResumeTemplates(
 	return { imported, assetsRestored };
 }
 
-export async function deleteProfileResumeTemplates(profileId: number): Promise<void> {
-	await dbDirect.delete(resume_templates).where(eq(resume_templates.profile_id, profileId));
+/** Every presentation template the profile owns, of both kinds. */
+export async function deleteProfilePresentationTemplates(profileId: number): Promise<void> {
+	await dbDirect
+		.delete(presentation_templates)
+		.where(eq(presentation_templates.profile_id, profileId));
 }

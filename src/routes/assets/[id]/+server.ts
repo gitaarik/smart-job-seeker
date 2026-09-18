@@ -32,7 +32,7 @@ const UPLOADS_DIR = join(process.cwd(), 'uploads', 'files');
  * than bytes under `uploads/`; those columns are gone and the clauses went with
  * them. Anything served from `uploads/` never reaches this route at all.
  *
- * The template check reads `resume_template_assets`, which is an indexed
+ * The template check reads `presentation_template_assets`, which is an indexed
  * lookup. It used to be `config::text ILIKE '%<id>%'` over the jsonb, because
  * the ids lived in there; they are rows now, so this is the one branch that
  * stopped being a scan.
@@ -43,7 +43,7 @@ const UPLOADS_DIR = join(process.cwd(), 'uploads', 'files');
  * download, and `/admin/files/download` for the file browser.
  */
 const PUBLIC_REFERENCES = sql`
-	EXISTS (SELECT 1 FROM resume_template_assets WHERE file_id = files.id)
+	EXISTS (SELECT 1 FROM presentation_template_assets WHERE file_id = files.id)
 `;
 
 /**

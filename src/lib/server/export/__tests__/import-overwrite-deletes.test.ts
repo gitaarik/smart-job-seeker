@@ -93,7 +93,7 @@ vi.mock('../import-translations', () => ({
 	importTranslations: () => Promise.resolve(0)
 }));
 vi.mock('../import-templates', () => ({
-	deleteProfileResumeTemplates: () => Promise.resolve(),
+	deleteProfilePresentationTemplates: () => Promise.resolve(),
 	importResumeTemplates: () => Promise.resolve(0)
 }));
 

@@ -119,7 +119,14 @@ export interface ExportedFieldVariant {
 	sort?: number | null;
 }
 
-// --- Resume templates (resume_templates) ---
+// --- Presentation templates (`presentation_templates`) ---
+//
+// The envelope key stays `resume_templates`, the table's name before the
+// portfolio kind arrived. It is a wire format: archives written by every
+// earlier version carry that key, and renaming it here would make them
+// import as templateless. The `kind` field below is what distinguishes a
+// document template from a portfolio theme; absent means `document`, which
+// is exactly what every pre-rename archive holds.
 /** An asset the template config points at by file id. */
 export interface ExportedTemplateAsset {
 	/** File id in the source database; rewritten to the new id on import. */
@@ -131,6 +138,8 @@ export interface ExportedTemplateAsset {
 export interface ExportedResumeTemplate {
 	name?: string;
 	slug?: string;
+	/** 'document' | 'portfolio'. Absent in archives written before the kinds split. */
+	kind?: string;
 	status?: string;
 	sort?: number | null;
 	/** Kept verbatim, including its file ids — the importer rewrites them. */

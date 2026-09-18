@@ -23,7 +23,7 @@ import { emptyTranslationIndexMaps, resolveTranslationTarget } from '../export-t
 import { emptyCreatedTranslationIds, resolveTranslationEntity } from '../import-translations';
 import { collectFileIdCandidates } from '../export-templates';
 import { rewriteConfigFileIds, splitConfigAssets } from '../import-templates';
-import { foldAssetsIntoConfig } from '$lib/server/profile/resume-templates';
+import { foldAssetsIntoConfig } from '$lib/server/profile/presentation-templates';
 
 describe('translation targets', () => {
 	function exportMaps() {
@@ -134,7 +134,7 @@ describe('template assets', () => {
  * The archive keeps the ids in the config; the database keeps them in rows.
  *
  * That split is the compatibility story: an export written before
- * `resume_template_assets` existed is the same file as one written after, so
+ * `presentation_template_assets` existed is the same file as one written after, so
  * the import has to turn config into rows, and the export has to turn rows
  * back into config. These two functions are the seam, and the property worth
  * asserting is that they compose back to where they started.
