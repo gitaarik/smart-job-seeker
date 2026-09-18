@@ -1,7 +1,4 @@
-<script lang="ts">
-	import { onMount } from 'svelte';
-	import { SvelteSet } from 'svelte/reactivity';
-
+<script module lang="ts">
 	// Import only the JSON locale data — no runtime library needed.
 	// Vite handles JSON imports natively for both SSR and client builds.
 	import enLocale from 'i18n-iso-countries/langs/en.json';
@@ -40,21 +37,35 @@
 		);
 	}
 
-	// Build the country list once from the locale JSON files
+	/**
+	 * Every country, with the names nine locales know it by.
+	 *
+	 * In `<script module>` because it depends on nothing but the imports: a
+	 * couple of thousand strings folded into ~250 rows, and the instance script
+	 * ran it on every mount. The import config page alone mounts one of these
+	 * per row, so opening it built the whole table over and over for a value
+	 * that cannot differ between them.
+	 */
 	const COUNTRIES: Country[] = (() => {
 		const enCountries = enLocale.countries as Record<string, string | string[]>;
 
 		return Object.keys(enCountries)
 			.map((code) => {
-				const searchSet = new SvelteSet<string>();
+				// Deduped against the array rather than through a Set:
+				// svelte/prefer-svelte-reactivity flags any mutable Set in a
+				// .svelte file, and a SvelteSet would wrap a dozen strings built
+				// once at module load in reactivity nothing will ever read.
+				const searchNames: string[] = [];
 
 				// Collect names from all locales (English first, then others)
 				for (const locale of locales) {
 					const entry = (locale.countries as Record<string, string | string[]>)[code];
 					if (!entry) continue;
 					// Entry is either a string or array of strings (aliases)
-					const names = Array.isArray(entry) ? entry : [entry];
-					names.forEach((n) => searchSet.add(n.toLowerCase()));
+					for (const name of Array.isArray(entry) ? entry : [entry]) {
+						const lower = name.toLowerCase();
+						if (!searchNames.includes(lower)) searchNames.push(lower);
+					}
 				}
 
 				// Primary display name: first English name
@@ -65,11 +76,15 @@
 					code,
 					name: displayName,
 					flag: codeToFlag(code),
-					searchNames: [...searchSet]
+					searchNames
 				};
 			})
 			.sort((a, b) => a.name.localeCompare(b.name));
 	})();
+</script>
+
+<script lang="ts">
+	import { onMount } from 'svelte';
 
 	let {
 		value = $bindable(''),
@@ -151,9 +166,11 @@
 			e.preventDefault();
 			highlightIndex = Math.max(highlightIndex - 1, 0);
 			scrollToHighlighted();
-		} else if (e.key === 'Enter' && highlightIndex >= 0) {
+		} else if (e.key === 'Enter') {
+			const choice = filtered[highlightIndex];
+			if (!choice) return;
 			e.preventDefault();
-			select(filtered[highlightIndex]);
+			select(choice);
 		}
 	}
 
@@ -181,6 +198,11 @@
 		value={displayText}
 		oninput={(e) => {
 			searchText = (e.target as HTMLInputElement).value;
+			// The highlight indexes into `filtered`, which this keystroke is about
+			// to shrink. Arrowing to Denmark and then typing "z" left the index at
+			// 57 over a list of one, and Enter read filtered[57] — undefined, and
+			// `select` dereferenced it.
+			highlightIndex = -1;
 			if (!isOpen) open();
 		}}
 		onfocus={() => {
