@@ -103,7 +103,15 @@ export const load: PageServerLoad = async ({ url }) => {
 			feedback_replies: f.feedback_replies.map((r) => ({
 				...r,
 				user: userMap[r.user_id] || { name: null, email: r.user_id }
-			}))
+			})),
+			// Named for what they are. Both come from generated relations whose
+			// names say only which tables are involved: `user_feedbacks` is the
+			// self-join listing the tickets merged INTO this one, which reads as
+			// "some feedback" and is the reason the page asked for `merged_from`
+			// and got undefined — the merged badge and the subscriber count have
+			// never rendered.
+			merged_from: f.user_feedbacks,
+			subscribers: f.user_feedback_subscribers
 		})),
 		counts,
 		statusFilter,

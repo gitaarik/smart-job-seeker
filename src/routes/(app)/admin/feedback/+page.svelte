@@ -17,7 +17,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let feedback = $derived((data as any).feedback);
+	let feedback = $derived(data.feedback);
 	let counts = $derived((data as any).counts);
 	let statusFilter = $derived((data as any).statusFilter);
 	let categoryFilter = $derived((data as any).categoryFilter);
@@ -175,7 +175,7 @@
 									<span
 										class="text-xs text-[var(--dash-text-muted)]"
 										title="Tickets merged into this one: {entry.merged_from
-											.map((m: any) => '#' + m.id)
+											.map((m) => '#' + m.id)
 											.join(', ')}"
 									>
 										<FontAwesomeIcon icon={faCodeBranch} class="inline h-3 w-3" />
@@ -206,15 +206,15 @@
 						{#if entry.user_feedback_files?.length > 0}
 							<div class="flex flex-wrap gap-2">
 								{#each entry.user_feedback_files as fileRecord (fileRecord.id)}
-									{#if fileRecord.files}
+									{#if fileRecord.file}
 										<a
-											href="/admin/feedback?fileId={fileRecord.files.id}&feedbackId={entry.id}"
+											href="/admin/feedback?fileId={fileRecord.file.id}&feedbackId={entry.id}"
 											class="flex items-center gap-1.5 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)]"
 										>
 											<FontAwesomeIcon icon={faDownload} class="h-3 w-3" />
-											<span class="max-w-32 truncate">{fileRecord.files.filename_download}</span>
+											<span class="max-w-32 truncate">{fileRecord.file.filename_download}</span>
 											<span class="text-[var(--dash-text-muted)]"
-												>{formatFileSize(fileRecord.files.filesize)}</span
+												>{formatFileSize(fileRecord.file.filesize)}</span
 											>
 										</a>
 									{/if}
