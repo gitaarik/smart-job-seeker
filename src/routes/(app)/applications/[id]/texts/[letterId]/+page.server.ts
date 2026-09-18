@@ -18,7 +18,7 @@ import {
 } from '$lib/server/ai-chat/entity-versions';
 import { isGenerating } from '$lib/server/ai-chat/ai-generation-status';
 import { isStaffViewer } from '$lib/server/auth/guards';
-import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
+import { TEXT_KINDS, TITLE_MAX } from '$lib/server/texts/profile-texts';
 
 // Version `source` values and the ConversationEntry shape live in the shared
 // engine; re-export the type so +page.svelte keeps importing it from here.
@@ -36,6 +36,7 @@ export const load: PageServerLoad = async ({ parent, params, url, locals }) => {
 			letter: {
 				id: 0,
 				letter_type: letterType,
+				title: null as string | null,
 				status: 'draft',
 				content: null,
 				ai_chat_id: null,
@@ -130,6 +131,49 @@ export const actions: Actions = {
 		}
 
 		redirect(303, `/applications/${appId}/texts/${newLetter.id}`);
+	},
+
+	/**
+	 * Name the letter, or take its name away again.
+	 *
+	 * Separate from `update`, which is about the text and its versions: a name is
+	 * not a draft of anything, so it saves on its own and records no version.
+	 *
+	 * An empty field clears the name rather than being refused, which is the
+	 * difference between this and the cheat sheet's title. A letter always has a
+	 * name to fall back on — its type — so "no name" is a state worth being able
+	 * to return to, and the list reads fine in it.
+	 */
+	rename: async ({ request, locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		const letterId = parseInt(params.letterId);
+		if (isNaN(appId) || isNaN(letterId)) return fail(400, { error: 'Invalid letter' });
+
+		const owner = await db.query.applications.findFirst({
+			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId))
+		});
+		if (!owner) return fail(404, { error: 'Application not found' });
+
+		const formData = await request.formData();
+		const title = (formData.get('title') as string | null)?.trim();
+		if (title && title.length > TITLE_MAX) {
+			return fail(400, { error: `A name can be at most ${TITLE_MAX} characters` });
+		}
+
+		await db
+			.update(application_letters)
+			.set({ title: title || null, date_updated: new Date() })
+			.where(
+				and(eq(application_letters.id, letterId), eq(application_letters.application_id, appId))
+			);
+
+		return { success: true };
 	},
 
 	update: async ({ request, locals, cookies, params }) => {

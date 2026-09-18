@@ -136,20 +136,65 @@ describe('which kinds may be started at all', () => {
 });
 
 describe('what a create is allowed to decide', () => {
-	it('takes one naming field and offers nowhere to put the text', () => {
+	it('takes naming fields and offers nowhere to put the text', () => {
 		// The whole design in one assertion. A content field here would make the
 		// first version of every agent-made text invisible to the timeline that is
-		// supposed to gate it.
+		// supposed to gate it. What a create may take is the field its def names,
+		// plus the optional name a choice carries where its choice cannot tell two
+		// rows apart, and nothing else.
 		for (const capability of TEXT_CREATE_CAPABILITY_NAMES) {
 			const kind = capability.slice('add_'.length) as (typeof TEXT_CREATE_KIND_NAMES)[number];
+			const create = TEXT_KINDS[kind].create;
+			const allowed = [
+				create.field,
+				...(create.decides === 'choice' && create.named ? [create.named.field] : [])
+			];
 			const fields = Object.keys(TEXT_CREATE_CAPABILITIES[capability].fields);
-			expect(fields, capability).toEqual([TEXT_KINDS[kind].create.field]);
+			expect(fields, capability).toEqual(allowed);
+			expect(TEXT_CREATE_CAPABILITIES[capability].requiredFields, capability).toEqual([
+				create.field
+			]);
 		}
 	});
 
-	it('names a letter by its type, because a letter has no title', () => {
-		expect(Object.keys(TEXT_CREATE_CAPABILITIES.add_letter.fields)).toEqual(['letter_type']);
+	it('names a letter by its type, and by a title where two share one', () => {
+		// The type was a letter's only name, so a second interview cheat sheet on
+		// one application was a second row reading "Interview cheat sheet" and the
+		// create refused to make it. The title is what tells them apart, and it is
+		// optional: the first of a type is named perfectly well by the type.
+		expect(Object.keys(TEXT_CREATE_CAPABILITIES.add_letter.fields)).toEqual([
+			'letter_type',
+			'letter_title'
+		]);
 		expect(TEXT_CREATE_CAPABILITIES.add_letter.requiredFields).toEqual(['letter_type']);
+	});
+
+	it('refuses a second letter that would read the same, and allows a named one', () => {
+		const state = { existing: ['Interview cheat sheet'] };
+		const validate = TEXT_CREATE_CAPABILITIES.add_letter.validate;
+
+		expect(validate?.({ letter_type: 'cheat_sheet' }, state)).toMatchObject({ ok: false });
+		expect(
+			validate?.({ letter_type: 'cheat_sheet', letter_title: '  ' }, state),
+			'a blank name is no name, so it still collides'
+		).toMatchObject({ ok: false });
+		expect(
+			validate?.({ letter_type: 'cheat_sheet', letter_title: 'Second interview' }, state)
+		).toEqual({ ok: true });
+		expect(
+			validate?.({ letter_type: 'cheat_sheet', letter_title: 'interview cheat sheet' }, state),
+			'a name that reproduces the label it was meant to replace is the same duplicate'
+		).toMatchObject({ ok: false });
+	});
+
+	it('refuses a name longer than the column', () => {
+		const tooLong = 'x'.repeat(256);
+		expect(
+			TEXT_CREATE_CAPABILITIES.add_letter.validate?.(
+				{ letter_type: 'cover_letter', letter_title: tooLong },
+				{ existing: [] }
+			)
+		).toMatchObject({ ok: false });
 	});
 
 	it('tells the agent its job is only half done', () => {

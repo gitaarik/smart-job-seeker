@@ -63,6 +63,7 @@ import {
 	type VersionTrailSummary
 } from '$lib/server/ai-chat/entity-versions';
 import { parseStarMarkdown, serializeStarMarkdown } from '$lib/interview/star';
+import { LETTER_TYPE_LABELS, letterLabel } from '$lib/texts/letter-label';
 import { touchProfile } from '$lib/server/profile/touch-profile';
 import { sameText } from '$lib/utils/same-text';
 
@@ -70,7 +71,7 @@ import { sameText } from '$lib/utils/same-text';
 export const TEXT_READ_CHARS = 60000;
 
 /**
- * Longest title the two title columns hold, both `varchar(255)`.
+ * Longest title the three title columns hold, all `varchar(255)`.
  *
  * Here rather than in the capability that refuses it, so the limit sits with the
  * columns it describes. Refused before the insert either way: a driver error is
@@ -148,21 +149,40 @@ interface TextRow {
  *
  * Two shapes, because the three creatable kinds are named two different ways. A
  * story and a cheat sheet are named by a subject the applicant supplies, so the
- * field is free text bounded by the column. A letter has no title column at
- * all — `letter_type` is what names it in a list — so the field is a choice
- * between the same two values the page's own New button offers, and `label` is
- * what that list will call it.
+ * field is free text bounded by the column. A letter is named by its TYPE —
+ * a cover letter or an interview cheat sheet, the same two values the page's
+ * own New button offers — so its field is a choice, and `label` is what the
+ * list will call it.
+ *
+ * A choice can also be `named`, and the letter is: the type alone made two
+ * cheat sheets on one application the same row twice, so it carries an optional
+ * title that takes over as the label when it is set. Optional rather than
+ * required, because the first one of a type needs no name and asking for one
+ * would put "Cover letter (1)" in a list that reads perfectly well without it.
  */
 export type TextCreateDef = {
 	/** Whose row it is: the profile itself, or one application on it. */
 	owner: 'profile' | 'application';
 	/** The wire field carrying that decision. Prefixed, as every field here is. */
 	field: string;
-	/** Make the empty row under `ownerId`, and return it as any read would. */
-	insert(ownerId: number, value: string): Promise<TextRow>;
+	/**
+	 * Make the empty row under `ownerId`, and return it as any read would.
+	 *
+	 * `name` is the second decision a `named` choice carries. Undefined for every
+	 * other shape, and null or absent for a row nobody named.
+	 */
+	insert(ownerId: number, value: string, name?: string | null): Promise<TextRow>;
 } & (
 	| { decides: 'title'; maxLength: number }
-	| { decides: 'choice'; choices: readonly { value: string; label: string }[] }
+	| {
+			decides: 'choice';
+			choices: readonly { value: string; label: string }[];
+			/**
+			 * The optional name this choice may carry, where the choice alone does
+			 * not tell two rows apart. Absent for a choice that does.
+			 */
+			named?: { field: string; maxLength: number };
+	  }
 );
 
 export interface TextKindDef {
@@ -217,23 +237,11 @@ type CreatableKindDef = TextKindDef & { create: TextCreateDef };
  * The four kinds
  * ------------------------------------------------------------------ */
 
-const LETTER_TYPE_LABELS: Record<string, string> = {
-	cover_letter: 'Cover letter',
-	cheat_sheet: 'Interview cheat sheet'
-};
-
-/**
- * A letter's own name, which is its type and not a title.
- *
- * `letter_type` can itself be "cheat_sheet", which is NOT the `cheat_sheets`
- * table this module also reads — two features named the same thing, one a
- * letter written on an application and one an interview-prep sheet on the
- * profile. Spelling the label out is the only thing keeping them apart in a
- * list, and the tool description says so too.
+/*
+ * The labels and the title-over-type rule live in `$lib/texts/letter-label`,
+ * because the pages that list letters need the same answer this module gives an
+ * agent, and they cannot import a module that opens a database connection.
  */
-function letterLabel(letterType: string): string {
-	return LETTER_TYPE_LABELS[letterType] ?? letterType;
-}
 
 /**
  * The types a letter can be, in the order the page's New menu offers them.
@@ -305,6 +313,7 @@ const letterKind: CreatableKindDef = {
 			.select({
 				id: application_letters.id,
 				letter_type: application_letters.letter_type,
+				title: application_letters.title,
 				content: application_letters.content,
 				application_id: application_letters.application_id
 			})
@@ -320,7 +329,7 @@ const letterKind: CreatableKindDef = {
 
 		return rows.map((row) => ({
 			id: row.id,
-			label: letterLabel(row.letter_type),
+			label: letterLabel(row.letter_type, row.title),
 			applicationId: row.application_id,
 			committed: row.content,
 			path: `/applications/${row.application_id}/texts/${row.id}`
@@ -329,13 +338,13 @@ const letterKind: CreatableKindDef = {
 	read: async (id, profileId) => {
 		const row = await db.query.application_letters.findFirst({
 			where: eq(application_letters.id, id),
-			columns: { id: true, letter_type: true, content: true, application_id: true },
+			columns: { id: true, letter_type: true, title: true, content: true, application_id: true },
 			with: { application: { columns: { id: true, profile_id: true } } }
 		});
 		if (!row || row.application?.profile_id !== profileId) return null;
 		return {
 			id: row.id,
-			label: letterLabel(row.letter_type),
+			label: letterLabel(row.letter_type, row.title),
 			applicationId: row.application_id,
 			committed: row.content,
 			path: `/applications/${row.application_id}/texts/${row.id}`
@@ -357,21 +366,28 @@ const letterKind: CreatableKindDef = {
 		field: 'letter_type',
 		decides: 'choice',
 		choices: LETTER_TYPE_CHOICES,
-		insert: async (applicationId, letterType) => {
+		named: { field: 'letter_title', maxLength: TITLE_MAX },
+		insert: async (applicationId, letterType, title) => {
+			const named = title?.trim();
 			const [row] = await db
 				.insert(application_letters)
 				.values({
 					application_id: applicationId,
 					letter_type: letterType,
+					title: named || null,
 					content: null,
 					status: 'draft',
 					date_created: new Date()
 				})
-				.returning({ id: application_letters.id, letter_type: application_letters.letter_type });
+				.returning({
+					id: application_letters.id,
+					letter_type: application_letters.letter_type,
+					title: application_letters.title
+				});
 
 			return {
 				id: row.id,
-				label: letterLabel(row.letter_type),
+				label: letterLabel(row.letter_type, row.title),
 				applicationId,
 				committed: null,
 				path: `/applications/${applicationId}/texts/${row.id}`

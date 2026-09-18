@@ -94,10 +94,37 @@ function normalize(create: TextCreateDef, raw: unknown): string | null {
 	return create.choices.find((choice) => choice.value === value.toLowerCase())?.value ?? null;
 }
 
-/** What the list will call the row this value makes. */
-function labelFor(create: TextCreateDef, value: string): string {
+/**
+ * What the list will call the row these values make.
+ *
+ * The name wins where a choice carries one, which is the rule `letterLabel`
+ * applies when the row is read back. The two have to agree: this is what the
+ * duplicate check compares, so a label computed differently here would refuse a
+ * name the list would have shown as distinct, or allow one it would not.
+ */
+function labelFor(create: TextCreateDef, value: string, name?: string | null): string {
+	const named = name?.trim();
+	if (named) return named;
 	if (create.decides !== 'choice') return value;
 	return create.choices.find((choice) => choice.value === value)?.label ?? value;
+}
+
+/** The optional name a choice may carry, or undefined for one that may not. */
+function namedFieldOf(create: TextCreateDef): { field: string; maxLength: number } | undefined {
+	return create.decides === 'choice' ? create.named : undefined;
+}
+
+/**
+ * The name a call sent, trimmed, and empty for one that sent none.
+ *
+ * Shared by `validate` and `apply` so they cannot disagree about whether a
+ * whitespace-only name counts: it does not, anywhere. A row named " " would be
+ * a row the list has a blank label for, which is worse than the unnamed one it
+ * was trying to tell apart.
+ */
+function nameSent(fields: Record<string, unknown>, field: string): string {
+	const raw = fields[field];
+	return typeof raw === 'string' ? raw.trim() : '';
 }
 
 function contractFor(kind: CreatableTextKind): string {
@@ -113,6 +140,14 @@ function contractFor(kind: CreatableTextKind): string {
 			: `- "${create.field}" is which kind of ${noun} to start and is REQUIRED. One of:
 ${create.choices.map((choice) => `  ${choice.value} — listed as "${choice.label}"`).join('\n')}`;
 
+	const named = namedFieldOf(create);
+	const naming = named
+		? `\n- "${named.field}" is optional, and is what the list calls it INSTEAD of the
+  type. Send one when there is already a ${noun} of that type: without a name the
+  second row reads exactly like the first, and that is the one thing this refuses.
+  A short name for what it is for, at most ${named.maxLength} characters.`
+		: '';
+
 	const owner =
 		create.owner === 'application'
 			? `\nIt is started UNDER an application the applicant already has, named by
@@ -125,18 +160,25 @@ if the role is not there at all, add_application first.\n`
 			? `an empty ${noun} on an application is a row on their ${collection.name} page`
 			: `an empty ${noun} with a title nobody asked for is a row on their ${collection.name} page`;
 
-	const already =
-		create.owner === 'application'
+	const already = named
+		? `Check what that application already has, listed below, before adding. A second
+${noun} reading the same in that list is not a proposal they can decline.`
+		: create.owner === 'application'
 			? `Check what that application already has, listed below, before adding. A second
 ${noun} of the same type is not a proposal they can decline.`
 			: `Check what they already have, listed below, before adding. A second ${noun} on a
 subject already covered is not a proposal they can decline.`;
 
+	const instead = named
+		? `Add to the existing one instead, with add_${kind}_version, or give this one a
+name that says what it is for.`
+		: `Add to the existing one instead, with add_${kind}_version.`;
+
 	return `Start a new ${noun}, empty.
 
-${decides}
+${decides}${naming}
 
-**It is created empty.** This call decides ${create.decides === 'choice' ? 'the type' : 'the title'} and nothing else. There
+**It is created empty.** This call decides ${create.decides === 'choice' ? (named ? 'the type and the name' : 'the type') : 'the title'} and nothing else. There
 is no field here for the ${noun}'s text, and that is the point. Write the ${noun}
 itself with add_${kind}_version afterwards, using the id this returns, and the
 applicant takes that version from the timeline the way they take every other
@@ -147,7 +189,7 @@ somewhere to put something you thought of: ${somewhere} that they
 have to read, understand and delete.
 
 ${already} It is a duplicate they have to
-find. Add to the existing one instead, with add_${kind}_version.`;
+find. ${instead}`;
 }
 
 function capabilityFor(kind: CreatableTextKind): CapabilityDef {
@@ -155,6 +197,7 @@ function capabilityFor(kind: CreatableTextKind): CapabilityDef {
 	const create = def.create;
 	const field = create.field;
 	const owned = create.owner === 'application' ? 'on this application' : 'on this profile';
+	const named = namedFieldOf(create);
 
 	return {
 		title: `Start a new ${def.noun}`,
@@ -195,7 +238,10 @@ function capabilityFor(kind: CreatableTextKind): CapabilityDef {
 			return { existing: existing.map((row) => row.label) };
 		},
 
-		fields: { [field]: 'string' },
+		// The name is a second field and never a second required one: a first
+		// letter of a type is named by the type, and the contract asks for a name
+		// only where one would otherwise arrive unreadable.
+		fields: named ? { [field]: 'string', [named.field]: 'string' } : { [field]: 'string' },
 		requiredFields: [field],
 
 		contract: contractFor(kind),
@@ -244,9 +290,23 @@ function capabilityFor(kind: CreatableTextKind): CapabilityDef {
 				};
 			}
 
+			const name = named ? nameSent(fields, named.field) : '';
+			if (named && name.length > named.maxLength) {
+				return {
+					ok: false,
+					error:
+						`That name is ${name.length} characters and the column holds ` +
+						`${named.maxLength}. It names the ${def.noun} in a list; the content goes ` +
+						`in a version, not in here.`
+				};
+			}
+
 			// The same guard add_application carries, for the same reason: a
 			// duplicate is not a card they decline, it is one they have to hunt down.
-			const label = labelFor(create, value);
+			// What it compares is the LABEL, so a named kind is refused only where
+			// the list would read the same twice, and naming the second one is the
+			// way past it rather than a reason to write on top of the first.
+			const label = labelFor(create, value, name);
 			const existing = Array.isArray(state.existing) ? (state.existing as string[]) : [];
 			const clash = existing.find(
 				(entry) => String(entry).trim().toLowerCase() === label.toLowerCase()
@@ -254,9 +314,12 @@ function capabilityFor(kind: CreatableTextKind): CapabilityDef {
 			if (clash) {
 				return {
 					ok: false,
-					error:
-						`There is already a ${def.noun} called "${clash}" ${owned}. Write a ` +
-						`new version of that one with add_${kind}_version rather than starting a second.`
+					error: named
+						? `There is already a ${def.noun} called "${clash}" ${owned}. Send a ` +
+							`"${named.field}" saying what this one is for, or write a new version of ` +
+							`that one with add_${kind}_version.`
+						: `There is already a ${def.noun} called "${clash}" ${owned}. Write a ` +
+							`new version of that one with add_${kind}_version rather than starting a second.`
 				};
 			}
 
@@ -275,7 +338,11 @@ function capabilityFor(kind: CreatableTextKind): CapabilityDef {
 
 			// The target is the profile or the application: `authorize` checked it
 			// against the actor, so this is the row the new one belongs under.
-			const created = await create.insert(target.id, value);
+			const created = await create.insert(
+				target.id,
+				value,
+				named ? nameSent(fields, named.field) || null : null
+			);
 
 			// The row it made, not what it was added to. The target names the owner,
 			// which is what to authorize against and the wrong thing to call the

@@ -92,6 +92,7 @@ export async function buildFullExport(
 				application_letters: {
 					columns: {
 						letter_type: true,
+						title: true,
 						content: true
 					}
 				},
@@ -147,10 +148,13 @@ export async function buildFullExport(
 		salary_expectation: app.salary_expectation ? Number(app.salary_expectation) : undefined,
 		salary_currency: app.salary_currency || undefined,
 		salary_period: app.salary_period || undefined,
-		letters: app.application_letters.map((l: { letter_type: string; content: string | null }) => ({
-			type: l.letter_type || undefined,
-			content: l.content || undefined
-		})),
+		letters: app.application_letters.map(
+			(l: { letter_type: string; title: string | null; content: string | null }) => ({
+				type: l.letter_type || undefined,
+				title: l.title || undefined,
+				content: l.content || undefined
+			})
+		),
 		questions: app.application_questions.map(
 			(q: { question: string | null; answer: string | null }) => ({
 				question: q.question || undefined,

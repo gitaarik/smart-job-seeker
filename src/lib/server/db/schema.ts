@@ -3821,6 +3821,17 @@ export const application_letters = pgTable(
 		date_updated: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
 		application_id: integer().notNull(),
 		letter_type: varchar({ length: 255 }).default('cover_letter').notNull(),
+		/**
+		 * What this letter is called, where the type is not enough.
+		 *
+		 * Null for every letter written before this column and for every one the
+		 * applicant never named, and the lists fall back to the type's label there.
+		 * It exists because the type was the only name a letter had, so a second
+		 * interview cheat sheet on the same application was a second row reading
+		 * "Interview cheat sheet" — indistinguishable in a list, which is why the
+		 * create refused to make one.
+		 */
+		title: varchar({ length: 255 }),
 		content: text(),
 		ai_chat_id: integer(),
 		status: varchar({ length: 255 }).default('draft').notNull(),

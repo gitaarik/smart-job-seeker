@@ -20,6 +20,7 @@
 	import EmptyState from '../../profile/components/EmptyState.svelte';
 	import FilterTabs from '../../components/FilterTabs.svelte';
 	import ConfirmModal from '../../profile/components/ConfirmModal.svelte';
+	import { letterLabel } from '$lib/texts/letter-label';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -42,11 +43,6 @@
 		{ value: 'letters', label: 'Letters', icon: faEnvelope },
 		{ value: 'questions', label: 'Questions', icon: faQuestionCircle }
 	];
-
-	const letterTypes: Record<string, string> = {
-		cover_letter: 'Cover Letter',
-		cheat_sheet: 'Interview Cheat Sheet'
-	};
 
 	function getItemId(item: (typeof items)[0]): string {
 		return `${item.itemType}-${item.id}`;
@@ -197,7 +193,7 @@
 								<div class="flex flex-wrap items-center gap-2">
 									<h3 class="truncate font-medium text-[var(--dash-text)]">
 										{#if isLetter}
-											{letterTypes[item.letter_type] || item.letter_type}
+											{letterLabel(item.letter_type, item.title)}
 										{:else}
 											{item.question}
 										{/if}

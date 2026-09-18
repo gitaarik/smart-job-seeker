@@ -22,6 +22,7 @@
 	import EmptyState from '../../../profile/components/EmptyState.svelte';
 	import FilterTabs from '../../../components/FilterTabs.svelte';
 	import ConfirmModal from '../../../profile/components/ConfirmModal.svelte';
+	import { LETTER_TYPE_LABELS, letterLabel } from '$lib/texts/letter-label';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -218,10 +219,7 @@
 		});
 	});
 
-	const letterTypes: Record<string, string> = {
-		cover_letter: 'Cover Letter',
-		cheat_sheet: 'Interview Cheat Sheet'
-	};
+	const letterTypes = LETTER_TYPE_LABELS;
 
 	const typeFilters = [
 		{ value: 'all', label: 'All', icon: faLayerGroup },
@@ -718,7 +716,7 @@
 								<div class="min-w-0 flex-1">
 									<div class="flex flex-wrap items-center gap-2">
 										<h3 class="truncate font-medium text-[var(--dash-text)]">
-											{letterTypes[letterItem.letter_type] || letterItem.letter_type}
+											{letterLabel(letterItem.letter_type, letterItem.title)}
 										</h3>
 										<span
 											class="rounded-full px-2 py-0.5 text-xs capitalize {letterItem.status ===

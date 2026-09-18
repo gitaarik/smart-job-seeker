@@ -490,6 +490,8 @@ export interface ExportedApplication {
 
 export interface ExportedApplicationLetter {
 	type?: string;
+	/** What it is called where the type does not tell two of them apart. */
+	title?: string;
 	content?: string;
 }
 

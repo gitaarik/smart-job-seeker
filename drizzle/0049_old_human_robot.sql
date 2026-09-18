@@ -1,0 +1,1 @@
+ALTER TABLE "application_letters" ADD COLUMN "title" varchar(255);

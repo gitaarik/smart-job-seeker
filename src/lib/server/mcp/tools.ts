@@ -45,7 +45,8 @@ import { isTextCommitCapability } from '$lib/server/ai-chat/text-commit-capabili
 import {
 	TEXT_CREATE_CAPABILITY_NAMES,
 	isTextCreateCapability,
-	kindForTextCreateCapability
+	kindForTextCreateCapability,
+	textCreateOwner
 } from '$lib/server/ai-chat/text-create-capabilities';
 import { TEXT_KINDS } from '$lib/server/texts/profile-texts';
 import type { McpReadScope, McpScope } from './keys';
@@ -331,9 +332,21 @@ function renderParents(
  * sentence `renderParents` appends for a profile add, for the same reason.
  */
 function inventoryHintFor(capability: Capability): string | undefined {
-	return capability === 'add_application'
-		? 'For what they already have — the list this contract says to check — call list_applications.'
-		: undefined;
+	if (capability === 'add_application') {
+		return 'For what they already have — the list this contract says to check — call list_applications.';
+	}
+	// The three text creates say the same "listed below" and had nothing below
+	// them either. One call answers all three: `list_texts` takes a kind, and for
+	// a letter an application_id, which is the scope its duplicate check uses.
+	if (isTextCreateCapability(capability)) {
+		const kind = kindForTextCreateCapability(capability);
+		const scope = textCreateOwner(kind) === 'application' ? ' and that application_id' : '';
+		return (
+			`For what they already have — the list this contract says to check — ` +
+			`call list_texts with kind "${kind}"${scope}.`
+		);
+	}
+	return undefined;
 }
 
 function writeTool(capability: Capability, parents?: string): McpTool {

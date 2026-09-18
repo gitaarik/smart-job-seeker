@@ -1,12 +1,14 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { enhance } from '$app/forms';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faArrowLeft, faTrash } from '@fortawesome/free-solid-svg-icons';
+	import { faArrowLeft, faCheck, faTrash } from '@fortawesome/free-solid-svg-icons';
 	import { track } from '$lib/tools/analytics';
 	import ConversationTimeline from '$lib/components/conversation/ConversationTimeline.svelte';
 	import ConfirmModal from '../../../../profile/components/ConfirmModal.svelte';
+	import { LETTER_TYPE_LABELS, letterLabel } from '$lib/texts/letter-label';
 	import type { DeleteScope, VersionSource } from '$lib/server/ai-chat/entity-versions';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -18,10 +20,7 @@
 
 	let showDeleteConfirm = $state(false);
 
-	const letterTypes: Record<string, string> = {
-		cover_letter: 'Cover Letter',
-		cheat_sheet: 'Interview Cheat Sheet'
-	};
+	const letterTypes = LETTER_TYPE_LABELS;
 
 	const LETTER_LABELS: Record<VersionSource, string> = {
 		manual_edit: 'Manual edit',
@@ -34,6 +33,26 @@
 
 	let typeLabel = $derived(letterTypes[letter.letter_type] || letter.letter_type);
 	let placeholder = $derived(`Write your ${typeLabel.toLowerCase()} here...`);
+
+	// What the lists call it, which is the name where it has one. The heading
+	// says that and the placeholder above stays on the type: "Write your cheat
+	// sheet, second interview here..." names the row rather than the writing.
+	let displayName = $derived(letterLabel(letter.letter_type, letter.title));
+
+	// Mirrors the cheat sheet editor: local state so an invalidate cannot clobber
+	// a name being typed, and the Save button appears only once it differs from
+	// what the server holds. Empty is a real value here, so an emptied field is
+	// dirty too: clearing the name puts the type back.
+	let name = $state(data.letter.title ?? '');
+	let syncedName = data.letter.title ?? '';
+	$effect(() => {
+		const serverVal = data.letter.title ?? '';
+		if (serverVal !== syncedName) {
+			syncedName = serverVal;
+			name = serverVal;
+		}
+	});
+	let nameDirty = $derived(name.trim() !== (data.letter.title ?? ''));
 
 	/** Create the DB record for a new letter and navigate to the real URL. Returns the new letter ID. */
 	async function ensureLetterExists(): Promise<number> {
@@ -213,7 +232,32 @@
 	<!-- Header -->
 	<div class="flex flex-wrap items-center justify-between gap-3">
 		<div>
-			<h2 class="text-xl font-bold text-[var(--dash-text)]">{typeLabel}</h2>
+			<h2 class="text-xl font-bold text-[var(--dash-text)]">{displayName}</h2>
+			{#if !isNew}
+				<!--
+					Naming is optional, so the field carries the type as its placeholder:
+					empty means "call it a cover letter", which is what the list will do.
+					It only earns a Save button once it differs from what is stored.
+				-->
+				<form method="POST" action="?/rename" use:enhance class="mt-2 flex items-start gap-2">
+					<input
+						name="title"
+						bind:value={name}
+						placeholder={typeLabel}
+						aria-label="Name for this {typeLabel.toLowerCase()}"
+						class="w-64 max-w-full rounded-md border border-[var(--dash-border)] px-2 py-1 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+					/>
+					{#if nameDirty}
+						<button
+							type="submit"
+							class="flex items-center gap-1.5 rounded-lg bg-[var(--dash-primary)] px-3 py-1.5 text-sm whitespace-nowrap text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
+						>
+							<FontAwesomeIcon icon={faCheck} class="h-3.5 w-3.5" />
+							{name.trim() ? 'Save name' : 'Clear name'}
+						</button>
+					{/if}
+				</form>
+			{/if}
 			<div class="mt-1 flex items-center gap-3">
 				<span
 					class="rounded-full px-2 py-0.5 text-xs capitalize {letter.status === 'ready'

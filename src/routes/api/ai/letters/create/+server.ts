@@ -9,7 +9,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = requireAuth(locals);
 
 	const body = await request.json();
-	const { applicationId, letterType } = body;
+	// `title` is optional and names the letter where its type does not tell it
+	// apart from another on the same application. Absent for the first one of a
+	// type, which the list is happy to call by the type alone.
+	const { applicationId, letterType, title } = body;
 
 	if (!applicationId || !letterType) {
 		return json(
@@ -33,6 +36,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		.values({
 			application_id: applicationId,
 			letter_type: letterType,
+			title: typeof title === 'string' && title.trim() ? title.trim() : null,
 			status: 'draft',
 			date_created: new Date()
 		})

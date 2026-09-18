@@ -901,6 +901,7 @@ async function importFullAccountEntities(profileId: number, data: FullExportData
 			await dbDirect.insert(application_letters).values({
 				application_id: createdApp.id,
 				letter_type: letter.type || 'cover_letter',
+				title: letter.title || null,
 				content: letter.content || null
 			});
 		}

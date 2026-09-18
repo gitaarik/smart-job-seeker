@@ -49,6 +49,7 @@
 	import { profileDocUrl } from '$lib/utils/profile-doc-url';
 	import type { DocType } from '$lib/utils/profile-doc-url';
 	import { linkify } from '$lib/utils/linkify';
+	import { letterLabel } from '$lib/texts/letter-label';
 	import { portalToBody } from '$lib/actions/portal';
 	// The first use of Kit's typed route resolution in this codebase. Every other
 	// internal link here is a template string and sits in the lint baseline; new
@@ -145,11 +146,6 @@
 		}).format(Number(amount));
 		return period ? `${formatted} / ${period}` : formatted;
 	}
-
-	const letterTypeLabels: Record<string, string> = {
-		cover_letter: 'Cover Letter',
-		cheat_sheet: 'Interview Cheat Sheet'
-	};
 
 	let letterCount = $derived(app.application_letters?.length || 0);
 	let questionCount = $derived(app.application_questions?.length || 0);
@@ -605,7 +601,7 @@
 							href="/applications/{app.id}/texts/{letter.id}"
 							class="font-medium text-[var(--dash-text)] transition-colors hover:text-[var(--dash-primary)]"
 						>
-							{letterTypeLabels[letter.letter_type] || letter.letter_type}
+							{letterLabel(letter.letter_type, letter.title)}
 						</a>
 						<span class="text-[var(--dash-text-muted)]">({letter.status})</span>
 					</div>
