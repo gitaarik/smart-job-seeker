@@ -6,7 +6,7 @@
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { collected_data, profiles } from '$lib/server/db/schema';
-import { isProfileOnly, PROFILE_ONLY_FLAG } from '$lib/profile-visibility';
+import { isHiddenFromDocuments, PROFILE_ONLY_FLAG } from '$lib/profile-visibility';
 
 interface SchemaNode {
 	note?: string;
@@ -399,7 +399,9 @@ async function fetchProfileData(profileId: number) {
 			// `tags` itself is a visibility mechanism, not profile content, so the
 			// prompts never see it either way.
 			tech_skills: category.tech_skills.map(({ tags, ...skill }) =>
-				isProfileOnly(tags as string[] | null) ? { ...skill, [PROFILE_ONLY_FLAG]: true } : skill
+				isHiddenFromDocuments(tags as string[] | null)
+					? { ...skill, [PROFILE_ONLY_FLAG]: true }
+					: skill
 			)
 		}))
 	};

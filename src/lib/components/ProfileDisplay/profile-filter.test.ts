@@ -11,7 +11,8 @@ const VERSIONS = [
 	{ id: 3, slug: 'senior', toggles: [], extension_links: [{ extended_id: 1 }] }
 ];
 
-// Render as the given base template ("resume"/"cv") and version slug.
+// Render as the given base template ("resume", "cv" or "portfolio") and
+// version slug.
 function filterFor(type: string, versionSlug: string, items: Item[]): Item[] {
 	return createProfileFilter(VERSIONS, type, null, versionSlug).filterOnTags(items);
 }
@@ -62,6 +63,128 @@ describe('filterOnTags — version include/exclude for skills', () => {
 		// No version is being viewed, so nothing satisfies the whitelist.
 		const items: Item[] = [{ name: 'Kubernetes', tags: ['backend'] }];
 		expect(filterFor('resume', '', items)).toHaveLength(0);
+	});
+});
+
+// Pinned before `portfolio` became a base template, so a refactor of the
+// base-template rule has to keep every one of these answers. They are the
+// document behaviour the tags have always had.
+describe('filterOnTags — base template rules (pinned)', () => {
+	it('shows an untagged item on both documents', () => {
+		const items: Item[] = [{ name: 'TypeScript' }];
+		expect(filterFor('resume', '', items)).toHaveLength(1);
+		expect(filterFor('cv', '', items)).toHaveLength(1);
+	});
+
+	it('shows an item only on the document its positive tag names', () => {
+		const items: Item[] = [{ name: 'Publications', tags: ['cv'] }];
+		expect(filterFor('cv', '', items)).toHaveLength(1);
+		expect(filterFor('resume', '', items)).toHaveLength(0);
+	});
+
+	it('shows an item tagged for both documents on both', () => {
+		const items: Item[] = [{ name: 'Rust', tags: ['resume', 'cv'] }];
+		expect(filterFor('resume', '', items)).toHaveLength(1);
+		expect(filterFor('cv', '', items)).toHaveLength(1);
+	});
+
+	it('hides an item from the document its exclusion names, and only that one', () => {
+		const items: Item[] = [{ name: 'Fortran', tags: ['!resume'] }];
+		expect(filterFor('resume', '', items)).toHaveLength(0);
+		expect(filterFor('cv', '', items)).toHaveLength(1);
+	});
+
+	it('lets an exclusion beat a positive for the same document', () => {
+		const items: Item[] = [{ name: 'Contradiction', tags: ['cv', '!cv'] }];
+		expect(filterFor('cv', '', items)).toHaveLength(0);
+	});
+
+	it('ignores casing and whitespace in a base tag', () => {
+		const items: Item[] = [{ name: 'Publications', tags: ['  CV  '] }];
+		expect(filterFor('cv', '', items)).toHaveLength(1);
+		expect(filterFor('resume', '', items)).toHaveLength(0);
+	});
+
+	it('treats an unknown type as a resume, which is the default', () => {
+		const items: Item[] = [{ name: 'Publications', tags: ['cv'] }];
+		expect(filterFor('', '', items)).toHaveLength(0);
+	});
+
+	it('does not read a base tag as a version whitelist', () => {
+		// `cv` names a document, not a version, so it must not also restrict the
+		// item to a version called "cv" — which is what would hide it here.
+		const items: Item[] = [{ name: 'Publications', tags: ['cv'] }];
+		expect(filterFor('cv', 'frontend', items)).toHaveLength(1);
+	});
+
+	it('combines a base tag with a version whitelist', () => {
+		const items: Item[] = [{ name: 'Kubernetes', tags: ['cv', 'backend'] }];
+		expect(filterFor('cv', 'backend', items)).toHaveLength(1);
+		expect(filterFor('cv', 'frontend', items)).toHaveLength(0);
+		expect(filterFor('resume', 'backend', items)).toHaveLength(0);
+	});
+});
+
+// The public site is a base template like the documents are. Three bugs lived
+// here until 2026-09-18, all from a rule written when there were only two.
+describe('filterOnTags — the portfolio as a third base template', () => {
+	it('shows an item tagged for the site ON the site', () => {
+		// The obvious way to say "put this on my site" used to hide it: `portfolio`
+		// was not a base tag, so it fell through to the version whitelist and no
+		// version was named "portfolio".
+		const items: Item[] = [{ name: 'Side project', tags: ['portfolio'] }];
+		expect(filterFor('portfolio', '', items)).toHaveLength(1);
+	});
+
+	it('keeps a site-tagged item off the documents', () => {
+		const items: Item[] = [{ name: 'Side project', tags: ['portfolio'] }];
+		expect(filterFor('resume', '', items)).toHaveLength(0);
+		expect(filterFor('cv', '', items)).toHaveLength(0);
+	});
+
+	it('treats resume and cv alike on the site, rather than one of them specially', () => {
+		// The old rule asked "is the OPPOSITE template tagged", which on the site
+		// resolved to "resume", so a resume item vanished and a cv item stayed.
+		const resumeItem: Item[] = [{ name: 'Resume only', tags: ['resume'] }];
+		const cvItem: Item[] = [{ name: 'CV only', tags: ['cv'] }];
+		expect(filterFor('portfolio', '', resumeItem)).toHaveLength(0);
+		expect(filterFor('portfolio', '', cvItem)).toHaveLength(0);
+	});
+
+	it('shows an item tagged for a document and the site on both', () => {
+		const items: Item[] = [{ name: 'Rust', tags: ['cv', 'portfolio'] }];
+		expect(filterFor('cv', '', items)).toHaveLength(1);
+		expect(filterFor('portfolio', '', items)).toHaveLength(1);
+		expect(filterFor('resume', '', items)).toHaveLength(0);
+	});
+
+	it('hides an item the site excludes, and only from the site', () => {
+		const items: Item[] = [{ name: 'Day job', tags: ['!portfolio'] }];
+		expect(filterFor('portfolio', '', items)).toHaveLength(0);
+		expect(filterFor('resume', '', items)).toHaveLength(1);
+		expect(filterFor('cv', '', items)).toHaveLength(1);
+	});
+
+	it('leaves the site alone when only the documents are excluded', () => {
+		// `!resume` + `!cv` is "off the documents", which is now a statement about
+		// documents rather than about everything. Existing items were tagged
+		// before a site existed, so the backfill adds `!portfolio` to them.
+		const items: Item[] = [{ name: 'Hobby', tags: ['!resume', '!cv'] }];
+		expect(filterFor('portfolio', '', items)).toHaveLength(1);
+		expect(filterFor('resume', '', items)).toHaveLength(0);
+	});
+
+	it('hides an item excluded from all three everywhere', () => {
+		const items: Item[] = [{ name: 'Private', tags: ['!resume', '!cv', '!portfolio'] }];
+		expect(filterFor('portfolio', '', items)).toHaveLength(0);
+		expect(filterFor('resume', '', items)).toHaveLength(0);
+		expect(filterFor('cv', '', items)).toHaveLength(0);
+	});
+
+	it('still lets a version tag re-admit an item the site excludes', () => {
+		const items: Item[] = [{ name: 'Hobby', tags: ['!portfolio', 'frontend'] }];
+		expect(filterFor('portfolio', 'frontend', items)).toHaveLength(1);
+		expect(filterFor('portfolio', 'backend', items)).toHaveLength(0);
 	});
 });
 

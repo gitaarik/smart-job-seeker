@@ -69,9 +69,9 @@ import { templateForStorage, templatePrintsTechnologies } from '$lib/resume-temp
 import { expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
 import { normalizeSkill } from '$lib/skills';
 import {
-	BASE_TEMPLATE_TAGS,
+	DOCUMENT_TEMPLATE_TAGS,
 	heldBackByTemplate,
-	isProfileOnly,
+	isHiddenFromDocuments,
 	renameTagSlug,
 	tagSlug
 } from '$lib/profile-visibility';
@@ -245,7 +245,7 @@ export function buildCandidates(
 	 * Candidate.parentHeldBack in $lib/tailoring.
 	 */
 	const holdOn = (tags: string[], label: string): Candidate['parentHeldBack'] => {
-		if (isProfileOnly(tags)) return 'profile';
+		if (isHiddenFromDocuments(tags)) return 'profile';
 		if (heldBackByTemplate(tags, docType)) return 'template';
 		if (printingRoles.has(label.toLowerCase())) return 'alternative';
 		return 'version';
@@ -278,7 +278,7 @@ export function buildCandidates(
 				// A bullet is as old as the role it sits in — it has no dates of its own.
 				age: ageOf(role.end_date),
 				templateHeldBack: heldBackByTemplate(asStringArray(achievement.tags), docType),
-				profileOnly: isProfileOnly(asStringArray(achievement.tags)),
+				profileOnly: isHiddenFromDocuments(asStringArray(achievement.tags)),
 				pinned: false,
 				score: 0
 			});
@@ -303,7 +303,7 @@ export function buildCandidates(
 			parentVisible: true,
 			age: ageOf(project.end_date),
 			templateHeldBack: heldBackByTemplate(asStringArray(project.tags), docType),
-			profileOnly: isProfileOnly(asStringArray(project.tags)),
+			profileOnly: isHiddenFromDocuments(asStringArray(project.tags)),
 			pinned: false,
 			score: 0
 		});
@@ -2049,7 +2049,9 @@ export async function relevantExclusionsByVersion(opts: {
 			[text(role.position), text(role.name)].filter(Boolean).join(' at ') || `role ${role.id}`
 		])
 	);
-	for (const docType of BASE_TEMPLATE_TAGS) {
+	// Documents only: tailoring is about what is sent with an application, and
+	// the public site is not tailored per job.
+	for (const docType of DOCUMENT_TEMPLATE_TAGS) {
 		for (const versionSlug of versionSlugs) {
 			const built = buildCandidates(profile, docType, versionSlug, requiredSkills).filter((c) =>
 				DROPPABLE_ENTITIES.includes(c.entityType)
@@ -2368,7 +2370,7 @@ export async function versionItemStates(opts: {
 			reason: '',
 			source: 'base',
 			score: scoreOf.get(key) ?? null,
-			profileOnly: isProfileOnly(tags)
+			profileOnly: isHiddenFromDocuments(tags)
 		};
 		const override = overrideOf.get(key);
 		if (override) {
@@ -2377,7 +2379,7 @@ export async function versionItemStates(opts: {
 			return row;
 		}
 		if (!item.on && item.parentOn) {
-			row.reason = isProfileOnly(tags)
+			row.reason = isHiddenFromDocuments(tags)
 				? 'kept off your documents'
 				: heldBackByTemplate(tags, docType)
 					? `only on your ${docType === 'cv' ? 'resume' : 'CV'}`

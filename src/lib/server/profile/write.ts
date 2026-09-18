@@ -33,7 +33,7 @@ import { z } from 'zod';
 import { profiles } from '$lib/server/db/schema';
 import { coerceFields } from '$lib/server/utils/field-kinds';
 import { formatZodError } from '$lib/server/validation/api-schemas';
-import { isProfileOnly, setProfileOnly } from '$lib/profile-visibility';
+import { isHiddenFromDocuments, setProfileOnly } from '$lib/profile-visibility';
 import { touchProfile } from './touch-profile';
 import { recordChangeQuietly, type EditSource } from './change-log';
 import {
@@ -1030,7 +1030,7 @@ export async function setRowVisible(
 	if (!found.ok) return found;
 
 	const tags = (found.row.tags ?? null) as string[] | null;
-	const wasVisible = !isProfileOnly(tags);
+	const wasVisible = !isHiddenFromDocuments(tags);
 
 	// Already there is not an error, but it must not bump date_updated either:
 	// see updateRow on why a no-op that moves the profile's clock lies to the

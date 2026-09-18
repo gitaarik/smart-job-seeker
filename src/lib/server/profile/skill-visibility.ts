@@ -12,7 +12,7 @@
 import { dbDirect as db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { tech_skill_categories, tech_skills } from '$lib/server/db/schema';
-import { isProfileOnly, type ProfileSkillRef, versionsOf } from '$lib/profile-visibility';
+import { isHiddenFromDocuments, type ProfileSkillRef, versionsOf } from '$lib/profile-visibility';
 
 export type { ProfileSkillRef };
 
@@ -43,7 +43,7 @@ export async function getProfileSkillIndex(
 			name: row.name!,
 			level: row.level,
 			categoryId: row.categoryId!,
-			profileOnly: isProfileOnly(tags),
+			profileOnly: isHiddenFromDocuments(tags),
 			versions: versionsOf(tags)
 		};
 	}

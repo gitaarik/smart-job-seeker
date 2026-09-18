@@ -53,7 +53,7 @@ import {
 	PROFILE_RESOURCES,
 	type ProfileResourceName
 } from '$lib/server/profile/resources';
-import { isProfileOnly, versionsOf } from '$lib/profile-visibility';
+import { isHiddenFromDocuments, versionsOf } from '$lib/profile-visibility';
 import { readOwnedRows } from '$lib/server/profile/write';
 import { readEditLog } from '$lib/server/ai-chat/edit-log';
 import { createNotification } from '$lib/server/notifications';
@@ -204,7 +204,7 @@ async function readProfileSection(args: Args, key: VerifiedMcpKey): Promise<Tool
 		// answer that question, and neither is a tag string it could echo back.
 		if (hideable) {
 			const tags = (row.tags ?? null) as string[] | null;
-			entry.hidden = isProfileOnly(tags);
+			entry.hidden = isHiddenFromDocuments(tags);
 			entry.versions = versionsOf(tags);
 		}
 

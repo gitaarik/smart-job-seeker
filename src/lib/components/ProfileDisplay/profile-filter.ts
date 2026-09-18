@@ -24,7 +24,12 @@
  * unchanged, which is why adding this broke no existing call site.
  */
 
-import { BASE_TEMPLATE_TAGS, isNegated, tagSlug } from '$lib/profile-visibility';
+import {
+	BASE_TEMPLATE_TAGS,
+	isNegated,
+	normalizeTemplateType,
+	tagSlug
+} from '$lib/profile-visibility';
 import {
 	indexOverrides,
 	orderByOverrides,
@@ -115,9 +120,10 @@ export function createProfileFilter(
 		objList: T[],
 		entityType?: string
 	): T[] {
-		// The identifiers active for the currently-rendered document: the base
-		// template ("resume"/"cv") plus the viewed version's extension chain.
-		const currentType = (type || 'resume').toLowerCase();
+		// The identifiers active for the currently-rendered surface: the base
+		// template (a document or the site) plus the viewed version's extension
+		// chain.
+		const currentType = normalizeTemplateType(type);
 		const activeVersionIds = versionSlugs.map((s) => s.toLowerCase());
 
 		const overrideFor = (obj: T): VersionOverride | undefined => {
@@ -157,14 +163,12 @@ export function createProfileFilter(
 			// profile-only), so an explicit positive for the viewed version beats it.
 			if (negatedIds.includes(currentType) && !onActiveVersion) return false;
 
-			if (
-				!positives.includes(currentType) &&
-				positives.includes(currentType === 'resume' ? 'cv' : 'resume')
-			) {
-				// The opposite base template is tagged but the current one isn't —
-				// e.g. `type` is "cv" and tags contain "resume" but not "cv" → hide.
-				return false;
-			}
+			// Base positives are a whitelist over base templates: naming any of
+			// them and not this one hides the item. Not "the opposite one" — with
+			// resume, CV and the site there is no opposite, and reading it as a
+			// pair hid a `resume` item from the site while showing a `cv` one.
+			const basePositives = positives.filter((p) => BASE_TEMPLATE_TAGS.includes(p));
+			if (basePositives.length > 0 && !basePositives.includes(currentType)) return false;
 
 			// Positive version tags act as a whitelist: show only on those versions.
 			// With no version being viewed nothing can satisfy the whitelist, so a

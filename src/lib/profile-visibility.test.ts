@@ -1,31 +1,50 @@
 import { describe, expect, it } from 'vitest';
 import {
 	heldBackByTemplate,
-	isProfileOnly,
+	isHiddenFromDocuments,
+	setShownOn,
+	shownTemplates,
 	renameTagSlug,
 	setProfileOnly,
 	setVersions,
 	versionsOf
 } from './profile-visibility';
 
-describe('isProfileOnly', () => {
+describe('isHiddenFromDocuments', () => {
 	it('needs both base templates excluded', () => {
-		expect(isProfileOnly(['!resume', '!cv'])).toBe(true);
-		expect(isProfileOnly(['!resume'])).toBe(false);
-		expect(isProfileOnly(['!cv'])).toBe(false);
-		expect(isProfileOnly([])).toBe(false);
-		expect(isProfileOnly(null)).toBe(false);
+		expect(isHiddenFromDocuments(['!resume', '!cv'])).toBe(true);
+		expect(isHiddenFromDocuments(['!resume'])).toBe(false);
+		expect(isHiddenFromDocuments(['!cv'])).toBe(false);
+		expect(isHiddenFromDocuments([])).toBe(false);
+		expect(isHiddenFromDocuments(null)).toBe(false);
+	});
+
+	it('ignores the site: an item can be published and still off the documents', () => {
+		// The state the three switches exist to make pickable. `!portfolio` says
+		// nothing about whether a resume may print the item.
+		expect(isHiddenFromDocuments(['!resume', '!cv', '!portfolio'])).toBe(true);
+		expect(isHiddenFromDocuments(['!resume', '!cv', 'portfolio'])).toBe(true);
+		expect(isHiddenFromDocuments(['!portfolio'])).toBe(false);
 	});
 
 	it('ignores casing, whitespace and per-version tags', () => {
-		expect(isProfileOnly(['!Resume', ' !CV ', 'backend'])).toBe(true);
+		expect(isHiddenFromDocuments(['!Resume', ' !CV ', 'backend'])).toBe(true);
 	});
 });
 
 describe('setProfileOnly', () => {
 	it('adds both exclusions and drops contradictory positives', () => {
-		expect(setProfileOnly(['cv'], true)).toEqual(['!resume', '!cv']);
+		// A `cv` whitelist was already keeping the item off the site, so writing
+		// the state out says so rather than leaving it implied. What the item
+		// shows on does not change.
+		expect(setProfileOnly(['cv'], true)).toEqual(['!resume', '!cv', '!portfolio']);
 		expect(setProfileOnly(null, true)).toEqual(['!resume', '!cv']);
+	});
+
+	it('leaves the site as it found it', () => {
+		// The documents are its business; a published item stays published.
+		expect(setProfileOnly(['!portfolio'], true)).toEqual(['!resume', '!cv', '!portfolio']);
+		expect(setProfileOnly(['!resume', '!cv', '!portfolio'], false)).toEqual(['!portfolio']);
 	});
 
 	it('keeps per-version tags in both directions', () => {
@@ -41,8 +60,45 @@ describe('setProfileOnly', () => {
 
 	it('round-trips', () => {
 		const on = setProfileOnly(['backend'], true);
-		expect(isProfileOnly(on)).toBe(true);
-		expect(isProfileOnly(setProfileOnly(on, false))).toBe(false);
+		expect(isHiddenFromDocuments(on)).toBe(true);
+		expect(isHiddenFromDocuments(setProfileOnly(on, false))).toBe(false);
+	});
+});
+
+describe('setShownOn / shownTemplates', () => {
+	it('reads which templates an item appears on', () => {
+		expect(shownTemplates(null)).toEqual(['resume', 'cv', 'portfolio']);
+		expect(shownTemplates(['!portfolio'])).toEqual(['resume', 'cv']);
+		expect(shownTemplates(['cv'])).toEqual(['cv']);
+		expect(shownTemplates(['!resume', '!cv', '!portfolio'])).toEqual([]);
+	});
+
+	it('flips one template without disturbing the others', () => {
+		expect(shownTemplates(setShownOn(null, 'portfolio', false))).toEqual(['resume', 'cv']);
+		expect(shownTemplates(setShownOn(['!resume'], 'cv', false))).toEqual(['portfolio']);
+		expect(shownTemplates(setShownOn(['!resume', '!cv'], 'resume', true))).toEqual([
+			'resume',
+			'portfolio'
+		]);
+	});
+
+	// The switch has to move even when the item says where it belongs with a
+	// positive whitelist rather than with exclusions.
+	it('moves a whitelisted item onto another template', () => {
+		expect(shownTemplates(setShownOn(['cv'], 'portfolio', true))).toEqual(['cv', 'portfolio']);
+		expect(setShownOn(['cv'], 'portfolio', true)).toEqual(['!resume']);
+	});
+
+	it('keeps version tags through a flip', () => {
+		expect(setShownOn(['backend', '!senior'], 'portfolio', false)).toEqual([
+			'!portfolio',
+			'backend',
+			'!senior'
+		]);
+	});
+
+	it('says nothing at all when the item is on every template', () => {
+		expect(setShownOn(['!portfolio'], 'portfolio', true)).toEqual([]);
 	});
 });
 
@@ -74,7 +130,7 @@ describe('versionsOf / setVersions', () => {
 	it('round-trips', () => {
 		const tags = setVersions(['!resume', '!cv'], ['backend', 'senior']);
 		expect(versionsOf(tags)).toEqual(['backend', 'senior']);
-		expect(isProfileOnly(tags)).toBe(true);
+		expect(isHiddenFromDocuments(tags)).toBe(true);
 	});
 });
 

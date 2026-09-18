@@ -39,7 +39,7 @@ import {
 	work_experiences
 } from '$lib/server/db/schema';
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
-import { BASE_TEMPLATE_TAGS, SHOW_ON_ALL, tagsForShowOn } from '$lib/profile-visibility';
+import { DOCUMENT_TEMPLATE_TAGS, SHOW_ON_ALL, tagsForShowOn } from '$lib/profile-visibility';
 import { templatePrintsTechnologies } from '$lib/resume-templates';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import {
@@ -178,7 +178,9 @@ export async function getVersionCoverage(
 	const result: Record<string, VersionCoverage> = {};
 	const versionSlugs = ['', ...versions.map((v) => v.slug).filter(Boolean)];
 
-	for (const docType of BASE_TEMPLATE_TAGS) {
+	// Documents only: a skill's coverage is asked of what gets sent, and a
+	// one-click lift onto the public site is not what the strip offers.
+	for (const docType of DOCUMENT_TEMPLATE_TAGS) {
 		for (const versionSlug of versionSlugs) {
 			const { filterOnTags } = createProfileFilter(
 				versions as never,

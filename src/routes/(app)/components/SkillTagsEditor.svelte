@@ -20,9 +20,11 @@
 	import { clickOutside, keepInView } from '$lib/actions/popover';
 	import {
 		BASE_TEMPLATE_TAGS,
-		isNegated,
-		isProfileOnly,
-		setProfileOnly,
+		BASE_TEMPLATES,
+		isHiddenFromDocuments,
+		setShownOn,
+		shownOnTemplate,
+		shownTemplates,
 		tagSlug
 	} from '$lib/profile-visibility';
 
@@ -135,43 +137,36 @@
 	}
 
 	// Version tag editing state
-	const builtinTags = BASE_TEMPLATE_TAGS;
 
-	/** The `!resume`/`!cv` pair the "Show on CV" switch owns, not free-form tags. */
-	function isBaseExclusion(tag: string): boolean {
-		return isNegated(tag) && builtinTags.includes(tagSlug(tag));
+	/** A tag naming a base template, in either form — the switches own these. */
+	function isBaseTag(tag: string): boolean {
+		return BASE_TEMPLATE_TAGS.includes(tagSlug(tag));
 	}
 
 	let editingSkillTags = $derived(editingIndex === null ? [] : (skills[editingIndex]?.tags ?? []));
-	let editingProfileOnly = $derived(isProfileOnly(editingSkillTags));
+	let editingProfileOnly = $derived(isHiddenFromDocuments(editingSkillTags));
 
-	// Chips list the version tags. While profile-only is on, its exclusion pair
-	// is represented by the switch above, so don't also show it as chips.
-	let editingTags = $derived(
-		editingProfileOnly ? editingSkillTags.filter((t) => !isBaseExclusion(t)) : editingSkillTags
-	);
+	// Chips list the version tags only. The base templates are the switches
+	// above, and offering them here as well would let the two disagree.
+	let editingTags = $derived(editingSkillTags.filter((t) => !isBaseTag(t)));
 
 	let allSuggestions = $derived.by(() => {
 		// Suggest from the stored tags, not the displayed chips: a version already
 		// decided in either form (include or exclude) shouldn't be offered again.
 		const used = new Set(editingSkillTags.map(tagSlug));
-		const all = [
-			...builtinTags,
-			...versionSlugs.filter((v) => !builtinTags.includes(v.toLowerCase()))
-		];
-		return all.filter((s) => !used.has(s.toLowerCase()));
+		return versionSlugs.filter((v) => !isBaseTag(v) && !used.has(v.toLowerCase()));
 	});
 
-	function toggleProfileOnly() {
+	function toggleTemplate(type: string, shown: boolean) {
 		if (editingIndex === null) return;
-		const next = setProfileOnly(editingSkillTags, !editingProfileOnly);
+		const next = setShownOn(editingSkillTags, type, shown);
 		skills[editingIndex].tags = next.length > 0 ? next : null;
 	}
 
-	/** Version tags worth badging on the pill — the switch covers the rest. */
+	/** Version tags worth badging on the pill — the switches cover the rest. */
 	function versionTagCount(tags: string[] | null | undefined): number {
 		if (!Array.isArray(tags)) return 0;
-		return isProfileOnly(tags) ? tags.filter((t) => !isBaseExclusion(t)).length : tags.length;
+		return tags.filter((t) => !isBaseTag(t)).length;
 	}
 
 	function addSkillTag(tag: string) {
@@ -425,7 +420,7 @@
 		onfinalize={handleDndFinalize}
 	>
 		{#each dndWrapped as item (item.id)}
-			{@const profileOnly = isProfileOnly(item.skill.tags)}
+			{@const profileOnly = isHiddenFromDocuments(item.skill.tags)}
 			<div animate:flip={{ duration: flipDurationMs }}>
 				<div
 					class="
@@ -492,7 +487,7 @@
 {:else}
 	<div class="flex flex-wrap gap-2">
 		{#each skills as skill, index (index)}
-			{@const profileOnly = isProfileOnly(skill.tags)}
+			{@const profileOnly = isHiddenFromDocuments(skill.tags)}
 			<div class="relative">
 				<button
 					type="button"
@@ -587,39 +582,43 @@
 								class="w-full rounded border border-[var(--dash-border)] bg-transparent px-2 py-1.5 text-sm text-[var(--dash-text)] focus:ring-1 focus:ring-[var(--dash-primary)] focus:outline-none"
 							/>
 						</div>
-						<!-- Document visibility. Matching always uses every skill; this
-                 only controls whether the skill prints on a resume/CV. -->
+						<!-- Where the skill appears. Matching always uses every skill
+                 whatever these say; they only decide what it is shown on. -->
 						<div>
-							<button
-								type="button"
-								onclick={() => toggleProfileOnly()}
-								aria-pressed={!editingProfileOnly}
-								class="flex w-full items-center justify-between gap-2 text-left"
-							>
-								<span class="text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase">
-									Show on CV
-								</span>
-								<span
-									class="
-                    relative inline-flex h-4 w-7 shrink-0 rounded-full transition-colors {editingProfileOnly
-										? 'bg-[var(--dash-border)]'
-										: 'bg-emerald-500'}
-                  "
+							<span class="text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase">
+								Show on
+							</span>
+							{#each BASE_TEMPLATES as template (template.tag)}
+								{@const shown = shownOnTemplate(editingSkillTags, template.tag)}
+								<button
+									type="button"
+									onclick={() => toggleTemplate(template.tag, !shown)}
+									aria-pressed={shown}
+									class="mt-1 flex w-full items-center justify-between gap-2 text-left"
 								>
+									<span class="text-xs text-[var(--dash-text)]">{template.label}</span>
 									<span
 										class="
-                      absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all {editingProfileOnly
-											? 'left-0.5'
-											: 'left-3.5'}
+                      relative inline-flex h-4 w-7 shrink-0 rounded-full transition-colors {shown
+											? 'bg-emerald-500'
+											: 'bg-[var(--dash-border)]'}
                     "
-									></span>
-								</span>
-							</button>
-							<p class="mt-0.5 text-[10px] leading-snug text-[var(--dash-text-muted)]">
-								{#if editingProfileOnly}
-									Profile-only: counts for job matching, stays off your resume / CV.
+									>
+										<span
+											class="
+                        absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all {shown
+												? 'left-3.5'
+												: 'left-0.5'}
+                      "
+										></span>
+									</span>
+								</button>
+							{/each}
+							<p class="mt-1 text-[10px] leading-snug text-[var(--dash-text-muted)]">
+								{#if shownTemplates(editingSkillTags).length === 0}
+									Nowhere: counts for job matching and appears on nothing you send or publish.
 								{:else}
-									Shown on your resume / CV, and counts for job matching.
+									Counts for job matching either way.
 								{/if}
 							</p>
 						</div>
