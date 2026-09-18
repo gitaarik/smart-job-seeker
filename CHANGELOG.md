@@ -5,6 +5,46 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.32.0] - 2026-09-18
+
+62 commits since v0.31.0.
+
+### Added
+
+- Public portfolio site served from profile data
+- Applications can carry their own name
+- Resume tab split into sections with per-job skill switching
+- "Awaiting contract" as a status option
+- AI: record capabilities proposed and sources retrieved per turn
+- AI: reserve evidence budget floor for retrieved sources
+- AI: shorten long job postings to fit with other evidence
+- About Me field for profile bios
+- CV: print referee role with name, add contact details and translated position
+- Cover letters initiated via MCP
+- Text versioning: request a version to become active
+- Matcher golden dataset for release gatekeeping
+- Smoke test recording and pre-release validation
+
+### Changed
+
+- AI: order prompt blocks for cache hits; display token savings
+- Scraper: hoist static prompt above page dump for performance
+- Profile schema: remove unused city and region columns
+
+### Fixed
+
+- Profile: reserve base template names as version slugs
+- Profile: make portfolio a base template
+- Uploads: fix profile deletion with NULL type handling
+- LLM: handle rate limits with millisecond wait times
+- AI: render prompts with LangChain; refuse unfilled placeholders
+- AI: include references and education in prompt output
+- Applications: preserve line breaks in activity entries
+- Account: gate metered work at account level
+- Text: don't treat line-ending changes as new versions
+- Worker: validate account access before matching/scraping
+- Deployment: prevent empty backup directory from aborting deploy
+
 ## [0.31.0] - 2026-09-08
 
 4 commits since v0.30.0.
