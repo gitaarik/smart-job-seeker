@@ -3013,6 +3013,18 @@ export const ai_chats = pgTable(
 		 * hundred bytes answering the questions that get asked afterwards.
 		 */
 		retrieval: json(),
+		/**
+		 * What the assistant was allowed to propose on this turn, and what it
+		 * nearly was: every capability resolved, which tier it came from, and
+		 * whether it survived the 22k block budget. Null on every row that is not
+		 * an agent-chat turn — the four editors propose nothing.
+		 *
+		 * Exempt from the retention pass for the same reason as `retrieval`: a few
+		 * hundred bytes answering "why did it not offer to fix that", which is
+		 * asked long after the prompt stops being worth keeping. See
+		 * ai-chat/capability-record.ts.
+		 */
+		capabilities: json(),
 		followup_to: integer(),
 		error: text(),
 		provider: varchar({ length: 255 }),

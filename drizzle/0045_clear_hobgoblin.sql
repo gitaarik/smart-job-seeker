@@ -1,0 +1,1 @@
+ALTER TABLE "ai_chats" ADD COLUMN "capabilities" json;

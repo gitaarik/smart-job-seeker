@@ -26,6 +26,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			response: true,
 			context: true,
 			retrieval: true,
+			capabilities: true,
 			followup_to: true,
 			error: true,
 			provider: true,

@@ -5,7 +5,8 @@ import { and, asc, eq, inArray } from 'drizzle-orm';
 import {
 	agent_conversations,
 	agent_message_proposals,
-	agent_messages
+	agent_messages,
+	ai_chats
 } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/utils/api-helpers';
 import {
@@ -57,13 +58,18 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 		);
 	}
 
+	// Joined to the ai_chats row each assistant turn came from, for the
+	// capability record it carries. Staff-gated below, not here: one query is
+	// cheaper than two code paths, and the column is a few hundred bytes.
 	const rows = await db
 		.select({
 			id: agent_messages.id,
 			role: agent_messages.role,
-			content: agent_messages.content
+			content: agent_messages.content,
+			capabilities: ai_chats.capabilities
 		})
 		.from(agent_messages)
+		.leftJoin(ai_chats, eq(agent_messages.ai_chat_id, ai_chats.id))
 		.where(eq(agent_messages.conversation_id, id))
 		.orderBy(asc(agent_messages.id));
 
@@ -145,7 +151,14 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 					};
 				})
 			);
-			return { id: m.id, role: m.role, content: m.content, proposals };
+			return {
+				id: m.id,
+				role: m.role,
+				content: m.content,
+				proposals,
+				// Why this turn could propose what it did. Staff only.
+				...(actor.isStaff && m.capabilities ? { capabilityRecord: m.capabilities } : {})
+			};
 		})
 	);
 

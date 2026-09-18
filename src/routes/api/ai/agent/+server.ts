@@ -442,7 +442,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	// server-side from the route and authorized against this profile. `route` is
 	// client-supplied, so nothing derived from it is taken on trust.
 	const isStaff = isStaffUser(user);
-	const { context, capabilities } = await resolveChatContext({
+	const { context, capabilities, capabilityRecord } = await resolveChatContext({
 		routeId: route,
 		params: routeParams ?? {},
 		profileId: profile_id,
@@ -470,6 +470,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		{
 			profileDataFields: ASSISTANT_PROFILE_FIELDS,
 			context,
+			// Stored on the row whether or not anything was admitted: a turn that
+			// offered nothing is exactly the turn whose record explains why.
+			capabilityRecord,
 			// Fallbacks, NOT customVariables: passed as customVariables these blank
 			// every source the line above just assembled, because customVariables are
 			// the deliberate override. See placeholderDefaults in utils.ts.
@@ -579,6 +582,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		conversation_id: conversation.id,
 		title: conversation.title,
 		message_id: assistantMessage.id,
+		// Why this turn could propose what it did. Staff only, and gated here
+		// rather than in the component: what the page ships is the boundary, not
+		// what it chooses to render.
+		...(isStaff ? { capabilityRecord } : {}),
 		proposals: await Promise.all(
 			proposals.map(async (proposal, i) => {
 				const title = CAPABILITIES[proposal.capability as keyof typeof CAPABILITIES].title;

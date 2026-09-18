@@ -16,11 +16,14 @@
  * columns are nulled. Deleting whole rows would also be FK-safe (every inbound
  * FK is ON DELETE SET NULL) but would throw away the cost history.
  *
- * `retrieval` is deliberately NOT among them. It is a few hundred bytes holding
- * what the call actually retrieved — which projects and past texts, by which
- * ranker, at what score — and the questions it answers ("why did this draft cite
- * that project", "did semantic ranking run") are asked long after the prompt
- * itself has stopped being worth 45 kB. See documents/retrieval-record.ts.
+ * `retrieval` and `capabilities` are deliberately NOT among them. Each is a few
+ * hundred bytes: what the call actually retrieved (which projects and past
+ * texts, by which ranker, at what score) and what it was allowed to propose
+ * (which capabilities, from which tier, admitted or dropped for budget). The
+ * questions they answer — "why did this draft cite that project", "did semantic
+ * ranking run", "why did it not offer to fix that skill" — are asked long after
+ * the prompt itself has stopped being worth 45 kB. See
+ * documents/retrieval-record.ts and ai-chat/capability-record.ts.
  *
  * Nulling is NOT reversible. Run periodically from the worker. Idempotent —
  * already-nulled rows are skipped by the WHERE clause, so a repeat pass is a

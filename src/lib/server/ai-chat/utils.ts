@@ -23,6 +23,7 @@ import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
 import { assembleGenerationContext, type ContextRequest } from './generation-context';
 import type { ExportedProfileKey } from '$lib/server/profile/export';
 import type { RetrievalRecord } from '$lib/server/documents/retrieval-record';
+import type { CapabilityRecord } from './capability-record';
 import { applySkillVisibility, loadProfileData, renderProfileData } from './profile-data';
 import { promptValues, renderPrompt, unfilledVariables } from './render-prompt';
 
@@ -279,6 +280,15 @@ export async function createAndGenerateAiChat(
 		 */
 		context?: Omit<ContextRequest, 'profileId' | 'preloadedProfile'>;
 		/**
+		 * What the caller was allowed to propose on this turn, for the row.
+		 *
+		 * Passed in rather than assembled here, unlike the retrieval record: the
+		 * capability decision belongs to the agent chat and is made before the
+		 * prompt is built (it decides WHICH prompt is built — capable or plain).
+		 * This function only stores it. See ai-chat/capability-record.ts.
+		 */
+		capabilityRecord?: CapabilityRecord;
+		/**
 		 * Prior turns of this thread, replayed between the system prompt and the
 		 * new user message so the model sees an actual conversation rather than a
 		 * recap of one. Built by conversation-messages.ts from the version trail.
@@ -485,6 +495,7 @@ export async function createAndGenerateAiChat(
 				user_prompt: promptTemplate.user_prompt,
 				context: JSON.parse(JSON.stringify(context)),
 				retrieval,
+				capabilities: options?.capabilityRecord ?? null,
 				followup_to: followupTo,
 				date_created: new Date(),
 				provider: activeProvider,

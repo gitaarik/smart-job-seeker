@@ -9,6 +9,8 @@
 	import AutoGrowTextarea from '$lib/components/AutoGrowTextarea.svelte';
 	import CopyButton from './CopyButton.svelte';
 	import ProposalCard, { type Proposal } from './ProposalCard.svelte';
+	import CapabilityTrace from './CapabilityTrace.svelte';
+	import type { CapabilityRecord } from '$lib/server/ai-chat/capability-record';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronLeft,
@@ -29,6 +31,11 @@
 		 * to fix a field and rewrite a text proposes both, as two cards.
 		 */
 		proposals?: Proposal[];
+		/**
+		 * Why this turn could propose what it did. Present only for staff — the
+		 * server omits it for everyone else, so its absence is the gate.
+		 */
+		capabilityRecord?: CapabilityRecord;
 	};
 	type ConversationSummary = {
 		id: number;
@@ -315,7 +322,9 @@
 				{
 					role: 'assistant',
 					content: data.reply,
-					proposals: data.proposals ?? []
+					proposals: data.proposals ?? [],
+					// Undefined for everyone but staff — the server decides, not this.
+					capabilityRecord: data.capabilityRecord
 				}
 			];
 			writePointer();
@@ -563,6 +572,7 @@
 								{#each msg.proposals ?? [] as proposal (proposal.id)}
 									<ProposalCard {proposal} />
 								{/each}
+								<CapabilityTrace record={msg.capabilityRecord ?? null} />
 							</div>
 						</div>
 					{/if}

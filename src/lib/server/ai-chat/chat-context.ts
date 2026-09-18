@@ -26,11 +26,14 @@ import type {
 import { LIST_PIPELINE_BUDGET_CHARS } from './application-pipeline';
 import type { PageScope } from './page-scope';
 import {
+	CAPABILITY_PROMPT_BUDGET_CHARS,
 	type Capability,
 	fitMatchedCapabilities,
 	type LiveCapability,
+	renderCapabilityPrompt,
 	resolveCapabilities
 } from './capabilities';
+import { buildCapabilityRecord, type CapabilityRecord } from './capability-record';
 import { matchProfileSections } from './profile-matching';
 import { readOwnedRow } from '$lib/server/profile/write';
 import {
@@ -692,6 +695,11 @@ export async function resolveChatContext(opts: {
 }): Promise<{
 	context: GenerationContextOption;
 	capabilities: LiveCapability[];
+	/**
+	 * Why those and not others — every tier that was resolved, admitted or
+	 * dropped. Staff-only diagnostics; see capability-record.ts.
+	 */
+	capabilityRecord: CapabilityRecord;
 }> {
 	const scope = scopeForRoute(opts.routeId);
 	const entity = await resolveEntity(scope, opts.params, opts.profileId);
@@ -746,6 +754,17 @@ export async function resolveChatContext(opts: {
 	const capabilities = fitMatchedCapabilities(subject, [...children, ...matched]);
 
 	return {
+		capabilityRecord: buildCapabilityRecord({
+			subject,
+			children,
+			matched,
+			admitted: capabilities,
+			// Rendered again rather than threaded back from the caller: the block is
+			// at most the budget, the turn it belongs to is an LLM call, and the
+			// alternative is the route knowing how the record is assembled.
+			chars: capabilities.length > 0 ? renderCapabilityPrompt(capabilities).length : 0,
+			budgetChars: CAPABILITY_PROMPT_BUDGET_CHARS
+		}),
 		context: {
 			query,
 			entity: entity ?? undefined,
