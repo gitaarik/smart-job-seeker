@@ -58,7 +58,7 @@ Two things worth knowing:
 | ---------------- | --------------------- | ----------------- |
 | `svelte-check`   | `ci/check.sh`         | 31 errors         |
 | `scripts/` types | `ci/check-scripts.sh` | 25 errors         |
-| eslint           | `ci/check-lint.sh`    | 1,038 errors      |
+| eslint           | `ci/check-lint.sh`    | 1,024 errors      |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
 The three counts are ratchets: they may only ever go **down**, and each script
@@ -110,9 +110,9 @@ since most files already carry backlog) and runs the type gate whole, because
 the failure that motivated it appeared only in files the change never opened.
 It fails open when the dev stack is down, and `git push --no-verify` skips it.
 
-What remains is two rules and a handful of deliberate exceptions: 731
-`@typescript-eslint/no-explicit-any` (210 of them in test mocks, 128 in
-`src/lib/server/profile`) and 224 `svelte/no-navigation-without-resolve`.
+What remains is two rules and a handful of deliberate exceptions:
+`@typescript-eslint/no-explicit-any` (~700, a third of them in test mocks) and
+`svelte/no-navigation-without-resolve` (~220).
 Everything else has been worked down. Four rules are worth reading rather than
 counting:
 
