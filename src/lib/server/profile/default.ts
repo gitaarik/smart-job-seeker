@@ -4,47 +4,70 @@
  */
 
 import { dbDirect as db } from '$lib/server/db';
-import { asc, eq } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 import {
-	profiles,
+	certificates,
 	config,
+	education,
+	highlights,
+	languages,
+	profiles,
 	profile_field_variants,
-	work_experience_projects
+	profile_versions,
+	references,
+	side_projects,
+	side_project_achievements,
+	side_project_technologies,
+	tech_skills,
+	tech_skill_categories,
+	work_experiences,
+	work_experience_achievements,
+	work_experience_projects,
+	work_experience_technologies
 } from '$lib/server/db/schema';
 
 /**
- * Standard include structure used across all profile queries
- * Matches the pattern from profile-loader.ts and portfolio page
- */
-/**
- * Hoisted, not inlined, and that is load-bearing: PROFILE_INCLUDE is `as const`,
- * which turns an inline array literal into a READONLY tuple. Drizzle's `with`
- * rejects that, and the failure is not local — the whole include stops
- * satisfying the expected shape, so the query's return type silently degrades to
- * the bare `profiles` row and every consumer loses `work_experiences`,
- * `educations` and the rest. Measured: 40 new type errors across the public
- * routes from this one property. A `const` declared out here keeps its mutable
- * `SQL[]` type when referenced.
+ * Standard include structure used across all profile queries.
+ * Matches the pattern from profile-loader.ts and portfolio page.
  *
- * The other entries dodge it by taking an untyped callback, which costs two
- * `no-explicit-any` lint errors each; the single-value form
- * (`work_experience_projects`) dodges it by not being an array at all.
+ * Every ordering here is a VALUE — `asc(table.column)` — and never a
+ * `(t, { asc }) => ...` callback. Two separate reasons, and both bite silently:
+ *
+ * A callback needs a contextual type to infer `t` from, and this object has
+ * none: it is hoisted, so TypeScript sees a bare object literal. Written as
+ * callbacks the parameters had to be annotated `any`, which is what they were
+ * until 2026-09-18 — two `no-explicit-any` each, and no check that `t.sort`
+ * was a column of the right table.
+ *
+ * Hoisting is not optional, though. PROFILE_INCLUDE is `as const`, which turns
+ * an INLINE array literal into a readonly tuple, and drizzle's `with` rejects
+ * that. The failure is not local: the whole include stops satisfying the
+ * expected shape, the query's return type degrades to the bare `profiles` row,
+ * and every consumer loses `work_experiences`, `educations` and the rest.
+ * Measured once at 40 new type errors across the public routes, from one
+ * property. So the multi-key orderings are `const`s declared out here, which
+ * keep their mutable `SQL[]` type when referenced.
+ *
+ * Nothing fails at runtime either way. The rows come back; only the types go.
  */
 const FIELD_VARIANT_ORDER = [asc(profile_field_variants.sort), asc(profile_field_variants.id)];
+const WORK_ORDER = [asc(work_experiences.sort), desc(work_experiences.start_date)];
+const EDUCATION_ORDER = [asc(education.sort), desc(education.start_date)];
+const SIDE_PROJECT_ORDER = [asc(side_projects.sort), desc(side_projects.start_date)];
 
 const PROFILE_INCLUDE = {
-	languages: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
-	highlights: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
+	languages: { orderBy: asc(languages.sort) },
+	highlights: { orderBy: asc(highlights.sort) },
 	tech_skill_categories: {
 		with: {
-			tech_skills: { orderBy: (t: any, { asc }: any) => asc(t.sort) }
+			tech_skills: { orderBy: asc(tech_skills.sort) }
 		},
-		orderBy: (t: any, { asc }: any) => asc(t.sort)
+		orderBy: asc(tech_skill_categories.sort)
 	},
 	work_experiences: {
 		with: {
-			work_experience_achievements: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
-			work_experience_technologies: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
+			work_experience_achievements: { orderBy: asc(work_experience_achievements.sort) },
+			work_experience_technologies: { orderBy: asc(work_experience_technologies.sort) },
 			// Nothing renders a role's projects yet, but their name/description/
 			// outcome are translatable — and both the overlay resolver and the
 			// auto-translate endpoint walk the tree this include builds, so a
@@ -59,18 +82,18 @@ const PROFILE_INCLUDE = {
 				orderBy: asc(work_experience_projects.sort)
 			}
 		},
-		orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)]
+		orderBy: WORK_ORDER
 	},
-	educations: { orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)] },
+	educations: { orderBy: EDUCATION_ORDER },
 	side_projects: {
 		with: {
-			side_project_achievements: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
-			side_project_technologies: { orderBy: (t: any, { asc }: any) => asc(t.sort) }
+			side_project_achievements: { orderBy: asc(side_project_achievements.sort) },
+			side_project_technologies: { orderBy: asc(side_project_technologies.sort) }
 		},
-		orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)]
+		orderBy: SIDE_PROJECT_ORDER
 	},
-	references: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
-	certificates: { orderBy: (t: any, { asc }: any) => asc(t.sort) },
+	references: { orderBy: asc(references.sort) },
+	certificates: { orderBy: asc(certificates.sort) },
 	// Alternative wordings for the scalar profile fields. In the tree rather
 	// than fetched by the resolver alone, for the same reason a role's projects
 	// are: the auto-translate endpoint walks THIS include to find what can be
@@ -98,8 +121,8 @@ const PROFILE_INCLUDE = {
 			// free — see components/ProfileDisplay/profile-filter.ts.
 			overrides: true
 		},
-		orderBy: (t: any, { asc }: any) => asc(t.sort),
-		where: (t: any, { eq }: any) => eq(t.status, 'published')
+		orderBy: asc(profile_versions.sort),
+		where: eq(profile_versions.status, 'published')
 	}
 } as const;
 

@@ -237,7 +237,7 @@ async function fetchProfileData(profileId: number) {
 		with: {
 			highlights: {
 				columns: { text: true },
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			tech_skill_categories: {
 				columns: { name: true },
@@ -249,10 +249,10 @@ async function fetchProfileData(profileId: number) {
 							level: true,
 							tags: true
 						},
-						orderBy: (t: any, { desc }: any) => desc(t.sort)
+						orderBy: (t, { desc }) => desc(t.sort)
 					}
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			work_experiences: {
 				columns: {
@@ -267,11 +267,11 @@ async function fetchProfileData(profileId: number) {
 				with: {
 					work_experience_achievements: {
 						columns: { description: true },
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_technologies: {
 						columns: { name: true },
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_projects: {
 						columns: {
@@ -285,13 +285,13 @@ async function fetchProfileData(profileId: number) {
 						with: {
 							work_experience_project_technologies: {
 								columns: { name: true },
-								orderBy: (t: any, { asc }: any) => asc(t.sort)
+								orderBy: (t, { asc }) => asc(t.sort)
 							}
 						},
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},
-				orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)]
+				orderBy: (t, { asc, desc }) => [asc(t.sort), desc(t.start_date)]
 			},
 			side_projects: {
 				columns: {
@@ -306,14 +306,14 @@ async function fetchProfileData(profileId: number) {
 				with: {
 					side_project_achievements: {
 						columns: { description: true },
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					side_project_technologies: {
 						columns: { name: true },
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},
-				orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)]
+				orderBy: (t, { asc, desc }) => [asc(t.sort), desc(t.start_date)]
 			},
 			educations: {
 				columns: {
@@ -327,7 +327,7 @@ async function fetchProfileData(profileId: number) {
 					end_date: true,
 					summary: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			languages: {
 				columns: {
@@ -335,7 +335,7 @@ async function fetchProfileData(profileId: number) {
 					language_code: true,
 					proficiency: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			references: {
 				columns: {
@@ -345,7 +345,7 @@ async function fetchProfileData(profileId: number) {
 					author_phone: true,
 					text: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			project_stories: {
 				columns: {
@@ -357,14 +357,14 @@ async function fetchProfileData(profileId: number) {
 					reflection: true,
 					category: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			cheat_sheets: {
 				columns: {
 					title: true,
 					content: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			salary_expectations: {
 				columns: {
@@ -379,7 +379,7 @@ async function fetchProfileData(profileId: number) {
 					year_salary: true,
 					daily_rate: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			}
 		}
 	});

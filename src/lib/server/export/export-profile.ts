@@ -56,11 +56,11 @@ export async function buildProfileExport(
 						}
 					}
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			highlights: {
 				columns: { status: true, sort: true, text: true, fa_icon: true },
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			tech_skill_categories: {
 				columns: {
@@ -83,10 +83,10 @@ export async function buildProfileExport(
 						with: {
 							tech_skill_type: { columns: { slug: true } }
 						},
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			work_experiences: {
 				columns: {
@@ -114,11 +114,11 @@ export async function buildProfileExport(
 							fa_icon: true,
 							tags: true
 						},
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_technologies: {
 						columns: { status: true, sort: true, name: true },
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_projects: {
 						columns: {
@@ -136,13 +136,13 @@ export async function buildProfileExport(
 						with: {
 							work_experience_project_technologies: {
 								columns: { sort: true, name: true },
-								orderBy: (t: any, { asc }: any) => asc(t.sort)
+								orderBy: (t, { asc }) => asc(t.sort)
 							}
 						},
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},
-				orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)]
+				orderBy: (t, { asc, desc }) => [asc(t.sort), desc(t.start_date)]
 			},
 			side_projects: {
 				columns: {
@@ -163,14 +163,14 @@ export async function buildProfileExport(
 				with: {
 					side_project_achievements: {
 						columns: { id: true, description: true, sort: true },
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					side_project_technologies: {
 						columns: { sort: true, name: true },
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},
-				orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)]
+				orderBy: (t, { asc, desc }) => [asc(t.sort), desc(t.start_date)]
 			},
 			educations: {
 				columns: {
@@ -190,7 +190,7 @@ export async function buildProfileExport(
 					banner_path: true,
 					tags: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			languages: {
 				columns: {
@@ -201,7 +201,7 @@ export async function buildProfileExport(
 					language_code: true,
 					proficiency: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			field_variants: {
 				columns: {
@@ -228,7 +228,7 @@ export async function buildProfileExport(
 					author_phone: true,
 					text: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			certificates: {
 				columns: {
@@ -239,7 +239,7 @@ export async function buildProfileExport(
 					date: true,
 					url: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			}
 		}
 	});

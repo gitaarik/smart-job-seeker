@@ -42,7 +42,7 @@ export interface ExportedProfile {
 			slug?: string;
 			name?: string;
 			description?: string;
-			toggles?: any;
+			toggles?: unknown;
 			extends_from?: string | null;
 		}>;
 		highlights: Array<{
@@ -75,13 +75,13 @@ export interface ExportedProfile {
 			start_date?: Date | null;
 			end_date?: Date | null;
 			website?: string;
-			tags?: any;
+			tags?: unknown;
 			achievements: Array<{
 				status?: string;
 				sort?: number | null;
 				description?: string;
 				fa_icon?: string;
-				tags?: any;
+				tags?: unknown;
 			}>;
 			technologies: Array<{
 				status?: string;
@@ -113,7 +113,7 @@ export interface ExportedProfile {
 			stars?: number | null;
 			summary?: string;
 			repo_url?: string;
-			tags?: any;
+			tags?: unknown;
 			achievements: Array<{
 				description?: string;
 				sort?: number | null;
@@ -135,7 +135,7 @@ export interface ExportedProfile {
 			start_date?: Date | null;
 			end_date?: Date | null;
 			summary?: string;
-			tags?: any;
+			tags?: unknown;
 		}>;
 		languages: Array<{
 			status?: string;
@@ -211,11 +211,11 @@ export async function buildProfileJsonExport(
 						}
 					}
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			highlights: {
 				columns: { status: true, sort: true, text: true, fa_icon: true },
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			tech_skill_categories: {
 				columns: { status: true, sort: true, name: true, fa_icon: true },
@@ -223,10 +223,10 @@ export async function buildProfileJsonExport(
 					tech_skills: {
 						columns: { status: true, sort: true, name: true, years_experience: true, level: true },
 						with: { tech_skill_type: { columns: { slug: true } } },
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			work_experiences: {
 				columns: {
@@ -245,11 +245,11 @@ export async function buildProfileJsonExport(
 				with: {
 					work_experience_achievements: {
 						columns: { status: true, sort: true, description: true, fa_icon: true, tags: true },
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_technologies: {
 						columns: { status: true, sort: true, name: true },
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_projects: {
 						columns: {
@@ -265,13 +265,13 @@ export async function buildProfileJsonExport(
 						with: {
 							work_experience_project_technologies: {
 								columns: { sort: true, name: true },
-								orderBy: (t: any, { asc }: any) => asc(t.sort)
+								orderBy: (t, { asc }) => asc(t.sort)
 							}
 						},
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},
-				orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)]
+				orderBy: (t, { asc, desc }) => [asc(t.sort), desc(t.start_date)]
 			},
 			side_projects: {
 				columns: {
@@ -290,14 +290,14 @@ export async function buildProfileJsonExport(
 				with: {
 					side_project_achievements: {
 						columns: { description: true, sort: true },
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					side_project_technologies: {
 						columns: { sort: true, name: true },
-						orderBy: (t: any, { asc }: any) => asc(t.sort)
+						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},
-				orderBy: (t: any, { asc, desc }: any) => [asc(t.sort), desc(t.start_date)]
+				orderBy: (t, { asc, desc }) => [asc(t.sort), desc(t.start_date)]
 			},
 			educations: {
 				columns: {
@@ -314,11 +314,11 @@ export async function buildProfileJsonExport(
 					summary: true,
 					tags: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			languages: {
 				columns: { status: true, sort: true, name: true, language_code: true, proficiency: true },
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			references: {
 				columns: {
@@ -330,11 +330,11 @@ export async function buildProfileJsonExport(
 					author_phone: true,
 					text: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			certificates: {
 				columns: { status: true, sort: true, name: true, issuer: true, date: true, url: true },
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			project_stories: {
 				// The project a story is linked to is deliberately NOT exported: this
@@ -352,11 +352,11 @@ export async function buildProfileJsonExport(
 					reflection: true,
 					category: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			cheat_sheets: {
 				columns: { sort: true, title: true, content: true },
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			salary_expectations: {
 				columns: {
@@ -372,7 +372,7 @@ export async function buildProfileJsonExport(
 					year_salary: true,
 					daily_rate: true
 				},
-				orderBy: (t: any, { asc }: any) => asc(t.sort)
+				orderBy: (t, { asc }) => asc(t.sort)
 			}
 		}
 	});

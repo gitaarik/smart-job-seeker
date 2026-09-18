@@ -4,7 +4,12 @@
 
 import { dbDirect } from '$lib/server/db';
 import { eq, asc } from 'drizzle-orm';
-import { project_stories, cheat_sheets, profiles } from '$lib/server/db/schema';
+import {
+	applications as applicationsTable,
+	project_stories,
+	cheat_sheets,
+	profiles
+} from '$lib/server/db/schema';
 import { buildProfileExport } from './export-profile';
 import type {
 	DocumentFilePayload,
@@ -80,7 +85,7 @@ export async function buildFullExport(
 
 		// Applications with related data
 		dbDirect.query.applications.findMany({
-			where: (t: any, { eq }: any) => eq(t.profile_id, profileId),
+			where: eq(applicationsTable.profile_id, profileId),
 			with: {
 				job: {
 					columns: {
@@ -103,7 +108,7 @@ export async function buildFullExport(
 					}
 				}
 			},
-			orderBy: (t: any, { desc }: any) => desc(t.date_created)
+			orderBy: (t, { desc }) => desc(t.date_created)
 		})
 	]);
 
