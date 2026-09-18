@@ -4,7 +4,7 @@
  */
 
 import { dbDirect } from '$lib/server/db';
-import { eq, and, max } from 'drizzle-orm';
+import { eq, and, isNull, max, or } from 'drizzle-orm';
 import {
 	profiles,
 	work_experiences,
@@ -140,6 +140,33 @@ function parseDate(value: string | null | undefined): string | null {
 	const d = new Date(value);
 	if (isNaN(d.getTime())) return null;
 	return d.toISOString().split('T')[0];
+}
+
+/**
+ * The one education row a match key names, or undefined.
+ *
+ * The key is `institution|||area` (resume-diff.ts builds it), and both halves
+ * are load-bearing: two degrees from the same university differ only in the
+ * area. Resolving on the institution alone picks one of them arbitrarily, and
+ * on the removal path — which deleted by predicate rather than by id — it
+ * deleted both, which is why modify and remove now ask the same question here
+ * instead of each having their own idea of what the key means.
+ *
+ * An empty second half says the row has no area recorded. That is `null` in the
+ * column but `''` in the key (`${e.area ?? ''}`), so it has to match either;
+ * dropping the condition instead, as the modify branch used to, turns the key
+ * back into the institution alone.
+ */
+async function findEducationByKey(profileId: number, matchKey: string) {
+	const [institution, area] = matchKey.split('|||');
+	return dbDirect.query.education.findFirst({
+		where: and(
+			eq(education.profile_id, profileId),
+			eq(education.institution, institution),
+			area ? eq(education.area, area) : or(isNull(education.area), eq(education.area, ''))
+		),
+		columns: { id: true }
+	});
 }
 
 async function getMaxSort(table: any, whereCol: any, whereVal: any): Promise<number> {
@@ -345,15 +372,7 @@ export async function applyDiffToProfile(
 		}
 
 		for (const mod of payload.education.modified ?? []) {
-			const [institution, area] = mod.matchKey.split('|||');
-			const existing = await dbDirect.query.education.findFirst({
-				where: and(
-					eq(education.profile_id, profileId),
-					eq(education.institution, institution),
-					area ? eq(education.area, area) : (undefined as any)
-				),
-				columns: { id: true }
-			});
+			const existing = await findEducationByKey(profileId, mod.matchKey);
 			if (!existing) continue;
 			const updateData: Record<string, unknown> = {};
 			if (mod.fields.institution !== undefined)
@@ -374,10 +393,9 @@ export async function applyDiffToProfile(
 		}
 
 		for (const key of payload.education.removed ?? []) {
-			const [institution] = key.split('|||');
-			await dbDirect
-				.delete(education)
-				.where(and(eq(education.profile_id, profileId), eq(education.institution, institution)));
+			const existing = await findEducationByKey(profileId, key);
+			if (!existing) continue;
+			await dbDirect.delete(education).where(eq(education.id, existing.id));
 		}
 	}
 
