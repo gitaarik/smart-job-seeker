@@ -175,7 +175,8 @@ set -euo pipefail
 #     those objects, $derived does not, so every deep write would quietly stop
 #     being reactive.
 #   no-at-html-tags on ConversationTimeline is one of the audited sinks above.
-# 1,038 -> 1,024 on 2026-09-18, and none of it was a cleanup. The portfolio
+#
+# 1,038 -> 1,022 on 2026-09-18, and none of it was a cleanup. The portfolio
 # rebuild deleted 26 hardcoded components and the 1,696-line object they read,
 # which carried more backlog between them than the ~2,800 lines that replaced
 # them added. Measured with check-oss.sh against the real oss tree.
@@ -183,7 +184,10 @@ set -euo pipefail
 # One of those deletions matters to the audit above: FiveYearVisionSection was
 # one of the twelve svelte/no-at-html-tags sites, so the rule is down to its
 # remaining sinks and the audit no longer has to cover a file that is gone.
-BASELINE=1024
+#
+# check-oss.sh read 1,024 two commits before the push; the access-control test
+# then dropped its destructure-to-omit and its `as any`, and CI read 1,022.
+BASELINE=1022
 
 npx svelte-kit sync
 
