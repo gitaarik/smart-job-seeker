@@ -18,6 +18,8 @@
  * server/profile/version-overrides.ts.
  */
 
+import { BASE_TEMPLATE_TAGS } from './profile-visibility';
+
 /**
  * Entity vocabulary. These strings are persisted in
  * `profile_version_overrides.entity_type`, so renaming one orphans existing
@@ -100,6 +102,24 @@ export function isTailoredSlug(slug: string): boolean {
 /** The slug an application's own version gets. */
 export function tailoredSlugFor(applicationId: number): string {
 	return `${TAILORED_SLUG_PREFIX}${applicationId}`;
+}
+
+/**
+ * Whether a slug is spoken for by something other than a version.
+ *
+ * Two namespaces, and a tag cannot tell them apart. `app-<id>` belongs to
+ * job-tailored versions. The base template names (`resume`, `cv`, `portfolio`)
+ * belong to $lib/profile-visibility: an item tagged `portfolio` is saying which
+ * template it appears on, so a VERSION slugged `portfolio` could never be
+ * addressed by tag — every such tag would be read as the template instead, and
+ * the version's whitelist would quietly match nothing.
+ *
+ * Both collisions surface as the wrong thing being shown rather than as an
+ * error, which is why they are refused at the point a slug is chosen.
+ */
+export function isReservedVersionSlug(slug: string): boolean {
+	const normalized = slug.trim().toLowerCase();
+	return isTailoredSlug(normalized) || BASE_TEMPLATE_TAGS.includes(normalized);
 }
 
 export type OverrideAction = 'include' | 'exclude';

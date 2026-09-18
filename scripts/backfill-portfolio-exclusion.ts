@@ -28,7 +28,12 @@
 
 import { dbDirect as db, queryRawDirect } from '$lib/server/db';
 import { sql } from 'drizzle-orm';
-import { isHiddenFromDocuments, setShownOn, shownOnTemplate } from '$lib/profile-visibility';
+import {
+	BASE_TEMPLATE_TAGS,
+	isHiddenFromDocuments,
+	setShownOn,
+	shownOnTemplate
+} from '$lib/profile-visibility';
 
 const APPLY = process.argv.includes('--apply');
 
@@ -57,7 +62,45 @@ async function taggedTables(): Promise<string[]> {
 	return rows.map((r) => r.table_name);
 }
 
+/**
+ * Versions whose slug a base template now shadows.
+ *
+ * A tag naming one of the base templates says which template an item appears
+ * on, so a VERSION slugged `portfolio` can no longer be addressed by tag: every
+ * such tag reads as the template instead, and the version's whitelist matches
+ * nothing. New slugs are refused (isReservedVersionSlug), but a box may already
+ * hold one, and this pass would then canonicalise those tags away.
+ *
+ * Refusing to run is the right answer: renaming the version is a decision about
+ * someone's data, and the rename has to carry its tags with it (retagVersionSlug
+ * in server/profile/tailor-version.ts).
+ */
+async function collidingVersions(): Promise<Array<{ id: number; slug: string }>> {
+	// Each tag as its own parameter: a JS array handed to `= ANY(...)` has no
+	// type Postgres can infer, and fails at parse time rather than matching
+	// nothing.
+	const names = sql.join(
+		BASE_TEMPLATE_TAGS.map((t) => sql`${t}`),
+		sql`, `
+	);
+	return queryRawDirect<{ id: number; slug: string }>(sql`
+		SELECT id, slug FROM profile_versions WHERE lower(trim(slug)) IN (${names})
+	`);
+}
+
 async function main() {
+	const colliding = await collidingVersions();
+	if (colliding.length) {
+		console.error('Refusing to run: these versions are slugged after a base template.\n');
+		for (const v of colliding) console.error(`  version ${v.id}: "${v.slug}"`);
+		console.error(
+			'\nRename them first — their tags name the slug, so the rename has to retag the\n' +
+				'items too, which is what the rename action in the resume page already does.'
+		);
+		process.exitCode = 1;
+		return;
+	}
+
 	const tables = await taggedTables();
 	console.log(`Tag-carrying tables: ${tables.join(', ')}\n`);
 
@@ -102,7 +145,10 @@ async function main() {
 }
 
 main()
-	.then(() => process.exit(0))
+	// Respecting exitCode rather than exiting 0 flat: the collision check refuses
+	// by setting it, and a deploy step that cannot tell "refused" from "done" is
+	// the failure this whole script exists to prevent.
+	.then(() => process.exit(process.exitCode ?? 0))
 	.catch((err) => {
 		console.error(err);
 		process.exit(1);

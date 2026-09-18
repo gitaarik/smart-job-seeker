@@ -16,7 +16,7 @@ import { requireCredits } from '$lib/server/billing/require-credits';
 import { DEFAULT_TEMPLATE_ID, templateForStorage } from '$lib/resume-templates';
 import { getResumeTemplatesForProfile } from '$lib/server/profile/resume-templates';
 import { BASE_LOCALE, isKnownLocale, LOCALES } from '$lib/resume-translations';
-import { isTailoredSlug } from '$lib/version-overrides';
+import { isReservedVersionSlug, isTailoredSlug } from '$lib/version-overrides';
 
 export const load: PageServerLoad = async ({ parent, url }) => {
 	const layoutData = await parent();
@@ -182,12 +182,15 @@ export const actions: Actions = {
 			return fail(400, { error: 'Name is required' });
 		}
 
-		// The `app-<id>` namespace belongs to job-tailored versions; a hand-made
-		// version sharing a slug with one would surface as the wrong document
-		// being sent, not as an error.
-		if (isTailoredSlug(slug)) {
+		// Two reserved namespaces, both of which would surface as the wrong thing
+		// being shown rather than as an error: `app-<id>` belongs to job-tailored
+		// versions, and the base template names are what an item's tags use to
+		// say which template it appears on.
+		if (isReservedVersionSlug(slug)) {
 			return fail(400, {
-				error: 'Slugs starting with "app-<number>" are reserved for job-tailored versions.'
+				error: isTailoredSlug(slug)
+					? 'Slugs starting with "app-<number>" are reserved for job-tailored versions.'
+					: `"${slug}" is reserved: it names a base template, which item tags use to choose where they appear.`
 			});
 		}
 

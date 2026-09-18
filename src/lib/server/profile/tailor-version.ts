@@ -38,7 +38,7 @@ import {
 } from '$lib/server/db/schema';
 import { getProfileByIdentifier } from '$lib/server/profile/default';
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
-import { isTailoredSlug, OVERRIDE_ENTITIES, tailoredSlugFor } from '$lib/version-overrides';
+import { isReservedVersionSlug, OVERRIDE_ENTITIES, tailoredSlugFor } from '$lib/version-overrides';
 import {
 	beyondReach,
 	canSurface,
@@ -1882,7 +1882,7 @@ async function uniqueLibrarySlug(profileId: number, name: string): Promise<strin
 			.replace(/^-+|-+$/g, '')
 			.slice(0, 40) || 'tailored';
 	// Never hand back a slug the library forms would reject.
-	const seed = isTailoredSlug(base) ? `v-${base}` : base;
+	const seed = isReservedVersionSlug(base) ? `v-${base}` : base;
 
 	const taken = new Set(
 		(
