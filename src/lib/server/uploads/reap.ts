@@ -98,7 +98,26 @@ const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
  */
 export async function collectProfileFileRefs(profileId: number): Promise<FileRefs> {
 	const rows = await queryRawDirect<{ file_id: string | null; media_path: string | null }>(sql`
-		SELECT NULL AS file_id, profile_photo_path AS media_path
+		-- NULL::uuid, not a bare NULL, and the cast is the whole query.
+		--
+		-- Postgres resolves a UNION's column types left to right. The first
+		-- several branches select NULL into column 1, which resolves to text by
+		-- default; the first branch that puts a real value there
+		-- (cv_file_sent_id) is a uuid, and the whole statement fails with
+		-- "UNION types text and uuid cannot be matched" (42804). Not for some
+		-- profiles -- for every one of them.
+		--
+		-- This is the first statement of deleteProfile, so profile deletion and
+		-- account deletion both threw before deleting anything. It failed
+		-- closed, which is why nobody saw a half-deleted account, and why nobody
+		-- saw it at all.
+		--
+		-- The unit tests could not catch it: they mock queryRawDirect, so the
+		-- SQL never reached a server that could object. scripts/
+		-- verify-orphan-reap.ts found it, being the one harness that runs this
+		-- against a real database -- the gap its own header says it exists to
+		-- close.
+		SELECT NULL::uuid AS file_id, profile_photo_path AS media_path
 		  FROM profiles WHERE id = ${profileId}
 		UNION ALL
 		SELECT NULL, logo_path FROM work_experiences WHERE profile_id = ${profileId}

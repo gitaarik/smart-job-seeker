@@ -352,6 +352,32 @@ describe('collectProfileFileRefs', () => {
 		expect(refs.mediaPaths).toEqual(['profiles/photo.jpg', 'work/logo.png']);
 	});
 
+	/**
+	 * A regression guard for a bug that made profile and account deletion
+	 * impossible, and that every test in this file was blind to.
+	 *
+	 * Postgres types a UNION column from the first branch that supplies a
+	 * value. Column 1 starts as a run of bare NULLs, so it resolved to `text`,
+	 * and the first real value (`cv_file_sent_id`) is a uuid: the statement
+	 * failed with 42804 for every profile. Because `collectProfileFileRefs` is
+	 * the first line of `deleteProfile`, both deletion paths threw before
+	 * touching anything.
+	 *
+	 * The mock below is the reason it survived: it answers whatever the query
+	 * asks, so the SQL never met a server that could reject it. Asserting on
+	 * the text is a poor substitute for executing it — `verify-orphan-reap.ts`
+	 * does that against a real database and is what found this — but it is the
+	 * cheap half, and it runs in CI where the real one does not.
+	 */
+	it('types the leading NULL so the UNION can carry uuids', async () => {
+		mockQuery.mockResolvedValueOnce([]);
+
+		await collectProfileFileRefs(7);
+
+		const { sql } = queryAt(0);
+		expect(sql).toContain('NULL::uuid AS file_id');
+	});
+
 	it('asks only about the profile it was given', async () => {
 		mockQuery.mockResolvedValueOnce([]);
 
