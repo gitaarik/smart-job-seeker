@@ -3708,8 +3708,6 @@ export const profiles = pgTable(
 		location_url: varchar({ length: 255 }),
 		location_timezone: varchar({ length: 255 }),
 		sort: integer(),
-		city: varchar({ length: 255 }),
-		region: varchar({ length: 255 }),
 		country_code: varchar({ length: 10 }),
 		is_default: boolean().default(false),
 		slug: varchar({ length: 255 }),

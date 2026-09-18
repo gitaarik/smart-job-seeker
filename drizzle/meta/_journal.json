@@ -337,6 +337,13 @@
       "when": 1789135264894,
       "tag": "0047_fixed_meggan",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1789158683239,
+      "tag": "0048_public_star_brand",
+      "breakpoints": true
     }
   ]
 }
