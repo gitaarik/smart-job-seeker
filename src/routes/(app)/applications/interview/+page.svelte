@@ -45,9 +45,14 @@
 	let deleteKey = $state<string | null>(null);
 	let deleteType = $state<'cheatsheet' | 'story'>('cheatsheet');
 
-	// Save + error state (used by the add / delete flows)
-	type SaveState = 'idle' | 'saving' | 'saved' | 'error';
-	let addSaveState = $state<SaveState>('idle');
+	// One error line for every flow on this page: add, delete and reorder all
+	// write it, and each clears it on the way in.
+	//
+	// It used to be gated on a second `addSaveState === 'error'` flag that only
+	// the add flows set, and that a timer cleared after two seconds — so a
+	// delete that failed wrote a message nothing rendered, and an add that
+	// failed showed one for two seconds. The flag had no other reader; whether a
+	// create is in flight is `creatingSheet` / `creatingStory`.
 	let errorMessage = $state('');
 
 	const categories = [
@@ -114,19 +119,16 @@
 				await goto(`/applications/interview/cheatsheets/${result.sheet.id}`);
 			} else {
 				errorMessage = result.message || result.error || "Couldn't start a cheat sheet";
-				addSaveState = 'error';
-				setTimeout(() => (addSaveState = 'idle'), 2000);
 			}
 		} catch {
 			errorMessage = "Couldn't start a cheat sheet";
-			addSaveState = 'error';
-			setTimeout(() => (addSaveState = 'idle'), 2000);
 		} finally {
 			creatingSheet = false;
 		}
 	}
 
 	async function deleteSheet(id: number) {
+		errorMessage = '';
 		try {
 			const response = await fetch('/api/cheat-sheets', {
 				method: 'DELETE',
@@ -164,19 +166,16 @@
 				await goto(`/applications/interview/stories/${result.story.id}`);
 			} else {
 				errorMessage = result.message || result.error || "Couldn't start a story";
-				addSaveState = 'error';
-				setTimeout(() => (addSaveState = 'idle'), 2000);
 			}
 		} catch {
 			errorMessage = "Couldn't start a story";
-			addSaveState = 'error';
-			setTimeout(() => (addSaveState = 'idle'), 2000);
 		} finally {
 			creatingStory = false;
 		}
 	}
 
 	async function deleteStory(id: number) {
+		errorMessage = '';
 		try {
 			const response = await fetch('/api/interview-stories', {
 				method: 'DELETE',
@@ -261,26 +260,49 @@
 		dndItems = e.detail.items;
 	}
 
+	/**
+	 * Save the dragged order.
+	 *
+	 * A failure has to leave reorder mode OPEN. `invalidateAll` reloads the list
+	 * from the server, so closing on a failed save replaces the arrangement the
+	 * applicant just made with the stored one and says nothing — the order
+	 * silently reverts and the drag has to be done again from memory. Staying
+	 * open with the error line showing keeps their work on screen to retry.
+	 *
+	 * The old version could not tell the two apart at all: it awaited `fetch`
+	 * inside a `try` that swallowed everything, and `fetch` rejects only when
+	 * the request never completed. A 403 or a 500 resolves normally, so every
+	 * rejected reorder took the success path.
+	 */
 	async function confirmReorder() {
 		reorderSaving = true;
+		errorMessage = '';
 		const ids = dndItems.map((d) => parseInt(d.id)).filter((id) => !isNaN(id));
 		const endpoint = reorderType === 'cheatsheets' ? '/api/cheat-sheets' : '/api/interview-stories';
+		const label = reorderType === 'cheatsheets' ? 'cheat sheets' : 'stories';
 		try {
-			await fetch(endpoint, {
+			const response = await fetch(endpoint, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ profile_id: data.profileId, order: ids })
 			});
+			if (!response.ok) {
+				const err = await response.json().catch(() => ({}));
+				errorMessage = err.message || err.error || `Couldn't save the new order of your ${label}`;
+				return;
+			}
 			await invalidateAll();
+			reorderMode = false;
 		} catch {
-			// silently fail
+			errorMessage = `Couldn't save the new order of your ${label}`;
+		} finally {
+			reorderSaving = false;
 		}
-		reorderSaving = false;
-		reorderMode = false;
 	}
 
 	function cancelReorder() {
 		reorderMode = false;
+		errorMessage = '';
 	}
 
 	function handleClickOutside(e: MouseEvent) {
@@ -386,7 +408,7 @@
 		</div>
 	{/if}
 
-	{#if errorMessage && addSaveState === 'error'}
+	{#if errorMessage}
 		<div class="rounded-lg border border-[var(--dash-error)] bg-[var(--dash-error-light)] p-4">
 			<p class="text-sm text-[var(--dash-error)]">{errorMessage}</p>
 		</div>
