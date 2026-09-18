@@ -748,9 +748,9 @@
 										/>
 										<span class="font-medium text-[var(--dash-text-secondary)]">Last run</span>
 										<span
-											>{formatRelativeTime(
-												search.last_run
-											)}{#if search.last_run_jobs_found}{' '}({search.last_run_jobs_found} jobs){/if}</span
+											>{formatRelativeTime(search.last_run)}{#if search.last_run_jobs_found}
+												({search.last_run_jobs_found}
+												jobs){/if}</span
 										>
 									</div>
 								{:else}

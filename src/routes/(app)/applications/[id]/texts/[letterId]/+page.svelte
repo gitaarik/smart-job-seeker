@@ -20,6 +20,12 @@
 
 	let showDeleteConfirm = $state(false);
 
+	/** Kept out of the markup because the blank line is a real newline. */
+	const DELETE_WARNING =
+		'Are you sure you want to delete this letter?\n\n' +
+		'All versions, feedback, and revision history will be permanently removed. ' +
+		'This cannot be undone.';
+
 	const letterTypes = LETTER_TYPE_LABELS;
 
 	const LETTER_LABELS: Record<VersionSource, string> = {
@@ -315,7 +321,7 @@
 <ConfirmModal
 	isOpen={showDeleteConfirm}
 	title="Delete Letter"
-	message={'Are you sure you want to delete this letter?\n\nAll versions, feedback, and revision history will be permanently removed. This cannot be undone.'}
+	message={DELETE_WARNING}
 	onCancel={() => (showDeleteConfirm = false)}
 	onConfirm={() => {
 		showDeleteConfirm = false;

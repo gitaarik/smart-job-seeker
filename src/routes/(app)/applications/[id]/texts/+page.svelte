@@ -19,7 +19,6 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
-	import EmptyState from '../../../profile/components/EmptyState.svelte';
 	import FilterTabs from '../../../components/FilterTabs.svelte';
 	import ConfirmModal from '../../../profile/components/ConfirmModal.svelte';
 	import { LETTER_TYPE_LABELS, letterLabel } from '$lib/texts/letter-label';
@@ -312,7 +311,7 @@
 						<div
 							class="absolute top-full right-0 z-20 mt-1 min-w-[220px] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] py-1 shadow-lg"
 						>
-							{#each Object.entries(letterTypes) as [value, label]}
+							{#each Object.entries(letterTypes) as [value, label] (value)}
 								<a
 									href="/applications/{app.id}/texts/new?type={value}"
 									class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
@@ -640,7 +639,7 @@
 					<div
 						class="absolute top-full left-1/2 z-20 mt-1 min-w-[220px] -translate-x-1/2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] py-1 shadow-lg"
 					>
-						{#each Object.entries(letterTypes) as [value, label]}
+						{#each Object.entries(letterTypes) as [value, label] (value)}
 							<a
 								href="/applications/{app.id}/texts/new?type={value}"
 								class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"

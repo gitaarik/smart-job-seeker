@@ -188,8 +188,7 @@
 
 	async function restoreFromPointer() {
 		if (!browser || !profileId) return;
-		let pointer: { conversationId?: number; profileId?: number; lastActiveAt?: number } | null =
-			null;
+		let pointer: { conversationId?: number; profileId?: number; lastActiveAt?: number } | null;
 		try {
 			const raw = localStorage.getItem(POINTER_KEY);
 			pointer = raw ? JSON.parse(raw) : null;
@@ -552,7 +551,7 @@
 						</p>
 					</div>
 				{/if}
-				{#each messages as msg}
+				{#each messages as msg, i (i)}
 					{#if msg.role === 'user'}
 						<div class="flex justify-end">
 							<div

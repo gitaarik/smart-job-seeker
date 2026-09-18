@@ -79,7 +79,7 @@ import {
 	work_experiences
 } from './schema';
 
-export const ai_promptsRelations = relations(ai_prompts, ({ one }) => ({}));
+export const ai_promptsRelations = relations(ai_prompts, () => ({}));
 
 export const applicationsRelations = relations(applications, ({ one, many }) => ({
 	file: one(files, {
@@ -100,7 +100,7 @@ export const applicationsRelations = relations(applications, ({ one, many }) => 
 	application_records: many(application_records)
 }));
 
-export const filesRelations = relations(files, ({ one, many }) => ({
+export const filesRelations = relations(files, ({ many }) => ({
 	application_records: many(application_records),
 	job_resources: many(job_resources),
 	profile_exports: many(profile_exports),

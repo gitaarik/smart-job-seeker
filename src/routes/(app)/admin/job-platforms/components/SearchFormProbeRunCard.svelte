@@ -59,7 +59,6 @@
 	interface Props {
 		initialRun: DiscoveryRun;
 		initialLogs?: LogLine[];
-		platformName?: string | null;
 		/** Hide the inline "Open browser view" button. Used by the per-platform
 		 *  discovery page, where the status box at the top owns the button so we
 		 *  don't show two of them for the latest run. */
@@ -71,7 +70,6 @@
 	let {
 		initialRun,
 		initialLogs = [],
-		platformName: _platformName = null,
 		hideBrowserView = false,
 		credentialLabel,
 		deviceLabel

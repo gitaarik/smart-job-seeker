@@ -44,7 +44,7 @@
 	import DetailsCard from './DetailsCard.svelte';
 	import { hasOfferContent } from '$lib/application-offer';
 	import { describeSnooze, isSnoozed, snoozePresets, snoozeUntil } from '$lib/application-snooze';
-	import { formatSalaryRange, isSalarySingleValue, timeAgo } from '$lib/format';
+	import { formatSalaryRange, timeAgo } from '$lib/format';
 	import { formatDate as fmtDate } from '$lib/format-date';
 	import { profileDocUrl } from '$lib/utils/profile-doc-url';
 	import type { DocType } from '$lib/utils/profile-doc-url';
@@ -117,20 +117,6 @@
 
 	function formatDate(date: Date | string | null): string {
 		return fmtDate(date, { fallback: '' });
-	}
-
-	function formatRelativeDate(date: Date | string | null): string {
-		if (!date) return '';
-		const d = typeof date === 'string' ? new Date(date) : date;
-		const now = new Date();
-		const diffMs = now.getTime() - d.getTime();
-		const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-		if (diffDays === 0) return 'Today';
-		if (diffDays === 1) return 'Yesterday';
-		if (diffDays < 7) return `${diffDays} days ago`;
-		if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-		return formatDate(date);
 	}
 
 	function formatCurrency(
@@ -423,17 +409,17 @@
 			{#if job.job_types || job.work_location || job.experience_levels}
 				<div class="mb-3 flex flex-wrap gap-2">
 					{#if job.job_types && Array.isArray(job.job_types)}
-						{#each job.job_types as type}
+						{#each job.job_types as type, i (i)}
 							<CategoryPill category="job_type" value={type} />
 						{/each}
 					{/if}
 					{#if job.work_location && Array.isArray(job.work_location)}
-						{#each job.work_location as loc}
+						{#each job.work_location as loc, i (i)}
 							<CategoryPill category="work_location" value={loc} />
 						{/each}
 					{/if}
 					{#if job.experience_levels && Array.isArray(job.experience_levels)}
-						{#each job.experience_levels as level}
+						{#each job.experience_levels as level, i (i)}
 							<CategoryPill category="experience_level" value={level} />
 						{/each}
 					{/if}
@@ -594,7 +580,7 @@
 				</div>
 
 				<!-- Letters -->
-				{#each app.application_letters || [] as letter}
+				{#each app.application_letters || [] as letter, i (i)}
 					<div class="flex items-center gap-1.5">
 						<FontAwesomeIcon icon={faEnvelope} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
 						<a
@@ -926,7 +912,7 @@
 				<div class="relative">
 					<div class="absolute top-0 bottom-0 left-[13px] w-0.5 bg-[var(--dash-border)]"></div>
 					<div class="space-y-0">
-						{#each recentStatusLog as entry}
+						{#each recentStatusLog as entry, i (i)}
 							<div class="relative flex gap-3.5 pb-4">
 								<div class="relative z-10 flex w-7 flex-shrink-0 justify-center">
 									<div

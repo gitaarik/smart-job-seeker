@@ -2,7 +2,7 @@
  * Import export data (v2.0 format)
  */
 
-import { sql, eq, and, ne, type SQL } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 import { dbDirect } from '$lib/server/db';
 import {
 	profiles,
@@ -17,7 +17,6 @@ import {
 	salary_expectations,
 	tech_skill_categories,
 	tech_skills,
-	tech_skill_types,
 	work_experiences,
 	work_experience_achievements,
 	work_experience_technologies,

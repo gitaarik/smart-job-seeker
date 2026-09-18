@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -49,14 +50,14 @@
 	}
 
 	function setTypeFilter(type: string) {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		if (type) params.set('type', type);
 		const qs = params.toString();
 		goto(`/admin/ai-chats${qs ? `?${qs}` : ''}`);
 	}
 
 	function goToPage(p: number) {
-		const params = new URLSearchParams($page.url.searchParams);
+		const params = new SvelteURLSearchParams($page.url.searchParams);
 		params.set('page', String(p));
 		goto(`/admin/ai-chats?${params.toString()}`);
 	}
@@ -99,7 +100,7 @@
 			class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)] focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 		>
 			<option value="">All types ({data.total})</option>
-			{#each data.requestTypes as rt}
+			{#each data.requestTypes as rt (rt.type)}
 				<option value={rt.type}>{rt.type} ({rt.count})</option>
 			{/each}
 		</select>

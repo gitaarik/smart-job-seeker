@@ -17,6 +17,10 @@
 	// plain POST to /login, a page route with no actions, which answers 405 and
 	// drops the user on an error page. Gate the button on hydration instead:
 	// $effect only runs client-side, so this stays false through SSR.
+	//
+	// prefer-writable-derived does not apply: there is nothing to derive from.
+	// The effect is the signal — that it ran at all is the fact being recorded.
+	// eslint-disable-next-line svelte/prefer-writable-derived
 	let hydrated = $state(false);
 	$effect(() => {
 		hydrated = true;

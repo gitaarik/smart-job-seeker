@@ -57,6 +57,10 @@
 		levelOptions,
 		versionSlugs = [],
 		compact = false,
+		// The $effect below overwrites this on mount, but `false` is what SSR
+		// renders and what the parent reads until that first flush. Dropping it
+		// makes the prop undefined for that window instead.
+		// eslint-disable-next-line no-useless-assignment
 		canCategoryReorder = $bindable(false),
 		oncreate,
 		onrename,

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -10,7 +11,6 @@
 		faLayerGroup,
 		faQuestionCircle,
 		faRobot,
-		faTimes,
 		faTrash,
 		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
@@ -36,7 +36,7 @@
 	let editAnswer = $state('');
 
 	// AI generation states
-	let generatingIds = $state<Set<string>>(new Set());
+	const generatingIds = new SvelteSet<string>();
 	let aiError = $state<string | null>(null);
 	const typeFilters = [
 		{ value: 'all', label: 'All', icon: faLayerGroup },
@@ -84,7 +84,7 @@
 	}
 
 	function filterByType(type: string) {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		if (type !== 'all') {
 			params.set('type', type);
 		}
@@ -114,7 +114,6 @@
 			: `/api/ai/questions/${item.id}/generate`;
 
 		generatingIds.add(itemId);
-		generatingIds = new Set(generatingIds);
 		aiError = null;
 
 		try {
@@ -133,7 +132,6 @@
 			aiError = 'Network error. Please try again.';
 		} finally {
 			generatingIds.delete(itemId);
-			generatingIds = new Set(generatingIds);
 		}
 	}
 </script>
@@ -171,7 +169,6 @@
 				{@const itemId = getItemId(item)}
 				{@const isLetter = item.itemType === 'letter'}
 				{@const hasAiChat = !!item.ai_chat_id}
-				{@const hasContent = isLetter ? !!item.content : !!item.answer}
 				<Card class="overflow-hidden">
 					<!-- Header -->
 					<button

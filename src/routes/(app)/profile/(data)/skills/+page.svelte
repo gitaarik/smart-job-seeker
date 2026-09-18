@@ -51,13 +51,15 @@
 		}));
 	}
 
-	let mappedCategories = $state(mapCategories(data.categories));
+	// A writable $derived: the editor binds to this and writes through it, and a
+	// fresh `data` (an invalidate after a save) re-derives it. Written as $state
+	// plus an $effect that assigned it, which is the same intent with a worse
+	// failure mode — the effect runs after the write it is meant to overwrite,
+	// so a save landing at the same moment as an edit could put the stored value
+	// back over the newer one.
+	let mappedCategories = $derived(mapCategories(data.categories));
 	let canCategoryReorder = $state(false);
 	let editorRef: SkillCategoriesEditor;
-
-	$effect(() => {
-		mappedCategories = mapCategories(data.categories);
-	});
 
 	async function postAction(action: string, data: Record<string, string>) {
 		const formData = new FormData();

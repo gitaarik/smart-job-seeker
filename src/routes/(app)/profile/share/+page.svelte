@@ -296,7 +296,7 @@
 								class="w-full rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-2 text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 							>
 								<option value="">Select a version</option>
-								{#each versions as version}
+								{#each versions as version (version.id)}
 									<option value={version.id}>{version.name || version.slug || 'Untitled'}</option>
 								{/each}
 							</select>
@@ -564,7 +564,7 @@
 													bind:value={editVersion}
 													class="w-full rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-2 text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 												>
-													{#each versions as version}
+													{#each versions as version (version.id)}
 														<option value={version.id.toString()}
 															>{version.name || version.slug || 'Untitled'}</option
 														>

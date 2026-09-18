@@ -496,7 +496,6 @@
 							<div class="border-t border-[var(--dash-border)] px-4 pt-2 pb-4">
 								<SearchFormProbeRunCard
 									initialRun={run}
-									platformName={data.platform.name}
 									hideBrowserView={true}
 									{credentialLabel}
 									{deviceLabel}

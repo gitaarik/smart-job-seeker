@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { sidebarState, overlayState } from './sidebar-state.svelte';
 	import { feedbackState } from './feedback-state.svelte';
 	import { agentChatState } from './agent-chat-state.svelte';
@@ -20,7 +21,6 @@
 		faCrosshairs,
 		faCommentDots,
 		faComments,
-		faDatabase,
 		faEnvelope,
 		faExchangeAlt,
 		faFileAlt,
@@ -38,7 +38,6 @@
 		faSearch,
 		faShieldAlt,
 		faTimes,
-		faTrash,
 		faUser,
 		faUsers,
 		faUserTie
@@ -283,7 +282,9 @@
 	let menuItems = $derived(baseMenuItems);
 
 	let mobileMenuOpen = $derived(sidebarState.mobileOpen);
-	let expandedSections = $state<Set<string>>(new Set());
+	// A SvelteSet, mutated in place: `$state` does not proxy a Set, which is why
+	// this used to reassign a fresh copy after every change.
+	const expandedSections = new SvelteSet<string>();
 	let lastPath = $state('');
 
 	// Check if a child menu item should be considered active
@@ -372,20 +373,18 @@
 					isChildHrefActive(child.href, currentPath, currentSearch)
 				);
 				if (hasActiveChild && !expandedSections.has(item.label)) {
-					expandedSections = new Set([...expandedSections, item.label]);
+					expandedSections.add(item.label);
 				}
 			}
 		}
 	});
 
 	function toggleSection(label: string) {
-		const newSet = new Set(expandedSections);
-		if (newSet.has(label)) {
-			newSet.delete(label);
+		if (expandedSections.has(label)) {
+			expandedSections.delete(label);
 		} else {
-			newSet.add(label);
+			expandedSections.add(label);
 		}
-		expandedSections = newSet;
 	}
 
 	function isActive(href: string, alsoActiveFor?: string[]): boolean {
@@ -441,7 +440,7 @@
 >
 	<nav class="h-full overflow-y-auto p-3 pb-16">
 		<ul class="space-y-1">
-			{#each menuItems as item}
+			{#each menuItems as item (item.label)}
 				{#if item.children}
 					<!-- Section with children -->
 					<li>
@@ -469,7 +468,7 @@
 
 						{#if expandedSections.has(item.label)}
 							<ul class="mt-1 ml-4 space-y-1 border-l border-[var(--dash-border)] pl-4">
-								{#each item.children as child}
+								{#each item.children as child (child.label)}
 									<li>
 										<a
 											href={child.href}
@@ -615,7 +614,7 @@
 
 				{#if adminItem.children && expandedSections.has(adminItem.label)}
 					<ul class="mt-1 ml-4 space-y-1 border-l border-amber-500/30 pl-4">
-						{#each adminItem.children as child}
+						{#each adminItem.children as child (child.label)}
 							<li>
 								<a
 									href={child.href}

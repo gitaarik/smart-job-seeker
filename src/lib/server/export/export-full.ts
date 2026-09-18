@@ -3,7 +3,7 @@
  */
 
 import { dbDirect } from '$lib/server/db';
-import { eq, desc, asc } from 'drizzle-orm';
+import { eq, asc } from 'drizzle-orm';
 import { project_stories, cheat_sheets, profiles } from '$lib/server/db/schema';
 import { buildProfileExport } from './export-profile';
 import type {
