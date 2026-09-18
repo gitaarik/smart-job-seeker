@@ -187,7 +187,14 @@ set -euo pipefail
 #
 # check-oss.sh read 1,024 two commits before the push; the access-control test
 # then dropped its destructure-to-omit and its `as any`, and CI read 1,022.
-BASELINE=1022
+#
+# 1,022 -> 1,020 on 2026-09-18, incidental to fixing the bugs this backlog
+# turned up. Two `any` casts went with them: `undefined as any` standing in for
+# a dropped Drizzle condition in apply-diff.ts, and `(data as any).feedback` on
+# the admin feedback page — which is the one worth noting, because that cast is
+# precisely why nobody noticed the page reading three properties the loader
+# never returned. An `any` is not only style debt here.
+BASELINE=1020
 
 npx svelte-kit sync
 
