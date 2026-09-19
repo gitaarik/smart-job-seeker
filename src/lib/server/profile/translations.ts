@@ -82,15 +82,49 @@ export async function loadTranslator(
 	};
 }
 
+/**
+ * A node of a loaded profile tree, addressed by field name.
+ *
+ * `unknown` values rather than `any`: this walks the tree against the registry
+ * in resume-translations.ts and cannot know any node's shape, but every read
+ * still has to say what it expects — which is what stops `row.id` being passed
+ * to a Translator that wants a number.
+ */
+interface TreeNode {
+	/**
+	 * Declared, unlike the rest: every overlay is keyed on (entity, id, field),
+	 * so an id that is not a number means the walk cannot address the row at all.
+	 * The old `Record<string, any>` let `row.id` through as anything, and a
+	 * missing id silently translated nothing.
+	 */
+	id?: number;
+	[field: string]: unknown;
+}
+
+/**
+ * The child rows at a tree key, or none.
+ *
+ * A TreeNode's values are `unknown`, so every `for (const x of node.children)`
+ * needs to say it expects an array. That is the point: the old
+ * `Record<string, any>` let a misspelled key iterate undefined and quietly
+ * translate nothing.
+ */
+function childrenOf(node: TreeNode | null | undefined, key: string): TreeNode[] {
+	const value = node?.[key];
+	return Array.isArray(value) ? (value as TreeNode[]) : [];
+}
+
 /** Overwrite one field on a row when an overlay exists (no-op for the base). */
 function overlay(
 	tr: Translator,
 	entity: string,
-	row: Record<string, any> | null | undefined,
+	row: TreeNode | null | undefined,
 	field: string
 ): void {
-	if (!row || row.id == null) return;
-	row[field] = tr.t(entity, row.id, field, row[field] ?? null);
+	const id = row?.id;
+	if (!row || (typeof id !== 'number' && typeof id !== 'string')) return;
+	const base = row[field];
+	row[field] = tr.t(entity, id, field, base == null ? null : String(base));
 }
 
 /**
@@ -98,50 +132,55 @@ function overlay(
  * The entity/field pairs mirror TRANSLATABLE_FIELDS in resume-translations.ts.
  */
 export function applyTranslations(
-	profile: Record<string, any> | null | undefined,
+	profile: TreeNode | null | undefined,
 	tr: Translator
 ): typeof profile {
 	if (tr.isBase || !profile) return profile;
 
-	// Profile-level fields key on the profile id itself.
+	// Profile-level fields key on the profile id itself. Without one there is
+	// nothing to look an overlay up by, so the tree goes back untranslated
+	// rather than every field being keyed on `undefined`.
+	const profileId = profile.id;
+	if (profileId === undefined) return profile;
 	for (const f of ['summary', 'headline', 'subtitle', 'title', 'about_me_text', 'location']) {
-		profile[f] = tr.t('profile', profile.id, f, profile[f] ?? null);
+		const base = profile[f];
+		profile[f] = tr.t('profile', profileId, f, base == null ? null : String(base));
 	}
 
-	for (const we of profile.work_experiences ?? []) {
+	for (const we of childrenOf(profile, 'work_experiences')) {
 		for (const f of ['position', 'headline', 'summary', 'description']) {
 			overlay(tr, 'work_experience', we, f);
 		}
-		for (const a of we.work_experience_achievements ?? []) {
+		for (const a of childrenOf(we, 'work_experience_achievements')) {
 			overlay(tr, 'work_experience_achievement', a, 'description');
 		}
-		for (const p of we.work_experience_projects ?? []) {
+		for (const p of childrenOf(we, 'work_experience_projects')) {
 			for (const f of ['name', 'description', 'outcome']) {
 				overlay(tr, 'work_experience_project', p, f);
 			}
 		}
 	}
 
-	for (const cat of profile.tech_skill_categories ?? []) {
+	for (const cat of childrenOf(profile, 'tech_skill_categories')) {
 		overlay(tr, 'tech_skill_category', cat, 'name');
 	}
 
-	for (const edu of profile.educations ?? []) {
+	for (const edu of childrenOf(profile, 'educations')) {
 		for (const f of ['area', 'study_type', 'summary']) {
 			overlay(tr, 'education', edu, f);
 		}
 	}
 
-	for (const sp of profile.side_projects ?? []) {
+	for (const sp of childrenOf(profile, 'side_projects')) {
 		for (const f of ['name', 'summary']) {
 			overlay(tr, 'side_project', sp, f);
 		}
-		for (const a of sp.side_project_achievements ?? []) {
+		for (const a of childrenOf(sp, 'side_project_achievements')) {
 			overlay(tr, 'side_project_achievement', a, 'description');
 		}
 	}
 
-	for (const ref of profile.references ?? []) {
+	for (const ref of childrenOf(profile, 'references')) {
 		for (const f of ['author_position', 'text']) {
 			overlay(tr, 'reference', ref, f);
 		}
@@ -151,18 +190,22 @@ export function applyTranslations(
 	// stand in for — the field's key holds the translation of the default. See
 	// server/profile/field-variants.ts for why replacing one has to bring its
 	// own language with it.
-	for (const v of profile.field_variants ?? []) {
+	for (const v of childrenOf(profile, 'field_variants')) {
 		overlay(tr, 'profile_field_variant', v, 'value');
 	}
 
 	// A language's name has a second source: ICU knows "English" in every
 	// locale, so a row without an overlay is still localized — from its ISO
 	// code, or failing that its English name. An overlay row wins.
-	for (const lang of profile.languages ?? []) {
+	for (const lang of childrenOf(profile, 'languages')) {
 		if (!lang || lang.id == null) continue;
 		lang.name =
 			tr.t('language', lang.id, 'name', null) ??
-			localizeLanguageName(lang.name, lang.language_code, tr.locale);
+			localizeLanguageName(
+				typeof lang.name === 'string' ? lang.name : null,
+				typeof lang.language_code === 'string' ? lang.language_code : null,
+				tr.locale
+			);
 	}
 
 	return profile;
@@ -389,12 +432,13 @@ const MULTILINE_FIELDS = new Set([
 function pushRows(
 	rows: TranslatableRow[],
 	entity: string,
-	id: number,
-	obj: Record<string, any>,
+	id: number | undefined,
+	obj: TreeNode,
 	labelPrefix = ''
 ): void {
+	if (id === undefined) return;
 	for (const f of fieldsForEntity(entity)) {
-		const base = (obj?.[f.field] ?? '').toString();
+		const base = String(obj?.[f.field] ?? '');
 		if (!base.trim()) continue;
 		rows.push({
 			entity,
@@ -412,9 +456,7 @@ function pushRows(
  * non-empty English base, grouped for the editor UI. Same tree shape as
  * applyTranslations; only fields with real content are surfaced.
  */
-export function collectTranslatable(
-	profile: Record<string, any> | null | undefined
-): TranslatableGroup[] {
+export function collectTranslatable(profile: TreeNode | null | undefined): TranslatableGroup[] {
 	const groups: TranslatableGroup[] = [];
 	if (!profile) return groups;
 
@@ -424,12 +466,12 @@ export function collectTranslatable(
 		groups.push({ key: 'profile', title: 'Profile', rows: profileRows });
 	}
 
-	for (const we of profile.work_experiences ?? []) {
+	for (const we of childrenOf(profile, 'work_experiences')) {
 		const rows: TranslatableRow[] = [];
 		pushRows(rows, 'work_experience', we.id, we);
-		(we.work_experience_achievements ?? []).forEach((a: any, i: number) => {
-			const base = (a?.description ?? '').toString();
-			if (!base.trim()) return;
+		childrenOf(we, 'work_experience_achievements').forEach((a, i) => {
+			const base = String(a?.description ?? '');
+			if (!base.trim() || a.id === undefined) return;
 			rows.push({
 				entity: 'work_experience_achievement',
 				id: a.id,
@@ -439,7 +481,7 @@ export function collectTranslatable(
 				multiline: true
 			});
 		});
-		const projects: Array<Record<string, unknown>> = we.work_experience_projects ?? [];
+		const projects = childrenOf(we, 'work_experience_projects');
 		projects.forEach((p, i) => {
 			const name = typeof p.name === 'string' ? p.name.trim() : '';
 			pushRows(rows, 'work_experience_project', Number(p.id), p, name || `Project ${i + 1}`);
@@ -454,14 +496,20 @@ export function collectTranslatable(
 	}
 
 	const skillRows: TranslatableRow[] = [];
-	for (const cat of profile.tech_skill_categories ?? []) {
-		pushRows(skillRows, 'tech_skill_category', cat.id, cat, cat.name || 'Category');
+	for (const cat of childrenOf(profile, 'tech_skill_categories')) {
+		pushRows(
+			skillRows,
+			'tech_skill_category',
+			cat.id,
+			cat,
+			typeof cat.name === 'string' ? cat.name : 'Category'
+		);
 	}
 	if (skillRows.length) {
 		groups.push({ key: 'skills', title: 'Skill categories', rows: skillRows });
 	}
 
-	for (const edu of profile.educations ?? []) {
+	for (const edu of childrenOf(profile, 'educations')) {
 		const rows: TranslatableRow[] = [];
 		pushRows(rows, 'education', edu.id, edu);
 		if (rows.length) {
@@ -473,12 +521,12 @@ export function collectTranslatable(
 		}
 	}
 
-	for (const sp of profile.side_projects ?? []) {
+	for (const sp of childrenOf(profile, 'side_projects')) {
 		const rows: TranslatableRow[] = [];
 		pushRows(rows, 'side_project', sp.id, sp);
-		(sp.side_project_achievements ?? []).forEach((a: any, i: number) => {
-			const base = (a?.description ?? '').toString();
-			if (!base.trim()) return;
+		childrenOf(sp, 'side_project_achievements').forEach((a, i) => {
+			const base = String(a?.description ?? '');
+			if (!base.trim() || a.id === undefined) return;
 			rows.push({
 				entity: 'side_project_achievement',
 				id: a.id,
@@ -501,14 +549,14 @@ export function collectTranslatable(
 	// so the editor reads "Professional Summary — Backend-leaning" rather than
 	// four rows called "Wording".
 	const variantRows: TranslatableRow[] = [];
-	for (const v of profile.field_variants ?? []) {
-		const base = (v?.value ?? '').toString();
-		if (!base.trim()) continue;
+	for (const v of childrenOf(profile, 'field_variants')) {
+		const base = String(v?.value ?? '');
+		if (!base.trim() || v.id === undefined) continue;
 		variantRows.push({
 			entity: 'profile_field_variant',
 			id: v.id,
 			field: 'value',
-			label: `${variantFieldLabel(v.field)} — ${v.label || 'Alternative'}`,
+			label: `${variantFieldLabel(String(v.field ?? ''))} — ${v.label || 'Alternative'}`,
 			base,
 			multiline: true
 		});
@@ -517,7 +565,7 @@ export function collectTranslatable(
 		groups.push({ key: 'field-variants', title: 'Alternative wordings', rows: variantRows });
 	}
 
-	for (const ref of profile.references ?? []) {
+	for (const ref of childrenOf(profile, 'references')) {
 		const rows: TranslatableRow[] = [];
 		pushRows(rows, 'reference', ref.id, ref);
 		if (rows.length) {
@@ -530,8 +578,14 @@ export function collectTranslatable(
 	}
 
 	const languageRows: TranslatableRow[] = [];
-	for (const lang of profile.languages ?? []) {
-		pushRows(languageRows, 'language', lang.id, lang, lang.name || 'Language');
+	for (const lang of childrenOf(profile, 'languages')) {
+		pushRows(
+			languageRows,
+			'language',
+			lang.id,
+			lang,
+			typeof lang.name === 'string' ? lang.name : 'Language'
+		);
 	}
 	if (languageRows.length) {
 		groups.push({ key: 'languages', title: 'Languages', rows: languageRows });

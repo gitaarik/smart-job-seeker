@@ -11,16 +11,16 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let emails = $derived((data as any).emails);
-	let typeCounts = $derived((data as any).typeCounts as Record<string, number>);
-	let allCount = $derived((data as any).allCount as number);
-	let sentCount = $derived((data as any).sentCount as number);
-	let failedCount = $derived((data as any).failedCount as number);
-	let page = $derived((data as any).page as number);
-	let totalPages = $derived((data as any).totalPages as number);
-	let total = $derived((data as any).total as number);
-	let typeFilter = $derived((data as any).typeFilter as string);
-	let statusFilter = $derived((data as any).statusFilter as string);
+	let emails = $derived(data.emails);
+	let typeCounts = $derived(data.typeCounts);
+	let allCount = $derived(data.allCount);
+	let sentCount = $derived(data.sentCount);
+	let failedCount = $derived(data.failedCount);
+	let page = $derived(data.page);
+	let totalPages = $derived(data.totalPages);
+	let total = $derived(data.total);
+	let typeFilter = $derived(data.typeFilter);
+	let statusFilter = $derived(data.statusFilter);
 
 	let expandedId = $state<number | null>(null);
 	let showHtml = $state(false);

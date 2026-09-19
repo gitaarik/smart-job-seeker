@@ -24,6 +24,23 @@ export interface JobScrapingAiChatResult<T> {
 	message: string;
 	response: T | null;
 	aiChatId: number | null;
+	/**
+	 * The error this call died of, when it died of one.
+	 *
+	 * `message` is prose: it is built for a log line, and by the time a caller
+	 * reads it the typed `LLMRateLimitError` / `LLMQuotaExceededError` /
+	 * `LLMAuthenticationError` that produced it has been flattened into a
+	 * sentence. Callers that need to *act* on the cause were left matching
+	 * substrings of that sentence, which is how a Groq key problem could be
+	 * classified as a platform login failure: the enhanced auth message
+	 * contains the words "Authentication failed".
+	 *
+	 * Set only on the throwing path — a `{ success: false }` returned by
+	 * `createAndGenerateAiChat` itself carries no error object, so this stays
+	 * undefined and the caller is right back to the message. That is a real
+	 * limit of this field, not an oversight.
+	 */
+	cause?: unknown;
 }
 
 /**
@@ -104,7 +121,8 @@ export async function runProfileAiChat<T>(
 			success: false,
 			message: `AI chat creation failed: ${error instanceof Error ? error.message : String(error)}`,
 			response: null,
-			aiChatId: null
+			aiChatId: null,
+			cause: error
 		};
 	}
 }

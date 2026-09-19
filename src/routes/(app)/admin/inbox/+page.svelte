@@ -14,13 +14,13 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let emails = $derived((data as any).emails);
-	let counts = $derived((data as any).counts);
-	let page = $derived((data as any).page);
-	let totalPages = $derived((data as any).totalPages);
-	let total = $derived((data as any).total);
-	let statusFilter = $derived((data as any).statusFilter);
-	let handlerFilter = $derived((data as any).handlerFilter);
+	let emails = $derived(data.emails);
+	let counts = $derived(data.counts);
+	let page = $derived(data.page);
+	let totalPages = $derived(data.totalPages);
+	let total = $derived(data.total);
+	let statusFilter = $derived(data.statusFilter);
+	let handlerFilter = $derived(data.handlerFilter);
 
 	let expandedId = $state<number | null>(null);
 	let deleteId = $state<number | null>(null);
@@ -146,7 +146,7 @@
 									<span
 										class="rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-1.5 py-0.5 text-xs text-[var(--dash-text-secondary)]"
 									>
-										{handlerLabels[email.handler] || email.handler || 'unknown'}
+										{(email.handler && handlerLabels[email.handler]) || email.handler || 'unknown'}
 									</span>
 									{#if email.extracted_code}
 										<span class="flex items-center gap-1 text-xs text-green-600">

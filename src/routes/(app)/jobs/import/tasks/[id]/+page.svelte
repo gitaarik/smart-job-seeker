@@ -436,13 +436,13 @@
 
 	// Determine if this search uses a cloud browser (GoLogin) — either per-search override or server default
 	let expectsCloudBrowser = $derived(
-		(searchTask as any).browser_provider === 'hosted' ||
-			(!(searchTask as any).browser_provider && data.browserProvider === 'goLogin')
+		searchTask.browser_provider === 'hosted' ||
+			(!searchTask.browser_provider && data.browserProvider === 'goLogin')
 	);
 	// Tunnel mode: uses desktop app browser (no VNC, no live URL by default)
 	let isTunnelMode = $derived(
-		(searchTask as any).browser_provider === 'tunnel' ||
-			(!(searchTask as any).browser_provider && data.browserProvider === 'tunnel')
+		searchTask.browser_provider === 'tunnel' ||
+			(!searchTask.browser_provider && data.browserProvider === 'tunnel')
 	);
 	// Unmet requirements that stop this task from running (needs a connected
 	// device, login credentials, etc). Same computation the run endpoint enforces
@@ -453,13 +453,13 @@
 		computeImportTaskBlockers({
 			platformId: searchTask.platform_id,
 			platformName: searchTask.job_platform?.name ?? null,
-			taskSearchUrl: (searchTask as any).search_url ?? null,
+			taskSearchUrl: searchTask.search_url ?? null,
 			platformSearchPageUrl: searchTask.job_platform?.search_page_url ?? null,
 			platformUrl: searchTask.job_platform?.url ?? null,
 			platformLoginPageUrl: searchTask.job_platform?.login_page_url ?? null,
-			loginMode: (searchTask as any).login_mode ?? null,
-			hasCredential: (searchTask as any).platform_credential_id != null,
-			browserProvider: (searchTask as any).browser_provider ?? null,
+			loginMode: searchTask.login_mode ?? null,
+			hasCredential: searchTask.platform_credential_id != null,
+			browserProvider: searchTask.browser_provider ?? null,
 			serverBrowserProvider: data.browserProvider,
 			deviceConnected: !isTunnelMode ? true : desktopStatusChecked ? desktopConnected : true
 		})

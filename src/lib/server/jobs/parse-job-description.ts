@@ -101,6 +101,24 @@ type ExtractJobDataResponse = {
 const HEADER_FIELDS: (keyof ExtractedHeader)[] = ['title', 'company', 'job_poster', 'location'];
 
 /**
+ * A parse attempt, including why it produced nothing.
+ *
+ * `parseJobDescription` returns `null` on failure and that is the right shape
+ * for the callers it was written for: a paste that could not be enriched is
+ * stored verbatim, and the reason is theirs to ignore. The scraper is not one
+ * of those callers. It turns a failed parse into a thrown error, and with only
+ * `null` to go on it threw `new Error("Failed to extract job data")` — a
+ * sentence carrying nothing, which the run classifier then read as `unknown`.
+ * An exhausted LLM quota and a page the model could not make sense of arrived
+ * at it identical.
+ */
+export interface JobParseResult {
+	parsed: ParsedJobDescription | null;
+	/** Present only when `parsed` is null. `cause` only when something threw. */
+	failure?: { message: string; cause?: unknown };
+}
+
+/**
  * Build the search-context hint appended to the extraction prompt. Empty when
  * no context is supplied (the manual-create case).
  */
@@ -146,6 +164,25 @@ export async function parseJobDescription(
 		recoverHeader?: boolean;
 	}
 ): Promise<ParsedJobDescription | null> {
+	return (await parseJobDescriptionResult(text, opts)).parsed;
+}
+
+/**
+ * {@link parseJobDescription}, but saying why it failed.
+ *
+ * Same call, same cost — the only difference is that the reason survives. Use
+ * it when a failed parse becomes an error someone has to classify or read;
+ * use the plain form when the answer to a failure is to carry on without it.
+ */
+export async function parseJobDescriptionResult(
+	text: string,
+	opts: {
+		profileId: number;
+		sourceUrl?: string | null;
+		searchContext?: JobSearchContext;
+		recoverHeader?: boolean;
+	}
+): Promise<JobParseResult> {
 	// 1. Strip a captured page down to its content; tidy a paste but keep its
 	//    lines (they are the only structure it has).
 	const preparedText = prepareJobTextForLlm(text);
@@ -161,11 +198,11 @@ export async function parseJobDescription(
 	);
 
 	if (!aiResult.success || !aiResult.response) {
-		// Degrade path: let the caller decide what to do with no extraction. Log
-		// the underlying reason (provider error, no credits, bad JSON) — callers
-		// only see `null`, so this is the only record of *why* it failed.
+		// Degrade path: let the caller decide what to do with no extraction. The
+		// log line stays for the callers that take the plain `null` form and so
+		// never see the reason at all.
 		console.warn(`[parseJobDescription] extraction returned no result: ${aiResult.message}`);
-		return null;
+		return { parsed: null, failure: { message: aiResult.message, cause: aiResult.cause } };
 	}
 
 	const data = aiResult.response;
@@ -205,7 +242,7 @@ export async function parseJobDescription(
 		if (header.title === null) suggestedTitle = recovered.suggested_title;
 	}
 
-	return {
+	const parsed: ParsedJobDescription = {
 		title: header.title,
 		suggested_title: suggestedTitle,
 		job_description: data.job_description ?? null,
@@ -231,4 +268,5 @@ export async function parseJobDescription(
 		source_html_stripped: preparedText,
 		ai_chat_extraction: aiResult.aiChatId
 	};
+	return { parsed };
 }

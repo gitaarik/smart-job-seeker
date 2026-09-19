@@ -27,12 +27,12 @@
 		return `${base}?fileId=${encodeURIComponent(fileId)}` as ResolvedPathname;
 	}
 
-	let files = $derived((data as any).files);
-	let total = $derived((data as any).total);
-	let page = $derived((data as any).page);
-	let totalPages = $derived((data as any).totalPages);
-	let typeFilter = $derived((data as any).typeFilter);
-	let usageFilter = $derived((data as any).usageFilter);
+	let files = $derived(data.files);
+	let total = $derived(data.total);
+	let page = $derived(data.page);
+	let totalPages = $derived(data.totalPages);
+	let typeFilter = $derived(data.typeFilter);
+	let usageFilter = $derived(data.usageFilter);
 
 	const typeFilters = [
 		{ value: '', label: 'All types' },
@@ -81,7 +81,10 @@
 		return qs ? `${base}?${qs}` : base;
 	}
 
-	function getUsageLabels(file: any): { label: string; detail: string }[] {
+	/** One row of `data.files`, as the loader's query shapes it. */
+	type FileRow = PageData['files'][number];
+
+	function getUsageLabels(file: FileRow): { label: string; detail: string }[] {
 		const labels: { label: string; detail: string }[] = [];
 		for (const p of file.profiles || []) {
 			labels.push({ label: 'Source CV', detail: p.name || `Profile #${p.id}` });
@@ -221,7 +224,7 @@
 
 							<!-- Import log indicator -->
 							{#if file.importLogs.length > 0}
-								{@const hasError = file.importLogs.some((l: any) => l.event.includes('error'))}
+								{@const hasError = file.importLogs.some((l) => l.event.includes('error'))}
 								<FontAwesomeIcon
 									icon={hasError ? faExclamationTriangle : faCheckCircle}
 									class="h-3.5 w-3.5 flex-shrink-0 {hasError ? 'text-amber-500' : 'text-green-500'}"
