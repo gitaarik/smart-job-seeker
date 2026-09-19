@@ -6,6 +6,19 @@ import { profiles } from '$lib/server/db/schema';
 import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
 import { generateSlug } from '$lib/server/utils/slug-generator';
 
+/**
+ * This endpoint's own payload shape. Deliberately not
+ * $lib/server/profile/export-profile-json's ExportedProfile: that one carries
+ * the address and identity fields, certificates and salary_expectations, while
+ * this one carries application_questions and a salary_settings block it does
+ * not. Two formats, not one duplicated.
+ *
+ * The relation arrays are `unknown[]` because this file only copies them out of
+ * the query below and hands them to JSON.stringify — the query is their source
+ * of truth, and restating each row shape here would be a second declaration to
+ * keep in step. `unknown` rather than `any` so a future reader cannot reach into
+ * an element without saying what they expect it to be.
+ */
 interface ExportedProfile {
 	profile: {
 		name?: string;
@@ -24,17 +37,17 @@ interface ExportedProfile {
 		nationality?: string;
 		location_url?: string;
 		location_timezone?: string;
-		profile_versions: Array<any>;
-		highlights: Array<any>;
-		tech_skill_categories: Array<any>;
-		work_experiences: Array<any>;
-		side_projects: Array<any>;
-		education: Array<any>;
-		languages: Array<any>;
-		references: Array<any>;
-		project_stories: Array<any>;
-		application_questions?: Array<any>;
-		cheat_sheets: Array<any>;
+		profile_versions: unknown[];
+		highlights: unknown[];
+		tech_skill_categories: unknown[];
+		work_experiences: unknown[];
+		side_projects: unknown[];
+		education: unknown[];
+		languages: unknown[];
+		references: unknown[];
+		project_stories: unknown[];
+		application_questions?: unknown[];
+		cheat_sheets: unknown[];
 		salary_settings?: {
 			base_rate?: number | null;
 			currency?: string;

@@ -5,6 +5,7 @@
 
 import { dbDirect } from '$lib/server/db';
 import { eq, and, isNull, max, or } from 'drizzle-orm';
+import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import {
 	profiles,
 	work_experiences,
@@ -169,12 +170,23 @@ async function findEducationByKey(profileId: number, matchKey: string) {
 	});
 }
 
-async function getMaxSort(table: any, whereCol: any, whereVal: any): Promise<number> {
+/**
+ * The highest `sort` among the rows matching one column, or 0.
+ *
+ * Generic over the table because six callers pass six different ones, but only
+ * over tables that actually have a `sort` column — which is what the old `any`
+ * signature could not say, and it is the one thing this function requires.
+ */
+async function getMaxSort(
+	table: PgTable & { sort: PgColumn },
+	whereCol: PgColumn,
+	whereVal: number
+): Promise<number> {
 	const [result] = await dbDirect
 		.select({ value: max(table.sort) })
 		.from(table)
 		.where(eq(whereCol, whereVal));
-	return result?.value ?? 0;
+	return Number(result?.value ?? 0);
 }
 
 export async function applyDiffToProfile(

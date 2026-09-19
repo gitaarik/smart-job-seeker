@@ -38,6 +38,35 @@
 
 	let { currentData, incomingData, isLoading, error, onBack, onLoadingChange }: Props = $props();
 
+	/**
+	 * What a `fields` bag in this payload actually holds.
+	 *
+	 * Every value reaching it has been through `normalize()` in resume-diff.ts,
+	 * which does `String(value).trim()`. So a bag is a string map however the
+	 * payload's own field types read — including for graduationYear,
+	 * yearsExperience and stars, which apply-diff hands to integer columns and
+	 * Postgres coerces. That is why each bag is cast where it is attached, rather
+	 * than declared as a field type it does not hold.
+	 */
+	type DiffFields = Record<string, string | undefined>;
+
+	/**
+	 * One "modified" entry of a payload section, as that section declares it.
+	 *
+	 * Spelled out per section rather than as `Modification<K>`: not every section
+	 * of the payload has a `modified` array (basics does not), so a generic could
+	 * not be proven to index one.
+	 */
+	type WorkMod = NonNullable<NonNullable<DiffApplyPayload['work']>['modified']>[number];
+	type EducationMod = NonNullable<NonNullable<DiffApplyPayload['education']>['modified']>[number];
+	type SkillMod = NonNullable<NonNullable<DiffApplyPayload['skills']>['modified']>[number];
+	type LanguageMod = NonNullable<NonNullable<DiffApplyPayload['languages']>['modified']>[number];
+	type ProjectMod = NonNullable<NonNullable<DiffApplyPayload['projects']>['modified']>[number];
+	type CertificateMod = NonNullable<
+		NonNullable<DiffApplyPayload['certificates']>['modified']
+	>[number];
+	type ReferenceMod = NonNullable<NonNullable<DiffApplyPayload['references']>['modified']>[number];
+
 	// Compute the diff
 	let diff = $state<ResumeDataDiff>(diffResumeData(currentData, incomingData));
 
@@ -56,7 +85,7 @@
 			}
 		}
 		if (Object.keys(enabledBasics).length > 0) {
-			payload.basics = enabledBasics as any;
+			payload.basics = enabledBasics as DiffApplyPayload['basics'];
 		}
 
 		// Work
@@ -72,15 +101,15 @@
 			} else if (item.type === 'removed' && item.current) {
 				workPayload.removed!.push(`${item.current.name}|||${item.current.position}`);
 			} else if (item.type === 'modified' && item.current && item.incoming) {
-				const fields: Record<string, any> = {};
+				const fields: DiffFields = {};
 				for (const fd of item.fieldDiffs ?? []) {
 					if (fd.changed && fd.enabled) {
 						fields[fd.field] = fd.incoming;
 					}
 				}
-				const mod: any = {
+				const mod: WorkMod = {
 					matchKey: `${item.current.name}|||${item.current.position}`,
-					fields
+					fields: fields as WorkMod['fields']
 				};
 
 				// Handle nested diffs
@@ -120,13 +149,13 @@
 			} else if (item.type === 'removed' && item.current) {
 				eduPayload.removed!.push(`${item.current.institution}|||${item.current.area ?? ''}`);
 			} else if (item.type === 'modified' && item.current) {
-				const fields: Record<string, any> = {};
+				const fields: DiffFields = {};
 				for (const fd of item.fieldDiffs ?? []) {
 					if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
 				}
 				eduPayload.modified!.push({
 					matchKey: `${item.current.institution}|||${item.current.area ?? ''}`,
-					fields
+					fields: fields as EducationMod['fields']
 				});
 			}
 		}
@@ -151,11 +180,11 @@
 			} else if (cat.type === 'removed' && cat.current) {
 				skillsPayload.removed!.push(cat.current.name);
 			} else if (cat.type === 'modified' && cat.current) {
-				const mod: any = { matchKey: cat.current.name };
+				const mod: SkillMod = { matchKey: cat.current.name };
 
-				const addSkills: any[] = [];
+				const addSkills: NonNullable<SkillMod['addSkills']> = [];
 				const removeSkills: string[] = [];
-				const modifySkills: any[] = [];
+				const modifySkills: NonNullable<SkillMod['modifySkills']> = [];
 
 				for (const sd of cat.skillDiffs ?? []) {
 					if (!sd.enabled) continue;
@@ -164,12 +193,15 @@
 					} else if (sd.type === 'removed' && sd.current) {
 						removeSkills.push(sd.current.name);
 					} else if (sd.type === 'modified' && sd.current) {
-						const fields: Record<string, any> = {};
+						const fields: DiffFields = {};
 						for (const fd of sd.fieldDiffs ?? []) {
 							if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
 						}
 						if (Object.keys(fields).length > 0) {
-							modifySkills.push({ name: sd.current.name, fields });
+							modifySkills.push({
+								name: sd.current.name,
+								fields: fields as NonNullable<SkillMod['modifySkills']>[number]['fields']
+							});
 						}
 					}
 				}
@@ -202,13 +234,13 @@
 			} else if (item.type === 'removed' && item.current) {
 				langPayload.removed!.push(item.current.name);
 			} else if (item.type === 'modified' && item.current) {
-				const fields: Record<string, any> = {};
+				const fields: DiffFields = {};
 				for (const fd of item.fieldDiffs ?? []) {
 					if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
 				}
 				langPayload.modified!.push({
 					matchKey: item.current.name,
-					fields
+					fields: fields as LanguageMod['fields']
 				});
 			}
 		}
@@ -233,11 +265,14 @@
 			} else if (item.type === 'removed' && item.current) {
 				projPayload.removed!.push(item.current.name);
 			} else if (item.type === 'modified' && item.current) {
-				const fields: Record<string, any> = {};
+				const fields: DiffFields = {};
 				for (const fd of item.fieldDiffs ?? []) {
 					if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
 				}
-				const mod: any = { matchKey: item.current.name, fields };
+				const mod: ProjectMod = {
+					matchKey: item.current.name,
+					fields: fields as ProjectMod['fields']
+				};
 
 				for (const nd of item.nestedDiffs ?? []) {
 					const addKey = nd.field === 'achievements' ? 'addAchievements' : 'addTechnologies';
@@ -275,13 +310,13 @@
 			} else if (item.type === 'removed' && item.current) {
 				certPayload.removed!.push(item.current.name);
 			} else if (item.type === 'modified' && item.current) {
-				const fields: Record<string, any> = {};
+				const fields: DiffFields = {};
 				for (const fd of item.fieldDiffs ?? []) {
 					if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
 				}
 				certPayload.modified!.push({
 					matchKey: item.current.name,
-					fields
+					fields: fields as CertificateMod['fields']
 				});
 			}
 		}
@@ -306,13 +341,13 @@
 			} else if (item.type === 'removed' && item.current) {
 				refPayload.removed!.push(item.current.author);
 			} else if (item.type === 'modified' && item.current) {
-				const fields: Record<string, any> = {};
+				const fields: DiffFields = {};
 				for (const fd of item.fieldDiffs ?? []) {
 					if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
 				}
 				refPayload.modified!.push({
 					matchKey: item.current.author,
-					fields
+					fields: fields as ReferenceMod['fields']
 				});
 			}
 		}

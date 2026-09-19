@@ -4,6 +4,7 @@
  */
 
 import * as cheerio from 'cheerio';
+import { isTag } from 'domhandler';
 
 /**
  * Options for HTML stripping
@@ -123,9 +124,7 @@ export function stripHtmlForLlm(html: string, options: StripHtmlOptions = {}): s
 	// Remove HTML comments (recursively find all comment nodes)
 	$('*')
 		.contents()
-		.filter(function (_: number, node: any) {
-			return node.type === 'comment';
-		})
+		.filter((_, node) => node.type === 'comment')
 		.remove();
 
 	// 2. Keep only essential attributes and truncate long values
@@ -286,7 +285,12 @@ export function stripHtmlForLlm(html: string, options: StripHtmlOptions = {}): s
 
 		$('*').each((_, elem) => {
 			const element = $(elem);
-			const tagName = (elem as any).tagName?.toLowerCase();
+			// `$('*')` yields elements only, so this never returns — it is how the
+			// callback's declared AnyNode (which may be a Document, with no
+			// tagName) gets narrowed. It replaced an `as any` that said the same
+			// thing without checking.
+			if (!isTag(elem)) return;
+			const tagName = elem.tagName.toLowerCase();
 
 			if (selfClosingTags.has(tagName)) return;
 

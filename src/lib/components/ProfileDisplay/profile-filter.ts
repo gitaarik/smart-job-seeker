@@ -52,10 +52,7 @@ export interface ProfileFilter {
 	 * $lib/version-overrides entity) for lists a tailored version can speak
 	 * about; without it only tags apply.
 	 */
-	filterOnTags: <T extends { tags?: string[] | unknown } & Record<string, any>>(
-		objList: T[],
-		entityType?: string
-	) => T[];
+	filterOnTags: <T extends object>(objList: T[], entityType?: string) => T[];
 	versionSlugs: string[];
 	toggles: string[];
 }
@@ -116,10 +113,7 @@ export function createProfileFilter(
 	});
 	const overrides = indexOverrides(overrideRows);
 
-	function filterOnTags<T extends { tags?: string[] | unknown } & Record<string, any>>(
-		objList: T[],
-		entityType?: string
-	): T[] {
+	function filterOnTags<T extends object>(objList: T[], entityType?: string): T[] {
 		// The identifiers active for the currently-rendered surface: the base
 		// template (a document or the site) plus the viewed version's extension
 		// chain.
