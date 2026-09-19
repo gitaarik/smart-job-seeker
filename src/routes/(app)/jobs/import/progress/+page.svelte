@@ -526,8 +526,9 @@
 						/>
 						<span class="text-xs text-[var(--dash-text-secondary)]">Show no-match</span>
 					</label>
-					<a href="/jobs/matches" class="text-xs text-[var(--dash-primary)] hover:underline"
-						>View all matches</a
+					<a
+						href={resolve('/jobs/matches')}
+						class="text-xs text-[var(--dash-primary)] hover:underline">View all matches</a
 					>
 				</div>
 			</div>
@@ -541,7 +542,7 @@
 					{#each recentMatches as match (match.id)}
 						{@const rec = getRecommendationLabel(match.recommendation)}
 						<a
-							href="/jobs/{match.job_id}"
+							href={resolve('/(app)/jobs/[id]', { id: String(match.job_id) })}
 							class="flex items-center gap-3 rounded-lg bg-[var(--dash-bg)] p-3 transition-colors hover:bg-[var(--dash-bg)]/80"
 						>
 							<!-- Score Badge -->

@@ -188,13 +188,32 @@ set -euo pipefail
 # check-oss.sh read 1,024 two commits before the push; the access-control test
 # then dropped its destructure-to-omit and its `as any`, and CI read 1,022.
 #
+# 1,020 -> 590 on 2026-09-19, the largest single drop this ratchet has had, and
+# almost none of it was style work:
+#
+#   - 139 in four profile/export serializers were one mistake repeated,
+#     `orderBy: (t: any, { asc }: any)`. Those annotations were suppressing
+#     drizzle's own inference, so nothing checked that `t.sort` was a column of
+#     the table being ordered. See the note in server/profile/default.ts for why
+#     the hoisted include needs the VALUE form rather than a callback.
+#   - 140 links moved to `resolve()`. Route ids carry their layout group and are
+#     typed against the generated union, which is how two dead
+#     /admin/job-platforms/[id]/discover links were found.
+#   - The rest was app-code `any` typed honestly (261 -> 11), the seven tail
+#     rules cleared, and three dead files deleted: test-utils/factories.ts,
+#     test-utils/mocks.ts and tools/fa-icons.ts, none of which anything imported.
+#
+# Two real defects came out of it rather than out of a bug report: education rows
+# deleted on the institution alone, and graduationYear / yearsExperience / stars
+# reaching integer columns as strings.
+#
 # 1,022 -> 1,020 on 2026-09-18, incidental to fixing the bugs this backlog
 # turned up. Two `any` casts went with them: `undefined as any` standing in for
 # a dropped Drizzle condition in apply-diff.ts, and `(data as any).feedback` on
 # the admin feedback page — which is the one worth noting, because that cast is
 # precisely why nobody noticed the page reading three properties the loader
 # never returned. An `any` is not only style debt here.
-BASELINE=1020
+BASELINE=590
 
 npx svelte-kit sync
 

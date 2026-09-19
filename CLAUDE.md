@@ -58,7 +58,7 @@ Two things worth knowing:
 | ---------------- | --------------------- | ----------------- |
 | `svelte-check`   | `ci/check.sh`         | 31 errors         |
 | `scripts/` types | `ci/check-scripts.sh` | 23 errors         |
-| eslint           | `ci/check-lint.sh`    | 1,020 errors      |
+| eslint           | `ci/check-lint.sh`    | 590 errors        |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
 The three counts are ratchets: they may only ever go **down**, and each script
@@ -111,10 +111,31 @@ the failure that motivated it appeared only in files the change never opened.
 It fails open when the dev stack is down, and `git push --no-verify` skips it.
 
 What remains is two rules and a handful of deliberate exceptions:
-`@typescript-eslint/no-explicit-any` (~700, a third of them in test mocks) and
-`svelte/no-navigation-without-resolve` (~220).
-Everything else has been worked down. Four rules are worth reading rather than
+`@typescript-eslint/no-explicit-any` (~476, and 465 of those are test mocks —
+app code is down to 11) and `svelte/no-navigation-without-resolve` (~86).
+Everything else has been worked down. Five rules are worth reading rather than
 counting:
+
+- **`svelte/no-navigation-without-resolve`** — 138 links were migrated to
+  `resolve()` on 2026-09-19, and what is left is **not** un-migrated navigation.
+  Roughly: 30 hrefs that arrive as a prop (`{href}` in ContactItem, StatCard,
+  ProfileLink; `tab.href`; `activityHref`), 26 built by a local page helper, 14
+  external URLs out of stored data (`job.source_url`, `cert.url`,
+  `profile.signal_profile`, a scraper's live URL), 5 `goto()` calls that append a
+  query to a resolved path, 5 same-page query-only navigations, and 4 redirect
+  targets a form action chose. The rule cannot see that any of those are fine,
+  and it has no per-helper allowlist — only coarse `ignoreLinks` / `ignoreGoto`
+  booleans — so silencing them means ~85 disable comments across 50 files, which
+  is worse code than the errors. **Before adding to this count, check you are not
+  in one of those buckets.**
+
+  Two things worth knowing when you do migrate one. A route id carries its layout
+  group (`/(app)/jobs/[id]`, not `/jobs/[id]`), though a plain pathname is
+  accepted for a static link with no params; and `resolve` is typed against the
+  generated route union, so a path that is not a route fails svelte-check. That
+  is how two dead `/admin/job-platforms/[id]/discover` links were found — the
+  page had been renamed to `[id]/search-form-probe` and the links never followed.
+  For files under `static/`, the helper is `asset()`, not `resolve()`.
 
 - **`svelte/no-at-html-tags`** — all 10 sites were audited 2026-08-07 and are
   sound. A new hit is an unreviewed HTML sink, not backlog, and `/p/[slug]`
