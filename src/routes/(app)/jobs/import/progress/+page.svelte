@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { onMount, onDestroy } from 'svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -285,7 +286,7 @@
 						on jobs you want and add the ones you genuinely have.
 					</p>
 					<a
-						href="/profile/skills"
+						href={resolve('/profile/skills')}
 						class="mt-2 inline-flex rounded border border-[var(--dash-border)] px-2 py-0.5 text-xs whitespace-nowrap text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 						>Edit skills</a
 					>
@@ -309,7 +310,7 @@
 				{#if matchedCount > 0}
 					<div class="mt-2 flex flex-wrap items-center gap-2">
 						<a
-							href="/jobs?minScore=1"
+							href="{resolve('/jobs')}?minScore=1"
 							class="inline-flex rounded border border-[var(--dash-border)] px-2 py-0.5 text-xs whitespace-nowrap text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 							>View</a
 						>
@@ -343,7 +344,7 @@
 				{#if noMatchCount > 0}
 					<div class="mt-2 flex flex-wrap items-center gap-2">
 						<a
-							href="/jobs?minScore=0"
+							href="{resolve('/jobs')}?minScore=0"
 							class="inline-flex rounded border border-[var(--dash-border)] px-2 py-0.5 text-xs whitespace-nowrap text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 							>View</a
 						>
@@ -369,7 +370,7 @@
 				<div class="text-xs text-[var(--dash-text-muted)]">waiting to be processed</div>
 				{#if unmatchedCount > 0}
 					<a
-						href="/jobs?minScore=unmatched"
+						href="{resolve('/jobs')}?minScore=unmatched"
 						class="mt-2 inline-flex rounded border border-[var(--dash-border)] px-2 py-0.5 text-xs whitespace-nowrap text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 						>View</a
 					>
@@ -381,7 +382,7 @@
 				<div class="mb-1 text-sm text-[var(--dash-text-secondary)]">Total Jobs</div>
 				<div class="text-2xl font-bold text-[var(--dash-text)]">{totalJobs}</div>
 				<a
-					href="/jobs"
+					href={resolve('/jobs')}
 					class="mt-2 inline-flex rounded border border-[var(--dash-border)] px-2 py-0.5 text-xs whitespace-nowrap text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 					>View</a
 				>
@@ -441,7 +442,7 @@
 						</div>
 						<div class="ml-6">
 							<a
-								href="/jobs/{matcherState?.currentJobId}"
+								href={resolve('/(app)/jobs/[id]', { id: String(matcherState?.currentJobId) })}
 								class="text-sm text-[var(--dash-primary)] hover:underline"
 							>
 								{matcherState?.currentJobTitle || 'Unknown job'}

@@ -319,7 +319,10 @@
 						>
 							{#each Object.entries(letterTypes) as [value, label] (value)}
 								<a
-									href="/applications/{app.id}/texts/new?type={value}"
+									href="{resolve('/(app)/applications/[id]/texts/[letterId]', {
+										id: String(app.id),
+										letterId: 'new'
+									})}?type={value}"
 									class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 									onclick={() => (showAddMenu = false)}
 								>
@@ -647,7 +650,10 @@
 					>
 						{#each Object.entries(letterTypes) as [value, label] (value)}
 							<a
-								href="/applications/{app.id}/texts/new?type={value}"
+								href="{resolve('/(app)/applications/[id]/texts/[letterId]', {
+									id: String(app.id),
+									letterId: 'new'
+								})}?type={value}"
 								class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 								onclick={() => (showAddMenu = false)}
 							>
