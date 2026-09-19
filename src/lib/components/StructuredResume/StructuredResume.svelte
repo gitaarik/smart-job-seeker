@@ -6,6 +6,7 @@
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 	import { formatDateRangeCompact } from '$lib/tools/date-utils';
 	import { createProfileFilter } from '../ProfileDisplay/profile-filter';
+	import type { VersionObj } from '../ProfileDisplay/profile-filter';
 	import { isContactHidden } from '$lib/resume-contact-fields';
 	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 	import { assetUrl, type ResumeTemplateConfig } from '$lib/resume-templates';
@@ -50,7 +51,7 @@
 		work_experiences: WorkExperience[];
 		educations: Education[];
 		tech_skill_categories: SkillCategory[];
-		profile_versions: any[];
+		profile_versions: VersionObj[];
 	}
 
 	interface Props {

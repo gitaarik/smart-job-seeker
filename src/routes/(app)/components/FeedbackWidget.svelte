@@ -72,7 +72,7 @@
 		formData.set('message', message.trim());
 		formData.set('category', category);
 		formData.set('page_url', $page.url.pathname + $page.url.search);
-		const profileId = ($page.data as any).selectedProfile?.id;
+		const profileId = $page.data.selectedProfile?.id;
 		if (profileId) formData.set('profile_id', String(profileId));
 		for (const file of files) {
 			formData.append('files', file);

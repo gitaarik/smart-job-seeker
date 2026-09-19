@@ -19,9 +19,9 @@
 	let { data }: { data: PageData } = $props();
 
 	let feedback = $derived(data.feedback);
-	let counts = $derived((data as any).counts);
-	let statusFilter = $derived((data as any).statusFilter);
-	let categoryFilter = $derived((data as any).categoryFilter);
+	let counts = $derived(data.counts);
+	let statusFilter = $derived(data.statusFilter);
+	let categoryFilter = $derived(data.categoryFilter);
 
 	let deleteId = $state<number | null>(null);
 	let editingNoteId = $state<number | null>(null);

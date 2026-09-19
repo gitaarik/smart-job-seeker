@@ -60,7 +60,7 @@
 
 	let app = $derived(data.application);
 	let job = $derived(app.job);
-	let profileSlug = $derived((data as any).selectedProfile?.slug as string | undefined);
+	let profileSlug = $derived(data.selectedProfile?.slug);
 
 	// Notes
 	type Note = { id: string; text: string; created_at: string };

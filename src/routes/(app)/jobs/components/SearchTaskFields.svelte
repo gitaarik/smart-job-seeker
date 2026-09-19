@@ -34,10 +34,42 @@
 	import { toLoginMode } from '$lib/import-tasks/sign-in';
 	import type { TimeFormat } from '$lib/format-date';
 
+	/**
+	 * The fields of a `search_tasks` row this component reads.
+	 *
+	 * Named rather than `any` so a caller passing a row that is missing one —
+	 * a query with a `columns` list, say — hears about it here instead of
+	 * rendering a control with no value in it.
+	 */
+	interface SearchTaskFieldsRow {
+		search_term?: string | null;
+		max_jobs?: number | null;
+		platform_id?: number | null;
+		platform_credential_id?: number | null;
+		login_mode?: string | null;
+		browser_provider?: string | null;
+		keep_minimized?: boolean | null;
+		debug_screenshots?: boolean | null;
+		skip_existing?: boolean | null;
+		skip_first?: number | null;
+		stop_after_duplicates?: number | null;
+		schedule_interval_hours?: number | null;
+		schedule_preferred_hour?: number | null;
+		sjsbrowser_api_key?: number | null;
+		job_platform?: {
+			id?: number;
+			name?: string | null;
+			url?: string | null;
+			login_page_url?: string | null;
+		} | null;
+	}
+
+	type PlatformCredentialOption = NonNullable<Props['platformCredentials']>[number];
+
 	interface Props {
 		localBrowserAllowed: boolean;
 		serverBrowserProvider: string;
-		searchTask?: any;
+		searchTask?: SearchTaskFieldsRow | null;
 		searchTaskId?: number;
 		profileId?: number;
 		platformCredentials?: Array<{
@@ -518,6 +550,9 @@
 	let credentialSaveError = $state<string | null>(null);
 
 	async function saveLoginAndCredential() {
+		// Nothing to save against without a task: this whole path PATCHes
+		// `searchTaskId`, and the writes at the end update the row it returned.
+		if (!searchTask) return;
 		isSavingCredential = true;
 		isSavingLoginMode = true;
 		credentialSaveError = null;
@@ -590,8 +625,8 @@
 
 	// Re-sync state when searchTask changes from outside (navigation)
 	export function resetToData(newData: {
-		searchTask: any;
-		platformCredentials: any[];
+		searchTask: SearchTaskFieldsRow;
+		platformCredentials: PlatformCredentialOption[];
 		browserCountryCode: string;
 		defaultCountryCode: string;
 		browserFingerprint: {

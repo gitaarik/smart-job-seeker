@@ -24,7 +24,7 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 
 	const isOwner = feedback.user_id === user.id;
 	const isSubscriber = feedback.user_feedback_subscribers.some((s) => s.user_id === user.id);
-	const isAdmin = (user as any).is_admin === true;
+	const isAdmin = user.is_admin === true;
 
 	if (!isOwner && !isSubscriber && !isAdmin) {
 		error(403, 'Not authorized');

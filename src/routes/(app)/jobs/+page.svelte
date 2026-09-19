@@ -34,7 +34,7 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	let isStaff = $derived(!!(data as any).user?.is_staff || !!(data as any).user?.is_admin);
+	let isStaff = $derived(!!data.user?.is_staff || !!data.user?.is_admin);
 	let isClearingMatches = $state(false);
 	let clearMatchResult = $state<{ count: number } | null>(null);
 	let showClearMatchConfirm = $state(false);
@@ -880,7 +880,10 @@
 							return async ({ result, update }) => {
 								isClearingMatches = false;
 								if (result.type === 'success' && result.data) {
-									clearMatchResult = { count: (result.data as any).clearedCount ?? 0 };
+									// A form action's data is Record<string, unknown>, so say what
+									// this field is expected to be rather than casting the lot.
+									const cleared = result.data.clearedCount;
+									clearMatchResult = { count: typeof cleared === 'number' ? cleared : 0 };
 								}
 								await update();
 							};

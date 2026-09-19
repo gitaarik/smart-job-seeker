@@ -118,7 +118,7 @@
 		}
 	}
 
-	function handleTurnstileError(error: any) {
+	function handleTurnstileError(error: unknown) {
 		console.error('Turnstile error:', error);
 		if (!isHumanState.value) {
 			isVerifyError = true;

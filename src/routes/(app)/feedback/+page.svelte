@@ -14,7 +14,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let feedback = $derived((data as any).feedback);
+	let feedback = $derived(data.feedback);
 
 	let expandedId = $state<number | null>(null);
 	let replyText = $state('');

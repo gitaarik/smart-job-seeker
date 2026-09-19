@@ -37,7 +37,7 @@ import {
 	type VersionOverride
 } from '$lib/version-overrides';
 
-interface VersionObj {
+export interface VersionObj {
 	id: number;
 	slug: string | null;
 	toggles: string[] | unknown;

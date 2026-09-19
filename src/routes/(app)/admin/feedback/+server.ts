@@ -7,7 +7,7 @@ import { getFile } from '$lib/server/files';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const user = locals.user;
-	if (!user || !(user as any).is_admin) error(403, 'Forbidden');
+	if (!user?.is_admin) error(403, 'Forbidden');
 
 	const fileId = url.searchParams.get('fileId');
 	if (!fileId) error(400, 'File ID required');

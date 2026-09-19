@@ -7,9 +7,10 @@
 	import { onMount } from 'svelte';
 	import { initializeTheme, themeState, updateDOM } from '$lib/stores/theme.svelte';
 	import { identify } from '$lib/tools/analytics';
+	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
-	let { children, data }: { children: any; data: LayoutData } = $props();
+	let { children, data }: { children: Snippet; data: LayoutData } = $props();
 
 	// Initialize theme store with server-detected theme data
 	if (data.themePreference && data.actualTheme && data.systemTheme) {

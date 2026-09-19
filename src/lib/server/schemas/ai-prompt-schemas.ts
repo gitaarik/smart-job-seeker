@@ -965,7 +965,7 @@ export const aiPromptSchemas = {
  * @param request - Prompt request identifier
  * @returns Zod schema or undefined if not found
  */
-export function getSchemaForPrompt(request: string): z.ZodType<any> | undefined {
+export function getSchemaForPrompt(request: string) {
 	return aiPromptSchemas[request as keyof typeof aiPromptSchemas];
 }
 

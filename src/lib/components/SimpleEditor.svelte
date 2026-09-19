@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import type { Editor, Extensions } from '@tiptap/core';
+	// For the module augmentation that adds getMarkdown() to Editor.
+	import type {} from '@tiptap/markdown';
 	import { browser } from '$app/environment';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { decodeMarkdownEntities } from '$lib/utils/markdown-entities';
@@ -33,7 +36,7 @@
 
 	let element: HTMLDivElement;
 	let bubbleMenuElement: HTMLDivElement;
-	let editor: any = $state(null);
+	let editor: Editor | null = $state(null);
 
 	onMount(async () => {
 		if (!browser) return;
@@ -44,7 +47,7 @@
 		const Link = (await import('@tiptap/extension-link')).default;
 		const BubbleMenu = (await import('@tiptap/extension-bubble-menu')).default;
 
-		const extensions: any[] = [
+		const extensions: Extensions = [
 			StarterKit,
 			Placeholder.configure({ placeholder }),
 			Link.configure({
@@ -77,7 +80,7 @@
 					// The serializer HTML-encodes every text node; callers store this
 					// string and show it as plain text, so undo that. See
 					// `decodeMarkdownEntities`.
-					content = decodeMarkdownEntities((ed as any).getMarkdown());
+					content = decodeMarkdownEntities(ed.getMarkdown());
 				} else {
 					content = ed.getHTML();
 				}

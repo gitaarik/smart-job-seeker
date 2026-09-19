@@ -393,8 +393,8 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
 			selectedCredentialId:
 				searchTask?.platform_profile?.platform_credential_id?.toString() ?? 'none',
 			loginUrl: searchTask?.job_platform?.login_page_url ?? null,
-			browserProvider: (searchTask as any)?.browser_provider ?? null,
-			keepMinimized: (searchTask as any)?.keep_minimized ?? true,
+			browserProvider: searchTask?.browser_provider ?? null,
+			keepMinimized: searchTask?.keep_minimized ?? true,
 			defaultCountryCode,
 			browserFingerprint: {
 				language: profile?.browser_language || '',
