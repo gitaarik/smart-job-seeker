@@ -152,6 +152,10 @@
 
 	function retrySession() {
 		if (!session) return;
+		// The path IS resolved; the rule only accepts a bare `resolve()` call or an
+		// expression typed ResolvedPathname, and appending a query makes it a
+		// plain string. resolve() takes no query of its own.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(`${resolve('/admin/scraper-agent')}?retry=${data.sessionId}`);
 	}
 

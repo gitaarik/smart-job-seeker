@@ -44,6 +44,9 @@
 			}
 
 			// Redirect to the intended page or dashboard
+			// The fallback is resolved; `redirectTo` is the ?redirect= param the login
+			// page was reached with, so it is a runtime string and not a route id.
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
 			goto(data.redirectTo || resolve('/home'));
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'An error occurred';

@@ -188,7 +188,7 @@ set -euo pipefail
 # check-oss.sh read 1,024 two commits before the push; the access-control test
 # then dropped its destructure-to-omit and its `as any`, and CI read 1,022.
 #
-# 1,020 -> 590 on 2026-09-19, the largest single drop this ratchet has had, and
+# 1,020 -> 585 on 2026-09-19, the largest single drop this ratchet has had, and
 # almost none of it was style work:
 #
 #   - 139 in four profile/export serializers were one mistake repeated,
@@ -213,7 +213,7 @@ set -euo pipefail
 # the admin feedback page — which is the one worth noting, because that cast is
 # precisely why nobody noticed the page reading three properties the loader
 # never returned. An `any` is not only style debt here.
-BASELINE=590
+BASELINE=585
 
 npx svelte-kit sync
 

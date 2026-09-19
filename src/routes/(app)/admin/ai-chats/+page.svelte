@@ -54,12 +54,20 @@
 		const params = new SvelteURLSearchParams();
 		if (type) params.set('type', type);
 		const qs = params.toString();
+		// The path IS resolved; the rule only accepts a bare `resolve()` call or an
+		// expression typed ResolvedPathname, and appending a query makes it a
+		// plain string. resolve() takes no query of its own.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(`${resolve('/admin/ai-chats')}${qs ? `?${qs}` : ''}`);
 	}
 
 	function goToPage(p: number) {
 		const params = new SvelteURLSearchParams($page.url.searchParams);
 		params.set('page', String(p));
+		// The path IS resolved; the rule only accepts a bare `resolve()` call or an
+		// expression typed ResolvedPathname, and appending a query makes it a
+		// plain string. resolve() takes no query of its own.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(`${resolve('/admin/ai-chats')}?${params.toString()}`);
 	}
 

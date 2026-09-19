@@ -58,7 +58,7 @@ Two things worth knowing:
 | ---------------- | --------------------- | ----------------- |
 | `svelte-check`   | `ci/check.sh`         | 31 errors         |
 | `scripts/` types | `ci/check-scripts.sh` | 23 errors         |
-| eslint           | `ci/check-lint.sh`    | 590 errors        |
+| eslint           | `ci/check-lint.sh`    | 585 errors        |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
 The three counts are ratchets: they may only ever go **down**, and each script
@@ -112,7 +112,7 @@ It fails open when the dev stack is down, and `git push --no-verify` skips it.
 
 What remains is two rules and a handful of deliberate exceptions:
 `@typescript-eslint/no-explicit-any` (~476, and 465 of those are test mocks —
-app code is down to 11) and `svelte/no-navigation-without-resolve` (~86).
+app code is down to 11) and `svelte/no-navigation-without-resolve` (~81).
 Everything else has been worked down. Five rules are worth reading rather than
 counting:
 
@@ -126,8 +126,9 @@ counting:
   targets a form action chose. The rule cannot see that any of those are fine,
   and it has no per-helper allowlist — only coarse `ignoreLinks` / `ignoreGoto`
   booleans — so silencing them means ~85 disable comments across 50 files, which
-  is worse code than the errors. **Before adding to this count, check you are not
-  in one of those buckets.**
+  is worse code than the errors. Five query-carrying `goto()` calls do carry a
+  disable each, with the reason on the line above. **Before adding to this
+  count, check you are not in one of those buckets.**
 
   Two things worth knowing when you do migrate one. A route id carries its layout
   group (`/(app)/jobs/[id]`, not `/jobs/[id]`), though a plain pathname is
