@@ -313,7 +313,9 @@
 				{/if}
 			</div>
 			<a
-				href={`/admin/job-platforms/${data.platform.id}/discover`}
+				href={resolve('/(app)/admin/job-platforms/[id]/search-form-probe', {
+					id: String(data.platform.id)
+				})}
 				class="shrink-0 rounded bg-[var(--dash-primary)] px-4 py-2 text-sm whitespace-nowrap text-white hover:bg-[var(--dash-primary-hover)]"
 				>Open discovery</a
 			>

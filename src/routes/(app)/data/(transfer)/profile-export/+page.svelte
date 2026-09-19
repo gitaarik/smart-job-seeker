@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -274,7 +275,7 @@
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 				{#each exports as exp (exp.id)}
 					<a
-						href="/data/profile-export/download?id={exp.id}"
+						href="{resolve('/(app)/data/(transfer)/profile-export/download')}?id={exp.id}"
 						download
 						class="block rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] p-4 transition-colors hover:border-[var(--dash-primary)]"
 					>

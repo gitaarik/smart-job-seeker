@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faEnvelope,
@@ -63,7 +64,7 @@
 		for (const [k, v] of Object.entries(params)) {
 			if (v) parts.push(`${k}=${v}`);
 		}
-		return `/admin/inbox${parts.length ? '?' + parts.join('&') : ''}`;
+		return `${resolve('/admin/inbox')}${parts.length ? '?' + parts.join('&') : ''}`;
 	}
 
 	function toggleExpand(id: number) {

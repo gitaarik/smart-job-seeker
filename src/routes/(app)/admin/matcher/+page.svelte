@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChartBar, faCircle } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
@@ -163,7 +164,10 @@
 				{#each profiles as profile (profile.id)}
 					{@const state = getProfileState(profile.id)}
 					{@const evaluated = profile.matchedCount + profile.noMatchCount}
-					<a href="/admin/matcher/{profile.id}" class="block no-underline">
+					<a
+						href={resolve('/(app)/admin/matcher/[profileId]', { profileId: String(profile.id) })}
+						class="block no-underline"
+					>
 						<Card
 							padding="responsive"
 							class="cursor-pointer transition-colors hover:border-[var(--dash-primary)]/50"

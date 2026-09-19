@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCommentDots,
@@ -190,7 +191,9 @@
 									{#each entry.user_feedback_files as fileRecord (fileRecord.id)}
 										{#if fileRecord.file}
 											<a
-												href="/api/feedback/{entry.id}/files?fileId={fileRecord.file.id}"
+												href="{resolve('/api/feedback/[id]/files', {
+													id: String(entry.id)
+												})}?fileId={fileRecord.file.id}"
 												class="flex items-center gap-1.5 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)]"
 											>
 												<FontAwesomeIcon icon={faDownload} class="h-3 w-3" />

@@ -108,7 +108,7 @@
 	<div class="flex flex-wrap gap-2">
 		{#each statusTabs as tab (tab.value)}
 			<a
-				href="/admin/feedback{tab.value ? `?status=${tab.value}` : ''}{categoryFilter
+				href="{resolve('/admin/feedback')}{tab.value ? `?status=${tab.value}` : ''}{categoryFilter
 					? `${tab.value ? '&' : '?'}category=${categoryFilter}`
 					: ''}"
 				class="rounded-lg border px-3 py-1.5 text-sm transition-colors {statusFilter === tab.value
@@ -124,7 +124,7 @@
 	<!-- Category filter -->
 	<div class="flex flex-wrap gap-1.5">
 		<a
-			href="/admin/feedback{statusFilter ? `?status=${statusFilter}` : ''}"
+			href="{resolve('/admin/feedback')}{statusFilter ? `?status=${statusFilter}` : ''}"
 			class="rounded-full border px-2 py-0.5 text-xs transition-colors {!categoryFilter
 				? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
 				: 'border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-text-muted)]'}"
@@ -132,7 +132,9 @@
 		>
 		{#each Object.entries(categoryLabels) as [value, label] (value)}
 			<a
-				href="/admin/feedback?{statusFilter ? `status=${statusFilter}&` : ''}category={value}"
+				href="{resolve('/admin/feedback')}?{statusFilter
+					? `status=${statusFilter}&`
+					: ''}category={value}"
 				class="rounded-full border px-2 py-0.5 text-xs transition-colors {categoryFilter === value
 					? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
 					: 'border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-text-muted)]'}"

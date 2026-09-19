@@ -117,7 +117,9 @@
 	<header class="space-y-1">
 		{#if data.platform}
 			<a
-				href="/admin/job-platforms/{data.platform.id}/discover"
+				href={resolve('/(app)/admin/job-platforms/[id]/search-form-probe', {
+					id: String(data.platform.id)
+				})}
 				class="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)]"
 				>← {data.platform.name} discovery</a
 			>

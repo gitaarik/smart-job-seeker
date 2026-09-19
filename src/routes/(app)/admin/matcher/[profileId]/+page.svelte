@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { onMount, onDestroy } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -249,7 +250,7 @@
 							<span>
 								Processing:
 								<a
-									href="/jobs/{state.currentJobId}"
+									href={resolve('/(app)/jobs/[id]', { id: String(state.currentJobId) })}
 									class="text-[var(--dash-primary)] hover:underline"
 								>
 									{state.currentJobTitle || `Job #${state.currentJobId}`}
@@ -291,7 +292,7 @@
 									/>
 									<div class="min-w-0">
 										<a
-											href="/jobs/{err.jobId}"
+											href={resolve('/(app)/jobs/[id]', { id: String(err.jobId) })}
 											class="text-sm font-medium text-[var(--dash-primary)] hover:underline"
 										>
 											{err.jobTitle}

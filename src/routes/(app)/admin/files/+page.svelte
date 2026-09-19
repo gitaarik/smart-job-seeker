@@ -71,7 +71,7 @@
 	}
 
 	function buildUrl(params: Record<string, string>): string {
-		const base = '/admin/files';
+		const base = resolve('/admin/files');
 		const search = new SvelteURLSearchParams();
 		const merged = { type: typeFilter, usage: usageFilter, page: '1', ...params };
 		for (const [k, v] of Object.entries(merged)) {

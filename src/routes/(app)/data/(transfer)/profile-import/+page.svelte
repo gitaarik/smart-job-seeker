@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import type { ResumeData } from '$lib/server/resume/types';
 	import { page } from '$app/stores';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -281,7 +282,7 @@
 									{#if log.file_id}
 										<div class="flex flex-wrap items-center gap-3">
 											<a
-												href="/api/resume/reparse?logId={log.id}"
+												href="{resolve('/api/resume/reparse')}?logId={log.id}"
 												class="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 hover:underline"
 											>
 												<FontAwesomeIcon icon={faDownload} class="h-3 w-3" />
