@@ -144,6 +144,30 @@ function parseDate(value: string | null | undefined): string | null {
 }
 
 /**
+ * A value on its way to an integer column, or null.
+ *
+ * The three numeric fields in this payload (graduationYear, yearsExperience,
+ * stars) do not arrive as numbers. The diff that produces a `fields` bag runs
+ * every value through `normalize()` in resume-diff.ts, which is
+ * `String(value).trim()`, so the modify paths handed a string to a column
+ * declared `integer()`. Postgres coerced "2015" and threw 22P02 on anything
+ * else — and because one apply writes a whole profile, a single unparseable
+ * year failed the entire import with a driver error naming no field.
+ *
+ * A value that is not a number is stored as null rather than aborting: the
+ * column is nullable, the applicant saw the value in the diff they approved,
+ * and losing one year beats losing the import. `parseInt` and not `Number` so
+ * that a range like "2015-2016" keeps its first year, which is the one shape
+ * that actually turns up in CVs.
+ */
+function intOrNull(value: unknown): number | null {
+	if (value === null || value === undefined || value === '') return null;
+	if (typeof value === 'number') return Number.isFinite(value) ? Math.trunc(value) : null;
+	const parsed = parseInt(String(value).trim(), 10);
+	return Number.isFinite(parsed) ? parsed : null;
+}
+
+/**
  * The one education row a match key names, or undefined.
  *
  * The key is `institution|||area` (resume-diff.ts builds it), and both halves
@@ -378,7 +402,7 @@ export async function applyDiffToProfile(
 				url: e.url || null,
 				start_date: parseDate(e.startDate),
 				end_date: parseDate(e.endDate),
-				graduation_year: e.graduationYear ?? null,
+				graduation_year: intOrNull(e.graduationYear),
 				summary: e.summary || null
 			});
 		}
@@ -397,7 +421,7 @@ export async function applyDiffToProfile(
 				updateData.start_date = parseDate(mod.fields.startDate);
 			if (mod.fields.endDate !== undefined) updateData.end_date = parseDate(mod.fields.endDate);
 			if (mod.fields.graduationYear !== undefined)
-				updateData.graduation_year = mod.fields.graduationYear ?? null;
+				updateData.graduation_year = intOrNull(mod.fields.graduationYear);
 			if (mod.fields.summary !== undefined) updateData.summary = mod.fields.summary || null;
 			if (Object.keys(updateData).length > 0) {
 				await dbDirect.update(education).set(updateData).where(eq(education.id, existing.id));
@@ -424,7 +448,7 @@ export async function applyDiffToProfile(
 					category_id: created.id,
 					name: skill.name || null,
 					level: skill.level || null,
-					years_experience: skill.yearsExperience ?? null,
+					years_experience: intOrNull(skill.yearsExperience),
 					status: 'draft',
 					sort: sort++
 				});
@@ -448,7 +472,7 @@ export async function applyDiffToProfile(
 						category_id: existing.id,
 						name: skill.name || null,
 						level: skill.level || null,
-						years_experience: skill.yearsExperience ?? null,
+						years_experience: intOrNull(skill.yearsExperience),
 						status: 'draft',
 						sort: sort++
 					});
@@ -474,7 +498,7 @@ export async function applyDiffToProfile(
 					const updateData: Record<string, unknown> = {};
 					if (skillMod.fields.level !== undefined) updateData.level = skillMod.fields.level || null;
 					if (skillMod.fields.yearsExperience !== undefined)
-						updateData.years_experience = skillMod.fields.yearsExperience ?? null;
+						updateData.years_experience = intOrNull(skillMod.fields.yearsExperience);
 					if (Object.keys(updateData).length > 0) {
 						await dbDirect.update(tech_skills).set(updateData).where(eq(tech_skills.id, skill.id));
 					}
@@ -543,7 +567,7 @@ export async function applyDiffToProfile(
 					summary: p.summary || null,
 					start_date: parseDate(p.startDate),
 					end_date: parseDate(p.endDate),
-					stars: p.stars ?? null
+					stars: intOrNull(p.stars)
 				})
 				.returning();
 			let sort = 1;
@@ -574,7 +598,7 @@ export async function applyDiffToProfile(
 			if (mod.fields.startDate !== undefined)
 				updateData.start_date = parseDate(mod.fields.startDate);
 			if (mod.fields.endDate !== undefined) updateData.end_date = parseDate(mod.fields.endDate);
-			if (mod.fields.stars !== undefined) updateData.stars = mod.fields.stars ?? null;
+			if (mod.fields.stars !== undefined) updateData.stars = intOrNull(mod.fields.stars);
 			if (Object.keys(updateData).length > 0) {
 				await dbDirect
 					.update(side_projects)
