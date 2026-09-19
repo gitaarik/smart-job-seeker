@@ -13,6 +13,7 @@ export {
 	type CompletionResult,
 	generateChatCompletion,
 	generateChatCompletionTracked,
+	isFallbackEligible,
 	isLLMOutputValidationMessage,
 	LLM_OUTPUT_VALIDATION_PATTERNS,
 	LLMAuthenticationError,
@@ -23,6 +24,8 @@ export {
 	type StructuredOutputConfig,
 	type TokenUsage
 } from './langchain.js';
+
+export { extractionFallback, type FallbackTarget, writingFallback } from './fallback.js';
 
 export { llmCache } from './cache.js';
 

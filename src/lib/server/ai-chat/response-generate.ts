@@ -12,7 +12,8 @@ import {
 	generateChatCompletionTracked,
 	LLMAuthenticationError,
 	LLMQuotaExceededError,
-	LLMRateLimitError
+	LLMRateLimitError,
+	writingFallback
 } from '$lib/server/llm';
 import { getErrorMessage } from '$lib/server/utils/errors';
 import { tokensToCost, chargeCredits } from '$lib/server/billing/credits';
@@ -48,17 +49,27 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 				{ role: 'system', content: prompts.systemPrompt },
 				{ role: 'user', content: prompts.userPrompt }
 			],
-			{ provider: writingProvider, model: writingModel }
+			{ provider: writingProvider, model: writingModel, fallback: writingFallback() }
 		);
 
 		const usage = completionResult.usage;
 		const creditsCost = usage ? tokensToCost(usage.totalTokens) : 0;
+
+		// Which pair actually answered — the fallback when the primary failed over.
+		// Written back to the row for the same reason as in createAndGenerateAiChat:
+		// the stamp predates the call, and the cost page prices by these columns.
+		const ranOn = completionResult.fallbackUsed ?? {
+			provider: writingProvider,
+			model: writingModel
+		};
 
 		// Update the response field + token usage
 		await db
 			.update(ai_chats)
 			.set({
 				response: completionResult.content,
+				provider: ranOn.provider,
+				model: ranOn.model,
 				input_tokens: usage?.inputTokens ?? null,
 				output_tokens: usage?.outputTokens ?? null,
 				total_tokens: usage?.totalTokens ?? null,
@@ -80,8 +91,8 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 				});
 				if (profile?.user_id) {
 					const providerCostUsd = estimateProviderCostUsd(
-						writingProvider,
-						writingModel,
+						ranOn.provider,
+						ranOn.model,
 						usage.inputTokens,
 						usage.outputTokens,
 						usage.cachedInputTokens
@@ -94,8 +105,8 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 						{
 							aiChatId,
 							tokens: usage,
-							provider: writingProvider,
-							model: writingModel,
+							provider: ranOn.provider,
+							model: ranOn.model,
 							providerCostUsd
 						}
 					);

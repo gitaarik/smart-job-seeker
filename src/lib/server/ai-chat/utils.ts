@@ -9,10 +9,12 @@ import { config } from '$lib/server/config';
 import { errorTracker } from '$lib/server/monitoring/error-tracker';
 import {
 	type ChatMessage,
+	extractionFallback,
 	generateChatCompletionTracked,
 	isFatalLLMError,
 	isLLMOutputValidationMessage,
 	type TokenUsage,
+	writingFallback,
 	z
 } from '$lib/server/llm';
 import { getSchemaForPrompt } from '$lib/server/schemas/ai-prompt-schemas';
@@ -69,6 +71,45 @@ const WRITING_PROMPT_KEYS = new Set<string>([
 	'followup_prep_sheet',
 	'followup',
 	'followup_letter'
+]);
+
+/**
+ * Non-writing prompts that may fail over to the extraction fallback.
+ *
+ * An ALLOWLIST rather than the denylist the writing split uses, because the two
+ * fail in opposite directions. Forgetting to add a prompt here costs it a
+ * failover, which is where everything started. Forgetting to EXCLUDE one from a
+ * denylist would hand failover to a prompt whose output is a judgement, and the
+ * matcher is exactly that: `score_job_match` writes a number the jobs list
+ * filters on, so a handful of rows scored by a second model would reorder a
+ * ranking against a baseline no golden run has ever seen, invisibly, because a
+ * fallback call looks exactly like a successful one.
+ *
+ * So the judgement prompts are absent on purpose and should stay absent:
+ * score_job_match, extract_matched_skills, tailor_resume_selection,
+ * estimate_salary_expectations, suggest_import_tasks. So is anything whose
+ * output is prose a person reads — that belongs in WRITING_PROMPT_KEYS if it
+ * belongs anywhere.
+ *
+ * What is here is the extractive half: a scrape that has already spent minutes
+ * of browser time, and the parses a user is sitting in front of.
+ */
+export const EXTRACTION_FALLBACK_PROMPT_KEYS = new Set<string>([
+	'detect_job_detail_content',
+	'detect_login_fields',
+	'detect_login_page',
+	'detect_pagination',
+	'extract_job_click_selectors',
+	'extract_job_data',
+	'extract_job_header',
+	'extract_job_links',
+	'extract_jobs_from_search_page',
+	'find_next_page_button',
+	'compact_job_description',
+	'extract_resume_data',
+	'extract_document',
+	'extract_qa_pairs',
+	'propose_project_from_code'
 ]);
 
 /**
@@ -485,6 +526,16 @@ export async function createAndGenerateAiChat(
 		const isWritingPrompt = WRITING_PROMPT_KEYS.has(promptKey);
 		const activeProvider = isWritingPrompt ? config.llmWritingProvider : config.llmProvider;
 		const activeModel = isWritingPrompt ? config.llmWritingModel : config.llmModel;
+		// Failover target by class: writing gets the writing pair, the extractive
+		// prompts get the extraction pair (off by default), and everything left —
+		// the judgements — gets none. See llm/fallback.ts for why the two classes
+		// want different providers, and EXTRACTION_FALLBACK_PROMPT_KEYS above for
+		// why that last group is a silence rather than an omission.
+		const fallback = isWritingPrompt
+			? writingFallback()
+			: EXTRACTION_FALLBACK_PROMPT_KEYS.has(promptKey)
+				? extractionFallback()
+				: undefined;
 
 		// Step 7: Create the ai_chats record with template prompts (not interpolated)
 		const [aiChat] = await db
@@ -536,6 +587,7 @@ export async function createAndGenerateAiChat(
 				structuredOutput,
 				provider: activeProvider,
 				model: activeModel,
+				fallback,
 				// Undefined leaves generateChatCompletionTracked on its own default.
 				temperature: promptTemplate.temperature
 			}
@@ -556,10 +608,28 @@ export async function createAndGenerateAiChat(
 		const usage = completionResult.usage;
 		const creditsCost = usage ? tokensToCost(usage.totalTokens) : 0;
 
+		/**
+		 * What actually generated this, which is not always what the row was
+		 * stamped with at insert time: the stamp is written before the call, and a
+		 * writing call that failed over ran somewhere else.
+		 *
+		 * Re-stamping is not cosmetic. estimateProviderCostUsd prices by
+		 * "provider/model" and returns null on a key it doesn't know, so a row left
+		 * claiming the primary is a row priced against a model that never ran —
+		 * and /admin/costs groups by these two columns, so the error compounds
+		 * rather than showing up as one odd number.
+		 */
+		const ranOn = completionResult.fallbackUsed ?? {
+			provider: activeProvider,
+			model: activeModel
+		};
+
 		await db
 			.update(ai_chats)
 			.set({
 				response: responseToSave,
+				provider: ranOn.provider,
+				model: ranOn.model,
 				input_tokens: usage?.inputTokens ?? null,
 				output_tokens: usage?.outputTokens ?? null,
 				total_tokens: usage?.totalTokens ?? null,
@@ -577,8 +647,8 @@ export async function createAndGenerateAiChat(
 			if (profileForCredits?.user_id) {
 				const { chargeCredits } = await import('$lib/server/billing/credits');
 				const providerCostUsd = estimateProviderCostUsd(
-					activeProvider,
-					activeModel,
+					ranOn.provider,
+					ranOn.model,
 					usage.inputTokens,
 					usage.outputTokens,
 					usage.cachedInputTokens
@@ -592,8 +662,8 @@ export async function createAndGenerateAiChat(
 						aiChatId: aiChat.id,
 						promptKey,
 						tokens: usage,
-						provider: activeProvider,
-						model: activeModel,
+						provider: ranOn.provider,
+						model: ranOn.model,
 						providerCostUsd
 					}
 				);

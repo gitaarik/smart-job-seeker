@@ -3,7 +3,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { instructionsBlock, makeFullPrompt } from '../utils';
+import { EXTRACTION_FALLBACK_PROMPT_KEYS, instructionsBlock, makeFullPrompt } from '../utils';
+import { promptTemplates } from '../prompt-templates';
 
 describe('makeFullPrompt', () => {
 	it('combines system and user prompts', () => {
@@ -70,5 +71,33 @@ describe('instructionsBlock', () => {
 		expect(instructionsBlock('just give me bullets')).toMatch(
 			/does NOT override the output format/
 		);
+	});
+});
+
+describe('EXTRACTION_FALLBACK_PROMPT_KEYS', () => {
+	// Fifteen keys typed by hand against a 50-prompt registry. A typo here is
+	// silent in exactly the way the allowlist was chosen to be: the prompt simply
+	// never gets a fallback, and nothing says so.
+	it('names only prompts that exist', () => {
+		const unknown = [...EXTRACTION_FALLBACK_PROMPT_KEYS].filter((k) => !(k in promptTemplates));
+		expect(unknown).toEqual([]);
+	});
+
+	/**
+	 * The invariant the allowlist exists to hold. `score_job_match` writes the
+	 * number the jobs list filters on, so a few rows scored by a second model
+	 * would reorder a ranking against a baseline no golden run has seen, and a
+	 * fallback call is indistinguishable from a successful one. The others are
+	 * judgements for the same reason: what they return is an opinion, not a
+	 * reading of the page.
+	 */
+	it.each([
+		'score_job_match',
+		'extract_matched_skills',
+		'tailor_resume_selection',
+		'estimate_salary_expectations',
+		'suggest_import_tasks'
+	])('never hands %s a second model', (key) => {
+		expect(EXTRACTION_FALLBACK_PROMPT_KEYS.has(key)).toBe(false);
 	});
 });

@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { getEnv } from '$lib/tools/get-env';
 import { llmCache } from './cache.js';
 import { isRetryableError, withRetry } from '$lib/server/utils/retry';
+import { errorTracker } from '$lib/server/monitoring/error-tracker';
 import { config } from '$lib/server/config';
 
 /**
@@ -99,6 +100,56 @@ export const LLM_OUTPUT_VALIDATION_PATTERNS = [
 export function isLLMOutputValidationMessage(message: string): boolean {
 	const lower = message.toLowerCase();
 	return LLM_OUTPUT_VALIDATION_PATTERNS.some((p) => lower.includes(p));
+}
+
+/**
+ * Provider-down phrasings that carry no `status` we can read.
+ *
+ * The human-readable forms rather than the bare numbers: "503" as a substring
+ * also matches a token count, and the errors worth catching here all spell the
+ * condition out. Anything that does arrive with a numeric status is already
+ * covered by `isRetryableError`'s 5xx branch.
+ */
+const FALLBACK_ELIGIBLE_MESSAGE_PATTERNS = [
+	'service unavailable',
+	'temporarily unavailable',
+	'overloaded',
+	'internal server error',
+	'bad gateway'
+] as const;
+
+/**
+ * Whether a failed call is worth re-trying on a DIFFERENT provider.
+ *
+ * The exclusions are the point. A bad key and an empty balance are the two
+ * classes where failing loudly is the correct behaviour: they are configuration
+ * faults, they do not clear on their own, and a fallback converts a five-minute
+ * fix into a silent migration of the workload (and the bill) onto the other
+ * provider. Measured on dev over seven months: 288 auth and 256 quota failures,
+ * against 3 calls that failed because a provider was actually overloaded. The
+ * failover most people picture insures against the 3; the danger is what it does
+ * to the 544.
+ *
+ * Rate limits ARE eligible, including the long-window ones `isRetryableError`
+ * declines to sit out: a second provider is exactly the right answer to "this
+ * one's quota window is exhausted for the next hour".
+ *
+ * Output-validation failures are eligible as a last resort. Three attempts on
+ * one model have already failed by the time this is consulted, so the schema is
+ * either unsatisfiable for that model or the sampling is unlucky, and a
+ * different model resolves both readings.
+ */
+export function isFallbackEligible(error: unknown): boolean {
+	if (error instanceof LLMAuthenticationError || error instanceof LLMQuotaExceededError) {
+		return false;
+	}
+	if (error instanceof LLMRateLimitError || error instanceof LLMOutputValidationError) {
+		return true;
+	}
+	if (!(error instanceof Error)) return false;
+	if (isRetryableError(error)) return true;
+	const lower = error.message.toLowerCase();
+	return FALLBACK_ELIGIBLE_MESSAGE_PATTERNS.some((p) => lower.includes(p));
 }
 
 /**
@@ -271,6 +322,22 @@ export interface ChatCompletionOptions {
 	structuredOutput?: StructuredOutputConfig;
 	/** Override the LLM provider for this call (defaults to config.llmProvider). */
 	provider?: string;
+	/**
+	 * Second provider/model, tried ONCE if the primary exhausts its retries with
+	 * a failure a different provider could survive (see `isFallbackEligible`).
+	 *
+	 * Deliberately opt-in per call rather than global. Failing over is only right
+	 * where a different model's output is interchangeable with the primary's:
+	 * user-facing writing, which a person reads and can regenerate. It is wrong
+	 * for the matcher (two models produce scores that are not comparable, and the
+	 * jobs list filters on score) and wrong for embeddings (a different provider
+	 * is a different vector space). So the policy lives with the caller that
+	 * knows which of those it is, not here.
+	 *
+	 * The result carries `fallbackUsed` when this ran. Any caller that records
+	 * provider/model must read it.
+	 */
+	fallback?: { provider: string; model: string };
 }
 
 /**
@@ -392,6 +459,20 @@ function createLangChainModel(
 					model
 				);
 			}
+			// NOTE — no reasoning cap here, and gpt-oss-120b is served on this
+			// provider too. The Groq branch above pins `reasoningEffort: 'low'`
+			// because a reasoning model's thoughts are charged against the
+			// completion budget, and on a small-budget JSON call they can eat all of
+			// it and return `json_validate_failed` with an empty body. Cerebras is
+			// the one other provider on the JSON-mode path, so it is the natural
+			// extraction fallback, and it would meet that trap uncapped.
+			//
+			// Not fixed rather than fixed blind: `@langchain/cerebras` exposes no
+			// reasoning option, and the account behind SJS_LLM_API_KEY_CEREBRAS
+			// answers "payment required", so whether the API accepts an
+			// OpenAI-style `reasoning_effort` passthrough could not be probed
+			// (2026-09-19). Settle that before pointing extraction here; the
+			// passthrough shape to copy is the `response_format` cast further down.
 			return new ChatCerebras({
 				apiKey,
 				model,
@@ -414,7 +495,14 @@ function createLangChainModel(
  * Generate a cache key from messages and options
  */
 function generateCacheKey(messages: ChatMessage[], options: ChatCompletionOptions): string {
-	return JSON.stringify({ messages, options });
+	// `fallback` is excluded: it says what to do when the call FAILS, not what was
+	// asked for. Including it would split the cache between callers that pass one
+	// and callers that don't, and invalidate every entry written before it
+	// existed. Dropping it leaves the key byte-identical for every existing
+	// caller, because the remaining keys keep their insertion order.
+	const cacheable = { ...options };
+	delete cacheable.fallback;
+	return JSON.stringify({ messages, options: cacheable });
 }
 
 /**
@@ -474,6 +562,17 @@ export interface TokenUsage {
 export interface CompletionResult {
 	content: string;
 	usage: TokenUsage | null;
+	/**
+	 * Present only when `options.fallback` produced this result.
+	 *
+	 * Callers that record which model ran MUST read it, because they recorded the
+	 * primary before the call: `ai_chats` is stamped with provider/model at insert
+	 * time, and `estimateProviderCostUsd` prices by "provider/model" and returns
+	 * null on a key it doesn't know. Leaving the stamp alone would price a call
+	 * against a model that never ran — the same silent-null failure that left 178
+	 * gemini-2.5-pro charges unpriced.
+	 */
+	fallbackUsed?: { provider: string; model: string };
 }
 
 /** Extract token usage from a LangChain AIMessage response */
@@ -859,6 +958,25 @@ async function generateWithLangChain(
 }
 
 /**
+ * The fallback to use, or undefined when there isn't a usable one: unset, or
+ * pointing at the pair that just failed.
+ *
+ * Falling back to yourself is a fourth attempt wearing a disguise. It would
+ * double the cost of every hard failure and change nothing about the outcome,
+ * which is why the identical-pair case is dropped here rather than left to each
+ * caller to remember.
+ */
+function usableFallback(
+	fallback: ChatCompletionOptions['fallback'],
+	primaryProvider: string,
+	primaryModel: string
+): { provider: string; model: string } | undefined {
+	if (!fallback?.provider || !fallback.model) return undefined;
+	if (fallback.provider === primaryProvider && fallback.model === primaryModel) return undefined;
+	return fallback;
+}
+
+/**
  * Generate chat completion with token usage tracking.
  * Returns both the content and token usage for credit billing.
  */
@@ -882,27 +1000,80 @@ export async function generateChatCompletionTracked(
 		return { content: cachedResponse, usage: null };
 	}
 
+	const attempt = (activeProvider: string | undefined, activeModel: string) =>
+		generateWithLangChain(
+			messages,
+			activeModel,
+			maxTokens,
+			temperature,
+			structuredOutput,
+			activeProvider
+		);
+
 	// Make completion request with retry logic
-	const result = await withRetry(
-		async () => {
-			return await generateWithLangChain(
-				messages,
-				model,
-				maxTokens,
-				temperature,
-				structuredOutput,
-				provider
-			);
-		},
-		{
+	let result: CompletionResult;
+	try {
+		result = await withRetry(() => attempt(provider, model), {
 			maxAttempts: config.retryMaxAttempts,
 			initialDelay: config.retryInitialDelay,
 			maxDelay: config.retryMaxDelay,
 			shouldRetry: isRetryableError
-		}
-	);
+		});
+	} catch (primaryError) {
+		const fallback = usableFallback(options.fallback, provider || config.llmProvider, model);
+		if (!fallback || !isFallbackEligible(primaryError)) throw primaryError;
 
-	// Cache the raw content
+		/**
+		 * The primary's failed attempts are not free, and they are not recorded
+		 * anywhere: a provider bills a failed generation like a successful one, but
+		 * `ai_chats` holds one row per call with one provider/model on it, and what
+		 * that row ends up holding is whatever ANSWERED. So a call that failed over
+		 * under-reports by whatever the primary burned. Bounded by how rare a
+		 * failover is, and the alternative — a second row for a call the user made
+		 * once — would corrupt every count that groups by prompt. The log line is
+		 * where that spend is visible.
+		 */
+		errorTracker.logWarning('LLM primary failed; trying the fallback provider', {
+			operation: 'generateChatCompletionTracked',
+			metadata: {
+				primary: `${provider || config.llmProvider}/${model}`,
+				fallback: `${fallback.provider}/${fallback.model}`,
+				error: primaryError instanceof Error ? primaryError.message : String(primaryError)
+			}
+		});
+
+		try {
+			/**
+			 * ONE attempt, not another `withRetry` budget.
+			 *
+			 * The primary has already spent three attempts and up to a 60s
+			 * provider-supplied wait getting here. A second full budget would turn a
+			 * slow failure into a much slower one on the only path this is enabled
+			 * for — user-facing writing, where someone is watching a spinner. If the
+			 * fallback is also rate-limited, both providers are saturated and waiting
+			 * longer is not the answer.
+			 */
+			result = { ...(await attempt(fallback.provider, fallback.model)), fallbackUsed: fallback };
+		} catch (fallbackError) {
+			// The primary's error is the proximate cause and names the fault worth
+			// fixing, so it is what the caller sees. The fallback's is logged rather
+			// than thrown: a fallback that is itself misconfigured must not present
+			// as the reason the primary failed.
+			errorTracker.logError(
+				'LLM fallback failed too',
+				fallbackError instanceof Error ? fallbackError : new Error(String(fallbackError)),
+				{
+					operation: 'generateChatCompletionTracked',
+					metadata: { fallback: `${fallback.provider}/${fallback.model}` }
+				}
+			);
+			throw primaryError;
+		}
+	}
+
+	// Cache the raw content. Keyed on the model that was ASKED for, including
+	// when the fallback answered: the next identical request asks for the primary
+	// again, and a valid answer to that request is what the cache holds.
 	await llmCache.set(cacheKey, result.content, model, config.llmCacheTTL);
 
 	return result;

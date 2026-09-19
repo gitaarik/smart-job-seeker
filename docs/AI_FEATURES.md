@@ -65,6 +65,45 @@ high-quality AI responses:
 The provider can be configured per deployment. Responses are cached to reduce
 latency and API costs.
 
+#### Failover, and where it deliberately stops
+
+User-facing writing (cover letters, application answers, STAR stories, prep
+sheets, the assistant chat) is the one path that will retry on a _second_
+provider. When the writing provider exhausts its retries with a rate limit, a
+provider-side outage, or an output it could not make valid, the call is tried
+once more on `SJS_LLM_WRITING_FALLBACK_PROVIDER` — which defaults to the app
+provider, the one preview and production already write on. Set it to `none` to
+turn failover off.
+
+Two things it will not do:
+
+- **It does not fail over on an authentication or quota/balance error.** Those
+  are configuration faults that do not clear on their own, and quietly moving
+  the workload to a second provider hides the fault while spending money. They
+  are also, by a wide margin, the failures that actually happen: measured over
+  seven months of development traffic, 288 authentication and 256 quota
+  failures against 3 calls that failed because a provider was overloaded.
+- **It never applies to a judgement.** Match scores from two different models
+  are not comparable and the job list filters on score; the same goes for
+  matched skills, résumé tailoring, salary estimates and import suggestions.
+  Embeddings are excluded for a harder reason still: two providers are not the
+  same vector space. These degrade in their own ways instead — the matcher
+  pauses a profile when its provider is unavailable, and semantic matching
+  falls back to exact matching when embeddings are off.
+
+Extraction and scraping have a **second, separate** fallback,
+`SJS_LLM_FALLBACK_PROVIDER`, for the prompts that read a page rather than judge
+one: the scrape helpers, job extraction, résumé and document parsing. It is
+**off unless set**, because the only provider that can serve those prompts
+without a schema error is Cerebras (everything else converts the Zod schema to
+JSON Schema, where `extract_job_data`'s salary coercion throws), and that
+account is not funded. The plumbing is in place; enabling it is one variable
+plus a `PROVIDER_COSTS` row for the target.
+
+A failover is recorded, not silent: the `ai_chats` row is re-stamped with the
+provider and model that actually answered, so it shows up in the cost
+breakdown.
+
 ### Privacy and Data Usage
 
 Your privacy is important:

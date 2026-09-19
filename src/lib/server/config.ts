@@ -75,6 +75,16 @@ export interface AppConfig {
 	// app provider/model.
 	llmWritingModel: string;
 	llmWritingProvider: string;
+	// Second provider/model tried once when a WRITING call fails for a reason a
+	// different provider could survive. Empty provider = no failover, which is
+	// also what an unusable target (no API key, or the writing pair itself)
+	// resolves to. Writing only, on purpose — see ChatCompletionOptions.fallback.
+	llmWritingFallbackProvider: string;
+	llmWritingFallbackModel: string;
+	// The same for extraction and scraping calls, and OFF unless configured —
+	// the compatible target is unfunded. See llm/fallback.ts.
+	llmFallbackProvider: string;
+	llmFallbackModel: string;
 	groqApiKey: string;
 	geminiApiKey: string;
 	openaiApiKey: string;
@@ -212,6 +222,96 @@ function loadConfig(): AppConfig {
 	const preferredWritingProvider = geminiApiKey ? 'gemini' : llmProvider;
 	const llmTranslateProvider = getEnv('SJS_LLM_TRANSLATE_PROVIDER', '') || preferredWritingProvider;
 	const llmWritingProvider = getEnv('SJS_LLM_WRITING_PROVIDER', '') || preferredWritingProvider;
+	const llmWritingModel =
+		getEnv('SJS_LLM_WRITING_MODEL', '') ||
+		(llmWritingProvider === 'gemini' ? 'gemini-2.5-pro' : getModelForProvider(llmWritingProvider));
+
+	const PROVIDER_KEY_ENV: Record<string, string> = {
+		groq: 'SJS_LLM_API_KEY_GROQ',
+		gemini: 'SJS_LLM_API_KEY_GEMINI',
+		openai: 'SJS_LLM_API_KEY_OPENAI',
+		deepseek: 'SJS_LLM_API_KEY_DEEPSEEK',
+		cerebras: 'SJS_LLM_API_KEY_CEREBRAS'
+	};
+	const hasApiKeyFor = (provider: string): boolean => {
+		const envVar = PROVIDER_KEY_ENV[provider];
+		return !!envVar && !!getEnv(envVar, '');
+	};
+
+	/**
+	 * Runtime failover, for user-facing WRITING and nothing else.
+	 *
+	 * Why only writing: a person is waiting on the answer, reads it, and can
+	 * regenerate it, so a different model's prose is an acceptable substitute.
+	 * Nothing else in the app has that property. Matcher scores from two models
+	 * are not comparable and the jobs list filters on score; embeddings from two
+	 * providers are not even in the same vector space. Those degrade correctly
+	 * already (the matcher's provider-unavailable pause, isEmbeddingConfigured).
+	 *
+	 * Why the app provider is the default target: preview and production set no
+	 * SJS_LLM_WRITING_PROVIDER at all, so they already write on it. The fallback
+	 * is therefore a model this project ships writing on rather than an untried
+	 * one that first runs during an incident — which matters because llm:smoke
+	 * and the golden sets only ever validate the CONFIGURED pair.
+	 *
+	 * gpt-oss-120b is the shallower writer of the two and a 131k window against
+	 * gemini-2.5-pro's 1M, so the app provider is the available answer rather
+	 * than the good one. `SJS_LLM_WRITING_FALLBACK_PROVIDER=openai` is the
+	 * one-variable upgrade, and it is deliberately NOT the default: probed
+	 * 2026-09-19, that account has no credits, and a default pointing at it
+	 * would replace a fallback that works with one that cannot.
+	 *
+	 * Disabled (empty provider) when the target has no API key, or resolves to
+	 * the writing pair itself. Same lesson as preferredWritingProvider above and
+	 * the embedding provider below: a default pointing at a provider with no
+	 * quota turns a quiet degrade into a hard failure. `none` disables it
+	 * explicitly. Read with `||` rather than `??`, so `${VAR:-}` from Compose is
+	 * safe.
+	 */
+	const writingFallbackChoice =
+		getEnv('SJS_LLM_WRITING_FALLBACK_PROVIDER', '') ||
+		(llmWritingProvider === llmProvider ? 'none' : llmProvider);
+	const writingFallbackWanted = writingFallbackChoice === 'none' ? '' : writingFallbackChoice;
+	const llmWritingFallbackProvider = hasApiKeyFor(writingFallbackWanted)
+		? writingFallbackWanted
+		: '';
+	const llmWritingFallbackModel = llmWritingFallbackProvider
+		? getEnv('SJS_LLM_WRITING_FALLBACK_MODEL', '') ||
+			getModelForProvider(llmWritingFallbackProvider)
+		: '';
+
+	/**
+	 * Extraction / scraping failover. OFF unless `SJS_LLM_FALLBACK_PROVIDER`
+	 * names a target, which is the opposite of the writing default above, for
+	 * two independent reasons.
+	 *
+	 * **Structural:** only `groq` and `cerebras` take the JSON-mode path in
+	 * generateWithLangChain. Any other target sends `extract_job_data` through
+	 * withStructuredOutput, where its salary `.transform()`s throw. So the set of
+	 * providers that can serve extraction today has exactly one member that is
+	 * not the app provider itself.
+	 *
+	 * **Practical:** that one member is not funded. Probed 2026-09-19 against the
+	 * live APIs with the keys in `.env`: cerebras answers "payment required",
+	 * deepseek "api key is invalid", openai "no credits remaining". Only groq and
+	 * gemini work. `hasApiKeyFor` cannot see any of that — a key is a string, not
+	 * a balance — so a default here would enable a fallback that spends a round
+	 * trip to reach the error it started with.
+	 *
+	 * Set it explicitly once a second provider is funded, and give the target a
+	 * PROVIDER_COSTS row first (both copies) or its calls price as null.
+	 */
+	const extractionFallbackChoice = getEnv('SJS_LLM_FALLBACK_PROVIDER', '');
+	const llmFallbackProvider =
+		extractionFallbackChoice &&
+		extractionFallbackChoice !== 'none' &&
+		extractionFallbackChoice !== llmProvider &&
+		hasApiKeyFor(extractionFallbackChoice)
+			? extractionFallbackChoice
+			: '';
+	const llmFallbackModel = llmFallbackProvider
+		? getEnv('SJS_LLM_FALLBACK_MODEL', '') || getModelForProvider(llmFallbackProvider)
+		: '';
 	// Default to gemini: it is the provider this project actually pays for
 	// (SJS_LLM_WRITING_PROVIDER / SJS_LLM_TRANSLATE_PROVIDER), and Groq — the
 	// app default, which has no embeddings API at all. Defaulting to openai meant
@@ -265,11 +365,11 @@ function loadConfig(): AppConfig {
 					? 'gemini-2.5-pro'
 					: getModelForProvider(llmTranslateProvider)),
 		llmWritingProvider,
-		llmWritingModel:
-			getEnv('SJS_LLM_WRITING_MODEL', '') ||
-			(llmWritingProvider === 'gemini'
-				? 'gemini-2.5-pro'
-				: getModelForProvider(llmWritingProvider)),
+		llmWritingModel,
+		llmWritingFallbackProvider,
+		llmWritingFallbackModel,
+		llmFallbackProvider,
+		llmFallbackModel,
 		groqApiKey: getEnv('SJS_LLM_API_KEY_GROQ', ''),
 		geminiApiKey,
 		openaiApiKey: getEnv('SJS_LLM_API_KEY_OPENAI', ''),
