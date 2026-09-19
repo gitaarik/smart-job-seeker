@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import Spinner from '$lib/components/Spinner.svelte';
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -31,7 +32,7 @@
 					{data.error}
 				</p>
 				<a
-					href="/login"
+					href={resolve('/login')}
 					class="mt-6 inline-block font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 				>
 					Go to login

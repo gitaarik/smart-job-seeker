@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
 
@@ -21,7 +22,7 @@
 		<p class="text-sm text-[var(--dash-text-muted)]">
 			Recent platform-discovery activity across all platforms. To start a new run, open the platform
 			on
-			<a href="/admin/job-platforms" class="underline">Job Platforms</a>
+			<a href={resolve('/admin/job-platforms')} class="underline">Job Platforms</a>
 			and click "New discovery".
 		</p>
 	</header>

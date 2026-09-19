@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowRight,
@@ -176,7 +177,7 @@
 	</p>
 	<p class="mb-4 text-xs text-[var(--dash-text-muted)]">
 		New here? See <a
-			href="/guide/how-it-works"
+			href={resolve('/guide/[slug]', { slug: 'how-it-works' })}
 			target="_blank"
 			rel="noopener"
 			class="text-[var(--dash-primary)] hover:underline">how Smart Job Seeker works</a

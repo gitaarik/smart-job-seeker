@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { invalidateAll } from '$app/navigation';
@@ -508,7 +509,7 @@
 		Connect a device to import jobs from your own IP address. Use the desktop app on your computer
 		or a self-hosted Docker container on a NAS or server.
 		<a
-			href="/guide/devices"
+			href={resolve('/guide/[slug]', { slug: 'devices' })}
 			target="_blank"
 			rel="noopener"
 			class="text-[var(--dash-primary)] hover:underline">How devices &amp; sharing work →</a
@@ -1371,7 +1372,7 @@ volumes:
 					{#if sharingContacts.length === 0 && sharingExisting.length === 0}
 						<p class="mb-4 text-sm text-[var(--dash-text-secondary)]">
 							No contacts yet — invite someone with a link below, or <a
-								href="/contacts"
+								href={resolve('/contacts')}
 								class="text-[var(--dash-primary)] hover:underline">add a contact</a
 							> to share directly.
 						</p>

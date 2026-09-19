@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faChevronDown, faPlus, faUser } from '@fortawesome/free-solid-svg-icons';
@@ -17,7 +18,7 @@
 
 	function selectProfile(profile: ProfileSummary) {
 		dropdown.close();
-		goto(`/home?profile=${profile.id}`);
+		goto(`${resolve('/home')}?profile=${profile.id}`);
 	}
 </script>
 
@@ -66,7 +67,7 @@
 
 		<div class="mt-2 border-t border-[var(--dash-border)] pt-2">
 			<a
-				href="/profile/create"
+				href={resolve('/profile/create')}
 				onclick={() => dropdown.close()}
 				class="flex w-full items-center gap-2 px-3 py-2 text-left text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 			>

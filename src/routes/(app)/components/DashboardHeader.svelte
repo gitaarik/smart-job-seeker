@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { navigating } from '$app/stores';
+	import { resolve } from '$app/paths';
 	import ProfileSwitcher from './ProfileSwitcher.svelte';
 	import UserMenu from './UserMenu.svelte';
 	import NotificationBell from './NotificationBell.svelte';
@@ -29,7 +30,11 @@
 >
 	<div class="flex items-center py-2">
 		<!-- Logo area — matches sidebar width on desktop -->
-		<a href="/home" onclick={handleLogoClick} class="flex shrink-0 items-center gap-3 px-4 lg:w-60">
+		<a
+			href={resolve('/home')}
+			onclick={handleLogoClick}
+			class="flex shrink-0 items-center gap-3 px-4 lg:w-60"
+		>
 			<svg
 				class="h-7 w-7 text-[var(--dash-chrome-text)]"
 				viewBox="0 0 40 40"

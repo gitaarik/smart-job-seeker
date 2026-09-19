@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -188,7 +189,7 @@
 <div class="max-w-3xl space-y-6 pb-8">
 	<div>
 		<a
-			href="/applications/active"
+			href={resolve('/applications/active')}
 			class="mb-2 inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-3 w-3" />
@@ -258,7 +259,7 @@
 			</button>
 			<div class="flex items-center gap-2">
 				<a
-					href="/applications/active"
+					href={resolve('/applications/active')}
 					class="rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 				>
 					Cancel
@@ -396,7 +397,7 @@
 				</button>
 				<div class="flex items-center gap-2">
 					<a
-						href="/applications/active"
+						href={resolve('/applications/active')}
 						class="rounded-md border border-[var(--dash-border)] px-3 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 					>
 						Cancel

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
+	import { asset } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { getAllIcons } from '$lib/data/job-icons';
 	import CategoryPill from '$lib/components/CategoryPill.svelte';
@@ -634,12 +635,12 @@
 			<h3 class="mb-2 text-sm font-medium text-[var(--dash-text)]">SVG Assets</h3>
 			<div class="flex flex-wrap gap-4 text-xs text-[var(--dash-text-secondary)]">
 				<a
-					href="/brand/logo-indigo.svg"
+					href={asset('/brand/logo-indigo.svg')}
 					target="_blank"
 					class="text-[var(--dash-primary)] hover:underline">/brand/logo-indigo.svg</a
 				>
 				<a
-					href="/brand/logo-white.svg"
+					href={asset('/brand/logo-white.svg')}
 					target="_blank"
 					class="text-[var(--dash-primary)] hover:underline">/brand/logo-white.svg</a
 				>

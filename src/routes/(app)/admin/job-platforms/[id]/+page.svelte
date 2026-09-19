@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { PLATFORM_STATUSES, PLATFORM_TYPES, withCurrent } from '$lib/job-platforms/taxonomy';
 	import { invalidateAll } from '$app/navigation';
@@ -83,7 +84,7 @@
 <div class="space-y-6">
 	<div class="flex items-center gap-3">
 		<a
-			href="/admin/job-platforms"
+			href={resolve('/admin/job-platforms')}
 			class="text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />

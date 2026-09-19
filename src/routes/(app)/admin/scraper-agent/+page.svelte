@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -91,7 +92,7 @@
 			});
 			if (response.ok) {
 				const result = await response.json();
-				goto(`/admin/scraper-agent/${result.id}`);
+				goto(resolve('/(app)/admin/scraper-agent/[id]', { id: String(result.id) }));
 			} else {
 				const text = await response.text();
 				try {

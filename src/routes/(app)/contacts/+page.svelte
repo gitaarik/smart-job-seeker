@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -291,7 +292,7 @@
 										<span class="text-xs text-[var(--dash-text-muted)]">Shared:</span>
 										{#each devices as device (device.id)}
 											<a
-												href="/jobs/import/devices"
+												href={resolve('/jobs/import/devices')}
 												class="inline-flex items-center gap-1 rounded-full bg-[var(--dash-primary)]/10 px-2 py-0.5 text-xs text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary)]/20"
 												title="Manage on the Devices page"
 											>

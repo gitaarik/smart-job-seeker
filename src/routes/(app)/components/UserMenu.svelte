@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { resolve } from '$app/paths';
 	import {
 		faAddressBook,
 		faBook,
@@ -51,7 +52,7 @@
 		<ThemeSwitcher variant="inline" />
 
 		<a
-			href="/contacts"
+			href={resolve('/contacts')}
 			class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 		>
 			<FontAwesomeIcon icon={faAddressBook} class="h-4 w-4" />
@@ -59,7 +60,7 @@
 		</a>
 
 		<a
-			href="/guide"
+			href={resolve('/guide')}
 			target="_blank"
 			rel="noopener"
 			class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
@@ -69,7 +70,7 @@
 		</a>
 
 		<a
-			href="/feedback"
+			href={resolve('/feedback')}
 			class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 		>
 			<FontAwesomeIcon icon={faCommentDots} class="h-4 w-4" />
@@ -77,7 +78,7 @@
 		</a>
 
 		<a
-			href="/settings"
+			href={resolve('/settings')}
 			class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 		>
 			<FontAwesomeIcon icon={faCog} class="h-4 w-4" />
@@ -85,7 +86,7 @@
 		</a>
 
 		<a
-			href="/logout"
+			href={resolve('/logout')}
 			class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-error)] transition-colors hover:bg-[var(--dash-bg)]"
 		>
 			<FontAwesomeIcon icon={faSignOutAlt} class="h-4 w-4" />

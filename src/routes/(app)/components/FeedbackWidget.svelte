@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCommentDots,
@@ -149,7 +150,7 @@
 					<p class="mt-1 text-xs text-[var(--dash-text-muted)]">We'll look into it.</p>
 					<div class="mt-4 flex items-center justify-center gap-3">
 						<a
-							href="/feedback"
+							href={resolve('/feedback')}
 							onclick={close}
 							class="rounded-lg px-4 py-1.5 text-sm text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary)]/10"
 						>

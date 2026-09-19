@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowLeft, faGraduationCap, faTrash } from '@fortawesome/free-solid-svg-icons';
@@ -132,7 +133,7 @@
 	<!-- Header -->
 	<div class="flex items-center gap-4">
 		<a
-			href="/profile/education"
+			href={resolve('/profile/education')}
 			class="flex items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />

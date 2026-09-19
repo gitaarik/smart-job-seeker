@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import Spinner from '$lib/components/Spinner.svelte';
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -30,7 +31,7 @@
 				<h2 class="mt-6 text-3xl font-extrabold text-[var(--dash-text)]">Invalid Invitation</h2>
 				<p class="mt-4 text-[var(--dash-text-secondary)]">{data.error}</p>
 				<a
-					href="/login"
+					href={resolve('/login')}
 					class="mt-6 inline-block font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 				>
 					Go to login
@@ -47,7 +48,7 @@
 				</p>
 				<p class="mt-2 text-center text-sm">
 					<a
-						href="/guide/how-it-works"
+						href={resolve('/guide/[slug]', { slug: 'how-it-works' })}
 						target="_blank"
 						rel="noopener"
 						class="text-[var(--dash-primary)] hover:underline"

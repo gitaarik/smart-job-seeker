@@ -10,6 +10,7 @@
 	 * edited here.
 	 */
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -1060,7 +1061,7 @@
 							Device connected
 						{:else}
 							No device connected — <a
-								href="/jobs/import/devices"
+								href={resolve('/jobs/import/devices')}
 								class="underline hover:text-amber-700">Setup guide</a
 							>
 						{/if}
@@ -1353,7 +1354,7 @@
 										>{userTimezone.split('/').pop()?.replace(/_/g, ' ')}</span
 									>
 									<a
-										href="/settings#timezone"
+										href="{resolve('/settings')}#timezone"
 										class="text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
 										title="Change timezone"
 									>
@@ -1361,7 +1362,7 @@
 									</a>
 								{:else}
 									<a
-										href="/settings#timezone"
+										href="{resolve('/settings')}#timezone"
 										class="text-xs text-[var(--dash-text-muted)] underline hover:text-[var(--dash-primary)]"
 										>Set timezone</a
 									>

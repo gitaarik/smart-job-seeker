@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -92,7 +93,7 @@
 	<!-- Header with back link -->
 	<div>
 		<a
-			href="/profile/resume"
+			href={resolve('/profile/resume')}
 			class="flex items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />
@@ -219,7 +220,7 @@
 					</h3>
 					<p class="mb-3 text-xs text-[var(--dash-text-secondary)]">
 						For trackable links with view limits and expiration, use <a
-							href="/profile/share"
+							href={resolve('/profile/share')}
 							class="text-[var(--dash-primary)] hover:underline">Share Links</a
 						>.
 					</p>
@@ -410,7 +411,9 @@
 						</div>
 						<div class="flex flex-wrap gap-2">
 							{#each tagUsage.skills as item (item.id)}
-								<a href="/profile/skills" class="dash-link-ext">{item.name || 'Untitled'}</a>
+								<a href={resolve('/profile/skills')} class="dash-link-ext"
+									>{item.name || 'Untitled'}</a
+								>
 							{/each}
 						</div>
 					</div>

@@ -42,6 +42,7 @@
 	 * which is the very next screen after this form succeeds.
 	 */
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCloud, faLaptop } from '@fortawesome/free-solid-svg-icons';
@@ -210,7 +211,7 @@
 			submitting = false;
 			if (result.type === 'success' && result.data && 'taskId' in result.data) {
 				track('search_task_created');
-				await goto(`/jobs/import/tasks/${result.data.taskId}`);
+				await goto(resolve('/(app)/jobs/import/tasks/[id]', { id: String(result.data.taskId) }));
 				return;
 			}
 			// Anything else is a failure, and a custom `enhance` callback that

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -252,7 +253,7 @@
 	<!-- Header with Back Button -->
 	<div>
 		<a
-			href="/jobs"
+			href={resolve('/jobs')}
 			onclick={(e) => {
 				if (document.referrer && new URL(document.referrer).origin === location.origin) {
 					e.preventDefault();

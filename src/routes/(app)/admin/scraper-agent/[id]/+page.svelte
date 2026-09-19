@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -151,7 +152,7 @@
 
 	function retrySession() {
 		if (!session) return;
-		goto(`/admin/scraper-agent?retry=${data.sessionId}`);
+		goto(`${resolve('/admin/scraper-agent')}?retry=${data.sessionId}`);
 	}
 
 	// Derived: latest stage for header display

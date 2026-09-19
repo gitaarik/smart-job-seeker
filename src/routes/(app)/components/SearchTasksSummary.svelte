@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { resolve } from '$app/paths';
 	import { getSearchTaskStatusIcon } from '$lib/search-task-status';
 	import { searchTaskDisplayName } from '$lib/format';
 	import Card from './Card.svelte';
@@ -59,7 +60,10 @@
 <div>
 	<div class="mb-3 flex items-center justify-between">
 		<h3 class="text-base font-semibold text-[var(--dash-text)]">Import Tasks</h3>
-		<a href="/jobs/import/tasks" class="text-sm text-[var(--dash-primary)] hover:underline">
+		<a
+			href={resolve('/jobs/import/tasks')}
+			class="text-sm text-[var(--dash-primary)] hover:underline"
+		>
 			{searchTasks.totalCount === 0 ? 'Add' : 'Manage'}
 		</a>
 	</div>
@@ -111,7 +115,10 @@
 					</div>
 				{/each}
 				{#if searchTasks.totalCount > 4}
-					<a href="/jobs/import/tasks" class="text-xs text-[var(--dash-primary)] hover:underline">
+					<a
+						href={resolve('/jobs/import/tasks')}
+						class="text-xs text-[var(--dash-primary)] hover:underline"
+					>
 						+{searchTasks.totalCount - 4} more
 					</a>
 				{/if}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	let { data }: { data: PageData } = $props();
 </script>
 
@@ -26,7 +27,7 @@
 			{/if}
 		</p>
 		<a
-			href="/login"
+			href={resolve('/login')}
 			class="inline-block font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
 		>
 			Go to login

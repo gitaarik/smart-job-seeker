@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import SearchFormProbeRunCard from '../../components/SearchFormProbeRunCard.svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -122,7 +123,7 @@
 			>
 		{:else}
 			<a
-				href="/admin/job-platforms/search-form-probe"
+				href={resolve('/admin/job-platforms/search-form-probe')}
 				class="text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)]"
 				>← All discovery runs</a
 			>

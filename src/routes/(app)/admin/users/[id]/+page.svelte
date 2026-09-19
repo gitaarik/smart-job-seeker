@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { SvelteDate } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -87,7 +88,7 @@
 	<!-- Header with back link -->
 	<div class="flex items-center gap-3">
 		<a
-			href="/admin/users"
+			href={resolve('/admin/users')}
 			class="p-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-text)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />

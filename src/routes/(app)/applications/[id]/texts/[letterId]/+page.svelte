@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -78,9 +79,15 @@
 		}
 
 		// Navigate to the real URL so subsequent actions and page data work
-		await goto(`/applications/${appId}/texts/${result.letterId}`, {
-			replaceState: true
-		});
+		await goto(
+			resolve('/(app)/applications/[id]/texts/[letterId]', {
+				id: String(appId),
+				letterId: String(result.letterId)
+			}),
+			{
+				replaceState: true
+			}
+		);
 		return result.letterId;
 	}
 

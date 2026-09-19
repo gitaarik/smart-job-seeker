@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { armOn } from '$lib/actions/arm-on';
 	import { page } from '$app/stores';
 	import { SvelteDate } from 'svelte/reactivity';
@@ -312,7 +313,7 @@
 		>
 			<p class="text-sm" style="color: var(--dash-warning);">
 				No email address available. Add one in
-				<a href="/profile/edit" class="font-medium underline">Profile Data</a>
+				<a href={resolve('/profile/edit')} class="font-medium underline">Profile Data</a>
 				to enable email digests.
 			</p>
 		</div>
@@ -402,7 +403,7 @@
 									label="{data.emailDigest.email_address} (profile)"
 								/>
 								<a
-									href="/profile/edit#email_address"
+									href="{resolve('/profile/edit')}#email_address"
 									class="text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
 									title="Edit profile email"
 								>
@@ -417,7 +418,7 @@
 									label="{data.emailDigest.account_email} (account)"
 								/>
 								<a
-									href="/settings#account-email"
+									href="{resolve('/settings')}#account-email"
 									class="text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
 									title="Edit account email"
 								>
@@ -430,7 +431,7 @@
 				{#if digestSendTo === 'profile' && !hasEmail}
 					<p class="mt-1.5 text-xs" style="color: var(--dash-warning);">
 						This profile doesn't have an email address. Add one in
-						<a href="/profile/edit" class="underline">Profile Data</a>
+						<a href={resolve('/profile/edit')} class="underline">Profile Data</a>
 						or switch to account email.
 					</p>
 				{/if}

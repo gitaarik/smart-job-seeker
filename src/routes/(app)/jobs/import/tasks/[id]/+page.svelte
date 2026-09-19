@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { armOn } from '$lib/actions/arm-on';
 	import { onDestroy, onMount } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
@@ -139,7 +140,7 @@
 				method: 'DELETE'
 			});
 			if (res.ok) {
-				goto('/jobs/import/tasks');
+				goto(resolve('/jobs/import/tasks'));
 			}
 		} finally {
 			isDeleting = false;
@@ -2133,7 +2134,7 @@
 	<!-- Header -->
 	<div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
 		<a
-			href="/jobs/import/tasks"
+			href={resolve('/jobs/import/tasks')}
 			class="flex shrink-0 items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />
@@ -2502,7 +2503,7 @@
 						{/if}
 					{:else}
 						No device connected — <a
-							href="/jobs/import/devices"
+							href={resolve('/jobs/import/devices')}
 							class="underline hover:text-amber-700">Setup guide</a
 						>
 					{/if}

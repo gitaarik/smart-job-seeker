@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -174,7 +175,7 @@
 
 <div class="mx-auto max-w-3xl space-y-6">
 	<a
-		href="/applications/interview"
+		href={resolve('/applications/interview')}
 		class="inline-flex items-center gap-2 text-sm text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-text)]"
 	>
 		<FontAwesomeIcon icon={faArrowLeft} class="h-3.5 w-3.5" /> Back to interview prep

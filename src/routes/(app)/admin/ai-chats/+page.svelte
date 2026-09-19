@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -53,13 +54,13 @@
 		const params = new SvelteURLSearchParams();
 		if (type) params.set('type', type);
 		const qs = params.toString();
-		goto(`/admin/ai-chats${qs ? `?${qs}` : ''}`);
+		goto(`${resolve('/admin/ai-chats')}${qs ? `?${qs}` : ''}`);
 	}
 
 	function goToPage(p: number) {
 		const params = new SvelteURLSearchParams($page.url.searchParams);
 		params.set('page', String(p));
-		goto(`/admin/ai-chats?${params.toString()}`);
+		goto(`${resolve('/admin/ai-chats')}?${params.toString()}`);
 	}
 
 	function formatDate(date: Date | string | null) {

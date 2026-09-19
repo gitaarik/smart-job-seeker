@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { authClient } from '$lib/auth-client';
+	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import type { PageData } from './$types';
@@ -43,7 +44,7 @@
 			}
 
 			// Redirect to the intended page or dashboard
-			goto(data.redirectTo || '/home');
+			goto(data.redirectTo || resolve('/home'));
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'An error occurred';
 		} finally {
@@ -105,7 +106,7 @@
 			<div class="flex items-center justify-between">
 				<div class="text-sm">
 					<a
-						href="/forgot-password"
+						href={resolve('/forgot-password')}
 						class="font-medium text-[var(--dash-primary)] hover:opacity-80"
 					>
 						Forgot your password?

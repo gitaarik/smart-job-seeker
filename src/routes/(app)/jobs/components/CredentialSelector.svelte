@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { resolve } from '$app/paths';
 	import {
 		faCheck,
 		faChevronDown,
@@ -699,7 +700,7 @@
 					<div class="py-6 text-center">
 						<p class="text-sm text-[var(--dash-text-secondary)]">
 							No contacts yet. <a
-								href="/contacts"
+								href={resolve('/contacts')}
 								class="text-[var(--dash-primary)] hover:underline">Add contacts</a
 							> to share logins.
 						</p>

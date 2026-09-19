@@ -446,7 +446,7 @@
 				{/if}
 
 				<a
-					href="/applications/new"
+					href={resolve('/applications/new')}
 					class="flex items-center gap-2 rounded-md bg-[var(--dash-primary)] px-2.5 py-1.5 text-xs text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
 				>
 					<FontAwesomeIcon icon={faPlus} class="h-3 w-3" />

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { resolve } from '$app/paths';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { sidebarState, overlayState } from './sidebar-state.svelte';
 	import { feedbackState } from './feedback-state.svelte';
@@ -516,7 +517,7 @@
 		<!-- Plan & Usage -->
 		<div class="mt-3 border-t border-[var(--dash-border)] pt-3">
 			<a
-				href="/billing"
+				href={resolve('/billing')}
 				onclick={closeMobileMenu}
 				class="
           flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm transition-colors {$page.url.pathname.startsWith(
@@ -545,7 +546,7 @@
 						)
 					: null}
 				<a
-					href="/billing"
+					href={resolve('/billing')}
 					onclick={closeMobileMenu}
 					class="group mx-2.5 mt-1.5 block"
 					title="{usedPct}% used{daysLeft != null ? ` · resets in ${daysLeft}d` : ''}"

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -369,7 +370,7 @@
 			</div>
 			{#if suggestedRates}
 				<a
-					href="/applications/salary"
+					href={resolve('/applications/salary')}
 					class="flex items-center gap-1 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
 				>
 					Salary settings
@@ -548,8 +549,9 @@
 						</div>
 						<p class="mb-3 text-[var(--dash-text-secondary)]">
 							No salary expectation set yet.
-							<a href="/applications/salary" class="text-[var(--dash-primary)] hover:underline"
-								>Configure your salary settings</a
+							<a
+								href={resolve('/applications/salary')}
+								class="text-[var(--dash-primary)] hover:underline">Configure your salary settings</a
 							> to get calculated rates, or set it manually.
 						</p>
 						<button

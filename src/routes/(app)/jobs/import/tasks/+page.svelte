@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { deserialize } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -321,7 +322,7 @@
 				// flow) instead of appending to the list below — that "new task at
 				// the bottom" jump is disorienting after the suggestion card they
 				// were just looking at.
-				await goto(`/jobs/import/tasks/${result.data.taskId}`);
+				await goto(resolve('/(app)/jobs/import/tasks/[id]', { id: String(result.data.taskId) }));
 				return;
 			}
 			suggestionsError =
@@ -425,7 +426,7 @@
 						{/if}
 					{:else}
 						No device connected — <a
-							href="/jobs/import/devices"
+							href={resolve('/jobs/import/devices')}
 							class="underline hover:text-[var(--dash-primary)]">Setup guide</a
 						>
 					{/if}

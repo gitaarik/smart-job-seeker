@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { normalizeQuestion } from '$lib/utils/normalize-question';
@@ -263,7 +264,12 @@
 				// "Add & open editor" jumps straight to the dedicated page so the user
 				// can iterate on the answer there rather than on this list.
 				if (wantOpen && qid) {
-					goto(`/applications/${app.id}/texts/questions/${qid}`);
+					goto(
+						resolve('/(app)/applications/[id]/texts/questions/[qid]', {
+							id: String(app.id),
+							qid: String(qid)
+						})
+					);
 				}
 			} else {
 				openAfterAdd = false;

@@ -116,7 +116,11 @@
 			});
 			const result = await response.json();
 			if (response.ok && result.sheet?.id) {
-				await goto(`/applications/interview/cheatsheets/${result.sheet.id}`);
+				await goto(
+					resolve('/(app)/applications/interview/cheatsheets/[id]', {
+						id: String(result.sheet.id)
+					})
+				);
 			} else {
 				errorMessage = result.message || result.error || "Couldn't start a cheat sheet";
 			}
@@ -163,7 +167,11 @@
 			});
 			const result = await response.json();
 			if (response.ok && result.story?.id) {
-				await goto(`/applications/interview/stories/${result.story.id}`);
+				await goto(
+					resolve('/(app)/applications/interview/stories/[id]', {
+						id: String(result.story.id)
+					})
+				);
 			} else {
 				errorMessage = result.message || result.error || "Couldn't start a story";
 			}

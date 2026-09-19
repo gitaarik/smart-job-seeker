@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { LayoutData } from './$types';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -57,7 +58,7 @@
 		<!-- Back link + title -->
 		<div class="mb-4">
 			<a
-				href="/applications/active"
+				href={resolve('/applications/active')}
 				class="inline-flex items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 			>
 				<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />
