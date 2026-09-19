@@ -526,7 +526,7 @@
 				     interactive element inside the first. -->
 				<div class="relative">
 					<a
-						href="/applications/{app.id}"
+						href={resolve('/(app)/applications/[id]', { id: String(app.id) })}
 						data-app-id={app.id}
 						class="block overflow-hidden rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] transition-all hover:border-[var(--dash-primary)] hover:ring-2 hover:ring-[var(--dash-primary)]/20 {snoozed
 							? 'opacity-60'

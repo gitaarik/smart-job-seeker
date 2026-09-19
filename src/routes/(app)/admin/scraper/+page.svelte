@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -387,7 +388,9 @@
 										>{run.status}</span
 									>
 									<a
-										href="/jobs/import/tasks/{run.searchTask.id}"
+										href={resolve('/(app)/jobs/import/tasks/[id]', {
+											id: String(run.searchTask.id)
+										})}
 										class="truncate text-sm font-medium text-[var(--dash-text)] hover:text-[var(--dash-primary)]"
 									>
 										{run.searchTask.name}

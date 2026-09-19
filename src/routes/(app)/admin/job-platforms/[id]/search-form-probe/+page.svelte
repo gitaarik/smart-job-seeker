@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { invalidateAll } from '$app/navigation';
@@ -255,7 +256,7 @@
 <div class="mx-auto max-w-4xl space-y-6 p-6">
 	<div class="space-y-1">
 		<a
-			href="/admin/job-platforms/{data.platform.id}"
+			href={resolve('/(app)/admin/job-platforms/[id]', { id: String(data.platform.id) })}
 			class="inline-flex items-center gap-1 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-3 w-3" />
@@ -280,8 +281,9 @@
 				<p class="font-medium">Platform has no login page URL.</p>
 				<p class="mt-1">
 					Discovery requires login, so we need to know where the login form is.
-					<a href="/admin/job-platforms/{data.platform.id}" class="font-medium underline"
-						>Set it on the platform</a
+					<a
+						href={resolve('/(app)/admin/job-platforms/[id]', { id: String(data.platform.id) })}
+						class="font-medium underline">Set it on the platform</a
 					>
 					first, then come back here.
 				</p>
@@ -502,7 +504,9 @@
 								/>
 								<p class="mt-3 text-xs text-[var(--dash-text-muted)]">
 									<a
-										href={`/admin/job-platforms/search-form-probe/${run.id}`}
+										href={resolve('/(app)/admin/job-platforms/search-form-probe/[id]', {
+											id: String(run.id)
+										})}
 										class="underline hover:text-[var(--dash-primary)]">Open run page</a
 									>
 									for a permalink to this run.

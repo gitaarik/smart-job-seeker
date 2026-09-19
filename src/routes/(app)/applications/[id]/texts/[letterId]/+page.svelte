@@ -234,7 +234,7 @@
 	<!-- Back link -->
 	<div>
 		<a
-			href="/applications/{appId}/texts"
+			href={resolve('/(app)/applications/[id]/texts', { id: String(appId) })}
 			class="flex items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 		>
 			<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />

@@ -345,8 +345,11 @@
 						</div>
 						<div class="flex flex-wrap gap-2">
 							{#each tagUsage.workExperiences as item (item.id)}
-								<a href="/profile/work-experience/{item.id}" class="dash-link-ext"
-									>{item.name || 'Untitled'}</a
+								<a
+									href={resolve('/(app)/profile/(data)/work-experience/[id]', {
+										id: String(item.id)
+									})}
+									class="dash-link-ext">{item.name || 'Untitled'}</a
 								>
 							{/each}
 						</div>
@@ -367,8 +370,9 @@
 						</div>
 						<div class="flex flex-wrap gap-2">
 							{#each tagUsage.education as item (item.id)}
-								<a href="/profile/education/{item.id}" class="dash-link-ext"
-									>{item.name || 'Untitled'}</a
+								<a
+									href={resolve('/(app)/profile/(data)/education/[id]', { id: String(item.id) })}
+									class="dash-link-ext">{item.name || 'Untitled'}</a
 								>
 							{/each}
 						</div>
@@ -389,8 +393,11 @@
 						</div>
 						<div class="flex flex-wrap gap-2">
 							{#each tagUsage.sideProjects as item (item.id)}
-								<a href="/profile/side-projects/{item.id}" class="dash-link-ext"
-									>{item.name || 'Untitled'}</a
+								<a
+									href={resolve('/(app)/profile/(data)/side-projects/[id]', {
+										id: String(item.id)
+									})}
+									class="dash-link-ext">{item.name || 'Untitled'}</a
 								>
 							{/each}
 						</div>
@@ -433,8 +440,11 @@
 						</div>
 						<div class="flex flex-wrap gap-2">
 							{#each tagUsage.achievements as item (item.id)}
-								<a href="/profile/work-experience/{item.work_experience_id}" class="dash-link-ext"
-									>{item.name || 'Untitled'}</a
+								<a
+									href={resolve('/(app)/profile/(data)/work-experience/[id]', {
+										id: String(item.work_experience_id)
+									})}
+									class="dash-link-ext">{item.name || 'Untitled'}</a
 								>
 							{/each}
 						</div>

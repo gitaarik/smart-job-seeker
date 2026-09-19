@@ -546,7 +546,7 @@
 					</h2>
 				{/if}
 				<a
-					href="/jobs/import/tasks/{search.id}"
+					href={resolve('/(app)/jobs/import/tasks/[id]', { id: String(search.id) })}
 					class="block rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] p-3 transition-colors hover:bg-[var(--dash-bg)] sm:p-4"
 				>
 					<div class="flex items-start gap-3">

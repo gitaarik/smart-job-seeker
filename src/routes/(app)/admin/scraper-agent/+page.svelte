@@ -356,7 +356,10 @@
 		{/if}
 		<div class="space-y-2">
 			{#each sessions as session (session.id)}
-				<a href="/admin/scraper-agent/{session.id}" class="block">
+				<a
+					href={resolve('/(app)/admin/scraper-agent/[id]', { id: String(session.id) })}
+					class="block"
+				>
 					<Card
 						padding="responsive"
 						class="transition-colors hover:border-[var(--dash-primary)]/40"

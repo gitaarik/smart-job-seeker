@@ -34,7 +34,9 @@
 			<div class="overflow-hidden rounded-lg border border-[var(--dash-border)]">
 				{#each data.runs as { run, platform_name } (run.id)}
 					<a
-						href={`/admin/job-platforms/search-form-probe/${run.id}`}
+						href={resolve('/(app)/admin/job-platforms/search-form-probe/[id]', {
+							id: String(run.id)
+						})}
 						class="flex items-center justify-between gap-3 border-b border-[var(--dash-border)] px-4 py-3 transition-colors last:border-b-0 hover:bg-[var(--dash-bg)]"
 					>
 						<div class="min-w-0 flex-1">

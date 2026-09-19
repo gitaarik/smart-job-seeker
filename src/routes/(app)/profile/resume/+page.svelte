@@ -530,7 +530,7 @@
 
 					{#snippet headerActions()}
 						<a
-							href="/profile/resume/{version.id}"
+							href={resolve('/(app)/profile/resume/[id]', { id: String(version.id) })}
 							class="cursor-pointer p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 							aria-label="Edit"
 							onclick={(e) => e.stopPropagation()}

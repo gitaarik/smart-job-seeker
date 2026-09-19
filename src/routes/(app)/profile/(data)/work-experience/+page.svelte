@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faBriefcase, faExternalLink, faPencil } from '@fortawesome/free-solid-svg-icons';
@@ -350,7 +351,7 @@
 
 						{#snippet headerActions()}
 							<a
-								href="/profile/work-experience/{exp.id}"
+								href={resolve('/(app)/profile/(data)/work-experience/[id]', { id: String(exp.id) })}
 								class="cursor-pointer p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 								aria-label="Edit"
 								onclick={(e) => e.stopPropagation()}

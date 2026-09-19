@@ -509,7 +509,7 @@
 					class="-mx-6 mt-4 -mb-6 flex items-center border-t border-[var(--dash-border)] px-6 py-3"
 				>
 					<a
-						href="/jobs/{job.id}"
+						href={resolve('/(app)/jobs/[id]', { id: String(job.id) })}
 						class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline"
 					>
 						View Job Details
@@ -584,7 +584,10 @@
 					<div class="flex items-center gap-1.5">
 						<FontAwesomeIcon icon={faEnvelope} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
 						<a
-							href="/applications/{app.id}/texts/{letter.id}"
+							href={resolve('/(app)/applications/[id]/texts/[letterId]', {
+								id: String(app.id),
+								letterId: String(letter.id)
+							})}
 							class="font-medium text-[var(--dash-text)] transition-colors hover:text-[var(--dash-primary)]"
 						>
 							{letterLabel(letter.letter_type, letter.title)}
@@ -604,7 +607,7 @@
 							Application Questions
 						</span>
 						<a
-							href="/applications/{app.id}/texts"
+							href={resolve('/(app)/applications/[id]/texts', { id: String(app.id) })}
 							class="font-medium text-[var(--dash-text)] transition-colors hover:text-[var(--dash-primary)]"
 						>
 							{questionCount}
@@ -620,7 +623,7 @@
 							Documents
 						</span>
 						<a
-							href="/applications/{app.id}/activity"
+							href={resolve('/(app)/applications/[id]/activity', { id: String(app.id) })}
 							class="font-medium text-[var(--dash-text)] transition-colors hover:text-[var(--dash-primary)]"
 						>
 							{fileCount} attached
@@ -637,7 +640,7 @@
 						/>
 						<span class="text-[var(--dash-text-secondary)]">Salary Expectation</span>
 						<a
-							href="/applications/{app.id}/salary"
+							href={resolve('/(app)/applications/[id]/salary', { id: String(app.id) })}
 							class="font-medium text-[var(--dash-text)] transition-colors hover:text-[var(--dash-primary)]"
 						>
 							{formatCurrency(app.salary_expectation, app.salary_currency, app.salary_period)}
@@ -656,13 +659,13 @@
 				class="-mx-6 mt-2 -mb-6 flex flex-wrap items-center gap-4 border-t border-[var(--dash-border)] px-6 py-3"
 			>
 				<a
-					href="/applications/{app.id}/texts"
+					href={resolve('/(app)/applications/[id]/texts', { id: String(app.id) })}
 					class="inline-flex items-center gap-1.5 text-xs whitespace-nowrap text-[var(--dash-primary)] hover:underline"
 				>
 					Write texts <FontAwesomeIcon icon={faArrowRight} class="h-3 w-3" />
 				</a>
 				<a
-					href="/applications/{app.id}/activity"
+					href={resolve('/(app)/applications/[id]/activity', { id: String(app.id) })}
 					class="inline-flex items-center gap-1.5 text-xs whitespace-nowrap text-[var(--dash-primary)] hover:underline"
 				>
 					{fileCount === 0 ? 'Log activity' : 'Open activity'}
@@ -670,7 +673,7 @@
 				</a>
 				{#if !app.salary_expectation}
 					<a
-						href="/applications/{app.id}/salary"
+						href={resolve('/(app)/applications/[id]/salary', { id: String(app.id) })}
 						class="inline-flex items-center gap-1.5 text-xs whitespace-nowrap text-[var(--dash-primary)] hover:underline"
 					>
 						Set salary <FontAwesomeIcon icon={faArrowRight} class="h-3 w-3" />
@@ -899,7 +902,7 @@
 				</div>
 				{#if statusLogCount > 5}
 					<a
-						href="/applications/{app.id}/activity"
+						href={resolve('/(app)/applications/[id]/activity', { id: String(app.id) })}
 						class="flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline"
 					>
 						View all ({statusLogCount})
@@ -966,7 +969,7 @@
 
 			{#if statusLogCount <= 5 && statusLogCount > 0}
 				<a
-					href="/applications/{app.id}/activity"
+					href={resolve('/(app)/applications/[id]/activity', { id: String(app.id) })}
 					class="flex items-center gap-1.5 pt-2 text-xs text-[var(--dash-primary)] hover:underline"
 				>
 					View full timeline

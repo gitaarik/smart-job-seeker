@@ -34,7 +34,7 @@
 				{#each guideSections as section (section.slug)}
 					<li>
 						<a
-							href={`/guide/${section.slug}`}
+							href={resolve('/guide/[slug]', { slug: String(section.slug) })}
 							class="
                 block rounded-lg px-3 py-2 text-sm transition-colors {activeSlug === section.slug
 								? 'bg-[var(--dash-primary-light)] font-medium text-[var(--dash-primary)]'

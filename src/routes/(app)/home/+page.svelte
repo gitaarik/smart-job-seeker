@@ -153,7 +153,7 @@
 			<div class="space-y-2">
 				{#each activeApplications as app (app.id)}
 					{@const job = app.job}
-					<a href="/applications/{app.id}" class="block">
+					<a href={resolve('/(app)/applications/[id]', { id: String(app.id) })} class="block">
 						<Card class="transition-colors hover:bg-[var(--dash-bg)]">
 							<div class="flex items-center gap-3 p-3">
 								<div

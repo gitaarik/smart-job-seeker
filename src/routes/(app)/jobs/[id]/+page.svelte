@@ -565,7 +565,9 @@
 					<div class="ml-auto">
 						{#if data.existingApplication}
 							<a
-								href="/applications/{data.existingApplication.id}"
+								href={resolve('/(app)/applications/[id]', {
+									id: String(data.existingApplication.id)
+								})}
 								class="flex items-center gap-2 rounded-lg border border-[var(--dash-success)] bg-[var(--dash-success-light)] px-4 py-2 whitespace-nowrap text-[var(--dash-success)] transition-colors hover:bg-[var(--dash-success)] hover:text-white"
 							>
 								<FontAwesomeIcon icon={faPaperPlane} class="h-4 w-4" />

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowRight,
@@ -389,7 +390,7 @@
 
 		<!-- Details button -->
 		<a
-			href="/jobs/{job.id}"
+			href={resolve('/(app)/jobs/[id]', { id: String(job.id) })}
 			class="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs whitespace-nowrap text-blue-500 transition-colors hover:border-blue-500/50 hover:bg-blue-500/20"
 		>
 			<span class="sm:hidden">Details</span>

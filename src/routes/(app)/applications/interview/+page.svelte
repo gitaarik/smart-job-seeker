@@ -554,7 +554,9 @@
 						</button>
 
 						<a
-							href="/applications/interview/cheatsheets/{sheet.id}"
+							href={resolve('/(app)/applications/interview/cheatsheets/[id]', {
+								id: String(sheet.id)
+							})}
 							onclick={(e) => e.stopPropagation()}
 							class="absolute top-3 right-10 z-10 cursor-pointer p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 							aria-label="Edit cheat sheet"
@@ -585,7 +587,9 @@
 										<FontAwesomeIcon icon={faTrash} class="h-3 w-3" /> Delete
 									</button>
 									<a
-										href="/applications/interview/cheatsheets/{sheet.id}"
+										href={resolve('/(app)/applications/interview/cheatsheets/[id]', {
+											id: String(sheet.id)
+										})}
 										class="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-[var(--dash-primary)] px-3 py-1.5 text-xs text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary-light)]"
 									>
 										<FontAwesomeIcon icon={faPencil} class="h-3 w-3" /> Edit cheat sheet
@@ -661,7 +665,7 @@
 						</button>
 
 						<a
-							href="/applications/interview/stories/{story.id}"
+							href={resolve('/(app)/applications/interview/stories/[id]', { id: String(story.id) })}
 							onclick={(e) => e.stopPropagation()}
 							class="absolute top-3 right-10 z-10 cursor-pointer p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 							aria-label="Edit story"
@@ -758,7 +762,9 @@
 										<FontAwesomeIcon icon={faTrash} class="h-3 w-3" /> Delete
 									</button>
 									<a
-										href="/applications/interview/stories/{story.id}"
+										href={resolve('/(app)/applications/interview/stories/[id]', {
+											id: String(story.id)
+										})}
 										class="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-[var(--dash-primary)] px-3 py-1.5 text-xs text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary-light)]"
 									>
 										<FontAwesomeIcon icon={faPencil} class="h-3 w-3" /> Edit story

@@ -754,7 +754,10 @@
 								</div>
 								<div class="flex flex-shrink-0 items-center gap-1">
 									<a
-										href="/applications/{app.id}/texts/{item.id}"
+										href={resolve('/(app)/applications/[id]/texts/[letterId]', {
+											id: String(app.id),
+											letterId: String(item.id)
+										})}
 										class="cursor-pointer p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 										aria-label="Edit"
 										onclick={(e) => e.stopPropagation()}
@@ -815,7 +818,10 @@
 							</div>
 							<div class="flex flex-shrink-0 items-center gap-1">
 								<a
-									href="/applications/{app.id}/texts/questions/{item.id}"
+									href={resolve('/(app)/applications/[id]/texts/questions/[qid]', {
+										id: String(app.id),
+										qid: String(item.id)
+									})}
 									onclick={(e) => e.stopPropagation()}
 									class="cursor-pointer p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
 									aria-label="Open answer editor"
@@ -885,7 +891,10 @@
 								{/if}
 								<div class="flex justify-end border-t border-[var(--dash-border)] pt-2">
 									<a
-										href="/applications/{app.id}/texts/questions/{item.id}"
+										href={resolve('/(app)/applications/[id]/texts/questions/[qid]', {
+											id: String(app.id),
+											qid: String(item.id)
+										})}
 										class="flex items-center gap-1.5 rounded-lg bg-[var(--dash-primary)] px-3 py-1.5 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
 									>
 										<FontAwesomeIcon icon={faPencil} class="h-3.5 w-3.5" />

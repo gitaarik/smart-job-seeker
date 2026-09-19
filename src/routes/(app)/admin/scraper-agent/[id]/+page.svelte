@@ -224,7 +224,7 @@
 						{/if}
 					</div>
 					<a
-						href="/jobs/import/tasks/{session.searchTaskId}"
+						href={resolve('/(app)/jobs/import/tasks/[id]', { id: String(session.searchTaskId) })}
 						class="inline-flex items-center gap-1.5 text-sm text-[var(--dash-primary)] hover:underline"
 					>
 						{session.searchTaskName}

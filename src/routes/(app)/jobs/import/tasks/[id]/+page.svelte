@@ -2021,7 +2021,7 @@
 											class="flex items-center gap-4 border-t border-[var(--dash-border)] pt-2 text-xs text-[var(--dash-text-muted)]"
 										>
 											<a
-												href="/jobs/{job.id}"
+												href={resolve('/(app)/jobs/[id]', { id: String(job.id) })}
 												class="flex items-center gap-1 text-[var(--dash-primary)] hover:underline"
 											>
 												<FontAwesomeIcon icon={faEye} class="h-3 w-3" />
@@ -2100,7 +2100,11 @@
 								</span>
 								{#if log.screenshot_path}
 									<a
-										href="/api/import-tasks/{searchTask.id}/runs/{run.id}/screenshots/{log.screenshot_path}"
+										href={resolve('/api/import-tasks/[id]/runs/[runId]/screenshots/[name]', {
+											id: String(searchTask.id),
+											runId: String(run.id),
+											name: String(log.screenshot_path)
+										})}
 										target="_blank"
 										rel="noopener"
 										class="flex-shrink-0"
@@ -3128,7 +3132,14 @@
 												</span>
 												{#if log.screenshot_path}
 													<a
-														href="/api/import-tasks/{searchTask.id}/runs/{featuredRunId}/screenshots/{log.screenshot_path}"
+														href={resolve(
+															'/api/import-tasks/[id]/runs/[runId]/screenshots/[name]',
+															{
+																id: String(searchTask.id),
+																runId: String(featuredRunId),
+																name: String(log.screenshot_path)
+															}
+														)}
 														target="_blank"
 														rel="noopener"
 														class="flex-shrink-0"

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { faUsers } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
@@ -475,7 +476,7 @@
 	{:else}
 		<div class="space-y-3">
 			{#each filteredUsers as user (user.id)}
-				<a href="/admin/users/{user.id}" class="block">
+				<a href={resolve('/(app)/admin/users/[id]', { id: String(user.id) })} class="block">
 					<Card
 						class="relative overflow-hidden transition-all hover:border-[var(--dash-primary)]/30"
 					>
