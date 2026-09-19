@@ -24,6 +24,23 @@ export interface MatcherError {
 	timestamp: string;
 }
 
+/**
+ * Why the matcher is deliberately not working on a profile.
+ *
+ * Without this, a back-off is indistinguishable from a dead worker: the cycle
+ * returns before writing any state, the key expires on its 120s TTL, and the
+ * dashboard shows a profile that simply stopped. The pause is a decision, so
+ * it should read as one.
+ */
+export interface MatcherBackoffState {
+	/** ISO timestamp the pause lifts at. Null while only jobs are benched. */
+	until: string | null;
+	/** The provider failure that caused the pause, as reported. */
+	reason: string | null;
+	/** Jobs currently left out of the batch for failing repeatedly. */
+	benchedJobs: number;
+}
+
 export interface MatcherState {
 	/** Whether the matcher loop is actively running */
 	active: boolean;
@@ -45,6 +62,12 @@ export interface MatcherState {
 	totalFailed: number;
 	/** Recent errors (last 50) */
 	recentErrors: MatcherError[];
+	/**
+	 * Present while the matcher is holding back on this profile. Optional
+	 * rather than required so a state written by a worker from before this
+	 * field existed still parses during a rolling deploy.
+	 */
+	backoff?: MatcherBackoffState | null;
 	/** Timestamp of last update */
 	lastUpdated: string;
 }

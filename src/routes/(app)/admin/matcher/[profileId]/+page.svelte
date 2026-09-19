@@ -31,6 +31,11 @@
 		totalMatched: number;
 		totalFailed: number;
 		recentErrors: MatcherError[];
+		backoff?: {
+			until: string | null;
+			reason: string | null;
+			benchedJobs: number;
+		} | null;
 		lastUpdated: string;
 	}
 
@@ -112,6 +117,27 @@
 	}
 
 	let evaluated = $derived((profile?.matchedCount ?? 0) + (profile?.noMatchCount ?? 0));
+
+	/**
+	 * Paused, as opposed to merely having benched jobs. `backoff` carries both,
+	 * and only one of them stops the profile.
+	 *
+	 * A plain function rather than a `$derived`: the state variable on this page
+	 * is called `state`, and closing over it inside a rune makes svelte2tsx
+	 * resolve the `$state` rune to that binding, which types it `any` and
+	 * reports it as referenced in its own initializer.
+	 */
+	function isPaused(s: MatcherState | null): boolean {
+		const until = s?.backoff?.until;
+		return !!until && new Date(until).getTime() > Date.now();
+	}
+
+	/** "2m", "45s" — how much of the pause is left. */
+	function remaining(until: string | null | undefined): string {
+		if (!until) return '';
+		const secs = Math.max(0, Math.ceil((new Date(until).getTime() - Date.now()) / 1000));
+		return secs >= 60 ? `${Math.ceil(secs / 60)}m` : `${secs}s`;
+	}
 </script>
 
 <div class="space-y-6">
@@ -143,7 +169,11 @@
 			<Card padding="responsive">
 				<div class="mb-3 flex items-center justify-between">
 					<div class="flex items-center gap-2">
-						{#if state?.active && state?.currentJobId}
+						{#if isPaused(state)}
+							<span class="relative flex h-2.5 w-2.5" title="Paused after an AI provider failure">
+								<span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-orange-500"></span>
+							</span>
+						{:else if state?.active && state?.currentJobId}
 							<span class="relative flex h-2.5 w-2.5">
 								<span
 									class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"
@@ -196,11 +226,24 @@
 
 				<!-- Worker state row -->
 				{#if state}
+					{#if isPaused(state)}
+						<p class="mb-2 text-xs text-orange-600 dark:text-orange-400">
+							Paused {remaining(state.backoff?.until)} — AI provider unavailable{state.backoff
+								?.reason
+								? `: ${state.backoff.reason}`
+								: ''}
+						</p>
+					{/if}
 					<div class="flex flex-wrap gap-x-6 gap-y-1 text-xs text-[var(--dash-text-muted)]">
 						<span>Cycles: {state.totalCycles}</span>
 						<span>Session: {state.totalMatched} matched</span>
 						{#if state.totalFailed > 0}
 							<span class="text-[var(--dash-error)]">{state.totalFailed} failed</span>
+						{/if}
+						{#if state.backoff?.benchedJobs}
+							<span title="Failed repeatedly; left out of the batch for an hour">
+								{state.backoff.benchedJobs} benched
+							</span>
 						{/if}
 						{#if state.currentJobId}
 							<span>

@@ -26,6 +26,11 @@
 		totalCycles: number;
 		totalMatched: number;
 		totalFailed: number;
+		backoff?: {
+			until: string | null;
+			reason: string | null;
+			benchedJobs: number;
+		} | null;
 		lastUpdated: string;
 	}
 
@@ -91,6 +96,23 @@
 	);
 	let isProcessingJob = $derived(isProcessingThisProfile && matcherState?.currentJobId != null);
 	let isWaitingForMatcher = $derived(!matcherState?.active && matcherAlive);
+
+	/**
+	 * The matcher is deliberately holding off on this profile after the AI
+	 * provider failed. Worth saying: the page otherwise reads "Waiting for next
+	 * batch..." indefinitely, which is what a stuck worker looks like too.
+	 */
+	let isPaused = $derived.by(() => {
+		const until = matcherState?.backoff?.until;
+		return !!until && new Date(until).getTime() > Date.now();
+	});
+
+	let pauseRemaining = $derived.by(() => {
+		const until = matcherState?.backoff?.until;
+		if (!until) return '';
+		const secs = Math.max(0, Math.ceil((new Date(until).getTime() - Date.now()) / 1000));
+		return secs >= 60 ? `${Math.ceil(secs / 60)} minutes` : `${secs} seconds`;
+	});
 
 	async function loadStatus() {
 		try {
@@ -430,6 +452,14 @@
 								</div>
 							{/if}
 						</div>
+					</div>
+				{:else if isPaused}
+					<!-- Deliberately paused, not stuck. The provider message stays in the
+					     admin view; here it is only worth saying that it will resume. -->
+					<div
+						class="rounded-lg border border-orange-500/20 bg-[var(--dash-bg)] p-3 text-sm text-orange-600 dark:text-orange-400"
+					>
+						Scoring paused — the AI service is temporarily unavailable. Resuming in {pauseRemaining}.
 					</div>
 				{:else}
 					<!-- Idle between cycles -->
