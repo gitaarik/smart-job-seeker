@@ -131,7 +131,14 @@
 	});
 </script>
 
-<div class="mt-1.5">
+<!--
+	Which field this block varies, as an attribute rather than a position. The
+	e2e test used to reach the summary's editor with `.last()`, on the comment
+	that there were four of these and summary was the last; About Me added a
+	fifth below it and the test spent ten days driving the wrong one. A control
+	repeated once per field needs to be addressable by that field.
+-->
+<div class="mt-1.5" data-field-variants={field}>
 	{#if !open && variants.length === 0}
 		<button
 			type="button"

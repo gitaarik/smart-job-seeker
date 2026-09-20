@@ -63,22 +63,47 @@ describe('alternative field wordings', () => {
 			await b.page.goto('/profile/edit');
 			await b.page.waitForLoadState('networkidle');
 
-			// Four of these, one per field; the last is the summary's. That the
-			// control starts collapsed is itself part of the design — an advanced
-			// affordance on a page whose job is the basics.
-			await b.page.getByRole('button', { name: '+ Add an alternative wording' }).last().click();
+			// The summary's block, named rather than counted. This was `.last()`
+			// on the comment that there were four of these and summary was the
+			// last of them; About Me then added a fifth below it, and the test
+			// spent ten days filling one editor and asserting about another —
+			// failing on a timeout that said nothing about which field it was on.
+			// That the control starts collapsed is itself part of the design: an
+			// advanced affordance on a page whose job is the basics.
+			const block = b.page.locator('[data-field-variants="summary"]');
+			await block.getByRole('button', { name: '+ Add an alternative wording' }).click();
 
-			await b.page.getByPlaceholder('Name it — e.g. “Backend-leaning”').fill(LABEL);
+			await block.getByPlaceholder('Name it — e.g. “Backend-leaning”').fill(LABEL);
 			// The value box is seeded from the profile's own summary, so this
-			// replaces rather than appends.
-			await b.page.getByPlaceholder('Write a brief professional summary...').last().fill(WORDING);
-			await b.page
+			// replaces rather than appends. Scoped to the block for the same
+			// reason as the rest: the page's own summary field carries this
+			// placeholder too, and it is not the one being edited here.
+			await block.getByPlaceholder('Write a brief professional summary...').fill(WORDING);
+			await block
 				.getByPlaceholder('When to use it — e.g. “agency and consultancy roles”')
 				.fill(NOTE);
-			await b.page.getByRole('button', { name: 'Save' }).last().click();
+			await block.getByRole('button', { name: 'Save' }).click();
 
 			// Saved means it is listed, not that a request went out.
-			await b.page.getByText(`Use for: ${NOTE}`).waitFor({ state: 'visible', timeout: 15000 });
+			await block.getByText(`Use for: ${NOTE}`).waitFor({ state: 'visible', timeout: 15000 });
+
+			// The wording went into the variant, NOT into the profile. This page
+			// autosaves, so a selector that drifts off the editor writes the
+			// sentinel straight into the applicant's own summary and leaves it
+			// there — which is exactly what happened when `.last()` started
+			// resolving to About Me. Both assertions further down still passed
+			// afterwards for the wrong reason, because a summary containing the
+			// sentinel is indistinguishable from a wording that reached the
+			// document, so the damage read as "the clear is broken" for ten days.
+			// Checked here rather than in `finally`, where it would mask whatever
+			// actually failed.
+			const ownSummary = await b.page
+				.getByPlaceholder('Write a brief professional summary...')
+				.first()
+				.inputValue();
+			expect(ownSummary, 'the profile summary must not have been overwritten').not.toContain(
+				SENTINEL
+			);
 
 			const listed = await api(b.page, '/api/field-variants', 'GET');
 			expect(listed.status).toBe(200);
