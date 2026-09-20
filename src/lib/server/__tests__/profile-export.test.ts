@@ -28,6 +28,7 @@ vi.mock('remove-markdown', () => ({
 
 import { exportProfile } from '../profile/export';
 import { db } from '$lib/server/db';
+import { findFirst, asMock } from './db-mocks';
 
 describe('exportProfile', () => {
 	beforeEach(() => {
@@ -36,7 +37,7 @@ describe('exportProfile', () => {
 
 	it('should export both schema and data atomically', async () => {
 		// Setup for profile check - profile not found
-		(db.query.profiles.findFirst as any).mockResolvedValueOnce(null);
+		findFirst(db.query.profiles).mockResolvedValueOnce(null);
 
 		const result = await exportProfile(1);
 
@@ -48,7 +49,7 @@ describe('exportProfile', () => {
 	});
 
 	it('marks profile-only skills in the AI snapshot rather than dropping them', async () => {
-		(db.query.profiles.findFirst as any)
+		findFirst(db.query.profiles)
 			.mockResolvedValueOnce({ id: 1 }) // existence check
 			.mockResolvedValueOnce({
 				name: 'Alex',
@@ -76,10 +77,10 @@ describe('exportProfile', () => {
 					}
 				]
 			});
-		(db.query.collected_data.findFirst as any).mockResolvedValueOnce(null);
+		findFirst(db.query.collected_data).mockResolvedValueOnce(null);
 
 		const values = vi.fn().mockResolvedValue(undefined);
-		(db.insert as any).mockReturnValue({ values });
+		asMock(db.insert).mockReturnValue({ values });
 
 		const result = await exportProfile(1);
 		expect(result.success).toBe(true);

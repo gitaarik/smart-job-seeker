@@ -62,6 +62,7 @@ vi.mock('$lib/server/db/schema', () => ({
 import { db } from '$lib/server/db';
 import { createFollowupAiChat } from '$lib/server/ai-chat/create-followup';
 import { createApplicationQuestionFollowup } from '../ai-chat/application-question-followup';
+import { findFirst } from './db-mocks';
 
 describe('createApplicationQuestionFollowup', () => {
 	const mockQuestion = {
@@ -87,7 +88,7 @@ describe('createApplicationQuestionFollowup', () => {
 
 	describe('validation', () => {
 		it('should return error if application question not found', async () => {
-			(db.query.application_questions.findFirst as any).mockResolvedValueOnce(null);
+			findFirst(db.query.application_questions).mockResolvedValueOnce(null);
 
 			const result = await createApplicationQuestionFollowup(999, 'Make it more technical');
 
@@ -97,7 +98,7 @@ describe('createApplicationQuestionFollowup', () => {
 		});
 
 		it('should return error if question has no ai_chats', async () => {
-			(db.query.application_questions.findFirst as any).mockResolvedValueOnce({
+			findFirst(db.query.application_questions).mockResolvedValueOnce({
 				id: 200,
 				ai_chat_id: null
 			});
@@ -112,7 +113,7 @@ describe('createApplicationQuestionFollowup', () => {
 
 	describe('successful followup creation', () => {
 		it('should create followup and update question reference', async () => {
-			(db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
+			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
 			const mockCreateFollowup = createFollowupAiChat as any;
 			mockCreateFollowup.mockResolvedValueOnce({
@@ -155,7 +156,7 @@ describe('createApplicationQuestionFollowup', () => {
 		});
 
 		it('should pass includeOriginalContext option to createFollowupAiChat', async () => {
-			(db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
+			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
 			const mockCreateFollowup = createFollowupAiChat as any;
 			mockCreateFollowup.mockResolvedValueOnce({
@@ -183,7 +184,7 @@ describe('createApplicationQuestionFollowup', () => {
 		});
 
 		it('should update both ai_chats and ai_chat_response fields', async () => {
-			(db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
+			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
 			const mockCreateFollowup = createFollowupAiChat as any;
 			mockCreateFollowup.mockResolvedValueOnce({
@@ -205,7 +206,7 @@ describe('createApplicationQuestionFollowup', () => {
 
 	describe('error handling', () => {
 		it('should handle createFollowupAiChat failure', async () => {
-			(db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
+			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
 			const mockCreateFollowup = createFollowupAiChat as any;
 			mockCreateFollowup.mockResolvedValueOnce({
@@ -224,7 +225,7 @@ describe('createApplicationQuestionFollowup', () => {
 		});
 
 		it('should handle createFollowupAiChat returning no aiChat', async () => {
-			(db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
+			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
 			const mockCreateFollowup = createFollowupAiChat as any;
 			mockCreateFollowup.mockResolvedValueOnce({
@@ -242,7 +243,7 @@ describe('createApplicationQuestionFollowup', () => {
 		});
 
 		it('should handle database errors gracefully', async () => {
-			(db.query.application_questions.findFirst as any).mockRejectedValueOnce(
+			findFirst(db.query.application_questions).mockRejectedValueOnce(
 				new Error('Database connection lost')
 			);
 
@@ -254,7 +255,7 @@ describe('createApplicationQuestionFollowup', () => {
 		});
 
 		it('should handle unknown errors', async () => {
-			(db.query.application_questions.findFirst as any).mockRejectedValueOnce('Unexpected error');
+			findFirst(db.query.application_questions).mockRejectedValueOnce('Unexpected error');
 
 			const result = await createApplicationQuestionFollowup(200, 'Refine');
 
@@ -263,7 +264,7 @@ describe('createApplicationQuestionFollowup', () => {
 		});
 
 		it('should handle error during question update', async () => {
-			(db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
+			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
 			const mockCreateFollowup = createFollowupAiChat as any;
 			mockCreateFollowup.mockResolvedValueOnce({
@@ -283,7 +284,7 @@ describe('createApplicationQuestionFollowup', () => {
 
 	describe('return values', () => {
 		it('should return aiChat on success', async () => {
-			(db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
+			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
 			const mockCreateFollowup = createFollowupAiChat as any;
 			mockCreateFollowup.mockResolvedValueOnce({
@@ -300,7 +301,7 @@ describe('createApplicationQuestionFollowup', () => {
 		});
 
 		it('should not return aiChat on failure', async () => {
-			(db.query.application_questions.findFirst as any).mockResolvedValueOnce(null);
+			findFirst(db.query.application_questions).mockResolvedValueOnce(null);
 
 			const result = await createApplicationQuestionFollowup(999, 'Refine');
 
@@ -310,7 +311,7 @@ describe('createApplicationQuestionFollowup', () => {
 
 	describe('edge cases', () => {
 		it('should handle empty followup request', async () => {
-			(db.query.application_questions.findFirst as any).mockResolvedValueOnce(mockQuestion);
+			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
 			const mockCreateFollowup = createFollowupAiChat as any;
 			mockCreateFollowup.mockResolvedValueOnce({
@@ -335,7 +336,7 @@ describe('createApplicationQuestionFollowup', () => {
 		});
 
 		it('should handle question with ai_chats = 0', async () => {
-			(db.query.application_questions.findFirst as any).mockResolvedValueOnce({
+			findFirst(db.query.application_questions).mockResolvedValueOnce({
 				id: 200,
 				ai_chat_id: 0
 			});

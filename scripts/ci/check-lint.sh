@@ -213,7 +213,20 @@ set -euo pipefail
 # the admin feedback page — which is the one worth noting, because that cast is
 # precisely why nobody noticed the page reading three properties the loader
 # never returned. An `any` is not only style debt here.
-BASELINE=585
+# 585 -> 487 on 2026-09-20: the 98 test-file casts that reached a mock method
+# through `as any`. They are now findFirst(db.query.x) / findMany(...) /
+# asMock(...) from src/lib/server/__tests__/db-mocks.ts, which return vitest's
+# `Mock` — the mock API stays in view and everything else stays out.
+#
+# `vi.mocked` is the obvious answer and the wrong one for the drizzle calls: it
+# also checks the resolved value against the real row type, and these fixtures
+# are deliberate partials of a row whose consumer reads three columns. It IS
+# the right answer for createFollowupAiChat, whose result type is small and
+# hand-written, and it immediately found two things the `any` had hidden in
+# ai-chat-followup-history.test.ts: an `aiChat` fixture missing six required
+# fields, so the test asserted against a shape the function cannot return, and
+# five unguarded reads of an options parameter that is optional.
+BASELINE=487
 
 npx svelte-kit sync
 

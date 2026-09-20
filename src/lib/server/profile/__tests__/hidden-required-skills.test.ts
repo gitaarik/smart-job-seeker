@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
@@ -31,13 +31,7 @@ async function getHiddenRequiredSkills(
 	return result;
 }
 import { dbDirect as db } from '$lib/server/db';
-
-/**
- * The mocked `findMany` for one table. Drizzle's own signature is what the
- * module under test sees; here it is a spy, and saying so once beats casting
- * at every call site.
- */
-const findMany = (table: { findMany: unknown }): Mock => table.findMany as Mock;
+import { findMany } from '../../__tests__/db-mocks';
 
 const PROFILE_ONLY = ['!resume', '!cv'];
 

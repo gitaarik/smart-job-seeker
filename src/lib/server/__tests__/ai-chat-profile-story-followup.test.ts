@@ -57,6 +57,7 @@ vi.mock('$lib/server/db/schema', () => ({
 import { db } from '$lib/server/db';
 import { createFollowupAiChat } from '$lib/server/ai-chat/create-followup';
 import { createProfileStoryFollowup } from '../ai-chat/profile-story-followup';
+import { findFirst, findMany } from './db-mocks';
 
 describe('createProfileStoryFollowup', () => {
 	const mockStory = { id: 200, ai_chat_id: 5 };
@@ -74,19 +75,19 @@ describe('createProfileStoryFollowup', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockUpdateWhere.mockResolvedValue({});
-		(db.query.story_versions.findMany as any).mockResolvedValue([]);
+		findMany(db.query.story_versions).mockResolvedValue([]);
 	});
 
 	describe('validation', () => {
 		it('errors if the story is not found', async () => {
-			(db.query.project_stories.findFirst as any).mockResolvedValueOnce(null);
+			findFirst(db.query.project_stories).mockResolvedValueOnce(null);
 			const result = await createProfileStoryFollowup(999, 'Sharpen it');
 			expect(result.success).toBe(false);
 			expect(result.message).toContain('Project story with ID 999 not found');
 		});
 
 		it('errors if the story has no ai_chats yet', async () => {
-			(db.query.project_stories.findFirst as any).mockResolvedValueOnce({
+			findFirst(db.query.project_stories).mockResolvedValueOnce({
 				id: 200,
 				ai_chat_id: null
 			});
@@ -97,7 +98,7 @@ describe('createProfileStoryFollowup', () => {
 		});
 
 		it('treats ai_chat_id = 0 as no thread', async () => {
-			(db.query.project_stories.findFirst as any).mockResolvedValueOnce({
+			findFirst(db.query.project_stories).mockResolvedValueOnce({
 				id: 200,
 				ai_chat_id: 0
 			});
@@ -109,8 +110,8 @@ describe('createProfileStoryFollowup', () => {
 
 	describe('successful followup', () => {
 		it("creates the followup and updates the story's chat pointer", async () => {
-			(db.query.project_stories.findFirst as any).mockResolvedValueOnce(mockStory);
-			(createFollowupAiChat as any).mockResolvedValueOnce({
+			findFirst(db.query.project_stories).mockResolvedValueOnce(mockStory);
+			vi.mocked(createFollowupAiChat).mockResolvedValueOnce({
 				success: true,
 				message: 'created',
 				aiChat: mockCreatedAiChat
@@ -134,8 +135,8 @@ describe('createProfileStoryFollowup', () => {
 		});
 
 		it('passes includeOriginalContext through', async () => {
-			(db.query.project_stories.findFirst as any).mockResolvedValueOnce(mockStory);
-			(createFollowupAiChat as any).mockResolvedValueOnce({
+			findFirst(db.query.project_stories).mockResolvedValueOnce(mockStory);
+			vi.mocked(createFollowupAiChat).mockResolvedValueOnce({
 				success: true,
 				message: 'created',
 				aiChat: mockCreatedAiChat
@@ -153,8 +154,8 @@ describe('createProfileStoryFollowup', () => {
 
 	describe('error handling', () => {
 		it('surfaces a createFollowupAiChat failure and skips the update', async () => {
-			(db.query.project_stories.findFirst as any).mockResolvedValueOnce(mockStory);
-			(createFollowupAiChat as any).mockResolvedValueOnce({
+			findFirst(db.query.project_stories).mockResolvedValueOnce(mockStory);
+			vi.mocked(createFollowupAiChat).mockResolvedValueOnce({
 				success: false,
 				message: 'Parent ai_chats not found'
 			});
@@ -166,7 +167,7 @@ describe('createProfileStoryFollowup', () => {
 		});
 
 		it('handles a database error while fetching the story', async () => {
-			(db.query.project_stories.findFirst as any).mockRejectedValueOnce(
+			findFirst(db.query.project_stories).mockRejectedValueOnce(
 				new Error('Database connection lost')
 			);
 			const result = await createProfileStoryFollowup(200, 'Refine');
@@ -178,8 +179,8 @@ describe('createProfileStoryFollowup', () => {
 
 	describe('edge cases', () => {
 		it('still calls through on an empty request (validation lives downstream)', async () => {
-			(db.query.project_stories.findFirst as any).mockResolvedValueOnce(mockStory);
-			(createFollowupAiChat as any).mockResolvedValueOnce({
+			findFirst(db.query.project_stories).mockResolvedValueOnce(mockStory);
+			vi.mocked(createFollowupAiChat).mockResolvedValueOnce({
 				success: true,
 				message: 'created',
 				aiChat: mockCreatedAiChat

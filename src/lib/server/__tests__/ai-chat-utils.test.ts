@@ -21,6 +21,7 @@ vi.mock('$lib/server/db', () => ({
 }));
 
 import { db } from '$lib/server/db';
+import { findFirst } from './db-mocks';
 
 describe('getInterpolatedPrompts', () => {
 	beforeEach(() => {
@@ -28,7 +29,7 @@ describe('getInterpolatedPrompts', () => {
 	});
 
 	it('should return null if ai_chats not found', async () => {
-		(db.query.ai_chats.findFirst as any).mockResolvedValueOnce(null);
+		findFirst(db.query.ai_chats).mockResolvedValueOnce(null);
 
 		const result = await getInterpolatedPrompts(999);
 
@@ -48,8 +49,8 @@ describe('getInterpolatedPrompts', () => {
 			data: '{"name": "John"}'
 		};
 
-		(db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
-		(db.query.collected_data.findFirst as any).mockResolvedValueOnce(mockCollectedData);
+		findFirst(db.query.ai_chats).mockResolvedValueOnce(mockAiChat);
+		findFirst(db.query.collected_data).mockResolvedValueOnce(mockCollectedData);
 		const result = await getInterpolatedPrompts(1);
 
 		expect(result).toEqual({
@@ -65,8 +66,8 @@ describe('getInterpolatedPrompts', () => {
 			profile_id: 1
 		};
 
-		(db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
-		(db.query.collected_data.findFirst as any).mockResolvedValueOnce(null);
+		findFirst(db.query.ai_chats).mockResolvedValueOnce(mockAiChat);
+		findFirst(db.query.collected_data).mockResolvedValueOnce(null);
 		const result = await getInterpolatedPrompts(1);
 
 		expect(result).toEqual({
@@ -87,8 +88,8 @@ describe('getInterpolatedPrompts', () => {
 			data: null
 		};
 
-		(db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
-		(db.query.collected_data.findFirst as any).mockResolvedValueOnce(mockCollectedData);
+		findFirst(db.query.ai_chats).mockResolvedValueOnce(mockAiChat);
+		findFirst(db.query.collected_data).mockResolvedValueOnce(mockCollectedData);
 		const result = await getInterpolatedPrompts(1);
 
 		expect(result).toEqual({
@@ -100,13 +101,13 @@ describe('getInterpolatedPrompts', () => {
 	it('should call collected_data.findFirst with correct profile ID', async () => {
 		const profileId = 42;
 
-		(db.query.ai_chats.findFirst as any).mockResolvedValueOnce({
+		findFirst(db.query.ai_chats).mockResolvedValueOnce({
 			system_prompt: '${schema}',
 			user_prompt: '${data}',
 			profile_id: profileId
 		});
 
-		(db.query.collected_data.findFirst as any).mockResolvedValueOnce({
+		findFirst(db.query.collected_data).mockResolvedValueOnce({
 			schema: '{}',
 			data: '{}'
 		});
@@ -129,8 +130,8 @@ describe('getInterpolatedPrompts', () => {
 			data: 'DATA_VALUE'
 		};
 
-		(db.query.ai_chats.findFirst as any).mockResolvedValueOnce(mockAiChat);
-		(db.query.collected_data.findFirst as any).mockResolvedValueOnce(mockCollectedData);
+		findFirst(db.query.ai_chats).mockResolvedValueOnce(mockAiChat);
+		findFirst(db.query.collected_data).mockResolvedValueOnce(mockCollectedData);
 		const result = await getInterpolatedPrompts(1);
 
 		expect(result?.systemPrompt).toBe(

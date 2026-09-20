@@ -75,6 +75,7 @@ import { createApplicationLetterFollowup } from '../ai-chat/application-letter-f
 import { createApplicationQuestionFollowup } from '../ai-chat/application-question-followup';
 import { createProfileStoryFollowup } from '../ai-chat/profile-story-followup';
 import { createProfileCheatSheetFollowup } from '../ai-chat/profile-cheatsheet-followup';
+import { findFirst } from './db-mocks';
 
 /** A thread where advice was given and agreed, but never applied to a draft. */
 const TRAIL = [
@@ -92,42 +93,59 @@ const TRAIL = [
 	}
 ];
 
-/** Options handed to createFollowupAiChat by the most recent call. */
+/**
+ * Options handed to createFollowupAiChat by the most recent call.
+ *
+ * The parameter is optional on the real signature, and `historyMessages` with
+ * it; every caller under test passes both, so assert that here rather than at
+ * each assertion below.
+ */
 function lastOptions() {
-	const calls = (createFollowupAiChat as any).mock.calls;
-	return calls[calls.length - 1][2];
+	const calls = vi.mocked(createFollowupAiChat).mock.calls;
+	const options = calls[calls.length - 1]?.[2];
+	if (!options?.historyMessages) throw new Error('last call carried no historyMessages');
+	return { ...options, historyMessages: options.historyMessages };
 }
 
 describe('followup conversation replay', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockHistoryRows.mockResolvedValue(TRAIL);
-		(createFollowupAiChat as any).mockResolvedValue({
+		vi.mocked(createFollowupAiChat).mockResolvedValue({
 			success: true,
 			message: 'ok',
-			aiChat: { id: 2, response: '{"feedback":"done","text":null}' }
+			aiChat: {
+				id: 2,
+				profile_id: 1,
+				system_prompt: 'sys',
+				user_prompt: 'user',
+				full_prompt: null,
+				response: '{"feedback":"done","text":null}',
+				date_created: null,
+				date_updated: null
+			}
 		});
-		(db.query.application_letters.findFirst as any).mockResolvedValue({
+		findFirst(db.query.application_letters).mockResolvedValue({
 			id: 1,
 			ai_chat_id: 1,
 			letter_type: 'cover_letter',
 			content: 'Draft one.',
 			application: { id: 7, job: { title: 'Engineer' } }
 		});
-		(db.query.letter_versions.findFirst as any).mockResolvedValue({
+		findFirst(db.query.letter_versions).mockResolvedValue({
 			content: 'Draft one.'
 		});
-		(db.query.application_questions.findFirst as any).mockResolvedValue({
+		findFirst(db.query.application_questions).mockResolvedValue({
 			id: 1,
 			ai_chat_id: 1,
 			question: 'Why us?',
 			answer: 'Draft one.',
 			application: { id: 7, job: { title: 'Engineer' } }
 		});
-		(db.query.question_versions.findFirst as any).mockResolvedValue({
+		findFirst(db.query.question_versions).mockResolvedValue({
 			content: 'Draft one.'
 		});
-		(db.query.project_stories.findFirst as any).mockResolvedValue({
+		findFirst(db.query.project_stories).mockResolvedValue({
 			id: 1,
 			ai_chat_id: 1,
 			title: 'A migration',
@@ -138,7 +156,7 @@ describe('followup conversation replay', () => {
 			result: 'R',
 			reflection: null
 		});
-		(db.query.cheat_sheets.findFirst as any).mockResolvedValue({
+		findFirst(db.query.cheat_sheets).mockResolvedValue({
 			id: 1,
 			ai_chat_id: 1,
 			title: 'System design',
