@@ -731,19 +731,19 @@ describe('tier 1 — direct writes', () => {
 		expect(result.structuredContent?.change_id).toBe(55);
 	});
 
-	it('sends the agent to the page for an add, and to Undo for an edit', async () => {
-		// Not the same question for both verbs. An edit is undoable from the feed,
-		// because only the before-image has what it replaced; an add is not — the
-		// registry has no delete, deliberately — so the page with the delete button
-		// is the honest answer. Pointing at an Undo that is not there is worse than
-		// saying nothing.
+	it('sends the agent to Undo for a profile add as well as an edit', async () => {
+		// Read off the registry, not assumed per verb. An edit is undoable because
+		// only the before-image has what it replaced; a profile add is undoable
+		// because removing the row it made is a reverse it can promise. The verbs
+		// that can promise neither are the ones sent to a page instead — see the
+		// activity-record case, which still is.
 		const added = await callTool(
 			'add_language',
 			{ profile_id: 12, 'language.name': 'Spanish', rationale: 'They said so.' },
 			KEY
 		);
-		expect(added.structuredContent?.undoable).toBe(false);
-		expect(added.content[0].text).toContain('Languages page');
+		expect(added.structuredContent?.undoable).toBe(true);
+		expect(added.content[0].text).toContain('/data/ai-changes');
 
 		const edited = await callTool(
 			'edit_work_experience',
@@ -1180,8 +1180,10 @@ describe('jobs and applications', () => {
 		);
 
 		expect(result.structuredContent?.applied).toBe(true);
-		// An add has no undo — the honest answer is the page with the delete
-		// button, and for an application that page is one row's, not a section's.
+		// This add has no undo: an activity record is history filed under an
+		// application, not a profile row the registry can take back. So the honest
+		// answer stays the page with the delete button, and for an application
+		// that page is one row's, not a section's.
 		expect(result.structuredContent?.undoable).toBe(false);
 		expect(result.content[0].text).toContain('/applications/44');
 	});

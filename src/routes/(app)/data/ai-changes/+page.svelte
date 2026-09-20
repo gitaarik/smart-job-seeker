@@ -205,10 +205,12 @@
 							</form>
 						{:else if entry.whereInstead}
 							<!--
-								No undo for this one. Adding an entry has no reverse through the
-								registry — it has no delete, deliberately — so the honest answer
-								is where to do it by hand, the same shape as the assistant naming
-								a page it cannot reach.
+								No undo for this one: the verb has no reverse through the
+								registry, so the honest answer is where to do it by hand, the
+								same shape as the assistant naming a page it cannot reach. A
+								profile add reverses by removing the row it made and reaches the
+								Undo branch above instead; what lands here is the verbs that
+								cannot, activity records and text versions among them.
 
 								Named rather than linked. `resolve()` is overloaded per literal
 								route, so a route id held in a variable satisfies no overload, and
