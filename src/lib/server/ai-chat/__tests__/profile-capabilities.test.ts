@@ -414,15 +414,10 @@ describe('adding an entry', () => {
 		).toBeNull();
 	});
 
-	it('authorizes the actor’s own profile, and nothing they do not own', async () => {
-		// Two shapes reach this, and only because an add outlives its own write:
-		// the profile while it is being proposed, the row it created once the log
-		// holds it. Anything that is neither is refused — and the second branch is
-		// a read scoped to this actor, so it refuses by finding nothing rather
-		// than by comparing an id it was handed.
+	it('authorizes only the actor’s own profile', async () => {
+		// Still only the profile, deliberately. The undo's different target shape
+		// is `authorizeRevert`'s problem and not this one's — see the note there.
 		expect(await add.authorize({ id: 12, label: 'x' }, ACTOR)).toBe(true);
-
-		state.row = null;
 		expect(await add.authorize({ id: 99, label: 'x' }, ACTOR)).toBe(false);
 	});
 
@@ -993,16 +988,16 @@ describe('undoing an add', () => {
 		expect(state.deletes.every((write) => !('source' in (write.actor as object)))).toBe(true);
 	});
 
-	it('authorizes against the created row, not only the profile it was addressed to', async () => {
+	it('authorizes the undo against the created row, through its own gate', async () => {
 		// The target changes shape between proposing and undoing: the profile
 		// before the write, the new row after it, because that is what the log
-		// keeps. A check written for the first shape alone refuses every undo.
+		// keeps. `authorize` still answers only the first, so the undo needs the
+		// second gate — and `revertEdit` prefers it exactly for that reason.
 		state.row = { id: 99, profile_id: 12 };
-		expect(await addLanguage.authorize(ROW, ACTOR)).toBe(true);
+		expect(await addLanguage.authorizeRevert?.(ROW, ACTOR)).toBe(true);
 
 		state.row = null;
-		expect(await addLanguage.authorize(ROW, ACTOR)).toBe(false);
-		expect(await addLanguage.authorize({ id: 12, label: 'their languages' }, ACTOR)).toBe(true);
+		expect(await addLanguage.authorizeRevert?.(ROW, ACTOR)).toBe(false);
 	});
 
 	it('refuses when something has been filed under the row since', async () => {

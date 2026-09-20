@@ -211,6 +211,27 @@ describe('what it tells the agent afterwards', () => {
 		expect(note).toMatch(/has changed yet/);
 		expect(note).not.toMatch(/\bupdated\b(?!\.)/i);
 	});
+
+	it('says the same thing to the applicant, without the agent’s instructions', () => {
+		// The feed renders this one. `appliedNote` ends by telling the agent what
+		// to say, which is prose addressed to somebody else — showing it to the
+		// applicant hands them a script for a conversation they are not in.
+		const note = letterVerb.applicantNote?.(LETTER, {
+			name: 'Applications',
+			path: '/applications/44/texts/3'
+		});
+		expect(note).toMatch(/still says what it said/);
+		expect(note).toMatch(/keep or delete/);
+		expect(note).toContain('Applications page');
+		expect(note).not.toMatch(/tell them/i);
+	});
+
+	it('is offered on the verb the feed cannot undo, which is why the feed asks', () => {
+		// The pairing that makes this worth having: no revert, so the feed falls
+		// through to naming a page, and the note is what it says instead.
+		expect(letterVerb.revert).toBeUndefined();
+		expect(letterVerb.applicantNote).toBeDefined();
+	});
 });
 
 describe('how much friction it earns', () => {

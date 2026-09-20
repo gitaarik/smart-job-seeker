@@ -49,6 +49,7 @@ import {
 	type CreatableTextKind,
 	type TextCreateDef
 } from '$lib/server/texts/profile-texts';
+import { countVersions } from './entity-versions';
 import type { CapabilityDef, CapabilityTarget } from './capabilities';
 
 /** How many existing rows the model is shown, so it makes no second copy. */
@@ -225,6 +226,20 @@ function capabilityFor(kind: CreatableTextKind): CapabilityDef {
 				? target.id === actor.profileId
 				: !!(await readProfileApplication(target.id, actor.profileId)),
 
+		/**
+		 * The undo names the text, where the proposal named what it hangs off.
+		 *
+		 * Kept apart from `authorize` rather than folded into it, and here that
+		 * separation is load-bearing rather than tidy: `apply` passes the target's
+		 * id to `create.insert` as the OWNER. An `authorize` that also accepted a
+		 * text id would accept a proposal naming a letter and file the new letter
+		 * under it.
+		 *
+		 * `read` is scoped to the actor's profile, so this is the same ownership
+		 * question asked of the row instead of its owner.
+		 */
+		authorizeRevert: async (target, actor) => (await def.read(target.id, actor.profileId)) !== null,
+
 		// Not a diff: there is no row yet. What the model needs is what it might
 		// duplicate, which is the question every `add_` asks. Scoped to the
 		// application for the kind that hangs off one — every letter on the profile
@@ -348,6 +363,60 @@ function capabilityFor(kind: CreatableTextKind): CapabilityDef {
 			// which is what to authorize against and the wrong thing to call the
 			// change.
 			return { id: created.id, label: created.label };
+		},
+
+		/**
+		 * Delete the row this add made, while it is still the empty row it made.
+		 *
+		 * What this verb creates is a shell: a title or a type and no text, which
+		 * the agent is told to fill with `add_${kind}_version` next. The half-done
+		 * state is the common one, and until now the only way out of it was to
+		 * find the row on its own page.
+		 *
+		 * Two refusals, and both are "somebody has put something here since":
+		 *
+		 *  - **Text on it.** Committed through `setText`, by the applicant or by a
+		 *    version they accepted. The row is no longer the empty one this made.
+		 *  - **Versions under it.** A version is a row in a timeline that the
+		 *    applicant has not ruled on yet, and it is the thing `add_${kind}_version`
+		 *    leaves them to decide. Deleting the text would decide it for them by
+		 *    taking the timeline with it.
+		 *
+		 * The target is the created row here rather than the owner it was
+		 * addressed to, the same swap every add makes once the log holds it — so
+		 * `read` is asked for the row, not for what it hangs off.
+		 */
+		revert: async (t, _previous, actor) => {
+			const row = await def.read(t.id, actor.profileId);
+			if (!row) return;
+
+			const where = `Delete it from your ${def.collection.name} page instead.`;
+
+			if (row.committed && row.committed.trim()) {
+				throw new Error(
+					`This ${def.noun} has text on it now, and undoing the add would delete ` +
+						`that text with it. ${where}`
+				);
+			}
+
+			if ((await countVersions(def.versions, t.id)) > 0) {
+				throw new Error(
+					`This ${def.noun} has a version waiting in its timeline, which undoing ` +
+						`the add would delete unread. Decide on that version first, or ` +
+						`delete the ${def.noun} from your ${def.collection.name} page.`
+				);
+			}
+
+			// The owner the delete is scoped by, which is not the same column per
+			// kind: a letter belongs to an application, a story and a cheat sheet
+			// to the profile. A letter whose application is missing is a row this
+			// cannot scope a statement to, so it refuses rather than widening one.
+			const owner = create.owner === 'application' ? row.applicationId : actor.profileId;
+			if (owner === null || owner === undefined) {
+				throw new Error(`add_${kind} could not be undone: that ${def.noun} names no application`);
+			}
+
+			await create.remove(t.id, owner);
 		},
 
 		// The generic "remove it again from their … page" is true here, but it is

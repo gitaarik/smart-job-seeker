@@ -720,23 +720,19 @@ function addCapability(name: ProfileResourceName): CapabilityDef {
 				? null
 				: { id: actor.profileId, label: `their ${resource.title.toLowerCase()}` },
 
+		authorize: async (t, actor) => t.id === actor.profileId,
+
 		/**
-		 * The target has two shapes across one add's life, and both are checked
-		 * here.
+		 * The undo names the row, where the proposal named the profile.
 		 *
-		 * Before the write it is the PROFILE — there is no row to name yet. After
-		 * it, the log holds the row the add created, because `apply` hands that
-		 * back and `executeCapability` records the created row in preference to
-		 * the target it was addressed to. So an undo comes back through here with
-		 * a row id where the proposal had a profile id, and a check written for
-		 * only the first shape refuses every undo as "no longer yours".
+		 * `apply` hands back the row it made and `executeCapability` logs that in
+		 * preference to the target it was addressed to, so `authorize` above —
+		 * which vets a profile id — would refuse every undo as "no longer yours".
 		 *
-		 * The row is read against the actor's profile, never by id alone, so the
-		 * second branch is the same ownership rule as the first and not a way
-		 * around it.
+		 * Read against the actor's profile rather than by id alone, so this is
+		 * the same ownership rule asked of a different row.
 		 */
-		authorize: async (t, actor) =>
-			t.id === actor.profileId ||
+		authorizeRevert: async (t, actor) =>
 			(await readOwnedRow(name, { profileId: actor.profileId }, t.id)) !== null,
 
 		current: async (_t, actor, entity) => {
