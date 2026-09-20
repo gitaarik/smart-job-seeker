@@ -67,6 +67,8 @@
 							<div>
 								<h3 class="font-semibold">{request.title}</h3>
 								<p class="text-sm text-[var(--dash-text-secondary)]">
+									<!-- `request_id`, as the agent's own unapplied result reports it. -->
+									<span class="font-mono">Request {request.id}</span> ·
 									{request.target.label} · asked {when(request.createdAt)} · by a connected app
 								</p>
 							</div>
@@ -167,11 +169,25 @@
 	{:else}
 		<ul class="space-y-4">
 			{#each data.entries as entry (entry.id)}
-				<li class="rounded-lg border border-[var(--dash-border)] p-4">
+				<!--
+					Anchored like a pending request, so one of these can be linked to as
+					well as named. The two ids are different things — a request is an
+					unanswered proposal, a change is something that happened — which is
+					why they are labelled rather than printed bare, and why they do not
+					share a prefix.
+				-->
+				<li id="change-{entry.id}" class="rounded-lg border border-[var(--dash-border)] p-4">
 					<div class="flex flex-wrap items-baseline justify-between gap-2">
 						<div>
 							<h3 class="font-semibold">{entry.title}</h3>
 							<p class="text-sm text-[var(--dash-text-secondary)]">
+								<!--
+									What an agent calls this when it reports one back: `change_id`
+									in the applied result, `request_id` in the tier 2 one. Shown so
+									that "change 1116" in a chat and a row on this page are visibly
+									the same thing, which is the whole reason it is here.
+								-->
+								<span class="font-mono">Change {entry.id}</span> ·
 								<!--
 									The name of the thing is where you would click to go and look at
 									it, so it is the link rather than a second one beside it. Absent
