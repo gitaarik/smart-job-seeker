@@ -6,7 +6,12 @@
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import ChangeDiff from '$lib/components/ChangeDiff.svelte';
 	import DiffSegments from '$lib/components/DiffSegments.svelte';
-	import { inlineDiff, shrinkage, summarizeValue } from '$lib/utils/change-analysis';
+	import {
+		inlineDiff,
+		shrinkage,
+		summarizeValue,
+		type FieldChange
+	} from '$lib/utils/change-analysis';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -28,6 +33,61 @@
 <svelte:head>
 	<title>Recent Changes - Smart Job Seeker</title>
 </svelte:head>
+
+<!--
+	What one change did, as its fields. Rendered for a pending request and for a
+	history entry from the same definition: they are the same list of the same
+	shape, and the two copies this replaced had already drifted from the chat's
+	proposal card — see the `from` branch below for the drift that was visible.
+-->
+{#snippet changeList(changes: FieldChange[])}
+	<dl class="mt-3 space-y-2 text-sm">
+		{#each changes as change (change.field)}
+			{@const segments = inlineDiff(change)}
+			<div>
+				<dt class="text-[var(--dash-text-secondary)]">{change.label}</dt>
+				<dd class="break-words">
+					<!--
+						A small edit reads as a diff: the word that changed is marked, instead of
+						left for the eye to find between two near-identical lines. A rewrite, a
+						value being set or cleared, and anything long fall back to old → new — the
+						long ones get their full diff from ChangeDiff below.
+					-->
+					{#if segments}
+						<DiffSegments {segments} />
+					{:else}
+						<!--
+							No arrow when nothing is being replaced. An add creates a row, so every
+							`from` arrives as "—", and "empty → Smart Job Seeker" reads as a field
+							that used to hold something and was cleared — on the row's own parent,
+							where it reads as the project itself having been emptied. What the add
+							is saying is just "Side project: Smart Job Seeker". Same branch as the
+							chat's ProposalCard, which has had it since it started showing creates.
+						-->
+						{#if change.from !== '—'}
+							<span class="line-through opacity-60">{summarizeValue(change.from)}</span>
+							<span aria-hidden="true"> → </span>
+						{/if}
+						<span>{summarizeValue(change.to)}</span>
+					{/if}
+					<!--
+						A replacement shorter than what it replaces is the one shape of edit whose
+						loss is invisible — the new text reads perfectly well, and nothing about it
+						says what used to be there.
+					-->
+					{#if shrinkage(change) > 0}
+						<span class="text-[11px] text-amber-600 dark:text-amber-400">
+							−{shrinkage(change).toLocaleString()}
+						</span>
+					{/if}
+				</dd>
+			</div>
+		{/each}
+	</dl>
+	<div class="mt-2">
+		<ChangeDiff {changes} />
+	</div>
+{/snippet}
 
 <div class="space-y-6">
 	<SectionHeader title="Recent Changes" icon={faHistory} />
@@ -111,42 +171,7 @@
 						{/if}
 
 						{#if request.changes.length > 0}
-							<dl class="mt-3 space-y-2 text-sm">
-								{#each request.changes as change (change.field)}
-									{@const segments = inlineDiff(change)}
-									<div>
-										<dt class="text-[var(--dash-text-secondary)]">{change.label}</dt>
-										<dd class="break-words">
-											<!--
-												A small edit reads as a diff: the word that changed is marked, instead
-												of left for the eye to find between two near-identical lines. A
-												rewrite, a value being set or cleared, and anything long fall back to
-												old → new — the long ones get their full diff from ChangeDiff below.
-											-->
-											{#if segments}
-												<DiffSegments {segments} />
-											{:else}
-												<span class="line-through opacity-60">{summarizeValue(change.from)}</span>
-												<span aria-hidden="true"> → </span>
-												<span>{summarizeValue(change.to)}</span>
-											{/if}
-											<!--
-												A replacement shorter than what it replaces is the one shape of
-												edit whose loss is invisible — the new text reads perfectly well,
-												and nothing about it says what used to be there.
-											-->
-											{#if shrinkage(change) > 0}
-												<span class="text-[11px] text-amber-600 dark:text-amber-400">
-													−{shrinkage(change).toLocaleString()}
-												</span>
-											{/if}
-										</dd>
-									</div>
-								{/each}
-							</dl>
-							<div class="mt-2">
-								<ChangeDiff changes={request.changes} />
-							</div>
+							{@render changeList(request.changes)}
 						{:else if request.whereInstead}
 							<p class="mt-3 text-sm text-[var(--dash-text-secondary)]">
 								This would take the entry off your CVs and exports. It stays on your
@@ -285,42 +310,7 @@
 					</div>
 
 					{#if entry.changes.length > 0}
-						<dl class="mt-3 space-y-2 text-sm">
-							{#each entry.changes as change (change.field)}
-								{@const segments = inlineDiff(change)}
-								<div>
-									<dt class="text-[var(--dash-text-secondary)]">{change.label}</dt>
-									<dd class="break-words">
-										<!--
-											A small edit reads as a diff: the word that changed is marked, instead
-											of left for the eye to find between two near-identical lines. A
-											rewrite, a value being set or cleared, and anything long fall back to
-											old → new — the long ones get their full diff from ChangeDiff below.
-										-->
-										{#if segments}
-											<DiffSegments {segments} />
-										{:else}
-											<span class="line-through opacity-60">{summarizeValue(change.from)}</span>
-											<span aria-hidden="true"> → </span>
-											<span>{summarizeValue(change.to)}</span>
-										{/if}
-										<!--
-											A replacement shorter than what it replaces is the one shape of
-											edit whose loss is invisible — the new text reads perfectly well,
-											and nothing about it says what used to be there.
-										-->
-										{#if shrinkage(change) > 0}
-											<span class="text-[11px] text-amber-600 dark:text-amber-400">
-												−{shrinkage(change).toLocaleString()}
-											</span>
-										{/if}
-									</dd>
-								</div>
-							{/each}
-						</dl>
-						<div class="mt-2">
-							<ChangeDiff changes={entry.changes} />
-						</div>
+						{@render changeList(entry.changes)}
 					{/if}
 				</li>
 			{/each}
