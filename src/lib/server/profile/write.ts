@@ -749,7 +749,10 @@ export async function createRow(
 
 	const row = withParentName(resource, created as unknown as SectionRow, parent.label);
 	// No before-image, because there was no row. The history says one appeared
-	// and what it said; `add_*` has no undo, so the feed sends them to the page.
+	// and what it said, which is all an undo of an add needs: its reverse is the
+	// row's removal, not a value put back. See `addCapability`'s `revert` — the
+	// feed resolves this entry through the capability registry whoever wrote it,
+	// so a person's add undoes the same way the assistant's does.
 	await logChange(
 		actor,
 		`add_${name}`,

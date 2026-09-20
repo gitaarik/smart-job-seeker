@@ -372,10 +372,15 @@ export interface CapabilityDef {
 	 *
 	 * Optional, and its absence is a real answer rather than a gap. Undo exists
 	 * for writes **nothing else can reverse** — a rewritten summary is gone, and
-	 * only the before-image has it. An `add_*` is not that: the row is sitting on
-	 * its own page with a delete button, and giving the registry a delete is the
-	 * one thing the whole hide-not-delete design refused. So adds have no revert,
-	 * and the feed says where to go instead.
+	 * only the before-image has it.
+	 *
+	 * An `add_*` reverses differently: there is no before-image to put back, so
+	 * the undo is the row's removal. The generated profile adds do this, under
+	 * the guards in `profile-capabilities.ts` that keep it to a row the registry
+	 * made and nothing has been hung off since — which is not the general delete
+	 * the hide-not-delete design refused, and does not give the registry one. An
+	 * add that cannot promise that much leaves this off, and the feed says which
+	 * page to go to instead.
 	 *
 	 * Whatever this writes goes through the same ownership check as any other
 	 * write — a log row is a record, not a licence.

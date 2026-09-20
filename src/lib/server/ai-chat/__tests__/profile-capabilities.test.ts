@@ -36,6 +36,7 @@ const state = {
 	creates: [] as { resource: string; actor: unknown; values: Record<string, unknown> }[],
 	visibility: [] as { resource: string; actor: unknown; id: number; visible: boolean }[],
 	tagWrites: [] as { resource: string; actor: unknown; id: number; tags: string[] | null }[],
+	deletes: [] as { resource: string; actor: unknown; id: number }[],
 	updateResult: { ok: true } as { ok: boolean; error?: string; reason?: string }
 };
 
@@ -75,6 +76,12 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => {
 		setRowTags: (resource: string, actor: unknown, id: number, tags: string[] | null) => {
 			state.tagWrites.push({ resource, actor, id, tags });
 			return Promise.resolve(state.updateResult);
+		},
+		deleteRow: (resource: string, actor: unknown, id: number) => {
+			state.deletes.push({ resource, actor, id });
+			return Promise.resolve(
+				state.updateResult.ok ? { ok: true, row: { id } } : state.updateResult
+			);
 		}
 	};
 });
@@ -97,6 +104,7 @@ beforeEach(() => {
 	state.creates = [];
 	state.visibility = [];
 	state.tagWrites = [];
+	state.deletes = [];
 	state.updateResult = { ok: true };
 });
 
@@ -406,8 +414,15 @@ describe('adding an entry', () => {
 		).toBeNull();
 	});
 
-	it('authorizes only the actor’s own profile', async () => {
+	it('authorizes the actor’s own profile, and nothing they do not own', async () => {
+		// Two shapes reach this, and only because an add outlives its own write:
+		// the profile while it is being proposed, the row it created once the log
+		// holds it. Anything that is neither is refused — and the second branch is
+		// a read scoped to this actor, so it refuses by finding nothing rather
+		// than by comparing an id it was handed.
 		expect(await add.authorize({ id: 12, label: 'x' }, ACTOR)).toBe(true);
+
+		state.row = null;
 		expect(await add.authorize({ id: 99, label: 'x' }, ACTOR)).toBe(false);
 	});
 
@@ -947,5 +962,114 @@ describe('reverting from the change history', () => {
 	it('refuses an empty before-image instead of writing nothing successfully', async () => {
 		await expect(edit.revert?.(TARGET, {}, ACTOR)).rejects.toThrow(/recorded no fields/);
 		expect(state.updates).toHaveLength(0);
+	});
+});
+
+/**
+ * Undoing an add, which is the one place a capability deletes anything.
+ *
+ * What is worth pinning is that it stays the narrow thing it was allowed to be.
+ * The row it removes is one the registry made; the guard is the cascade, which
+ * on a role reaches four tables, and it is the reason the general delete verb
+ * was refused in the first place. A revert that took a role's achievements with
+ * it would have re-opened that decision by the back door.
+ */
+describe('undoing an add', () => {
+	const addLanguage = PROFILE_CAPABILITIES.add_language;
+	const addRole = PROFILE_CAPABILITIES.add_work_experience;
+	const ROW = { id: 99, label: 'Spanish' };
+
+	it('deletes the row the add created', async () => {
+		await addLanguage.revert?.(ROW, {}, ACTOR);
+
+		expect(state.deletes).toEqual([
+			expect.objectContaining({ resource: 'language', id: 99, actor: { profileId: 12 } })
+		]);
+	});
+
+	it('records nothing of its own, so the feed shows one entry and not two', () => {
+		// The actor carries no `source`, which is what makes the write layer's own
+		// logging sit out. An undo is the entry it undoes, marked reverted.
+		expect(state.deletes.every((write) => !('source' in (write.actor as object)))).toBe(true);
+	});
+
+	it('authorizes against the created row, not only the profile it was addressed to', async () => {
+		// The target changes shape between proposing and undoing: the profile
+		// before the write, the new row after it, because that is what the log
+		// keeps. A check written for the first shape alone refuses every undo.
+		state.row = { id: 99, profile_id: 12 };
+		expect(await addLanguage.authorize(ROW, ACTOR)).toBe(true);
+
+		state.row = null;
+		expect(await addLanguage.authorize(ROW, ACTOR)).toBe(false);
+		expect(await addLanguage.authorize({ id: 12, label: 'their languages' }, ACTOR)).toBe(true);
+	});
+
+	it('refuses when something has been filed under the row since', async () => {
+		// Every child table cascades, so this delete would take the achievement
+		// with it. That is the four-table case hide-not-delete exists for, and it
+		// is refused rather than reported as an undo.
+		state.rowsByResource = {
+			work_experience_achievement: [{ id: 3, work_experience_id: 99, description: 'Shipped it' }]
+		};
+
+		await expect(addRole.revert?.({ id: 99, label: 'Lead at Acme' }, {}, ACTOR)).rejects.toThrow(
+			/role achievements filed under it now/
+		);
+		expect(state.deletes).toHaveLength(0);
+	});
+
+	it('names the page to do it by hand when it refuses', async () => {
+		state.rowsByResource = {
+			work_experience_achievement: [{ id: 3, work_experience_id: 99, description: 'Shipped it' }]
+		};
+
+		await expect(addRole.revert?.({ id: 99, label: 'Lead at Acme' }, {}, ACTOR)).rejects.toThrow(
+			/Work experience page/
+		);
+	});
+
+	it('deletes a row whose children belong to a different parent', async () => {
+		// The filter is the foreign key, not the section. Another role's
+		// achievements are not under this one and must not block its undo.
+		state.rowsByResource = {
+			work_experience_achievement: [{ id: 3, work_experience_id: 7, description: 'Elsewhere' }]
+		};
+
+		await addRole.revert?.({ id: 99, label: 'Lead at Acme' }, {}, ACTOR);
+
+		expect(state.deletes).toEqual([
+			expect.objectContaining({ resource: 'work_experience', id: 99 })
+		]);
+	});
+
+	it('refuses when the row has been changed since it was added', async () => {
+		// Asked of the row, not the history, and the skills page is why: it writes
+		// through Drizzle rather than the write layer, so a retyped skill leaves no
+		// entry for `revertEdit`'s ordering rule to find. `createRow` leaves
+		// date_updated null, so a value here is somebody's later write.
+		state.row = { id: 99, profile_id: 12, date_updated: new Date() };
+
+		await expect(addLanguage.revert?.(ROW, {}, ACTOR)).rejects.toThrow(/has been changed since/);
+		expect(state.deletes).toHaveLength(0);
+	});
+
+	it('names the page for that refusal too', async () => {
+		state.row = { id: 99, profile_id: 12, date_updated: new Date() };
+
+		await expect(addLanguage.revert?.(ROW, {}, ACTOR)).rejects.toThrow(/Languages page/);
+	});
+
+	it('reports a refusal from the write layer instead of claiming the undo worked', async () => {
+		state.updateResult = { ok: false, error: 'Access denied', reason: 'unauthorized' };
+
+		await expect(addLanguage.revert?.(ROW, {}, ACTOR)).rejects.toThrow(/could not be undone/);
+	});
+
+	it.each(Object.keys(PROFILE_RESOURCES))('add_%s can be undone', (resource) => {
+		// Every generated add, not the one section a test happened to name. The
+		// feed reads `revertible` off the registry, so a section without this is a
+		// section whose adds silently become permanent.
+		expect(PROFILE_CAPABILITIES[`add_${resource}` as never]).toHaveProperty('revert');
 	});
 });

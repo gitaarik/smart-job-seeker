@@ -1041,9 +1041,10 @@ async function runWrite(
 
 	// How they take it back, which is not the same question for every verb. An
 	// edit is undoable from the feed, because only its before-image has what it
-	// replaced. An add is not — the registry has no delete, deliberately — so the
-	// honest answer is the page with the delete button on it. Telling an agent to
-	// send them to an Undo that is not there is worse than saying nothing.
+	// replaced; a profile add is too, by removing the row it made. A verb with no
+	// reverse falls through to the page with the delete button on it — telling an
+	// agent to send them to an Undo that is not there is worse than saying
+	// nothing, so this reads the registry rather than assuming per verb.
 	//
 	// And a capability whose write did not change anything anybody reads says so
 	// itself: both sentences below would report a version proposed into a

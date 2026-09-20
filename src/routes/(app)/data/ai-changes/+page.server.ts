@@ -11,8 +11,8 @@ import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile
 /**
  * Where an entry of a given kind can be put right by hand.
  *
- * The feed's answer to a change it cannot undo. An `add_*` has no revert — the
- * registry has no delete, on purpose — so the honest response is the same one
+ * The feed's answer to a change it cannot undo — a verb with no revert at all,
+ * or one whose undo the registry refused. The honest response is the same one
  * the assistant gives for a section it cannot reach from a page: name the page
  * and send them there.
  *

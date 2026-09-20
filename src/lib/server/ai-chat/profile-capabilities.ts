@@ -52,6 +52,7 @@ import {
 } from '$lib/server/profile/resources';
 import {
 	createRow,
+	deleteRow,
 	matchParentName,
 	parentNameRefusal,
 	readOwnedRow,
@@ -74,6 +75,13 @@ import type { ContextEntity } from './generation-context';
  * an entry off every document while leaving the row and its children alone. It
  * is one click to accept and one to undo, on the same page the applicant would
  * have edited it from. Hard delete stays UI-only.
+ *
+ * Undoing an add is the one exception, and it is not that rule loosened. The
+ * row it removes is one the registry made itself, whose whole content is in the
+ * log, that the applicant has not touched since and that nothing else hangs
+ * off — see `addCapability`'s `revert` for how each of those is checked and
+ * what happens when one fails. There is still no verb that deletes anything of
+ * theirs; an agent can only unwind its own add.
  *
  * `hide` was originally `status: 'draft'`, on the belief that documents render
  * only `published` rows. They do not; nothing filters on that column at all.
@@ -462,6 +470,45 @@ function ancestorsOf(name: ProfileResourceName): ProfileResourceName[] {
 }
 
 /**
+ * The sections whose rows hang directly off this one.
+ *
+ * Direct children only, and that is not a shortcut: a grandchild hangs off a
+ * child, so a row with no children has no descendants either. One level is the
+ * whole answer to "would deleting this take anything with it".
+ */
+function childSectionsOf(name: ProfileResourceName): ProfileResourceName[] {
+	return PROFILE_RESOURCE_NAMES.filter((child) => {
+		const { owner } = PROFILE_RESOURCES[child];
+		return owner.via === 'parent' && owner.parent === name;
+	});
+}
+
+/**
+ * The sections that have gained a row under this one, named as the applicant
+ * would recognise them.
+ *
+ * Asked against a fresh read rather than the log, because what matters is what
+ * is hanging off the row *now* — a child added through the page leaves no
+ * capability entry behind, and it would be taken by the cascade just the same.
+ */
+async function childrenUnder(
+	name: ProfileResourceName,
+	id: number,
+	actor: CapabilityActor
+): Promise<string[]> {
+	const found: string[] = [];
+
+	for (const child of childSectionsOf(name)) {
+		const under = await idsUnder(child, { resource: name, id }, actor);
+		if (under && under.size > 0) {
+			found.push(`${under.size} ${PROFILE_RESOURCES[child].title.toLowerCase()}`);
+		}
+	}
+
+	return found;
+}
+
+/**
  * The ids of this section's rows that are, or descend from, the row the page is
  * about — or null when the page is about something else entirely.
  *
@@ -673,7 +720,24 @@ function addCapability(name: ProfileResourceName): CapabilityDef {
 				? null
 				: { id: actor.profileId, label: `their ${resource.title.toLowerCase()}` },
 
-		authorize: async (t, actor) => t.id === actor.profileId,
+		/**
+		 * The target has two shapes across one add's life, and both are checked
+		 * here.
+		 *
+		 * Before the write it is the PROFILE — there is no row to name yet. After
+		 * it, the log holds the row the add created, because `apply` hands that
+		 * back and `executeCapability` records the created row in preference to
+		 * the target it was addressed to. So an undo comes back through here with
+		 * a row id where the proposal had a profile id, and a check written for
+		 * only the first shape refuses every undo as "no longer yours".
+		 *
+		 * The row is read against the actor's profile, never by id alone, so the
+		 * second branch is the same ownership rule as the first and not a way
+		 * around it.
+		 */
+		authorize: async (t, actor) =>
+			t.id === actor.profileId ||
+			(await readOwnedRow(name, { profileId: actor.profileId }, t.id)) !== null,
 
 		current: async (_t, actor, entity) => {
 			const rows = await rowsFor(name, entity ?? null, actor);
@@ -777,6 +841,67 @@ a duplicate of anything already in one:\n\n${lines.join('\n')}`;
 			// accepted, and it is the Apply button on the second card — not the
 			// model — that would then make the duplicate.
 			return checkDuplicate(resource, name, fields, proposed, current);
+		},
+
+		/**
+		 * Take back a row this add made, which means deleting it.
+		 *
+		 * The only reverse an add has. Everything the hide-not-delete rule was
+		 * protecting is still protected, because this is not the general delete
+		 * that rule refused: the row is one the registry created, its content is
+		 * in the log, and the two ways a delete loses something nobody chose are
+		 * checked before it runs.
+		 *
+		 * **Something hanging off it.** Every child table cascades on the parent's
+		 * delete, so undoing an added role would silently take its achievements,
+		 * technologies and projects with it — the four-table case the rule was
+		 * written about. Refused instead, naming what is under there, because an
+		 * undo that removes work the applicant did afterwards is not an undo.
+		 *
+		 * **Work done to the row itself.** Asked of the row, not of the log, and
+		 * that is the whole point: `revertEdit`'s ordering rule only sees changes
+		 * that were *recorded*, and not every page records one. The skills page
+		 * writes through Drizzle directly rather than the write layer, so an
+		 * applicant who retyped a skill's years leaves no entry behind and the
+		 * ordering rule waves the undo through onto their edit. `createRow`
+		 * leaves `date_updated` null and every later write sets it, so the row
+		 * itself answers a question the history cannot.
+		 *
+		 * Both refusals fall through to the same place the feed already sends an
+		 * un-undoable change, so the cost of being strict here is a sentence
+		 * naming a page, and the cost of being lax is deleting something nobody
+		 * chose to delete.
+		 *
+		 * `deleteRow` is called without a `source`, so it records nothing — the
+		 * undo is one entry in the feed, marked reverted, and not a second entry
+		 * saying something was deleted. Same reason the other two reverts pass a
+		 * bare actor.
+		 */
+		revert: async (t, _previous, actor) => {
+			const byHand = `Delete it from your ${resource.page.name} page instead.`;
+
+			const row = await readOwnedRow(name, { profileId: actor.profileId }, t.id);
+			if (row?.date_updated) {
+				throw new Error(
+					`This ${resource.label} has been changed since it was added, and undoing ` +
+						`the add would delete it along with that change. ${byHand}`
+				);
+			}
+
+			const children = await childrenUnder(name, t.id, actor);
+			if (children.length > 0) {
+				throw new Error(
+					`This ${resource.label} has ${children.join(' and ')} filed under it now, ` +
+						`and deleting it would take ${children.length > 1 ? 'them' : 'it'} too. ` +
+						`Remove ${children.length > 1 ? 'those' : 'that'} first, or delete the ` +
+						`${resource.label} itself from your ${resource.page.name} page.`
+				);
+			}
+
+			const result = await deleteRow(name, { profileId: actor.profileId }, t.id);
+			if (!result.ok) {
+				throw new Error(`add_${name} could not be undone: ${result.error}`);
+			}
 		},
 
 		apply: async (_t, proposed, _current, actor) => {
