@@ -476,6 +476,27 @@ export const SOURCE_APPLIED_FILTER_NAMES: SearchFilterName[] = [
 ];
 
 /**
+ * Source-applied filters that ALSO have a local equivalent.
+ *
+ * When one of these cannot be driven into the form, the run scraped a broader
+ * result set than asked for, but the user is not shown unfiltered jobs:
+ * `checkEligibility` drops the mismatches at match time against the profile's
+ * own preferences. The cost is page cap and credits spent on jobs that get
+ * discarded, which is a recall and efficiency problem rather than a
+ * correctness one, and the run status should say which of the two it is.
+ *
+ * Only `work_location` qualifies. `sort_by` is an ordering with no local
+ * meaning, and `time_posted` has no local gate, so an unapplied one of those
+ * genuinely does reach the user as a broader result set.
+ *
+ * This does not make the source pass optional — see
+ * {@link SOURCE_APPLIED_FILTER_NAMES} for why `work_location` is driven at the
+ * source regardless: geography dominates the result set, and a local-only pass
+ * never sees the remote hits that the page cap buried.
+ */
+export const LOCALLY_BACKSTOPPED_SOURCE_FILTERS: SearchFilterName[] = ['work_location'];
+
+/**
  * Keep only the filters we apply at the source (search form); see
  * {@link SOURCE_APPLIED_FILTER_NAMES}. A task still RECORDS its full filter
  * selection (user intent), but the scraper drives only this subset into the
