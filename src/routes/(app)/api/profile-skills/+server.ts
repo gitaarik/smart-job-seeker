@@ -16,7 +16,14 @@ import {
 	techSkillQuickAddSchema,
 	techSkillUpdateSchema
 } from '$lib/server/validation/api-schemas';
-import { setProfileOnly, setVersions, SHOW_ON_ALL, tagsForShowOn } from '$lib/profile-visibility';
+import {
+	BASE_TEMPLATE_TAGS,
+	setBaseTemplates,
+	setProfileOnly,
+	setVersions,
+	SHOW_ON_ALL,
+	tagsForShowOn
+} from '$lib/profile-visibility';
 import { SKILL_LEVELS } from '$lib/data/field-labels';
 import { getSelectedProfileId, touchProfile } from '../../profile/utils';
 
@@ -195,7 +202,22 @@ export const PATCH: RequestHandler = async ({ request, locals, cookies }) => {
 		}
 	}
 
-	if (body.show_on != null) {
+	if (body.base_templates !== undefined) {
+		// The whole Show-on set, stated. First because it is the least ambiguous
+		// of the three: the others each settle visibility from a partial
+		// instruction, so a request carrying both would have to pick, and this is
+		// the one that said exactly where the skill goes.
+		//
+		// Applied to the STORED tags, which is what keeps a version tag the caller
+		// has not confirmed yet out of the write: `setBaseTemplates` rewrites the
+		// base-template tags and carries the rest of the stored array through
+		// untouched.
+		const unknown = body.base_templates.find((t) => !BASE_TEMPLATE_TAGS.includes(t));
+		if (unknown) {
+			return json({ error: `Unknown template "${unknown}"` }, { status: 400 });
+		}
+		updates.tags = nullIfEmpty(setBaseTemplates(current, body.base_templates));
+	} else if (body.show_on != null) {
 		// The lift shorthand, which settles visibility on its own.
 		updates.tags = nullIfEmpty(tagsForShowOn(current, body.show_on));
 	} else if (body.profile_only !== undefined || body.versions !== undefined) {

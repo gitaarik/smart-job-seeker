@@ -49,6 +49,8 @@
 		/** Both reorder hooks are awaited: the editor keeps its Save button
 		 *  spinning until the write lands, then leaves reorder mode. */
 		onskillreorder?: (category: CategoryItem, skills: SkillItem[]) => void | Promise<void>;
+		/** Passed straight through: the Show-on switches, saving themselves. */
+		onskillshownon?: (category: CategoryItem, skill: SkillItem, shownOn: string[]) => Promise<void>;
 		oncategoryreorder?: (categories: CategoryItem[]) => void | Promise<void>;
 	}
 
@@ -71,6 +73,7 @@
 		onskillupdate,
 		onskillremove,
 		onskillreorder,
+		onskillshownon,
 		oncategoryreorder
 	}: Props = $props();
 
@@ -438,6 +441,9 @@
 		onupdate={onskillupdate ? (skill) => onskillupdate(category, skill) : undefined}
 		onremove={onskillremove ? (skill) => onskillremove(category, skill) : undefined}
 		onreorder={onskillreorder ? (skills) => onskillreorder(category, skills) : undefined}
+		onshownon={onskillshownon
+			? (skill, shownOn) => onskillshownon(category, skill, shownOn)
+			: undefined}
 	/>
 {/snippet}
 

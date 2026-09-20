@@ -41,14 +41,34 @@
 		}));
 	}
 
+	/**
+	 * The editable copy of a load's categories.
+	 *
+	 * `$state` rather than a plain array, and that is the whole of what makes
+	 * the editors below work. They write through the binding by mutating a row
+	 * in place — `skills[i].tags = …` for the Show-on switches, `bind:value` for
+	 * level and years, the tag chips — and a plain object graph accepts every
+	 * one of those writes silently: the value changes, nothing re-renders, and
+	 * the `$derived` that reads it stays on its first answer forever. The
+	 * switches then never move, and because each click recomputes from that
+	 * stale answer, toggling a second template discards the first.
+	 *
+	 * Proxying here rather than at each mutation site is deliberate: the two
+	 * editors deep-mutate in a dozen places, and the other caller
+	 * (profile/create's review step) already binds real `$state`. This is the
+	 * one caller that did not.
+	 */
 	function mapCategories(cats: typeof data.categories): DbCategoryItem[] {
-		return cats.map((c) => ({
-			id: c.id,
-			name: c.name || '',
-			tags: Array.isArray(c.tags) ? (c.tags as string[]) : null,
-			note: c.note ?? '',
-			skills: mapSkills(c.tech_skills)
-		}));
+		const mapped = $state(
+			cats.map((c) => ({
+				id: c.id,
+				name: c.name || '',
+				tags: Array.isArray(c.tags) ? (c.tags as string[]) : null,
+				note: c.note ?? '',
+				skills: mapSkills(c.tech_skills)
+			}))
+		);
+		return mapped;
 	}
 
 	// A writable $derived: the editor binds to this and writes through it, and a
@@ -157,6 +177,39 @@
 		postAction('deleteSkill', { id: String(dbSkill.id) });
 	}
 
+	/**
+	 * Write one skill's Show-on switches, immediately.
+	 *
+	 * Deliberately not `postAction`: that reloads the page data through
+	 * `invalidateAll()`, and this write happens with the editor popup OPEN. A
+	 * reload there rebuilds every category object underneath the popup that is
+	 * bound to them, which is the whole page's state swapped out mid-edit. The
+	 * local array already carries the change (the editor wrote it before calling
+	 * this), so there is nothing a reload would add.
+	 *
+	 * Throws on failure rather than returning false, because that is what
+	 * `autoSaveField` reads: a rejection is what puts the error and its Retry in
+	 * front of the applicant instead of leaving a switch showing a state the
+	 * server never accepted.
+	 */
+	async function handleSkillShownOn(
+		category: CategoryItem,
+		skill: SkillItem,
+		shownOn: string[]
+	): Promise<void> {
+		const dbSkill = skill as DbSkillItem;
+		if (!dbSkill.id) return;
+		const res = await fetch('/api/profile-skills', {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ id: dbSkill.id, base_templates: shownOn })
+		});
+		if (!res.ok) {
+			const body = await res.json().catch(() => null);
+			throw new Error(body?.error ?? 'Could not save that');
+		}
+	}
+
 	function handleSkillReorder(category: CategoryItem, skills: SkillItem[]) {
 		const dbCat = category as DbCategoryItem;
 		if (!dbCat.id) return;
@@ -216,6 +269,7 @@
 			onskillcreate={handleSkillCreate}
 			onskillupdate={handleSkillUpdate}
 			onskillremove={handleSkillRemove}
+			onskillshownon={handleSkillShownOn}
 			onskillreorder={handleSkillReorder}
 			oncategoryreorder={handleCategoryReorder}
 		/>

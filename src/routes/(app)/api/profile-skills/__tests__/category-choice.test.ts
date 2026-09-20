@@ -259,4 +259,54 @@ describe('PATCH /api/profile-skills — editing a skill in place', () => {
 		await edit({});
 		expect(mockUpdateSet).not.toHaveBeenCalled();
 	});
+
+	/**
+	 * `base_templates` — the skills page's three Show-on switches, which save
+	 * themselves and so send the whole set on every flip.
+	 */
+	describe('base_templates', () => {
+		it('states where the skill shows, all three at once', async () => {
+			await edit({ base_templates: ['cv'] });
+			// Canonicalised as exclusions, which is the shape the column already
+			// holds; `cv` alone as a positive would mean the same and read as a
+			// different rule.
+			expect(updated()?.tags).toEqual(['!resume', '!portfolio']);
+		});
+
+		it('clears the column when everything is back on', async () => {
+			await edit({ base_templates: ['resume', 'cv', 'portfolio'] });
+			expect(updated()).toMatchObject({ tags: null });
+		});
+
+		it('leaves the stored version tags alone', async () => {
+			// The switch says nothing about versions, and the popup it is in can
+			// hold version edits the applicant has not confirmed. Only the stored
+			// ones survive, which is what keeps those out of this write.
+			mockSkillsFindFirst.mockResolvedValue({
+				id: 5,
+				category_id: 10,
+				tags: ['backend', '!senior'],
+				tech_skill_category: { profile_id: 7 }
+			});
+
+			await edit({ base_templates: ['resume'] });
+			expect(updated()?.tags).toEqual(['!cv', '!portfolio', 'backend', '!senior']);
+		});
+
+		it('rejects a template that is not one', async () => {
+			// A version slug here would be silently dropped by setBaseTemplates,
+			// leaving a switch that reported success and changed nothing.
+			const res = await edit({ base_templates: ['resume', 'backend'] });
+
+			expect(res.status).toBe(400);
+			expect(mockUpdateSet).not.toHaveBeenCalled();
+		});
+
+		it('wins over the other two ways of saying it', async () => {
+			// Only the switches send it, and they state the whole set; a request
+			// carrying both has to pick one, and this is the unambiguous half.
+			await edit({ base_templates: ['resume'], profile_only: true, show_on: 'backend' });
+			expect(updated()?.tags).toEqual(['!cv', '!portfolio']);
+		});
+	});
 });

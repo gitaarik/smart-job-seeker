@@ -18,10 +18,13 @@
 	import { dndzone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import { clickOutside, keepInView } from '$lib/actions/popover';
+	import { arraysEqual, autoSaveField } from '$lib/components/auto-save.svelte';
+	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import {
 		BASE_TEMPLATE_TAGS,
 		BASE_TEMPLATES,
 		isHiddenFromDocuments,
+		setBaseTemplates,
 		setShownOn,
 		shownOnTemplate,
 		shownTemplates,
@@ -62,6 +65,19 @@
 		onremove?: (skill: SkillItem) => void;
 		/** Awaited: reorder mode stays open, spinning, until the write lands. */
 		onreorder?: (skills: SkillItem[]) => void | Promise<void>;
+		/**
+		 * Persist one existing skill's base templates, now, and throw if it fails.
+		 *
+		 * Supplying it is what makes the three Show-on switches save themselves
+		 * instead of waiting for the popup's Save. It takes the whole set rather
+		 * than the switch that moved, because that is the only unambiguous way to
+		 * state visibility — see `setBaseTemplates`.
+		 *
+		 * Optional because the other caller is the profile-create wizard, where no
+		 * skill has been written yet and there is nothing to patch. Without it the
+		 * switches behave as they always did: local until Save.
+		 */
+		onshownon?: (skill: SkillItem, shownOn: string[]) => Promise<void>;
 	}
 
 	let {
@@ -77,7 +93,8 @@
 		onupdate,
 		oncreate,
 		onremove,
-		onreorder
+		onreorder,
+		onshownon
 	}: Props = $props();
 
 	let levelOptions = $derived(_levelOptions.length > 0 ? _levelOptions : defaultLevelOptions);
@@ -157,10 +174,68 @@
 		return versionSlugs.filter((v) => !isBaseTag(v) && !used.has(v.toLowerCase()));
 	});
 
+	/**
+	 * The skill the visibility field is currently saving for.
+	 *
+	 * Held apart from `editingIndex` because the two answer different questions:
+	 * the index says which popup is open now, and a save in flight belongs to
+	 * whichever skill was open when it started. Plain, not `$state` — nothing
+	 * renders from it.
+	 */
+	let shownOnTarget: SkillItem | null = null;
+
+	/**
+	 * The Show-on switches, saving themselves.
+	 *
+	 * No debounce: a switch is a decision the moment it moves, and there is no
+	 * half-flipped state worth waiting out. The value is the whole shown-on set
+	 * rather than the switch that changed, which is what the endpoint wants and
+	 * what makes a concurrent edit converge instead of racing.
+	 *
+	 * The popup's Save and Cancel still govern the name, level, years and the
+	 * version chips; only these three are out from under them.
+	 */
+	const visibility = autoSaveField<string[]>({
+		initial: [],
+		equal: arraysEqual,
+		save: async (shownOn) => {
+			const target = shownOnTarget;
+			if (!target || !onshownon) return;
+			await onshownon(target, shownOn);
+		},
+		onSaved: (shownOn) => {
+			// The switches follow what was written, which for a click they already
+			// show and for the indicator's Undo they do not: undo posts the
+			// previous set straight through this field without going back through
+			// toggleTemplate, so without this the server moves and the switches
+			// stay put. Applied to the row's own tags, so a version chip added in
+			// the meantime survives.
+			if (shownOnTarget) {
+				const next = setBaseTemplates(shownOnTarget.tags, shownOn);
+				shownOnTarget.tags = next.length > 0 ? next : null;
+			}
+			// Move the Cancel snapshot forward over the base templates only. A
+			// switch that has already been written is not something Cancel should
+			// offer to take back — it would put the UI back over a server that has
+			// moved on. The version chips are untouched, so Cancel still reverts
+			// those, which is the edit it is actually there for.
+			if (editingSnapshot) {
+				const next = setBaseTemplates(editingSnapshot.tags, shownOn);
+				editingSnapshot.tags = next.length > 0 ? next : null;
+			}
+		}
+	});
+
+	/** Whether the switches in the open popup write on their own. */
+	let autoSavesVisibility = $derived(!!onshownon && !editingIsNew);
+
 	function toggleTemplate(type: string, shown: boolean) {
 		if (editingIndex === null) return;
 		const next = setShownOn(editingSkillTags, type, shown);
 		skills[editingIndex].tags = next.length > 0 ? next : null;
+		// Not for a skill that does not exist on the server yet: its tags ride
+		// along with the create on Save, and patching by id needs an id.
+		if (!editingIsNew && onshownon) visibility.set(shownTemplates(next));
 	}
 
 	/** Version tags worth badging on the pill — the switches cover the rest. */
@@ -269,6 +344,12 @@
 		};
 		editingIsNew = false;
 		editingIndex = index;
+		// Re-seed rather than create one field per skill: only one popup is open
+		// at a time, so one field serves them all. reset() also invalidates an
+		// in-flight save's commit step, which is what stops a slow write for the
+		// last skill from reporting itself on this one.
+		shownOnTarget = skills[index];
+		visibility.reset(shownTemplates(skills[index].tags));
 		// Auto-expand only for tags the section actually lists — a profile-only
 		// skill's exclusion pair lives on the switch, not in here.
 		showVersionTags_popup = versionTagCount(skills[index].tags) > 0;
@@ -280,6 +361,8 @@
 		editingIndex = skills.length - 1;
 		editingSnapshot = null;
 		editingIsNew = true;
+		shownOnTarget = null;
+		visibility.reset(BASE_TEMPLATE_TAGS);
 		showVersionTags_popup = false;
 		pushEditHistory();
 	}
@@ -614,11 +697,33 @@
 									</span>
 								</button>
 							{/each}
+							{#if autoSavesVisibility}
+								<!--
+									Its own line, not squeezed beside the label: the popup is a
+									fixed 256px and the indicator does not wrap, so an error long
+									enough to matter would hang off the edge of it. The reserved
+									height keeps the switches from jumping as the pill comes and
+									goes.
+								-->
+								<div class="mt-1 min-h-[1rem]">
+									<AutoSaveIndicator field={visibility} />
+								</div>
+							{/if}
+							<!--
+								Says out loud that these three do not wait for Save, because the
+								Save button is still on screen three fields below and governs
+								everything else in here. The indicator is silent at rest by
+								design, and silence next to a Save button reads as "this needs
+								it".
+							-->
 							<p class="mt-1 text-[10px] leading-snug text-[var(--dash-text-muted)]">
 								{#if shownTemplates(editingSkillTags).length === 0}
 									Nowhere: counts for job matching and appears on nothing you send or publish.
 								{:else}
 									Counts for job matching either way.
+								{/if}
+								{#if autoSavesVisibility}
+									Saved as you switch.
 								{/if}
 							</p>
 						</div>

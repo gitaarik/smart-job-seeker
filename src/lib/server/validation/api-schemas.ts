@@ -153,7 +153,19 @@ export const techSkillUpdateSchema = z.object({
 	/** Hold it back from every resume/CV, or stop doing so. */
 	profile_only: z.boolean().optional(),
 	/** The versions a held-back skill is shown on anyway, as a whole set. */
-	versions: z.array(z.string().trim().max(255)).optional()
+	versions: z.array(z.string().trim().max(255)).optional(),
+	/**
+	 * The base templates the skill appears on, as a whole set — the skills
+	 * page's three Show-on switches, which each save themselves.
+	 *
+	 * Named for `setBaseTemplates` rather than after the switches' label, so it
+	 * cannot be read as a typo for `show_on` above. The two say different
+	 * things: `show_on` lifts a held-back skill onto somewhere, this one states
+	 * where it is shown and where it is not, all three at once. Sending the
+	 * whole set is what makes a switch unambiguous — an incremental "also show
+	 * it here" has no single right answer against a positive whitelist.
+	 */
+	base_templates: z.array(z.string().trim().max(64)).optional()
 });
 
 // Job preferences
