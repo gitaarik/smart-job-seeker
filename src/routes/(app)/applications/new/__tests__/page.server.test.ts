@@ -38,7 +38,7 @@ const mockValues = vi.fn(() => {
 	p.returning = () => Promise.resolve([{ id: INSERT_IDS.get(table) ?? 1 }]);
 	return p;
 });
-const mockInsert = vi.fn((table: any) => {
+const mockInsert = vi.fn((table: { __table?: string } | undefined) => {
 	insertingTable = table?.__table ?? '';
 	return { values: mockValues };
 });
@@ -58,17 +58,17 @@ vi.mock('$lib/server/db', () => {
 	const handle = {
 		query: {
 			job_platforms: {
-				findFirst: (...a: any[]) => mockPlatformFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockPlatformFindFirst(...a)
 			}
 		},
-		insert: (...a: any[]) => mockInsert(...a)
+		insert: (...a: unknown[]) => mockInsert(...a)
 	};
 	return { db: handle, dbDirect: handle, queryRaw: vi.fn(), sql: vi.fn() };
 });
 
 vi.mock('drizzle-orm', () => ({
-	ilike: vi.fn((_c: any, v: any) => v),
-	or: vi.fn((...a: any[]) => a)
+	ilike: vi.fn((_c: unknown, v: unknown) => v),
+	or: vi.fn((...a: unknown[]) => a)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({
@@ -80,17 +80,17 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 vi.mock('../../../profile/utils', () => ({
-	getSelectedProfileId: (...a: any[]) => mockGetSelectedProfileId(...a)
+	getSelectedProfileId: (...a: unknown[]) => mockGetSelectedProfileId(...a)
 }));
 vi.mock('$lib/server/jobs/parse-job-description', () => ({
-	parseJobDescription: (...a: any[]) => mockParseJobDescription(...a)
+	parseJobDescription: (...a: unknown[]) => mockParseJobDescription(...a)
 }));
 vi.mock('$lib/server/jobs/parse-cache', () => ({
-	parseCacheKey: (...a: any[]) => mockParseCacheKey(...a),
-	recallParse: (...a: any[]) => mockRecallParse(...a)
+	parseCacheKey: (...a: unknown[]) => mockParseCacheKey(...a),
+	recallParse: (...a: unknown[]) => mockRecallParse(...a)
 }));
 vi.mock('$lib/server/job/match-trigger', () => ({
-	triggerMatchForImport: (...a: any[]) => mockTriggerMatchForImport(...a)
+	triggerMatchForImport: (...a: unknown[]) => mockTriggerMatchForImport(...a)
 }));
 
 import { actions } from '../+page.server';

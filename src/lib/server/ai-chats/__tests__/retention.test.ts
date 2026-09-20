@@ -18,17 +18,17 @@ const mockUpdate = vi.fn().mockReturnValue({ set: mockSet });
 
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
-		select: (...a: any[]) => mockSelect(...a),
-		update: (...a: any[]) => mockUpdate(...a)
+		select: (...a: unknown[]) => mockSelect(...a),
+		update: (...a: unknown[]) => mockUpdate(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	and: vi.fn((...a: any[]) => a),
-	or: vi.fn((...a: any[]) => a),
-	lt: vi.fn((c: any, v: any) => ({ c, v })),
-	isNotNull: vi.fn((c: any) => c),
-	inArray: vi.fn((_c: any, v: any) => v)
+	and: vi.fn((...a: unknown[]) => a),
+	or: vi.fn((...a: unknown[]) => a),
+	lt: vi.fn((c: unknown, v: unknown) => ({ c, v })),
+	isNotNull: vi.fn((c: unknown) => c),
+	inArray: vi.fn((_c: unknown, v: unknown) => v)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({

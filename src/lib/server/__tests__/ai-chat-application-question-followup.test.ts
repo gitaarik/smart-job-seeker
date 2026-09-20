@@ -18,7 +18,7 @@ vi.mock('$lib/server/db', () => ({
 				findFirst: vi.fn()
 			}
 		},
-		update: (...args: any[]) => mockUpdateFn(...args)
+		update: (...args: unknown[]) => mockUpdateFn(...args)
 	}
 }));
 
@@ -37,9 +37,9 @@ vi.mock('$lib/server/ai-chat/entity-versions', () => ({
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val),
-	and: vi.fn((...args: any[]) => args),
-	or: vi.fn((...args: any[]) => args),
+	eq: vi.fn((_col: unknown, val: unknown) => val),
+	and: vi.fn((...args: unknown[]) => args),
+	or: vi.fn((...args: unknown[]) => args),
 	isNotNull: vi.fn(),
 	desc: vi.fn(),
 	asc: vi.fn()
@@ -115,8 +115,7 @@ describe('createApplicationQuestionFollowup', () => {
 		it('should create followup and update question reference', async () => {
 			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
-			const mockCreateFollowup = createFollowupAiChat as any;
-			mockCreateFollowup.mockResolvedValueOnce({
+			vi.mocked(createFollowupAiChat).mockResolvedValueOnce({
 				success: true,
 				message: 'Follow-up created',
 				aiChat: mockCreatedAiChat
@@ -132,7 +131,7 @@ describe('createApplicationQuestionFollowup', () => {
 			expect(result.aiChat?.id).toBe(6);
 
 			// Verify createFollowupAiChat was called correctly
-			expect(mockCreateFollowup).toHaveBeenCalledWith(
+			expect(vi.mocked(createFollowupAiChat)).toHaveBeenCalledWith(
 				5, // parent ai_chats id
 				'Add specific examples',
 				expect.objectContaining({
@@ -158,8 +157,7 @@ describe('createApplicationQuestionFollowup', () => {
 		it('should pass includeOriginalContext option to createFollowupAiChat', async () => {
 			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
-			const mockCreateFollowup = createFollowupAiChat as any;
-			mockCreateFollowup.mockResolvedValueOnce({
+			vi.mocked(createFollowupAiChat).mockResolvedValueOnce({
 				success: true,
 				message: 'Follow-up created',
 				aiChat: mockCreatedAiChat
@@ -171,7 +169,7 @@ describe('createApplicationQuestionFollowup', () => {
 				true // includeOriginalContext
 			);
 
-			expect(mockCreateFollowup).toHaveBeenCalledWith(
+			expect(vi.mocked(createFollowupAiChat)).toHaveBeenCalledWith(
 				5,
 				'Make it shorter',
 				expect.objectContaining({
@@ -186,8 +184,7 @@ describe('createApplicationQuestionFollowup', () => {
 		it('should update both ai_chats and ai_chat_response fields', async () => {
 			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
-			const mockCreateFollowup = createFollowupAiChat as any;
-			mockCreateFollowup.mockResolvedValueOnce({
+			vi.mocked(createFollowupAiChat).mockResolvedValueOnce({
 				success: true,
 				message: 'Follow-up created',
 				aiChat: mockCreatedAiChat
@@ -208,8 +205,7 @@ describe('createApplicationQuestionFollowup', () => {
 		it('should handle createFollowupAiChat failure', async () => {
 			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
-			const mockCreateFollowup = createFollowupAiChat as any;
-			mockCreateFollowup.mockResolvedValueOnce({
+			vi.mocked(createFollowupAiChat).mockResolvedValueOnce({
 				success: false,
 				message: 'Parent ai_chats not found'
 			});
@@ -227,8 +223,7 @@ describe('createApplicationQuestionFollowup', () => {
 		it('should handle createFollowupAiChat returning no aiChat', async () => {
 			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
-			const mockCreateFollowup = createFollowupAiChat as any;
-			mockCreateFollowup.mockResolvedValueOnce({
+			vi.mocked(createFollowupAiChat).mockResolvedValueOnce({
 				success: false,
 				message: 'Failed to create followup',
 				aiChat: undefined
@@ -266,8 +261,7 @@ describe('createApplicationQuestionFollowup', () => {
 		it('should handle error during question update', async () => {
 			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
-			const mockCreateFollowup = createFollowupAiChat as any;
-			mockCreateFollowup.mockResolvedValueOnce({
+			vi.mocked(createFollowupAiChat).mockResolvedValueOnce({
 				success: true,
 				message: 'Follow-up created',
 				aiChat: mockCreatedAiChat
@@ -286,8 +280,7 @@ describe('createApplicationQuestionFollowup', () => {
 		it('should return aiChat on success', async () => {
 			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
-			const mockCreateFollowup = createFollowupAiChat as any;
-			mockCreateFollowup.mockResolvedValueOnce({
+			vi.mocked(createFollowupAiChat).mockResolvedValueOnce({
 				success: true,
 				message: 'Follow-up created',
 				aiChat: mockCreatedAiChat
@@ -313,8 +306,7 @@ describe('createApplicationQuestionFollowup', () => {
 		it('should handle empty followup request', async () => {
 			findFirst(db.query.application_questions).mockResolvedValueOnce(mockQuestion);
 
-			const mockCreateFollowup = createFollowupAiChat as any;
-			mockCreateFollowup.mockResolvedValueOnce({
+			vi.mocked(createFollowupAiChat).mockResolvedValueOnce({
 				success: true,
 				message: 'Follow-up created',
 				aiChat: mockCreatedAiChat
@@ -323,7 +315,7 @@ describe('createApplicationQuestionFollowup', () => {
 			// Should still work, validation is done in createFollowupAiChat
 			await createApplicationQuestionFollowup(200, '');
 
-			expect(mockCreateFollowup).toHaveBeenCalledWith(
+			expect(vi.mocked(createFollowupAiChat)).toHaveBeenCalledWith(
 				5,
 				'',
 				expect.objectContaining({

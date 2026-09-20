@@ -21,21 +21,21 @@ const mockAppFindFirst = vi.fn();
 const mockRecordFindFirst = vi.fn();
 const mockReturning = vi.fn();
 const mockValues = vi.fn().mockReturnValue({
-	returning: (...a: any[]) => mockReturning(...a)
+	returning: (...a: unknown[]) => mockReturning(...a)
 });
 const mockInsert = vi.fn().mockReturnValue({
-	values: (...a: any[]) => mockValues(...a)
+	values: (...a: unknown[]) => mockValues(...a)
 });
 const mockUpdateWhere = vi.fn().mockResolvedValue(undefined);
 const mockUpdateSet = vi.fn().mockReturnValue({
-	where: (...a: any[]) => mockUpdateWhere(...a)
+	where: (...a: unknown[]) => mockUpdateWhere(...a)
 });
 const mockUpdate = vi.fn().mockReturnValue({
-	set: (...a: any[]) => mockUpdateSet(...a)
+	set: (...a: unknown[]) => mockUpdateSet(...a)
 });
 const mockDeleteWhere = vi.fn().mockResolvedValue(undefined);
 const mockDelete = vi.fn().mockReturnValue({
-	where: (...a: any[]) => mockDeleteWhere(...a)
+	where: (...a: unknown[]) => mockDeleteWhere(...a)
 });
 const mockGetSelectedProfileId = vi.fn();
 const mockUploadFile = vi.fn();
@@ -46,20 +46,20 @@ const mockDerive = vi.fn();
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
-			applications: { findFirst: (...a: any[]) => mockAppFindFirst(...a) },
+			applications: { findFirst: (...a: unknown[]) => mockAppFindFirst(...a) },
 			application_records: {
-				findFirst: (...a: any[]) => mockRecordFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockRecordFindFirst(...a)
 			}
 		},
-		insert: (...a: any[]) => mockInsert(...a),
-		update: (...a: any[]) => mockUpdate(...a),
-		delete: (...a: any[]) => mockDelete(...a)
+		insert: (...a: unknown[]) => mockInsert(...a),
+		update: (...a: unknown[]) => mockUpdate(...a),
+		delete: (...a: unknown[]) => mockDelete(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_c: any, v: any) => v),
-	and: vi.fn((...a: any[]) => a)
+	eq: vi.fn((_c: unknown, v: unknown) => v),
+	and: vi.fn((...a: unknown[]) => a)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({
@@ -74,23 +74,23 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 vi.mock('$lib/server/profile/selected-profile', () => ({
-	getSelectedProfileId: (...a: any[]) => mockGetSelectedProfileId(...a)
+	getSelectedProfileId: (...a: unknown[]) => mockGetSelectedProfileId(...a)
 }));
 
 vi.mock('$lib/server/files', () => ({
-	uploadFile: (...a: any[]) => mockUploadFile(...a),
-	deleteFile: (...a: any[]) => mockDeleteFile(...a)
+	uploadFile: (...a: unknown[]) => mockUploadFile(...a),
+	deleteFile: (...a: unknown[]) => mockDeleteFile(...a)
 }));
 
 vi.mock('$lib/server/ai-chat/application-activity', () => ({
-	extractRecordFile: (...a: any[]) => mockExtract(...a)
+	extractRecordFile: (...a: unknown[]) => mockExtract(...a)
 }));
 
 // Mocked explicitly rather than left to fall into its own catch: derivation is
 // best-effort by design, so an unmocked one would "pass" while doing nothing
 // and the wiring assertions below would prove nothing.
 vi.mock('$lib/server/ai-chat/record-derivation', () => ({
-	deriveRecordMetadata: (...a: any[]) => mockDerive(...a)
+	deriveRecordMetadata: (...a: unknown[]) => mockDerive(...a)
 }));
 
 // $lib/application-records is deliberately NOT mocked — the point of the type
@@ -134,16 +134,16 @@ beforeEach(() => {
 	mockRecordFindFirst.mockResolvedValue({ id: 7, application_id: 1 });
 	mockReturning.mockResolvedValue([{ id: 7 }]);
 	mockValues.mockReturnValue({
-		returning: (...a: any[]) => mockReturning(...a)
+		returning: (...a: unknown[]) => mockReturning(...a)
 	});
-	mockInsert.mockReturnValue({ values: (...a: any[]) => mockValues(...a) });
+	mockInsert.mockReturnValue({ values: (...a: unknown[]) => mockValues(...a) });
 	mockUpdateWhere.mockResolvedValue(undefined);
 	mockUpdateSet.mockReturnValue({
-		where: (...a: any[]) => mockUpdateWhere(...a)
+		where: (...a: unknown[]) => mockUpdateWhere(...a)
 	});
-	mockUpdate.mockReturnValue({ set: (...a: any[]) => mockUpdateSet(...a) });
+	mockUpdate.mockReturnValue({ set: (...a: unknown[]) => mockUpdateSet(...a) });
 	mockDeleteWhere.mockResolvedValue(undefined);
-	mockDelete.mockReturnValue({ where: (...a: any[]) => mockDeleteWhere(...a) });
+	mockDelete.mockReturnValue({ where: (...a: unknown[]) => mockDeleteWhere(...a) });
 	mockUploadFile.mockResolvedValue({ id: 'file-uuid' });
 	mockDeleteFile.mockResolvedValue(undefined);
 	mockExtract.mockResolvedValue('extracted text');

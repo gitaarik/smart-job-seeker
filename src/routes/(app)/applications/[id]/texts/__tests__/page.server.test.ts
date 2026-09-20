@@ -20,21 +20,21 @@ const mockGetSelectedProfileId = vi.fn();
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
-			applications: { findFirst: (...a: any[]) => mockAppFindFirst(...a) },
+			applications: { findFirst: (...a: unknown[]) => mockAppFindFirst(...a) },
 			application_questions: {
-				findFirst: (...a: any[]) => mockQFindFirst(...a),
-				findMany: (...a: any[]) => mockQFindMany(...a)
+				findFirst: (...a: unknown[]) => mockQFindFirst(...a),
+				findMany: (...a: unknown[]) => mockQFindMany(...a)
 			}
 		},
-		insert: (...a: any[]) => mockInsert(...a),
-		update: (...a: any[]) => mockUpdate(...a)
+		insert: (...a: unknown[]) => mockInsert(...a),
+		update: (...a: unknown[]) => mockUpdate(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_c: any, v: any) => v),
-	and: vi.fn((...a: any[]) => a),
-	desc: vi.fn((c: any) => c)
+	eq: vi.fn((_c: unknown, v: unknown) => v),
+	and: vi.fn((...a: unknown[]) => a),
+	desc: vi.fn((c: unknown) => c)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({
@@ -48,7 +48,7 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 vi.mock('$lib/server/profile/selected-profile', () => ({
-	getSelectedProfileId: (...a: any[]) => mockGetSelectedProfileId(...a)
+	getSelectedProfileId: (...a: unknown[]) => mockGetSelectedProfileId(...a)
 }));
 
 import { actions } from '../+page.server';

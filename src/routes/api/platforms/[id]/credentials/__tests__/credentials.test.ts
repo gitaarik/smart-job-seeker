@@ -31,28 +31,28 @@ const mockDeleteFn = vi.fn().mockReturnValue({ where: mockDeleteWhere });
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
-			profiles: { findFirst: (...a: any[]) => mockProfilesFindFirst(...a) },
+			profiles: { findFirst: (...a: unknown[]) => mockProfilesFindFirst(...a) },
 			job_platforms: {
-				findFirst: (...a: any[]) => mockPlatformsFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockPlatformsFindFirst(...a)
 			},
 			platform_credentials: {
-				findFirst: (...a: any[]) => mockPlatformCredentialsFindFirst(...a),
-				findMany: (...a: any[]) => mockPlatformCredentialsFindMany(...a)
+				findFirst: (...a: unknown[]) => mockPlatformCredentialsFindFirst(...a),
+				findMany: (...a: unknown[]) => mockPlatformCredentialsFindMany(...a)
 			},
 			platform_profiles: {
-				findMany: (...a: any[]) => mockPlatformProfilesFindMany(...a)
+				findMany: (...a: unknown[]) => mockPlatformProfilesFindMany(...a)
 			}
 		},
-		update: (...a: any[]) => mockUpdateFn(...a),
-		insert: (...a: any[]) => mockInsertFn(...a),
-		delete: (...a: any[]) => mockDeleteFn(...a)
+		update: (...a: unknown[]) => mockUpdateFn(...a),
+		insert: (...a: unknown[]) => mockInsertFn(...a),
+		delete: (...a: unknown[]) => mockDeleteFn(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val),
-	and: vi.fn((...args: any[]) => args),
-	inArray: vi.fn((_col: any, vals: any[]) => vals)
+	eq: vi.fn((_col: unknown, val: unknown) => val),
+	and: vi.fn((...args: unknown[]) => args),
+	inArray: vi.fn((_col: unknown, vals: unknown[]) => vals)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({

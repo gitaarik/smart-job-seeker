@@ -22,19 +22,19 @@ const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
-			profiles: { findFirst: (...a: any[]) => mockProfilesFindFirst(...a) },
+			profiles: { findFirst: (...a: unknown[]) => mockProfilesFindFirst(...a) },
 			match_config: {
-				findFirst: (...a: any[]) => mockConfigFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockConfigFindFirst(...a)
 			}
 		},
-		insert: (...a: any[]) => mockInsertFn(...a),
-		update: (...a: any[]) => mockUpdateFn(...a)
+		insert: (...a: unknown[]) => mockInsertFn(...a),
+		update: (...a: unknown[]) => mockUpdateFn(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val),
-	and: vi.fn((...args: any[]) => args)
+	eq: vi.fn((_col: unknown, val: unknown) => val),
+	and: vi.fn((...args: unknown[]) => args)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({

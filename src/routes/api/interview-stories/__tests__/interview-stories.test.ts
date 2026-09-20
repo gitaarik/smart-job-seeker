@@ -28,20 +28,20 @@ const mockDeleteFn = vi.fn().mockReturnValue({ where: mockDeleteWhere });
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
-			profiles: { findFirst: (...a: any[]) => mockProfilesFindFirst(...a) },
+			profiles: { findFirst: (...a: unknown[]) => mockProfilesFindFirst(...a) },
 			project_stories: {
-				findFirst: (...a: any[]) => mockStoriesFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockStoriesFindFirst(...a)
 			}
 		},
-		insert: (...a: any[]) => mockInsertFn(...a),
-		update: (...a: any[]) => mockUpdateFn(...a),
-		delete: (...a: any[]) => mockDeleteFn(...a)
+		insert: (...a: unknown[]) => mockInsertFn(...a),
+		update: (...a: unknown[]) => mockUpdateFn(...a),
+		delete: (...a: unknown[]) => mockDeleteFn(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val),
-	and: vi.fn((...args: any[]) => args),
+	eq: vi.fn((_col: unknown, val: unknown) => val),
+	and: vi.fn((...args: unknown[]) => args),
 	desc: vi.fn()
 }));
 

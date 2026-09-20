@@ -226,7 +226,28 @@ set -euo pipefail
 # ai-chat-followup-history.test.ts: an `aiChat` fixture missing six required
 # fields, so the test asserted against a shape the function cannot return, and
 # five unguarded reads of an options parameter that is optional.
-BASELINE=487
+# 487 -> 189 on 2026-09-20, the same day and the other half of the same idea:
+# 298 test-file `any`s that were never describing anything.
+#
+#   - 167 rest params and 90 vi.fn callback params are forwarded, not read, so
+#     `unknown` says what is true without also saying "stop checking". The
+#     swap is only safe where the body ignores the value: one callback did
+#     read `table?.__table`, and it is typed `{ __table?: string }` now, which
+#     beats both spellings. svelte-check stayed at 31 through all of it.
+#   - 41 were `const m = fn as any; m.mockResolvedValue(...)`, the assignment
+#     form of the casts cleared above. Now vi.mocked(fn), or the shared
+#     findMany() where the target was dbDirect.
+#
+# A first attempt swapped every `: any` parameter in the tree and broke 20-odd
+# call sites whose bodies genuinely used the value — `catch (e: any)` reading
+# e.status, helper signatures taking a RequestEvent. Scoped to rest params and
+# vi.fn callbacks, the fallout was one site. The boundary is whether the
+# parameter is forwarded or used, and it is not visible from the annotation.
+#
+# What is left is ~190: 45 `: any`, 24 `as any`, the ~86 navigation residue and
+# the 8 audited html sinks. The remaining test-file `any` is the part that
+# wants reading rather than a regex.
+BASELINE=189
 
 npx svelte-kit sync
 

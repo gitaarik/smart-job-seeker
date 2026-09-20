@@ -17,19 +17,19 @@ vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
 			search_tasks: {
-				findFirst: (...a: any[]) => mockSearchTasksFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockSearchTasksFindFirst(...a)
 			},
 			search_task_runs: {
-				findFirst: (...a: any[]) => mockRunsFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockRunsFindFirst(...a)
 			}
 		},
-		update: (...a: any[]) => mockUpdateFn(...a)
+		update: (...a: unknown[]) => mockUpdateFn(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val),
-	and: vi.fn((...args: any[]) => args)
+	eq: vi.fn((_col: unknown, val: unknown) => val),
+	and: vi.fn((...args: unknown[]) => args)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({

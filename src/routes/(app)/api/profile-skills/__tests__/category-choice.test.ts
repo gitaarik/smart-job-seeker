@@ -28,23 +28,23 @@ vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
 			tech_skill_categories: {
-				findMany: (...a: any[]) => mockCategoriesFindMany(...a)
+				findMany: (...a: unknown[]) => mockCategoriesFindMany(...a)
 			},
-			tech_skills: { findFirst: (...a: any[]) => mockSkillsFindFirst(...a) },
+			tech_skills: { findFirst: (...a: unknown[]) => mockSkillsFindFirst(...a) },
 			profile_versions: {
-				findMany: (...a: any[]) => mockVersionsFindMany(...a)
+				findMany: (...a: unknown[]) => mockVersionsFindMany(...a)
 			}
 		},
-		insert: (...a: any[]) => mockInsertFn(...a),
-		update: (...a: any[]) => mockUpdateFn(...a)
+		insert: (...a: unknown[]) => mockInsertFn(...a),
+		update: (...a: unknown[]) => mockUpdateFn(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val),
-	and: vi.fn((...args: any[]) => args),
-	asc: vi.fn((col: any) => col),
-	desc: vi.fn((col: any) => col)
+	eq: vi.fn((_col: unknown, val: unknown) => val),
+	and: vi.fn((...args: unknown[]) => args),
+	asc: vi.fn((col: unknown) => col),
+	desc: vi.fn((col: unknown) => col)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({

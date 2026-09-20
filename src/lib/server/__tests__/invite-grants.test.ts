@@ -25,20 +25,20 @@ const mockUpdateFn = vi.fn().mockReturnValue({ set: mockUpdateSet });
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
-			api_keys: { findMany: (...a: any[]) => mockApiKeysFindMany(...a) },
+			api_keys: { findMany: (...a: unknown[]) => mockApiKeysFindMany(...a) },
 			subscriptions: {
-				findFirst: (...a: any[]) => mockSubscriptionsFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockSubscriptionsFindFirst(...a)
 			}
 		},
-		insert: (...a: any[]) => mockInsertFn(...a),
-		update: (...a: any[]) => mockUpdateFn(...a)
+		insert: (...a: unknown[]) => mockInsertFn(...a),
+		update: (...a: unknown[]) => mockUpdateFn(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((col: any, val: any) => ({ kind: 'eq', col, val })),
-	and: vi.fn((...args: any[]) => ({ kind: 'and', args })),
-	inArray: vi.fn((col: any, vals: any[]) => ({ kind: 'in', col, vals }))
+	eq: vi.fn((col: unknown, val: unknown) => ({ kind: 'eq', col, val })),
+	and: vi.fn((...args: unknown[]) => ({ kind: 'and', args })),
+	inArray: vi.fn((col: unknown, vals: unknown[]) => ({ kind: 'in', col, vals }))
 }));
 
 vi.mock('$lib/server/db/schema', () => ({
@@ -60,17 +60,17 @@ vi.mock('$lib/server/billing/plans', () => ({
 
 const mockEnsureAcceptedContact = vi.fn().mockResolvedValue(undefined);
 vi.mock('$lib/server/contacts', () => ({
-	ensureAcceptedContact: (...a: any[]) => mockEnsureAcceptedContact(...a)
+	ensureAcceptedContact: (...a: unknown[]) => mockEnsureAcceptedContact(...a)
 }));
 
 const mockInsertDeviceShare = vi.fn().mockResolvedValue({ success: true });
 vi.mock('$lib/server/device-shares', () => ({
-	insertDeviceShare: (...a: any[]) => mockInsertDeviceShare(...a)
+	insertDeviceShare: (...a: unknown[]) => mockInsertDeviceShare(...a)
 }));
 
 const mockCreateNotification = vi.fn().mockResolvedValue(undefined);
 vi.mock('$lib/server/notifications', () => ({
-	createNotification: (...a: any[]) => mockCreateNotification(...a)
+	createNotification: (...a: unknown[]) => mockCreateNotification(...a)
 }));
 
 import {

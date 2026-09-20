@@ -51,8 +51,8 @@ vi.mock('$lib/server/ai-chat/application-activity', () => ({
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_c: any, v: any) => v),
-	and: vi.fn((...a: any[]) => a),
+	eq: vi.fn((_c: unknown, v: unknown) => v),
+	and: vi.fn((...a: unknown[]) => a),
 	asc: vi.fn(),
 	desc: vi.fn(),
 	isNotNull: vi.fn()

@@ -27,26 +27,26 @@ const mockDeleteFn = vi.fn().mockReturnValue({ where: mockDeleteWhere });
 vi.mock('$lib/server/db', () => ({
 	db: {
 		query: {
-			api_keys: { findFirst: (...a: any[]) => mockApiKeysFindFirst(...a) },
+			api_keys: { findFirst: (...a: unknown[]) => mockApiKeysFindFirst(...a) },
 			device_shares: {
-				findFirst: (...a: any[]) => mockDeviceSharesFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockDeviceSharesFindFirst(...a)
 			},
-			users: { findFirst: (...a: any[]) => mockUsersFindFirst(...a) },
+			users: { findFirst: (...a: unknown[]) => mockUsersFindFirst(...a) },
 			verifications: {
-				findFirst: (...a: any[]) => mockVerificationsFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockVerificationsFindFirst(...a)
 			}
 		},
-		insert: (...a: any[]) => mockInsertFn(...a),
-		delete: (...a: any[]) => mockDeleteFn(...a)
+		insert: (...a: unknown[]) => mockInsertFn(...a),
+		delete: (...a: unknown[]) => mockDeleteFn(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((col: any, val: any) => ({ kind: 'eq', col, val })),
-	and: vi.fn((...args: any[]) => ({ kind: 'and', args })),
-	desc: vi.fn((col: any) => ({ kind: 'desc', col })),
-	gt: vi.fn((col: any, val: any) => ({ kind: 'gt', col, val })),
-	inArray: vi.fn((col: any, vals: any[]) => ({ kind: 'in', col, vals }))
+	eq: vi.fn((col: unknown, val: unknown) => ({ kind: 'eq', col, val })),
+	and: vi.fn((...args: unknown[]) => ({ kind: 'and', args })),
+	desc: vi.fn((col: unknown) => ({ kind: 'desc', col })),
+	gt: vi.fn((col: unknown, val: unknown) => ({ kind: 'gt', col, val })),
+	inArray: vi.fn((col: unknown, vals: unknown[]) => ({ kind: 'in', col, vals }))
 }));
 
 vi.mock('$lib/server/db/schema', () => ({
@@ -70,12 +70,12 @@ vi.mock('$lib/server/db/schema', () => ({
 const mockEnsureAcceptedContact = vi.fn().mockResolvedValue(undefined);
 vi.mock('$lib/server/contacts', () => ({
 	areContacts: vi.fn(),
-	ensureAcceptedContact: (...a: any[]) => mockEnsureAcceptedContact(...a)
+	ensureAcceptedContact: (...a: unknown[]) => mockEnsureAcceptedContact(...a)
 }));
 
 const mockCreateNotification = vi.fn().mockResolvedValue(undefined);
 vi.mock('$lib/server/notifications', () => ({
-	createNotification: (...a: any[]) => mockCreateNotification(...a)
+	createNotification: (...a: unknown[]) => mockCreateNotification(...a)
 }));
 
 vi.mock('$lib/server/credential-shares', () => ({

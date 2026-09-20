@@ -21,7 +21,7 @@ vi.mock('$lib/server/db', () => ({
 				findFirst: vi.fn()
 			}
 		},
-		update: (...args: any[]) => mockUpdateFn(...args)
+		update: (...args: unknown[]) => mockUpdateFn(...args)
 	}
 }));
 
@@ -66,7 +66,7 @@ vi.mock('@langchain/groq', () => ({
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val)
+	eq: vi.fn((_col: unknown, val: unknown) => val)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({
@@ -88,8 +88,7 @@ describe('generateAiChatResponse', () => {
 	});
 
 	it('should return error if ai_chats not found', async () => {
-		const utilsMock = getInterpolatedPrompts as any;
-		utilsMock.mockResolvedValueOnce(null);
+		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(null);
 
 		const result = await generateAiChatResponse(999);
 
@@ -98,14 +97,12 @@ describe('generateAiChatResponse', () => {
 	});
 
 	it('should generate response and save to database', async () => {
-		const utilsMock = getInterpolatedPrompts as any;
-
 		const mockPrompts = {
 			systemPrompt: 'You are a helpful assistant',
 			userPrompt: 'What is the capital of France?'
 		};
 
-		utilsMock.mockResolvedValueOnce(mockPrompts);
+		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
 
 		mockInvoke.mockResolvedValueOnce(new AIMessage('The capital of France is Paris.'));
 
@@ -123,14 +120,12 @@ describe('generateAiChatResponse', () => {
 	});
 
 	it('should call Groq API with correct parameters', async () => {
-		const utilsMock = getInterpolatedPrompts as any;
-
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
 			userPrompt: 'Tell me a joke'
 		};
 
-		utilsMock.mockResolvedValueOnce(mockPrompts);
+		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
 
 		mockInvoke.mockResolvedValueOnce(new AIMessage('Why did the chicken cross the road?'));
 
@@ -141,13 +136,12 @@ describe('generateAiChatResponse', () => {
 	});
 
 	it('should handle Groq API error gracefully', async () => {
-		const utilsMock = getInterpolatedPrompts as any;
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
 			userPrompt: 'Tell me a joke'
 		};
 
-		utilsMock.mockResolvedValueOnce(mockPrompts);
+		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
 
 		const apiError = new Error('Groq API error: Rate limit exceeded');
 		mockInvoke.mockRejectedValueOnce(apiError);
@@ -161,13 +155,12 @@ describe('generateAiChatResponse', () => {
 	});
 
 	it('should handle response with no content', async () => {
-		const utilsMock = getInterpolatedPrompts as any;
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
 			userPrompt: 'Tell me a joke'
 		};
 
-		utilsMock.mockResolvedValueOnce(mockPrompts);
+		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
 
 		mockInvoke.mockResolvedValueOnce(new AIMessage(''));
 
@@ -178,13 +171,12 @@ describe('generateAiChatResponse', () => {
 	});
 
 	it('should handle empty choices array', async () => {
-		const utilsMock = getInterpolatedPrompts as any;
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
 			userPrompt: 'Tell me a joke'
 		};
 
-		utilsMock.mockResolvedValueOnce(mockPrompts);
+		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
 
 		mockInvoke.mockResolvedValueOnce(new AIMessage(''));
 
@@ -195,14 +187,12 @@ describe('generateAiChatResponse', () => {
 	});
 
 	it('should handle database update error', async () => {
-		const utilsMock = getInterpolatedPrompts as any;
-
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
 			userPrompt: 'Tell me a joke'
 		};
 
-		utilsMock.mockResolvedValueOnce(mockPrompts);
+		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
 
 		mockInvoke.mockResolvedValueOnce(new AIMessage('Some response'));
 
@@ -217,15 +207,13 @@ describe('generateAiChatResponse', () => {
 	});
 
 	it('should use variable interpolation before sending to Groq', async () => {
-		const utilsMock = getInterpolatedPrompts as any;
-
 		const mockPrompts = {
 			systemPrompt: 'Use this schema: {user_schema} to structure response',
 			userPrompt: 'Use this data: {user_data} to answer'
 		};
 
 		// The utility should have already interpolated these
-		utilsMock.mockResolvedValueOnce(mockPrompts);
+		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
 
 		mockInvoke.mockResolvedValueOnce(new AIMessage('Response with interpolated data'));
 
@@ -237,20 +225,18 @@ describe('generateAiChatResponse', () => {
 	});
 
 	it('should process multiple responses correctly', async () => {
-		const utilsMock = getInterpolatedPrompts as any;
-
 		const mockPrompts = {
 			systemPrompt: 'Be helpful',
 			userPrompt: 'What is 2+2?'
 		};
 
-		utilsMock.mockResolvedValueOnce(mockPrompts);
+		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
 
 		mockInvoke.mockResolvedValueOnce(new AIMessage('2 + 2 = 4'));
 
 		const result1 = await generateAiChatResponse(1);
 
-		utilsMock.mockResolvedValueOnce(mockPrompts);
+		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
 		mockInvoke.mockResolvedValueOnce(new AIMessage('2 + 2 = 4'));
 
 		const result2 = await generateAiChatResponse(2);

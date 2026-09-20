@@ -37,15 +37,15 @@ const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
-		insert: (...a: any[]) => mockInsert(...a),
-		delete: (...a: any[]) => mockDelete(...a),
+		insert: (...a: unknown[]) => mockInsert(...a),
+		delete: (...a: unknown[]) => mockDelete(...a),
 		update: (...a: unknown[]) => mockUpdate(...a),
-		select: (...a: any[]) => mockSelect(...a)
+		select: (...a: unknown[]) => mockSelect(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	and: (...a: any[]) => ({ and: a }),
+	and: (...a: unknown[]) => ({ and: a }),
 	asc: (c: any) => ({ asc: c }),
 	desc: (c: unknown) => ({ desc: c }),
 	eq: (c: any, v: any) => ({ eq: [c, v] }),

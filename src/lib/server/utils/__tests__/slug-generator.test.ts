@@ -17,9 +17,9 @@ vi.mock('$lib/server/db', () => ({
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val),
-	and: vi.fn((...args: any[]) => args),
-	ne: vi.fn((_col: any, val: any) => val)
+	eq: vi.fn((_col: unknown, val: unknown) => val),
+	and: vi.fn((...args: unknown[]) => args),
+	ne: vi.fn((_col: unknown, val: unknown) => val)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({

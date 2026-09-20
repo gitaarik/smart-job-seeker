@@ -22,13 +22,13 @@ vi.mock('$lib/server/db', () => ({
 				findFirst: vi.fn()
 			}
 		},
-		insert: (...a: any[]) => mockInsertFn(...a),
-		update: (...a: any[]) => mockUpdateFn(...a)
+		insert: (...a: unknown[]) => mockInsertFn(...a),
+		update: (...a: unknown[]) => mockUpdateFn(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val)
+	eq: vi.fn((_col: unknown, val: unknown) => val)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({
@@ -42,9 +42,9 @@ const mockGetProfileIdFromApiKey = vi.fn();
 const mockRecordImporter = vi.fn();
 
 vi.mock('$lib/server/job/import-utils', () => ({
-	findExistingJob: (...a: any[]) => mockFindExistingJob(...a),
-	getProfileIdFromApiKey: (...a: any[]) => mockGetProfileIdFromApiKey(...a),
-	recordImporter: (...a: any[]) => mockRecordImporter(...a)
+	findExistingJob: (...a: unknown[]) => mockFindExistingJob(...a),
+	getProfileIdFromApiKey: (...a: unknown[]) => mockGetProfileIdFromApiKey(...a),
+	recordImporter: (...a: unknown[]) => mockRecordImporter(...a)
 }));
 
 // Mock the API key verification module (used by getProfileIdFromApiKey)

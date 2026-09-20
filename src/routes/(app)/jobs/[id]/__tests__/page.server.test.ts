@@ -30,24 +30,24 @@ const mockDetectPlatformId = vi.fn().mockResolvedValue(null);
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
-			jobs: { findFirst: (...a: any[]) => mockJobFindFirst(...a) },
+			jobs: { findFirst: (...a: unknown[]) => mockJobFindFirst(...a) },
 			job_importers: {
-				findFirst: (...a: any[]) => mockImporterFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockImporterFindFirst(...a)
 			}
 		},
-		update: (...a: any[]) => mockUpdate(...a),
-		delete: (...a: any[]) => mockDelete(...a)
+		update: (...a: unknown[]) => mockUpdate(...a),
+		delete: (...a: unknown[]) => mockDelete(...a)
 	},
 	queryRaw: vi.fn(),
 	sql: vi.fn()
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_c: any, v: any) => v),
-	and: vi.fn((...a: any[]) => a),
-	asc: vi.fn((c: any) => c),
-	desc: vi.fn((c: any) => c),
-	isNotNull: vi.fn((c: any) => c)
+	eq: vi.fn((_c: unknown, v: unknown) => v),
+	and: vi.fn((...a: unknown[]) => a),
+	asc: vi.fn((c: unknown) => c),
+	desc: vi.fn((c: unknown) => c),
+	isNotNull: vi.fn((c: unknown) => c)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({
@@ -66,20 +66,20 @@ vi.mock('$lib/server/db/schema', () => ({
 
 vi.mock('$lib/server/job/match-utils', () => ({ getProfileSkillLevels: vi.fn() }));
 vi.mock('$lib/server/queue/match-queue', () => ({
-	addMatchJob: (...a: any[]) => mockAddMatchJob(...a)
+	addMatchJob: (...a: unknown[]) => mockAddMatchJob(...a)
 }));
 vi.mock('$lib/server/browser/geo-utils', () => ({ getGeoConfig: vi.fn() }));
 vi.mock('../../../profile/utils', () => ({
-	getSelectedProfileId: (...a: any[]) => mockGetSelectedProfileId(...a)
+	getSelectedProfileId: (...a: unknown[]) => mockGetSelectedProfileId(...a)
 }));
 vi.mock('$lib/server/jobs/parse-job-description', () => ({
-	parseJobDescription: (...a: any[]) => mockParseJobDescription(...a)
+	parseJobDescription: (...a: unknown[]) => mockParseJobDescription(...a)
 }));
 vi.mock('$lib/server/jobs/job-fields', async (importOriginal) => ({
 	// Only the platform lookup touches the DB; the coercion helpers are pure and
 	// are exactly what these tests are checking the action wires up correctly.
 	...(await importOriginal<typeof import('$lib/server/jobs/job-fields')>()),
-	detectPlatformId: (...a: any[]) => mockDetectPlatformId(...a)
+	detectPlatformId: (...a: unknown[]) => mockDetectPlatformId(...a)
 }));
 
 import { actions } from '../+page.server';

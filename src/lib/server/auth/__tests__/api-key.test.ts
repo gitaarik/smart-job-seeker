@@ -15,7 +15,7 @@ vi.mock('$lib/server/db', () => ({
 	db: {
 		query: {
 			api_keys: {
-				findFirst: (...args: any[]) => mockFindFirst(...args)
+				findFirst: (...args: unknown[]) => mockFindFirst(...args)
 			}
 		},
 		update: vi.fn(() => ({

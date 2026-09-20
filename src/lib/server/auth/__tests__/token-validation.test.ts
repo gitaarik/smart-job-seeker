@@ -12,18 +12,18 @@ vi.mock('$lib/server/db', () => ({
 	db: {
 		query: {
 			profile_tokens: {
-				findFirst: (...args: any[]) => mockFindFirstToken(...args)
+				findFirst: (...args: unknown[]) => mockFindFirstToken(...args)
 			},
 			profile_versions: {
-				findFirst: (...args: any[]) => mockFindFirstVersion(...args)
+				findFirst: (...args: unknown[]) => mockFindFirstVersion(...args)
 			}
 		},
-		update: (...args: any[]) => mockUpdate(...args)
+		update: (...args: unknown[]) => mockUpdate(...args)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val),
+	eq: vi.fn((_col: unknown, val: unknown) => val),
 	sql: vi.fn()
 }));
 

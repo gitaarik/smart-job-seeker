@@ -23,15 +23,15 @@ const mockRm = vi.fn();
 
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
-		select: (...a: any[]) => mockSelect(...a),
-		delete: (...a: any[]) => mockDelete(...a)
+		select: (...a: unknown[]) => mockSelect(...a),
+		delete: (...a: unknown[]) => mockDelete(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	and: vi.fn((...a: any[]) => a),
-	lt: vi.fn((c: any, v: any) => ({ c, v })),
-	inArray: vi.fn((_c: any, v: any) => v),
+	and: vi.fn((...a: unknown[]) => a),
+	lt: vi.fn((c: unknown, v: unknown) => ({ c, v })),
+	inArray: vi.fn((_c: unknown, v: unknown) => v),
 	sql: vi.fn(() => 'NOT EXISTS(...)')
 }));
 
@@ -48,9 +48,9 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 vi.mock('node:fs/promises', () => ({
-	readdir: (...a: any[]) => mockReaddir(...a),
-	stat: (...a: any[]) => mockStat(...a),
-	rm: (...a: any[]) => mockRm(...a)
+	readdir: (...a: unknown[]) => mockReaddir(...a),
+	stat: (...a: unknown[]) => mockStat(...a),
+	rm: (...a: unknown[]) => mockRm(...a)
 }));
 
 import { DEFAULT_BATCH_LIMIT, pruneScraperLogs, pruneScraperScreenshots } from '../retention';

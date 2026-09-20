@@ -14,13 +14,13 @@ const mockCreateAndGenerate = vi.fn();
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
-			application_questions: { findFirst: (...a: any[]) => mockQFindFirst(...a) }
+			application_questions: { findFirst: (...a: unknown[]) => mockQFindFirst(...a) }
 		}
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_c: any, v: any) => v)
+	eq: vi.fn((_c: unknown, v: unknown) => v)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({
@@ -28,7 +28,7 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 vi.mock('$lib/server/ai-chat/utils', () => ({
-	createAndGenerateAiChat: (...a: any[]) => mockCreateAndGenerate(...a)
+	createAndGenerateAiChat: (...a: unknown[]) => mockCreateAndGenerate(...a)
 }));
 
 vi.mock('$lib/server/ai-chat/application-question', () => ({

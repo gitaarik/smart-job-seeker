@@ -38,25 +38,25 @@ vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
 			search_tasks: {
-				findFirst: (...a: any[]) => mockSearchTasksFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockSearchTasksFindFirst(...a)
 			},
 			platform_credentials: {
-				findFirst: (...a: any[]) => mockPlatformCredentialsFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockPlatformCredentialsFindFirst(...a)
 			},
 			platform_profiles: {
-				findFirst: (...a: any[]) => mockPlatformProfilesFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockPlatformProfilesFindFirst(...a)
 			},
-			api_keys: { findFirst: (...a: any[]) => mockApiKeysFindFirst(...a) },
-			users: { findFirst: (...a: any[]) => mockUsersFindFirst(...a) }
+			api_keys: { findFirst: (...a: unknown[]) => mockApiKeysFindFirst(...a) },
+			users: { findFirst: (...a: unknown[]) => mockUsersFindFirst(...a) }
 		},
-		update: (...a: any[]) => mockUpdateFn(...a),
-		insert: (...a: any[]) => mockInsertFn(...a)
+		update: (...a: unknown[]) => mockUpdateFn(...a),
+		insert: (...a: unknown[]) => mockInsertFn(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((col: any, val: any) => ({ kind: 'eq', col, val })),
-	and: vi.fn((...args: any[]) => ({ kind: 'and', args }))
+	eq: vi.fn((col: unknown, val: unknown) => ({ kind: 'eq', col, val })),
+	and: vi.fn((...args: unknown[]) => ({ kind: 'and', args }))
 }));
 
 vi.mock('$lib/server/db/schema', () => ({
@@ -86,12 +86,12 @@ vi.mock('$lib/server/validation/api-schemas', () => ({
 
 const mockHasDeviceAccess = vi.fn();
 vi.mock('$lib/server/device-shares', () => ({
-	hasDeviceAccess: (...a: any[]) => mockHasDeviceAccess(...a)
+	hasDeviceAccess: (...a: unknown[]) => mockHasDeviceAccess(...a)
 }));
 
 const mockHasCredentialAccess = vi.fn();
 vi.mock('$lib/server/credential-shares', () => ({
-	hasCredentialAccess: (...a: any[]) => mockHasCredentialAccess(...a)
+	hasCredentialAccess: (...a: unknown[]) => mockHasCredentialAccess(...a)
 }));
 
 vi.mock('$lib/server/auth/crypto', () => ({

@@ -11,11 +11,11 @@ const mockGetSelectedProfileId = vi.fn();
 const mockCreateAndGenerate = vi.fn();
 
 vi.mock('$lib/server/profile/selected-profile', () => ({
-	getSelectedProfileId: (...a: any[]) => mockGetSelectedProfileId(...a)
+	getSelectedProfileId: (...a: unknown[]) => mockGetSelectedProfileId(...a)
 }));
 
 vi.mock('$lib/server/ai-chat/utils', () => ({
-	createAndGenerateAiChat: (...a: any[]) => mockCreateAndGenerate(...a)
+	createAndGenerateAiChat: (...a: unknown[]) => mockCreateAndGenerate(...a)
 }));
 
 vi.mock('$lib/server/billing/require-credits', () => ({

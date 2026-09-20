@@ -65,8 +65,8 @@ const mockInsert = vi.fn().mockReturnValue({ values: mockValues });
 
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
-		select: (...a: any[]) => mockSelect(...a),
-		insert: (...a: any[]) => mockInsert(...a)
+		select: (...a: unknown[]) => mockSelect(...a),
+		insert: (...a: unknown[]) => mockInsert(...a)
 	}
 }));
 
@@ -74,7 +74,7 @@ vi.mock('$lib/server/db/schema', () => ({
 	skill_embeddings: { skill: 'skill', label: 'label', model: 'model' }
 }));
 
-vi.mock('drizzle-orm', () => ({ eq: vi.fn((_c: any, v: any) => v) }));
+vi.mock('drizzle-orm', () => ({ eq: vi.fn((_c: unknown, v: unknown) => v) }));
 
 import {
 	_resetVocabCache,

@@ -13,13 +13,13 @@ const mockUpdate = vi.fn().mockReturnValue({ set: mockSet });
 
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
-		update: (...a: any[]) => mockUpdate(...a)
+		update: (...a: unknown[]) => mockUpdate(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
 	// Return the compared value so the where-arg is inspectable in assertions.
-	eq: vi.fn((_col: any, val: any) => val)
+	eq: vi.fn((_col: unknown, val: unknown) => val)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({

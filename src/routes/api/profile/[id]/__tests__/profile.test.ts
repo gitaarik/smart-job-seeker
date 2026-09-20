@@ -18,25 +18,25 @@ vi.mock('$lib/server/db', () => ({
 	db: {
 		query: {
 			profiles: {
-				findFirst: (...a: any[]) => mockFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockFindFirst(...a)
 			}
 		},
-		update: (...a: any[]) => mockUpdateFn(...a)
+		update: (...a: unknown[]) => mockUpdateFn(...a)
 	},
 	dbDirect: {
 		query: {
 			profiles: {
-				findFirst: (...a: any[]) => mockFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockFindFirst(...a)
 			}
 		},
-		update: (...a: any[]) => mockUpdateFn(...a)
+		update: (...a: unknown[]) => mockUpdateFn(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val),
-	and: vi.fn((...args: any[]) => args),
-	ne: vi.fn((_col: any, val: any) => val),
+	eq: vi.fn((_col: unknown, val: unknown) => val),
+	and: vi.fn((...args: unknown[]) => args),
+	ne: vi.fn((_col: unknown, val: unknown) => val),
 	asc: vi.fn()
 }));
 

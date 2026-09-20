@@ -31,35 +31,35 @@ const mockDeleteFn = vi.fn().mockReturnValue({ where: mockDeleteWhere });
 vi.mock('$lib/server/db', () => ({
 	db: {
 		query: {
-			profiles: { findMany: (...a: any[]) => mockProfilesFindMany(...a) },
+			profiles: { findMany: (...a: unknown[]) => mockProfilesFindMany(...a) },
 			platform_credentials: {
-				findFirst: (...a: any[]) => mockPlatformCredentialsFindFirst(...a),
-				findMany: (...a: any[]) => mockPlatformCredentialsFindMany(...a)
+				findFirst: (...a: unknown[]) => mockPlatformCredentialsFindFirst(...a),
+				findMany: (...a: unknown[]) => mockPlatformCredentialsFindMany(...a)
 			},
-			api_keys: { findMany: (...a: any[]) => mockApiKeysFindMany(...a) },
+			api_keys: { findMany: (...a: unknown[]) => mockApiKeysFindMany(...a) },
 			device_shares: {
-				findFirst: (...a: any[]) => mockDeviceSharesFindFirst(...a)
+				findFirst: (...a: unknown[]) => mockDeviceSharesFindFirst(...a)
 			},
 			credential_shares: {
-				findFirst: (...a: any[]) => mockCredentialSharesFindFirst(...a),
-				findMany: (...a: any[]) => mockCredentialSharesFindMany(...a)
+				findFirst: (...a: unknown[]) => mockCredentialSharesFindFirst(...a),
+				findMany: (...a: unknown[]) => mockCredentialSharesFindMany(...a)
 			},
 			users: {
-				findFirst: (...a: any[]) => mockUsersFindFirst(...a),
-				findMany: (...a: any[]) => mockUsersFindMany(...a)
+				findFirst: (...a: unknown[]) => mockUsersFindFirst(...a),
+				findMany: (...a: unknown[]) => mockUsersFindMany(...a)
 			}
 		},
-		insert: (...a: any[]) => mockInsertFn(...a),
-		delete: (...a: any[]) => mockDeleteFn(...a)
+		insert: (...a: unknown[]) => mockInsertFn(...a),
+		delete: (...a: unknown[]) => mockDeleteFn(...a)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((col: any, val: any) => ({ kind: 'eq', col, val })),
-	and: vi.fn((...args: any[]) => ({ kind: 'and', args })),
-	or: vi.fn((...args: any[]) => ({ kind: 'or', args })),
-	inArray: vi.fn((col: any, vals: any[]) => ({ kind: 'in', col, vals })),
-	desc: vi.fn((col: any) => ({ kind: 'desc', col }))
+	eq: vi.fn((col: unknown, val: unknown) => ({ kind: 'eq', col, val })),
+	and: vi.fn((...args: unknown[]) => ({ kind: 'and', args })),
+	or: vi.fn((...args: unknown[]) => ({ kind: 'or', args })),
+	inArray: vi.fn((col: unknown, vals: unknown[]) => ({ kind: 'in', col, vals })),
+	desc: vi.fn((col: unknown) => ({ kind: 'desc', col }))
 }));
 
 vi.mock('$lib/server/db/schema', () => ({
@@ -84,12 +84,12 @@ vi.mock('$lib/server/db/schema', () => ({
 
 const mockAreContacts = vi.fn();
 vi.mock('$lib/server/contacts', () => ({
-	areContacts: (...a: any[]) => mockAreContacts(...a)
+	areContacts: (...a: unknown[]) => mockAreContacts(...a)
 }));
 
 const mockCreateNotification = vi.fn().mockResolvedValue(undefined);
 vi.mock('$lib/server/notifications', () => ({
-	createNotification: (...a: any[]) => mockCreateNotification(...a)
+	createNotification: (...a: unknown[]) => mockCreateNotification(...a)
 }));
 
 import {

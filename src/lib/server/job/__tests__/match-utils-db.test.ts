@@ -19,12 +19,12 @@ const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
-		select: (...args: any[]) => mockSelect(...args)
+		select: (...args: unknown[]) => mockSelect(...args)
 	}
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val)
+	eq: vi.fn((_col: unknown, val: unknown) => val)
 }));
 
 vi.mock('$lib/server/db/schema', () => ({

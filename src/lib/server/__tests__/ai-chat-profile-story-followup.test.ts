@@ -17,7 +17,7 @@ vi.mock('$lib/server/db', () => ({
 			project_stories: { findFirst: vi.fn() },
 			story_versions: { findMany: vi.fn().mockResolvedValue([]) }
 		},
-		update: (...args: any[]) => mockUpdateFn(...args)
+		update: (...args: unknown[]) => mockUpdateFn(...args)
 	}
 }));
 
@@ -34,8 +34,8 @@ vi.mock('$lib/server/ai-chat/entity-versions', () => ({
 }));
 
 vi.mock('drizzle-orm', () => ({
-	eq: vi.fn((_col: any, val: any) => val),
-	and: vi.fn((...args: any[]) => args),
+	eq: vi.fn((_col: unknown, val: unknown) => val),
+	and: vi.fn((...args: unknown[]) => args),
 	asc: vi.fn(),
 	desc: vi.fn()
 }));
