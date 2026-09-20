@@ -3330,7 +3330,17 @@ export const capability_edits = pgTable(
 		source: varchar({ length: 16 }).notNull(),
 		/** A key of CAPABILITIES. Text, not an enum: the registry is the authority. */
 		capability: varchar({ length: 64 }).notNull(),
-		target: jsonb().$type<{ id: number; label: string }>().notNull(),
+		/**
+		 * The `CapabilityTarget` as it was when the write landed, stored whole.
+		 *
+		 * Typed as the two fields every target has plus the two some carry, rather
+		 * than as the pair alone. What goes in is whatever the resolver built, and
+		 * `path` is the row's own page — which is what the changes feed links to,
+		 * and what a type naming only `id` and `label` hid from the reader that
+		 * wanted it. No migration: the column was always jsonb and always held
+		 * this.
+		 */
+		target: jsonb().$type<{ id: number; label: string; match?: string; path?: string }>().notNull(),
 		/** What was written. */
 		fields: jsonb().$type<Record<string, unknown>>().notNull(),
 		/**

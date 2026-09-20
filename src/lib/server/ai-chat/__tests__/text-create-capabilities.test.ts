@@ -380,7 +380,14 @@ describe('apply', () => {
 		// The row it made, not the profile it was added to. Without this the change
 		// log names "their Interview Prep" and nothing downstream can say which
 		// sheet an accepted proposal produced, or write its first version.
-		expect(target).toEqual({ id: 77, label: 'Freelance vs. permanent' });
+		// The path travels with it because only the row knows it, and the changes
+		// feed links the entry to it. Dropped, an agent's new text is the one row
+		// in the history nobody can click through to.
+		expect(target).toEqual({
+			id: 77,
+			label: 'Freelance vs. permanent',
+			path: '/texts/cheat_sheet/77'
+		});
 	});
 
 	it('writes a letter under the application, not the profile', async () => {
@@ -396,7 +403,7 @@ describe('apply', () => {
 		);
 
 		expect(inserted).toHaveBeenCalledWith('letter', OWNED_APPLICATION, 'cover_letter');
-		expect(target).toEqual({ id: 77, label: 'Cover letter' });
+		expect(target).toEqual({ id: 77, label: 'Cover letter', path: '/texts/letter/77' });
 	});
 });
 

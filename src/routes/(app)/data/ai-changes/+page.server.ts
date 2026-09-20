@@ -41,6 +41,31 @@ function pageFor(capability: string): string | null {
  * and a version awaiting a verdict badly, and those reach the feed identically.
  * A capability with nothing to add leaves this off and the page name stands.
  */
+/**
+ * Where to open the thing a change was about.
+ *
+ * The row's own page where the log kept one, and the list it lives on
+ * otherwise. Both are in the log already: a verb that resolves its target
+ * through `entities.ts` gets a `path` on it, which is how a cover letter's URL
+ * survives — it is `/applications/{application}/texts/{id}`, and only whoever
+ * read the row knew the first half. A profile section has none and needs none,
+ * because its whole list is one page.
+ *
+ * Offered on every entry rather than only the ones with no undo. "Take me to
+ * it" is the question a history gets asked most, and it is no less the question
+ * for a change that also has an Undo button.
+ */
+function linkFor(entry: {
+	capability: string;
+	target: { id: number; label: string; path?: string };
+}): { name: string; path: string } | null {
+	const page = pageOf(entry.capability);
+	if (entry.target.path) {
+		return { name: entry.target.label, path: entry.target.path };
+	}
+	return page;
+}
+
 function noteFor(entry: {
 	capability: string;
 	target: { id: number; label: string };
@@ -97,6 +122,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 			// Preferred over `whereInstead` where there is one: a capability that
 			// knows what it left behind says it better than a page name can.
 			applicantNote: entry.revertible ? null : noteFor(entry),
+			link: linkFor(entry),
 			// Rendered server-side through the same describer the proposal card
 			// uses where the change was one, and through its own where it was a
 			// deletion or a reorder. `previous` is the before-image the write

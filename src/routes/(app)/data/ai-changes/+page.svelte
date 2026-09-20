@@ -172,8 +172,26 @@
 						<div>
 							<h3 class="font-semibold">{entry.title}</h3>
 							<p class="text-sm text-[var(--dash-text-secondary)]">
-								{entry.target.label} · {when(entry.createdAt)} · by {SOURCE_LABELS[entry.source] ??
-									entry.source}
+								<!--
+									The name of the thing is where you would click to go and look at
+									it, so it is the link rather than a second one beside it. Absent
+									for a change whose target has no page at all, which is why this
+									branches instead of always linking.
+
+									The path comes from the log and never from the URL: `entities.ts`
+									built it, out of ids this profile owns. Not `resolve()` — it is
+									overloaded per literal route, so a route id in a variable
+									satisfies no overload, and the paths here span four route trees.
+								-->
+								{#if entry.link}
+									<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+									<a class="underline hover:no-underline" href={entry.link.path}>
+										{entry.target.label}
+									</a>
+								{:else}
+									{entry.target.label}
+								{/if}
+								· {when(entry.createdAt)} · by {SOURCE_LABELS[entry.source] ?? entry.source}
 							</p>
 						</div>
 
