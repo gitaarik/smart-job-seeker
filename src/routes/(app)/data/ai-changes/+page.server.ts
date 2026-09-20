@@ -5,7 +5,7 @@ import { CAPABILITIES, describeProposalChanges } from '$lib/server/ai-chat/capab
 import { describeLoggedChange, readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
 import { approveRequest, readRequests, rejectRequest } from '$lib/server/mcp/requests';
 import { targetingFor } from '$lib/server/mcp/entities';
-import type { Capability } from '$lib/server/ai-chat/capabilities';
+import type { Capability, CapabilityActor } from '$lib/server/ai-chat/capabilities';
 import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
 
 /**
@@ -33,15 +33,6 @@ function pageFor(capability: string): string | null {
 }
 
 /**
- * What a change it cannot undo left for the applicant, where the capability has
- * a better answer than naming a page.
- *
- * Asked only of entries with no undo, because that is the branch whose fallback
- * is thin: "change it on your Interview Prep page" describes a stray row well
- * and a version awaiting a verdict badly, and those reach the feed identically.
- * A capability with nothing to add leaves this off and the page name stands.
- */
-/**
  * Where to open the thing a change was about.
  *
  * The row's own page where the log kept one, and the list it lives on
@@ -66,18 +57,47 @@ function linkFor(entry: {
 	return page;
 }
 
-function noteFor(entry: {
-	capability: string;
-	target: { id: number; label: string };
-}): string | null {
+/**
+ * What a change it cannot undo left for the applicant, where the capability has
+ * a better answer than naming a page.
+ *
+ * Asked only of entries with no undo, because that is the branch whose fallback
+ * is thin: "change it on your Interview Prep page" describes a stray row well
+ * and a version awaiting a verdict badly, and those reach the feed identically.
+ * A capability with nothing to add leaves this off and the page name stands.
+ *
+ * Reads, so it is awaited rather than computed: a note about a past write is
+ * usually a claim about what has happened since, and the first version of this
+ * could not see that. It told the applicant a version was waiting after they
+ * had taken it.
+ */
+async function noteFor(
+	entry: {
+		capability: string;
+		target: { id: number; label: string };
+		fields: Record<string, unknown>;
+	},
+	actor: CapabilityActor
+): Promise<string | null> {
 	const def =
 		entry.capability in CAPABILITIES ? CAPABILITIES[entry.capability as Capability] : null;
-	return def?.applicantNote?.(entry.target, pageOf(entry.capability)) ?? null;
+	if (!def?.applicantNote) return null;
+
+	return def.applicantNote(entry.target, pageOf(entry.capability), actor, entry.fields);
 }
 
-export const load: PageServerLoad = async ({ parent }) => {
+export const load: PageServerLoad = async ({ parent, locals }) => {
 	const { selectedProfile } = await parent();
 	if (!selectedProfile) redirect(302, '/home');
+
+	// The same actor the form actions build, because a note reads rows and every
+	// read below it is scoped to a profile. Taken from the session rather than
+	// assumed, so the staff flag is theirs and not a constant nobody chose.
+	const user = locals.user as { is_staff?: boolean; is_admin?: boolean } | undefined;
+	const actor: CapabilityActor = {
+		profileId: selectedProfile.id,
+		isStaff: !!user?.is_staff || !!user?.is_admin
+	};
 
 	const [entries, pending] = await Promise.all([
 		readEditLog(selectedProfile.id),
@@ -88,6 +108,18 @@ export const load: PageServerLoad = async ({ parent }) => {
 	// Resolved here against the same window it was computed over, so the card can
 	// say which change to undo first in the words that change is titled with.
 	const titles = new Map(entries.map((entry) => [entry.id, entry.title]));
+
+	// Each note reads the row it is about, so they go together rather than one
+	// after another. Only the verbs that declare one cost anything: the rest
+	// resolve to null without a query, which on a feed that is mostly profile
+	// edits is nearly all of them.
+	const notes = new Map(
+		await Promise.all(
+			entries.map(
+				async (entry) => [entry.id, entry.revertible ? null : await noteFor(entry, actor)] as const
+			)
+		)
+	);
 
 	return {
 		// Everything an agent asked for and nobody has answered. First on the page
@@ -121,7 +153,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 			whereInstead: entry.revertible ? null : pageFor(entry.capability),
 			// Preferred over `whereInstead` where there is one: a capability that
 			// knows what it left behind says it better than a page name can.
-			applicantNote: entry.revertible ? null : noteFor(entry),
+			applicantNote: notes.get(entry.id) ?? null,
 			link: linkFor(entry),
 			// Rendered server-side through the same describer the proposal card
 			// uses where the change was one, and through its own where it was a

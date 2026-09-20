@@ -419,8 +419,23 @@ export interface CapabilityDef {
 	 * name the page and stop. That answer is right for a row they might want to
 	 * delete and wrong for a version waiting on their verdict, and the feed
 	 * cannot tell those apart — the capability can, so it says.
+	 *
+	 * Async, and given the actor and the fields the change wrote, because what
+	 * is worth saying about a past write usually depends on what has happened
+	 * since. A version add is the case: it is waiting until the applicant takes
+	 * it, and then it is not. The first version of this was a pure function of
+	 * the capability, so it said "waiting" forever — a note that can go stale is
+	 * worse than the generic line it replaced, which could only be thin.
+	 *
+	 * Costs a read per entry that declares one, so it stays on the verbs where
+	 * the answer actually changes.
 	 */
-	applicantNote?(target: CapabilityTarget, page: { name: string; path: string } | null): string;
+	applicantNote?(
+		target: CapabilityTarget,
+		page: { name: string; path: string } | null,
+		actor: CapabilityActor,
+		fields: Record<string, unknown>
+	): Promise<string>;
 	/**
 	 * Who may undo this, for the verbs whose logged target is not the target the
 	 * write was addressed to.

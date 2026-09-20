@@ -68,6 +68,8 @@ const { tierForWrite } = await import('$lib/server/mcp/tiers');
 const ACTOR = { profileId: 12, isStaff: false };
 const LETTER = { id: 3, label: 'Cover letter', path: '/applications/44/texts/3' };
 const STORY = { id: 8, label: 'The migration', path: '/applications/interview/stories/8' };
+/** What the feed hands a note: the collection, named the way the sidebar does. */
+const PAGE = { name: 'Applications', path: '/applications' };
 
 const letterVerb = TEXT_CAPABILITIES.add_letter_version;
 const storyVerb = TEXT_CAPABILITIES.add_story_version;
@@ -212,18 +214,52 @@ describe('what it tells the agent afterwards', () => {
 		expect(note).not.toMatch(/\bupdated\b(?!\.)/i);
 	});
 
-	it('says the same thing to the applicant, without the agent’s instructions', () => {
+	it('says the same thing to the applicant, without the agent’s instructions', async () => {
 		// The feed renders this one. `appliedNote` ends by telling the agent what
 		// to say, which is prose addressed to somebody else — showing it to the
 		// applicant hands them a script for a conversation they are not in.
-		const note = letterVerb.applicantNote?.(LETTER, {
-			name: 'Applications',
-			path: '/applications/44/texts/3'
+		const note = await letterVerb.applicantNote?.(LETTER, PAGE, ACTOR, {
+			letter_content: 'A version nobody has taken.'
 		});
 		expect(note).toMatch(/still says what it said/);
 		expect(note).toMatch(/keep or delete/);
 		expect(note).toContain('Applications page');
 		expect(note).not.toMatch(/tell them/i);
+	});
+
+	it('says the version was taken once the letter says it', async () => {
+		// The whole reason this reads rather than computes. Nothing records that a
+		// version was accepted, so the note asks the question the timeline badge
+		// and `latest_is_current` ask: is what this change proposed what the text
+		// says now.
+		const note = await letterVerb.applicantNote?.(LETTER, PAGE, ACTOR, {
+			letter_content: 'The letter as it was saved.'
+		});
+		expect(note).toMatch(/says this now/);
+		expect(note).not.toMatch(/waiting/);
+	});
+
+	it('folds line endings, so a CRLF copy is not a waiting version', async () => {
+		// The failure same-text.ts was written for, reaching this note too: a text
+		// saved with CRLF against a version written with LF is the same prose, and
+		// comparing raw would put a waiting version on a letter that already says
+		// it. Same `sameText` as the other four surfaces, for that reason.
+		const note = await letterVerb.applicantNote?.(LETTER, PAGE, ACTOR, {
+			letter_content: 'The letter as it was saved.\r\n'
+		});
+		expect(note).toMatch(/says this now/);
+	});
+
+	it('says so when the text is gone rather than guessing', async () => {
+		const note = await letterVerb.applicantNote?.(
+			LETTER,
+			PAGE,
+			{ profileId: 13, isStaff: false },
+			{
+				letter_content: 'Anything.'
+			}
+		);
+		expect(note).toMatch(/has been deleted/);
 	});
 
 	it('is offered on the verb the feed cannot undo, which is why the feed asks', () => {

@@ -326,13 +326,41 @@ function capabilityFor(kind: TextKind): CapabilityDef {
 			`applicant compares it with what is there now and keeps or deletes it. Tell them ` +
 			`it is waiting and what you changed — not that their ${def.noun} has been updated.`,
 
-		// The same fact, said to the applicant. Without this the feed calls a
-		// version waiting on their verdict "change it on your … page", which reads
-		// as a dead end rather than as the decision it is.
-		applicantNote: (target, page) =>
-			`Your ${def.noun} still says what it said. A new version is waiting in the ` +
-			`timeline for "${target.label}"${page ? ` on your ${page.name} page` : ''}, ` +
-			`where you can compare it with the current text and keep or delete it.`
+		/**
+		 * The same fact, said to the applicant — and asked afresh, because it
+		 * stops being true the moment they take the version.
+		 *
+		 * Compared rather than looked up, because nothing records that a version
+		 * was accepted: committing one writes the text and leaves the trail
+		 * alone. So this asks what the other four surfaces ask — is what this
+		 * change proposed what the text says now — through the same `sameText`
+		 * they use, which folds line endings. Without that folding a sheet saved
+		 * with CRLF reads as a rewrite of itself; see same-text.ts, where that
+		 * cost a "waiting version" that was the sheet's own words.
+		 *
+		 * The proposal is normalized the way `apply` normalized it on the way in,
+		 * so a story's markdown is compared against a story's markdown rather
+		 * than against five columns.
+		 */
+		applicantNote: async (target, page, actor, fields) => {
+			const where = page ? ` on your ${page.name} page` : '';
+			const row = await readOwnedText(kind, target.id, actor.profileId);
+
+			if (!row) {
+				return `That ${def.noun} has been deleted since, and this version with it.`;
+			}
+
+			const proposed = normalizeForKind(kind, String(fields[content] ?? '').trim());
+			if (proposed && sameText(proposed, row.committed ?? '')) {
+				return `Your ${def.noun} says this now — the version was taken from the timeline for "${target.label}"${where}.`;
+			}
+
+			return (
+				`Your ${def.noun} still says what it said. A new version is waiting in the ` +
+				`timeline for "${target.label}"${where}, where you can compare it with the ` +
+				`current text and keep or delete it.`
+			);
+		}
 	};
 }
 
