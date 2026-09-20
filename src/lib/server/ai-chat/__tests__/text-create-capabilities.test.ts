@@ -27,6 +27,21 @@ const OWNED_APPLICATION = 55;
 
 const inserted = vi.fn();
 const listed = vi.fn();
+const removed = vi.fn();
+
+/** What `read` hands back for the created row, and how full its timeline is. */
+let textRow: {
+	id: number;
+	label: string;
+	applicationId: number | null;
+	committed: string | null;
+} | null = null;
+let versionCount = 0;
+
+vi.mock('../entity-versions', async (importOriginal) => ({
+	...(await importOriginal<typeof import('../entity-versions')>()),
+	countVersions: () => Promise.resolve(versionCount)
+}));
 
 vi.mock('$lib/server/applications/profile-applications', () => ({
 	readProfileApplication: (id: number, profileId: number) =>
@@ -57,8 +72,18 @@ vi.mock('$lib/server/texts/profile-texts', async (importOriginal) => {
 					}))
 				);
 			},
+			// The created row as a later read finds it. Null by default, so a test
+			// that does not set one exercises "it is gone already".
+			read: (id: number, profileId: number) =>
+				Promise.resolve(
+					textRow && profileId === 12 ? { ...textRow, id, path: `/texts/${kind}/${id}` } : null
+				),
 			create: {
 				...create,
+				remove: (id: number, ownerId: number) => {
+					removed(kind, id, ownerId);
+					return Promise.resolve();
+				},
 				insert: (ownerId: number, value: string) => {
 					inserted(kind, ownerId, value);
 					return Promise.resolve({
@@ -110,6 +135,9 @@ beforeEach(() => {
 	existing = [];
 	inserted.mockClear();
 	listed.mockClear();
+	removed.mockClear();
+	textRow = { id: 77, label: 'Untitled', applicationId: OWNED_APPLICATION, committed: null };
+	versionCount = 0;
 });
 
 describe('which kinds may be started at all', () => {
@@ -387,5 +415,76 @@ describe('authorize', () => {
 		expect(
 			await TEXT_CREATE_CAPABILITIES.add_letter.authorize({ id: 999, label: 'theirs' }, ACTOR)
 		).toBe(false);
+	});
+});
+
+/**
+ * Undoing a create, which is the half-done state this verb leaves behind.
+ *
+ * A create makes a shell and the agent is told to fill it next. When that does
+ * not happen the applicant is left with an empty row, and until there was an
+ * undo the only way out was to find it on its own page. What the cases below
+ * pin is that it stays an undo of THIS add and does not become a delete: the
+ * moment anything is on the row or under it, the refusal names the page.
+ */
+describe('undoing a create', () => {
+	const CREATED = { id: 77, label: 'Untitled cheat sheet' };
+	const sheet = TEXT_CREATE_CAPABILITIES.add_cheat_sheet;
+
+	it('deletes the row while it is still the empty one it made', async () => {
+		await sheet.revert?.(CREATED, {}, ACTOR);
+
+		expect(removed).toHaveBeenCalledWith('cheat_sheet', 77, 12);
+	});
+
+	it('scopes a letter’s delete by its application, not by the profile', async () => {
+		// The owner column differs per kind, and a delete scoped by the wrong one
+		// either matches nothing or matches too much.
+		await TEXT_CREATE_CAPABILITIES.add_letter.revert?.(CREATED, {}, ACTOR);
+
+		expect(removed).toHaveBeenCalledWith('letter', 77, OWNED_APPLICATION);
+	});
+
+	it('refuses once the text has been written', async () => {
+		textRow = {
+			id: 77,
+			label: 'x',
+			applicationId: null,
+			committed: 'Salary, Michael, notice period'
+		};
+
+		await expect(sheet.revert?.(CREATED, {}, ACTOR)).rejects.toThrow(/has text on it now/);
+		expect(removed).not.toHaveBeenCalled();
+	});
+
+	it('refuses while a version is waiting in the timeline', async () => {
+		// The case that motivated the guard: `add_cheat_sheet` and
+		// `add_cheat_sheet_version` arrive as a pair, and they key on different
+		// rows so the ordering rule does not connect them. Undoing the create
+		// would take a version the applicant has not ruled on yet.
+		versionCount = 1;
+
+		await expect(sheet.revert?.(CREATED, {}, ACTOR)).rejects.toThrow(
+			/version waiting in its timeline/
+		);
+		expect(removed).not.toHaveBeenCalled();
+	});
+
+	it('does nothing when the row is already gone', async () => {
+		textRow = null;
+
+		await expect(sheet.revert?.(CREATED, {}, ACTOR)).resolves.toBeUndefined();
+		expect(removed).not.toHaveBeenCalled();
+	});
+
+	it('authorizes the undo against the row, where authorize vets the owner', async () => {
+		// Load-bearing separation here rather than tidiness: `apply` passes the
+		// target's id to `insert` as the owner, so an `authorize` that accepted a
+		// text id would file a new letter under a letter.
+		expect(await sheet.authorizeRevert?.(CREATED, ACTOR)).toBe(true);
+		expect(await sheet.authorize(CREATED, ACTOR)).toBe(false);
+
+		textRow = null;
+		expect(await sheet.authorizeRevert?.(CREATED, ACTOR)).toBe(false);
 	});
 });

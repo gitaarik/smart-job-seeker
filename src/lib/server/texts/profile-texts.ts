@@ -172,6 +172,19 @@ export type TextCreateDef = {
 	 * other shape, and null or absent for a row nobody named.
 	 */
 	insert(ownerId: number, value: string, name?: string | null): Promise<TextRow>;
+	/**
+	 * Delete a row `insert` made, for undoing the add that made it.
+	 *
+	 * The caller checks first that the row is still empty and carries no
+	 * versions — see the `revert` in `text-create-capabilities.ts`, which is the
+	 * only caller and the place those rules are written down. This is the
+	 * statement, not the policy.
+	 *
+	 * Scoped by owner in the same statement that finds the row, so an id
+	 * belonging to somebody else deletes nothing rather than being refused
+	 * informatively.
+	 */
+	remove(id: number, ownerId: number): Promise<void>;
 } & (
 	| { decides: 'title'; maxLength: number }
 	| {
@@ -392,6 +405,14 @@ const letterKind: CreatableKindDef = {
 				committed: null,
 				path: `/applications/${applicationId}/texts/${row.id}`
 			};
+		},
+
+		remove: async (id, applicationId) => {
+			await db
+				.delete(application_letters)
+				.where(
+					and(eq(application_letters.id, id), eq(application_letters.application_id, applicationId))
+				);
 		}
 	},
 
@@ -546,6 +567,14 @@ const storyKind: CreatableKindDef = {
 				committed: null,
 				path: `/applications/interview/stories/${row.id}`
 			};
+		},
+
+		remove: async (id, profileId) => {
+			await db
+				.delete(project_stories)
+				.where(and(eq(project_stories.id, id), eq(project_stories.profile_id, profileId)));
+
+			await touchProfile(profileId);
 		}
 	},
 
@@ -630,6 +659,14 @@ const cheatSheetKind: CreatableKindDef = {
 				committed: null,
 				path: `/applications/interview/cheatsheets/${row.id}`
 			};
+		},
+
+		remove: async (id, profileId) => {
+			await db
+				.delete(cheat_sheets)
+				.where(and(eq(cheat_sheets.id, id), eq(cheat_sheets.profile_id, profileId)));
+
+			await touchProfile(profileId);
 		}
 	},
 

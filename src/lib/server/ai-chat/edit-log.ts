@@ -416,7 +416,13 @@ export async function revertEdit(editId: number, actor: CapabilityActor): Promis
 	// a row it could read, and both of its reverts go through the write layer,
 	// which scopes every statement to the actor's own profile. The check is the
 	// write, one layer down, rather than a second one written here.
-	if (capability && !(await capability.authorize(row.target, actor))) {
+	//
+	// `authorizeRevert` where the verb has one: an add's logged target is the row
+	// it made rather than the owner it was addressed to, and the check that vets
+	// an owner refuses a row. See CapabilityDef.authorizeRevert for why the two
+	// are separate gates and not one widened check.
+	const gate = capability?.authorizeRevert ?? capability?.authorize;
+	if (capability && gate && !(await gate.call(capability, row.target, actor))) {
 		return {
 			ok: false,
 			reason: 'not_found',

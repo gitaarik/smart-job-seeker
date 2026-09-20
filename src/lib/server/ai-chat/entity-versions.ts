@@ -326,6 +326,18 @@ export async function ensureBaselineVersion(
 	});
 }
 
+/**
+ * How many versions a text's timeline holds.
+ *
+ * Asked before undoing the add that created the text: a row with versions on it
+ * has had work done since, and deleting it would take that work with it. Counted
+ * rather than read, because the only question is none versus some.
+ */
+export async function countVersions(vt: VersionBinding, entityId: number): Promise<number> {
+	const [row] = await db.select({ n: count() }).from(vt.table).where(eq(vt.fk, entityId));
+	return Number(row?.n ?? 0);
+}
+
 /** Unconditional insert of a version row. */
 export async function recordVersion(
 	vt: VersionBinding,

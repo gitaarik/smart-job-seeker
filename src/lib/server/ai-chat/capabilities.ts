@@ -406,6 +406,39 @@ export interface CapabilityDef {
 	 * a card the applicant is already looking at.
 	 */
 	appliedNote?(target: CapabilityTarget, page: { name: string; path: string } | null): string;
+	/**
+	 * What this write left for the APPLICANT to do, for the changes feed to say
+	 * in place of its generic line.
+	 *
+	 * The sibling of `appliedNote` and not a reuse of it: that one is addressed
+	 * to the agent, in the second person, and ends by telling it what to say.
+	 * Rendering it to the applicant would hand them instructions written for
+	 * somebody else.
+	 *
+	 * Only consulted for an entry the feed cannot undo, where its fallback is to
+	 * name the page and stop. That answer is right for a row they might want to
+	 * delete and wrong for a version waiting on their verdict, and the feed
+	 * cannot tell those apart — the capability can, so it says.
+	 */
+	applicantNote?(target: CapabilityTarget, page: { name: string; path: string } | null): string;
+	/**
+	 * Who may undo this, for the verbs whose logged target is not the target the
+	 * write was addressed to.
+	 *
+	 * An `add_*` is addressed to an owner — a profile, an application — and
+	 * `executeCapability` then logs the row it made instead, because that is the
+	 * thing that appeared. So the undo arrives naming a row, and `authorize`,
+	 * which was written to vet an owner, refuses it.
+	 *
+	 * Split out rather than widened, because for some verbs the target is not
+	 * merely a label: `add_letter` passes it to `create.insert` as the owning
+	 * application. An `authorize` taught to accept both shapes would also accept
+	 * a proposal naming a letter, and file the new one under it.
+	 *
+	 * Absent means `authorize` answers both, which is right wherever the write
+	 * ignores the target and takes its owner from the actor.
+	 */
+	authorizeRevert?(target: CapabilityTarget, actor: CapabilityActor): Promise<boolean>;
 }
 
 /* ------------------------------------------------------------------ *

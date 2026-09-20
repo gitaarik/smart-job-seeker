@@ -324,7 +324,15 @@ function capabilityFor(kind: TextKind): CapabilityDef {
 			`Nothing on the ${def.noun} has changed yet. This is a new version waiting in ` +
 			`the timeline for "${target.label}"${page ? ` (${page.path})` : ''}, where the ` +
 			`applicant compares it with what is there now and keeps or deletes it. Tell them ` +
-			`it is waiting and what you changed — not that their ${def.noun} has been updated.`
+			`it is waiting and what you changed — not that their ${def.noun} has been updated.`,
+
+		// The same fact, said to the applicant. Without this the feed calls a
+		// version waiting on their verdict "change it on your … page", which reads
+		// as a dead end rather than as the decision it is.
+		applicantNote: (target, page) =>
+			`Your ${def.noun} still says what it said. A new version is waiting in the ` +
+			`timeline for "${target.label}"${page ? ` on your ${page.name} page` : ''}, ` +
+			`where you can compare it with the current text and keep or delete it.`
 	};
 }
 

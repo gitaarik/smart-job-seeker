@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { getSelectedProfileId } from '../../profile/utils';
-import { describeProposalChanges } from '$lib/server/ai-chat/capabilities';
+import { CAPABILITIES, describeProposalChanges } from '$lib/server/ai-chat/capabilities';
 import { describeLoggedChange, readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
 import { approveRequest, readRequests, rejectRequest } from '$lib/server/mcp/requests';
 import { targetingFor } from '$lib/server/mcp/entities';
@@ -21,13 +21,33 @@ import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile
  * the second needed adding — `add_activity_record` was the one verb in the feed
  * whose fallback answer was nothing at all.
  */
-function pageFor(capability: string): string | null {
+function pageOf(capability: string): { name: string; path: string } | null {
 	const resource = capability.slice(capability.indexOf('_') + 1) as ProfileResourceName;
 	return (
-		PROFILE_RESOURCES[resource]?.page.name ??
-		targetingFor(capability as Capability)?.collection.name ??
-		null
+		PROFILE_RESOURCES[resource]?.page ?? targetingFor(capability as Capability)?.collection ?? null
 	);
+}
+
+function pageFor(capability: string): string | null {
+	return pageOf(capability)?.name ?? null;
+}
+
+/**
+ * What a change it cannot undo left for the applicant, where the capability has
+ * a better answer than naming a page.
+ *
+ * Asked only of entries with no undo, because that is the branch whose fallback
+ * is thin: "change it on your Interview Prep page" describes a stray row well
+ * and a version awaiting a verdict badly, and those reach the feed identically.
+ * A capability with nothing to add leaves this off and the page name stands.
+ */
+function noteFor(entry: {
+	capability: string;
+	target: { id: number; label: string };
+}): string | null {
+	const def =
+		entry.capability in CAPABILITIES ? CAPABILITIES[entry.capability as Capability] : null;
+	return def?.applicantNote?.(entry.target, pageOf(entry.capability)) ?? null;
 }
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -74,6 +94,9 @@ export const load: PageServerLoad = async ({ parent }) => {
 			blockedBy:
 				entry.supersededBy === null ? null : (titles.get(entry.supersededBy) ?? 'a later change'),
 			whereInstead: entry.revertible ? null : pageFor(entry.capability),
+			// Preferred over `whereInstead` where there is one: a capability that
+			// knows what it left behind says it better than a page name can.
+			applicantNote: entry.revertible ? null : noteFor(entry),
 			// Rendered server-side through the same describer the proposal card
 			// uses where the change was one, and through its own where it was a
 			// deletion or a reorder. `previous` is the before-image the write

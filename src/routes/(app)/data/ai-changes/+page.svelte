@@ -203,6 +203,21 @@
 									Undo
 								</button>
 							</form>
+						{:else if entry.applicantNote}
+							<!--
+								The capability's own account of what it left behind, for the
+								cases where naming a page is a poor description of it. A version
+								add is the one that motivated this: it changes nothing anybody
+								reads and leaves a version in a timeline awaiting a verdict,
+								which "change it on your Interview Prep page" reads as a dead end
+								rather than as the decision it is.
+
+								Ahead of `whereInstead` rather than beside it, because the note
+								names the page too and the two together say it twice.
+							-->
+							<span class="text-sm text-[var(--dash-text-secondary)]">
+								{entry.applicantNote}
+							</span>
 						{:else if entry.whereInstead}
 							<!--
 								No undo for this one: the verb has no reverse through the
@@ -210,7 +225,7 @@
 								same shape as the assistant naming a page it cannot reach. A
 								profile add reverses by removing the row it made and reaches the
 								Undo branch above instead; what lands here is the verbs that
-								cannot, activity records and text versions among them.
+								cannot, and that have nothing more particular to say.
 
 								Named rather than linked. `resolve()` is overloaded per literal
 								route, so a route id held in a variable satisfies no overload, and
