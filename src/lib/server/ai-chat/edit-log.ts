@@ -96,7 +96,8 @@ export interface EditLogEntry {
 	id: number;
 	capability: LoggedAction;
 	source: EditSource;
-	target: { id: number; label: string };
+	/** Whole, `path` included: the feed links to the row's own page where it has one. */
+	target: { id: number; label: string; match?: string; path?: string };
 	fields: Record<string, unknown>;
 	previous: Record<string, unknown>;
 	revertedAt: Date | null;

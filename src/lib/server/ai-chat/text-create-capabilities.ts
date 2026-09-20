@@ -362,7 +362,12 @@ function capabilityFor(kind: CreatableTextKind): CapabilityDef {
 			// The row it made, not what it was added to. The target names the owner,
 			// which is what to authorize against and the wrong thing to call the
 			// change.
-			return { id: created.id, label: created.label };
+			//
+			// `path` travels with it because the row knows it and nothing
+			// downstream can rebuild it: a letter's page is under the application it
+			// belongs to. The changes feed links the entry to it — without this an
+			// agent's new text is the one row in the history you cannot click.
+			return { id: created.id, label: created.label, path: created.path };
 		},
 
 		/**
