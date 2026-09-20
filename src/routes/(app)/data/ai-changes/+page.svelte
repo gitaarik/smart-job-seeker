@@ -187,7 +187,18 @@
 									that "change 1116" in a chat and a row on this page are visibly
 									the same thing, which is the whole reason it is here.
 								-->
-								<span class="font-mono">Change {entry.id}</span> ·
+								<span class="font-mono">Change {entry.id}</span>
+								<!--
+									And the number it was approved under, where it was approved at
+									all. The two run on separate sequences, so a change and a
+									request whose numbers are close are not related — change 1110
+									really did come from request 110, and change 1111 came from no
+									request at all. Printing only one of them is what made that
+									pair unreadable.
+								-->
+								{#if entry.fromRequest}
+									<span class="font-mono">· from Request {entry.fromRequest}</span>
+								{/if} ·
 								<!--
 									The name of the thing is where you would click to go and look at
 									it, so it is the link rather than a second one beside it. Absent

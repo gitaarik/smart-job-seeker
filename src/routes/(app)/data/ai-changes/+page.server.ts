@@ -3,7 +3,12 @@ import { fail, redirect } from '@sveltejs/kit';
 import { getSelectedProfileId } from '../../profile/utils';
 import { CAPABILITIES, describeProposalChanges } from '$lib/server/ai-chat/capabilities';
 import { describeLoggedChange, readEditLog, revertEdit } from '$lib/server/ai-chat/edit-log';
-import { approveRequest, readRequests, rejectRequest } from '$lib/server/mcp/requests';
+import {
+	approveRequest,
+	readRequests,
+	rejectRequest,
+	requestIdsByEdit
+} from '$lib/server/mcp/requests';
 import { targetingFor } from '$lib/server/mcp/entities';
 import type { Capability, CapabilityActor } from '$lib/server/ai-chat/capabilities';
 import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
@@ -109,6 +114,14 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 	// say which change to undo first in the words that change is titled with.
 	const titles = new Map(entries.map((entry) => [entry.id, entry.title]));
 
+	// Which of these the applicant approved, by the number they approved it
+	// under. One query for the window, because the alternative is a lookup per
+	// row for a fact most rows do not have.
+	const fromRequests = await requestIdsByEdit(
+		selectedProfile.id,
+		entries.map((entry) => entry.id)
+	);
+
 	// Each note reads the row it is about, so they go together rather than one
 	// after another. Only the verbs that declare one cost anything: the rest
 	// resolve to null without a query, which on a feed that is mostly profile
@@ -155,6 +168,9 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 			// knows what it left behind says it better than a page name can.
 			applicantNote: notes.get(entry.id) ?? null,
 			link: linkFor(entry),
+			// The request this was approved as, where it was one. Null for a change
+			// that applied on its own, which is most of them.
+			fromRequest: fromRequests.get(entry.id) ?? null,
 			// Rendered server-side through the same describer the proposal card
 			// uses where the change was one, and through its own where it was a
 			// deletion or a reorder. `previous` is the before-image the write

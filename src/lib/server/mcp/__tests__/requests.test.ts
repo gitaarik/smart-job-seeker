@@ -12,7 +12,9 @@ const state = {
 	/** What the conditional claim returns. Empty means someone got there first. */
 	claimed: [] as Record<string, unknown>[],
 	updates: [] as Record<string, unknown>[],
-	inserts: [] as Record<string, unknown>[]
+	inserts: [] as Record<string, unknown>[],
+	/** Rows for a select awaited at `where`, which the edit-id lookup is. */
+	rows: [] as Record<string, unknown>[]
 };
 
 vi.mock('$lib/server/db', () => {
@@ -25,7 +27,12 @@ vi.mock('$lib/server/db', () => {
 		}),
 		select: () => ({
 			from: () => ({
-				where: () => ({ orderBy: () => ({ limit: () => Promise.resolve([]) }) })
+				// Thenable as well as chainable: `readRequests` orders and limits
+				// before awaiting, and the edit-id lookup awaits this directly.
+				where: () => ({
+					orderBy: () => ({ limit: () => Promise.resolve([]) }),
+					then: (resolve: (v: unknown) => void) => resolve(state.rows)
+				})
 			})
 		}),
 		update: () => ({
@@ -63,7 +70,8 @@ vi.mock('$lib/server/ai-chat/capabilities', () => ({
 	executeCapability: (...args: unknown[]) => executeCapability(...args)
 }));
 
-const { approveRequest, rejectRequest, requestPath, requestUrl } = await import('../requests');
+const { approveRequest, rejectRequest, requestIdsByEdit, requestPath, requestUrl } =
+	await import('../requests');
 
 const ACTOR = { profileId: 12, isStaff: false };
 
@@ -91,6 +99,7 @@ beforeEach(() => {
 	state.claimed = [pendingRow()];
 	state.updates = [];
 	state.inserts = [];
+	state.rows = [];
 	executeCapability.mockResolvedValue({ ok: true, previous: {}, editId: 55 });
 });
 
@@ -189,5 +198,45 @@ describe('requestPath', () => {
 		// URL there would send them out and back in, losing the session's scroll
 		// and, on a different host in preview, the session itself.
 		expect(requestPath(101).startsWith('/')).toBe(true);
+	});
+});
+
+/**
+ * Reading the approval link backwards, which is what the changes feed needs.
+ *
+ * `edit_id` is written when a request is approved, and until this was read back
+ * the history could say "Change 1110" and not that it was the thing the
+ * applicant approved as request 110. The two ids run on separate sequences, so
+ * a reader cannot infer one from the other — 1110 did come from 110, and 1111
+ * came from no request at all.
+ */
+describe('which request produced a change', () => {
+	it('keys by the edit, so the feed can look up the row it is holding', async () => {
+		state.rows = [
+			{ id: 110, editId: 1110 },
+			{ id: 111, editId: 1114 }
+		];
+
+		const found = await requestIdsByEdit(12, [1110, 1111, 1114]);
+
+		expect(found.get(1110)).toBe(110);
+		expect(found.get(1114)).toBe(111);
+		// Applied on its own, never requested — the case that made the near-miss
+		// numbering unreadable.
+		expect(found.has(1111)).toBe(false);
+	});
+
+	it('drops a request that never produced an edit', async () => {
+		// A rejected one keeps its row and its null edit_id. Left in, it would key
+		// the map on null and claim some change came from it.
+		state.rows = [{ id: 112, editId: null }];
+
+		expect(await requestIdsByEdit(12, [1110])).toEqual(new Map());
+	});
+
+	it('asks nothing when there are no changes to ask about', async () => {
+		state.rows = [{ id: 110, editId: 1110 }];
+
+		expect(await requestIdsByEdit(12, [])).toEqual(new Map());
 	});
 });

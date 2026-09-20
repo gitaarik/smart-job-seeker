@@ -148,6 +148,42 @@ export async function readRequests(
 }
 
 /**
+ * Which request produced each of these changes, for the ones that came from a
+ * request at all.
+ *
+ * The link is `edit_id`, written when a request is approved. Read backwards
+ * here because the changes feed has the edits and wants the request: an entry
+ * that says only "Change 1110" cannot tell the applicant it is the thing they
+ * approved as request 110, and the two ids run on separate sequences, so their
+ * numbers being close is luck rather than a correspondence they can rely on.
+ *
+ * Keyed by edit rather than by request because one request makes at most one
+ * edit, and the caller is holding edits.
+ */
+export async function requestIdsByEdit(
+	profileId: number,
+	editIds: number[]
+): Promise<Map<number, number>> {
+	if (editIds.length === 0) return new Map();
+
+	const rows = await db
+		.select({ id: capability_requests.id, editId: capability_requests.edit_id })
+		.from(capability_requests)
+		.where(
+			and(
+				eq(capability_requests.profile_id, profileId),
+				inArray(capability_requests.edit_id, editIds)
+			)
+		);
+
+	return new Map(
+		rows
+			.filter((row): row is { id: number; editId: number } => row.editId !== null)
+			.map((row) => [row.editId, row.id])
+	);
+}
+
+/**
  * How many there are, as opposed to how many were returned.
  *
  * Only worth a query because of what `list_pending_changes` promises. That tool
