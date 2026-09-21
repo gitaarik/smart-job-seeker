@@ -47,7 +47,7 @@ vi.mock('$lib/server/db/schema', () => ({
 
 import { PUT } from '../+server';
 
-function createEvent(body: any, user?: any) {
+function createEvent(body: unknown, user?: App.Locals['user']) {
 	return {
 		locals: { user: user === undefined ? { id: 'user-1' } : user, session: null },
 		request: new Request('http://localhost/api/job-preferences', {
@@ -55,7 +55,7 @@ function createEvent(body: any, user?: any) {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(body)
 		})
-	} as any;
+	} as unknown as Parameters<typeof PUT>[0];
 }
 
 describe('PUT /api/job-preferences', () => {

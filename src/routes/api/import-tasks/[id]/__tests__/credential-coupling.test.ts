@@ -72,7 +72,7 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 vi.mock('$lib/server/utils/api-helpers', () => ({
-	requireAuth: (locals: any) => {
+	requireAuth: (locals: App.Locals | undefined) => {
 		if (!locals?.user) throw new Error('not authed');
 		return locals.user;
 	},
@@ -81,7 +81,7 @@ vi.mock('$lib/server/utils/api-helpers', () => ({
 
 vi.mock('$lib/server/validation/api-schemas', () => ({
 	searchTaskUpdateSchema: { _: 'schema' },
-	parseBody: (_schema: any, body: any) => body
+	parseBody: (_schema: unknown, body: unknown) => body
 }));
 
 const mockHasDeviceAccess = vi.fn();
@@ -95,13 +95,13 @@ vi.mock('$lib/server/credential-shares', () => ({
 }));
 
 vi.mock('$lib/server/auth/crypto', () => ({
-	encryptCredential: (v: any) => v
+	encryptCredential: (v: unknown) => v
 }));
 
 import { PATCH } from '../+server';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-function createPatchEvent(body: any, user = { id: CONTACT }) {
+function createPatchEvent(body: unknown, user = { id: CONTACT }) {
 	return {
 		params: { id: '1' },
 		locals: { user, session: null },
@@ -110,7 +110,7 @@ function createPatchEvent(body: any, user = { id: CONTACT }) {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(body)
 		})
-	} as any;
+	} as unknown as Parameters<typeof PATCH>[0];
 }
 
 const TASK_OWNED_BY_CONTACT = {

@@ -39,7 +39,7 @@ vi.mock('@langchain/google-genai', () => ({
 		// Everything except Groq and Cerebras goes through withStructuredOutput,
 		// so this is the path the writing model actually takes.
 		withStructuredOutput() {
-			return { invoke: (m: any) => mockGeminiStructuredInvoke(m) };
+			return { invoke: (m: unknown) => mockGeminiStructuredInvoke(m) };
 		}
 	}
 }));
@@ -51,7 +51,7 @@ vi.mock('@langchain/groq', () => ({
 		async invoke(messages: unknown) {
 			return mockInvoke(messages);
 		}
-		withStructuredOutput(schema: any, options?: any) {
+		withStructuredOutput(schema: unknown, options?: unknown) {
 			return mockWithStructuredOutput(schema, options);
 		}
 	}

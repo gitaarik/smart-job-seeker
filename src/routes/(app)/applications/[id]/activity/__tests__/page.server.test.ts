@@ -103,7 +103,7 @@ type Fields = Record<string, string>;
 function createEvent(
 	fields: Fields = {},
 	opts: {
-		user?: any;
+		user?: App.Locals['user'];
 		params?: Record<string, string>;
 		file?: File;
 	} = {}
@@ -114,9 +114,9 @@ function createEvent(
 	return {
 		params: opts.params ?? { id: '1' },
 		locals: { user: opts.user === undefined ? { id: 'user-1' } : opts.user },
-		cookies: {} as any,
+		cookies: {},
 		request: { formData: async () => fd }
-	} as any;
+	} as unknown as Parameters<NonNullable<typeof actions.create>>[0];
 }
 
 const typed: Fields = {

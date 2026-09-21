@@ -24,16 +24,16 @@ vi.mock('$lib/server/billing/require-credits', () => ({
 
 import { POST } from '../+server';
 
-function createEvent(body: unknown, opts: { user?: any; rawBody?: string } = {}) {
+function createEvent(body: unknown, opts: { user?: App.Locals['user']; rawBody?: string } = {}) {
 	return {
 		locals: { user: opts.user === undefined ? { id: 'user-1' } : opts.user },
-		cookies: {} as any,
+		cookies: {},
 		request: new Request('http://localhost/api/ai/questions/extract', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: opts.rawBody !== undefined ? opts.rawBody : JSON.stringify(body)
 		})
-	} as any;
+	} as unknown as Parameters<typeof POST>[0];
 }
 
 function aiResponse(pairs: unknown) {

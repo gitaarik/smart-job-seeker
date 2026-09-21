@@ -81,7 +81,7 @@ function createMockEvent(request: Request, user?: App.Locals['user']) {
 		request,
 		locals: { user },
 		url: new URL('http://localhost:5173/api/jobs/import')
-	} as any;
+	} as unknown as Parameters<typeof importSingle>[0];
 }
 
 describe('POST /api/jobs/import - Single Job Import', () => {

@@ -15,6 +15,10 @@ export default ts.config(
 	// code we do not edit, and linting it only ever reports other people's
 	// style choices back at us.
 	{ ignores: ['static/vnc/**'] },
+	// A disable directive that stops being necessary is worse than none: it
+	// sits there silently covering whatever the next person writes on that
+	// line. Make the stale one an error so it has to be removed.
+	{ linterOptions: { reportUnusedDisableDirectives: 'error' } },
 	js.configs.recommended,
 	...ts.configs.recommended,
 	...svelte.configs.recommended,

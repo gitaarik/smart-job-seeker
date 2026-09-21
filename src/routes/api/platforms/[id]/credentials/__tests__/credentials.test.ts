@@ -74,13 +74,13 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 vi.mock('$lib/server/auth/crypto', () => ({
-	encryptCredential: (v: any) => v,
-	decryptCredential: (v: any) => v
+	encryptCredential: (v: unknown) => v,
+	decryptCredential: (v: unknown) => v
 }));
 
 import { DELETE, PUT } from '../+server';
 
-function createPutEvent(body: any, user?: any) {
+function createPutEvent(body: unknown, user?: App.Locals['user']) {
 	return {
 		params: { id: '5' },
 		locals: {
@@ -92,10 +92,10 @@ function createPutEvent(body: any, user?: any) {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(body)
 		})
-	} as any;
+	} as unknown as Parameters<typeof PUT>[0];
 }
 
-function createDeleteEvent(params: Record<string, string>, user?: any) {
+function createDeleteEvent(params: Record<string, string>, user?: App.Locals['user']) {
 	const url = new URL('http://localhost/api/platforms/5/credentials');
 	for (const [k, v] of Object.entries(params)) {
 		url.searchParams.set(k, v);
@@ -107,7 +107,7 @@ function createDeleteEvent(params: Record<string, string>, user?: any) {
 			session: null
 		},
 		url
-	} as any;
+	} as unknown as Parameters<typeof PUT>[0];
 }
 
 describe('PUT /api/platforms/[id]/credentials', () => {

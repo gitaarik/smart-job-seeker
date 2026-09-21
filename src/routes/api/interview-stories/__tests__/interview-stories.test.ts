@@ -63,7 +63,7 @@ vi.mock('$lib/server/db/schema', () => ({
 
 import { POST, PUT, DELETE } from '../+server';
 
-function createEvent(method: string, body: any, user?: any) {
+function createEvent(method: string, body: unknown, user?: App.Locals['user']) {
 	return {
 		locals: { user: user === undefined ? { id: 'user-1' } : user, session: null },
 		request: new Request('http://localhost/api/interview-stories', {
@@ -71,7 +71,7 @@ function createEvent(method: string, body: any, user?: any) {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(body)
 		})
-	} as any;
+	} as unknown as Parameters<typeof POST>[0];
 }
 
 describe('POST /api/interview-stories', () => {

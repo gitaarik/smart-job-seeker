@@ -176,7 +176,7 @@ describe('followup conversation replay', () => {
 			await run(1, 'Now write it', true, true);
 
 			const { historyMessages, customVariables } = lastOptions();
-			expect(historyMessages.map((m: any) => m.role)).toEqual([
+			expect(historyMessages.map((m) => m.role)).toEqual([
 				'user',
 				'assistant',
 				'user',

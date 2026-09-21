@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { requireAuth, redirectIfAuthenticated } from '../guards';
-import type { RequestEvent } from '@sveltejs/kit';
+import type { Redirect, RequestEvent } from '@sveltejs/kit';
 
-function createMockEvent(user: any = null, pathname = '/home', search = ''): RequestEvent {
+function createMockEvent(
+	user: Partial<NonNullable<App.Locals['user']>> | null = null,
+	pathname = '/home',
+	search = ''
+): RequestEvent {
 	return {
 		locals: { user, session: null },
 		url: { pathname, search } as URL
@@ -21,18 +25,20 @@ describe('requireAuth', () => {
 
 		try {
 			requireAuth(createMockEvent(null, '/home'));
-		} catch (e: any) {
-			expect(e.status).toBe(302);
-			expect(e.location).toBe('/login?redirect=%2Fhome');
+		} catch (e) {
+			const redirect = e as Redirect;
+			expect(redirect.status).toBe(302);
+			expect(redirect.location).toBe('/login?redirect=%2Fhome');
 		}
 	});
 
 	it('preserves search params in redirect', () => {
 		try {
 			requireAuth(createMockEvent(null, '/jobs', '?page=2'));
-		} catch (e: any) {
-			expect(e.status).toBe(302);
-			expect(e.location).toBe('/login?redirect=%2Fjobs%3Fpage%3D2');
+		} catch (e) {
+			const redirect = e as Redirect;
+			expect(redirect.status).toBe(302);
+			expect(redirect.location).toBe('/login?redirect=%2Fjobs%3Fpage%3D2');
 		}
 	});
 });
@@ -46,9 +52,10 @@ describe('redirectIfAuthenticated', () => {
 		const user = { id: 'user-1' };
 		try {
 			redirectIfAuthenticated(createMockEvent(user));
-		} catch (e: any) {
-			expect(e.status).toBe(302);
-			expect(e.location).toBe('/');
+		} catch (e) {
+			const redirect = e as Redirect;
+			expect(redirect.status).toBe(302);
+			expect(redirect.location).toBe('/');
 		}
 	});
 
@@ -56,9 +63,10 @@ describe('redirectIfAuthenticated', () => {
 		const user = { id: 'user-1' };
 		try {
 			redirectIfAuthenticated(createMockEvent(user), '/home');
-		} catch (e: any) {
-			expect(e.status).toBe(302);
-			expect(e.location).toBe('/home');
+		} catch (e) {
+			const redirect = e as Redirect;
+			expect(redirect.status).toBe(302);
+			expect(redirect.location).toBe('/home');
 		}
 	});
 });

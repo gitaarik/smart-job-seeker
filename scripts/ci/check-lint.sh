@@ -247,7 +247,27 @@ set -euo pipefail
 # What is left is ~190: 45 `: any`, 24 `as any`, the ~86 navigation residue and
 # the 8 audited html sinks. The remaining test-file `any` is the part that
 # wants reading rather than a regex.
-BASELINE=189
+# 189 -> 120 on 2026-09-21: every remaining test-file `any`, 68 of them given
+# a real type and one kept as a documented exception.
+#
+#   - ~40 were event doubles ending `} as any`. They are
+#     `as unknown as Parameters<typeof PATCH>[0]` now, which names the handler's
+#     own parameter type, so a double that stops matching its route fails here.
+#   - `user?: any` became App.Locals['user'], or Partial<NonNullable<...>> where
+#     the fixture is a deliberate stand-in rather than a whole User.
+#   - `catch (e: any)` reading e.status became `catch (e)` with `e as Redirect`
+#     at the point of use, and `const p: any = Promise.resolve()` carrying a
+#     bolted-on `.returning` became the intersection it always was.
+#
+# The exception is profile.test.ts, whose event double feeds PATCH here, GET in
+# export.json and PUT in browser-info. Their RequestEvent types are keyed by
+# route id and mutually unassignable, so no one parameter type fits all three
+# call sites. It carries an eslint-disable and the reason, which is worth more
+# than a slot in this count: a count is fungible, and a disable is not.
+#
+# reportUnusedDisableDirectives is on as of this change, so that directive
+# cannot outlive its reason and quietly cover the next `any` on that line.
+BASELINE=120
 
 npx svelte-kit sync
 

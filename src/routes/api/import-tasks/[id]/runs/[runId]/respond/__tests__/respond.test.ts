@@ -46,9 +46,9 @@ vi.mock('$lib/server/db/schema', () => ({
 import { POST } from '../+server';
 
 function createEvent(
-	body: any,
+	body: unknown,
 	opts: {
-		user?: any;
+		user?: App.Locals['user'];
 		params?: Record<string, string>;
 	} = {}
 ) {
@@ -60,7 +60,7 @@ function createEvent(
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(body)
 		})
-	} as any;
+	} as unknown as Parameters<typeof POST>[0];
 }
 
 describe('POST /api/import-tasks/[id]/runs/[runId]/respond', () => {

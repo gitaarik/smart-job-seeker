@@ -34,7 +34,9 @@ const mockValues = vi.fn(() => {
 	// `db.insert(x).values(...)` is awaited directly for join tables and
 	// chained with `.returning()` for the rest, so it has to be both.
 	const table = insertingTable;
-	const p: any = Promise.resolve(undefined);
+	const p = Promise.resolve(undefined) as Promise<undefined> & {
+		returning?: () => Promise<{ id: number }[]>;
+	};
 	p.returning = () => Promise.resolve([{ id: INSERT_IDS.get(table) ?? 1 }]);
 	return p;
 });
@@ -98,7 +100,10 @@ import { applications, jobs } from '$lib/server/db/schema';
 
 const TOKEN = 'matching-token';
 
-function createEvent(fields: Record<string, string | string[]> = {}, opts: { user?: any } = {}) {
+function createEvent(
+	fields: Record<string, string | string[]> = {},
+	opts: { user?: App.Locals['user'] } = {}
+) {
 	const fd = new FormData();
 	for (const [k, v] of Object.entries(fields)) {
 		if (Array.isArray(v)) v.forEach((one) => fd.append(k, one));
@@ -106,24 +111,24 @@ function createEvent(fields: Record<string, string | string[]> = {}, opts: { use
 	}
 	return {
 		locals: { user: opts.user === undefined ? { id: 'user-1' } : opts.user },
-		cookies: {} as any,
+		cookies: {},
 		request: { formData: async () => fd }
-	} as any;
+	} as unknown as Parameters<NonNullable<typeof actions.default>>[0];
 }
 
 /** Run the action, returning the redirect it throws on success. */
-async function run(event: any) {
+async function run(event: Parameters<NonNullable<typeof actions.default>>[0]) {
 	try {
 		return { redirect: null, result: await actions.default!(event) };
-	} catch (e: any) {
+	} catch (e) {
 		return { redirect: e, result: null };
 	}
 }
 
 /** The values object passed to `db.insert(<table>)`, or undefined. */
 function insertedFor(table: unknown) {
-	const idx = mockInsert.mock.calls.findIndex((c: any[]) => c[0] === table);
-	return idx === -1 ? undefined : (mockValues.mock.calls[idx] as any[])[0];
+	const idx = mockInsert.mock.calls.findIndex((c: unknown[]) => c[0] === table);
+	return idx === -1 ? undefined : (mockValues.mock.calls[idx] as unknown[])[0];
 }
 
 /** A parse result with every field the action reads. */
@@ -161,11 +166,13 @@ describe('create-application action', () => {
 		vi.clearAllMocks();
 		mockValues.mockImplementation(() => {
 			const table = insertingTable;
-			const p: any = Promise.resolve(undefined);
+			const p = Promise.resolve(undefined) as Promise<undefined> & {
+				returning?: () => Promise<{ id: number }[]>;
+			};
 			p.returning = () => Promise.resolve([{ id: INSERT_IDS.get(table) ?? 1 }]);
 			return p;
 		});
-		mockInsert.mockImplementation((table: any) => {
+		mockInsert.mockImplementation((table: { __table?: string } | undefined) => {
 			insertingTable = table?.__table ?? '';
 			return { values: mockValues };
 		});

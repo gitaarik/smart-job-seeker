@@ -56,7 +56,7 @@ import { actions } from '../+page.server';
 function createEvent(
 	questions: unknown,
 	opts: {
-		user?: any;
+		user?: App.Locals['user'];
 		params?: Record<string, string>;
 		rawQuestions?: string;
 		fills?: unknown;
@@ -73,9 +73,9 @@ function createEvent(
 	return {
 		params: opts.params ?? { id: '1' },
 		locals: { user: opts.user === undefined ? { id: 'user-1' } : opts.user },
-		cookies: {} as any,
+		cookies: {},
 		request: { formData: async () => fd }
-	} as any;
+	} as unknown as Parameters<NonNullable<typeof actions.createQuestions>>[0];
 }
 
 describe('createQuestions action', () => {
@@ -122,7 +122,7 @@ describe('createQuestions action', () => {
 	});
 
 	it('rejects a payload that is not an array', async () => {
-		const res = await actions.createQuestions!(createEvent({ question: 'Q' } as any));
+		const res = await actions.createQuestions!(createEvent({ question: 'Q' }));
 		expect(res).toMatchObject({ status: 400 });
 		expect(mockInsert).not.toHaveBeenCalled();
 	});

@@ -65,7 +65,7 @@ const CATEGORIES = [
 	{ id: 11, name: 'Backend', sort: 4, tech_skills: [] }
 ];
 
-function createEvent(body: any, method = 'POST') {
+function createEvent(body: Record<string, unknown>, method = 'POST') {
 	return {
 		locals: { user: { id: 'user-1' }, session: null },
 		cookies: { get: () => undefined },
@@ -74,7 +74,7 @@ function createEvent(body: any, method = 'POST') {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(body)
 		})
-	} as any;
+	} as unknown as Parameters<typeof PATCH>[0];
 }
 
 /** The values handed to the last insert of a given kind. */
@@ -170,7 +170,7 @@ describe('PATCH /api/profile-skills — editing a skill in place', () => {
 		return mockUpdateSet.mock.calls[0]?.[0];
 	}
 
-	function edit(body: any) {
+	function edit(body: Record<string, unknown>) {
 		return PATCH(createEvent({ id: 5, ...body }, 'PATCH'));
 	}
 

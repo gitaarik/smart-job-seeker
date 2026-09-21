@@ -21,7 +21,7 @@ const baseProfile = {
 	public_cv_version_id: null as number | null,
 	public_resume_version_id: null as number | null,
 	public_portfolio_version_id: null as number | null
-} as any;
+} as AccessControlOptions['profile'];
 
 function opts(overrides: Partial<AccessControlOptions> = {}): AccessControlOptions {
 	return {
@@ -100,10 +100,12 @@ describe('checkProfileAccess', () => {
 	});
 
 	it('denies a route whose publish column is missing from the row entirely', async () => {
-		const withoutColumn = { ...baseProfile };
+		// A row missing the column outright is what this checks, and the type
+		// says it cannot happen — hence the widen to delete, and back to pass.
+		const withoutColumn = { ...baseProfile } as Partial<AccessControlOptions['profile']>;
 		delete withoutColumn.public_portfolio_version_id;
 		const result = await checkProfileAccess(
-			opts({ profile: withoutColumn, routeType: 'portfolio' })
+			opts({ profile: withoutColumn as AccessControlOptions['profile'], routeType: 'portfolio' })
 		);
 		expect(result.allowed).toBe(false);
 	});

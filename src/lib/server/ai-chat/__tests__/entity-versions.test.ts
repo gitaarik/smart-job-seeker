@@ -46,9 +46,9 @@ vi.mock('$lib/server/db', () => ({
 
 vi.mock('drizzle-orm', () => ({
 	and: (...a: unknown[]) => ({ and: a }),
-	asc: (c: any) => ({ asc: c }),
+	asc: (c: unknown) => ({ asc: c }),
 	desc: (c: unknown) => ({ desc: c }),
-	eq: (c: any, v: any) => ({ eq: [c, v] }),
+	eq: (c: unknown, v: unknown) => ({ eq: [c, v] }),
 	gt: (c: unknown, v: unknown) => ({ gt: [c, v] }),
 	gte: (c: unknown, v: unknown) => ({ gte: [c, v] }),
 	isNotNull: (c: unknown) => ({ isNotNull: c })

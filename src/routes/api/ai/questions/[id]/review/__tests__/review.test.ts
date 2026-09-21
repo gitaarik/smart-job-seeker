@@ -54,12 +54,12 @@ function ownedQuestion(overrides: Record<string, unknown> = {}) {
 	};
 }
 
-function createEvent(opts: { user?: any; id?: string; body?: unknown } = {}) {
+function createEvent(opts: { user?: App.Locals['user']; id?: string; body?: unknown } = {}) {
 	return {
 		params: { id: opts.id ?? '1' },
 		locals: { user: opts.user === undefined ? { id: 'user-1' } : opts.user },
 		request: opts.body !== undefined ? { json: async () => opts.body } : undefined
-	} as any;
+	} as unknown as Parameters<typeof POST>[0];
 }
 
 function reviewResponse(feedback: string, revisedText: string | null) {

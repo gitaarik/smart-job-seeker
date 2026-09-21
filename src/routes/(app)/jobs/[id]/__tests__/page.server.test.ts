@@ -92,7 +92,7 @@ function createEvent(
 		description?: string;
 		reparse?: string;
 		fields?: DetailFields;
-		user?: any;
+		user?: Partial<NonNullable<App.Locals['user']>> | null;
 		params?: Record<string, string>;
 	} = {}
 ) {
@@ -105,9 +105,9 @@ function createEvent(
 	return {
 		params: opts.params ?? { id: '3815' },
 		locals: { user: opts.user === undefined ? { id: 'user-1' } : opts.user },
-		cookies: {} as any,
+		cookies: {},
 		request: { formData: async () => fd }
-	} as any;
+	} as unknown as Parameters<NonNullable<typeof actions.updateDescription>>[0];
 }
 
 /** The header form as the browser posts it: every field present, blanks empty. */
@@ -496,7 +496,7 @@ describe('updateDescription action', () => {
 		);
 
 		expect(res).toMatchObject({ status: 502 });
-		expect((res as any).data.error).toContain('Description saved');
+		expect((res as { data: { error: string } }).data.error).toContain('Description saved');
 		// The description write still happened.
 		expect(mockUpdateSet).toHaveBeenCalledWith(
 			expect.objectContaining({ job_description: 'New description' })

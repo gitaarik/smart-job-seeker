@@ -53,9 +53,9 @@ import { GET } from '../export.json/+server';
 import { PUT } from '../browser-info/+server';
 
 function createEvent(opts: {
-	user?: any;
+	user?: App.Locals['user'];
 	params?: Record<string, string>;
-	body?: any;
+	body?: unknown;
 	method?: string;
 }) {
 	const user = opts.user === undefined ? { id: 'user-1' } : opts.user;
@@ -71,6 +71,10 @@ function createEvent(opts: {
 			body: JSON.stringify(body)
 		}),
 		url: new URL('http://localhost/api/profile/1')
+		// This double feeds PATCH here, GET in export.json and PUT in browser-info.
+		// Their RequestEvent types are keyed by route id and mutually unassignable,
+		// so no one parameter type fits all three call sites.
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- see above
 	} as any;
 }
 
