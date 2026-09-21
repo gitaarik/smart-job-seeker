@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { armOn } from '$lib/actions/arm-on';
@@ -1919,7 +1920,7 @@
 								<!-- Source link for items without a job row (skipped/error)
                      so the user can still inspect what the scraper saw. -->
 								{#if !item.job && item.source_url}
-									<a
+									<ExternalLink
 										href={item.source_url}
 										target="_blank"
 										rel="noopener"
@@ -1927,7 +1928,7 @@
 									>
 										<FontAwesomeIcon icon={faExternalLinkAlt} class="mr-1 h-3 w-3" />
 										{item.source_url}
-									</a>
+									</ExternalLink>
 								{/if}
 
 								<!-- Expanded job details -->
@@ -2028,7 +2029,7 @@
 												View details
 											</a>
 											{#if job.source_url}
-												<a
+												<ExternalLink
 													href={job.source_url}
 													target="_blank"
 													rel="noopener"
@@ -2036,7 +2037,7 @@
 												>
 													<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3" />
 													Source
-												</a>
+												</ExternalLink>
 											{/if}
 										</div>
 									</div>
@@ -2650,7 +2651,7 @@
 				<div>
 					<h3 class="mb-1 text-xs font-medium text-[var(--dash-text-secondary)]">Jobs URL</h3>
 					{#if jobsUrl}
-						<a
+						<ExternalLink
 							href={jobsUrl}
 							target="_blank"
 							rel="noopener"
@@ -2658,7 +2659,7 @@
 						>
 							{jobsUrl}
 							<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3 flex-shrink-0" />
-						</a>
+						</ExternalLink>
 					{:else}
 						<p class="text-sm text-[var(--dash-text-muted)]">Not set</p>
 					{/if}
@@ -2835,7 +2836,7 @@
 							{/if}
 						{/if}
 						{#if isCloudMode && liveUrl}
-							<a
+							<ExternalLink
 								href={liveUrl}
 								target="_blank"
 								rel="noopener"
@@ -2843,7 +2844,7 @@
 								title="Open in new tab"
 							>
 								<FontAwesomeIcon icon={faExternalLinkAlt} class="h-4 w-4" />
-							</a>
+							</ExternalLink>
 						{/if}
 						<button
 							onclick={() => {
@@ -2915,7 +2916,7 @@
 											</button>
 										{/if}
 										{#if isCloudMode && liveUrl}
-											<a
+											<ExternalLink
 												href={liveUrl}
 												target="_blank"
 												rel="noopener"
@@ -2926,7 +2927,7 @@
 											>
 												<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3.5 w-3.5" />
 												Open in new tab
-											</a>
+											</ExternalLink>
 										{/if}
 									</div>
 								{/if}

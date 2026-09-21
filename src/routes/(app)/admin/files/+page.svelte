@@ -1,4 +1,9 @@
 <script lang="ts">
+	/*
+	 * Every href here comes from buildUrl(), which calls resolve('/admin/files')
+	 * itself and appends the query. The rule does not follow a function call.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import type { ResolvedPathname } from '$app/types';

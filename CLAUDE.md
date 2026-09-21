@@ -58,7 +58,7 @@ Two things worth knowing:
 | ---------------- | --------------------- | ----------------- |
 | `svelte-check`   | `ci/check.sh`         | 31 errors         |
 | `scripts/` types | `ci/check-scripts.sh` | 23 errors         |
-| eslint           | `ci/check-lint.sh`    | 585 errors        |
+| eslint           | `ci/check-lint.sh`    | 31 errors         |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
 The three counts are ratchets: they may only ever go **down**, and each script
@@ -110,38 +110,58 @@ since most files already carry backlog) and runs the type gate whole, because
 the failure that motivated it appeared only in files the change never opened.
 It fails open when the dev stack is down, and `git push --no-verify` skips it.
 
-What remains is two rules and a handful of deliberate exceptions:
-`@typescript-eslint/no-explicit-any` (~476, and 465 of those are test mocks —
-app code is down to 11) and `svelte/no-navigation-without-resolve` (~81).
-Everything else has been worked down. Five rules are worth reading rather than
-counting:
+What remains is 31 errors, down from 1,521 when the ratchet went in. Measured
+with `check-oss.sh`: 10 of those are visible from the dev container (9 zod and
+LangChain generic defaults in `lib/server/llm/langchain.ts`, 1 in
+`scripts/test-structured-output.ts`, all correct as they are). The other 21 are
+in paths the dev container mounts over, so only `check-oss.sh` can see them and
+they have not been itemised — if you need to know what they are, that is the
+tool that can tell you.
 
-- **`svelte/no-navigation-without-resolve`** — 138 links were migrated to
-  `resolve()` on 2026-09-19, and what is left is **not** un-migrated navigation.
-  Roughly: 30 hrefs that arrive as a prop (`{href}` in ContactItem, StatCard,
-  ProfileLink; `tab.href`; `activityHref`), 26 built by a local page helper, 14
-  external URLs out of stored data (`job.source_url`, `cert.url`,
-  `profile.signal_profile`, a scraper's live URL), 5 `goto()` calls that append a
-  query to a resolved path, 5 same-page query-only navigations, and 4 redirect
-  targets a form action chose. The rule cannot see that any of those are fine,
-  and it has no per-helper allowlist — only coarse `ignoreLinks` / `ignoreGoto`
-  booleans — so silencing them means ~85 disable comments across 50 files, which
-  is worse code than the errors. Five query-carrying `goto()` calls do carry a
-  disable each, with the reason on the line above. **Before adding to this
-  count, check you are not in one of those buckets.**
+`@typescript-eslint/no-explicit-any` in tests and
+`svelte/no-navigation-without-resolve` were both cleared on 2026-09-20/21; the
+comment block in `ci/check-lint.sh` is the real history of how. Five rules are
+worth reading rather than counting:
 
-  Two things worth knowing when you do migrate one. A route id carries its layout
-  group (`/(app)/jobs/[id]`, not `/jobs/[id]`), though a plain pathname is
-  accepted for a static link with no params; and `resolve` is typed against the
-  generated route union, so a path that is not a route fails svelte-check. That
-  is how two dead `/admin/job-platforms/[id]/discover` links were found — the
-  page had been renamed to `[id]/search-form-probe` and the links never followed.
-  For files under `static/`, the helper is `asset()`, not `resolve()`.
+- **`svelte/no-navigation-without-resolve`** — cleared 2026-09-21, and only ONE
+  of the 81 was actually fixable: a ternary between two literal paths in
+  `+error.svelte`. The rule does no interprocedural analysis, so a helper that
+  resolves internally reports identically to one that never heard of
+  `resolve()` — `filterUrl()` in `admin/emails` calls `resolve('/admin/emails')`
+  on line 83 and all four of its call sites were flagged anyway. Everything else
+  was marked, so **a new hit is now genuinely yours**: check you are not in one
+  of the marked buckets before adding to it.
 
-- **`svelte/no-at-html-tags`** — all 10 sites were audited 2026-08-07 and are
-  sound. A new hit is an unreviewed HTML sink, not backlog, and `/p/[slug]`
-  renders user-authored content publicly. Two sites there were injectable until
-  that audit.
+  Where the marks went. 27 external URLs (a scraped posting, a platform's own
+  site, a tunnel live view, a link a user typed into their profile) moved to
+  `lib/components/ExternalLink.svelte`, which carries one disable — use that
+  component for a new external link rather than a bare `<a>`. 11 leaf components
+  that exist to render a caller-supplied href, and 14 pages whose sites are all
+  one shape, carry a file-scoped disable naming the shape.
+
+  Two mechanics worth knowing. An inline `eslint-disable-next-line` usually does
+  NOT work here: the flagged line is normally an `href` attribute inside a
+  multi-line element, and a comment cannot sit between attributes. And a
+  file-level disable placed above `<script>` is silently ignored — the directive
+  has to be **inside** the script block to apply to the markup.
+
+  When you do migrate one: a route id carries its layout group
+  (`/(app)/jobs/[id]`), though a plain pathname is accepted for a static link
+  with no params; `resolve` is typed against the generated route union, so a
+  path that is not a route fails svelte-check. That is how two dead
+  `/admin/job-platforms/[id]/discover` links were found. For files under
+  `static/`, the helper is `asset()`.
+
+- **`svelte/no-at-html-tags`** — 8 sites, each re-verified 2026-09-21 and each
+  now carrying its reason next to the code rather than in a comment here.
+  `renderSafeMarkdown` escapes raw HTML tokens to inert text and allowlists
+  http/https/mailto (stripping control characters first, so `java\tscript:`
+  cannot slip through); `highlightHtml` escapes all five entities before it
+  injects its own `<span>`s, which is what makes rendering scraped page HTML
+  safe; `linkify` escapes before wrapping http(s) matches. A new hit is an
+  unreviewed HTML sink, not backlog, and `/p/[slug]` renders user-authored
+  content publicly.
+
 - **`svelte/require-each-key`** — an unkeyed `{#each}` mismatches component
   state when a list reorders, and this UI has drag-reordering throughout. Nearly
   all were keyed on 2026-09-17. Key by a value only when it cannot repeat (a

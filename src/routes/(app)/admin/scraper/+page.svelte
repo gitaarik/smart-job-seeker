@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
@@ -447,7 +448,7 @@
 							<!-- Right: Actions -->
 							<div class="flex flex-shrink-0 items-center gap-2">
 								{#if run.liveUrl}
-									<a
+									<ExternalLink
 										href={run.liveUrl}
 										target="_blank"
 										rel="noopener"
@@ -455,7 +456,7 @@
 										title="Open live view"
 									>
 										<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3.5 w-3.5" />
-									</a>
+									</ExternalLink>
 								{/if}
 
 								{#if isActive(run.status)}

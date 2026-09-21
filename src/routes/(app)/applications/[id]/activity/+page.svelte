@@ -1,4 +1,9 @@
 <script lang="ts">
+	/*
+	 * The href is a template over basePath (`/applications/${app.id}`). A template
+	 * is not a resolve() call, so the rule cannot verify it.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';

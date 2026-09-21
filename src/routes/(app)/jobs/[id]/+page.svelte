@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
@@ -473,14 +474,14 @@
 									class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
 								/>
 								<span class="text-[var(--dash-text-muted)]">Source</span>
-								<a
+								<ExternalLink
 									href={job.source_url}
 									target="_blank"
 									rel="noopener"
 									class="truncate text-[var(--dash-primary)] transition-colors hover:text-[var(--dash-primary-hover)]"
 								>
 									{job.source_url.replace(/^https?:\/\/(?:www\.)?/, '')}
-								</a>
+								</ExternalLink>
 							</div>
 						{/if}
 

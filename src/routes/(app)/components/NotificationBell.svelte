@@ -1,4 +1,10 @@
 <script lang="ts">
+	/*
+	 * The link is stored on the notification row, written when it was created.
+	 * This component only renders what it is handed, so the rule has nothing
+	 * to check, and the `<a>` spans several lines so there is no line to mark.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {

@@ -1,4 +1,9 @@
 <script lang="ts">
+	/*
+	 * goto() here carries a bare query string against the page already open. No
+	 * route changes, so there is no route id to resolve.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { ActionData, PageData } from './$types';
 	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';

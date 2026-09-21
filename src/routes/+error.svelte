@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 </script>
 
@@ -19,8 +20,8 @@
 
 	<a
 		href={$page.url.pathname.startsWith('/login') || $page.url.pathname.startsWith('/signup')
-			? '/login'
-			: '/home'}
+			? resolve('/login')
+			: resolve('/home')}
 		class="mt-8 inline-flex items-center justify-center rounded-lg bg-[var(--dash-primary)] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
 	>
 		Go back

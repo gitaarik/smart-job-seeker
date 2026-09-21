@@ -1,4 +1,10 @@
 <script lang="ts">
+	/*
+	 * activityHref is a prop, resolved by the page that owns the application id.
+	 * This component only renders what it is handed, so the rule has nothing
+	 * to check, and the `<a>` spans several lines so there is no line to mark.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	/**
 	 * The offer terms the summariser pulled out of this application's activity
 	 * entries, on the overview page.

@@ -1,4 +1,16 @@
 <script lang="ts">
+	/*
+	 * {@html linkify(note.text)} renders a user-written application note.
+	 * linkify escapes &, <, > and " first, then wraps only http(s) matches in an
+	 * anchor, so the note cannot contribute markup. Mid-line, so file level.
+	 */
+	/* eslint-disable svelte/no-at-html-tags */
+	/*
+	 * The href comes from profileDocUrl(), which builds a public /p/<slug> document
+	 * URL. The rule does not follow a function call.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
@@ -491,14 +503,14 @@
 							class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
 						/>
 						<span class="text-[var(--dash-text-muted)]">Source</span>
-						<a
+						<ExternalLink
 							href={job.source_url}
 							target="_blank"
 							rel="noopener"
 							class="truncate text-[var(--dash-primary)] transition-colors hover:text-[var(--dash-primary-hover)]"
 						>
 							{job.source_url.replace(/^https?:\/\/(?:www\.)?/, '')}
-						</a>
+						</ExternalLink>
 					</div>
 				{/if}
 			</div>

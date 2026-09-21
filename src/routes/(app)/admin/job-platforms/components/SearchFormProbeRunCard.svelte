@@ -16,6 +16,7 @@
 	 * now drives the search UI directly every run, so there's nothing to
 	 * "promote into a preset" from a discovery run.
 	 */
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faCloud, faCopy, faDesktop } from '@fortawesome/free-solid-svg-icons';
@@ -270,12 +271,12 @@
 							Search page
 						</dt>
 						<dd class="min-w-0">
-							<a
+							<ExternalLink
 								href={findings.search_page_url}
 								target="_blank"
 								rel="noopener noreferrer"
 								class="font-mono text-xs break-all text-[var(--dash-primary)] hover:underline"
-								>{findings.search_page_url}</a
+								>{findings.search_page_url}</ExternalLink
 							>
 						</dd>
 					{/if}

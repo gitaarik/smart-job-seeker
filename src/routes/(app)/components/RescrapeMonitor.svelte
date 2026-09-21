@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { formatDateTime } from '$lib/format-date';
@@ -354,7 +355,7 @@
 							<label class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
 								>Source URL</label
 							>
-							<a
+							<ExternalLink
 								href={sourceUrl}
 								target="_blank"
 								rel="noopener"
@@ -362,7 +363,7 @@
 							>
 								{sourceUrl}
 								<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3 flex-shrink-0" />
-							</a>
+							</ExternalLink>
 						</div>
 					{/if}
 
@@ -373,7 +374,7 @@
 							Login URL
 						</label>
 						{#if loginUrl}
-							<a
+							<ExternalLink
 								href={loginUrl}
 								target="_blank"
 								rel="noopener"
@@ -381,7 +382,7 @@
 							>
 								{loginUrl}
 								<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3 flex-shrink-0" />
-							</a>
+							</ExternalLink>
 						{:else}
 							<p class="text-sm text-[var(--dash-text-muted)]">Not configured</p>
 						{/if}

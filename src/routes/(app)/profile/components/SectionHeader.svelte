@@ -1,4 +1,10 @@
 <script lang="ts">
+	/*
+	 * backHref is the caller's route, resolved where it is known.
+	 * This component only renders what it is handed, so the rule has nothing
+	 * to check, and the `<a>` spans several lines so there is no line to mark.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowLeft, faPlus } from '@fortawesome/free-solid-svg-icons';
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';

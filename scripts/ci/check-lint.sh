@@ -267,7 +267,36 @@ set -euo pipefail
 #
 # reportUnusedDisableDirectives is on as of this change, so that directive
 # cannot outlive its reason and quietly cover the next `any` on that line.
-BASELINE=120
+# 120 -> 31 on 2026-09-21, and none of it was a fix. The rule does no
+# interprocedural analysis, so a helper that resolves internally is reported
+# exactly like one that never heard of resolve(): filterUrl() in admin/emails
+# calls resolve('/admin/emails') on line 83 and all four of its call sites are
+# flagged regardless. Of 81 navigation errors, exactly ONE was fixable — a
+# ternary between two literal paths in +error.svelte, now resolve('/login') and
+# resolve('/home'). The rest were marked:
+#
+#   - 27 external URLs (a scraped posting, a platform's own site, a tunnel live
+#     view, a link a user typed into their profile) moved to
+#     lib/components/ExternalLink.svelte, which carries the one disable.
+#   - 11 leaf components that exist to render a caller-supplied href, and 14
+#     pages whose sites are all one shape, carry a file-scoped disable naming
+#     which shape. Inline marks do not work here: the flagged line is usually
+#     an `href` attribute inside a multi-line element, and a comment cannot sit
+#     between attributes. A disable above <script> is silently ignored; the
+#     directive has to be INSIDE the script block to apply.
+#
+# The 8 no-at-html-tags sinks were re-read rather than trusted, and all hold:
+# renderSafeMarkdown escapes raw HTML tokens and allowlists link schemes,
+# highlightHtml escapes all five entities before injecting its own spans, and
+# linkify escapes before wrapping http(s) matches. They now carry that reason
+# next to the code instead of in this comment, which is worth more than a slot
+# in this count: a count is fungible and a disable is not.
+#
+# ExternalLink was the only part that changed behaviour, and not for lint: those
+# 27 sites were interpolating user-typed and scraped strings straight into an
+# href, on pages including public /p/<slug> profiles, where `javascript:` and
+# `data:` execute on click. It now allowlists schemes, with 14 tests.
+BASELINE=31
 
 npx svelte-kit sync
 

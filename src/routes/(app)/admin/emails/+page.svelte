@@ -1,4 +1,10 @@
 <script lang="ts">
+	/*
+	 * Every href here comes from filterUrl(), which calls resolve('/admin/emails')
+	 * itself and appends the query. The rule does not follow a function call, so it
+	 * reports the call site even though the route is resolved.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';

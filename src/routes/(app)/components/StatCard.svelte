@@ -23,6 +23,9 @@
 </script>
 
 {#if href}
+	<!-- The href is the caller's route, already resolved there. This component
+	     only renders what it is handed, so there is nothing to resolve here. -->
+	<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 	<a {href} class="group block">
 		<Card padding="sm">
 			<div class="flex items-center justify-between gap-2.5">

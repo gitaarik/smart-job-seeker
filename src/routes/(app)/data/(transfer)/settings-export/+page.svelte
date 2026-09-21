@@ -1,4 +1,9 @@
 <script lang="ts">
+	/*
+	 * The href comes from the downloadUrl derived, which builds the download
+	 * route with its query. The rule does not follow that indirection.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { PageData } from './$types';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {

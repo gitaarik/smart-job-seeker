@@ -1,4 +1,10 @@
 <script lang="ts">
+	/*
+	 * Two shapes here, neither resolvable: goto(u.pathname + u.search) re-enters the
+	 * current page with changed query, and profileDocUrl() builds a public /p/<slug>
+	 * document URL behind a function call.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';

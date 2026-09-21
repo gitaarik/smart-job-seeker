@@ -9,6 +9,7 @@
 	 * Polling starts on open and stops on close/unmount. The blob URL for
 	 * the latest screenshot is revoked between frames so we don't leak.
 	 */
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import { onDestroy } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -128,7 +129,7 @@
 						</button>
 					{/if}
 					{#if isCloudMode && liveUrl}
-						<a
+						<ExternalLink
 							href={liveUrl}
 							target="_blank"
 							rel="noopener noreferrer"
@@ -137,7 +138,7 @@
 							aria-label="Open in new tab"
 						>
 							<FontAwesomeIcon icon={faExternalLinkAlt} class="h-4 w-4" />
-						</a>
+						</ExternalLink>
 					{/if}
 					<button
 						type="button"

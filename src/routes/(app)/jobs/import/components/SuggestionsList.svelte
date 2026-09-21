@@ -1,4 +1,5 @@
 <script lang="ts" module>
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { SearchFilterValue } from '$lib/job-platforms/search-filters';
 
 	export type Suggestion = {
@@ -149,7 +150,7 @@
 							<span class="text-xs text-[var(--dash-text-muted)]">{trackRecord(suggestion)}</span>
 						{/if}
 					</div>
-					<a
+					<ExternalLink
 						href={suggestion.platform_url}
 						target="_blank"
 						rel="noopener noreferrer"
@@ -159,7 +160,7 @@
 					>
 						<FontAwesomeIcon icon={faArrowUpRightFromSquare} class="h-2.5 w-2.5" />
 						{displayUrl(suggestion.platform_url)}
-					</a>
+					</ExternalLink>
 					<p class="text-sm text-[var(--dash-text-secondary)]">{suggestion.note}</p>
 				</div>
 

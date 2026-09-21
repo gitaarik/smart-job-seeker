@@ -1,4 +1,10 @@
 <script lang="ts">
+	/*
+	 * Nav item hrefs come from the nav definition, already resolved there.
+	 * This component only renders what it is handed, so the rule has nothing
+	 * to check, and the `<a>` spans several lines so there is no line to mark.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { page } from '$app/stores';
 	import { resolve } from '$app/paths';
 	import { SvelteSet } from 'svelte/reactivity';

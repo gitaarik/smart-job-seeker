@@ -1,4 +1,13 @@
 <script lang="ts">
+	/*
+	 * The three {@html} sites render SCRAPED page HTML, and are safe because
+	 * highlightHtml escapes &, <, >, " and ' before it injects any markup: the
+	 * only live tags in its output are the <span> wrappers it adds itself.
+	 * Marked at file level because each sits mid-line inside an expression, so
+	 * there is no line of its own to mark.
+	 */
+	/* eslint-disable svelte/no-at-html-tags */
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import SearchFormProbeRunCard from '../../components/SearchFormProbeRunCard.svelte';
@@ -171,14 +180,14 @@
 									{new Date(debug.captured_at).toLocaleString()}
 								</span>
 							</div>
-							<a
+							<ExternalLink
 								href={debug.page_url}
 								target="_blank"
 								rel="noopener noreferrer"
 								class="text-xs text-[var(--dash-primary)] hover:underline"
 							>
 								{new URL(debug.page_url).hostname}
-							</a>
+							</ExternalLink>
 						</div>
 
 						<div class="grid gap-4 md:grid-cols-2">

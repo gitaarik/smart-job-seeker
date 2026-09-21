@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -391,12 +392,12 @@
 							>
 						{/if}
 						{#if cert.url}
-							<a
+							<ExternalLink
 								href={cert.url}
 								target="_blank"
 								rel="noopener noreferrer"
 								onclick={(e) => e.stopPropagation()}
-								class="text-sm text-[var(--dash-primary)] hover:underline">{cert.url}</a
+								class="text-sm text-[var(--dash-primary)] hover:underline">{cert.url}</ExternalLink
 							>
 						{/if}
 					{/snippet}

@@ -19,6 +19,8 @@
 	{:else if type === 'phone'}
 		<a href="tel:{href}" class="underline hover:text-slate-600">{content}</a>
 	{:else}
+		<!-- The href is the caller's: a contact link from the profile, not a route. -->
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 		<a {href} target="_blank" class="underline hover:text-slate-600">{content}</a>
 	{/if}
 {/if}

@@ -1,4 +1,9 @@
 <script lang="ts">
+	/*
+	 * goto(result.location) follows wherever the form action redirected to. The
+	 * server chose that target; the client has no route id to resolve.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { deserialize } from '$app/forms';

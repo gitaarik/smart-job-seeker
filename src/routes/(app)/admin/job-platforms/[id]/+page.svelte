@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
@@ -179,7 +180,7 @@
 						required
 						class="flex-1 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
 					/>
-					<a
+					<ExternalLink
 						href={url}
 						target="_blank"
 						rel="noopener noreferrer"
@@ -187,7 +188,7 @@
 						aria-label="Open base URL"
 					>
 						<FontAwesomeIcon icon={faExternalLinkAlt} class="h-4 w-4" />
-					</a>
+					</ExternalLink>
 				</div>
 			</div>
 			<div>
@@ -257,7 +258,7 @@
 						class="flex-1 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
 					/>
 					{#if searchPageUrl}
-						<a
+						<ExternalLink
 							href={searchPageUrl}
 							target="_blank"
 							rel="noopener noreferrer"
@@ -265,7 +266,7 @@
 							aria-label="Open search page URL"
 						>
 							<FontAwesomeIcon icon={faExternalLinkAlt} class="h-4 w-4" />
-						</a>
+						</ExternalLink>
 					{/if}
 				</div>
 				<p class="mt-1 text-xs text-[var(--dash-text-muted)]">

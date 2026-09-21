@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
@@ -280,7 +281,7 @@
 								href={resolve('/(app)/admin/job-platforms/[id]', { id: String(platform.id) })}
 								class="text-[var(--dash-primary)] hover:underline">{platform.name}</a
 							>
-							<a
+							<ExternalLink
 								href={platform.url}
 								target="_blank"
 								rel="noopener noreferrer"
@@ -288,7 +289,7 @@
 								title="Open base URL"
 							>
 								<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3" />
-							</a>
+							</ExternalLink>
 						</td>
 						<td class="px-3 py-2 font-mono text-xs text-[var(--dash-text-secondary)]">
 							{platform.key}

@@ -608,6 +608,9 @@
 					</p>
 				</div>
 				<div class="ai-feedback mb-1 text-sm text-[var(--dash-text)]">
+					<!-- LLM output. renderSafeMarkdown escapes raw HTML tokens to inert text and -->
+					<!-- allowlists http/https/mailto on links, so nothing here renders as markup. -->
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					{@html renderSafeMarkdown(entry.aiFeedback)}
 				</div>
 				{#if !entry.content && !isEditing && entry.type !== 'ai_advice'}

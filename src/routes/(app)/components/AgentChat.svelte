@@ -566,6 +566,9 @@
 								<div
 									class="agent-md rounded-2xl rounded-bl-sm bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)]"
 								>
+									<!-- Assistant output. renderSafeMarkdown escapes raw HTML and allowlists link -->
+									<!-- schemes. -->
+									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 									{@html renderSafeMarkdown(msg.content)}
 								</div>
 								{#each msg.proposals ?? [] as proposal (proposal.id)}

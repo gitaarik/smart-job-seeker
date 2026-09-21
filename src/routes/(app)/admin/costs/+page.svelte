@@ -1,4 +1,9 @@
 <script lang="ts">
+	/*
+	 * These hrefs are bare query strings ("?period=...") against the page already
+	 * open. No route changes, so there is no route id to resolve.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { PageData } from './$types';
 	import { faChartLine } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';

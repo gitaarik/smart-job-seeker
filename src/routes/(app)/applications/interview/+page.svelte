@@ -568,6 +568,9 @@
 							<div class="border-t border-[var(--dash-border)] p-3 sm:p-4">
 								{#if sheet.content}
 									<div class="cheatsheet-content text-sm text-[var(--dash-text)]">
+										<!-- Cheat-sheet content, LLM-written. renderSafeMarkdown escapes raw HTML and -->
+										<!-- allowlists link schemes. -->
+										<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 										{@html renderSafeMarkdown(htmlToMarkdown(sheet.content))}
 									</div>
 								{:else}

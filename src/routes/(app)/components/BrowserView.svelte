@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCloud,
@@ -37,7 +38,7 @@
 		</div>
 		<div class="flex items-center gap-2">
 			{#if isCloudMode && liveUrl}
-				<a
+				<ExternalLink
 					href={liveUrl}
 					target="_blank"
 					rel="noopener"
@@ -45,7 +46,7 @@
 					title="Open in new tab"
 				>
 					<FontAwesomeIcon icon={faExternalLinkAlt} class="h-4 w-4" />
-				</a>
+				</ExternalLink>
 			{/if}
 			{#if onclose}
 				<button
@@ -65,7 +66,7 @@
 			<p class="text-center text-sm text-[var(--dash-text-secondary)]">
 				Open the browser view in a new tab for the best experience on mobile.
 			</p>
-			<a
+			<ExternalLink
 				href={liveUrl}
 				target="_blank"
 				rel="noopener"
@@ -73,7 +74,7 @@
 			>
 				<FontAwesomeIcon icon={faExpand} class="h-4 w-4" />
 				Open Browser View
-			</a>
+			</ExternalLink>
 		</div>
 		<div class="relative hidden sm:block" style="padding-bottom: 56.25%;">
 			<iframe

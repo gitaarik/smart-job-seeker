@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import { page } from '$app/state';
 	import { formatDateRangeCompact } from '$lib/tools/date-utils';
 	import {
@@ -347,13 +348,13 @@
 					</div>
 
 					<div>
-						<a
+						<ExternalLink
 							href={project.url}
 							target="_blank"
 							class="whitespace-nowrap underline hover:text-slate-600"
 						>
 							{project.url}
-						</a>
+						</ExternalLink>
 					</div>
 
 					<div class="mb-[-31px] text-xs">{project.summary}<br /><br /><br /></div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
@@ -233,13 +234,13 @@
 							<span>{entry.user?.name || entry.user?.email}</span>
 							<span>{formatDate(entry.date_created)}</span>
 							{#if entry.page_url}
-								<a
+								<ExternalLink
 									href={entry.page_url}
 									class="flex items-center gap-1 text-[var(--dash-primary)] hover:underline"
 								>
 									<FontAwesomeIcon icon={faExternalLinkAlt} class="h-2.5 w-2.5" />
 									{entry.page_url}
-								</a>
+								</ExternalLink>
 							{/if}
 							{#if entry.subscribers?.length > 0}
 								<span

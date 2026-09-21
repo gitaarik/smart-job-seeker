@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -193,11 +194,11 @@
 					{#if profile.signal_profile || profile.whatsapp_number || profile.telegram_username}
 						<p class="mt-2 flex justify-center gap-4 text-xl">
 							{#if profile.signal_profile}
-								<a
+								<ExternalLink
 									href={profile.signal_profile}
 									target="_blank"
 									title="Signal"
-									class="hover:text-teal"><FontAwesomeIcon icon={faSignalMessenger} /></a
+									class="hover:text-teal"><FontAwesomeIcon icon={faSignalMessenger} /></ExternalLink
 								>
 							{/if}
 

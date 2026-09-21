@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
@@ -290,7 +291,7 @@
 						{#snippet expandedContent()}
 							<!-- URL link in top right -->
 							{#if project.url}
-								<a
+								<ExternalLink
 									href={project.url}
 									target="_blank"
 									rel="noopener"
@@ -298,7 +299,7 @@
 								>
 									{formatProjectUrl(project.url).displayLabel}
 									<FontAwesomeIcon icon={faExternalLink} class="h-3 w-3" />
-								</a>
+								</ExternalLink>
 							{/if}
 
 							{#if project.summary}

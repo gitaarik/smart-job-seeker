@@ -1,4 +1,9 @@
 <script lang="ts">
+	/*
+	 * buildUrl() returns a bare query string ("?status=...") for the page already
+	 * open: these are filter changes, not navigations to another route.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';

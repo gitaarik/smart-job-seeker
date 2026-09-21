@@ -1,4 +1,10 @@
 <script lang="ts">
+	/*
+	 * Every href here comes from filterUrl(), which calls resolve('/admin/inbox')
+	 * itself and appends the query. The rule does not follow a function call.
+	 */
+	/* eslint-disable svelte/no-navigation-without-resolve */
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -199,7 +205,7 @@
 												<span class="flex-shrink-0 font-medium text-[var(--dash-text-secondary)]"
 													>Link:</span
 												>
-												<a
+												<ExternalLink
 													href={email.extracted_link}
 													target="_blank"
 													class="break-all text-[var(--dash-primary)] hover:underline"
@@ -207,7 +213,7 @@
 													{email.extracted_link.length > 80
 														? email.extracted_link.slice(0, 80) + '...'
 														: email.extracted_link}
-												</a>
+												</ExternalLink>
 											</div>
 										{/if}
 										{#if email.applied_at}
