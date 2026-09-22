@@ -58,7 +58,28 @@ const PROFILE_SNAPSHOT_COLUMNS = {
 	 * it from the day it was written — against a snapshot that did not carry it,
 	 * so it has never once been answered.
 	 */
-	remote_start_year: true
+	remote_start_year: true,
+	/**
+	 * What the applicant charges, and the three columns that qualify it.
+	 *
+	 * Added 2026-09-22, when Phase 0 of profile memory measured the gap: asked
+	 * "what do you think I charge?", the assistant answered confidently from
+	 * numbers it found in past application negotiations, because neither salary
+	 * store reached it. `salary_expectations` was retired the same day for
+	 * reaching no prompt at all; these four are the live store, edited on Salary
+	 * Prep, and they were in no snapshot either.
+	 *
+	 * `salary_base_rate` is PER HOUR, `salary_adjustments` are percentages and
+	 * `salary_region_overrides` replace the base outright. None of that is
+	 * legible from the numbers alone, and the schema cannot say so — `${schema}`
+	 * is interpolated by no template, and the blob renders as bare
+	 * `JSON.stringify`. So `fetchProfileData` ships the arithmetic as a note
+	 * beside the values; see `salaryNote`.
+	 */
+	salary_base_rate: true,
+	salary_currency: true,
+	salary_adjustments: true,
+	salary_region_overrides: true
 } as const;
 
 /** Field names only, for the schema mapping and the test that pins the two together. */
@@ -202,6 +223,53 @@ function buildSchemaNode(
 	}
 
 	return node;
+}
+
+/**
+ * The arithmetic behind the salary columns, shipped beside them.
+ *
+ * `salary_base_rate` is an hourly figure, `salary_adjustments` are percentages
+ * that SUM across whichever of the three dimensions a role matches, and
+ * `salary_region_overrides` replace the base rate and its currency outright.
+ * A model handed `{"contract": 65}` with none of that reads it as a rate, not
+ * an uplift, and the cost of that misreading is a wrong number quoted to an
+ * employer.
+ *
+ * It rides inside `salary_adjustments` rather than in a key of its own because
+ * `ExportedProfileKey` is `keyof PROFILE_SNAPSHOT_COLUMNS`, and that union
+ * being exactly the real columns is what stops a field list asking for
+ * something the snapshot never writes. Enriching a value keeps the key honest.
+ * The note is synthesised even when the column is null, so a profile with a
+ * base rate and no adjustments still says what the base rate means.
+ */
+const SALARY_NOTE =
+	'salary_base_rate is PER HOUR in salary_currency. The percentages below are ' +
+	'summed across whichever of employment_type, work_arrangement and company_type ' +
+	'a role matches, then applied as rate = base * (1 + total / 100). A matching ' +
+	'salary_region_overrides entry replaces the base rate and currency outright, ' +
+	'before those percentages are applied. To quote another period use the same ' +
+	'working assumptions the app does: 8 hours a day, 21.75 days a month ' +
+	'(174 hours), 12 months a year. Show the multiplication when you quote a ' +
+	'figure, so a slip is visible.';
+
+/**
+ * Fold the note into the adjustments, or drop all four salary keys.
+ *
+ * No base rate means the applicant has not set one, and four null columns
+ * spend blob on saying so — where an absent key already reads as "they have
+ * none" to every consumer (see EXPORTED_PROFILE_KEYS).
+ */
+function withSalaryNote<T extends Record<string, unknown>>(profile: T): T {
+	if (profile.salary_base_rate == null) {
+		const copy = { ...profile };
+		delete copy.salary_base_rate;
+		delete copy.salary_currency;
+		delete copy.salary_adjustments;
+		delete copy.salary_region_overrides;
+		return copy;
+	}
+	const adjustments = (profile.salary_adjustments ?? {}) as Record<string, unknown>;
+	return { ...profile, salary_adjustments: { note: SALARY_NOTE, ...adjustments } };
 }
 
 /**
@@ -357,7 +425,7 @@ async function fetchProfileData(profileId: number) {
 
 	if (!profile) return profile;
 
-	return {
+	return withSalaryNote({
 		...profile,
 		tech_skill_categories: profile.tech_skill_categories.map((category) => ({
 			...category,
@@ -375,7 +443,7 @@ async function fetchProfileData(profileId: number) {
 					: skill
 			)
 		}))
-	};
+	});
 }
 
 /**

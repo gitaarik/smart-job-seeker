@@ -111,9 +111,24 @@ describe('profile field lists (composed from CORE)', () => {
 		);
 	});
 
-	it('ASSISTANT = the letter fields plus references and the long bio', () => {
+	const SALARY_FIELDS = [
+		'salary_base_rate',
+		'salary_currency',
+		'salary_adjustments',
+		'salary_region_overrides'
+	];
+
+	it('ASSISTANT = the letter fields plus references, the long bio and salary', () => {
 		expect(set(ASSISTANT_PROFILE_FIELDS)).toEqual(
-			set([...LETTER_PROFILE_FIELDS, 'references', 'about_me_text'])
+			set([
+				...LETTER_PROFILE_FIELDS,
+				'references',
+				'about_me_text',
+				'salary_base_rate',
+				'salary_currency',
+				'salary_adjustments',
+				'salary_region_overrides'
+			])
 		);
 	});
 
@@ -133,6 +148,25 @@ describe('profile field lists (composed from CORE)', () => {
 			expect(list).not.toContain('about_me_text');
 		}
 		expect(ASSISTANT_PROFILE_FIELDS).toContain('about_me_text');
+	});
+
+	it('keeps what the applicant charges out of every document generator', () => {
+		// Salary is the assistant's alone, for a different reason than the bio:
+		// it answers "what do I charge", and it has no business being written
+		// into a letter or a story unprompted. The matcher is kept away from it
+		// separately and more firmly — see NON_FIT_FIELDS, where salary reaching
+		// `score_job_match` was measured moving 12 replayed scorings past the
+		// temperature-0 noise floor.
+		for (const list of [
+			CORE_PROFILE_FIELDS,
+			STORY_PROFILE_FIELDS,
+			CHEATSHEET_PROFILE_FIELDS,
+			LETTER_PROFILE_FIELDS,
+			QUESTION_PROFILE_FIELDS
+		]) {
+			for (const field of SALARY_FIELDS) expect(list).not.toContain(field);
+		}
+		for (const field of SALARY_FIELDS) expect(ASSISTANT_PROFILE_FIELDS).toContain(field);
 	});
 
 	it('every generator list is CORE plus its own delta, with no duplicates', () => {

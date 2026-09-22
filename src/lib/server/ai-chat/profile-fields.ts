@@ -70,7 +70,18 @@ export const ASSISTANT_PROFILE_FIELDS: ExportedProfileKey[] = [
 	'location',
 	'languages',
 	'references',
-	'about_me_text'
+	'about_me_text',
+	// What they charge. Measured 2026-09-22: asked "what do you think I charge?"
+	// the assistant named a monthly and an hourly figure, both reconstructed from
+	// numbers in past application negotiations, because no salary store reached
+	// it -- the live columns were in no snapshot and the retired table was named
+	// by no field list. This is the only caller that gets them: a cover letter
+	// does not quote a rate unprompted, and the matcher is kept away from them
+	// deliberately (see NON_FIT_FIELDS).
+	'salary_base_rate',
+	'salary_currency',
+	'salary_adjustments',
+	'salary_region_overrides'
 ];
 
 /**
