@@ -11,6 +11,7 @@ import { eq } from 'drizzle-orm';
 import { users } from '$lib/server/db/schema';
 import { initSentry, Sentry } from '$lib/server/monitoring/sentry';
 import { aiRateLimiter, createRateLimitResponse } from '$lib/server/middleware/rate-limit';
+import { shapeHtmlShell } from '$lib/server/html-shell';
 
 initSentry('sveltekit');
 
@@ -214,13 +215,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	// Apply theme
+	// Apply theme, and the language of a public document (`/p/[slug]/resume?lang=nl`).
+	// Its load sets `documentLocale`, and loads run inside resolve, so it is read
+	// per chunk rather than here. Without it a Dutch CV told screen readers it was
+	// English, and so did its PDF export, which prints this same page.
 	const theme = getThemeFromRequest(event.request);
 
 	return await resolve(event, {
-		transformPageChunk: ({ html }) => {
-			return html.replace('class="theme-light"', `class="theme-${theme}"`);
-		}
+		transformPageChunk: ({ html }) => shapeHtmlShell(html, theme, event.locals.documentLocale)
 	});
 };
 

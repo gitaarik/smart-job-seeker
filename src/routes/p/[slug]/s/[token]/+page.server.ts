@@ -19,7 +19,7 @@ import {
 } from '$lib/server/profile/field-variants';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, url, getClientAddress }) => {
+export const load: PageServerLoad = async ({ params, url, locals, getClientAddress }) => {
 	const { slug, token: tokenString } = params;
 
 	// Get profile by slug
@@ -98,6 +98,7 @@ export const load: PageServerLoad = async ({ params, url, getClientAddress }) =>
 	// public routes do, so ProfileDisplay stays language-agnostic.
 	const translator = await loadTranslator(profile.id, locale);
 	applyTranslations(profile, translator);
+	locals.documentLocale = translator.locale;
 
 	// Then the wording the shared version picked, after those translations. This
 	// route has no template, so the third overlay does not apply here — see

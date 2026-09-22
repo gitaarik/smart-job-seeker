@@ -94,6 +94,7 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	const langParam = url.searchParams.get('lang');
 	const translator = await loadTranslator(profile.id, isKnownLocale(langParam) ? langParam : null);
 	applyTranslations(profile, translator);
+	locals.documentLocale = translator.locale;
 	applyFieldVariants(profile, await loadFieldVariants(profile.id, versionId, translator));
 
 	return {

@@ -17,6 +17,11 @@ declare global {
 			user: User | null;
 			session: Session | null;
 			adminUser: User | null;
+			/**
+			 * The language a public document renders in, set by its load function.
+			 * The page hook writes it onto `<html lang>`, which app.html fixes at "en".
+			 */
+			documentLocale?: string;
 		}
 		// interface PageData {}
 		// interface PageState {}

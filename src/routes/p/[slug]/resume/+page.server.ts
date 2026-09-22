@@ -75,6 +75,7 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	const langParam = url.searchParams.get('lang');
 	const translator = await loadTranslator(profile.id, isKnownLocale(langParam) ? langParam : null);
 	applyTranslations(profile, translator);
+	locals.documentLocale = translator.locale;
 
 	// Then the wording this version picked for the profile's scalar fields, if
 	// it picked any — after the translations whose language it has to match, and
