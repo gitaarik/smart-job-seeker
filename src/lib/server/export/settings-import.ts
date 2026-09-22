@@ -6,8 +6,7 @@ import {
 	profiles,
 	job_platforms,
 	platform_profiles,
-	platform_credentials,
-	salary_expectations
+	platform_credentials
 } from '$lib/server/db/schema';
 import type { SettingsExportData } from './settings-types';
 
@@ -27,8 +26,6 @@ export interface SettingsImportSummary {
 	matchConfigUpdated: boolean;
 	emailDigestUpdated: boolean;
 	salaryUpdated: boolean;
-	salaryExpectationsReplaced: number;
-	salaryExpectationsInserted: number;
 }
 
 export function validateSettingsExport(data: unknown): data is SettingsExportData {
@@ -53,9 +50,7 @@ export async function importSettings(
 		platformProfilesCreated: 0,
 		matchConfigUpdated: false,
 		emailDigestUpdated: false,
-		salaryUpdated: false,
-		salaryExpectationsReplaced: 0,
-		salaryExpectationsInserted: 0
+		salaryUpdated: false
 	};
 
 	const tasks = data.search_tasks ?? [];
@@ -267,33 +262,6 @@ export async function importSettings(
 					salary_region_overrides: s.region_overrides
 				})
 				.where(eq(profiles.id, profileId));
-
-			const deleted = await tx
-				.delete(salary_expectations)
-				.where(eq(salary_expectations.profile_id, profileId))
-				.returning({ id: salary_expectations.id });
-			summary.salaryExpectationsReplaced = deleted.length;
-
-			for (const exp of s.expectations) {
-				await tx.insert(salary_expectations).values({
-					profile_id: profileId,
-					sort: exp.sort,
-					job_title: exp.job_title,
-					company_type: exp.company_type,
-					employment_type: exp.employment_type,
-					work_arrangement: exp.work_arrangement,
-					region: exp.region,
-					hourly_rate: exp.hourly_rate,
-					month_salary: exp.month_salary,
-					year_salary: exp.year_salary,
-					daily_rate: exp.daily_rate,
-					currency: exp.currency,
-					experience_level: exp.experience_level,
-					date_created: new Date(),
-					date_updated: new Date()
-				});
-				summary.salaryExpectationsInserted += 1;
-			}
 
 			summary.salaryUpdated = true;
 		}

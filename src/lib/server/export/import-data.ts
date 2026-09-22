@@ -14,7 +14,6 @@ import {
 	certificates,
 	project_stories,
 	cheat_sheets,
-	salary_expectations,
 	tech_skill_categories,
 	tech_skills,
 	work_experiences,
@@ -243,13 +242,12 @@ async function deleteProfileChildren(profileId: number, scope: ExportData['scope
 		await dbDirect.delete(project_stories).where(eq(project_stories.profile_id, profileId));
 		await dbDirect.delete(cheat_sheets).where(eq(cheat_sheets.profile_id, profileId));
 	}
-	// Not salary_expectations. The April 2026 salary overhaul moved this export's
-	// salary payload to the profile-level `salary_settings` fields and deleted the
-	// reader for the table, but left this delete behind — so an overwrite import
-	// wiped every row and put nothing back. The table outlived that overhaul and
-	// belongs to settings export/import now (`settings-export.ts`), which is the
-	// only thing that should replace it. A pre-overhaul payload that still carries
-	// the rows is handled in `importFullAccountEntities`.
+	// The `salary_expectations` table was retired on 2026-09-22, finishing what the
+	// April 2026 salary overhaul started: that overhaul moved the salary payload to
+	// the profile-level `salary_settings` fields and stopped writing the table, and
+	// nothing read it afterwards. An archive taken before then still carries a
+	// `salary_expectations` key; it is simply ignored now, which loses nothing that
+	// `salary_settings` does not already carry.
 
 	// Delete tech skills (need to delete skills before categories)
 	const techCats = await dbDirect.query.tech_skill_categories.findMany({
@@ -820,31 +818,6 @@ async function importFullAccountEntities(profileId: number, data: FullExportData
 				salary_region_overrides: ss.region_overrides ? (ss.region_overrides as unknown) : undefined
 			})
 			.where(eq(profiles.id, profileId));
-	}
-
-	// Salary expectations (pre-April-2026 format). Nothing writes these any more —
-	// the table belongs to settings export/import — but an archive taken before the
-	// salary overhaul still carries them, and the payload owning them is the one
-	// case where replacing the profile's rows is right. Legacy payloads predate the
-	// `currency` column, so those rows fall back to the column default.
-	if (data.salary_expectations?.length) {
-		await dbDirect.delete(salary_expectations).where(eq(salary_expectations.profile_id, profileId));
-		for (const se of data.salary_expectations) {
-			await dbDirect.insert(salary_expectations).values({
-				profile_id: profileId,
-				sort: se.sort ?? null,
-				job_title: se.job_title || null,
-				company_type: se.company_type || '',
-				employment_type: se.employment_type || '',
-				work_arrangement: se.work_arrangement || '',
-				experience_level: se.experience_level || null,
-				region: se.region || '',
-				hourly_rate: se.hourly_rate ?? null,
-				month_salary: se.month_salary ?? null,
-				year_salary: se.year_salary ?? null,
-				daily_rate: se.daily_rate ?? null
-			});
-		}
 	}
 
 	// Applications. These hang off `jobs`, which is global rather than

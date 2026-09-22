@@ -95,7 +95,6 @@ describe('EXTRACTION_FALLBACK_PROMPT_KEYS', () => {
 		'score_job_match',
 		'extract_matched_skills',
 		'tailor_resume_selection',
-		'estimate_salary_expectations',
 		'suggest_import_tasks'
 	])('never hands %s a second model', (key) => {
 		expect(EXTRACTION_FALLBACK_PROMPT_KEYS.has(key)).toBe(false);

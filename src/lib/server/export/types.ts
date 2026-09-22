@@ -424,20 +424,6 @@ export interface ExportedCheatSheet {
 }
 
 /** @deprecated Legacy format — kept for backward-compatible imports */
-export interface ExportedSalaryExpectation {
-	sort?: number | null;
-	job_title?: string;
-	company_type?: string;
-	employment_type?: string;
-	work_arrangement?: string;
-	experience_level?: string;
-	region?: string;
-	hourly_rate?: number | null;
-	month_salary?: number | null;
-	year_salary?: number | null;
-	daily_rate?: number | null;
-}
-
 export interface ExportedSalarySettings {
 	base_rate?: number | null;
 	currency?: string;
@@ -512,13 +498,6 @@ export interface FullExportData extends ExportEnvelope {
 	project_stories: ExportedProjectStory[];
 	cheat_sheets: ExportedCheatSheet[];
 	salary_settings?: ExportedSalarySettings;
-	/**
-	 * @deprecated Read-only. Written by exports taken before the April 2026 salary
-	 * overhaul, which replaced it with `salary_settings`; the table itself lives on
-	 * under settings export/import. Nothing populates this any more, but the
-	 * importer still restores it so those archives do not lose the rows.
-	 */
-	salary_expectations?: ExportedSalaryExpectation[];
 	job_preferences?: ExportedJobPreferences;
 	saved_jobs?: ExportedSavedJob[];
 	job_matches?: ExportedJobMatch[];

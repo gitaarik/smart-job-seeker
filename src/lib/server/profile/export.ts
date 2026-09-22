@@ -136,20 +136,6 @@ const PROFILE_SCHEMA_MAPPING = {
 			},
 			cheat_sheets: {
 				fields: ['title', 'content']
-			},
-			salary_expectations: {
-				fields: [
-					'job_title',
-					'company_type',
-					'employment_type',
-					'work_arrangement',
-					'experience_level',
-					'region',
-					'hourly_rate',
-					'month_salary',
-					'year_salary',
-					'daily_rate'
-				]
 			}
 		}
 	}
@@ -363,21 +349,6 @@ async function fetchProfileData(profileId: number) {
 				columns: {
 					title: true,
 					content: true
-				},
-				orderBy: (t, { asc }) => asc(t.sort)
-			},
-			salary_expectations: {
-				columns: {
-					job_title: true,
-					company_type: true,
-					employment_type: true,
-					work_arrangement: true,
-					experience_level: true,
-					region: true,
-					hourly_rate: true,
-					month_salary: true,
-					year_salary: true,
-					daily_rate: true
 				},
 				orderBy: (t, { asc }) => asc(t.sort)
 			}

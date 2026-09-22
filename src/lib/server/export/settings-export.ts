@@ -1,12 +1,6 @@
 import { dbDirect as db } from '$lib/server/db';
-import { eq, asc } from 'drizzle-orm';
-import {
-	search_tasks,
-	match_config,
-	profiles,
-	job_platforms,
-	salary_expectations
-} from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
+import { search_tasks, match_config, profiles, job_platforms } from '$lib/server/db/schema';
 import type {
 	SettingsExportData,
 	ExportedSearchTask,
@@ -115,42 +109,22 @@ export async function buildSettingsExport(
 	}
 
 	if (options.includeSalary) {
-		const [profile, expectations] = await Promise.all([
-			db.query.profiles.findFirst({
-				where: eq(profiles.id, profileId),
-				columns: {
-					salary_base_rate: true,
-					salary_currency: true,
-					salary_adjustments: true,
-					salary_region_overrides: true
-				}
-			}),
-			db
-				.select()
-				.from(salary_expectations)
-				.where(eq(salary_expectations.profile_id, profileId))
-				.orderBy(asc(salary_expectations.sort), asc(salary_expectations.id))
-		]);
+		// One read now the expectations table is gone; it was a Promise.all of two.
+		const profile = await db.query.profiles.findFirst({
+			where: eq(profiles.id, profileId),
+			columns: {
+				salary_base_rate: true,
+				salary_currency: true,
+				salary_adjustments: true,
+				salary_region_overrides: true
+			}
+		});
 
 		result.salary = {
 			base_rate: profile?.salary_base_rate ?? null,
 			currency: profile?.salary_currency ?? null,
 			adjustments: profile?.salary_adjustments ?? null,
-			region_overrides: profile?.salary_region_overrides ?? null,
-			expectations: expectations.map((e) => ({
-				sort: e.sort,
-				job_title: e.job_title,
-				company_type: e.company_type,
-				employment_type: e.employment_type,
-				work_arrangement: e.work_arrangement,
-				region: e.region,
-				hourly_rate: e.hourly_rate,
-				month_salary: e.month_salary,
-				year_salary: e.year_salary,
-				daily_rate: e.daily_rate,
-				currency: e.currency,
-				experience_level: e.experience_level
-			}))
+			region_overrides: profile?.salary_region_overrides ?? null
 		} satisfies ExportedSalary;
 	}
 

@@ -9,7 +9,6 @@ import {
 	certificates,
 	project_stories,
 	cheat_sheets,
-	salary_expectations,
 	tech_skill_categories,
 	tech_skills,
 	work_experiences,
@@ -90,9 +89,6 @@ export async function importProfileFromJson(
 			.delete(project_stories)
 			.where(eq(project_stories.profile_id, overwriteProfileId));
 		await dbDirect.delete(cheat_sheets).where(eq(cheat_sheets.profile_id, overwriteProfileId));
-		await dbDirect
-			.delete(salary_expectations)
-			.where(eq(salary_expectations.profile_id, overwriteProfileId));
 
 		// Delete tech skills (need to delete skills before categories)
 		const techCats = await dbDirect.query.tech_skill_categories.findMany({
@@ -368,24 +364,6 @@ export async function importProfileFromJson(
 			sort: cs.sort ?? null,
 			title: cs.title || null,
 			content: cs.content || null
-		});
-	}
-
-	// Salary expectations
-	for (const se of p.salary_expectations ?? []) {
-		await dbDirect.insert(salary_expectations).values({
-			profile_id: profileId,
-			sort: se.sort ?? null,
-			job_title: se.job_title || null,
-			company_type: se.company_type || '',
-			employment_type: se.employment_type || '',
-			work_arrangement: se.work_arrangement || '',
-			experience_level: se.experience_level || null,
-			region: se.region || '',
-			hourly_rate: se.hourly_rate ?? null,
-			month_salary: se.month_salary ?? null,
-			year_salary: se.year_salary ?? null,
-			daily_rate: se.daily_rate ?? null
 		});
 	}
 

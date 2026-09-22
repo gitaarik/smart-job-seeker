@@ -93,12 +93,7 @@
 							class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)]"
 						/>
 						<FontAwesomeIcon icon={faMoneyBillWave} class="h-4 w-4 text-[var(--dash-text-muted)]" />
-						<span class="text-[var(--dash-text)]">
-							Salary settings ({data.salaryExpectationCount} expectation{data.salaryExpectationCount ===
-							1
-								? ''
-								: 's'})
-						</span>
+						<span class="text-[var(--dash-text)]">Salary settings</span>
 					</label>
 				</div>
 

@@ -62,6 +62,5 @@ export type {
 	ExportedSearchTask,
 	ExportedMatchConfig,
 	ExportedEmailDigest,
-	ExportedSalary,
-	ExportedSalaryExpectation
+	ExportedSalary
 } from './settings-types';

@@ -50,7 +50,6 @@ import {
 	project_stories,
 	question_versions,
 	references,
-	salary_expectations,
 	scraper_agent_iterations,
 	scraper_agent_sessions,
 	scraper_logs,
@@ -192,7 +191,6 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
 	project_stories: many(project_stories),
 	profile_exports: many(profile_exports),
 	references: many(references),
-	salary_expectations: many(salary_expectations),
 	profile_versions: many(profile_versions, {
 		relationName: 'profile_versions_profile_id_profiles_id'
 	}),
@@ -453,13 +451,6 @@ export const scraper_logsRelations = relations(scraper_logs, ({ one }) => ({
 	search_task_run: one(search_task_runs, {
 		fields: [scraper_logs.run_id],
 		references: [search_task_runs.id]
-	})
-}));
-
-export const salary_expectationsRelations = relations(salary_expectations, ({ one }) => ({
-	profile: one(profiles, {
-		fields: [salary_expectations.profile_id],
-		references: [profiles.id]
 	})
 }));
 

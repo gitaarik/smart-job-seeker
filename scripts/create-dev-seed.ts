@@ -147,7 +147,6 @@ const SEED_TABLES = {
 		'highlights',
 		'project_stories',
 		'cheat_sheets',
-		'salary_expectations',
 		'platform_profiles'
 	]
 } as const;

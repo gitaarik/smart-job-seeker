@@ -351,6 +351,13 @@
       "when": 1789543735367,
       "tag": "0049_old_human_robot",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1790081909204,
+      "tag": "0050_clean_sentinel",
+      "breakpoints": true
     }
   ]
 }

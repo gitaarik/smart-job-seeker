@@ -9,9 +9,8 @@ import { generateSlug } from '$lib/server/utils/slug-generator';
 /**
  * This endpoint's own payload shape. Deliberately not
  * $lib/server/profile/export-profile-json's ExportedProfile: that one carries
- * the address and identity fields, certificates and salary_expectations, while
- * this one carries application_questions and a salary_settings block it does
- * not. Two formats, not one duplicated.
+ * the address and identity fields and certificates, while this one carries
+ * application_questions. Two formats, not one duplicated.
  *
  * The relation arrays are `unknown[]` because this file only copies them out of
  * the query below and hands them to JSON.stringify — the query is their source

@@ -2,19 +2,12 @@
  * An overwrite import must only delete what its payload can put back.
  *
  * Two instances of that rule were broken, both silent, both found on a live
- * database rather than by anything in this suite.
- *
- * The April 2026 salary overhaul replaced this export's salary payload with the
- * profile-level `salary_settings` fields and deleted the importer's reader for
- * the `salary_expectations` table — but left the *delete* in
- * `deleteProfileChildren`. Every overwrite import from then on wiped the whole
- * table for that profile and put nothing back. Nothing failed, so nothing said
- * so; on the dev database that was 50 rows.
- *
- * The table outlived the overhaul and belongs to settings export/import now, so
- * the fix is that a profile import leaves it alone — unless the payload itself
- * carries the rows, which only a pre-overhaul archive does, and which is the one
- * case where replacing them is what the file asked for.
+ * database rather than by anything in this suite. The first was
+ * `salary_expectations`: the April 2026 salary overhaul stopped writing that
+ * table's payload but left the *delete* in `deleteProfileChildren`, so every
+ * overwrite import wiped 50 rows and put nothing back. That table was retired
+ * on 2026-09-22, which is why its cases are gone from this file; the rule it
+ * taught is what the remaining ones check.
  *
  * With the DB mocked this asserts which tables the importer *asks* to delete and
  * insert, not what Postgres does. That is the right level here: the bug was a
@@ -36,7 +29,6 @@ const TABLES = [
 	'certificates',
 	'project_stories',
 	'cheat_sheets',
-	'salary_expectations',
 	'tech_skill_categories',
 	'tech_skills',
 	'tech_skill_types',
@@ -176,73 +168,6 @@ function exportPayload(scope: 'profile' | 'full', extra: Record<string, unknown>
 	} as never;
 }
 
-describe('overwrite import and salary_expectations', () => {
-	beforeEach(() => {
-		deleted.length = 0;
-		inserted.length = 0;
-	});
-
-	it('leaves the table alone when the payload does not carry it', async () => {
-		await importExportData(fullExport(), 'u1', { overwriteProfileId: 1 });
-
-		expect(deleted).not.toContain('salary_expectations');
-	});
-
-	it('still clears the rest of the profile it is replacing', async () => {
-		await importExportData(fullExport(), 'u1', { overwriteProfileId: 1 });
-
-		// Guards the assertion above: it has to fail because the salary delete is
-		// gone, not because deleteProfileChildren stopped running altogether.
-		expect(deleted).toEqual(
-			expect.arrayContaining(['highlights', 'education', 'cheat_sheets', 'work_experiences'])
-		);
-	});
-
-	it('restores the rows a pre-overhaul archive carries, replacing what is there', async () => {
-		await importExportData(
-			fullExport({
-				salary_expectations: [
-					{
-						sort: 1,
-						job_title: 'Backend Engineer',
-						company_type: 'startup',
-						employment_type: 'contract',
-						work_arrangement: 'remote',
-						experience_level: 'senior',
-						region: 'nl',
-						hourly_rate: 95,
-						month_salary: null,
-						year_salary: null,
-						daily_rate: 760
-					}
-				]
-			}),
-			'u1',
-			{ overwriteProfileId: 1 }
-		);
-
-		expect(deleted).toContain('salary_expectations');
-		const rows = inserted.filter((i) => i.table === 'salary_expectations');
-		expect(rows).toHaveLength(1);
-		expect(rows[0].values).toMatchObject({
-			profile_id: 1,
-			job_title: 'Backend Engineer',
-			region: 'nl',
-			hourly_rate: 95,
-			daily_rate: 760
-		});
-	});
-});
-
-/**
- * The same defect, found while fixing the one above and strictly worse.
- *
- * `importFullAccountEntities` restores stories, cheat sheets and applications,
- * and it runs for `scope: 'full'` alone — but the delete pass ran for every
- * overwrite import. Importing a profile-scope archive therefore erased the
- * profile's entire application history, letters and answers included, with
- * nothing in the payload able to put a single row back.
- */
 describe('overwrite import at profile scope', () => {
 	beforeEach(() => {
 		deleted.length = 0;

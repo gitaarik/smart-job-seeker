@@ -62,8 +62,6 @@
 			add('Interview cheat sheets', p.cheat_sheets);
 			if (p.salary_settings) {
 				counts.push({ label: 'Salary settings', count: 1 });
-			} else {
-				add('Salary expectations', p.salary_expectations);
 			}
 
 			preview = {

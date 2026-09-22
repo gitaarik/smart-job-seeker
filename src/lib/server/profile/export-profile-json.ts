@@ -176,19 +176,6 @@ export interface ExportedProfile {
 			title?: string;
 			content?: string;
 		}>;
-		salary_expectations?: Array<{
-			sort?: number | null;
-			job_title?: string;
-			company_type?: string;
-			employment_type?: string;
-			work_arrangement?: string;
-			experience_level?: string;
-			region?: string;
-			hourly_rate?: number | null;
-			month_salary?: number | null;
-			year_salary?: number | null;
-			daily_rate?: number | null;
-		}>;
 	};
 }
 
@@ -357,22 +344,6 @@ export async function buildProfileJsonExport(
 			cheat_sheets: {
 				columns: { sort: true, title: true, content: true },
 				orderBy: (t, { asc }) => asc(t.sort)
-			},
-			salary_expectations: {
-				columns: {
-					sort: true,
-					job_title: true,
-					company_type: true,
-					employment_type: true,
-					work_arrangement: true,
-					experience_level: true,
-					region: true,
-					hourly_rate: true,
-					month_salary: true,
-					year_salary: true,
-					daily_rate: true
-				},
-				orderBy: (t, { asc }) => asc(t.sort)
 			}
 		}
 	});
@@ -472,8 +443,7 @@ export async function buildProfileJsonExport(
 			references: baseProfile.references,
 			certificates: baseProfile.certificates,
 			project_stories: baseProfile.project_stories,
-			cheat_sheets: baseProfile.cheat_sheets,
-			salary_expectations: baseProfile.salary_expectations
+			cheat_sheets: baseProfile.cheat_sheets
 		}
 	} as ExportedProfile;
 

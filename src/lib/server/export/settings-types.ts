@@ -60,20 +60,4 @@ export interface ExportedSalary {
 	currency: string | null;
 	adjustments: unknown;
 	region_overrides: unknown;
-	expectations: ExportedSalaryExpectation[];
-}
-
-export interface ExportedSalaryExpectation {
-	sort: number | null;
-	job_title: string | null;
-	company_type: string;
-	employment_type: string;
-	work_arrangement: string;
-	region: string;
-	hourly_rate: number | null;
-	month_salary: number | null;
-	year_salary: number | null;
-	daily_rate: number | null;
-	currency: string | null;
-	experience_level: string | null;
 }

@@ -77,17 +77,7 @@
 							<li>Email digest preferences updated</li>
 						{/if}
 						{#if form.summary.salaryUpdated}
-							<li>
-								Salary settings updated
-								{#if form.summary.salaryExpectationsInserted > 0 || form.summary.salaryExpectationsReplaced > 0}
-									({form.summary.salaryExpectationsInserted} expectation{form.summary
-										.salaryExpectationsInserted === 1
-										? ''
-										: 's'} loaded{form.summary.salaryExpectationsReplaced > 0
-										? `, ${form.summary.salaryExpectationsReplaced} replaced`
-										: ''})
-								{/if}
-							</li>
+							<li>Salary settings updated</li>
 						{/if}
 						{#if form.summary.tasksSkippedUnknownPlatform.length > 0}
 							<li class="text-[var(--dash-warning)]">

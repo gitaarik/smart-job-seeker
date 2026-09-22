@@ -87,7 +87,7 @@ const WRITING_PROMPT_KEYS = new Set<string>([
  *
  * So the judgement prompts are absent on purpose and should stay absent:
  * score_job_match, extract_matched_skills, tailor_resume_selection,
- * estimate_salary_expectations, suggest_import_tasks. So is anything whose
+ * suggest_import_tasks. So is anything whose
  * output is prose a person reads — that belongs in WRITING_PROMPT_KEYS if it
  * belongs anywhere.
  *

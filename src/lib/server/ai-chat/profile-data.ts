@@ -198,7 +198,8 @@ export async function loadProfileData(
  * Blob keys `score_job_match` must not see, because a match score is supposed
  * to mean role fit and these cannot contribute to one.
  *
- * `salary_expectations` is the reason this exists. Salary is deliberately
+ * `salary_expectations` was the reason this exists, and is why the measurement
+ * below is worth keeping after the field itself went. Salary is deliberately
  * excluded from match scoring -- the blend in matcher.ts leaves it out, and
  * eligibility filtering leaves it out, so that a high score means fit and
  * because most postings omit salary anyway. But the exclusion was only ever
@@ -206,7 +207,10 @@ export async function loadProfileData(
  * handed to the LLM inside the profile blob, so the half of the blend that is a
  * language model could weight them freely, and measurably did: dropping them
  * moved the score on 12 replayed scorings well past the temperature-0 noise
- * floor and flipped half the recommendation buckets.
+ * floor and flipped half the recommendation buckets. The table was retired on
+ * 2026-09-22 and no longer reaches any blob, so the entry is gone from both
+ * lists; anything salary-shaped that reaches the blob later belongs back here,
+ * and that number is what says so.
  *
  * The rest is identity. A name and a nationality have no bearing on whether
  * someone fits a role and are exactly the inputs a scoring model should never
@@ -228,8 +232,7 @@ export const NON_FIT_FIELDS: ExportedProfileKey[] = [
 	'location_url',
 	'name',
 	'nationality',
-	'phone_number',
-	'salary_expectations'
+	'phone_number'
 ];
 
 export const NON_SKILL_FIELDS: ExportedProfileKey[] = [
@@ -244,7 +247,6 @@ export const NON_SKILL_FIELDS: ExportedProfileKey[] = [
 	'personal_website',
 	'phone_number',
 	'references',
-	'salary_expectations',
 	'stackoverflow_profile'
 ];
 

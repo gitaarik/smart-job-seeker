@@ -1824,35 +1824,6 @@ export const scraper_logs = pgTable(
 	]
 );
 
-export const salary_expectations = pgTable(
-	'salary_expectations',
-	{
-		id: serial().primaryKey().notNull(),
-		sort: integer(),
-		date_created: timestamp({ withTimezone: true, mode: 'date' }),
-		date_updated: timestamp({ withTimezone: true, mode: 'date' }),
-		job_title: varchar({ length: 255 }),
-		company_type: varchar({ length: 255 }).notNull(),
-		employment_type: varchar({ length: 255 }).notNull(),
-		work_arrangement: varchar({ length: 255 }).notNull(),
-		region: varchar({ length: 255 }).notNull(),
-		hourly_rate: integer(),
-		month_salary: integer(),
-		year_salary: integer(),
-		daily_rate: integer(),
-		profile_id: integer().notNull(),
-		currency: varchar({ length: 255 }).default('EUR'),
-		experience_level: varchar({ length: 255 })
-	},
-	(table) => [
-		foreignKey({
-			columns: [table.profile_id],
-			foreignColumns: [profiles.id],
-			name: 'salary_expectations_profile_foreign'
-		}).onDelete('cascade')
-	]
-);
-
 export const profile_versions = pgTable(
 	'profile_versions',
 	{
@@ -5064,7 +5035,6 @@ export type ProfileExports = typeof profile_exports.$inferSelect;
 export type References = typeof references.$inferSelect;
 export type ScraperLogs = typeof scraper_logs.$inferSelect;
 export type ScraperLogSteps = typeof scraper_log_steps.$inferSelect;
-export type SalaryExpectations = typeof salary_expectations.$inferSelect;
 export type ProfileVersions = typeof profile_versions.$inferSelect;
 export type SideProjectTechnologies = typeof side_project_technologies.$inferSelect;
 export type WorkExperienceAchievements = typeof work_experience_achievements.$inferSelect;
