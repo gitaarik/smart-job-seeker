@@ -313,7 +313,28 @@ set -euo pipefail
 # generic defaults in llm/langchain.ts, 1 in tasks/[id]/+page.server.ts, 1 in
 # scripts/test-structured-output.ts. Reaching 0 means a documented disable on
 # each, not a fix.
-BASELINE=10
+# 10 -> 0 on 2026-09-22. THE BACKLOG IS GONE. 1,521 when this gate went in on
+# 2026-08-07; zero now, measured with check-oss.sh against the real oss tree.
+#
+# Eight of the last ten were fixable and three of those were casts that had
+# simply stopped being necessary: `(searchTask as any).ui_preferences` reads a
+# column the query selects, and the three `(normalizedParsed as any).jobs` sites
+# sit under a `'jobs' in normalizedParsed` check that already narrows it. The
+# rest got the type they were describing all along — the four properties an
+# error handler reads, a named UsageBearingResult for the two shapes a token
+# count arrives in, a named path into zod's internal `_def` so a typo in it
+# still fails.
+#
+# Two remain and carry a disable with the reason beside them: z.ZodType<any>,
+# because zod's output parameter is covariant and `unknown` would make every
+# caller cast instead of this one line; and `generateChatCompletion<T = any>`,
+# where the default is only reached by callers that chose not to name a shape.
+#
+# Writing UsageBearingResult cost two type errors before it earned its place:
+# all-optional properties make a weak type, and LangChain's
+# `Partial<ResponseMetadata>` shares none of them, so an AIMessageChunk would
+# not assign until the provider-specific keys got an index signature.
+BASELINE=0
 
 npx svelte-kit sync
 
@@ -337,10 +358,13 @@ if [ -z "${errors:-}" ]; then
   exit 1
 fi
 
+# The ratchet is retired: the baseline is 0, so this is a plain gate now. The
+# changed-files reporting below stays, because naming the errors a change added
+# is worth as much at zero as it was at 1,521.
 if [ "$errors" -gt "$BASELINE" ]; then
-  echo "::error::eslint found $errors errors, baseline is $BASELINE — $((errors - BASELINE)) new."
-  echo "Fix them, or if a baseline error was legitimately replaced, adjust"
-  echo "BASELINE in scripts/ci/check-lint.sh."
+  echo "::error::eslint found $errors errors. The tree is clean — these are yours."
+  echo "Fix them. Do not raise BASELINE: it is 0 because the backlog is gone,"
+  echo "and a rule worth disabling is worth disabling on the line, with a reason."
   echo
 
   # Errors in files this change touched. `head -40` of a 1,457-error backlog is
@@ -369,9 +393,4 @@ if [ "$errors" -gt "$BASELINE" ]; then
   exit 1
 fi
 
-if [ "$errors" -lt "$BASELINE" ]; then
-  echo "::notice::eslint found $errors errors, below the baseline of $BASELINE."
-  echo "Lower BASELINE in scripts/ci/check-lint.sh to $errors to lock the improvement in."
-fi
-
-echo "eslint: $errors errors (baseline $BASELINE) — no new lint errors."
+echo "eslint: clean."

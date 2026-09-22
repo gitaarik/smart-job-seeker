@@ -58,12 +58,19 @@ Two things worth knowing:
 | ---------------- | --------------------- | ----------------- |
 | `svelte-check`   | `ci/check.sh`         | 31 errors         |
 | `scripts/` types | `ci/check-scripts.sh` | 23 errors         |
-| eslint           | `ci/check-lint.sh`    | 10 errors         |
+| eslint           | `ci/check-lint.sh`    | zero — no backlog |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
-The three counts are ratchets: they may only ever go **down**, and each script
-nags when the real number drops below its baseline so it cannot quietly creep
-back up. New errors fail a PR; the existing backlog is tolerated.
+`svelte-check` and the `scripts/` type check are ratchets: they may only ever go
+**down**, and each nags when the real number drops below its baseline so it
+cannot quietly creep back up. New errors fail a PR; the existing backlog is
+tolerated.
+
+**eslint is no longer a ratchet.** It went 1,521 -> 0 between 2026-08-07 and
+2026-09-22 and is now a plain gate: any error fails. Do not raise its baseline
+to get a PR through — a rule worth disabling is worth disabling on the line,
+with the reason next to it. The changed-files reporting is still there, so a
+failure names the errors your change added.
 
 **A count taken in the dev app container is not the count CI sees.**
 `docker-compose.yml` bind-mounts cloud's billing overlay over OSS's stubs at
@@ -110,17 +117,18 @@ since most files already carry backlog) and runs the type gate whole, because
 the failure that motivated it appeared only in files the change never opened.
 It fails open when the dev stack is down, and `git push --no-verify` skips it.
 
-What remains is 10 errors, down from 1,521 when the ratchet went in. All ten
-are `no-explicit-any` and all ten are correct: 8 zod and LangChain generic
-defaults in `lib/server/llm/langchain.ts`, 1 in
-`routes/(app)/jobs/import/tasks/[id]/+page.server.ts`, 1 in
-`scripts/test-structured-output.ts`. Reaching zero means a documented disable
-on each, not a fix.
+Nothing remains. The last ten went on 2026-09-22: eight were fixable, and three
+of those were casts that had simply stopped being necessary — a property the
+query does select, and three sites already narrowed by the `in` check above
+them. Two are kept with a disable and the reason beside them, `z.ZodType<any>`
+(zod's output parameter is covariant, so `unknown` makes every caller cast) and
+`generateChatCompletion<T = any>` (the default is only reached by callers that
+chose not to name a shape).
 
-`@typescript-eslint/no-explicit-any` in tests and
-`svelte/no-navigation-without-resolve` were both cleared on 2026-09-20/21; the
-comment block in `ci/check-lint.sh` is the real history of how. Five rules are
-worth reading rather than counting:
+The comment block in `ci/check-lint.sh` is the real history of how, including
+the two wrong turns worth not repeating.
+
+Five rules are worth reading rather than counting:
 
 - **`svelte/no-navigation-without-resolve`** — cleared 2026-09-21, and only ONE
   of the 81 was actually fixable: a ternary between two literal paths in
