@@ -31,7 +31,24 @@ export default ts.config(
 		rules: {
 			// typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
 			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
-			'no-undef': 'off'
+			'no-undef': 'off',
+
+			// Honour the leading underscore, which this codebase already writes and
+			// the rule's defaults do not recognise. The OSS billing stubs are the
+			// clearest case: `requireCredits(_userId, _estimatedCost)` names the
+			// arguments the cloud overlay uses so the signatures match, and ignores
+			// them because everything is free here — 21 errors for saying that
+			// deliberately. It also makes `const { [key]: _, ...rest }` usable for
+			// omitting a property, which had to be written as copy-then-delete.
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_',
+					destructuredArrayIgnorePattern: '^_'
+				}
+			]
 		}
 	},
 	{

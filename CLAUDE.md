@@ -58,7 +58,7 @@ Two things worth knowing:
 | ---------------- | --------------------- | ----------------- |
 | `svelte-check`   | `ci/check.sh`         | 31 errors         |
 | `scripts/` types | `ci/check-scripts.sh` | 23 errors         |
-| eslint           | `ci/check-lint.sh`    | 31 errors         |
+| eslint           | `ci/check-lint.sh`    | 10 errors         |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
 The three counts are ratchets: they may only ever go **down**, and each script
@@ -110,13 +110,12 @@ since most files already carry backlog) and runs the type gate whole, because
 the failure that motivated it appeared only in files the change never opened.
 It fails open when the dev stack is down, and `git push --no-verify` skips it.
 
-What remains is 31 errors, down from 1,521 when the ratchet went in. Measured
-with `check-oss.sh`: 10 of those are visible from the dev container (9 zod and
-LangChain generic defaults in `lib/server/llm/langchain.ts`, 1 in
-`scripts/test-structured-output.ts`, all correct as they are). The other 21 are
-in paths the dev container mounts over, so only `check-oss.sh` can see them and
-they have not been itemised — if you need to know what they are, that is the
-tool that can tell you.
+What remains is 10 errors, down from 1,521 when the ratchet went in. All ten
+are `no-explicit-any` and all ten are correct: 8 zod and LangChain generic
+defaults in `lib/server/llm/langchain.ts`, 1 in
+`routes/(app)/jobs/import/tasks/[id]/+page.server.ts`, 1 in
+`scripts/test-structured-output.ts`. Reaching zero means a documented disable
+on each, not a fix.
 
 `@typescript-eslint/no-explicit-any` in tests and
 `svelte/no-navigation-without-resolve` were both cleared on 2026-09-20/21; the
@@ -173,13 +172,14 @@ worth reading rather than counting:
   `const`, mutated in place. Do the same in new code, and do not wrap them in
   `$state` — `svelte/no-unnecessary-state-wrap` flags that, and the two rules
   will trade errors back and forth if you satisfy only one.
-- **`@typescript-eslint/no-unused-vars`** — cleared on 2026-09-17 down to what
-  sat in uncommitted files, so a hit is usually yours. Two shapes are not dead
-  code and must not be deleted: `const { [key]: _, ...rest }` omits a property
-  (this config reports the binding anyway — write copy-then-`delete` instead),
-  and an unused `$props()` name is the component's public shape, which is
-  `svelte/no-unused-props`. Everything else was a dead import or the leftover of
-  a replaced feature, and several marked a half-written one.
+- **`@typescript-eslint/no-unused-vars`** — cleared, so a hit is yours. **A
+  leading underscore now silences it** (`argsIgnorePattern` and friends, set in
+  `eslint.config.js` on 2026-09-22): before that the rule's defaults flagged
+  `_userId` anyway, which cost 21 errors in the billing stubs alone and forced
+  `const { [key]: _, ...rest }` to be written as copy-then-`delete`. Both work
+  now. An unused `$props()` name is the component's public shape and belongs to
+  `svelte/no-unused-props` instead. Everything else was a dead import or the
+  leftover of a replaced feature, and several marked a half-written one.
 
 ## Testing with Playwright MCP
 

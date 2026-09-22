@@ -296,7 +296,24 @@ set -euo pipefail
 # 27 sites were interpolating user-typed and scraped strings straight into an
 # href, on pages including public /p/<slug> profiles, where `javascript:` and
 # `data:` execute on click. It now allowlists schemes, with 14 tests.
-BASELINE=31
+# 31 -> 10 on 2026-09-22, and this one was a real fix, not a mark. All 21 that
+# went were no-unused-vars in the OSS billing stubs, which already do the right
+# thing: `requireCredits(_userId, _estimatedCost)` names the arguments the cloud
+# overlay uses, so the signatures match, and ignores them because everything is
+# free here. The leading underscore is the universal way to say that, and this
+# config had never set argsIgnorePattern, so the rule's defaults flagged all 21
+# for saying it deliberately. eslint.config.js now sets the four ignore patterns.
+#
+# They were also invisible from the dev container, which mounts cloud's billing
+# over these files, so a container-side grep for the rule found nothing. Only a
+# check-oss.sh-shaped run can see them — same docker run, emitting `eslint . -f
+# json` instead of a count.
+#
+# The 10 left are all no-explicit-any and all correct: 8 zod and LangChain
+# generic defaults in llm/langchain.ts, 1 in tasks/[id]/+page.server.ts, 1 in
+# scripts/test-structured-output.ts. Reaching 0 means a documented disable on
+# each, not a fix.
+BASELINE=10
 
 npx svelte-kit sync
 
