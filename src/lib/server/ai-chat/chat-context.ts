@@ -437,10 +437,31 @@ const ROUTE_SCOPES: Record<string, RouteScope> = {
 	 */
 	'/jobs': {
 		...PROFILE_SCOPE,
+		// Longest prefix wins, so this also covers /jobs/import and the config page
+		// under it — which is where the preferences form lives and where the
+		// Phase 0 eval asked for this change. /jobs/[id] declares its own scope and
+		// deliberately does not get it: that page is about one posting, and a
+		// standing preference is not something to propose while looking at one.
+		capabilities: ['edit_match_config'],
 		hint: {
 			page:
 				'the list of jobs they are browsing, which has its own search and ' +
 				'filter controls for narrowing it down',
+			subject: null
+		}
+	},
+	/**
+	 * The import pages: the automated searches, and the preferences every
+	 * imported job is scored against. Same scope as /jobs, different hint —
+	 * "change this" means the config here and the filters there.
+	 */
+	'/jobs/import': {
+		...PROFILE_SCOPE,
+		capabilities: ['edit_match_config'],
+		hint: {
+			page:
+				'their job import setup — the automated searches, and the Match Config ' +
+				'preferences every imported job is scored against',
 			subject: null
 		}
 	},

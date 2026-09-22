@@ -131,17 +131,26 @@ async function ask(item: EvalQuestion, n: number) {
 		console.log(`!! FAILED: ${result.message ?? 'no response'}`);
 		return;
 	}
-	// Capable turns return the structured envelope; the reply is inside it.
+	// Capable turns return the structured envelope; the reply is inside it, and
+	// so is the half that matters most when the question was a request to CHANGE
+	// something. Printing only the prose made a capable turn indistinguishable
+	// from a polite refusal — "I can update your preferences" reads the same
+	// whether it proposed the right fields, the wrong ones, or none.
 	let reply = result.aiChat.response;
+	let proposals: unknown[] = [];
 	try {
 		const parsed = JSON.parse(reply);
 		if (parsed && typeof parsed === 'object' && typeof parsed.reply === 'string') {
 			reply = parsed.reply;
+			if (Array.isArray(parsed.proposals)) proposals = parsed.proposals;
 		}
 	} catch {
 		// Plain-text turn — the response IS the reply.
 	}
 	console.log(reply.trim());
+	if (proposals.length > 0) {
+		console.log(`\n     proposed: ${JSON.stringify(proposals, null, 2).replace(/\n/g, '\n     ')}`);
+	}
 }
 
 const questions = readQuestions();

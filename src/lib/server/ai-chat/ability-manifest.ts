@@ -53,6 +53,7 @@ import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/r
 import { targetingFor } from '$lib/server/mcp/entities';
 import { isTextCapability } from './text-version-capabilities';
 import { isTextCommitCapability } from './text-commit-capabilities';
+import { MATCH_CONFIG_CAPABILITY_NAMES } from './match-config-capability';
 
 /** One area of the app, as the navigation names it. */
 export interface AppArea {
@@ -79,11 +80,6 @@ export const APP_AREAS: readonly AppArea[] = [
 		name: 'Job Import',
 		path: '/jobs/import',
 		what: "automated searches that drive each job platform's own search page and import what they find"
-	},
-	{
-		name: 'Match Config',
-		path: '/jobs/import/config',
-		what: 'the preferences every imported job is scored against'
 	},
 	{
 		name: 'Application documents',
@@ -155,6 +151,10 @@ export const APP_AREAS: readonly AppArea[] = [
  * commits, so a chat offering to press it is offering to do the thing the
  * applicant is already looking at.
  */
+function isMatchConfigCapability(capability: Capability): boolean {
+	return (MATCH_CONFIG_CAPABILITY_NAMES as string[]).includes(capability);
+}
+
 function entityCapabilities(): Capability[] {
 	const generated = new Set<string>(PROFILE_CAPABILITY_NAMES);
 	return (Object.keys(CAPABILITIES) as Capability[]).filter(
@@ -170,9 +170,26 @@ function entityCapabilities(): Capability[] {
  * is missing from this block is the exact failure the block was written to stop,
  * so a new one appears here unlabelled rather than not at all.
  */
-function byEntity(): { job: string[]; application: string[]; other: string[] } {
-	const groups = { job: [] as string[], application: [] as string[], other: [] as string[] };
+function byEntity(): {
+	job: string[];
+	application: string[];
+	settings: string[];
+	other: string[];
+} {
+	const groups = {
+		job: [] as string[],
+		application: [] as string[],
+		settings: [] as string[],
+		other: [] as string[]
+	};
 	for (const capability of entityCapabilities()) {
+		// A settings capability targets no entity, so `targetingFor` cannot place
+		// it and it would fall into `other` — rendered as "Elsewhere", which is the
+		// one thing this block exists not to say. It gets a line naming its page.
+		if (isMatchConfigCapability(capability)) {
+			groups.settings.push(CAPABILITIES[capability].title);
+			continue;
+		}
 		const entity = targetingFor(capability)?.entity;
 		groups[entity === 'job' || entity === 'application' ? entity : 'other'].push(
 			CAPABILITIES[capability].title
@@ -209,6 +226,18 @@ export function formatAbilityManifest(areas: readonly AppArea[] = APP_AREAS): st
 			: '',
 		`- On each profile page listed above: correct an entry, or add one. Hiding an ` +
 			`entry is offered on ${join(hideable)} only.`,
+		// Short on purpose: this block ships on every turn on every page, and its
+		// size is ratcheted. What the config cannot do is stated here in one
+		// clause because that is the sentence the model got wrong with no
+		// capability in reach (Phase 0 C1 sent the user to Match Config to add
+		// "excluded keywords or industries", which has never existed). The full
+		// version lives in the capability's own contract, which renders only
+		// where the capability is live.
+		groups.settings.length
+			? `- On /jobs and Match Config (/jobs/import): ${groups.settings.join(' · ')} ` +
+				`(work types, levels, remote or on-site, places). No industry, keyword ` +
+				`or salary filter exists.`
+			: '',
 		groups.other.length ? `- Elsewhere: ${groups.other.join(' · ')}.` : ''
 	].filter(Boolean);
 

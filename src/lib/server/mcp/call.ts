@@ -808,6 +808,14 @@ async function resolveTarget(
 		return targeting.resolve(id, actor);
 	}
 
+	// The profile's own single row, and an add's not-yet-row, are the two shapes
+	// with nothing for a caller to name. Both ask the capability to resolve from
+	// the actor; they differ only in what a failure means.
+	if (def.singleton) {
+		const target = await def.resolve(null, actor);
+		return target ? { target } : { error: 'That setting is not available on this profile.' };
+	}
+
 	if (capability.startsWith('add_')) {
 		const target = await def.resolve(null, actor);
 		return target ? { target } : { error: 'That section cannot be added to right now.' };

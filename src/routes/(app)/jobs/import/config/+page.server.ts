@@ -1,54 +1,28 @@
 import type { PageServerLoad } from './$types';
-import { dbDirect as db } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
-import { match_config } from '$lib/server/db/schema';
+import {
+	EXPERIENCE_LEVEL_OPTIONS,
+	JOB_TYPE_OPTIONS,
+	WORK_LOCATION_OPTIONS,
+	readMatchPreferences
+} from '$lib/server/job/match-preferences';
 
-// Preference options for the matching config form.
-// These are the values stored in the database. They don't map 1:1 to the
-// taxonomy's canonical values (e.g. "Freelance" is a user-facing preference
-// but normalizes to "contract" for matching). Keep in sync manually for now.
-const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];
-
-const EXPERIENCE_LEVELS = ['Entry-level', 'Mid-level', 'Senior', 'Lead', 'Executive'];
-
-const WORK_LOCATION_OPTIONS = ['Remote', 'Hybrid', 'On-site'];
-
+/**
+ * The options and the get-or-create both moved to
+ * `$lib/server/job/match-preferences`, which is also what `edit_match_config`
+ * holds the model to. They used to be declared here under a comment saying
+ * "Keep in sync manually for now"; a third copy behind a capability is what
+ * made that worth fixing, because a model offered a value this form does not
+ * show writes a preference no job can match.
+ */
 export const load: PageServerLoad = async ({ parent }) => {
 	const { profileId } = await parent();
-
-	// Get or auto-create config for this profile
-	let matchConfigResult = await db.query.match_config.findFirst({
-		where: eq(match_config.profile_id, profileId)
-	});
-
-	if (!matchConfigResult) {
-		const [created] = await db
-			.insert(match_config)
-			.values({
-				profile_id: profileId,
-				date_created: new Date(),
-				date_updated: new Date()
-			})
-			.returning();
-		matchConfigResult = created;
-	}
-	const config = matchConfigResult;
+	const config = await readMatchPreferences(profileId);
 
 	return {
-		config: {
-			id: config.id,
-			job_types: (config.job_types as string[]) || [],
-			experience_levels: (config.experience_levels as string[]) || [],
-			work_location: (config.work_location as string[]) || [],
-			locations: (config.locations as string[]) || [],
-			remote_only: config.remote_only,
-			match_community_jobs: config.match_community_jobs,
-			community_max_age_days:
-				((config as Record<string, unknown>).community_max_age_days as number | null) ?? null
-		},
+		config,
 		options: {
-			jobTypes: JOB_TYPES,
-			experienceLevels: EXPERIENCE_LEVELS,
+			jobTypes: JOB_TYPE_OPTIONS,
+			experienceLevels: EXPERIENCE_LEVEL_OPTIONS,
 			workLocationOptions: WORK_LOCATION_OPTIONS
 		}
 	};

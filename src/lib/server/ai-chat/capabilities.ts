@@ -68,6 +68,7 @@ import {
 	writeApplicationStatus
 } from '$lib/server/applications/status';
 import { TEXT_CREATE_CAPABILITIES, type TextCreateCapability } from './text-create-capabilities';
+import { MATCH_CONFIG_CAPABILITIES, type MatchConfigCapability } from './match-config-capability';
 import { TEXT_COMMIT_CAPABILITIES, type TextCommitCapability } from './text-commit-capabilities';
 import type { EditSource } from './edit-log';
 import type { TierDecision } from '$lib/server/mcp/tiers';
@@ -104,7 +105,8 @@ export type Capability =
 	| ProfileCapability
 	| TextCapability
 	| TextCreateCapability
-	| TextCommitCapability;
+	| TextCommitCapability
+	| MatchConfigCapability;
 
 /** The concrete row a capability acts on, once resolved from the page entity. */
 export interface CapabilityTarget {
@@ -230,6 +232,18 @@ export interface CapabilityDef {
 	 * to it; a required field is read while it is still deciding what to send.
 	 */
 	requiredFields?: string[];
+	/**
+	 * Whether this capability's target is the profile's own single row, rather
+	 * than one named by id or one it is about to create.
+	 *
+	 * `resolve` answers from the actor alone for these, so there is nothing for a
+	 * caller to name. The chat never needed to know — it resolves from a route
+	 * either way — but MCP has no page, and `resolveTarget` had exactly two
+	 * shapes: an id argument, or an `add_` that makes a row. A settings row is
+	 * neither, and without this it would ship a tool demanding an `entry_id` for
+	 * a section that has no entries.
+	 */
+	singleton?: boolean;
 	/**
 	 * This capability's current state, for the model to propose against.
 	 *
@@ -1783,7 +1797,8 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
 	...PROFILE_CAPABILITIES,
 	...TEXT_CAPABILITIES,
 	...TEXT_CREATE_CAPABILITIES,
-	...TEXT_COMMIT_CAPABILITIES
+	...TEXT_COMMIT_CAPABILITIES,
+	...MATCH_CONFIG_CAPABILITIES
 };
 
 /** A capability that resolved and authorized for this turn. */

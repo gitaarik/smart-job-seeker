@@ -28,7 +28,7 @@
 
 import { z } from 'zod';
 
-export type FieldKind = 'string' | 'int' | 'date' | 'stringArray';
+export type FieldKind = 'string' | 'int' | 'date' | 'boolean' | 'stringArray';
 
 /**
  * The types sent to an LLM provider.
@@ -45,6 +45,10 @@ export const WIRE_TYPES: Record<FieldKind, z.ZodTypeAny> = {
 	string: z.union([z.string(), z.number()]).nullish(),
 	int: z.union([z.number(), z.string()]).nullish(),
 	date: z.string().nullish(),
+	// Models answer a yes/no field with the word, and an HTML checkbox posts
+	// "on". Both land here rather than in a type error; `coerceField` decides
+	// what they mean.
+	boolean: z.union([z.boolean(), z.string()]).nullish(),
 	stringArray: z.union([z.array(z.string()), z.string()]).nullish()
 };
 
@@ -86,6 +90,17 @@ export function coerceField(kind: FieldKind, value: unknown): CoerceResult {
 		const match = DATE_ONLY.exec(text);
 		if (!match) return { ok: false, error: `"${text}" is not a date (expected YYYY-MM-DD)` };
 		return { ok: true, value: match[1] };
+	}
+
+	if (kind === 'boolean') {
+		if (typeof value === 'boolean') return { ok: true, value };
+		// "false" is a non-empty string and every truthiness test calls it true,
+		// which is the whole reason this is spelled out: a model that answers
+		// "false" to "remote only?" must not turn the filter on.
+		const text = String(value).trim().toLowerCase();
+		if (['true', 'yes', 'on', '1'].includes(text)) return { ok: true, value: true };
+		if (['false', 'no', 'off', '0'].includes(text)) return { ok: true, value: false };
+		return { ok: false, error: `"${String(value)}" is not a yes or a no` };
 	}
 
 	if (kind === 'stringArray') {

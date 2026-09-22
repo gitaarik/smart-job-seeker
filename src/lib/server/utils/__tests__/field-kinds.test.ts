@@ -144,3 +144,37 @@ describe('coerceFields', () => {
 		});
 	});
 });
+
+describe('coerceField — boolean', () => {
+	it('keeps a real boolean', () => {
+		expect(coerceField('boolean', true)).toEqual({ ok: true, value: true });
+		expect(coerceField('boolean', false)).toEqual({ ok: true, value: false });
+	});
+
+	it('reads the words a model answers with', () => {
+		for (const yes of ['true', 'Yes', ' ON ', '1']) {
+			expect(coerceField('boolean', yes), yes).toEqual({ ok: true, value: true });
+		}
+		for (const no of ['false', 'No', 'off', '0']) {
+			expect(coerceField('boolean', no), no).toEqual({ ok: true, value: false });
+		}
+	});
+
+	it('does not let the STRING "false" through as truthy', () => {
+		// The whole reason this kind is spelled out rather than cast: every
+		// truthiness test in JavaScript calls "false" true, so a model answering
+		// "false" to "remote only?" would turn the filter on.
+		expect(coerceField('boolean', 'false')).toEqual({ ok: true, value: false });
+	});
+
+	it('reports a value that is neither', () => {
+		expect(coerceField('boolean', 'maybe')).toMatchObject({ ok: false });
+	});
+
+	it('treats empty as no opinion, not as off', () => {
+		// A notNull column reads null as "the model did not say", which is what
+		// keeps an unreadable answer from being written as a deliberate false.
+		expect(coerceField('boolean', '')).toEqual({ ok: true, value: null });
+		expect(coerceValue('boolean', 'maybe')).toBe(null);
+	});
+});

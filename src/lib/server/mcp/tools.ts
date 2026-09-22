@@ -70,6 +70,10 @@ import {
 } from '$lib/server/profile/resources';
 import { parentNames, type ProfileActor } from '$lib/server/profile/write';
 import type { FieldKind } from '$lib/server/utils/field-kinds';
+import { MATCH_CONFIG_CAPABILITY_NAMES } from '$lib/server/ai-chat/match-config-capability';
+
+/** Where the match preferences are seen and edited by hand. */
+const MATCH_CONFIG_PAGE = { name: 'Match Config', path: '/jobs/import/config' };
 import { annotationsFor, readToolAnnotations, type ToolAnnotations } from './tiers';
 
 /** A JSON Schema object, as narrow as this file needs it to be. */
@@ -156,7 +160,8 @@ const CREATE_CAPABILITY_NAMES: Capability[] = [
 export const MCP_CAPABILITIES: Capability[] = [
 	...PROFILE_CAPABILITY_NAMES,
 	...ENTITY_CAPABILITY_NAMES,
-	...CREATE_CAPABILITY_NAMES
+	...CREATE_CAPABILITY_NAMES,
+	...MATCH_CONFIG_CAPABILITY_NAMES
 ];
 
 // The four version verbs are already in ENTITY_CAPABILITY_NAMES: they name a
@@ -179,6 +184,8 @@ function jsonType(kind: FieldKind): Record<string, unknown> {
 			return { type: 'array', items: { type: 'string' } };
 		case 'date':
 			return { type: 'string', description: 'YYYY-MM-DD' };
+		case 'boolean':
+			return { type: 'boolean' };
 		default:
 			return { type: 'string' };
 	}
@@ -370,8 +377,9 @@ function writeTool(capability: Capability, parents?: string): McpTool {
 		// add needs nothing — the key already says which profile.
 		properties[targeting.arg] = { type: 'integer', description: targeting.argDescription };
 		required.push(targeting.arg);
-	} else if (!isAdd) {
-		// A profile add has no row yet; everything else names one. `entry_id` rather
+	} else if (!isAdd && !def.singleton) {
+		// A profile add has no row yet, and a settings row is the profile's own, so
+		// neither names one; everything else does. `entry_id` rather
 		// than `id`, so a schema that also carries `work_experience.*` fields cannot
 		// be read as though the id were one of them.
 		properties.entry_id = {
@@ -981,6 +989,10 @@ export function pageFor(capability: Capability): { name: string; path: string } 
 	// Without this the applied-result has no "remove it again from…" line, which
 	// is the only thing that tells the applicant where a wrong row went.
 	if (capability === 'add_application') return APPLICATION_COLLECTION;
+	// The settings row has a page and no section, so `sectionFor` cannot find it
+	// either. Without this an agent's applied-result would say a preference was
+	// changed and not where it can be seen or put back.
+	if (capability === 'edit_match_config') return MATCH_CONFIG_PAGE;
 	if (isTextCreateCapability(capability)) {
 		return TEXT_KINDS[kindForTextCreateCapability(capability)].collection;
 	}
