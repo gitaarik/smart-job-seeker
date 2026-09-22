@@ -220,7 +220,12 @@ function handleLLMError(error: unknown, provider: string, model: string): never 
 
 		// Check if error object has additional properties (from LangChain/API)
 		if (error && typeof error === 'object') {
-			const errorObj = error as any;
+			const errorObj = error as {
+				status?: string | number;
+				statusCode?: string | number;
+				response?: { data?: unknown };
+				error?: { message?: string };
+			};
 
 			// Try to get status code
 			if (errorObj.status) {
@@ -309,6 +314,12 @@ export interface ChatMessage {
  */
 export interface StructuredOutputConfig {
 	name: string;
+	/**
+	 * Any caller's schema. `z.ZodType<unknown>` looks stricter and is not: zod's
+	 * output parameter is covariant, so a `ZodType<Job>` stops being assignable
+	 * here and every caller needs a cast instead of this one line.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- see above
 	schema: z.ZodType<any>;
 }
 
@@ -575,8 +586,37 @@ export interface CompletionResult {
 	fallbackUsed?: { provider: string; model: string };
 }
 
+/**
+ * The two shapes a token count arrives in: LangChain's own `usage_metadata`,
+ * and the raw OpenAI-compatible block providers leave on `response_metadata`.
+ */
+interface UsageBearingResult {
+	usage_metadata?: {
+		input_tokens?: number;
+		output_tokens?: number;
+		input_token_details?: { cache_read?: number };
+	};
+	response_metadata?: {
+		usage?: { prompt_tokens_details?: { cached_tokens?: number } };
+		tokenUsage?: {
+			promptTokens?: number;
+			input_tokens?: number;
+			completionTokens?: number;
+			output_tokens?: number;
+			totalTokens?: number;
+			total_tokens?: number;
+		};
+		/**
+		 * LangChain types this as `Partial<ResponseMetadata>`, whose keys are
+		 * provider-specific and share none of the two above. Without this the
+		 * whole thing is a weak type and an AIMessageChunk will not assign.
+		 */
+		[key: string]: unknown;
+	};
+}
+
 /** Extract token usage from a LangChain AIMessage response */
-function extractTokenUsage(result: any): TokenUsage | null {
+function extractTokenUsage(result: UsageBearingResult | null | undefined): TokenUsage | null {
 	// LangChain stores usage in usage_metadata (standard) or response_metadata
 	const usage = result?.usage_metadata;
 	if (usage) {
@@ -811,11 +851,18 @@ async function generateWithLangChain(
 						normalizedParsed &&
 						typeof normalizedParsed === 'object' &&
 						'jobs' in normalizedParsed &&
-						Array.isArray((normalizedParsed as any).jobs)
+						Array.isArray(normalizedParsed.jobs)
 					) {
 						try {
-							const allJobs = (normalizedParsed as any).jobs as unknown[];
-							const jobSchema = (zodSchema as any).shape?.jobs?._def?.element;
+							const allJobs = normalizedParsed.jobs as unknown[];
+							// `shape` exists only on a ZodObject and `_def` is zod's internal
+							// node, neither of them on the ZodType this is declared as. Naming
+							// the path we reach for beats `any`, which would also accept a typo.
+							const jobSchema = (
+								zodSchema as unknown as {
+									shape?: { jobs?: { _def?: { element?: z.ZodTypeAny } } };
+								}
+							).shape?.jobs?._def?.element;
 							if (jobSchema && allJobs.length > 0) {
 								const validJobs = allJobs.filter((job) => {
 									try {
@@ -832,7 +879,7 @@ async function generateWithLangChain(
 										}/${allJobs.length} job objects failed validation, keeping ${validJobs.length} valid`
 									);
 									const partial = {
-										...(normalizedParsed as any),
+										...normalizedParsed,
 										jobs: validJobs
 									};
 									const validated = zodSchema.parse(partial);
@@ -1083,6 +1130,13 @@ export async function generateChatCompletionTracked(
  * Generate chat completion with structured JSON output
  * When structuredOutput is provided, automatically parses the JSON response
  */
+/*
+ * `T = any` rather than `unknown`: the caller names the shape it expects
+ * (`generateChatCompletion<JobList>(...)`), and the default is only reached by
+ * callers that do not care. `unknown` would make those narrow a value they
+ * already chose to ignore.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- see above
 export async function generateChatCompletion<T = any>(
 	messages: ChatMessage[],
 	options: ChatCompletionOptions & { structuredOutput: StructuredOutputConfig }

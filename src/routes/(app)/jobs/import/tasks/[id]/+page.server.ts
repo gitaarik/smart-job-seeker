@@ -250,7 +250,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 			language: geoDefaults.language,
 			timezone: geoDefaults.timezone
 		},
-		uiPreferences: ((searchTask as any).ui_preferences ?? {}) as Record<string, unknown>,
+		uiPreferences: (searchTask.ui_preferences ?? {}) as Record<string, unknown>,
 		verificationEmailAddress: verificationAddress.fullAddress,
 		apiKeyDevices
 	};

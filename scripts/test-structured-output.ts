@@ -42,7 +42,7 @@ const convertedFormat: ResponseFormat = {
 	json_schema: {
 		name: 'job_links',
 		strict: true,
-		schema: dbFormatExample as Record<string, any>
+		schema: dbFormatExample as Record<string, unknown>
 	}
 };
 
