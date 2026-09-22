@@ -99,4 +99,29 @@ describe('the LLM response cache', () => {
 			await expect(llmCache.get('a prompt', 'some-model')).resolves.toBeNull();
 		});
 	});
+
+	/**
+	 * disable() is one-way and process-wide, so this takes a fresh copy of the
+	 * module rather than turning off the one every other test here shares.
+	 */
+	describe('once disabled', () => {
+		it('neither reads nor writes', async () => {
+			vi.resetModules();
+			const { llmCache: cache } = await import('../llm/cache');
+			const redis = (await import('../queue/redis')).getRedisClient();
+
+			// The same Redis the fresh cache talks to, or the silence below proves nothing.
+			await cache.set('a prompt', 'an answer', 'some-model');
+			expect(await cache.get('a prompt', 'some-model')).toBe('an answer');
+
+			const get = vi.spyOn(redis, 'get');
+			const set = vi.spyOn(redis, 'set');
+			cache.disable();
+
+			expect(await cache.get('a prompt', 'some-model')).toBeNull();
+			await cache.set('another prompt', 'an answer', 'some-model');
+			expect(get).not.toHaveBeenCalled();
+			expect(set).not.toHaveBeenCalled();
+		});
+	});
 });

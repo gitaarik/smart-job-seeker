@@ -125,6 +125,9 @@ async function attempt<T>(
 }
 
 class LLMCache {
+	/** Set by disable(), and never unset. */
+	private disabled = false;
+
 	/**
 	 * sha256 of model + prompt.
 	 *
@@ -139,13 +142,30 @@ class LLMCache {
 
 	/** Cached response, or null for a miss — including every failure mode. */
 	async get(prompt: string, model?: string): Promise<string | null> {
+		if (this.disabled) return null;
 		return attempt('get', (client) => client.get(this.keyFor(prompt, model)));
 	}
 
 	/** Store a response. TTL is in milliseconds, matching config.llmCacheTTL. */
 	async set(prompt: string, response: string, model?: string, ttl?: number): Promise<void> {
+		if (this.disabled) return;
 		const ttlMs = Math.max(1, Math.floor(ttl || DEFAULT_TTL_MS));
 		await attempt('set', (client) => client.set(this.keyFor(prompt, model), response, 'PX', ttlMs));
+	}
+
+	/**
+	 * Read nothing and store nothing, for the rest of this process.
+	 *
+	 * For scripts that measure the model rather than use it: the golden sets and
+	 * llm:smoke. They send the same prompt again on purpose, as a repeat or as a
+	 * re-run, and a prompt is its own key, so all but the first would come back
+	 * from here as calls that used no tokens. That is how a golden run's three
+	 * repeats per case were really one or two answers and copies, and how a
+	 * re-run within the TTL replayed the previous run whole while reporting
+	 * itself as a fresh one. Nothing in the app calls this.
+	 */
+	disable(): void {
+		this.disabled = true;
 	}
 
 	/**
