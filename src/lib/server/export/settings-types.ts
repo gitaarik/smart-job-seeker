@@ -6,6 +6,7 @@ export interface SettingsExportData {
 	match_config?: ExportedMatchConfig;
 	email_digest?: ExportedEmailDigest;
 	salary?: ExportedSalary;
+	directives?: ExportedDirective[];
 }
 
 export interface ExportedSearchTask {
@@ -60,4 +61,16 @@ export interface ExportedSalary {
 	currency: string | null;
 	adjustments: unknown;
 	region_overrides: unknown;
+}
+
+/**
+ * One live standing directive. The history is not carried: it is the trail of
+ * how they got here on the old instance, and an import is a fresh start from
+ * where they are.
+ */
+export interface ExportedDirective {
+	topic: string;
+	statement: string;
+	/** ISO date they stated it, which the import keeps. */
+	stated_at: string;
 }

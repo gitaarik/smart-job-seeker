@@ -47,6 +47,7 @@ import { jobDetailsText } from './job-context';
 import { formatPageScope, type PageScope } from './page-scope';
 import type { ProfileResourceName } from '$lib/server/profile/resources';
 import type { ExportedProfileKey } from '$lib/server/profile/export';
+import type { DirectiveConsumer } from './directives';
 import {
 	fitProfileToBudget,
 	formatTrimNote,
@@ -124,6 +125,13 @@ export type ContextSource =
 	 * — which `profile_edits` already covers. See ability-manifest.ts.
 	 */
 	| 'abilities'
+	/**
+	 * What the applicant has told the assistant to keep to — every live one,
+	 * never ranked, so a stated limit cannot lose a budget contest. Filtered to
+	 * the consumer the caller names in `sourceOptions.directives`. See
+	 * directives.ts.
+	 */
+	| 'directives'
 	| 'projects'
 	| 'stories'
 	| 'application_texts';
@@ -157,6 +165,14 @@ export interface SourceOptions {
 	 * Defaults to DEFAULT_PIPELINE_BUDGET_CHARS.
 	 */
 	application_pipeline?: { budgetChars: number };
+	/**
+	 * Which generation this is, for the directives that apply to it: a writing
+	 * rule reaches the cover-letter generator, a "reply in Dutch" reaches only
+	 * the chat. Required whenever `directives` is requested — stated by the
+	 * caller rather than guessed from which other sources it asked for, the same
+	 * discipline as `scopeHint`. A request without it renders nothing.
+	 */
+	directives?: { consumer: DirectiveConsumer };
 }
 
 export interface ContextRequest {
@@ -418,6 +434,25 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 		// layers. `generation-context` is imported very widely and none of those
 		// importers wants that graph to merely name a source.
 		render: async () => (await import('./ability-manifest')).abilityManifestText()
+	},
+	directives: {
+		variable: 'profileDirectives',
+		// The orientation band: under page_scope, above everything it constrains.
+		// It is small by construction — one statement per topic, each capped, the
+		// block ceilinged — so ranking it this high costs the budget almost
+		// nothing, and a limit dropped to make room for evidence is not a limit.
+		priority: 93,
+		// The chat always looked: "none recorded" is an answer it needs, since
+		// "what have I told you?" is a question it gets. A writer never did — a
+		// cover letter has no use for being told there is nothing to keep to.
+		looked: (req) => req.sourceOptions?.directives?.consumer === 'chat',
+		// Lazy for the reason the two manifests above are: the source reads its own
+		// table, and this module is imported far too widely to put it in their graph.
+		render: async (req) => {
+			const consumer = req.sourceOptions?.directives?.consumer;
+			if (!consumer) return '';
+			return (await import('./directives')).directivesText(req.profileId, consumer);
+		}
 	},
 	activity_manifest: {
 		variable: 'activityManifest',
@@ -686,6 +721,7 @@ const SOURCE_LABELS: Record<ContextSource, string> = {
 	activity_manifest: 'the index of everything on record',
 	profile_edits: 'the index of what they can change and where',
 	abilities: 'the list of what you can do and what only the app can do',
+	directives: 'the standing directives they have given you',
 	application_activity: 'the history recorded on this application',
 	application_pipeline: "the applicant's other applications",
 	projects: "the applicant's projects",

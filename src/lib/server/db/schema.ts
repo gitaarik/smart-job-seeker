@@ -3341,6 +3341,75 @@ export const capability_edits = pgTable(
 );
 
 /**
+ * What the applicant has told the assistant to keep to, across the whole
+ * profile: "no defence work", "never open a letter with 'I am excited to'".
+ *
+ * The standing-preference half of profile memory (planning/PROFILE-MEMORY.md).
+ * Rendered whole into every prompt that asks for it and never ranked, so a
+ * stated limit cannot lose a budget contest to trivia — see ai-chat/directives.ts.
+ *
+ * ## One live row per topic, and the old ones stay
+ *
+ * `topic` is the supersede key. A new statement on a topic does not edit the
+ * old row: it is written as a new one and the old row's `superseded_by` points
+ * at it, so every change is a pair the applicant can read and reverse, and a
+ * rewrite cannot quietly lose half of what they said. Stopping one sets
+ * `retired_at` instead, since there is nothing to point at. Live means both are
+ * null.
+ */
+export const profile_directives = pgTable(
+	'profile_directives',
+	{
+		id: serial().primaryKey().notNull(),
+		profile_id: integer().notNull(),
+		/** A key of DIRECTIVE_TOPICS. Text, not an enum: the code is the authority. */
+		topic: varchar({ length: 64 }).notNull(),
+		/** What they said, in their own words where possible. */
+		statement: text().notNull(),
+		/**
+		 * Which generations read it: the assistant always, cover letters and
+		 * application answers where the topic is about writing. Never the matcher
+		 * — see Rule 4 in the plan.
+		 */
+		applies_to: jsonb().$type<string[]>().default(['chat']).notNull(),
+		/** When they said it. Kept apart from `date_created` so an import keeps the original date. */
+		stated_at: timestamp({ withTimezone: true, mode: 'date' })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
+		/** Which surface wrote it: `{type: 'chat' | 'mcp' | 'ui' | 'import' | 'undo'}`. */
+		source: jsonb().$type<{ type: string }>().notNull(),
+		/** The row that replaced this one. Null while it is live, or once it was stopped. */
+		superseded_by: integer(),
+		/** Set when they stopped it without a replacement. */
+		retired_at: timestamp({ withTimezone: true, mode: 'date' }),
+		date_created: timestamp({ withTimezone: true, mode: 'date' })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
+		date_updated: timestamp({ withTimezone: true, mode: 'date' })
+	},
+	(table) => [
+		// The history read, and the cascade: FKs are not indexed for free here.
+		index('profile_directives_profile_idx').on(table.profile_id),
+		// One live row per topic, held by the database rather than by the write
+		// path alone: two proposals applied at once would otherwise both find no
+		// live row to supersede and leave two. Also the index the live read uses.
+		uniqueIndex('profile_directives_live_topic_idx')
+			.on(table.profile_id, table.topic)
+			.where(sql`superseded_by IS NULL AND retired_at IS NULL`),
+		foreignKey({
+			columns: [table.profile_id],
+			foreignColumns: [profiles.id],
+			name: 'profile_directives_profile_foreign'
+		}).onDelete('cascade'),
+		foreignKey({
+			columns: [table.superseded_by],
+			foreignColumns: [table.id],
+			name: 'profile_directives_superseded_by_foreign'
+		})
+	]
+);
+
+/**
  * Credentials for the MCP server: one key, one profile, one scope.
  *
  * ## Why this is not a scope column on `api_keys`

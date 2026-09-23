@@ -6,21 +6,25 @@ import type {
 	ExportedSearchTask,
 	ExportedMatchConfig,
 	ExportedEmailDigest,
-	ExportedSalary
+	ExportedSalary,
+	ExportedDirective
 } from './settings-types';
+import { loadDirectives } from '$lib/server/ai-chat/directives';
 
 export interface SettingsExportOptions {
 	includeTasks: boolean;
 	includeMatchConfig: boolean;
 	includeEmailDigest: boolean;
 	includeSalary: boolean;
+	includeDirectives: boolean;
 }
 
 export const defaultSettingsExportOptions: SettingsExportOptions = {
 	includeTasks: true,
 	includeMatchConfig: true,
 	includeEmailDigest: true,
-	includeSalary: true
+	includeSalary: true,
+	includeDirectives: true
 };
 
 export async function buildSettingsExport(
@@ -126,6 +130,16 @@ export async function buildSettingsExport(
 			adjustments: profile?.salary_adjustments ?? null,
 			region_overrides: profile?.salary_region_overrides ?? null
 		} satisfies ExportedSalary;
+	}
+
+	// A memory that does not survive moving instances is one the applicant loses
+	// by moving — the reason the plan asks for this.
+	if (options.includeDirectives) {
+		result.directives = (await loadDirectives(profileId)).map<ExportedDirective>((d) => ({
+			topic: d.topic,
+			statement: d.statement,
+			stated_at: d.statedAt.toISOString()
+		}));
 	}
 
 	return result;

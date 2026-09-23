@@ -85,9 +85,10 @@ export async function createApplicationLetterFollowup(
 					letterRecord.letter_type === 'cheat_sheet' ? ('full' as const) : ('compact' as const);
 				context = {
 					entity: { type: 'application', id: applicationId },
-					sources: ['job', 'application_activity'],
+					sources: ['job', 'application_activity', 'directives'],
 					sourceOptions: {
-						application_activity: { detail }
+						application_activity: { detail },
+						directives: { consumer: 'letters' }
 					}
 				};
 			}

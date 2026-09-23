@@ -221,7 +221,10 @@ export async function cloneProfileInto(
 		replaceExistingTasks: true,
 		applyMatchConfig: true,
 		applyEmailDigest: false, // demo users shouldn't get scheduled digest emails
-		applySalary: true
+		applySalary: true,
+		// How the owner talks to their own assistant, not part of the material being
+		// demonstrated — a cloned "reply in Dutch" would greet every demo user in it.
+		applyDirectives: false
 	});
 	return profileId;
 }

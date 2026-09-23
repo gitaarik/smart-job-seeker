@@ -36,6 +36,7 @@
 
 	const TIER_LABELS: Record<string, string> = {
 		subject: "the page's own",
+		always: 'every page',
 		child: 'child collection',
 		matched: 'matched from the message'
 	};

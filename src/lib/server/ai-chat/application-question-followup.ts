@@ -84,7 +84,8 @@ export async function createApplicationQuestionFollowup(
 			if (applicationId != null) {
 				context = {
 					entity: { type: 'application', id: applicationId },
-					sources: ['job', 'application_activity']
+					sources: ['job', 'application_activity', 'directives'],
+					sourceOptions: { directives: { consumer: 'answers' } }
 				};
 				// A revision turn gets the same retrieved evidence the initial answer
 				// had; without it turn 2 onward writes from the conversation alone.

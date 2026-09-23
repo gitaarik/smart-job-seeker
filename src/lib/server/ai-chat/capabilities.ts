@@ -69,6 +69,7 @@ import {
 } from '$lib/server/applications/status';
 import { TEXT_CREATE_CAPABILITIES, type TextCreateCapability } from './text-create-capabilities';
 import { MATCH_CONFIG_CAPABILITIES, type MatchConfigCapability } from './match-config-capability';
+import { DIRECTIVE_CAPABILITIES, type DirectiveCapability } from './directive-capability';
 import { TEXT_COMMIT_CAPABILITIES, type TextCommitCapability } from './text-commit-capabilities';
 import type { EditSource } from './edit-log';
 import type { TierDecision } from '$lib/server/mcp/tiers';
@@ -106,7 +107,8 @@ export type Capability =
 	| TextCapability
 	| TextCreateCapability
 	| TextCommitCapability
-	| MatchConfigCapability;
+	| MatchConfigCapability
+	| DirectiveCapability;
 
 /** The concrete row a capability acts on, once resolved from the page entity. */
 export interface CapabilityTarget {
@@ -331,7 +333,15 @@ export interface CapabilityDef {
 		target: CapabilityTarget,
 		fields: Record<string, unknown>,
 		current: Record<string, unknown>,
-		actor: CapabilityActor
+		actor: CapabilityActor,
+		/**
+		 * Which surface this write came from, for a row that records it itself.
+		 *
+		 * Last and optional, so the capabilities that leave that to the edit log
+		 * do not name it. Only `edit_directives` reads it: a directive carries its
+		 * source on the row, where the page that lists them shows it.
+		 */
+		context?: { source: EditSource }
 	): Promise<CapabilityTarget | void>;
 	/**
 	 * What an undo of this write would need to know, when that isn't "the old
@@ -1798,7 +1808,8 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
 	...TEXT_CAPABILITIES,
 	...TEXT_CREATE_CAPABILITIES,
 	...TEXT_COMMIT_CAPABILITIES,
-	...MATCH_CONFIG_CAPABILITIES
+	...MATCH_CONFIG_CAPABILITIES,
+	...DIRECTIVE_CAPABILITIES
 };
 
 /** A capability that resolved and authorized for this turn. */
@@ -2145,7 +2156,7 @@ export async function executeCapability(
 
 	// An add hands back the row it made; everything else writes to the target it
 	// was given and returns nothing. See CapabilityDef.apply.
-	const created = (await def.apply(target, fields, current, actor)) ?? null;
+	const created = (await def.apply(target, fields, current, actor, { source })) ?? null;
 
 	// After the write, and never able to undo it. The change already happened;
 	// throwing here would report a failure for something that succeeded and
@@ -2573,8 +2584,16 @@ the proposal is discarded rather than applied to something else.`;
  * one every turn. Measured at **16,984** on application 49, with the six live
  * and the posting inline. The arrangement that binds is still that page beside
  * a matched section, which the test above holds to the budget.
+ *
+ * Raised from 22,000 to 24,000 when `edit_directives` became something every
+ * page offers (see chat-context.ts). Its block measures 1,920 characters in the
+ * prompt, and it is admitted beside the page's subject, so without this the
+ * matched sections would lose exactly that much room on every turn — a section
+ * the message named would stop being offered on a busy page for a reason no
+ * prompt states. The raise is that block rounded up, and nothing else: what a
+ * message could reach before, it still can.
  */
-export const CAPABILITY_PROMPT_BUDGET_CHARS = 22000;
+export const CAPABILITY_PROMPT_BUDGET_CHARS = 24000;
 
 /**
  * Admit matched capabilities while they fit, in the order given.

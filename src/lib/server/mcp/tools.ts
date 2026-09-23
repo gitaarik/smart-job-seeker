@@ -71,6 +71,10 @@ import {
 import { parentNames, type ProfileActor } from '$lib/server/profile/write';
 import type { FieldKind } from '$lib/server/utils/field-kinds';
 import { MATCH_CONFIG_CAPABILITY_NAMES } from '$lib/server/ai-chat/match-config-capability';
+import {
+	DIRECTIVE_CAPABILITY_NAMES,
+	DIRECTIVES_PAGE
+} from '$lib/server/ai-chat/directive-capability';
 
 /** Where the match preferences are seen and edited by hand. */
 const MATCH_CONFIG_PAGE = { name: 'Match Config', path: '/jobs/import/config' };
@@ -161,7 +165,8 @@ export const MCP_CAPABILITIES: Capability[] = [
 	...PROFILE_CAPABILITY_NAMES,
 	...ENTITY_CAPABILITY_NAMES,
 	...CREATE_CAPABILITY_NAMES,
-	...MATCH_CONFIG_CAPABILITY_NAMES
+	...MATCH_CONFIG_CAPABILITY_NAMES,
+	...DIRECTIVE_CAPABILITY_NAMES
 ];
 
 // The four version verbs are already in ENTITY_CAPABILITY_NAMES: they name a
@@ -993,6 +998,8 @@ export function pageFor(capability: Capability): { name: string; path: string } 
 	// either. Without this an agent's applied-result would say a preference was
 	// changed and not where it can be seen or put back.
 	if (capability === 'edit_match_config') return MATCH_CONFIG_PAGE;
+	// The same shape: a profile-wide set with one page and no section.
+	if (capability === 'edit_directives') return DIRECTIVES_PAGE;
 	if (isTextCreateCapability(capability)) {
 		return TEXT_KINDS[kindForTextCreateCapability(capability)].collection;
 	}

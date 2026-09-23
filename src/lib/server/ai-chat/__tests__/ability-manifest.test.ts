@@ -163,7 +163,8 @@ describe('formatAbilityManifest', () => {
 		// It ships on every turn on every page, like the two manifests it sits
 		// beside — and unlike them it is the same characters for every user, so
 		// the whole of its cost is this number. Twelve areas at ~90 characters,
-		// four capability lines, and two short frames.
-		expect(TEXT.length).toBeLessThanOrEqual(2800);
+		// five capability lines, and two short frames. Raised from 2,800 for the
+		// fifth, the standing directives, which measured 2,892 with it.
+		expect(TEXT.length).toBeLessThanOrEqual(2900);
 	});
 });

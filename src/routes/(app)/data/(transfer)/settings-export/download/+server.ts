@@ -25,7 +25,8 @@ export const GET: RequestHandler = async ({ locals, cookies, url }) => {
 		includeTasks: parseFlag(url, 'tasks'),
 		includeMatchConfig: parseFlag(url, 'match'),
 		includeEmailDigest: parseFlag(url, 'digest'),
-		includeSalary: parseFlag(url, 'salary')
+		includeSalary: parseFlag(url, 'salary'),
+		includeDirectives: parseFlag(url, 'directives')
 	};
 
 	const data = await buildSettingsExport(profileId, options);

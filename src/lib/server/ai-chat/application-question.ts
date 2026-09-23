@@ -125,7 +125,9 @@ export async function generateApplicationQuestionAnswer(
 		text: [question.question, job?.title].filter(Boolean).join('\n'),
 		skills: (job?.skills_required as string[] | null) ?? undefined
 	};
-	const sources: ContextSource[] = ['job', 'application_activity'];
+	// The standing directives in every mode, review included: a review blind to
+	// "never mention my nationality" would suggest adding it. See directives.ts.
+	const sources: ContextSource[] = ['job', 'application_activity', 'directives'];
 	if (isWriting) sources.push('projects', 'stories', 'application_texts');
 
 	const variables: Record<string, unknown> = {
@@ -149,7 +151,8 @@ export async function generateApplicationQuestionAnswer(
 			context: {
 				query,
 				entity: { type: 'application', id: question.application.id },
-				sources
+				sources,
+				sourceOptions: { directives: { consumer: 'answers' } }
 			}
 		});
 	} catch (error) {

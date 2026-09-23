@@ -19,6 +19,7 @@
 	let applyMatchConfig = $state(true);
 	let applyEmailDigest = $state(true);
 	let applySalary = $state(true);
+	let applyDirectives = $state(true);
 	let importing = $state(false);
 
 	function handleFileChange(event: Event) {
@@ -78,6 +79,20 @@
 						{/if}
 						{#if form.summary.salaryUpdated}
 							<li>Salary settings updated</li>
+						{/if}
+						{#if form.summary.directivesImported > 0}
+							<li>
+								{form.summary.directivesImported} directive{form.summary.directivesImported === 1
+									? ''
+									: 's'} imported
+							</li>
+						{/if}
+						{#if form.summary.directivesSkipped.length > 0}
+							<li class="text-[var(--dash-warning)]">
+								Skipped directives on topics this app does not have: {form.summary.directivesSkipped.join(
+									', '
+								)}
+							</li>
 						{/if}
 						{#if form.summary.tasksSkippedUnknownPlatform.length > 0}
 							<li class="text-[var(--dash-warning)]">
@@ -186,6 +201,17 @@
 							/>
 							<span class="text-sm text-[var(--dash-text)]">
 								Apply salary settings from file (replaces existing expectations)
+							</span>
+						</label>
+						<label class="flex cursor-pointer items-center gap-2">
+							<input
+								type="checkbox"
+								name="applyDirectives"
+								bind:checked={applyDirectives}
+								class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)]"
+							/>
+							<span class="text-sm text-[var(--dash-text)]">
+								Apply directives from file (each replaces the one on the same topic)
 							</span>
 						</label>
 					</div>

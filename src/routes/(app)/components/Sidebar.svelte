@@ -23,6 +23,7 @@
 		faBinoculars,
 		faBuilding,
 		faChevronRight,
+		faClipboardList,
 		faCog,
 		faCompass,
 		faCrosshairs,
@@ -181,6 +182,14 @@
 					label: 'Profile Settings',
 					href: '/data/settings',
 					icon: faWrench
+				},
+				// What they have told the assistant to keep to. Beside the settings
+				// rather than under Profile: it shapes what gets written for them, it
+				// is not material they apply with.
+				{
+					label: 'Directives',
+					href: '/data/directives',
+					icon: faClipboardList
 				},
 				{
 					label: 'Recent Changes',

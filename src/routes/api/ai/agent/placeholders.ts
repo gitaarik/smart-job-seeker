@@ -31,6 +31,7 @@ export const CHAT_CONTEXT_PLACEHOLDERS = [
 	'activityManifest',
 	'profileEditManifest',
 	'assistantAbilities',
+	'profileDirectives',
 	'relevantProjects',
 	'relevantStories',
 	'relevantApplicationTexts',

@@ -12,6 +12,7 @@ import {
 import { targetingFor } from '$lib/server/mcp/entities';
 import type { Capability, CapabilityActor } from '$lib/server/ai-chat/capabilities';
 import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
+import { DIRECTIVES_PAGE } from '$lib/server/ai-chat/directive-capability';
 
 /**
  * Where an entry of a given kind can be put right by hand.
@@ -27,6 +28,9 @@ import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile
  * whose fallback answer was nothing at all.
  */
 function pageOf(capability: string): { name: string; path: string } | null {
+	// A profile-wide set with a page and no section, which neither registry below
+	// can place.
+	if (capability === 'edit_directives') return DIRECTIVES_PAGE;
 	const resource = capability.slice(capability.indexOf('_') + 1) as ProfileResourceName;
 	return (
 		PROFILE_RESOURCES[resource]?.page ?? targetingFor(capability as Capability)?.collection ?? null

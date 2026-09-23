@@ -269,14 +269,18 @@ import {
 	resolveCapabilities
 } from '../capabilities';
 
-/** What /applications/[id] declares — the busiest route in the table. */
+/**
+ * What /applications/[id] offers — the busiest route in the table: its own six,
+ * and the one every page offers beside them.
+ */
 const APPLICATION_PAGE_CAPABILITIES: Capability[] = [
 	'edit_application_details',
 	'update_application_status',
 	'add_activity_record',
 	'edit_job_details',
 	'edit_job_description',
-	'edit_job_skills'
+	'edit_job_skills',
+	'edit_directives'
 ];
 
 const ACTOR = { profileId: 12, isStaff: false };

@@ -115,6 +115,8 @@ Guidelines:
 
 \${data}
 
+\${profileDirectives}
+
 \${pageScope}
 
 \${jobDetails}
@@ -166,6 +168,8 @@ Guidelines:
 ## The user's profile:
 
 \${data}
+
+\${profileDirectives}
 
 \${pageScope}
 
@@ -348,6 +352,8 @@ The applicant's profile, the job, the question and the material most relevant to
 
 \${data}
 
+\${profileDirectives}
+
 ## Job:
 
 \${jobDetails}
@@ -393,6 +399,8 @@ The applicant's profile, the job, the question and the material most relevant to
 ## Applicant Profile:
 
 \${data}
+
+\${profileDirectives}
 
 ## Job:
 
@@ -454,6 +462,8 @@ The applicant's profile and the job follow below.
 ## Applicant Profile:
 \${data}
 
+\${profileDirectives}
+
 ## Job:
 
 \${jobDetails}
@@ -485,6 +495,8 @@ The applicant's profile and the job follow below.
 ## Applicant Profile:
 
 \${data}
+
+\${profileDirectives}
 
 ## Job:
 
@@ -522,6 +534,8 @@ The applicant's profile and the job follow below.
 ## Applicant Profile:
 
 \${data}
+
+\${profileDirectives}
 
 ## Job:
 
@@ -562,6 +576,8 @@ The applicant's profile, the job, the question, the current answer and the mater
 ## Applicant Profile:
 
 \${data}
+
+\${profileDirectives}
 
 ## Job:
 
@@ -1740,6 +1756,8 @@ Return JSON with:
 
 \${data}
 
+\${profileDirectives}
+
 ## Job:
 
 \${jobDetails}
@@ -1853,6 +1871,8 @@ Return a single JSON object with exactly two keys: "text" (the cover letter itse
 
 \${data}
 
+\${profileDirectives}
+
 ## Job:
 
 \${jobDetails}
@@ -1883,6 +1903,8 @@ Rules:
 ## Applicant Profile:
 \${data}
 
+\${profileDirectives}
+
 ## Job:
 
 \${jobDetails}
@@ -1911,6 +1933,8 @@ In your feedback:
 
 ## Applicant Profile:
 \${data}
+
+\${profileDirectives}
 
 ## Job:
 
@@ -1953,6 +1977,8 @@ Use the key "text" (NOT "letter") for the letter.
 ## Applicant Profile:
 
 \${data}
+
+\${profileDirectives}
 
 ## Job:
 
@@ -2014,6 +2040,8 @@ Return a single JSON object with exactly two keys: "text" (the cheat sheet as on
 
 \${data}
 
+\${profileDirectives}
+
 ## Job:
 
 \${jobDetails}
@@ -2064,6 +2092,8 @@ Use the key "text" for the cheat sheet.
 
 \${data}
 
+\${profileDirectives}
+
 ## Job:
 
 \${jobDetails}
@@ -2094,6 +2124,8 @@ Rules:
 ## Applicant Profile:
 \${data}
 
+\${profileDirectives}
+
 ## Job:
 
 \${jobDetails}
@@ -2122,6 +2154,8 @@ In your feedback:
 
 ## Applicant Profile:
 \${data}
+
+\${profileDirectives}
 
 ## Job:
 

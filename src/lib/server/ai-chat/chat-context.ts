@@ -387,7 +387,31 @@ const APPLICATION_SCOPE: RouteScope = {
  * page it is most needed on is the page that grants nothing, which is exactly
  * the page most likely to have been written without thinking about it.
  */
-const ALWAYS: ContextSource[] = ['page_scope', 'activity_manifest', 'profile_edits', 'abilities'];
+const ALWAYS: ContextSource[] = [
+	'page_scope',
+	'activity_manifest',
+	'profile_edits',
+	'abilities',
+	// What they have told the assistant to keep to. Not about the page at all,
+	// which is exactly why it cannot be left to each scope to request.
+	'directives'
+];
+
+/**
+ * The capabilities every route offers, whatever it is about.
+ *
+ * Only the standing directives. A preference is stated wherever the applicant
+ * is standing, and the failure this answers — "I'll keep that in mind", with
+ * nothing kept — happened in the Phase 0 eval on every page it was asked on,
+ * including the two that grant nothing. Admitted beside the subject rather than
+ * matched from the message, because a matcher that misses a phrasing brings
+ * that failure straight back, silently.
+ *
+ * The cost is that no page is plain-text any more: every turn is a structured
+ * one. Most pages were already — every profile section, both job pages, an
+ * application — and the directive block is small.
+ */
+const EVERY_PAGE_CAPABILITIES: Capability[] = ['edit_directives'];
 
 const ROUTE_SCOPES: Record<string, RouteScope> = {
 	// Longest prefix wins, so /applications/[id] keeps its own scope and
@@ -760,23 +784,25 @@ export async function resolveChatContext(opts: {
 	const recent = [...(opts.history ?? []), opts.message].slice(-MATCH_WINDOW_MESSAGES).join('\n');
 	const tiers = tieredCapabilities(scope);
 
-	const [subject, ...children] = await Promise.all(
-		[tiers.subject, ...tiers.children].map((group) =>
+	const [subject, always, ...children] = await Promise.all(
+		[tiers.subject, EVERY_PAGE_CAPABILITIES, ...tiers.children].map((group) =>
 			resolveCapabilities(group, entity, actor, { message: recent })
 		)
 	);
 
 	// Three tiers, in the order they may be given up. The page's subject never
-	// is. Its child collections come next, because they are on this page too and
-	// a role's projects belong to the turn far more than a section the message
-	// merely brushed against. The rest of the profile is last, and gives way
-	// first — page bias has to survive a message that names three sections.
+	// is, and nor is what every page offers. Its child collections come next,
+	// because they are on this page too and a role's projects belong to the turn
+	// far more than a section the message merely brushed against. The rest of
+	// the profile is last, and gives way first — page bias has to survive a
+	// message that names three sections.
 	const matched = await matchedCapabilities(scope, [...(opts.history ?? []), opts.message], actor);
-	const capabilities = fitMatchedCapabilities(subject, [...children, ...matched]);
+	const capabilities = fitMatchedCapabilities([...subject, ...always], [...children, ...matched]);
 
 	return {
 		capabilityRecord: buildCapabilityRecord({
 			subject,
+			always,
 			children,
 			matched,
 			admitted: capabilities,
@@ -790,7 +816,7 @@ export async function resolveChatContext(opts: {
 			query,
 			entity: entity ?? undefined,
 			sources,
-			sourceOptions: scope.sourceOptions,
+			sourceOptions: { ...scope.sourceOptions, directives: { consumer: 'chat' } },
 			scopeHint,
 			budgetChars: CHAT_BUDGET_CHARS
 		},

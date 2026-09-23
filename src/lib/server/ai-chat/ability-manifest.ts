@@ -54,6 +54,7 @@ import { targetingFor } from '$lib/server/mcp/entities';
 import { isTextCapability } from './text-version-capabilities';
 import { isTextCommitCapability } from './text-commit-capabilities';
 import { MATCH_CONFIG_CAPABILITY_NAMES } from './match-config-capability';
+import { DIRECTIVE_CAPABILITY_NAMES, DIRECTIVES_PAGE } from './directive-capability';
 
 /** One area of the app, as the navigation names it. */
 export interface AppArea {
@@ -155,6 +156,10 @@ function isMatchConfigCapability(capability: Capability): boolean {
 	return (MATCH_CONFIG_CAPABILITY_NAMES as string[]).includes(capability);
 }
 
+function isDirectiveCapability(capability: Capability): boolean {
+	return (DIRECTIVE_CAPABILITY_NAMES as string[]).includes(capability);
+}
+
 function entityCapabilities(): Capability[] {
 	const generated = new Set<string>(PROFILE_CAPABILITY_NAMES);
 	return (Object.keys(CAPABILITIES) as Capability[]).filter(
@@ -174,12 +179,14 @@ function byEntity(): {
 	job: string[];
 	application: string[];
 	settings: string[];
+	everywhere: string[];
 	other: string[];
 } {
 	const groups = {
 		job: [] as string[],
 		application: [] as string[],
 		settings: [] as string[],
+		everywhere: [] as string[],
 		other: [] as string[]
 	};
 	for (const capability of entityCapabilities()) {
@@ -188,6 +195,12 @@ function byEntity(): {
 		// one thing this block exists not to say. It gets a line naming its page.
 		if (isMatchConfigCapability(capability)) {
 			groups.settings.push(CAPABILITIES[capability].title);
+			continue;
+		}
+		// Offered on every page, so it has no page to name — and "Elsewhere" is
+		// wrong for it for the same reason as for the settings row.
+		if (isDirectiveCapability(capability)) {
+			groups.everywhere.push(CAPABILITIES[capability].title);
 			continue;
 		}
 		const entity = targetingFor(capability)?.entity;
@@ -237,6 +250,10 @@ export function formatAbilityManifest(areas: readonly AppArea[] = APP_AREAS): st
 			? `- On /jobs and Match Config (/jobs/import): ${groups.settings.join(' · ')} ` +
 				`(work types, levels, remote or on-site, places). No industry, keyword ` +
 				`or salary filter exists.`
+			: '',
+		groups.everywhere.length
+			? `- On every page: ${groups.everywhere.join(' · ')} — what they want kept to ` +
+				`from now on. Listed on ${DIRECTIVES_PAGE.name} (${DIRECTIVES_PAGE.path}).`
 			: '',
 		groups.other.length ? `- Elsewhere: ${groups.other.join(' · ')}.` : ''
 	].filter(Boolean);

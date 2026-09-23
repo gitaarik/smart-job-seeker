@@ -13,6 +13,7 @@
 		faListUl,
 		faEnvelope,
 		faBullseye,
+		faClipboardList,
 		faMoneyBillWave
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
@@ -23,19 +24,21 @@
 	let includeMatch = $state(true);
 	let includeDigest = $state(true);
 	let includeSalary = $state(true);
+	let includeDirectives = $state(true);
 
 	const downloadUrl = $derived.by(() => {
 		const params = new URLSearchParams({
 			tasks: includeTasks ? '1' : '0',
 			match: includeMatch ? '1' : '0',
 			digest: includeDigest ? '1' : '0',
-			salary: includeSalary ? '1' : '0'
+			salary: includeSalary ? '1' : '0',
+			directives: includeDirectives ? '1' : '0'
 		});
 		return `/data/settings-export/download?${params.toString()}`;
 	});
 
 	const nothingSelected = $derived(
-		!includeTasks && !includeMatch && !includeDigest && !includeSalary
+		!includeTasks && !includeMatch && !includeDigest && !includeSalary && !includeDirectives
 	);
 </script>
 
@@ -94,6 +97,15 @@
 						/>
 						<FontAwesomeIcon icon={faMoneyBillWave} class="h-4 w-4 text-[var(--dash-text-muted)]" />
 						<span class="text-[var(--dash-text)]">Salary settings</span>
+					</label>
+					<label class="flex cursor-pointer items-center gap-3">
+						<input
+							type="checkbox"
+							bind:checked={includeDirectives}
+							class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)]"
+						/>
+						<FontAwesomeIcon icon={faClipboardList} class="h-4 w-4 text-[var(--dash-text-muted)]" />
+						<span class="text-[var(--dash-text)]">Directives</span>
 					</label>
 				</div>
 

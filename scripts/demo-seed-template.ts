@@ -76,7 +76,10 @@ async function main() {
 		replaceExistingTasks: true,
 		applyMatchConfig: true,
 		applyEmailDigest: false,
-		applySalary: true
+		applySalary: true,
+		// Same reason as cloneProfileInto: how the owner talks to their assistant is
+		// not part of the profile a demo shows off, and every clone inherits this.
+		applyDirectives: false
 	});
 	console.log(`Demo-template ready: profile ${profileId} for user ${userId}.`);
 }

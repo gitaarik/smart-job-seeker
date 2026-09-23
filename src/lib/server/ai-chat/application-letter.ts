@@ -130,7 +130,10 @@ export async function generateApplicationLetter(
 	// A cheat sheet is *about* the interviews so it gets the full record set; a
 	// cover letter only needs the gist, so it gets the compact budget.
 	const detail = letterType === 'cheat_sheet' ? ('full' as const) : ('compact' as const);
-	const sources: ContextSource[] = ['job', 'application_activity'];
+	//
+	// Every mode gets the standing directives: a review that ignores "never open
+	// with 'I am excited to'" re-suggests exactly that. See directives.ts.
+	const sources: ContextSource[] = ['job', 'application_activity', 'directives'];
 	if (mode === 'generate' || mode === 'auto') {
 		sources.push('projects', 'stories', 'application_texts');
 	}
@@ -142,7 +145,8 @@ export async function generateApplicationLetter(
 		entity: { type: 'application', id: letter.application.id },
 		sources,
 		sourceOptions: {
-			application_activity: { detail }
+			application_activity: { detail },
+			directives: { consumer: 'letters' }
 		}
 	};
 

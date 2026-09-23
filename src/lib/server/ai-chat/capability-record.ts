@@ -26,6 +26,11 @@ import type { LiveCapability } from './capabilities';
 export type CapabilityTier =
 	/** The page's own subject. Never dropped — it is what the page promised. */
 	| 'subject'
+	/**
+	 * Offered on every page whatever it is about: the standing directives, which
+	 * are stated wherever the applicant happens to be. Never dropped either.
+	 */
+	| 'always'
 	/** Collections belonging to the subject row, on the same page. */
 	| 'child'
 	/** A section the conversation named that this page does not grant. */
@@ -60,6 +65,7 @@ export interface CapabilityRecord {
  */
 export function buildCapabilityRecord(parts: {
 	subject: LiveCapability[];
+	always?: LiveCapability[];
 	children: LiveCapability[][];
 	matched: LiveCapability[][];
 	/** What survived fitMatchedCapabilities. */
@@ -80,6 +86,7 @@ export function buildCapabilityRecord(parts: {
 	return {
 		entries: [
 			...entriesFor(parts.subject, 'subject'),
+			...entriesFor(parts.always ?? [], 'always'),
 			...parts.children.flatMap((g) => entriesFor(g, 'child')),
 			...parts.matched.flatMap((g) => entriesFor(g, 'matched'))
 		],

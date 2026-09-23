@@ -314,6 +314,33 @@ describe('resolveChatContext — orientation blocks', () => {
 		}
 	});
 
+	it('gives every route the standing directives, as the chat, and the means to add one', async () => {
+		// A preference is stated wherever the applicant is standing. The Phase 0
+		// eval saw "I'll keep that in mind" with nothing kept on every page it
+		// asked, including the ones that grant nothing — so neither the block nor
+		// the capability can be left to a route to request.
+		for (const [routeId, params] of ROUTES) {
+			applicationRow = { id: 42, job: { title: 'Staff Engineer' } };
+			jobRow = { id: 9, title: 'Staff Engineer' };
+			mockResolveCapabilities.mockClear();
+
+			const { context: ctx } = await resolveChatContext({
+				...base,
+				routeId,
+				params: params as Record<string, string>
+			});
+
+			expect(ctx.sources, routeId).toContain('directives');
+			expect(ctx.sourceOptions?.directives?.consumer, routeId).toBe('chat');
+			// What the route hands the registry; resolving it is capabilities.test.ts's.
+			const declared = mockResolveCapabilities.mock.calls.map(([names]) => names as string[]);
+			expect(
+				declared.some((names) => names.includes('edit_directives')),
+				routeId
+			).toBe(true);
+		}
+	});
+
 	it('tells the model a bare question means THIS application on a detail page', async () => {
 		applicationRow = { id: 42, job: { title: 'Staff Engineer' } };
 
@@ -784,10 +811,12 @@ describe('sections the message reaches for', () => {
 
 		const { capabilities } = await onJobPage('while I think of it, add Spanish to my languages');
 
+		// The page's own, then what every page offers, then what the message named.
 		expect(capabilities.map((c) => c.capability)).toEqual([
 			'edit_job_details',
 			'edit_job_description',
 			'edit_job_skills',
+			'edit_directives',
 			'edit_language',
 			'add_language'
 		]);
@@ -801,7 +830,8 @@ describe('sections the message reaches for', () => {
 		expect(capabilities.map((c) => c.capability)).toEqual([
 			'edit_job_details',
 			'edit_job_description',
-			'edit_job_skills'
+			'edit_job_skills',
+			'edit_directives'
 		]);
 	});
 
@@ -830,7 +860,11 @@ describe('sections the message reaches for', () => {
 			message: 'fix my languages'
 		});
 
-		expect(capabilities.map((c) => c.capability)).toEqual(['edit_language', 'add_language']);
+		expect(capabilities.map((c) => c.capability)).toEqual([
+			'edit_language',
+			'add_language',
+			'edit_directives'
+		]);
 	});
 
 	it('carries a section through a follow-up that names nothing', async () => {

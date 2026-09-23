@@ -82,7 +82,8 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 			// attached to it — assembled from the application id.
 			context: {
 				entity: { type: 'application', id: question.application.id },
-				sources: ['job', 'application_activity']
+				sources: ['job', 'application_activity', 'directives'],
+				sourceOptions: { directives: { consumer: 'answers' } }
 			}
 		}
 	);

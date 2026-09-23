@@ -9,12 +9,18 @@ import {
 	platform_credentials
 } from '$lib/server/db/schema';
 import type { SettingsExportData } from './settings-types';
+import {
+	isDirectiveTopic,
+	MAX_STATEMENT_CHARS,
+	writeDirectives
+} from '$lib/server/ai-chat/directives';
 
 export interface SettingsImportOptions {
 	replaceExistingTasks: boolean;
 	applyMatchConfig: boolean;
 	applyEmailDigest: boolean;
 	applySalary: boolean;
+	applyDirectives: boolean;
 }
 
 export interface SettingsImportSummary {
@@ -26,6 +32,9 @@ export interface SettingsImportSummary {
 	matchConfigUpdated: boolean;
 	emailDigestUpdated: boolean;
 	salaryUpdated: boolean;
+	directivesImported: number;
+	/** Topics this instance does not know, left out rather than failing the import. */
+	directivesSkipped: string[];
 }
 
 export function validateSettingsExport(data: unknown): data is SettingsExportData {
@@ -50,7 +59,9 @@ export async function importSettings(
 		platformProfilesCreated: 0,
 		matchConfigUpdated: false,
 		emailDigestUpdated: false,
-		salaryUpdated: false
+		salaryUpdated: false,
+		directivesImported: 0,
+		directivesSkipped: []
 	};
 
 	const tasks = data.search_tasks ?? [];
@@ -264,6 +275,28 @@ export async function importSettings(
 				.where(eq(profiles.id, profileId));
 
 			summary.salaryUpdated = true;
+		}
+
+		// Each one supersedes its topic's live directive, keeping the date it was
+		// stated; a topic the file does not mention keeps what it has. Through the
+		// write layer rather than an insert, so the one-live-per-topic rule and
+		// the history hold for an import exactly as for a proposal.
+		if (options.applyDirectives && data.directives) {
+			for (const d of data.directives) {
+				const statement = typeof d.statement === 'string' ? d.statement.trim() : '';
+				if (!isDirectiveTopic(d.topic) || !statement) {
+					summary.directivesSkipped.push(String(d.topic));
+					continue;
+				}
+				const stated = new Date(d.stated_at);
+				const { written } = await writeDirectives(
+					profileId,
+					{ [d.topic]: statement.slice(0, MAX_STATEMENT_CHARS) },
+					'import',
+					{ statedAt: Number.isNaN(stated.getTime()) ? undefined : stated, tx }
+				);
+				summary.directivesImported += written.length;
+			}
 		}
 	});
 

@@ -38,6 +38,7 @@ export const actions: Actions = {
 		const applyMatchConfig = formData.get('applyMatchConfig') === 'on';
 		const applyEmailDigest = formData.get('applyEmailDigest') === 'on';
 		const applySalary = formData.get('applySalary') === 'on';
+		const applyDirectives = formData.get('applyDirectives') === 'on';
 
 		let parsed: unknown;
 		try {
@@ -59,7 +60,8 @@ export const actions: Actions = {
 				replaceExistingTasks,
 				applyMatchConfig,
 				applyEmailDigest,
-				applySalary
+				applySalary,
+				applyDirectives
 			});
 		} catch (err) {
 			console.error('Settings import failed:', err);

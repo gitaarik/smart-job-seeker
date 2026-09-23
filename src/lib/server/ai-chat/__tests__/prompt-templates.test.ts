@@ -198,6 +198,74 @@ describe('${applicationActivity} template \u2194 caller wiring', () => {
 });
 
 /**
+ * Every template that references `${profileDirectives}`, and which consumer its
+ * caller names — the standing directives filtered to what applies there (see
+ * ai-chat/directives.ts).
+ *
+ * The same seventeen templates as `${applicationActivity}`, and on purpose: the
+ * directives reach everything written for the applicant about an application,
+ * plus the assistant. What they must NOT reach is the matcher — Rule 4 of
+ * planning/PROFILE-MEMORY.md, because a free-text preference inside
+ * `score_job_match` moves scores the way salary once did.
+ */
+const PROFILE_DIRECTIVES_CONSUMER: Record<string, 'chat' | 'letters' | 'answers'> = {
+	// routes/api/ai/agent, through chat-context.ts's ALWAYS sources.
+	personal_agent_chat: 'chat',
+	personal_agent_chat_capable: 'chat',
+	// ai-chat/application-letter.ts and its followup: cover letters and job
+	// cheat sheets alike, since both are written for this application.
+	write_cover_letter: 'letters',
+	write_or_advise_cover_letter: 'letters',
+	advise_cover_letter: 'letters',
+	review_cover_letter: 'letters',
+	write_cheat_sheet: 'letters',
+	write_or_advise_cheat_sheet: 'letters',
+	advise_cheat_sheet: 'letters',
+	review_cheat_sheet: 'letters',
+	followup_letter: 'letters',
+	// ai-chat/application-question.ts, its followup and the revise endpoint.
+	answer_application_question: 'answers',
+	write_or_advise_application_question: 'answers',
+	advise_application_question: 'answers',
+	review_application_question: 'answers',
+	revise_application_question: 'answers',
+	followup_application_question: 'answers'
+};
+
+describe('${profileDirectives} template \u2194 caller wiring', () => {
+	const referencing = Object.entries(promptTemplates)
+		.filter(([, t]) => `${t.system_prompt}\n${t.user_prompt}`.includes('${profileDirectives}'))
+		.map(([key]) => key);
+
+	it('is referenced by exactly the templates whose callers request it', () => {
+		expect(referencing.sort()).toEqual(Object.keys(PROFILE_DIRECTIVES_CONSUMER).sort());
+	});
+
+	it('rides the same prompts as the application history', () => {
+		// Written for the applicant about an application, or the assistant: the
+		// one set of prompts where "never mention my age" can be broken.
+		expect(referencing.sort()).toEqual(Object.keys(APPLICATION_ACTIVITY_SUPPLIED_BY).sort());
+	});
+
+	it('never reaches the matcher', () => {
+		const matcher = promptTemplates.score_job_match;
+		expect(`${matcher.system_prompt}\n${matcher.user_prompt}`).not.toContain('profileDirectives');
+	});
+
+	it('sits right after the profile, in the per-profile band the prompt cache orders by', () => {
+		for (const key of referencing) {
+			const text = promptTemplates[key].system_prompt;
+			const data = text.indexOf('${data}');
+			const directives = text.indexOf('${profileDirectives}');
+			expect(directives, key).toBeGreaterThan(data);
+			// Nothing per-job or per-turn between the two.
+			const between = text.slice(data + '${data}'.length, directives);
+			expect(between.trim(), key).toBe('');
+		}
+	});
+});
+
+/**
  * `${additionalContext}` carries the applicant's own brief for a turn — what
  * they typed in the editor's composer before pressing "AI advice" or "AI
  * generate". Same two-way drift risk as `${interviewHistory}`, with one extra
