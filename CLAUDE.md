@@ -57,7 +57,7 @@ Two things worth knowing:
 | Gate             | Script                | Baseline          |
 | ---------------- | --------------------- | ----------------- |
 | `svelte-check`   | `ci/check.sh`         | 29 errors         |
-| `scripts/` types | `ci/check-scripts.sh` | 23 errors         |
+| `scripts/` types | `ci/check-scripts.sh` | 4 errors          |
 | eslint           | `ci/check-lint.sh`    | zero — no backlog |
 | prettier         | `prettier --check .`  | zero — no backlog |
 

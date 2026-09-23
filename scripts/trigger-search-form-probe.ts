@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
  * Dev-only: trigger a platform-discovery run without going through the admin
- * API. Mirrors POST /api/admin/discover. Picks credential + device by reusing
- * whatever the most recent run on this platform used, falling back to the
- * first available credential.
+ * API. Mirrors POST /api/admin/search-form-probe. Picks credential + device by
+ * reusing whatever the most recent run on this platform used, falling back to
+ * the first available credential.
  *
  * Usage (from cloud/):
- *   npm run trigger-discover -- <platform-id>
- *   npm run trigger-discover -- <platform-id> --credential <id>
- *   npm run trigger-discover -- <platform-id> --device <api-key-id>
+ *   npm run trigger-search-form-probe -- <platform-id>
+ *   npm run trigger-search-form-probe -- <platform-id> --credential <platform-credential-id>
+ *   npm run trigger-search-form-probe -- <platform-id> --device <api-key-id>
  *
  * Skips ownership and credit checks — do not expose this on a public host.
  */
@@ -19,7 +19,7 @@ import {
 	api_keys,
 	job_platforms,
 	search_form_probe_runs,
-	platform_profiles
+	platform_credentials
 } from '$lib/server/db/schema';
 import { addSearchFormProbeJob } from '$lib/server/queue/search-form-probe-queue';
 
@@ -34,7 +34,7 @@ async function main() {
 	const platformId = platformArg ? parseInt(platformArg, 10) : NaN;
 	if (!Number.isFinite(platformId)) {
 		console.error(
-			'Usage: npm run trigger-discover -- <platform-id> [--credential <id>] [--device <api-key-id>]'
+			'Usage: npm run trigger-search-form-probe -- <platform-id> [--credential <id>] [--device <api-key-id>]'
 		);
 		process.exit(1);
 	}
@@ -62,7 +62,7 @@ async function main() {
 		where: eq(search_form_probe_runs.platform_id, platform.id),
 		orderBy: desc(search_form_probe_runs.started_at),
 		columns: {
-			platform_profile_id: true,
+			platform_credential_id: true,
 			sjsbrowser_api_key_id: true,
 			triggered_by_user_id: true
 		}
@@ -71,10 +71,10 @@ async function main() {
 	const credFlag = parseFlag('credential');
 	let credentialId: number | null = credFlag
 		? parseInt(credFlag, 10)
-		: (previousRun?.platform_profile_id ?? null);
+		: (previousRun?.platform_credential_id ?? null);
 	if (credentialId === null) {
-		const firstCred = await db.query.platform_profiles.findFirst({
-			where: eq(platform_profiles.platform_id, platform.id),
+		const firstCred = await db.query.platform_credentials.findFirst({
+			where: eq(platform_credentials.platform_id, platform.id),
 			columns: { id: true }
 		});
 		if (!firstCred) {
@@ -87,8 +87,8 @@ async function main() {
 		console.error('Invalid --credential value');
 		process.exit(1);
 	}
-	const cred = await db.query.platform_profiles.findFirst({
-		where: eq(platform_profiles.id, credentialId!),
+	const cred = await db.query.platform_credentials.findFirst({
+		where: eq(platform_credentials.id, credentialId!),
 		columns: { id: true, platform_id: true, username: true }
 	});
 	if (!cred || cred.platform_id !== platform.id) {
@@ -124,7 +124,7 @@ async function main() {
 			target_url: platform.url,
 			status: 'queued',
 			triggered_by_user_id: previousRun?.triggered_by_user_id ?? null,
-			platform_profile_id: credentialId,
+			platform_credential_id: credentialId,
 			sjsbrowser_api_key_id: deviceId
 		})
 		.returning();

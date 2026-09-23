@@ -106,7 +106,7 @@ try {
 			new HumanMessage('What did the interviewer say about the runway?'),
 			new AIMessage({ content: '', tool_calls: calls }),
 			new ToolMessage({
-				content: await readEntry.invoke(calls[0].args as { entry_id: number }),
+				content: await readEntry.invoke(calls[0].args as { entry_id: number; reason: string }),
 				tool_call_id: calls[0].id!
 			})
 		]);

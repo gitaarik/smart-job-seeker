@@ -11,7 +11,8 @@
  * Safe to run repeatedly — already-encrypted rows are detected and skipped.
  * Requires SJS_CREDENTIALS_KEY to be set in the environment.
  *
- * The sibling of migrate-encrypt-credentials.ts, for the column that used to be
+ * The sibling of migrate-encrypt-credentials.ts (deleted 2026-09-23: the columns
+ * it encrypted moved to platform_credentials), for the column that used to be
  * `api_keys.key_plain`. That column stored the device key beside its own sha256,
  * which made the hash decorative: anyone who could read the table had working
  * credentials. It is `key_encrypted` now.

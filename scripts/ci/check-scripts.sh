@@ -50,7 +50,18 @@ set -euo pipefail
 # Locals. A third gate's worth of the backlog was the gate's own config. Found
 # by adding one import to api-helpers.ts, which pulled auth/guards.ts in and
 # produced ten "new" errors in a file nobody had touched.
-BASELINE=23
+#
+# 23 -> 4 on 2026-09-23. 19 of the 23 sat in five scripts, and every one was a
+# script that could no longer run. Three were deleted: migrate-search-terms.ts
+# and migrate-encrypt-credentials.ts were one-off migrations whose tables and
+# columns are gone, and test-structured-output.ts imported a module that no
+# longer exists. Two were still worth having and were repaired:
+# trigger-search-form-probe.ts still read credentials from platform_profiles,
+# where they lived before moving to platform_credentials (its npm wrapper also
+# swallowed its --credential and --device flags), and probe-groq-tools.ts cast a
+# tool call's args to half the tool's schema. The 4 left are app code this
+# program reaches, and svelte-check counts the same four.
+BASELINE=4
 
 npx svelte-kit sync
 
