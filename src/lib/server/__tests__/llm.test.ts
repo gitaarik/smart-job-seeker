@@ -22,13 +22,19 @@ vi.mock('../config', () => ({
 }));
 
 // Create hoisted mocks for LangChain
-const { mockInvoke, mockWithStructuredOutput, mockGeminiInvoke, mockGeminiStructuredInvoke } =
-	vi.hoisted(() => ({
-		mockInvoke: vi.fn(),
-		mockWithStructuredOutput: vi.fn(),
-		mockGeminiInvoke: vi.fn(),
-		mockGeminiStructuredInvoke: vi.fn()
-	}));
+const {
+	mockInvoke,
+	mockWithStructuredOutput,
+	mockGeminiInvoke,
+	mockGeminiWithStructuredOutput,
+	mockGeminiStructuredInvoke
+} = vi.hoisted(() => ({
+	mockInvoke: vi.fn(),
+	mockWithStructuredOutput: vi.fn(),
+	mockGeminiInvoke: vi.fn(),
+	mockGeminiWithStructuredOutput: vi.fn(),
+	mockGeminiStructuredInvoke: vi.fn()
+}));
 
 vi.mock('@langchain/google-genai', () => ({
 	ChatGoogleGenerativeAI: class ChatGoogleGenerativeAI {
@@ -38,7 +44,8 @@ vi.mock('@langchain/google-genai', () => ({
 		}
 		// Everything except Groq and Cerebras goes through withStructuredOutput,
 		// so this is the path the writing model actually takes.
-		withStructuredOutput() {
+		withStructuredOutput(schema: unknown, options?: unknown) {
+			mockGeminiWithStructuredOutput(schema, options);
 			return { invoke: (m: unknown) => mockGeminiStructuredInvoke(m) };
 		}
 	}
@@ -523,5 +530,74 @@ describe('a null structured parse', () => {
 			model: 'gemini-2.5-pro'
 		});
 		expect(result).toEqual({ reply: 'Here you go.' });
+	});
+});
+
+/**
+ * Gemini's `responseSchema` takes one `type` per node, and zod 4.5 began writing
+ * `z.string().nullable()` as `"type": ["string", "null"]`. Every structured
+ * Gemini call failed on it, so Gemini is now sent a JSON Schema converted for
+ * it, and the reply is held to the zod schema here instead of by LangChain.
+ * See llm/gemini-schema.ts.
+ */
+describe('a structured Gemini call', () => {
+	const schema = z.object({
+		reply: z.string(),
+		note: z.string().nullable(),
+		tone: z.string().default('plain')
+	});
+	const structuredOutput: StructuredOutputConfig = { name: 'personal_agent_chat_capable', schema };
+	const messages: ChatMessage[] = [{ role: 'user', content: 'hi' }];
+	const raw = new AIMessage({
+		content: '',
+		usage_metadata: { input_tokens: 10, output_tokens: 5, total_tokens: 15 }
+	});
+
+	beforeEach(async () => {
+		await llmCache.clear();
+		vi.clearAllMocks();
+	});
+
+	it('is sent a JSON Schema with no type lists, not the zod schema', async () => {
+		mockGeminiStructuredInvoke.mockResolvedValue({ raw, parsed: { reply: 'Hi.', note: null } });
+
+		await generateChatCompletion(messages, {
+			structuredOutput,
+			provider: 'gemini',
+			model: 'gemini-2.5-pro'
+		});
+
+		const [sent] = mockGeminiWithStructuredOutput.mock.calls[0];
+		expect(sent).not.toBeInstanceOf(z.ZodType);
+		expect(JSON.stringify(sent)).not.toMatch(/"type":\[/);
+		expect((sent as { properties: Record<string, unknown> }).properties.note).toEqual({
+			anyOf: [{ type: 'string' }, { type: 'null' }]
+		});
+	});
+
+	it("returns zod's reading of the reply, defaults included", async () => {
+		mockGeminiStructuredInvoke.mockResolvedValue({ raw, parsed: { reply: 'Hi.', note: null } });
+
+		const result = await generateChatCompletion(messages, {
+			structuredOutput,
+			provider: 'gemini',
+			model: 'gemini-2.5-pro'
+		});
+		expect(result).toEqual({ reply: 'Hi.', note: null, tone: 'plain' });
+	});
+
+	// LangChain's zod parser turned a reply that broke the schema into a null
+	// parse, which fails as no usable structured output. Checking it here must
+	// fail it the same way, not hand the caller a reply of the wrong shape.
+	it('fails a reply the schema rejects, as the zod parser did', async () => {
+		mockGeminiStructuredInvoke.mockResolvedValue({ raw, parsed: { reply: 42, note: null } });
+
+		await expect(
+			generateChatCompletion(messages, {
+				structuredOutput,
+				provider: 'gemini',
+				model: 'gemini-2.5-pro'
+			})
+		).rejects.toThrow(/no usable structured output/i);
 	});
 });

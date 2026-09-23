@@ -33,9 +33,9 @@ import { dbDirect as db } from '../src/lib/server/db';
 import { ai_chats } from '../src/lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { buildProposalSchema } from '../src/lib/server/ai-chat/capabilities';
+import { geminiResponseSchema } from '../src/lib/server/llm/gemini-schema';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { z } from 'zod';
 import { config } from '../src/lib/server/config';
 
 const ID = Number(process.argv[2]);
@@ -89,7 +89,7 @@ for (let n = 0; n < RUNS; n++) {
 		...(BUDGET ? { thinkingConfig: { thinkingBudget: BUDGET } } : {})
 	});
 
-	const structured = model.withStructuredOutput(z.toJSONSchema(schema) as Record<string, unknown>, {
+	const structured = model.withStructuredOutput(geminiResponseSchema(schema), {
 		name: 'personal_agent_chat_capable',
 		includeRaw: true
 	});

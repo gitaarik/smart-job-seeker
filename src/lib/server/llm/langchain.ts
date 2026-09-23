@@ -12,6 +12,7 @@ import { AIMessage, type BaseMessage, HumanMessage, SystemMessage } from '@langc
 import { z } from 'zod';
 import { getEnv } from '$lib/tools/get-env';
 import { llmCache } from './cache.js';
+import { geminiResponseSchema, parseStructuredReply } from './gemini-schema';
 import { isRetryableError, withRetry } from '$lib/server/utils/retry';
 import { errorTracker } from '$lib/server/monitoring/error-tracker';
 import { config } from '$lib/server/config';
@@ -902,13 +903,25 @@ async function generateWithLangChain(
 				}
 			}
 
-			// For other providers, use withStructuredOutput (includeRaw for token usage)
-			const structuredModel = chatModel.withStructuredOutput(zodSchema, {
-				name: structuredOutput.name,
-				includeRaw: true
-			});
-
-			const { raw, parsed: result } = await structuredModel.invoke(langChainMessages);
+			// For other providers, use withStructuredOutput (includeRaw for token usage).
+			//
+			// Gemini is sent a JSON Schema it can read instead of the zod schema, and
+			// the reply is held to the zod schema here rather than by LangChain's
+			// parser. See gemini-schema.ts.
+			const options = { name: structuredOutput.name, includeRaw: true } as const;
+			let raw: BaseMessage;
+			let result: unknown;
+			if (provider === 'gemini') {
+				const reply = await chatModel
+					.withStructuredOutput(geminiResponseSchema(zodSchema), options)
+					.invoke(langChainMessages);
+				raw = reply.raw;
+				result = await parseStructuredReply(zodSchema, reply.parsed);
+			} else {
+				({ raw, parsed: result } = await chatModel
+					.withStructuredOutput(zodSchema, options)
+					.invoke(langChainMessages));
+			}
 			const usage = extractTokenUsage(raw);
 
 			/**

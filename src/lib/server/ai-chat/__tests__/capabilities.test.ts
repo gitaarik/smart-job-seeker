@@ -268,6 +268,7 @@ import {
 	renderCapabilityPrompt,
 	resolveCapabilities
 } from '../capabilities';
+import { geminiResponseSchema } from '$lib/server/llm/gemini-schema';
 
 /**
  * What /applications/[id] offers — the busiest route in the table: its own six,
@@ -1047,6 +1048,14 @@ describe('update_application_status', () => {
 });
 
 describe('buildProposalSchema', () => {
+	// The schema every assistant turn sends, and Gemini's responseSchema takes
+	// one type per node. zod 4.5+ writes a nullable as a type list, which failed
+	// every turn until the conversion split them; see llm/gemini-schema.ts.
+	it('converts for Gemini without a type list, with every capability live', () => {
+		const schema = buildProposalSchema(Object.keys(CAPABILITIES) as Capability[]);
+		expect(JSON.stringify(geminiResponseSchema(schema))).not.toMatch(/"type":\[/);
+	});
+
 	it('accepts the loose shapes both providers actually return', () => {
 		// gpt-oss returns bare values where arrays belong and quotes its numbers.
 		// The wire schema has to ADMIT those rather than reject the turn — it
