@@ -87,23 +87,20 @@ export const auth = betterAuth({
 
 	user: {
 		modelName: 'users',
+		/**
+		 * The new address gets emailVerification.sendVerificationEmail's mail
+		 * (below), and the change lands when its link is followed.
+		 *
+		 * This used to set sendChangeEmailVerification, with a mail of its own.
+		 * better-auth has since dropped that option (1.7.5 has no trace of it),
+		 * so nothing called it, and because betterAuth() infers its options
+		 * generically the unknown key raised no error: only three implicit-anys
+		 * in the svelte-check backlog. Its successor, sendChangeEmailConfirmation,
+		 * is not a rename. It mails the OLD address to approve the change before
+		 * the new one is verified, which is a different flow, not adopted here.
+		 */
 		changeEmail: {
-			enabled: true,
-			sendChangeEmailVerification: async ({ user, newEmail, url }) => {
-				await sendEmail({
-					to: newEmail,
-					subject: 'Verify your new email address',
-					html: `
-            <h2>Verify your new email</h2>
-            <p>Click the link below to confirm changing your email to <strong>${newEmail}</strong>:</p>
-            <p><a href="${url}">Verify Email</a></p>
-            <p>If you didn't request this, you can safely ignore this email.</p>
-            <p>This link will expire in 1 hour.</p>
-          `,
-					type: 'email_change',
-					userId: user.id
-				});
-			}
+			enabled: true
 		},
 		additionalFields: {
 			is_admin: {
