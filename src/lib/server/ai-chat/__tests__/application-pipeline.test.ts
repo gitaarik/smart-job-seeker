@@ -12,6 +12,7 @@ import {
 	describeOffer,
 	fitPipelineToBudget,
 	formatPipelineContext,
+	pipelineOrder,
 	type PipelineRow
 } from '../application-pipeline';
 
@@ -114,6 +115,22 @@ describe('formatPipelineContext', () => {
 
 	it('stays empty when there is genuinely nothing', () => {
 		expect(formatPipelineContext([], { finished: 0 })).toBe('');
+	});
+
+	// An accepted job stays in the table: it is what every other offer is weighed
+	// against, so the note must stop saying it was left out, and the table says
+	// what the row is for — but only when there is one, since a rule about an
+	// absent row invites the model to go looking for it.
+	it('does not count an accepted application among the ones left out', () => {
+		const note = formatPipelineContext([row()], { finished: 2 }).replace(/\s+/g, ' ');
+		expect(note).toContain('2 finished application(s) — rejected or withdrawn — are not in');
+		expect(note).toContain('and what they accepted');
+	});
+
+	it('names an accepted row as the baseline, and says nothing when there is none', () => {
+		const withAccepted = formatPipelineContext([row(), row({ id: 2, status: 'accepted' })]);
+		expect(withAccepted).toContain('A row with status Accepted is a job they have taken.');
+		expect(formatPipelineContext([row()])).not.toContain('status Accepted');
 	});
 
 	// A recruiter placing the applicant at several clients is the connection the
@@ -494,6 +511,48 @@ describe('fitPipelineToBudget', () => {
 		expect(out.rows[5].offer).toEqual(offer);
 	});
 
+	// A job they have taken is what every offer is weighed against, and its
+	// details are where the conditions for that are kept. By age alone it would
+	// lose them first: it has usually sat longest of anything in the table.
+	it("keeps an accepted row's details after even an offer's", () => {
+		const rows = pipeline(6, { details: DETAILS });
+		rows[4].offer = {
+			base: 92000,
+			bonus: null,
+			equity: null,
+			currency: 'EUR',
+			period: 'year',
+			start_date: null,
+			respond_by: '2026-08-15',
+			notes: null
+		};
+		rows[5].status = 'accepted';
+		// Room for exactly one row's details: the accepted one's.
+		const out = fitPipelineToBudget(
+			rows,
+			chars(rows.map((r) => (r.status === 'accepted' ? r : { ...r, details: [] })))
+		);
+		expect(out.rows[5].details).toHaveLength(2);
+		expect(out.rows.slice(0, 5).every((r) => r.details.length === 0)).toBe(true);
+	});
+
+	it("keeps an accepted row's summary to the last as well", () => {
+		const rows = pipeline(6);
+		rows[5].status = 'accepted';
+		const out = fitPipelineToBudget(rows, chars(rows) - 3 * SUMMARY.length);
+		expect(out.rows[5].summary).not.toBeNull();
+	});
+
+	it('drops an accepted row only once nothing else is left to drop', () => {
+		const rows = pipeline(20);
+		rows[19].status = 'accepted';
+		const out = fitPipelineToBudget(rows, 3000);
+		expect(out.omitted).toBeGreaterThan(0);
+		expect(out.rows.at(-1)!.status).toBe('accepted');
+		// And it does go, rather than the current row, when it is all that is left.
+		expect(fitPipelineToBudget(rows, 10).rows.map((r) => r.isCurrent)).toEqual([true]);
+	});
+
 	it('drops rows only once no summary is left to give', () => {
 		const rows = pipeline(20);
 		const out = fitPipelineToBudget(rows, 3000);
@@ -563,6 +622,19 @@ describe('fitPipelineToBudget', () => {
 			omitted: 0,
 			shed: 0
 		});
+	});
+});
+
+describe('pipelineOrder', () => {
+	it('puts the current row first, then an accepted one, then the most recently active', () => {
+		const rows = [
+			row({ id: 1, daysInStage: 2 }),
+			row({ id: 2, daysInStage: 90, status: 'accepted' }),
+			row({ id: 3, daysInStage: 40, isCurrent: true }),
+			row({ id: 4, daysInStage: null }),
+			row({ id: 5, daysInStage: 9 })
+		];
+		expect([...rows].sort(pipelineOrder).map((r) => r.id)).toEqual([3, 2, 1, 5, 4]);
 	});
 });
 

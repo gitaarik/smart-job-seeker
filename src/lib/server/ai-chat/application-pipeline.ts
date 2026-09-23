@@ -38,7 +38,7 @@ import {
 	normalizeSalaryPeriod,
 	rateToHourly
 } from '$lib/salary/conversion';
-import { getStatusLabel, isFinishedStatus } from '$lib/application-status';
+import { getStatusLabel, isComparedStatus } from '$lib/application-status';
 import { isSnoozed } from '$lib/application-snooze';
 import type { OfferTerms } from './application-summary';
 import type { StoredDetail } from '$lib/application-details';
@@ -323,11 +323,11 @@ export function formatPipelineContext(
 		finished > 0
 			? [
 					'',
-					`NOTE: ${finished} finished application(s) — rejected, withdrawn or`,
-					'accepted — are not in the table below. This table is what is IN PLAY,',
-					'not everything that exists. They are listed in the activity index with',
-					'their status, so answer questions about outcomes and history from',
-					'there rather than saying there are none.'
+					`NOTE: ${finished} finished application(s) — rejected or withdrawn —`,
+					'are not in the table below. This table is what is IN PLAY, and what',
+					'they accepted, not everything that exists. They are listed in the',
+					'activity index with their status, so answer questions about outcomes',
+					'and history from there rather than saying there are none.'
 				]
 			: [];
 
@@ -360,6 +360,18 @@ export function formatPipelineContext(
 	// pipeline appears on /jobs/[id] with no row marked and no application page
 	// in sight.
 	const onOne = rows.some((r) => r.isCurrent);
+
+	// An accepted row is not one more option: it is what the others are measured
+	// against. Said only when there is one, because on most profiles there is not,
+	// and a rule about a row that is absent invites the model to look for it.
+	const baseline = rows.some(isAccepted)
+		? [
+				'',
+				'A row with status Accepted is a job they have taken. While anything else is',
+				'open it is the baseline: weigh another offer against it, including any',
+				'conditions its details record, rather than treating it as one more option.'
+			]
+		: [];
 
 	const framing = onOne
 		? [
@@ -410,12 +422,36 @@ export function formatPipelineContext(
 		'Salary figures in brackets are converted to one currency and period so',
 		'they can be ranked. Quote the figure as written, never the converted one,',
 		'and never present a conversion as what the employer offered.',
+		...baseline,
 		...omission,
 		...shedding,
 		...excluded,
 		'',
 		...lines
 	].join('\n');
+}
+
+/**
+ * A job they have taken. It stays in the table as the baseline (see
+ * isComparedStatus), and it is the last row to lose its depth or its place.
+ */
+function isAccepted(r: PipelineRow): boolean {
+	return r.status === 'accepted';
+}
+
+/**
+ * The order rows are handed to the budget in: current first, then what they
+ * accepted, then most recently active. Both caps cut from the end, so a long
+ * pipeline loses its stalest rows rather than arbitrary ones, and never the job
+ * every other offer is weighed against — which has usually sat longest of all,
+ * so by age alone it would be the first to go.
+ */
+export function pipelineOrder(x: PipelineRow, y: PipelineRow): number {
+	return (
+		Number(y.isCurrent) - Number(x.isCurrent) ||
+		Number(isAccepted(y)) - Number(isAccepted(x)) ||
+		(x.daysInStage ?? 1e9) - (y.daysInStage ?? 1e9)
+	);
 }
 
 /**
@@ -439,9 +475,12 @@ export function formatPipelineContext(
  *     describing something in motion; on an application that has not moved in
  *     two months the structured line ("94d in stage", stage, entry count)
  *     already says the useful part. Rows carrying an offer are held back to
- *     last — an offer means a decision is pending, however long it has sat.
+ *     last — an offer means a decision is pending, however long it has sat —
+ *     and an accepted row after even those, in this rung and the one before:
+ *     it is what that decision is weighed against.
  *  4. Only then, rows themselves, from the stalest end, counted into the
- *     omission note so the model knows the picture is partial.
+ *     omission note so the model knows the picture is partial. An accepted row
+ *     goes only when nothing else is left to drop.
  *
  * Returns rows with shed details emptied and shed summaries nulled, so the
  * renderer stays unchanged.
@@ -482,6 +521,10 @@ export function fitPipelineToBudget(
 				(a, z) =>
 					// The current application first: its full history is in another block.
 					Number(z.r.isCurrent) - Number(a.r.isCurrent) ||
+					// An accepted job last of all: it is what every offer is weighed
+					// against, and its details are where the conditions for that live.
+					// It is also, by the time anything else is open, the stalest row.
+					Number(isAccepted(a.r)) - Number(isAccepted(z.r)) ||
 					// Then anything without an offer, since an offer means a live decision.
 					Number(!!a.r.offer) - Number(!!z.r.offer) ||
 					// Then stalest down. An unknown age sorts last: it is a weak signal,
@@ -508,13 +551,15 @@ export function fitPipelineToBudget(
 	}
 	const shedIn = (rs: PipelineRow[]) => rs.filter((r) => shedRows.has(r)).length;
 
-	// Rung 3 — drop rows from the stale end. `rows` arrives sorted current-first
-	// then most-recently-active, so the last droppable row is the stalest.
+	// Rung 3 — drop rows from the stale end. `rows` arrives in `pipelineOrder`,
+	// so the last droppable row is the stalest.
 	//
 	// A current row is never dropped, and that is enforced here rather than left
 	// to the caller's sort order: losing it would not just omit a row, it would
 	// flip the framing above to "the applicant is looking at a list of these",
-	// which on an application page is simply false.
+	// which on an application page is simply false. An accepted row goes only
+	// once nothing else can: without it every offer left in the table is
+	// compared against nothing.
 	//
 	// The condition prices the CURRENT state, not the state after another drop.
 	// Dropping the first row is what makes the omission note appear, so asking
@@ -524,7 +569,11 @@ export function fitPipelineToBudget(
 	let omitted = 0;
 	while (kept.length > 1 && cost(kept, omitted, shedIn(kept)) > budgetChars) {
 		let last = kept.length - 1;
-		while (last >= 0 && kept[last].isCurrent) last--;
+		while (last >= 0 && (kept[last].isCurrent || isAccepted(kept[last]))) last--;
+		if (last < 0) {
+			last = kept.length - 1;
+			while (last >= 0 && kept[last].isCurrent) last--;
+		}
 		if (last < 0) break;
 		kept = [...kept.slice(0, last), ...kept.slice(last + 1)];
 		omitted++;
@@ -683,10 +732,12 @@ export async function loadPipelineRows(
 		}
 	});
 
-	// Finished applications are excluded: they grow without bound and dilute
-	// "what am I working on". The current one is kept even if finished — the
-	// user is looking at it, so a table that omits it reads as a bug.
-	const live = rows.filter((a) => !isFinishedStatus(a.status) || a.id === currentApplicationId);
+	// Rejected and withdrawn applications are excluded: they grow without bound
+	// and dilute "what am I working on". An accepted one is kept — it is the
+	// baseline the others are weighed against, see isComparedStatus — and so is
+	// the current one whatever its status: the user is looking at it, so a table
+	// that omits it reads as a bug.
+	const live = rows.filter((a) => isComparedStatus(a.status) || a.id === currentApplicationId);
 	// The count of what the filter dropped is returned, not swallowed. Excluding
 	// them is right — see the comment above — but doing it SILENTLY is what let
 	// "what patterns come up across my rejected applications?" be answered with
@@ -782,12 +833,7 @@ export async function loadPipelineRows(
 		}
 	}
 
-	// Current first, then most recently active — so a long pipeline is
-	// truncated from its stalest end rather than arbitrarily.
-	built.sort(
-		(x, y) =>
-			Number(y.isCurrent) - Number(x.isCurrent) || (x.daysInStage ?? 1e9) - (y.daysInStage ?? 1e9)
-	);
+	built.sort(pipelineOrder);
 
 	return { rows: built, finished };
 }

@@ -58,6 +58,22 @@ export function isFinishedStatus(status: string): boolean {
 	return finishedStatuses.includes(status);
 }
 
+/**
+ * Whether an application belongs in the comparison: the pipeline table the
+ * assistant sees on every page, and the summaries that feed it.
+ *
+ * Everything still in play, plus what they ACCEPTED. A job they have taken is
+ * not history while they are still applying elsewhere: it is the baseline every
+ * other offer is weighed against, and the conditions they wrote down about it —
+ * a walk-away number, say — are about exactly that. Left out as "finished", it
+ * could be compared against from its own page only, which is the one page where
+ * nobody asks. Rejected and withdrawn stay out: they grow without bound and say
+ * nothing about what to do next.
+ */
+export function isComparedStatus(status: string): boolean {
+	return !isFinishedStatus(status) || status === 'accepted';
+}
+
 export function getStepperPhase(status: string): string {
 	if (finishedStatuses.includes(status)) return 'result';
 	if (status === 'preparing' || status === 'sent') return 'applying';

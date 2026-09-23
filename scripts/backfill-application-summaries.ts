@@ -33,7 +33,7 @@ import { dbDirect as db } from '$lib/server/db';
 import { asc, isNull, not, or, sql } from 'drizzle-orm';
 import { application_records, applications } from '$lib/server/db/schema';
 import { CONTRACT_PREFIX, summarizeApplication } from '$lib/server/ai-chat/application-summary';
-import { isFinishedStatus } from '$lib/application-status';
+import { isComparedStatus } from '$lib/application-status';
 import { MIN_ENTRIES_FOR_SUMMARY } from '$lib/application-records';
 
 const APPLY = process.argv.includes('--apply');
@@ -66,15 +66,16 @@ async function main() {
 		.groupBy(applications.id, applications.profile_id, applications.status)
 		.orderBy(asc(applications.id));
 
-	// Finished applications are excluded from the spine, so summarising them
-	// would be paying for a line nothing renders.
+	// Only what the spine renders: summarising a rejected or withdrawn one would
+	// be paying for a line nothing shows. The same rule as the spine itself, so
+	// the two cannot drift — an accepted application is in both.
 	const eligible = rows.filter(
-		(r) => Number(r.entries) >= MIN_ENTRIES_FOR_SUMMARY && !isFinishedStatus(r.status)
+		(r) => Number(r.entries) >= MIN_ENTRIES_FOR_SUMMARY && isComparedStatus(r.status)
 	);
 
 	console.log(
 		`${rows.length} application(s) not on the current extraction (${CONTRACT_PREFIX}); ` +
-			`${eligible.length} eligible (>= ${MIN_ENTRIES_FOR_SUMMARY} entries, not finished).`
+			`${eligible.length} eligible (>= ${MIN_ENTRIES_FOR_SUMMARY} entries, in play or accepted).`
 	);
 
 	if (!APPLY) {

@@ -5,6 +5,8 @@ import {
 	defaultActionByStep,
 	getQuickStatusActions,
 	getStepperPhase,
+	isComparedStatus,
+	isFinishedStatus,
 	stageRanks,
 	statusOptions,
 	stepsByPhase
@@ -127,5 +129,23 @@ describe('the phase action lists', () => {
 				}
 			}
 		}
+	});
+});
+
+// The comparison the assistant reads on every page — and the summaries that feed
+// it — keeps what is in play and what they accepted. A job they have taken is the
+// baseline for every other offer, so leaving it out as "finished" hid the terms
+// they had set against it everywhere but its own page.
+describe('the compared statuses', () => {
+	it('keep every status still in play', () => {
+		for (const { value } of statusOptions) {
+			if (!isFinishedStatus(value)) expect(isComparedStatus(value), value).toBe(true);
+		}
+	});
+
+	it('keep an accepted application, and leave out the rest of the finished ones', () => {
+		expect(isComparedStatus('accepted')).toBe(true);
+		expect(isComparedStatus('rejected')).toBe(false);
+		expect(isComparedStatus('withdrawn')).toBe(false);
 	});
 });
