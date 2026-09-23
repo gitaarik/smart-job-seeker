@@ -53,6 +53,7 @@ import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/r
 import { targetingFor } from '$lib/server/mcp/entities';
 import { isTextCapability } from './text-version-capabilities';
 import { isTextCommitCapability } from './text-commit-capabilities';
+import { isReorderCapability } from './reorder-capabilities';
 import { MATCH_CONFIG_CAPABILITY_NAMES } from './match-config-capability';
 import { DIRECTIVE_CAPABILITY_NAMES, DIRECTIVES_PAGE } from './directive-capability';
 
@@ -162,8 +163,14 @@ function isDirectiveCapability(capability: Capability): boolean {
 
 function entityCapabilities(): Capability[] {
 	const generated = new Set<string>(PROFILE_CAPABILITY_NAMES);
+	// A reorder is MCP-only: no page offers it, so naming it here would promise
+	// the chat a verb it is never given. See `reorder-capabilities.ts`.
 	return (Object.keys(CAPABILITIES) as Capability[]).filter(
-		(c) => !generated.has(c) && !isTextCapability(c) && !isTextCommitCapability(c)
+		(c) =>
+			!generated.has(c) &&
+			!isTextCapability(c) &&
+			!isTextCommitCapability(c) &&
+			!isReorderCapability(c)
 	);
 }
 

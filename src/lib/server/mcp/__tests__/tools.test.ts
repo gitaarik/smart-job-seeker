@@ -124,6 +124,19 @@ describe('how a write names its row', () => {
 		}
 	});
 
+	it('makes a reorder name no entry, only the order, and say it needs approving', () => {
+		// The section is the target, so there is no row to name; the order is the
+		// whole call, as ids.
+		const tool = byName.get('reorder_skill');
+		expect(tool).toBeDefined();
+		expect(tool!.inputSchema.required).toEqual(['profile_id', 'skill.order', 'rationale']);
+		expect(tool!.inputSchema.properties?.['skill.order']).toEqual({
+			type: 'array',
+			items: { type: 'integer' }
+		});
+		expect(tool!.annotations.title).toContain('needs your approval');
+	});
+
 	it('still makes an add to an application name the application', () => {
 		// Every other add takes no id at all, because the key says which profile.
 		// An application is not implied by anything.

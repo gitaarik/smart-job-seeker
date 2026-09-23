@@ -1084,6 +1084,28 @@ describe('tier 2 — nothing is written', () => {
 		expect(result.structuredContent?.applied).toBe(false);
 	});
 
+	it('never writes a reorder, and keeps the order an undo would need', async () => {
+		const result = await callTool(
+			'reorder_work_experience',
+			{
+				profile_id: 12,
+				'work_experience.order': [6, 5],
+				rationale: 'They want the internship first.'
+			},
+			KEY
+		);
+
+		expect(executeCapability).not.toHaveBeenCalled();
+		expect(result.structuredContent?.applied).toBe(false);
+		expect(createRequest).toHaveBeenCalledWith(
+			expect.objectContaining({
+				capability: 'reorder_work_experience',
+				fields: { 'work_experience.order': [6, 5] },
+				previous: expect.objectContaining({ order: [5, 6] })
+			})
+		);
+	});
+
 	it('never writes a show either, and keeps the tags an undo would need', async () => {
 		// Row 6 is hidden and re-admitted on one version. Approving puts it back;
 		// undoing that has to restore the version tag too, so the request records
@@ -1177,6 +1199,20 @@ describe('refusals the agent can act on', () => {
 
 		expect(result.isError).toBe(true);
 		expect(result.content[0].text).toContain('is not hidden');
+		expect(createRequest).not.toHaveBeenCalled();
+	});
+
+	it('refuses a reorder that leaves part of the section out', async () => {
+		// Row 6 is missing. Queued, it would be a card to read and reject; refused
+		// here, the agent is told which entry to add.
+		const result = await callTool(
+			'reorder_work_experience',
+			{ profile_id: 12, 'work_experience.order': [5], rationale: 'x' },
+			KEY
+		);
+
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('Missing: 6');
 		expect(createRequest).not.toHaveBeenCalled();
 	});
 

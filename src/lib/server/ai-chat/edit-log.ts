@@ -16,11 +16,11 @@
  * the same write: an edit is `edit_work_experience` whether a person or a
  * proposal made it, and undoes identically either way.
  *
- * Two things only a person can do have no capability to name them — deleting
- * and reordering. They are resolved here through `UI_ACTIONS`, which is
- * deliberately not part of the registry: that list is what an agent is offered,
- * and a `delete_*` in it is a delete tool. Showing something hidden was a third
- * until it became `show_*`.
+ * One thing only a person can do has no capability to name it — deleting. It is
+ * resolved here through `UI_ACTIONS`, which is deliberately not part of the
+ * registry: that list is what an agent is offered, and a `delete_*` in it is a
+ * delete tool. Showing something hidden and reordering a section were the other
+ * two until they became `show_*` and `reorder_*`.
  *
  * ## Recording is not optional, and it is not the caller's job
  *
@@ -214,8 +214,8 @@ export async function recordEdit(opts: {
  * What an entry means: its title, and the undo if it has one.
  *
  * Two registries, because two things write here. A capability where the action
- * is something the assistant could also have done, and `UI_ACTIONS` for the
- * two verbs only a person has. Null for neither — a capability can be removed
+ * is something an agent could also have done, and `UI_ACTIONS` for the one
+ * verb only a person has. Null for neither — a capability can be removed
  * from the registry while its history stays (`hide_language` was one for a day),
  * and the row still describes what happened; it just cannot be named or undone.
  */

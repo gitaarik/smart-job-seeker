@@ -89,6 +89,23 @@ describe('coerceField', () => {
 		});
 	});
 
+	describe('intArray', () => {
+		it('keeps a list of ids, and reads quoted ones as the numbers they are', () => {
+			expect(coerceField('intArray', [3, '1', ' 2 '])).toEqual({ ok: true, value: [3, 1, 2] });
+		});
+
+		it('splits a comma-joined string, skipping empty places rather than reading them as 0', () => {
+			expect(coerceField('intArray', '3, 1, 2')).toEqual({ ok: true, value: [3, 1, 2] });
+			expect(coerceField('intArray', '3,,2')).toEqual({ ok: true, value: [3, 2] });
+		});
+
+		it('refuses an item that is not an id, rather than dropping it', () => {
+			// Dropped, the rest would be written as the whole order.
+			expect(coerceField('intArray', [3, 'Python', 2]).ok).toBe(false);
+			expect(coerceField('intArray', [3, 1.5]).ok).toBe(false);
+		});
+	});
+
 	describe('string', () => {
 		it('trims', () => {
 			expect(coerceField('string', '  hi  ')).toEqual({ ok: true, value: 'hi' });

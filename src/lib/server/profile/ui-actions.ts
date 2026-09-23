@@ -1,43 +1,38 @@
 /**
- * The two things a person can do to a section row that the assistant cannot.
+ * The one thing a person can do to a section row that no agent can: delete it.
  *
  * The change log resolves an entry to a title and an undo through the
  * capability registry, which is the right answer for the writes that ARE
  * capabilities — a UI edit and a chat edit both land as `edit_work_experience`
- * and both undo the same way. Two do not:
+ * and both undo the same way. A delete does not: the registry has no delete on
+ * purpose. The assistant proposes `hide_*` instead, because a proposal card is
+ * accepted in one click and a delete is not recoverable from a before-image.
  *
- *  - **delete** — the registry has no delete on purpose. The assistant proposes
- *    `hide_*` instead, because a proposal card is accepted in one click and a
- *    delete is not recoverable from a before-image.
- *  - **reorder** — a section-wide write with no single row to name.
+ * There were three until 2026-09-23. Showing a hidden entry became `show_*`,
+ * and reordering a section became `reorder_*` (MCP only, see
+ * `reorder-capabilities.ts`). A person's un-hide and reorder are still logged
+ * under those names by `write.ts`, so they resolve to the same title and undo
+ * as an agent's, the way an edit does.
  *
- * Showing a hidden entry was the third until it became `show_*` in the
- * registry (2026-09-23). `setRowVisible(…, true)` still logs it under that name
- * when a person does it, so their un-hide and an agent's resolve to the same
- * title and undo, the way an edit does.
- *
- * They are declared here rather than added to `PROFILE_CAPABILITIES` because
- * that list is what the assistant and the MCP server are offered. A
+ * It is declared here rather than added to `PROFILE_CAPABILITIES` because that
+ * list is what the assistant and the MCP server are offered. A
  * `delete_work_experience` in it is a delete tool for an agent, which is the
  * one thing the hide-not-delete design refused.
  *
- * ## What can be put back
+ * ## Why it cannot be put back
  *
- * A reorder can: the before-image is the order it was in, and writing it back
- * is the same call that changed it.
- *
- * A delete cannot, and this is the file that says so out loud rather than
- * leaving the feed to discover it. A work-experience project owns its
- * technologies and any documents attached to it through `ON DELETE CASCADE`, so
- * what a re-create would restore is a row with the same text and none of the
- * things that hung off it. The editors ask before deleting for exactly this
- * reason; the history records it and offers the page instead.
+ * This is the file that says so out loud rather than leaving the feed to
+ * discover it. A work-experience project owns its technologies and any
+ * documents attached to it through `ON DELETE CASCADE`, so what a re-create
+ * would restore is a row with the same text and none of the things that hung
+ * off it. The editors ask before deleting for exactly this reason; the history
+ * records it and offers the page instead.
  */
 
 import { PROFILE_RESOURCE_NAMES, PROFILE_RESOURCES, type ProfileResourceName } from './resources';
-import { reorderRows, type ProfileActor } from './write';
+import type { ProfileActor } from './write';
 
-export type UiActionVerb = 'delete' | 'reorder';
+export type UiActionVerb = 'delete';
 
 export type UiAction = `${UiActionVerb}_${ProfileResourceName}`;
 
@@ -62,27 +57,8 @@ export interface UiActionDef {
  * implicitly `any` — which is exactly the check this file most wants.
  */
 function defsFor(name: ProfileResourceName): Array<[UiAction, UiActionDef]> {
-	const { label, title } = PROFILE_RESOURCES[name];
-
-	const remove: UiActionDef = { title: `Delete this ${label}` };
-
-	const reorder: UiActionDef = {
-		title: `Reorder ${title.toLowerCase()}`,
-		revert: async (_target, previous, actor) => {
-			const order = Array.isArray(previous.order) ? (previous.order as number[]) : [];
-			// An empty order is not a no-op worth attempting: `reorderRows` would
-			// write nothing and report success, and the history would mark the entry
-			// undone having done nothing.
-			if (order.length === 0) throw new Error('That order was not recorded.');
-			const result = await reorderRows(name, actor, order);
-			if (!result.ok) throw new Error(result.error);
-		}
-	};
-
-	return [
-		[`delete_${name}`, remove],
-		[`reorder_${name}`, reorder]
-	];
+	const { label } = PROFILE_RESOURCES[name];
+	return [[`delete_${name}`, { title: `Delete this ${label}` }]];
 }
 
 export const UI_ACTIONS: Record<UiAction, UiActionDef> = Object.fromEntries(

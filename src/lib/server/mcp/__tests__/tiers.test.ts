@@ -120,6 +120,19 @@ describe('tierForWrite', () => {
 		).toBe(2);
 	});
 
+	it('asks before any reorder, though it removes nothing', () => {
+		// Fills no blank and replaces no text, which every generic rule below would
+		// read as additive. It rewrites an arrangement made by hand.
+		expect(
+			tierForWrite({
+				capability: 'reorder_skill',
+				current: {},
+				fields: { 'skill.order': [3, 1, 2] },
+				...noBurst
+			}).tier
+		).toBe(2);
+	});
+
 	it('asks before a show exactly as before a hide', () => {
 		// The reverse switch is not the hidden add's case: that entry was never on
 		// a document, and this one was taken off on purpose.

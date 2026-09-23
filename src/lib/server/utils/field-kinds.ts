@@ -28,7 +28,12 @@
 
 import { z } from 'zod';
 
-export type FieldKind = 'string' | 'int' | 'date' | 'boolean' | 'stringArray';
+/**
+ * `intArray` is a list of row ids, which only an agent sends: the one field that
+ * names rows rather than describing one (a section's new order). No form posts
+ * it, and no model in the chat is offered it.
+ */
+export type FieldKind = 'string' | 'int' | 'date' | 'boolean' | 'stringArray' | 'intArray';
 
 /**
  * The types sent to an LLM provider.
@@ -49,7 +54,8 @@ export const WIRE_TYPES: Record<FieldKind, z.ZodTypeAny> = {
 	// "on". Both land here rather than in a type error; `coerceField` decides
 	// what they mean.
 	boolean: z.union([z.boolean(), z.string()]).nullish(),
-	stringArray: z.union([z.array(z.string()), z.string()]).nullish()
+	stringArray: z.union([z.array(z.string()), z.string()]).nullish(),
+	intArray: z.union([z.array(z.union([z.number(), z.string()])), z.string()]).nullish()
 };
 
 export type CoerceResult = { ok: true; value: unknown } | { ok: false; error: string };
@@ -109,6 +115,23 @@ export function coerceField(kind: FieldKind, value: unknown): CoerceResult {
 		const list = Array.isArray(value) ? value : String(value).split(',');
 		const cleaned = list.map((item) => String(item).trim()).filter(Boolean);
 		return { ok: true, value: cleaned.length > 0 ? cleaned : null };
+	}
+
+	if (kind === 'intArray') {
+		// Strict per item, unlike a string list: an id that is not a whole number
+		// names no row, and dropping it would reorder the rest as though it had
+		// never been sent.
+		const list = Array.isArray(value) ? value : String(value).split(',');
+		const ids: number[] = [];
+		for (const item of list) {
+			const text = typeof item === 'number' ? null : String(item).trim();
+			// `Number('')` is 0, which is an id-shaped nothing: "3,,2" is two ids.
+			if (text === '') continue;
+			const n = text === null ? item : Number(text);
+			if (!Number.isInteger(n)) return { ok: false, error: `"${String(item)}" is not an id` };
+			ids.push(n as number);
+		}
+		return { ok: true, value: ids.length > 0 ? ids : null };
 	}
 
 	const trimmed = String(value).trim();

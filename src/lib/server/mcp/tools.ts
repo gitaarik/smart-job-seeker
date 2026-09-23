@@ -40,6 +40,10 @@
 import { APP_AREAS } from '$lib/server/ai-chat/ability-manifest';
 import { CAPABILITIES, type Capability } from '$lib/server/ai-chat/capabilities';
 import { PROFILE_CAPABILITY_NAMES } from '$lib/server/ai-chat/profile-capabilities';
+import {
+	isReorderCapability,
+	REORDER_CAPABILITY_NAMES
+} from '$lib/server/ai-chat/reorder-capabilities';
 import { APPLICATION_COLLECTION, ENTITY_CAPABILITY_NAMES, targetingFor } from './entities';
 import { isTextCommitCapability } from '$lib/server/ai-chat/text-commit-capabilities';
 import {
@@ -161,14 +165,16 @@ const CREATE_CAPABILITY_NAMES: Capability[] = [
  * ones are hand-written and reach a job or an application through
  * `entities.ts`; the create ones make a row that did not exist. Nothing in the
  * registry is held back now — which is worth stating, because for one release
- * something was.
+ * something was. The reorder verbs go the other way: they are here and in no
+ * chat scope, because a person in the app drags (see `reorder-capabilities.ts`).
  */
 export const MCP_CAPABILITIES: Capability[] = [
 	...PROFILE_CAPABILITY_NAMES,
 	...ENTITY_CAPABILITY_NAMES,
 	...CREATE_CAPABILITY_NAMES,
 	...MATCH_CONFIG_CAPABILITY_NAMES,
-	...DIRECTIVE_CAPABILITY_NAMES
+	...DIRECTIVE_CAPABILITY_NAMES,
+	...REORDER_CAPABILITY_NAMES
 ];
 
 // The four version verbs are already in ENTITY_CAPABILITY_NAMES: they name a
@@ -189,6 +195,8 @@ function jsonType(kind: FieldKind): Record<string, unknown> {
 			return { type: 'integer' };
 		case 'stringArray':
 			return { type: 'array', items: { type: 'string' } };
+		case 'intArray':
+			return { type: 'array', items: { type: 'integer' } };
 		case 'date':
 			return { type: 'string', description: 'YYYY-MM-DD' };
 		case 'boolean':
@@ -388,11 +396,12 @@ function writeTool(capability: Capability, parents?: string, languages: string[]
 	const isAdd = capability.startsWith('add_');
 	const isSwitch = capability.startsWith('hide_') || capability.startsWith('show_');
 	// The verbs that are Tier 2 whatever the row holds: a hide or a show moves an
-	// entry off or back onto every document, and a commit replaces a text the
-	// applicant is going to send. Every other capability's tier depends on values
-	// nobody has read yet at `tools/list` time, so only these can promise it in a
-	// title.
-	const alwaysAsks = isSwitch || isTextCommitCapability(capability);
+	// entry off or back onto every document, a reorder rearranges a list the
+	// applicant ordered by hand, and a commit replaces a text they are going to
+	// send. Every other capability's tier depends on values nobody has read yet
+	// at `tools/list` time, so only these can promise it in a title.
+	const alwaysAsks =
+		isSwitch || isReorderCapability(capability) || isTextCommitCapability(capability);
 
 	const properties: Record<string, unknown> = { profile_id: PROFILE_ID_PROPERTY };
 	const required = ['profile_id'];
@@ -859,8 +868,8 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
 			`${documents ? ', and list_documents for the evidence behind it' : ''}. ` +
 			`Read what the question needs before answering it.`,
 
-		`Changes that overwrite something the applicant wrote, and changes that hide ` +
-			`an entry or show a hidden one, are not applied by you. They are recorded ` +
+		`Changes that overwrite something the applicant wrote, hide an entry, show a ` +
+			`hidden one or reorder a section are not applied by you. They are recorded ` +
 			`and the applicant approves them in their own app. There is no tool that ` +
 			`approves one, and asking again will not help — say it is waiting, give ` +
 			`them the "review_at" URL that came back with it, and carry on. That link ` +
