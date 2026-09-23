@@ -48,6 +48,7 @@ import {
 	renderCapabilityPrompt
 } from '../src/lib/server/ai-chat/capabilities';
 import { EMPTY_CONTEXT_VARIABLES } from '../src/routes/api/ai/agent/placeholders';
+import { llmCache } from '../src/lib/server/llm';
 
 interface EvalQuestion {
 	q: string;
@@ -154,6 +155,13 @@ async function ask(item: EvalQuestion, n: number) {
 }
 
 const questions = readQuestions();
+
+// Every question has to reach the model. The app's response cache is keyed on
+// the prompt, so asking the same question twice to sample it — or re-running
+// a set within the hour — would otherwise answer from the first run and read
+// as a model that never varies. Found sampling one question three times:
+// three identical replies, two of them copies.
+llmCache.disable();
 const items = ONLY ? [questions[ONLY - 1]] : questions;
 let n = ONLY ?? 1;
 for (const item of items) {
