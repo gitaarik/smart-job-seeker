@@ -5,6 +5,41 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.0] - 2026-09-23
+
+82 commits since v0.32.1.
+
+### Added
+
+- AI chat tracks accepted applications in pipeline comparisons and preserves applicant decisions in summaries
+- Assistant can see applicant-provided directives, salary expectations, and now adjust match preferences
+- Changes feed shows request IDs, indicates which request approved each change, links to affected rows, and supports undo for text creations and adds
+- Scraper can apply filters to controls not visible in accessibility tree; offers direct LLM extraction fallback when templated extraction fails
+- LLM writing and extraction calls now failover to alternate provider if primary fails
+- Matcher reports when scoring is paused rather than just stopping
+- Skills golden set for validating extraction accuracy against hand-labelled data
+
+### Changed
+
+- Removed salary_expectations table; salary now handled as part of profile data
+- Completed TypeScript migration: eliminated all production `any` types for full type safety
+- Retired eslint linting ratchet; backlog reduced to zero
+- Activities preserve proposal title, type, and date when edited by assistant
+- Response cache can be disabled by measuring scripts for accurate baseline scoring
+
+### Fixed
+
+- Gemini LLM compatibility: response schema now passes zod 4.5+ validation
+- Resume tailoring applies correct language version for all export targets
+- Translated CVs tagged with their own language in metadata
+- E2E tests correctly expect directives on pages with limited permission grants
+- Golden baseline matcher handles independent repeats correctly
+- Scraper reports dropped filters caught at match time instead of as missing
+- Failed AI calls no longer mask as successful
+- Resume imports coerce numeric fields correctly
+- Dead /discover links repointed; navigation links resolved to typed routes
+- Security updates: 20 alerts cleared in @xmldom and 8 other dependencies
+
 ## [0.32.1] - 2026-09-18
 
 13 commits since v0.32.0.
