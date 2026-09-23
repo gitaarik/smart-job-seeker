@@ -442,6 +442,10 @@ this key is bound to, which every other tool requires.
 A count of zero means the applicant has nothing in that section yet — not that
 you cannot see it.
 
+It also returns the applicant's standing directives: what they have asked to be
+kept to in anything written or proposed for them, one statement per topic, in
+their own words. The list is complete; an empty one means they have stated none.
+
 This covers the profile only. Their jobs and their applications are reached
 through list_jobs and list_applications, which take the same profile_id.`,
 		inputSchema: { type: 'object', properties: {}, required: [], additionalProperties: false },
@@ -812,7 +816,8 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
 		`This server reads and changes one job applicant's own record — the profile ` +
 			`this key is bound to, the jobs they have collected and the applications ` +
 			`they have sent. Call list_profile_sections first: it returns the profile ` +
-			`id every other tool needs.`,
+			`id every other tool needs, and the standing directives the applicant has ` +
+			`recorded for anything written or proposed for them.`,
 
 		`Jobs are the exception to "their own": a posting is shared between everyone ` +
 			`it matched, so only the ones they typed in by hand can be changed, and only ` +

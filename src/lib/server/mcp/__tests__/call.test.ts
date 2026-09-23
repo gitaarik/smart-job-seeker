@@ -89,6 +89,19 @@ vi.mock('$lib/server/ai-chat/profile-edit-manifest', () => ({
 
 vi.mock('$lib/server/ai-chat/edit-log', () => ({ readEditLog: () => Promise.resolve([]) }));
 
+// The standing directives list_profile_sections returns. The read alone is
+// stubbed; the topic list and labels stay real, since they are what the text
+// is built from.
+let directiveRows: unknown[] = [];
+let directivesFail = false;
+vi.mock('$lib/server/ai-chat/directives', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/ai-chat/directives')>()),
+	loadDirectives: async () => {
+		if (directivesFail) throw new Error('connection reset');
+		return directiveRows;
+	}
+}));
+
 /**
  * A job this profile entered by hand, and one it only imported. The second is
  * the case the whole scope question is about: readable, and refused by every
@@ -348,6 +361,8 @@ function withReadScope(readScope: 'record' | 'documents') {
 }
 
 beforeEach(() => {
+	directiveRows = [];
+	directivesFail = false;
 	vi.clearAllMocks();
 	recentDirectWrites.mockResolvedValue(0);
 	createRequest.mockResolvedValue(101);
@@ -401,6 +416,80 @@ describe('profile scoping', () => {
 
 		expect(result.isError).toBeUndefined();
 		expect(result.structuredContent?.profile_id).toBe(12);
+	});
+});
+
+describe('standing directives on list_profile_sections', () => {
+	// An outside agent has no page and no system prompt of ours: this is the one
+	// call it reliably makes first, so it is where it learns how the applicant
+	// wants to be represented.
+	it('returns them as data, in their words, with the topics nothing was said about', async () => {
+		directiveRows = [
+			{
+				id: 3,
+				topic: 'writing_style',
+				statement: "Don't ever open a cover letter with 'I am excited to'.",
+				appliesTo: ['chat', 'letters', 'answers'],
+				statedAt: new Date('2026-09-23T07:00:00Z'),
+				source: 'chat'
+			}
+		];
+
+		const result = await callTool('list_profile_sections', {}, KEY);
+		const text = result.content[0].text;
+
+		expect(result.structuredContent?.directives).toEqual([
+			{
+				topic: 'writing_style',
+				label: 'Writing style',
+				statement: "Don't ever open a cover letter with 'I am excited to'.",
+				stated_at: '2026-09-23T07:00:00.000Z'
+			}
+		]);
+		expect(text).toContain(
+			"- Writing style: Don't ever open a cover letter with 'I am excited to'. (stated 2026-09-23)"
+		);
+		expect(text).toContain('every one the applicant has recorded');
+		expect(text).toContain('Nothing recorded on: domains, positioning, personal details');
+		expect(text).toContain('edit_directives');
+	});
+
+	it('ships the data and not the chat framing', async () => {
+		// "follow these without being reminded" is written to our own assistant;
+		// shipped outward it would be orders injected into someone else's agent.
+		directiveRows = [
+			{
+				id: 1,
+				topic: 'domains',
+				statement: 'No defence work.',
+				appliesTo: ['chat'],
+				statedAt: new Date('2026-09-23T07:00:00Z'),
+				source: 'chat'
+			}
+		];
+		const text = (await callTool('list_profile_sections', {}, KEY)).content[0].text;
+		expect(text).not.toContain('without being reminded');
+		expect(text).not.toContain('What they have told you to keep to');
+	});
+
+	it('says there are none when there are none', async () => {
+		const result = await callTool('list_profile_sections', {}, KEY);
+		expect(result.structuredContent?.directives).toEqual([]);
+		expect(result.content[0].text).toContain('Standing directives: none recorded.');
+	});
+
+	it('says a failed read failed, and still hands back the profile', async () => {
+		directivesFail = true;
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		const result = await callTool('list_profile_sections', {}, KEY);
+
+		expect(result.isError).toBeUndefined();
+		expect(result.structuredContent?.profile_id).toBe(12);
+		// null, not [] — "could not read" and "none" are different answers.
+		expect(result.structuredContent?.directives).toBeNull();
+		expect(result.content[0].text).toContain('could not be read just now');
+		expect(result.content[0].text).not.toContain('none recorded');
 	});
 });
 

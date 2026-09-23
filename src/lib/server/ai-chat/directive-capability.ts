@@ -126,8 +126,8 @@ ${topicLines}
 
 Propose one when they state a preference meant to outlast this conversation
 ("from now on", "never", "always", "remember that"), not for a one-off request
-about the thing in front of them. Until they apply the card nothing is stored,
-so never say you have noted it or will remember it: say you have proposed it.
+about the thing in front of them. Until they approve it nothing is stored, so
+never say you have noted it or will remember it: say you have proposed it.
 
 Write what THEY said, in their words and at their scope. No advice, examples or
 reasons of your own: a directive that says more than they did is a rule they

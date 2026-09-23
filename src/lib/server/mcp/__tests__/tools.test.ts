@@ -296,6 +296,9 @@ describe('what the client is told before it sees a tool', () => {
 			const instructions = instructionsFor(scope);
 			expect(instructions, scope).toContain('list_profile_sections');
 			expect(instructions, scope).toContain('Do not invent history');
+			// The first call is also where an agent learns how the applicant wants
+			// to be represented, and it can only look for what it was told exists.
+			expect(instructions, scope).toContain('standing directives');
 		}
 	});
 });

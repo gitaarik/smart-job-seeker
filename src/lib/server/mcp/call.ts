@@ -46,6 +46,13 @@ import {
 	type ProposedChange
 } from '$lib/server/ai-chat/capabilities';
 import { profileEditCounts } from '$lib/server/ai-chat/profile-edit-manifest';
+import {
+	DIRECTIVE_TOPIC_NAMES,
+	DIRECTIVE_TOPICS,
+	type Directive,
+	loadDirectives,
+	topicLabel
+} from '$lib/server/ai-chat/directives';
 import { describeChangeLines } from '$lib/server/ai-chat/proposal-summary';
 import {
 	assistantFields,
@@ -146,8 +153,76 @@ function profileMismatch(args: Args, key: VerifiedMcpKey): ToolResult | null {
  * Reads
  * ------------------------------------------------------------------ */
 
+/**
+ * The standing directives, for the tool every agent is told to call first.
+ *
+ * An outside agent has no system prompt of ours and no page: it starts every
+ * session knowing nothing about how the applicant wants to be represented, and
+ * this is the one call it reliably makes. So the directives ride here.
+ *
+ * As data, not as the chat's block (see the load / format / text split in
+ * generation-context.ts). That text is written to our own assistant — "follow
+ * these without being reminded", "keep the CV out of it" — and shipped to
+ * someone else's model it would be orders injected into their agent. What goes
+ * out is what the applicant said and when, plus the plain facts an agent needs
+ * to read it right: that the list is the whole list, and which topics are empty.
+ *
+ * A failed read is said to be one. For a data caller "none" and "could not
+ * read" are different answers, and conflating them is how an agent would come
+ * to write the very thing a directive forbids.
+ */
+async function directivesForAgents(
+	profileId: number
+): Promise<{ text: string; data: Record<string, unknown>[] | null }> {
+	let live: Directive[];
+	try {
+		live = await loadDirectives(profileId);
+	} catch (e) {
+		console.error('[mcp] could not read the standing directives', e);
+		return {
+			text:
+				'Their standing directives could not be read just now. They may have some: ' +
+				'do not assume there are none.',
+			data: null
+		};
+	}
+
+	if (live.length === 0) {
+		return {
+			text: 'Standing directives: none recorded. The applicant has not stated any.',
+			data: []
+		};
+	}
+
+	const held = new Set(live.map((d) => d.topic));
+	const silent = DIRECTIVE_TOPIC_NAMES.filter((topic) => !held.has(topic)).map((topic) =>
+		DIRECTIVE_TOPICS[topic].label.toLowerCase()
+	);
+	const lines = live.map(
+		(d) =>
+			`- ${topicLabel(d.topic)}: ${d.statement} (stated ${d.statedAt.toISOString().slice(0, 10)})`
+	);
+
+	return {
+		text:
+			`Standing directives — every one the applicant has recorded, in their words, for ` +
+			`anything written or proposed for them:\n${lines.join('\n')}` +
+			(silent.length > 0 ? `\nNothing recorded on: ${silent.join(', ')}.` : '') +
+			`\nChanging one is edit_directives, which the applicant approves.`,
+		data: live.map((d) => ({
+			topic: d.topic,
+			label: topicLabel(d.topic),
+			statement: d.statement,
+			stated_at: d.statedAt.toISOString()
+		}))
+	};
+}
+
 async function listProfileSections(key: VerifiedMcpKey): Promise<ToolResult> {
-	const counts = await profileEditCounts(key.profileId);
+	const [counts, directives] = await Promise.all([
+		profileEditCounts(key.profileId),
+		directivesForAgents(key.profileId)
+	]);
 	const sections = counts.map(({ name, rows }) => {
 		const resource = PROFILE_RESOURCES[name];
 		return {
@@ -170,8 +245,16 @@ async function listProfileSections(key: VerifiedMcpKey): Promise<ToolResult> {
 			`reads: ${key.readScope}).\n\n` +
 			`${lines.join('\n')}\n\n` +
 			`Their jobs and applications are separate: list_jobs and list_applications, ` +
-			`same profile_id.`,
-		{ profile_id: key.profileId, scope: key.scope, read_scope: key.readScope, sections }
+			`same profile_id.\n\n` +
+			directives.text,
+		{
+			profile_id: key.profileId,
+			scope: key.scope,
+			read_scope: key.readScope,
+			sections,
+			// null when they could not be read, which is not the same as [].
+			directives: directives.data
+		}
 	);
 }
 
