@@ -218,7 +218,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Apply theme, and the language of a public document (`/p/[slug]/resume?lang=nl`).
 	// Its load sets `documentLocale`, and loads run inside resolve, so it is read
 	// per chunk rather than here. Without it a Dutch CV told screen readers it was
-	// English, and so did its PDF export, which prints this same page.
+	// English. Its PDF export prints this page but untagged, so it carries no
+	// language either way.
 	const theme = getThemeFromRequest(event.request);
 
 	return await resolve(event, {
