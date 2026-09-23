@@ -9,7 +9,7 @@
  * - **Tier 1 — additive and reversible.** Adding an entry, or filling a field
  *   that was empty. Direct write for a `write`-scoped key, logged, and the undo
  *   handle comes back in the tool result.
- * - **Tier 2 — overwrites of authored prose, hides, anything bulk.** The tool
+ * - **Tier 2 — overwrites of authored prose, hides and shows, anything bulk.** The tool
  *   does not write. It records a request and returns a deep link; a human
  *   approves in the app.
  *
@@ -128,6 +128,14 @@ export function tierForWrite(opts: {
 		return { tier: 2, reason: 'Hiding an entry takes it off every document.' };
 	}
 
+	// And a show puts one back on all of them, over a hide somebody chose. It
+	// is not the add's case below: that entry has never been on a document, and
+	// this one was taken off on purpose. Asked about exactly as the hide was, so
+	// neither direction of the switch is cheaper for an agent than the other.
+	if (capability.startsWith('show_')) {
+		return { tier: 2, reason: 'Showing a hidden entry puts it back on every document.' };
+	}
+
 	if (recentDirectWrites >= DIRECT_WRITE_BURST) {
 		return {
 			tier: 2,
@@ -215,7 +223,7 @@ export function annotationsFor(capability: Capability): ToolAnnotations {
 	return {
 		title: CAPABILITIES[capability].title,
 		readOnlyHint: false,
-		// An add creates a new row and destroys nothing; an edit or a hide
+		// An add creates a new row and destroys nothing; an edit, a hide or a show
 		// overwrites something that may have been authored by hand.
 		destructiveHint: !isAdd,
 		// Repeating an edit with the same fields lands the same values. Repeating

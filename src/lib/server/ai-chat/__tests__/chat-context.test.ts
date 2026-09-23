@@ -41,12 +41,19 @@ vi.mock('$lib/server/profile/write', () => ({
 }));
 
 import {
+	admissionOrder,
 	CHAT_BUDGET_CHARS,
 	normalizeRouteId,
 	resolveChatContext,
 	scopeForRoute,
 	tieredCapabilities
 } from '../chat-context';
+import {
+	fitMatchedCapabilities,
+	renderCapabilityPrompt,
+	type Capability,
+	type LiveCapability
+} from '../capabilities';
 
 beforeEach(() => {
 	applicationRow = null;
@@ -55,6 +62,69 @@ beforeEach(() => {
 	sectionRows = {};
 	mockResolveCapabilities.mockReset();
 	mockResolveCapabilities.mockResolvedValue([]);
+});
+
+describe('admissionOrder', () => {
+	const live = (capability: string, ids = [1, 2]): LiveCapability => ({
+		capability: capability as Capability,
+		targets: ids.map((id) => ({ id, label: `Row ${id}` })),
+		current: null
+	});
+	const names = (groups: LiveCapability[][]) => groups.map((g) => g.map((c) => c.capability));
+
+	it('admits every section’s own verbs before any show', () => {
+		// A child section before a matched one, as before; the shows of both after
+		// all of it, each alone.
+		const children = [
+			[
+				live('edit_work_experience_achievement'),
+				live('add_work_experience_achievement'),
+				live('hide_work_experience_achievement'),
+				live('show_work_experience_achievement', [2])
+			]
+		];
+		const matched = [
+			[live('edit_skill'), live('add_skill'), live('hide_skill'), live('show_skill', [2])]
+		];
+
+		expect(names(admissionOrder(children, matched))).toEqual([
+			[
+				'edit_work_experience_achievement',
+				'add_work_experience_achievement',
+				'hide_work_experience_achievement'
+			],
+			['edit_skill', 'add_skill', 'hide_skill'],
+			['show_work_experience_achievement'],
+			['show_skill']
+		]);
+	});
+
+	it('leaves a section with nothing hidden exactly as it was', () => {
+		// The common case: show is not live, so there is nothing to split off.
+		const matched = [[live('edit_skill'), live('add_skill'), live('hide_skill')]];
+		expect(names(admissionOrder([], matched))).toEqual([['edit_skill', 'add_skill', 'hide_skill']]);
+	});
+
+	it('drops a show that does not fit without taking its section with it', () => {
+		// What it is for. Inside the group, a list of hidden skills too long to fit
+		// would have dropped edit, add and hide along with it.
+		const granted = [live('edit_language', [9])];
+		const section = [live('edit_skill'), live('add_skill'), live('hide_skill')];
+		const budget = renderCapabilityPrompt([...granted, ...section]).length;
+
+		const admitted = fitMatchedCapabilities(
+			granted,
+			admissionOrder([], [[...section, live('show_skill', [3, 4, 5])]]),
+			budget
+		);
+
+		expect(admitted.map((c) => c.capability)).toEqual([
+			'edit_language',
+			'edit_skill',
+			'add_skill',
+			'hide_skill'
+		]);
+	});
 });
 
 describe('normalizeRouteId', () => {
@@ -574,14 +644,16 @@ describe('profile section pages', () => {
 		expect(scope.capabilities).toContain(capability);
 	});
 
-	it.each(SECTIONS)('%s offers all three verbs on its own row', (route, resource) => {
+	it.each(SECTIONS)('%s offers every verb on its own row', (route, resource) => {
 		// Adding is the same request from a list and from one entry ("add another
 		// role"), and hiding follows the same targeting as editing, so a page that
-		// can reach a section can do all three to it.
+		// can reach a section can do all of it. Showing is granted here too and
+		// narrows itself at resolve time, to a row that is hidden.
 		expect(tieredCapabilities(scopeForRoute(route)).subject).toEqual([
 			`edit_${resource}`,
 			`add_${resource}`,
-			`hide_${resource}`
+			`hide_${resource}`,
+			`show_${resource}`
 		]);
 	});
 
@@ -592,7 +664,7 @@ describe('profile section pages', () => {
 	});
 
 	it('makes only the page’s own section unconditional', () => {
-		// The three verbs of ONE section are the promise the page makes, and
+		// The verbs of ONE section are the promise the page makes, and
 		// nothing may drop them. Anything else it grants is a child collection
 		// that lives on the same page — a role's projects — and those go in the
 		// tier that gives way, because a busy role’s five sections measure 30k
@@ -601,7 +673,7 @@ describe('profile section pages', () => {
 		for (const [route, resource] of SECTIONS) {
 			const { subject, children } = tieredCapabilities(scopeForRoute(route));
 
-			expect(subject, route).toHaveLength(3);
+			expect(subject, route).toHaveLength(4);
 			expect(
 				subject.every((c) => c.endsWith(`_${resource}`)),
 				`${route}: ${subject.join(', ')}`
@@ -633,9 +705,11 @@ describe('profile section pages', () => {
 			'edit_work_experience_achievement',
 			'add_work_experience_achievement',
 			'hide_work_experience_achievement',
+			'show_work_experience_achievement',
 			'edit_work_experience_technology',
 			'add_work_experience_technology',
 			'hide_work_experience_technology',
+			'show_work_experience_technology',
 			'edit_work_experience_project_technology',
 			'add_work_experience_project_technology'
 		]);
@@ -681,9 +755,11 @@ describe('profile section pages', () => {
 			'edit_skill',
 			'add_skill',
 			'hide_skill',
+			'show_skill',
 			'edit_skill_category',
 			'add_skill_category',
-			'hide_skill_category'
+			'hide_skill_category',
+			'show_skill_category'
 		]);
 		// A list page: no row comes from the URL, so the model names one.
 		expect(scope.entity).toBeNull();
@@ -703,7 +779,12 @@ describe('profile section pages', () => {
 		// The page's own section, resolved against the row the URL named. Its child
 		// collections are resolved in their own calls — see the tiering above.
 		expect(mockResolveCapabilities).toHaveBeenCalledWith(
-			['edit_work_experience', 'add_work_experience', 'hide_work_experience'],
+			[
+				'edit_work_experience',
+				'add_work_experience',
+				'hide_work_experience',
+				'show_work_experience'
+			],
 			{ type: 'profile_section', resource: 'work_experience', id: 5 },
 			expect.objectContaining({ profileId: 12 }),
 			expect.anything()
@@ -724,7 +805,12 @@ describe('profile section pages', () => {
 		expect(context.entity).toBeUndefined();
 		expect(capabilities).toEqual([]);
 		expect(mockResolveCapabilities).toHaveBeenCalledWith(
-			['edit_work_experience', 'add_work_experience', 'hide_work_experience'],
+			[
+				'edit_work_experience',
+				'add_work_experience',
+				'hide_work_experience',
+				'show_work_experience'
+			],
 			null,
 			expect.anything(),
 			expect.anything()

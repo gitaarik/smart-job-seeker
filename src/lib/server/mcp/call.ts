@@ -956,6 +956,20 @@ async function resolveTarget(
 	const candidates = (await def.resolveMany?.(null, actor)) ?? [];
 	const target = candidates.find((row) => row.id === entryId);
 	if (!target) {
+		// A row the section has and this verb does not offer. Only `show_*` narrows
+		// its targets that way, to the rows that are hidden, and "there is no
+		// entry" would send an agent looking for an id it already holds.
+		const section = sectionFor(capability);
+		if (capability.startsWith('show_') && section) {
+			const rows = await readOwnedRows(section, { profileId: actor.profileId });
+			if (rows.some((row) => Number(row.id) === entryId)) {
+				return {
+					error:
+						`Entry ${entryId} in ${section} is not hidden: it already prints on their ` +
+						`documents, so there is nothing to show. No request was made.`
+				};
+			}
+		}
 		return {
 			error:
 				`There is no entry ${entryId} in ${sectionFor(capability)} on this profile. ` +

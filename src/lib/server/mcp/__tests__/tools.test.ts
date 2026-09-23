@@ -112,6 +112,18 @@ describe('how a write names its row', () => {
 		}
 	});
 
+	it('makes a hide and a show name the entry, and say they need approving', () => {
+		// Neither carries a field, so the entry is the whole call; and both are
+		// Tier 2 whatever the row holds, which is the one tier a title can promise
+		// before anyone has said which row.
+		for (const capability of ['hide_skill', 'show_skill']) {
+			const tool = byName.get(capability);
+			expect(tool, capability).toBeDefined();
+			expect(tool!.inputSchema.required).toEqual(['profile_id', 'entry_id', 'rationale']);
+			expect(tool!.annotations.title, capability).toContain('needs your approval');
+		}
+	});
+
 	it('still makes an add to an application name the application', () => {
 		// Every other add takes no id at all, because the key says which profile.
 		// An application is not implied by anything.

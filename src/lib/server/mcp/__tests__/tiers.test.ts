@@ -120,6 +120,19 @@ describe('tierForWrite', () => {
 		).toBe(2);
 	});
 
+	it('asks before a show exactly as before a hide', () => {
+		// The reverse switch is not the hidden add's case: that entry was never on
+		// a document, and this one was taken off on purpose.
+		expect(
+			tierForWrite({
+				capability: 'show_work_experience',
+				current: {},
+				fields: {},
+				...noBurst
+			}).tier
+		).toBe(2);
+	});
+
 	describe('a capability that grades its own write', () => {
 		// `status` is notNull with a default, so the overwrite rule below would
 		// grade every move through the pipeline Tier 2 — putting "they invited me

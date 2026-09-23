@@ -186,13 +186,13 @@ beforeEach(() => {
 
 describe('the generated set', () => {
 	it('covers every declared section, with the verbs that section has', () => {
-		// Not sections x 3. `hide` is not universal — see HIDEABLE_RESOURCES:
-		// languages, references, certificates and highlights are rendered on a
-		// document with no filter between them and the page, so there is nothing
-		// to write that would take one off. Asserting the product was what let the
-		// first version ship a hide that changed nothing.
+		// Not sections x 4. `hide` and `show` are not universal — see
+		// HIDEABLE_RESOURCES: languages, references, certificates and highlights
+		// are rendered on a document with no filter between them and the page, so
+		// there is nothing to write that would take one off. Asserting the product
+		// was what let the first version ship a hide that changed nothing.
 		expect(PROFILE_CAPABILITY_NAMES).toHaveLength(
-			Object.keys(PROFILE_RESOURCES).length * 2 + HIDEABLE_RESOURCES.length
+			Object.keys(PROFILE_RESOURCES).length * 2 + HIDEABLE_RESOURCES.length * 2
 		);
 	});
 
@@ -206,6 +206,14 @@ describe('the generated set', () => {
 		const hideable = (HIDEABLE_RESOURCES as readonly string[]).includes(resource);
 		expect(PROFILE_CAPABILITIES[`hide_${resource}` as never] !== undefined).toBe(hideable);
 	});
+
+	it.each(Object.keys(PROFILE_RESOURCES))(
+		'%s can be shown again only if it can be hidden',
+		(resource) => {
+			const hideable = (HIDEABLE_RESOURCES as readonly string[]).includes(resource);
+			expect(PROFILE_CAPABILITIES[`show_${resource}` as never] !== undefined).toBe(hideable);
+		}
+	);
 
 	it('offers hide only where the row carries the tags that hiding writes', () => {
 		// The other half of the declaration. HIDEABLE_RESOURCES is declared rather
@@ -663,6 +671,136 @@ describe('hiding an entry', () => {
 			id: 5,
 			tags: ['senior']
 		});
+	});
+
+	it('gives its card a change to accept', () => {
+		// A card lists changes by field and a hide has none, so it used to read
+		// "Nothing left to change" with no Apply button under it.
+		expect(hide.describeChanges?.({}, {})).toEqual([
+			{ field: 'documents', label: 'CVs and exports', from: 'Shown', to: 'Hidden' }
+		]);
+	});
+});
+
+/**
+ * A hidden entry put back on the documents.
+ *
+ * The reverse of the block above, and deliberately not its mirror in targeting:
+ * a hide can be offered on any row, where a show is offered only on rows that
+ * are hidden. That narrowing is what keeps it out of a turn that has nothing to
+ * show, on a prompt block with little room left.
+ */
+describe('showing an entry again', () => {
+	const show = PROFILE_CAPABILITIES.show_work_experience;
+	const HIDDEN = ['!resume', '!cv'];
+	const PAGE = { type: 'profile_section', resource: 'work_experience', id: 5 } as const;
+
+	it('carries no fields — naming the row is the whole proposal', () => {
+		expect(Object.keys(show.fields)).toEqual([]);
+	});
+
+	it('offers the page’s own row only while it is hidden', async () => {
+		state.row = { id: 5, profile_id: 12, position: 'Engineer', name: 'Acme', tags: HIDDEN };
+		expect(await show.resolve(PAGE, ACTOR)).toEqual({ id: 5, label: 'Engineer at Acme' });
+
+		state.row = { id: 5, profile_id: 12, position: 'Engineer', name: 'Acme', tags: null };
+		expect(await show.resolve(PAGE, ACTOR)).toBeNull();
+	});
+
+	it('lists only the hidden rows', async () => {
+		state.rows = [
+			{ id: 1, profile_id: 12, position: 'Engineer', name: 'Acme', tags: HIDDEN },
+			{ id: 2, profile_id: 12, position: 'Lead', name: 'Initech', tags: null },
+			// Off the resume only: it still prints on the CV, so it is not hidden.
+			{ id: 3, profile_id: 12, position: 'Intern', name: 'Globex', tags: ['!resume'] }
+		];
+
+		expect(await show.resolveMany?.(null, ACTOR)).toEqual([{ id: 1, label: 'Engineer at Acme' }]);
+	});
+
+	it('does not fall through to every hidden row from a visible row’s page', async () => {
+		// `resolve` found nothing because the page's role is visible. The list it
+		// falls back to is narrowed to that same role, so a hidden role elsewhere
+		// on the profile is not offered on a page about a different one.
+		state.row = { id: 5, profile_id: 12, position: 'Engineer', name: 'Acme', tags: null };
+		state.rows = [
+			{ id: 5, profile_id: 12, position: 'Engineer', name: 'Acme', tags: null },
+			{ id: 6, profile_id: 12, position: 'Lead', name: 'Initech', tags: HIDDEN }
+		];
+
+		expect(await show.resolveMany?.(PAGE, ACTOR)).toEqual([]);
+	});
+
+	it('shows rather than rewriting the tags itself', async () => {
+		await show.apply({ id: 5, label: 'Acme' }, {}, {}, ACTOR);
+
+		expect(state.visibility[0]).toMatchObject({
+			resource: 'work_experience',
+			actor: { profileId: 12 },
+			id: 5,
+			visible: true
+		});
+		expect(state.updates).toHaveLength(0);
+	});
+
+	it('throws when the write refuses, like the other verbs', async () => {
+		state.updateResult = { ok: false, reason: 'not_found', error: 'Role not found' };
+		await expect(show.apply({ id: 5, label: 'x' }, {}, {}, ACTOR)).rejects.toThrow(
+			/show_work_experience refused at write time/
+		);
+	});
+
+	it('records the tags it is about to overwrite', async () => {
+		state.row = { id: 5, profile_id: 12, position: 'Engineer', tags: ['!resume', '!cv', 'senior'] };
+
+		expect(await show.beforeImage?.({ id: 5, label: 'Acme' }, {}, ACTOR, {})).toEqual({
+			tags: ['!resume', '!cv', 'senior']
+		});
+	});
+
+	it('undoes by restoring the exact tag array', async () => {
+		// Not "hide it again": a hide writes both exclusions, and the entry may
+		// have been off only one of them before it was shown.
+		await show.revert?.({ id: 5, label: 'Acme' }, { tags: ['!resume', 'senior'] }, ACTOR);
+
+		expect(state.tagWrites[0]).toMatchObject({
+			resource: 'work_experience',
+			id: 5,
+			tags: ['!resume', 'senior']
+		});
+	});
+
+	it('reads a missing tag array as no tags at all', async () => {
+		await show.revert?.({ id: 5, label: 'Acme' }, {}, ACTOR);
+
+		expect(state.tagWrites[0]).toMatchObject({ id: 5, tags: null });
+	});
+
+	it('reports a refused undo as a thrown error, so the log does not mark it undone', async () => {
+		state.updateResult = { ok: false, error: 'Access denied' };
+
+		await expect(show.revert?.({ id: 5, label: 'Acme' }, { tags: [] }, ACTOR)).rejects.toThrow(
+			/show_work_experience could not be undone: Access denied/
+		);
+	});
+
+	it('gives its card a change to accept', () => {
+		expect(show.describeChanges?.({}, {})).toEqual([
+			{ field: 'documents', label: 'CVs and exports', from: 'Hidden', to: 'Shown' }
+		]);
+	});
+
+	it('says not to propose it unasked', () => {
+		expect(show.contract).toContain('asked for it');
+	});
+
+	it('warns that a child hidden on its own stays hidden, only where there are children', () => {
+		// A role owns achievements and technologies that hide separately; a skill
+		// owns nothing, and the sentence would describe something that cannot
+		// happen to it.
+		expect(show.contract).toContain('hidden on its own stays hidden');
+		expect(PROFILE_CAPABILITIES.show_skill_category.contract).toContain('hidden on its own');
+		expect(PROFILE_CAPABILITIES.show_skill.contract).not.toContain('hidden on its own');
 	});
 });
 

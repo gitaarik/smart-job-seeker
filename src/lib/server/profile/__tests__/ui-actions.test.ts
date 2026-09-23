@@ -1,28 +1,24 @@
 /**
- * The three verbs a person has that the assistant does not.
+ * The two verbs a person has that the assistant does not.
  *
  * The point of the file under test is that they are NOT capabilities — the
  * registry is what an agent is offered, and a `delete_*` in it is a delete tool.
- * So what is worth pinning is that they exist for every section, that the two
- * with an undo write it through the same layer the original write used, and that
- * deletion has none.
+ * So what is worth pinning is that they exist for every section, that a
+ * reorder's undo writes through the same layer the original write used, and that
+ * deletion has none. Showing a hidden entry used to be a third; its undo is
+ * tested with `show_*` in the registry now.
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const state = {
 	reordered: [] as { resource: string; order: number[] }[],
-	tagged: [] as { resource: string; id: number; tags: string[] | null }[],
 	result: { ok: true } as { ok: boolean; error?: string }
 };
 
 vi.mock('../write', () => ({
 	reorderRows: (resource: string, _actor: unknown, order: number[]) => {
 		state.reordered.push({ resource, order });
-		return Promise.resolve(state.result);
-	},
-	setRowTags: (resource: string, _actor: unknown, id: number, tags: string[] | null) => {
-		state.tagged.push({ resource, id, tags });
 		return Promise.resolve(state.result);
 	}
 }));
@@ -35,27 +31,34 @@ const TARGET = { id: 5, label: 'Engineer at Acme' };
 
 beforeEach(() => {
 	state.reordered = [];
-	state.tagged = [];
 	state.result = { ok: true };
 });
 
 describe('the registry', () => {
-	it('covers every section with all three verbs', () => {
+	it('covers every section with both verbs', () => {
 		for (const name of PROFILE_RESOURCE_NAMES) {
-			for (const verb of ['delete', 'reorder', 'show']) {
+			for (const verb of ['delete', 'reorder']) {
 				expect(isUiAction(`${verb}_${name}`), `${verb}_${name}`).toBe(true);
 			}
 		}
 	});
 
 	it('is not a capability, so nothing offers these to an agent', async () => {
-		// The whole reason this file exists rather than three more entries in
+		// The whole reason this file exists rather than more entries in
 		// PROFILE_CAPABILITIES, which is the list the chat and MCP surfaces are
 		// built from.
 		const { PROFILE_CAPABILITY_NAMES } = await import('$lib/server/ai-chat/profile-capabilities');
 		for (const name of Object.keys(UI_ACTIONS)) {
 			expect(PROFILE_CAPABILITY_NAMES as string[]).not.toContain(name);
 		}
+	});
+
+	it('leaves showing to the registry, where a page’s un-hide and an agent’s meet', async () => {
+		// `setRowVisible(…, true)` logs `show_<section>` whoever called it. With
+		// the name in both lists the history would pick one by lookup order.
+		const { PROFILE_CAPABILITY_NAMES } = await import('$lib/server/ai-chat/profile-capabilities');
+		expect(isUiAction('show_work_experience')).toBe(false);
+		expect(PROFILE_CAPABILITY_NAMES as string[]).toContain('show_work_experience');
 	});
 
 	it('gives every action a title a person could read', () => {
@@ -86,30 +89,5 @@ describe('what can be put back', () => {
 			/not recorded/
 		);
 		expect(state.reordered).toHaveLength(0);
-	});
-
-	it('restores the exact tags a hide replaced', async () => {
-		// Exact, not derived: un-hiding through `setProfileOnly` is a merge and
-		// would lift a `!resume` the applicant set by hand along with the one the
-		// hide wrote. See setRowTags.
-		await UI_ACTIONS.show_work_experience.revert?.(TARGET, { tags: ['!resume', 'senior'] }, ACTOR);
-
-		expect(state.tagged).toEqual([
-			{ resource: 'work_experience', id: 5, tags: ['!resume', 'senior'] }
-		]);
-	});
-
-	it('reads a missing tag array as no tags at all', async () => {
-		await UI_ACTIONS.show_work_experience.revert?.(TARGET, {}, ACTOR);
-
-		expect(state.tagged).toEqual([{ resource: 'work_experience', id: 5, tags: null }]);
-	});
-
-	it('reports a refused write as a thrown error, so the log does not mark it undone', async () => {
-		state.result = { ok: false, error: 'Access denied' };
-
-		await expect(
-			UI_ACTIONS.show_work_experience.revert?.(TARGET, { tags: [] }, ACTOR)
-		).rejects.toThrow('Access denied');
 	});
 });

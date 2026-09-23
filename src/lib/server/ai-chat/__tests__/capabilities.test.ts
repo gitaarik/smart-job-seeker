@@ -1402,6 +1402,9 @@ describe('the registry as a whole', () => {
 				targets: [{ id: 12, label: 'their work experience' }],
 				current: { existing: roles.map((r) => r.label) }
 			},
+			// No `show_work_experience`: a matched section's show is admitted after
+			// every section's own verbs, in a group of its own (see
+			// `admissionOrder`), so it never decides whether this group fits.
 			{ capability: 'hide_work_experience', targets: roles, current: null }
 		];
 
@@ -1465,6 +1468,9 @@ describe('the registry as a whole', () => {
 				targets: [{ id: 12, label: 'their skills' }],
 				current: SKILL_INVENTORY
 			},
+			// Without `show_skill`, for the reason on the work-history case above:
+			// with a full list of hidden skills it costs another ~2,400 characters,
+			// which is why it waits behind the section rather than inside it.
 			{ capability: 'hide_skill', targets: skills, current: null, omitted: 53 }
 		];
 
@@ -1474,15 +1480,17 @@ describe('the registry as a whole', () => {
 	});
 
 	it('keeps the skills page inside the budget with both its sections live', () => {
-		// /profile/skills grants six capabilities — three verbs over skills and
-		// three over the groups — because two sections share one page. Nothing
+		// /profile/skills grants eight capabilities — four verbs over skills and
+		// four over the groups — because two sections share one page. Nothing
 		// drops a page's OWN capabilities, so this one is not protected by
-		// fitMatchedCapabilities and has to fit on its own.
+		// fitMatchedCapabilities and has to fit on its own, with show listing a
+		// full page of hidden skills that shares no row with edit's list.
 		const skills = Array.from({ length: TARGET_LIST_CAP }, (_, i) => ({
 			id: i + 1,
 			label: `PostgreSQL ${i} — Backend (TypeScript / React)`
 		}));
 		const groups = SKILL_GROUPS.map((label, i) => ({ id: 100 + i, label }));
+		const hidden = skills.map((skill) => ({ ...skill, id: skill.id + 1000 }));
 
 		const live: LiveCapability[] = [
 			{ capability: 'edit_skill', targets: skills, current: null, omitted: 53 },
@@ -1492,13 +1500,15 @@ describe('the registry as a whole', () => {
 				current: SKILL_INVENTORY
 			},
 			{ capability: 'hide_skill', targets: skills, current: null, omitted: 53 },
+			{ capability: 'show_skill', targets: hidden, current: null, omitted: 20 },
 			{ capability: 'edit_skill_category', targets: groups, current: null },
 			{
 				capability: 'add_skill_category',
 				targets: [{ id: 1, label: 'their skill categories' }],
 				current: { existing: SKILL_GROUPS }
 			},
-			{ capability: 'hide_skill_category', targets: groups, current: null }
+			{ capability: 'hide_skill_category', targets: groups, current: null },
+			{ capability: 'show_skill_category', targets: groups.slice(1), current: null }
 		];
 
 		expect(renderCapabilityPrompt(live).length).toBeLessThanOrEqual(CAPABILITY_PROMPT_BUDGET_CHARS);
@@ -1506,10 +1516,10 @@ describe('the registry as a whole', () => {
 
 	describe('fitMatchedCapabilities', () => {
 		// Real capability names, so the sizes measured are the sizes shipped.
-		// `hide` only exists for the three sections that can be hidden, so a
-		// section's group is two or three entries depending on which it is.
+		// `hide` and `show` only exist for the sections that can be hidden, so a
+		// section's group is two or four entries depending on which it is.
 		const section = (resource: string): LiveCapability[] =>
-			(['edit', 'add', 'hide'] as const)
+			(['edit', 'add', 'hide', 'show'] as const)
 				.map((verb) => `${verb}_${resource}` as Capability)
 				.filter((capability) => capability in CAPABILITIES)
 				.map((capability) => ({

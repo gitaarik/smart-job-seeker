@@ -131,11 +131,13 @@ const PROFILE_SCOPE: RouteScope = {
  * Every verb a section has, wherever it is reachable. Adding an entry is the
  * same request from a list and from one entry's page ("add another role"), and
  * hiding follows the same targeting as editing — so nothing here grants a
- * subset of what the section supports.
+ * subset of what the section supports. Showing is granted the same way and
+ * narrows itself: it resolves only rows that are hidden, so on a page with none
+ * it is simply not live.
  *
- * What it supports is not uniform: four sections have no `hide`, because
- * nothing filters them on a document. That is `verbsFor`'s to know, not this
- * table's.
+ * What it supports is not uniform: four sections have no `hide` or `show`,
+ * because nothing filters them on a document. That is `verbsFor`'s to know, not
+ * this table's.
  */
 function sectionCapabilities(resource: ProfileResourceName): Capability[] {
 	return verbsFor(resource) as Capability[];
@@ -682,6 +684,35 @@ function grantedSections(scope: RouteScope): ProfileResourceName[] {
 }
 
 /**
+ * The optional groups, in the order the budget admits them: every section's own
+ * verbs first, children before matched ones, and each section's `show_*` after
+ * all of them, in groups of its own.
+ *
+ * Show is the one verb split off its section. A section's verbs are otherwise
+ * one offer (see `fitMatchedCapabilities`), but show lists a SECOND set of rows,
+ * the hidden ones, where edit and hide share one list, so it can cost a full
+ * list on its own. Kept inside the group, it made a matched skills section
+ * 2,351 characters too big to sit beside an application page with 25 hidden
+ * skills to list, and the whole section would have dropped out of the turn —
+ * edit, add and hide lost for the sake of the rarest of the four. Last, it
+ * takes only room nothing else wanted. Where it is the page's own subject it is
+ * never split off: a hidden role's page offers to show that role, whatever else
+ * the turn holds.
+ */
+export function admissionOrder(
+	children: LiveCapability[][],
+	matched: LiveCapability[][]
+): LiveCapability[][] {
+	const isShow = (live: LiveCapability) => live.capability.startsWith('show_');
+	const main = (groups: LiveCapability[][]) =>
+		groups.map((group) => group.filter((live) => !isShow(live))).filter((g) => g.length > 0);
+	const shows = (groups: LiveCapability[][]) =>
+		groups.flatMap((group) => group.filter(isShow).map((live) => [live]));
+
+	return [...main(children), ...main(matched), ...shows(children), ...shows(matched)];
+}
+
+/**
  * Sections the message named but the page does not offer, resolved the same way
  * the page's own are — `resolveCapabilities` against an entity, so a matched row
  * behaves exactly like a row reached by URL and gets its current values.
@@ -795,9 +826,13 @@ export async function resolveChatContext(opts: {
 	// because they are on this page too and a role's projects belong to the turn
 	// far more than a section the message merely brushed against. The rest of
 	// the profile is last, and gives way first — page bias has to survive a
-	// message that names three sections.
+	// message that names three sections. See `admissionOrder` for the one verb
+	// that waits behind all of it.
 	const matched = await matchedCapabilities(scope, [...(opts.history ?? []), opts.message], actor);
-	const capabilities = fitMatchedCapabilities([...subject, ...always], [...children, ...matched]);
+	const capabilities = fitMatchedCapabilities(
+		[...subject, ...always],
+		admissionOrder(children, matched)
+	);
 
 	return {
 		capabilityRecord: buildCapabilityRecord({

@@ -84,11 +84,17 @@ import {
 	writeTranslations
 } from '$lib/server/profile/section-translations';
 import { localeLabel } from '$lib/resume-translations';
-import type { CapabilityActor, CapabilityDef, CapabilityTarget } from './capabilities';
+import { isHiddenFromDocuments } from '$lib/profile-visibility';
+import type {
+	CapabilityActor,
+	CapabilityDef,
+	CapabilityTarget,
+	ProposedChange
+} from './capabilities';
 import type { ContextEntity } from './generation-context';
 
 /**
- * The three verbs, and why deletion is not one of them.
+ * The four verbs, and why deletion is not one of them.
  *
  * `edit` and `add` are ordinary. Removal is not: nothing a capability writes is
  * recoverable from the before-image, and a work experience owns achievements,
@@ -109,20 +115,30 @@ import type { ContextEntity } from './generation-context';
  * only `published` rows. They do not; nothing filters on that column at all.
  * See HIDEABLE_RESOURCES, which also records why only three of the seven
  * sections have this verb.
+ *
+ * `show` is hide run backwards, and it was UI-only for no recorded reason: the
+ * write, its history entry and its undo all existed, and only a person could
+ * reach them. An agent that tidied a skill list could hide half of it and had
+ * to hand the other half back as clicks. It asks for approval exactly as a hide
+ * does (see `tiers.ts`), because a hidden entry is a choice somebody made.
  */
 export type ProfileCapability =
-	`edit_${ProfileResourceName}` | `add_${ProfileResourceName}` | `hide_${HideableResourceName}`;
+	| `edit_${ProfileResourceName}`
+	| `add_${ProfileResourceName}`
+	| `hide_${HideableResourceName}`
+	| `show_${HideableResourceName}`;
 
-export const PROFILE_VERBS = ['edit', 'add', 'hide'] as const;
+export const PROFILE_VERBS = ['edit', 'add', 'hide', 'show'] as const;
 
 /**
  * Every verb this section actually has.
  *
- * `hide` is not universal: four of the seven sections are rendered on documents
- * with no filter between them and the page, so there is nothing to write that
- * would take an entry off one. See HIDEABLE_RESOURCES. Offering the verb anyway
- * is how the first version of this shipped a write that changed nothing while
- * the assistant reported the entry hidden.
+ * `hide` and `show` are not universal: four of the seven sections are rendered
+ * on documents with no filter between them and the page, so there is nothing to
+ * write that would take an entry off one, or put it back. See
+ * HIDEABLE_RESOURCES. Offering the verb anyway is how the first version of this
+ * shipped a write that changed nothing while the assistant reported the entry
+ * hidden.
  */
 export function verbsFor(resource: ProfileResourceName): ProfileCapability[] {
 	const verbs: ProfileCapability[] = [
@@ -130,7 +146,8 @@ export function verbsFor(resource: ProfileResourceName): ProfileCapability[] {
 		`add_${resource}` as ProfileCapability
 	];
 	if ((HIDEABLE_RESOURCES as readonly string[]).includes(resource)) {
-		verbs.push(`hide_${resource as HideableResourceName}`);
+		const name = resource as HideableResourceName;
+		verbs.push(`hide_${name}`, `show_${name}`);
 	}
 	return verbs;
 }
@@ -1230,27 +1247,9 @@ there is nothing to write.`,
 
 		validate: () => ({ ok: true }),
 
-		/**
-		 * The row's document tags, which is what hiding rewrites.
-		 *
-		 * The default before-image is the old values of the fields being written,
-		 * and this capability writes no fields — so without this the log would
-		 * record `{}` and an undo would have nothing to put back. Recording the
-		 * whole array rather than "it was visible" is what lets the undo restore a
-		 * per-version tag the applicant set by hand alongside it.
-		 */
-		beforeImage: async (t, _current, actor) => {
-			const row = await readOwnedRow(name, { profileId: actor.profileId }, t.id);
-			return { tags: (row?.tags as string[] | null) ?? null };
-		},
+		describeChanges: () => documentsChange(false),
 
-		revert: async (t, previous, actor) => {
-			const tags = Array.isArray(previous.tags) ? (previous.tags as string[]) : null;
-			const result = await setRowTags(name, { profileId: actor.profileId }, t.id, tags);
-			if (!result.ok) {
-				throw new Error(`hide_${name} could not be undone: ${result.error}`);
-			}
-		},
+		...tagRestore(name, 'hide'),
 
 		apply: async (t, _proposed, _current, actor) => {
 			const result = await setRowVisible(name, { profileId: actor.profileId }, t.id, false);
@@ -1261,10 +1260,136 @@ there is nothing to write.`,
 	};
 }
 
+/**
+ * Put a hidden entry back on every document, reversibly.
+ *
+ * Offered only for rows that ARE hidden, on both surfaces, and that narrowing is
+ * the design rather than a filter on top of it. In the chat it is what makes
+ * the verb nearly free: a page about a visible row has nothing to show, so the
+ * verb drops out of the turn instead of adding a contract to a block that is
+ * ratcheted (the busiest role page had 949 characters left when this arrived),
+ * and a list of the hidden rows is short where the section's own list is every
+ * row. Over MCP the same narrowing turns "show this" on a visible entry into a
+ * refusal that says why, rather than a request somebody has to open to find it
+ * does nothing.
+ *
+ * A detail page offers its own row or nothing: `rowsFor` narrows the list to
+ * the row the page is about, so a visible role's page does not fall through to
+ * every hidden role on the profile. That row's values are already on the page,
+ * in the edit verb's state, so this prints one line rather than the row again.
+ *
+ * It lifts the `!resume` + `!cv` pair and nothing else (see `setProfileOnly`):
+ * an entry taken off the site stays off it, a version tag stays where it was,
+ * and a child hidden on its own stays hidden when its parent comes back.
+ */
+function showCapability(name: HideableResourceName): CapabilityDef {
+	const resource = PROFILE_RESOURCES[name];
+	const editor = editCapability(name);
+	const hidden = (row: SectionRow) => isHiddenFromDocuments(row.tags as string[] | null);
+
+	// Said only where it can happen: a section with hideable children.
+	const children = childSectionsOf(name).some((child) =>
+		(HIDEABLE_RESOURCES as readonly string[]).includes(child)
+	);
+
+	return {
+		title: `Show this ${resource.label} again`,
+
+		resolve: async (entity, actor) => {
+			if (entity?.type !== 'profile_section' || entity.resource !== name) return null;
+			const found = await target(name, entity.id, actor);
+			return found && hidden(found.row) ? found.target : null;
+		},
+
+		resolveMany: async (entity, actor) => {
+			const rows = await rowsFor(name, entity, actor);
+			return rows.filter(hidden).map((row) => targetFor(name, row));
+		},
+
+		authorize: editor.authorize,
+		current: editor.current,
+
+		fields: {},
+
+		contract: `You may propose showing one of their hidden ${resource.title.toLowerCase()} again.
+
+Showing puts it back on every CV and every export, undoing a hide. Only an entry
+that is hidden now can be shown. Somebody chose to hide it, so propose this only
+when they have asked for it, not because it looks useful to you.${
+			children ? ' Anything inside it that was hidden on its own stays hidden.' : ''
+		}
+
+This proposal carries no fields. Name the entry and say why in the rationale.`,
+
+		renderState: () => 'It is hidden now: it prints on no CV and no export.',
+
+		validate: () => ({ ok: true }),
+
+		describeChanges: () => documentsChange(true),
+
+		...tagRestore(name, 'show'),
+
+		apply: async (t, _proposed, _current, actor) => {
+			const result = await setRowVisible(name, { profileId: actor.profileId }, t.id, true);
+			if (!result.ok) {
+				throw new Error(`show_${name} refused at write time: ${result.error}`);
+			}
+		}
+	};
+}
+
+/**
+ * The before-image and undo of a hide or a show: the row's document tags.
+ *
+ * The default before-image is the old values of the fields being written, and
+ * neither verb writes a field — so without this the log would record `{}` and
+ * an undo would have nothing to put back. Recording the whole array rather than
+ * "it was visible" is what lets the undo restore a per-version tag the applicant
+ * set by hand alongside it; see `setRowTags` for why the undo is exact rather
+ * than the opposite verb.
+ */
+function tagRestore(
+	name: HideableResourceName,
+	verb: 'hide' | 'show'
+): Required<Pick<CapabilityDef, 'beforeImage' | 'revert'>> {
+	return {
+		beforeImage: async (t, _current, actor) => {
+			const row = await readOwnedRow(name, { profileId: actor.profileId }, t.id);
+			return { tags: (row?.tags as string[] | null) ?? null };
+		},
+
+		revert: async (t, previous, actor) => {
+			const tags = Array.isArray(previous.tags) ? (previous.tags as string[]) : null;
+			const result = await setRowTags(name, { profileId: actor.profileId }, t.id, tags);
+			if (!result.ok) {
+				throw new Error(`${verb}_${name} could not be undone: ${result.error}`);
+			}
+		}
+	};
+}
+
+/**
+ * What a hide or a show does, as the one line its card lists.
+ *
+ * A card lists a proposal's changes by field, and neither verb has a field: the
+ * tags that do it are the mechanism, not the change. So both cards listed
+ * nothing, read "Nothing left to change", and offered no Apply button, which
+ * left a hide the assistant proposed impossible to accept from the chat. This
+ * names the change the way the applicant sees it, on the card and on the
+ * approval page alike.
+ */
+function documentsChange(visible: boolean): ProposedChange[] {
+	const [from, to] = visible ? ['Hidden', 'Shown'] : ['Shown', 'Hidden'];
+	return [{ field: 'documents', label: 'CVs and exports', from, to }];
+}
+
 export const PROFILE_CAPABILITIES = Object.fromEntries([
 	...PROFILE_RESOURCE_NAMES.flatMap((name) => [
 		[`edit_${name}`, editCapability(name)],
 		[`add_${name}`, addCapability(name)]
 	]),
-	...HIDEABLE_RESOURCES.map((name) => [`hide_${name}`, hideCapability(name)])
+	...HIDEABLE_RESOURCES.flatMap((name) => [
+		[`hide_${name}`, hideCapability(name)],
+		[`show_${name}`, showCapability(name)]
+	])
 ]) as Record<ProfileCapability, CapabilityDef>;

@@ -386,12 +386,13 @@ function translationProperty(base: string, locale: string): Record<string, unkno
 function writeTool(capability: Capability, parents?: string, languages: string[] = []): McpTool {
 	const def = CAPABILITIES[capability];
 	const isAdd = capability.startsWith('add_');
-	const isHide = capability.startsWith('hide_');
-	// The two verbs that are Tier 2 whatever the row holds: a hide takes an entry
-	// off every document, and a commit replaces a text the applicant is going to
-	// send. Every other capability's tier depends on values nobody has read yet
-	// at `tools/list` time, so only these two can promise it in a title.
-	const alwaysAsks = isHide || isTextCommitCapability(capability);
+	const isSwitch = capability.startsWith('hide_') || capability.startsWith('show_');
+	// The verbs that are Tier 2 whatever the row holds: a hide or a show moves an
+	// entry off or back onto every document, and a commit replaces a text the
+	// applicant is going to send. Every other capability's tier depends on values
+	// nobody has read yet at `tools/list` time, so only these can promise it in a
+	// title.
+	const alwaysAsks = isSwitch || isTextCommitCapability(capability);
 
 	const properties: Record<string, unknown> = { profile_id: PROFILE_ID_PROPERTY };
 	const required = ['profile_id'];
@@ -448,8 +449,8 @@ function writeTool(capability: Capability, parents?: string, languages: string[]
 		},
 		annotations: {
 			...annotationsFor(capability),
-			// A hide writes nothing but tags, so an agent reading only the schema
-			// would see a tool with no fields and no clue what it does. A commit
+			// A hide or a show writes nothing but tags, so an agent reading only the
+			// schema would see a tool with no fields and no clue what it does. A commit
 			// writes one integer, which says even less about what it replaces.
 			title: alwaysAsks ? `${def.title} (needs your approval)` : def.title
 		}
@@ -489,7 +490,8 @@ Where the section can be hidden from, each entry also carries what it is
 currently doing on a document: "hidden" is true when it prints on no CV and no
 export — still counted for job matching, just off every document — and
 "versions" lists the versions it is re-admitted on despite that. An entry
-already hidden does not need hiding again. Where "hideable" is false the
+already hidden does not need hiding again, and only a hidden one can be shown
+again. Where "hideable" is false the
 section has no such control at all: every entry prints, and there is nothing
 to propose.`,
 		inputSchema: {
@@ -858,14 +860,14 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
 			`Read what the question needs before answering it.`,
 
 		`Changes that overwrite something the applicant wrote, and changes that hide ` +
-			`an entry, are not applied by you. They are recorded and the applicant ` +
-			`approves them in their own app. There is no tool that approves one, and ` +
-			`asking again will not help — say it is waiting, give them the "review_at" ` +
-			`URL that came back with it, and carry on. That link is the whole of what ` +
-			`they have to act on, and it is dropped most often when several proposals ` +
-			`are summarised at the end rather than reported as they happen. An entry ` +
-			`they want off their CVs from the start is not a hide: add it with its ` +
-			`"hidden" field, and it is written hidden.`,
+			`an entry or show a hidden one, are not applied by you. They are recorded ` +
+			`and the applicant approves them in their own app. There is no tool that ` +
+			`approves one, and asking again will not help — say it is waiting, give ` +
+			`them the "review_at" URL that came back with it, and carry on. That link ` +
+			`is the whole of what they have to act on, and it is dropped most often ` +
+			`when several proposals are summarised at the end rather than reported as ` +
+			`they happen. An entry they want off their CVs from the start is not a ` +
+			`hide: add it with its "hidden" field, and it is written hidden.`,
 
 		`Do not invent history. Rewording what the applicant has said is in scope; ` +
 			`adding a role, a date or an employer they have not told you about is not.`,

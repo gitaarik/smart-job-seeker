@@ -1,17 +1,20 @@
 /**
- * The three things a person can do to a section row that the assistant cannot.
+ * The two things a person can do to a section row that the assistant cannot.
  *
  * The change log resolves an entry to a title and an undo through the
  * capability registry, which is the right answer for the writes that ARE
  * capabilities — a UI edit and a chat edit both land as `edit_work_experience`
- * and both undo the same way. Three do not:
+ * and both undo the same way. Two do not:
  *
  *  - **delete** — the registry has no delete on purpose. The assistant proposes
  *    `hide_*` instead, because a proposal card is accepted in one click and a
  *    delete is not recoverable from a before-image.
  *  - **reorder** — a section-wide write with no single row to name.
- *  - **show** — the other half of hide. `setRowVisible(…, true)` is a distinct
- *    thing that happened and logging it as a hide would print the wrong verb.
+ *
+ * Showing a hidden entry was the third until it became `show_*` in the
+ * registry (2026-09-23). `setRowVisible(…, true)` still logs it under that name
+ * when a person does it, so their un-hide and an agent's resolve to the same
+ * title and undo, the way an edit does.
  *
  * They are declared here rather than added to `PROFILE_CAPABILITIES` because
  * that list is what the assistant and the MCP server are offered. A
@@ -21,9 +24,7 @@
  * ## What can be put back
  *
  * A reorder can: the before-image is the order it was in, and writing it back
- * is the same call that changed it. Showing can, by restoring the exact tag
- * array — the same restore `hide_*` uses, and exact rather than derived for the
- * reason recorded on `setRowTags`.
+ * is the same call that changed it.
  *
  * A delete cannot, and this is the file that says so out loud rather than
  * leaving the feed to discover it. A work-experience project owns its
@@ -34,9 +35,9 @@
  */
 
 import { PROFILE_RESOURCE_NAMES, PROFILE_RESOURCES, type ProfileResourceName } from './resources';
-import { reorderRows, setRowTags, type ProfileActor } from './write';
+import { reorderRows, type ProfileActor } from './write';
 
-export type UiActionVerb = 'delete' | 'reorder' | 'show';
+export type UiActionVerb = 'delete' | 'reorder';
 
 export type UiAction = `${UiActionVerb}_${ProfileResourceName}`;
 
@@ -78,19 +79,9 @@ function defsFor(name: ProfileResourceName): Array<[UiAction, UiActionDef]> {
 		}
 	};
 
-	const show: UiActionDef = {
-		title: `Show this ${label} again`,
-		revert: async (target, previous, actor) => {
-			const tags = Array.isArray(previous.tags) ? (previous.tags as string[]) : null;
-			const result = await setRowTags(name, actor, target.id, tags);
-			if (!result.ok) throw new Error(result.error);
-		}
-	};
-
 	return [
 		[`delete_${name}`, remove],
-		[`reorder_${name}`, reorder],
-		[`show_${name}`, show]
+		[`reorder_${name}`, reorder]
 	];
 }
 

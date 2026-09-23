@@ -105,11 +105,17 @@ describe('formatAbilityManifest', () => {
 		expect(TEXT).toContain('read-only');
 	});
 
-	it('offers hiding only where hiding writes something', () => {
+	it('offers hiding and unhiding only where they write something', () => {
 		const hideable = PROFILE_RESOURCE_NAMES.filter((name) =>
 			PROFILE_CAPABILITY_NAMES.includes(`hide_${name}` as never)
 		);
-		const sentence = TEXT.split('\n').find((line) => line.includes('Hiding an entry')) ?? '';
+		// The two verbs come as a pair: a section that can be hidden from can be
+		// shown on again, and no other can.
+		const showable = PROFILE_RESOURCE_NAMES.filter((name) =>
+			PROFILE_CAPABILITY_NAMES.includes(`show_${name}` as never)
+		);
+		expect(showable).toEqual(hideable);
+		const sentence = TEXT.split('\n').find((line) => line.includes('Hiding or unhiding')) ?? '';
 
 		expect(sentence).not.toBe('');
 		for (const name of PROFILE_RESOURCE_NAMES) {

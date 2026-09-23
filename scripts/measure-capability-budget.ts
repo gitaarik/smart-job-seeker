@@ -22,7 +22,11 @@ import {
 	resolveCapabilities
 } from '$lib/server/ai-chat/capabilities';
 import { CAPABILITY_PROMPT_BUDGET_CHARS } from '$lib/server/ai-chat/capabilities';
-import { scopeForRoute, tieredCapabilities } from '$lib/server/ai-chat/chat-context';
+import {
+	admissionOrder,
+	scopeForRoute,
+	tieredCapabilities
+} from '$lib/server/ai-chat/chat-context';
 import type { ContextEntity } from '$lib/server/ai-chat/generation-context';
 import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/resources';
 import { readOwnedRows } from '$lib/server/profile/write';
@@ -98,14 +102,15 @@ async function main() {
 		const size = renderCapabilityPrompt(live).length;
 
 		// What the turn would actually carry: the page's subject, then its child
-		// collections while they fit. `declared` is the ceiling, not the cost.
+		// collections while they fit, in the order the chat admits them (a
+		// child's `show_*` last). `declared` is the ceiling, not the cost.
 		const tiers = tieredCapabilities(scope);
 		const [subject, ...children] = await Promise.all(
 			[tiers.subject, ...tiers.children].map((group) =>
 				resolveCapabilities(group, entity, { profileId, isStaff: false })
 			)
 		);
-		const admitted = fitMatchedCapabilities(subject, children);
+		const admitted = fitMatchedCapabilities(subject, admissionOrder(children, []));
 		const kept = renderCapabilityPrompt(admitted).length;
 		const kept_names = new Set(admitted.map((c) => c.capability));
 

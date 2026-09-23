@@ -1076,8 +1076,9 @@ export async function setRowVisible(
 
 	await touchProfile(actor.profileId);
 
-	// Hiding is a capability; showing is not, and logging an un-hide as a hide
-	// would print the wrong verb in the history for a thing the user did.
+	// One column, two capabilities: `hide_*` and `show_*` each log under their
+	// own name, and logging an un-hide as a hide would print the wrong verb in
+	// the history for a thing the user did.
 	await logChange(
 		actor,
 		visible ? `show_${name}` : `hide_${name}`,

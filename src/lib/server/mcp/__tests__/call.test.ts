@@ -740,9 +740,9 @@ describe('list_pending_changes', () => {
 		expect(request).toHaveProperty('changes');
 	});
 
-	it('says so for a change that has no fields to show', async () => {
-		// Naming the row is the whole proposal for a hide, so an empty change list
-		// is the correct answer and has to read as one.
+	it('describes a hide by what it does to the documents', async () => {
+		// Naming the row is the whole of a hide's payload, so its fields describe
+		// nothing. What it does is one line an applicant would recognise.
 		readRequests.mockResolvedValue(
 			pendingRequests(1, {
 				capability: 'hide_work_experience',
@@ -754,8 +754,10 @@ describe('list_pending_changes', () => {
 
 		const result = await callTool('list_pending_changes', { profile_id: 12 }, KEY);
 
-		expect((result.structuredContent?.requests as { changes: unknown[] }[])[0].changes).toEqual([]);
-		expect(result.content[0].text).toContain('naming the entry is the whole change');
+		expect((result.structuredContent?.requests as { changes: unknown[] }[])[0].changes).toEqual([
+			{ field: 'documents', label: 'CVs and exports', from: 'Shown', to: 'Hidden' }
+		]);
+		expect(result.content[0].text).toContain('CVs and exports');
 	});
 
 	it('renders a request whose capability the registry no longer has', async () => {
@@ -1082,6 +1084,26 @@ describe('tier 2 — nothing is written', () => {
 		expect(result.structuredContent?.applied).toBe(false);
 	});
 
+	it('never writes a show either, and keeps the tags an undo would need', async () => {
+		// Row 6 is hidden and re-admitted on one version. Approving puts it back;
+		// undoing that has to restore the version tag too, so the request records
+		// the whole array rather than "it was hidden".
+		const result = await callTool(
+			'show_work_experience',
+			{ profile_id: 12, entry_id: 6, rationale: 'They want the internship back.' },
+			KEY
+		);
+
+		expect(executeCapability).not.toHaveBeenCalled();
+		expect(result.structuredContent?.applied).toBe(false);
+		expect(createRequest).toHaveBeenCalledWith(
+			expect.objectContaining({
+				capability: 'show_work_experience',
+				previous: { tags: ['!resume', '!cv', 'senior'] }
+			})
+		);
+	});
+
 	it('notifies the applicant that something is waiting', async () => {
 		await callTool(
 			'edit_work_experience',
@@ -1142,6 +1164,20 @@ describe('refusals the agent can act on', () => {
 
 		expect(result.isError).toBe(true);
 		expect(result.content[0].text).toContain('work_experience.summary');
+	});
+
+	it('says an entry that is not hidden has nothing to show, rather than that it is missing', async () => {
+		// Row 5 is on every document. "There is no entry 5" would send the agent
+		// looking for an id it already has.
+		const result = await callTool(
+			'show_work_experience',
+			{ profile_id: 12, entry_id: 5, rationale: 'x' },
+			KEY
+		);
+
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('is not hidden');
+		expect(createRequest).not.toHaveBeenCalled();
 	});
 
 	it('refuses an entry id that is not on this profile', async () => {

@@ -211,7 +211,7 @@ function byEntity(): {
 	return groups;
 }
 
-/** Sections where `hide` is a real write rather than one that changes nothing. */
+/** Sections where `hide` and `show` are real writes rather than ones that change nothing. */
 function hideableSections(): string[] {
 	return PROFILE_RESOURCE_NAMES.filter((name) =>
 		verbsFor(name).some((verb) => verb.startsWith('hide_'))
@@ -237,8 +237,8 @@ export function formatAbilityManifest(areas: readonly AppArea[] = APP_AREAS): st
 		groups.application.length
 			? `- On an application's own page: ${groups.application.join(' · ')}.`
 			: '',
-		`- On each profile page listed above: correct an entry, or add one. Hiding an ` +
-			`entry is offered on ${join(hideable)} only.`,
+		`- On each profile page listed above: correct or add an entry. Hiding or ` +
+			`unhiding one is offered on ${join(hideable)} only.`,
 		// Short on purpose: this block ships on every turn on every page, and its
 		// size is ratcheted. What the config cannot do is stated here in one
 		// clause because that is the sentence the model got wrong with no
