@@ -79,6 +79,9 @@ export interface ExportedProfile {
 			achievements: Array<{
 				status?: string;
 				sort?: number | null;
+				/** Never written. Exports from before 2026-04-17 carried the text here;
+				 *  import folds it into `description` (c3748889). */
+				title?: string;
 				description?: string;
 				fa_icon?: string;
 				tags?: unknown;
