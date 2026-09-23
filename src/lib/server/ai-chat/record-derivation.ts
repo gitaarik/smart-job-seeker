@@ -113,6 +113,22 @@ export function coerceDerived(candidate: Candidate): {
  *
  * Pure, so the rule is testable without a DB or an LLM.
  */
+/**
+ * Fields the writer of a record chose rather than fell back on.
+ *
+ * `date_updated` says whether a PERSON edited the row since, which is the right
+ * signal for the composer's fallbacks. It says nothing about a row written from
+ * a proposal: that title, type and date were on the card the applicant applied,
+ * so they are decisions from the first write, and the row is still "untouched".
+ * Without this the pass replaced them — the card said one title and the
+ * timeline showed another.
+ */
+export interface DecidedFields {
+	title?: boolean;
+	record_type?: boolean;
+	event_date?: boolean;
+}
+
 export function pickChanges(
 	record: {
 		contacts: unknown;
@@ -124,19 +140,20 @@ export function pickChanges(
 		record_type: string | null;
 		event_date: string | null;
 		contacts: RecordContact[];
-	}
+	},
+	decided: DecidedFields = {}
 ): Record<string, unknown> {
 	const untouched = !record.date_updated;
 	const changes: Record<string, unknown> = {};
 
-	if (derived.title && untouched) changes.title = derived.title;
-	if (derived.record_type && untouched) {
+	if (derived.title && untouched && !decided.title) changes.title = derived.title;
+	if (derived.record_type && untouched && !decided.record_type) {
 		changes.record_type = derived.record_type;
 	}
 	// The date is fallback-filled with today, which is a guess rather than a
 	// decision — so an untouched record may have it replaced, and an edited one
-	// only if it is somehow blank.
-	if (derived.event_date && (untouched || !record.event_date)) {
+	// only if it is somehow blank. A date the writer chose is neither.
+	if (derived.event_date && !decided.event_date && (untouched || !record.event_date)) {
 		changes.event_date = derived.event_date;
 	}
 	// Contacts are the one field the composer cannot pre-fill, so a non-empty
@@ -181,10 +198,13 @@ export function shouldDerive(record: {
  * replace them freely. The moment they edit anything, derivation stops
  * touching the fields they could plausibly have set and fills only what is
  * genuinely still blank.
+ *
+ * A writer that CHOSE a field says so through `decided` — see DecidedFields.
  */
 export async function deriveRecordMetadata(
 	recordId: number,
-	profileId: number
+	profileId: number,
+	opts: { decided?: DecidedFields } = {}
 ): Promise<Record<string, unknown> | null> {
 	try {
 		const record = await db.query.application_records.findFirst({
@@ -214,7 +234,7 @@ export async function deriveRecordMetadata(
 
 		const derived = coerceDerived(JSON.parse(result.aiChat.response) as Candidate);
 
-		const changes = pickChanges(record, derived);
+		const changes = pickChanges(record, derived, opts.decided);
 
 		// Stamped even when nothing changed: the point of the column is "has
 		// anyone looked", and a pass that found nothing HAS looked.

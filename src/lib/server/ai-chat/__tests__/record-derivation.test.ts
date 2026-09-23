@@ -131,6 +131,36 @@ describe('pickChanges', () => {
 		expect(out.contacts).toBeUndefined();
 	});
 
+	// A row written from a proposal is untouched too, but its title, type and
+	// date were on the card the applicant applied. Replacing them would store
+	// something nobody approved.
+	it('keeps what the writer decided, and still fills the rest', () => {
+		const out = pickChanges(
+			{ contacts: [], event_date: '2026-09-22', date_updated: null },
+			derived,
+			{
+				title: true,
+				record_type: true,
+				event_date: true
+			}
+		);
+		expect(out.title).toBeUndefined();
+		expect(out.record_type).toBeUndefined();
+		expect(out.event_date).toBeUndefined();
+		expect(out.contacts).toEqual(derived.contacts);
+	});
+
+	it('replaces only the fields the writer left to it', () => {
+		const out = pickChanges(
+			{ contacts: [], event_date: '2026-09-22', date_updated: null },
+			derived,
+			{ title: true }
+		);
+		expect(out.title).toBeUndefined();
+		expect(out.record_type).toBe('message');
+		expect(out.event_date).toBe('2026-07-28');
+	});
+
 	it('writes nothing when the model found nothing', () => {
 		const out = pickChanges(
 			{ contacts: [], event_date: null, date_updated: null },

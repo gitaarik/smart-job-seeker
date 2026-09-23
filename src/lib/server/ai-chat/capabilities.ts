@@ -1602,12 +1602,22 @@ drop the other, and an entry is also the unit the chronology is read in.`,
 			.returning({ id: application_records.id });
 
 		// The same two passes the composer runs, in the same order and for the same
-		// reasons: derivation fills only what is still empty (here, essentially the
-		// contacts — this proposal already carries a type and a title), and the
-		// summariser runs after it so the digest reads the derived entry rather than
-		// the write-time fallbacks. Both are best-effort by construction, so a
-		// failure in either leaves the entry written and visible.
-		await deriveRecordMetadata(created.id, app.profile_id);
+		// reasons: derivation fills what the proposal left to it, and the summariser
+		// runs after it so the digest reads the derived entry rather than the
+		// write-time fallbacks. Both are best-effort by construction, so a failure
+		// in either leaves the entry written and visible.
+		//
+		// What the proposal DID carry is passed as decided. The row is new, so to
+		// derivation it looks like a composer entry full of fallbacks, and it used
+		// to replace them: an entry applied from a card titled "Werknotitie: …"
+		// reached the timeline retitled in English. The card is what was approved.
+		await deriveRecordMetadata(created.id, app.profile_id, {
+			decided: {
+				title: !!proposedTitle,
+				record_type: typeof fields.entry_type === 'string',
+				event_date: typeof fields.entry_date === 'string'
+			}
+		});
 		await summarizeApplication(target.id, app.profile_id);
 
 		// The entry, not the application it was filed under. The target this was

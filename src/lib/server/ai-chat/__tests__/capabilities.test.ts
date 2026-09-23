@@ -1700,8 +1700,31 @@ describe('add_activity_record', () => {
 
 		expect(mockRecordInsert).toHaveBeenCalledTimes(1);
 		expect(order).toEqual(['derive', 'summarise']);
-		expect(mockDeriveRecord).toHaveBeenCalledWith(777, 12);
+		expect(mockDeriveRecord).toHaveBeenCalledWith(777, 12, {
+			decided: { title: false, record_type: false, event_date: false }
+		});
 		expect(mockSummarize).toHaveBeenCalledWith(42, 12);
+	});
+
+	it('tells derivation which fields the card carried, so it keeps them', async () => {
+		// A proposal's title, type and date were on the card the applicant applied.
+		// The row is new, so derivation used to treat them as fallbacks and
+		// replace them: the timeline then showed a title nobody had approved.
+		await def.apply(
+			TARGET,
+			{
+				entry_content: 'x'.repeat(400),
+				entry_title: 'Werknotitie: wat een aanbod moet opleveren',
+				entry_type: 'note',
+				entry_date: '2026-09-22'
+			},
+			{},
+			ACTOR
+		);
+
+		expect(mockDeriveRecord).toHaveBeenCalledWith(777, 12, {
+			decided: { title: true, record_type: true, event_date: true }
+		});
 	});
 
 	it('fills type, title, date and stage when the proposal omits them', async () => {
