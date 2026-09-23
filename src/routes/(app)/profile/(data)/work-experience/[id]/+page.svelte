@@ -502,17 +502,13 @@
 					/>
 				</div>
 
-				<div>
-					<label for="edit-location" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
-						Location
-					</label>
-					<input
-						type="text"
-						id="edit-location"
-						bind:value={editLocation}
-						class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-					/>
-				</div>
+				<TranslatableField
+					entity="work_experience"
+					id={experience.id}
+					field="location"
+					label="Location"
+					bind:value={editLocation}
+				/>
 
 				<div>
 					<label for="edit-website" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">

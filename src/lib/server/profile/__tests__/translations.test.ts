@@ -9,7 +9,7 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { isTranslatable } from '$lib/resume-translations';
+import { fieldsForEntity, isTranslatable, TRANSLATABLE_FIELDS } from '$lib/resume-translations';
 
 // The module imports the db for its ownership queries; none of the tree walking
 // below touches it.
@@ -266,5 +266,75 @@ describe('references in the translation layer', () => {
 		});
 		// Nothing to translate on a referee who is only a name.
 		expect(groups.find((g) => g.key === 'ref-14')).toBeUndefined();
+	});
+});
+
+describe('applyTranslations — the whole vocabulary', () => {
+	/** One row of every entity the vocabulary names, each with its own id. */
+	const IDS: Record<string, number> = {
+		profile: 1,
+		work_experience: 2,
+		work_experience_achievement: 3,
+		work_experience_project: 4,
+		tech_skill_category: 5,
+		education: 6,
+		side_project: 7,
+		side_project_achievement: 8,
+		reference: 9,
+		profile_field_variant: 10,
+		language: 11
+	};
+
+	it('overlays every field TRANSLATABLE_FIELDS lists, on the entity it names', () => {
+		// The walk is written out entity by entity, so a field added to the
+		// vocabulary and not to the walk is accepted by the editor, stored, and
+		// never printed. A work location was one hand-written list away from that.
+		const nodes: Record<string, Record<string, unknown>> = Object.fromEntries(
+			Object.entries(IDS).map(([entity, id]) => [
+				entity,
+				{
+					id,
+					...Object.fromEntries(
+						fieldsForEntity(entity).map((f) => [f.field, `EN ${entity}.${f.field}`])
+					)
+				}
+			])
+		);
+		const tree = Object.assign(nodes.profile, {
+			work_experiences: [
+				Object.assign(nodes.work_experience, {
+					work_experience_achievements: [nodes.work_experience_achievement],
+					work_experience_projects: [nodes.work_experience_project]
+				})
+			],
+			tech_skill_categories: [nodes.tech_skill_category],
+			educations: [nodes.education],
+			side_projects: [
+				Object.assign(nodes.side_project, {
+					side_project_achievements: [nodes.side_project_achievement]
+				})
+			],
+			references: [nodes.reference],
+			field_variants: [nodes.profile_field_variant],
+			languages: [nodes.language]
+		});
+
+		applyTranslations(
+			tree as Parameters<typeof applyTranslations>[0],
+			translator(
+				Object.fromEntries(
+					TRANSLATABLE_FIELDS.map((f) => [
+						`${f.entity}:${IDS[f.entity]}:${f.field}`,
+						`NL ${f.entity}.${f.field}`
+					])
+				)
+			)
+		);
+
+		for (const f of TRANSLATABLE_FIELDS) {
+			// An entity missing from IDS is a new one this test has to be taught.
+			expect(IDS[f.entity], f.entity).toBeDefined();
+			expect(nodes[f.entity][f.field], `${f.entity}.${f.field}`).toBe(`NL ${f.entity}.${f.field}`);
+		}
 	});
 });

@@ -81,6 +81,10 @@ export const TRANSLATABLE_FIELDS: TranslatableField[] = [
 	{ entity: 'profile_field_variant', field: 'value', label: 'Wording' },
 
 	{ entity: 'work_experience', field: 'position', label: 'Position' },
+	// A place is not always spelled the same in every language: The Hague is Den
+	// Haag on a Dutch CV. Most places need no row at all, since a missing
+	// translation falls back to the English.
+	{ entity: 'work_experience', field: 'location', label: 'Location' },
 	{ entity: 'work_experience', field: 'headline', label: 'Headline' },
 	{ entity: 'work_experience', field: 'summary', label: 'Summary' },
 	{ entity: 'work_experience', field: 'description', label: 'Description' },

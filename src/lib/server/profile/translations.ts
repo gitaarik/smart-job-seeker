@@ -165,7 +165,7 @@ export function applyTranslations(
 	}
 
 	for (const we of childrenOf(profile, 'work_experiences')) {
-		for (const f of ['position', 'headline', 'summary', 'description']) {
+		for (const f of ['position', 'location', 'headline', 'summary', 'description']) {
 			overlay(tr, 'work_experience', we, f);
 		}
 		for (const a of childrenOf(we, 'work_experience_achievements')) {
