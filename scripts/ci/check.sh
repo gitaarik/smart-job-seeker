@@ -23,7 +23,12 @@ set -euo pipefail
 # 500. It sat inside this budget for four months. That is the limit
 # check-scripts.sh describes: a count cannot tell a stale error from a live
 # one, so an error in the backlog is still worth reading.
-BASELINE=29
+#
+# 29 -> 25 the same day, from the four errors this gate shared with
+# check-scripts.sh: a better-auth callback nothing had called since the option
+# it was set on was dropped, and a legacy field the profile importer reads that
+# its type had lost.
+BASELINE=25
 
 npx svelte-kit sync
 

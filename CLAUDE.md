@@ -56,18 +56,18 @@ Two things worth knowing:
 
 | Gate             | Script                | Baseline          |
 | ---------------- | --------------------- | ----------------- |
-| `svelte-check`   | `ci/check.sh`         | 29 errors         |
-| `scripts/` types | `ci/check-scripts.sh` | 4 errors          |
+| `svelte-check`   | `ci/check.sh`         | 25 errors         |
+| `scripts/` types | `ci/check-scripts.sh` | zero — no backlog |
 | eslint           | `ci/check-lint.sh`    | zero — no backlog |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
-`svelte-check` and the `scripts/` type check are ratchets: they may only ever go
-**down**, and each nags when the real number drops below its baseline so it
-cannot quietly creep back up. New errors fail a PR; the existing backlog is
-tolerated.
+`svelte-check` is the one ratchet left: it may only ever go **down**, and it
+nags when the real number drops below its baseline so it cannot quietly creep
+back up. New errors fail a PR; the existing backlog is tolerated.
 
 **eslint is no longer a ratchet.** It went 1,521 -> 0 between 2026-08-07 and
-2026-09-22 and is now a plain gate: any error fails. Do not raise its baseline
+2026-09-22 and is now a plain gate: any error fails. The `scripts/` type check
+followed on 2026-09-23 (189 -> 0 over its life), with the same rule. Do not raise its baseline
 to get a PR through — a rule worth disabling is worth disabling on the line,
 with the reason next to it. The changed-files reporting is still there, so a
 failure names the errors your change added.

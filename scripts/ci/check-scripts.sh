@@ -61,7 +61,14 @@ set -euo pipefail
 # swallowed its --credential and --device flags), and probe-groq-tools.ts cast a
 # tool call's args to half the tool's schema. The 4 left are app code this
 # program reaches, and svelte-check counts the same four.
-BASELINE=4
+#
+# 4 -> 0 the same day, and the ratchet is retired: any error fails, as with
+# eslint. Three of the four were a better-auth option that no longer exists
+# (user.changeEmail.sendChangeEmailVerification), so its callback had no
+# contextual type and nothing had called it since the option was dropped. The
+# fourth was a legacy field the profile importer reads on purpose, which its
+# type had lost.
+BASELINE=0
 
 npx svelte-kit sync
 
@@ -71,17 +78,12 @@ output=$(npx tsc -p tsconfig.scripts.json --noEmit 2>&1) || true
 
 errors=$(printf '%s\n' "$output" | grep -c 'error TS' || true)
 
+# The ratchet is retired: the baseline is 0, so this is a plain gate now.
 if [ "$errors" -gt "$BASELINE" ]; then
-  echo "::error::scripts/ type-check found $errors errors, baseline is $BASELINE — $((errors - BASELINE)) new."
-  echo "Fix them, or if a baseline error was legitimately replaced, adjust"
-  echo "BASELINE in scripts/ci/check-scripts.sh."
+  echo "::error::scripts/ type-check found $errors errors. This gate is at zero, so these are yours."
+  echo "Fix them. Do not raise BASELINE: it is 0 because the backlog is gone."
   printf '%s\n' "$output" | grep 'error TS' | head -40
   exit 1
 fi
 
-if [ "$errors" -lt "$BASELINE" ]; then
-  echo "::notice::scripts/ type-check found $errors errors, below the baseline of $BASELINE."
-  echo "Lower BASELINE in scripts/ci/check-scripts.sh to $errors to lock the improvement in."
-fi
-
-echo "scripts/ type-check: $errors errors (baseline $BASELINE) — no new type errors."
+echo "scripts/ type-check: clean."

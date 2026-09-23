@@ -45,20 +45,20 @@ jobs:
       # scripts/ sits outside the tsconfig svelte-check uses, so it had no gate
       # at all — which is how 11 scripts kept calling Prisma's API a whole ORM
       # migration later, and how an import of a path that never existed
-      # survived. Same count-based ratchet.
+      # survived. It started as a count-based ratchet and reached zero on
+      # 2026-09-23, so any error fails now.
       - name: Type check (scripts/)
         run: ./scripts/ci/check-scripts.sh
       # Formatting was unenforced, and three configs disagreed about what it
       # even was — the tree matched none of them. Now that it is at a fixed
-      # point, gate it, or it drifts straight back. Format only: eslint is a
-      # separate ~1,500-error backlog and is deliberately not run here.
+      # point, gate it, or it drifts straight back.
       - name: Formatting (prettier)
         run: npx prettier --check .
-      # Third ratchet. eslint has never run in CI and carries ~1,500 errors,
-      # almost none auto-fixable, so this gates the count rather than zero. Two
-      # of its rules matter more than their count suggests — see the script:
-      # no-at-html-tags guards HTML sinks on public pages, and require-each-key
-      # catches state mismatches in a UI full of drag-reordering.
+      # eslint started as a ratchet over ~1,500 errors and reached zero on
+      # 2026-09-22, so any error fails now. Two of its rules matter more than
+      # their count ever suggested — see the script: no-at-html-tags guards HTML
+      # sinks on public pages, and require-each-key catches state mismatches in
+      # a UI full of drag-reordering.
       - name: Lint (eslint)
         run: ./scripts/ci/check-lint.sh
       # Builds one database from the migration files and another from
