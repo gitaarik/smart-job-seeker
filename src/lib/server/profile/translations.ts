@@ -28,6 +28,7 @@ import {
 import {
 	BASE_LOCALE,
 	fieldsForEntity,
+	isKnownLocale,
 	type TranslatableGroup,
 	type TranslatableRow,
 	translationKey
@@ -47,6 +48,22 @@ const IDENTITY: Translator = {
 	isBase: true,
 	t: (_entity, _id, _field, base) => base
 };
+
+/**
+ * The languages this profile has translated into, besides English. The resume
+ * pages offer exactly these in their language picker, so they are every
+ * language a version of this profile can be exported in.
+ */
+export async function translatedLocales(profileId: number): Promise<string[]> {
+	const rows = await db
+		.selectDistinct({ locale: profile_translations.locale })
+		.from(profile_translations)
+		.where(eq(profile_translations.profile_id, profileId));
+	return rows
+		.map((r) => r.locale)
+		.filter((locale) => isKnownLocale(locale) && locale !== BASE_LOCALE)
+		.sort();
+}
 
 /**
  * Load every translation for a profile in `locale` into an in-memory resolver.

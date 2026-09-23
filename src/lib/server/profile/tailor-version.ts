@@ -82,6 +82,7 @@ import {
 } from '$lib/server/documents/content-embeddings';
 import { scoreUnitAgainstQuery } from '$lib/server/documents/content-retrieval';
 import { countVersionPages } from '$lib/server/profile/page-fit';
+import { translatedLocales } from '$lib/server/profile/translations';
 import { chooseFieldVariants, variantDecisions } from '$lib/server/profile/tailor-field-variants';
 import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
 import { config } from '$lib/server/config';
@@ -1196,7 +1197,10 @@ async function fitToPages(opts: {
 	candidates: Candidate[];
 }): Promise<{ decisions: Decision[] | null; pages: number | null; targetPages: number }> {
 	const { profileId, versionId, versionSlug, docType, template, targetPages } = opts;
-	const count = () => countVersionPages(profileId, versionSlug, docType, template);
+	// English and every language the profile translates into: they share this
+	// one selection, and the translation is usually the longer document.
+	const locales = [null, ...(await translatedLocales(profileId))];
+	const count = () => countVersionPages(profileId, versionSlug, docType, template, locales);
 
 	let budget = opts.budgetChars;
 	let pages = await count();

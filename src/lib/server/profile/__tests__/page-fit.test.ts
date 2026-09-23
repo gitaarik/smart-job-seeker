@@ -28,6 +28,18 @@ describe('renderRoute', () => {
 		}
 	});
 
+	it('carries the language, which runs longer than the English', () => {
+		expect(renderRoute('rik-wanders', 'resume', 'app-78', 'citrus', 'nl')).toContain('&lang=nl');
+	});
+
+	it('leaves English unnamed, as the export path does', () => {
+		for (const english of [null, 'en']) {
+			expect(renderRoute('rik-wanders', 'resume', 'app-78', 'citrus', english)).not.toContain(
+				'lang='
+			);
+		}
+	});
+
 	it('renders a CV from the cv route and everything else from resume', () => {
 		expect(renderRoute('rik', 'cv', 'v1')).toContain('/p/rik/cv?');
 		expect(renderRoute('rik', 'resume', 'v1')).toContain('/p/rik/resume?');
