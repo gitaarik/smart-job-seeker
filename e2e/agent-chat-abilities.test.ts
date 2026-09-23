@@ -60,14 +60,18 @@ describe('assistant empty state', () => {
 		expect(await link.getAttribute('href')).toBe('/guide');
 	});
 
-	it('offers nothing on a page that can propose nothing', async () => {
-		// The honest half. /home grants no capability, and inventing an offer
-		// there would be the same over-promise the server-side list exists to
-		// avoid — the fallback is the sentence the panel always had.
+	it('offers only the directives on a page that grants nothing of its own', async () => {
+		// The honest half. /home grants no capability of its own, and inventing an
+		// offer there would be the same over-promise the server-side list exists
+		// to avoid. The directives are the exception, offered on every page
+		// because a standing preference is stated wherever the applicant happens
+		// to be, so they are the whole list here.
 		await openAssistant('/home');
 
-		const invitation = b.page.getByText('Ask me anything about your job search');
-		await invitation.waitFor({ state: 'visible', timeout: 15000 });
-		expect(await b.page.getByText('On this page I can also suggest changes').count()).toBe(0);
+		const heading = b.page.getByText('On this page I can also suggest changes');
+		await heading.waitFor({ state: 'visible', timeout: 15000 });
+		const offered = heading.locator('xpath=following-sibling::ul[1]/li');
+		expect(await offered.count()).toBe(1);
+		expect(await offered.getByText('Update your directives', { exact: true }).count()).toBe(1);
 	});
 });
