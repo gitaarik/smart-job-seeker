@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeDiff, type DiffSegment, isSmallDiff } from '../word-diff';
+import { computeDiff, type DiffSegment, diffBothWays, isSmallDiff, splitDiff } from '../word-diff';
 
 /** Reconstruct the "new" text from the segments (same + added runs, in order). */
 function reconstructNew(segments: DiffSegment[]): string {
@@ -70,5 +70,62 @@ describe('isSmallDiff', () => {
 
 	it('is false for an empty comparison', () => {
 		expect(isSmallDiff([])).toBe(false);
+	});
+});
+
+describe('splitDiff', () => {
+	const join = (segments: DiffSegment[]) => segments.map((s) => s.text).join('');
+
+	it('gives back each text exactly, in its own whitespace', () => {
+		// Unlike the inline diff, whose spacing is the new text's: a paragraph break
+		// in the old text has to survive in the old text's pane.
+		const before = 'First paragraph here.\n\nSecond paragraph,  with two spaces.\n';
+		const after = 'First paragraph, reworded.\nA new second one.';
+		const split = splitDiff(before, after);
+
+		expect(join(split.before)).toBe(before);
+		expect(join(split.after)).toBe(after);
+	});
+
+	it('marks only removals on the old side and only additions on the new', () => {
+		const split = splitDiff('the quick brown fox', 'the slow brown fox');
+
+		expect(split.before).toEqual([
+			{ type: 'same', text: 'the ' },
+			{ type: 'removed', text: 'quick' },
+			{ type: 'same', text: ' brown fox' }
+		]);
+		expect(split.after).toEqual([
+			{ type: 'same', text: 'the ' },
+			{ type: 'added', text: 'slow' },
+			{ type: 'same', text: ' brown fox' }
+		]);
+	});
+
+	it('keeps the gap between runs out of the marked one', () => {
+		// So a highlight starts and ends on a word, not on a coloured space.
+		const split = splitDiff('keep drop keep', 'keep keep');
+		const removed = split.before.find((s) => s.type === 'removed');
+
+		expect(removed?.text).toBe('drop');
+	});
+
+	it('is one alignment for both views', () => {
+		// diffBothWays exists so a rewrite is aligned once, not twice.
+		const both = diffBothWays('a b c d', 'a x c y');
+
+		expect(both.inline).toEqual(computeDiff('a b c d', 'a x c y'));
+		expect({ before: both.before, after: both.after }).toEqual(splitDiff('a b c d', 'a x c y'));
+	});
+
+	it('handles an empty side', () => {
+		expect(splitDiff('', 'new words')).toEqual({
+			before: [],
+			after: [{ type: 'added', text: 'new words' }]
+		});
+		expect(splitDiff('old words', '')).toEqual({
+			before: [{ type: 'removed', text: 'old words' }],
+			after: []
+		});
 	});
 });

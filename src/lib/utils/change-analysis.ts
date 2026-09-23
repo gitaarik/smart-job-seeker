@@ -14,7 +14,13 @@
  * segments, and collapsing them would make one of the two worse.
  */
 
-import { computeDiff, isSmallDiff, type DiffSegment } from './word-diff';
+import {
+	computeDiff,
+	diffBothWays,
+	isSmallDiff,
+	type DiffSegment,
+	type SplitDiff
+} from './word-diff';
 
 /**
  * Above this, a value is summarised rather than shown — and is a candidate for
@@ -25,20 +31,6 @@ import { computeDiff, isSmallDiff, type DiffSegment } from './word-diff';
  * different set of changes in the browser than in a tool result.
  */
 export const LONG_VALUE_CHARS = 120;
-
-/**
- * How short a removed run has to be before it counts as rewording rather than
- * a cut.
- *
- * Chosen, not guessed, but on a thin corpus: every stored rewrite proposal
- * yields 7.5 runs per card at 40 characters, 4.0 at 80 and 2.5 at 120, and the
- * paragraph this was built to catch survives all three. Length is a weak
- * discriminator — a rewritten region comes back as a removed run too, and some
- * of those run past 100 characters — so the panel is labelled as what it
- * literally is rather than as "what you lost". 80 halves the churn without
- * reaching the length of a dropped sentence.
- */
-export const DROPPED_RUN_CHARS = 80;
 
 /** How much of a short value may change before old → new reads better than a diff. */
 export const SHORT_DIFF_MAX_CHANGED = 0.5;
@@ -53,12 +45,16 @@ export interface FieldChange {
 export interface AnalysedChange {
 	change: FieldChange;
 	/**
-	 * The inline word diff, or null when the texts share too little for one to
-	 * be readable — in which case the caller shows the new text instead.
+	 * The word diff marked in place, for a change small enough to read that way.
+	 * Null otherwise.
 	 */
 	segments: DiffSegment[] | null;
-	/** Runs of the old text with no counterpart in the new one. */
-	dropped: string[];
+	/**
+	 * Both texts whole, each marked with its half of the diff, for a change too
+	 * large to read in place. Null where `segments` is set, and where there was
+	 * no old text to set the new one against.
+	 */
+	split: SplitDiff | null;
 }
 
 /** "—" is how an unset value is rendered; as diff input it means empty. */
@@ -122,20 +118,21 @@ export function shrinkage(change: { from: string; to: string }): number {
 }
 
 /**
- * Each long change, diffed once, with what a rewrite dropped pulled out.
+ * Each long change, diffed once, and shown in whichever form reads.
  *
  * A tweak gets the word diff inline — the same threshold the version editors
- * use, because diffing two texts that share almost nothing produces an
- * unreadable stripe of every word deleted and every word added, which hides the
- * very thing the user opened this to read.
+ * use. A rewrite gets the two texts side by side, each marked with its own half
+ * of the diff, because marking both in one text interleaves every word deleted
+ * with every word added into a stripe that hides the very thing the user opened
+ * this to read.
  *
- * A wholesale rewrite got only the new text, and that is the hole `dropped`
- * fills. Asked to combine a job posting with a second one pasted into the chat,
- * the assistant returned a merge 950 characters SHORTER than the description it
- * replaced — and because a merge changes far more than 30% of the words, the
- * card showed the new text with nothing to say a whole paragraph of the old one
- * had gone. No prompt makes an LLM rewrite lossless; what it can do is not be
- * silent about it.
+ * This used to show a rewrite as the new text alone, plus a list of the long
+ * runs it removed. The list was added for a measured failure — asked to combine
+ * a job posting with a second one pasted into the chat, the assistant returned a
+ * merge 950 characters SHORTER than the description it replaced, and nothing
+ * said a paragraph had gone — but a reader of it saw fragments of a text they
+ * could not see whole. The old text in full, with what went marked in it, shows
+ * the same loss in the place it was lost.
  *
  * **Call this lazily.** The LCS builds a full (m+1)x(n+1) matrix of words, so a
  * pair of 5,000-word texts is 25 million cells on the main thread. The chat
@@ -145,13 +142,13 @@ export function shrinkage(change: { from: string; to: string }): number {
  */
 export function analyseChanges(changes: FieldChange[]): AnalysedChange[] {
 	return changes.map((change) => {
-		const segments = computeDiff(asText(change.from), asText(change.to));
-		return {
-			change,
-			segments: isSmallDiff(segments) ? segments : null,
-			dropped: segments
-				.filter((s) => s.type === 'removed' && s.text.trim().length >= DROPPED_RUN_CHARS)
-				.map((s) => s.text.trim())
-		};
+		const from = asText(change.from);
+		// A value arriving where there was none has no before to set it against.
+		if (!from) return { change, segments: null, split: null };
+
+		const { inline, before, after } = diffBothWays(from, asText(change.to));
+		return isSmallDiff(inline)
+			? { change, segments: inline, split: null }
+			: { change, segments: null, split: { before, after } };
 	});
 }

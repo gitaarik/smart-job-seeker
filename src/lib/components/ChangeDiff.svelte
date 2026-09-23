@@ -56,45 +56,63 @@
 
 {#if expanded}
 	<div class="space-y-2">
-		{#each analysed as { change, segments, dropped } (change.field)}
+		{#each analysed as { change, segments, split } (change.field)}
 			<div>
 				<p class="mb-0.5 text-[11px] text-[var(--dash-text-muted)]">
 					{labelPrefix}{change.label}
-					{#if !segments}
-						<span class="italic">— replaced, showing the new text</span>
-					{/if}
 				</p>
-				<div
-					class="max-h-64 overflow-y-auto rounded-md border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1.5"
-				>
-					{#if segments}
-						<pre
-							class="text-[11px] leading-relaxed break-words whitespace-pre-wrap text-[var(--dash-text)]"><DiffSegments
-								{segments}
-							/></pre>
-					{:else}
-						<pre
-							class="text-[11px] leading-relaxed break-words whitespace-pre-wrap text-[var(--dash-text)]">{asText(
-								change.to
-							) || '(empty)'}</pre>
-					{/if}
-				</div>
 
-				<!--
-          Only on the rewrite branch: a small diff already shows its removals
-          inline, in place, which is better than a list of them.
-        -->
-				{#if !segments && dropped.length > 0}
-					<p class="mt-1 mb-0.5 text-[11px] text-amber-600 dark:text-amber-400">
-						In the old text and not in the new one
+				{#if split}
+					<!--
+            A rewrite, as the two texts rather than one marked twice: interleaved,
+            every word removed and every word added make a stripe nobody reads.
+            Side by side, each is still the text it is, and what went and what
+            arrived are marked in the text they belong to.
+          -->
+					<p class="mb-0.5 text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase">
+						Before
 					</p>
 					<div
-						class="max-h-40 space-y-1 overflow-y-auto rounded-md border border-amber-500/30 bg-amber-500/5 px-2 py-1.5"
+						class="max-h-64 overflow-y-auto rounded-md border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1.5"
 					>
-						{#each dropped as run, i (i)}
+						<pre
+							class="text-[11px] leading-relaxed break-words whitespace-pre-wrap text-[var(--dash-text)]"><DiffSegments
+								segments={split.before}
+								strike={false}
+							/></pre>
+					</div>
+					<p
+						class="mt-1.5 mb-0.5 text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase"
+					>
+						After
+					</p>
+					<div
+						class="max-h-64 overflow-y-auto rounded-md border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1.5"
+					>
+						{#if split.after.length > 0}
 							<pre
-								class="text-[11px] leading-relaxed break-words whitespace-pre-wrap text-[var(--dash-text-muted)]">{run}</pre>
-						{/each}
+								class="text-[11px] leading-relaxed break-words whitespace-pre-wrap text-[var(--dash-text)]"><DiffSegments
+									segments={split.after}
+								/></pre>
+						{:else}
+							<p class="text-[11px] text-[var(--dash-text-muted)] italic">(empty)</p>
+						{/if}
+					</div>
+				{:else}
+					<div
+						class="max-h-64 overflow-y-auto rounded-md border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1.5"
+					>
+						{#if segments}
+							<pre
+								class="text-[11px] leading-relaxed break-words whitespace-pre-wrap text-[var(--dash-text)]"><DiffSegments
+									{segments}
+								/></pre>
+						{:else}
+							<pre
+								class="text-[11px] leading-relaxed break-words whitespace-pre-wrap text-[var(--dash-text)]">{asText(
+									change.to
+								) || '(empty)'}</pre>
+						{/if}
 					</div>
 				{/if}
 			</div>

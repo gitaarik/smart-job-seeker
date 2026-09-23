@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
 	analyseChanges,
-	DROPPED_RUN_CHARS,
 	isLong,
 	LONG_VALUE_CHARS,
 	shrinkage,
@@ -62,39 +61,45 @@ describe('analyseChanges', () => {
 		expect(result.segments?.some((s) => s.type === 'added' && s.text.includes('gamma'))).toBe(true);
 	});
 
-	it('refuses to diff a wholesale rewrite', () => {
+	it('shows a wholesale rewrite as the two texts, not one marked twice', () => {
 		// Two texts sharing almost nothing produce a stripe of every word deleted
-		// and every word added, which hides the thing the reader opened this for.
-		// The caller shows the new text instead.
-		const [result] = analyseChanges([change(long('alpha', 60), long('omega', 60))]);
+		// and every word added. Split, each is whole and reads as itself.
+		const from = long('alpha', 60);
+		const to = long('omega', 60);
+		const [result] = analyseChanges([change(from, to)]);
 
 		expect(result.segments).toBeNull();
+		expect(result.split?.before.map((s) => s.text).join('')).toBe(from);
+		expect(result.split?.after.map((s) => s.text).join('')).toBe(to);
 	});
 
-	it('surfaces what a rewrite dropped, which is the case a diff cannot show', () => {
+	it('marks what a rewrite dropped in the old text, where it was', () => {
 		// The measured failure: a merge came back materially shorter, and because
 		// it changed far more than 30% of the words there was no inline diff to
-		// notice the missing paragraph in.
+		// notice the missing paragraph in. Before this, only the new text showed.
 		const paragraph = long('paragraph', 20);
 		const [result] = analyseChanges([
 			change(`${long('alpha', 60)} ${paragraph}`, long('omega', 60))
 		]);
 
-		expect(result.segments).toBeNull();
-		expect(result.dropped.some((run) => run.includes(paragraph))).toBe(true);
+		expect(
+			result.split?.before.some((s) => s.type === 'removed' && s.text.includes(paragraph))
+		).toBe(true);
 	});
 
-	it('ignores removals too short to be a cut rather than a rewording', () => {
-		const [result] = analyseChanges([change(long('alpha', 60), `${long('omega', 60)} tiny`)]);
-
-		expect(result.dropped.every((run) => run.length >= DROPPED_RUN_CHARS)).toBe(true);
-	});
-
-	it('reads "—" as empty rather than as a character', () => {
+	it('has no before to show for a value set where there was none', () => {
 		const [result] = analyseChanges([change('—', long('omega', 40))]);
 
-		expect(result.segments?.every((s) => s.type === 'added') ?? true).toBe(true);
-		expect(result.dropped).toEqual([]);
+		expect(result.segments).toBeNull();
+		expect(result.split).toBeNull();
+	});
+
+	it('shows a cleared value as the text that went, and nothing after', () => {
+		const from = long('alpha', 40);
+		const [result] = analyseChanges([change(from, '—')]);
+
+		expect(result.split?.before).toEqual([{ type: 'removed', text: from }]);
+		expect(result.split?.after).toEqual([]);
 	});
 });
 
