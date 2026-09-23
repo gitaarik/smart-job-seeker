@@ -264,13 +264,13 @@ Respond with a single JSON object and nothing else:
 	summarize_application: {
 		system_prompt: `You condense one job application's history into a short standing summary, and pull out the terms of any offer.
 
-You are given every entry the applicant has recorded against this application, oldest first: correspondence, interview rounds, feedback, briefs, offers, contracts, notes, and the text of documents they attached.
+You are given every entry the applicant has recorded against this application, oldest first: correspondence, interview rounds, feedback, briefs, offers, contracts, notes, and the text of documents they attached. Their own notes are where they write what they concluded and what they still have to find out — read them as closely as anything the employer sent, however long the documents around them are.
 
 ## The summary
 
 3-6 sentences. It is read alongside a dozen other applications when the applicant asks things like "where am I with everything?" or "is this one worth the effort?", so lead with WHERE THIS STANDS and what is outstanding, not with a chronology.
 
-Say what has actually happened and what is waiting on whom. Name people where it matters. If something is overdue, unanswered, or needs a decision, that is the most important sentence and it goes first.
+Say what has actually happened and what is waiting on whom. Name people where it matters. If something is overdue, unanswered, or needs a decision, that is the most important sentence and it goes first. A question the applicant noted as still open is outstanding too.
 
 Never speculate about what might happen. Never repeat the job description — the reader already has it.
 
@@ -289,11 +289,13 @@ When there is one, fill only what is stated. Never infer a number that is not wr
 
 Concrete things this application picked up along the way that someone would want in front of them and would otherwise have to reread every entry to find. A requirement nobody put in the job ad. A salary figure named before any offer existed. Something either side promised to do. A fact about the team or the work that only came up in conversation.
 
+When the applicant's own notes hold a decision about this application, that is a detail too, as "decision": a walk-away number, a condition they set before they would go ahead, why they are staying or leaving. Nothing else records it, and it is what any comparison with another application is decided against. Quote their figures and thresholds exactly as written and all of them: a ladder of thresholds is one decision, not its middle rung. Say what it is about in their terms, since "an offer elsewhere must beat this" and "this offer must reach that" are opposite rules. Cite the note it came from, list it first, and never be the one to leave it out. It is in addition to the other details, never instead of them.
+
 Write the CURRENT state of each. These entries contradict each other on purpose — a band becomes an offer becomes a renegotiated offer — so give the figure that stands now, not every figure ever mentioned. If something was superseded, it is not a detail; it is history, and the summary covers it.
 
 - "label" is a short noun phrase: "Office days", "Notice period", "Take-home deadline".
 - "value" is the fact in one line, quoting numbers and dates as they were written.
-- "category" is one of: requirement (a condition to satisfy), compensation (money talk short of a formal offer), logistics (how the process runs from here), commitment (what either side said they would do), role_detail (a fact about the job or team that was not in the ad), other.
+- "category" is one of: requirement (a condition to satisfy), compensation (money talk short of a formal offer), logistics (how the process runs from here), commitment (what either side said they would do), role_detail (a fact about the job or team that was not in the ad), decision (the applicant's own conclusion about this application, from their notes), other.
 - "record_id" is the number in the [entry N] heading you took it from. Use null rather than guessing.
 
 Only what is written down. Do not restate the job ad, do not repeat the offer's own terms — those are fields already — and do not pad the list: three details that matter beat ten that do not. Return an empty array when the entries contain nothing of this kind.
@@ -319,7 +321,8 @@ or, when an offer exists and things have come up along the way:
   },
   "details": [
     { "category": "requirement", "label": "Office days", "value": "Tuesdays and Thursdays, in Amsterdam", "record_id": 12 },
-    { "category": "commitment", "label": "References", "value": "You agreed to send two by Friday", "record_id": 14 }
+    { "category": "commitment", "label": "References", "value": "You agreed to send two by Friday", "record_id": 14 },
+    { "category": "decision", "label": "Walk-away", "value": "Only worth taking at 95k or more; below that, stay where I am", "record_id": 15 }
   ]
 }
 

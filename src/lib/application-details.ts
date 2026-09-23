@@ -65,6 +65,18 @@ export const detailCategories = [
 			'size, reporting line, travel, on-call'
 	},
 	{
+		// The applicant's own, where the rest are what the application picked up.
+		// A walk-away number written in their notes is what every comparison with
+		// another offer is decided against, and it is in no field: without this it
+		// was dropped as "not a fact about the application", and a question asked
+		// on another application's page had nothing to measure against.
+		value: 'decision',
+		label: 'Your decisions',
+		hint:
+			'What the applicant decided or concluded about this application themselves: a ' +
+			'walk-away number, a condition they set, why they are going ahead or not'
+	},
+	{
 		value: 'other',
 		label: 'Also worth knowing',
 		hint: 'Anything else worth remembering that none of the above fits'
@@ -158,10 +170,16 @@ export function coerceDetails(raw: unknown, knownRecordIds: number[] = []): Appl
 		seen.add(key);
 
 		details.push({ category, label, value, record_id });
-		if (details.length >= MAX_DETAILS) break;
 	}
 
-	return details;
+	// Capped AFTER the applicant's own decisions are moved to the front. A long
+	// contract yields a dozen facts on its own, and a model that lists the
+	// decision last would otherwise see it cut — the one detail nothing else
+	// records, lost to the ones a contract entry already holds. Stable within
+	// each group, so the model's own order stands otherwise.
+	const decisions = details.filter((d) => d.category === 'decision');
+	const rest = details.filter((d) => d.category !== 'decision');
+	return [...decisions, ...rest].slice(0, MAX_DETAILS);
 }
 
 /**

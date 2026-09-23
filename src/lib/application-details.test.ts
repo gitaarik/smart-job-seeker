@@ -91,6 +91,24 @@ describe('coerceDetails', () => {
 		);
 	});
 
+	it('keeps a decision the applicant wrote down, even past the cap', () => {
+		// A long contract yields a dozen facts on its own. The walk-away number in
+		// their notes is recorded nowhere else, so it must not be what the cap cuts.
+		const facts = Array.from({ length: 14 }, (_, i) => detail({ label: `Term ${i}` }));
+		const decision = detail({
+			category: 'decision',
+			label: 'Walk-away',
+			value: 'An offer elsewhere wins from 95k a year; below 80k it is not worth leaving'
+		});
+		const out = coerceDetails([...facts, decision]);
+		expect(out).toHaveLength(12);
+		expect(out[0]).toMatchObject({ category: 'decision', label: 'Walk-away' });
+	});
+
+	it('accepts decision as a category rather than folding it into other', () => {
+		expect(coerceDetails([detail({ category: 'decision' })])[0].category).toBe('decision');
+	});
+
 	it('caps the list', () => {
 		const many = Array.from({ length: 30 }, (_, i) => detail({ label: `L${i}` }));
 		expect(coerceDetails(many)).toHaveLength(12);

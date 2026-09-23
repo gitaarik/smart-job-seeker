@@ -419,7 +419,7 @@ export const summarizeApplicationSchema = z.object({
 				category: z
 					.string()
 					.describe(
-						'One of: requirement, compensation, logistics, commitment, role_detail, other.'
+						'One of: requirement, compensation, logistics, commitment, role_detail, decision, other.'
 					),
 				label: z.string().describe('Short noun phrase naming the thing.'),
 				value: z.string().describe('The fact itself, in one line.'),
