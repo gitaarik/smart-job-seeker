@@ -863,7 +863,9 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
 			`asking again will not help — say it is waiting, give them the "review_at" ` +
 			`URL that came back with it, and carry on. That link is the whole of what ` +
 			`they have to act on, and it is dropped most often when several proposals ` +
-			`are summarised at the end rather than reported as they happen.`,
+			`are summarised at the end rather than reported as they happen. An entry ` +
+			`they want off their CVs from the start is not a hide: add it with its ` +
+			`"hidden" field, and it is written hidden.`,
 
 		`Do not invent history. Rewording what the applicant has said is in scope; ` +
 			`adding a role, a date or an employer they have not told you about is not.`,

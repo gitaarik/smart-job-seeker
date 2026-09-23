@@ -175,6 +175,7 @@ const {
 	setRowVisible,
 	updateRow
 } = await import('../write');
+const { isHiddenFromDocuments } = await import('$lib/profile-visibility');
 
 const ACTOR: ProfileActor = { profileId: 7 };
 
@@ -395,6 +396,46 @@ describe('createRow', () => {
 	it('touches the profile', async () => {
 		await createRow('language', ACTOR, { name: 'Dutch' });
 		expect(touchedProfile()).toBe(true);
+	});
+
+	it('creates an entry hidden in the insert itself, when asked', async () => {
+		await createRow(
+			'work_experience',
+			ACTOR,
+			{ name: 'Acme', position: 'Engineer' },
+			{ hidden: true }
+		);
+
+		expect(state.inserts).toHaveLength(1);
+		expect(isHiddenFromDocuments(state.inserts[0].values.tags as string[])).toBe(true);
+		// No second write: a separate hide would stamp `date_updated`, and the undo
+		// of an add refuses a row that says it changed since.
+		expect(sectionUpdates()).toHaveLength(0);
+	});
+
+	it('keeps a per-version tag the caller sent alongside the hide', async () => {
+		await createRow(
+			'work_experience',
+			ACTOR,
+			{ name: 'Acme', position: 'Engineer', tags: ['senior'] },
+			{ hidden: true }
+		);
+
+		const tags = state.inserts[0].values.tags as string[];
+		expect(isHiddenFromDocuments(tags)).toBe(true);
+		expect(tags).toContain('senior');
+	});
+
+	it('writes no tags when not asked to hide', async () => {
+		await createRow('work_experience', ACTOR, { name: 'Acme', position: 'Engineer' });
+		expect(state.inserts[0].values).not.toHaveProperty('tags');
+	});
+
+	it('refuses a hidden entry in a section nothing filters, rather than printing it anyway', async () => {
+		const result = await createRow('highlight', ACTOR, { text: 'Ships things' }, { hidden: true });
+
+		expect(result).toMatchObject({ ok: false, reason: 'invalid' });
+		expect(state.inserts).toHaveLength(0);
 	});
 });
 

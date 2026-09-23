@@ -706,13 +706,31 @@ async function nextSort(
 	return (last?.max ?? -1) + 1;
 }
 
-/** Create a row in one of the profile's sections. */
+/**
+ * Create a row in one of the profile's sections.
+ *
+ * `hidden` creates it already off every document: the same `!resume` + `!cv`
+ * pair `setRowVisible` writes, set in the insert itself. Hiding it afterwards
+ * would be a second write, and a failed second write leaves the entry printing
+ * on every CV. It would also set `date_updated`, which the undo of an add reads
+ * as "changed since it was added" and refuses.
+ */
 export async function createRow(
 	name: ProfileResourceName,
 	actor: ProfileActor,
-	input: Record<string, unknown>
+	input: Record<string, unknown>,
+	opts: { hidden?: boolean } = {}
 ): Promise<WriteResult<{ id: number; row: SectionRow }>> {
 	const resource = resourceFor(name);
+
+	// The same refusal `setRowVisible` gives, and for the same reason: four
+	// sections print unfiltered, so a hidden entry there would print anyway.
+	if (opts.hidden && !isHideable(name)) {
+		return refuse(
+			'invalid',
+			`A ${resource.label} cannot be hidden — nothing filters this section on a document.`
+		);
+	}
 
 	// Before the validation rather than after it, so a caller that pointed at the
 	// parent by id satisfies the required name without having to know the label.
@@ -729,11 +747,19 @@ export async function createRow(
 	);
 	if (!checked.ok) return checked;
 
+	// Merged into whatever tags the caller sent, so a per-version tag survives.
+	const values = opts.hidden
+		? {
+				...checked.values,
+				tags: setProfileOnly((checked.values.tags as string[] | null) ?? null, true)
+			}
+		: checked.values;
+
 	const [created] = await db
 		.insert(resource.table)
 		.values({
 			...resource.insertDefaults,
-			...withoutNulls(resource, withoutParentField(resource, checked.values), 'fill'),
+			...withoutNulls(resource, withoutParentField(resource, values), 'fill'),
 			[ownerKey(resource)]: parent.id ?? actor.profileId,
 			sort: await nextSort(resource, actor, parent.id),
 			// Written where the column exists, skipped where it doesn't — three of
@@ -757,7 +783,7 @@ export async function createRow(
 		actor,
 		`add_${name}`,
 		{ id: Number(row.id), label: resource.rowLabel(row) },
-		checked.values,
+		values,
 		{}
 	);
 

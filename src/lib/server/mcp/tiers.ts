@@ -143,6 +143,9 @@ export function tierForWrite(opts: {
 	const declared = CAPABILITIES[capability]?.tierFor?.(fields, current);
 	if (declared) return declared;
 
+	// Including an add that lands hidden (`<section>.hidden`). The hide rule above
+	// is about entries the applicant chose to show; one that has never been on a
+	// document takes nothing off one, and it is reversible like any other add.
 	if (capability.startsWith('add_')) {
 		return { tier: 1, reason: 'Adding an entry does not replace anything.' };
 	}

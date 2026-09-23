@@ -2445,6 +2445,8 @@ function labelFor(field: string): string {
 function renderValue(value: unknown): string {
 	if (value === null || value === undefined || value === '') return '—';
 	if (Array.isArray(value)) return value.join(', ');
+	// A card is read by the applicant, and "Hidden: true" is a programmer's word.
+	if (typeof value === 'boolean') return value ? 'yes' : 'no';
 	return String(value);
 }
 

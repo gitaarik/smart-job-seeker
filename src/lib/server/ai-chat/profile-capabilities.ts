@@ -880,6 +880,22 @@ function editCapability(name: ProfileResourceName): CapabilityDef {
 }
 
 /**
+ * The wire name of an add's "keep it off the documents" switch, or null where
+ * the section cannot hide anything.
+ *
+ * On the add verb only. Taking an EXISTING entry off the documents is a hide,
+ * and a hide is a request the applicant approves (see `tiers.ts`), because it
+ * removes something they chose to show. An entry that is hidden from the moment
+ * it exists removes nothing, and without this the only way to add one was to
+ * add it visible and then ask to hide it: every document showed it in between,
+ * and each entry cost an approval that protected nothing. Not a column, so
+ * `toColumns` drops it and `apply` reads it separately.
+ */
+function hiddenField(name: ProfileResourceName): string | null {
+	return (HIDEABLE_RESOURCES as readonly string[]).includes(name) ? wireName(name, 'hidden') : null;
+}
+
+/**
  * Add an entry to a section.
  *
  * The target is the PROFILE, not a row — there is no row yet. That is the same
@@ -895,6 +911,7 @@ function editCapability(name: ProfileResourceName): CapabilityDef {
 function addCapability(name: ProfileResourceName): CapabilityDef {
 	const resource = PROFILE_RESOURCES[name];
 	const fields = assistantFields(resource);
+	const hidden = hiddenField(name);
 
 	return {
 		title: `Add a ${resource.label}`,
@@ -957,7 +974,8 @@ function addCapability(name: ProfileResourceName): CapabilityDef {
 			...Object.fromEntries(
 				Object.entries(fields).map(([column, spec]) => [wireName(name, column), spec.kind])
 			),
-			...translationFieldKinds(name)
+			...translationFieldKinds(name),
+			...(hidden ? { [hidden]: 'boolean' as const } : {})
 		},
 
 		contract: `${contractFor(resource, name)}
@@ -970,6 +988,14 @@ every field you send is the new entry's own. ${
 						.join(
 							' and '
 						)} — without ${resource.required.length > 1 ? 'them' : 'it'} there is nothing to show in the list, and the proposal is discarded.`
+				: ''
+		}${
+			hidden
+				? `
+
+Send "${hidden}": true only when they ask for it kept off their CVs. It is
+added hidden: on no CV or export, still counted for job matching, and they
+can show it from their ${resource.page.name} page.`
 				: ''
 		}
 
@@ -1126,7 +1152,10 @@ a duplicate of anything already in one:\n\n${lines.join('\n')}`;
 			const result = await createRow(
 				name,
 				{ profileId: actor.profileId },
-				toColumns(name, fields, proposed)
+				toColumns(name, fields, proposed),
+				// `true` exactly: the value has been through `coerceValue`, which turns
+				// a "yes" into true and anything it cannot read into null.
+				{ hidden: hidden !== null && proposed[hidden] === true }
 			);
 			if (!result.ok) {
 				throw new Error(`add_${name} refused at write time: ${result.error}`);

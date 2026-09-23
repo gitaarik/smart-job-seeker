@@ -93,6 +93,20 @@ describe('tierForWrite', () => {
 		).toBe(2);
 	});
 
+	it('keeps an add that lands hidden additive, since it takes nothing off a document', () => {
+		// The mirror of the case below. Hiding an existing entry removes something
+		// the applicant chose to show; an entry hidden from its first moment was
+		// never shown, and undoing the add removes it like any other.
+		expect(
+			tierForWrite({
+				capability: 'add_skill',
+				current: { existingByGroup: { Backend: ['PostgreSQL'] } },
+				fields: { 'skill.name': 'Prisma', 'skill.category': 'Backend', 'skill.hidden': true },
+				...noBurst
+			}).tier
+		).toBe(1);
+	});
+
 	it('never treats a hide as additive, however empty the row', () => {
 		// A hide writes tags and carries no fields, so every generic rule above
 		// would read it as touching nothing.

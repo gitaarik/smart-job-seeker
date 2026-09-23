@@ -33,7 +33,12 @@ const state = {
 		id: number;
 		values: Record<string, unknown>;
 	}[],
-	creates: [] as { resource: string; actor: unknown; values: Record<string, unknown> }[],
+	creates: [] as {
+		resource: string;
+		actor: unknown;
+		values: Record<string, unknown>;
+		opts?: { hidden?: boolean };
+	}[],
 	visibility: [] as { resource: string; actor: unknown; id: number; visible: boolean }[],
 	tagWrites: [] as { resource: string; actor: unknown; id: number; tags: string[] | null }[],
 	deletes: [] as { resource: string; actor: unknown; id: number }[],
@@ -60,8 +65,13 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => {
 			state.updates.push({ resource, actor, id, values });
 			return Promise.resolve(state.updateResult);
 		},
-		createRow: (resource: string, actor: unknown, values: Record<string, unknown>) => {
-			state.creates.push({ resource, actor, values });
+		createRow: (
+			resource: string,
+			actor: unknown,
+			values: Record<string, unknown>,
+			opts?: { hidden?: boolean }
+		) => {
+			state.creates.push({ resource, actor, values, opts });
 			// The row as well as its id, because the real one hands both back and the
 			// capability labels what it created from the row — a mock returning only
 			// an id passes a test the write layer's own shape would not.
@@ -653,6 +663,84 @@ describe('hiding an entry', () => {
 			id: 5,
 			tags: ['senior']
 		});
+	});
+});
+
+/**
+ * An entry that is hidden from the moment it exists.
+ *
+ * Hiding an existing entry is a request, because it takes something the
+ * applicant chose to show off their documents. Adding one hidden takes nothing
+ * off, and before this switch the only route to it was a visible add followed by
+ * a hide: every document printed the entry in between.
+ */
+describe('adding an entry hidden', () => {
+	const add = PROFILE_CAPABILITIES.add_skill;
+
+	beforeEach(() => {
+		state.rowsByResource = { skill_category: [{ id: 1, name: 'Backend' }], skill: [] };
+	});
+
+	it('offers the switch on every section that can hide, and on no other', () => {
+		for (const name of Object.keys(PROFILE_RESOURCES) as ProfileResourceName[]) {
+			const fields =
+				PROFILE_CAPABILITIES[`add_${name}` as keyof typeof PROFILE_CAPABILITIES].fields;
+			if ((HIDEABLE_RESOURCES as readonly string[]).includes(name)) {
+				expect(fields[`${name}.hidden`]).toBe('boolean');
+			} else {
+				expect(fields).not.toHaveProperty(`${name}.hidden`);
+			}
+		}
+	});
+
+	it('is not on the edit verb, where it would be a hide without the approval', () => {
+		expect(PROFILE_CAPABILITIES.edit_skill.fields).not.toHaveProperty('skill.hidden');
+	});
+
+	it('says when to use it, and what hidden still means', () => {
+		expect(add.contract).toContain('"skill.hidden": true');
+		expect(add.contract).toContain('only when they ask');
+		expect(add.contract).toContain('still counted for job matching');
+		expect(PROFILE_CAPABILITIES.add_language.contract).not.toContain('hidden');
+	});
+
+	it('creates it hidden in the same write, and never as a column', async () => {
+		await add.apply(
+			{ id: 12, label: 'their skills' },
+			{ 'skill.name': 'Prisma', 'skill.category': 'Backend', 'skill.hidden': true },
+			{},
+			ACTOR
+		);
+
+		expect(state.creates[0]).toMatchObject({ resource: 'skill', opts: { hidden: true } });
+		expect(state.creates[0].values).not.toHaveProperty('hidden');
+		// Not a second write after the create: that would leave it printing if it
+		// failed, and would stamp the row as changed, which blocks undoing the add.
+		expect(state.visibility).toHaveLength(0);
+	});
+
+	it('creates it visible when the switch is off or absent', async () => {
+		for (const fields of [{ 'skill.hidden': false }, {}]) {
+			state.creates = [];
+			await add.apply(
+				{ id: 12, label: 'their skills' },
+				{ 'skill.name': 'Prisma', 'skill.category': 'Backend', ...fields },
+				{},
+				ACTOR
+			);
+			expect(state.creates[0].opts).toEqual({ hidden: false });
+		}
+	});
+
+	it('does not take a value coercion could not read as a yes', async () => {
+		// `coerceValue` turns an unreadable value into null before `apply` runs.
+		await add.apply(
+			{ id: 12, label: 'their skills' },
+			{ 'skill.name': 'Prisma', 'skill.category': 'Backend', 'skill.hidden': null },
+			{},
+			ACTOR
+		);
+		expect(state.creates[0].opts).toEqual({ hidden: false });
 	});
 });
 

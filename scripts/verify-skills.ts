@@ -22,8 +22,9 @@ import {
 	resolveCapabilities,
 	renderCapabilityPrompt
 } from '$lib/server/ai-chat/capabilities';
-import { verbsFor } from '$lib/server/ai-chat/profile-capabilities';
+import { PROFILE_CAPABILITY_NAMES, verbsFor } from '$lib/server/ai-chat/profile-capabilities';
 import { profileEditManifestText } from '$lib/server/ai-chat/profile-edit-manifest';
+import { isHiddenFromDocuments } from '$lib/profile-visibility';
 
 const profileId = Number(process.argv[2]);
 const actor = { profileId, isStaff: false };
@@ -236,15 +237,65 @@ async function main() {
 		);
 	}
 
+	// --- an add that lands hidden ---
+	//
+	// Hidden in the insert itself, which is what keeps the add's own undo working:
+	// that undo is a delete, refused for a row whose `date_updated` is set, and a
+	// separate hide after the create would have set it. "yes" rather than true,
+	// so the coercion a model's answer goes through is part of what is checked.
+	const hiddenAdd = await executeCapability(
+		'add_skill',
+		addTarget!,
+		actor,
+		{
+			'skill.name': 'ZZ Verify Hidden',
+			'skill.category': group,
+			'skill.level': 'proficient',
+			'skill.hidden': 'yes'
+		},
+		'chat'
+	);
+	const hiddenRow = (await readOwnedRows('skill', { profileId })).find(
+		(row) => row.name === 'ZZ Verify Hidden'
+	);
+	check(
+		'adds it hidden, off every document',
+		hiddenAdd.ok && isHiddenFromDocuments(hiddenRow?.tags as string[] | null),
+		hiddenAdd.ok ? JSON.stringify(hiddenRow?.tags ?? null) : hiddenAdd.error
+	);
+	check(
+		'in the same write, so nothing marks it changed since',
+		!!hiddenRow && hiddenRow.date_updated == null,
+		String(hiddenRow?.date_updated ?? null)
+	);
+	if (hiddenAdd.ok && hiddenAdd.editId) {
+		await revertEdit(hiddenAdd.editId, actor);
+		check(
+			'undoing the add removes it, like any add',
+			!(await readOwnedRows('skill', { profileId })).some((row) => row.name === 'ZZ Verify Hidden')
+		);
+	} else if (hiddenRow) {
+		await deleteRow('skill', { profileId }, hiddenRow.id);
+	}
+
 	// --- the same registry, over MCP ---
 	const { toolsFor } = await import('$lib/server/mcp/tools');
 	const tools = await toolsFor('write');
 	const addSkill = tools.find((t) => t.name === 'add_skill');
-	check('MCP serves a tool per profile capability', tools.length === 27, `${tools.length} tools`);
+	// By name rather than by count: the count was 27 when this was written and
+	// every later phase moved it, which failed this check for reasons unrelated
+	// to skills.
+	const missing = PROFILE_CAPABILITY_NAMES.filter((name) => !tools.some((t) => t.name === name));
+	check('MCP serves a tool per profile capability', missing.length === 0, missing.join(', '));
 	check(
 		'add_skill takes the group by name',
 		!!addSkill?.inputSchema.properties?.['skill.category'],
 		JSON.stringify(addSkill?.inputSchema.required)
+	);
+	check(
+		'add_skill offers the hidden switch as a yes/no',
+		(addSkill?.inputSchema.properties?.['skill.hidden'] as { type?: string } | undefined)?.type ===
+			'boolean'
 	);
 
 	const manifest = await profileEditManifestText(profileId);
