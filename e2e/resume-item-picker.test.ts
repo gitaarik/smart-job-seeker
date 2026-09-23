@@ -43,16 +43,25 @@ describe('what is on it', () => {
 		await b.page.goto(`/applications/${APP_ID}/resume`);
 		await b.page.waitForLoadState('networkidle');
 
-		// Back to nothing: no version for this job, no record.
-		if (await b.page.getByRole('button', { name: /^Delete$/ }).count()) {
-			await b.page.getByRole('button', { name: /^Delete$/ }).click();
+		// Back to nothing: no version for this job, no record. Only reached when
+		// an earlier file left one, as resume-card.test.ts does.
+		//
+		// Each step waits for its own button to go, not for the network: the
+		// network is idle a beat before the enhance-driven re-render lands, and
+		// deleting the job's version takes the record with it. Waiting on
+		// `networkidle` found "Clear this record" still on screen, clicked it as
+		// the re-render removed it, and timed out every test after this one.
+		const del = b.page.getByRole('button', { name: /^Delete$/ });
+		if (await del.count()) {
+			await del.click();
 			await b.page.getByRole('button', { name: /Delete it/ }).click();
-			await b.page.waitForLoadState('networkidle');
+			await del.waitFor({ state: 'detached' });
 		}
-		if (await b.page.getByRole('button', { name: /Clear this record/ }).count()) {
-			await b.page.getByRole('button', { name: /Clear this record/ }).click();
+		const clear = b.page.getByRole('button', { name: /Clear this record/ });
+		if (await clear.count()) {
+			await clear.click();
 			await b.page.getByRole('button', { name: /^Clear$/ }).click();
-			await b.page.waitForLoadState('networkidle');
+			await clear.waitFor({ state: 'detached' });
 		}
 
 		// There is no document to describe, so the section stays away.
