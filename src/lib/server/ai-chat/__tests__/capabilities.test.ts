@@ -91,6 +91,22 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => {
 	};
 });
 
+/**
+ * The languages this profile writes in besides English, and what its rows hold
+ * in them. None, unless a test says so — which is every profile that has never
+ * translated anything, and keeps every other test here as it was.
+ */
+let profileLanguages: string[] = [];
+let translatedRows: Record<number, Record<string, string>> = {};
+vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/profile/section-translations')>()),
+	translatedLocales: () => Promise.resolve(profileLanguages),
+	readTranslations: (_profileId: number, _name: string, ids: number[]) =>
+		Promise.resolve(
+			new Map(ids.filter((id) => translatedRows[id]).map((id) => [id, translatedRows[id]] as const))
+		)
+}));
+
 vi.mock('$lib/server/db/schema', () => ({
 	applications: {
 		id: 'applications.id',
@@ -254,6 +270,7 @@ import {
 	buildProposalSchema,
 	CAPABILITIES,
 	CAPABILITY_PROMPT_BUDGET_CHARS,
+	liveLanguages,
 	TARGET_LIST_CAP,
 	type Capability,
 	capabilityFieldSchema,
@@ -288,6 +305,8 @@ const ACTOR = { profileId: 12, isStaff: false };
 
 beforeEach(() => {
 	sectionRows = {};
+	profileLanguages = [];
+	translatedRows = {};
 	vi.clearAllMocks();
 	applicationRow = null;
 	jobRow = null;
@@ -2405,5 +2424,117 @@ describe('a capability live over several rows', () => {
 		]);
 
 		expect(rendered.length).toBeLessThanOrEqual(6000);
+	});
+});
+
+describe('translations', () => {
+	const REFERENCES = [
+		{
+			id: 13,
+			profile_id: 12,
+			author: 'Elmar Krack',
+			author_position: 'Co-founder of Tender-it',
+			text: 'Rik demonstrated exceptional technical leadership.'
+		},
+		{
+			id: 14,
+			profile_id: 12,
+			author: 'Michaël de Groot',
+			author_position: 'Founder of Chipta',
+			text: 'Rik modernized our client-facing interfaces.'
+		}
+	];
+
+	/** The references page of a profile that writes in Dutch: one row translated, one not. */
+	async function referencesPage(): Promise<LiveCapability[]> {
+		sectionRows = { reference: REFERENCES };
+		profileLanguages = ['nl'];
+		translatedRows = { 13: { 'reference.author_position.nl': 'Medeoprichter van Tender-it' } };
+		return resolveCapabilities(['edit_reference', 'add_reference'], null, ACTOR);
+	}
+
+	/** One proposal, as the model would send it. */
+	function proposing(field: string) {
+		return {
+			reply: 'Done.',
+			proposals: [
+				{
+					capability: 'edit_reference',
+					target_id: 13,
+					rationale: 'x',
+					changes: [{ field, value: 'Rik toonde leiderschap.' }]
+				}
+			]
+		};
+	}
+
+	it('labels a translation as the field it translates, in its language', () => {
+		const changes = describeProposalChanges(
+			'edit_reference',
+			{
+				'reference.text.nl': 'Rik toonde leiderschap.',
+				'reference.author_position.nl': 'Oprichter'
+			},
+			{ 'reference.text.nl': null, 'reference.author_position.nl': 'Medeoprichter' }
+		);
+
+		expect(changes.map((c) => c.label)).toEqual(['Their role (Dutch)', 'Text (Dutch)']);
+	});
+
+	it('offers translation fields to the schema only in the languages given', () => {
+		// A profile that has never translated anything gets the schema it always did.
+		expect(
+			buildProposalSchema(['edit_reference']).safeParse(proposing('reference.text.nl')).success
+		).toBe(false);
+
+		const dutch = buildProposalSchema(['edit_reference'], { languages: ['nl'] });
+		expect(dutch.safeParse(proposing('reference.text.nl')).success).toBe(true);
+		expect(dutch.safeParse(proposing('reference.text.de')).success).toBe(false);
+	});
+
+	it('resolves the languages, and notes what each listed row has', async () => {
+		const live = await referencesPage();
+		const edit = live.find((c) => c.capability === 'edit_reference');
+		const add = live.find((c) => c.capability === 'add_reference');
+
+		expect(edit?.languages).toEqual(['nl']);
+		expect(edit?.notes).toEqual({ 13: 'Dutch: author_position' });
+		// An add names no row, so there is nothing to note — only the languages.
+		expect(add?.languages).toEqual(['nl']);
+		expect(add?.notes).toBeUndefined();
+		expect(liveLanguages(live)).toEqual(['nl']);
+	});
+
+	it('prints the note on the row, and the rule once', async () => {
+		const prompt = renderCapabilityPrompt(await referencesPage());
+
+		expect(prompt).toContain(
+			'target_id 13: Elmar Krack, Co-founder of Tender-it (Dutch: author_position)'
+		);
+		// No note on a row with nothing translated: its absence is the information.
+		expect(prompt).toMatch(/target_id 14: Michaël de Groot, Founder of Chipta\n/);
+		expect(prompt.match(/Their CV also exists in Dutch/g)).toHaveLength(1);
+		// The fields are listed, because the schema's enum steers a model reaching
+		// for a translation a section lacks to the English field instead.
+		expect(prompt).toContain('reference.author_position, reference.text.');
+		expect(prompt).toContain('("reference.author_position.nl")');
+	});
+
+	it('says nothing about translations to a profile that has none', async () => {
+		sectionRows = { reference: REFERENCES };
+		const live = await resolveCapabilities(['edit_reference', 'add_reference'], null, ACTOR);
+
+		expect(live.every((c) => c.languages === undefined && c.notes === undefined)).toBe(true);
+		expect(renderCapabilityPrompt(live)).not.toContain('Dutch');
+	});
+
+	it('keeps the rule to a paragraph', async () => {
+		// Paid on every capable turn of a translating profile's page, and the
+		// work-experience page had 3,524 characters of budget left when it was
+		// added.
+		const live = await referencesPage();
+		const without = renderCapabilityPrompt(live.map(({ languages: _l, notes: _n, ...c }) => c));
+
+		expect(renderCapabilityPrompt(live).length - without.length).toBeLessThan(900);
 	});
 });

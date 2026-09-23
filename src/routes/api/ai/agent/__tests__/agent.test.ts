@@ -119,6 +119,7 @@ vi.mock('$lib/server/ai-chat/capabilities', () => ({
 		}
 	},
 	buildProposalSchema: () => ({ schema: true }),
+	liveLanguages: () => [],
 	describeProposalChanges: () => [{ field: 'salary_min', label: 'Salary min', from: '5', to: '6' }],
 	fieldsFromChanges: (_c: string, changes: { field: string; value: unknown }[]) =>
 		Object.fromEntries(changes.map((c) => [c.field, c.value])),

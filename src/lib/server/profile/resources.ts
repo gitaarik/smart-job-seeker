@@ -408,6 +408,22 @@ export interface ProfileResource {
 	 * that before they click rather than after.
 	 */
 	hideNote?: string;
+	/**
+	 * What this section's rows are called in `profile_translations`, for the
+	 * sections whose text also prints in another language.
+	 *
+	 * The overlay has its own vocabulary (see `TRANSLATABLE_FIELDS` in
+	 * `$lib/resume-translations`), and it is persisted, so it cannot simply be
+	 * renamed to match: a skill group's translations are stored under
+	 * `tech_skill_category`, after its table, where this layer calls the section
+	 * `skill_category`. Which of a section's columns are translatable is that
+	 * vocabulary's answer, not this declaration's — naming the entity is the one
+	 * fact the two need to share.
+	 *
+	 * Absent means nothing in the section is translated, which is most of them:
+	 * a certificate or a technology is called the same thing in every language.
+	 */
+	translationEntity?: string;
 }
 
 /**
@@ -554,7 +570,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		// Postgres sorts ASC NULLS LAST, so with no manual sort the list falls
 		// through to date order; once reordered, `sort` wins.
 		orderBy: [asc(work_experiences.sort), desc(work_experiences.start_date)],
-		schema: workExperienceBasicSchema
+		schema: workExperienceBasicSchema,
+		translationEntity: 'work_experience'
 	},
 
 	/**
@@ -624,7 +641,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 			desc(work_experiences.start_date),
 			asc(work_experience_projects.sort)
 		],
-		schema: workExperienceProjectBasicSchema
+		schema: workExperienceProjectBasicSchema,
+		translationEntity: 'work_experience_project'
 	},
 
 	/** The bullet points under a role — what the applicant actually achieved there. */
@@ -673,7 +691,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 			desc(work_experiences.start_date),
 			asc(work_experience_achievements.sort)
 		],
-		schema: workExperienceAchievementBasicSchema
+		schema: workExperienceAchievementBasicSchema,
+		translationEntity: 'work_experience_achievement'
 	},
 
 	/** What one role was worked in — the stack listed under the job. */
@@ -807,7 +826,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		notNullColumns: [],
 		newRowPlacement: 'append',
 		orderBy: [asc(education.sort), desc(education.start_date)],
-		schema: educationUpdateSchema
+		schema: educationUpdateSchema,
+		translationEntity: 'education'
 	},
 
 	side_project: {
@@ -839,7 +859,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		notNullColumns: [],
 		newRowPlacement: 'unsorted',
 		orderBy: [asc(side_projects.sort), desc(side_projects.start_date)],
-		schema: sideProjectBasicSchema
+		schema: sideProjectBasicSchema,
+		translationEntity: 'side_project'
 	},
 
 	/** The bullet points under a side project. Same shape as a role's, one column lighter. */
@@ -880,7 +901,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 			desc(side_projects.start_date),
 			asc(side_project_achievements.sort)
 		],
-		schema: sideProjectAchievementBasicSchema
+		schema: sideProjectAchievementBasicSchema,
+		translationEntity: 'side_project_achievement'
 	},
 
 	/** What one side project was built with. */
@@ -947,7 +969,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		notNullColumns: [],
 		newRowPlacement: 'append',
 		orderBy: [asc(languages.sort)],
-		schema: languageBasicSchema
+		schema: languageBasicSchema,
+		translationEntity: 'language'
 	},
 
 	reference: {
@@ -973,7 +996,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		notNullColumns: ['author'],
 		newRowPlacement: 'append',
 		orderBy: [asc(references.sort)],
-		schema: referenceBasicSchema
+		schema: referenceBasicSchema,
+		translationEntity: 'reference'
 	},
 
 	certificate: {
@@ -1164,6 +1188,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		newRowPlacement: 'append',
 		orderBy: [asc(tech_skill_categories.sort)],
 		schema: techSkillCategoryBasicSchema,
+		// Stored under the table's name, not the section's. See `translationEntity`.
+		translationEntity: 'tech_skill_category',
 		hideNote:
 			'Hiding a group takes every skill in it off the document, not just the ' +
 			'heading — both renderers drop a group once its heading is filtered out.'

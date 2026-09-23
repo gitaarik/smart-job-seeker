@@ -37,6 +37,12 @@
  * a proposal is stored. A name that matches nothing is then a refusal that says
  * which groups exist, at the point the model can still do something about it,
  * rather than an exception thrown at apply time.
+ *
+ * **A translation beside each column that has one.** `reference.text.nl` sits
+ * next to `reference.text`, so the English and the Dutch it prints as on the
+ * Dutch CV are one proposal and one card, and neither can go stale behind the
+ * other's back. Which languages a model is offered is the profile's own answer;
+ * see `section-translations.ts`.
  */
 
 import {
@@ -62,6 +68,22 @@ import {
 	updateRow,
 	validatePatch
 } from '$lib/server/profile/write';
+import {
+	deleteRowTranslations,
+	languagesOf,
+	LANGUAGES_KEY,
+	parseTranslationField,
+	readTranslations,
+	translatableColumns,
+	translatedLocales,
+	translatedSince,
+	translationField,
+	translationFieldKinds,
+	translationRefusal,
+	translationsIn,
+	writeTranslations
+} from '$lib/server/profile/section-translations';
+import { localeLabel } from '$lib/resume-translations';
 import type { CapabilityActor, CapabilityDef, CapabilityTarget } from './capabilities';
 import type { ContextEntity } from './generation-context';
 
@@ -425,9 +447,21 @@ const INLINE_LIMIT = 160;
 /**
  * `parents` rides along in `current` without being a field, so it is rendered
  * as what it is — the groups this row could be filed under — rather than as a
- * value someone could propose a new version of.
+ * value someone could propose a new version of. The row's languages ride the
+ * same way; see `LANGUAGES_KEY`.
  */
-const NOT_A_VALUE = new Set(['parents']);
+const NOT_A_VALUE = new Set(['parents', LANGUAGES_KEY]);
+
+/**
+ * How much of a translation the model is shown before it is not shown at all.
+ *
+ * Far more than `INLINE_LIMIT`, because a long English value is in the profile
+ * block above and a translation is nowhere else in the prompt. 800 covers the
+ * longest measured on the profile this was built against, a 633-character Dutch
+ * role summary. Past it the value is described rather than cut: a model shown
+ * half a text and asked to edit it sends back half a text.
+ */
+const TRANSLATION_INLINE_LIMIT = 800;
 
 function renderState(current: Record<string, unknown>): string {
 	const lines = Object.entries(current)
@@ -437,6 +471,12 @@ function renderState(current: Record<string, unknown>): string {
 			if (Array.isArray(value)) return `  - ${field}: ${value.join(', ')}`;
 
 			const text = String(value);
+			if (parseTranslationField(field)) {
+				return text.length > TRANSLATION_INLINE_LIMIT
+					? `  - ${field}: ${text.length} characters, too long to show here; translate the ` +
+							`English afresh rather than editing it`
+					: `  - ${field}: ${text}`;
+			}
 			return text.length > INLINE_LIMIT
 				? `  - ${field}: ${text.length} characters, shown in full in their profile above`
 				: `  - ${field}: ${text}`;
@@ -454,6 +494,135 @@ function renderState(current: Record<string, unknown>): string {
 	]
 		.join('')
 		.trimEnd();
+}
+
+/**
+ * The languages this profile writes this section in, and one row's
+ * translations in them.
+ *
+ * Nothing is read for a section with nothing translatable, and only the
+ * language list for a profile that has never translated anything — which is
+ * most of them, and which this keeps at one indexed query.
+ */
+async function translationsOf(
+	name: ProfileResourceName,
+	id: number | null,
+	actor: CapabilityActor
+): Promise<{ languages: string[]; values: Record<string, string> }> {
+	if (translatableColumns(name).length === 0) return { languages: [], values: {} };
+
+	const languages = await translatedLocales(actor.profileId);
+	if (languages.length === 0 || id === null) return { languages, values: {} };
+
+	const values = (await readTranslations(actor.profileId, name, [id], languages)).get(id) ?? {};
+	return { languages, values };
+}
+
+/**
+ * A row's values as the model and the card read them: each column, followed by
+ * its translation in every language the profile has started.
+ *
+ * Null where a translation has not been written, rather than absent. That is
+ * what lets a model fill one — a field missing from `current` is refused by
+ * `validate` as a language nobody started — and what makes filling it read as
+ * additive to the tiering, which asks whether the value being replaced is blank.
+ */
+function valuesWithTranslations(
+	name: ProfileResourceName,
+	columns: string[],
+	row: SectionRow | null,
+	translations: { languages: string[]; values: Record<string, string> }
+): Record<string, unknown> {
+	const translatable = translatableColumns(name);
+	const values: Record<string, unknown> = {};
+
+	for (const column of columns) {
+		values[wireName(name, column)] = row?.[column] ?? null;
+		if (!translatable.includes(column)) continue;
+		for (const locale of translations.languages) {
+			const field = translationField(name, column, locale);
+			values[field] = translations.values[field] ?? null;
+		}
+	}
+
+	if (translations.languages.length > 0) values[LANGUAGES_KEY] = translations.languages;
+	return values;
+}
+
+/**
+ * The translation half of a change, checked: the refusals `translationRefusal`
+ * makes, then each new translation against the rule its English column is held
+ * to. An achievement's 255 characters are a limit on the line, whatever
+ * language it is written in.
+ */
+function checkTranslations(
+	name: ProfileResourceName,
+	proposed: Record<string, unknown>,
+	current: Record<string, unknown>
+): { ok: true } | { ok: false; error: string } {
+	const refusal = translationRefusal(name, proposed, current, languagesOf(current));
+	if (refusal) return { ok: false, error: refusal };
+
+	for (const [field, value] of Object.entries(translationsIn(name, proposed))) {
+		if (value === null || value === undefined || value === '') continue;
+		const column = parseTranslationField(field)?.column as string;
+		const checked = validatePatch(name, { [column]: value });
+		if (!checked.ok) return { ok: false, error: `${field}: ${checked.error}` };
+	}
+
+	return { ok: true };
+}
+
+/**
+ * What one listed row already holds in other languages, as its list line says
+ * it: "Dutch: text, author_position".
+ *
+ * Only a list needs this. A page about one row shows its translations among
+ * its current values; a list shows labels, and without a note a model changing
+ * a listed row's English has no way to know there is a Dutch version to keep in
+ * step with it.
+ */
+function translationNote(name: ProfileResourceName, values: Record<string, string>): string {
+	const byLanguage = new Map<string, string[]>();
+	for (const field of Object.keys(values)) {
+		const translation = parseTranslationField(field);
+		if (!translation || translation.section !== name) continue;
+		byLanguage.set(translation.locale, [
+			...(byLanguage.get(translation.locale) ?? []),
+			translation.column
+		]);
+	}
+
+	return [...byLanguage]
+		.map(([locale, columns]) => `${localeLabel(locale)}: ${columns.join(', ')}`)
+		.join('; ');
+}
+
+/**
+ * The generated sections' answer to `CapabilityDef.translations`: the
+ * profile's languages, and for a list, what each row already has in them.
+ */
+async function sectionTranslations(
+	name: ProfileResourceName,
+	targets: CapabilityTarget[],
+	actor: CapabilityActor,
+	withNotes: boolean
+): Promise<{ languages: string[]; notes: Record<number, string> }> {
+	const { languages } = await translationsOf(name, null, actor);
+	if (languages.length === 0 || !withNotes || targets.length < 2) return { languages, notes: {} };
+
+	const held = await readTranslations(
+		actor.profileId,
+		name,
+		targets.map((t) => t.id),
+		languages
+	);
+	const notes: Record<number, string> = {};
+	for (const [id, values] of held) {
+		const note = translationNote(name, values);
+		if (note) notes[id] = note;
+	}
+	return { languages, notes };
 }
 
 /**
@@ -627,19 +796,23 @@ function editCapability(name: ProfileResourceName): CapabilityDef {
 		 * this one's prompt.
 		 */
 		current: async (t, actor, entity) => {
-			const row = await readOwnedRow(name, { profileId: actor.profileId }, t.id);
-			const groups = await parentLabels(resource, actor, entity);
+			const [row, groups, translations] = await Promise.all([
+				readOwnedRow(name, { profileId: actor.profileId }, t.id),
+				parentLabels(resource, actor, entity),
+				translationsOf(name, t.id, actor)
+			]);
 			return {
-				...Object.fromEntries(
-					Object.keys(fields).map((column) => [wireName(name, column), row?.[column] ?? null])
-				),
+				...valuesWithTranslations(name, Object.keys(fields), row, translations),
 				...(groups ? { parents: groups } : {})
 			};
 		},
 
-		fields: Object.fromEntries(
-			Object.entries(fields).map(([column, spec]) => [wireName(name, column), spec.kind])
-		),
+		fields: {
+			...Object.fromEntries(
+				Object.entries(fields).map(([column, spec]) => [wireName(name, column), spec.kind])
+			),
+			...translationFieldKinds(name)
+		},
 
 		contract: contractFor(resource, name),
 
@@ -649,43 +822,59 @@ function editCapability(name: ProfileResourceName): CapabilityDef {
 			const group = checkParent(resource, name, proposed, current);
 			if (!group.ok) return group;
 
+			const translated = checkTranslations(name, proposed, current);
+			if (!translated.ok) return translated;
+
 			const checked = validatePatch(name, toColumns(name, fields, proposed));
 			return checked.ok ? { ok: true } : { ok: false, error: checked.error };
 		},
+
+		translations: (targets, actor) => sectionTranslations(name, targets, actor, true),
 
 		/**
 		 * Write the old values back. Same path as the edit itself, so ownership,
 		 * coercion and validation are all re-asked — a log row records what
 		 * happened, it does not authorize anything.
+		 *
+		 * A translation comes back the same way, and one that was not there before
+		 * comes back as not there: its before-image is null, and null removes it.
 		 */
 		revert: async (t, previous, actor) => {
 			const patch = toColumnsFromRecord(name, fields, previous);
+			const translations = translationsIn(name, previous);
 			// An empty patch is a before-image this capability cannot read, not a
 			// change with nothing in it: `updateRow` would write nothing and report
 			// success, and the history would mark the change undone.
-			if (Object.keys(patch).length === 0) {
+			if (Object.keys(patch).length === 0 && Object.keys(translations).length === 0) {
 				throw new Error(`edit_${name} recorded no fields this can put back`);
 			}
 
-			const result = await updateRow(name, { profileId: actor.profileId }, t.id, patch);
-			if (!result.ok) {
-				throw new Error(`edit_${name} could not be undone: ${result.error}`);
+			if (Object.keys(patch).length > 0) {
+				const result = await updateRow(name, { profileId: actor.profileId }, t.id, patch);
+				if (!result.ok) {
+					throw new Error(`edit_${name} could not be undone: ${result.error}`);
+				}
 			}
+			await writeTranslations(actor.profileId, name, t.id, translations);
 		},
 
 		apply: async (t, proposed, _current, actor) => {
-			const result = await updateRow(
-				name,
-				{ profileId: actor.profileId },
-				t.id,
-				toColumns(name, fields, proposed)
-			);
+			const columns = toColumns(name, fields, proposed);
+			const translations = translationsIn(name, proposed);
 
-			// authorize and validate both passed moments ago, so a refusal here is
-			// a race — the row deleted, the profile switched — not a bad proposal.
-			if (!result.ok) {
-				throw new Error(`edit_${name} refused at write time: ${result.error}`);
+			// The English first, so a refusal at write time leaves the translation
+			// describing the English that is still there. A change of translations
+			// alone skips it; `writeTranslations` asks about ownership itself.
+			if (Object.keys(columns).length > 0 || Object.keys(translations).length === 0) {
+				const result = await updateRow(name, { profileId: actor.profileId }, t.id, columns);
+
+				// authorize and validate both passed moments ago, so a refusal here is
+				// a race — the row deleted, the profile switched — not a bad proposal.
+				if (!result.ok) {
+					throw new Error(`edit_${name} refused at write time: ${result.error}`);
+				}
 			}
+			await writeTranslations(actor.profileId, name, t.id, translations);
 		}
 	};
 }
@@ -722,6 +911,9 @@ function addCapability(name: ProfileResourceName): CapabilityDef {
 
 		authorize: async (t, actor) => t.id === actor.profileId,
 
+		// The languages only: an add names no row, so there is nothing to note.
+		translations: (targets, actor) => sectionTranslations(name, targets, actor, false),
+
 		/**
 		 * The undo names the row, where the proposal named the profile.
 		 *
@@ -736,9 +928,15 @@ function addCapability(name: ProfileResourceName): CapabilityDef {
 			(await readOwnedRow(name, { profileId: actor.profileId }, t.id)) !== null,
 
 		current: async (_t, actor, entity) => {
-			const rows = await rowsFor(name, entity ?? null, actor);
-			const groups = await parentLabels(resource, actor, entity);
-			if (!groups) return { existing: rows.map((row) => resource.rowLabel(row)) };
+			const [rows, groups, { languages }] = await Promise.all([
+				rowsFor(name, entity ?? null, actor),
+				parentLabels(resource, actor, entity),
+				translationsOf(name, null, actor)
+			]);
+			// No values to pair them with — the row does not exist yet — so only the
+			// languages it may arrive in, for `validate` to hold a translation to.
+			const translatable = languages.length > 0 ? { [LANGUAGES_KEY]: languages } : {};
+			if (!groups) return { existing: rows.map((row) => resource.rowLabel(row)), ...translatable };
 
 			// By group, the way the page shows them. A flat list would repeat the
 			// group on every line — a skill's label carries it — which on a profile
@@ -752,12 +950,15 @@ function addCapability(name: ProfileResourceName): CapabilityDef {
 				(inventory[group] ??= []).push((resource.shortLabel ?? resource.rowLabel)(row));
 			}
 
-			return { existingByGroup: inventory, parents: groups };
+			return { existingByGroup: inventory, parents: groups, ...translatable };
 		},
 
-		fields: Object.fromEntries(
-			Object.entries(fields).map(([column, spec]) => [wireName(name, column), spec.kind])
-		),
+		fields: {
+			...Object.fromEntries(
+				Object.entries(fields).map(([column, spec]) => [wireName(name, column), spec.kind])
+			),
+			...translationFieldKinds(name)
+		},
 
 		contract: `${contractFor(resource, name)}
 
@@ -827,6 +1028,11 @@ a duplicate of anything already in one:\n\n${lines.join('\n')}`;
 			const checked = validatePatch(name, toColumns(name, fields, proposed), true);
 			if (!checked.ok) return { ok: false, error: checked.error };
 
+			// There is no row to hold the English yet, so a translation is refused
+			// unless its English arrives in the same change.
+			const translated = checkTranslations(name, proposed, current);
+			if (!translated.ok) return translated;
+
 			// Last, because a duplicate of a row that does not have a valid name yet
 			// is not the interesting thing wrong with it — and because this reads
 			// the label the proposal would produce, which is only meaningful once
@@ -884,6 +1090,17 @@ a duplicate of anything already in one:\n\n${lines.join('\n')}`;
 				);
 			}
 
+			// The same question of its translations, which live in another table and
+			// so never touch `date_updated`. The add stamped its own with the row's
+			// `date_created`; anything stamped otherwise was written since.
+			const created = row?.date_created instanceof Date ? row.date_created : null;
+			if (created && (await translatedSince(actor.profileId, name, t.id, created))) {
+				throw new Error(
+					`This ${resource.label}'s translation has been changed since it was added, and ` +
+						`undoing the add would delete it along with that change. ${byHand}`
+				);
+			}
+
 			const children = await childrenUnder(name, t.id, actor);
 			if (children.length > 0) {
 				throw new Error(
@@ -898,6 +1115,11 @@ a duplicate of anything already in one:\n\n${lines.join('\n')}`;
 			if (!result.ok) {
 				throw new Error(`add_${name} could not be undone: ${result.error}`);
 			}
+
+			// After the row, so a refused delete leaves its translations with it.
+			// Nothing else would remove them: the overlay has no foreign key to the
+			// row it translates.
+			await deleteRowTranslations(actor.profileId, name, t.id);
 		},
 
 		apply: async (_t, proposed, _current, actor) => {
@@ -908,6 +1130,16 @@ a duplicate of anything already in one:\n\n${lines.join('\n')}`;
 			);
 			if (!result.ok) {
 				throw new Error(`add_${name} refused at write time: ${result.error}`);
+			}
+
+			// Stamped with the row's own creation time, which is what lets undoing
+			// this add tell its translations from one written afterwards.
+			const translations = translationsIn(name, proposed);
+			if (Object.keys(translations).length > 0) {
+				const created = result.row.date_created;
+				await writeTranslations(actor.profileId, name, result.id, translations, {
+					stamp: created instanceof Date ? created : new Date()
+				});
 			}
 
 			// The row, so the change is recorded against the thing that appeared
@@ -958,8 +1190,10 @@ This proposal carries no fields. Name the entry and say why in the rationale;
 there is nothing to write.`,
 
 		renderState: (current) => {
+			// The English only. A hide takes the whole entry off, whatever language it
+			// is read in, and its translations would double this list to say so.
 			const shown = Object.entries(current)
-				.filter(([field]) => !NOT_A_VALUE.has(field))
+				.filter(([field]) => !NOT_A_VALUE.has(field) && !parseTranslationField(field))
 				.filter(([, value]) => value !== null && value !== undefined && value !== '')
 				.map(([field, value]) => `  - ${field}: ${String(value).slice(0, INLINE_LIMIT)}`);
 			return shown.length > 0 ? `What hiding this would take off:\n\n${shown.join('\n')}` : '';

@@ -60,6 +60,31 @@ vi.mock('$lib/server/profile/write', () => ({
 	setRowTags: () => Promise.resolve({ ok: true })
 }));
 
+/**
+ * What the profile holds in other languages: none, unless a test says so, which
+ * is every profile that has never translated anything.
+ */
+const translations = {
+	languages: [] as string[],
+	values: {} as Record<number, Record<string, string>>
+};
+
+// Partial: the field names and the refusals are the real ones, and only the
+// reads are stubbed — a translatable section asks which languages the profile
+// writes in on every read and every write.
+vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/profile/section-translations')>()),
+	translatedLocales: () => Promise.resolve(translations.languages),
+	readTranslations: (_profileId: number, _name: string, ids: number[]) =>
+		Promise.resolve(
+			new Map(
+				ids
+					.filter((id) => translations.values[id])
+					.map((id) => [id, translations.values[id]] as const)
+			)
+		)
+}));
+
 // Partial: the real CAPABILITIES and the real coercion, only the write stubbed.
 vi.mock('$lib/server/ai-chat/capabilities', async (importOriginal) => ({
 	...(await importOriginal<typeof import('$lib/server/ai-chat/capabilities')>()),
@@ -363,6 +388,8 @@ function withReadScope(readScope: 'record' | 'documents') {
 beforeEach(() => {
 	directiveRows = [];
 	directivesFail = false;
+	translations.languages = [];
+	translations.values = {};
 	vi.clearAllMocks();
 	recentDirectWrites.mockResolvedValue(0);
 	createRequest.mockResolvedValue(101);
@@ -1544,5 +1571,159 @@ describe('writing a version of a text', () => {
 		const result = await callTool('add_letter_version', { ...version, letter_content: long }, KEY);
 		expect(result.content[0].text).toContain('characters in total');
 		expect(result.content[0].text.length).toBeLessThan(long.length);
+	});
+});
+
+describe('translations', () => {
+	/** Row 5, with a Dutch version of its summary: a profile that writes in Dutch. */
+	function inDutch() {
+		translations.languages = ['nl'];
+		translations.values = {
+			5: { 'work_experience.summary.nl': 'Wat de sollicitant zelf schreef.' }
+		};
+	}
+
+	it('reads each translation beside the English it translates', async () => {
+		inDutch();
+		const result = await callTool(
+			'read_profile_section',
+			{ profile_id: 12, section: 'work_experience' },
+			KEY
+		);
+
+		const entries = result.structuredContent?.entries as { fields: Record<string, unknown> }[];
+		const keys = Object.keys(entries[0].fields);
+		// Right after its English, so a reader sees the pair it has to keep in step.
+		expect(keys[keys.indexOf('work_experience.summary') + 1]).toBe('work_experience.summary.nl');
+		expect(entries[0].fields['work_experience.summary.nl']).toBe(
+			'Wat de sollicitant zelf schreef.'
+		);
+		// Null where nothing is written yet, so a reader can tell "none" from "not asked".
+		expect(entries[1].fields['work_experience.summary.nl']).toBeNull();
+		expect(result.content[0].text).toContain('Dutch CV');
+	});
+
+	it('reads no translations for a profile that has none', async () => {
+		const result = await callTool(
+			'read_profile_section',
+			{ profile_id: 12, section: 'work_experience' },
+			KEY
+		);
+
+		const entries = result.structuredContent?.entries as { fields: Record<string, unknown> }[];
+		expect(Object.keys(entries[0].fields).some((key) => key.endsWith('.nl'))).toBe(false);
+		expect(result.content[0].text).not.toContain('Dutch');
+	});
+
+	it('fills an empty translation directly, like any empty field', async () => {
+		// Dutch started, but nothing written for row 5 yet.
+		translations.languages = ['nl'];
+		const result = await callTool(
+			'edit_work_experience',
+			{
+				profile_id: 12,
+				entry_id: 5,
+				'work_experience.summary.nl': 'Wat de sollicitant zelf schreef.',
+				rationale: 'They asked for the Dutch.'
+			},
+			KEY
+		);
+
+		expect(result.structuredContent?.applied).toBe(true);
+		expect(executeCapability).toHaveBeenCalled();
+	});
+
+	it('asks before replacing a translation someone wrote', async () => {
+		inDutch();
+		const result = await callTool(
+			'edit_work_experience',
+			{
+				profile_id: 12,
+				entry_id: 5,
+				'work_experience.summary.nl': 'Een kortere versie.',
+				rationale: 'Shorter Dutch.'
+			},
+			KEY
+		);
+
+		expect(executeCapability).not.toHaveBeenCalled();
+		expect(createRequest).toHaveBeenCalled();
+		expect(result.structuredContent?.applied).toBe(false);
+	});
+
+	it('warns when the English changes and its translation does not', async () => {
+		inDutch();
+		const result = await callTool(
+			'edit_work_experience',
+			{
+				profile_id: 12,
+				entry_id: 5,
+				'work_experience.summary': 'A punchier version.',
+				rationale: 'Reads better.'
+			},
+			KEY
+		);
+
+		expect(result.structuredContent?.stale_translations).toEqual(['work_experience.summary.nl']);
+		expect(result.content[0].text).toContain('"work_experience.summary.nl" still holds');
+	});
+
+	it('does not warn when the translation moves with it', async () => {
+		inDutch();
+		const result = await callTool(
+			'edit_work_experience',
+			{
+				profile_id: 12,
+				entry_id: 5,
+				'work_experience.summary': 'A punchier version.',
+				'work_experience.summary.nl': 'Een pakkender versie.',
+				rationale: 'Reads better, in both languages.'
+			},
+			KEY
+		);
+
+		expect(result.structuredContent?.stale_translations).toBeUndefined();
+		// One request carrying both, so the applicant approves the pair together.
+		expect(createRequest).toHaveBeenCalledTimes(1);
+		expect(createRequest.mock.calls[0][0].fields).toEqual({
+			'work_experience.summary': 'A punchier version.',
+			'work_experience.summary.nl': 'Een pakkender versie.'
+		});
+	});
+
+	it('refuses a language the profile has not started', async () => {
+		inDutch();
+		const result = await callTool(
+			'edit_work_experience',
+			{
+				profile_id: 12,
+				entry_id: 5,
+				'work_experience.position.de': 'Entwickler',
+				rationale: 'German too.'
+			},
+			KEY
+		);
+
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('no German version');
+		expect(executeCapability).not.toHaveBeenCalled();
+		expect(createRequest).not.toHaveBeenCalled();
+	});
+
+	it('refuses clearing the English from under its translation', async () => {
+		inDutch();
+		const result = await callTool(
+			'edit_work_experience',
+			{
+				profile_id: 12,
+				entry_id: 5,
+				'work_experience.summary': null,
+				rationale: 'Drop the summary.'
+			},
+			KEY
+		);
+
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('work_experience.summary.nl');
 	});
 });

@@ -62,6 +62,17 @@ import {
 } from '$lib/server/profile/resources';
 import { isHiddenFromDocuments, versionsOf } from '$lib/profile-visibility';
 import { readOwnedRows } from '$lib/server/profile/write';
+import {
+	isOfferedField,
+	languageList,
+	languagesOf,
+	parseTranslationField,
+	readTranslations,
+	staleTranslations,
+	translatableColumns,
+	translatedLocales,
+	translationField
+} from '$lib/server/profile/section-translations';
 import { readEditLog } from '$lib/server/ai-chat/edit-log';
 import { createNotification } from '$lib/server/notifications';
 import {
@@ -270,12 +281,34 @@ async function readProfileSection(args: Args, key: VerifiedMcpKey): Promise<Tool
 	const rows = await readOwnedRows(name, { profileId: key.profileId });
 	const hideable = isHideable(name);
 
+	// Each translatable column's versions in the profile's other languages, named
+	// as the edit tools take them and listed right after the English they
+	// translate — null where one has not been written. Nothing is read for a
+	// section with nothing to translate, or a profile that never has.
+	const translatable = translatableColumns(name);
+	const languages = translatable.length > 0 ? await translatedLocales(key.profileId) : [];
+	const translations = await readTranslations(
+		key.profileId,
+		name,
+		rows.map((row) => row.id),
+		languages
+	);
+
 	const entries = rows.map((row) => {
+		const held = translations.get(row.id) ?? {};
 		const entry: Record<string, unknown> = {
 			entry_id: row.id,
 			label: resource.rowLabel(row),
 			fields: Object.fromEntries(
-				Object.keys(fields).map((column) => [`${name}.${column}`, row[column] ?? null])
+				Object.keys(fields).flatMap((column) => [
+					[`${name}.${column}`, row[column] ?? null],
+					...(translatable.includes(column)
+						? languages.map((locale) => {
+								const field = translationField(name, column, locale);
+								return [field, held[field] ?? null];
+							})
+						: [])
+				])
 			)
 		};
 
@@ -315,12 +348,23 @@ async function readProfileSection(args: Args, key: VerifiedMcpKey): Promise<Tool
 		: `\n\nNothing filters this section on a document, so every entry here prints and ` +
 			`none of them can be hidden — by you or from the profile page.`;
 
+	// Said once here, where the fields are first seen, rather than left for an
+	// agent to infer from a suffix.
+	const translated =
+		languages.length > 0
+			? `\n\nA field ending in ${languages.map((locale) => `".${locale}"`).join(' or ')} is ` +
+				`what their ${languageList(languages)} CV prints in place of the English field ` +
+				`before it. The same edit and add tools write it, and it goes stale whenever the ` +
+				`English changes without it.`
+			: '';
+
 	return ok(
 		`${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} in ${name}:\n\n` +
 			entries
 				.map((e) => `- [${e.entry_id}] ${e.label}${e.hidden === true ? ' — hidden' : ''}`)
 				.join('\n') +
-			note,
+			note +
+			translated,
 		{ section: name, hideable, entries }
 	);
 }
@@ -979,8 +1023,11 @@ async function runWrite(
 	const sent = pickCapabilityFields(capability, args);
 
 	if (Object.keys(def.fields).length > 0 && Object.keys(sent).length === 0) {
+		const offered = Object.keys(def.fields).filter((field) =>
+			isOfferedField(field, languagesOf(current))
+		);
 		return fail(
-			`No recognised fields. This tool writes: ${Object.keys(def.fields).join(', ')} — ` +
+			`No recognised fields. This tool writes: ${offered.join(', ')} — ` +
 				`use the full names including the prefix.`
 		);
 	}
@@ -1026,6 +1073,14 @@ async function runWrite(
 
 	const valid = def.validate(fields, current);
 	if (!valid.ok) return fail(valid.error);
+
+	// A rewritten English field whose translation this call leaves alone. Not a
+	// refusal — see `staleTranslations` — but the one consequence of the write an
+	// agent cannot see in its own result, and how the Dutch CV used to go stale
+	// behind every agent edit.
+	const stale = staleTranslations(fields, current);
+	const staleNote = staleTranslationNote(stale);
+	const staleData = stale.length > 0 ? { stale_translations: stale } : {};
 
 	const rationale = typeof args.rationale === 'string' ? args.rationale.trim() : '';
 	if (!rationale) {
@@ -1079,14 +1134,16 @@ async function runWrite(
 				`Asked to ${def.title.toLowerCase()} on "${target.label}".\n` +
 				(text ? `\n${text}\n` : '') +
 				`\nThey decide at ${link}. There is no way for you to approve it; ` +
-				`tell them it is waiting and carry on.`,
+				`tell them it is waiting and carry on.` +
+				staleNote,
 			{
 				applied: false,
 				request_id: requestId,
 				review_at: link,
 				reason: decision.reason,
 				target: target.label,
-				diff
+				diff,
+				...staleData
 			}
 		);
 	}
@@ -1158,15 +1215,37 @@ async function runWrite(
 	return ok(
 		`${note ? `Recorded on "${written.label}".` : `Applied to "${written.label}".`}\n` +
 			(text ? `\n${text}\n` : '') +
-			`\n${reversal}${note ? '' : ' Tell them you made it.'}`.replace('  ', ' '),
+			`\n${reversal}${note ? '' : ' Tell them you made it.'}`.replace('  ', ' ') +
+			staleNote,
 		{
 			applied: true,
 			change_id: outcome.editId,
 			undoable: !!def.revert,
 			target: written.label,
 			...(note ? { note } : {}),
-			diff
+			diff,
+			...staleData
 		}
+	);
+}
+
+/**
+ * What to tell an agent whose change left a translation describing the English
+ * it replaced. Empty when it left none.
+ */
+function staleTranslationNote(stale: string[]): string {
+	if (stale.length === 0) return '';
+
+	const languages = [
+		...new Set(stale.map((field) => parseTranslationField(field)?.locale ?? ''))
+	].filter(Boolean);
+	const one = stale.length === 1;
+
+	return (
+		`\n\n${stale.map((field) => `"${field}"`).join(', ')} still ${one ? 'holds' : 'hold'} ` +
+		`the translation of the old English, and ${one ? 'goes' : 'go'} on printing on their ` +
+		`${languageList(languages)} CV. Send ${one ? 'it' : 'them'} with the new wording, or ` +
+		`tell them ${one ? 'it needs' : 'they need'} updating.`
 	);
 }
 

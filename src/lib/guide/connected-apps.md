@@ -53,6 +53,12 @@ an entry, always need your approval here, in this app. No setting turns that
 off, and the app on the other end cannot approve on your behalf — which is
 the entire reason approval happens here and not there.
 
+**Translations follow the same rule.** If your CV also exists in another
+language, an app can write that version of a field too, beside the English and
+in the same change. Filling in one you have not translated yet counts as filling
+a blank; rewriting one counts as rewriting something you wrote. It can only
+write in a language you have already started.
+
 Even with "Add things directly", writes stop being direct in bulk: after **20 in
 an hour** on one profile, the rest become requests waiting for you. An assistant
 that gets carried away fills a review queue, not your profile. Changes you

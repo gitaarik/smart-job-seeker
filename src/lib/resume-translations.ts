@@ -38,6 +38,16 @@ export function isKnownLocale(code: string | null | undefined): code is string {
 	return !!code && LOCALES.some((l) => l.code === code);
 }
 
+/** Every language a translation can be written in: all of the above but the base. */
+export const TRANSLATION_LOCALES: string[] = LOCALES.filter((l) => l.code !== BASE_LOCALE).map(
+	(l) => l.code
+);
+
+/** A language's English name, for prose that has to say which one: "Dutch". */
+export function localeLabel(code: string): string {
+	return LOCALES.find((l) => l.code === code)?.label ?? code;
+}
+
 /** A translatable text field on some profile entity. */
 export interface TranslatableField {
 	/** Stable key persisted in profile_translations.entity_type. */

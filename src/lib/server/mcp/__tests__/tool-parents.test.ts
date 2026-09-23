@@ -64,6 +64,13 @@ vi.mock('$lib/server/db', () => {
 	return { db: dbMock, dbDirect: dbMock };
 });
 
+// Which languages a profile writes in is another file's question. This profile
+// has none, so no tool here grows a translation field.
+vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/profile/section-translations')>()),
+	translatedLocales: () => Promise.resolve([])
+}));
+
 const { tech_skill_categories } = await import('$lib/server/db/schema');
 const { toolsFor } = await import('../tools');
 

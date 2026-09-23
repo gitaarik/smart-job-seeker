@@ -37,7 +37,9 @@ const state = {
 	visibility: [] as { resource: string; actor: unknown; id: number; visible: boolean }[],
 	tagWrites: [] as { resource: string; actor: unknown; id: number; tags: string[] | null }[],
 	deletes: [] as { resource: string; actor: unknown; id: number }[],
-	updateResult: { ok: true } as { ok: boolean; error?: string; reason?: string }
+	updateResult: { ok: true } as { ok: boolean; error?: string; reason?: string },
+	/** When a created row says it was created, for the tests that read it back. */
+	createdAt: null as Date | null
 };
 
 vi.mock('$lib/server/profile/write', async (importOriginal) => {
@@ -65,7 +67,17 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => {
 			// an id passes a test the write layer's own shape would not.
 			return Promise.resolve(
 				state.updateResult.ok
-					? { ok: true, id: 99, row: { ...values, id: 99, sort: null, status: null } }
+					? {
+							ok: true,
+							id: 99,
+							row: {
+								...values,
+								id: 99,
+								sort: null,
+								status: null,
+								...(state.createdAt ? { date_created: state.createdAt } : {})
+							}
+						}
 					: state.updateResult
 			);
 		},
@@ -82,6 +94,54 @@ vi.mock('$lib/server/profile/write', async (importOriginal) => {
 			return Promise.resolve(
 				state.updateResult.ok ? { ok: true, row: { id } } : state.updateResult
 			);
+		}
+	};
+});
+
+/**
+ * The translation overlay: a profile that writes in no other language, unless a
+ * test says it does.
+ */
+const translations = {
+	languages: [] as string[],
+	values: {} as Record<number, Record<string, string>>,
+	writes: [] as { name: string; id: number; values: Record<string, unknown>; stamp?: Date }[],
+	removed: [] as { name: string; id: number }[],
+	writtenSince: false
+};
+
+vi.mock('$lib/server/profile/section-translations', async (importOriginal) => {
+	// The field vocabulary and the refusals are real — they are what is under
+	// test. Only the overlay's reads and writes are stood in for.
+	const actual = await importOriginal<typeof import('$lib/server/profile/section-translations')>();
+	return {
+		...actual,
+		translatedLocales: () => Promise.resolve(translations.languages),
+		readTranslations: (_profileId: number, _name: string, ids: number[]) =>
+			Promise.resolve(
+				new Map(
+					ids
+						.filter((id) => translations.values[id])
+						.map((id) => [id, translations.values[id]] as const)
+				)
+			),
+		writeTranslations: (
+			_profileId: number,
+			name: string,
+			id: number,
+			values: Record<string, unknown>,
+			opts: { stamp?: Date } = {}
+		) => {
+			// The real one writes nothing for an empty set, so nothing is recorded.
+			if (Object.keys(values).length > 0) {
+				translations.writes.push({ name, id, values, stamp: opts.stamp });
+			}
+			return Promise.resolve();
+		},
+		translatedSince: () => Promise.resolve(translations.writtenSince),
+		deleteRowTranslations: (_profileId: number, name: string, id: number) => {
+			translations.removed.push({ name, id });
+			return Promise.resolve();
 		}
 	};
 });
@@ -106,6 +166,12 @@ beforeEach(() => {
 	state.tagWrites = [];
 	state.deletes = [];
 	state.updateResult = { ok: true };
+	state.createdAt = null;
+	translations.languages = [];
+	translations.values = {};
+	translations.writes = [];
+	translations.removed = [];
+	translations.writtenSince = false;
 });
 
 describe('the generated set', () => {
@@ -1066,5 +1132,381 @@ describe('undoing an add', () => {
 		// feed reads `revertible` off the registry, so a section without this is a
 		// section whose adds silently become permanent.
 		expect(PROFILE_CAPABILITIES[`add_${resource}` as never]).toHaveProperty('revert');
+	});
+});
+
+describe('translations', () => {
+	const reference = PROFILE_CAPABILITIES.edit_reference;
+	const addReference = PROFILE_CAPABILITIES.add_reference;
+	const REFERENCE = { id: 13, label: 'Elmar Krack, Co-founder of Tender-it' };
+
+	/** A profile that writes in Dutch, with reference 13's position already in it. */
+	function inDutch() {
+		translations.languages = ['nl'];
+		translations.values = { 13: { 'reference.author_position.nl': 'Medeoprichter van Tender-it' } };
+		state.row = {
+			id: 13,
+			profile_id: 12,
+			author: 'Elmar Krack',
+			author_position: 'Co-founder of Tender-it',
+			text: 'Rik demonstrated exceptional technical leadership.'
+		};
+	}
+
+	describe('the fields', () => {
+		it('gives each translatable column a twin in every language', () => {
+			// Declared for every language because `fields` is the coercion's
+			// allow-list; which ones a model is SHOWN is decided per profile.
+			for (const locale of ['nl', 'de', 'fr', 'es']) {
+				expect(reference.fields).toHaveProperty(`reference.text.${locale}`, 'string');
+				expect(addReference.fields).toHaveProperty(`reference.author_position.${locale}`, 'string');
+			}
+		});
+
+		it('gives none to a column the overlay does not translate', () => {
+			// A referee is called the same in every language.
+			expect(reference.fields).not.toHaveProperty('reference.author.nl');
+			expect(Object.keys(PROFILE_CAPABILITIES.edit_certificate.fields)).not.toContainEqual(
+				expect.stringMatching(/\.nl$/)
+			);
+		});
+
+		it('gives none to a column kept from the assistant', () => {
+			expect(PROFILE_CAPABILITIES.edit_work_experience.fields).not.toHaveProperty(
+				'work_experience.tags.nl'
+			);
+		});
+	});
+
+	describe('current', () => {
+		it('puts each translation right after the English it translates', async () => {
+			inDutch();
+			const current = await reference.current(REFERENCE, ACTOR);
+			const keys = Object.keys(current);
+
+			expect(keys[keys.indexOf('reference.author_position') + 1]).toBe(
+				'reference.author_position.nl'
+			);
+			expect(current['reference.author_position.nl']).toBe('Medeoprichter van Tender-it');
+		});
+
+		it('reads an unwritten translation as null, so filling it reads as additive', async () => {
+			inDutch();
+			expect(await reference.current(REFERENCE, ACTOR)).toHaveProperty('reference.text.nl', null);
+		});
+
+		it('carries the languages beside the values, for validate', async () => {
+			inDutch();
+			expect(await reference.current(REFERENCE, ACTOR)).toHaveProperty('translationLocales', [
+				'nl'
+			]);
+		});
+
+		it('is exactly what it was for a profile that has never translated anything', async () => {
+			state.row = { id: 13, profile_id: 12, author: 'Elmar Krack' };
+			const current = await reference.current(REFERENCE, ACTOR);
+
+			expect(Object.keys(current).some((key) => key.endsWith('.nl'))).toBe(false);
+			expect(current).not.toHaveProperty('translationLocales');
+		});
+	});
+
+	describe('renderState', () => {
+		it('shows a long translation in full, which the English is not', () => {
+			// The English is in the profile block; a translation is nowhere else.
+			const rendered = reference.renderState?.({
+				'reference.text': 'x'.repeat(500),
+				'reference.text.nl': 'y'.repeat(500),
+				translationLocales: ['nl']
+			});
+			expect(rendered).toContain('y'.repeat(500));
+			expect(rendered).not.toContain('x'.repeat(500));
+			expect(rendered).not.toContain('translationLocales');
+		});
+
+		it('describes one too long to show rather than cutting it', () => {
+			// Half a text shown is half a text sent back.
+			const rendered = reference.renderState?.({ 'reference.text.nl': 'y'.repeat(900) });
+			expect(rendered).toContain('900 characters');
+			expect(rendered).not.toContain('y'.repeat(801));
+		});
+	});
+
+	describe('validate', () => {
+		it('accepts a translation in a language the profile writes in', async () => {
+			inDutch();
+			const current = await reference.current(REFERENCE, ACTOR);
+			expect(
+				reference.validate({ 'reference.text.nl': 'Rik toonde leiderschap.' }, current)
+			).toEqual({
+				ok: true
+			});
+		});
+
+		it('refuses a language the profile has not started', async () => {
+			inDutch();
+			const current = await reference.current(REFERENCE, ACTOR);
+			const result = reference.validate({ 'reference.text.de': 'Rik zeigte Führung.' }, current);
+
+			expect(result.ok).toBe(false);
+			expect((result as { error: string }).error).toContain('no German version');
+		});
+
+		it('refuses a translation of an English field that is empty', async () => {
+			inDutch();
+			state.row = { ...(state.row ?? {}), text: null };
+			const current = await reference.current(REFERENCE, ACTOR);
+
+			expect(reference.validate({ 'reference.text.nl': 'Iets.' }, current).ok).toBe(false);
+			// Unless the English arrives in the same change.
+			expect(
+				reference.validate(
+					{ 'reference.text': 'Something.', 'reference.text.nl': 'Iets.' },
+					current
+				)
+			).toEqual({ ok: true });
+		});
+
+		it('refuses clearing the English from under its translation, and allows clearing both', async () => {
+			inDutch();
+			const current = await reference.current(REFERENCE, ACTOR);
+
+			const alone = reference.validate({ 'reference.author_position': null }, current);
+			expect(alone.ok).toBe(false);
+			expect((alone as { error: string }).error).toContain('reference.author_position.nl');
+
+			expect(
+				reference.validate(
+					{ 'reference.author_position': null, 'reference.author_position.nl': null },
+					current
+				)
+			).toEqual({ ok: true });
+		});
+
+		it('holds a translation to the rule its English column is held to', async () => {
+			// An achievement is one line in any language.
+			translations.languages = ['nl'];
+			state.row = { id: 7, profile_id: 12, description: 'Shipped it.' };
+			const achievement = PROFILE_CAPABILITIES.edit_work_experience_achievement;
+			const current = await achievement.current({ id: 7, label: 'x' }, ACTOR);
+
+			const result = achievement.validate(
+				{ 'work_experience_achievement.description.nl': 'x'.repeat(300) },
+				current
+			);
+			expect(result.ok).toBe(false);
+			expect((result as { error: string }).error).toContain(
+				'work_experience_achievement.description.nl'
+			);
+		});
+	});
+
+	describe('apply', () => {
+		it('writes a translation without touching the row when that is all it changes', async () => {
+			await reference.apply(
+				REFERENCE,
+				{ 'reference.text.nl': 'Rik toonde leiderschap.' },
+				{},
+				ACTOR
+			);
+
+			expect(state.updates).toHaveLength(0);
+			expect(translations.writes).toEqual([
+				{ name: 'reference', id: 13, values: { 'reference.text.nl': 'Rik toonde leiderschap.' } }
+			]);
+		});
+
+		it('writes the English to the row and the translation beside it', async () => {
+			await reference.apply(
+				REFERENCE,
+				{ 'reference.text': 'Rik led.', 'reference.text.nl': 'Rik leidde.' },
+				{},
+				ACTOR
+			);
+
+			expect(state.updates[0].values).toEqual({ text: 'Rik led.' });
+			expect(translations.writes[0].values).toEqual({ 'reference.text.nl': 'Rik leidde.' });
+		});
+
+		it('leaves the translation alone when the English write is refused', async () => {
+			state.updateResult = { ok: false, reason: 'not_found', error: 'gone' };
+
+			await expect(
+				reference.apply(
+					REFERENCE,
+					{ 'reference.text': 'Rik led.', 'reference.text.nl': 'Rik leidde.' },
+					{},
+					ACTOR
+				)
+			).rejects.toThrow(/refused at write time/);
+			expect(translations.writes).toHaveLength(0);
+		});
+	});
+
+	describe('undo', () => {
+		it('puts a replaced translation back, and removes one that was not there', async () => {
+			await reference.revert?.(
+				REFERENCE,
+				{ 'reference.text.nl': null, 'reference.author_position.nl': 'Medeoprichter' },
+				ACTOR
+			);
+
+			expect(state.updates).toHaveLength(0);
+			expect(translations.writes[0].values).toEqual({
+				'reference.text.nl': null,
+				'reference.author_position.nl': 'Medeoprichter'
+			});
+		});
+
+		it('puts back the English and the translation of one change together', async () => {
+			await reference.revert?.(
+				REFERENCE,
+				{ 'reference.text': 'Old English.', 'reference.text.nl': 'Oud Nederlands.' },
+				ACTOR
+			);
+
+			expect(state.updates[0].values).toEqual({ text: 'Old English.' });
+			expect(translations.writes[0].values).toEqual({ 'reference.text.nl': 'Oud Nederlands.' });
+		});
+	});
+
+	describe('adding an entry', () => {
+		it('carries the languages it may arrive in, and no values', async () => {
+			inDutch();
+			const current = await addReference.current({ id: 12, label: 'x' }, ACTOR);
+			expect(current).toHaveProperty('translationLocales', ['nl']);
+			expect(Object.keys(current).some((key) => key.endsWith('.nl'))).toBe(false);
+		});
+
+		it('takes a translation only with its English', async () => {
+			inDutch();
+			const current = await addReference.current({ id: 12, label: 'x' }, ACTOR);
+
+			expect(
+				addReference.validate(
+					{ 'reference.author': 'Michaël de Groot', 'reference.text.nl': 'Rik moderniseerde.' },
+					current
+				).ok
+			).toBe(false);
+			expect(
+				addReference.validate(
+					{
+						'reference.author': 'Michaël de Groot',
+						'reference.text': 'Rik modernized.',
+						'reference.text.nl': 'Rik moderniseerde.'
+					},
+					current
+				)
+			).toEqual({ ok: true });
+		});
+
+		it('writes the translations onto the row it created, stamped with its creation', async () => {
+			// The stamp is what lets undoing this add tell its own translations from
+			// one written afterwards.
+			state.createdAt = new Date('2026-09-23T12:00:00Z');
+
+			const target = await addReference.apply(
+				{ id: 12, label: 'x' },
+				{
+					'reference.author': 'Michaël de Groot',
+					'reference.text': 'Rik modernized.',
+					'reference.text.nl': 'Rik moderniseerde.'
+				},
+				{},
+				ACTOR
+			);
+
+			expect(state.creates[0].values).toEqual({
+				author: 'Michaël de Groot',
+				text: 'Rik modernized.'
+			});
+			expect(target).toMatchObject({ id: 99 });
+			expect(translations.writes[0]).toEqual({
+				name: 'reference',
+				id: 99,
+				values: { 'reference.text.nl': 'Rik moderniseerde.' },
+				stamp: state.createdAt
+			});
+		});
+
+		it('refuses to undo an add whose translation was written since', async () => {
+			state.row = { id: 99, profile_id: 12, date_created: new Date('2026-09-23T12:00:00Z') };
+			translations.writtenSince = true;
+
+			await expect(addReference.revert?.({ id: 99, label: 'x' }, {}, ACTOR)).rejects.toThrow(
+				/translation has been changed since it was added/
+			);
+			expect(state.deletes).toHaveLength(0);
+		});
+
+		it('removes the row’s translations along with the row', async () => {
+			state.row = { id: 99, profile_id: 12, date_created: new Date('2026-09-23T12:00:00Z') };
+
+			await addReference.revert?.({ id: 99, label: 'x' }, {}, ACTOR);
+
+			expect(state.deletes).toEqual([{ resource: 'reference', actor: { profileId: 12 }, id: 99 }]);
+			expect(translations.removed).toEqual([{ name: 'reference', id: 99 }]);
+		});
+	});
+
+	describe('the languages a turn is offered', () => {
+		it('notes what each listed row already has, so a list is not blind to it', async () => {
+			inDutch();
+			const answer = await reference.translations?.(
+				[REFERENCE, { id: 14, label: 'Michaël de Groot, Founder of Chipta' }],
+				ACTOR
+			);
+
+			expect(answer).toEqual({ languages: ['nl'], notes: { 13: 'Dutch: author_position' } });
+		});
+
+		it('notes nothing for a single row, whose values already show it', async () => {
+			inDutch();
+			expect(await reference.translations?.([REFERENCE], ACTOR)).toEqual({
+				languages: ['nl'],
+				notes: {}
+			});
+		});
+
+		it('offers no language to a profile that has never translated anything', async () => {
+			expect(await reference.translations?.([REFERENCE, { id: 14, label: 'x' }], ACTOR)).toEqual({
+				languages: [],
+				notes: {}
+			});
+		});
+
+		it('offers an add its languages and nothing to note', async () => {
+			inDutch();
+			expect(await addReference.translations?.([{ id: 12, label: 'x' }], ACTOR)).toEqual({
+				languages: ['nl'],
+				notes: {}
+			});
+		});
+
+		it('offers nothing for a section with no translatable column', async () => {
+			// Even on a profile that writes in Dutch: a certificate is called the
+			// same thing in every language.
+			inDutch();
+			expect(
+				await PROFILE_CAPABILITIES.edit_certificate.translations?.(
+					[
+						{ id: 1, label: 'a' },
+						{ id: 2, label: 'b' }
+					],
+					ACTOR
+				)
+			).toEqual({ languages: [], notes: {} });
+		});
+	});
+
+	it('leaves translations off what hiding takes off', async () => {
+		// The whole entry goes, in every language; listing the Dutch too says so twice.
+		const hide = PROFILE_CAPABILITIES.hide_work_experience;
+		const rendered = hide.renderState?.({
+			'work_experience.position': 'Engineer',
+			'work_experience.position.nl': 'Ontwikkelaar'
+		});
+		expect(rendered).toContain('Engineer');
+		expect(rendered).not.toContain('Ontwikkelaar');
 	});
 });

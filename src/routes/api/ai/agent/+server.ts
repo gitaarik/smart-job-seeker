@@ -23,6 +23,7 @@ import {
 	describeProposalChanges,
 	fieldsFromChanges,
 	type LiveCapability,
+	liveLanguages,
 	renderCapabilityPrompt
 } from '$lib/server/ai-chat/capabilities';
 import { summarizeProposal } from '$lib/server/ai-chat/proposal-summary';
@@ -482,7 +483,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			historyMessages: history,
 			...(capable
 				? {
-						responseSchema: buildProposalSchema(capabilities.map((c) => c.capability))
+						// Translation fields only in the languages the prompt offers them in.
+						responseSchema: buildProposalSchema(
+							capabilities.map((c) => c.capability),
+							{ languages: liveLanguages(capabilities) }
+						)
 					}
 				: {})
 		}

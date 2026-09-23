@@ -45,6 +45,7 @@ import { createAndGenerateAiChat } from '../src/lib/server/ai-chat/utils';
 import { ASSISTANT_PROFILE_FIELDS } from '../src/lib/server/ai-chat/profile-fields';
 import {
 	buildProposalSchema,
+	liveLanguages,
 	renderCapabilityPrompt
 } from '../src/lib/server/ai-chat/capabilities';
 import { EMPTY_CONTEXT_VARIABLES } from '../src/routes/api/ai/agent/placeholders';
@@ -115,7 +116,12 @@ async function ask(item: EvalQuestion, n: number) {
 			placeholderDefaults: EMPTY_CONTEXT_VARIABLES,
 			historyMessages: [],
 			...(capable
-				? { responseSchema: buildProposalSchema(capabilities.map((c) => c.capability)) }
+				? {
+						responseSchema: buildProposalSchema(
+							capabilities.map((c) => c.capability),
+							{ languages: liveLanguages(capabilities) }
+						)
+					}
 				: {})
 		}
 	);

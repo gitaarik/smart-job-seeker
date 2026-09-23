@@ -78,6 +78,8 @@ import { capability_edits } from '$lib/server/db/schema';
 import { recordChange, type EditSource } from '$lib/server/profile/change-log';
 import { isUiAction, UI_ACTIONS, type UiAction } from '$lib/server/profile/ui-actions';
 import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
+import { translatableColumns } from '$lib/server/profile/section-translations';
+import { TRANSLATION_LOCALES } from '$lib/resume-translations';
 import {
 	CAPABILITIES,
 	describeFieldChanges,
@@ -283,8 +285,16 @@ export function describeLoggedChange(entry: EditLogEntry): ProposedChange[] {
 	const [verb, resource] = section;
 	if (verb === 'reorder' || verb === 'hide' || verb === 'show') return [];
 
+	// Each column's translations right after it, by the same prefix-less name
+	// `byColumn` gives them (`text.nl`), so a change that rewrote the English and
+	// the Dutch reads as the pair it was.
+	const translatable = translatableColumns(resource);
 	return describeFieldChanges(
-		Object.keys(PROFILE_RESOURCES[resource].fields),
+		Object.keys(PROFILE_RESOURCES[resource].fields).flatMap((column) =>
+			translatable.includes(column)
+				? [column, ...TRANSLATION_LOCALES.map((locale) => `${column}.${locale}`)]
+				: [column]
+		),
 		byColumn(entry.fields),
 		byColumn(entry.previous)
 	);

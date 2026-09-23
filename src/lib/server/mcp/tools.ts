@@ -69,6 +69,8 @@ import {
 	type ProfileResourceName
 } from '$lib/server/profile/resources';
 import { parentNames, type ProfileActor } from '$lib/server/profile/write';
+import { parseTranslationField, translatedLocales } from '$lib/server/profile/section-translations';
+import { localeLabel } from '$lib/resume-translations';
 import type { FieldKind } from '$lib/server/utils/field-kinds';
 import { MATCH_CONFIG_CAPABILITY_NAMES } from '$lib/server/ai-chat/match-config-capability';
 import {
@@ -361,7 +363,27 @@ function inventoryHintFor(capability: Capability): string | undefined {
 	return undefined;
 }
 
-function writeTool(capability: Capability, parents?: string): McpTool {
+/**
+ * A translation field, described where an agent reads it: on the property.
+ *
+ * The chat explains these once, in its preamble. A tool has no preamble — this
+ * server renders `contract` alone — so the rule travels with the field, and only
+ * to a profile that writes in the language, since the property is not listed
+ * for anyone else.
+ */
+function translationProperty(base: string, locale: string): Record<string, unknown> {
+	const language = localeLabel(locale);
+	return {
+		type: 'string',
+		description:
+			`"${base}" in ${language}: what their ${language} CV prints in its place. When you ` +
+			`change "${base}", change this too, or that CV keeps the old text. Write it as it ` +
+			`would be written in ${language} rather than word for word, keeping names and ` +
+			`technical terms. null removes it, and the English prints there instead.`
+	};
+}
+
+function writeTool(capability: Capability, parents?: string, languages: string[] = []): McpTool {
 	const def = CAPABILITIES[capability];
 	const isAdd = capability.startsWith('add_');
 	const isHide = capability.startsWith('hide_');
@@ -395,7 +417,11 @@ function writeTool(capability: Capability, parents?: string): McpTool {
 	}
 
 	for (const [name, kind] of Object.entries(def.fields)) {
-		properties[name] = jsonType(kind);
+		const translation = parseTranslationField(name);
+		if (!translation) properties[name] = jsonType(kind);
+		else if (languages.includes(translation.locale)) {
+			properties[name] = translationProperty(translation.base, translation.locale);
+		}
 	}
 
 	// Before the rationale, so the required list reads in the order the schema
@@ -966,10 +992,14 @@ export async function toolsFor(
 	// offers, and the wrong one to serve to an agent, which is why the route
 	// passes the key's profile.
 	const parents = actor ? await parentBlocksFor(actor) : null;
+	// A translation field is listed only in a language this profile writes in,
+	// so a profile that has never translated anything sees the tools it always
+	// did. Without an actor there is no profile to ask, and so no languages.
+	const languages = actor ? await translatedLocales(actor.profileId) : [];
 	return [
 		...tools,
 		uploadTool,
-		...MCP_CAPABILITIES.map((c) => writeTool(c, parents?.get(c) ?? inventoryHintFor(c)))
+		...MCP_CAPABILITIES.map((c) => writeTool(c, parents?.get(c) ?? inventoryHintFor(c), languages))
 	];
 }
 

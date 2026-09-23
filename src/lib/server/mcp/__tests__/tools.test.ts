@@ -6,8 +6,20 @@
  * call, or makes it with the wrong argument name and is told "no recognised
  * fields" by a server that could have said so in the schema.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { APP_AREAS } from '$lib/server/ai-chat/ability-manifest';
+import { parseTranslationField } from '$lib/server/profile/section-translations';
+
+// A profile, for the tests that pass one: no parent groups to list, and Dutch
+// as the one language it writes in besides English.
+vi.mock('$lib/server/profile/write', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/profile/write')>()),
+	parentNames: () => Promise.resolve([])
+}));
+vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/profile/section-translations')>()),
+	translatedLocales: () => Promise.resolve(['nl'])
+}));
 import { CAPABILITIES } from '$lib/server/ai-chat/capabilities';
 import { ENTITY_CAPABILITY_NAMES, targetingFor } from '../entities';
 import {
@@ -193,9 +205,44 @@ describe('how a write names its row', () => {
 		for (const capability of MCP_CAPABILITIES) {
 			const properties = byName.get(capability)!.inputSchema.properties ?? {};
 			for (const field of Object.keys(CAPABILITIES[capability].fields)) {
+				// A translation waits for a profile to say it writes in that language.
+				if (parseTranslationField(field)) continue;
 				expect(Object.keys(properties), capability).toContain(field);
 			}
 		}
+	});
+});
+
+describe('translation fields', () => {
+	async function referenceProperties(): Promise<Record<string, unknown>> {
+		const tools = await toolsFor('write', 'documents', { profileId: 12 });
+		return tools.find((tool) => tool.name === 'edit_reference')!.inputSchema.properties ?? {};
+	}
+
+	it('are listed only in the languages the profile writes in', async () => {
+		const names = Object.keys(await referenceProperties());
+		expect(names).toContain('reference.text.nl');
+		expect(names).toContain('reference.author_position.nl');
+		expect(names).not.toContain('reference.text.de');
+	});
+
+	it('exist only for the columns the overlay translates', async () => {
+		// A referee is called the same in every language, so a name has no Dutch.
+		expect(Object.keys(await referenceProperties())).not.toContain('reference.author.nl');
+	});
+
+	it('say what they are and that they go stale, on the property itself', async () => {
+		// A tool has no preamble to explain them in, so the property has to.
+		const property = (await referenceProperties())['reference.text.nl'] as {
+			description: string;
+		};
+		expect(property.description).toContain('Dutch CV');
+		expect(property.description).toContain('change this too');
+	});
+
+	it('are not offered without a profile to ask', () => {
+		const names = Object.keys(byName.get('edit_reference')!.inputSchema.properties ?? {});
+		expect(names.some((name) => parseTranslationField(name))).toBe(false);
 	});
 });
 

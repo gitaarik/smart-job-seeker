@@ -36,6 +36,12 @@ import { application_records, applications, jobs } from '$lib/server/db/schema';
 import type { ContextEntity } from './generation-context';
 import { coerceValue, WIRE_TYPES, type FieldKind } from '$lib/server/utils/field-kinds';
 import { PROFILE_CAPABILITIES, type ProfileCapability } from './profile-capabilities';
+import {
+	isOfferedField,
+	languageList,
+	parseTranslationField
+} from '$lib/server/profile/section-translations';
+import { localeLabel, TRANSLATION_LOCALES } from '$lib/resume-translations';
 import { TEXT_CAPABILITIES, type TextCapability } from './text-version-capabilities';
 import { rowsNamedInMessage } from './profile-matching';
 import {
@@ -256,6 +262,27 @@ export interface CapabilityDef {
 	 * chronology it is about to add to because there is no row to diff yet.
 	 */
 	renderState?(current: Record<string, unknown>): string;
+	/**
+	 * The languages besides English this capability writes for this actor, and
+	 * what each listed row already has in them.
+	 *
+	 * Only a profile section whose text also prints in another language has
+	 * this, and it answers with no languages on a profile that has never
+	 * translated anything — which is most of them, and which then costs nothing on
+	 * any surface. The fields themselves are in `fields` either way, a twin per
+	 * column per language (`reference.text.nl`), because that map is the
+	 * coercion's allow-list and cannot wait for a profile. What this decides is
+	 * which of them a model is shown. See `section-translations.ts`.
+	 *
+	 * The notes are for a LIST, keyed by row id: "Dutch: text". A page about one
+	 * row shows its translations among its current values, but a list shows only
+	 * labels, and without the note a model changing a listed row's English cannot
+	 * know it has a Dutch version to keep in step.
+	 */
+	translations?(
+		targets: CapabilityTarget[],
+		actor: CapabilityActor
+	): Promise<{ languages: string[]; notes: Record<number, string> }>;
 	/**
 	 * Whether a field may be dropped on its way to `apply` because its value
 	 * already matches the row.
@@ -1852,6 +1879,13 @@ export interface LiveCapability {
 	 * telling someone they have no such skill.
 	 */
 	omitted?: number;
+	/**
+	 * The languages besides English this capability can write here, when there
+	 * are any. See `CapabilityDef.translations`.
+	 */
+	languages?: string[];
+	/** What a listed row already has in those languages, by row id: "Dutch: text". */
+	notes?: Record<number, string>;
 }
 
 /**
@@ -1892,48 +1926,82 @@ export async function resolveCapabilities(
 ): Promise<LiveCapability[]> {
 	const live = await Promise.all(
 		declared.map(async (capability): Promise<LiveCapability | null> => {
-			const def = CAPABILITIES[capability];
-
-			// The page's own row wins. Only a page that names none asks for a list,
-			// which is what keeps "biased to the page" true rather than aspirational.
-			const target = await def.resolve(entity, actor);
-			if (target) {
-				if (!(await def.authorize(target, actor))) return null;
-				return {
-					capability,
-					targets: [target],
-					current: await def.current(target, actor, entity)
-				};
-			}
-
-			if (!def.resolveMany) return null;
-
-			const candidates = await def.resolveMany(entity, actor);
-			const authorized = (
-				await Promise.all(
-					candidates.map(async (row) => ((await def.authorize(row, actor)) ? row : null))
-				)
-			).filter((row): row is CapabilityTarget => row !== null);
-			if (authorized.length === 0) return null;
-
-			const { targets, omitted } = fitTargets(authorized, opts.message ?? '');
-
-			// One row is the single-row case however it was reached — by URL, by
-			// being the only one, or by being the only one the message named — so it
-			// gets the values to diff against rather than a list of one.
-			if (targets.length === 1) {
-				return {
-					capability,
-					targets,
-					current: await def.current(targets[0], actor, entity),
-					...(omitted > 0 ? { omitted } : {})
-				};
-			}
-
-			return { capability, targets, current: null, ...(omitted > 0 ? { omitted } : {}) };
+			const resolved = await resolveOne(capability, entity, actor, opts.message ?? '');
+			return resolved ? withTranslations(resolved, actor) : null;
 		})
 	);
 	return live.filter((c): c is LiveCapability => c !== null);
+}
+
+/**
+ * The languages a live capability can write in and, on a list, what each row
+ * already has in them. Asked after the targets are settled, so the notes are
+ * for the rows actually printed; left off entirely where there is nothing to
+ * say, which keeps the block of every untranslated profile as it was.
+ */
+async function withTranslations(
+	live: LiveCapability,
+	actor: CapabilityActor
+): Promise<LiveCapability> {
+	const def = CAPABILITIES[live.capability];
+	if (!def.translations) return live;
+
+	const { languages, notes } = await def.translations(live.targets, actor);
+	if (languages.length === 0) return live;
+
+	return {
+		...live,
+		languages,
+		...(live.targets.length > 1 && Object.keys(notes).length > 0 ? { notes } : {})
+	};
+}
+
+/** One declared capability, resolved and authorized for this turn, or null. */
+async function resolveOne(
+	capability: Capability,
+	entity: ContextEntity | null,
+	actor: CapabilityActor,
+	message: string
+): Promise<LiveCapability | null> {
+	const def = CAPABILITIES[capability];
+
+	// The page's own row wins. Only a page that names none asks for a list,
+	// which is what keeps "biased to the page" true rather than aspirational.
+	const target = await def.resolve(entity, actor);
+	if (target) {
+		if (!(await def.authorize(target, actor))) return null;
+		return {
+			capability,
+			targets: [target],
+			current: await def.current(target, actor, entity)
+		};
+	}
+
+	if (!def.resolveMany) return null;
+
+	const candidates = await def.resolveMany(entity, actor);
+	const authorized = (
+		await Promise.all(
+			candidates.map(async (row) => ((await def.authorize(row, actor)) ? row : null))
+		)
+	).filter((row): row is CapabilityTarget => row !== null);
+	if (authorized.length === 0) return null;
+
+	const { targets, omitted } = fitTargets(authorized, message);
+
+	// One row is the single-row case however it was reached — by URL, by
+	// being the only one, or by being the only one the message named — so it
+	// gets the values to diff against rather than a list of one.
+	if (targets.length === 1) {
+		return {
+			capability,
+			targets,
+			current: await def.current(targets[0], actor, entity),
+			...(omitted > 0 ? { omitted } : {})
+		};
+	}
+
+	return { capability, targets, current: null, ...(omitted > 0 ? { omitted } : {}) };
 }
 
 /**
@@ -2197,9 +2265,22 @@ export async function executeCapability(
 	return { ok: true, previous, editId, created };
 }
 
-/** Every field name the live capabilities can address, for the `field` enum. */
-function fieldNamesFor(capabilities: Capability[]): string[] {
-	return capabilities.flatMap((c) => Object.keys(CAPABILITIES[c].fields));
+/**
+ * Every field name the live capabilities can address, for the `field` enum —
+ * their translations only in the languages this profile writes in.
+ */
+function fieldNamesFor(capabilities: Capability[], languages: string[]): string[] {
+	return capabilities.flatMap((c) =>
+		Object.keys(CAPABILITIES[c].fields).filter((field) => isOfferedField(field, languages))
+	);
+}
+
+/**
+ * Every language besides English that one of these capabilities writes in, for
+ * the proposal schema and the prompt to agree on.
+ */
+export function liveLanguages(live: LiveCapability[]): string[] {
+	return [...new Set(live.flatMap((c) => c.languages ?? []))].sort();
 }
 
 /**
@@ -2230,10 +2311,16 @@ function fieldNamesFor(capabilities: Capability[]): string[] {
  * keys is the failure mode, not nesting.
  *
  * `field` is an enum of the live capabilities' names, so the provider is
- * constrained at generation time rather than corrected afterwards.
+ * constrained at generation time rather than corrected afterwards. That includes
+ * a translation field only in `languages` — the ones the live capabilities write
+ * in, from `liveLanguages` — so a profile that has never translated anything is
+ * sent exactly the schema it always was.
  */
-export function buildProposalSchema(capabilities: Capability[]) {
-	const names = fieldNamesFor(capabilities);
+export function buildProposalSchema(
+	capabilities: Capability[],
+	opts: { languages?: string[] } = {}
+) {
+	const names = fieldNamesFor(capabilities, opts.languages ?? []);
 
 	return z.object({
 		reply: z.string().describe('The message shown to the user.'),
@@ -2339,6 +2426,16 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 function labelFor(field: string): string {
+	// A translation reads as the field it translates, in its language:
+	// `reference.text.nl` is "Text (Dutch)". Asked of the last segment alone,
+	// because this also labels a history row's keys, which have lost their
+	// section by the time they arrive (`text.nl`).
+	const dot = field.lastIndexOf('.');
+	const locale = dot > 0 ? field.slice(dot + 1) : '';
+	if (TRANSLATION_LOCALES.includes(locale)) {
+		return `${labelFor(field.slice(0, dot))} (${localeLabel(locale)})`;
+	}
+
 	// `work_experience.summary` labels as "Summary": the section is context the
 	// card gets from the row it names, not part of the field's name to a reader.
 	const column = field.slice(field.indexOf('.') + 1);
@@ -2433,7 +2530,9 @@ export function renderCapabilityBlock(
 	 * shorthand the model has to unpack: it is one list, and it was already
 	 * established a few hundred characters earlier.
 	 */
-	listedBy?: string
+	listedBy?: string,
+	/** What a listed row already has in another language — see `LiveCapability.notes`. */
+	notes?: Record<number, string>
 ): string {
 	const def = CAPABILITIES[capability];
 
@@ -2461,7 +2560,9 @@ This one acts on exactly the rows listed under ${listedBy} above — the same li
 not a shorter one. Name one of them as "target_id", copied from there.`;
 	}
 
-	const rows = targets.map((t) => `  - target_id ${t.id}: ${t.label}`).join('\n');
+	const rows = targets
+		.map((t) => `  - target_id ${t.id}: ${t.label}${notes?.[t.id] ? ` (${notes[t.id]})` : ''}`)
+		.join('\n');
 
 	return `### Capability: ${capability}
 
@@ -2602,6 +2703,16 @@ the proposal is discarded rather than applied to something else.`;
  * the message named would stop being offered on a busy page for a reason no
  * prompt states. The raise is that block rounded up, and nothing else: what a
  * message could reach before, it still can.
+ *
+ * Held at 24,000 when translations joined (2026-09-23). A profile that writes
+ * in another language is shown each row's translations, the translation rule
+ * once per prompt, and a note on each listed row that has one. On profile 1,
+ * translated almost whole, the busiest role page went from 20,476 to **22,542**
+ * with the same capabilities admitted. Most of that is the Dutch role summary
+ * shown in full, which is deliberate: a model asked to fix a translation it
+ * cannot see writes a different one, over wording the applicant chose. Every
+ * other page kept 7,000 or more, and a profile that has never translated
+ * anything pays nothing.
  */
 export const CAPABILITY_PROMPT_BUDGET_CHARS = 24000;
 
@@ -2650,9 +2761,10 @@ export function renderCapabilityPrompt(live: LiveCapability[]): string {
 		const first = key ? listedBy.get(key) : undefined;
 		if (key && !first) listedBy.set(key, c.capability);
 
-		return renderCapabilityBlock(c.capability, c.targets, c.current, c.omitted, first);
+		return renderCapabilityBlock(c.capability, c.targets, c.current, c.omitted, first, c.notes);
 	});
 	const choosing = live.some((c) => c.targets.length > 1);
+	const languages = liveLanguages(live);
 
 	return `## Changes you can propose
 
@@ -2708,5 +2820,40 @@ These hold for every kind of change below:
   same answer, and say so. Leaving it is not restraint — it is a row that now
   disagrees with itself.
 
-${blocks.join('\n\n')}`;
+${languages.length > 0 ? `${translationRule(live, languages)}\n\n` : ''}${blocks.join('\n\n')}`;
+}
+
+/**
+ * Said only when a live capability writes another language, for the reason
+ * TARGET_ID_RULE is conditional: every block ships on every capable turn, and a
+ * profile that has never translated anything should not pay for the paragraph.
+ *
+ * The fields are listed rather than described. The proposal schema constrains
+ * `field` to an enum, so a model reaching for a translation a section does not
+ * have is not refused — it is steered to the nearest name that exists, which is
+ * the English field, and the Dutch lands on the English CV.
+ */
+function translationRule(live: LiveCapability[], languages: string[]): string {
+	const fields = [
+		...new Set(
+			live
+				.filter((c) => c.languages?.length)
+				.flatMap((c) => Object.keys(CAPABILITIES[c.capability].fields))
+				.map((field) => parseTranslationField(field)?.base)
+				.filter((base): base is string => !!base)
+		)
+	];
+	const codes = languages.map((locale) => `".${locale}"`).join(' or ');
+
+	return `Their CV also exists in ${languageList(languages)}. On every row, each of these
+fields can have a version there, whether or not one is written yet:
+${fields.join(', ')}. That version is a field of its own, named with ${codes}
+after the English name ("${fields[0]}.${languages[0]}").
+
+A listed row marked "(${localeLabel(languages[0])}: …)" already has one for the fields named; any
+row can be given one. A single row shows its own among its current values. When you
+change the English of a field that has one, change that version too, in the same
+proposal, or that CV keeps the old text. Write it as it would be written in that
+language rather than word for word, keep names and technical terms, and put only
+English in an English field.`;
 }
