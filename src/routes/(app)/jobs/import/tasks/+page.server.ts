@@ -603,10 +603,9 @@ export const actions: Actions = {
 			} else {
 				const key = await db.query.api_keys.findFirst({
 					where: eq(api_keys.id, apiKeyId),
-					columns: { id: true },
-					with: { profile: { columns: { user_id: true } } }
+					columns: { id: true, user_id: true }
 				});
-				if (key?.profile.user_id === credOwner) {
+				if (key?.user_id === credOwner) {
 					resolvedSjsBrowserApiKey = apiKeyId;
 				}
 			}

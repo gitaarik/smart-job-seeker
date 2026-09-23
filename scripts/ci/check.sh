@@ -14,7 +14,16 @@ set -euo pipefail
 # BASELINE must only ever go DOWN. Lower it whenever errors are fixed; the
 # script nags when the actual count drops below it, so the ratchet can't
 # quietly slip back up.
-BASELINE=31
+#
+# 31 -> 29 on 2026-09-23. Both errors were one bug, and a live one: the
+# import-task create action asked api_keys for a `profile` relation it lost
+# when devices moved to user-wide ownership (ca521d5f, 2026-05-22). Drizzle
+# does not check `with` keys against the relations, so building that query
+# threw, and every create that paired a shared credential with a device was a
+# 500. It sat inside this budget for four months. That is the limit
+# check-scripts.sh describes: a count cannot tell a stale error from a live
+# one, so an error in the backlog is still worth reading.
+BASELINE=29
 
 npx svelte-kit sync
 

@@ -56,7 +56,7 @@ Two things worth knowing:
 
 | Gate             | Script                | Baseline          |
 | ---------------- | --------------------- | ----------------- |
-| `svelte-check`   | `ci/check.sh`         | 31 errors         |
+| `svelte-check`   | `ci/check.sh`         | 29 errors         |
 | `scripts/` types | `ci/check-scripts.sh` | 23 errors         |
 | eslint           | `ci/check-lint.sh`    | zero — no backlog |
 | prettier         | `prettier --check .`  | zero — no backlog |
@@ -95,7 +95,7 @@ docker compose exec -T -e NODE_OPTIONS=--max-old-space-size=3072 app \
 
 At the default (~2 GB) this dies partway through and the gate reports it as a
 crash. `svelte-check` is unaffected by the billing overlay, so this number is
-CI's number: 88 s and the same 31 errors.
+CI's number: 88 s, and the same count CI reports.
 
 **Do not raise that number "to be safe."** This host has 7.6 GB and about 3.5 GB
 free once the stack is up. A heap larger than free RAM does not fail — node
