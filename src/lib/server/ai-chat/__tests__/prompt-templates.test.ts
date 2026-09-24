@@ -158,7 +158,6 @@ describe('${applicationActivity} template \u2194 caller wiring', () => {
 			'extract_qa_pairs',
 			'extract_job_data',
 			'extract_job_header',
-			'extract_resume_data',
 			'extract_matched_skills',
 			'score_job_match',
 			'find_next_page_button'

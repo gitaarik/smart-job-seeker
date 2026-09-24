@@ -75,7 +75,7 @@ describe('instructionsBlock', () => {
 });
 
 describe('EXTRACTION_FALLBACK_PROMPT_KEYS', () => {
-	// Fifteen keys typed by hand against a 50-prompt registry. A typo here is
+	// Eight keys typed by hand against a 43-prompt registry. A typo here is
 	// silent in exactly the way the allowlist was chosen to be: the prompt simply
 	// never gets a fallback, and nothing says so.
 	it('names only prompts that exist', () => {
