@@ -30,8 +30,17 @@
 
 	let { filters = $bindable({}), compact = false }: Props = $props();
 
-	/** Multi-select intent — checkbox group instead of single dropdown. */
-	const MULTI_SELECT = new Set<SearchFilterName>(['work_location', 'job_type', 'experience_level']);
+	/** Multi-select intent — checkbox group instead of single dropdown.
+	 *  hours_commitment and employment_type replaced the multi-select job_type
+	 *  on 2026-05-25 (6679a65a) and are stored as arrays like it was, but this
+	 *  set kept the old name, so both rendered as single dropdowns: one choice
+	 *  shown, and a second saved one dropped on the next edit. */
+	const MULTI_SELECT = new Set<SearchFilterName>([
+		'work_location',
+		'hours_commitment',
+		'employment_type',
+		'experience_level'
+	]);
 
 	function getSingle(name: SearchFilterName): string {
 		const v = filters[name];
