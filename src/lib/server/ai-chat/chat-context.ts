@@ -34,6 +34,7 @@ import {
 	resolveCapabilities
 } from './capabilities';
 import { buildCapabilityRecord, type CapabilityRecord } from './capability-record';
+import { chatQuery } from './relevance-queries';
 import { matchProfileSections } from './profile-matching';
 import { readOwnedRow } from '$lib/server/profile/write';
 import {
@@ -642,10 +643,10 @@ async function jobApplicationNote(
  * skills are folded in — otherwise retrieval on an application page ranks
  * against a pronoun.
  */
-async function entityQueryTerms(
+async function entityQueryJob(
 	entity: ContextEntity | null
-): Promise<{ text: string; skills?: string[] }> {
-	if (!entity) return { text: '' };
+): Promise<{ title: string | null; skills_required: unknown } | null> {
+	if (!entity) return null;
 
 	const columns = { title: true, skills_required: true } as const;
 	const job =
@@ -659,10 +660,7 @@ async function entityQueryTerms(
 					})
 				)?.job;
 
-	return {
-		text: job?.title ?? '',
-		skills: (job?.skills_required as string[] | null) ?? undefined
-	};
+	return job ?? null;
 }
 
 /**
@@ -779,12 +777,7 @@ export async function resolveChatContext(opts: {
 }> {
 	const scope = scopeForRoute(opts.routeId);
 	const entity = await resolveEntity(scope, opts.params, opts.profileId);
-	const terms = await entityQueryTerms(entity);
-
-	const query: RelevanceQuery = {
-		text: [opts.message, terms.text].filter(Boolean).join('\n'),
-		skills: terms.skills
-	};
+	const query: RelevanceQuery = chatQuery(opts.message, await entityQueryJob(entity));
 
 	// An entity that failed to resolve (deleted, not owned, bad id) drops the
 	// sources that need one, rather than shipping empty blocks with headings.

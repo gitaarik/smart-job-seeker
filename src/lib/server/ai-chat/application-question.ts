@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm';
 import { application_questions } from '$lib/server/db/schema';
 import { createAndGenerateAiChat, instructionsBlock } from './utils';
 import { type ContextSource, type RelevanceQuery } from './generation-context';
+import { applicationQuestionQuery } from './relevance-queries';
 import { CORE_PROFILE_FIELDS } from './profile-fields';
 import type { ExportedProfileKey } from '$lib/server/profile/export';
 import { ensureBaselineVersion, QUESTION_VERSIONS, recordVersion } from './entity-versions';
@@ -121,10 +122,7 @@ export async function generateApplicationQuestionAnswer(
 	// application would otherwise retrieve the same job-driven set. (The model
 	// still sees the full JD via ${jobDetails}.)
 	const isWriting = mode === 'generate' || mode === 'auto';
-	const query: RelevanceQuery = {
-		text: [question.question, job?.title].filter(Boolean).join('\n'),
-		skills: (job?.skills_required as string[] | null) ?? undefined
-	};
+	const query: RelevanceQuery = applicationQuestionQuery(question.question, job);
 	// The standing directives in every mode, review included: a review blind to
 	// "never mention my nationality" would suggest adding it. See directives.ts.
 	const sources: ContextSource[] = ['job', 'application_activity', 'directives'];
