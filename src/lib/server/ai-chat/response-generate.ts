@@ -44,6 +44,7 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 		const writingModel = config.llmWritingModel;
 
 		// Generate response using generic LLM function with token tracking
+		const callStarted = performance.now();
 		const completionResult = await generateChatCompletionTracked(
 			[
 				{ role: 'system', content: prompts.systemPrompt },
@@ -57,6 +58,7 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 			}
 		);
 
+		const durationMs = Math.round(performance.now() - callStarted);
 		const usage = completionResult.usage;
 		const creditsCost = usage ? tokensToCost(usage.totalTokens) : 0;
 
@@ -79,6 +81,8 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 				output_tokens: usage?.outputTokens ?? null,
 				total_tokens: usage?.totalTokens ?? null,
 				cached_input_tokens: usage?.cachedInputTokens ?? null,
+				reasoning_tokens: usage?.reasoningTokens ?? null,
+				duration_ms: durationMs,
 				credits_charged: creditsCost || null
 			})
 			.where(eq(ai_chats.id, aiChatId));
@@ -100,7 +104,8 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 						ranOn.model,
 						usage.inputTokens,
 						usage.outputTokens,
-						usage.cachedInputTokens
+						usage.cachedInputTokens,
+						usage.reasoningTokens
 					);
 					await chargeCredits(
 						profile.user_id,

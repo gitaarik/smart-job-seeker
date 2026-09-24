@@ -379,6 +379,8 @@ export async function createAndGenerateAiChat(
 }> {
 	// Track aiChat ID so we can save errors to the record if creation succeeds but generation fails
 	let aiChatId: number | undefined;
+	// Set when the model call starts, so a failed call records how long it took too.
+	let callStarted: number | undefined;
 
 	try {
 		// Two questions before doing any work, and they are not the same one.
@@ -580,6 +582,7 @@ export async function createAndGenerateAiChat(
 				}
 			: undefined;
 
+		callStarted = performance.now();
 		const completionResult = await generateChatCompletionTracked(
 			[
 				{ role: 'system', content: interpolatedSystemPrompt },
@@ -596,6 +599,8 @@ export async function createAndGenerateAiChat(
 				promptKey
 			}
 		);
+
+		const durationMs = Math.round(performance.now() - callStarted);
 
 		// Step 8: Save response + token usage
 		const responseContent = completionResult.content;
@@ -638,6 +643,8 @@ export async function createAndGenerateAiChat(
 				output_tokens: usage?.outputTokens ?? null,
 				total_tokens: usage?.totalTokens ?? null,
 				cached_input_tokens: usage?.cachedInputTokens ?? null,
+				reasoning_tokens: usage?.reasoningTokens ?? null,
+				duration_ms: durationMs,
 				credits_charged: creditsCost || null
 			})
 			.where(eq(ai_chats.id, aiChat.id));
@@ -655,7 +662,8 @@ export async function createAndGenerateAiChat(
 					ranOn.model,
 					usage.inputTokens,
 					usage.outputTokens,
-					usage.cachedInputTokens
+					usage.cachedInputTokens,
+					usage.reasoningTokens
 				);
 				await chargeCredits(
 					profileForCredits.user_id,
@@ -717,12 +725,16 @@ export async function createAndGenerateAiChat(
 				.update(ai_chats)
 				.set({
 					error: errorMessage,
+					...(callStarted !== undefined
+						? { duration_ms: Math.round(performance.now() - callStarted) }
+						: {}),
 					...(usage
 						? {
 								input_tokens: usage.inputTokens,
 								output_tokens: usage.outputTokens,
 								total_tokens: usage.totalTokens,
-								cached_input_tokens: usage.cachedInputTokens
+								cached_input_tokens: usage.cachedInputTokens,
+								reasoning_tokens: usage.reasoningTokens
 							}
 						: {})
 				})

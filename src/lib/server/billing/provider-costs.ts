@@ -180,13 +180,20 @@ const warnedMissingPricing = new Set<string>();
  * implicitly, so it can be non-zero without anyone asking for it. Passing 0 (or
  * omitting it) prices everything at the full rate, which is the pre-existing
  * behaviour and errs high.
+ *
+ * `reasoningTokens` is thinking the provider bills at the output rate and did
+ * not count in `outputTokens` (TokenUsage.reasoningTokens): an addition, not a
+ * subset. Gemini 2.5's thoughts are the case. Omitting it prices only the
+ * visible answer, which is how every gemini-2.5-pro call was priced until
+ * 2026-09-24, and errs low.
  */
 export function estimateProviderCostUsd(
 	provider: string,
 	model: string,
 	inputTokens: number,
 	outputTokens: number,
-	cachedInputTokens = 0
+	cachedInputTokens = 0,
+	reasoningTokens = 0
 ): number | null {
 	const key = `${provider}/${model}`;
 	const cost = PROVIDER_COSTS[key];
@@ -212,7 +219,9 @@ export function estimateProviderCostUsd(
 	const fresh = inputTokens - cached;
 
 	return (
-		fresh * rates.input + cached * (rates.cachedInput ?? rates.input) + outputTokens * rates.output
+		fresh * rates.input +
+		cached * (rates.cachedInput ?? rates.input) +
+		(outputTokens + Math.max(reasoningTokens, 0)) * rates.output
 	);
 }
 
@@ -239,7 +248,12 @@ export function estimateProviderCostUsd(
 export function estimateGroupCostUsd(
 	provider: string,
 	model: string,
-	totals: { inputTokens: number; outputTokens: number; cachedInputTokens?: number },
+	totals: {
+		inputTokens: number;
+		outputTokens: number;
+		cachedInputTokens?: number;
+		reasoningTokens?: number;
+	},
 	longContext = false
 ): number | null {
 	const key = `${provider}/${model}`;
@@ -253,7 +267,7 @@ export function estimateGroupCostUsd(
 	return (
 		fresh * rates.input +
 		cached * (rates.cachedInput ?? rates.input) +
-		totals.outputTokens * rates.output
+		(totals.outputTokens + Math.max(totals.reasoningTokens ?? 0, 0)) * rates.output
 	);
 }
 

@@ -8,7 +8,11 @@
  * whichever copy is actually mounted — the one that prices real generations.
  */
 import { describe, expect, it, vi } from 'vitest';
-import { estimateProviderCostUsd, hasProviderPricing } from '$lib/server/billing/provider-costs';
+import {
+	estimateGroupCostUsd,
+	estimateProviderCostUsd,
+	hasProviderPricing
+} from '$lib/server/billing/provider-costs';
 
 const PRO = ['gemini', 'gemini-2.5-pro'] as const;
 
@@ -63,6 +67,33 @@ describe('estimateProviderCostUsd', () => {
 	it('keeps the standard rates at exactly the threshold', () => {
 		// "prompts <= 200k" — the boundary belongs to the cheaper tier.
 		expect(estimateProviderCostUsd(...PRO, 200_000, 0)).toBeCloseTo(200_000 * 1.25e-6, 6);
+	});
+
+	it("prices Gemini's thinking at the output rate, on top of the answer", () => {
+		// The turn that surfaced it: 958 visible tokens and 7,219 of thinking.
+		// Priced on the 958 alone, the output side came to a ninth of the bill.
+		// 25000 × $1.25/M + (958 + 7219) × $10/M
+		expect(estimateProviderCostUsd(...PRO, 25_000, 958, 0, 7_219)).toBeCloseTo(
+			25_000 * 1.25e-6 + 8_177 * 10e-6,
+			6
+		);
+		expect(estimateProviderCostUsd(...PRO, 25_000, 958, 0, 0)).toBeCloseTo(
+			estimateProviderCostUsd(...PRO, 25_000, 958)!,
+			9
+		);
+	});
+
+	it('prices reasoning in a group exactly as call by call', () => {
+		const a = estimateProviderCostUsd(...PRO, 10_000, 300, 2_000, 1_500)!;
+		const b = estimateProviderCostUsd(...PRO, 12_000, 200, 0, 4_000)!;
+		expect(
+			estimateGroupCostUsd(...PRO, {
+				inputTokens: 22_000,
+				outputTokens: 500,
+				cachedInputTokens: 2_000,
+				reasoningTokens: 5_500
+			})
+		).toBeCloseTo(a + b, 9);
 	});
 
 	it('prices a model with no long-context tier at one rate throughout', () => {

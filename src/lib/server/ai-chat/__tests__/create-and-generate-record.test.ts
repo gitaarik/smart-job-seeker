@@ -1,6 +1,7 @@
 /**
  * What createAndGenerateAiChat writes to `ai_chats` about the call itself:
- * which prompt it ran and which version of it.
+ * which prompt it ran and which version of it, what the model spent, and how
+ * long it took.
  *
  * Everything around the call is stubbed. The profile has no account, so no
  * spend or credit check runs, and the model is a mock that returns a fixed
@@ -66,7 +67,13 @@ describe('createAndGenerateAiChat: the record of the call', () => {
 		updates.length = 0;
 		mockGenerate.mockReset().mockResolvedValue({
 			content: 'short',
-			usage: { inputTokens: 100, outputTokens: 20, totalTokens: 120, cachedInputTokens: 0 }
+			usage: {
+				inputTokens: 100,
+				outputTokens: 20,
+				totalTokens: 120,
+				cachedInputTokens: 0,
+				reasoningTokens: 700
+			}
 		});
 	});
 
@@ -90,5 +97,44 @@ describe('createAndGenerateAiChat: the record of the call', () => {
 
 		expect(mockGenerate).toHaveBeenCalledTimes(1);
 		expect(mockGenerate.mock.calls[0][1]).toMatchObject({ promptKey: 'compact_job_description' });
+	});
+
+	it('records the thinking tokens, and leaves the credit basis alone', async () => {
+		await run();
+
+		const saved = updates.find((u) => 'response' in u);
+		expect(saved).toMatchObject({
+			output_tokens: 20,
+			reasoning_tokens: 700,
+			total_tokens: 120
+		});
+	});
+
+	it('records how long the model call took', async () => {
+		await run();
+
+		const saved = updates.find((u) => 'response' in u);
+		expect(saved?.duration_ms).toEqual(expect.any(Number));
+		expect(saved?.duration_ms).toBeGreaterThanOrEqual(0);
+	});
+
+	it('records the duration and the spend of a failed call too', async () => {
+		mockGenerate.mockReset().mockRejectedValue(
+			Object.assign(new Error('no usable structured output'), {
+				usage: {
+					inputTokens: 100,
+					outputTokens: 0,
+					totalTokens: 100,
+					cachedInputTokens: 0,
+					reasoningTokens: 8000
+				}
+			})
+		);
+
+		const result = await run();
+
+		expect(result.success).toBe(false);
+		const failed = updates.find((u) => 'error' in u);
+		expect(failed).toMatchObject({ reasoning_tokens: 8000, duration_ms: expect.any(Number) });
 	});
 });
