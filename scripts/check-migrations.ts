@@ -39,7 +39,7 @@
  *   npx tsx scripts/check-migrations.ts --keep     # leave the scratch DBs to poke at
  */
 
-import { execFileSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
@@ -119,14 +119,49 @@ async function buildFromMigrations(name: string): Promise<string | null> {
 	}
 }
 
+/**
+ * Install the extensions the migrations installed.
+ *
+ * drizzle-kit has no notion of extensions: a migration creates them (a custom
+ * one, e.g. `CREATE EXTENSION vector`), but `push` only emits tables, so onto an
+ * empty database it dies at the first column of an extension's type. Mirroring
+ * them from the migration-built database gives `push` the same starting point a
+ * real database has. A migration set that forgot one still fails: there is
+ * nothing to mirror, and the migrations themselves stop at that column.
+ */
+async function mirrorExtensions(from: string, to: string) {
+	const source = new pg.Client({ connectionString: urlFor(from) });
+	const target = new pg.Client({ connectionString: urlFor(to) });
+	await Promise.all([source.connect(), target.connect()]);
+	try {
+		const { rows } = await source.query<{ extname: string }>(
+			`SELECT extname FROM pg_extension WHERE extname <> 'plpgsql'`
+		);
+		for (const { extname } of rows) {
+			await target.query(`CREATE EXTENSION IF NOT EXISTS "${extname}"`);
+		}
+	} finally {
+		await Promise.all([source.end(), target.end()]);
+	}
+}
+
 function buildFromSchema(name: string) {
 	// drizzle-kit reads the URL from the config's env lookup, so this is how the
 	// target is chosen. `--force` skips the interactive confirmation; there is
 	// nothing in an empty database to lose.
-	execFileSync('npx', ['drizzle-kit', 'push', '--force'], {
+	const result = spawnSync('npx', ['drizzle-kit', 'push', '--force'], {
 		env: { ...process.env, DATABASE_URL: urlFor(name), SJS_DATABASE_URL: urlFor(name) },
-		stdio: ['ignore', 'pipe', 'pipe']
+		stdio: ['ignore', 'pipe', 'pipe'],
+		encoding: 'utf8'
 	});
+	if (result.error) throw result.error;
+	// drizzle-kit 0.31 exits 0 when a statement fails, having applied the ones
+	// before it, so the exit code alone reported a half-built database as a
+	// schema full of "left behind by the migrations". Its error is on stderr.
+	const failure = result.stderr.match(/^error: .*$/m)?.[0];
+	if (result.status !== 0 || failure) {
+		throw new Error(`drizzle-kit push failed: ${failure ?? result.stderr.trim()}`);
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -175,6 +210,22 @@ const QUERIES: Array<{ kind: string; sql: string }> = [
       JOIN pg_namespace ns ON ns.oid = t.typnamespace
       WHERE ns.nspname = 'public'
       GROUP BY t.typname`
+	},
+	{
+		// information_schema reports every type outside pg_catalog (an enum, or an
+		// extension's type) as 'USER-DEFINED', so above, a vector(3072) column and a
+		// vector(768) one compare equal, and so do columns of two different enums.
+		kind: 'column type',
+		sql: `
+      SELECT rel.relname || '.' || att.attname AS key,
+             format_type(att.atttypid, att.atttypmod) AS value
+      FROM pg_attribute att
+      JOIN pg_class rel ON rel.oid = att.attrelid
+      JOIN pg_namespace ns ON ns.oid = rel.relnamespace
+      JOIN pg_type typ ON typ.oid = att.atttypid
+      WHERE ns.nspname = 'public' AND rel.relkind = 'r'
+        AND att.attnum > 0 AND NOT att.attisdropped
+        AND typ.typnamespace <> 'pg_catalog'::regnamespace`
 	},
 	{
 		kind: 'sequence',
@@ -273,6 +324,7 @@ async function main() {
 
 		console.log('Building a database from schema.ts…');
 		await recreate(admin, SCRATCH.schema);
+		await mirrorExtensions(SCRATCH.migrations, SCRATCH.schema);
 		buildFromSchema(SCRATCH.schema);
 
 		const [fromMigrations, fromSchema] = await Promise.all([
