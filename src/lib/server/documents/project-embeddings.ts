@@ -56,7 +56,11 @@ export function projectKey(kind: string, id: number): string {
 }
 
 /** Stable key for a single unit (project + attachment). */
-function unitKey(u: { projectKind: string; projectId: number; attachmentId: number }): string {
+export function unitKey(u: {
+	projectKind: string;
+	projectId: number;
+	attachmentId: number;
+}): string {
 	return `${u.projectKind}:${u.projectId}:${u.attachmentId}`;
 }
 
@@ -85,7 +89,7 @@ export function buildJobQueryText(job: JobLike): string {
  * vector must never be persisted (it would poison the cache and silently score
  * the unit at 0 forever) — surface it so the caller falls back to lexical.
  */
-async function getUnitVectors(
+export async function getUnitVectors(
 	profileId: number,
 	units: EmbeddableUnit[]
 ): Promise<Map<string, number[]>> {
@@ -184,6 +188,33 @@ async function getUnitVectors(
 }
 
 /**
+ * Each project's cosine against the query, keyed by projectKey: both sides
+ * truncated to the working dimensions, then the MAX over the project's units.
+ * A unit without a vector is skipped, and a project with none is absent.
+ *
+ * Pure, and exported so the project-retrieval golden set scores its snapshot of
+ * vectors through the same arithmetic.
+ */
+export function maxPoolProjectScores(
+	queryNative: number[],
+	units: Pick<EmbeddableUnit, 'projectKind' | 'projectId' | 'attachmentId'>[],
+	unitVectors: Map<string, number[]>,
+	dims: number
+): Map<string, number> {
+	const queryVec = truncateVector(queryNative, dims);
+	const scores = new Map<string, number>();
+	for (const u of units) {
+		const native = unitVectors.get(unitKey(u));
+		if (!native?.length) continue;
+		const s = cosineSimilarity(queryVec, truncateVector(native, dims));
+		const pk = projectKey(u.projectKind, u.projectId);
+		const prev = scores.get(pk);
+		if (prev === undefined || s > prev) scores.set(pk, s);
+	}
+	return scores;
+}
+
+/**
  * Score each project against the job, keyed by projectKey — a project's score is
  * the MAX cosine over its units (best-matching source wins). Returns null —
  * signalling the caller to fall back to the deterministic ranker — when
@@ -206,18 +237,7 @@ export async function semanticScoreProjects(
 		]);
 		if (!jobNative?.length) return null;
 
-		const dims = config.embeddingWorkingDimensions;
-		const jobVec = truncateVector(jobNative, dims);
-		const scores = new Map<string, number>();
-		for (const u of units) {
-			const native = unitVectors.get(unitKey(u));
-			if (!native?.length) continue;
-			const s = cosineSimilarity(jobVec, truncateVector(native, dims));
-			const pk = projectKey(u.projectKind, u.projectId);
-			const prev = scores.get(pk);
-			if (prev === undefined || s > prev) scores.set(pk, s);
-		}
-		return scores;
+		return maxPoolProjectScores(jobNative, units, unitVectors, config.embeddingWorkingDimensions);
 	} catch (err) {
 		console.warn('[project-embeddings] semantic scoring failed, falling back to lexical:', err);
 		return null;

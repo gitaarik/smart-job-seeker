@@ -310,25 +310,16 @@ export async function widenProjectKeywords<T extends { keywords: string[] }>(
 }
 
 /**
- * Load the applicant's projects (work-experience + side), fold in any attached
- * documents, and return the top-K relevant to `job` together with the ranker
- * that chose them.
+ * Load the applicant's projects (work-experience + side) as rankable projects,
+ * with attached documents folded in, and the units the semantic ranker embeds:
+ * one per project's own typed data and one per attachment.
  *
- * `pinned` names a project the caller already knows this is about — it is
- * always included, always first, and takes one of the K slots.
- *
- * The `ranker` is reported separately from the picks because it survives an
- * EMPTY result, and that is the case worth recording: "embeddings ran and the
- * floor cleared nobody" and "embeddings were off and no keyword hit" are the
- * same empty list and very different bugs. Callers that only want the projects
- * use `relevantProfileProjects`.
+ * Split from rankedProfileProjects so the project-retrieval golden set can
+ * snapshot exactly what the rankers read.
  */
-export async function rankedProfileProjects(
-	profileId: number,
-	job: JobLike,
-	k = 3,
-	pinned?: PinnedProject
-): Promise<{ ranked: (RankableProject & { score: number })[]; ranker: RankerKind }> {
+export async function loadRankableProjects(
+	profileId: number
+): Promise<{ projects: RankableProject[]; units: EmbeddableUnit[] }> {
 	const docCols = {
 		id: true,
 		title: true,
@@ -445,6 +436,31 @@ export async function rankedProfileProjects(
 			);
 		}
 	}
+
+	return { projects, units };
+}
+
+/**
+ * Load the applicant's projects (work-experience + side), fold in any attached
+ * documents, and return the top-K relevant to `job` together with the ranker
+ * that chose them.
+ *
+ * `pinned` names a project the caller already knows this is about — it is
+ * always included, always first, and takes one of the K slots.
+ *
+ * The `ranker` is reported separately from the picks because it survives an
+ * EMPTY result, and that is the case worth recording: "embeddings ran and the
+ * floor cleared nobody" and "embeddings were off and no keyword hit" are the
+ * same empty list and very different bugs. Callers that only want the projects
+ * use `relevantProfileProjects`.
+ */
+export async function rankedProfileProjects(
+	profileId: number,
+	job: JobLike,
+	k = 3,
+	pinned?: PinnedProject
+): Promise<{ ranked: (RankableProject & { score: number })[]; ranker: RankerKind }> {
+	const { projects, units } = await loadRankableProjects(profileId);
 
 	// A pinned project is the subject, not a candidate: the applicant said this
 	// piece of writing is about it. It goes first and it is never ranked away —
