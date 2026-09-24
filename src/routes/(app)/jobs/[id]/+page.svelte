@@ -43,6 +43,7 @@
 		type JobFields
 	} from '../../components/JobFieldsForm.svelte';
 	import { formatJobStatus, formatSalaryRange, timeAgo } from '$lib/format';
+	import { getStatusLabel } from '$lib/application-status';
 	import { normalizeSalaryPeriod, projectToHourly, formatCurrency } from '$lib/salary/conversion';
 	import CategoryPill from '$lib/components/CategoryPill.svelte';
 	import { page } from '$app/stores';
@@ -573,7 +574,7 @@
 							>
 								<FontAwesomeIcon icon={faPaperPlane} class="h-4 w-4" />
 								View Application
-								<span class="text-xs capitalize">({data.existingApplication.status})</span>
+								<span class="text-xs">({getStatusLabel(data.existingApplication.status)})</span>
 							</a>
 						{:else}
 							<form
