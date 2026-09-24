@@ -79,9 +79,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: hadolint/hadolint-action@v3.4.0
-        with:
-          recursive: true
-          # Lenient on first adoption — fail only on hadolint errors (DL3000-tier),
-          # not on warnings/info. Tighten later by removing this line.
-          failure-threshold: error
+      # Every Dockerfile this repo tracks, under any name: hadolint-action's
+      # recursive mode only finds files named exactly `Dockerfile`, so
+      # Dockerfile.production, the one that ships, was never linted.
+      # .hadolint.yaml (DL3008, with why) is read from the root. Warnings fail
+      # since 2026-09-24; info does not.
+      - name: hadolint
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(git ls-files -- ':(glob)**/Dockerfile' ':(glob)**/Dockerfile.*')
+          printf 'hadolint: %s\n' "${files[@]}"
+          docker run --rm -v "$PWD:/w:ro" -w /w ghcr.io/hadolint/hadolint:v2.15.0-debian \
+            hadolint --failure-threshold warning "${files[@]}"
