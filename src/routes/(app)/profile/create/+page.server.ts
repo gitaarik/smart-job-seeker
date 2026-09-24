@@ -16,6 +16,7 @@ import {
 } from '$lib/server/resume';
 import { importProfileFromJson } from '$lib/server/profile/import-profile-json';
 import { exportProfile } from '$lib/server/profile/export';
+import { profileQuotaFailure } from '$lib/server/profile/quota';
 import type { ExportedProfile } from '$lib/server/profile/export-profile-json';
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -32,6 +33,11 @@ export const actions: Actions = {
 		if (!user) {
 			return fail(401, { error: 'Not authenticated' });
 		}
+
+		// Before the parse, not only before the insert: the parse is an LLM call
+		// the user pays for, and its only use is a profile they could not save.
+		const refused = await profileQuotaFailure(user.id);
+		if (refused) return refused;
 
 		const formData = await request.formData();
 		const file = formData.get('file') as File | null;
@@ -146,6 +152,9 @@ export const actions: Actions = {
 			return fail(400, { error: 'Name is required' });
 		}
 
+		const refused = await profileQuotaFailure(user.id);
+		if (refused) return refused;
+
 		let result;
 		try {
 			result = await createProfileFromResume(data, user.id, fileId || undefined);
@@ -182,6 +191,9 @@ export const actions: Actions = {
 		if (!name || name.trim().length === 0) {
 			return fail(400, { error: 'Name is required', name, title });
 		}
+
+		const refused = await profileQuotaFailure(user.id);
+		if (refused) return refused;
 
 		// Generate a slug from the name
 		const slug = name
@@ -267,6 +279,9 @@ export const actions: Actions = {
 				error: 'Invalid export format: missing profile data'
 			});
 		}
+
+		const refused = await profileQuotaFailure(user.id);
+		if (refused) return refused;
 
 		let result: { profileId: number; profileName: string };
 		try {
