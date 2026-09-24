@@ -617,8 +617,10 @@ letters and answers to application questions, and — from Interview Prep — ST
 stories and interview cheat sheets.
 
 Each is a text with an append-only timeline of versions beside it. The
-applicant keeps or discards versions from that timeline, which is why a version
-written by you changes nothing until they do.
+applicant uses the version they want from that timeline and the others stay as
+history, which is why a version written by you changes nothing until they use
+it. Never suggest deleting a version: a delete there removes every version after
+it too.
 
 Two fields decide what is worth doing:
 - "latest_is_current" false means a version is ALREADY waiting that nobody has

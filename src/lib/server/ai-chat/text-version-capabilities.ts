@@ -8,7 +8,8 @@
  * beside them (`entity-versions.ts`), and the app's own AI editor never writes
  * the committed column: `application-letter-followup.ts` records a version and
  * stops. The applicant commits by saving one, from a timeline that shows the
- * diff and offers a delete on every entry.
+ * diff and offers a delete on every entry. That delete is a rewind: it removes
+ * the entry and every one after it, which is why nothing here ever suggests it.
  *
  * So a version written from here replaces nothing. It arrives where the
  * editor's own proposals arrive, labelled as having come from a connected app
@@ -178,10 +179,15 @@ function contractFor(kind: TextKind): string {
 	return `${subjectFor(kind)}
 
 **This does not change the ${noun}.** It adds a version to the ${noun}'s
-timeline, where the applicant compares it against what is there now and either
-keeps it or deletes it. Until they do, the ${noun} says exactly what it said
-before. Report it that way: you wrote a version for them to look at, not a
-${noun} you have updated.
+timeline, where the applicant compares it against what is there now and uses it
+or leaves it. Until they use it, the ${noun} says exactly what it said before.
+Report it that way: you wrote a version for them to look at, not a ${noun} you
+have updated.
+
+**Never suggest deleting a version, in "${note}" or anywhere else.** Unused
+versions stay as history they can go back to, and a delete there is a rewind: it
+removes every version after it too, so "use the new one, delete the old one"
+deletes the new one as well.
 
 Fields:
 - "${content}" is the COMPLETE new text and is REQUIRED. Not a diff, not the
@@ -323,8 +329,10 @@ function capabilityFor(kind: TextKind): CapabilityDef {
 		appliedNote: (target, page) =>
 			`Nothing on the ${def.noun} has changed yet. This is a new version waiting in ` +
 			`the timeline for "${target.label}"${page ? ` (${page.path})` : ''}, where the ` +
-			`applicant compares it with what is there now and keeps or deletes it. Tell them ` +
-			`it is waiting and what you changed — not that their ${def.noun} has been updated.`,
+			`applicant compares it with what is there now and uses it or leaves it. Tell them ` +
+			`it is waiting and what you changed — not that their ${def.noun} has been updated. ` +
+			`And never tell them to delete another version: deleting one also deletes every ` +
+			`version after it.`,
 
 		/**
 		 * The same fact, said to the applicant — and asked afresh, because it
@@ -358,7 +366,7 @@ function capabilityFor(kind: TextKind): CapabilityDef {
 			return (
 				`Your ${def.noun} still says what it said. A new version is waiting in the ` +
 				`timeline for "${target.label}"${where}, where you can compare it with the ` +
-				`current text and keep or delete it.`
+				`current text and use it if you want it. Your other versions stay there too.`
 			);
 		}
 	};

@@ -214,6 +214,17 @@ describe('what it tells the agent afterwards', () => {
 		expect(note).not.toMatch(/\bupdated\b(?!\.)/i);
 	});
 
+	it('never has the agent suggest deleting a version', () => {
+		// A delete in the timeline is a rewind: it takes every later entry with
+		// it. "Keep the new one and delete the old one" was said to an applicant
+		// once, and following it would have deleted the new one as well.
+		const note = letterVerb.appliedNote?.(LETTER, { name: 'letter', path: LETTER.path });
+		expect(note).toMatch(/never tell them to delete another version/i);
+		expect(note).not.toMatch(/keeps or deletes/);
+		expect(letterVerb.contract).toMatch(/Never suggest deleting a version/);
+		expect(letterVerb.contract).toMatch(/every version after it/);
+	});
+
 	it('says the same thing to the applicant, without the agent’s instructions', async () => {
 		// The feed renders this one. `appliedNote` ends by telling the agent what
 		// to say, which is prose addressed to somebody else — showing it to the
@@ -222,7 +233,8 @@ describe('what it tells the agent afterwards', () => {
 			letter_content: 'A version nobody has taken.'
 		});
 		expect(note).toMatch(/still says what it said/);
-		expect(note).toMatch(/keep or delete/);
+		expect(note).toMatch(/use it if you want it/);
+		expect(note).not.toMatch(/delete/i);
 		expect(note).toContain('Applications page');
 		expect(note).not.toMatch(/tell them/i);
 	});
