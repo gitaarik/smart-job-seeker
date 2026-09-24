@@ -289,6 +289,14 @@ describe('widenProjectKeywords (the Graph half of GraphRAG)', () => {
 		expect(await widenProjectKeywords(projects)).toBe(projects);
 	});
 
+	it('widens through an expander the caller passes, instead of the database', async () => {
+		const snapshot = vi.fn().mockResolvedValue(graph({ svelte: ['Frontend development'] }));
+		const [p] = await widenProjectKeywords([{ keywords: ['Svelte'] }], snapshot);
+		expect(p.keywords).toEqual(['Svelte', 'Frontend development']);
+		expect(snapshot).toHaveBeenCalledWith(['Svelte']);
+		expect(expandForRetrieval).not.toHaveBeenCalled();
+	});
+
 	it('does not touch the graph when no project lists a skill', async () => {
 		const projects = [{ keywords: [] }];
 		expect(await widenProjectKeywords(projects)).toBe(projects);
