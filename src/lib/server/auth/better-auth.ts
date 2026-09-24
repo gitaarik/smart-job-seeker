@@ -9,9 +9,10 @@ import { createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { verifications } from '$lib/server/db/schema';
+import { users, verifications } from '$lib/server/db/schema';
 import { getEnv } from '$lib/tools/get-env';
 import { sendEmail } from '$lib/server/email';
+import { verificationMail } from '$lib/server/auth/verification-email';
 import { guardSignup } from '$lib/server/auth/signup-gate';
 
 export const auth = betterAuth({
@@ -88,16 +89,17 @@ export const auth = betterAuth({
 	user: {
 		modelName: 'users',
 		/**
-		 * The new address gets emailVerification.sendVerificationEmail's mail
-		 * (below), and the change lands when its link is followed.
+		 * The new address gets its mail from emailVerification.sendVerificationEmail
+		 * (below), which tells a change from a signup verification, and the change
+		 * lands when that link is followed.
 		 *
 		 * This used to set sendChangeEmailVerification, with a mail of its own.
-		 * better-auth has since dropped that option (1.7.5 has no trace of it),
-		 * so nothing called it, and because betterAuth() infers its options
-		 * generically the unknown key raised no error: only three implicit-anys
-		 * in the svelte-check backlog. Its successor, sendChangeEmailConfirmation,
-		 * is not a rename. It mails the OLD address to approve the change before
-		 * the new one is verified, which is a different flow, not adopted here.
+		 * better-auth has since dropped that option (1.7.5 has no trace of it), so
+		 * nothing called it, and because betterAuth() infers its options
+		 * generically the unknown key raised no error: only three implicit-anys in
+		 * the svelte-check backlog. Its successor, sendChangeEmailConfirmation, is
+		 * not a rename. It mails the OLD address to approve the change before the
+		 * new one is verified, which is a different flow, not adopted here.
 		 */
 		changeEmail: {
 			enabled: true
@@ -132,19 +134,14 @@ export const auth = betterAuth({
 	verification: { modelName: 'verifications' },
 
 	emailVerification: {
+		// Both signup verification and an email change arrive here; the stored
+		// address is what tells them apart. See verification-email.ts.
 		sendVerificationEmail: async ({ user, url }) => {
-			await sendEmail({
-				to: user.email,
-				subject: 'Verify your email address',
-				html: `
-          <h2>Verify your email</h2>
-          <p>Click the link below to verify your email address:</p>
-          <p><a href="${url}">Verify Email</a></p>
-          <p>If you didn't request this, you can safely ignore this email.</p>
-        `,
-				type: 'verification',
-				userId: user.id
+			const stored = await db.query.users.findFirst({
+				where: eq(users.id, user.id),
+				columns: { email: true }
 			});
+			await sendEmail(verificationMail(user, url, stored?.email ?? null));
 		}
 	},
 
