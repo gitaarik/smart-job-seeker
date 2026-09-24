@@ -350,6 +350,16 @@ export interface ChatCompletionOptions {
 	 * provider/model must read it.
 	 */
 	fallback?: { provider: string; model: string };
+	/**
+	 * What this call is for: the key in prompt-templates.ts when it renders one,
+	 * else a name for the inline prompt (usually the structured-output name).
+	 *
+	 * Metadata only. It never reaches the provider and is left out of the cache
+	 * key, so passing it changes no answer and no cache entry. It is here so the
+	 * layer that makes the call knows which prompt it is making, rather than
+	 * each caller guessing it back from the text afterwards.
+	 */
+	promptKey?: string;
 }
 
 /**
@@ -512,8 +522,11 @@ function generateCacheKey(messages: ChatMessage[], options: ChatCompletionOption
 	// and callers that don't, and invalidate every entry written before it
 	// existed. Dropping it leaves the key byte-identical for every existing
 	// caller, because the remaining keys keep their insertion order.
+	// `promptKey` is excluded for the same reason: it names the call, it does
+	// not change what is asked.
 	const cacheable = { ...options };
 	delete cacheable.fallback;
+	delete cacheable.promptKey;
 	return JSON.stringify({ messages, options: cacheable });
 }
 

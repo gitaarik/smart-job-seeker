@@ -19,6 +19,7 @@ import {
 } from '$lib/server/llm';
 import { getSchemaForPrompt } from '$lib/server/schemas/ai-prompt-schemas';
 import { promptTemplates } from './prompt-templates.js';
+import { promptFingerprint } from './prompt-fingerprint';
 import { tokensToCost } from '$lib/server/billing/credits';
 import { describeSpendBlock, getSpendEligibility } from '$lib/server/account/spend-eligibility';
 import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
@@ -199,14 +200,16 @@ function fetchPromptTemplate(key: string): {
 }
 
 /**
- * The stored profile blob with document-facing visibility applied.
+ * The stored profile blob with skill visibility applied: held-back skills
+ * dropped when `documentSafe`, and the flag itself stripped either way, as
+ * loadProfileData does for a new call.
  *
  * Hands back the original string untouched when there was nothing to resolve,
  * so re-interpolating a chat doesn't gratuitously reformat its own prompt — and
  * likewise if it won't parse, since a prompt built from an odd blob beats one
  * that throws on the way out.
  */
-function documentSafeData(stored: string | null | undefined): string {
+function visibleProfileData(stored: string | null | undefined, documentSafe: boolean): string {
 	if (!stored) return '{}';
 	let parsed: unknown;
 	try {
@@ -216,7 +219,7 @@ function documentSafeData(stored: string | null | undefined): string {
 	}
 	if (typeof parsed !== 'object' || parsed === null) return stored;
 
-	const visible = applySkillVisibility(parsed as Record<string, unknown>, true);
+	const visible = applySkillVisibility(parsed as Record<string, unknown>, documentSafe);
 	return visible === parsed ? stored : JSON.stringify(visible, null, 2);
 }
 
@@ -228,11 +231,13 @@ function documentSafeData(stored: string | null | undefined): string {
 export async function getInterpolatedPrompts(aiChatId: number): Promise<{
 	systemPrompt: string;
 	userPrompt: string;
+	/** Null on rows written before `ai_chats.prompt_key` existed. */
+	promptKey: string | null;
 } | null> {
 	// Fetch the ai_chatss record
 	const aiChat = await db.query.ai_chats.findFirst({
 		where: eq(ai_chats.id, aiChatId),
-		columns: { system_prompt: true, user_prompt: true, profile_id: true }
+		columns: { system_prompt: true, user_prompt: true, profile_id: true, prompt_key: true }
 	});
 
 	if (!aiChat) {
@@ -247,14 +252,16 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<{
 
 	// Prepare replacements (use empty objects as defaults).
 	//
-	// This path re-interpolates a stored chat and has no idea which template it
-	// came from — templates moved into code in 2026-03, and the column that used
-	// to record it has since been dropped. So it takes the conservative reading:
-	// withholding a held-back skill from an analysis is recoverable, putting one
-	// into a document the applicant sends is not.
+	// A row records the template it came from (`prompt_key`), so the profile is
+	// document-safe exactly when createAndGenerateAiChat made it so: for the
+	// writing prompts. Rows written before that column existed cannot say, so
+	// they take the conservative reading: withholding a held-back skill from an
+	// analysis is recoverable, putting one into a document the applicant sends
+	// is not.
+	const documentSafe = aiChat.prompt_key == null || WRITING_PROMPT_KEYS.has(aiChat.prompt_key);
 	const variables = {
 		schema: collectedDataRecord?.schema || '{}',
-		data: documentSafeData(collectedDataRecord?.data)
+		data: visibleProfileData(collectedDataRecord?.data, documentSafe)
 	};
 
 	// Interpolate variables in both prompts. A stored template, so a gap is blank.
@@ -263,7 +270,8 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<{
 
 	return {
 		systemPrompt,
-		userPrompt
+		userPrompt,
+		promptKey: aiChat.prompt_key ?? null
 	};
 }
 
@@ -541,6 +549,8 @@ export async function createAndGenerateAiChat(
 				retrieval,
 				capabilities: options?.capabilityRecord ?? null,
 				followup_to: followupTo,
+				prompt_key: promptKey,
+				prompt_fingerprint: promptFingerprint(promptTemplate),
 				date_created: new Date(),
 				provider: activeProvider,
 				model: activeModel,
@@ -582,7 +592,8 @@ export async function createAndGenerateAiChat(
 				model: activeModel,
 				fallback,
 				// Undefined leaves generateChatCompletionTracked on its own default.
-				temperature: promptTemplate.temperature
+				temperature: promptTemplate.temperature,
+				promptKey
 			}
 		);
 
