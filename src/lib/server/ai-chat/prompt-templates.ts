@@ -923,158 +923,6 @@ In your feedback:
 		user_prompt: `\${followupRequest}`
 	},
 
-	detect_job_detail_content: {
-		system_prompt: `You are analyzing a job search page HTML AFTER a user clicked on a job listing.
-Your task is to identify WHERE the job detail content appeared on the page.
-
-Common patterns for job detail display:
-1. MODAL/DIALOG: A popup overlay with job details (look for [role="dialog"], .modal, .MuiDialog, .ant-modal)
-2. SIDE PANEL: A right-side panel that slides in (look for .jobs-details, .job-view-layout, aside elements)
-3. INLINE EXPANSION: Content that expands below the clicked item
-4. MAIN CONTENT: Job details replace main content area
-
-Your task:
-1. Find the container that holds the DETAILED job information (not the job list cards)
-2. Look for elements containing: full job description, requirements, company info, apply button
-3. Return a CSS selector that uniquely identifies this job detail container
-4. Provide a confidence score (0-100) based on how certain you are
-
-CSS SELECTOR RULES:
-- Prefer class selectors (.job-details) over complex paths
-- Use attribute selectors when helpful ([role="dialog"], [data-job-id])
-- Avoid overly specific selectors that may break
-- Test: the selector should match exactly ONE element containing job details
-
-CONFIDENCE SCORING:
-- 90-100: Clear modal/dialog with role="dialog" or obvious job detail container
-- 70-89: Side panel or main content area with job description visible
-- 50-69: Found content that looks like job details but structure unclear
-- Below 50: Uncertain, might be wrong container
-
-Return null for selector if you cannot identify the job detail container.`,
-		user_prompt: `Here is the HTML from a job search page AFTER clicking on a job listing.
-Identify the container that shows the job details (description, requirements, apply button, etc.).
-
-HTML:
-{{html}}
-
-Return:
-1. selector: CSS selector for the job detail container (or null if not found)
-2. confidence: Your confidence score 0-100
-3. contentType: One of "modal", "panel", "inline", "main", "unknown"`
-	},
-
-	detect_login_fields: {
-		system_prompt: `You are a web form analysis expert. Your task is to identify login form fields in HTML markup.
-
-Given HTML from a login page, identify the SIMPLEST and most ROBUST selectors for:
-1. The username/email input field
-2. The password input field
-3. The submit button
-
-SELECTOR PRIORITY (most preferred first):
-1. ID selector: #fieldId (if the element has an id attribute)
-2. Name attribute: input[name="fieldname"]
-3. Type attribute: input[type="email"] or input[type="password"]
-4. CSS class: .classname (only if unique)
-5. Avoid complex selectors with nth-child, nth-of-type, or deep nesting
-
-Return CSS selectors that can be used with document.querySelector().
-If multiple login forms exist, choose the most prominent one.`,
-		user_prompt: `Analyze this login page HTML and identify the SIMPLEST, most ROBUST field selectors:
-
-\${html}
-
-For each field, return the SIMPLEST selector that will reliably match:
-- Username/email field: Prefer #id or input[name="..."] or input[type="email"]
-- Password field: Prefer #id or input[name="..."] or input[type="password"]
-- Submit button: Prefer button[type="submit"] or a button with specific aria-label
-
-Avoid complex selectors with nth-child or deep nesting.
-
-Return your analysis with confidence score and any warnings (CAPTCHA, 2FA, etc).`
-	},
-
-	detect_login_page: {
-		system_prompt: `You are a login page detection specialist. Your task is to analyze HTML content and determine if the page is a login/authentication page.
-
-Look for indicators such as:
-- Login forms with username/email and password input fields
-- Authentication-related headings (Sign In, Log In, Login, Sign Up alongside login)
-- Submit buttons with login-related text
-- OAuth/SSO provider buttons (Sign in with Google, LinkedIn, etc.)
-- Forgot password links
-- Create account/register links near login forms
-- Session expired messages
-- Please log in to continue messages
-
-Return a JSON response with your determination. Be conservative - only return true if you're confident it's a login page.`,
-		user_prompt: `Analyze this HTML and determine if it's a login/authentication page:
-
-\${html}
-
-Consider:
-- Presence of login form elements
-- Authentication-related messaging
-- Overall page purpose
-
-Return your determination with confidence level and reasoning.`
-	},
-
-	detect_pagination: {
-		system_prompt: `You are an expert at analyzing HTML to detect pagination patterns in job listing pages. Your task is to identify whether the page uses pagination (Next/Previous buttons, page numbers), infinite scroll, or load more buttons.`,
-		user_prompt: `Analyze this HTML and identify pagination mechanisms.
-
-Look for:
-- Next/Previous page links or buttons
-- Page number links (1, 2, 3...)
-- "Load More" or "Show More" buttons  
-- Infinite scroll indicators (lazy loading, scroll triggers)
-
-HTML:
-{{html}}
-
-Return the pagination type and relevant selectors for navigation.`
-	},
-
-	extract_job_click_selectors: {
-		system_prompt: `You are analyzing a job search results page to extract job titles alongside their clickable element IDs.
-
-CRITICAL: You MUST use the EXACT data-xxx values from the HTML. DO NOT make up or guess ID numbers.
-
-Each clickable element in the HTML has a data-xxx attribute with a numeric value. Your job is to:
-1. Find the data-xxx value (this is the ID you must use)
-2. Look for the job title near that element (in headings, links, or text content)
-3. Return ONLY the jobs where you found both a valid ID and a title
-
-Return a JSON object with an array of jobs, each containing the EXACT clickableId from the HTML and the extracted title.`,
-		user_prompt: `Here is HTML from a job search results page with clickable elements marked:
-
-{{html}}
-
-Instructions:
-1. Look for elements with data-xxx="NUMBER" attributes
-2. For each one, find the job title nearby (usually in <h2>, <h3>, <a>, or elements with "title" in the class)
-3. Return ONLY jobs where you found BOTH a valid data-xxx AND a title
-
-CRITICAL: Use the EXACT numbers from data-xxx attributes. Do NOT invent ID numbers.
-
-Example: If you see data-xxx="42" near "Senior Engineer", return:
-{"clickableId": 42, "title": "Senior Engineer"}
-
-Return in this format:
-{
-  "jobs": [
-    {"clickableId": 10, "title": "Software Engineer"},
-    {"clickableId": 12, "title": "Product Manager"}
-  ],
-  "pattern": "Found titles in h3 elements adjacent to buttons with data-xxx",
-  "jobCount": 2
-}
-
-If you cannot find clear title/ID pairs, return an empty jobs array.`
-	},
-
 	extract_job_data: {
 		// Extraction, not prose — see PromptTemplate.temperature. At the writing
 		// default the same paste came back with a title one run and null the
@@ -1428,22 +1276,6 @@ Return the shortened posting as plain text and nothing else. No preamble, no exp
 Return the shortened posting.`
 	},
 
-	extract_job_links: {
-		system_prompt: `You are a job listing link extraction specialist. Your task is to identify and extract URLs to individual job vacancy pages from job search result HTML.
-
-Focus on:
-- Links that point to individual job postings (not company pages, filters, or navigation)
-- Full URLs or URL paths that can be resolved
-- Avoid duplicate links
-
-Return ONLY a JSON array of URLs, nothing else.`,
-		user_prompt: `Extract all job vacancy URLs from this HTML:
-
-\${html}
-
-Return format: ["url1", "url2", "url3"]`
-	},
-
 	extract_jobs_from_search_page: {
 		system_prompt: `You are analyzing a job search results page to extract job information from each listing card.
 
@@ -1673,24 +1505,6 @@ The shortlist. Each line is: ref | what it is | relevance score the ranker gave 
 \${shortlist}
 
 Give a verdict for every line above.`
-	},
-
-	extract_resume_data: {
-		system_prompt: `You are a resume parser that extracts structured information from resume text. Extract all available information and return it in the specified JSON format.
-
-Guidelines:
-- Extract all work experience, including company name, position, dates, and accomplishments
-- Identify education history with institution names, degrees, and dates
-- Categorize technical skills into logical groups (e.g., "Frontend", "Backend", "Databases")
-- Extract language proficiencies if mentioned
-- Find personal projects or side projects
-- Include contact information (email, phone, location, social profiles)
-- For dates, use ISO 8601 format (YYYY-MM-DD) when possible
-- If information is not available, omit those fields rather than guessing
-- Be thorough - extract all relevant details from the resume text`,
-		user_prompt: `Extract structured resume data from the following text:
-
-{resumeText}`
 	},
 
 	find_next_page_button: {

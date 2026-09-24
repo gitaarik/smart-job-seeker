@@ -138,14 +138,14 @@ export async function runProfileAiChat<T>(
  * @returns Result with parsed response and aiChatId for database linking
  *
  * @example
- * const result = await createJobScrapingAiChat<{ urls: string[] }>(
+ * const result = await createJobScrapingAiChat<{ jobs: Array<{ title: string }> }>(
  *   searchTaskId,
- *   "extract_job_links",
+ *   "extract_jobs_from_search_page",
  *   { html: strippedHtml }
  * );
  *
  * if (result.success && result.response) {
- *   const urls = result.response.urls;
+ *   const jobs = result.response.jobs;
  *   // Save aiChatId to job record for audit trail
  * }
  */

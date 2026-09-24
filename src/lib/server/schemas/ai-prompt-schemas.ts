@@ -200,18 +200,6 @@ export const scoreJobMatchSchema = z.object({
 });
 
 /**
- * Schema for detect_login_page prompt
- * Determines if a page is a login/authentication page
- */
-export const detectLoginPageSchema = z.object({
-	isLoginPage: z.boolean().describe('True if this is a login/authentication page'),
-	confidence: z.number().min(0.0).max(1.0).describe('Confidence score from 0.0 to 1.0'),
-	indicators: z
-		.array(z.string())
-		.describe('List of indicators found that led to this determination')
-});
-
-/**
  * Schema for check_login_state prompt
  * Determines if user is logged in after navigating to login page
  */
@@ -907,7 +895,6 @@ export const aiPromptSchemas = {
 	extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
 	score_job_match: scoreJobMatchSchema,
 	extract_matched_skills: extractMatchedSkillsSchema,
-	detect_login_page: detectLoginPageSchema,
 	find_next_page_button: findNextPageButtonSchema,
 	check_login_state: checkLoginStateSchema,
 	write_cover_letter: writeLetterSchema,

@@ -95,18 +95,11 @@ const WRITING_PROMPT_KEYS = new Set<string>([
  * of browser time, and the parses a user is sitting in front of.
  */
 export const EXTRACTION_FALLBACK_PROMPT_KEYS = new Set<string>([
-	'detect_job_detail_content',
-	'detect_login_fields',
-	'detect_login_page',
-	'detect_pagination',
-	'extract_job_click_selectors',
 	'extract_job_data',
 	'extract_job_header',
-	'extract_job_links',
 	'extract_jobs_from_search_page',
 	'find_next_page_button',
 	'compact_job_description',
-	'extract_resume_data',
 	'extract_document',
 	'extract_qa_pairs',
 	'propose_project_from_code'

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
 	aiPromptSchemas,
-	detectLoginPageSchema,
 	extractJobDataSchema,
 	extractJobHeaderSchema,
 	extractQaPairsSchema,
@@ -19,7 +18,6 @@ describe('AI Prompt Schemas', () => {
 			expect(aiPromptSchemas).toHaveProperty('extract_job_data');
 			expect(aiPromptSchemas).toHaveProperty('extract_job_header');
 			expect(aiPromptSchemas).toHaveProperty('score_job_match');
-			expect(aiPromptSchemas).toHaveProperty('detect_login_page');
 			expect(aiPromptSchemas).toHaveProperty('find_next_page_button');
 		});
 
@@ -297,26 +295,6 @@ describe('AI Prompt Schemas', () => {
 				recommendation: 'recommend'
 			};
 			expect(() => scoreJobMatchSchema.parse(tooManyStrengths)).toThrow();
-		});
-	});
-
-	describe('detectLoginPageSchema', () => {
-		it('should validate login detection response', () => {
-			const validData = {
-				isLoginPage: true,
-				confidence: 0.95,
-				indicators: ['Login form found', 'Password field present', 'Sign in button detected']
-			};
-			expect(() => detectLoginPageSchema.parse(validData)).not.toThrow();
-		});
-
-		it('should enforce confidence boundaries', () => {
-			const invalidConfidence = {
-				isLoginPage: true,
-				confidence: 1.5, // > 1.0
-				indicators: ['Login form']
-			};
-			expect(() => detectLoginPageSchema.parse(invalidConfidence)).toThrow();
 		});
 	});
 
