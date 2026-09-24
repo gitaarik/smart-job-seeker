@@ -99,7 +99,8 @@ describe('generateAiChatResponse', () => {
 	it('should generate response and save to database', async () => {
 		const mockPrompts = {
 			systemPrompt: 'You are a helpful assistant',
-			userPrompt: 'What is the capital of France?'
+			userPrompt: 'What is the capital of France?',
+			promptKey: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
@@ -122,7 +123,8 @@ describe('generateAiChatResponse', () => {
 	it('should call Groq API with correct parameters', async () => {
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
-			userPrompt: 'Tell me a joke'
+			userPrompt: 'Tell me a joke',
+			promptKey: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
@@ -138,7 +140,8 @@ describe('generateAiChatResponse', () => {
 	it('should handle Groq API error gracefully', async () => {
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
-			userPrompt: 'Tell me a joke'
+			userPrompt: 'Tell me a joke',
+			promptKey: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
@@ -157,7 +160,8 @@ describe('generateAiChatResponse', () => {
 	it('should handle response with no content', async () => {
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
-			userPrompt: 'Tell me a joke'
+			userPrompt: 'Tell me a joke',
+			promptKey: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
@@ -173,7 +177,8 @@ describe('generateAiChatResponse', () => {
 	it('should handle empty choices array', async () => {
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
-			userPrompt: 'Tell me a joke'
+			userPrompt: 'Tell me a joke',
+			promptKey: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
@@ -189,7 +194,8 @@ describe('generateAiChatResponse', () => {
 	it('should handle database update error', async () => {
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
-			userPrompt: 'Tell me a joke'
+			userPrompt: 'Tell me a joke',
+			promptKey: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
@@ -209,7 +215,8 @@ describe('generateAiChatResponse', () => {
 	it('should use variable interpolation before sending to Groq', async () => {
 		const mockPrompts = {
 			systemPrompt: 'Use this schema: {user_schema} to structure response',
-			userPrompt: 'Use this data: {user_data} to answer'
+			userPrompt: 'Use this data: {user_data} to answer',
+			promptKey: null
 		};
 
 		// The utility should have already interpolated these
@@ -227,7 +234,8 @@ describe('generateAiChatResponse', () => {
 	it('should process multiple responses correctly', async () => {
 		const mockPrompts = {
 			systemPrompt: 'Be helpful',
-			userPrompt: 'What is 2+2?'
+			userPrompt: 'What is 2+2?',
+			promptKey: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);

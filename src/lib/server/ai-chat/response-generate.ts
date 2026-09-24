@@ -49,7 +49,12 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 				{ role: 'system', content: prompts.systemPrompt },
 				{ role: 'user', content: prompts.userPrompt }
 			],
-			{ provider: writingProvider, model: writingModel, fallback: writingFallback() }
+			{
+				provider: writingProvider,
+				model: writingModel,
+				fallback: writingFallback(),
+				promptKey: prompts.promptKey ?? undefined
+			}
 		);
 
 		const usage = completionResult.usage;

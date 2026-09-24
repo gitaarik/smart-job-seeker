@@ -379,6 +379,13 @@
       "when": 1790270417212,
       "tag": "0053_skill_word_position",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1790283871129,
+      "tag": "0054_ai_chat_prompt_key",
+      "breakpoints": true
     }
   ]
 }

@@ -86,7 +86,8 @@ export async function translateFields(
 				model,
 				provider,
 				structuredOutput: { name: 'translate_fields', schema: BatchSchema },
-				temperature: 0.3
+				temperature: 0.3,
+				promptKey: 'translate_fields'
 			}
 		);
 

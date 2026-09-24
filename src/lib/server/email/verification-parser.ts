@@ -158,7 +158,7 @@ ${emailContent}`;
 				},
 				{ role: 'user', content: prompt }
 			],
-			{ temperature: 0, maxTokens: 200 }
+			{ temperature: 0, maxTokens: 200, promptKey: 'verification_email' }
 		);
 
 		// Parse the response

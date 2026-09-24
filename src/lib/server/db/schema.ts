@@ -3082,6 +3082,19 @@ export const ai_chats = pgTable(
 		capabilities: json(),
 		followup_to: integer(),
 		error: text(),
+		/**
+		 * The key in prompt-templates.ts this call rendered, and
+		 * `promptFingerprint` of that template as it stood when the call ran.
+		 *
+		 * Null on rows written before 2026-09-24. Those can only be matched to a
+		 * template by their stored text, which is what /admin/costs did for every
+		 * row: any edit to a template broke the match for its older rows. The
+		 * fingerprint says which version of the template ran, so a row can be
+		 * matched to the smoke run or golden run that tested it (planning/
+		 * LANGFUSE.md, change 1).
+		 */
+		prompt_key: varchar({ length: 255 }),
+		prompt_fingerprint: varchar({ length: 16 }),
 		provider: varchar({ length: 255 }),
 		model: varchar({ length: 255 }),
 		request_type: varchar({ length: 255 }),

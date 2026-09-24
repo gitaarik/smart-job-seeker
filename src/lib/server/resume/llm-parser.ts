@@ -245,6 +245,7 @@ export async function parseResumeWithLLM(resumeText: string, userId?: string): P
 		model: 'openai/gpt-oss-120b',
 		maxTokens: 8192,
 		temperature: 0.1,
+		promptKey: 'resume_data',
 		structuredOutput: {
 			name: 'resume_data',
 			schema: ResumeDataSchema

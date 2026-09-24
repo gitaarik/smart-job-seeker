@@ -27,13 +27,15 @@ import { promptTemplates } from '$lib/server/ai-chat/prompt-templates';
 const PROMPT_KEY_PREFIX = 120;
 
 /**
- * `left(system_prompt, N)` -> the prompt key that produced it.
+ * `left(system_prompt, N)` -> the prompt key that produced it, for rows written
+ * before `ai_chats.prompt_key` existed. Newer rows carry the key and are
+ * grouped on it.
  *
  * `createAndGenerateAiChat` stores the template UNinterpolated, so a stored
  * system prompt is byte-identical to the one in code until someone edits the
- * template. Rows written before an edit stop matching and fall back to showing
- * their prefix, which is the honest outcome: they really were a different
- * prompt.
+ * template. Old rows written before an edit stop matching and fall back to
+ * showing their prefix, which is the honest outcome for a row that cannot say
+ * which prompt it was.
  */
 const promptKeyByPrefix = new Map<string, string>(
 	Object.entries(promptTemplates).map(([key, t]) => [
@@ -118,9 +120,13 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		GROUP BY 1, 2, 3, 4
 	`);
 
+	// The text prefix is only computed for rows with no key, so it never splits
+	// a keyed prompt's rows across its edits.
 	const byPrompt = await db.execute(sql`
 		SELECT
-			LEFT(c.system_prompt, ${PROMPT_KEY_PREFIX}) AS prompt_head,
+			c.prompt_key AS prompt_key,
+			CASE WHEN c.prompt_key IS NULL THEN LEFT(c.system_prompt, ${PROMPT_KEY_PREFIX}) END
+				AS prompt_head,
 			c.provider AS provider,
 			c.model AS model,
 			COALESCE(c.input_tokens, 0) > ${LONG_CONTEXT_THRESHOLD_TOKENS} AS long_context,
@@ -132,7 +138,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 			COALESCE(SUM(c.output_tokens), 0)::bigint AS output_tokens
 		FROM ai_chats c
 		WHERE c.date_created >= ${periodStart} AND c.date_created < ${periodEnd}
-		GROUP BY 1, 2, 3, 4
+		GROUP BY 1, 2, 3, 4, 5
 	`);
 
 	const rows = (byUserAndModel as unknown as { rows?: unknown[] }).rows ?? byUserAndModel;
@@ -248,9 +254,12 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		string,
 		{ label: string; matched: boolean; costUsd: number; tokens: number; calls: number }
 	>();
-	for (const raw of promptRows as (CostRow & { prompt_head: string })[]) {
+	for (const raw of promptRows as (CostRow & {
+		prompt_key: string | null;
+		prompt_head: string | null;
+	})[]) {
 		const head = raw.prompt_head ?? '';
-		const key = promptKeyByPrefix.get(head);
+		const key = raw.prompt_key ?? promptKeyByPrefix.get(head);
 		const label = key ?? `${head.slice(0, 60).replace(/\s+/g, ' ').trim()}…`;
 		let ps = promptStatsMap.get(label);
 		if (!ps) {
