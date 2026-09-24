@@ -552,8 +552,37 @@ function generateCacheKey(messages: ChatMessage[], options: ChatCompletionOption
  */
 export interface TokenUsage {
 	inputTokens: number;
+	/** The visible answer. Never includes `reasoningTokens`. */
 	outputTokens: number;
+	/**
+	 * The basis credits are charged on: input plus output as the provider
+	 * reported them. On Gemini that leaves the thinking out, since
+	 * @langchain/google-genai reports it only in its own total, and it is left
+	 * that way on purpose: counting it here would raise what every
+	 * gemini-2.5-pro writing call charges, which is a pricing decision rather
+	 * than a bug fix (planning/LANGFUSE.md, change 2). `reasoningTokens` is
+	 * where the thinking is recorded and priced in the meantime.
+	 */
 	totalTokens: number;
+	/**
+	 * Tokens the model spent thinking before it answered, billed at the output
+	 * rate. Disjoint from `outputTokens`, so output plus reasoning is everything
+	 * the provider bills as output.
+	 *
+	 * Gemini 2.5 is the case this exists for. @langchain/google-genai maps
+	 * `output_tokens` to `candidatesTokenCount` and reports the thoughts only in
+	 * `total_tokens`, so until this was recorded every thinking token was
+	 * invisible to the token counts and to `estimateProviderCostUsd`, by up to
+	 * the thinking budget per call. A provider that reports
+	 * `output_token_details.reasoning` counts it INSIDE `output_tokens`
+	 * (OpenAI's convention); it is taken out of `outputTokens` here so the two
+	 * never overlap.
+	 *
+	 * 0 when the provider reports nothing. Groq's gpt-oss does reason, but
+	 * reports the reasoning inside its completion tokens and not separately, so
+	 * there it is part of `outputTokens` and priced correctly already.
+	 */
+	reasoningTokens: number;
 	/**
 	 * The part of `inputTokens` the provider served from a cached prefix — a
 	 * subset, not an addition.
@@ -608,7 +637,9 @@ interface UsageBearingResult {
 	usage_metadata?: {
 		input_tokens?: number;
 		output_tokens?: number;
+		total_tokens?: number;
 		input_token_details?: { cache_read?: number };
+		output_token_details?: { reasoning?: number };
 	};
 	response_metadata?: {
 		usage?: { prompt_tokens_details?: { cached_tokens?: number } };
@@ -634,10 +665,22 @@ function extractTokenUsage(result: UsageBearingResult | null | undefined): Token
 	// LangChain stores usage in usage_metadata (standard) or response_metadata
 	const usage = result?.usage_metadata;
 	if (usage) {
+		const inputTokens = usage.input_tokens ?? 0;
+		const reportedOutput = usage.output_tokens ?? 0;
+		// Reported as part of the output (OpenAI's convention), or not reported
+		// at all and visible only as the gap between the total and the two counts
+		// (Gemini's thoughts). See TokenUsage.reasoningTokens.
+		const reportedReasoning = usage.output_token_details?.reasoning;
+		const reasoningTokens =
+			reportedReasoning != null
+				? Math.min(Math.max(reportedReasoning, 0), reportedOutput)
+				: Math.max((usage.total_tokens ?? 0) - inputTokens - reportedOutput, 0);
 		return {
-			inputTokens: usage.input_tokens ?? 0,
-			outputTokens: usage.output_tokens ?? 0,
-			totalTokens: (usage.input_tokens ?? 0) + (usage.output_tokens ?? 0),
+			inputTokens,
+			outputTokens: reportedReasoning != null ? reportedOutput - reasoningTokens : reportedOutput,
+			// Unchanged by the reasoning count: the credit basis. See TokenUsage.
+			totalTokens: inputTokens + reportedOutput,
+			reasoningTokens,
 			// Standard LangChain shape first. Providers that don't cache omit the
 			// whole `input_token_details` object rather than reporting a zero.
 			//
@@ -663,10 +706,14 @@ function extractTokenUsage(result: UsageBearingResult | null | undefined): Token
 	const respMeta = result?.response_metadata;
 	if (respMeta?.tokenUsage) {
 		const tu = respMeta.tokenUsage;
+		const inputTokens = tu.promptTokens ?? tu.input_tokens ?? 0;
+		const outputTokens = tu.completionTokens ?? tu.output_tokens ?? 0;
+		const totalTokens = tu.totalTokens ?? tu.total_tokens ?? 0;
 		return {
-			inputTokens: tu.promptTokens ?? tu.input_tokens ?? 0,
-			outputTokens: tu.completionTokens ?? tu.output_tokens ?? 0,
-			totalTokens: tu.totalTokens ?? tu.total_tokens ?? 0,
+			inputTokens,
+			outputTokens,
+			totalTokens,
+			reasoningTokens: Math.max(totalTokens - inputTokens - outputTokens, 0),
 			// No standard place for it on this path; the providers that land here
 			// are the ones not reporting the standard shape in the first place.
 			cachedInputTokens: 0

@@ -386,6 +386,13 @@
       "when": 1790283871129,
       "tag": "0054_ai_chat_prompt_key",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1790284725993,
+      "tag": "0055_ai_chat_reasoning_duration",
+      "breakpoints": true
     }
   ]
 }

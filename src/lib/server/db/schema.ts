@@ -3113,6 +3113,21 @@ export const ai_chats = pgTable(
 		 * identical.
 		 */
 		cached_input_tokens: integer(),
+		/**
+		 * Thinking billed at the output rate and NOT counted in `output_tokens`
+		 * (TokenUsage.reasoningTokens): an addition, unlike `cached_input_tokens`.
+		 * Gemini 2.5's thoughts, which were counted nowhere before 2026-09-24.
+		 * `total_tokens` still leaves them out, because it is what credits are
+		 * charged on; see TokenUsage.totalTokens.
+		 */
+		reasoning_tokens: integer(),
+		/**
+		 * Wall time of the model call in milliseconds, retries and any fallback
+		 * included, and a few for a response-cache hit. Recorded on failures too.
+		 * `date_created` is stamped before the call and `date_updated` is never
+		 * set, so until this existed there was no latency anywhere.
+		 */
+		duration_ms: integer(),
 		credits_charged: integer()
 	},
 	(table) => [

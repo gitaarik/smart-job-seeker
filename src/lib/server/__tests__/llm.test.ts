@@ -163,6 +163,74 @@ describe('cached input tokens', () => {
 	});
 });
 
+describe('reasoning tokens', () => {
+	beforeEach(async () => {
+		vi.clearAllMocks();
+		await llmCache.clear();
+	});
+
+	// @langchain/google-genai maps output_tokens to candidatesTokenCount and
+	// reports the thoughts only in total_tokens. Summing input and output, as
+	// this used to, lost them without a trace.
+	it("recovers Gemini's thinking from the gap in its total", async () => {
+		mockGeminiInvoke.mockResolvedValueOnce(
+			new AIMessage({
+				content: 'A letter.',
+				usage_metadata: { input_tokens: 1000, output_tokens: 958, total_tokens: 9177 }
+			})
+		);
+
+		const result = await generateChatCompletionTracked([{ role: 'user', content: 'think' }], {
+			provider: 'gemini',
+			model: 'gemini-2.5-pro'
+		});
+		expect(result.usage).toMatchObject({
+			inputTokens: 1000,
+			outputTokens: 958,
+			reasoningTokens: 7219,
+			// The credit basis is unchanged: see TokenUsage.totalTokens.
+			totalTokens: 1958
+		});
+	});
+
+	// OpenAI's convention counts reasoning inside output_tokens. Taking it out
+	// keeps output and reasoning disjoint, so pricing both at the output rate
+	// charges each token once.
+	it('takes reported reasoning out of the output it is part of', async () => {
+		mockInvoke.mockResolvedValueOnce(
+			new AIMessage({
+				content: 'OK',
+				usage_metadata: {
+					input_tokens: 50,
+					output_tokens: 300,
+					total_tokens: 350,
+					output_token_details: { reasoning: 280 }
+				}
+			})
+		);
+
+		const result = await generateChatCompletionTracked([{ role: 'user', content: 'reported' }]);
+		expect(result.usage).toMatchObject({
+			outputTokens: 20,
+			reasoningTokens: 280,
+			totalTokens: 350
+		});
+	});
+
+	it('reports zero when the counts add up to the total', async () => {
+		mockInvoke.mockResolvedValueOnce(
+			new AIMessage({
+				content: 'OK',
+				usage_metadata: { input_tokens: 12, output_tokens: 3, total_tokens: 15 }
+			})
+		);
+
+		const result = await generateChatCompletionTracked([{ role: 'user', content: 'plain' }]);
+		expect(result.usage?.reasoningTokens).toBe(0);
+		expect(result.usage?.outputTokens).toBe(3);
+	});
+});
+
 describe('generateChatCompletion', () => {
 	beforeEach(async () => {
 		vi.clearAllMocks();

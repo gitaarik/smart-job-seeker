@@ -48,6 +48,8 @@ interface CostRow {
 	input_tokens: number;
 	cached_input_tokens: number;
 	output_tokens: number;
+	/** Thinking not counted in output_tokens, priced at the output rate. */
+	reasoning_tokens: number;
 	calls: number;
 	cache_hits: number;
 	failed: number;
@@ -65,7 +67,8 @@ function priceRow(row: CostRow): number | null {
 		{
 			inputTokens: Number(row.input_tokens),
 			outputTokens: Number(row.output_tokens),
-			cachedInputTokens: Number(row.cached_input_tokens)
+			cachedInputTokens: Number(row.cached_input_tokens),
+			reasoningTokens: Number(row.reasoning_tokens)
 		},
 		row.long_context
 	);
@@ -113,6 +116,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 			COALESCE(SUM(c.input_tokens), 0)::bigint AS input_tokens,
 			COALESCE(SUM(c.cached_input_tokens), 0)::bigint AS cached_input_tokens,
 			COALESCE(SUM(c.output_tokens), 0)::bigint AS output_tokens,
+			COALESCE(SUM(c.reasoning_tokens), 0)::bigint AS reasoning_tokens,
 			COALESCE(SUM(c.credits_charged), 0)::bigint AS credits
 		FROM ai_chats c
 		LEFT JOIN profiles p ON p.id = c.profile_id
@@ -135,7 +139,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 			COUNT(*) FILTER (WHERE c.error IS NOT NULL)::int AS failed,
 			COALESCE(SUM(c.input_tokens), 0)::bigint AS input_tokens,
 			COALESCE(SUM(c.cached_input_tokens), 0)::bigint AS cached_input_tokens,
-			COALESCE(SUM(c.output_tokens), 0)::bigint AS output_tokens
+			COALESCE(SUM(c.output_tokens), 0)::bigint AS output_tokens,
+			COALESCE(SUM(c.reasoning_tokens), 0)::bigint AS reasoning_tokens
 		FROM ai_chats c
 		WHERE c.date_created >= ${periodStart} AND c.date_created < ${periodEnd}
 		GROUP BY 1, 2, 3, 4, 5
@@ -192,7 +197,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	for (const raw of rows as (CostRow & { user_id: string | null; credits: number })[]) {
 		const costUsd = priceRow(raw);
 		const calls = Number(raw.calls);
-		const tokens = Number(raw.input_tokens) + Number(raw.output_tokens);
+		const tokens =
+			Number(raw.input_tokens) + Number(raw.output_tokens) + Number(raw.reasoning_tokens);
 		cacheHits += Number(raw.cache_hits);
 		failedCalls += Number(raw.failed);
 
@@ -268,7 +274,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		}
 		const costUsd = priceRow(raw);
 		if (costUsd != null) ps.costUsd += costUsd;
-		ps.tokens += Number(raw.input_tokens) + Number(raw.output_tokens);
+		ps.tokens +=
+			Number(raw.input_tokens) + Number(raw.output_tokens) + Number(raw.reasoning_tokens);
 		ps.calls += Number(raw.calls);
 	}
 

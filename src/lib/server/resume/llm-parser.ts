@@ -229,6 +229,9 @@ const ResumeDataSchema = z.object({
 	references: nullableArray(ReferenceSchema)
 });
 
+/** The model the resume parser asks for, on the app provider. */
+const RESUME_MODEL = 'openai/gpt-oss-120b';
+
 /**
  * Parse resume text using LLM to extract structured data
  * @throws Error if parsing fails or name cannot be extracted
@@ -242,7 +245,7 @@ export async function parseResumeWithLLM(resumeText: string, userId?: string): P
 	];
 
 	const result = await generateChatCompletionTracked(messages, {
-		model: 'openai/gpt-oss-120b',
+		model: RESUME_MODEL,
 		maxTokens: 8192,
 		temperature: 0.1,
 		promptKey: 'resume_data',
@@ -257,12 +260,17 @@ export async function parseResumeWithLLM(resumeText: string, userId?: string): P
 	if (userId && usage) {
 		const creditsCost = tokensToCost(usage.totalTokens);
 		if (creditsCost > 0) {
+			// Priced as the model that ran, not the app default: the two differ
+			// whenever SJS_LLM_MODEL is set to anything else, and a price for the
+			// wrong model is worse than none because nothing flags it.
+			const ranOn = result.fallbackUsed ?? { provider: config.llmProvider, model: RESUME_MODEL };
 			const providerCostUsd = estimateProviderCostUsd(
-				config.llmProvider,
-				config.llmModel,
+				ranOn.provider,
+				ranOn.model,
 				usage.inputTokens,
 				usage.outputTokens,
-				usage.cachedInputTokens
+				usage.cachedInputTokens,
+				usage.reasoningTokens
 			);
 			await chargeCredits(
 				userId,
@@ -271,8 +279,8 @@ export async function parseResumeWithLLM(resumeText: string, userId?: string): P
 				`Resume AI parse (${usage.totalTokens} tokens)`,
 				{
 					tokens: usage,
-					provider: config.llmProvider,
-					model: config.llmModel,
+					provider: ranOn.provider,
+					model: ranOn.model,
 					providerCostUsd
 				}
 			);
