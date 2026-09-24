@@ -12,24 +12,9 @@ import { users } from '$lib/server/db/schema';
 import { initSentry, Sentry } from '$lib/server/monitoring/sentry';
 import { aiRateLimiter, createRateLimitResponse } from '$lib/server/middleware/rate-limit';
 import { shapeHtmlShell } from '$lib/server/html-shell';
+import { isPublicApiRoute } from '$lib/server/auth/public-api-routes';
 
 initSentry('sveltekit');
-
-// API routes that don't require session auth (they handle their own auth or are public)
-const PUBLIC_API_ROUTES = [
-	'/api/auth', // Better Auth handles its own auth
-	'/api/verify-turnstile', // Public CAPTCHA verification
-	// The MCP server. Authenticates on an Authorization bearer token against
-	// `mcp_keys` — a separate table from the device keys in `api_keys`,
-	// deliberately, so that neither kind of credential can be presented where
-	// the other belongs.
-	//
-	// These match by PREFIX. '/api/jobs/import' stood here for two device-key
-	// import endpoints, deleted 2026-09-24, and it also let
-	// /api/jobs/import/suggest skip the approval and pending-deletion checks
-	// below. A route added here exempts everything under it.
-	'/api/mcp'
-];
 
 function getSystemTheme(request: Request): 'light' | 'dark' {
 	// Try to detect system preference from headers
@@ -167,11 +152,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	// Enforce authentication on all /api/* routes by default.
-	// New API routes are secure automatically — only routes in PUBLIC_API_ROUTES skip this.
-	if (
-		pathname.startsWith('/api/') &&
-		!PUBLIC_API_ROUTES.some((route) => pathname.startsWith(route))
-	) {
+	// New API routes are secure automatically: only the routes in
+	// $lib/server/auth/public-api-routes skip this, and they check their callers
+	// themselves.
+	if (pathname.startsWith('/api/') && !isPublicApiRoute(pathname)) {
 		if (!event.locals.user) {
 			return json({ error: 'Not authenticated' }, { status: 401 });
 		}
