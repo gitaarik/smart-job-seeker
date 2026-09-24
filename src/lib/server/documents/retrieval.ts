@@ -288,14 +288,18 @@ export interface PinnedProject {
  *
  * Exported for its test — the fallback path is the one that must not regress,
  * and it is unreachable through relevantProfileProjects without a database.
+ * `expand` is the graph walk; the project-retrieval golden set passes one that
+ * answers from its snapshot of the ontology, so it widens offline through this
+ * same code.
  */
 export async function widenProjectKeywords<T extends { keywords: string[] }>(
-	projects: T[]
+	projects: T[],
+	expand: typeof expandForRetrieval = expandForRetrieval
 ): Promise<T[]> {
 	const all = [...new Set(projects.flatMap((p) => p.keywords))];
 	if (all.length === 0) return projects;
 	try {
-		const near = await expandForRetrieval(all);
+		const near = await expand(all);
 		if (near.size === 0) return projects;
 		return projects.map((p) => {
 			const implied = p.keywords.flatMap(
