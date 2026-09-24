@@ -49,7 +49,6 @@
 		matched_skill_details?: unknown;
 		adjacent_skills?: unknown;
 		match_summary?: string | null;
-		status: string;
 	}
 
 	interface Props {

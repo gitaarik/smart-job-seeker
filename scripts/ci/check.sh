@@ -28,7 +28,15 @@ set -euo pipefail
 # check-scripts.sh: a better-auth callback nothing had called since the option
 # it was set on was dropped, and a legacy field the profile importer reads that
 # its type had lost.
-BASELINE=25
+#
+# 25 -> 12 on 2026-09-24. Reading each error rather than counting them found
+# two more live bugs among 13: the rescrape monitor never passed the loginMode
+# its credential picker needs, so the saved-logins list stayed hidden, and the
+# import filter picker still named job_type, split into two axes in May, so
+# both new axes lost their multi-select. The other 11 were types that no longer
+# described their data: props nothing read, fields the endpoint does send, a
+# nullable column, a follow-up id that ends the chain as null.
+BASELINE=12
 
 npx svelte-kit sync
 

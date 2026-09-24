@@ -962,7 +962,7 @@
 							{#each debugSections as section (section.name)}
 								{#if section.name === 'Basics'}
 									<span
-										class="rounded border px-2 py-0.5 text-xs {section.fields > 1
+										class="rounded border px-2 py-0.5 text-xs {(section.fields ?? 0) > 1
 											? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700'
 											: 'border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}"
 									>

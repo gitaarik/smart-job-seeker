@@ -17,7 +17,7 @@
 	let letter = $derived(data.letter);
 	let conversation = $derived(data.conversation);
 	let isNew = $derived(data.isNew);
-	let appId = $derived($page.params.id);
+	let appId = $derived($page.params.id ?? '');
 
 	let showDeleteConfirm = $state(false);
 

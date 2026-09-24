@@ -147,7 +147,6 @@
 	<SearchFormProbeRunCard
 		initialRun={data.run}
 		initialLogs={data.logs}
-		profileId={data.profileId}
 		{credentialLabel}
 		{deviceLabel}
 	/>

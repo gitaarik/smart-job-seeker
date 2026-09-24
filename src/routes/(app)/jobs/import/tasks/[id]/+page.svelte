@@ -294,6 +294,9 @@
 		job_description: string | null;
 		source_url: string | null;
 		job_platform: { name: string } | null;
+		/** The run-items endpoint selects both; they arrive serialized. */
+		date_posted: string | null;
+		date_created: string | null;
 	}
 
 	interface RunItem {

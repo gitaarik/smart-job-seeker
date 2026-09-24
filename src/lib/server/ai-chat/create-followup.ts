@@ -116,6 +116,7 @@ export async function createFollowupAiChat(
 				system_prompt: ancestor.system_prompt,
 				user_prompt: ancestor.user_prompt
 			};
+			if (!ancestor.followup_to) break;
 			currentId = ancestor.followup_to;
 		}
 	}

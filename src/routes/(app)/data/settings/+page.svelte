@@ -25,7 +25,7 @@
 	}
 
 	function confirmDelete() {
-		document.getElementById('delete-form')?.requestSubmit();
+		(document.getElementById('delete-form') as HTMLFormElement | null)?.requestSubmit();
 	}
 
 	function cancelDelete() {
