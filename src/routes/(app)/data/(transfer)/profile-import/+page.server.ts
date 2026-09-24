@@ -15,6 +15,7 @@ import type { ExportedProfile } from '$lib/server/profile/export-profile-json';
 import { getProfileAsResumeData } from '$lib/server/resume/profile-to-resume-data';
 import { applyDiffToProfile, type DiffApplyPayload } from '$lib/server/resume/apply-diff';
 import { logImportEvent } from '$lib/server/import-log';
+import { profileQuotaFailure } from '$lib/server/profile/quota';
 import { dbDirect as db } from '$lib/server/db';
 import { desc } from 'drizzle-orm';
 import { import_logs } from '$lib/server/db/schema';
@@ -108,6 +109,10 @@ export const actions: Actions = {
 				return fail(400, { error: 'No profile selected to overwrite' });
 			}
 			overwriteProfileId = selectedId;
+		} else {
+			// Only a new profile counts against the plan; overwriting one does not.
+			const refused = await profileQuotaFailure(user.id);
+			if (refused) return refused;
 		}
 
 		try {
@@ -279,6 +284,11 @@ export const actions: Actions = {
 			return fail(400, {
 				error: 'Invalid export format: missing profile data'
 			});
+		}
+
+		if (importMode !== 'overwrite') {
+			const refused = await profileQuotaFailure(user.id);
+			if (refused) return refused;
 		}
 
 		let result: { profileId: number; profileName: string };
