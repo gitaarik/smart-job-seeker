@@ -15,7 +15,9 @@ declare global {
 		// interface Error {}
 		interface Locals {
 			user: User | null;
-			session: Session | null;
+			/** The session record alone: hooks.server.ts splits getSession()'s
+			 *  `{ session, user }` across this and `user`. */
+			session: Session['session'] | null;
 			adminUser: User | null;
 			/**
 			 * The language a public document renders in, set by its load function.

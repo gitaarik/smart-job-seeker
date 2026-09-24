@@ -146,7 +146,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// In dev, Vite's origin is http://localhost:PORT, which does not match the
 	// public baseURL behind a reverse proxy, so better-auth's origin check has to
 	// be bypassed by calling the handler directly.
-	if (pathname.startsWith(auth.options.basePath || '/api/auth')) {
+	// better-auth's default basePath: the config never sets one, so the
+	// `auth.options.basePath` this used to read was always undefined.
+	if (pathname.startsWith('/api/auth')) {
 		if (import.meta.env.DEV) {
 			return auth.handler(event.request);
 		}
