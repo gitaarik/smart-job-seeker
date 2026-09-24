@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm';
 import { application_letters } from '$lib/server/db/schema';
 import { createAndGenerateAiChat, instructionsBlock } from './utils';
 import type { ContextSource, GenerationContextOption } from './generation-context';
+import { letterQuery } from './relevance-queries';
 import { LETTER_PROFILE_FIELDS } from './profile-fields';
 import { ensureBaselineVersion, LETTER_VERSIONS, recordVersion } from './entity-versions';
 /**
@@ -138,10 +139,7 @@ export async function generateApplicationLetter(
 		sources.push('projects', 'stories', 'application_texts');
 	}
 	const context: GenerationContextOption = {
-		query: {
-			text: [job.title, job.job_description].filter(Boolean).join('\n'),
-			skills: (job.skills_required as string[] | null) ?? undefined
-		},
+		query: letterQuery(job),
 		entity: { type: 'application', id: letter.application.id },
 		sources,
 		sourceOptions: {
