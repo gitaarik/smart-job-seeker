@@ -28,6 +28,11 @@
  * is the normal case, the graph affected no request at all. `withGraphPick` now
  * gives it the last of the K slots on every request, bounded to exactly one so
  * the change is measurable and reversible.
+ *
+ * SJS_PROJECT_RETRIEVAL_MERGE=fused replaces that slot with reciprocal rank
+ * fusion of the two full lists (mergeProjectRankings). The graph slot stays the
+ * default until a hand-labelled set says fusion is at least as good; see
+ * planning/PROJECT-RETRIEVAL-FUSION.md.
  */
 
 import { dbDirect as db } from '$lib/server/db';
@@ -38,6 +43,11 @@ import { type EmbeddableUnit, projectKey, semanticScoreProjects } from './projec
 import { expandForRetrieval } from '$lib/server/job/skill-ontology';
 import { normalizeSkill } from '$lib/skills';
 import { profile_document_projects } from '$lib/server/db/schema';
+import {
+	type FusionOptions,
+	reciprocalRankFusion,
+	RRF_DEFAULT_K
+} from '$lib/server/search/rank-fusion';
 import type { RankerKind, RetrievalItem, RetrievalVia, RetrievedBlock } from './retrieval-record';
 
 export interface JobLike {
@@ -62,6 +72,13 @@ export interface RankableProject {
 	 * describes the retrieval, not the applicant.
 	 */
 	via?: RetrievalVia;
+	/**
+	 * Fused picks only: the project's rank in the semantic and in the
+	 * graph-widened keyword list, each absent when that list did not hold it.
+	 * For the retrieval record; not shown to the model.
+	 */
+	semanticRank?: number;
+	keywordRank?: number;
 	kind: 'side_project' | 'work_experience_project';
 	id: number;
 	/**
@@ -440,9 +457,10 @@ export async function rankedProfileProjects(
 	const rest = subject ? projects.filter((p) => p !== subject) : projects;
 	const remaining = subject ? Math.max(0, k - 1) : k;
 
-	// Semantic (embedding) ranking leads; the graph-widened ranker gets the last
-	// slot. It used to be a pure fallback, which meant that with embeddings on —
-	// the normal case — the graph never affected a single request.
+	// Both rankers run in full, and mergeProjectRankings decides what reaches the
+	// K slots. The widened keyword list is needed either way — as the graph's slot,
+	// as a fusion input, or as the whole answer when semantic is unavailable — so
+	// both modes cost the same one graph query.
 	let ranked: (RankableProject & { score: number })[];
 	let ranker: RankerKind;
 	if (remaining === 0 || rest.length === 0) {
@@ -452,25 +470,23 @@ export async function rankedProfileProjects(
 		ranker = 'none';
 	} else {
 		const scores = await semanticScoreProjects(profileId, units, job);
-		const semantic = scores ? rankBySemanticScores(rest, scores, remaining) : [];
-		if (semantic.length === 0) {
-			// Semantic is unavailable, or its floor cleared nobody. A floor that
-			// rejects every project leaves the writer with none at all, so here the
-			// widened keywords are the whole answer rather than a supplement.
-			ranked = rankProjects(await widenProjectKeywords(rest), job, remaining);
-			ranker = 'overlap';
-		} else {
-			ranked = await withGraphPick(semantic, rest, job, remaining);
-			ranker = 'semantic';
-		}
+		const semantic = scores ? rankBySemanticScores(rest, scores) : [];
+		const keyword = rankProjects(await widenProjectKeywords(rest), job, Infinity);
+		({ ranked, ranker } = mergeProjectRankings(
+			semantic,
+			keyword,
+			remaining,
+			config.projectRetrievalMerge
+		));
 	}
 
 	// Stamp how each pick was made while the answer is still in scope. The graph's
 	// reserved slot is scored deterministically even on a semantic list, so `via`
-	// is per item and `ranker` is per source; neither reaches the model.
+	// is per item and `ranker` is per source; neither reaches the model. A fused
+	// pick already says which list found it.
 	const stamped: (RankableProject & { score: number })[] = ranked.map((p) => ({
 		...p,
-		via: p.viaGraph ? 'graph' : ranker === 'semantic' ? 'semantic' : 'overlap'
+		via: p.via ?? (p.viaGraph ? 'graph' : ranker === 'semantic' ? 'semantic' : 'overlap')
 	}));
 
 	// The score on the subject is a sort key, not a measurement: nothing ranked it,
@@ -492,6 +508,84 @@ export async function relevantProfileProjects(
 	pinned?: PinnedProject
 ): Promise<(RankableProject & { score: number })[]> {
 	return (await rankedProfileProjects(profileId, job, k, pinned)).ranked;
+}
+
+/** How project retrieval merges its two rankers; see config.projectRetrievalMerge. */
+export type ProjectMergeMode = 'fused' | 'graph_slot';
+
+/**
+ * The fusion settings project retrieval uses. k = 60 and equal weights are the
+ * usual starting point, not a measurement: the labelled set in
+ * cloud/scripts/golden/project-retrieval compares them with k = 10 and a
+ * double-weighted semantic list, and whichever wins belongs here.
+ */
+export const PROJECT_FUSION: Readonly<FusionOptions> = { k: RRF_DEFAULT_K };
+
+type Scored = RankableProject & { score: number };
+
+/**
+ * Merge the two rankers' lists into the K projects retrieval returns.
+ *
+ * `semantic` is every project at or above the cosine floor, best first;
+ * `keyword` every project the graph-widened keyword ranker scores above zero,
+ * best first. Both FULL lists, not top-K: under fusion a project fourth on both
+ * lists must be able to beat one first on one list and absent from the other.
+ *
+ * Fallbacks are the same in both modes. No semantic list — embeddings off, the
+ * provider failed, or nothing cleared the floor — means the keyword list alone
+ * decides (`overlap`). A floor that rejects every project would leave the
+ * writer with none at all, so there the widened keywords are the whole answer
+ * rather than a supplement.
+ *
+ *  - `graph_slot` (today's default): semantic leads and the keyword ranker gets
+ *    the last slot — see pickGraphSlot.
+ *  - `fused`: reciprocal rank fusion of both lists, the semantic list first so
+ *    it wins a tie (rank-fusion.ts). An empty keyword list leaves the semantic
+ *    list to decide alone, reported as `semantic`, since nothing was fused. Each
+ *    fused pick carries its ranks and a `via` naming the lists that held it,
+ *    and its `score` is the fused score.
+ *
+ * Pure, and exported so the project-retrieval golden set can replay both modes
+ * from a snapshot through the same code production runs.
+ */
+export function mergeProjectRankings(
+	semantic: Scored[],
+	keyword: Scored[],
+	k: number,
+	mode: ProjectMergeMode,
+	fusion: Readonly<FusionOptions> = PROJECT_FUSION
+): { ranked: Scored[]; ranker: RankerKind } {
+	if (semantic.length === 0) return { ranked: keyword.slice(0, k), ranker: 'overlap' };
+	if (mode === 'graph_slot') {
+		return {
+			ranked: pickGraphSlot(semantic.slice(0, k), keyword.slice(0, k), k),
+			ranker: 'semantic'
+		};
+	}
+	if (keyword.length === 0) return { ranked: semantic.slice(0, k), ranker: 'semantic' };
+
+	const byKey = new Map<string, Scored>();
+	for (const p of [...keyword, ...semantic]) byKey.set(projectKey(p.kind, p.id), p);
+	const entries = (list: Scored[]) =>
+		list.map((p) => ({ id: projectKey(p.kind, p.id), score: p.score }));
+	const fused = reciprocalRankFusion(
+		[
+			{ name: 'semantic', entries: entries(semantic) },
+			{ name: 'keyword', entries: entries(keyword) }
+		],
+		fusion
+	);
+	const ranked = fused.slice(0, k).map((f): Scored => {
+		const { semantic: semanticRank, keyword: keywordRank } = f.ranks;
+		return {
+			...byKey.get(f.id)!,
+			score: f.score,
+			via: semanticRank && keywordRank ? 'both' : semanticRank ? 'semantic' : 'keyword',
+			...(semanticRank === undefined ? {} : { semanticRank }),
+			...(keywordRank === undefined ? {} : { keywordRank })
+		};
+	});
+	return { ranked, ranker: 'fused' };
 }
 
 /**
@@ -524,6 +618,7 @@ export async function relevantProfileProjects(
  * Exported for its test, for the same reason `widenProjectKeywords` is: reaching
  * it through `relevantProfileProjects` needs a database and an embedding
  * provider, and the displacement rule is the part that must not regress.
+ * rankedProfileProjects widens once and calls pickGraphSlot, the pure half.
  */
 export async function withGraphPick(
 	semantic: (RankableProject & { score: number })[],
@@ -531,9 +626,22 @@ export async function withGraphPick(
 	job: JobLike,
 	k: number
 ): Promise<(RankableProject & { score: number })[]> {
+	return pickGraphSlot(semantic, rankProjects(await widenProjectKeywords(candidates), job, k), k);
+}
+
+/**
+ * The displacement rule of withGraphPick, on lists already ranked: `semantic`
+ * the top K by cosine, `keyword` the top K of the graph-widened keyword ranker.
+ * Only the keyword list's top K is looked at, as it always was — a newcomer from
+ * further down would be a different rule, not the same one on more data.
+ */
+export function pickGraphSlot(
+	semantic: (RankableProject & { score: number })[],
+	keyword: (RankableProject & { score: number })[],
+	k: number
+): (RankableProject & { score: number })[] {
 	const chosen = new Set(semantic.map((p) => projectKey(p.kind, p.id)));
-	const widened = rankProjects(await widenProjectKeywords(candidates), job, k);
-	const newcomer = widened.find((p) => !chosen.has(projectKey(p.kind, p.id)));
+	const newcomer = keyword.slice(0, k).find((p) => !chosen.has(projectKey(p.kind, p.id)));
 	if (!newcomer) return semantic;
 
 	// `rankProjects` already dropped everything scoring zero, so a newcomer has at
@@ -553,15 +661,19 @@ export async function withGraphPick(
 
 /**
  * Rank projects by their semantic cosine scores, dropping anything below the
- * (config) relevance floor and taking the top K. Same output shape as the
+ * relevance floor (config by default) and taking the top K — all of them unless
+ * K is given, since the merge wants the full list. Same output shape as the
  * deterministic rankProjects, so downstream formatting is identical.
+ *
+ * Exported so the project-retrieval golden set ranks its snapshot the way
+ * production does.
  */
-function rankBySemanticScores(
+export function rankBySemanticScores(
 	projects: RankableProject[],
 	scores: Map<string, number>,
-	k: number
+	k = Infinity,
+	floor = config.embeddingProjectThreshold
 ): (RankableProject & { score: number })[] {
-	const floor = config.embeddingProjectThreshold;
 	return projects
 		.map((p) => ({ ...p, score: scores.get(projectKey(p.kind, p.id)) ?? 0 }))
 		.filter((p) => p.score >= floor)
@@ -634,7 +746,9 @@ export async function relevantProjectsBlock(
 			title: p.title,
 			...(p.context ? { context: p.context } : {}),
 			score: p.score,
-			via: p.via ?? (ranker === 'semantic' ? 'semantic' : 'overlap')
+			via: p.via ?? (ranker === 'semantic' ? 'semantic' : 'overlap'),
+			...(p.semanticRank === undefined ? {} : { semanticRank: p.semanticRank }),
+			...(p.keywordRank === undefined ? {} : { keywordRank: p.keywordRank })
 		}))
 	};
 }
