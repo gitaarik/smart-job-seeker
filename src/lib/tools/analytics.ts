@@ -8,7 +8,7 @@ import { getWindowVariable } from './window';
  */
 
 type UmamiApi = {
-	track?: (name: string) => void;
+	track?: (name: string, data?: EventData) => void;
 	identify?: (data: Record<string, unknown>) => void;
 };
 
@@ -58,9 +58,20 @@ function enqueue(fn: (umami: UmamiApi) => void): void {
 	}, 200);
 }
 
-export function track(name: string): void {
+/**
+ * Properties attached to an event (Umami "event data"). Keep them to small
+ * enumerations — a plan id, which page a click came from, an error code — and
+ * never an address, a name or free text: Umami stores them verbatim.
+ */
+export type EventData = Record<string, string | number | boolean>;
+
+export function track(name: string, data?: EventData): void {
 	enqueue((umami) => {
-		if (typeof umami.track === 'function') umami.track(name);
+		if (typeof umami.track !== 'function') return;
+		// Called with one argument when there is no data, exactly as before, so
+		// existing events are recorded identically.
+		if (data) umami.track(name, data);
+		else umami.track(name);
 	});
 }
 

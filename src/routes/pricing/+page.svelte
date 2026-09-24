@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { track } from '$lib/tools/analytics';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -15,6 +16,12 @@
 	// The plan people land on. With four plans the third is the intended
 	// default; with one (the self-hosted OSS build) there is nothing to feature.
 	const featured = $derived(data.plans.length > 2 ? data.plans[2].id : null);
+
+	// Where a plan's button leads. Signed in it is an upgrade; signed out it is
+	// the funnel's entry — the waitlist when registration is open.
+	const next = $derived<'billing' | 'signup' | 'login'>(
+		data.signedIn ? 'billing' : data.registrationOpen ? 'signup' : 'login'
+	);
 </script>
 
 <svelte:head>
@@ -85,9 +92,8 @@
 					{/if}
 
 					<a
-						href={resolve(
-							data.signedIn ? '/billing' : data.registrationOpen ? '/signup' : '/login'
-						)}
+						href={resolve(`/${next}`)}
+						onclick={() => track('pricing_plan_clicked', { plan: plan.id, next })}
 						class="mt-6 inline-flex justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
 						style={plan.id === featured
 							? 'background-color: var(--dash-primary); color: white;'

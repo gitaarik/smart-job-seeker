@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { track } from '$lib/tools/analytics';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -42,6 +43,8 @@
 				error = result.error.message || 'Login failed';
 				return;
 			}
+
+			track('login_succeeded');
 
 			// Redirect to the intended page or dashboard
 			// The fallback is resolved; `redirectTo` is the ?redirect= param the login
