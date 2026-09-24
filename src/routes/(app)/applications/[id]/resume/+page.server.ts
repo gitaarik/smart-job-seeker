@@ -10,7 +10,8 @@ import {
 	profile_version_overrides,
 	profile_versions,
 	profiles,
-	tech_skill_categories
+	tech_skill_categories,
+	tech_skills
 } from '$lib/server/db/schema';
 import { getSelectedProfileId } from '../../../profile/utils';
 import { DEFAULT_TEMPLATE_ID, templateForStorage } from '$lib/resume-templates';
@@ -19,7 +20,7 @@ import { BASE_LOCALE, isKnownLocale, LOCALES } from '$lib/resume-translations';
 import { getLatestExport } from '$lib/server/profile/export-files';
 import { exportKey } from '$lib/utils/profile-doc-url';
 import { getVersionCoverage } from '$lib/server/profile/hidden-required-skills';
-import { skillWords, specWarning } from '$lib/version-coverage';
+import { specWarning } from '$lib/version-coverage';
 import {
 	addSkillWordForApplication,
 	decisionsForVersion,
@@ -39,7 +40,7 @@ import {
 import { baseOnByItem, keptAsBase } from '$lib/tailoring';
 import { isOverrideEntity } from '$lib/version-overrides';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
-import { loadSkillWords } from '$lib/server/profile/skill-words';
+import { loadSkillWords, suggestPlace } from '$lib/server/profile/skill-words';
 import { provenanceFor } from '$lib/match-provenance';
 
 /** How the document going to this job is presented: which template, which language. */
@@ -115,37 +116,6 @@ async function readSentAs(profileId: number, formData: FormData): Promise<SentAs
 	}
 
 	return { template, locale };
-}
-
-/** Words too common to say two skill names are about the same thing. */
-const FILLER_WORDS = new Set(['and', 'the', 'for', 'with', 'of', 'in', 'on', 'to', 'a', 'an']);
-
-/**
- * Which skill group a credited word should print in, before the applicant says
- * otherwise.
- *
- * The group of the skill the match credited it through, when the match
- * recorded one: "Monitoring" through Sentry goes where Sentry is. Failing that,
- * the first group holding a skill that shares one of its words, which is how
- * "Tool Calling", credited on the model's own judgement, finds "Function
- * calling". Null when neither says anything; the page then offers the first
- * group the document prints.
- */
-function suggestGroup(
-	skill: string,
-	from: string | null,
-	groups: Array<{ id: number; tech_skills: Array<{ name: string | null }> }>
-): number | null {
-	const lower = (value: string | null) => (value ?? '').trim().toLowerCase();
-	if (from) {
-		const home = groups.find((g) => g.tech_skills.some((s) => lower(s.name) === lower(from)));
-		if (home) return home.id;
-	}
-	const words = new Set(skillWords(skill).filter((w) => w.length > 2 && !FILLER_WORDS.has(w)));
-	const near = groups.find((g) =>
-		g.tech_skills.some((s) => skillWords(s.name ?? '').some((w) => words.has(w)))
-	);
-	return near?.id ?? null;
 }
 
 /**
@@ -356,15 +326,16 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 	 * exact-name join the coverage map uses, so the two never double-count a
 	 * skill.
 	 *
-	 * Each carries what the match credited it through and the group it would
-	 * print in, because the fix is now a word on this job's version rather than
-	 * a new profile skill: the profile already holds the thing, under the name
-	 * the match went through. See server/profile/skill-words.ts.
+	 * Each carries what the match credited it through, and the group and the
+	 * skill it would go beside, because the fix is now a word on this job's
+	 * version rather than a new profile skill: the profile already holds the
+	 * thing, under the name the match went through. See
+	 * server/profile/skill-words.ts.
 	 */
 	const skillGroups = await db.query.tech_skill_categories.findMany({
 		where: eq(tech_skill_categories.profile_id, layoutData.selectedProfile.id),
 		columns: { id: true, name: true },
-		with: { tech_skills: { columns: { name: true } } },
+		with: { tech_skills: { columns: { id: true, name: true }, orderBy: asc(tech_skills.sort) } },
 		orderBy: asc(tech_skill_categories.sort)
 	});
 	const namedByProfile = new Set(
@@ -379,7 +350,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		})
 		.map((skill) => {
 			const from = provenanceFor(matchRead.details, skill)?.from ?? null;
-			return { skill, from, categoryId: suggestGroup(skill, from, skillGroups) };
+			return { skill, from, ...suggestPlace(skill, from, skillGroups) };
 		});
 
 	/** The words this job's own version carries, for the strip and the review. */
@@ -388,6 +359,8 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 				id: word.id,
 				name: word.name,
 				reason: word.reason,
+				categoryId: word.categoryId,
+				beforeSkillId: word.beforeSkillId,
 				group: skillGroups.find((g) => g.id === word.categoryId)?.name ?? ''
 			}))
 		: [];
@@ -438,7 +411,11 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		gaps: matchRead.gaps,
 		creditedNotNamed,
 		jobWords,
-		skillGroups: skillGroups.map(({ id, name }) => ({ id, name: name ?? 'Skills' })),
+		skillGroups: skillGroups.map(({ id, name, tech_skills: skills }) => ({
+			id,
+			name: name ?? 'Skills',
+			skills: skills.map((s) => ({ id: s.id, name: s.name ?? '' }))
+		})),
 		exclusions: reach.exclusions,
 		outOfReach: reach.outOfReach,
 		heldBackParents: reach.heldBackParents,
@@ -747,6 +724,9 @@ export const actions: Actions = {
 		const name = ((formData.get('name') as string) || '').trim();
 		const categoryId = parseInt((formData.get('category_id') as string) || '');
 		if (!name || isNaN(categoryId)) return fail(400, { error: 'Invalid word' });
+		// Empty means the end of the group.
+		const before = parseInt((formData.get('before_skill_id') as string) || '');
+		const beforeSkillId = isNaN(before) ? null : before;
 		const docType = (formData.get('doc_type') as string) === 'cv' ? 'cv' : 'resume';
 		const baseSlug = ((formData.get('base_slug') as string) || '').trim();
 
@@ -757,7 +737,8 @@ export const actions: Actions = {
 				baseSlug,
 				docType,
 				name,
-				categoryId
+				categoryId,
+				beforeSkillId
 			});
 			refreshPdfs(profileId, appId, result.versionSlug);
 

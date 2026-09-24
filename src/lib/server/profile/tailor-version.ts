@@ -2533,7 +2533,8 @@ export async function versionItemStates(opts: {
 				name: word.name,
 				reason: text(word.reason),
 				on: printingWords.has(word.id),
-				inherited: word.versionId !== version?.id
+				inherited: word.versionId !== version?.id,
+				beforeSkillId: word.beforeSkillId
 			}))
 		});
 	}
@@ -2711,6 +2712,9 @@ export async function setItemStateForApplication(opts: {
  * THIS job's: it has to be one the job lists, and a name the profile already
  * holds is refused, since showing that skill here is the fix and a second copy
  * under the same name is not.
+ *
+ * Adding a word the version already has moves it instead: to the group and the
+ * place given, which is how the page repositions one.
  */
 export async function addSkillWordForApplication(opts: {
 	profileId: number;
@@ -2720,8 +2724,11 @@ export async function addSkillWordForApplication(opts: {
 	docType: string;
 	name: string;
 	categoryId: number;
+	/** The skill in that group it goes in front of; null puts it at the end. */
+	beforeSkillId?: number | null;
 }): Promise<{ versionSlug: string; created: boolean }> {
 	const { profileId, applicationId, baseSlug, docType, categoryId } = opts;
+	const beforeSkillId = opts.beforeSkillId ?? null;
 	const name = opts.name.trim();
 	if (!name || name.length > 255) throw new Error('Name the word to add.');
 	const lower = name.toLowerCase();
@@ -2729,7 +2736,13 @@ export async function addSkillWordForApplication(opts: {
 	const profile = await getProfileByIdentifier(profileId);
 	if (!profile) throw new Error('Profile not found');
 	const groups = profile.tech_skill_categories ?? [];
-	if (!groups.some((group) => group.id === categoryId)) throw new Error('Skill group not found');
+	const group = groups.find((g) => g.id === categoryId);
+	if (!group) throw new Error('Skill group not found');
+	// A place in another group would print nothing different from no place at
+	// all, and say otherwise in the review.
+	if (beforeSkillId !== null && !(group.tech_skills ?? []).some((s) => s.id === beforeSkillId)) {
+		throw new Error('That position is not in the chosen skill group.');
+	}
 	const twin = groups
 		.flatMap((group) => group.tech_skills ?? [])
 		.find((skill) => text(skill.name).toLowerCase() === lower);
@@ -2803,12 +2816,19 @@ export async function addSkillWordForApplication(opts: {
 	if (same) {
 		await db
 			.update(profile_version_skill_words)
-			.set({ name: spelled, category_id: categoryId, reason, date_updated: now })
+			.set({
+				name: spelled,
+				category_id: categoryId,
+				before_skill_id: beforeSkillId,
+				reason,
+				date_updated: now
+			})
 			.where(eq(profile_version_skill_words.id, same.id));
 	} else {
 		await db.insert(profile_version_skill_words).values({
 			version_id: versionId,
 			category_id: categoryId,
+			before_skill_id: beforeSkillId,
 			name: spelled,
 			reason,
 			date_created: now,

@@ -126,14 +126,27 @@
 		 * match went through, when it named one, and the group the word would
 		 * print in by default.
 		 */
-		creditedNotNamed: { skill: string; from: string | null; categoryId: number | null }[];
+		creditedNotNamed: {
+			skill: string;
+			from: string | null;
+			categoryId: number | null;
+			/** The skill the word relates to, which it is offered a place right after. */
+			anchorSkillId: number | null;
+		}[];
 		/**
 		 * Words the tailored version carries for skills the profile holds under
 		 * another name. See server/profile/skill-words.ts.
 		 */
-		jobWords?: { id: number; name: string; reason: string | null; group: string }[];
+		jobWords?: {
+			id: number;
+			name: string;
+			reason: string | null;
+			categoryId: number;
+			beforeSkillId: number | null;
+			group: string;
+		}[];
 		/** Every skill group on the profile, for where a word can go. */
-		skillGroups?: { id: number; name: string }[];
+		skillGroups?: { id: number; name: string; skills: { id: number; name: string }[] }[];
 		/** Per document, the relevant things it leaves out. Keyed like `coverage`. */
 		exclusions: Record<
 			string,
@@ -464,14 +477,20 @@
 
 	/**
 	 * Where a credited word can go: the skill groups the document it is added to
-	 * prints, which is the one the panel below describes. Every group on the
-	 * profile when the panel has nothing to say, which is before anything is
-	 * recorded.
+	 * prints, which is the one the panel below describes, each with the skills it
+	 * prints, for the position. Every group on the profile when the panel has
+	 * nothing to say, which is before anything is recorded.
 	 */
 	let wordGroups = $derived.by(() => {
 		const printing = items
 			.filter((g) => g.section === 'skills' && g.on && g.entityId !== null)
-			.map((g) => ({ id: g.entityId as number, name: g.title }));
+			.map((g) => ({
+				id: g.entityId as number,
+				name: g.title,
+				skills: g.rows
+					.filter((r) => r.entityType === OVERRIDE_ENTITIES.skill && r.on)
+					.map((r) => ({ id: r.entityId, name: r.label }))
+			}));
 		return printing.length > 0 ? printing : skillGroups;
 	});
 
@@ -1299,6 +1318,7 @@
 											from={c.from}
 											groups={wordGroups}
 											suggested={c.categoryId}
+											anchor={c.anchorSkillId}
 											{docType}
 											baseSlug={pickerBase}
 										/>
@@ -1326,28 +1346,21 @@
 										On this job's {docLabel} as words of their own:
 									</span>
 									{#each creditedAdded as c (c.skill)}
-										<form
-											method="POST"
-											action="?/removeSkillWord"
-											use:enhance={() =>
-												async ({ update }) => {
-													await update({ reset: false });
+										{#if c.word}
+											<AddSkillWord
+												skill={c.word.name}
+												from={c.from}
+												groups={wordGroups}
+												anchor={c.anchorSkillId}
+												word={{
+													id: c.word.id,
+													categoryId: c.word.categoryId,
+													beforeSkillId: c.word.beforeSkillId
 												}}
-										>
-											<input type="hidden" name="word_id" value={c.word?.id} />
-											<button
-												type="submit"
-												title="{c.word?.group
-													? `In ${c.word.group}. `
-													: ''}Take it off this job's {docLabel}"
-												aria-label="Take {c.word?.name} off this job's {docLabel}"
-												class="inline-flex items-center gap-1 rounded-lg border border-[var(--dash-success)]/40 bg-[var(--dash-success-light)] px-2 py-0.5 text-xs text-[var(--dash-success)] transition-colors hover:border-[var(--dash-error)]/50 hover:text-[var(--dash-error)]"
-											>
-												<FontAwesomeIcon icon={faCheck} class="h-2.5 w-2.5" />
-												{c.word?.name}
-												<FontAwesomeIcon icon={faXmark} class="h-2.5 w-2.5 opacity-60" />
-											</button>
-										</form>
+												{docType}
+												baseSlug={pickerBase}
+											/>
+										{/if}
 									{/each}
 								</div>
 							{/if}

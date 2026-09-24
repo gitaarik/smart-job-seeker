@@ -119,6 +119,26 @@
 	}
 
 	const rowKey = (entityType: string, entityId: number) => `${entityType}:${entityId}`;
+
+	/**
+	 * Where each of a group's own words prints among the skills listed: in front
+	 * of the first listed skill at or after the one it was placed before, which
+	 * is where the document puts it once the skills it leaves out are gone.
+	 * Words with no place, or whose place is past the last listed skill, end
+	 * the group.
+	 */
+	function wordSlots(group: ItemGroup, shown: ItemRow[]) {
+		const listed = new Set(shown.map((row) => row.entityId));
+		const before: Record<number, SkillWordRow[]> = {};
+		const end: SkillWordRow[] = [];
+		for (const word of group.words ?? []) {
+			const at = group.rows.findIndex((row) => row.entityId === word.beforeSkillId);
+			const next = at === -1 ? undefined : group.rows.slice(at).find((r) => listed.has(r.entityId));
+			if (next) before[next.entityId] = [...(before[next.entityId] ?? []), word];
+			else end.push(word);
+		}
+		return { before, end };
+	}
 </script>
 
 <!-- The fields every switch posts: which item, and the state it is asking for. -->
@@ -340,6 +360,7 @@
 						{@const shown = group.rows.filter((r) => !keptOff(r))}
 						{@const folded = group.rows.filter(keptOff)}
 						{@const unfolded = openKeptOff.includes(group.key)}
+						{@const slots = wordSlots(group, shown)}
 						<div>
 							<div class="flex flex-wrap items-baseline justify-between gap-2">
 								<p class="min-w-0 text-xs font-medium text-[var(--dash-text)]">
@@ -364,11 +385,14 @@
 							{/if}
 
 							<div class="mt-1.5 flex flex-wrap items-center gap-1 {group.on ? '' : 'opacity-50'}">
+								<!-- The group's own words sit where the document prints them. -->
 								{#each shown as row (rowKey(row.entityType, row.entityId))}
+									{#each slots.before[row.entityId] ?? [] as word (word.id)}
+										{@render wordChip(word)}
+									{/each}
 									{@render nameChip(row)}
 								{/each}
-								<!-- Where the document prints them: after the group's own skills. -->
-								{#each group.words ?? [] as word (word.id)}
+								{#each slots.end as word (word.id)}
 									{@render wordChip(word)}
 								{/each}
 								{#if unfolded}

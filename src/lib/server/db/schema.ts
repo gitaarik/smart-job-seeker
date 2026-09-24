@@ -2518,12 +2518,27 @@ export const profile_version_skill_words = pgTable(
 		name: varchar({ length: 255 }).notNull(),
 		/** What it stands in for, shown where the applicant reviews the version. */
 		reason: text(),
+		/**
+		 * The skill it prints in front of; null prints it at the end of its group.
+		 *
+		 * "Before" rather than "after" so that one column says every position:
+		 * the start of the group is before its first skill, and the end is null.
+		 * A skill rather than an index, so the word stays beside its neighbour
+		 * when the group gains or loses a skill.
+		 */
+		before_skill_id: integer(),
 		date_created: timestamp({ withTimezone: true, mode: 'date' }),
 		date_updated: timestamp({ withTimezone: true, mode: 'date' })
 	},
 	(table) => [
 		uniqueIndex('profile_version_skill_words_name_key').on(table.version_id, table.name),
 		index('profile_version_skill_words_category_idx').on(table.category_id),
+		index('profile_version_skill_words_before_idx').on(table.before_skill_id),
+		foreignKey({
+			columns: [table.before_skill_id],
+			foreignColumns: [tech_skills.id],
+			name: 'profile_version_skill_words_before_foreign'
+		}).onDelete('set null'),
 		foreignKey({
 			columns: [table.version_id],
 			foreignColumns: [profile_versions.id],

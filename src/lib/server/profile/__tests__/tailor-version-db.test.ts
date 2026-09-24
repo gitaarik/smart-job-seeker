@@ -612,8 +612,25 @@ describe('addSkillWordForApplication', () => {
 			version_id: 5,
 			category_id: 4,
 			name: 'Monitoring',
-			reason: 'this job asks for it; your match credits it through Sentry'
+			reason: 'this job asks for it; your match credits it through Sentry',
+			// No place given: the end of the group.
+			before_skill_id: null
 		});
+	});
+
+	it('stores the skill it goes in front of', async () => {
+		await add({ name: 'Tool Calling', categoryId: 6, beforeSkillId: 60 });
+
+		expect(written()[0].values).toMatchObject({ category_id: 6, before_skill_id: 60 });
+	});
+
+	// A place in another group would print nothing different from no place,
+	// and the review would say otherwise.
+	it('refuses a place outside the chosen group', async () => {
+		await expect(add({ categoryId: 4, beforeSkillId: 60 })).rejects.toThrow(
+			'That position is not in the chosen skill group.'
+		);
+		expect(inserts).toHaveLength(0);
 	});
 
 	it('says so when the match inferred it rather than naming a skill', async () => {
@@ -652,6 +669,17 @@ describe('addSkillWordForApplication', () => {
 		expect(inserts).toHaveLength(0);
 	});
 
+	it('moves a word it already has within its group, to the place given', async () => {
+		find.profile_version_skill_words.findMany.mockResolvedValue([{ id: 31, name: 'Monitoring' }]);
+
+		await add({ categoryId: 4, beforeSkillId: 40 });
+
+		expect(updates[0]).toMatchObject({
+			table: profile_version_skill_words,
+			set: expect.objectContaining({ category_id: 4, before_skill_id: 40 })
+		});
+	});
+
 	it('moves a word it already has rather than adding it twice', async () => {
 		find.profile_version_skill_words.findMany.mockResolvedValue([{ id: 31, name: 'MONITORING' }]);
 
@@ -660,7 +688,7 @@ describe('addSkillWordForApplication', () => {
 		expect(written()).toHaveLength(0);
 		expect(updates[0]).toMatchObject({
 			table: profile_version_skill_words,
-			set: expect.objectContaining({ name: 'Monitoring', category_id: 6 })
+			set: expect.objectContaining({ name: 'Monitoring', category_id: 6, before_skill_id: null })
 		});
 	});
 
@@ -955,6 +983,8 @@ describe('versionItemStates', () => {
 			category_id,
 			name,
 			reason: id === 1 ? 'this job asks for it; your match credits it through Python' : null,
+			// Monitoring was placed in front of Django.
+			before_skill_id: id === 1 ? 41 : null,
 			version: { profile_id: version_id === 99 ? 2 : 1 }
 		});
 		find.profile_version_skill_words.findMany.mockResolvedValue([
@@ -974,12 +1004,20 @@ describe('versionItemStates', () => {
 				name: 'Monitoring',
 				reason: 'this job asks for it; your match credits it through Python',
 				on: true,
-				inherited: false
+				inherited: false,
+				beforeSkillId: 41
 			},
-			{ id: 2, name: 'Testing', reason: '', on: true, inherited: true }
+			{ id: 2, name: 'Testing', reason: '', on: true, inherited: true, beforeSkillId: null }
 		]);
 		expect(group(groups, 'tech_skill_category:6')?.words).toEqual([
-			{ id: 3, name: 'Tool Calling', reason: '', on: false, inherited: false }
+			{
+				id: 3,
+				name: 'Tool Calling',
+				reason: '',
+				on: false,
+				inherited: false,
+				beforeSkillId: null
+			}
 		]);
 	});
 });

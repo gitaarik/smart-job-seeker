@@ -1,0 +1,3 @@
+ALTER TABLE "profile_version_skill_words" ADD COLUMN "before_skill_id" integer;--> statement-breakpoint
+ALTER TABLE "profile_version_skill_words" ADD CONSTRAINT "profile_version_skill_words_before_foreign" FOREIGN KEY ("before_skill_id") REFERENCES "public"."tech_skills"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "profile_version_skill_words_before_idx" ON "profile_version_skill_words" USING btree ("before_skill_id");

@@ -1139,6 +1139,8 @@ export interface SkillWordRow {
 	 * says where it comes from.
 	 */
 	inherited: boolean;
+	/** The skill it prints in front of; null is the end of its group. */
+	beforeSkillId: number | null;
 }
 
 /**

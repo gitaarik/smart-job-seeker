@@ -188,7 +188,8 @@ export async function getVersionCoverage(
 				versionId: v.id,
 				categoryId: w.category_id,
 				name: w.name,
-				reason: w.reason
+				reason: w.reason,
+				beforeSkillId: w.before_skill_id
 			}))
 		])
 	);

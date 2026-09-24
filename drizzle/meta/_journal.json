@@ -372,6 +372,13 @@
       "when": 1790255044601,
       "tag": "0052_version_skill_words",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1790270417212,
+      "tag": "0053_skill_word_position",
+      "breakpoints": true
     }
   ]
 }

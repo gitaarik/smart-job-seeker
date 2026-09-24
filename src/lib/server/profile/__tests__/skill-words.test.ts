@@ -18,18 +18,26 @@ import {
 	applySkillWords,
 	loadSkillWords,
 	renderedVersionId,
+	suggestPlace,
 	versionChain,
 	wordsToPrint,
 	type SkillWord
 } from '../skill-words';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 
-const word = (id: number, name: string, categoryId = 1, versionId = 5): SkillWord => ({
+const word = (
+	id: number,
+	name: string,
+	categoryId = 1,
+	versionId = 5,
+	beforeSkillId: number | null = null
+): SkillWord => ({
 	id,
 	versionId,
 	categoryId,
 	name,
-	reason: null
+	reason: null,
+	beforeSkillId
 });
 
 describe('versionChain', () => {
@@ -170,6 +178,118 @@ describe('applySkillWords', () => {
 	});
 });
 
+describe('applySkillWords: where in the group', () => {
+	const tree = () => ({
+		profile_versions: [],
+		tech_skill_categories: [
+			{
+				id: 1,
+				tags: null,
+				tech_skills: [
+					{ id: 10, name: 'Docker', tags: null },
+					{ id: 11, name: 'Sentry', tags: null },
+					{ id: 12, name: 'Kubernetes', tags: ['!resume', '!cv'] },
+					{ id: 13, name: 'Nginx', tags: null }
+				] as Array<Record<string, unknown> & { id: number }>
+			},
+			{ id: 2, tags: null, tech_skills: [{ id: 20, name: 'Git', tags: null }] }
+		]
+	});
+	const order = (t: ReturnType<typeof tree>) =>
+		t.tech_skill_categories[0].tech_skills.map((s) => s.name);
+
+	it('goes in front of the skill it was placed before', () => {
+		const t = applySkillWords(tree(), [word(1, 'Monitoring', 1, 5, 12)], 'resume', null);
+		expect(order(t)).toEqual(['Docker', 'Sentry', 'Monitoring', 'Kubernetes', 'Nginx']);
+	});
+
+	it('leads the group when placed before its first skill', () => {
+		const t = applySkillWords(tree(), [word(1, 'Monitoring', 1, 5, 10)], 'resume', null);
+		expect(order(t)[0]).toBe('Monitoring');
+	});
+
+	// Kubernetes is kept off this resume, so the word it was placed before
+	// prints right after Sentry once the renderer's filter drops it.
+	it('keeps its place when the skill it precedes does not print', () => {
+		const t = applySkillWords(tree(), [word(1, 'Monitoring', 1, 5, 12)], 'resume', null);
+		const printed = t.tech_skill_categories[0].tech_skills.filter((s) => !s.tags);
+		expect(printed.map((s) => s.name)).toEqual(['Docker', 'Sentry', 'Monitoring', 'Nginx']);
+	});
+
+	it('keeps the order words were added in when two share a place', () => {
+		const t = applySkillWords(
+			tree(),
+			[word(1, 'Monitoring', 1, 5, 13), word(2, 'Observability', 1, 5, 13)],
+			'resume',
+			null
+		);
+		expect(order(t).slice(-3)).toEqual(['Monitoring', 'Observability', 'Nginx']);
+	});
+
+	it('ends the group with no place, or a place the group does not hold', () => {
+		const t = applySkillWords(
+			tree(),
+			[word(1, 'Monitoring', 1, 5, null), word(2, 'Security', 1, 5, 20)],
+			'resume',
+			null
+		);
+		expect(order(t).slice(-2)).toEqual(['Monitoring', 'Security']);
+	});
+});
+
+describe('suggestPlace', () => {
+	const groups = [
+		{
+			id: 1,
+			tech_skills: [
+				{ id: 10, name: 'Sentry' },
+				{ id: 11, name: 'Docker' }
+			]
+		},
+		{
+			id: 2,
+			tech_skills: [
+				{ id: 20, name: 'Function calling' },
+				{ id: 21, name: 'RAG' }
+			]
+		}
+	];
+
+	it('puts a word beside the skill the match credited it through', () => {
+		expect(suggestPlace('Monitoring', 'sentry', groups)).toEqual({
+			categoryId: 1,
+			anchorSkillId: 10
+		});
+	});
+
+	// "Tool Calling" was credited on the model's own judgement, so there is no
+	// skill to go by but the word the two names share.
+	it('falls back to a skill that shares one of its words', () => {
+		expect(suggestPlace('Tool Calling', null, groups)).toEqual({
+			categoryId: 2,
+			anchorSkillId: 20
+		});
+	});
+
+	it('does not match on filler words', () => {
+		expect(
+			suggestPlace('Security and Compliance', null, [
+				{ id: 3, tech_skills: [{ id: 30, name: 'Rock and roll' }] }
+			])
+		).toEqual({
+			categoryId: null,
+			anchorSkillId: null
+		});
+	});
+
+	it('says nothing when nothing relates', () => {
+		expect(suggestPlace('Kafka', 'Pulsar', groups)).toEqual({
+			categoryId: null,
+			anchorSkillId: null
+		});
+	});
+});
+
 describe('renderedVersionId', () => {
 	const profile = { profile_versions: [{ id: 5, slug: 'app-12' }] };
 
@@ -202,6 +322,7 @@ describe('loadSkillWords', () => {
 				category_id: 1,
 				name: 'Testing',
 				reason: null,
+				before_skill_id: null,
 				version: { profile_id: 1 }
 			},
 			{
@@ -210,6 +331,7 @@ describe('loadSkillWords', () => {
 				category_id: 1,
 				name: 'Monitoring',
 				reason: 'why',
+				before_skill_id: 7,
 				version: { profile_id: 1 }
 			},
 			// A forged or stale id naming somebody else's version.
@@ -219,13 +341,14 @@ describe('loadSkillWords', () => {
 				category_id: 1,
 				name: 'Theirs',
 				reason: null,
+				before_skill_id: null,
 				version: { profile_id: 2 }
 			}
 		]);
 
 		expect(await loadSkillWords(1, [5, 3])).toEqual([
-			{ id: 2, versionId: 5, categoryId: 1, name: 'Monitoring', reason: 'why' },
-			{ id: 1, versionId: 3, categoryId: 1, name: 'Testing', reason: null }
+			{ id: 2, versionId: 5, categoryId: 1, name: 'Monitoring', reason: 'why', beforeSkillId: 7 },
+			{ id: 1, versionId: 3, categoryId: 1, name: 'Testing', reason: null, beforeSkillId: null }
 		]);
 	});
 });

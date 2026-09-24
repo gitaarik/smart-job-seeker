@@ -12,9 +12,10 @@
  * now lives on the one version that wants it: `profile_version_skill_words`.
  *
  * `loadDocumentSkillWords` reads the words a rendered version carries, and
- * `applySkillWords` appends them to their skill groups in the loaded profile
+ * `applySkillWords` puts them into their skill groups in the loaded profile
  * tree, the same in-place trick applyTranslations and applyFieldVariants use,
- * so no renderer needs to know this exists. Words ride the version's extension
+ * so no renderer needs to know this exists. Each goes in front of the skill the
+ * applicant placed it before, or at the end of the group. Words ride the version's extension
  * chain like its overrides do: a tailored version kept in the library and then
  * built on passes them on.
  *
@@ -28,6 +29,7 @@ import { asc, inArray } from 'drizzle-orm';
 import { profile_version_skill_words } from '$lib/server/db/schema';
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
+import { skillWords } from '$lib/version-coverage';
 
 export interface SkillWord {
 	id: number;
@@ -35,6 +37,8 @@ export interface SkillWord {
 	categoryId: number;
 	name: string;
 	reason: string | null;
+	/** The skill it prints in front of; null puts it at the end of its group. */
+	beforeSkillId: number | null;
 }
 
 /** What a version needs for its chain to be walked: the tree's shape and the query's. */
@@ -83,7 +87,14 @@ export async function loadSkillWords(
 	const rows =
 		(await db.query.profile_version_skill_words.findMany({
 			where: inArray(profile_version_skill_words.version_id, versionIds),
-			columns: { id: true, version_id: true, category_id: true, name: true, reason: true },
+			columns: {
+				id: true,
+				version_id: true,
+				category_id: true,
+				name: true,
+				reason: true,
+				before_skill_id: true
+			},
 			with: { version: { columns: { profile_id: true } } },
 			orderBy: asc(profile_version_skill_words.id)
 		})) ?? [];
@@ -96,7 +107,8 @@ export async function loadSkillWords(
 			versionId: row.version_id,
 			categoryId: row.category_id,
 			name: row.name,
-			reason: row.reason
+			reason: row.reason,
+			beforeSkillId: row.before_skill_id
 		}))
 		.sort((a, b) => (rank.get(a.versionId) ?? 0) - (rank.get(b.versionId) ?? 0));
 }
@@ -189,13 +201,17 @@ export function printedSkillNames(
 }
 
 /**
- * Append a version's words to their skill groups in a loaded profile tree,
- * mutating it in place.
+ * Put a version's words into their skill groups in a loaded profile tree,
+ * mutating it in place: in front of the skill each was placed before, else at
+ * the end of the group. Several placed before one skill keep the order they
+ * were added in.
  *
  * Each becomes a row shaped like a skill with no tags, so every renderer's
- * filter keeps it wherever it keeps the group. The id is the word's own,
- * negated: an override is keyed by a skill id, and a synthetic row must never
- * answer to a decision about a real one.
+ * filter keeps it wherever it keeps the group, and it keeps its place through
+ * that filter: a skill the document leaves out takes nothing with it, so a word
+ * placed before one lands after whatever prints ahead of it. The id is the
+ * word's own, negated: an override is keyed by a skill id, and a synthetic row
+ * must never answer to a decision about a real one.
  *
  * `docType` and `versionId` name the document being rendered, the same pair the
  * page hands its renderer, so "already printed" is asked of that document and
@@ -222,21 +238,74 @@ export function applySkillWords<T>(
 	const groups = tree.tech_skill_categories ?? [];
 	const printed = printedSkillNames(tree as never, docType, versionId ?? null);
 
-	for (const word of wordsToPrint(words, printed)) {
-		const group = groups.find((g) => g.id === word.categoryId);
-		if (!group) continue;
+	const toPrint = wordsToPrint(words, printed);
+	for (const group of groups) {
+		const mine = toPrint.filter((word) => word.categoryId === group.id);
+		if (mine.length === 0) continue;
+		const row = (word: SkillWord) => ({
+			id: -word.id,
+			name: word.name,
+			category_id: word.categoryId,
+			level: null,
+			years_experience: null,
+			tags: null,
+			sort: null
+		});
+		const skills = group.tech_skills ?? [];
+		const placed = new Set(skills.map((skill) => skill.id));
 		group.tech_skills = [
-			...(group.tech_skills ?? []),
-			{
-				id: -word.id,
-				name: word.name,
-				category_id: word.categoryId,
-				level: null,
-				years_experience: null,
-				tags: null,
-				sort: null
-			}
+			...skills.flatMap((skill) => [
+				...mine.filter((word) => word.beforeSkillId === skill.id).map(row),
+				skill
+			]),
+			// No place, or a place in another group or gone from this one.
+			...mine
+				.filter((word) => word.beforeSkillId === null || !placed.has(word.beforeSkillId))
+				.map(row)
 		];
 	}
 	return profile;
+}
+
+/** Words too common to say two skill names are about the same thing. */
+const FILLER_WORDS = new Set(['and', 'the', 'for', 'with', 'of', 'in', 'on', 'to', 'a', 'an']);
+
+/**
+ * Where a credited word most likely belongs: beside the skill it stands in for.
+ *
+ * The skill the match credited it through, when the match recorded one:
+ * "Monitoring" through Sentry goes beside Sentry. Failing that, the first skill
+ * sharing one of its words, which is how "Tool Calling", credited on the model's
+ * own judgement, finds "Function calling". Both null when neither says anything;
+ * the page then offers the first group the document prints, at its end.
+ *
+ * It answers with the related skill rather than a position. What prints next to
+ * that skill depends on the document, and the page knows which one it is.
+ */
+export function suggestPlace(
+	skill: string,
+	from: string | null,
+	groups: ReadonlyArray<{
+		id: number;
+		tech_skills: ReadonlyArray<{ id: number; name: string | null }>;
+	}>
+): { categoryId: number | null; anchorSkillId: number | null } {
+	const find = (test: (name: string) => boolean) => {
+		for (const group of groups) {
+			const hit = group.tech_skills.find((s) => test(key(s.name)));
+			if (hit) return { categoryId: group.id, anchorSkillId: hit.id };
+		}
+		return null;
+	};
+	if (from) {
+		const home = find((name) => name === key(from));
+		if (home) return home;
+	}
+	const words = new Set(skillWords(skill).filter((w) => w.length > 2 && !FILLER_WORDS.has(w)));
+	return (
+		find((name) => skillWords(name).some((w) => words.has(w))) ?? {
+			categoryId: null,
+			anchorSkillId: null
+		}
+	);
 }
