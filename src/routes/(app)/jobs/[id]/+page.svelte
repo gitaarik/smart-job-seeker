@@ -1249,8 +1249,7 @@
 		defaultCountryCode={data.rescrapeConfig?.defaultCountryCode ?? ''}
 		browserFingerprint={data.rescrapeConfig?.browserFingerprint ?? {
 			language: '',
-			timezone: '',
-			userAgent: ''
+			timezone: ''
 		}}
 		browserFingerprintDefaults={data.rescrapeConfig?.browserFingerprintDefaults ?? {
 			language: 'en-US,en',

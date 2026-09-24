@@ -335,7 +335,6 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
 		browserFingerprint: {
 			language: string;
 			timezone: string;
-			userAgent: string;
 		};
 		browserFingerprintDefaults: { language: string; timezone: string };
 	} | null = null;
@@ -347,7 +346,7 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
 			where: eq(profiles.id, profileId),
 			columns: { user_id: true }
 		});
-		const platformCredentials = ownerProfile
+		const platformCredentials = ownerProfile?.user_id
 			? await db.query.platform_credentials.findMany({
 					where: and(
 						eq(platform_credentials.user_id, ownerProfile.user_id),

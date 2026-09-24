@@ -388,10 +388,15 @@
 						{/if}
 					</div>
 
-					<!-- Credentials -->
+					<!-- Credentials. A rescrape sends a credential and nothing else, so
+					     the sign-in mode chooser has nothing to set here: pin the mode
+					     that lists saved logins and hide it, as admin discovery does.
+					     Left unset, the list never rendered (since b2250ab8). -->
 					<CredentialSelector
 						bind:credentials
 						bind:selectedId={credentialId}
+						loginMode="auto"
+						hideLoginMode={true}
 						{platformId}
 						{profileId}
 						{platformName}
