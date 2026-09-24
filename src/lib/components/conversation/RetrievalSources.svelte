@@ -32,6 +32,7 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronDown, faChevronUp, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
 	import type { RetrievalMention, RetrievalRecord } from '$lib/server/documents/retrieval-record';
+	import { describeVia, formatRetrievalScore } from '$lib/retrieval-display';
 
 	let {
 		sources = [],
@@ -127,14 +128,6 @@
 	// they most need, since the reason it came back empty is exactly what the
 	// detail explains.
 	let canExpand = $derived(sources.length > 0 || !!retrieval);
-
-	/**
-	 * A cosine and a keyword count are not the same quantity and must not be
-	 * formatted as though they were — see withGraphPick on why they are never
-	 * merged into one scale.
-	 */
-	const formatScore = (via: string, score: number) =>
-		via === 'semantic' ? score.toFixed(2) : String(score);
 </script>
 
 <!-- The single anchor below takes its href from linkFor(), which builds every
@@ -210,9 +203,8 @@
 					<ul class="space-y-0.5">
 						{#each retrieval.items as item, i (i)}
 							<li class="font-mono">
-								{item.source}/{item.kind}#{item.id} · {item.via} · {formatScore(
-									item.via,
-									item.score
+								{item.source}/{item.kind}#{item.id} · {describeVia(item)} · {formatRetrievalScore(
+									item
 								)}
 							</li>
 						{/each}

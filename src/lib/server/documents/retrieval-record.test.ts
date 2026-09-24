@@ -6,6 +6,7 @@ import {
 	type RetrievalItem,
 	type RetrievalRecord
 } from './retrieval-record';
+import { describeVia, formatRetrievalScore, isFusedItem } from '$lib/retrieval-display';
 
 const item = (over: Partial<RetrievalItem> = {}): RetrievalItem => ({
 	source: 'projects',
@@ -118,5 +119,41 @@ describe('crowdedOut', () => {
 
 	it('is empty for a turn with no record', () => {
 		expect(crowdedOut(null)).toEqual([]);
+	});
+});
+
+describe('fused picks in the staff view', () => {
+	it('tells a fused pick by its ranks, not its via', () => {
+		// A fused pick only the semantic list held is via "semantic", like every
+		// pre-fusion semantic row; only the rank says its score is a fused one.
+		expect(isFusedItem(item({ via: 'semantic', semanticRank: 1 }))).toBe(true);
+		expect(isFusedItem(item({ via: 'keyword', keywordRank: 2 }))).toBe(true);
+		expect(isFusedItem(item({ via: 'semantic' }))).toBe(false);
+	});
+
+	it('says which list found it, in words, with the ranks', () => {
+		expect(describeVia(item({ via: 'both', semanticRank: 2, keywordRank: 1 }))).toBe(
+			'found by both (meaning #2, keywords #1)'
+		);
+		expect(describeVia(item({ via: 'semantic', semanticRank: 1 }))).toBe(
+			'found by meaning (meaning #1)'
+		);
+		expect(describeVia(item({ via: 'keyword', keywordRank: 3 }))).toBe(
+			'found by keywords (keywords #3)'
+		);
+	});
+
+	it('keeps reading rows written before fusion as they were recorded', () => {
+		expect(describeVia(item({ via: 'graph', score: 6 }))).toBe('graph');
+		expect(describeVia(item({ via: 'overlap', score: 4 }))).toBe('overlap');
+		expect(formatRetrievalScore(item({ via: 'graph', score: 6 }))).toBe('6');
+		expect(formatRetrievalScore(item({ via: 'semantic', score: 0.6123 }))).toBe('0.61');
+	});
+
+	it('prints a fused score as one, never as a cosine', () => {
+		// 1/61 through the cosine formatter would read "0.02", a terrible cosine.
+		expect(formatRetrievalScore(item({ via: 'semantic', score: 1 / 61, semanticRank: 1 }))).toBe(
+			'rrf 0.0164'
+		);
 	});
 });

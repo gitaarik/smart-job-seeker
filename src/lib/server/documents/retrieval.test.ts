@@ -1,17 +1,40 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const expandForRetrieval = vi.fn();
 vi.mock('$lib/server/job/skill-ontology', () => ({
 	expandForRetrieval: (...args: unknown[]) => expandForRetrieval(...args)
 }));
 
+// Only rankedProfileProjects reaches these: the profile's projects and their
+// cosine scores, faked so the merge switch can be driven end to end.
+const sideProjects = vi.fn();
+const semanticScoreProjects = vi.fn();
+vi.mock('$lib/server/db', () => ({
+	dbDirect: {
+		query: {
+			side_projects: { findMany: () => sideProjects() },
+			work_experiences: { findMany: async () => [] }
+		}
+	}
+}));
+vi.mock('./project-embeddings', async (importOriginal) => ({
+	...(await importOriginal<typeof import('./project-embeddings')>()),
+	semanticScoreProjects: (...args: unknown[]) => semanticScoreProjects(...args)
+}));
+
+import { config } from '$lib/server/config';
 import {
 	buildDocEvidence,
 	type DocRow,
 	formatProjectCitations,
 	formatSupportingEvidence,
+	mergeProjectRankings,
+	pickGraphSlot,
 	type RankableProject,
+	rankBySemanticScores,
+	rankedProfileProjects,
 	rankProjects,
+	relevantProjectsBlock,
 	scoreProjectAgainstJob,
 	widenProjectKeywords,
 	withGraphPick
@@ -371,5 +394,282 @@ describe('withGraphPick (the union, not a fallback)', () => {
 			3
 		);
 		expect(out[2].score).toBe(0.61);
+	});
+});
+
+describe('pickGraphSlot (the pure half of withGraphPick)', () => {
+	const scored = (id: number, score: number) => ({ ...proj(id, []), score });
+
+	it('looks only at the top K of the keyword list, as withGraphPick always did', () => {
+		// Project 4 is new to semantic but fourth on the keyword list: with K = 3
+		// it is out of reach, however the full list is passed.
+		const semantic = [scored(1, 0.9), scored(2, 0.8), scored(3, 0.7)];
+		const keyword = [scored(1, 9), scored(2, 8), scored(3, 7), scored(4, 6)];
+		expect(pickGraphSlot(semantic, keyword, 3)).toBe(semantic);
+	});
+
+	it('takes the first keyword pick semantic lacks, into the last slot', () => {
+		const semantic = [scored(1, 0.9), scored(2, 0.8), scored(3, 0.7)];
+		const out = pickGraphSlot(semantic, [scored(2, 9), scored(5, 3)], 3);
+		expect(out.map((p) => [p.id, p.score, p.viaGraph])).toEqual([
+			[1, 0.9, undefined],
+			[2, 0.8, undefined],
+			// The floor of the list it joined: the score of the pick it displaced.
+			[5, 0.7, true]
+		]);
+	});
+});
+
+describe('rankBySemanticScores', () => {
+	const scores = new Map([
+		['side_project:1', 0.62],
+		['side_project:2', 0.5],
+		['side_project:3', 0.49],
+		['side_project:4', 0.8]
+	]);
+	const all = [1, 2, 3, 4, 5].map((id) => proj(id, []));
+
+	it('returns every project at or above the floor, best first, when no K is given', () => {
+		expect(rankBySemanticScores(all, scores, undefined, 0.5).map((p) => p.id)).toEqual([4, 1, 2]);
+	});
+
+	it('still takes a top K and a floor when given', () => {
+		expect(rankBySemanticScores(all, scores, 1, 0.5).map((p) => p.id)).toEqual([4]);
+		expect(rankBySemanticScores(all, scores, undefined, 0.7).map((p) => p.id)).toEqual([4]);
+	});
+});
+
+describe('mergeProjectRankings', () => {
+	const sem = (id: number, score: number) => ({ ...proj(id, []), score });
+	const kw = sem;
+
+	describe('fallbacks, the same in both modes', () => {
+		for (const mode of ['graph_slot', 'fused'] as const) {
+			it(`${mode}: no semantic list means the keyword list alone decides`, () => {
+				const out = mergeProjectRankings([], [kw(1, 6), kw(2, 3), kw(3, 3), kw(4, 1)], 3, mode);
+				expect(out.ranker).toBe('overlap');
+				expect(out.ranked.map((p) => p.id)).toEqual([1, 2, 3]);
+				expect(out.ranked.every((p) => p.via === undefined)).toBe(true);
+			});
+
+			it(`${mode}: both empty means nothing`, () => {
+				expect(mergeProjectRankings([], [], 3, mode)).toEqual({ ranked: [], ranker: 'overlap' });
+			});
+
+			it(`${mode}: an empty keyword list leaves the semantic list to decide`, () => {
+				const out = mergeProjectRankings(
+					[sem(1, 0.7), sem(2, 0.6), sem(3, 0.55), sem(4, 0.51)],
+					[],
+					3,
+					mode
+				);
+				expect(out.ranker).toBe('semantic');
+				expect(out.ranked.map((p) => [p.id, p.score])).toEqual([
+					[1, 0.7],
+					[2, 0.6],
+					[3, 0.55]
+				]);
+			});
+		}
+	});
+
+	describe('graph_slot (today, and the default)', () => {
+		it('is withGraphPick on the top K of each list', () => {
+			const out = mergeProjectRankings(
+				[sem(1, 0.9), sem(2, 0.8), sem(3, 0.7), sem(4, 0.6)],
+				[kw(2, 9), kw(7, 4)],
+				3,
+				'graph_slot'
+			);
+			expect(out.ranker).toBe('semantic');
+			expect(out.ranked.map((p) => [p.id, p.viaGraph])).toEqual([
+				[1, undefined],
+				[2, undefined],
+				[7, true]
+			]);
+		});
+	});
+
+	describe('fused', () => {
+		it('lets fourth on both lists beat first on only one', () => {
+			// The whole case for fusing FULL lists: with top-3 lists project 4 would
+			// be on neither and could never be picked.
+			const out = mergeProjectRankings(
+				[sem(1, 0.9), sem(2, 0.8), sem(3, 0.7), sem(4, 0.6)],
+				[kw(5, 12), kw(6, 9), kw(7, 6), kw(4, 3)],
+				3,
+				'fused'
+			);
+			expect(out.ranker).toBe('fused');
+			expect(out.ranked[0]).toMatchObject({ id: 4, via: 'both', semanticRank: 4, keywordRank: 4 });
+			expect(out.ranked[0].score).toBeCloseTo(2 / 64, 12);
+		});
+
+		it('names the list that found each pick and records only the ranks it has', () => {
+			const out = mergeProjectRankings(
+				[sem(1, 0.9), sem(2, 0.8)],
+				[kw(2, 5), kw(3, 4)],
+				3,
+				'fused'
+			);
+			expect(out.ranked.map((p) => [p.id, p.via, p.semanticRank, p.keywordRank])).toEqual([
+				[2, 'both', 2, 1],
+				[1, 'semantic', 1, undefined],
+				[3, 'keyword', undefined, 2]
+			]);
+			expect(out.ranked[1]).not.toHaveProperty('keywordRank');
+			expect(out.ranked[2]).not.toHaveProperty('semanticRank');
+			expect(out.ranked.every((p) => !p.viaGraph)).toBe(true);
+		});
+
+		it('takes K and no more', () => {
+			const out = mergeProjectRankings(
+				[sem(1, 0.9), sem(2, 0.8)],
+				[kw(3, 5), kw(4, 4)],
+				2,
+				'fused'
+			);
+			expect(out.ranked).toHaveLength(2);
+		});
+
+		it('gives tied keyword scores one rank, and breaks equal fused scores by semantic rank', () => {
+			// 3 and 4 tie on keywords, so both are keyword rank 1; 4 is higher on
+			// semantic. Without shared ranks, 3 would win by being listed first.
+			const out = mergeProjectRankings(
+				[sem(4, 0.8), sem(3, 0.7)],
+				[kw(3, 6), kw(4, 6)],
+				2,
+				'fused'
+			);
+			expect(out.ranked.map((p) => [p.id, p.keywordRank])).toEqual([
+				[4, 1],
+				[3, 1]
+			]);
+		});
+
+		it('breaks a tie between a semantic-only and a keyword-only pick toward semantic', () => {
+			const out = mergeProjectRankings([sem(1, 0.9)], [kw(2, 5)], 3, 'fused');
+			expect(out.ranked.map((p) => p.id)).toEqual([1, 2]);
+		});
+
+		it('takes k and weights from the caller, for the golden set to compare', () => {
+			const semantic = [sem(1, 0.9), sem(2, 0.8)];
+			const keyword = [kw(2, 5), kw(3, 4)];
+			// Semantic weighted double: its first pick now beats the both-lists pick.
+			const out = mergeProjectRankings(semantic, keyword, 3, 'fused', {
+				k: 60,
+				weights: { semantic: 2 }
+			});
+			expect(out.ranked.map((p) => p.id)).toEqual([2, 1, 3]);
+			const heavy = mergeProjectRankings(semantic, keyword, 3, 'fused', {
+				k: 1,
+				weights: { semantic: 4 }
+			});
+			expect(heavy.ranked.map((p) => p.id)).toEqual([1, 2, 3]);
+		});
+	});
+});
+
+describe('rankedProfileProjects: the SJS_PROJECT_RETRIEVAL_MERGE switch', () => {
+	const job = { title: 'Frontend Engineer', skills_required: ['Svelte'] };
+	const side = (id: number, name: string, techs: string[]) => ({
+		id,
+		name,
+		summary: '',
+		side_project_technologies: techs.map((name) => ({ name })),
+		side_project_achievements: [],
+		profile_document_projects: []
+	});
+	const mode = config.projectRetrievalMerge;
+
+	beforeEach(() => {
+		expandForRetrieval.mockReset();
+		expandForRetrieval.mockResolvedValue(new Map());
+		// Four projects; semantic likes 1-3, only 4 lists the required skill.
+		sideProjects.mockResolvedValue([
+			side(1, 'One', ['React']),
+			side(2, 'Two', ['Vue']),
+			side(3, 'Three', ['Angular']),
+			side(4, 'Four', ['Svelte'])
+		]);
+		semanticScoreProjects.mockResolvedValue(
+			new Map([
+				['side_project:1', 0.9],
+				['side_project:2', 0.8],
+				['side_project:3', 0.7],
+				['side_project:4', 0.4]
+			])
+		);
+	});
+	afterEach(() => {
+		config.projectRetrievalMerge = mode;
+	});
+
+	it('defaults to the graph slot', () => {
+		expect(mode).toBe('graph_slot');
+	});
+
+	it('graph_slot: the keyword pick displaces the last semantic one, marked graph', async () => {
+		config.projectRetrievalMerge = 'graph_slot';
+		const { ranked, ranker } = await rankedProfileProjects(1, job, 3);
+		expect(ranker).toBe('semantic');
+		expect(ranked.map((p) => [p.id, p.via])).toEqual([
+			[1, 'semantic'],
+			[2, 'semantic'],
+			[4, 'graph']
+		]);
+		expect(ranked.some((p) => p.semanticRank !== undefined)).toBe(false);
+	});
+
+	it('fused: the same lists merged by rank, each pick saying which list found it', async () => {
+		config.projectRetrievalMerge = 'fused';
+		const { ranked, ranker } = await rankedProfileProjects(1, job, 3);
+		expect(ranker).toBe('fused');
+		// 1 (semantic #1) and 4 (keyword #1, under the floor) tie at 1/61; semantic
+		// wins the tie. 2 (semantic #2) takes the third slot, 3 is out.
+		expect(ranked.map((p) => [p.id, p.via])).toEqual([
+			[1, 'semantic'],
+			[4, 'keyword'],
+			[2, 'semantic']
+		]);
+	});
+
+	it('fused: a pinned project still takes the first slot, unranked', async () => {
+		config.projectRetrievalMerge = 'fused';
+		const { ranked } = await rankedProfileProjects(1, job, 3, { kind: 'side_project', id: 3 });
+		expect(ranked.map((p) => [p.id, p.via])).toEqual([
+			[3, 'pinned'],
+			[1, 'semantic'],
+			[4, 'keyword']
+		]);
+	});
+
+	it('fused: embeddings unavailable falls back to the keyword list, as today', async () => {
+		config.projectRetrievalMerge = 'fused';
+		semanticScoreProjects.mockResolvedValue(null);
+		const { ranked, ranker } = await rankedProfileProjects(1, job, 3);
+		expect(ranker).toBe('overlap');
+		expect(ranked.map((p) => [p.id, p.via])).toEqual([[4, 'overlap']]);
+	});
+
+	it('fused: the record carries the ranks and the fused score', async () => {
+		config.projectRetrievalMerge = 'fused';
+		const block = await relevantProjectsBlock(1, job, 3);
+		expect(block.ranker).toBe('fused');
+		expect(block.items[0]).toMatchObject({ id: 1, via: 'semantic', semanticRank: 1 });
+		expect(block.items[0]).not.toHaveProperty('keywordRank');
+		expect(block.items[1]).toMatchObject({ id: 4, via: 'keyword', keywordRank: 1 });
+		expect(block.items[1]).not.toHaveProperty('semanticRank');
+		expect(block.items[0].score).toBeCloseTo(1 / 61, 12);
+	});
+
+	it('graph_slot: the record has no ranks, exactly as before', async () => {
+		config.projectRetrievalMerge = 'graph_slot';
+		const block = await relevantProjectsBlock(1, job, 3);
+		for (const item of block.items) {
+			expect(item).not.toHaveProperty('semanticRank');
+			expect(item).not.toHaveProperty('keywordRank');
+		}
+		expect(block.items.map((i) => i.score)).toEqual([0.9, 0.8, 0.7]);
 	});
 });

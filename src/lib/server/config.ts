@@ -113,6 +113,11 @@ export interface AppConfig {
 	// Floor cosine for semantic project↔job RAG retrieval (a different, higher-
 	// baseline distribution than the skill threshold — not comparable).
 	embeddingProjectThreshold: number;
+	// How project retrieval merges its semantic and keyword rankers: 'graph_slot'
+	// (the keyword ranker gets the last of the K slots, withGraphPick) or 'fused'
+	// (reciprocal rank fusion of both full lists). See
+	// planning/PROJECT-RETRIEVAL-FUSION.md.
+	projectRetrievalMerge: 'fused' | 'graph_slot';
 
 	// LLM Configuration
 	llmCacheTTL: number; // milliseconds
@@ -426,6 +431,12 @@ function loadConfig(): AppConfig {
 		// re-measure if it hides relevant projects or lets off-field ones through.
 		// See planning/SEMANTIC-MATCHING-AND-RAG.md.
 		embeddingProjectThreshold: parseFloat(getEnv('SJS_EMBEDDING_PROJECT_THRESHOLD', '0.50')),
+		// The graph slot stays the default until the labelled project-retrieval set
+		// says fusion is at least as good; the switch exists so that choosing, and
+		// going back, is an env change. Anything but 'fused' is the graph slot.
+		projectRetrievalMerge: (getEnv('SJS_PROJECT_RETRIEVAL_MERGE', 'graph_slot') === 'fused'
+			? 'fused'
+			: 'graph_slot') as 'fused' | 'graph_slot',
 
 		// Caching (1 hour default)
 		llmCacheTTL: parseInt(getEnv('SJS_LLM_CACHE_TTL', String(1000 * 60 * 60)), 10),

@@ -35,16 +35,28 @@
  *  - `overlap` — deterministic token/skill overlap: embeddings off, the provider
  *    failed, or the cosine floor cleared nobody and the widened keywords became
  *    the whole answer.
+ *  - `fused` — both rankers produced a list and reciprocal rank fusion merged
+ *    them (projects only, with SJS_PROJECT_RETRIEVAL_MERGE=fused). The items'
+ *    `score` is then the fused score, see RetrievalItem.score.
  *  - `none` — there was nothing to rank (the profile has no units of this kind).
  */
-export type RankerKind = 'semantic' | 'overlap' | 'none';
+export type RankerKind = 'semantic' | 'overlap' | 'fused' | 'none';
 
-/** How one item came to be in the list. */
+/**
+ * How one item came to be in the list.
+ *
+ * `graph` and `overlap` stay after fusion arrived: rows written under the graph
+ * slot keep them, and readers must go on accepting them.
+ */
 export type RetrievalVia =
 	| 'semantic'
 	| 'overlap'
 	/** The skill-graph-widened ranker's reserved slot — see withGraphPick. */
 	| 'graph'
+	/** Fused, and only the (graph-widened) keyword list held it. */
+	| 'keyword'
+	/** Fused, and both the semantic and the keyword list held it. */
+	| 'both'
 	/** The caller named it; it was never ranked. */
 	| 'pinned';
 
@@ -62,9 +74,19 @@ export interface RetrievalItem {
 	 * Cosine in [0, 1] when `via` is "semantic"; an unbounded count of keyword
 	 * hits when it is "overlap" or "graph"; a sort key, not a measurement, when
 	 * it is "pinned". The two scales are NOT comparable — see withGraphPick.
+	 *
+	 * On a fused pick — one carrying `semanticRank` or `keywordRank` — it is the
+	 * reciprocal-rank-fusion score instead, whatever `via` says: small (about
+	 * 1/61 per list at k = 60), and a function of positions only. Use
+	 * isFusedItem ($lib/retrieval-display) rather than `via` to tell, since a fused pick only the semantic
+	 * list held is `via: "semantic"` too.
 	 */
 	score: number;
 	via: RetrievalVia;
+	/** Fused picks only: rank in the semantic list, when it held this item. */
+	semanticRank?: number;
+	/** Fused picks only: rank in the graph-widened keyword list, when it held it. */
+	keywordRank?: number;
 	/**
 	 * The row this one hangs off, where its page needs two ids: the work
 	 * experience for a work_experience_project, the application for a past letter
