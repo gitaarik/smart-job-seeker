@@ -9,6 +9,11 @@ import {
 	describePlatformReferences,
 	updatePlatformWithAudit
 } from '$lib/server/job-platforms/admin';
+import { markableUnsupportedValues } from '$lib/job-platforms/search-filters';
+import {
+	mergeUnsupported,
+	type UnsupportedFilters
+} from '$lib/server/job-platforms/unsupported-filters';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const platformId = parseInt(params.id, 10);
@@ -181,6 +186,62 @@ export const actions: Actions = {
 		} catch (err) {
 			return fail(500, {
 				error: err instanceof Error ? err.message : 'Clear failed'
+			});
+		}
+	},
+
+	/**
+	 * Mark one value of a filter as not offered by this platform, so the scraper
+	 * leaves it out of the form pass instead of failing to apply it, and marking
+	 * the run partial, every time (Impactpool's search form has no hybrid).
+	 * Writes an audit row like `clear_unsupported`.
+	 */
+	add_unsupported: async ({ params, request, locals }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const platformId = parseInt(params.id ?? '', 10);
+		if (isNaN(platformId)) return fail(400, { error: 'Invalid platform id' });
+
+		const formData = await request.formData();
+		const canonical = parseString(formData.get('canonical')).trim();
+		const value = parseString(formData.get('value')).trim();
+		if (!markableUnsupportedValues(canonical).includes(value)) {
+			return fail(400, {
+				error: `Not a value that can be marked unsupported: ${canonical}=${value}`
+			});
+		}
+
+		try {
+			const existing = await db.query.job_platforms.findFirst({
+				where: eq(job_platforms.id, platformId),
+				columns: { unsupported_filters: true }
+			});
+			if (!existing) return fail(404, { error: 'Platform not found' });
+
+			const current = (existing.unsupported_filters ?? {}) as UnsupportedFilters;
+			const name = canonical as keyof UnsupportedFilters;
+			const before = current[name] ?? [];
+			if (before.includes(value)) return { success: true };
+			const next = mergeUnsupported(current, { [name]: [value] });
+
+			await db.transaction(async (tx) => {
+				await tx
+					.update(job_platforms)
+					.set({ unsupported_filters: next, unsupported_filters_at: new Date() })
+					.where(eq(job_platforms.id, platformId));
+				await tx.insert(job_platform_changes).values({
+					platform_id: platformId,
+					field: `unsupported_filters.${canonical}`,
+					old_value: before.length > 0 ? JSON.stringify(before) : null,
+					new_value: JSON.stringify(next[name]),
+					changed_by_user_id: user.id
+				});
+			});
+			return { success: true };
+		} catch (err) {
+			return fail(500, {
+				error: err instanceof Error ? err.message : 'Add failed'
 			});
 		}
 	}

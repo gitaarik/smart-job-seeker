@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	expandExperienceBuckets,
 	experienceLevelBuckets,
+	markableUnsupportedValues,
 	SOURCE_APPLIED_FILTER_NAMES,
 	sourceApplicableFilters,
 	toExperienceBuckets
@@ -93,5 +94,19 @@ describe('sourceApplicableFilters', () => {
 			'time_posted',
 			'work_location'
 		]);
+	});
+});
+
+describe('markableUnsupportedValues', () => {
+	it('offers the non-default values of the filters applied on the site', () => {
+		expect(markableUnsupportedValues('work_location')).toEqual(['remote', 'hybrid', 'onsite']);
+		expect(markableUnsupportedValues('time_posted')).toEqual(['24h', 'week', 'month']);
+		expect(markableUnsupportedValues('sort_by')).toEqual(['newest']);
+	});
+
+	it('offers nothing for filters that are only enforced locally', () => {
+		expect(markableUnsupportedValues('experience_level')).toEqual([]);
+		expect(markableUnsupportedValues('employment_type')).toEqual([]);
+		expect(markableUnsupportedValues('not_a_filter')).toEqual([]);
 	});
 });

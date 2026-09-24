@@ -4,6 +4,12 @@
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { PLATFORM_STATUSES, PLATFORM_TYPES, withCurrent } from '$lib/job-platforms/taxonomy';
+	import {
+		markableUnsupportedValues,
+		SEARCH_FILTER_DEFINITIONS,
+		SOURCE_APPLIED_FILTER_NAMES,
+		type SearchFilterName
+	} from '$lib/job-platforms/search-filters';
 	import { invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -68,6 +74,9 @@
 	let cascades = $derived(data.references.cascades);
 
 	let deleting = $state(false);
+
+	// The filter picked in the "mark as not offered" form; its values follow it.
+	let addCanonical = $state<SearchFilterName>('work_location');
 
 	// Tuples of (canonical, value-keys) recorded as unsupported on this
 	// platform — drives the per-row Clear buttons below.
@@ -402,12 +411,13 @@
 
 		{#if unsupportedEntries.length === 0}
 			<p class="text-sm text-[var(--dash-text-muted)]">
-				No filters recorded as unsupported on this platform.
+				No filters marked as unsupported on this platform.
 			</p>
 		{:else}
 			<p class="mb-3 text-xs text-[var(--dash-text-muted)]">
-				Recorded automatically when the scraper requested a filter the form didn't expose. Stripped
-				from future runs — clear to let the scraper re-attempt.
+				Values this site's search form doesn't offer. The scraper doesn't try them and doesn't count
+				them as failed filters. Added below or by a search-form probe; clear one to let the scraper
+				try it again.
 			</p>
 			<ul class="space-y-1 text-sm">
 				{#each unsupportedEntries as [canonical, values] (canonical)}
@@ -470,6 +480,45 @@
 				</button>
 			</form>
 		{/if}
+
+		<form
+			method="POST"
+			action="?/add_unsupported"
+			class="mt-3 flex flex-wrap items-center gap-2 border-t border-[var(--dash-border)] pt-3"
+			use:enhance={() => {
+				return async ({ result, update }) => {
+					await update();
+					if (result.type === 'success') await invalidateAll();
+				};
+			}}
+		>
+			<span class="text-xs text-[var(--dash-text-muted)]">Mark as not offered:</span>
+			<select
+				name="canonical"
+				bind:value={addCanonical}
+				aria-label="Filter"
+				class="rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
+			>
+				{#each SOURCE_APPLIED_FILTER_NAMES as name (name)}
+					<option value={name}>{SEARCH_FILTER_DEFINITIONS[name].label}</option>
+				{/each}
+			</select>
+			<select
+				name="value"
+				aria-label="Value"
+				class="rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)]"
+			>
+				{#each markableUnsupportedValues(addCanonical) as key (key)}
+					<option value={key}>{SEARCH_FILTER_DEFINITIONS[addCanonical].values[key]}</option>
+				{/each}
+			</select>
+			<button
+				type="submit"
+				class="rounded border border-[var(--dash-border)] px-2 py-0.5 text-xs text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)]"
+			>
+				Add
+			</button>
+		</form>
 	</div>
 
 	<!-- Change history -->

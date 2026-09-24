@@ -510,3 +510,15 @@ export function sourceApplicableFilters<T>(filters: Record<string, T>): Record<s
 	}
 	return out;
 }
+
+/**
+ * The values an admin can mark as not offered on a platform (its
+ * `unsupported_filters`), which the scraper then leaves out of the form pass:
+ * every non-default value of a filter applied on the site itself. The other
+ * filters are only ever enforced locally, so marking one would change nothing.
+ */
+export function markableUnsupportedValues(name: string): string[] {
+	if (!(SOURCE_APPLIED_FILTER_NAMES as string[]).includes(name)) return [];
+	// The first value is the default, which puts nothing in the search.
+	return Object.keys(SEARCH_FILTER_DEFINITIONS[name as SearchFilterName].values).slice(1);
+}
