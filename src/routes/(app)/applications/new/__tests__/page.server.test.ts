@@ -63,7 +63,7 @@ vi.mock('$lib/server/db', () => {
 				findFirst: (...a: unknown[]) => mockPlatformFindFirst(...a)
 			}
 		},
-		insert: (...a: unknown[]) => mockInsert(...a)
+		insert: (table: { __table?: string } | undefined) => mockInsert(table)
 	};
 	return { db: handle, dbDirect: handle, queryRaw: vi.fn(), sql: vi.fn() };
 });

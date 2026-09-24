@@ -35,7 +35,7 @@ export const load: LayoutServerLoad = async (event) => {
 			profiles: [],
 			selectedProfile: null,
 			adminUser,
-			creditBalance: 0,
+			creditBalance: undefined,
 			unreadNotifications: 0,
 			userTimezone: userRecord?.timezone ?? null,
 			timeFormat: resolveTimeFormat(userRecord?.time_format ?? null, userRecord?.timezone ?? null)

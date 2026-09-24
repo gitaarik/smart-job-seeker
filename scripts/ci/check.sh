@@ -36,7 +36,16 @@ set -euo pipefail
 # both new axes lost their multi-select. The other 11 were types that no longer
 # described their data: props nothing read, fields the endpoint does send, a
 # nullable column, a follow-up id that ends the chain as null.
-BASELINE=12
+#
+# 12 -> 1 the same day, all types: a `state` variable that made svelte2tsx read
+# `$state` as a store (4), Locals.session typed as the wrong half of the
+# session pair and an auth option the config never sets (2), and five places
+# where a value's type said less than its data. The one left is not a type
+# problem: import-utils.ts hands the user id an API key now resolves to on as
+# a profile id, so both /api/jobs/import endpoints fail for any key. Nothing
+# in these trees calls them; whether to map a key to a profile or delete them
+# is a decision, not a fix.
+BASELINE=1
 
 npx svelte-kit sync
 

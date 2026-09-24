@@ -274,7 +274,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 	return {
 		profileCompleteness,
-		matchConfig,
+		matchConfig: matchConfig ?? null,
 		searchTasks,
 		matchStats,
 		topMatches,

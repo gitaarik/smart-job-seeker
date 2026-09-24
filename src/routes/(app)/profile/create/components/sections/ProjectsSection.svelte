@@ -156,7 +156,11 @@
 								<label class="mb-2 block text-sm font-medium text-[var(--dash-text)]">
 									Technologies
 								</label>
-								<TechnologyTagsEditor bind:technologies={project.technologies} />
+								<TechnologyTagsEditor
+									bind:technologies={
+										() => project.technologies ?? [], (v) => (project.technologies = v)
+									}
+								/>
 							</div>
 
 							<div>

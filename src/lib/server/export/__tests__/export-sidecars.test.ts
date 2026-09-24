@@ -166,7 +166,7 @@ describe('template assets across the archive boundary', () => {
 
 		expect(
 			foldAssetsIntoConfig(
-				config,
+				config as object,
 				assets.map((a) => ({ key: a.key, file_id: a.fileId }))
 			)
 		).toEqual(original);
