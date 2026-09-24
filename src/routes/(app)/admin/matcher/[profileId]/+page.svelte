@@ -50,7 +50,10 @@
 		unmatchedCount: number;
 	}
 
-	let state = $state<MatcherState | null>(null);
+	// Not `state`: with a variable of that name in scope, svelte2tsx reads every
+	// `$state(...)` in the file as a subscription to it. That was four
+	// svelte-check errors on this page until 2026-09-24.
+	let matcherState = $state<MatcherState | null>(null);
 	let profile = $state<ProfileInfo | null>(null);
 	let loading = $state(true);
 	let error = $state('');
@@ -61,7 +64,7 @@
 			const response = await fetch('/api/admin/matcher/status');
 			if (response.ok) {
 				const result = await response.json();
-				state =
+				matcherState =
 					result.matcherStates.find((s: MatcherState) => s.profileId === data.profileId) ?? null;
 				profile = result.profiles.find((p: ProfileInfo) => p.id === data.profileId) ?? null;
 				error = '';
@@ -122,11 +125,6 @@
 	/**
 	 * Paused, as opposed to merely having benched jobs. `backoff` carries both,
 	 * and only one of them stops the profile.
-	 *
-	 * A plain function rather than a `$derived`: the state variable on this page
-	 * is called `state`, and closing over it inside a rune makes svelte2tsx
-	 * resolve the `$state` rune to that binding, which types it `any` and
-	 * reports it as referenced in its own initializer.
 	 */
 	function isPaused(s: MatcherState | null): boolean {
 		const until = s?.backoff?.until;
@@ -170,18 +168,18 @@
 			<Card padding="responsive">
 				<div class="mb-3 flex items-center justify-between">
 					<div class="flex items-center gap-2">
-						{#if isPaused(state)}
+						{#if isPaused(matcherState)}
 							<span class="relative flex h-2.5 w-2.5" title="Paused after an AI provider failure">
 								<span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-orange-500"></span>
 							</span>
-						{:else if state?.active && state?.currentJobId}
+						{:else if matcherState?.active && matcherState?.currentJobId}
 							<span class="relative flex h-2.5 w-2.5">
 								<span
 									class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"
 								></span>
 								<span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500"></span>
 							</span>
-						{:else if state?.active}
+						{:else if matcherState?.active}
 							<span class="relative flex h-2.5 w-2.5">
 								<span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-yellow-500"></span>
 							</span>
@@ -198,9 +196,9 @@
 							>
 						{/if}
 					</div>
-					{#if state?.lastUpdated}
+					{#if matcherState?.lastUpdated}
 						<span class="text-xs text-[var(--dash-text-muted)]">
-							{formatRelativeTime(state.lastUpdated)}
+							{formatRelativeTime(matcherState.lastUpdated)}
 						</span>
 					{/if}
 				</div>
@@ -226,36 +224,36 @@
 				{/if}
 
 				<!-- Worker state row -->
-				{#if state}
-					{#if isPaused(state)}
+				{#if matcherState}
+					{#if isPaused(matcherState)}
 						<p class="mb-2 text-xs text-orange-600 dark:text-orange-400">
-							Paused {remaining(state.backoff?.until)} — AI provider unavailable{state.backoff
-								?.reason
-								? `: ${state.backoff.reason}`
+							Paused {remaining(matcherState.backoff?.until)} — AI provider unavailable{matcherState
+								.backoff?.reason
+								? `: ${matcherState.backoff.reason}`
 								: ''}
 						</p>
 					{/if}
 					<div class="flex flex-wrap gap-x-6 gap-y-1 text-xs text-[var(--dash-text-muted)]">
-						<span>Cycles: {state.totalCycles}</span>
-						<span>Session: {state.totalMatched} matched</span>
-						{#if state.totalFailed > 0}
-							<span class="text-[var(--dash-error)]">{state.totalFailed} failed</span>
+						<span>Cycles: {matcherState.totalCycles}</span>
+						<span>Session: {matcherState.totalMatched} matched</span>
+						{#if matcherState.totalFailed > 0}
+							<span class="text-[var(--dash-error)]">{matcherState.totalFailed} failed</span>
 						{/if}
-						{#if state.backoff?.benchedJobs}
+						{#if matcherState.backoff?.benchedJobs}
 							<span title="Failed repeatedly; left out of the batch for an hour">
-								{state.backoff.benchedJobs} benched
+								{matcherState.backoff.benchedJobs} benched
 							</span>
 						{/if}
-						{#if state.currentJobId}
+						{#if matcherState.currentJobId}
 							<span>
 								Processing:
 								<a
-									href={resolve('/(app)/jobs/[id]', { id: String(state.currentJobId) })}
+									href={resolve('/(app)/jobs/[id]', { id: String(matcherState.currentJobId) })}
 									class="text-[var(--dash-primary)] hover:underline"
 								>
-									{state.currentJobTitle || `Job #${state.currentJobId}`}
+									{matcherState.currentJobTitle || `Job #${matcherState.currentJobId}`}
 								</a>
-								({state.cycleProcessed + 1}/{state.cycleBatchSize})
+								({matcherState.cycleProcessed + 1}/{matcherState.cycleBatchSize})
 							</span>
 						{/if}
 					</div>
@@ -269,20 +267,20 @@
 		<Card padding="responsive">
 			<h3 class="mb-3 text-sm font-medium text-[var(--dash-text)]">
 				Recent Errors
-				{#if state && state.recentErrors?.length > 0}
+				{#if matcherState && matcherState.recentErrors?.length > 0}
 					<span class="font-normal text-[var(--dash-text-muted)]"
-						>({state.recentErrors.length})</span
+						>({matcherState.recentErrors.length})</span
 					>
 				{/if}
 			</h3>
 
-			{#if !state?.recentErrors?.length}
+			{#if !matcherState?.recentErrors?.length}
 				<p class="py-4 text-center text-sm text-[var(--dash-text-muted)]">
 					No errors in current session.
 				</p>
 			{:else}
 				<div class="space-y-2">
-					{#each [...state.recentErrors].reverse() as err, i (i)}
+					{#each [...matcherState.recentErrors].reverse() as err, i (i)}
 						<div class="rounded-lg border border-[var(--dash-error)]/20 bg-[var(--dash-bg)] p-3">
 							<div class="flex items-start justify-between gap-2">
 								<div class="flex min-w-0 items-start gap-2">
