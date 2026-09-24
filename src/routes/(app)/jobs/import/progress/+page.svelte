@@ -13,6 +13,7 @@
 	import ScoreBadge from '../../components/ScoreBadge.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { portalToBody } from '$lib/actions/portal';
+	import { isSkillReachLow } from '$lib/profile-completeness';
 
 	let { data }: { data: PageData } = $props();
 
@@ -77,16 +78,9 @@
 	// someone edits their skills, not second to second.
 	let skillReach = $derived(data.skillReach ?? null);
 
-	// Warn only from inside the empty band. Across preview's profiles this number
-	// clusters at 67-76% or at 0-9% with nothing between, so 25 separates the two
-	// populations without sitting near either. The corpus floor keeps a brand-new
-	// account with four imported jobs from being told its skills are the problem.
-	let skillReachIsLow = $derived(
-		skillReach !== null &&
-			skillReach.percentage !== null &&
-			skillReach.jobsWithSkills >= 20 &&
-			skillReach.percentage < 25
-	);
+	// Warn only from inside the empty band, with a corpus floor. The thresholds
+	// live beside the profile gap list, which asks the same question.
+	let skillReachIsLow = $derived(isSkillReachLow(skillReach));
 
 	let evaluatedCount = $derived(matchedCount + noMatchCount);
 	let evaluatedProgress = $derived(totalJobs > 0 ? (evaluatedCount / totalJobs) * 100 : 0);
