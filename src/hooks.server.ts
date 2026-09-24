@@ -19,10 +19,15 @@ initSentry('sveltekit');
 const PUBLIC_API_ROUTES = [
 	'/api/auth', // Better Auth handles its own auth
 	'/api/verify-turnstile', // Public CAPTCHA verification
-	'/api/jobs/import', // Uses API key auth
 	// The MCP server. Authenticates on an Authorization bearer token against
-	// `mcp_keys` — a separate table from the device keys above, deliberately, so
-	// that neither kind of credential can be presented where the other belongs.
+	// `mcp_keys` — a separate table from the device keys in `api_keys`,
+	// deliberately, so that neither kind of credential can be presented where
+	// the other belongs.
+	//
+	// These match by PREFIX. '/api/jobs/import' stood here for two device-key
+	// import endpoints, deleted 2026-09-24, and it also let
+	// /api/jobs/import/suggest skip the approval and pending-deletion checks
+	// below. A route added here exempts everything under it.
 	'/api/mcp'
 ];
 
