@@ -38,8 +38,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: ./scripts/ci/test.sh
-      # Runs in the same job to reuse the install test.sh just did. Gates on
-      # the error count, not zero — see the script for why.
+      # Runs in the same job to reuse the install test.sh just did. It gated on
+      # an error count while a backlog was worked off, and reached zero on
+      # 2026-09-24, so any error fails now; the script has the history.
       - name: Type check (svelte-check)
         run: ./scripts/ci/check.sh
       # scripts/ sits outside the tsconfig svelte-check uses, so it had no gate

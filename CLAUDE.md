@@ -56,14 +56,17 @@ Two things worth knowing:
 
 | Gate             | Script                | Baseline          |
 | ---------------- | --------------------- | ----------------- |
-| `svelte-check`   | `ci/check.sh`         | 1 error           |
+| `svelte-check`   | `ci/check.sh`         | zero — no backlog |
 | `scripts/` types | `ci/check-scripts.sh` | zero — no backlog |
 | eslint           | `ci/check-lint.sh`    | zero — no backlog |
 | prettier         | `prettier --check .`  | zero — no backlog |
 
-`svelte-check` is the one ratchet left: it may only ever go **down**, and it
-nags when the real number drops below its baseline so it cannot quietly creep
-back up. New errors fail a PR; the existing backlog is tolerated.
+**No ratchets are left.** All four gates are at zero and fail on any error:
+eslint got there on 2026-09-22, the `scripts/` type check on 2026-09-23 and
+`svelte-check` on 2026-09-24. Each started as a count that could only go down
+while its backlog was worked off; the history is in the scripts. Reading those
+backlogs rather than counting them kept turning up live bugs, which is the
+argument for never letting a new one start.
 
 **eslint is no longer a ratchet.** It went 1,521 -> 0 between 2026-08-07 and
 2026-09-22 and is now a plain gate: any error fails. The `scripts/` type check

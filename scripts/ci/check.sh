@@ -4,16 +4,13 @@ set -euo pipefail
 # Type-check gate (svelte-check, not raw tsc — tsc alone can't see ./$types or
 # $app/* and reports a different, smaller set).
 #
-# The tree carries a standing backlog of pre-existing errors: better-auth
+# It started over a standing backlog of pre-existing errors: better-auth
 # version drift, per-component Props mismatches, implicit anys, a Drizzle
-# relation query. They're spread one-to-four across ~20 files, several are
-# library-version issues, and none is a quick fix. Gating on zero would fail
-# every PR, so gate on the COUNT instead — new errors fail the build, the
-# backlog is tolerated.
-#
-# BASELINE must only ever go DOWN. Lower it whenever errors are fixed; the
-# script nags when the actual count drops below it, so the ratchet can't
-# quietly slip back up.
+# relation query. Gating on zero would have failed every PR, so it gated on the
+# COUNT instead, a ratchet that could only go down while the backlog was worked
+# off. The history below is what each step down found. It reached zero on
+# 2026-09-24 and is a plain gate now, like eslint and the scripts/ type check:
+# any error fails. Do not raise BASELINE to get a change through.
 #
 # 31 -> 29 on 2026-09-23. Both errors were one bug, and a live one: the
 # import-task create action asked api_keys for a `profile` relation it lost
@@ -45,7 +42,12 @@ set -euo pipefail
 # a profile id, so both /api/jobs/import endpoints fail for any key. Nothing
 # in these trees calls them; whether to map a key to a profile or delete them
 # is a decision, not a fix.
-BASELINE=1
+#
+# 1 -> 0 on 2026-09-24: Rik chose delete. Both endpoints went with the two
+# modules only they used, and so did the '/api/jobs/import' entry in
+# hooks.server.ts's PUBLIC_API_ROUTES, which matched by prefix and so had also
+# been exempting /api/jobs/import/suggest from the approval check.
+BASELINE=0
 
 npx svelte-kit sync
 
@@ -65,18 +67,17 @@ if [ -z "${errors:-}" ]; then
 fi
 
 if [ "$errors" -gt "$BASELINE" ]; then
-  echo "::error::svelte-check found $errors errors, baseline is $BASELINE — $((errors - BASELINE)) new."
-  echo "Fix them, or if a baseline error was legitimately replaced, adjust"
-  echo "BASELINE in scripts/ci/check.sh."
+  echo "::error::svelte-check found $errors errors. The tree is clean, so these are yours."
+  echo "Fix them. Do not raise BASELINE: it is 0 because the backlog is gone."
   echo
 
   all_errors=$(printf '%s\n' "$output" | grep ' ERROR ' || true)
 
-  # Errors in files this change touched, first and on their own. The whole list
-  # is the backlog plus yours, and the backlog is 31 lines of libraries and
-  # other people's components — reading it to find your own is the work this
-  # saves. Empty when changed-files.sh cannot tell (see its header), and then
-  # the full list below is all there is.
+  # Errors in files this change touched, first and on their own. With no
+  # backlog every error is new, but one bad shared type can still put most of
+  # them in files the change never opened, and which is which is the first
+  # thing to know. Empty when changed-files.sh cannot tell (see its header),
+  # and then the full list below is all there is.
   changed=$(./scripts/ci/changed-files.sh 2>/dev/null || true)
   if [ -n "$changed" ]; then
     mine=$(printf '%s\n' "$all_errors" | grep -F -f <(printf '%s\n' "$changed" | sed 's/.*/"&"/') || true)
@@ -101,9 +102,4 @@ if [ "$errors" -gt "$BASELINE" ]; then
   exit 1
 fi
 
-if [ "$errors" -lt "$BASELINE" ]; then
-  echo "::notice::svelte-check found $errors errors, below the baseline of $BASELINE."
-  echo "Lower BASELINE in scripts/ci/check.sh to $errors to lock the improvement in."
-fi
-
-echo "svelte-check: $errors errors (baseline $BASELINE) — no new type errors."
+echo "svelte-check: clean."
