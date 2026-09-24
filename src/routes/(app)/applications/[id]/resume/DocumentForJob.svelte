@@ -24,7 +24,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import Card from '../../../components/Card.svelte';
-	import AddSkillToProfile from '../../../jobs/components/AddSkillToProfile.svelte';
+	import AddSkillWord from './AddSkillWord.svelte';
 	import ItemPicker from './ItemPicker.svelte';
 	import TailoredActions from './TailoredActions.svelte';
 	import TailoredDetails from './TailoredDetails.svelte';
@@ -74,7 +74,8 @@
 	 *
 	 * The host page must expose `setCvSent`, `clearCvSent`, `tailorVersion`,
 	 * `includeInTailored`, `discardTailored`, `keepDecision`, `rejectDecision`,
-	 * `promoteTailored`, `setItemState` and `generatePdfs`.
+	 * `promoteTailored`, `setItemState`, `addSkillWord`, `removeSkillWord` and
+	 * `generatePdfs`.
 	 */
 	let {
 		app,
@@ -86,6 +87,8 @@
 		items,
 		coverage,
 		creditedNotNamed,
+		jobWords = [],
+		skillGroups = [],
 		exclusions,
 		outOfReach,
 		heldBackParents,
@@ -119,9 +122,18 @@
 		coverage: Record<string, VersionCoverage>;
 		/**
 		 * Required skills the match credits through something related, while no
-		 * skill of the applicant's carries the word itself.
+		 * skill of the applicant's carries the word itself — with the skill the
+		 * match went through, when it named one, and the group the word would
+		 * print in by default.
 		 */
-		creditedNotNamed: string[];
+		creditedNotNamed: { skill: string; from: string | null; categoryId: number | null }[];
+		/**
+		 * Words the tailored version carries for skills the profile holds under
+		 * another name. See server/profile/skill-words.ts.
+		 */
+		jobWords?: { id: number; name: string; reason: string | null; group: string }[];
+		/** Every skill group on the profile, for where a word can go. */
+		skillGroups?: { id: number; name: string }[];
 		/** Per document, the relevant things it leaves out. Keyed like `coverage`. */
 		exclusions: Record<
 			string,
@@ -423,9 +435,49 @@
 	/** Hidden skills whose name the document already prints inside another. */
 	let carried = $derived(hiddenSkills.filter((s) => s.carriedBy));
 
+	/**
+	 * The credited words, each with where it stands: on this job's version as a
+	 * word of its own, printed inside a longer skill name on the document
+	 * described, or nowhere at all.
+	 *
+	 * A carried one stays offered, as a hidden skill carried by another does in
+	 * the strip below: a keyword search finds "API" in "API design", a person
+	 * skimming the list may not, and which reader matters is the applicant's
+	 * call. What changes is the claim. "A keyword search finds nothing" was said
+	 * of words sitting on the page inside others.
+	 */
+	let credited = $derived(
+		creditedNotNamed.map((c) => {
+			const key = c.skill.trim().toLowerCase();
+			return {
+				...c,
+				word: jobWords.find((w) => w.name.trim().toLowerCase() === key) ?? null,
+				carriedBy: describing
+					? (coverage[hiddenSkillsKey(docType, activeSlug)]?.carried?.[key] ?? null)
+					: null
+			};
+		})
+	);
+	let creditedOpen = $derived(credited.filter((c) => !c.word));
+	let creditedAdded = $derived(credited.filter((c) => !!c.word));
+	let creditedCarried = $derived(creditedOpen.filter((c) => !!c.carriedBy));
+
+	/**
+	 * Where a credited word can go: the skill groups the document it is added to
+	 * prints, which is the one the panel below describes. Every group on the
+	 * profile when the panel has nothing to say, which is before anything is
+	 * recorded.
+	 */
+	let wordGroups = $derived.by(() => {
+		const printing = items
+			.filter((g) => g.section === 'skills' && g.on && g.entityId !== null)
+			.map((g) => ({ id: g.entityId as number, name: g.title }));
+		return printing.length > 0 ? printing : skillGroups;
+	});
+
 	/** Everything the checks raise, across all four. */
 	let checkCount = $derived(
-		hiddenEvidence.length + hiddenSkills.length + creditedNotNamed.length + heldBackRoles.length
+		hiddenEvidence.length + hiddenSkills.length + creditedOpen.length + heldBackRoles.length
 	);
 
 	/**
@@ -461,7 +513,9 @@
 	 */
 	function covLabel(slug: string): string {
 		const entry = coverage[hiddenSkillsKey(docType, slug)];
-		if (!entry || entry.required === 0) return '';
+		// Nothing to say for a profile that names none of the job's skills
+		// anywhere: every version would read "names 0".
+		if (!entry || entry.required === 0 || entry.owned + entry.shown.length === 0) return '';
 		return ` — names ${entry.shown.length} of ${entry.required}`;
 	}
 
@@ -622,8 +676,11 @@
 	let itemsShowing = $derived(
 		items.reduce((n, group) => n + (group.on ? group.rows.filter((r) => r.on).length : 0), 0)
 	);
-	/** Decisions that change the document; see Decision.keptAsBase. */
-	let changeCount = $derived(decisions.filter((d) => !d.keptAsBase).length);
+	/**
+	 * Decisions that change the document (see Decision.keptAsBase), and the
+	 * words it carries of its own.
+	 */
+	let changeCount = $derived(decisions.filter((d) => !d.keptAsBase).length + jobWords.length);
 	let tailoredBaseName = $derived(tailored?.baseSlug ? nameOf(tailored.baseSlug) : '');
 	let tailoredHasPdf = $derived(
 		!!tailored &&
@@ -1145,7 +1202,7 @@
 					<p class="text-xs text-[var(--dash-text-secondary)]">
 						Once you choose what you're sending, it's checked against this job here.
 					</p>
-				{:else if checkCount === 0 && lifted.length === 0}
+				{:else if checkCount === 0 && lifted.length === 0 && creditedAdded.length === 0}
 					<p class="text-xs text-[var(--dash-text-secondary)]">Nothing to flag.</p>
 				{/if}
 				<div class="space-y-3">
@@ -1211,35 +1268,104 @@
 		     picked: this one is not about which document you send — no version of
 		     a profile that never says "SQL" says it. The match counts it through
 		     MySQL and PostgreSQL, and a recruiter searching the file for the word
-		     finds nothing. -->
-					{#if creditedNotNamed.length > 0}
+		     finds nothing.
+
+		     The fix is a word on this job's version, not a profile skill. It used
+		     to be the other: every add was a second name for a skill the profile
+		     already held, since that is what the match credited it through, and it
+		     printed on every document by default. -->
+					{#if credited.length > 0}
 						<div class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-3">
-							<p class="flex items-start gap-2 text-xs text-[var(--dash-text)]">
-								<FontAwesomeIcon
-									icon={faMagnifyingGlass}
-									class="mt-0.5 h-3 w-3 shrink-0 opacity-60"
-								/>
-								<span>
-									This job's match already credits you with
-									{creditedNotNamed.length === 1 ? 'this' : 'these'}, through related skills you
-									have — but
-									{creditedNotNamed.length === 1 ? 'the word' : 'the words'} never {creditedNotNamed.length ===
-									1
-										? 'appears'
-										: 'appear'} on your {docLabel}, so a keyword search of it finds nothing.
-								</span>
-							</p>
+							{#if creditedOpen.length > 0}
+								<p class="flex items-start gap-2 text-xs text-[var(--dash-text)]">
+									<FontAwesomeIcon
+										icon={faMagnifyingGlass}
+										class="mt-0.5 h-3 w-3 shrink-0 opacity-60"
+									/>
+									<span>
+										This job's match already credits you with
+										{creditedOpen.length === 1 ? 'this' : 'these'}, through related skills you have
+										— but your {docLabel} never lists {creditedOpen.length === 1 ? 'it' : 'them'} by name{creditedCarried.length ===
+										0
+											? ', so a keyword search of it finds nothing'
+											: ''}.
+									</span>
+								</p>
 
-							<div class="mt-2 flex flex-wrap gap-1.5">
-								{#each creditedNotNamed as skill (skill)}
-									<AddSkillToProfile {skill} strength="strong" variant="required" defaultShowOnCv />
-								{/each}
-							</div>
+								<div class="mt-2 flex flex-wrap gap-1.5">
+									{#each creditedOpen as c (c.skill)}
+										<AddSkillWord
+											skill={c.skill}
+											from={c.from}
+											groups={wordGroups}
+											suggested={c.categoryId}
+											{docType}
+											baseSlug={pickerBase}
+										/>
+									{/each}
+								</div>
 
-							<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
-								Adding one puts the word on your profile and, unless you say otherwise, on the
-								documents you send.
-							</p>
+								{#if creditedCarried.length > 0}
+									<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
+										Already on the page inside another skill:
+										{#each creditedCarried as c, i (c.skill)}<span
+												>{i > 0 ? ', ' : ''}<strong>{c.skill}</strong> in “{c.carriedBy}”</span
+											>{/each}. A keyword search finds
+										{creditedCarried.length === 1 ? 'it' : 'them'} there; a reader may not.
+									</p>
+								{/if}
+							{/if}
+
+							{#if creditedAdded.length > 0}
+								<div
+									class="flex flex-wrap items-center gap-1.5 {creditedOpen.length > 0
+										? 'mt-3'
+										: ''}"
+								>
+									<span class="text-[10px] text-[var(--dash-text-secondary)]">
+										On this job's {docLabel} as words of their own:
+									</span>
+									{#each creditedAdded as c (c.skill)}
+										<form
+											method="POST"
+											action="?/removeSkillWord"
+											use:enhance={() =>
+												async ({ update }) => {
+													await update({ reset: false });
+												}}
+										>
+											<input type="hidden" name="word_id" value={c.word?.id} />
+											<button
+												type="submit"
+												title="{c.word?.group
+													? `In ${c.word.group}. `
+													: ''}Take it off this job's {docLabel}"
+												aria-label="Take {c.word?.name} off this job's {docLabel}"
+												class="inline-flex items-center gap-1 rounded-lg border border-[var(--dash-success)]/40 bg-[var(--dash-success-light)] px-2 py-0.5 text-xs text-[var(--dash-success)] transition-colors hover:border-[var(--dash-error)]/50 hover:text-[var(--dash-error)]"
+											>
+												<FontAwesomeIcon icon={faCheck} class="h-2.5 w-2.5" />
+												{c.word?.name}
+												<FontAwesomeIcon icon={faXmark} class="h-2.5 w-2.5 opacity-60" />
+											</button>
+										</form>
+									{/each}
+								</div>
+							{/if}
+
+							{#if creditedOpen.length > 0}
+								<p class="mt-2 text-[10px] text-[var(--dash-text-secondary)]">
+									{#if tailored && !choseTailored}
+										Adding one puts the word on <strong>{tailored.name}</strong>, the version
+										tailored for this job, which you aren't sending right now.
+									{:else if tailored}
+										Adding one puts the word on this job's version only.
+									{:else}
+										Adding one makes a version of {recorded ? recordedLabel : `your ${docLabel}`} just
+										for this job, with the word on it.
+									{/if}
+									Your profile and your other documents stay as they are.
+								</p>
+							{/if}
 						</div>
 					{/if}
 
@@ -1502,6 +1628,7 @@
 						<TailoredDetails
 							{tailored}
 							{decisions}
+							words={jobWords}
 							{gaps}
 							{docType}
 							baseName={tailoredBaseName}

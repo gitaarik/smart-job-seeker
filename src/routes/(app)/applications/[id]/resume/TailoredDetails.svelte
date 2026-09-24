@@ -6,6 +6,7 @@
 		faCheck,
 		faEye,
 		faEyeSlash,
+		faFont,
 		faRotateLeft
 	} from '@fortawesome/free-solid-svg-icons';
 	import type { DocType } from '$lib/utils/profile-doc-url';
@@ -22,14 +23,19 @@
 	 *
 	 * A tailored version is a SELECTION over what the applicant already wrote —
 	 * it can hide a bullet, surface a held-back skill and reorder within a role,
-	 * but it never writes a word. That is what makes this list possible: each
-	 * decision is auditable in one line, against text the applicant recognises.
+	 * but tailoring never writes a word. That is what makes this list possible:
+	 * each decision is auditable in one line, against text the applicant
+	 * recognises. The one exception is the applicant's own: a job's word for a
+	 * skill they hold under another name, which they put on this version from
+	 * the checks above, and which is listed here with the rest.
 	 *
-	 * The host page must expose `rejectDecision` and `keepDecision`.
+	 * The host page must expose `rejectDecision`, `keepDecision` and
+	 * `removeSkillWord`.
 	 */
 	let {
 		tailored,
 		decisions,
+		words = [],
 		gaps,
 		docType,
 		baseName,
@@ -38,6 +44,8 @@
 		/** Only where it was built from: the plain document ignores every version tag. */
 		tailored: { baseSlug?: string | null };
 		decisions: Decision[];
+		/** The job's own words this version carries; see server/profile/skill-words.ts. */
+		words?: { id: number; name: string; reason: string | null; group: string }[];
 		/** What the match found missing — what a selection cannot fix. */
 		gaps: string[];
 		docType: DocType;
@@ -92,8 +100,8 @@
 	     version tags — four side projects vanished here — and nothing on the
 	     page said which document the diff was a diff against. -->
 	<p class="text-xs text-[var(--dash-text-secondary)]">
-		{changes.length}
-		{changes.length === 1 ? 'change' : 'changes'} against
+		{changes.length + words.length}
+		{changes.length + words.length === 1 ? 'change' : 'changes'} against
 		{#if baseName}<strong class="font-medium text-[var(--dash-text)]">{baseName}</strong>{:else}your
 			plain {docLabel}{/if}.
 	</p>
@@ -146,7 +154,7 @@
 		</div>
 	{/if}
 
-	{#if changes.length === 0 && kept.length === 0}
+	{#if changes.length === 0 && kept.length === 0 && words.length === 0}
 		<p class="mt-3 text-xs text-[var(--dash-text-secondary)]">
 			Nothing to change — the version this builds on already reads well for this job.
 		</p>
@@ -236,6 +244,62 @@
 			</div>
 		{/if}
 	{/each}
+
+	{#if words.length > 0}
+		<!-- Not decisions, so not in the groups above: a decision names an item
+		     the profile holds, and these are words it holds under another name.
+		     The applicant put each one here, so there is nothing to keep and
+		     nothing a regeneration would undo; taking one off is the only action. -->
+		<div class="mt-4">
+			<p class="mb-2 text-[10px] font-semibold tracking-wide text-[var(--dash-text)] uppercase">
+				Words for this job
+			</p>
+			<ul class="space-y-2">
+				{#each words as word (word.id)}
+					<li
+						class="flex items-start gap-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-2"
+					>
+						<FontAwesomeIcon
+							icon={faFont}
+							class="mt-1 h-3 w-3 shrink-0 text-[var(--dash-success)]"
+						/>
+						<div class="min-w-0 flex-1">
+							<p class="mb-1 flex flex-wrap items-center gap-1.5 text-[10px] leading-none">
+								<span
+									class="rounded border border-[var(--dash-border)] px-1 py-0.5 font-medium tracking-wide text-[var(--dash-text-secondary)] uppercase"
+								>
+									Skill
+								</span>
+								{#if word.group}
+									<span class="truncate text-[var(--dash-text-secondary)]">{word.group}</span>
+								{/if}
+							</p>
+							<p class="text-xs text-[var(--dash-text)]">{word.name}</p>
+							{#if word.reason}
+								<p class="mt-0.5 text-[10px] text-[var(--dash-text-secondary)]">{word.reason}</p>
+							{/if}
+						</div>
+						<form
+							method="POST"
+							action="?/removeSkillWord"
+							use:enhance={track}
+							class="flex shrink-0 items-center"
+						>
+							<input type="hidden" name="word_id" value={word.id} />
+							<button
+								type="submit"
+								disabled={working}
+								title="Take this word off this job's {docLabel}"
+								class="rounded px-1.5 py-1 text-[10px] text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)] disabled:opacity-70"
+							>
+								Take off
+							</button>
+						</form>
+					</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
 
 	{#if kept.length > 0}
 		<!-- Quiet on purpose: none of these changes the document. They are listed

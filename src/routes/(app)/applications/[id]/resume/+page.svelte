@@ -67,6 +67,8 @@
 	items={data.items ?? []}
 	coverage={data.coverage ?? {}}
 	creditedNotNamed={data.creditedNotNamed ?? []}
+	jobWords={data.jobWords ?? []}
+	skillGroups={data.skillGroups ?? []}
 	exclusions={data.exclusions ?? {}}
 	outOfReach={data.outOfReach ?? {}}
 	heldBackParents={data.heldBackParents ?? {}}

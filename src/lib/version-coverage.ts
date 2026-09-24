@@ -36,11 +36,25 @@ export interface HiddenSkill {
 
 /** What one candidate document does with the skills this job requires. */
 export interface VersionCoverage {
-	/** Required skills the profile has AND this document prints. */
+	/**
+	 * Required skills this document prints by name: the profile's own, and the
+	 * words a tailored version carries for skills the profile holds under
+	 * another name (see server/profile/skill-words.ts).
+	 */
 	shown: string[];
 	/** Required skills the profile has but this document won't print. */
 	hidden: HiddenSkill[];
-	/** Required skills the profile has at all — the best any document could do. */
+	/**
+	 * Required skills this document does not name but prints inside a longer
+	 * name, keyed by the lowercased requirement: "api" → "API design". The
+	 * same fact `HiddenSkill.carriedBy` states for a skill the profile holds,
+	 * for the ones it holds under no name of their own.
+	 */
+	carried: Record<string, string>;
+	/**
+	 * Required skills the profile has at all. No longer a ceiling on `shown`,
+	 * since a version's own words can name a skill the profile does not.
+	 */
 	owned: number;
 	/** Distinct skills the job requires. */
 	required: number;

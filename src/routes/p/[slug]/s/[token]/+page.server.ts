@@ -17,6 +17,11 @@ import {
 	loadFieldVariants,
 	withoutFieldVariants
 } from '$lib/server/profile/field-variants';
+import {
+	applySkillWords,
+	loadDocumentSkillWords,
+	renderedVersionId
+} from '$lib/server/profile/skill-words';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals, getClientAddress }) => {
@@ -106,6 +111,20 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	applyFieldVariants(
 		profile,
 		await loadFieldVariants(profile.id, token.profile_version, translator)
+	);
+
+	// And the skill words the shared version carries — see
+	// server/profile/skill-words.ts.
+	const shownVersionId = renderedVersionId(
+		profile,
+		token.profile_version,
+		url.searchParams.get('version')
+	);
+	applySkillWords(
+		profile,
+		await loadDocumentSkillWords(profile, shownVersionId),
+		format,
+		shownVersionId
 	);
 
 	// A portfolio link needs a theme to render with, and the token names a

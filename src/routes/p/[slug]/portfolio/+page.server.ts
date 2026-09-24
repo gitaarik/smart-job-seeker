@@ -24,6 +24,7 @@ import {
 	loadFieldVariants,
 	withoutFieldVariants
 } from '$lib/server/profile/field-variants';
+import { applySkillWords, loadDocumentSkillWords } from '$lib/server/profile/skill-words';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals, getClientAddress }) => {
@@ -96,6 +97,12 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	applyTranslations(profile, translator);
 	locals.documentLocale = translator.locale;
 	applyFieldVariants(profile, await loadFieldVariants(profile.id, versionId, translator));
+	applySkillWords(
+		profile,
+		await loadDocumentSkillWords(profile, versionId),
+		'portfolio',
+		versionId
+	);
 
 	return {
 		// Stripped of the wording library before serialising: the variants are

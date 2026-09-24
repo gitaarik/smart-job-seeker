@@ -297,3 +297,84 @@ describe('getVersionCoverage — a skill printed at a role', () => {
 		});
 	});
 });
+
+describe('getVersionCoverage — words a version carries', () => {
+	beforeEach(() => vi.clearAllMocks());
+
+	/** VERSIONS again, each carrying the words given for its id. */
+	function withWords(
+		words: Record<number, Array<{ id: number; category_id: number; name: string }>>
+	) {
+		findMany(db.query.profile_versions).mockResolvedValue(
+			VERSIONS.map((v) => ({
+				...v,
+				skill_words: (words[v.id] ?? []).map((w) => ({ ...w, reason: null }))
+			}))
+		);
+	}
+
+	const shownOn = (coverage: Record<string, { shown: string[] }>, version: string) =>
+		coverage[hiddenSkillsKey('resume', version)]?.shown ?? [];
+
+	// The word is the job's own name for a skill the profile holds under
+	// another, so a document carrying it names the requirement.
+	it('counts a word as naming the skill, on its version and on those built on it', async () => {
+		setup([{ id: 1, tags: null, tech_skills: [{ id: 10, name: 'Sentry', tags: null }] }]);
+		withWords({ 1: [{ id: 1, category_id: 1, name: 'Monitoring' }] });
+
+		const coverage = await getVersionCoverage(1, ['Monitoring', 'Sentry']);
+		expect(shownOn(coverage, 'backend')).toEqual(['Monitoring', 'Sentry']);
+		// "senior" extends "backend".
+		expect(shownOn(coverage, 'senior')).toContain('Monitoring');
+		expect(shownOn(coverage, '')).toEqual(['Sentry']);
+	});
+
+	// The renderer reaches the group first, and a word in a group the document
+	// leaves out prints nothing.
+	it('leaves out a word whose group the document leaves out', async () => {
+		setup([
+			{ id: 1, tags: null, tech_skills: [{ id: 10, name: 'Sentry', tags: null }] },
+			{ id: 2, tags: ['!resume'], tech_skills: [{ id: 20, name: 'Vue', tags: null }] }
+		]);
+		withWords({ 1: [{ id: 1, category_id: 2, name: 'Monitoring' }] });
+
+		const coverage = await getVersionCoverage(1, ['Monitoring', 'Sentry']);
+		expect(shownOn(coverage, 'backend')).not.toContain('Monitoring');
+		expect(coverage[hiddenSkillsKey('cv', 'backend')].shown).toContain('Monitoring');
+	});
+
+	it('counts a name once when the skills block prints it as well', async () => {
+		setup([{ id: 1, tags: null, tech_skills: [{ id: 10, name: 'Monitoring', tags: null }] }]);
+		withWords({ 1: [{ id: 1, category_id: 1, name: 'monitoring' }] });
+
+		const coverage = await getVersionCoverage(1, ['Monitoring']);
+		expect(shownOn(coverage, 'backend')).toEqual(['Monitoring']);
+	});
+
+	// A keyword search for "API" finds "API design". The credited strip used to
+	// say it would find nothing.
+	it('names what carries a required word inside a longer name', async () => {
+		setup([{ id: 1, tags: null, tech_skills: [{ id: 10, name: 'API design', tags: null }] }]);
+		withWords({ 1: [{ id: 1, category_id: 1, name: 'Testing' }] });
+
+		const coverage = await getVersionCoverage(1, ['API', 'Testing', 'Security']);
+		expect(coverage[hiddenSkillsKey('resume', '')].carried).toEqual({ api: 'API design' });
+		// Named outright by the word, so not merely carried.
+		expect(coverage[hiddenSkillsKey('resume', 'backend')].carried).toEqual({ api: 'API design' });
+		expect(shownOn(coverage, 'backend')).toEqual(['Testing']);
+	});
+
+	// A profile that owns none of the required skills still gets an entry per
+	// document: a word or a carrier can speak for one all the same.
+	it('answers for a profile that owns none of the required skills', async () => {
+		setup([{ id: 1, tags: null, tech_skills: [{ id: 10, name: 'API design', tags: null }] }]);
+
+		const coverage = await getVersionCoverage(1, ['API']);
+		expect(coverage[hiddenSkillsKey('resume', '')]).toMatchObject({
+			shown: [],
+			hidden: [],
+			carried: { api: 'API design' },
+			owned: 0
+		});
+	});
+});

@@ -2493,6 +2493,50 @@ export const profile_version_overrides = pgTable(
 	]
 );
 
+/**
+ * A skill name one version prints that no skill on the profile holds: the job's
+ * own word for something the applicant has under another name.
+ *
+ * The application page offers these for the words a job's match credits
+ * through a related skill ("Monitoring" through Sentry) while nothing on the
+ * profile says them. That used to add a profile skill, which by construction
+ * duplicated one the applicant already had and printed on every document. A
+ * profile row buys nothing here, since the match already counts the word, so it
+ * lives on the one document that wants it and goes when that version goes.
+ *
+ * Not an override row: an override names an item by id, and this has no item,
+ * only the text. See server/profile/skill-words.ts for how it reaches the page.
+ */
+export const profile_version_skill_words = pgTable(
+	'profile_version_skill_words',
+	{
+		id: serial().primaryKey().notNull(),
+		version_id: integer().notNull(),
+		/** The skill group it prints in. */
+		category_id: integer().notNull(),
+		/** The word, spelled the way the job spells it. */
+		name: varchar({ length: 255 }).notNull(),
+		/** What it stands in for, shown where the applicant reviews the version. */
+		reason: text(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' }),
+		date_updated: timestamp({ withTimezone: true, mode: 'date' })
+	},
+	(table) => [
+		uniqueIndex('profile_version_skill_words_name_key').on(table.version_id, table.name),
+		index('profile_version_skill_words_category_idx').on(table.category_id),
+		foreignKey({
+			columns: [table.version_id],
+			foreignColumns: [profile_versions.id],
+			name: 'profile_version_skill_words_version_foreign'
+		}).onDelete('cascade'),
+		foreignKey({
+			columns: [table.category_id],
+			foreignColumns: [tech_skill_categories.id],
+			name: 'profile_version_skill_words_category_foreign'
+		}).onDelete('cascade')
+	]
+);
+
 export const side_project_achievements = pgTable(
 	'side_project_achievements',
 	{

@@ -13,6 +13,7 @@ function entry(shown: string[], hidden: Array<[string, boolean]>, required = 8):
 	return {
 		shown,
 		hidden: hidden.map(([name, liftable], i) => ({ id: i + 1, name, liftable, carriedBy: null })),
+		carried: {},
 		owned: shown.length + hidden.length,
 		required
 	};

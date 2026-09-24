@@ -9,7 +9,8 @@ import {
 	profile_version_extensions,
 	profile_version_overrides,
 	profile_versions,
-	profiles
+	profiles,
+	tech_skill_categories
 } from '$lib/server/db/schema';
 import { getSelectedProfileId } from '../../../profile/utils';
 import { DEFAULT_TEMPLATE_ID, templateForStorage } from '$lib/resume-templates';
@@ -18,14 +19,16 @@ import { BASE_LOCALE, isKnownLocale, LOCALES } from '$lib/resume-translations';
 import { getLatestExport } from '$lib/server/profile/export-files';
 import { exportKey } from '$lib/utils/profile-doc-url';
 import { getVersionCoverage } from '$lib/server/profile/hidden-required-skills';
-import { specWarning } from '$lib/version-coverage';
+import { skillWords, specWarning } from '$lib/version-coverage';
 import {
+	addSkillWordForApplication,
 	decisionsForVersion,
 	describeOverrides,
 	includeInTailoredVersion,
 	jobMatchRead,
 	promoteToLibrary,
 	relevantExclusionsByVersion,
+	removeSkillWordForApplication,
 	retagVersionSlug,
 	setItemStateForApplication,
 	tailorVersionForApplication,
@@ -36,6 +39,8 @@ import {
 import { baseOnByItem, keptAsBase } from '$lib/tailoring';
 import { isOverrideEntity } from '$lib/version-overrides';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
+import { loadSkillWords } from '$lib/server/profile/skill-words';
+import { provenanceFor } from '$lib/match-provenance';
 
 /** How the document going to this job is presented: which template, which language. */
 interface SentAs {
@@ -110,6 +115,37 @@ async function readSentAs(profileId: number, formData: FormData): Promise<SentAs
 	}
 
 	return { template, locale };
+}
+
+/** Words too common to say two skill names are about the same thing. */
+const FILLER_WORDS = new Set(['and', 'the', 'for', 'with', 'of', 'in', 'on', 'to', 'a', 'an']);
+
+/**
+ * Which skill group a credited word should print in, before the applicant says
+ * otherwise.
+ *
+ * The group of the skill the match credited it through, when the match
+ * recorded one: "Monitoring" through Sentry goes where Sentry is. Failing that,
+ * the first group holding a skill that shares one of its words, which is how
+ * "Tool Calling", credited on the model's own judgement, finds "Function
+ * calling". Null when neither says anything; the page then offers the first
+ * group the document prints.
+ */
+function suggestGroup(
+	skill: string,
+	from: string | null,
+	groups: Array<{ id: number; tech_skills: Array<{ name: string | null }> }>
+): number | null {
+	const lower = (value: string | null) => (value ?? '').trim().toLowerCase();
+	if (from) {
+		const home = groups.find((g) => g.tech_skills.some((s) => lower(s.name) === lower(from)));
+		if (home) return home.id;
+	}
+	const words = new Set(skillWords(skill).filter((w) => w.length > 2 && !FILLER_WORDS.has(w)));
+	const near = groups.find((g) =>
+		g.tech_skills.some((s) => skillWords(s.name ?? '').some((w) => words.has(w)))
+	);
+	return near?.id ?? null;
 }
 
 /**
@@ -295,7 +331,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		tailored ? decisionsForVersion(tailored.id).then(describeOverrides) : Promise.resolve([]),
 		layoutData.application?.job?.id
 			? jobMatchRead(layoutData.selectedProfile.id, layoutData.application.job.id)
-			: Promise.resolve({ gaps: [], matched: [] }),
+			: Promise.resolve({ gaps: [], matched: [], details: null }),
 		// What each candidate document leaves out that speaks to this job, and
 		// what it puts beyond reach entirely — the measure the base suggestion
 		// ranks on. Free after the first view: item vectors and the job's own
@@ -316,21 +352,45 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 	 * The third state between "you have it and it prints" and "you don't have
 	 * it": the matcher counts SQL through MySQL and Linux through Linode, but a
 	 * document that prints those does not print these, and a keyword search for
-	 * them finds nothing. Computed against the same exact-name join the coverage
-	 * map uses, so the two never double-count a skill.
+	 * them finds nothing. Measured against the profile's own skill names, the
+	 * exact-name join the coverage map uses, so the two never double-count a
+	 * skill.
+	 *
+	 * Each carries what the match credited it through and the group it would
+	 * print in, because the fix is now a word on this job's version rather than
+	 * a new profile skill: the profile already holds the thing, under the name
+	 * the match went through. See server/profile/skill-words.ts.
 	 */
+	const skillGroups = await db.query.tech_skill_categories.findMany({
+		where: eq(tech_skill_categories.profile_id, layoutData.selectedProfile.id),
+		columns: { id: true, name: true },
+		with: { tech_skills: { columns: { name: true } } },
+		orderBy: asc(tech_skill_categories.sort)
+	});
 	const namedByProfile = new Set(
-		Object.values(coverage).flatMap((entry) => [
-			...entry.shown.map((n) => n.toLowerCase()),
-			...entry.hidden.map((h) => h.name.toLowerCase())
-		])
+		skillGroups.flatMap((g) => g.tech_skills.map((s) => (s.name ?? '').trim().toLowerCase()))
 	);
 	const matchedLower = new Set(matchRead.matched.map((s) => s.trim().toLowerCase()));
 	const requiredList = Array.isArray(requiredSkills) ? (requiredSkills as string[]) : [];
-	const creditedNotNamed = requiredList.filter((skill) => {
-		const key = skill.trim().toLowerCase();
-		return key && matchedLower.has(key) && !namedByProfile.has(key);
-	});
+	const creditedNotNamed = requiredList
+		.filter((skill) => {
+			const key = skill.trim().toLowerCase();
+			return key && matchedLower.has(key) && !namedByProfile.has(key);
+		})
+		.map((skill) => {
+			const from = provenanceFor(matchRead.details, skill)?.from ?? null;
+			return { skill, from, categoryId: suggestGroup(skill, from, skillGroups) };
+		});
+
+	/** The words this job's own version carries, for the strip and the review. */
+	const jobWords = tailored
+		? (await loadSkillWords(layoutData.selectedProfile.id, [tailored.id])).map((word) => ({
+				id: word.id,
+				name: word.name,
+				reason: word.reason,
+				group: skillGroups.find((g) => g.id === word.categoryId)?.name ?? ''
+			}))
+		: [];
 
 	/**
 	 * Everything the document being sent could print, for the panel that edits it.
@@ -377,6 +437,8 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		decisions: decisions.map((d) => ({ ...d, keptAsBase: keptAsBase(d, baseOn) })),
 		gaps: matchRead.gaps,
 		creditedNotNamed,
+		jobWords,
+		skillGroups: skillGroups.map(({ id, name }) => ({ id, name: name ?? 'Skills' })),
 		exclusions: reach.exclusions,
 		outOfReach: reach.outOfReach,
 		heldBackParents: reach.heldBackParents,
@@ -660,6 +722,87 @@ export const actions: Actions = {
 		} catch (error) {
 			return fail(400, {
 				error: error instanceof Error ? error.message : 'Could not change that item.'
+			});
+		}
+	},
+
+	/**
+	 * Put the job's own word for a skill on this job's version: the credited
+	 * strip's add. It used to add a profile skill, which duplicated one the
+	 * applicant already had and printed on every document. Creates the version
+	 * the way a toggle does, and records it as the document going out when it
+	 * does, for the same reason.
+	 */
+	addSkillWord: async ({ request, locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
+
+		const formData = await request.formData();
+		const name = ((formData.get('name') as string) || '').trim();
+		const categoryId = parseInt((formData.get('category_id') as string) || '');
+		if (!name || isNaN(categoryId)) return fail(400, { error: 'Invalid word' });
+		const docType = (formData.get('doc_type') as string) === 'cv' ? 'cv' : 'resume';
+		const baseSlug = ((formData.get('base_slug') as string) || '').trim();
+
+		try {
+			const result = await addSkillWordForApplication({
+				profileId,
+				applicationId: appId,
+				baseSlug,
+				docType,
+				name,
+				categoryId
+			});
+			refreshPdfs(profileId, appId, result.versionSlug);
+
+			if (result.created) {
+				await db
+					.update(applications)
+					.set({
+						cv_version_sent: result.versionSlug,
+						cv_sent_through: docType,
+						date_updated: new Date()
+					})
+					.where(and(eq(applications.id, appId), eq(applications.profile_id, profileId)));
+			}
+			return { success: true };
+		} catch (error) {
+			return fail(400, {
+				error: error instanceof Error ? error.message : 'Could not add that word.'
+			});
+		}
+	},
+
+	/** Take one of this job's words back off its version. */
+	removeSkillWord: async ({ request, locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		const formData = await request.formData();
+		const wordId = parseInt((formData.get('word_id') as string) || '');
+		if (isNaN(appId) || isNaN(wordId)) return fail(400, { error: 'Invalid word' });
+
+		try {
+			const { versionSlug } = await removeSkillWordForApplication({
+				profileId,
+				applicationId: appId,
+				wordId
+			});
+			refreshPdfs(profileId, appId, versionSlug);
+			return { success: true };
+		} catch (error) {
+			return fail(404, {
+				error: error instanceof Error ? error.message : 'Could not take that word off.'
 			});
 		}
 	},

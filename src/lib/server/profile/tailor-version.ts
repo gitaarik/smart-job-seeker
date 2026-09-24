@@ -27,6 +27,7 @@ import {
 	profile_field_variants,
 	profile_version_extensions,
 	profile_version_overrides,
+	profile_version_skill_words,
 	profile_versions,
 	profiles,
 	side_projects,
@@ -65,6 +66,8 @@ import {
 import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
 import { variantFieldLabel, variantPreview } from '$lib/field-variants';
 import { isVariantOwned } from '$lib/server/profile/field-variants';
+import { loadSkillWords, versionChain, wordsToPrint } from '$lib/server/profile/skill-words';
+import { provenanceFor } from '$lib/match-provenance';
 import { templateForStorage, templatePrintsTechnologies } from '$lib/resume-templates';
 import { expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
 import { normalizeSkill } from '$lib/skills';
@@ -1561,14 +1564,18 @@ async function persistDecisions(versionId: number, decisions: Decision[]): Promi
 export async function jobMatchRead(
 	profileId: number,
 	jobId: number
-): Promise<{ gaps: string[]; matched: string[] }> {
+): Promise<{ gaps: string[]; matched: string[]; details: unknown }> {
 	const match = await db.query.job_matches.findFirst({
 		where: and(eq(job_matches.profile_id, profileId), eq(job_matches.job_id, jobId)),
-		columns: { gaps: true, matched_skills: true }
+		columns: { gaps: true, matched_skills: true, matched_skill_details: true }
 	});
 	return {
 		gaps: asStringArray(match?.gaps).slice(0, 6),
-		matched: asStringArray(match?.matched_skills)
+		matched: asStringArray(match?.matched_skills),
+		// How each credited skill was reached, for "credited through Sentry".
+		// Unvalidated json, null on rows scored before the column existed; read
+		// it with provenanceFor.
+		details: match?.matched_skill_details ?? null
 	};
 }
 
@@ -2477,11 +2484,29 @@ export async function versionItemStates(opts: {
 		});
 	}
 
+	// The words this document carries for skills the profile holds under another
+	// name, by the rule the renderer appends them by: see skill-words.ts. Its own
+	// words can be taken off here; ones a base version carries only say so.
+	const chain = version ? versionChain(profile.profile_versions ?? [], version.id) : [];
+	const words = await loadSkillWords(profileId, chain);
+	const printedSkillNames = new Set(
+		(profile.tech_skill_categories ?? [])
+			.filter((category) => printed.categories.has(category.id))
+			.flatMap((category) => category.tech_skills ?? [])
+			.filter((skill) => printed.skills.has(skill.id))
+			.map((skill) => text(skill.name).toLowerCase())
+			.filter(Boolean)
+	);
+	const printingWords = new Set(
+		wordsToPrint(words, printedSkillNames, printed.categories).map((word) => word.id)
+	);
+
 	// Every skill, not just the ones a job requires. Those are the only skills a
 	// run can reach, so the rest had no per-job control anywhere.
 	for (const category of profile.tech_skill_categories ?? []) {
 		const skills = category.tech_skills ?? [];
-		if (skills.length === 0) continue;
+		const groupWords = words.filter((word) => word.categoryId === category.id);
+		if (skills.length === 0 && groupWords.length === 0) continue;
 		const on = printed.categories.has(category.id);
 		groups.push({
 			key: `${OVERRIDE_ENTITIES.skillCategory}:${category.id}`,
@@ -2502,7 +2527,14 @@ export async function versionItemStates(opts: {
 					baseOn: basePrinted?.skills.has(skill.id),
 					parentOn: on
 				})
-			)
+			),
+			words: groupWords.map((word) => ({
+				id: word.id,
+				name: word.name,
+				reason: text(word.reason),
+				on: printingWords.has(word.id),
+				inherited: word.versionId !== version?.id
+			}))
 		});
 	}
 
@@ -2668,6 +2700,152 @@ export async function setItemStateForApplication(opts: {
 		});
 
 	return { versionSlug, created: !existing };
+}
+
+/**
+ * Put the job's own word for a skill on this application's version, creating
+ * that version if it does not exist yet, as a toggle does.
+ *
+ * For the words the match credits through a related skill while nothing on the
+ * profile says them (see server/profile/skill-words.ts). It stays a word of
+ * THIS job's: it has to be one the job lists, and a name the profile already
+ * holds is refused, since showing that skill here is the fix and a second copy
+ * under the same name is not.
+ */
+export async function addSkillWordForApplication(opts: {
+	profileId: number;
+	applicationId: number;
+	/** What a version made here builds on; '' falls back as a run's does. */
+	baseSlug: string;
+	docType: string;
+	name: string;
+	categoryId: number;
+}): Promise<{ versionSlug: string; created: boolean }> {
+	const { profileId, applicationId, baseSlug, docType, categoryId } = opts;
+	const name = opts.name.trim();
+	if (!name || name.length > 255) throw new Error('Name the word to add.');
+	const lower = name.toLowerCase();
+
+	const profile = await getProfileByIdentifier(profileId);
+	if (!profile) throw new Error('Profile not found');
+	const groups = profile.tech_skill_categories ?? [];
+	if (!groups.some((group) => group.id === categoryId)) throw new Error('Skill group not found');
+	const twin = groups
+		.flatMap((group) => group.tech_skills ?? [])
+		.find((skill) => text(skill.name).toLowerCase() === lower);
+	if (twin) {
+		throw new Error(
+			`Your profile already has “${text(twin.name)}”. Show that skill on this version instead.`
+		);
+	}
+
+	const application = await db.query.applications.findFirst({
+		where: and(eq(applications.id, applicationId), eq(applications.profile_id, profileId)),
+		with: {
+			job: {
+				columns: {
+					id: true,
+					title: true,
+					company: true,
+					skills_required: true,
+					skills_preferred: true
+				}
+			}
+		}
+	});
+	if (!application?.job) throw new Error('This application has no job to take the word from.');
+	const job = application.job;
+	const asked = [...asStringArray(job.skills_required), ...asStringArray(job.skills_preferred)];
+	// The posting's spelling, not whatever the form sent: it is the word a
+	// keyword search will look for.
+	const spelled = asked.find((skill) => skill.trim().toLowerCase() === lower)?.trim();
+	if (!spelled) throw new Error(`This job doesn't list “${name}”.`);
+
+	// Why it is here, in the match's own terms: which skill of the applicant's
+	// earned the word, when the match recorded one.
+	const via = provenanceFor((await jobMatchRead(profileId, job.id)).details, spelled);
+	const reason = via?.from
+		? `this job asks for it; your match credits it through ${via.from}`
+		: via
+			? 'this job asks for it; your match infers it from your profile'
+			: 'this job asks for it';
+
+	const existing = await db.query.profile_versions.findFirst({
+		where: and(
+			eq(profile_versions.profile_id, profileId),
+			eq(profile_versions.application_id, applicationId)
+		),
+		columns: { id: true, slug: true }
+	});
+	// The strip offers this before anything is recorded, when the base the page
+	// would pass is the plain document, and a version built on that ignores
+	// every version tag; the run falls back the same way. See defaultBaseSlug.
+	const versionId =
+		existing?.id ??
+		(await upsertTailoredVersion({
+			profileId,
+			applicationId,
+			baseSlug: baseSlug || (await defaultBaseSlug(profileId, docType)),
+			jobTitle: text(job.title),
+			company: text(job.company)
+		}));
+	const versionSlug = existing?.slug ?? tailoredSlugFor(applicationId);
+
+	// One row per word whatever its case, so a second add moves it rather than
+	// printing it twice.
+	const now = new Date();
+	const onVersion =
+		(await db.query.profile_version_skill_words.findMany({
+			where: eq(profile_version_skill_words.version_id, versionId),
+			columns: { id: true, name: true }
+		})) ?? [];
+	const same = onVersion.find((word) => word.name.trim().toLowerCase() === lower);
+	if (same) {
+		await db
+			.update(profile_version_skill_words)
+			.set({ name: spelled, category_id: categoryId, reason, date_updated: now })
+			.where(eq(profile_version_skill_words.id, same.id));
+	} else {
+		await db.insert(profile_version_skill_words).values({
+			version_id: versionId,
+			category_id: categoryId,
+			name: spelled,
+			reason,
+			date_created: now,
+			date_updated: now
+		});
+	}
+
+	return { versionSlug, created: !existing };
+}
+
+/** Take one of this application's words back off its version. */
+export async function removeSkillWordForApplication(opts: {
+	profileId: number;
+	applicationId: number;
+	wordId: number;
+}): Promise<{ versionSlug: string | null }> {
+	const { profileId, applicationId, wordId } = opts;
+	// Ownership: the word must sit on the version owned by THIS application,
+	// which must belong to the selected profile.
+	const version = await db.query.profile_versions.findFirst({
+		where: and(
+			eq(profile_versions.profile_id, profileId),
+			eq(profile_versions.application_id, applicationId)
+		),
+		columns: { id: true, slug: true }
+	});
+	if (!version) throw new Error('No tailored version for this application');
+
+	await db
+		.delete(profile_version_skill_words)
+		.where(
+			and(
+				eq(profile_version_skill_words.id, wordId),
+				eq(profile_version_skill_words.version_id, version.id)
+			)
+		);
+	return { versionSlug: version.slug };
 }
 
 /**

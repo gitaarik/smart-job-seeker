@@ -1114,6 +1114,31 @@ export interface ItemGroup {
 	 */
 	note?: string | null;
 	rows: ItemRow[];
+	/**
+	 * Words this document prints in a skill group that no skill on the profile
+	 * holds: the job's own word for something the applicant has under another
+	 * name. Skill groups only. See server/profile/skill-words.ts.
+	 */
+	words?: SkillWordRow[];
+}
+
+/** One of those words, as the panel lists it. */
+export interface SkillWordRow {
+	id: number;
+	name: string;
+	/** What it stands in for, as recorded when it was added. */
+	reason: string;
+	/**
+	 * Whether it prints. Not when its group is off, and not when the document
+	 * now prints a skill of that very name, which then speaks for it.
+	 */
+	on: boolean;
+	/**
+	 * Carried by a version this one builds on rather than written on it. Taking
+	 * it off here would mean taking it off that version too, so the panel only
+	 * says where it comes from.
+	 */
+	inherited: boolean;
 }
 
 /**

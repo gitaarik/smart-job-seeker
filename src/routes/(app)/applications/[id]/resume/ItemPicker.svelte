@@ -7,9 +7,10 @@
 		faChevronRight,
 		faCircleNotch,
 		faEyeSlash,
-		faTriangleExclamation
+		faTriangleExclamation,
+		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
-	import type { ItemGroup, ItemRow, ItemSection } from '$lib/tailoring';
+	import type { ItemGroup, ItemRow, ItemSection, SkillWordRow } from '$lib/tailoring';
 	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 	import type { DocType } from '$lib/utils/profile-doc-url';
 
@@ -33,7 +34,12 @@
 	 * already says what it holds; skills stay open, because a group of names reads
 	 * at a glance.
 	 *
-	 * The host page must expose `setItemState`.
+	 * A skill group also lists the words this version carries of its own: a
+	 * job's word for a skill the profile holds under another name, added from
+	 * the checks above. Dashed, because they are not profile skills, and taken
+	 * off rather than switched off, because off is simply not having one.
+	 *
+	 * The host page must expose `setItemState` and `removeSkillWord`.
 	 */
 	let {
 		items,
@@ -189,6 +195,46 @@
 	</form>
 {/snippet}
 
+<!-- A word of this version's own. One a base version carries is only named. -->
+{#snippet wordChip(word: SkillWordRow)}
+	{@const key = `word:${word.id}`}
+	{@const why = [
+		word.reason,
+		word.on ? '' : `not printing: this ${docLabel} already lists the skill, or the group is off`
+	]
+		.filter(Boolean)
+		.join('. ')}
+	{#if word.inherited}
+		<span
+			title="{why ? `${why}. ` : ''}From the version this one builds on"
+			class="rounded border border-dashed border-[var(--dash-border)] px-1.5 py-0.5 text-[10px] text-[var(--dash-text-secondary)] {word.on
+				? ''
+				: 'line-through'}"
+		>
+			{word.name}
+		</span>
+	{:else}
+		<form method="POST" action="?/removeSkillWord" use:enhance={() => track(key)}>
+			<input type="hidden" name="word_id" value={word.id} />
+			<button
+				type="submit"
+				disabled={pending !== null}
+				title="{why ? `${why}. ` : ''}Only on this job's {docLabel}. Click to take it off."
+				aria-label="Take {word.name} off this job's {docLabel}"
+				class="inline-flex items-center gap-1 rounded border border-dashed border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 px-1.5 py-0.5 text-[10px] text-[var(--dash-text)] transition-colors hover:border-[var(--dash-error)]/60 disabled:opacity-70 {word.on
+					? ''
+					: 'line-through'}"
+			>
+				{#if pending === key}
+					<FontAwesomeIcon icon={faCircleNotch} spin class="h-2 w-2" />
+				{/if}
+				{word.name}
+				<FontAwesomeIcon icon={faXmark} class="h-2 w-2 opacity-60" />
+			</button>
+		</form>
+	{/if}
+{/snippet}
+
 <!-- A switch for a whole role or skill group: nothing under it prints while it is off. -->
 {#snippet groupSwitch(group: ItemGroup, noun: string)}
 	{#if group.entityType && group.entityId !== null}
@@ -320,6 +366,10 @@
 							<div class="mt-1.5 flex flex-wrap items-center gap-1 {group.on ? '' : 'opacity-50'}">
 								{#each shown as row (rowKey(row.entityType, row.entityId))}
 									{@render nameChip(row)}
+								{/each}
+								<!-- Where the document prints them: after the group's own skills. -->
+								{#each group.words ?? [] as word (word.id)}
+									{@render wordChip(word)}
 								{/each}
 								{#if unfolded}
 									{#each folded as row (rowKey(row.entityType, row.entityId))}

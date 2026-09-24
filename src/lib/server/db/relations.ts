@@ -45,6 +45,7 @@ import {
 	profile_version_extensions,
 	profile_field_variants,
 	profile_version_overrides,
+	profile_version_skill_words,
 	profile_versions,
 	profiles,
 	project_stories,
@@ -476,7 +477,10 @@ export const profile_versionsRelations = relations(profile_versions, ({ one, man
 		fields: [profile_versions.application_id],
 		references: [applications.id]
 	}),
-	overrides: many(profile_version_overrides)
+	overrides: many(profile_version_overrides),
+	// Words this version prints that no profile skill holds — see
+	// profile_version_skill_words in schema.ts.
+	skill_words: many(profile_version_skill_words)
 }));
 
 export const profile_version_overridesRelations = relations(
@@ -485,6 +489,20 @@ export const profile_version_overridesRelations = relations(
 		version: one(profile_versions, {
 			fields: [profile_version_overrides.version_id],
 			references: [profile_versions.id]
+		})
+	})
+);
+
+export const profile_version_skill_wordsRelations = relations(
+	profile_version_skill_words,
+	({ one }) => ({
+		version: one(profile_versions, {
+			fields: [profile_version_skill_words.version_id],
+			references: [profile_versions.id]
+		}),
+		category: one(tech_skill_categories, {
+			fields: [profile_version_skill_words.category_id],
+			references: [tech_skill_categories.id]
 		})
 	})
 );

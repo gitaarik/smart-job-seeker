@@ -50,6 +50,7 @@ const {
 		profiles: { findFirst: vi.fn() },
 		profile_versions: { findFirst: vi.fn(), findMany: vi.fn() },
 		profile_version_overrides: { findFirst: vi.fn(), findMany: vi.fn() },
+		profile_version_skill_words: { findFirst: vi.fn(), findMany: vi.fn() },
 		job_matches: { findFirst: vi.fn() },
 		work_experiences: { findMany: vi.fn() },
 		work_experience_achievements: { findMany: vi.fn() },
@@ -128,15 +129,22 @@ vi.mock('$lib/server/documents/content-retrieval', () => ({
 	scoreUnitAgainstQuery: (...args: unknown[]) => mockLexical(...args)
 }));
 
-import { applications, profile_version_overrides, profile_versions } from '$lib/server/db/schema';
+import {
+	applications,
+	profile_version_overrides,
+	profile_version_skill_words,
+	profile_versions
+} from '$lib/server/db/schema';
 import { config } from '$lib/server/config';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import type { Candidate } from '$lib/tailoring';
 import {
+	addSkillWordForApplication,
 	describeOverrides,
 	includeInTailoredVersion,
 	jobMatchRead,
 	promoteToLibrary as promote,
+	removeSkillWordForApplication,
 	retagVersionSlug,
 	scoreCandidates,
 	setItemStateForApplication,
@@ -165,6 +173,7 @@ beforeEach(() => {
 	}
 	find.profile_versions.findMany.mockResolvedValue([]);
 	find.profile_version_overrides.findMany.mockResolvedValue([]);
+	find.profile_version_skill_words.findMany.mockResolvedValue([]);
 	find.work_experiences.findMany.mockResolvedValue([]);
 	find.work_experience_achievements.findMany.mockResolvedValue([]);
 	find.side_projects.findMany.mockResolvedValue([]);
@@ -547,6 +556,151 @@ describe('setItemStateForApplication', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// addSkillWordForApplication / removeSkillWordForApplication
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('addSkillWordForApplication', () => {
+	const profile = profileFixture({
+		tech_skill_categories: [
+			category(4, 'DevOps', [skill(40, 'Sentry')]),
+			category(6, 'AI', [skill(60, 'Function calling')])
+		],
+		profile_versions: [version(3, 'base')]
+	});
+	const JOB = {
+		id: 9,
+		title: 'AI Engineer',
+		company: 'Acme',
+		skills_required: ['Monitoring', 'Tool Calling'],
+		skills_preferred: ['Jira']
+	};
+
+	function add(over: Partial<Parameters<typeof addSkillWordForApplication>[0]> = {}) {
+		return addSkillWordForApplication({
+			profileId: 1,
+			applicationId: 12,
+			baseSlug: 'base',
+			docType: 'resume',
+			name: 'Monitoring',
+			categoryId: 4,
+			...over
+		});
+	}
+	const written = () => inserts.filter((i) => i.table === profile_version_skill_words);
+
+	beforeEach(() => {
+		mockGetProfile.mockResolvedValue(profile);
+		find.applications.findFirst.mockResolvedValue({ id: 12, job: JOB });
+		find.profile_versions.findFirst.mockResolvedValue({ id: 5, slug: 'app-12' });
+		find.job_matches.findFirst.mockResolvedValue({
+			gaps: [],
+			matched_skills: ['Monitoring', 'Tool Calling'],
+			matched_skill_details: [
+				{ skill: 'Monitoring', via: 'ontology', depth: 1, from: 'Sentry' },
+				{ skill: 'Tool Calling', via: 'llm', depth: 0 }
+			]
+		});
+	});
+
+	// The posting's spelling, because that is what a keyword search looks for.
+	it('writes the word on this job’s version, spelled the way the job spells it', async () => {
+		const result = await add({ name: '  monitoring ' });
+
+		expect(result).toEqual({ versionSlug: 'app-12', created: false });
+		expect(written()).toHaveLength(1);
+		expect(written()[0].values).toMatchObject({
+			version_id: 5,
+			category_id: 4,
+			name: 'Monitoring',
+			reason: 'this job asks for it; your match credits it through Sentry'
+		});
+	});
+
+	it('says so when the match inferred it rather than naming a skill', async () => {
+		await add({ name: 'Tool Calling', categoryId: 6 });
+
+		expect(written()[0].values).toMatchObject({
+			reason: 'this job asks for it; your match infers it from your profile'
+		});
+	});
+
+	it('takes a word the job lists as a plus', async () => {
+		await add({ name: 'Jira' });
+
+		expect(written()[0].values).toMatchObject({ name: 'Jira', reason: 'this job asks for it' });
+	});
+
+	it('refuses a word the job does not list', async () => {
+		await expect(add({ name: 'Kubernetes' })).rejects.toThrow(/doesn't list “Kubernetes”/);
+		expect(inserts).toHaveLength(0);
+	});
+
+	// Showing the profile's own skill is the fix; a second copy under the same
+	// name is the duplicate this exists to stop.
+	it('refuses a name the profile already holds', async () => {
+		find.applications.findFirst.mockResolvedValue({
+			id: 12,
+			job: { ...JOB, skills_required: ['Sentry'] }
+		});
+
+		await expect(add({ name: 'sentry' })).rejects.toThrow(/already has “Sentry”/);
+		expect(inserts).toHaveLength(0);
+	});
+
+	it('refuses a group that is not on this profile', async () => {
+		await expect(add({ categoryId: 999 })).rejects.toThrow('Skill group not found');
+		expect(inserts).toHaveLength(0);
+	});
+
+	it('moves a word it already has rather than adding it twice', async () => {
+		find.profile_version_skill_words.findMany.mockResolvedValue([{ id: 31, name: 'MONITORING' }]);
+
+		await add({ categoryId: 6 });
+
+		expect(written()).toHaveLength(0);
+		expect(updates[0]).toMatchObject({
+			table: profile_version_skill_words,
+			set: expect.objectContaining({ name: 'Monitoring', category_id: 6 })
+		});
+	});
+
+	it('creates the version on demand, and says that it did', async () => {
+		find.profile_versions.findFirst.mockResolvedValue(undefined);
+		returning.set(profile_versions, [{ id: 77 }]);
+
+		const result = await add();
+
+		expect(result).toEqual({ versionSlug: 'app-12', created: true });
+		expect(written()[0].values).toMatchObject({ version_id: 77 });
+	});
+});
+
+describe('removeSkillWordForApplication', () => {
+	const remove = () =>
+		removeSkillWordForApplication({ profileId: 1, applicationId: 12, wordId: 31 });
+
+	// The word must sit on THIS application's version: an id alone could name
+	// somebody else's.
+	it('deletes the word only from this application’s own version', async () => {
+		find.profile_versions.findFirst.mockResolvedValue({ id: 5, slug: 'app-12' });
+
+		expect(await remove()).toEqual({ versionSlug: 'app-12' });
+		expect(deletes).toHaveLength(1);
+		expect(deletes[0].table).toBe(profile_version_skill_words);
+		const { sql, params } = render(deletes[0].where!);
+		expect(sql).toContain('"version_id"');
+		expect(params).toEqual([31, 5]);
+	});
+
+	it('refuses when the application has no tailored version', async () => {
+		find.profile_versions.findFirst.mockResolvedValue(undefined);
+
+		await expect(remove()).rejects.toThrow('No tailored version');
+		expect(deletes).toHaveLength(0);
+	});
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // includeInTailoredVersion
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -791,6 +945,43 @@ describe('versionItemStates', () => {
 
 		for (const r of groups.flatMap((g) => g.rows)) expect(r.baseOn).toBe(r.on);
 	});
+
+	// The job's own words for skills the profile holds under other names. Its
+	// own can be taken off here; the base's only say where they come from.
+	it('lists the words it carries under their group, and whether each prints', async () => {
+		const wordRow = (id: number, version_id: number, category_id: number, name: string) => ({
+			id,
+			version_id,
+			category_id,
+			name,
+			reason: id === 1 ? 'this job asks for it; your match credits it through Python' : null,
+			version: { profile_id: version_id === 99 ? 2 : 1 }
+		});
+		find.profile_version_skill_words.findMany.mockResolvedValue([
+			wordRow(1, 5, 4, 'Monitoring'),
+			wordRow(2, 3, 4, 'Testing'),
+			// Frontend is off every resume, so a word in it prints nothing.
+			wordRow(3, 5, 6, 'Tool Calling'),
+			// Somebody else's version.
+			wordRow(4, 99, 4, 'Theirs')
+		]);
+
+		const groups = await states();
+
+		expect(group(groups, 'tech_skill_category:4')?.words).toEqual([
+			{
+				id: 1,
+				name: 'Monitoring',
+				reason: 'this job asks for it; your match credits it through Python',
+				on: true,
+				inherited: false
+			},
+			{ id: 2, name: 'Testing', reason: '', on: true, inherited: true }
+		]);
+		expect(group(groups, 'tech_skill_category:6')?.words).toEqual([
+			{ id: 3, name: 'Tool Calling', reason: '', on: false, inherited: false }
+		]);
+	});
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -799,14 +990,18 @@ describe('versionItemStates', () => {
 
 describe('jobMatchRead', () => {
 	it('reads the gaps and the credited skills', async () => {
+		const details = [{ skill: 'SQL', via: 'ontology', depth: 1, from: 'PostgreSQL' }];
 		find.job_matches.findFirst.mockResolvedValue({
 			gaps: ['Kafka', 'Terraform'],
-			matched_skills: ['SQL', 'Python']
+			matched_skills: ['SQL', 'Python'],
+			matched_skill_details: details
 		});
 
 		expect(await jobMatchRead(1, 9)).toEqual({
 			gaps: ['Kafka', 'Terraform'],
-			matched: ['SQL', 'Python']
+			matched: ['SQL', 'Python'],
+			// Passed through unread: provenanceFor narrows it where it is used.
+			details
 		});
 	});
 
@@ -822,10 +1017,10 @@ describe('jobMatchRead', () => {
 
 	it('is empty when nothing has matched this job, or the columns hold junk', async () => {
 		find.job_matches.findFirst.mockResolvedValue(undefined);
-		expect(await jobMatchRead(1, 9)).toEqual({ gaps: [], matched: [] });
+		expect(await jobMatchRead(1, 9)).toEqual({ gaps: [], matched: [], details: null });
 
 		find.job_matches.findFirst.mockResolvedValue({ gaps: 'not an array', matched_skills: null });
-		expect(await jobMatchRead(1, 9)).toEqual({ gaps: [], matched: [] });
+		expect(await jobMatchRead(1, 9)).toEqual({ gaps: [], matched: [], details: null });
 	});
 });
 

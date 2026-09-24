@@ -15,6 +15,11 @@ import {
 	loadFieldVariants,
 	withoutFieldVariants
 } from '$lib/server/profile/field-variants';
+import {
+	applySkillWords,
+	loadDocumentSkillWords,
+	renderedVersionId
+} from '$lib/server/profile/skill-words';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals, getClientAddress }) => {
@@ -80,6 +85,18 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	// before the template's overrides, which are a force that outranks a choice.
 	// See server/profile/field-variants.ts for the full order.
 	applyFieldVariants(profile, await loadFieldVariants(profile.id, versionId, translator));
+
+	// Then the skill words this version carries: a job's own word for something
+	// the profile holds under another name, printed on this document only. See
+	// server/profile/skill-words.ts. Asked of the version the renderer will
+	// apply, which falls back to `?version=` when the load resolved none.
+	const shownVersionId = renderedVersionId(profile, versionId, url.searchParams.get('version'));
+	applySkillWords(
+		profile,
+		await loadDocumentSkillWords(profile, shownVersionId),
+		'cv',
+		shownVersionId
+	);
 
 	// Then the template's own values for the fields it overrides, LAST: an
 	// override is a force ("on Citrus this role is Senior Engineer"), so it has

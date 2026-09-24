@@ -365,6 +365,13 @@
       "when": 1790146495627,
       "tag": "0051_aspiring_obadiah_stane",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1790255044601,
+      "tag": "0052_version_skill_words",
+      "breakpoints": true
     }
   ]
 }

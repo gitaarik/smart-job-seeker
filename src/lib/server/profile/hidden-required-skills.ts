@@ -48,6 +48,7 @@ import {
 	type HiddenSkill,
 	type VersionCoverage
 } from '$lib/version-coverage';
+import { versionChain, wordsToPrint, type SkillWord } from '$lib/server/profile/skill-words';
 
 // The shapes and the ranking live in $lib/version-coverage so the card can rank
 // as the applicant flips between Resume and CV without asking the server again.
@@ -123,8 +124,9 @@ export async function getVersionCoverage(
 			columns: { id: true, slug: true, toggles: true, application_id: true },
 			// A tailored version's visible set is its tags PLUS its per-job
 			// overrides, so the prediction has to see both or it would answer for a
-			// document that doesn't exist.
-			with: { extension_links: true, overrides: true },
+			// document that doesn't exist. And the words it prints that no skill
+			// holds, which name a required skill as plainly as a skill does.
+			with: { extension_links: true, overrides: true, skill_words: true },
 			orderBy: asc(profile_versions.sort)
 		}),
 		db.query.tech_skill_categories.findMany({
@@ -173,7 +175,23 @@ export async function getVersionCoverage(
 			});
 		}
 	}
-	if (owned.size === 0) return {};
+	// No early return when the profile owns none of them: a version can still
+	// name one through a word it carries, and a document can still carry one
+	// inside another skill's name, which the credited strip asks about.
+
+	// Each version's words, in the shape the chain walk and the print rule take.
+	const wordsOf = new Map<number, SkillWord[]>(
+		versions.map((v) => [
+			v.id,
+			(v.skill_words ?? []).map((w) => ({
+				id: w.id,
+				versionId: v.id,
+				categoryId: w.category_id,
+				name: w.name,
+				reason: w.reason
+			}))
+		])
+	);
 
 	const result: Record<string, VersionCoverage> = {};
 	const versionSlugs = ['', ...versions.map((v) => v.slug).filter(Boolean)];
@@ -206,6 +224,20 @@ export async function getVersionCoverage(
 				}
 			}
 
+			// Then the words the version carries, by the same rule the renderer
+			// appends them by: after the skills block, never twice, and only in a
+			// group this document prints. See server/profile/skill-words.ts.
+			const root = versionSlug ? versions.find((v) => v.slug === versionSlug) : undefined;
+			const chainWords = root
+				? versionChain(versions, root.id).flatMap((id) => wordsOf.get(id) ?? [])
+				: [];
+			const namedByWord: string[] = [];
+			for (const word of wordsToPrint(chainWords, new Set(visible), visibleCategories)) {
+				visible.add(word.name.trim().toLowerCase());
+				printed.push(word.name);
+				if (wanted.has(word.name.trim().toLowerCase())) namedByWord.push(word.name);
+			}
+
 			// The skills block is not the only place a skill name reaches the page.
 			// On a template that renders a role's TECH line, a skill listed there is
 			// shown by this document, and reporting it as hidden asked the applicant
@@ -228,7 +260,7 @@ export async function getVersionCoverage(
 			const target = versionSlug || SHOW_ON_ALL;
 
 			const hidden: HiddenSkill[] = [];
-			const shown: string[] = [];
+			const shown: string[] = [...namedByWord];
 			for (const [key, skill] of owned) {
 				if (visible.has(key)) {
 					shown.push(skill.name);
@@ -248,9 +280,20 @@ export async function getVersionCoverage(
 				});
 			}
 
+			// Every required skill this document does not name but prints inside a
+			// longer name. The hidden ones already say so on their own entry; this is
+			// for the rest, which the profile holds under no name of their own.
+			const carried: Record<string, string> = {};
+			for (const name of wanted) {
+				if (visible.has(name)) continue;
+				const carrier = carrierOf(name, printed);
+				if (carrier) carried[name] = carrier;
+			}
+
 			result[hiddenSkillsKey(docType, versionSlug as string)] = {
 				shown,
 				hidden,
+				carried,
 				owned: owned.size,
 				required: wanted.size
 			};
