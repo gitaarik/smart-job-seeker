@@ -215,7 +215,13 @@ export function buildCandidates(
 	 * which the tech line can change; the default is the built-in layout, which
 	 * prints no technologies, so leaving it out keeps the previous answer.
 	 */
-	template?: string | null
+	template?: string | null,
+	/**
+	 * The job's nice-to-haves. A skill named here is pinned like a required one
+	 * (see Candidate.pinnedFor); only the run that writes decisions passes it,
+	 * since nothing else asks what a skill pin would add.
+	 */
+	preferredSkills: string[] = []
 ): Candidate[] {
 	const { filterOnTags } = createProfileFilter(
 		(profile.profile_versions ?? []) as never,
@@ -224,6 +230,12 @@ export function buildCandidates(
 		baseSlug
 	);
 	const required = new Set(requiredSkills.map((s) => s.trim().toLowerCase()).filter(Boolean));
+	// Required wins where a posting lists a skill twice: the stronger claim is
+	// the true one.
+	const preferred = new Set(
+		preferredSkills.map((s) => s.trim().toLowerCase()).filter((s) => s && !required.has(s))
+	);
+	const wanted = (lowerName: string) => required.has(lowerName) || preferred.has(lowerName);
 	const candidates: Candidate[] = [];
 	const ageOf = ageScale(profile, Date.now());
 
@@ -416,12 +428,13 @@ export function buildCandidates(
 		if (!visibleCategories.has(category.id)) continue;
 		const names = printedInCategory.get(category.id) ?? [];
 		if (names.length === 0) continue;
-		// Any required skill IN the group, printed or not: a hidden one is about to
+		// Any wanted skill IN the group, printed or not: a hidden one is about to
 		// be surfaced, and the surfacing prints nothing if its group has gone —
-		// the filter reaches the category first.
+		// the filter reaches the category first. Preferred counts too, for the
+		// same reason: it is pinned below.
 		const holdsRequired = (category.tech_skills ?? []).some((skill) => {
 			const name = text(skill.name);
-			return !!name && required.has(name.toLowerCase());
+			return !!name && wanted(name.toLowerCase());
 		});
 		candidates.push({
 			entityType: OVERRIDE_ENTITIES.skillCategory,
@@ -442,7 +455,7 @@ export function buildCandidates(
 		});
 	}
 
-	// One candidate per required NAME, for the same reason: two rows would mean
+	// One candidate per wanted NAME, for the same reason: two rows would mean
 	// two identical "now showing: Python" lines in the diff.
 	// The concepts the document already shows, whatever it calls them.
 	const printedConcepts = new Set(
@@ -459,7 +472,7 @@ export function buildCandidates(
 		if (!visibleCategories.has(category.id)) continue;
 		for (const skill of category.tech_skills ?? []) {
 			const name = text(skill.name);
-			if (!name || !required.has(name.toLowerCase())) continue;
+			if (!name || !wanted(name.toLowerCase())) continue;
 			if (claimed.has(name.toLowerCase())) continue;
 			claimed.add(name.toLowerCase());
 			// A required skill the document ALREADY PRINTS under another name is
@@ -490,6 +503,7 @@ export function buildCandidates(
 					(visibleSkillsByCategory.get(category.id)?.has(skill.id) ?? false),
 				parentVisible: true,
 				pinned: true,
+				pinnedFor: required.has(name.toLowerCase()) ? 'required' : 'preferred',
 				score: 1,
 				anchor: anchorAmongSiblings(name, printedInCategory.get(category.id) ?? []),
 				carriedBy: carrierOf(name, printedAnywhere)
@@ -704,6 +718,23 @@ export function applyVerdictReasons(
 }
 
 /**
+ * Why a skill was pinned onto the document, in the job's own terms.
+ *
+ * Says which list asked for it, because "this job requires Jira" about a
+ * nice-to-have claims more than the posting did. And it carries the
+ * counter-argument when there is one: a keyword search already finds "AWS"
+ * inside "AWS EC2", so that include is a judgement about human readers, and the
+ * diff should let it be reviewed as one.
+ */
+export function pinnedReason(c: Candidate): string {
+	const asked =
+		c.pinnedFor === 'preferred'
+			? `this job lists ${c.label} as a plus`
+			: `this job requires ${c.label}`;
+	return c.carriedBy ? `${asked} — “${c.carriedBy}” already carries the word` : asked;
+}
+
+/**
  * Generate (or regenerate) the version tailored to one application.
  *
  * Regeneration replaces the decisions this feature made and leaves the
@@ -756,7 +787,8 @@ export async function tailorVersionForApplication(opts: {
 	if (!profile) throw new Error('Profile not found.');
 
 	const requiredSkills = asStringArray(job.skills_required);
-	const querySkills = [...requiredSkills, ...asStringArray(job.skills_preferred)];
+	const preferredSkills = asStringArray(job.skills_preferred);
+	const querySkills = [...requiredSkills, ...preferredSkills];
 	const query = {
 		text: [
 			text(job.title),
@@ -783,19 +815,15 @@ export async function tailorVersionForApplication(opts: {
 		docType,
 		effectiveBase,
 		requiredSkills,
-		await conceptResolver(profile, requiredSkills),
-		template
+		await conceptResolver(profile, querySkills),
+		template,
+		preferredSkills
 	);
+	// Evidence stays about the required list: a bullet is kept for naming what
+	// the job cannot do without, and a nice-to-have is not that.
 	await markCoverage(built, profile, requiredSkills);
 	const { candidates, ranker, floor } = await scoreCandidates(profileId, built, query);
 
-	// The reason carries the counter-argument when there is one: a keyword search
-	// already finds "AWS" inside "AWS EC2", so this include is a judgement about
-	// human readers, and the diff should let it be reviewed as one.
-	const pinnedReason = (c: Candidate) =>
-		c.carriedBy
-			? `this job requires ${c.label} — “${c.carriedBy}” already carries the word`
-			: `this job requires ${c.label}`;
 	const otherLabel = docType === 'cv' ? 'resume' : 'CV';
 	const groupDropReason = (c: Candidate) => {
 		const count = c.label.split(':')[1]?.split(',').length ?? 0;

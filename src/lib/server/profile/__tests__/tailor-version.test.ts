@@ -21,6 +21,7 @@ import {
 	applyVerdictReasons,
 	buildCandidates,
 	markCoverage,
+	pinnedReason,
 	refFor,
 	shortlistFor
 } from '../tailor-version';
@@ -441,6 +442,97 @@ describe('buildCandidates: skills', () => {
 		);
 		expect(found).toHaveLength(1);
 		expect(found[0].visible).toBe(false);
+	});
+});
+
+describe('buildCandidates: a skill the job lists as a plus', () => {
+	// The applicant keeps "Jira" hidden for the postings that name it. A posting
+	// that lists it under preferred rather than required used to leave it hidden,
+	// though an ATS scores a match on either list.
+	const profileWith = (skills: Array<{ id: number; name: string; tags?: string[] | null }>) =>
+		({
+			profile_versions: [{ id: 1, slug: 'base', extension_links: [], toggles: [], overrides: [] }],
+			work_experiences: [],
+			side_projects: [],
+			tech_skill_categories: [
+				{
+					id: 1,
+					name: 'Tooling',
+					tags: null,
+					tech_skills: skills.map((s) => ({ ...s, tags: s.tags ?? null }))
+				}
+			]
+		}) as unknown as Parameters<typeof buildCandidates>[0];
+
+	const HIDDEN = ['!resume', '!cv'];
+	const build = (
+		skills: Array<{ id: number; name: string; tags?: string[] | null }>,
+		required: string[],
+		preferred: string[]
+	) => buildCandidates(profileWith(skills), 'resume', 'base', required, undefined, null, preferred);
+
+	it('pins a hidden skill named only in the preferred list', () => {
+		const jira = build(
+			[
+				{ id: 1, name: 'Git' },
+				{ id: 2, name: 'Jira', tags: HIDDEN }
+			],
+			['Python'],
+			['Jira']
+		).find((c) => c.entityType === OVERRIDE_ENTITIES.skill);
+		expect(jira).toMatchObject({
+			entityId: 2,
+			visible: false,
+			pinned: true,
+			pinnedFor: 'preferred'
+		});
+	});
+
+	it('keeps the group that holds it, or the pin would print nothing', () => {
+		const group = build(
+			[
+				{ id: 1, name: 'Git' },
+				{ id: 2, name: 'Jira', tags: HIDDEN }
+			],
+			[],
+			['Jira']
+		).find((c) => c.entityType === OVERRIDE_ENTITIES.skillCategory);
+		expect(group?.pinned).toBe(true);
+	});
+
+	it('calls a skill on both lists required', () => {
+		const jira = build([{ id: 2, name: 'Jira', tags: HIDDEN }], ['Jira'], ['jira']).find(
+			(c) => c.entityType === OVERRIDE_ENTITIES.skill
+		);
+		expect(jira?.pinnedFor).toBe('required');
+	});
+
+	it('pins nothing for a preferred list the profile holds none of', () => {
+		const found = build([{ id: 1, name: 'Git' }], [], ['Confluence']).filter(
+			(c) => c.entityType === OVERRIDE_ENTITIES.skill
+		);
+		expect(found).toEqual([]);
+	});
+
+	it('says which list asked for it', () => {
+		const pin = (over: Partial<Candidate>): Candidate => ({
+			entityType: OVERRIDE_ENTITIES.skill,
+			entityId: 2,
+			parentId: 1,
+			label: 'Jira',
+			chars: 4,
+			visible: false,
+			pinned: true,
+			score: 1,
+			...over
+		});
+		expect(pinnedReason(pin({ pinnedFor: 'preferred' }))).toBe('this job lists Jira as a plus');
+		expect(pinnedReason(pin({ pinnedFor: 'required' }))).toBe('this job requires Jira');
+		// Absent reads as required: every pin made before the field existed was one.
+		expect(pinnedReason(pin({}))).toBe('this job requires Jira');
+		expect(pinnedReason(pin({ pinnedFor: 'preferred', carriedBy: 'Jira automation' }))).toBe(
+			'this job lists Jira as a plus — “Jira automation” already carries the word'
+		);
 	});
 });
 

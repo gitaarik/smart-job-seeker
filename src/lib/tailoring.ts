@@ -142,6 +142,16 @@ export interface Candidate {
 	 */
 	pinned: boolean;
 	/**
+	 * Which of the job's two lists pinned a skill. Absent means required.
+	 *
+	 * A preferred skill is pinned the same way, because the hidden entry the
+	 * applicant keeps for exactly this wording is worth printing for a job that
+	 * names it as a plus, and an ATS scores a match on either list. The reason
+	 * line is what differs: "this job requires Jira" would claim more than the
+	 * posting did.
+	 */
+	pinnedFor?: 'required' | 'preferred';
+	/**
 	 * Required skills this item NAMES — directly, or through the skill graph.
 	 *
 	 * Pinning answers "is this skill on the page". Nothing answered "is the
