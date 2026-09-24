@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import { track } from '$lib/tools/analytics';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -73,6 +74,7 @@
 		}
 
 		loading = true;
+		track('signup_submitted');
 
 		try {
 			const result = await authClient.signUp.email(
@@ -84,13 +86,18 @@
 			);
 
 			if (result.error) {
+				// The code, never the message: a code is a small enumeration
+				// (USER_ALREADY_EXISTS, a captcha refusal), a message is free text.
+				track('signup_failed', { code: result.error.code || String(result.error.status) });
 				error = result.error.message || 'Signup failed';
 				resetTurnstile();
 				return;
 			}
 
+			track('signup_completed');
 			goto(resolve('/signup/pending'));
 		} catch (err) {
+			track('signup_failed', { code: 'network' });
 			error = err instanceof Error ? err.message : 'An error occurred';
 			resetTurnstile();
 		} finally {

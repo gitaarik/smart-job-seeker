@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { track } from '$lib/tools/analytics';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -60,6 +61,7 @@
 		{#if data.registrationOpen}
 			<a
 				href={resolve('/signup')}
+				onclick={() => track('signup_cta_clicked', { from: 'frontpage' })}
 				class="inline-flex items-center justify-center rounded-lg bg-[var(--dash-primary)] px-8 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[var(--dash-primary-hover)]"
 				>Join the waitlist</a
 			>
