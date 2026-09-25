@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { armOn } from '$lib/actions/arm-on';
 	import { page } from '$app/stores';
@@ -28,17 +29,17 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let digestEnabled = $state(data.emailDigest.enabled);
-	let digestFrequency = $state(data.emailDigest.frequency_days);
-	let digestMinScore = $state(data.emailDigest.min_score);
-	let digestPreferredHour = $state(data.emailDigest.preferred_hour);
-	let sendToProfile = $state(
-		data.emailDigest.send_to === 'profile' || data.emailDigest.send_to === 'both'
-	);
-	let sendToAccount = $state(
-		data.emailDigest.send_to === 'account' || data.emailDigest.send_to === 'both'
-	);
-	let digestTimezone = $state(data.emailDigest.timezone || '');
+	// The settings start from the server's once, at mount, and own their values
+	// from then on: they save themselves, and nothing else writes them while
+	// the page is open.
+	const digest = untrack(() => data.emailDigest);
+	let digestEnabled = $state(digest.enabled);
+	let digestFrequency = $state(digest.frequency_days);
+	let digestMinScore = $state(digest.min_score);
+	let digestPreferredHour = $state(digest.preferred_hour);
+	let sendToProfile = $state(digest.send_to === 'profile' || digest.send_to === 'both');
+	let sendToAccount = $state(digest.send_to === 'account' || digest.send_to === 'both');
+	let digestTimezone = $state(digest.timezone || '');
 	let sendToExpanded = $state(false);
 	let digestError = $state('');
 	let sendingNow = $state(false);
@@ -192,12 +193,12 @@
 	const digestField = autoSaveField<DigestSettings>({
 		armOnInteraction: true,
 		initial: {
-			enabled: data.emailDigest.enabled,
-			frequencyDays: data.emailDigest.frequency_days,
-			minScore: data.emailDigest.min_score,
-			preferredHour: data.emailDigest.preferred_hour,
-			sendTo: data.emailDigest.send_to,
-			timezone: data.emailDigest.timezone || ''
+			enabled: digest.enabled,
+			frequencyDays: digest.frequency_days,
+			minScore: digest.min_score,
+			preferredHour: digest.preferred_hour,
+			sendTo: digest.send_to,
+			timezone: digest.timezone || ''
 		},
 		save: async (v, prev) => {
 			const changed = diffPayload(digestBody(v), digestBody(prev));

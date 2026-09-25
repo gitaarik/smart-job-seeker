@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { PageData } from './$types';
 	import { armOn } from '$lib/actions/arm-on';
 	import { page } from '$app/stores';
@@ -48,13 +49,18 @@
 	// (Email and password below stay on explicit save: both need the current
 	// credential and a verification round-trip, so "undo" means nothing there.)
 	type DisplaySettings = { timezone: string; timeFormat: string | null };
-	let timezone = $state(data.timezone || '');
+	// Starts from the server's once, at mount; the field saves itself from then on.
+	const loadedDisplay = untrack(() => ({
+		timezone: data.timezone || '',
+		timeFormat: data.timeFormatRaw
+	}));
+	let timezone = $state(loadedDisplay.timezone);
 	// Time format: null = auto, "12h", "24h"
-	let timeFormat = $state<string | null>(data.timeFormatRaw);
+	let timeFormat = $state<string | null>(loadedDisplay.timeFormat);
 
 	const displayField = autoSaveField<DisplaySettings>({
 		armOnInteraction: true,
-		initial: { timezone: data.timezone || '', timeFormat: data.timeFormatRaw },
+		initial: { ...loadedDisplay },
 		save: async (v, prev) => {
 			const changed = diffPayload(
 				{ timezone: v.timezone, time_format: v.timeFormat },

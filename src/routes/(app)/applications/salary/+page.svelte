@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { PageData } from './$types';
 	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -30,25 +31,26 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let settings = $derived(data.salarySettings);
-
-	// Editable state — initialize from server data
-	let baseRate = $state(settings.baseRate?.toString() ?? '');
-	let currency = $state(settings.currency ?? 'EUR');
+	// Editable state — initialized from the server's once, at mount, and owned
+	// from then on: every section saves itself, and nothing else writes these
+	// while the page is open. The auto-save baselines below start from the same.
+	const loaded = untrack(() => data.salarySettings);
+	let baseRate = $state(loaded.baseRate?.toString() ?? '');
+	let currency = $state(loaded.currency ?? 'EUR');
 	let adjustments = $state<SalaryAdjustments>(
-		settings.adjustments && Object.keys(settings.adjustments).length > 0
-			? (settings.adjustments as SalaryAdjustments)
+		loaded.adjustments && Object.keys(loaded.adjustments).length > 0
+			? (loaded.adjustments as SalaryAdjustments)
 			: { employment_type: {}, work_arrangement: {}, company_type: {} }
 	);
 	let regionOverrides = $state<SalaryRegionOverrides>(
-		settings.regionOverrides && Object.keys(settings.regionOverrides).length > 0
-			? (settings.regionOverrides as SalaryRegionOverrides)
+		loaded.regionOverrides && Object.keys(loaded.regionOverrides).length > 0
+			? (loaded.regionOverrides as SalaryRegionOverrides)
 			: {}
 	);
 
 	let incomeAssumptions = $state<IncomeAssumptions>({
 		...DEFAULT_INCOME_ASSUMPTIONS,
-		...(settings.incomeAssumptions ?? {})
+		...(loaded.incomeAssumptions ?? {})
 	});
 
 	let showAssumptions = $state(false);
@@ -69,11 +71,11 @@
 	// reduces "did this change?" to a string compare.
 	const regionRatesField = autoSaveField<Record<string, string>>({
 		armOnInteraction: true,
-		initial: {
+		initial: untrack(() => ({
 			baseRate,
 			currency,
 			regionOverrides: JSON.stringify(regionOverrides)
-		},
+		})),
 		save: (v, prev) => {
 			const changed = diffPayload(
 				{
@@ -112,7 +114,7 @@
 
 	const adjustmentsField = autoSaveField<string>({
 		armOnInteraction: true,
-		initial: JSON.stringify(adjustments),
+		initial: untrack(() => JSON.stringify(adjustments)),
 		save: (v) => postAction('saveAdjustments', { adjustments: v }),
 		onSaved: (v) => (adjustments = JSON.parse(v)),
 		debounceMs: 700
@@ -121,7 +123,7 @@
 
 	const incomeField = autoSaveField<string>({
 		armOnInteraction: true,
-		initial: JSON.stringify(incomeAssumptions),
+		initial: untrack(() => JSON.stringify(incomeAssumptions)),
 		save: (v) => postAction('saveIncomeAssumptions', { income_assumptions: v }),
 		onSaved: (v) => (incomeAssumptions = JSON.parse(v)),
 		debounceMs: 700

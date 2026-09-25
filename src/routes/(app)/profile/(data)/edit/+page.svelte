@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { untrack } from 'svelte';
 	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -33,16 +34,30 @@
 	let { data }: { data: PageData } = $props();
 
 	const profile = $derived(data.profile);
-	let photoUrl = $state(getProfilePhotoUrl(data.profile));
+
+	// Every card below starts from the profile as it was at mount and owns its
+	// values from then on: each saves itself, and nothing else writes these
+	// columns while the page is open (the assistant has no capability for them).
+	const loaded = untrack(() => data.profile);
+	let photoUrl = $state(getProfilePhotoUrl(loaded));
 
 	// Form values - Personal Information
-	let name = $state(data.profile?.name || '');
-	let slug = $state(data.profile?.slug || '');
-	let title = $state(data.profile?.title || '');
-	let subtitle = $state(data.profile?.subtitle || '');
-	let headline = $state(data.profile?.headline || '');
-	let summary = $state(data.profile?.summary || '');
-	let about_me_text = $state(data.profile?.about_me_text || '');
+	const loadedPersonal = {
+		name: loaded?.name || '',
+		slug: loaded?.slug || '',
+		title: loaded?.title || '',
+		subtitle: loaded?.subtitle || '',
+		headline: loaded?.headline || '',
+		summary: loaded?.summary || '',
+		about_me_text: loaded?.about_me_text || ''
+	};
+	let name = $state(loadedPersonal.name);
+	let slug = $state(loadedPersonal.slug);
+	let title = $state(loadedPersonal.title);
+	let subtitle = $state(loadedPersonal.subtitle);
+	let headline = $state(loadedPersonal.headline);
+	let summary = $state(loadedPersonal.summary);
+	let about_me_text = $state(loadedPersonal.about_me_text);
 
 	// Alternative wordings for the prose fields above. Fetched once for all of
 	// them rather than per field, so opening this page costs one request no
@@ -63,20 +78,36 @@
 	});
 
 	// Form values - Contact Information
-	let email_address = $state(data.profile?.email_address || '');
-	let phone_number = $state(data.profile?.phone_number || '');
-	let location = $state(data.profile?.location || '');
-	let location_url = $state(data.profile?.location_url || '');
-	let location_timezone = $state(data.profile?.location_timezone || '');
-	let country_code = $state(data.profile?.country_code || '');
-	let personal_website = $state(data.profile?.personal_website || '');
+	const loadedContact = {
+		email_address: loaded?.email_address || '',
+		phone_number: loaded?.phone_number || '',
+		location: loaded?.location || '',
+		location_url: loaded?.location_url || '',
+		location_timezone: loaded?.location_timezone || '',
+		country_code: loaded?.country_code || '',
+		personal_website: loaded?.personal_website || ''
+	};
+	let email_address = $state(loadedContact.email_address);
+	let phone_number = $state(loadedContact.phone_number);
+	let location = $state(loadedContact.location);
+	let location_url = $state(loadedContact.location_url);
+	let location_timezone = $state(loadedContact.location_timezone);
+	let country_code = $state(loadedContact.country_code);
+	let personal_website = $state(loadedContact.personal_website);
 
 	// Form values - Social Profiles
-	let linkedin_profile = $state(data.profile?.linkedin_profile || '');
-	let github_profile = $state(data.profile?.github_profile || '');
-	let stackoverflow_profile = $state(data.profile?.stackoverflow_profile || '');
-	let npm_profile = $state(data.profile?.npm_profile || '');
-	let pypi_profile = $state(data.profile?.pypi_profile || '');
+	const loadedSocial = {
+		linkedin_profile: loaded?.linkedin_profile || '',
+		github_profile: loaded?.github_profile || '',
+		stackoverflow_profile: loaded?.stackoverflow_profile || '',
+		npm_profile: loaded?.npm_profile || '',
+		pypi_profile: loaded?.pypi_profile || ''
+	};
+	let linkedin_profile = $state(loadedSocial.linkedin_profile);
+	let github_profile = $state(loadedSocial.github_profile);
+	let stackoverflow_profile = $state(loadedSocial.stackoverflow_profile);
+	let npm_profile = $state(loadedSocial.npm_profile);
+	let pypi_profile = $state(loadedSocial.pypi_profile);
 
 	async function saveSection(fields: Record<string, string>, prev: Record<string, string>) {
 		const changed = diffPayload(fields, prev);
@@ -104,7 +135,7 @@
 	// burst of edits, not a single input.
 	const personalInfoField = autoSaveField<Record<string, string>>({
 		armOnInteraction: true,
-		initial: { name, slug, title, subtitle, headline, summary, about_me_text },
+		initial: { ...loadedPersonal },
 		save: saveSection,
 		onSaved: (v) => {
 			name = v.name;
@@ -124,15 +155,7 @@
 
 	const contactField = autoSaveField<Record<string, string>>({
 		armOnInteraction: true,
-		initial: {
-			email_address,
-			phone_number,
-			location,
-			location_url,
-			location_timezone,
-			country_code,
-			personal_website
-		},
+		initial: { ...loadedContact },
 		save: saveSection,
 		onSaved: (v) => {
 			email_address = v.email_address;
@@ -160,13 +183,7 @@
 
 	const socialField = autoSaveField<Record<string, string>>({
 		armOnInteraction: true,
-		initial: {
-			linkedin_profile,
-			github_profile,
-			stackoverflow_profile,
-			npm_profile,
-			pypi_profile
-		},
+		initial: { ...loadedSocial },
 		save: saveSection,
 		onSaved: (v) => {
 			linkedin_profile = v.linkedin_profile;
