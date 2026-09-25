@@ -52,11 +52,12 @@ BASELINE=0
 # state_referenced_locally is an error here, not the warning Svelte makes it.
 # It flags a component reading a prop or a piece of state once, where the
 # script runs, which captures the value at mount and never sees it change.
-# All 351 were read on 2026-09-25 and seven were live bugs of one shape:
-# SvelteKit keeps a page when only `data` changes (a notification to another
-# import task, a source link to another question, a proposal applied behind
-# the chat panel, a profile switch on /home), and the copy went on showing,
-# and saving, the old record. The rest were deliberate and now say so:
+# All 351 were read on 2026-09-25 and eight were live bugs of one shape:
+# SvelteKit keeps a page when only `data` or `form` changes (a notification to
+# another import task, a source link to another question, a proposal applied
+# behind the chat panel, a profile switch on /home, a failed `use:enhance`
+# submit), and the copy went on showing, and saving, the old value. The rest
+# were deliberate and now say so:
 # follow `data` with a (writable) $derived, read a seed through `untrack` next
 # to the reason it holds, or have an editor call remountOnAppliedChange().
 # As a warning a new one would pass unseen, which is how 351 accumulated.

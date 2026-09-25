@@ -71,9 +71,10 @@ argument for never letting a new one start.
 **`state_referenced_locally` is an error in the type gate** (since 2026-09-25,
 via `--compiler-warnings` in `ci/check.sh` and `npm run check`). Svelte only
 warns when a component reads a prop or state once, where its script runs, and
-351 had piled up. Seven were live bugs of one shape: SvelteKit keeps a page when
-only `data` changes (a link to another record on the same route, an
-`invalidateAll()`), so a copy taken at mount showed, and saved, the old record.
+351 had piled up. Eight were live bugs of one shape: SvelteKit keeps a page when
+only `data` or `form` changes (a link to another record on the same route, an
+`invalidateAll()`, a failed `use:enhance` submit), so a copy taken at mount
+showed, and saved, the old value.
 When the compiler flags one, pick what you mean. To follow `data`, use a
 writable `$derived`, built as `$state` inside a function if you mutate it in
 place (see `jobState` in `jobs/[id]`). To seed once on purpose, read through
