@@ -4,7 +4,7 @@
 
 	import '../app.css';
 	import './(app)/dashboard.css';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { initializeTheme, themeState, updateDOM } from '$lib/stores/theme.svelte';
 	import { identify } from '$lib/tools/analytics';
 	import type { Snippet } from 'svelte';
@@ -12,10 +12,13 @@
 
 	let { children, data }: { children: Snippet; data: LayoutData } = $props();
 
-	// Initialize theme store with server-detected theme data
-	if (data.themePreference && data.actualTheme && data.systemTheme) {
-		initializeTheme(data.themePreference, data.actualTheme, data.systemTheme);
-	}
+	// Initialize theme store with server-detected theme data, once: the root
+	// layout lives as long as the app, and the store owns the theme from here.
+	untrack(() => {
+		if (data.themePreference && data.actualTheme && data.systemTheme) {
+			initializeTheme(data.themePreference, data.actualTheme, data.systemTheme);
+		}
+	});
 
 	// Lives here, not in ThemeSwitcher, so OS-theme changes in "auto" mode still propagate while the user menu is closed.
 	$effect(() => {

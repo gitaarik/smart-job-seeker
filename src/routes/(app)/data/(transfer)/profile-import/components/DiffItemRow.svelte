@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronDown,
@@ -39,7 +40,7 @@
 		showUnchanged = false
 	}: Props = $props();
 
-	let isExpanded = $state(defaultExpanded);
+	let isExpanded = $state(untrack(() => defaultExpanded));
 
 	const borderClass = $derived(
 		type === 'added'

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { ActionData } from './$types';
 	import type { ResumeData } from '$lib/server/resume/types';
 	import { faUser } from '@fortawesome/free-solid-svg-icons';
@@ -16,7 +17,8 @@
 	let uploadedFileId = $state<string | null>(null);
 	let uploadedFileName = $state<string | null>(null);
 	let isLoading = $state(false);
-	let error = $state<string | null>(form?.error || null);
+	// `form` only arrives from a no-JS submit; everything after sets this itself.
+	let error = $state<string | null>(untrack(() => form?.error || null));
 
 	function handleSkipToManual() {
 		parsedData = { basics: { name: '' } };

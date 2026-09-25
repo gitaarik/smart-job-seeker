@@ -17,7 +17,7 @@
 	 * "promote into a preset" from a discovery run.
 	 */
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faCloud, faCopy, faDesktop } from '@fortawesome/free-solid-svg-icons';
 	import BrowserViewModal from './BrowserViewModal.svelte';
@@ -76,9 +76,12 @@
 		deviceLabel
 	}: Props = $props();
 
-	let run = $state<DiscoveryRun>(initialRun);
-	let logs = $state<LogLine[]>(initialLogs);
-	let logsLoaded = $state(initialLogs.length > 0);
+	// The card owns the run from here: polling replaces it, and the initial*
+	// props are only where it starts.
+	const initial = untrack(() => ({ run: initialRun, logs: initialLogs }));
+	let run = $state<DiscoveryRun>(initial.run);
+	let logs = $state<LogLine[]>(initial.logs);
+	let logsLoaded = $state(initial.logs.length > 0);
 	let pollTimer: ReturnType<typeof setInterval> | null = null;
 	let showBrowser = $state(false);
 	let copied = $state(false);

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, untrack } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -83,7 +83,7 @@
 	// up they tend to collapse it, so persist that choice. Backed by a cookie
 	// (read in +page.server.ts) so SSR renders the right state — no flash on
 	// refresh. Initial value comes from the server-rendered load data.
-	let setupExpanded = $state(data.setupExpanded);
+	let setupExpanded = $state(untrack(() => data.setupExpanded));
 
 	function toggleSetup() {
 		setupExpanded = !setupExpanded;

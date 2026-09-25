@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
@@ -24,15 +25,19 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	// Bound form values for the platform-level fields.
+	// Bound form values for the platform-level fields. Seeded once: an explicit
+	// Save form, whose submit keeps them (`update({ reset: false })`), and
+	// following `data` would wipe an unsaved edit whenever another form on this
+	// page reloads it.
 	let saving = $state(false);
-	let name = $state(data.platform.name);
-	let key = $state(data.platform.key);
-	let url = $state(data.platform.url);
-	let type = $state(data.platform.type ?? '');
-	let status = $state(data.platform.status);
-	let loginPageUrl = $state(data.platform.login_page_url ?? '');
-	let searchPageUrl = $state(data.platform.search_page_url ?? '');
+	const loaded = untrack(() => data.platform);
+	let name = $state(loaded.name);
+	let key = $state(loaded.key);
+	let url = $state(loaded.url);
+	let type = $state(loaded.type ?? '');
+	let status = $state(loaded.status);
+	let loginPageUrl = $state(loaded.login_page_url ?? '');
+	let searchPageUrl = $state(loaded.search_page_url ?? '');
 
 	// A row with a value outside the vocabulary keeps it as an option, so
 	// saving an unrelated field cannot quietly rewrite it.

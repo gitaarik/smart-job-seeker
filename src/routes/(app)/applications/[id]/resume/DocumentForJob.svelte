@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -199,7 +200,7 @@
 	 * recorded, which took the version picker to do: the control this card
 	 * exists to stop needing.
 	 */
-	let docType = $state<DocType>(app.cv_sent_through === 'cv' ? 'cv' : 'resume');
+	let docType = $state<DocType>(untrack(() => (app.cv_sent_through === 'cv' ? 'cv' : 'resume')));
 	let docLabel = $derived(docType === 'cv' ? 'CV' : 'resume');
 
 	/** Everything selectable here: the library, plus this job's own version. */
@@ -255,8 +256,9 @@
 	 * Both carry their UI form here — `'default'` and `'en'` rather than null —
 	 * because that is what a `<select>` can hold. The server normalises.
 	 */
-	let templateSlug = $state<string>(app.cv_template_sent || DEFAULT_TEMPLATE_ID);
-	let localeCode = $state<string>(app.cv_locale_sent || BASE_LOCALE);
+	// Both start from what was sent, and the picker owns them from then on.
+	let templateSlug = $state<string>(untrack(() => app.cv_template_sent || DEFAULT_TEMPLATE_ID));
+	let localeCode = $state<string>(untrack(() => app.cv_locale_sent || BASE_LOCALE));
 	/** Nothing to ask a profile with one template and one language — most of them. */
 	let offersTemplate = $derived(templates.length > 0);
 	let offersLocale = $derived(availableLocales.length > 1);

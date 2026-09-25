@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/stores';
 	import { formatDateTime } from '$lib/format-date';
 	import type { TimeFormat } from '$lib/format-date';
@@ -86,22 +86,34 @@
 		message: string | null;
 	}
 
+	// Everything below starts from the props once: the monitor is mounted when
+	// it opens, the initial and default values are only where the form starts,
+	// and from then on the form and the polling own them.
+	const opened = untrack(() => ({
+		status: initialStatus,
+		credentials: platformCredentials,
+		credentialId: initialCredentialId,
+		browserProvider: defaultBrowserProvider,
+		keepMinimized: defaultKeepMinimized,
+		fingerprint: { ...browserFingerprint }
+	}));
+
 	// If resuming an active rescrape, skip config and go straight to polling
-	const resuming = initialStatus === 'queued' || initialStatus === 'scraping';
+	const resuming = opened.status === 'queued' || opened.status === 'scraping';
 
 	// Config state
-	let credentials = $state(platformCredentials);
-	let credentialId = $state(initialCredentialId);
-	let browserProvider = $state<string | null>(defaultBrowserProvider);
-	let keepMinimized = $state(defaultKeepMinimized);
+	let credentials = $state(opened.credentials);
+	let credentialId = $state(opened.credentialId);
+	let browserProvider = $state<string | null>(opened.browserProvider);
+	let keepMinimized = $state(opened.keepMinimized);
 	let countryCode = $state('');
-	let browserLanguage = $state(browserFingerprint.language);
-	let browserTimezone = $state(browserFingerprint.timezone);
+	let browserLanguage = $state(opened.fingerprint.language);
+	let browserTimezone = $state(opened.fingerprint.timezone);
 	let showAdvanced = $state(false);
 	let started = $state(resuming);
 
 	// Scraping state
-	let status = $state<string>(resuming ? initialStatus! : 'idle');
+	let status = $state<string>(resuming ? opened.status! : 'idle');
 	let message = $state<string>(resuming ? 'Resuming...' : '');
 	let liveUrl = $state<string | null>(null);
 	let logs = $state<LogEntry[]>([]);

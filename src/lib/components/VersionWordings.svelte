@@ -17,6 +17,7 @@
 	would claim otherwise.
 -->
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { PRINTED_VARIANT_FIELDS, variantPreview, type FieldVariant } from '$lib/field-variants';
 	import { groupVariantsByField } from '$lib/field-variants';
 
@@ -37,7 +38,7 @@
 	// Owned locally after the first render so a pick shows immediately rather
 	// than after a round trip; the server is the authority, and a failed save
 	// puts the previous value back.
-	let picks = $state<Record<string, number | null>>({ ...initialPicks });
+	let picks = $state<Record<string, number | null>>(untrack(() => ({ ...initialPicks })));
 	let saving = $state<string | null>(null);
 	let error = $state('');
 

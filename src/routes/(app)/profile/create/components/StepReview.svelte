@@ -4,6 +4,7 @@
 	 * server chose that target; the client has no route id to resolve.
 	 */
 	/* eslint-disable svelte/no-navigation-without-resolve */
+	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -41,8 +42,8 @@
 		onLoadingChange
 	}: Props = $props();
 
-	// Editable copy of the parsed data
-	const snapshot = $state.snapshot(parsedData) as ResumeData;
+	// Editable copy of the parsed data, taken once as the step opens
+	const snapshot = untrack(() => $state.snapshot(parsedData)) as ResumeData;
 	let editableData = $state({
 		basics: snapshot.basics,
 		work: snapshot.work ?? [],

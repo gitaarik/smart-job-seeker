@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
@@ -15,10 +16,11 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	// Re-seeding the inputs from `form.values` only matters without JS — with
-	// `use:enhance` the bound state survives a failed submit on its own.
-	const submitted = form?.values ?? null;
+	// `use:enhance` the bound state survives a failed submit on its own. So
+	// both read `form` once, as the no-JS page load hands it over.
+	const submitted = untrack(() => form?.values ?? null);
 
-	let showCreate = $state(!!form?.error);
+	let showCreate = $state(untrack(() => !!form?.error));
 	let creating = $state(false);
 	let keyTouched = $state(!!submitted?.key);
 

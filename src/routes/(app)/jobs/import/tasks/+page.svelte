@@ -10,7 +10,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import {
 		faCalendar,
 		faClock,
@@ -39,14 +39,12 @@
 	let searchTasks = $derived(data.searchTasks);
 	let showAddForm = $state(false);
 
-	// Sort options (initialized from server-persisted preference)
+	// Sort options (initialized from server-persisted preference, then the
+	// user's own until the next visit)
 	type SortOption = 'added' | 'alpha' | 'last_run';
 	const validSorts: SortOption[] = ['added', 'alpha', 'last_run'];
-	let sortBy = $state<SortOption>(
-		validSorts.includes(data.searchTaskSort as SortOption)
-			? (data.searchTaskSort as SortOption)
-			: 'added'
-	);
+	const savedSort = untrack(() => data.searchTaskSort as SortOption);
+	let sortBy = $state<SortOption>(validSorts.includes(savedSort) ? savedSort : 'added');
 
 	function setSortBy(value: SortOption) {
 		sortBy = value;

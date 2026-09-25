@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -31,14 +31,17 @@
 	// the most recent run used, falling back to the first available cred. The
 	// user can change them on the page; clicking Start bakes the current
 	// selection into the new run.
-	const initialMostRecentRun = data.runs[0] ?? null;
-	let credentials = $state(data.credentials);
+	// These are defaults, taken once at mount; the selector can add a
+	// credential to the list, which is why it is local state.
+	const loaded = untrack(() => data);
+	const initialMostRecentRun = loaded.runs[0] ?? null;
+	let credentials = $state(loaded.credentials);
 	let selectedCredentialId = $state<string>(
 		initialMostRecentRun?.platform_credential_id != null &&
-			data.credentials.some((c) => c.id === initialMostRecentRun.platform_credential_id)
+			loaded.credentials.some((c) => c.id === initialMostRecentRun.platform_credential_id)
 			? String(initialMostRecentRun.platform_credential_id)
-			: data.credentials[0]
-				? String(data.credentials[0].id)
+			: loaded.credentials[0]
+				? String(loaded.credentials[0].id)
 				: ''
 	);
 	let loginMode = $state('auto');

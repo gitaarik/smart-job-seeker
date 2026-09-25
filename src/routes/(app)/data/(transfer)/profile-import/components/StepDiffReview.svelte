@@ -4,6 +4,7 @@
 	 * server chose that target; the client has no route id to resolve.
 	 */
 	/* eslint-disable svelte/no-navigation-without-resolve */
+	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -72,8 +73,9 @@
 	>[number];
 	type ReferenceMod = NonNullable<NonNullable<DiffApplyPayload['references']>['modified']>[number];
 
-	// Compute the diff
-	let diff = $state<ResumeDataDiff>(diffResumeData(currentData, incomingData));
+	// Compute the diff once, as the review opens: the checkboxes below edit this
+	// copy, and the wizard mounts a new review for another upload.
+	let diff = $state<ResumeDataDiff>(untrack(() => diffResumeData(currentData, incomingData)));
 
 	let showUnchanged = $state(false);
 	const enabledCount = $derived(countEnabledChanges(diff));

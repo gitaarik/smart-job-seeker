@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -15,7 +16,7 @@
 
 	let { title, icon, count, badge, defaultExpanded = false, children }: Props = $props();
 
-	let isExpanded = $state(defaultExpanded);
+	let isExpanded = $state(untrack(() => defaultExpanded));
 
 	const hasBadgeChanges = $derived(
 		badge && (badge.added > 0 || badge.modified > 0 || badge.removed > 0)

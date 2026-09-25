@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCalendarCheck } from '@fortawesome/free-solid-svg-icons';
@@ -33,12 +34,15 @@
 		onsave: () => void;
 	} = $props();
 
-	// State
-	let selectedPhase = $state(getStepperPhase(status));
-	let selectedStep = $state(statusStep || '');
-	let selectedAction = $state(statusAction || '');
-	let selectedActionDate = $state(statusActionDate || '');
-	let selectedResult = $state(isFinishedStatus(status) ? status : '');
+	// State. The picker starts on the status it is shown and owns the selection
+	// from then on; the page mounts a fresh one whenever that status changes
+	// (`{#key}` on status, step and action), so nothing here follows the props.
+	const shown = untrack(() => ({ status, statusStep, statusAction, statusActionDate }));
+	let selectedPhase = $state(getStepperPhase(shown.status));
+	let selectedStep = $state(shown.statusStep || '');
+	let selectedAction = $state(shown.statusAction || '');
+	let selectedActionDate = $state(shown.statusActionDate || '');
+	let selectedResult = $state(isFinishedStatus(shown.status) ? shown.status : '');
 	let description = $state('');
 	let customStepActive = $state(false);
 	let customStepText = $state('');

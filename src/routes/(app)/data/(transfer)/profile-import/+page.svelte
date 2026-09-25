@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import type { ResumeData } from '$lib/server/resume/types';
@@ -22,7 +23,8 @@
 	let showDiffReview = $state(false);
 	let incomingData = $state<ResumeData | null>(null);
 	let isLoading = $state(false);
-	let error = $state<string | null>(form?.error || null);
+	// `form` only arrives from a no-JS submit; everything after sets this itself.
+	let error = $state<string | null>(untrack(() => form?.error || null));
 
 	// Current profile data from server (fall back to empty for diff)
 	const emptyProfile: ResumeData = { basics: { name: '' } };
