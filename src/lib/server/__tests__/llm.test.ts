@@ -188,8 +188,8 @@ describe('reasoning tokens', () => {
 			inputTokens: 1000,
 			outputTokens: 958,
 			reasoningTokens: 7219,
-			// The credit basis is unchanged: see TokenUsage.totalTokens.
-			totalTokens: 1958
+			// Thinking is charged like any other token: see TokenUsage.totalTokens.
+			totalTokens: 9177
 		});
 	});
 
