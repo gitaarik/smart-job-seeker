@@ -5,6 +5,50 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.34.0] - 2026-09-25
+
+82 commits since v0.33.0.
+
+### Added
+
+- Profile quota enforcement and reasoning token pricing; model calls now charge to their calling user
+- Reciprocal rank fusion function for search and project retrieval behind feature flag
+- Signup funnel analytics tracking on public pages
+- Project retrieval golden set with offline replay capability and export
+- Ranked profile gap list showing gaps beside completeness score
+- Tailoring: let applicants place job-only skill words in their own groups and surface hidden skills marked as preferred by the job
+- Admin ability to mark filter values that a platform does not offer
+- Assistant features: agent-driven section reordering and entry visibility control (show hidden, add already-hidden)
+- Before-and-after diff view for rewritten text changes
+- Work location translatable text and translation display alongside English on both surfaces
+- Scraper model helper charging to task owner; opt-in job_match_history pruning; LLM reasoning token pricing at output rate
+- Scraper repair loop on LangGraph with Postgres checkpoints; named prompts with fingerprints from OSS
+
+### Changed
+
+- Project rankers fused behind `SJS_PROJECT_RETRIEVAL_MERGE` feature flag
+- AI chat retrieval queries now built in a single module
+- Job_match_history prune moved to opt-in scheduler on worker
+
+### Fixed
+
+- Migration checker now detects failed schema pushes and compares extension column types
+- MCP no longer suggests deleting text versions
+- Email verification mail now sent when user changes their email
+- Job page status label display on application button
+- Session type correctness and admin matcher page `state` variable shadowing
+- Filter picker now supports multi-select for hours and employment types; saved logins list restored in rescrape
+- Profile import legacy achievement title handling; email relay, debug API and Stripe webhook access past session gate
+- Chrome host-gateway mapping removed on deployed boxes; Docker containers run as node user instead of root
+- Scraper agent repair loop and CLI failure handling; prettier and eslint compliance in cloud's own code
+- Matcher job ID array handling and npm ci lockfile consistency
+
+### Removed
+
+- Seven unused prompt templates
+- Job import API (inoperative since May)
+- Change-email callback no longer invoked by better-auth
+
 ## [0.33.0] - 2026-09-23
 
 82 commits since v0.32.1.
