@@ -18,6 +18,7 @@
 	 * until it is dropped, and deleting asks first because a project owns its
 	 * technologies and documents by cascade.
 	 */
+	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -58,12 +59,16 @@
 		profileId: number;
 	} = $props();
 
+	// The store, and the counts below, start from the props once and own the
+	// rows from then on. The role's page mounts this again when it moves to
+	// another role, and after a proposal is applied from the chat panel.
+	const seed = untrack(() => ({ workExperienceId, profileId, initial }));
 	const store = sectionRows({
 		resource: 'work_experience_project',
 		parentKey: 'work_experience_id',
-		parentId: workExperienceId,
-		profileId,
-		initial,
+		parentId: seed.workExperienceId,
+		profileId: seed.profileId,
+		initial: seed.initial,
 		toData: toProjectData,
 		blank: blankProject,
 		toBody: projectBody,
@@ -72,7 +77,7 @@
 
 	/** Counts shown on a row, by project id — what the row can say without opening it. */
 	const counts: Record<number, { technologies: number; sources: number }> = Object.fromEntries(
-		initial.map((p) => [
+		seed.initial.map((p) => [
 			p.id,
 			{
 				technologies: (p.work_experience_project_technologies ?? []).length,

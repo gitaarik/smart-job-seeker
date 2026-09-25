@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import { beforeNavigate } from '$app/navigation';
 	import { flushPendingSaves, hasPendingSaves } from '$lib/components/auto-save.svelte';
+	import { appliedChangeEpoch } from '$lib/components/applied-change.svelte';
 	import DashboardHeader from './components/DashboardHeader.svelte';
 	import Sidebar from './components/Sidebar.svelte';
 	import FeedbackWidget from './components/FeedbackWidget.svelte';
@@ -110,7 +111,11 @@
 
 	<main class="overflow-x-clip px-4 py-5 pb-24 text-sm lg:pb-20 lg:pl-60">
 		<div class="mx-auto max-w-5xl">
-			{@render children()}
+			<!-- An editor that seeds itself from `data` once is mounted again after
+			     the assistant's change is applied; see remountOnAppliedChange. -->
+			{#key appliedChangeEpoch()}
+				{@render children()}
+			{/key}
 		</div>
 	</main>
 

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { untrack } from 'svelte';
+	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
 	import { armOn } from '$lib/actions/arm-on';
 	import { invalidate, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -22,8 +24,15 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let imageUrl = $state(data.imageUrl);
-	let bannerUrl = $state(data.bannerUrl);
+	// Everything below that starts from `data` does so once, at mount: the
+	// fields, their auto-save baselines and the row stores are the page's own
+	// from then on. The one thing that changes a project under an open editor is
+	// a proposal applied from the chat panel, and that mounts the page again.
+	remountOnAppliedChange();
+	const loaded = untrack(() => data);
+
+	let imageUrl = $state(loaded.imageUrl);
+	let bannerUrl = $state(loaded.bannerUrl);
 
 	let project = $derived(data.project);
 
@@ -49,23 +58,26 @@
 	// a sentence nothing can retype for the applicant — asks first.
 
 	// Form states
-	let editName = $state(project.name || '');
-	let editUrl = $state(project.url || '');
-	let editRepoUrl = $state(project.repo_url || '');
-	let editSummary = $state(project.summary || '');
-	let editStars = $state(project.stars?.toString() || '');
-	let editStartDate = $state(formatDate(project.start_date));
-	let editEndDate = $state(formatDate(project.end_date));
-	let editTags = $state<string[]>(Array.isArray(project.tags) ? (project.tags as string[]) : []);
+	const loadedBasics = basicsOf(loaded.project);
+	let editName = $state(loadedBasics.name);
+	let editUrl = $state(loadedBasics.url);
+	let editRepoUrl = $state(loadedBasics.repoUrl);
+	let editSummary = $state(loadedBasics.summary);
+	let editStars = $state(loadedBasics.stars);
+	let editStartDate = $state(loadedBasics.startDate);
+	let editEndDate = $state(loadedBasics.endDate);
+	let editTags = $state<string[]>(
+		Array.isArray(loaded.project.tags) ? (loaded.project.tags as string[]) : []
+	);
 	let showDeleteConfirm = $state(false);
 	let childError = $state<string | null>(null);
 
 	const achievementStore = sectionRows({
 		resource: 'side_project_achievement',
 		parentKey: 'side_project_id',
-		parentId: project.id,
-		profileId: data.profileId,
-		initial: project.side_project_achievements,
+		parentId: loaded.project.id,
+		profileId: loaded.profileId,
+		initial: loaded.project.side_project_achievements,
 		toData: (a) => ({ description: a.description ?? '' }),
 		blank: () => ({ description: '' }),
 		toBody: (v: { description: string }) => ({ description: v.description.trim() }),
@@ -76,9 +88,9 @@
 	const techStore = sectionRows({
 		resource: 'side_project_technology',
 		parentKey: 'side_project_id',
-		parentId: project.id,
-		profileId: data.profileId,
-		initial: project.side_project_technologies,
+		parentId: loaded.project.id,
+		profileId: loaded.profileId,
+		initial: loaded.project.side_project_technologies,
 		toData: (t) => ({ name: t.name ?? '' }),
 		blank: () => ({ name: '' }),
 		toBody: (v: { name: string }) => ({ name: v.name.trim() }),
@@ -148,6 +160,18 @@
 		endDate: string;
 	};
 
+	/** A loaded project as the form holds it. */
+	function basicsOf(p: PageData['project']): ProjectBasics {
+		return {
+			name: p.name || '',
+			url: p.url || '',
+			repoUrl: p.repo_url || '',
+			summary: p.summary || '',
+			stars: p.stars?.toString() || '',
+			startDate: formatDate(p.start_date),
+			endDate: formatDate(p.end_date)
+		};
+	}
 	/** Form state as the API expects it. Both sides of the diff go through here. */
 	function basicsBody(v: ProjectBasics) {
 		return {
@@ -162,15 +186,7 @@
 	}
 	const basicsField = autoSaveField<ProjectBasics>({
 		armOnInteraction: true,
-		initial: {
-			name: editName,
-			url: editUrl,
-			repoUrl: editRepoUrl,
-			summary: editSummary,
-			stars: editStars,
-			startDate: editStartDate,
-			endDate: editEndDate
-		},
+		initial: { ...loadedBasics },
 		save: async (v, prev) => {
 			const body = patchBody(basicsBody(v), basicsBody(prev));
 			if (!body) return;

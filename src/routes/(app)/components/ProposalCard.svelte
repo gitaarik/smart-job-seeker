@@ -13,6 +13,8 @@
 
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { flushPendingSaves } from '$lib/components/auto-save.svelte';
+	import { afterAppliedChange } from '$lib/components/applied-change.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowRight,
@@ -38,7 +40,8 @@
 
 	let applying = $state(false);
 	let error = $state('');
-	let appliedAt = $state<string | null>(proposal.applied_at);
+	// The server's word, overridden the moment this card applies the change.
+	let appliedAt = $derived<string | null>(proposal.applied_at);
 
 	/**
 	 * The one-line summary above is honest but not reviewable: "107 characters →
@@ -52,6 +55,9 @@
 		applying = true;
 		error = '';
 		try {
+			// An edit still inside its debounce window goes out first, so the reload
+			// below carries it and an editor mounted again starts from it.
+			flushPendingSaves();
 			const res = await fetch(`/api/ai/agent/proposals/${proposal.id}/apply`, { method: 'POST' });
 			const data = await res.json().catch(() => null);
 			if (!res.ok || !data?.success) {
@@ -60,8 +66,10 @@
 			}
 			appliedAt = new Date().toISOString();
 			// The page behind the panel is now stale — it is very often the very
-			// record that just changed.
+			// record that just changed. A page that derives from `data` follows the
+			// reload; an editor that seeded itself from it is mounted again.
 			await invalidateAll();
+			afterAppliedChange();
 		} catch {
 			error = 'Could not reach the server. Please try again.';
 		} finally {

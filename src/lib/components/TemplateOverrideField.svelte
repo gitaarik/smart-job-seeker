@@ -15,6 +15,7 @@
 	 * is usually right as it stands. An override that *is* set opens on its own,
 	 * because a hidden one silently changes what the template prints.
 	 */
+	import { untrack } from 'svelte';
 	import { BASE_LOCALE } from '$lib/resume-translations';
 
 	interface Props {
@@ -49,8 +50,9 @@
 	}
 
 	/** What the server holds, so an unchanged box does not PUT on every blur. */
-	let saved = $state<Record<number, string>>(storedValues());
-	let values = $state<Record<number, string>>({ ...saved });
+	const loadedValues = storedValues();
+	let saved = $state<Record<number, string>>(loadedValues);
+	let values = $state<Record<number, string>>({ ...loadedValues });
 	let status = $state<Record<number, SaveState>>({});
 
 	function anySet(vals: Record<number, string>): boolean {
@@ -60,12 +62,12 @@
 	// Bound, not derived: an override opens the panel on arrival, and after that
 	// only the reader decides. Clearing the last override while the panel is open
 	// must not snap it shut under the cursor.
-	let isOpen = $state(anySet(saved));
+	let isOpen = $state(anySet(loadedValues));
 
 	// The role editor is one route, so moving from /work-experience/8 to /9 swaps
 	// these props under a component that is never torn down — without this the
 	// second role would be editing the first one's values.
-	let loadedFor = id;
+	let loadedFor = untrack(() => id);
 	$effect(() => {
 		if (loadedFor === id) return;
 		loadedFor = id;

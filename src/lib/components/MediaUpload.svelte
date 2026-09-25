@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTimes, faImage, faExpand, faCheck } from '@fortawesome/free-solid-svg-icons';
 	import Spinner from '$lib/components/Spinner.svelte';
@@ -31,7 +32,7 @@
 	let isUploading = $state(false);
 	let isDragging = $state(false);
 	let error = $state<string | null>(null);
-	let previewUrl = $state<string | null>(currentUrl);
+	let previewUrl = $state<string | null>(untrack(() => currentUrl));
 	let showFullPreview = $state(false);
 	let markedForDeletion = $state(false);
 	let showSuccess = $state(false);

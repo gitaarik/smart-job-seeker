@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { untrack } from 'svelte';
+	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
 	import { resolve } from '$app/paths';
 	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -14,25 +16,33 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let logoUrl = $state(data.logoUrl);
-	let bannerUrl = $state(data.bannerUrl);
+	// Everything below that starts from `data` does so once, at mount: the
+	// fields and their auto-save baseline are the page's own from then on. The
+	// one thing that changes an entry under an open editor is a proposal applied
+	// from the chat panel, and that mounts the page again.
+	remountOnAppliedChange();
+	const loaded = untrack(() => data);
+
+	let logoUrl = $state(loaded.logoUrl);
+	let bannerUrl = $state(loaded.bannerUrl);
 
 	let education = $derived(data.education);
 
 	let pageTitle = $derived(education.institution || 'Education');
 
 	// Form states
-	let editInstitution = $state(education.institution || '');
-	let editArea = $state(education.area || '');
-	let editStudyType = $state(education.study_type || '');
-	let editLocation = $state(education.location || '');
-	let editUrl = $state(education.url || '');
-	let editGraduationYear = $state(education.graduation_year?.toString() || '');
-	let editStartDate = $state(formatDate(education.start_date));
-	let editEndDate = $state(formatDate(education.end_date));
-	let editSummary = $state(education.summary || '');
+	const loadedBasics = basicsOf(loaded.education);
+	let editInstitution = $state(loadedBasics.institution);
+	let editArea = $state(loadedBasics.area);
+	let editStudyType = $state(loadedBasics.studyType);
+	let editLocation = $state(loadedBasics.location);
+	let editUrl = $state(loadedBasics.url);
+	let editGraduationYear = $state(loadedBasics.graduationYear);
+	let editStartDate = $state(loadedBasics.startDate);
+	let editEndDate = $state(loadedBasics.endDate);
+	let editSummary = $state(loadedBasics.summary);
 	let editTags = $state<string[]>(
-		Array.isArray(education.tags) ? (education.tags as string[]) : []
+		Array.isArray(loaded.education.tags) ? (loaded.education.tags as string[]) : []
 	);
 	let showDeleteConfirm = $state(false);
 
@@ -55,6 +65,20 @@
 		endDate: string;
 		summary: string;
 	};
+	/** A loaded entry as the form holds it. */
+	function basicsOf(e: PageData['education']): EducationBasics {
+		return {
+			institution: e.institution || '',
+			area: e.area || '',
+			studyType: e.study_type || '',
+			location: e.location || '',
+			url: e.url || '',
+			graduationYear: e.graduation_year?.toString() || '',
+			startDate: formatDate(e.start_date),
+			endDate: formatDate(e.end_date),
+			summary: e.summary || ''
+		};
+	}
 	/** Form state as the API expects it. Both sides of the diff go through here. */
 	function basicsBody(v: EducationBasics) {
 		return {
@@ -71,17 +95,7 @@
 	}
 	const basicsField = autoSaveField<EducationBasics>({
 		armOnInteraction: true,
-		initial: {
-			institution: editInstitution,
-			area: editArea,
-			studyType: editStudyType,
-			location: editLocation,
-			url: editUrl,
-			graduationYear: editGraduationYear,
-			startDate: editStartDate,
-			endDate: editEndDate,
-			summary: editSummary
-		},
+		initial: { ...loadedBasics },
 		save: async (v, prev) => {
 			const body = patchBody(basicsBody(v), basicsBody(prev));
 			if (!body) return;

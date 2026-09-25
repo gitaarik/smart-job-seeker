@@ -13,6 +13,7 @@
 	 * draft/POST/PATCH rules, the body mapping and the per-row indicator.
 	 */
 	import type { PageData } from './$types';
+	import { untrack } from 'svelte';
 	import { invalidate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { projectDetailDep } from '$lib/project-detail';
@@ -21,6 +22,7 @@
 	import ProjectRepoFetch from '$lib/components/ProjectRepoFetch.svelte';
 	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
+	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
 	import Card from '../../../../../../components/Card.svelte';
 	import ProjectTechnologies from '../../../../../components/ProjectTechnologies.svelte';
 	import ProjectSourcesPointer from '../../../../../components/ProjectSourcesPointer.svelte';
@@ -53,12 +55,19 @@
 		void invalidate(projectDetailDep('work_experience_project', data.project.id));
 	}
 
+	// The store (and the technologies list below) start from `data` once, at
+	// mount, and own the row from then on. A proposal applied from the chat
+	// panel is the one thing that changes it under an open editor, and that
+	// mounts the page again.
+	remountOnAppliedChange();
+	const loaded = untrack(() => data);
+
 	const store = sectionRows({
 		resource: 'work_experience_project',
 		parentKey: 'work_experience_id',
-		parentId: data.experience.id,
-		profileId: data.profileId,
-		initial: [data.project],
+		parentId: loaded.experience.id,
+		profileId: loaded.profileId,
+		initial: [loaded.project],
 		toData: toProjectData,
 		blank: blankProject,
 		toBody: projectBody,

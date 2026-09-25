@@ -11,6 +11,7 @@
 	import { faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
+	import { untrack } from 'svelte';
 
 	let {
 		projectId,
@@ -25,12 +26,16 @@
 		onChanged?: () => void;
 	} = $props();
 
+	// The store starts from the props once and owns the chips from then on:
+	// `projectId` never changes under it (see above), and after a proposal is
+	// applied from the chat panel the page mounts it again.
+	const seed = untrack(() => ({ projectId, profileId, initial }));
 	const store = sectionRows({
 		resource: 'work_experience_project_technology',
 		parentKey: 'work_experience_project_id',
-		parentId: projectId,
-		profileId,
-		initial,
+		parentId: seed.projectId,
+		profileId: seed.profileId,
+		initial: seed.initial,
 		toData: (r) => ({ name: r.name ?? '' }),
 		blank: () => ({ name: '' }),
 		toBody: (v) => ({ name: v.name.trim() }),

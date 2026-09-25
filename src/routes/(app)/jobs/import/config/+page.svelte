@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { untrack } from 'svelte';
+	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
 	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck } from '@fortawesome/free-solid-svg-icons';
@@ -11,6 +13,15 @@
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 
 	let { data }: { data: PageData } = $props();
+
+	// Every section below starts from `data` once, at mount, and owns its value
+	// from then on. The assistant can change these preferences from the chat
+	// panel (`edit_match_config`, made for this very page), and a proposal applied
+	// there mounts the page again rather than leaving it on the old lists: the
+	// saves here send a whole list and no `expected`, so a stale checkbox
+	// clicked afterwards would quietly have put the old list back.
+	remountOnAppliedChange();
+	const loaded = untrack(() => data);
 
 	// Helper to normalize saved values to match our option labels (case-insensitive)
 	function normalizeToOptions(saved: string[], options: string[]): string[] {
@@ -45,12 +56,11 @@
 	// page. Job types and work location are required, so the $effect that feeds
 	// them skips an empty selection rather than persisting one — the card shows
 	// a hint instead of an indicator while that's the case.
-	let jobTypes = $state<string[]>(
-		normalizeToOptions(data.config.job_types || [], data.options.jobTypes)
-	);
+	const loadedJobTypes = normalizeToOptions(loaded.config.job_types || [], loaded.options.jobTypes);
+	let jobTypes = $state<string[]>([...loadedJobTypes]);
 	const jobTypesField = autoSaveField<string[]>({
 		armOnInteraction: true,
-		initial: [...jobTypes],
+		initial: [...loadedJobTypes],
 		save: (v) => patchConfig({ job_types: v }),
 		onSaved: (v) => (jobTypes = [...v]),
 		equal: setsEqual
@@ -60,12 +70,14 @@
 		jobTypesField.set([...jobTypes]);
 	});
 
-	let workLocation = $state<string[]>(
-		normalizeToOptions(data.config.work_location || [], data.options.workLocationOptions)
+	const loadedWorkLocation = normalizeToOptions(
+		loaded.config.work_location || [],
+		loaded.options.workLocationOptions
 	);
+	let workLocation = $state<string[]>([...loadedWorkLocation]);
 	const workLocationField = autoSaveField<string[]>({
 		armOnInteraction: true,
-		initial: [...workLocation],
+		initial: [...loadedWorkLocation],
 		save: (v) => patchConfig({ work_location: v }),
 		onSaved: (v) => (workLocation = [...v]),
 		equal: setsEqual
@@ -75,22 +87,25 @@
 		workLocationField.set([...workLocation]);
 	});
 
-	let experienceLevels = $state<string[]>(
-		normalizeToOptions(data.config.experience_levels || [], data.options.experienceLevels)
+	const loadedExperienceLevels = normalizeToOptions(
+		loaded.config.experience_levels || [],
+		loaded.options.experienceLevels
 	);
+	let experienceLevels = $state<string[]>([...loadedExperienceLevels]);
 	const experienceLevelsField = autoSaveField<string[]>({
 		armOnInteraction: true,
-		initial: [...experienceLevels],
+		initial: [...loadedExperienceLevels],
 		save: (v) => patchConfig({ experience_levels: v }),
 		onSaved: (v) => (experienceLevels = [...v]),
 		equal: setsEqual
 	});
 	$effect(() => experienceLevelsField.set([...experienceLevels]));
 
-	let locations = $state<string[]>(data.config.locations || []);
+	const loadedLocations = loaded.config.locations || [];
+	let locations = $state<string[]>([...loadedLocations]);
 	const locationsField = autoSaveField<string[]>({
 		armOnInteraction: true,
-		initial: [...locations],
+		initial: [...loadedLocations],
 		save: (v) => patchConfig({ locations: v }),
 		onSaved: (v) => (locations = [...v]),
 		equal: setsEqual
@@ -100,14 +115,14 @@
 	// Toggle + time window travel together: turning the toggle off clears the
 	// window server-side, so they have to be one PATCH.
 	type CommunityConfig = { enabled: boolean; maxAgeDays: number | null };
-	let matchCommunityJobs = $state<boolean>(data.config.match_community_jobs ?? false);
-	let communityMaxAgeDays = $state<number | null>(data.config.community_max_age_days ?? 30);
+	let matchCommunityJobs = $state<boolean>(loaded.config.match_community_jobs ?? false);
+	let communityMaxAgeDays = $state<number | null>(loaded.config.community_max_age_days ?? 30);
 	const communityField = autoSaveField<CommunityConfig>({
 		armOnInteraction: true,
 		initial: {
-			enabled: data.config.match_community_jobs ?? false,
-			maxAgeDays: data.config.match_community_jobs
-				? (data.config.community_max_age_days ?? 30)
+			enabled: loaded.config.match_community_jobs ?? false,
+			maxAgeDays: loaded.config.match_community_jobs
+				? (loaded.config.community_max_age_days ?? 30)
 				: null
 		},
 		save: (v, prev) => {

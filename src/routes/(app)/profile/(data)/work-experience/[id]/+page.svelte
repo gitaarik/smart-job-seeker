@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -20,6 +21,7 @@
 	import TemplateOverrideField from '$lib/components/TemplateOverrideField.svelte';
 	import AchievementsList, { type AchievementItem } from '$lib/components/AchievementsList.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
+	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
 	import WorkExperienceProjects from '../../../components/WorkExperienceProjects.svelte';
 	import VersionTags from '$lib/components/VersionTags.svelte';
 	import VersionTagsPopup from '$lib/components/VersionTagsPopup.svelte';
@@ -32,8 +34,15 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let logoUrl = $state(data.logoUrl);
-	let bannerUrl = $state(data.bannerUrl);
+	// Everything below that starts from `data` does so once, at mount: the
+	// fields, their auto-save baselines and the row stores are the page's own
+	// from then on. The one thing that changes a role under an open editor is a
+	// proposal applied from the chat panel, and that mounts the page again.
+	remountOnAppliedChange();
+	const loaded = untrack(() => data);
+
+	let logoUrl = $state(loaded.logoUrl);
+	let bannerUrl = $state(loaded.bannerUrl);
 
 	let experience = $derived(data.experience);
 
@@ -52,16 +61,17 @@
 	let techReorderState = $state<SaveState>('idle');
 
 	// Form states
-	let editName = $state(experience.name || '');
-	let editPosition = $state(experience.position || '');
-	let editLocation = $state(experience.location || '');
-	let editWebsite = $state(experience.website || '');
-	let editHeadline = $state(experience.headline || '');
-	let editSummary = $state(experience.summary || '');
-	let editStartDate = $state(formatDate(experience.start_date));
-	let editEndDate = $state(formatDate(experience.end_date));
+	const loadedBasics = basicsOf(loaded.experience);
+	let editName = $state(loadedBasics.name);
+	let editPosition = $state(loadedBasics.position);
+	let editLocation = $state(loadedBasics.location);
+	let editWebsite = $state(loadedBasics.website);
+	let editHeadline = $state(loadedBasics.headline);
+	let editSummary = $state(loadedBasics.summary);
+	let editStartDate = $state(loadedBasics.startDate);
+	let editEndDate = $state(loadedBasics.endDate);
 	let editTags = $state<string[]>(
-		Array.isArray(experience.tags) ? (experience.tags as string[]) : []
+		Array.isArray(loaded.experience.tags) ? (loaded.experience.tags as string[]) : []
 	);
 	let showDeleteConfirm = $state(false);
 
@@ -80,9 +90,9 @@
 	const achievementStore = sectionRows({
 		resource: 'work_experience_achievement',
 		parentKey: 'work_experience_id',
-		parentId: experience.id,
-		profileId: data.profileId,
-		initial: experience.work_experience_achievements,
+		parentId: loaded.experience.id,
+		profileId: loaded.profileId,
+		initial: loaded.experience.work_experience_achievements,
 		toData: (a) => ({
 			description: a.description ?? '',
 			tags: Array.isArray(a.tags) ? (a.tags as string[]) : []
@@ -98,9 +108,9 @@
 	const techStore = sectionRows({
 		resource: 'work_experience_technology',
 		parentKey: 'work_experience_id',
-		parentId: experience.id,
-		profileId: data.profileId,
-		initial: experience.work_experience_technologies,
+		parentId: loaded.experience.id,
+		profileId: loaded.profileId,
+		initial: loaded.experience.work_experience_technologies,
 		toData: (t) => ({
 			name: t.name ?? '',
 			tags: Array.isArray(t.tags) ? (t.tags as string[]) : []
@@ -209,6 +219,19 @@
 		startDate: string;
 		endDate: string;
 	};
+	/** A loaded role as the form holds it. */
+	function basicsOf(e: PageData['experience']): ExperienceBasics {
+		return {
+			name: e.name || '',
+			position: e.position || '',
+			location: e.location || '',
+			website: e.website || '',
+			headline: e.headline || '',
+			summary: e.summary || '',
+			startDate: formatDate(e.start_date),
+			endDate: formatDate(e.end_date)
+		};
+	}
 	/** Form state as the API expects it. Both sides of the diff go through here. */
 	function basicsBody(v: ExperienceBasics) {
 		return {
@@ -224,16 +247,7 @@
 	}
 	const basicsField = autoSaveField<ExperienceBasics>({
 		armOnInteraction: true,
-		initial: {
-			name: editName,
-			position: editPosition,
-			location: editLocation,
-			website: editWebsite,
-			headline: editHeadline,
-			summary: editSummary,
-			startDate: editStartDate,
-			endDate: editEndDate
-		},
+		initial: { ...loadedBasics },
 		save: async (v, prev) => {
 			const body = patchBody(basicsBody(v), basicsBody(prev));
 			if (!body) return;
