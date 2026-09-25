@@ -49,11 +49,24 @@ set -euo pipefail
 # been exempting /api/jobs/import/suggest from the approval check.
 BASELINE=0
 
+# state_referenced_locally is an error here, not the warning Svelte makes it.
+# It flags a component reading a prop or a piece of state once, where the
+# script runs, which captures the value at mount and never sees it change.
+# All 351 were read on 2026-09-25 and seven were live bugs of one shape:
+# SvelteKit keeps a page when only `data` changes (a notification to another
+# import task, a source link to another question, a proposal applied behind
+# the chat panel, a profile switch on /home), and the copy went on showing,
+# and saving, the old record. The rest were deliberate and now say so:
+# follow `data` with a (writable) $derived, read a seed through `untrack` next
+# to the reason it holds, or have an editor call remountOnAppliedChange().
+# As a warning a new one would pass unseen, which is how 351 accumulated.
+SVELTE_CHECK_FLAGS=(--compiler-warnings "state_referenced_locally:error")
+
 npx svelte-kit sync
 
 # svelte-check exits non-zero whenever errors exist, which is exactly the
 # thing we're deciding for ourselves — so don't let it abort the script.
-output=$(npx svelte-check --tsconfig ./tsconfig.json --output machine 2>&1) || true
+output=$(npx svelte-check --tsconfig ./tsconfig.json "${SVELTE_CHECK_FLAGS[@]}" --output machine 2>&1) || true
 
 # The machine format ends with:
 #   <ts> COMPLETED <n> FILES <e> ERRORS <w> WARNINGS <f> FILES_WITH_PROBLEMS

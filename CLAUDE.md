@@ -68,6 +68,19 @@ while its backlog was worked off; the history is in the scripts. Reading those
 backlogs rather than counting them kept turning up live bugs, which is the
 argument for never letting a new one start.
 
+**`state_referenced_locally` is an error in the type gate** (since 2026-09-25,
+via `--compiler-warnings` in `ci/check.sh` and `npm run check`). Svelte only
+warns when a component reads a prop or state once, where its script runs, and
+351 had piled up. Seven were live bugs of one shape: SvelteKit keeps a page when
+only `data` changes (a link to another record on the same route, an
+`invalidateAll()`), so a copy taken at mount showed, and saved, the old record.
+When the compiler flags one, pick what you mean. To follow `data`, use a
+writable `$derived`, built as `$state` inside a function if you mutate it in
+place (see `jobState` in `jobs/[id]`). To seed once on purpose, read through
+`untrack(() => …)` next to the reason that holds. An auto-saving editor that
+seeds from `data` calls `remountOnAppliedChange()`, so a proposal applied from
+the chat panel mounts it again.
+
 **eslint is no longer a ratchet.** It went 1,521 -> 0 between 2026-08-07 and
 2026-09-22 and is now a plain gate: any error fails. The `scripts/` type check
 followed on 2026-09-23 (189 -> 0 over its life), with the same rule. Do not raise its baseline
