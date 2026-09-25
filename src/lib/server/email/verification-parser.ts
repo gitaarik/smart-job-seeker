@@ -74,14 +74,16 @@ const CODE_PATTERNS = [
 export async function parseVerificationEmail(
 	subject: string | null,
 	bodyText: string | null,
-	bodyHtml: string | null
+	bodyHtml: string | null,
+	chargeTo: string | null = null
 ): Promise<ParsedVerification | null> {
 	// Strategy 1: Pattern matching (fast, no cost)
 	const patternResult = parseWithPatterns(subject, bodyText, bodyHtml);
 	if (patternResult) return patternResult;
 
-	// Strategy 2: LLM extraction fallback (handles unknown email formats)
-	const llmResult = await parseWithLLM(subject, bodyText, bodyHtml);
+	// Strategy 2: LLM extraction fallback (handles unknown email formats).
+	// Its tokens are charged to `chargeTo`.
+	const llmResult = await parseWithLLM(subject, bodyText, bodyHtml, chargeTo);
 	if (llmResult) return llmResult;
 
 	return null;
@@ -117,11 +119,12 @@ function parseWithPatterns(
 async function parseWithLLM(
 	subject: string | null,
 	bodyText: string | null,
-	bodyHtml: string | null
+	bodyHtml: string | null,
+	chargeTo: string | null
 ): Promise<ParsedVerification | null> {
 	try {
 		// Lazy import to avoid circular dependencies and keep the module light
-		const { generateChatCompletion } = await import('$lib/server/llm');
+		const { generateChatCompletionCharged } = await import('$lib/server/llm/charged');
 
 		// Build a clean text representation (prefer plain text, fall back to stripped HTML)
 		let emailContent = bodyText;
@@ -149,7 +152,8 @@ Subject: ${subject || '(none)'}
 Email body:
 ${emailContent}`;
 
-		const response = await generateChatCompletion(
+		const response = await generateChatCompletionCharged(
+			chargeTo,
 			[
 				{
 					role: 'system',
