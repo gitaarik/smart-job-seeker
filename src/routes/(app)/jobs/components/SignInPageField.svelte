@@ -17,6 +17,7 @@
 	 * column is where "auto" mode types every account's stored password, and
 	 * it must not be rewritable by whoever happens to use the site first.
 	 */
+	import { untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCheck,
@@ -61,9 +62,9 @@
 	// Open on its own when the task wants to sign in and has nowhere to do it:
 	// that combination is the silent no-op this field exists to surface, so it
 	// should not hide behind a pencil.
-	let current = $state(value);
+	let current = $state(untrack(() => value));
 	let editing = $state(false);
-	let draft = $state(value ?? '');
+	let draft = $state(untrack(() => value ?? ''));
 	let saving = $state(false);
 	let error = $state<string | null>(null);
 

@@ -31,16 +31,12 @@
 
 	let { taskId, initial, onSaved }: Props = $props();
 
-	let keywords = $state(initial.search_term ?? '');
-	let savedKeywords = $state(initial.search_term ?? '');
+	// Both follow the prop (e.g. after a successful save with a {#key} reset);
+	// typing and saving override them until it changes again.
+	let keywords = $derived(initial.search_term ?? '');
+	let savedKeywords = $derived(initial.search_term ?? '');
 	let saving = $state(false);
 	let error = $state<string | null>(null);
-
-	$effect(() => {
-		// Reset on prop change (e.g. after a successful save with a {#key} reset)
-		keywords = initial.search_term ?? '';
-		savedKeywords = initial.search_term ?? '';
-	});
 
 	const dirty = $derived(keywords.trim() !== (savedKeywords ?? '').trim());
 

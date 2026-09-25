@@ -5,6 +5,7 @@
 	 * hides them otherwise, posts to /api/import-tasks/[id], invokes a
 	 * callback so the parent can sync local state.
 	 */
+	import { untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 	import Spinner from '$lib/components/Spinner.svelte';
@@ -27,8 +28,11 @@
 		return JSON.parse(JSON.stringify(v));
 	}
 
-	let filters = $state<Record<string, SearchFilterValue>>(detach(initial));
-	let savedSnapshot = $state(JSON.stringify(initial));
+	// Seeded once. The page mounts a fresh editor per task, and after a save
+	// this copy is already what the server holds, so it never follows `initial`.
+	const seed = untrack(() => detach(initial));
+	let filters = $state<Record<string, SearchFilterValue>>(seed);
+	let savedSnapshot = $state(JSON.stringify(seed));
 	let saving = $state(false);
 	let error = $state<string | null>(null);
 

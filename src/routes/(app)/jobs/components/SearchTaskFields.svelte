@@ -9,7 +9,7 @@
 	 * with mode="add"), and it went in 2026-09-05; a task is created there and
 	 * edited here.
 	 */
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -64,8 +64,6 @@
 			login_page_url?: string | null;
 		} | null;
 	}
-
-	type PlatformCredentialOption = NonNullable<Props['platformCredentials']>[number];
 
 	interface Props {
 		localBrowserAllowed: boolean;
@@ -218,6 +216,13 @@
 	// For toggle+number combos (max_jobs, stop_after_duplicates, skip_first) the
 	// UI still owns two bindable strings/bools; a $effect feeds the computed
 	// value into the helper, which short-circuits when nothing actually changed.
+	//
+	// Every field starts from the task as it stood at mount (`task`) and owns its
+	// value from then on: each saves itself, and its `onSaved` writes the result
+	// back into the live `searchTask`. Another task gets a fresh copy of this
+	// component (the page wraps it in `{#key data.searchTask.id}`), so no seed
+	// here ever has to follow the prop.
+	const task = untrack(() => searchTask);
 
 	// Patch helpers — defined up here so the autoSaveField factories can
 	// capture them without forward references.
@@ -246,7 +251,7 @@
 	}
 
 	// Search term — free text, debounced.
-	let searchTermInput = $state<string>(searchTask?.search_term ?? '');
+	let searchTermInput = $state<string>(task?.search_term ?? '');
 	// Arm every field on the first real interaction with the form, so a browser
 	// reload/autofill that repopulates a bound input does not trigger a save.
 	function armFields() {
@@ -269,7 +274,7 @@
 
 	const searchTermField = autoSaveField<string | null>({
 		armOnInteraction: true,
-		initial: searchTask?.search_term ?? null,
+		initial: task?.search_term ?? null,
 		save: (v) => patchSearchTask({ search_term: v }),
 		onSaved: (v) => {
 			if (searchTask) searchTask.search_term = v;
@@ -286,11 +291,11 @@
 	let showAdvancedSearch = $state(false);
 
 	// Max jobs — toggle + number.
-	let maxJobsEnabled = $state<boolean>(searchTask?.max_jobs != null);
-	let maxJobsInput = $state<string>(searchTask?.max_jobs?.toString() ?? '');
+	let maxJobsEnabled = $state<boolean>(task?.max_jobs != null);
+	let maxJobsInput = $state<string>(task?.max_jobs?.toString() ?? '');
 	const maxJobsField = autoSaveField<number | null>({
 		armOnInteraction: true,
-		initial: searchTask?.max_jobs ?? null,
+		initial: task?.max_jobs ?? null,
 		save: (v) => patchSearchTask({ max_jobs: v }),
 		onSaved: (v) => {
 			if (searchTask) searchTask.max_jobs = v;
@@ -304,10 +309,10 @@
 	});
 
 	// Skip existing — boolean toggle.
-	let skipExisting = $state<boolean>(searchTask?.skip_existing ?? false);
+	let skipExisting = $state<boolean>(task?.skip_existing ?? false);
 	const skipExistingField = autoSaveField<boolean>({
 		armOnInteraction: true,
-		initial: searchTask?.skip_existing ?? false,
+		initial: task?.skip_existing ?? false,
 		save: (v) => patchSearchTask({ skip_existing: v }),
 		onSaved: (v) => {
 			if (searchTask) searchTask.skip_existing = v;
@@ -319,13 +324,11 @@
 	});
 
 	// Stop after N duplicates — toggle + number.
-	let stopAfterDuplicatesEnabled = $state<boolean>(searchTask?.stop_after_duplicates != null);
-	let stopAfterDuplicatesInput = $state<string>(
-		searchTask?.stop_after_duplicates?.toString() ?? ''
-	);
+	let stopAfterDuplicatesEnabled = $state<boolean>(task?.stop_after_duplicates != null);
+	let stopAfterDuplicatesInput = $state<string>(task?.stop_after_duplicates?.toString() ?? '');
 	const stopAfterDuplicatesField = autoSaveField<number | null>({
 		armOnInteraction: true,
-		initial: searchTask?.stop_after_duplicates ?? null,
+		initial: task?.stop_after_duplicates ?? null,
 		save: (v) => patchSearchTask({ stop_after_duplicates: v }),
 		onSaved: (v) => {
 			if (searchTask) searchTask.stop_after_duplicates = v;
@@ -341,11 +344,11 @@
 	});
 
 	// Skip first N — toggle + number.
-	let skipFirstEnabled = $state<boolean>(searchTask?.skip_first != null);
-	let skipFirstInput = $state<string>(searchTask?.skip_first?.toString() ?? '');
+	let skipFirstEnabled = $state<boolean>(task?.skip_first != null);
+	let skipFirstInput = $state<string>(task?.skip_first?.toString() ?? '');
 	const skipFirstField = autoSaveField<number | null>({
 		armOnInteraction: true,
-		initial: searchTask?.skip_first ?? null,
+		initial: task?.skip_first ?? null,
 		save: (v) => patchSearchTask({ skip_first: v }),
 		onSaved: (v) => {
 			if (searchTask) searchTask.skip_first = v;
@@ -365,13 +368,13 @@
 		provider: string | null;
 		apiKey: number | null;
 	};
-	let browserProvider = $state<string | null>(searchTask?.browser_provider ?? null);
-	let sjsBrowserApiKey = $state<number | null>(searchTask?.sjsbrowser_api_key ?? null);
+	let browserProvider = $state<string | null>(task?.browser_provider ?? null);
+	let sjsBrowserApiKey = $state<number | null>(task?.sjsbrowser_api_key ?? null);
 	const browserConfigField = autoSaveField<BrowserConfig>({
 		armOnInteraction: true,
 		initial: {
-			provider: searchTask?.browser_provider ?? null,
-			apiKey: searchTask?.sjsbrowser_api_key ?? null
+			provider: task?.browser_provider ?? null,
+			apiKey: task?.sjsbrowser_api_key ?? null
 		},
 		save: (v) =>
 			patchSearchTask({
@@ -396,10 +399,10 @@
 	});
 
 	// Keep minimized — boolean toggle.
-	let keepMinimized = $state<boolean>(searchTask?.keep_minimized ?? true);
+	let keepMinimized = $state<boolean>(task?.keep_minimized ?? true);
 	const keepMinimizedField = autoSaveField<boolean>({
 		armOnInteraction: true,
-		initial: searchTask?.keep_minimized ?? true,
+		initial: task?.keep_minimized ?? true,
 		save: (v) => patchSearchTask({ keep_minimized: v }),
 		onSaved: (v) => {
 			if (searchTask) searchTask.keep_minimized = v;
@@ -413,10 +416,10 @@
 	// Debug screenshots — boolean toggle (staff-only). PATCH endpoint also
 	// enforces the staff gate server-side, so a non-staff user with a hand-
 	// crafted request still can't enable this.
-	let debugScreenshots = $state<boolean>(Boolean(searchTask?.debug_screenshots));
+	let debugScreenshots = $state<boolean>(Boolean(task?.debug_screenshots));
 	const debugScreenshotsField = autoSaveField<boolean>({
 		armOnInteraction: true,
-		initial: Boolean(searchTask?.debug_screenshots),
+		initial: Boolean(task?.debug_screenshots),
 		save: (v) => patchSearchTask({ debug_screenshots: v }),
 		onSaved: (v) => {
 			if (searchTask) searchTask.debug_screenshots = v;
@@ -432,16 +435,14 @@
 		intervalHours: number | null;
 		preferredHour: number;
 	};
-	let scheduleEnabled = $state<boolean>(searchTask?.schedule_interval_hours != null);
-	let scheduleIntervalInput = $state<string>(
-		searchTask?.schedule_interval_hours?.toString() ?? '24'
-	);
-	let schedulePreferredHour = $state<number>(searchTask?.schedule_preferred_hour ?? 9);
+	let scheduleEnabled = $state<boolean>(task?.schedule_interval_hours != null);
+	let scheduleIntervalInput = $state<string>(task?.schedule_interval_hours?.toString() ?? '24');
+	let schedulePreferredHour = $state<number>(task?.schedule_preferred_hour ?? 9);
 	const scheduleField = autoSaveField<ScheduleConfig>({
 		armOnInteraction: true,
 		initial: {
-			intervalHours: searchTask?.schedule_interval_hours ?? null,
-			preferredHour: searchTask?.schedule_preferred_hour ?? 9
+			intervalHours: task?.schedule_interval_hours ?? null,
+			preferredHour: task?.schedule_preferred_hour ?? 9
 		},
 		save: (v) =>
 			patchSearchTask({
@@ -466,11 +467,13 @@
 		});
 	});
 
-	// Browser country (edit) — patches the profile, not the task.
-	let editBrowserCountryCode = $state(initialBrowserCountryCode);
+	// Browser country (edit) — patches the profile, not the task. Seeded at
+	// mount like the task's own fields above.
+	const initialCountryCode = untrack(() => initialBrowserCountryCode);
+	let editBrowserCountryCode = $state(initialCountryCode);
 	const browserCountryField = autoSaveField<string>({
 		armOnInteraction: true,
-		initial: initialBrowserCountryCode,
+		initial: initialCountryCode,
 		save: (v) => patchProfile({ browser_country_code: v.trim().toUpperCase() || null }),
 		onSaved: (v) => {
 			editBrowserCountryCode = v;
@@ -484,16 +487,14 @@
 	// Browser fingerprint (edit) — language + timezone, patches the profile.
 	type Fingerprint = { language: string; timezone: string };
 	let showAdvancedBrowser = $state(false);
-	let browserLanguage = $state(browserFingerprint.language);
-	let browserTimezone = $state(browserFingerprint.timezone);
-	let defaultBrowserLanguage = browserFingerprintDefaults.language;
-	let defaultBrowserTimezone = browserFingerprintDefaults.timezone;
+	const initialFingerprint = untrack(() => ({ ...browserFingerprint }));
+	let browserLanguage = $state(initialFingerprint.language);
+	let browserTimezone = $state(initialFingerprint.timezone);
+	let defaultBrowserLanguage = $derived(browserFingerprintDefaults.language);
+	let defaultBrowserTimezone = $derived(browserFingerprintDefaults.timezone);
 	const fingerprintField = autoSaveField<Fingerprint>({
 		armOnInteraction: true,
-		initial: {
-			language: browserFingerprint.language,
-			timezone: browserFingerprint.timezone
-		},
+		initial: { ...initialFingerprint },
 		save: (v) =>
 			patchProfile({
 				browser_language: v.language.trim() || null,
@@ -517,8 +518,8 @@
 	// Credentials (edit) — kept on manual save because picking a shared
 	// credential can cascade a device change that we want to confirm
 	// explicitly, and the combined PATCH surfaces a custom error.
-	let editPlatformCredentials = $state(initialPlatformCredentials);
-	const editInitialCredId = searchTask?.platform_credential_id?.toString() ?? 'none';
+	let editPlatformCredentials = $state(untrack(() => initialPlatformCredentials));
+	const editInitialCredId = task?.platform_credential_id?.toString() ?? 'none';
 	let editSavedCredentialId = $state<string>(editInitialCredId);
 	let editSelectedCredentialId = $state<string>(editInitialCredId);
 	let credentialDirty = $derived(editSelectedCredentialId !== editSavedCredentialId);
@@ -527,12 +528,12 @@
 	// The platform's sign-in page. Mirrored into local state because
 	// SignInPageField can add one while the page is open, and both the mode
 	// chooser's copy and the "sign in now" target depend on it.
-	let signInPageUrl = $state<string | null>(searchTask?.job_platform?.login_page_url ?? null);
+	let signInPageUrl = $state<string | null>(task?.job_platform?.login_page_url ?? null);
 	let hasSignInPage = $derived(!!signInPageUrl);
 
 	// Login mode (edit)
-	let editLoginMode = $state<string>(searchTask?.login_mode ?? 'auto');
-	let editSavedLoginMode = $state<string>(searchTask?.login_mode ?? 'auto');
+	let editLoginMode = $state<string>(task?.login_mode ?? 'auto');
+	let editSavedLoginMode = $state<string>(task?.login_mode ?? 'auto');
 	let loginModeDirty = $derived(editLoginMode !== editSavedLoginMode);
 	let isSavingLoginMode = $state(false);
 
@@ -622,98 +623,6 @@
 	// one field — they reuse the combined save.
 	async function saveCredential() {
 		await saveLoginAndCredential();
-	}
-
-	// Re-sync state when searchTask changes from outside (navigation)
-	export function resetToData(newData: {
-		searchTask: SearchTaskFieldsRow;
-		platformCredentials: PlatformCredentialOption[];
-		browserCountryCode: string;
-		defaultCountryCode: string;
-		browserFingerprint: {
-			language: string;
-			timezone: string;
-		};
-		browserFingerprintDefaults: { language: string; timezone: string };
-		uiPreferences: Record<string, unknown>;
-	}) {
-		searchTermInput = newData.searchTask.search_term ?? '';
-		maxJobsEnabled = newData.searchTask.max_jobs != null;
-		maxJobsInput = newData.searchTask.max_jobs?.toString() ?? '';
-		skipFirstEnabled = newData.searchTask.skip_first != null;
-		skipFirstInput = newData.searchTask.skip_first?.toString() ?? '';
-		stopAfterDuplicatesEnabled = newData.searchTask.stop_after_duplicates != null;
-		stopAfterDuplicatesInput = newData.searchTask.stop_after_duplicates?.toString() ?? '';
-		skipExisting = newData.searchTask.skip_existing ?? false;
-		browserProvider = newData.searchTask.browser_provider ?? null;
-		keepMinimized = newData.searchTask.keep_minimized ?? true;
-		debugScreenshots = Boolean(newData.searchTask.debug_screenshots);
-		scheduleEnabled = newData.searchTask.schedule_interval_hours != null;
-		scheduleIntervalInput = newData.searchTask.schedule_interval_hours?.toString() ?? '24';
-		schedulePreferredHour = newData.searchTask.schedule_preferred_hour ?? 9;
-		editBrowserCountryCode = newData.browserCountryCode;
-		browserLanguage = newData.browserFingerprint.language;
-		browserTimezone = newData.browserFingerprint.timezone;
-		defaultBrowserLanguage = newData.browserFingerprintDefaults.language;
-		defaultBrowserTimezone = newData.browserFingerprintDefaults.timezone;
-		editPlatformCredentials = newData.platformCredentials;
-
-		// Re-seed the auto-save helpers with the new server-confirmed values so
-		// the $effects that mirror UI → helper see "unchanged" and don't trigger
-		// a save on navigation.
-		searchTermField.reset(newData.searchTask.search_term ?? null);
-		maxJobsField.reset(newData.searchTask.max_jobs ?? null);
-		skipExistingField.reset(newData.searchTask.skip_existing ?? false);
-		stopAfterDuplicatesField.reset(newData.searchTask.stop_after_duplicates ?? null);
-		skipFirstField.reset(newData.searchTask.skip_first ?? null);
-		browserConfigField.reset({
-			provider: newData.searchTask.browser_provider ?? null,
-			apiKey: newData.searchTask.sjsbrowser_api_key ?? null
-		});
-		keepMinimizedField.reset(newData.searchTask.keep_minimized ?? true);
-		debugScreenshotsField.reset(Boolean(newData.searchTask.debug_screenshots));
-		scheduleField.reset({
-			intervalHours: newData.searchTask.schedule_interval_hours ?? null,
-			preferredHour: newData.searchTask.schedule_preferred_hour ?? 9
-		});
-		browserCountryField.reset(newData.browserCountryCode);
-		fingerprintField.reset({
-			language: newData.browserFingerprint.language,
-			timezone: newData.browserFingerprint.timezone
-		});
-
-		const credId = newData.searchTask.platform_credential_id?.toString() ?? 'none';
-		editSavedCredentialId = credId;
-		editSelectedCredentialId = credId;
-		editLoginMode = newData.searchTask.login_mode ?? 'auto';
-		editSavedLoginMode = newData.searchTask.login_mode ?? 'auto';
-		signInPageUrl = newData.searchTask.job_platform?.login_page_url ?? null;
-		sectionOpen = {
-			search: (() => {
-				const v = newData.uiPreferences['task_sections_search'];
-				return v === undefined ? true : Boolean(v);
-			})(),
-			auth: (() => {
-				const v = newData.uiPreferences['task_sections_auth'];
-				return v === undefined ? true : Boolean(v);
-			})(),
-			options: (() => {
-				const v = newData.uiPreferences['task_sections_options'];
-				return v === undefined ? true : Boolean(v);
-			})(),
-			schedule: (() => {
-				const v = newData.uiPreferences['task_sections_schedule'];
-				return v === undefined ? true : Boolean(v);
-			})(),
-			browser: (() => {
-				const v = newData.uiPreferences['task_sections_browser'];
-				return v === undefined ? true : Boolean(v);
-			})(),
-			advanced: (() => {
-				const v = newData.uiPreferences['task_sections_advanced'];
-				return v === undefined ? false : Boolean(v);
-			})()
-		};
 	}
 
 	// Prevent browser form restoration from causing dirty state on page load/refresh.
