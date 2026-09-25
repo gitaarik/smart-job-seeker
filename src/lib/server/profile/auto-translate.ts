@@ -7,7 +7,7 @@
  */
 
 import { z } from 'zod';
-import { generateChatCompletion } from '$lib/server/llm/langchain';
+import { generateChatCompletionCharged } from '$lib/server/llm/charged';
 import { config } from '$lib/server/config';
 import { LOCALES } from '$lib/resume-translations';
 
@@ -23,16 +23,19 @@ const BatchSchema = z.object({
 });
 
 /** Fields per LLM call — keeps each response comfortably within output limits. */
-const CHUNK_SIZE = 20;
+export const CHUNK_SIZE = 20;
 
 /**
  * Translate `fields` into `locale`. Returns a map from the field's index (in
  * the input array) to its translated string. Missing/blank results are omitted
  * so the caller falls back to English for anything the model skipped.
+ *
+ * Each call's tokens are charged to `chargeTo`, the user whose profile it is.
  */
 export async function translateFields(
 	fields: FieldToTranslate[],
 	locale: string,
+	chargeTo: string | null,
 	model: string = config.llmTranslateModel,
 	provider: string | undefined = config.llmTranslateProvider
 ): Promise<Map<number, string>> {
@@ -43,7 +46,8 @@ export async function translateFields(
 		const chunk = fields.slice(start, start + CHUNK_SIZE);
 		const items = chunk.map((f, k) => ({ i: start + k, t: f.base }));
 
-		const parsed = await generateChatCompletion<z.infer<typeof BatchSchema>>(
+		const parsed = await generateChatCompletionCharged<z.infer<typeof BatchSchema>>(
+			chargeTo,
 			[
 				{
 					role: 'system',

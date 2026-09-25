@@ -8,7 +8,12 @@ import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
 import { getProfileByIdentifier } from '$lib/server/profile/default';
 import { collectTranslatable } from '$lib/server/profile/translations';
 import { touchProfile } from '$lib/server/profile/touch-profile';
-import { translateFields, type FieldToTranslate } from '$lib/server/profile/auto-translate';
+import {
+	CHUNK_SIZE,
+	translateFields,
+	type FieldToTranslate
+} from '$lib/server/profile/auto-translate';
+import { requireCredits } from '$lib/server/billing/require-credits';
 import { BASE_LOCALE, isKnownLocale, translationKey } from '$lib/resume-translations';
 
 /**
@@ -75,9 +80,12 @@ export const POST: RequestHandler = async ({ locals, cookies, request }) => {
 		return json({ translations: [], count: 0 });
 	}
 
+	// A credit a call at least: the fields go to the model CHUNK_SIZE at a time.
+	await requireCredits(user.id, Math.ceil(targets.length / CHUNK_SIZE));
+
 	let translated: Map<number, string>;
 	try {
-		translated = await translateFields(targets, locale);
+		translated = await translateFields(targets, locale, user.id);
 	} catch (e) {
 		console.error('[auto-translate] LLM error:', e);
 		error(502, 'Translation service failed');

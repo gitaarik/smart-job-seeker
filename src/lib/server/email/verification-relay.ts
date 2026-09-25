@@ -11,6 +11,7 @@ import { and, desc, eq, or } from 'drizzle-orm';
 import {
 	inbound_emails,
 	platform_profiles,
+	profiles,
 	search_task_runs,
 	search_tasks,
 	verification_email_addresses
@@ -183,11 +184,13 @@ export async function processInboundEmail(params: {
 	const blockedRunResults = await db
 		.select({
 			id: search_task_runs.id,
-			started_at: search_task_runs.started_at
+			started_at: search_task_runs.started_at,
+			taskOwnerId: profiles.user_id
 		})
 		.from(search_task_runs)
 		.innerJoin(search_tasks, eq(search_task_runs.search_task_id, search_tasks.id))
 		.leftJoin(platform_profiles, eq(platform_profiles.id, search_tasks.platform_profile_id))
+		.leftJoin(profiles, eq(profiles.id, search_tasks.profile_id))
 		.where(
 			and(
 				eq(search_task_runs.status, 'blocked'),
@@ -199,8 +202,13 @@ export async function processInboundEmail(params: {
 
 	const blockedRun = blockedRunResults[0] ?? null;
 
-	// 3. Parse the email
-	const parsed = await parseVerificationEmail(subject, bodyText, bodyHtml);
+	// 3. Parse the email. When that takes the model, its tokens are charged to
+	// whoever's run the email unblocks: through a shared credential that is the
+	// contact running the task, not the owner whose inbox received it, just as
+	// the scrape itself is charged to the task's owner. With no run, to the
+	// owner of the address.
+	const chargeTo = blockedRun?.taskOwnerId ?? verifyAddr.profile?.user_id ?? null;
+	const parsed = await parseVerificationEmail(subject, bodyText, bodyHtml, chargeTo);
 
 	// 4. Store the email record
 	const [emailRecord] = await db

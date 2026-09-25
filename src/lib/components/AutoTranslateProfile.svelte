@@ -27,6 +27,10 @@
 					data.count > 0
 						? `Translated ${data.count} field${data.count === 1 ? '' : 's'}. Switch a field's tab to review.`
 						: 'Nothing to translate — everything is already done.';
+			} else if (res.status === 403) {
+				// Out of credits: the server's message says how many it needed.
+				const body = await res.json().catch(() => null);
+				message = body?.message ?? 'Not enough usage remaining to translate.';
 			} else {
 				message = 'Translation failed — check the AI provider is configured.';
 			}

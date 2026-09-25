@@ -1232,23 +1232,26 @@ export async function generateChatCompletion(
 	options: ChatCompletionOptions = {}
 ): Promise<string> {
 	const result = await generateChatCompletionTracked(messages, options);
+	return completionOutput(result, options);
+}
 
-	// Parse JSON if structuredOutput was provided
-	if (options.structuredOutput) {
-		try {
-			return JSON.parse(result.content);
-		} catch (error) {
-			const model = options.model ?? config.llmModel;
-			throw new Error(
-				`Failed to parse JSON response from LLM (${config.llmProvider}/${model}): ${
-					error instanceof Error ? error.message : String(error)
-				}\nResponse was: ${result.content.substring(0, 500)}${
-					result.content.length > 500 ? '...' : ''
-				}`,
-				{ cause: error }
-			);
-		}
+/**
+ * What `generateChatCompletion` hands back for a result: the parsed JSON when
+ * the call asked for structured output, else the text.
+ */
+export function completionOutput(result: CompletionResult, options: ChatCompletionOptions = {}) {
+	if (!options.structuredOutput) return result.content;
+	try {
+		return JSON.parse(result.content);
+	} catch (error) {
+		const model = options.model ?? config.llmModel;
+		throw new Error(
+			`Failed to parse JSON response from LLM (${config.llmProvider}/${model}): ${
+				error instanceof Error ? error.message : String(error)
+			}\nResponse was: ${result.content.substring(0, 500)}${
+				result.content.length > 500 ? '...' : ''
+			}`,
+			{ cause: error }
+		);
 	}
-
-	return result.content;
 }
