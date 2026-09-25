@@ -3117,8 +3117,9 @@ export const ai_chats = pgTable(
 		 * Thinking billed at the output rate and NOT counted in `output_tokens`
 		 * (TokenUsage.reasoningTokens): an addition, unlike `cached_input_tokens`.
 		 * Gemini 2.5's thoughts, which were counted nowhere before 2026-09-24.
-		 * `total_tokens` still leaves them out, because it is what credits are
-		 * charged on; see TokenUsage.totalTokens.
+		 * `total_tokens` includes them on every row that records this, because
+		 * credits are charged on everything a call spends; on older rows it is
+		 * input plus output only. See TokenUsage.totalTokens.
 		 */
 		reasoning_tokens: integer(),
 		/**

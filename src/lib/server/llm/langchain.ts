@@ -555,13 +555,15 @@ export interface TokenUsage {
 	/** The visible answer. Never includes `reasoningTokens`. */
 	outputTokens: number;
 	/**
-	 * The basis credits are charged on: input plus output as the provider
-	 * reported them. On Gemini that leaves the thinking out, since
-	 * @langchain/google-genai reports it only in its own total, and it is left
-	 * that way on purpose: counting it here would raise what every
-	 * gemini-2.5-pro writing call charges, which is a pricing decision rather
-	 * than a bug fix (planning/LANGFUSE.md, change 2). `reasoningTokens` is
-	 * where the thinking is recorded and priced in the meantime.
+	 * Everything the call spent: input, output and reasoning. It is what
+	 * credits are charged on, because every token a call spends is charged to
+	 * the user it was spent for, thinking included (decided 2026-09-25,
+	 * planning/LANGFUSE.md, change 2).
+	 *
+	 * Until then this was input plus output as reported, which on Gemini left
+	 * the thinking out: @langchain/google-genai reports it only in its own
+	 * total. A gemini-2.5-pro writing call thinks for up to its thinking budget,
+	 * so counting it raises what those calls charge.
 	 */
 	totalTokens: number;
 	/**
@@ -675,11 +677,12 @@ function extractTokenUsage(result: UsageBearingResult | null | undefined): Token
 			reportedReasoning != null
 				? Math.min(Math.max(reportedReasoning, 0), reportedOutput)
 				: Math.max((usage.total_tokens ?? 0) - inputTokens - reportedOutput, 0);
+		const outputTokens =
+			reportedReasoning != null ? reportedOutput - reasoningTokens : reportedOutput;
 		return {
 			inputTokens,
-			outputTokens: reportedReasoning != null ? reportedOutput - reasoningTokens : reportedOutput,
-			// Unchanged by the reasoning count: the credit basis. See TokenUsage.
-			totalTokens: inputTokens + reportedOutput,
+			outputTokens,
+			totalTokens: inputTokens + outputTokens + reasoningTokens,
 			reasoningTokens,
 			// Standard LangChain shape first. Providers that don't cache omit the
 			// whole `input_token_details` object rather than reporting a zero.

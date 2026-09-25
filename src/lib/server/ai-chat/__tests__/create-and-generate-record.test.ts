@@ -70,7 +70,7 @@ describe('createAndGenerateAiChat: the record of the call', () => {
 			usage: {
 				inputTokens: 100,
 				outputTokens: 20,
-				totalTokens: 120,
+				totalTokens: 820,
 				cachedInputTokens: 0,
 				reasoningTokens: 700
 			}
@@ -99,14 +99,14 @@ describe('createAndGenerateAiChat: the record of the call', () => {
 		expect(mockGenerate.mock.calls[0][1]).toMatchObject({ promptKey: 'compact_job_description' });
 	});
 
-	it('records the thinking tokens, and leaves the credit basis alone', async () => {
+	it('records the thinking tokens, and counts them in the total it charges on', async () => {
 		await run();
 
 		const saved = updates.find((u) => 'response' in u);
 		expect(saved).toMatchObject({
 			output_tokens: 20,
 			reasoning_tokens: 700,
-			total_tokens: 120
+			total_tokens: 820
 		});
 	});
 
@@ -124,7 +124,7 @@ describe('createAndGenerateAiChat: the record of the call', () => {
 				usage: {
 					inputTokens: 100,
 					outputTokens: 0,
-					totalTokens: 100,
+					totalTokens: 8100,
 					cachedInputTokens: 0,
 					reasoningTokens: 8000
 				}
