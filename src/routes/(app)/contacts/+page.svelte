@@ -17,7 +17,8 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let contacts = $state(data.contacts);
+	// Follows `data`: every change below ends in invalidateAll().
+	let contacts = $derived(data.contacts);
 	let showAddForm = $state(false);
 	let inviteEmail = $state('');
 	let isSubmitting = $state(false);
@@ -57,7 +58,6 @@
 			inviteEmail = '';
 			showAddForm = false;
 			await invalidateAll();
-			contacts = data.contacts;
 		} catch {
 			errorMessage = 'Failed to send contact request';
 		} finally {
@@ -75,7 +75,6 @@
 
 			if (res.ok) {
 				await invalidateAll();
-				contacts = data.contacts;
 			}
 		} catch {
 			errorMessage = 'Failed to accept contact request';
@@ -92,7 +91,6 @@
 
 			if (res.ok) {
 				await invalidateAll();
-				contacts = data.contacts;
 			}
 		} catch {
 			errorMessage = 'Failed to decline contact request';
@@ -109,7 +107,6 @@
 
 			if (res.ok) {
 				await invalidateAll();
-				contacts = data.contacts;
 			}
 		} catch {
 			errorMessage = 'Failed to remove contact';

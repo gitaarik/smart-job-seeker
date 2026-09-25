@@ -45,21 +45,14 @@
 	let applications = $derived(data.applications);
 	let openDropdown = $state<string | null>(null);
 
-	// Filter state synced from server data
-	let groupFilter = $state(data.currentGroup);
-	let phaseFilter = $state(data.currentPhase);
-	let platformFilter = $state(data.currentPlatform);
-	let sortOrder = $state(data.currentSort);
-	let searchInput = $state(data.currentSearch);
+	// Filter state follows the server's (the URL's) on every load; a control
+	// overrides it until the navigation it starts brings the new value back.
+	let groupFilter = $derived(data.currentGroup);
+	let phaseFilter = $derived(data.currentPhase);
+	let platformFilter = $derived(data.currentPlatform);
+	let sortOrder = $derived(data.currentSort);
+	let searchInput = $derived(data.currentSearch);
 	let searchInputEl: HTMLInputElement;
-
-	$effect(() => {
-		groupFilter = data.currentGroup;
-		phaseFilter = data.currentPhase;
-		platformFilter = data.currentPlatform;
-		sortOrder = data.currentSort;
-		searchInput = data.currentSearch;
-	});
 
 	// "Snoozed" is only offered once something is in it — an empty group is a
 	// filter that can only ever disappoint.

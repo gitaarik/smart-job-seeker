@@ -65,44 +65,49 @@
 	let { profile, config, type = null, versionId = null, locale = null }: Props = $props();
 
 	// --- template config → local branding values ---
-	const accent = config.accent ?? '#ffd400';
-	const headingFont = config.fonts?.heading ?? 'Poppins';
-	const bodyFont = config.fonts?.body ?? 'Carlito';
-	const A = config.assets ?? {};
-	const badgeUrl = assetUrl(A.badge);
-	const screenBgUrl = assetUrl(A.screenBackground);
-	const printBgUrl = assetUrl(A.printBackground);
-	const footerUrl = assetUrl(A.footer);
-	const dividerUrl = assetUrl(A.divider);
-	const appendLocation = config.rules?.appendLocationToHeadline ?? false;
+	// Everything that reads the props is derived from them, so the document
+	// renders whatever profile and template it is given rather than the first.
+	const accent = $derived(config.accent ?? '#ffd400');
+	const headingFont = $derived(config.fonts?.heading ?? 'Poppins');
+	const bodyFont = $derived(config.fonts?.body ?? 'Carlito');
+	const A = $derived(config.assets ?? {});
+	const badgeUrl = $derived(assetUrl(A.badge));
+	const screenBgUrl = $derived(assetUrl(A.screenBackground));
+	const printBgUrl = $derived(assetUrl(A.printBackground));
+	const footerUrl = $derived(assetUrl(A.footer));
+	const dividerUrl = $derived(assetUrl(A.divider));
+	const appendLocation = $derived(config.rules?.appendLocationToHeadline ?? false);
 
-	const rootStyle = [
-		`--accent:${accent}`,
-		`--heading-font:${headingFont}`,
-		`--body-font:${bodyFont}`,
-		screenBgUrl ? `--screen-bg:url('${screenBgUrl}')` : ''
-	]
-		.filter(Boolean)
-		.join(';');
+	const rootStyle = $derived(
+		[
+			`--accent:${accent}`,
+			`--heading-font:${headingFont}`,
+			`--body-font:${bodyFont}`,
+			screenBgUrl ? `--screen-bg:url('${screenBgUrl}')` : ''
+		]
+			.filter(Boolean)
+			.join(';')
+	);
 
-	const versionFromUrl = page.url.searchParams.get('version') || '';
-	const { filterOnTags, toggles } = createProfileFilter(
-		profile.profile_versions,
-		type,
-		versionId,
-		versionFromUrl
+	const versionFromUrl = $derived(page.url.searchParams.get('version') || '');
+	const { filterOnTags, toggles } = $derived(
+		createProfileFilter(profile.profile_versions, type, versionId, versionFromUrl)
 	);
 
 	// Categories whose skills are all hidden (all profile-only, say) drop out
 	// entirely, so neither an empty category nor a lone heading gets printed.
-	const skills = filterOnTags(profile.tech_skill_categories ?? [], OVERRIDE_ENTITIES.skillCategory)
-		.map((cat) => ({
-			...cat,
-			tech_skills: filterOnTags(cat.tech_skills ?? [], OVERRIDE_ENTITIES.skill)
-		}))
-		.filter((cat) => cat.tech_skills.length > 0);
-	const work = filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience);
-	const education = filterOnTags(profile.educations ?? [], OVERRIDE_ENTITIES.education);
+	const skills = $derived(
+		filterOnTags(profile.tech_skill_categories ?? [], OVERRIDE_ENTITIES.skillCategory)
+			.map((cat) => ({
+				...cat,
+				tech_skills: filterOnTags(cat.tech_skills ?? [], OVERRIDE_ENTITIES.skill)
+			}))
+			.filter((cat) => cat.tech_skills.length > 0)
+	);
+	const work = $derived(
+		filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience)
+	);
+	const education = $derived(filterOnTags(profile.educations ?? [], OVERRIDE_ENTITIES.education));
 
 	// Work-experience lead line. The stored headline holds only the base text;
 	// when the template opts in, the job location is appended ("… in {location}.").
@@ -127,26 +132,31 @@
 		return [head, tail].filter(Boolean).join(' – ');
 	}
 
-	const contactLocation = [
-		profile.location,
-		profile.location_timezone ? `(${profile.location_timezone})` : ''
-	]
-		.filter(Boolean)
-		.join(' ');
+	const contactLocation = $derived(
+		[profile.location, profile.location_timezone ? `(${profile.location_timezone})` : '']
+			.filter(Boolean)
+			.join(' ')
+	);
 
 	// Template-level contact overrides (brand contact points, e.g. a consultancy
 	// email) replace the profile's own value; the profile value is the fallback.
-	const contactOverrides = config.contact ?? {};
+	const contactOverrides = $derived(config.contact ?? {});
 	const contactText = (key: string, fallback: string | null) => contactOverrides[key] ?? fallback;
 
-	const contacts = [
-		{ icon: 'mail', key: 'email', text: contactText('email', profile.email_address) },
-		{ icon: 'phone', key: 'phone', text: contactText('phone', profile.phone_number) },
-		{ icon: 'pin', key: 'location', text: contactText('location', contactLocation || null) },
-		{ icon: 'globe', key: 'website', text: contactText('website', profile.personal_website) },
-		{ icon: 'linkedin', key: 'linkedin', text: contactText('linkedin', profile.linkedin_profile) },
-		{ icon: 'github', key: 'github', text: contactText('github', profile.github_profile) }
-	].filter((c) => !!c.text && !isContactHidden(c.key, toggles));
+	const contacts = $derived(
+		[
+			{ icon: 'mail', key: 'email', text: contactText('email', profile.email_address) },
+			{ icon: 'phone', key: 'phone', text: contactText('phone', profile.phone_number) },
+			{ icon: 'pin', key: 'location', text: contactText('location', contactLocation || null) },
+			{ icon: 'globe', key: 'website', text: contactText('website', profile.personal_website) },
+			{
+				icon: 'linkedin',
+				key: 'linkedin',
+				text: contactText('linkedin', profile.linkedin_profile)
+			},
+			{ icon: 'github', key: 'github', text: contactText('github', profile.github_profile) }
+		].filter((c) => !!c.text && !isContactHidden(c.key, toggles))
+	);
 
 	// Share-link preview (LinkedIn, Slack, WhatsApp) is built from these two.
 	const headTitle = $derived(resumeDocumentTitle(profile));

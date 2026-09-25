@@ -14,7 +14,7 @@
 
 	let { state = 'idle', onClick, disabled = false, label }: Props = $props();
 
-	const defaultLabel = label ?? 'Save';
+	const defaultLabel = $derived(label ?? 'Save');
 
 	const buttonText = $derived(
 		state === 'saving'

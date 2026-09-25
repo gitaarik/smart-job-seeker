@@ -125,42 +125,42 @@
 	const heading = (key: TemplateLabelKey) => t(key).toUpperCase();
 	const presentLabel = t('present');
 
-	// Use versionId prop if provided, otherwise fall back to URL query param
-	const versionFromUrl: string = page.url.searchParams.get('version') || '';
-	const { filterOnTags, toggles } = createProfileFilter(
-		profile.profile_versions,
-		type,
-		versionId,
-		versionFromUrl
+	// Use versionId prop if provided, otherwise fall back to URL query param.
+	// Derived, like everything below that reads the props, so the document renders
+	// whatever profile it is given rather than the first.
+	const versionFromUrl: string = $derived(page.url.searchParams.get('version') || '');
+	const { filterOnTags, toggles } = $derived(
+		createProfileFilter(profile.profile_versions, type, versionId, versionFromUrl)
 	);
 
-	const work_experiences = filterOnTags(profile.work_experiences, OVERRIDE_ENTITIES.workExperience);
+	const work_experiences = $derived(
+		filterOnTags(profile.work_experiences, OVERRIDE_ENTITIES.workExperience)
+	);
 
 	// Resolve visible skills per category up front: a category whose skills are
 	// all hidden (all profile-only, say) must not print an empty bullet — nor
 	// keep the SKILLS heading alive when it's the only category left.
-	const skillGroups = filterOnTags(
-		profile.tech_skill_categories ?? [],
-		OVERRIDE_ENTITIES.skillCategory
-	)
-		.map((group) => ({
-			name: group.name,
-			skills: filterOnTags(group.tech_skills ?? [], OVERRIDE_ENTITIES.skill)
-		}))
-		.filter((group) => group.skills.length > 0);
+	const skillGroups = $derived(
+		filterOnTags(profile.tech_skill_categories ?? [], OVERRIDE_ENTITIES.skillCategory)
+			.map((group) => ({
+				name: group.name,
+				skills: filterOnTags(group.tech_skills ?? [], OVERRIDE_ENTITIES.skill)
+			}))
+			.filter((group) => group.skills.length > 0)
+	);
 
 	// Contact fields show when set and not hidden by a `hide:<key>` version toggle.
 	const showContact = (key: string, value: string | null | undefined) =>
 		!!value && !isContactHidden(key, toggles);
-	const contactVisible = {
+	const contactVisible = $derived({
 		email: showContact('email', profile.email_address),
 		phone: showContact('phone', profile.phone_number),
 		location: showContact('location', profile.location),
 		website: showContact('website', profile.personal_website),
 		linkedin: showContact('linkedin', profile.linkedin_profile),
 		github: showContact('github', profile.github_profile)
-	};
-	const anyContact = Object.values(contactVisible).some(Boolean);
+	});
+	const anyContact = $derived(Object.values(contactVisible).some(Boolean));
 
 	// Share-link preview (LinkedIn, Slack, WhatsApp) is built from these two.
 	const headTitle = $derived(resumeDocumentTitle(profile));

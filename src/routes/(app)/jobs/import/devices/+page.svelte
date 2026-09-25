@@ -32,7 +32,8 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let apiKeys = $state(data.apiKeys);
+	// Follows `data`: every change below ends in invalidateAll().
+	let apiKeys = $derived(data.apiKeys);
 	let sharedDevices = $derived(data.sharedDevices);
 	let sortedApiKeys = $derived(
 		[...apiKeys].sort((a, b) => Number(!!a.revoked) - Number(!!b.revoked))
@@ -134,7 +135,6 @@
 			if (res.ok) {
 				editingKeyId = null;
 				await invalidateAll();
-				apiKeys = data.apiKeys;
 			}
 		} catch {
 			errorMessage = 'Failed to rename device key';
@@ -285,7 +285,6 @@
 			// Surface the new device immediately so the wizard can watch it connect.
 			await pollOwnedSjsBrowserStatus();
 			await invalidateAll();
-			apiKeys = data.apiKeys;
 		} catch {
 			errorMessage = 'Failed to create device key';
 		} finally {
@@ -302,7 +301,6 @@
 			const res = await fetch(`/api/api-keys/${keyId}`, { method: 'DELETE' });
 			if (res.ok) {
 				await invalidateAll();
-				apiKeys = data.apiKeys;
 			}
 		} catch {
 			errorMessage = 'Failed to revoke device key';
@@ -318,7 +316,6 @@
 			});
 			if (res.ok) {
 				await invalidateAll();
-				apiKeys = data.apiKeys;
 			}
 		} catch {
 			errorMessage = 'Failed to activate device key';
@@ -332,7 +329,6 @@
 			const res = await fetch(`/api/api-keys/${keyId}?permanent=true`, { method: 'DELETE' });
 			if (res.ok) {
 				await invalidateAll();
-				apiKeys = data.apiKeys;
 			}
 		} catch {
 			errorMessage = 'Failed to delete device key';

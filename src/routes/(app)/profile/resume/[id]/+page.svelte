@@ -25,17 +25,24 @@
 	let showDeleteModal = $state(false);
 	let showAdvanced = $state(false);
 
-	// Form states — re-sync when data changes (e.g. after form submission with use:enhance)
-	let editName = $state(data.version.name || '');
-	let editSlug = $state(data.version.slug || '');
-	let editExtendsIds = $state<number[]>([...data.version.extendsIds]);
-	let editPublicResume = $state(data.publicResumeVersionId === data.version.id);
-	let editPublicCv = $state(data.publicCvVersionId === data.version.id);
+	// Form states follow `data` (a submit with use:enhance reloads it); editing
+	// overrides them until it changes again.
+	let editName = $derived(data.version.name || '');
+	let editSlug = $derived(data.version.slug || '');
+	let editExtendsIds = $derived<number[]>([...data.version.extendsIds]);
+	let editPublicResume = $derived(data.publicResumeVersionId === data.version.id);
+	let editPublicCv = $derived(data.publicCvVersionId === data.version.id);
 	let slugManual = $state(false);
 
 	const contactVisibility = (toggles: unknown) =>
 		Object.fromEntries(CONTACT_FIELDS.map((f) => [f.key, !isContactHidden(f.key, toggles)]));
-	let editContactVisible = $state<Record<string, boolean>>(contactVisibility(data.version.toggles));
+	// Deep `$state`, built inside a function: the checkboxes write one key at a
+	// time, which a bare `$derived` would not notice.
+	function contactState(toggles: unknown) {
+		const visible = $state<Record<string, boolean>>(contactVisibility(toggles));
+		return visible;
+	}
+	let editContactVisible = $derived(contactState(data.version.toggles));
 
 	function slugify(text: string): string {
 		return text
@@ -53,13 +60,9 @@
 		}
 	}
 
+	// A hand-typed slug starts over with the fields.
 	$effect(() => {
-		editName = data.version.name || '';
-		editSlug = data.version.slug || '';
-		editExtendsIds = [...data.version.extendsIds];
-		editPublicResume = data.publicResumeVersionId === data.version.id;
-		editPublicCv = data.publicCvVersionId === data.version.id;
-		editContactVisible = contactVisibility(data.version.toggles);
+		void data;
 		slugManual = false;
 	});
 
