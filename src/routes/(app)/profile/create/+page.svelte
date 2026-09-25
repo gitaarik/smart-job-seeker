@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import type { ActionData } from './$types';
 	import type { ResumeData } from '$lib/server/resume/types';
 	import { faUser } from '@fortawesome/free-solid-svg-icons';
@@ -17,8 +16,10 @@
 	let uploadedFileId = $state<string | null>(null);
 	let uploadedFileName = $state<string | null>(null);
 	let isLoading = $state(false);
-	// `form` only arrives from a no-JS submit; everything after sets this itself.
-	let error = $state<string | null>(untrack(() => form?.error || null));
+	// A failed submit comes back through `use:enhance` as a new `form`, so the
+	// error follows it; the handlers below set it themselves in between. It was a
+	// copy of `form` taken at mount, and the failure never reached the screen.
+	let error = $derived<string | null>(form?.error || null);
 
 	function handleSkipToManual() {
 		parsedData = { basics: { name: '' } };

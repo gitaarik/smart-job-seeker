@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import type { ResumeData } from '$lib/server/resume/types';
@@ -23,8 +22,10 @@
 	let showDiffReview = $state(false);
 	let incomingData = $state<ResumeData | null>(null);
 	let isLoading = $state(false);
-	// `form` only arrives from a no-JS submit; everything after sets this itself.
-	let error = $state<string | null>(untrack(() => form?.error || null));
+	// A failed submit comes back through `use:enhance` as a new `form`, so the
+	// error follows it; the handlers below set it themselves in between. It was a
+	// copy of `form` taken at mount, and the failure never reached the screen.
+	let error = $derived<string | null>(form?.error || null);
 
 	// Current profile data from server (fall back to empty for diff)
 	const emptyProfile: ResumeData = { basics: { name: '' } };
