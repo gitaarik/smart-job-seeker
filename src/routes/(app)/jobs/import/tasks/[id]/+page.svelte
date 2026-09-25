@@ -3,7 +3,7 @@
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { armOn } from '$lib/actions/arm-on';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, untrack } from 'svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import Card from '../../../../components/Card.svelte';
@@ -62,7 +62,30 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let searchTask = $state(data.searchTask);
+	/**
+	 * The task as this page shows it. Polling and the run controls write status
+	 * into it ahead of the next load, so it is deep `$state`, built inside a
+	 * function because a bare `$derived` would hand back the plain object and
+	 * those writes would stop rendering.
+	 *
+	 * Rebuilt when the page moves to another task: a notification links straight
+	 * to one on this same route, and SvelteKit keeps the component and swaps
+	 * `data` under it. A copy taken once at mount went on driving the previous
+	 * task (its runs, its Start and Stop, its note) under the new task's URL.
+	 *
+	 * Keyed on the id rather than on `data`, so a reload of the same task (the
+	 * `invalidateAll` after a run ends) keeps this object: the editors below
+	 * reset from it, and would wipe what is being typed into them.
+	 */
+	function taskState(task: PageData['searchTask']) {
+		const live = $state(task);
+		return live;
+	}
+	let taskId = $derived(data.searchTask.id);
+	let searchTask = $derived.by(() => {
+		void taskId;
+		return untrack(() => taskState(data.searchTask));
+	});
 	const profileSkillLevels = $derived(data.profileSkillLevels);
 
 	/**
@@ -80,10 +103,13 @@
 	// <SearchTaskFields> further down the page. `isEditingNote` only controls
 	// whether the input is shown; it no longer gates the save.
 	let isEditingNote = $state(false);
-	let editNoteInput = $state(searchTask.note ?? '');
+	// Seeded once per task: the reset effect below re-seeds both on a move to
+	// another one.
+	const initialNote = untrack(() => searchTask.note ?? null);
+	let editNoteInput = $state(initialNote ?? '');
 	const noteField = autoSaveField<string | null>({
 		armOnInteraction: true,
-		initial: searchTask.note ?? null,
+		initial: initialNote,
 		save: async (v) => {
 			const res = await fetch(`/api/import-tasks/${searchTask.id}`, {
 				method: 'PATCH',
@@ -371,8 +397,9 @@
 	let logContainerRefs = $state<Record<number, HTMLElement | null>>({});
 	let logAutoScroll = $state<Record<number, boolean>>({});
 
-	// Reset all page state when navigating between different search tasks
-	let currentSearchTaskId = $state(data.searchTask.id);
+	// Reset all page state when navigating between different search tasks. The
+	// task itself follows `data` (see `searchTask`); this is everything else.
+	let currentSearchTaskId = untrack(() => data.searchTask.id);
 	$effect(() => {
 		if (data.searchTask.id === currentSearchTaskId) return;
 		currentSearchTaskId = data.searchTask.id;
@@ -421,7 +448,7 @@
 		if (isBlocked && !prevIsBlocked) showInterventionControls = true;
 		prevIsBlocked = isBlocked;
 	});
-	let hasOtherRunning = $state(data.hasOtherRunning);
+	let hasOtherRunning = $derived(data.hasOtherRunning);
 	let isCloudMode = $derived(!!liveUrl);
 	let isMagicLink = $derived(isBlocked && searchTask.status_message?.includes('login link'));
 	let isVerification = $derived(
@@ -429,7 +456,7 @@
 			(searchTask.status_message?.includes('verification') ||
 				searchTask.status_message?.includes('login link'))
 	);
-	let verificationEmailAddress = $state(data.verificationEmailAddress);
+	let verificationEmailAddress = $derived(data.verificationEmailAddress);
 	let copiedVerifyEmail = $state(false);
 
 	function copyVerificationEmail() {
