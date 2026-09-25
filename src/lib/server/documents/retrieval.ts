@@ -25,13 +25,13 @@
  * The two are a UNION rather than a fallback, and that distinction is the whole
  * value of the graph here. As a fallback the widened ranker ran only when
  * embeddings were off or the floor cleared nobody — so with embeddings on, which
- * is the normal case, the graph affected no request at all. `withGraphPick` now
- * gives it the last of the K slots on every request, bounded to exactly one so
- * the change is measurable and reversible.
+ * is the normal case, the graph affected no request at all. `withGraphPick` then
+ * gave it the last of the K slots on every request, bounded to exactly one so
+ * the change was measurable and reversible.
  *
- * SJS_PROJECT_RETRIEVAL_MERGE=fused replaces that slot with reciprocal rank
- * fusion of the two full lists (mergeProjectRankings). The graph slot stays the
- * default until a hand-labelled set says fusion is at least as good; see
+ * Since 2026-09-25 the default is reciprocal rank fusion of the two full lists
+ * instead (mergeProjectRankings), after a hand-labelled set put it ahead of the
+ * slot; SJS_PROJECT_RETRIEVAL_MERGE=graph_slot brings the slot back. See
  * planning/PROJECT-RETRIEVAL-FUSION.md.
  */
 
@@ -534,10 +534,12 @@ export async function relevantProfileProjects(
 export type ProjectMergeMode = 'fused' | 'graph_slot';
 
 /**
- * The fusion settings project retrieval uses. k = 60 and equal weights are the
- * usual starting point, not a measurement: the labelled set in
- * cloud/scripts/golden/project-retrieval compares them with k = 10 and a
- * double-weighted semantic list, and whichever wins belongs here.
+ * The fusion settings project retrieval uses: k = 60 and equal weights, the
+ * usual starting point. The labelled set in cloud/scripts/golden/project-retrieval
+ * compared them with k = 10 and a double-weighted semantic list (2026-09-25).
+ * k = 10 tied on best found and was ahead on good and wrong picks by a single
+ * pick, too little to move off the conventional value; weighting the semantic
+ * list double was behind on every measure.
  */
 export const PROJECT_FUSION: Readonly<FusionOptions> = { k: RRF_DEFAULT_K };
 
@@ -557,13 +559,13 @@ type Scored = RankableProject & { score: number };
  * writer with none at all, so there the widened keywords are the whole answer
  * rather than a supplement.
  *
- *  - `graph_slot` (today's default): semantic leads and the keyword ranker gets
- *    the last slot — see pickGraphSlot.
- *  - `fused`: reciprocal rank fusion of both lists, the semantic list first so
- *    it wins a tie (rank-fusion.ts). An empty keyword list leaves the semantic
- *    list to decide alone, reported as `semantic`, since nothing was fused. Each
- *    fused pick carries its ranks and a `via` naming the lists that held it,
- *    and its `score` is the fused score.
+ *  - `graph_slot` (the default until 2026-09-25): semantic leads and the keyword
+ *    ranker gets the last slot — see pickGraphSlot.
+ *  - `fused` (the default): reciprocal rank fusion of both lists, the semantic
+ *    list first so it wins a tie (rank-fusion.ts). An empty keyword list leaves
+ *    the semantic list to decide alone, reported as `semantic`, since nothing
+ *    was fused. Each fused pick carries its ranks and a `via` naming the lists
+ *    that held it, and its `score` is the fused score.
  *
  * Pure, and exported so the project-retrieval golden set can replay both modes
  * from a snapshot through the same code production runs.
@@ -611,6 +613,10 @@ export function mergeProjectRankings(
 /**
  * Let the graph-widened ranker claim the last slot, when it has something
  * semantic ranking missed.
+ *
+ * Only with SJS_PROJECT_RETRIEVAL_MERGE=graph_slot since 2026-09-25: the
+ * default is fusion (mergeProjectRankings), which merges the same two lists by
+ * rank without a fixed slot. What follows is why the slot came first.
  *
  * ## Why a slot and not a merge
  *

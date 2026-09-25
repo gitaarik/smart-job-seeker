@@ -36,8 +36,9 @@
  *    failed, or the cosine floor cleared nobody and the widened keywords became
  *    the whole answer.
  *  - `fused` — both rankers produced a list and reciprocal rank fusion merged
- *    them (projects only, with SJS_PROJECT_RETRIEVAL_MERGE=fused). The items'
- *    `score` is then the fused score, see RetrievalItem.score.
+ *    them (projects only; the default, unless
+ *    SJS_PROJECT_RETRIEVAL_MERGE=graph_slot). The items' `score` is then the
+ *    fused score, see RetrievalItem.score.
  *  - `none` — there was nothing to rank (the profile has no units of this kind).
  */
 export type RankerKind = 'semantic' | 'overlap' | 'fused' | 'none';

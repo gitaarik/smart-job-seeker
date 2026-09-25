@@ -481,7 +481,7 @@ describe('mergeProjectRankings', () => {
 		}
 	});
 
-	describe('graph_slot (today, and the default)', () => {
+	describe('graph_slot (the default until 2026-09-25)', () => {
 		it('is withGraphPick on the top K of each list', () => {
 			const out = mergeProjectRankings(
 				[sem(1, 0.9), sem(2, 0.8), sem(3, 0.7), sem(4, 0.6)],
@@ -498,7 +498,7 @@ describe('mergeProjectRankings', () => {
 		});
 	});
 
-	describe('fused', () => {
+	describe('fused (the default)', () => {
 		it('lets fourth on both lists beat first on only one', () => {
 			// The whole case for fusing FULL lists: with top-3 lists project 4 would
 			// be on neither and could never be picked.
@@ -613,8 +613,8 @@ describe('rankedProfileProjects: the SJS_PROJECT_RETRIEVAL_MERGE switch', () => 
 		config.projectRetrievalMerge = mode;
 	});
 
-	it('defaults to the graph slot', () => {
-		expect(mode).toBe('graph_slot');
+	it('defaults to fusion', () => {
+		expect(mode).toBe('fused');
 	});
 
 	it('graph_slot: the keyword pick displaces the last semantic one, marked graph', async () => {
