@@ -17,6 +17,9 @@ the same rule: it can suggest, it cannot quietly rewrite what you wrote.
    and both are decided here, once.
 5. Click **Create key** and copy the key straight into your app. Treat it like a
    password.
+6. Leave the page open while you set the app up. It says **Waiting for … to
+   connect** until the app first uses the key, then **Connected**, with the name
+   and version the app gives for itself.
 
 The page also shows the **server address**. Almost every client needs exactly
 two things: that address, and the key as a bearer token.
@@ -97,8 +100,10 @@ Any key, any time, from [Connected Apps](/data/connected-apps) → **Revoke**. I
 stops working immediately. What that app asked for stays on the record, which is
 usually the thing you wanted to look at in the first place.
 
-Every key also shows when it was **last used**, so a connection you have
-forgotten about is visible rather than silent.
+Every key also shows whether anything has connected with it, which app that was,
+and when it was **last active**, so a connection you have forgotten about is
+visible rather than silent. The app's name is the one the app gives for itself:
+good for telling your own apps apart, but not proof of who is on the other end.
 
 ## What a connected app can't do
 

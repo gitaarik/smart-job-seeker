@@ -13,7 +13,7 @@
 import type { RequestHandler } from './$types';
 import { createRateLimitResponse, mcpRateLimiter } from '$lib/server/middleware/rate-limit';
 import { callTool } from '$lib/server/mcp/call';
-import { verifyMcpKey, type VerifiedMcpKey } from '$lib/server/mcp/keys';
+import { recordMcpClient, verifyMcpKey, type VerifiedMcpKey } from '$lib/server/mcp/keys';
 import {
 	isNotification,
 	isRpcRequest,
@@ -69,6 +69,9 @@ async function handleMessage(
 
 	switch (message.method) {
 		case 'initialize':
+			// What connected, for the key's row on Connected Apps: the one moment a
+			// client says what it is.
+			recordMcpClient(key.keyId, message.params?.clientInfo);
 			return rpcResult(id, {
 				protocolVersion: PROTOCOL_VERSION,
 				// Tools only. No `resources`, no `prompts`, and no `completions` —

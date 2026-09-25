@@ -176,6 +176,75 @@ export async function verifyMcpKey(key: string): Promise<VerifiedMcpKey | null> 
 	}
 }
 
+/** The column widths of `client_name` and `client_version`. */
+const CLIENT_NAME_MAX = 100;
+const CLIENT_VERSION_MAX = 50;
+
+/** What a client said it was when it connected. Either half may be missing. */
+export interface McpClientInfo {
+	name: string | null;
+	version: string | null;
+}
+
+/**
+ * One `clientInfo` string, made fit to show.
+ *
+ * Format characters are dropped, because a right-to-left override can make one
+ * name read as another. Control characters and runs of whitespace fold to one
+ * space. The cut is by code point, which is how Postgres counts a varchar, so
+ * it never splits a surrogate pair. Anything that is not a non-empty string is
+ * null.
+ */
+function cleanClientText(value: unknown, max: number): string | null {
+	if (typeof value !== 'string') return null;
+	const text = value
+		.replace(/\p{Cf}/gu, '')
+		.replace(/[\p{Cc}\s]+/gu, ' ')
+		.trim();
+	return text ? Array.from(text).slice(0, max).join('').trim() : null;
+}
+
+/**
+ * Read the `clientInfo` of an `initialize` request.
+ *
+ * The spec's own rule picks the name: `title` is the one meant for people, and
+ * `name` stands in when a client gives no title. Nothing is checked beyond
+ * being fit to show, because nothing is decided on it; see the note on
+ * `mcp_keys.client_name`.
+ */
+export function readMcpClientInfo(clientInfo: unknown): McpClientInfo {
+	if (typeof clientInfo !== 'object' || clientInfo === null) {
+		return { name: null, version: null };
+	}
+	const info = clientInfo as Record<string, unknown>;
+	return {
+		name:
+			cleanClientText(info.title, CLIENT_NAME_MAX) ?? cleanClientText(info.name, CLIENT_NAME_MAX),
+		version: cleanClientText(info.version, CLIENT_VERSION_MAX)
+	};
+}
+
+/**
+ * Remember what connected with a key, from its `initialize`.
+ *
+ * Written on every handshake, including one that names nothing, so the row
+ * describes the latest client rather than keeping an older one's name next to
+ * a newer one's activity. Fire and forget, like `last_used`: recording the
+ * client must not fail the handshake it describes.
+ */
+export function recordMcpClient(keyId: number, clientInfo: unknown): void {
+	const { name, version } = readMcpClientInfo(clientInfo);
+	db.update(mcp_keys)
+		.set({ client_name: name, client_version: version })
+		.where(eq(mcp_keys.id, keyId))
+		.catch((e) => {
+			// Logged, unlike a missed `last_used`. When this fails it fails on every
+			// handshake (a database without the columns), and a name that never
+			// appears gives nobody a reason to go and look.
+			console.error('[mcp] could not record the connecting client', e);
+		});
+}
+
 /**
  * Mint a key for one of the user's own profiles.
  *
@@ -218,6 +287,28 @@ export async function createMcpKey(opts: {
 	return { id: created.id, key };
 }
 
+/**
+ * Where a key stands, as Connected Apps shows it.
+ *
+ * `waiting` is a key nothing has used yet: every key for the minute after it
+ * is made, and a forgotten one after that. `connected` means something has
+ * used it, not that anything is using it now. The server is stateless, so
+ * there is no connection to be up or down, only the last time something
+ * called.
+ */
+export type McpKeyStatus = 'waiting' | 'connected' | 'revoked' | 'expired';
+
+export function mcpKeyStatus(
+	key: { revoked: boolean; expiresAt: Date | null; lastUsed: Date | null },
+	now: Date
+): McpKeyStatus {
+	if (key.revoked) return 'revoked';
+	// The test `verifyMcpKey` refuses on, so the page never calls a key
+	// connected that the server would turn away.
+	if (key.expiresAt && key.expiresAt < now) return 'expired';
+	return key.lastUsed ? 'connected' : 'waiting';
+}
+
 export interface McpKeyListing {
 	id: number;
 	name: string;
@@ -225,9 +316,13 @@ export interface McpKeyListing {
 	profileName: string | null;
 	scope: McpScope;
 	readScope: McpReadScope;
+	status: McpKeyStatus;
 	revoked: boolean;
 	expiresAt: Date | null;
 	lastUsed: Date | null;
+	/** What the last client to connect called itself; see `mcp_keys.client_name`. */
+	clientName: string | null;
+	clientVersion: string | null;
 	createdAt: Date;
 	/** The key itself where it is still readable, for a client that needs re-configuring. */
 	key: string | null;
@@ -245,6 +340,8 @@ export async function listMcpKeys(userId: string): Promise<McpKeyListing[]> {
 			revoked: mcp_keys.revoked,
 			expires_at: mcp_keys.expires_at,
 			last_used: mcp_keys.last_used,
+			client_name: mcp_keys.client_name,
+			client_version: mcp_keys.client_version,
 			date_created: mcp_keys.date_created,
 			key_encrypted: mcp_keys.key_encrypted
 		})
@@ -253,6 +350,7 @@ export async function listMcpKeys(userId: string): Promise<McpKeyListing[]> {
 		.where(eq(mcp_keys.user_id, userId))
 		.orderBy(desc(mcp_keys.date_created));
 
+	const now = new Date();
 	return rows.map((row) => ({
 		id: row.id,
 		name: row.name,
@@ -260,12 +358,40 @@ export async function listMcpKeys(userId: string): Promise<McpKeyListing[]> {
 		profileName: row.profile_name,
 		scope: isMcpScope(row.scope) ? row.scope : 'read',
 		readScope: isMcpReadScope(row.read_scope) ? row.read_scope : 'record',
+		status: mcpKeyStatus(
+			{ revoked: row.revoked, expiresAt: row.expires_at, lastUsed: row.last_used },
+			now
+		),
 		revoked: row.revoked,
 		expiresAt: row.expires_at,
 		lastUsed: row.last_used,
+		clientName: row.client_name,
+		clientVersion: row.client_version,
 		createdAt: row.date_created,
 		key: readStoredMcpKey(row.key_encrypted)
 	}));
+}
+
+/**
+ * How long after a key is made Connected Apps keeps checking for its app:
+ * long enough to find the connector settings in an unfamiliar client. After
+ * that a reload gives the same answer the checking would have.
+ */
+export const MCP_CONNECT_WATCH_MS = 15 * 60 * 1000;
+
+/**
+ * Whether the page should keep checking this key: made in the last few
+ * minutes, still usable, and no client has said what it is yet.
+ *
+ * "Said what it is" rather than "used", because the key's first use and the
+ * client's name are two separate writes. Stopping at the first could stop one
+ * check before the name lands, and leave the page saying "Connected" with no
+ * answer to "connected what?" until someone reloads it.
+ */
+export function isAwaitingClient(key: McpKeyListing, now: Date): boolean {
+	if (key.status !== 'waiting' && key.status !== 'connected') return false;
+	if (key.clientName) return false;
+	return now.getTime() - key.createdAt.getTime() < MCP_CONNECT_WATCH_MS;
 }
 
 /**

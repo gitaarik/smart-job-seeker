@@ -3572,6 +3572,19 @@ export const mcp_keys = pgTable(
 		read_scope: varchar({ length: 16 }).default('record').notNull(),
 		expires_at: timestamp({ withTimezone: true, mode: 'date' }),
 		last_used: timestamp({ withTimezone: true, mode: 'date' }),
+		/**
+		 * What the client said it was at its last `initialize`: the handshake's
+		 * `clientInfo`, its `title` where it gave one and its `name` otherwise.
+		 *
+		 * Self-reported, so a label and never evidence: anything holding the key
+		 * can call itself "Claude Code". Only the key's owner sees it, and nothing
+		 * is decided on it. What it adds is the difference between "something used
+		 * this key" and "Claude Code 2.1 did", which is the question someone asks
+		 * right after pasting a key into an app. Null until a client connects, and
+		 * again after one that did not say. Capped to fit in `mcp/keys.ts`.
+		 */
+		client_name: varchar({ length: 100 }),
+		client_version: varchar({ length: 50 }),
 		revoked: boolean().default(false).notNull(),
 		date_created: timestamp({ withTimezone: true, mode: 'date' })
 			.default(sql`CURRENT_TIMESTAMP`)

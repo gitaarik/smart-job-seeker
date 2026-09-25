@@ -14,23 +14,34 @@ import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import {
 	createMcpKey,
+	isAwaitingClient,
 	isMcpReadScope,
 	isMcpScope,
 	listMcpKeys,
 	revokeMcpKey
 } from '$lib/server/mcp/keys';
 
-export const load: PageServerLoad = async ({ parent, locals }) => {
+export const load: PageServerLoad = async ({ parent, locals, depends }) => {
+	// What the page re-runs while a new key waits for its app; see `awaiting`.
+	depends('app:connected-apps');
+
 	const { profiles, selectedProfile } = await parent();
 	const user = locals.user as { id: string } | undefined;
 	if (!selectedProfile || !user) redirect(302, '/home');
 
+	// Every key this user holds, not only the selected profile's. A credential
+	// they forgot they minted against another profile is exactly the one worth
+	// showing them, and hiding it behind a profile switch is how it gets
+	// forgotten again.
+	const keys = await listMcpKeys(user.id);
+	const now = new Date();
+
 	return {
-		// Every key this user holds, not only the selected profile's. A credential
-		// they forgot they minted against another profile is exactly the one worth
-		// showing them, and hiding it behind a profile switch is how it gets
-		// forgotten again.
-		keys: await listMcpKeys(user.id),
+		keys,
+		// The keys the page keeps checking on its own. Decided here, on the
+		// server's clock, so a browser whose clock is off can neither check
+		// forever nor stop before it starts.
+		awaiting: keys.filter((key) => isAwaitingClient(key, now)).map((key) => key.id),
 		profiles: profiles.map((profile) => ({ id: profile.id, name: profile.name })),
 		selectedProfileId: selectedProfile.id
 	};
