@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
@@ -24,23 +25,24 @@
 	// its server value actually changed since we last synced it — otherwise an
 	// invalidate would clobber an unsaved edit to a field the server didn't touch
 	// (e.g. a title you're mid-way through typing while saving the story body).
-	let title = $state(data.story.title ?? '');
-	let category = $state(data.story.category ?? '');
-	let situation = $state(data.story.situation ?? '');
-	let task = $state(data.story.task ?? '');
-	let action = $state(data.story.action ?? '');
-	let result = $state(data.story.result ?? '');
-	let reflection = $state(data.story.reflection ?? '');
+	const loaded = untrack(() => data.story);
+	let title = $state(loaded.title ?? '');
+	let category = $state(loaded.category ?? '');
+	let situation = $state(loaded.situation ?? '');
+	let task = $state(loaded.task ?? '');
+	let action = $state(loaded.action ?? '');
+	let result = $state(loaded.result ?? '');
+	let reflection = $state(loaded.reflection ?? '');
 
 	// Plain (non-reactive) tracker of the last server value we synced per field.
 	const synced: Record<string, string> = {
-		title: data.story.title ?? '',
-		category: data.story.category ?? '',
-		situation: data.story.situation ?? '',
-		task: data.story.task ?? '',
-		action: data.story.action ?? '',
-		result: data.story.result ?? '',
-		reflection: data.story.reflection ?? ''
+		title: loaded.title ?? '',
+		category: loaded.category ?? '',
+		situation: loaded.situation ?? '',
+		task: loaded.task ?? '',
+		action: loaded.action ?? '',
+		result: loaded.result ?? '',
+		reflection: loaded.reflection ?? ''
 	};
 	$effect(() => {
 		const s = data.story;

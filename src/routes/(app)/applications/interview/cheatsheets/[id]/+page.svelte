@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
@@ -19,8 +20,8 @@
 	// generate on an unnamed sheet may set it server-side — re-sync when the server
 	// value actually changes (mirrors the story editor's title handling), so an
 	// invalidate doesn't clobber a title you're mid-way through typing.
-	let title = $state(data.sheet.title ?? '');
-	let syncedTitle = data.sheet.title ?? '';
+	let title = $state(untrack(() => data.sheet.title ?? ''));
+	let syncedTitle = untrack(() => data.sheet.title ?? '');
 	$effect(() => {
 		const serverVal = data.sheet.title ?? '';
 		if (serverVal !== syncedTitle) {

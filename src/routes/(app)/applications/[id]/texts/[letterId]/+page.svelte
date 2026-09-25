@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { ActionData, PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
@@ -50,8 +51,8 @@
 	// a name being typed, and the Save button appears only once it differs from
 	// what the server holds. Empty is a real value here, so an emptied field is
 	// dirty too: clearing the name puts the type back.
-	let name = $state(data.letter.title ?? '');
-	let syncedName = data.letter.title ?? '';
+	let name = $state(untrack(() => data.letter.title ?? ''));
+	let syncedName = untrack(() => data.letter.title ?? '');
 	$effect(() => {
 		const serverVal = data.letter.title ?? '';
 		if (serverVal !== syncedName) {

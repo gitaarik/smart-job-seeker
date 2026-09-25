@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
+	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
@@ -18,7 +19,23 @@
 	let conversation = $derived(data.conversation);
 
 	// Question text is edited + saved independently of answer versioning.
-	let questionText = $state(data.question.question ?? '');
+	//
+	// Local state, re-synced only when the server's value changes, like the
+	// letter and cheat sheet names: an AI turn reloads `data` and must not
+	// clobber text being typed. It has to re-sync at all because a source link
+	// under an answer can open another question on this same route, where
+	// SvelteKit keeps the page and swaps `data`; a copy taken once at mount
+	// showed the previous question's text, dirty, one Save away from writing
+	// it over the new one.
+	let questionText = $state(untrack(() => data.question.question ?? ''));
+	let syncedQuestionText = untrack(() => data.question.question ?? '');
+	$effect(() => {
+		const serverVal = data.question.question ?? '';
+		if (serverVal !== syncedQuestionText) {
+			syncedQuestionText = serverVal;
+			questionText = serverVal;
+		}
+	});
 	let savedQuestionText = $derived(data.question.question ?? '');
 	let questionDirty = $derived(
 		questionText.trim() !== savedQuestionText && questionText.trim().length > 0
