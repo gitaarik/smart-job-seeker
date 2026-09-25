@@ -66,14 +66,21 @@
 
 	let expandedId = $state<number | null>(null);
 
-	// Track saved/rejected state locally for optimistic UI
-	let savedJobIds = $state<Record<number, boolean>>(
-		Object.fromEntries(items.filter((i) => i.status === 'saved').map((i) => [i.job.id, true]))
-	);
-
-	let rejectedJobIds = $state<Record<number, boolean>>(
-		Object.fromEntries(items.filter((i) => i.status === 'rejected').map((i) => [i.job.id, true]))
-	);
+	// Saved/rejected state for the optimistic UI: flipped locally by the toggles
+	// below until the reload after a save brings the server's. Built from `items`
+	// rather than copied once, so a new list starts from its own statuses: the
+	// home page's profile switcher reloads the same route with another profile's
+	// matches, and a copy taken at mount kept marking the first profile's picks.
+	// `$state` inside the function keeps the maps deep for those flips, which a
+	// bare `$derived` would not.
+	function jobIdsWith(status: string) {
+		const ids = $state<Record<number, boolean>>(
+			Object.fromEntries(items.filter((i) => i.status === status).map((i) => [i.job.id, true]))
+		);
+		return ids;
+	}
+	let savedJobIds = $derived(jobIdsWith('saved'));
+	let rejectedJobIds = $derived(jobIdsWith('rejected'));
 
 	function toggleExpand(jobId: number) {
 		expandedId = expandedId === jobId ? null : jobId;
