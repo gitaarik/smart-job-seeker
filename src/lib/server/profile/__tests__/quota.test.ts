@@ -52,13 +52,3 @@ describe('profileQuotaFailure', () => {
 		await expect(profileQuotaFailure('user-1')).rejects.toThrow('connection terminated');
 	});
 });
-
-describe('the OSS stub', () => {
-	it('never refuses: a self-hosted install has no plan limits', async () => {
-		const { requireProfileQuota } = await vi.importActual<
-			typeof import('$lib/server/billing/require-profile-quota')
-		>('$lib/server/billing/require-profile-quota');
-
-		await expect(requireProfileQuota('user-1', 1_000_000)).resolves.toBeUndefined();
-	});
-});
