@@ -10,7 +10,10 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let query = $state(data.root?.label ?? '');
+	// The focused concept's label, until typing replaces it. Follows `data`: a
+	// node links to this same route with another `?concept=`, and a copy taken
+	// at mount kept the first label and offered suggestions for it.
+	let query = $derived(data.root?.label ?? '');
 
 	/**
 	 * Nodes are HTML, edges are SVG.
