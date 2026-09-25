@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
+	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -53,9 +54,22 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	let job = $state(data.job);
-	let match = $state(data.match);
-	let jobStatus = $state(data.jobStatus);
+	/**
+	 * The job as this page shows it: the server's row, which a save below updates
+	 * in place ahead of the reload that follows. Built inside a function so it
+	 * stays deep `$state` (a bare `$derived` would hand back the plain row and
+	 * those writes would stop rendering), and rebuilt whenever `data` brings a
+	 * new row: an edit the assistant applied from the chat panel reloads `data`,
+	 * and a copy taken once at mount went on showing the job as it was.
+	 */
+	function jobState(row: PageData['job']) {
+		const live = $state(row);
+		return live;
+	}
+	let job = $derived(jobState(data.job));
+	let match = $derived(data.match);
+	// The server's, overridden by a form action's result until the reload lands.
+	let jobStatus = $derived(data.jobStatus);
 	let isSaving = $state(false);
 	let isRematching = $state(false);
 	let rematchError = $state('');
@@ -126,7 +140,8 @@
 
 	// Description editing (manually-created jobs only)
 	let isEditingDescription = $state(false);
-	let descriptionDraft = $state(data.job.job_description ?? '');
+	// Filled from the job when editing starts; see startEditingDescription.
+	let descriptionDraft = $state('');
 	let isSavingDescription = $state(false);
 	let descriptionError = $state('');
 	let showSaveReparseConfirm = $state(false);
@@ -168,8 +183,11 @@
 	// the shared job row, so without this an applicant who opened a job somebody
 	// was rescraping got a modal for a tool that is not theirs — and, once the
 	// endpoint started answering 403, a modal that could only fail.
-	let rescrapeActive = ['queued', 'scraping'].includes(job.rescrape_status ?? '');
-	let showRescrapeMonitor = $state(data.isStaff && rescrapeActive);
+	//
+	// Only on arrival: after that the button and the monitor's own close decide.
+	let showRescrapeMonitor = $state(
+		untrack(() => data.isStaff && ['queued', 'scraping'].includes(data.job.rescrape_status ?? ''))
+	);
 
 	// Update status when form action completes
 	$effect(() => {
@@ -302,10 +320,10 @@
 								// "Remote" in the location box moves to the work arrangement,
 								// the platform is re-resolved from the URL, salary period is
 								// canonicalized. Take the reloaded row rather than guessing at
-								// those locally. `reset: false` keeps the form's bound values
-								// from being wiped on the way out.
+								// those locally: `job` follows `data` once update() lands it.
+								// `reset: false` keeps the form's bound values from being wiped
+								// on the way out.
 								await update({ reset: false });
-								job = data.job;
 								isEditingDetails = false;
 							};
 						}}
