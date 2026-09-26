@@ -82,6 +82,14 @@ place (see `jobState` in `jobs/[id]`). To seed once on purpose, read through
 seeds from `data` calls `remountOnAppliedChange()`, so a proposal applied from
 the chat panel mounts it again.
 
+**Svelte warnings fail the gate too** (since 2026-09-26; `--fail-on-warnings`
+in `npm run check`, a count in `ci/check.sh`). The last 68 were a11y and
+`<slot>`, and two of them were bugs (confirm dialogs that ignored a click
+outside, a label pointing at an id nothing had). Fix what Svelte is right
+about. Where it is not, write a `svelte-ignore` and put the reason in its own
+comment above it: `svelte/no-unused-svelte-ignore` reads every word of the
+ignore comment as a warning code.
+
 **eslint is no longer a ratchet.** It went 1,521 -> 0 between 2026-08-07 and
 2026-09-22 and is now a plain gate: any error fails. The `scripts/` type check
 followed on 2026-09-23 (189 -> 0 over its life), with the same rule. Do not raise its baseline

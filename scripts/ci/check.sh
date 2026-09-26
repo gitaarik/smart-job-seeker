@@ -116,4 +116,22 @@ if [ "$errors" -gt "$BASELINE" ]; then
   exit 1
 fi
 
+# Warnings fail too, since 2026-09-26. The other 68 (form labels tied to
+# nothing, click handlers without a keyboard path, `<slot>`, state updated
+# without `$state`) were cleared the day after state_referenced_locally, and
+# reading them turned up two more bugs: every delete confirmation ignored a
+# click outside it, and Basic Info's Country label pointed at an id nothing
+# carried. A warning Svelte is right about is worth fixing; one it is wrong
+# about gets a svelte-ignore with the reason next to it, in its own comment
+# above the ignore (svelte/no-unused-svelte-ignore reads every word of the
+# ignore comment as a code).
+warnings=$(printf '%s\n' "$output" |
+  awk '/ COMPLETED /{for (i = 1; i <= NF; i++) if ($i == "WARNINGS") { print $(i - 1); exit }}')
+if [ "${warnings:-0}" -gt 0 ]; then
+  echo "::error::svelte-check found $warnings warnings. There are none on main, so these are yours."
+  echo
+  printf '%s\n' "$output" | grep ' WARNING ' || true
+  exit 1
+fi
+
 echo "svelte-check: clean."
