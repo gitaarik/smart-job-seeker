@@ -1037,16 +1037,26 @@
 
 <!-- Status Picker Modal -->
 {#if statusPickerOpen}
+	<!-- Backdrop: a click outside the card closes, as Escape does. -->
+	<button
+		type="button"
+		use:portalToBody
+		class="fixed inset-0 z-40 bg-black/50"
+		onclick={() => (statusPickerOpen = false)}
+		tabindex="-1"
+		aria-label="Close status picker"
+	></button>
 	<div
 		use:portalToBody={{ onClose: () => (statusPickerOpen = false) }}
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+		class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4"
 		role="dialog"
-		onclick={(e) => {
-			if (e.target === e.currentTarget) statusPickerOpen = false;
-		}}
+		aria-modal="true"
+		aria-labelledby="status-picker-title"
 	>
-		<div class="w-full max-w-lg rounded-xl bg-[var(--dash-card)] p-6 shadow-lg">
-			<h3 class="mb-4 text-lg font-semibold text-[var(--dash-text)]">Update Status</h3>
+		<div class="pointer-events-auto w-full max-w-lg rounded-xl bg-[var(--dash-card)] p-6 shadow-lg">
+			<h3 id="status-picker-title" class="mb-4 text-lg font-semibold text-[var(--dash-text)]">
+				Update Status
+			</h3>
 
 			{#key app.status + (app.status_step || '') + (app.status_action || '')}
 				<StatusStepper

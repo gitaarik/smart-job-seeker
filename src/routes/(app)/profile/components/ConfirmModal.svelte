@@ -40,30 +40,28 @@
 </script>
 
 {#if isOpen}
-	<!-- Backdrop -->
-	<div
+	<!-- Backdrop: a click outside the card cancels, as Escape does (portalToBody).
+	     A real button, kept out of the tab order, like the layout's overlay. -->
+	<button
+		type="button"
 		use:portalToBody
 		class="fixed inset-0 z-40 bg-black/50"
 		onclick={onCancel}
-		role="button"
 		tabindex="-1"
 		aria-label="Close modal"
-	></div>
+	></button>
 
-	<!-- Modal -->
+	<!-- Modal. The full-screen wrapper lets clicks through to the backdrop except
+	     on the card: it used to sit above the backdrop and swallow them, so a
+	     click outside the card never cancelled anything. -->
 	<div
 		use:portalToBody={{ onClose: onCancel }}
-		class="fixed inset-0 z-50 flex items-center justify-center p-4"
+		class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="modal-title"
 	>
-		<div
-			class="w-full max-w-md rounded-xl bg-[var(--dash-card)] p-6 shadow-xl"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={() => {}}
-			role="document"
-		>
+		<div class="pointer-events-auto w-full max-w-md rounded-xl bg-[var(--dash-card)] p-6 shadow-xl">
 			<div class="flex items-start gap-4">
 				<div class="h-10 w-10 rounded-full {iconBg} flex flex-shrink-0 items-center justify-center">
 					<FontAwesomeIcon {icon} class="h-5 w-5 {iconColor}" />

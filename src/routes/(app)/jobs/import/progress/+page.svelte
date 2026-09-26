@@ -580,30 +580,26 @@
 </div>
 
 {#if showRematchModal}
-	<!-- Backdrop -->
-	<div
+	<!-- Backdrop: a click outside the card closes, as Escape does. -->
+	<button
+		type="button"
 		use:portalToBody
 		class="fixed inset-0 z-40 bg-black/50"
 		onclick={() => (showRematchModal = false)}
-		role="button"
 		tabindex="-1"
 		aria-label="Close modal"
-	></div>
+	></button>
 
-	<!-- Rematch Modal -->
+	<!-- Rematch Modal. Clicks pass through the wrapper to the backdrop except on
+	     the card; the wrapper used to sit above the backdrop and swallow them. -->
 	<div
 		use:portalToBody={{ onClose: () => (showRematchModal = false) }}
-		class="fixed inset-0 z-50 flex items-center justify-center p-4"
+		class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="rematch-modal-title"
 	>
-		<div
-			class="w-full max-w-md rounded-xl bg-[var(--dash-card)] p-6 shadow-xl"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={() => {}}
-			role="document"
-		>
+		<div class="pointer-events-auto w-full max-w-md rounded-xl bg-[var(--dash-card)] p-6 shadow-xl">
 			<div class="flex items-start gap-4">
 				<div
 					class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--dash-primary)]/10"
@@ -621,10 +617,14 @@
 						This uses AI usage and may take a while.
 					</p>
 
-					<label class="mb-1.5 block text-sm font-medium text-[var(--dash-text)]">
+					<label
+						for="rematch-date-filter"
+						class="mb-1.5 block text-sm font-medium text-[var(--dash-text)]"
+					>
 						Date posted filter
 					</label>
 					<select
+						id="rematch-date-filter"
 						bind:value={rematchDateFilter}
 						class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)]"
 					>

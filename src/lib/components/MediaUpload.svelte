@@ -226,17 +226,26 @@
 
 <!-- Full preview modal -->
 {#if showFullPreview && previewUrl}
+	<!-- Backdrop: a click anywhere but the image closes, as Escape does. -->
+	<button
+		type="button"
+		use:portalToBody
+		class="fixed inset-0 z-40 bg-black/80"
+		onclick={() => (showFullPreview = false)}
+		tabindex="-1"
+		aria-label="Close preview"
+	></button>
 	<div
 		use:portalToBody={{ onClose: () => (showFullPreview = false) }}
 		role="dialog"
 		aria-modal="true"
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-		onclick={() => (showFullPreview = false)}
+		aria-label="Image preview"
+		class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4"
 	>
 		<button
 			type="button"
 			onclick={() => (showFullPreview = false)}
-			class="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
+			class="pointer-events-auto absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20"
 			aria-label="Close preview"
 		>
 			<FontAwesomeIcon icon={faTimes} class="h-5 w-5 text-white" />
@@ -244,8 +253,7 @@
 		<img
 			src={previewUrl}
 			alt="Full preview"
-			class="max-h-full max-w-full rounded-lg object-contain"
-			onclick={(e) => e.stopPropagation()}
+			class="pointer-events-auto max-h-full max-w-full rounded-lg object-contain"
 		/>
 	</div>
 {/if}
