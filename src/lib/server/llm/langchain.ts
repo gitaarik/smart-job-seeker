@@ -13,6 +13,8 @@ import { z } from 'zod';
 import { getEnv } from '$lib/tools/get-env';
 import { llmCache } from './cache.js';
 import { recordSentMessages, traceAttempt, traceLlmCall } from './trace';
+import { DEFAULT_TEMPERATURE } from '$lib/server/ai-chat/prompt-templates';
+import { promptRef } from '$lib/server/ai-chat/prompt-registry';
 import { geminiResponseSchema, parseStructuredReply } from './gemini-schema';
 import { isRetryableError, withRetry } from '$lib/server/utils/retry';
 import { errorTracker } from '$lib/server/monitoring/error-tracker';
@@ -361,6 +363,13 @@ export interface ChatCompletionOptions {
 	 * each caller guessing it back from the text afterwards.
 	 */
 	promptKey?: string;
+	/**
+	 * Which version of the `promptKey` template the call rendered, when it is
+	 * not the template as it is now: a generation replayed from an `ai_chats`
+	 * row ran the version the row recorded. Metadata only, like `promptKey`; it
+	 * links the call's generations to that version in Langfuse.
+	 */
+	promptFingerprint?: string;
 }
 
 /**
@@ -523,11 +532,12 @@ function generateCacheKey(messages: ChatMessage[], options: ChatCompletionOption
 	// and callers that don't, and invalidate every entry written before it
 	// existed. Dropping it leaves the key byte-identical for every existing
 	// caller, because the remaining keys keep their insertion order.
-	// `promptKey` is excluded for the same reason: it names the call, it does
-	// not change what is asked.
+	// `promptKey` and `promptFingerprint` are excluded for the same reason: they
+	// name the call, they do not change what is asked.
 	const cacheable = { ...options };
 	delete cacheable.fallback;
 	delete cacheable.promptKey;
+	delete cacheable.promptFingerprint;
 	return JSON.stringify({ messages, options: cacheable });
 }
 
@@ -1128,7 +1138,7 @@ async function completeTracked(
 	const {
 		model = config.llmModel,
 		maxTokens = 8192,
-		temperature = 0.7,
+		temperature = DEFAULT_TEMPERATURE,
 		structuredOutput,
 		provider
 	} = options;
@@ -1150,7 +1160,8 @@ async function completeTracked(
 				messages,
 				temperature,
 				maxTokens,
-				structured: structuredOutput !== undefined
+				structured: structuredOutput !== undefined,
+				prompt: promptRef(options.promptKey, options.promptFingerprint)
 			},
 			() =>
 				generateWithLangChain(

@@ -116,6 +116,8 @@ export function maskTraceData(data: unknown): unknown {
 
 let provider: NodeTracerProvider | null = null;
 let initialised = false;
+/** Whether the provider exports to a Langfuse project, not to a test's processors. */
+let exportsToLangfuse = false;
 /** Which process sent a trace, in its metadata; the environment is the same for all. */
 let processName: ProcessComponent | undefined;
 
@@ -131,6 +133,15 @@ export interface Telemetry {
 /** Whether `initTelemetry` gave Langfuse a provider in this process. */
 export function isTelemetryEnabled(): boolean {
 	return provider !== null;
+}
+
+/**
+ * Whether this process sends to a Langfuse project, from its keys, so it may use
+ * the project's other APIs (the prompt registry). False under a test's
+ * processors, which keeps tests off the network.
+ */
+export function sendsToLangfuse(): boolean {
+	return exportsToLangfuse;
 }
 
 /**
@@ -153,6 +164,7 @@ export function initTelemetry(
 		if (!context.setGlobalContextManager(manager)) manager.disable();
 
 		const spanProcessors = options.spanProcessors ?? langfuseProcessors();
+		exportsToLangfuse = !options.spanProcessors && spanProcessors.length > 0;
 		if (spanProcessors.length) {
 			const environment = getEnvironmentName();
 			provider = new NodeTracerProvider({
@@ -182,7 +194,7 @@ function langfuseProcessors(): SpanProcessor[] {
 		new LangfuseSpanProcessor({
 			publicKey,
 			secretKey,
-			baseUrl: process.env.LANGFUSE_BASE_URL,
+			baseUrl: process.env.LANGFUSE_BASE_URL || undefined,
 			environment: getEnvironmentName(),
 			release: runningVersion(),
 			mask: ({ data }) => maskTraceData(data)
@@ -195,7 +207,7 @@ function langfuseProcessors(): SpanProcessor[] {
  * dev the last release before the work in progress. The app and the worker run
  * from their repository's root, whose versions a release bumps together.
  */
-function runningVersion(): string | undefined {
+export function runningVersion(): string | undefined {
 	try {
 		const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8'));
 		return typeof pkg.version === 'string' ? pkg.version : undefined;

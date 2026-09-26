@@ -100,7 +100,8 @@ describe('generateAiChatResponse', () => {
 		const mockPrompts = {
 			systemPrompt: 'You are a helpful assistant',
 			userPrompt: 'What is the capital of France?',
-			promptKey: null
+			promptKey: null,
+			promptFingerprint: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
@@ -124,7 +125,8 @@ describe('generateAiChatResponse', () => {
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
 			userPrompt: 'Tell me a joke',
-			promptKey: null
+			promptKey: null,
+			promptFingerprint: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
@@ -141,7 +143,8 @@ describe('generateAiChatResponse', () => {
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
 			userPrompt: 'Tell me a joke',
-			promptKey: null
+			promptKey: null,
+			promptFingerprint: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
@@ -161,7 +164,8 @@ describe('generateAiChatResponse', () => {
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
 			userPrompt: 'Tell me a joke',
-			promptKey: null
+			promptKey: null,
+			promptFingerprint: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
@@ -178,7 +182,8 @@ describe('generateAiChatResponse', () => {
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
 			userPrompt: 'Tell me a joke',
-			promptKey: null
+			promptKey: null,
+			promptFingerprint: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
@@ -195,7 +200,8 @@ describe('generateAiChatResponse', () => {
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',
 			userPrompt: 'Tell me a joke',
-			promptKey: null
+			promptKey: null,
+			promptFingerprint: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);
@@ -216,7 +222,8 @@ describe('generateAiChatResponse', () => {
 		const mockPrompts = {
 			systemPrompt: 'Use this schema: {user_schema} to structure response',
 			userPrompt: 'Use this data: {user_data} to answer',
-			promptKey: null
+			promptKey: null,
+			promptFingerprint: null
 		};
 
 		// The utility should have already interpolated these
@@ -235,7 +242,8 @@ describe('generateAiChatResponse', () => {
 		const mockPrompts = {
 			systemPrompt: 'Be helpful',
 			userPrompt: 'What is 2+2?',
-			promptKey: null
+			promptKey: null,
+			promptFingerprint: null
 		};
 
 		vi.mocked(getInterpolatedPrompts).mockResolvedValueOnce(mockPrompts);

@@ -56,7 +56,8 @@ describe('getInterpolatedPrompts', () => {
 		expect(result).toEqual({
 			systemPrompt: 'System: {"type": "object"} - {"name": "John"}',
 			userPrompt: 'User: {"type": "object"} - {"name": "John"}',
-			promptKey: null
+			promptKey: null,
+			promptFingerprint: null
 		});
 	});
 
@@ -74,7 +75,8 @@ describe('getInterpolatedPrompts', () => {
 		expect(result).toEqual({
 			systemPrompt: 'Schema: {}\nData: {}',
 			userPrompt: 'Show me {} and {}',
-			promptKey: null
+			promptKey: null,
+			promptFingerprint: null
 		});
 	});
 
@@ -97,7 +99,8 @@ describe('getInterpolatedPrompts', () => {
 		expect(result).toEqual({
 			systemPrompt: '{} {}',
 			userPrompt: '{} {}',
-			promptKey: null
+			promptKey: null,
+			promptFingerprint: null
 		});
 	});
 

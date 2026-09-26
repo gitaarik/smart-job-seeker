@@ -54,7 +54,9 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 				provider: writingProvider,
 				model: writingModel,
 				fallback: writingFallback(),
-				promptKey: prompts.promptKey ?? undefined
+				promptKey: prompts.promptKey ?? undefined,
+				// The row's own version, which may be older than the template now.
+				promptFingerprint: prompts.promptFingerprint ?? undefined
 			}
 		);
 

@@ -245,11 +245,19 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<{
 	userPrompt: string;
 	/** Null on rows written before `ai_chats.prompt_key` existed. */
 	promptKey: string | null;
+	/** The version of that template the row ran; null on the same older rows. */
+	promptFingerprint: string | null;
 } | null> {
 	// Fetch the ai_chatss record
 	const aiChat = await db.query.ai_chats.findFirst({
 		where: eq(ai_chats.id, aiChatId),
-		columns: { system_prompt: true, user_prompt: true, profile_id: true, prompt_key: true }
+		columns: {
+			system_prompt: true,
+			user_prompt: true,
+			profile_id: true,
+			prompt_key: true,
+			prompt_fingerprint: true
+		}
 	});
 
 	if (!aiChat) {
@@ -283,7 +291,8 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<{
 	return {
 		systemPrompt,
 		userPrompt,
-		promptKey: aiChat.prompt_key ?? null
+		promptKey: aiChat.prompt_key ?? null,
+		promptFingerprint: aiChat.prompt_fingerprint ?? null
 	};
 }
 

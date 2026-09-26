@@ -87,8 +87,8 @@ export interface PromptTemplate {
 	user_prompt: string;
 	/**
 	 * Sampling temperature for this prompt. Omitted means the shared default
-	 * (0.7), which is a writing setting: it is what makes a cover letter read
-	 * like prose rather than a form.
+	 * (DEFAULT_TEMPERATURE), which is a writing setting: it is what makes a
+	 * cover letter read like prose rather than a form.
 	 *
 	 * A prompt that classifies rather than writes wants the opposite. Measured
 	 * on `tailor_resume_selection`: the same shortlist, four minutes apart,
@@ -99,6 +99,12 @@ export interface PromptTemplate {
 	 */
 	temperature?: number;
 }
+
+/**
+ * The temperature of a template that sets none, and of any call that names none
+ * (llm/langchain.ts). See PromptTemplate.temperature.
+ */
+export const DEFAULT_TEMPERATURE = 0.7;
 
 export const promptTemplates: Record<string, PromptTemplate> = {
 	personal_agent_chat: {

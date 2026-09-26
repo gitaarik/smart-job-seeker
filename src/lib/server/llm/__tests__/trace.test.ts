@@ -32,9 +32,16 @@ vi.mock('$lib/server/config', () => ({
 	}
 }));
 
-const { mockGroqInvoke, mockGeminiInvoke } = vi.hoisted(() => ({
+const { mockGroqInvoke, mockGeminiInvoke, mockResolvePrompt } = vi.hoisted(() => ({
 	mockGroqInvoke: vi.fn(),
-	mockGeminiInvoke: vi.fn()
+	mockGeminiInvoke: vi.fn(),
+	mockResolvePrompt: vi.fn()
+}));
+
+// The registry's own behaviour is prompt-registry.test.ts; here only what it answers.
+vi.mock('$lib/server/ai-chat/prompt-registry', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/ai-chat/prompt-registry')>()),
+	resolvePrompt: mockResolvePrompt
 }));
 
 vi.mock('@langchain/groq', () => ({
@@ -56,6 +63,7 @@ vi.mock('@langchain/google-genai', () => ({
 }));
 
 import { generateChatCompletionTracked } from '$lib/server/llm';
+import { promptRef } from '$lib/server/ai-chat/prompt-registry';
 import { llmCache } from '$lib/server/llm/cache';
 import { initTelemetry, type Telemetry } from '$lib/server/monitoring/telemetry';
 
@@ -77,6 +85,7 @@ beforeAll(() => {
 
 beforeEach(async () => {
 	vi.clearAllMocks();
+	mockResolvePrompt.mockResolvedValue(null);
 	await llmCache.clear();
 	exporter.reset();
 });
@@ -158,5 +167,69 @@ describe('the LLM call', () => {
 		expect(input).toHaveLength(1);
 		expect(input[0].content).toContain('Page text: locked out');
 		expect(input[0].content).toContain('Output ONLY a valid JSON object');
+	});
+});
+
+describe("a generation's prompt version", () => {
+	const letter = () => promptRef('write_cover_letter')!;
+	const writeLetter = (options: { promptFingerprint?: string } = {}) =>
+		generateChatCompletionTracked([{ role: 'user', content: `a letter ${Math.random()}` }], {
+			provider: 'gemini',
+			model: 'gemini-2.5-pro',
+			promptKey: 'write_cover_letter',
+			...options
+		});
+
+	it('links to the registered version of its template', async () => {
+		mockResolvePrompt.mockResolvedValue({ name: 'write_cover_letter', version: 3 });
+		mockGeminiInvoke.mockResolvedValueOnce(reply('Dear team'));
+
+		await writeLetter();
+
+		const [generation] = generations(await exported());
+		expect(mockResolvePrompt).toHaveBeenCalledWith(letter());
+		expect(generation.attributes['langfuse.observation.prompt.name']).toBe('write_cover_letter');
+		expect(generation.attributes['langfuse.observation.prompt.version']).toBe(3);
+		expect(generation.attributes['langfuse.observation.metadata.prompt_fingerprint']).toBe(
+			letter().fingerprint
+		);
+	});
+
+	it('ends unlinked, with its fingerprint, when the version is not known in time', async () => {
+		mockResolvePrompt.mockReturnValue(new Promise(() => {}));
+		mockGeminiInvoke.mockResolvedValueOnce(reply('Dear team'));
+
+		await writeLetter();
+
+		const [generation] = generations(await exported());
+		expect(generation.attributes['langfuse.observation.prompt.name']).toBeUndefined();
+		expect(generation.attributes['langfuse.observation.metadata.prompt_fingerprint']).toBe(
+			letter().fingerprint
+		);
+	});
+
+	it('looks up the version a replayed row ran, not the template as it is now', async () => {
+		mockGeminiInvoke.mockResolvedValueOnce(reply('Dear team'));
+
+		await writeLetter({ promptFingerprint: '0123456789abcdef' });
+
+		expect(mockResolvePrompt).toHaveBeenCalledWith({
+			key: 'write_cover_letter',
+			fingerprint: '0123456789abcdef'
+		});
+	});
+
+	it('looks nothing up for an inline prompt', async () => {
+		mockGroqInvoke.mockResolvedValueOnce(reply('{"code": "1"}'));
+
+		await generateChatCompletionTracked([{ role: 'user', content: 'an email' }], {
+			promptKey: 'verification_email'
+		});
+
+		const [generation] = generations(await exported());
+		expect(mockResolvePrompt).not.toHaveBeenCalled();
+		expect(
+			generation.attributes['langfuse.observation.metadata.prompt_fingerprint']
+		).toBeUndefined();
 	});
 });

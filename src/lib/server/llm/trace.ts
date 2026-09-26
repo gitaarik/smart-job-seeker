@@ -5,7 +5,8 @@
  * or miss; under it one generation per provider attempt, so retries and the
  * fallback each show. A generation records the model and its parameters, the
  * messages, the output, the usage in Langfuse's four separate buckets and the
- * cost the app bills from, so Langfuse and /admin/costs agree by construction.
+ * cost the app bills from, so Langfuse and /admin/costs agree by construction,
+ * and it links to the registered version of its template (prompt-registry.ts).
  * A failed attempt is an ERROR generation that keeps the usage its error
  * carried: a provider bills a failed call like a successful one.
  *
@@ -17,6 +18,11 @@
 import { startActiveObservation, updateActiveObservation } from '@langfuse/tracing';
 import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
 import { isInTrace, isTelemetryEnabled, startTrace } from '$lib/server/monitoring/telemetry';
+import {
+	resolvePrompt,
+	type PromptLink,
+	type PromptRef
+} from '$lib/server/ai-chat/prompt-registry';
 import type { ChatMessage, CompletionResult, TokenUsage } from './langchain';
 
 /** The matcher's calls: the bulk of the volume, so sampled. See telemetry.ts. */
@@ -55,15 +61,21 @@ export interface Attempt {
 	temperature: number;
 	maxTokens: number;
 	structured: boolean;
+	/** The template the call rendered, whose registered version it links to. */
+	prompt?: PromptRef | null;
 }
 
-/** Trace one provider attempt as a generation. */
+/**
+ * Trace one provider attempt as a generation, linked to the registered version
+ * of its template. The version is looked up while the model runs.
+ */
 export async function traceAttempt(
 	attempt: Attempt,
 	call: () => Promise<CompletionResult>
 ): Promise<CompletionResult> {
 	if (!isTelemetryEnabled()) return call();
 
+	const link = attempt.prompt ? resolvePrompt(attempt.prompt) : null;
 	return startActiveObservation(
 		attempt.provider,
 		async (generation) => {
@@ -79,19 +91,58 @@ export async function traceAttempt(
 			});
 			try {
 				const result = await call();
-				generation.update({ output: result.content, ...usageAndCost(attempt, result.usage) });
+				generation.update({
+					output: result.content,
+					...usageAndCost(attempt, result.usage),
+					...(await promptAttributes(attempt.prompt, link))
+				});
 				return result;
 			} catch (error) {
 				generation.update({
 					level: 'ERROR',
 					statusMessage: error instanceof Error ? error.message : String(error),
-					...usageAndCost(attempt, (error as { usage?: TokenUsage } | null)?.usage ?? null)
+					...usageAndCost(attempt, (error as { usage?: TokenUsage } | null)?.usage ?? null),
+					...(await promptAttributes(attempt.prompt, link))
 				});
 				throw error;
 			}
 		},
 		{ asType: 'generation' }
 	);
+}
+
+/** How long an ended attempt waits for its template's version before going unlinked. */
+const PROMPT_LINK_WAIT_MS = 1000;
+
+/**
+ * The generation's link to its template's version, which has to be on it before
+ * it ends: Langfuse resolves the link once, at ingestion, and never again. The
+ * lookup started with the model call, so it has almost always finished; one
+ * that has not in time leaves only the fingerprint, which every generation of a
+ * template carries.
+ */
+async function promptAttributes(
+	prompt: PromptRef | null | undefined,
+	link: Promise<PromptLink | null> | null
+) {
+	if (!prompt || !link) return {};
+	const version = await withDeadline(link, PROMPT_LINK_WAIT_MS);
+	return {
+		metadata: { prompt_fingerprint: prompt.fingerprint },
+		...(version ? { prompt: { ...version, isFallback: false } } : {})
+	};
+}
+
+async function withDeadline<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const deadline = new Promise<null>((resolve) => {
+		timer = setTimeout(() => resolve(null), ms);
+	});
+	try {
+		return await Promise.race([promise, deadline]);
+	} finally {
+		clearTimeout(timer);
+	}
 }
 
 /**
