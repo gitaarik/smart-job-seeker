@@ -19,6 +19,8 @@ import { createTraceId, startActiveObservation } from '@langfuse/tracing';
 import { Sentry } from '../sentry';
 import {
 	initTelemetry,
+	inOpenTrace,
+	isInTrace,
 	maskTraceData,
 	recordedTraceId,
 	startTrace,
@@ -220,5 +222,22 @@ describe('steps and what a row keeps', () => {
 		expect(find('helper')!.attributes['user.id']).toBe('owner');
 		expect(find('import')!.attributes['session.id']).toBe('scrape-run:7');
 		expect(find('import')!.attributes['user.id']).toBe('someone else');
+	});
+
+	it('joins a trace somebody else opened, as a Langfuse experiment item does', async () => {
+		let joined = false;
+		await startActiveObservation('experiment-item-run', async () => {
+			await inOpenTrace(async () => {
+				joined = isInTrace();
+				await startActiveObservation('call', async () => {});
+			}, 'sdk-experiment');
+		});
+		await telemetry.flush();
+
+		expect(joined, 'calls inside nest instead of opening traces of their own').toBe(true);
+		const call = find('call')!;
+		expect(call.spanContext().traceId).toBe(find('experiment-item-run')!.spanContext().traceId);
+		expect(call.parentSpanContext?.spanId).toBe(find('experiment-item-run')!.spanContext().spanId);
+		expect(call.attributes['langfuse.environment']).toBe('sdk-experiment');
 	});
 });

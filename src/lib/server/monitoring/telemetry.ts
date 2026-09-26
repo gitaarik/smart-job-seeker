@@ -305,6 +305,19 @@ export function recordedTraceId(): string | null {
 }
 
 /**
+ * Run `work` inside a trace somebody else opened, a Langfuse experiment's item
+ * for one: the calls in it nest under that trace instead of opening their own,
+ * and all of it is kept, whatever sample group its prompts are in.
+ * `environment` files the spans with the trace they join.
+ */
+export async function inOpenTrace<T>(work: () => Promise<T>, environment?: string): Promise<T> {
+	if (!provider) return work();
+	const joined = () =>
+		context.with(context.active().setValue(SAMPLE_GROUP, 'default').setValue(SJS_ROOT, true), work);
+	return environment ? propagateAttributes({ environment }, joined) : joined();
+}
+
+/**
  * Give every trace started inside `work` this user and session, unless the
  * trace names its own. A scrape run uses it, so the helper calls and job
  * imports it makes are in the run's session. With telemetry off it only runs

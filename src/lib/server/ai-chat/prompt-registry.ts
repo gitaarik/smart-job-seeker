@@ -24,10 +24,10 @@
  */
 
 import { createHash } from 'node:crypto';
-import { LangfuseClient } from '@langfuse/client';
 import { toJsonSchema } from '@langchain/core/utils/json_schema';
 import { getSchemaForPrompt } from '$lib/server/schemas/ai-prompt-schemas';
 import { getEnvironmentName } from '$lib/server/monitoring/sentry';
+import { langfuseClient } from '$lib/server/monitoring/langfuse-client';
 import { runningVersion, sendsToLangfuse } from '$lib/server/monitoring/telemetry';
 import { DEFAULT_TEMPERATURE, promptTemplates, type PromptTemplate } from './prompt-templates';
 import { promptFingerprint } from './prompt-fingerprint';
@@ -269,16 +269,10 @@ const REQUEST_TIMEOUT_S = 5;
 
 /** Langfuse's prompt API, through its client, or null without keys. */
 function langfusePromptApi(): PromptApi | null {
-	const publicKey = process.env.LANGFUSE_PUBLIC_KEY;
-	const secretKey = process.env.LANGFUSE_SECRET_KEY;
-	if (!publicKey || !secretKey) return null;
+	const client = langfuseClient(REQUEST_TIMEOUT_S);
+	if (!client) return null;
 
-	const { api } = new LangfuseClient({
-		publicKey,
-		secretKey,
-		baseUrl: process.env.LANGFUSE_BASE_URL || undefined,
-		timeout: REQUEST_TIMEOUT_S
-	});
+	const { api } = client;
 	const requestOptions = { maxRetries: 1, timeoutInSeconds: REQUEST_TIMEOUT_S };
 	const read = (prompt: { version: number; labels: string[]; config?: unknown }) => ({
 		version: prompt.version,
