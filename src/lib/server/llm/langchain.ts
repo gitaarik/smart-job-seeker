@@ -12,7 +12,7 @@ import { AIMessage, type BaseMessage, HumanMessage, SystemMessage } from '@langc
 import { z } from 'zod';
 import { getEnv } from '$lib/tools/get-env';
 import { llmCache } from './cache.js';
-import { traceAttempt, traceLlmCall } from './trace';
+import { recordSentMessages, traceAttempt, traceLlmCall } from './trace';
 import { geminiResponseSchema, parseStructuredReply } from './gemini-schema';
 import { isRetryableError, withRetry } from '$lib/server/utils/retry';
 import { errorTracker } from '$lib/server/monitoring/error-tracker';
@@ -790,6 +790,10 @@ async function generateWithLangChain(
 						'Do NOT output a JSON Schema definition. Do NOT include $ref, definitions, type declarations, or schema metadata. ' +
 						'Just output the extracted data as JSON.' +
 						fieldHint;
+					const sent = String(lastMessage.content);
+					recordSentMessages(
+						messages.map((m, i) => (i === messages.length - 1 ? { ...m, content: sent } : m))
+					);
 				}
 
 				// Invoke with JSON mode enabled to ensure valid JSON output.

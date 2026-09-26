@@ -30,6 +30,8 @@ export type FollowupResult = {
 export async function createEntityFollowup(opts: {
 	entityId: number;
 	entityLabel: string;
+	/** The entity's table, singular, which names the trace's session: `cheat_sheet:3`. */
+	entityKind: string;
 	noAiChatHint?: string;
 	followupRequest: string;
 	includeOriginalContext?: boolean;
@@ -88,7 +90,8 @@ export async function createEntityFollowup(opts: {
 			customVariables,
 			profileDataFields: opts.profileDataFields,
 			context: opts.context,
-			historyMessages: opts.historyMessages
+			historyMessages: opts.historyMessages,
+			traceSession: `${opts.entityKind}:${entityId}`
 		});
 	} catch (error) {
 		return {

@@ -15,6 +15,7 @@
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import Card from '../../components/Card.svelte';
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -205,6 +206,11 @@
 									>{/if}
 								{#if expandedDetail.followup_to}<span
 										><strong>Followup to:</strong> #{expandedDetail.followup_to}</span
+									>{/if}
+								{#if chat.trace_id && data.traceUrl}<ExternalLink
+										href={data.traceUrl + chat.trace_id}
+										class="text-[var(--dash-primary)] hover:underline"
+										>Trace in Langfuse</ExternalLink
 									>{/if}
 							</div>
 

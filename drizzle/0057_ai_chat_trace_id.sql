@@ -1,0 +1,1 @@
+ALTER TABLE "ai_chats" ADD COLUMN "trace_id" varchar(32);

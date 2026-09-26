@@ -27,7 +27,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 				error: true,
 				provider: true,
 				model: true,
-				request_type: true
+				request_type: true,
+				trace_id: true
 			},
 			with: {
 				profile: {
@@ -48,6 +49,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
 	return {
 		chats,
+		traceUrl: traceUrlBase(),
 		total,
 		page,
 		perPage,
@@ -58,3 +60,10 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 			.map((r) => ({ type: r.request_type!, count: r.count }))
 	};
 };
+
+/** Where a row's `trace_id` opens in Langfuse, or null when this box sends no traces. */
+function traceUrlBase(): string | null {
+	const base = process.env.LANGFUSE_BASE_URL;
+	const project = process.env.LANGFUSE_PROJECT_ID;
+	return base && project ? `${base.replace(/\/$/, '')}/project/${project}/traces/` : null;
+}

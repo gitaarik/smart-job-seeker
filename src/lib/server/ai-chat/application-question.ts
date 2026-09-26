@@ -151,7 +151,8 @@ export async function generateApplicationQuestionAnswer(
 				entity: { type: 'application', id: question.application.id },
 				sources,
 				sourceOptions: { directives: { consumer: 'answers' } }
-			}
+			},
+			traceSession: `application_question:${questionId}`
 		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : 'Unknown error';

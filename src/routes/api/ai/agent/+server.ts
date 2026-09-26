@@ -11,7 +11,11 @@ import { requireAuth, requireProfileAccess } from '$lib/server/utils/api-helpers
 import { agentChatSchema, parseBody } from '$lib/server/validation/api-schemas';
 import { requireCredits } from '$lib/server/billing/require-credits';
 import type { ChatMessage } from '$lib/server/llm';
-import { createAndGenerateAiChat, reserveAiChatId } from '$lib/server/ai-chat/utils';
+import {
+	createAndGenerateAiChat,
+	reserveAiChatId,
+	reserveConversationId
+} from '$lib/server/ai-chat/utils';
 import { resolveChatContext } from '$lib/server/ai-chat/chat-context';
 import { EMPTY_CONTEXT_VARIABLES } from './placeholders';
 import { isStaffUser } from './scope';
@@ -32,7 +36,7 @@ import {
 	renderProposalOutcomes
 } from '$lib/server/ai-chat/proposal-outcomes';
 import { ASSISTANT_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
-import { aiChatTraceSeed, startTrace } from '$lib/server/monitoring/telemetry';
+import { aiChatTraceSeed, startTrace, traceStep } from '$lib/server/monitoring/telemetry';
 
 // Recent turns sent to the model as context (~20 user/assistant exchanges).
 // Older turns are dropped; summarization can be layered on later if needed.
@@ -239,6 +243,26 @@ async function readProposal(
 	};
 }
 
+/**
+ * One proposal as a `tool` observation of the turn's trace: what the model asked
+ * for, and what became of it. A dropped one is a WARNING with the reason the
+ * user was given.
+ */
+function traceProposal(
+	candidate: ProposalCandidate,
+	read: () => Promise<ReadProposal>
+): Promise<ReadProposal> {
+	const name = typeof candidate?.capability === 'string' ? candidate.capability : 'proposal';
+	return traceStep(name, 'tool', read, (result) =>
+		result.ok
+			? {
+					input: candidate,
+					output: { target: result.proposal.target, fields: result.proposal.fields }
+				}
+			: { input: candidate, level: 'WARNING', statusMessage: result.drop.why }
+	);
+}
+
 /** A capability's user-facing name, when it names one we know. */
 function titleFor(capability: string): string | null {
 	return capability in CAPABILITIES ? CAPABILITIES[capability as Capability].title : null;
@@ -324,7 +348,9 @@ async function readCapableReply(
 
 	const candidates = Array.isArray(body.proposals) ? body.proposals : [];
 	const read = await Promise.all(
-		candidates.map((c) => readProposal(c as ProposalCandidate, live, actor))
+		candidates.map((c) =>
+			traceProposal(c as ProposalCandidate, () => readProposal(c as ProposalCandidate, live, actor))
+		)
 	);
 	const drops = read.filter((r) => !r.ok).map((r) => r.drop);
 
@@ -440,43 +466,53 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		content: m.content + renderProposalOutcomes(outcomes.get(m.id) ?? [])
 	}));
 
-	// What the user is looking at, and what may be changed there — both resolved
-	// server-side from the route and authorized against this profile. `route` is
-	// client-supplied, so nothing derived from it is taken on trust.
-	const isStaff = isStaffUser(user);
-	const { context, capabilities, capabilityRecord } = await resolveChatContext({
-		routeId: route,
-		params: routeParams ?? {},
-		profileId: profile_id,
-		isStaff,
-		message,
-		// Only the user's own turns. What the assistant said is not the user
-		// asking for it — it names sections all the time ("that's on your
-		// Languages page"), and matching on its own suggestions would let the
-		// assistant talk itself into a capability nobody requested.
-		history: history.filter((m) => m.role === 'user').map((m) => m.content)
-	});
-
-	// Turns with nothing to propose keep the original plain-text path exactly:
-	// same prompt, no schema, no capability block, no extra tokens. Only a page
-	// where the user can actually change something pays for the structured one.
-	const capable = capabilities.length > 0;
 	// The turn's root trace (planning/LANGFUSE.md § Trace model), seeded from its
 	// ai_chats row, whose id is reserved first so the trace can be found from the
-	// row. A new thread has no id until the reply is stored below, so its first
-	// turn has no session.
+	// row. It covers what the turn may change, the generation and each proposal.
+	// A new thread's id is reserved as well, so its first turn is in its session.
+	const isStaff = isStaffUser(user);
 	const aiChatId = await reserveAiChatId();
-	const result = await startTrace(
+	const conversationId = conversation?.id ?? (await reserveConversationId());
+	const turn = await startTrace(
 		{
 			name: 'assistant turn',
 			kind: 'agent',
 			seed: aiChatTraceSeed(aiChatId),
 			userId: user.id,
-			sessionId: conversation ? `assistant:${conversation.id}` : undefined,
-			metadata: { profile_id: String(profile_id), capable: String(capable) }
+			sessionId: `assistant:${conversationId}`,
+			metadata: { profile_id: String(profile_id) }
 		},
-		() =>
-			createAndGenerateAiChat(
+		async () => {
+			// What the user is looking at, and what may be changed there — both resolved
+			// server-side from the route and authorized against this profile. `route` is
+			// client-supplied, so nothing derived from it is taken on trust.
+			const { context, capabilities, capabilityRecord } = await traceStep(
+				'capabilities',
+				'span',
+				() =>
+					resolveChatContext({
+						routeId: route,
+						params: routeParams ?? {},
+						profileId: profile_id,
+						isStaff,
+						message,
+						// Only the user's own turns. What the assistant said is not the user
+						// asking for it — it names sections all the time ("that's on your
+						// Languages page"), and matching on its own suggestions would let the
+						// assistant talk itself into a capability nobody requested.
+						history: history.filter((m) => m.role === 'user').map((m) => m.content)
+					}),
+				(resolved) => ({
+					input: { route, params: routeParams ?? {} },
+					output: resolved.capabilityRecord
+				})
+			);
+
+			// Turns with nothing to propose keep the original plain-text path exactly:
+			// same prompt, no schema, no capability block, no extra tokens. Only a page
+			// where the user can actually change something pays for the structured one.
+			const capable = capabilities.length > 0;
+			const result = await createAndGenerateAiChat(
 				profile_id,
 				capable ? 'personal_agent_chat_capable' : 'personal_agent_chat',
 				{
@@ -508,25 +544,33 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 							}
 						: {})
 				}
-			)
+			);
+
+			if (!result.success || !result.aiChat?.response) {
+				return { ok: false as const, message: result.message };
+			}
+
+			const { reply, proposals } = capable
+				? await readCapableReply(result.aiChat.response, capabilities, {
+						profileId: profile_id,
+						isStaff
+					})
+				: { reply: result.aiChat.response, proposals: [] as StoredProposal[] };
+			return { ok: true as const, aiChat: result.aiChat, reply, proposals, capabilityRecord };
+		}
 	);
 
-	if (!result.success || !result.aiChat?.response) {
+	if (!turn.ok) {
 		return json(
 			{
 				success: false,
-				message: result.message || 'The assistant could not respond.'
+				message: turn.message || 'The assistant could not respond.'
 			},
 			{ status: 422 }
 		);
 	}
 
-	const { reply, proposals } = capable
-		? await readCapableReply(result.aiChat.response, capabilities, {
-				profileId: profile_id,
-				isStaff
-			})
-		: { reply: result.aiChat.response, proposals: [] as StoredProposal[] };
+	const { aiChat, reply, proposals, capabilityRecord } = turn;
 	const now = new Date();
 
 	// Persist only now that we have a reply: create the thread on first message,
@@ -535,6 +579,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const [created] = await db
 			.insert(agent_conversations)
 			.values({
+				id: conversationId,
 				user_id: user.id,
 				profile_id,
 				title: deriveTitle(message),
@@ -571,7 +616,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				role: 'assistant',
 				content: reply,
 				profile_id,
-				ai_chat_id: result.aiChat.id,
+				ai_chat_id: aiChat.id,
 				date_created: now
 			}
 		])

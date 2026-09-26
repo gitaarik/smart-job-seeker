@@ -37,6 +37,8 @@ export async function createFollowupAiChat(
 		context?: GenerationContextOption;
 		/** Prior turns of this thread, replayed as real messages. */
 		historyMessages?: ChatMessage[];
+		/** The trace's session: the thing being refined, as `application_letter:12`. */
+		traceSession?: string;
 	}
 ): Promise<{
 	success: boolean;
@@ -184,7 +186,8 @@ export async function createFollowupAiChat(
 			{
 				profileDataFields: options?.profileDataFields ?? [],
 				context: options?.context,
-				historyMessages: options?.historyMessages
+				historyMessages: options?.historyMessages,
+				traceSession: options?.traceSession
 			}
 		);
 	} catch (error) {

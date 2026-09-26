@@ -211,6 +211,7 @@ export async function deriveRecordMetadata(
 			where: eq(application_records.id, recordId),
 			columns: {
 				id: true,
+				application_id: true,
 				title: true,
 				content: true,
 				record_type: true,
@@ -224,12 +225,18 @@ export async function deriveRecordMetadata(
 		});
 		if (!record || !shouldDerive(record)) return null;
 
-		const result = await createAndGenerateAiChat(profileId, 'derive_record_metadata', {
-			content: record.content!.slice(0, MAX_CHARS_SENT),
-			filename: record.file?.filename_download
-				? `The text was extracted from a file named "${record.file.filename_download}".\n\n`
-				: ''
-		});
+		const result = await createAndGenerateAiChat(
+			profileId,
+			'derive_record_metadata',
+			{
+				content: record.content!.slice(0, MAX_CHARS_SENT),
+				filename: record.file?.filename_download
+					? `The text was extracted from a file named "${record.file.filename_download}".\n\n`
+					: ''
+			},
+			undefined,
+			{ traceSession: `application:${record.application_id}` }
+		);
 		if (!result.success || !result.aiChat?.response) return null;
 
 		const derived = coerceDerived(JSON.parse(result.aiChat.response) as Candidate);

@@ -87,7 +87,8 @@ vi.mock('$lib/server/billing/require-credits', () => ({
 
 vi.mock('$lib/server/ai-chat/utils', () => ({
 	createAndGenerateAiChat: (...a: unknown[]) => mockCreateAndGenerate(...a),
-	reserveAiChatId: async () => 4242
+	reserveAiChatId: async () => 4242,
+	reserveConversationId: async () => 4343
 }));
 
 vi.mock('$lib/server/ai-chat/chat-context', () => ({

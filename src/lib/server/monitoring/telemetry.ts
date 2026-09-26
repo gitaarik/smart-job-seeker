@@ -26,8 +26,11 @@ import {
 	createContextKey,
 	type Context,
 	type SpanContext,
+	trace,
 	TraceFlags
 } from '@opentelemetry/api';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { type Sampler, SamplingDecision, type SpanProcessor } from '@opentelemetry/sdk-trace-base';
@@ -181,9 +184,24 @@ function langfuseProcessors(): SpanProcessor[] {
 			secretKey,
 			baseUrl: process.env.LANGFUSE_BASE_URL,
 			environment: getEnvironmentName(),
+			release: runningVersion(),
 			mask: ({ data }) => maskTraceData(data)
 		})
 	];
+}
+
+/**
+ * The version in the running tree's package.json: the release on a box, and on
+ * dev the last release before the work in progress. The app and the worker run
+ * from their repository's root, whose versions a release bumps together.
+ */
+function runningVersion(): string | undefined {
+	try {
+		const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8'));
+		return typeof pkg.version === 'string' ? pkg.version : undefined;
+	} catch {
+		return undefined;
+	}
 }
 
 export interface TraceOptions {
@@ -202,6 +220,8 @@ export interface TraceOptions {
 	tags?: string[];
 	/** Strings only, and nothing personal: metadata does not pass the mask. */
 	metadata?: Record<string, string>;
+	/** Overrides the box's environment for this trace, as `smoke` does for llm:smoke. */
+	environment?: string;
 }
 
 /**
@@ -220,10 +240,14 @@ export function isInTrace(): boolean {
 
 /**
  * Run `work` as the root of a trace of its own, with the user, session, tags and
- * metadata propagated to everything under it. With telemetry off it only runs
- * `work`.
+ * metadata propagated to everything under it, and what `describe` makes of its
+ * result recorded on the root. With telemetry off it only runs `work`.
  */
-export async function startTrace<T>(options: TraceOptions, work: () => Promise<T> | T): Promise<T> {
+export async function startTrace<T>(
+	options: TraceOptions,
+	work: () => Promise<T> | T,
+	describe?: (result: T) => StepRecord
+): Promise<T> {
 	if (!provider) return work();
 
 	const group = options.sampleGroup ?? 'default';
@@ -239,14 +263,88 @@ export async function startTrace<T>(options: TraceOptions, work: () => Promise<T
 			userId: options.userId,
 			sessionId: options.sessionId,
 			tags: options.tags,
+			environment: options.environment,
 			metadata: { ...options.metadata, sampleGroup: group, process: processName ?? 'unknown' }
 		},
 		() =>
 			context.with(context.active().setValue(SAMPLE_GROUP, group).setValue(SJS_ROOT, true), () =>
-				startActiveObservation(options.name, async () => await work(), {
-					asType: (options.kind ?? 'span') as 'span',
-					parentSpanContext
-				})
+				startActiveObservation(
+					options.name,
+					async (root) => {
+						const result = await work();
+						if (describe) root.update(describe(result));
+						return result;
+					},
+					{ asType: (options.kind ?? 'span') as 'span', parentSpanContext }
+				)
 			)
+	);
+}
+
+/**
+ * The id of the open trace when it is being recorded, for a row made inside it
+ * to link to. Null outside a trace and in one the sampler dropped, which never
+ * reaches Langfuse.
+ */
+export function recordedTraceId(): string | null {
+	if (!provider || !isInTrace()) return null;
+	const span = trace.getActiveSpan();
+	return span?.isRecording() ? span.spanContext().traceId : null;
+}
+
+/**
+ * Give every trace started inside `work` this user and session, unless the
+ * trace names its own. A scrape run uses it, so the helper calls and job
+ * imports it makes are in the run's session. With telemetry off it only runs
+ * `work`.
+ */
+export function withTraceAttributes<T>(
+	attributes: { userId?: string; sessionId?: string },
+	work: () => Promise<T>
+): Promise<T> {
+	if (!provider) return work();
+	return propagateAttributes(attributes, work);
+}
+
+export interface StepRecord {
+	input?: unknown;
+	output?: unknown;
+	metadata?: Record<string, unknown>;
+	/** WARNING for a step that did its job and still turned something away. */
+	level?: 'DEBUG' | 'DEFAULT' | 'WARNING' | 'ERROR';
+	statusMessage?: string;
+}
+
+/**
+ * Run one step of a unit of work (the retrieval, an eligibility check, a blend)
+ * as a child observation of the open trace, recording what `describe` makes of
+ * its result. A step that throws is recorded at ERROR level and rethrown. With
+ * no trace open, or telemetry off, it only runs `work`, so a step never opens a
+ * trace of its own.
+ */
+export async function traceStep<T>(
+	name: string,
+	kind: LangfuseObservationType,
+	work: () => Promise<T>,
+	describe?: (result: T) => StepRecord
+): Promise<T> {
+	if (!provider || !isInTrace()) return work();
+
+	return startActiveObservation(
+		name,
+		async (step) => {
+			try {
+				const result = await work();
+				if (describe) step.update(describe(result));
+				return result;
+			} catch (error) {
+				step.update({
+					level: 'ERROR',
+					statusMessage: error instanceof Error ? error.message : String(error)
+				});
+				throw error;
+			}
+		},
+		{ asType: kind as 'span' }
 	);
 }

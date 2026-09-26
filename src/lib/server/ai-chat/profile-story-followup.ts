@@ -110,6 +110,7 @@ export async function createProfileStoryFollowup(
 	return createEntityFollowup({
 		entityId: storyId,
 		entityLabel: 'project story',
+		entityKind: 'project_story',
 		noAiChatHint: 'Generate the initial story first.',
 		followupRequest,
 		includeOriginalContext,

@@ -18,6 +18,7 @@ import { OpenAIEmbeddings } from '@langchain/openai';
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import type { Embeddings } from '@langchain/core/embeddings';
 import { config } from '$lib/server/config';
+import { traceEmbedding } from './trace';
 
 /** API key for the configured embedding provider, or "" if absent. */
 function embeddingApiKey(): string {
@@ -49,7 +50,9 @@ function getEmbeddingModel(): Embeddings {
 
 /** Embed a single string into a vector. */
 export async function embed(text: string): Promise<number[]> {
-	return getEmbeddingModel().embedQuery(text);
+	return traceEmbedding(config.embeddingProvider, config.embeddingModel, [text], () =>
+		getEmbeddingModel().embedQuery(text)
+	);
 }
 
 /**
@@ -58,7 +61,9 @@ export async function embed(text: string): Promise<number[]> {
  */
 export async function embedBatch(texts: string[]): Promise<number[][]> {
 	if (texts.length === 0) return [];
-	return getEmbeddingModel().embedDocuments(texts);
+	return traceEmbedding(config.embeddingProvider, config.embeddingModel, texts, () =>
+		getEmbeddingModel().embedDocuments(texts)
+	);
 }
 
 /**

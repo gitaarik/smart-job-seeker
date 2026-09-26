@@ -10,8 +10,8 @@
  * carried: a provider bills a failed call like a successful one.
  *
  * A call made outside any trace opens one of its own, in the matcher's sample
- * group when it is one of the matcher's prompts. With telemetry off both
- * functions are just the call.
+ * group when it is one of the matcher's prompts. An embedding only joins the
+ * trace that is open. With telemetry off each of these is just the call.
  */
 
 import { startActiveObservation, updateActiveObservation } from '@langfuse/tracing';
@@ -91,6 +91,50 @@ export async function traceAttempt(
 			}
 		},
 		{ asType: 'generation' }
+	);
+}
+
+/**
+ * Record the messages an attempt sent, in place of the ones it was given, when
+ * a provider path rewrites them: the JSON reminder added for Groq and Cerebras.
+ */
+export function recordSentMessages(messages: ChatMessage[]): void {
+	if (!isTelemetryEnabled() || !isInTrace()) return;
+	updateActiveObservation({ input: messages }, { asType: 'generation' });
+}
+
+/**
+ * Trace an embedding call as an `embedding` observation, named by its provider,
+ * inside the trace that is open. Outside one it is only the call: an embedding
+ * is a step of some unit of work, never a unit of its own. The input is its
+ * size, since the text is already in the step that asked for it.
+ */
+export async function traceEmbedding<T extends number[] | number[][]>(
+	provider: string,
+	model: string,
+	texts: string[],
+	call: () => Promise<T>
+): Promise<T> {
+	if (!isTelemetryEnabled() || !isInTrace()) return call();
+
+	return startActiveObservation(
+		provider,
+		async (embedding) => {
+			embedding.update({
+				model,
+				input: { texts: texts.length, chars: texts.reduce((sum, text) => sum + text.length, 0) }
+			});
+			try {
+				return await call();
+			} catch (error) {
+				embedding.update({
+					level: 'ERROR',
+					statusMessage: error instanceof Error ? error.message : String(error)
+				});
+				throw error;
+			}
+		},
+		{ asType: 'embedding' }
 	);
 }
 

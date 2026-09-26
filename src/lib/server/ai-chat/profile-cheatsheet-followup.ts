@@ -93,6 +93,7 @@ export async function createProfileCheatSheetFollowup(
 	return createEntityFollowup({
 		entityId: cheatSheetId,
 		entityLabel: 'cheat sheet',
+		entityKind: 'cheat_sheet',
 		noAiChatHint: 'Generate the initial sheet first.',
 		followupRequest,
 		includeOriginalContext,

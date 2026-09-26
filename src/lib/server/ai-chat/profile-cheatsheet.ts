@@ -136,7 +136,8 @@ export async function generateProfileCheatSheet(
 	try {
 		aiChatResult = await createAndGenerateAiChat(profileId, promptType, variables, undefined, {
 			profileDataFields: CHEATSHEET_PROFILE_FIELDS,
-			context
+			context,
+			traceSession: `cheat_sheet:${cheatSheetId}`
 		});
 	} catch (error) {
 		const msg = error instanceof Error ? error.message : 'Unknown error';

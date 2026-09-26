@@ -3129,7 +3129,15 @@ export const ai_chats = pgTable(
 		 * set, so until this existed there was no latency anywhere.
 		 */
 		duration_ms: integer(),
-		credits_charged: integer()
+		credits_charged: integer(),
+		/**
+		 * The Langfuse trace the row was made in, when that trace was recorded: its
+		 * own, seeded from the row's id (aiChatTraceSeed), or the unit of work it
+		 * was a step of, such as a match or a job import, which a seed cannot
+		 * find. Null with telemetry off, for a trace the sampler dropped, and on
+		 * rows from before 2026-09-26. /admin/ai-chats links to it.
+		 */
+		trace_id: varchar({ length: 32 })
 	},
 	(table) => [
 		index('ai_chats_profile_id_idx').on(table.profile_id),

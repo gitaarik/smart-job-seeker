@@ -152,7 +152,8 @@ export async function generateProfileStory(
 	try {
 		aiChatResult = await createAndGenerateAiChat(profileId, promptType, variables, undefined, {
 			profileDataFields: STORY_PROFILE_FIELDS,
-			context
+			context,
+			traceSession: `project_story:${storyId}`
 		});
 	} catch (error) {
 		const msg = error instanceof Error ? error.message : 'Unknown error';

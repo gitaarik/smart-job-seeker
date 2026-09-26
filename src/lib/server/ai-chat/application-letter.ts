@@ -167,7 +167,11 @@ export async function generateApplicationLetter(
 			promptType,
 			customVariables,
 			undefined,
-			{ profileDataFields: LETTER_PROFILE_FIELDS, context }
+			{
+				profileDataFields: LETTER_PROFILE_FIELDS,
+				context,
+				traceSession: `application_letter:${letterId}`
+			}
 		);
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : 'Unknown error';

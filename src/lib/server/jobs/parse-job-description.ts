@@ -24,7 +24,8 @@
 import { prepareJobTextForLlm } from './posting-text';
 import { type ExtractedHeader, sanitizeExtractedHeader } from './extracted-header';
 import { recoverPostingHeader } from './header-recovery';
-import { runProfileAiChat } from '$lib/server/ai-chat/job-utils';
+import { profileOwnerId, runProfileAiChat } from '$lib/server/ai-chat/job-utils';
+import { isInTrace, isTelemetryEnabled, startTrace } from '$lib/server/monitoring/telemetry';
 import { isValidJobPostingDate, parseRelativeDate } from '$lib/tools/date-utils';
 
 /**
@@ -157,14 +158,16 @@ function buildSearchContextHint(searchContext?: JobSearchContext): string {
  */
 export async function parseJobDescription(
 	text: string,
-	opts: {
-		profileId: number;
-		sourceUrl?: string | null;
-		searchContext?: JobSearchContext;
-		recoverHeader?: boolean;
-	}
+	opts: JobParseOptions
 ): Promise<ParsedJobDescription | null> {
 	return (await parseJobDescriptionResult(text, opts)).parsed;
+}
+
+interface JobParseOptions {
+	profileId: number;
+	sourceUrl?: string | null;
+	searchContext?: JobSearchContext;
+	recoverHeader?: boolean;
 }
 
 /**
@@ -176,13 +179,24 @@ export async function parseJobDescription(
  */
 export async function parseJobDescriptionResult(
 	text: string,
-	opts: {
-		profileId: number;
-		sourceUrl?: string | null;
-		searchContext?: JobSearchContext;
-		recoverHeader?: boolean;
-	}
+	opts: JobParseOptions
 ): Promise<JobParseResult> {
+	if (!isTelemetryEnabled() || isInTrace()) return extractJob(text, opts);
+
+	// One trace for the extraction and the header pass (planning/LANGFUSE.md §
+	// Trace model). Inside a scrape run it is in the run's session.
+	return startTrace(
+		{
+			name: 'job import',
+			kind: 'chain',
+			userId: await profileOwnerId(opts.profileId),
+			metadata: { profile_id: String(opts.profileId) }
+		},
+		() => extractJob(text, opts)
+	);
+}
+
+async function extractJob(text: string, opts: JobParseOptions): Promise<JobParseResult> {
 	// 1. Strip a captured page down to its content; tidy a paste but keep its
 	//    lines (they are the only structure it has).
 	const preparedText = prepareJobTextForLlm(text);

@@ -23,7 +23,19 @@ import { promptFingerprint } from './prompt-fingerprint';
 import { tokensToCost } from '$lib/server/billing/credits';
 import { describeSpendBlock, getSpendEligibility } from '$lib/server/account/spend-eligibility';
 import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
-import { assembleGenerationContext, type ContextRequest } from './generation-context';
+import {
+	assembleGenerationContext,
+	type ContextEntity,
+	type ContextRequest
+} from './generation-context';
+import {
+	aiChatTraceSeed,
+	isInTrace,
+	isTelemetryEnabled,
+	recordedTraceId,
+	startTrace,
+	traceStep
+} from '$lib/server/monitoring/telemetry';
 import type { ExportedProfileKey } from '$lib/server/profile/export';
 import type { RetrievalRecord } from '$lib/server/documents/retrieval-record';
 import type { CapabilityRecord } from './capability-record';
@@ -282,9 +294,21 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<{
  * A reservation whose work fails before the insert leaves a gap in the sequence,
  * as a rolled-back insert always did.
  */
-export async function reserveAiChatId(): Promise<number> {
+export function reserveAiChatId(): Promise<number> {
+	return reserveSerialId('ai_chats');
+}
+
+/**
+ * Reserve the id of the assistant thread a first turn will create, so that turn's
+ * trace is in the thread's session like every turn after it.
+ */
+export function reserveConversationId(): Promise<number> {
+	return reserveSerialId('agent_conversations');
+}
+
+async function reserveSerialId(table: 'ai_chats' | 'agent_conversations'): Promise<number> {
 	const result = await db.execute<{ id: string }>(
-		sql`SELECT nextval(pg_get_serial_sequence('ai_chats', 'id')) AS id`
+		sql`SELECT nextval(pg_get_serial_sequence(${table}, 'id')) AS id`
 	);
 	return Number(result.rows[0].id);
 }
@@ -307,8 +331,54 @@ export async function reserveAiChatId(): Promise<number> {
  * @param customVariables - Optional custom variables (strings or objects) for interpolation and context
  * @param followupTo - Optional parent ai_chats ID if this is a follow-up
  * @returns Object with success status, message, and the created ai_chats record (if successful)
+ *
+ * Traced as a `chain` of its own, seeded from its row, unless the caller opened
+ * a trace (the assistant turn, a match) and it is a part of that one. Its
+ * session is what it writes (`traceSession`), or else its context's entity.
  */
 export async function createAndGenerateAiChat(
+	profileId: number,
+	promptKey: string,
+	customVariables?: Record<string, unknown>,
+	followupTo?: number,
+	options?: AiChatOptions
+): ReturnType<typeof generateAiChat> {
+	if (!isTelemetryEnabled() || isInTrace()) {
+		return generateAiChat(profileId, promptKey, customVariables, followupTo, options);
+	}
+	const aiChatId = options?.aiChatId ?? (await reserveAiChatId());
+	const owner = await db.query.profiles.findFirst({
+		where: eq(profiles.id, profileId),
+		columns: { user_id: true }
+	});
+	return startTrace(
+		{
+			name: promptKey,
+			kind: 'chain',
+			seed: aiChatTraceSeed(aiChatId),
+			userId: owner?.user_id ?? undefined,
+			sessionId: options?.traceSession ?? sessionForEntity(options?.context?.entity),
+			metadata: {
+				profile_id: String(profileId),
+				...(followupTo ? { followup_to: String(followupTo) } : {})
+			}
+		},
+		() =>
+			generateAiChat(profileId, promptKey, customVariables, followupTo, { ...options, aiChatId })
+	);
+}
+
+type AiChatOptions = Parameters<typeof generateAiChat>[4];
+
+/** The trace session for what a generation is about: `application:77`, `work_experiences:5`. */
+function sessionForEntity(entity?: ContextEntity): string | undefined {
+	if (!entity) return undefined;
+	return entity.type === 'profile_section'
+		? `${entity.resource}:${entity.id}`
+		: `${entity.type}:${entity.id}`;
+}
+
+async function generateAiChat(
 	profileId: number,
 	promptKey: string,
 	customVariables?: Record<string, unknown>,
@@ -382,6 +452,13 @@ export async function createAndGenerateAiChat(
 		 * (aiChatTraceSeed). Reserved here otherwise.
 		 */
 		aiChatId?: number;
+		/**
+		 * The trace's session, `application_letter:12`: the thing the generation
+		 * writes, which is narrower than the entity its context is about (the
+		 * letter, not its application), or the application of a caller that
+		 * assembles no context. The context's entity when absent.
+		 */
+		traceSession?: string;
 	}
 ): Promise<{
 	success: boolean;
@@ -468,13 +545,25 @@ export async function createAndGenerateAiChat(
 		// questions it answers are asked long after the generation.
 		let retrieval: RetrievalRecord | null = null;
 		if (options?.context) {
-			const ctx = await assembleGenerationContext({
-				...options.context,
-				profileId,
-				profileFields: profileDataFields,
-				// Already loaded above for ${schema} — don't pay for it twice.
-				preloadedProfile: profileBlob
-			});
+			const request = options.context;
+			const ctx = await traceStep(
+				'context',
+				'retriever',
+				() =>
+					assembleGenerationContext({
+						...request,
+						profileId,
+						profileFields: profileDataFields,
+						// Already loaded above for ${schema} — don't pay for it twice.
+						preloadedProfile: profileBlob
+					}),
+				// The record the row keeps, not the rendered blocks: those are in the
+				// prompt, which the generation under this trace already holds.
+				(result) => ({
+					input: { sources: request.sources, entity: request.entity, query: request.query },
+					output: result.retrieval
+				})
+			);
 			assembled = ctx.variables;
 			retrieval = ctx.retrieval;
 		}
@@ -581,7 +670,8 @@ export async function createAndGenerateAiChat(
 				date_created: new Date(),
 				provider: activeProvider,
 				model: activeModel,
-				request_type: 'llm'
+				request_type: 'llm',
+				trace_id: recordedTraceId()
 			})
 			.returning();
 		aiChatId = aiChat.id;

@@ -140,6 +140,7 @@ export async function createApplicationLetterFollowup(
 	return createEntityFollowup({
 		entityId: letterId,
 		entityLabel: 'application letter',
+		entityKind: 'application_letter',
 		noAiChatHint: 'Generate the initial letter first.',
 		followupRequest,
 		includeOriginalContext,

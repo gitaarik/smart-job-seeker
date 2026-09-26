@@ -8,7 +8,7 @@
 import { createAndGenerateAiChat } from './utils.js';
 import { dbDirect } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { search_tasks } from '$lib/server/db/schema';
+import { profiles, search_tasks } from '$lib/server/db/schema';
 
 /**
  * The options bag `createAndGenerateAiChat` accepts, derived rather than
@@ -55,6 +55,15 @@ export async function getProfileIdForSearchTask(searchTaskId: number): Promise<n
 		columns: { profile_id: true }
 	});
 	return searchTask?.profile_id ?? null;
+}
+
+/** The user a profile belongs to, as a trace's user. */
+export async function profileOwnerId(profileId: number): Promise<string | undefined> {
+	const profile = await dbDirect.query.profiles.findFirst({
+		where: eq(profiles.id, profileId),
+		columns: { user_id: true }
+	});
+	return profile?.user_id ?? undefined;
 }
 
 /**

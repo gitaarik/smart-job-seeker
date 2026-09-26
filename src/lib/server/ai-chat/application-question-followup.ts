@@ -140,6 +140,7 @@ export async function createApplicationQuestionFollowup(
 	return createEntityFollowup({
 		entityId: questionId,
 		entityLabel: 'application question',
+		entityKind: 'application_question',
 		noAiChatHint: 'Generate the initial answer first.',
 		followupRequest,
 		includeOriginalContext,
