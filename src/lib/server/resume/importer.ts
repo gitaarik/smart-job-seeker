@@ -18,6 +18,7 @@ import {
 	side_projects,
 	side_project_achievements,
 	side_project_technologies,
+	certificate_skills,
 	certificates,
 	references
 } from '$lib/server/db/schema';
@@ -385,16 +386,28 @@ async function createSideProject(profileId: number, project: SideProject): Promi
 }
 
 async function createCertificate(profileId: number, cert: Certificate): Promise<void> {
-	await dbDirect.insert(certificates).values({
-		profile_id: profileId,
-		name: cert.name,
-		issuer: cert.issuer || null,
-		date: parseDate(cert.date),
-		url: cert.url || null,
-		status: 'draft',
-		sort: 0,
-		date_created: new Date()
-	});
+	const [created] = await dbDirect
+		.insert(certificates)
+		.values({
+			profile_id: profileId,
+			name: cert.name,
+			issuer: cert.issuer || null,
+			date: parseDate(cert.date),
+			expiry_date: parseDate(cert.expiryDate),
+			credential_id: cert.credentialId || null,
+			url: cert.url || null,
+			status: 'draft',
+			sort: 0,
+			date_created: new Date()
+		})
+		.returning({ id: certificates.id });
+
+	let sort = 0;
+	for (const skill of cert.skills ?? []) {
+		await dbDirect
+			.insert(certificate_skills)
+			.values({ certificate_id: created.id, name: skill, sort: sort++ });
+	}
 }
 
 async function createReference(profileId: number, ref: Reference): Promise<void> {

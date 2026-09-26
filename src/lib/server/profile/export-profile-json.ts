@@ -162,7 +162,11 @@ export interface ExportedProfile {
 			name?: string;
 			issuer?: string;
 			date?: Date | null;
+			expiry_date?: Date | null;
+			credential_id?: string;
 			url?: string;
+			/** Optional: files exported before 2026-09-26 have none. */
+			certificate_skills?: Array<{ sort?: number | null; name?: string }>;
 		}>;
 		project_stories: Array<{
 			sort?: number | null;
@@ -323,7 +327,22 @@ export async function buildProfileJsonExport(
 				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			certificates: {
-				columns: { status: true, sort: true, name: true, issuer: true, date: true, url: true },
+				columns: {
+					status: true,
+					sort: true,
+					name: true,
+					issuer: true,
+					date: true,
+					expiry_date: true,
+					credential_id: true,
+					url: true
+				},
+				with: {
+					certificate_skills: {
+						columns: { sort: true, name: true },
+						orderBy: (t, { asc }) => asc(t.sort)
+					}
+				},
 				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			project_stories: {

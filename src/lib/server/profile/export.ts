@@ -146,6 +146,21 @@ const PROFILE_SCHEMA_MAPPING = {
 					'summary'
 				]
 			},
+			/**
+			 * In no snapshot until 2026-09-26, so no prompt had ever seen one: not
+			 * the matcher, whatever the certificates page promised about scoring,
+			 * and not a letter or an application answer asked about a certification.
+			 * Whether one has lapsed is decided when a prompt is built, not here
+			 * (see `markExpiredCertificates`).
+			 */
+			certificates: {
+				fields: ['name', 'issuer', 'date', 'expiry_date', 'credential_id', 'url'],
+				relations: {
+					certificate_skills: {
+						fields: ['name']
+					}
+				}
+			},
 			languages: {
 				fields: ['name', 'language_code', 'proficiency']
 			},
@@ -380,6 +395,23 @@ async function fetchProfileData(profileId: number) {
 					start_date: true,
 					end_date: true,
 					summary: true
+				},
+				orderBy: (t, { asc }) => asc(t.sort)
+			},
+			certificates: {
+				columns: {
+					name: true,
+					issuer: true,
+					date: true,
+					expiry_date: true,
+					credential_id: true,
+					url: true
+				},
+				with: {
+					certificate_skills: {
+						columns: { name: true },
+						orderBy: (t, { asc }) => asc(t.sort)
+					}
 				},
 				orderBy: (t, { asc }) => asc(t.sort)
 			},

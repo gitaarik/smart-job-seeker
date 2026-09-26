@@ -1,6 +1,8 @@
 <script lang="ts">
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
+	import TechnologyTagsEditor from '$lib/components/TechnologyTagsEditor.svelte';
 	import type { ActionData, PageData } from './$types';
+	import type { SubmitFunction } from '@sveltejs/kit';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -13,12 +15,14 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import { dragHandleZone, dragHandle } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
-	import { invalidateAll } from '$app/navigation';
+	import { invalidate, invalidateAll } from '$app/navigation';
 	import SectionHeader from '../../components/SectionHeader.svelte';
 	import EmptyState from '../../components/EmptyState.svelte';
 	import ConfirmModal from '../../components/ConfirmModal.svelte';
 	import ItemCard from '../../components/ItemCard.svelte';
+	import CertificateSkills from '../../components/CertificateSkills.svelte';
 	import Card from '../../../components/Card.svelte';
+	import { CERTIFICATES_DEP } from './certificates-dep';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -31,15 +35,23 @@
 	let newName = $state('');
 	let newIssuer = $state('');
 	let newDate = $state('');
+	let newExpiryDate = $state('');
+	let newCredentialId = $state('');
 	let newUrl = $state('');
+	let newSkills = $state<string[]>([]);
+	let skillsError = $state<string | null>(null);
 
 	let editName = $state('');
 	let editIssuer = $state('');
 	let editDate = $state('');
+	let editExpiryDate = $state('');
+	let editCredentialId = $state('');
 	let editUrl = $state('');
 	let originalName = $state('');
 	let originalIssuer = $state('');
 	let originalDate = $state('');
+	let originalExpiryDate = $state('');
+	let originalCredentialId = $state('');
 	let originalUrl = $state('');
 	let showDiscardConfirm = $state(false);
 
@@ -52,7 +64,14 @@
 	function formatDateForDisplay(date: Date | string | null): string {
 		if (!date) return '';
 		const d = new Date(date);
-		return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+		// UTC, because a date column arrives as midnight UTC: read in a zone west
+		// of it, the first of a month would print as the month before.
+		return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', timeZone: 'UTC' });
+	}
+
+	/** Past its expiry date. No expiry date means it does not expire. */
+	function isExpired(expiry: Date | string | null): boolean {
+		return !!expiry && formatDateForInput(expiry) < new Date().toISOString().slice(0, 10);
 	}
 
 	function isEditDirty(): boolean {
@@ -60,6 +79,8 @@
 			editName !== originalName ||
 			editIssuer !== originalIssuer ||
 			editDate !== originalDate ||
+			editExpiryDate !== originalExpiryDate ||
+			editCredentialId !== originalCredentialId ||
 			editUrl !== originalUrl
 		);
 	}
@@ -78,10 +99,14 @@
 				editName = cert.name || '';
 				editIssuer = cert.issuer || '';
 				editDate = formatDateForInput(cert.date);
+				editExpiryDate = formatDateForInput(cert.expiry_date);
+				editCredentialId = cert.credential_id || '';
 				editUrl = cert.url || '';
 				originalName = editName;
 				originalIssuer = editIssuer;
 				originalDate = editDate;
+				originalExpiryDate = editExpiryDate;
+				originalCredentialId = editCredentialId;
 				originalUrl = editUrl;
 			}
 		}
@@ -97,38 +122,55 @@
 		newName = '';
 		newIssuer = '';
 		newDate = '';
+		newExpiryDate = '';
+		newCredentialId = '';
 		newUrl = '';
+		newSkills = [];
 	}
 
-	function handleAddSubmit() {
-		return async ({
-			result,
-			update
-		}: {
-			result: { type: string };
-			update: () => Promise<void>;
-		}) => {
+	/**
+	 * A new certificate's skills, posted once it exists.
+	 *
+	 * They need its id, which is why the add form holds them as plain chips and
+	 * not as rows saving themselves. One at a time, so they keep the order they
+	 * were typed in: each is appended as it lands.
+	 */
+	async function addSkills(certificateId: number, names: string[]) {
+		const failed: string[] = [];
+		for (const name of names.map((n) => n.trim()).filter(Boolean)) {
+			const response = await fetch('/api/profile-section/certificate_skill', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name, certificate_id: certificateId })
+			}).catch(() => null);
+			if (!response?.ok) failed.push(name);
+		}
+		skillsError = failed.length
+			? `The certificate was added, but these skills were not: ${failed.join(', ')}. Open it to add them again.`
+			: null;
+	}
+
+	const handleAddSubmit: SubmitFunction = () => {
+		return async ({ result, update }) => {
+			if (result.type === 'success') {
+				const id = Number(result.data?.id);
+				if (Number.isInteger(id) && id > 0) await addSkills(id, newSkills);
+			}
 			await update();
 			if (result.type === 'success') {
 				resetAddForm();
 			}
 		};
-	}
+	};
 
-	function handleEditSubmit() {
-		return async ({
-			result,
-			update
-		}: {
-			result: { type: string };
-			update: () => Promise<void>;
-		}) => {
+	const handleEditSubmit: SubmitFunction = () => {
+		return async ({ result, update }) => {
 			await update();
 			if (result.type === 'success') {
 				expandedId = null;
 			}
 		};
-	}
+	};
 
 	// --- Reorder mode ---
 	let reorderMode = $state(false);
@@ -200,16 +242,23 @@
 		</div>
 	{/if}
 
+	{#if skillsError}
+		<div class="rounded-lg border border-[var(--dash-error)] bg-[var(--dash-error-light)] p-4">
+			<p class="text-sm text-[var(--dash-error)]">{skillsError}</p>
+		</div>
+	{/if}
+
 	<!-- Add Form -->
 	{#if showAddForm}
-		<form
-			method="POST"
-			action="?/create"
-			use:enhance={handleAddSubmit}
-			class="rounded-lg border border-[var(--dash-primary)] bg-[var(--dash-card)] p-4"
-		>
+		<div class="rounded-lg border border-[var(--dash-primary)] bg-[var(--dash-card)] p-4">
 			<h3 class="mb-4 font-medium text-[var(--dash-text)]">Add New Certificate</h3>
-			<div class="space-y-4">
+			<form
+				id="add-certificate"
+				method="POST"
+				action="?/create"
+				use:enhance={handleAddSubmit}
+				class="space-y-4"
+			>
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 					<div>
 						<label for="new-name" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
@@ -244,7 +293,7 @@
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 					<div>
 						<label for="new-date" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
-							Date Obtained
+							Issue Date
 						</label>
 						<input
 							type="date"
@@ -256,8 +305,48 @@
 					</div>
 
 					<div>
+						<label
+							for="new-expiry-date"
+							class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+						>
+							Expiration Date
+						</label>
+						<input
+							type="date"
+							id="new-expiry-date"
+							name="expiry_date"
+							bind:value={newExpiryDate}
+							min={newDate || undefined}
+							aria-describedby="new-expiry-date-hint"
+							class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+						/>
+						<p id="new-expiry-date-hint" class="mt-1 text-xs text-[var(--dash-text-muted)]">
+							Leave empty if it does not expire.
+						</p>
+					</div>
+				</div>
+
+				<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<div>
+						<label
+							for="new-credential-id"
+							class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+						>
+							Credential ID
+						</label>
+						<input
+							type="text"
+							id="new-credential-id"
+							name="credential_id"
+							bind:value={newCredentialId}
+							placeholder="e.g., the certification number"
+							class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+						/>
+					</div>
+
+					<div>
 						<label for="new-url" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
-							URL
+							Credential URL
 						</label>
 						<input
 							type="url"
@@ -269,6 +358,12 @@
 						/>
 					</div>
 				</div>
+			</form>
+
+			<!-- Outside the form, which Enter in a chip would otherwise submit. -->
+			<div class="mt-4">
+				<h4 class="mb-2 text-sm font-medium text-[var(--dash-text)]">Skills</h4>
+				<TechnologyTagsEditor bind:technologies={newSkills} itemLabel="Skill" />
 			</div>
 
 			<div class="mt-4 flex justify-end gap-2">
@@ -281,12 +376,13 @@
 				</button>
 				<button
 					type="submit"
+					form="add-certificate"
 					class="rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
 				>
 					Add Certificate
 				</button>
 			</div>
-		</form>
+		</div>
 	{/if}
 
 	{#if canReorder && !reorderMode && !showAddForm}
@@ -379,6 +475,15 @@
 						{cert.name}
 					{/snippet}
 
+					{#snippet badges()}
+						{#if isExpired(cert.expiry_date)}
+							<span
+								class="ml-2 rounded-full bg-[var(--dash-warning-light)] px-2 py-0.5 align-middle text-xs font-medium text-[var(--dash-warning)]"
+								>Expired</span
+							>
+						{/if}
+					{/snippet}
+
 					{#snippet subtitle()}
 						{#if cert.issuer}
 							{cert.issuer}
@@ -388,7 +493,18 @@
 					{#snippet dateline()}
 						{#if cert.date}
 							<span class="text-sm text-[var(--dash-text-muted)]"
-								>{formatDateForDisplay(cert.date)}</span
+								>Issued {formatDateForDisplay(cert.date)}</span
+							>
+						{/if}
+						{#if cert.expiry_date}
+							<span class="text-sm text-[var(--dash-text-muted)]"
+								>{cert.date ? ' · ' : ''}{isExpired(cert.expiry_date) ? 'Expired' : 'Expires'}
+								{formatDateForDisplay(cert.expiry_date)}</span
+							>
+						{/if}
+						{#if cert.credential_id}
+							<span class="text-sm text-[var(--dash-text-muted)]"
+								>{cert.date || cert.expiry_date ? ' · ' : ''}ID {cert.credential_id}</span
 							>
 						{/if}
 						{#if cert.url}
@@ -399,6 +515,11 @@
 								onclick={(e) => e.stopPropagation()}
 								class="text-sm text-[var(--dash-primary)] hover:underline">{cert.url}</ExternalLink
 							>
+						{/if}
+						{#if cert.certificate_skills.length > 0}
+							<span class="mt-1 block text-sm text-[var(--dash-text-secondary)]">
+								{cert.certificate_skills.map((s) => s.name).join(', ')}
+							</span>
 						{/if}
 					{/snippet}
 
@@ -417,7 +538,12 @@
 					{/snippet}
 
 					{#snippet expandedContent()}
-						<form method="POST" action="?/update" use:enhance={handleEditSubmit}>
+						<form
+							id="edit-certificate-{cert.id}"
+							method="POST"
+							action="?/update"
+							use:enhance={handleEditSubmit}
+						>
 							<input type="hidden" name="id" value={cert.id} />
 							<div class="space-y-4">
 								<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -461,7 +587,7 @@
 											for="edit-date-{cert.id}"
 											class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
 										>
-											Date Obtained
+											Issue Date
 										</label>
 										<input
 											type="date"
@@ -474,10 +600,52 @@
 
 									<div>
 										<label
+											for="edit-expiry-date-{cert.id}"
+											class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+										>
+											Expiration Date
+										</label>
+										<input
+											type="date"
+											id="edit-expiry-date-{cert.id}"
+											name="expiry_date"
+											bind:value={editExpiryDate}
+											min={editDate || undefined}
+											aria-describedby="edit-expiry-date-hint-{cert.id}"
+											class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+										/>
+										<p
+											id="edit-expiry-date-hint-{cert.id}"
+											class="mt-1 text-xs text-[var(--dash-text-muted)]"
+										>
+											Leave empty if it does not expire.
+										</p>
+									</div>
+								</div>
+
+								<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+									<div>
+										<label
+											for="edit-credential-id-{cert.id}"
+											class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+										>
+											Credential ID
+										</label>
+										<input
+											type="text"
+											id="edit-credential-id-{cert.id}"
+											name="credential_id"
+											bind:value={editCredentialId}
+											class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+										/>
+									</div>
+
+									<div>
+										<label
 											for="edit-url-{cert.id}"
 											class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
 										>
-											URL
+											Credential URL
 										</label>
 										<input
 											type="url"
@@ -490,35 +658,44 @@
 									</div>
 								</div>
 							</div>
+						</form>
 
-							<div class="mt-4 flex items-center">
+						<!-- Outside the form: the chips save themselves, and Enter in one must not submit it. -->
+						<CertificateSkills
+							certificateId={cert.id}
+							profileId={data.profileId}
+							skills={cert.certificate_skills}
+							onChanged={() => invalidate(CERTIFICATES_DEP)}
+						/>
+
+						<div class="flex items-center">
+							<button
+								type="button"
+								onclick={() => {
+									expandedId = null;
+									deleteId = cert.id;
+								}}
+								class="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-500 transition-colors hover:border-red-500/50 hover:bg-red-500/20"
+							>
+								<FontAwesomeIcon icon={faTrash} class="h-3 w-3" /> Delete
+							</button>
+							<div class="ml-auto flex gap-2">
 								<button
 									type="button"
-									onclick={() => {
-										expandedId = null;
-										deleteId = cert.id;
-									}}
-									class="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-500 transition-colors hover:border-red-500/50 hover:bg-red-500/20"
+									onclick={() => (expandedId = null)}
+									class="rounded-lg border border-[var(--dash-border)] px-4 py-2 text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
 								>
-									<FontAwesomeIcon icon={faTrash} class="h-3 w-3" /> Delete
+									Cancel
 								</button>
-								<div class="ml-auto flex gap-2">
-									<button
-										type="button"
-										onclick={() => (expandedId = null)}
-										class="rounded-lg border border-[var(--dash-border)] px-4 py-2 text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
-									>
-										Cancel
-									</button>
-									<button
-										type="submit"
-										class="rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
-									>
-										Save
-									</button>
-								</div>
+								<button
+									type="submit"
+									form="edit-certificate-{cert.id}"
+									class="rounded-lg bg-[var(--dash-primary)] px-4 py-2 text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
+								>
+									Save
+								</button>
 							</div>
-						</form>
+						</div>
 					{/snippet}
 				</ItemCard>
 			{/each}
@@ -530,7 +707,7 @@
 <ConfirmModal
 	isOpen={deleteId !== null}
 	title="Delete Certificate"
-	message="Are you sure you want to delete this certificate? This action cannot be undone."
+	message="Are you sure you want to delete this certificate and its skills? This action cannot be undone."
 	onCancel={() => (deleteId = null)}
 	onConfirm={() => {
 		if (deleteId !== null) {

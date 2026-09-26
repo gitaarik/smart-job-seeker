@@ -11,6 +11,7 @@ import {
 	languages,
 	profile_field_variants,
 	references,
+	certificate_skills,
 	certificates,
 	project_stories,
 	cheat_sheets,
@@ -522,16 +523,29 @@ async function importProfileEntities(
 
 	// Certificates
 	for (const cert of p.certificates ?? []) {
-		await dbDirect.insert(certificates).values({
-			profile_id: profileId,
-			status: cert.status || 'draft',
-			sort: cert.sort ?? null,
-			name: cert.name || '',
-			issuer: cert.issuer || null,
-			date: toDateString(cert.date),
-			url: cert.url || null,
-			date_created: new Date()
-		});
+		const [createdCert] = await dbDirect
+			.insert(certificates)
+			.values({
+				profile_id: profileId,
+				status: cert.status || 'draft',
+				sort: cert.sort ?? null,
+				name: cert.name || '',
+				issuer: cert.issuer || null,
+				date: toDateString(cert.date),
+				expiry_date: toDateString(cert.expiry_date),
+				credential_id: cert.credential_id || null,
+				url: cert.url || null,
+				date_created: new Date()
+			})
+			.returning({ id: certificates.id });
+
+		for (const skill of cert.skills ?? []) {
+			await dbDirect.insert(certificate_skills).values({
+				certificate_id: createdCert.id,
+				sort: skill.sort ?? null,
+				name: skill.name || null
+			});
+		}
 	}
 
 	// Tech skill categories + tech skills

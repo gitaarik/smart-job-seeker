@@ -99,7 +99,12 @@ export function convertExportToResumeData(exported: ExportedProfile): ResumeData
 			name: c.name || '',
 			issuer: c.issuer,
 			date: dateToString(c.date),
-			url: c.url
+			expiryDate: dateToString(c.expiry_date),
+			credentialId: c.credential_id || undefined,
+			url: c.url,
+			// Absent, not empty, for a file exported before certificates had skills:
+			// the diff reads absent as "this file does not say".
+			skills: c.certificate_skills?.filter((s) => s.name).map((s) => s.name!)
 		})),
 		references: p.references?.map((r) => ({
 			author: r.author || '',

@@ -152,3 +152,23 @@ export function formatDateRangeYear(
 
 	return `${startYear} - ${endYear}`;
 }
+
+/**
+ * A certificate's years on a document: "2023", or "2021 - 2024" once it has an
+ * expiry date.
+ *
+ * Validity rather than a period of work, but printed in the shape a reader
+ * already knows from the roles on the same page, so one that has lapsed reads
+ * as lapsed without a word the document would have to translate. UTC, because
+ * a date column is a calendar day: read in a zone west of UTC, 1 January would
+ * print as the year before.
+ */
+export function formatCertificateYears(
+	issued: Date | string | null,
+	expires?: Date | string | null
+): string {
+	if (!issued) return '';
+	const from = toDate(issued).getUTCFullYear();
+	const to = expires ? toDate(expires).getUTCFullYear() : null;
+	return to === null || to === from ? String(from) : `${from} - ${to}`;
+}

@@ -839,13 +839,19 @@ describe('profile section list pages', () => {
 		expect(scopeForRoute(route).hint?.subject).toBeNull();
 	});
 
-	it('grants one section and no more', () => {
-		// Two verbs, not three: none of the list-page sections can be hidden —
-		// nothing filters them on a document. See HIDEABLE_RESOURCES.
-		for (const [route] of LISTS) {
+	it('grants its own sections and no more', () => {
+		// Two verbs a section, not three: none of the list-page sections can be
+		// hidden — nothing filters them on a document. See HIDEABLE_RESOURCES.
+		// Certificates carry a second section, their skills, edited in the same
+		// cards, so that page grants both.
+		const children: Partial<Record<string, string[]>> = {
+			'/(app)/profile/(data)/certificates': ['edit_certificate_skill', 'add_certificate_skill']
+		};
+		for (const [route, capability] of LISTS) {
 			expect(scopeForRoute(route).capabilities, route).toEqual([
-				expect.stringMatching(/^edit_/),
-				expect.stringMatching(/^add_/)
+				capability,
+				capability.replace(/^edit_/, 'add_'),
+				...(children[route] ?? [])
 			]);
 		}
 	});

@@ -31,6 +31,7 @@ export const CORE_PROFILE_FIELDS: ExportedProfileKey[] = [
 	'work_experiences',
 	'side_projects',
 	'educations',
+	'certificates',
 	'tech_skill_categories'
 ];
 

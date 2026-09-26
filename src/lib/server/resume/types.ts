@@ -100,7 +100,11 @@ export interface Certificate {
 	name: string;
 	issuer?: string;
 	date?: string;
+	expiryDate?: string;
+	credentialId?: string;
 	url?: string;
+	/** What it covers, as a side project lists its technologies. */
+	skills?: string[];
 }
 
 /**

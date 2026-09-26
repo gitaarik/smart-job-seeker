@@ -1039,7 +1039,8 @@ export async function tailorVersionForApplication(opts: {
 
 /**
  * Skill names the profile holds outside its skills block: the technologies
- * listed against a role, against a role's projects, and against a side project.
+ * listed against a role, against a role's projects, and against a side project,
+ * and the skills listed against a certificate.
  *
  * They are the same kind of thing as a `tech_skills` row — a bare skill name —
  * and until this existed only the skills block was ever consulted, so a
@@ -1057,6 +1058,7 @@ function heldTechnologies(
 			work_experience_projects?: { work_experience_project_technologies?: { name?: unknown }[] }[];
 		}[];
 		side_projects?: { side_project_technologies?: { name?: unknown }[] }[];
+		certificates?: { certificate_skills?: { name?: unknown }[] }[];
 	},
 	scope: 'all' | 'roles' = 'all'
 ): string[] {
@@ -1073,6 +1075,9 @@ function heldTechnologies(
 		...roles,
 		...(profile.side_projects ?? []).flatMap((p) =>
 			(p.side_project_technologies ?? []).map((t) => text(t.name))
+		),
+		...(profile.certificates ?? []).flatMap((c) =>
+			(c.certificate_skills ?? []).map((s) => text(s.name))
 		)
 	].filter(Boolean);
 }

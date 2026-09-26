@@ -320,10 +320,17 @@
 				for (const fd of item.fieldDiffs ?? []) {
 					if (fd.changed && fd.enabled) fields[fd.field] = fd.incoming;
 				}
-				certPayload.modified!.push({
+				const mod: CertificateMod = {
 					matchKey: item.current.name,
 					fields: fields as CertificateMod['fields']
-				});
+				};
+				for (const nd of item.nestedDiffs ?? []) {
+					const toAdd = nd.added.filter((_, i) => nd.addedEnabled[i]);
+					const toRemove = nd.removed.filter((_, i) => nd.removedEnabled[i]);
+					if (toAdd.length > 0) mod.addSkills = toAdd;
+					if (toRemove.length > 0) mod.removeSkills = toRemove;
+				}
+				certPayload.modified!.push(mod);
 			}
 		}
 		if (
@@ -862,6 +869,7 @@
 							: item.incoming?.issuer || item.current?.issuer}
 						bind:enabled={diff.certificates[i].enabled}
 						fieldDiffs={item.fieldDiffs}
+						nestedDiffs={item.nestedDiffs}
 						showUnchanged={showUnchanged || partialCertificates}
 					/>
 				{/each}

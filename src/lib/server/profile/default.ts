@@ -6,6 +6,7 @@
 import { dbDirect as db } from '$lib/server/db';
 import { asc, desc, eq } from 'drizzle-orm';
 import {
+	certificate_skills,
 	certificates,
 	config,
 	education,
@@ -93,7 +94,13 @@ const PROFILE_INCLUDE = {
 		orderBy: SIDE_PROJECT_ORDER
 	},
 	references: { orderBy: asc(references.sort) },
-	certificates: { orderBy: asc(certificates.sort) },
+	// A certificate's skills print on no document. They are here for the same
+	// reason a role's project technologies are: tailoring reads this tree as
+	// what the applicant holds (see heldTechnologies in tailor-version.ts).
+	certificates: {
+		with: { certificate_skills: { orderBy: asc(certificate_skills.sort) } },
+		orderBy: asc(certificates.sort)
+	},
 	// Alternative wordings for the scalar profile fields. In the tree rather
 	// than fetched by the resolver alone, for the same reason a role's projects
 	// are: the auto-translate endpoint walks THIS include to find what can be

@@ -4,7 +4,7 @@
 	import { faEnvelope, faGlobe, faLocationDot, faPhone } from '@fortawesome/free-solid-svg-icons';
 	import { faGithub, faLinkedin } from '@fortawesome/free-brands-svg-icons';
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-	import { formatDateRangeCompact } from '$lib/tools/date-utils';
+	import { formatCertificateYears, formatDateRangeCompact } from '$lib/tools/date-utils';
 	import { createProfileFilter } from '../ProfileDisplay/profile-filter';
 	import type { VersionObj } from '../ProfileDisplay/profile-filter';
 	import { isContactHidden } from '$lib/resume-contact-fields';
@@ -36,6 +36,12 @@
 		location: string | null;
 		tags?: string[] | unknown;
 	}
+	interface Certificate {
+		name: string | null;
+		issuer: string | null;
+		date: string | null;
+		expiry_date?: string | null;
+	}
 	interface Profile {
 		name: string | null;
 		title: string | null;
@@ -50,6 +56,7 @@
 		summary: string | null;
 		work_experiences: WorkExperience[];
 		educations: Education[];
+		certificates?: Certificate[];
 		tech_skill_categories: SkillCategory[];
 		profile_versions: VersionObj[];
 	}
@@ -130,6 +137,14 @@
 		const head = [e.area, e.study_type].filter(Boolean).join(', ');
 		const tail = [e.institution, e.location].filter(Boolean).join(', ');
 		return [head, tail].filter(Boolean).join(' – ');
+	}
+	// Education's shape, one line each. Unfiltered, as in the default layout:
+	// certificates have no tags, so nothing can hold one back from a version.
+	function certLine(c: Certificate): string {
+		const tail = [c.issuer, formatCertificateYears(c.date, c.expiry_date)]
+			.filter(Boolean)
+			.join(', ');
+		return [c.name, tail].filter(Boolean).join(' – ');
 	}
 
 	const contactLocation = $derived(
@@ -255,6 +270,17 @@
 										<div class="edu-item">
 											<span class="tl"><span class="ydot"></span><span class="tline"></span></span>
 											<p>{eduLine(e)}</p>
+										</div>
+									{/each}
+								</div>
+							{/if}
+							{#if profile.certificates && profile.certificates.length > 0}
+								<div class="block">
+									<h2>{templateLabel('certificates', locale)}</h2>
+									{#each profile.certificates as c, ci (ci)}
+										<div class="edu-item">
+											<span class="tl"><span class="ydot"></span><span class="tline"></span></span>
+											<p>{certLine(c)}</p>
 										</div>
 									{/each}
 								</div>

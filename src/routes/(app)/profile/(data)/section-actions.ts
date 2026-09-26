@@ -111,7 +111,10 @@ export function sectionActions(
 			if (!result.ok) return failWrite(result.reason, result.error);
 
 			if (options.createdPath) redirect(302, options.createdPath(result.id));
-			return { success: true };
+			// The id, for a list page that has more to write under the new row: a
+			// certificate's skills are posted once there is a certificate to hang
+			// them from.
+			return { success: true, id: result.id };
 		};
 	}
 

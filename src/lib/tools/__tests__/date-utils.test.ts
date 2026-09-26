@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateRangeCompact, isValidJobPostingDate, parseRelativeDate } from '../date-utils';
+import {
+	formatCertificateYears,
+	formatDateRangeCompact,
+	isValidJobPostingDate,
+	parseRelativeDate
+} from '../date-utils';
 
 describe('parseRelativeDate', () => {
 	const referenceDate = new Date('2025-12-28T12:00:00Z');
@@ -318,5 +323,28 @@ describe('formatDateRangeCompact', () => {
 
 	it('returns nothing without a start date', () => {
 		expect(formatDateRangeCompact(null)).toBe('');
+	});
+});
+
+describe('formatCertificateYears', () => {
+	it('prints the year it was issued', () => {
+		expect(formatCertificateYears('2023-03-15')).toBe('2023');
+		expect(formatCertificateYears('2023-03-15', null)).toBe('2023');
+	});
+
+	it('prints issue to expiry as a range', () => {
+		expect(formatCertificateYears('2021-06-01', '2024-06-01')).toBe('2021 - 2024');
+	});
+
+	it('collapses a certificate issued and expiring in the same year', () => {
+		expect(formatCertificateYears('2024-01-10', '2024-12-31')).toBe('2024');
+	});
+
+	it('reads a date column as the calendar day it names', () => {
+		expect(formatCertificateYears('2024-01-01', '2027-01-01')).toBe('2024 - 2027');
+	});
+
+	it('prints nothing without an issue date', () => {
+		expect(formatCertificateYears(null, '2026-01-01')).toBe('');
 	});
 });

@@ -4649,7 +4649,12 @@ export const certificates = pgTable(
 		date_updated: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
 		name: varchar({ length: 255 }).notNull(),
 		issuer: varchar({ length: 255 }),
+		/** When it was issued. Named before expiry existed, and kept: every export format says `date`. */
 		date: date(),
+		/** When it lapses. Null is a certificate that does not expire, not an unknown date. */
+		expiry_date: date(),
+		/** What the issuer verifies it by (a PMP or Microsoft certification number). */
+		credential_id: varchar({ length: 255 }),
 		url: varchar({ length: 255 }),
 		profile_id: integer().notNull()
 	},
@@ -4659,6 +4664,35 @@ export const certificates = pgTable(
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
 			name: 'certificates_profile_foreign'
+		}).onDelete('cascade')
+	]
+);
+
+/**
+ * What one certificate shows the applicant can do.
+ *
+ * Free text, one row per skill, the same shape as a side project's
+ * technologies: a name the applicant types, ordered by `sort`. Not a link to
+ * `tech_skills`, for the reason those are not either: a certificate names what
+ * it covers ("Kubernetes", "risk management") whether or not the applicant
+ * keeps that on their skills page.
+ */
+export const certificate_skills = pgTable(
+	'certificate_skills',
+	{
+		id: serial().primaryKey().notNull(),
+		sort: integer(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' }),
+		date_updated: timestamp({ withTimezone: true, mode: 'date' }),
+		name: varchar({ length: 255 }),
+		certificate_id: integer().notNull()
+	},
+	(table) => [
+		index('certificate_skills_certificate_idx').on(table.certificate_id),
+		foreignKey({
+			columns: [table.certificate_id],
+			foreignColumns: [certificates.id],
+			name: 'certificate_skills_certificate_foreign'
 		}).onDelete('cascade')
 	]
 );

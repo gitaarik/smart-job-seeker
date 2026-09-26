@@ -61,10 +61,11 @@ describe('formatProfileEditManifest', () => {
 
 	it('stays small enough to be unconditional', () => {
 		// It ships on every turn on every page, including ones with no capability
-		// at all. Fifteen sections at ~60 chars a line plus a short frame — nine
+		// at all. Sixteen sections at ~60 chars a line plus a short frame — nine
 		// of them before the child collections joined, which is where the extra
-		// 150 went. A line is the whole cost of a section here: this block is
-		// counts and page names, never contents.
-		expect(formatProfileEditManifest(ALL).length).toBeLessThanOrEqual(1400);
+		// 150 went, and one more line when certificates got their skills. A line
+		// is the whole cost of a section here: this block is counts and page
+		// names, never contents.
+		expect(formatProfileEditManifest(ALL).length).toBeLessThanOrEqual(1460);
 	});
 });

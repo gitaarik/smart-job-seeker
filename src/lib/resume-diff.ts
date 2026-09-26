@@ -480,21 +480,43 @@ function diffProjects(current: SideProject[], incoming: SideProject[]): ItemDiff
 
 // --- Certificates diff ---
 
+/**
+ * One certificate, with the fields a source may simply not carry diffed only
+ * when it does.
+ *
+ * A CV rarely states an expiry date or a credential ID, JSON Resume has no slot
+ * for either, and neither lists what a certificate covers. A source that says
+ * nothing about them is not one that clears them: diffed like the fields around
+ * them, every re-import would offer to wipe what was typed in here, pre-ticked.
+ */
 function diffCertificateItem(current: Certificate, incoming: Certificate): ItemDiff<Certificate> {
 	const fieldDiffs = [
 		diffField('name', 'Name', current.name, incoming.name),
 		diffField('issuer', 'Issuer', current.issuer, incoming.issuer),
-		diffField('date', 'Date', current.date, incoming.date),
-		diffField('url', 'URL', current.url, incoming.url)
+		diffField('date', 'Issue Date', current.date, incoming.date),
+		...(incoming.expiryDate === undefined
+			? []
+			: [diffField('expiryDate', 'Expiration Date', current.expiryDate, incoming.expiryDate)]),
+		...(incoming.credentialId === undefined
+			? []
+			: [diffField('credentialId', 'Credential ID', current.credentialId, incoming.credentialId)]),
+		diffField('url', 'Credential URL', current.url, incoming.url)
 	];
 
-	const hasChanges = fieldDiffs.some((d) => d.changed);
+	const nestedDiffs = (
+		incoming.skills === undefined
+			? []
+			: [diffStringArrays('skills', 'Skills', current.skills, incoming.skills)]
+	).filter((d) => d.added.length > 0 || d.removed.length > 0);
+
+	const hasChanges = fieldDiffs.some((d) => d.changed) || nestedDiffs.length > 0;
 
 	return {
 		type: hasChanges ? 'modified' : 'unchanged',
 		current,
 		incoming,
 		fieldDiffs,
+		nestedDiffs: nestedDiffs.length > 0 ? nestedDiffs : undefined,
 		enabled: hasChanges
 	};
 }

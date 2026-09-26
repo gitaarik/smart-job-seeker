@@ -63,6 +63,34 @@ export function applySkillVisibility(
 }
 
 /**
+ * Mark the certificates that have lapsed, as of `today` (YYYY-MM-DD).
+ *
+ * Decided here, when a prompt is built, and not in the snapshot. The snapshot
+ * is rebuilt when the profile changes, and a certificate expires without
+ * anything changing, so a flag written there would go on calling it valid for
+ * as long as nobody edited the profile. Nor is it left to the model: most
+ * prompts carry no date to hold `expiry_date` against, and "requires a valid
+ * certification" is exactly the question the date exists to answer.
+ */
+export function markExpiredCertificates(
+	data: Record<string, unknown>,
+	today: string
+): Record<string, unknown> {
+	const certificates = data.certificates;
+	if (!Array.isArray(certificates)) return data;
+
+	return {
+		...data,
+		certificates: certificates.map((certificate) => {
+			const expiry = (certificate as Record<string, unknown>)?.expiry_date;
+			return typeof expiry === 'string' && expiry.slice(0, 10) < today
+				? { ...(certificate as Record<string, unknown>), expired: true }
+				: certificate;
+		})
+	};
+}
+
+/**
  * Fetch a profile's collected_data, optionally narrowed to `fields`.
  *
  * Manually-created profiles don't have a record until something explicitly
@@ -101,9 +129,12 @@ export async function loadProfileData(
 	}
 
 	let schemaJson = record?.schema ? JSON.parse(record.schema) : {};
-	let dataJson = applySkillVisibility(
-		record?.data ? JSON.parse(record.data) : {},
-		options?.documentSafe ?? false
+	let dataJson = markExpiredCertificates(
+		applySkillVisibility(
+			record?.data ? JSON.parse(record.data) : {},
+			options?.documentSafe ?? false
+		),
+		new Date().toISOString().slice(0, 10)
 	);
 
 	if (fields) {

@@ -414,6 +414,13 @@
       "when": 1790437086981,
       "tag": "0058_product_scores",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1790443614585,
+      "tag": "0059_certificate_expiry_and_skills",
+      "breakpoints": true
     }
   ]
 }

@@ -57,6 +57,7 @@ import { z } from 'zod';
 import { asc, desc, type SQL } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import {
+	certificate_skills,
 	certificates,
 	education,
 	highlights,
@@ -78,6 +79,7 @@ import type { FieldKind } from '$lib/server/utils/field-kinds';
 import { versionsOf } from '$lib/profile-visibility';
 import {
 	certificateBasicSchema,
+	certificateSkillBasicSchema,
 	educationUpdateSchema,
 	highlightBasicSchema,
 	languageBasicSchema,
@@ -107,6 +109,7 @@ export type ProfileResourceName =
 	| 'language'
 	| 'reference'
 	| 'certificate'
+	| 'certificate_skill'
 	| 'highlight'
 	| 'skill'
 	| 'skill_category';
@@ -1014,7 +1017,12 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		fields: {
 			name: { kind: 'string', note: 'the certificate' },
 			issuer: { kind: 'string', note: 'who awarded it' },
-			date: { kind: 'date', note: 'when it was awarded' },
+			date: { kind: 'date', note: 'when it was issued' },
+			expiry_date: {
+				kind: 'date',
+				note: 'when it lapses; empty for a certificate that does not expire'
+			},
+			credential_id: { kind: 'string', note: 'the number the issuer verifies it by' },
 			url: { kind: 'string', note: 'where it can be verified' }
 		},
 		required: ['name'],
@@ -1023,6 +1031,42 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		newRowPlacement: 'append',
 		orderBy: [asc(certificates.sort)],
 		schema: certificateBasicSchema
+	},
+
+	/** What one certificate shows the applicant can do. The side-project technology shape. */
+	certificate_skill: {
+		table: certificate_skills,
+		owner: {
+			via: 'parent',
+			parent: 'certificate',
+			column: certificate_skills.certificate_id,
+			key: 'certificate_id',
+			nameField: 'certificate'
+		},
+		title: 'Certificate skills',
+		label: 'certificate skill',
+		page: {
+			path: '/profile/certificates',
+			name: 'Certificates'
+		},
+		rowLabel: (row) => joined([short(row.name), row.certificate], ' — ') || 'Untitled skill',
+		shortLabel: (row) => short(row.name) || 'Untitled skill',
+		rowNamesAreAmbiguous:
+			'A skill name is what job descriptions are made of, exactly as on the skills ' +
+			'page. Matching on one would reach for this section on any turn that mentions a technology.',
+		fields: {
+			name: { kind: 'string', note: 'the skill, named the way a job listing would' },
+			certificate: {
+				kind: 'string',
+				note: 'the certificate that covers it, named exactly as one of the certificates listed below'
+			}
+		},
+		required: ['name', 'certificate'],
+		insertDefaults: {},
+		notNullColumns: [],
+		newRowPlacement: 'append',
+		orderBy: [asc(certificates.sort), asc(certificate_skills.sort)],
+		schema: certificateSkillBasicSchema
 	},
 
 	highlight: {

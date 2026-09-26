@@ -20,6 +20,7 @@ import {
 	side_projects,
 	side_project_achievements,
 	side_project_technologies,
+	certificate_skills,
 	certificates,
 	references
 } from '$lib/server/db/schema';
@@ -102,6 +103,8 @@ export interface DiffApplyPayload {
 		modified?: Array<{
 			matchKey: string;
 			fields: Partial<Certificate>;
+			addSkills?: string[];
+			removeSkills?: string[];
 		}>;
 		removed?: string[];
 	};
@@ -676,16 +679,27 @@ export async function applyDiffToProfile(
 	// --- Apply certificate changes ---
 	if (payload.certificates) {
 		for (const c of payload.certificates.added ?? []) {
-			await dbDirect.insert(certificates).values({
-				profile_id: profileId,
-				status: 'draft',
-				name: c.name || '',
-				issuer: c.issuer || null,
-				date: parseDate(c.date),
-				url: c.url || null,
-				sort: 0,
-				date_created: new Date()
-			});
+			const [created] = await dbDirect
+				.insert(certificates)
+				.values({
+					profile_id: profileId,
+					status: 'draft',
+					name: c.name || '',
+					issuer: c.issuer || null,
+					date: parseDate(c.date),
+					expiry_date: parseDate(c.expiryDate),
+					credential_id: c.credentialId || null,
+					url: c.url || null,
+					sort: 0,
+					date_created: new Date()
+				})
+				.returning({ id: certificates.id });
+			let sort = 0;
+			for (const skill of c.skills ?? []) {
+				await dbDirect
+					.insert(certificate_skills)
+					.values({ certificate_id: created.id, name: skill, sort: sort++ });
+			}
 		}
 		for (const mod of payload.certificates.modified ?? []) {
 			const existing = await dbDirect.query.certificates.findFirst({
@@ -697,10 +711,38 @@ export async function applyDiffToProfile(
 			if (mod.fields.name !== undefined) updateData.name = mod.fields.name || '';
 			if (mod.fields.issuer !== undefined) updateData.issuer = mod.fields.issuer || null;
 			if (mod.fields.date !== undefined) updateData.date = parseDate(mod.fields.date);
+			if (mod.fields.expiryDate !== undefined) {
+				updateData.expiry_date = parseDate(mod.fields.expiryDate);
+			}
+			if (mod.fields.credentialId !== undefined) {
+				updateData.credential_id = mod.fields.credentialId || null;
+			}
 			if (mod.fields.url !== undefined) updateData.url = mod.fields.url || null;
 			if (Object.keys(updateData).length > 0) {
 				updateData.date_updated = new Date();
 				await dbDirect.update(certificates).set(updateData).where(eq(certificates.id, existing.id));
+			}
+			if (mod.addSkills?.length) {
+				let sort =
+					(await getMaxSort(certificate_skills, certificate_skills.certificate_id, existing.id)) +
+					1;
+				for (const skill of mod.addSkills) {
+					await dbDirect
+						.insert(certificate_skills)
+						.values({ certificate_id: existing.id, name: skill, sort: sort++ });
+				}
+			}
+			if (mod.removeSkills?.length) {
+				for (const skill of mod.removeSkills) {
+					await dbDirect
+						.delete(certificate_skills)
+						.where(
+							and(
+								eq(certificate_skills.certificate_id, existing.id),
+								eq(certificate_skills.name, skill)
+							)
+						);
+				}
 			}
 		}
 		for (const name of payload.certificates.removed ?? []) {

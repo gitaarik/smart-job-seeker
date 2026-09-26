@@ -237,7 +237,15 @@ export async function buildProfileExport(
 					name: true,
 					issuer: true,
 					date: true,
+					expiry_date: true,
+					credential_id: true,
 					url: true
+				},
+				with: {
+					certificate_skills: {
+						columns: { sort: true, name: true },
+						orderBy: (t, { asc }) => asc(t.sort)
+					}
 				},
 				orderBy: (t, { asc }) => asc(t.sort)
 			}
@@ -580,7 +588,13 @@ export async function buildProfileExport(
 			name: c.name || undefined,
 			issuer: c.issuer || undefined,
 			date: formatDate(c.date),
-			url: c.url || undefined
+			expiry_date: formatDate(c.expiry_date),
+			credential_id: c.credential_id || undefined,
+			url: c.url || undefined,
+			skills: c.certificate_skills.map((s) => ({
+				sort: s.sort,
+				name: s.name || undefined
+			}))
 		}))
 	};
 

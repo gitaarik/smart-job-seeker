@@ -44,6 +44,7 @@ describe('profile field lists (composed from CORE)', () => {
 				'work_experiences',
 				'side_projects',
 				'educations',
+				'certificates',
 				'tech_skill_categories',
 				'project_stories'
 			])
@@ -63,6 +64,7 @@ describe('profile field lists (composed from CORE)', () => {
 				'work_experiences',
 				'side_projects',
 				'educations',
+				'certificates',
 				'tech_skill_categories',
 				'languages'
 			])
@@ -83,6 +85,7 @@ describe('profile field lists (composed from CORE)', () => {
 				'work_experiences',
 				'side_projects',
 				'educations',
+				'certificates',
 				'tech_skill_categories',
 				'languages'
 			])
@@ -103,6 +106,7 @@ describe('profile field lists (composed from CORE)', () => {
 				'work_experiences',
 				'side_projects',
 				'educations',
+				'certificates',
 				'tech_skill_categories',
 				'languages',
 				'project_stories',

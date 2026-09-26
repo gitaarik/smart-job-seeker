@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import { page } from '$app/state';
-	import { formatDateRangeCompact } from '$lib/tools/date-utils';
+	import { formatCertificateYears, formatDateRangeCompact } from '$lib/tools/date-utils';
 	import {
 		proficiencyLabel,
 		templateLabel,
@@ -67,6 +67,7 @@
 			name: string;
 			issuer: string | null;
 			date: string | null;
+			expiry_date?: string | null;
 			url: string | null;
 		}>;
 		references: Array<{
@@ -403,7 +404,10 @@
 			{#each profile.certificates as cert, index (index)}
 				<div>
 					<span class="font-bold">{cert.name}</span>{#if cert.issuer}
-						— {cert.issuer}{/if}{#if cert.date}, {new Date(cert.date).getFullYear()}{/if}
+						— {cert.issuer}{/if}{#if cert.date}, {formatCertificateYears(
+							cert.date,
+							cert.expiry_date
+						)}{/if}
 				</div>
 			{/each}
 		</section>

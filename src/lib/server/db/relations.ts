@@ -10,6 +10,7 @@ import {
 	application_status_log,
 	applications,
 	billing_customers,
+	certificate_skills,
 	certificates,
 	cheat_sheets,
 	collected_data,
@@ -897,10 +898,18 @@ export const credit_transactionsRelations = relations(credit_transactions, ({ on
 	})
 }));
 
-export const certificatesRelations = relations(certificates, ({ one }) => ({
+export const certificatesRelations = relations(certificates, ({ one, many }) => ({
 	profile: one(profiles, {
 		fields: [certificates.profile_id],
 		references: [profiles.id]
+	}),
+	certificate_skills: many(certificate_skills)
+}));
+
+export const certificate_skillsRelations = relations(certificate_skills, ({ one }) => ({
+	certificate: one(certificates, {
+		fields: [certificate_skills.certificate_id],
+		references: [certificates.id]
 	})
 }));
 

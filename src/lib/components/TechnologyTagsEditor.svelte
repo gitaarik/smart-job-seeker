@@ -4,6 +4,8 @@
 
 	interface Props {
 		technologies: string[];
+		/** What one chip holds, for its placeholder and label. A certificate's chips are skills. */
+		itemLabel?: string;
 		deletedIndices?: Set<number>;
 		lastAddedIndex?: number | null;
 		onAdd?: () => void;
@@ -25,6 +27,7 @@
 
 	let {
 		technologies = $bindable(),
+		itemLabel = 'Technology',
 		deletedIndices = new Set(),
 		lastAddedIndex = null,
 		onAdd,
@@ -75,7 +78,7 @@
 		>
 			<div class="relative pr-3">
 				<span class="invisible min-w-[3ch] text-sm whitespace-pre {isDeleted ? 'line-through' : ''}"
-					>{technologies[index] || 'Technology'}</span
+					>{technologies[index] || itemLabel}</span
 				>
 				{#if isDeleted}
 					<span class="absolute inset-0 pr-3 text-sm text-[var(--dash-text-secondary)] line-through"
@@ -87,8 +90,8 @@
 						bind:value={technologies[index]}
 						oninput={(e) => onItemChange?.(index, e.currentTarget.value)}
 						onblur={() => onItemBlur?.(index)}
-						placeholder="Technology"
-						aria-label="Technology"
+						placeholder={itemLabel}
+						aria-label={itemLabel}
 						use:focusIfNew={index === effectiveLastAdded}
 						class="absolute inset-0 w-full border-none bg-transparent pr-3 text-sm text-[var(--dash-text)] focus:outline-none"
 					/>

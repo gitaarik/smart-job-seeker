@@ -198,6 +198,11 @@ vi.mock('$lib/server/db/schema', () => ({
 		id: 'side_project_technologies.id',
 		sort: 'side_project_technologies.sort',
 		side_project_id: 'side_project_technologies.side_project_id'
+	},
+	certificate_skills: {
+		id: 'certificate_skills.id',
+		sort: 'certificate_skills.sort',
+		certificate_id: 'certificate_skills.certificate_id'
 	}
 }));
 

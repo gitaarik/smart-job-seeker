@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { applySkillVisibility, fitProfileToBudget, formatTrimNote } from '../profile-data';
+import {
+	applySkillVisibility,
+	fitProfileToBudget,
+	formatTrimNote,
+	markExpiredCertificates
+} from '../profile-data';
 
 const entry = (n: number, size = 200) => ({ id: n, text: 'x'.repeat(size) });
 
@@ -133,5 +138,31 @@ describe('applySkillVisibility', () => {
 		expect(applySkillVisibility({ tech_skill_categories: 'nonsense' }, true)).toEqual({
 			tech_skill_categories: 'nonsense'
 		});
+	});
+});
+
+describe('markExpiredCertificates', () => {
+	const today = '2026-09-26';
+
+	it('marks a certificate whose expiry date has passed', () => {
+		const data = { certificates: [{ name: 'CKA', expiry_date: '2026-09-25' }] };
+		expect(markExpiredCertificates(data, today).certificates).toEqual([
+			{ name: 'CKA', expiry_date: '2026-09-25', expired: true }
+		]);
+	});
+
+	it('leaves one that expires today, later, or never', () => {
+		const certificates = [
+			{ name: 'Today', expiry_date: '2026-09-26' },
+			{ name: 'Later', expiry_date: '2027-01-01' },
+			{ name: 'Never', expiry_date: null },
+			{ name: 'Unsaid' }
+		];
+		expect(markExpiredCertificates({ certificates }, today).certificates).toEqual(certificates);
+	});
+
+	it('passes a blob without certificates through untouched', () => {
+		const data = { name: 'Alex' };
+		expect(markExpiredCertificates(data, today)).toBe(data);
 	});
 });

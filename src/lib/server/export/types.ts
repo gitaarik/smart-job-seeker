@@ -392,7 +392,16 @@ export interface ExportedCertificate {
 	name?: string;
 	issuer?: string;
 	date?: string | null;
+	expiry_date?: string | null;
+	credential_id?: string;
 	url?: string;
+	/** Optional: exports made before 2026-09-26 have none. */
+	skills?: ExportedCertificateSkill[];
+}
+
+export interface ExportedCertificateSkill {
+	sort?: number | null;
+	name?: string;
 }
 
 export interface ExportedReference {
