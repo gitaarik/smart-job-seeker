@@ -24,8 +24,6 @@
 export const PUBLIC_API_ROUTES = [
 	// Better Auth handles its own auth.
 	'/api/auth',
-	// Public CAPTCHA verification.
-	'/api/verify-turnstile',
 	// The MCP server. Authenticates on an Authorization bearer token against
 	// `mcp_keys`, a separate table from the device keys in `api_keys`,
 	// deliberately, so that neither kind of credential can be presented where

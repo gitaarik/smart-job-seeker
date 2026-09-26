@@ -10,8 +10,7 @@ describe('isPublicApiRoute', () => {
 		'/api/webhooks/stripe',
 		'/api/mcp',
 		'/api/mcp/upload',
-		'/api/auth/sign-in/email',
-		'/api/verify-turnstile'
+		'/api/auth/sign-in/email'
 	])('lets %s through to its own check', (pathname) => {
 		expect(isPublicApiRoute(pathname)).toBe(true);
 	});

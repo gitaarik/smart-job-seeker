@@ -45,7 +45,6 @@ smart-job-seeker/
 │   ├── lib/
 │   │   ├── components/            # Reusable UI components
 │   │   │   ├── ProfileDisplay/
-│   │   │   ├── contact-info/
 │   │   │   └── *.svelte
 │   │   ├── data/                  # Static data and types
 │   │   ├── server/                # Server-side code

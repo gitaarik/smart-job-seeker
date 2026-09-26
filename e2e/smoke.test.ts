@@ -136,19 +136,3 @@ describe('API endpoints', () => {
 		expect(res.status).toBe(401);
 	});
 });
-
-// ============================================================================
-// Public API endpoints
-// ============================================================================
-
-describe('public API endpoints', () => {
-	it('POST /api/verify-turnstile rejects empty token', async () => {
-		const res = await request('/api/verify-turnstile', {
-			auth: false,
-			method: 'POST',
-			body: { token: '' }
-		});
-		// 400 for invalid/empty token — not a 500
-		expect([400, 200]).toContain(res.status);
-	});
-});

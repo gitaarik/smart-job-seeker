@@ -1,9 +1,11 @@
 /**
  * Cloudflare Turnstile verification.
  *
- * Extracted from `/api/verify-turnstile` (which was the only caller, and which
- * only ever told the *client* whether a token was good) so the same check can
- * run where it actually protects something: in front of registration.
+ * Extracted from `/api/verify-turnstile`, which only ever told the *client*
+ * whether a token was good, so the same check can run where it actually
+ * protects something: in front of registration. That endpoint and the
+ * contact-info widget that called it went on 2026-09-26; nothing in oss used
+ * either any more (the portfolio keeps its own copies).
  *
  * The distinction matters. A page that verifies a token and then calls the
  * signup endpoint itself has not been protected — an attacker skips the page.
@@ -19,9 +21,9 @@ const VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
  * The public site key. Safe to ship to the browser by design — it is the
  * secret, not this, that proves a token was checked.
  *
- * Defaults to the key the contact-info widget has always used, so nothing
- * needs configuring to keep working; set `SJS_TURNSTILE_SITE_KEY` when an
- * environment has its own pair.
+ * Defaults to the key this site has always used, so nothing needs configuring
+ * to keep working; set `SJS_TURNSTILE_SITE_KEY` when an environment has its own
+ * pair.
  */
 export function turnstileSiteKey(): string {
 	return getEnv('SJS_TURNSTILE_SITE_KEY', '0x4AAAAAABkW4tr8bO8w8Vi8') as string;
