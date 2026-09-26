@@ -30,7 +30,7 @@
  */
 
 import { db } from '$lib/server/db';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { application_records, applications, jobs } from '$lib/server/db/schema';
 import type { ContextEntity } from './generation-context';
@@ -1482,6 +1482,16 @@ const RECENT_ENTRIES_SHOWN = 12;
  * from an offer letter the user pasted in verbatim — and the whole reason the
  * details card carries "source" links is so a fact on the overview page can be
  * traced to something the user vouched for.
+ *
+ * ## Why it can be undone
+ *
+ * The undo removes the entry, which is the add's reverse, not the general
+ * delete the registry refuses: it is the one row this write made, and it is
+ * refused once anything of the applicant's hangs off it (an edit, an
+ * attachment), on the same grounds as the profile adds. Without it an entry
+ * logged by an agent could only come off the timeline from the Activity tab,
+ * and nothing that wanted to write one without a click could offer an Undo
+ * beside it (planning/LOG-AS-YOU-GO.md).
  */
 const addActivityRecord: CapabilityDef = {
 	title: 'Add an entry to the activity log',
@@ -1653,8 +1663,74 @@ drop the other, and an entry is also the unit the chronology is read in.`,
 		// called with names the application, which is the right thing to authorize
 		// against and the wrong thing to call the change.
 		return { id: created.id, label: title };
+	},
+
+	// The logged target is the entry (see `apply`'s return), and `authorize`
+	// checks an application id, so the undo asks about the entry's application.
+	authorizeRevert: async (target, actor) => (await ownedEntry(target.id, actor)) !== null,
+
+	/**
+	 * Take a logged entry back off the timeline: the row, then the summary it fed.
+	 *
+	 * The same two steps as the Activity tab's delete, the only other way an entry
+	 * leaves, and for the same reason: the overview's details, offer terms and
+	 * "where this stands" are a projection of the entries, so the summariser has
+	 * to run again or a detail goes on citing an entry that is gone.
+	 *
+	 * Only while it is still the entry that was written. `date_updated` stays
+	 * null until a person edits it (derivation and extraction never set it), and
+	 * an attachment arrives as `file_id`; either means the row now holds work the
+	 * applicant did. Asked again in the delete itself, so an edit landing between
+	 * the read and the write is not taken with it.
+	 */
+	revert: async (target, _previous, actor) => {
+		const byHand = "Delete it from the application's Activity tab instead.";
+		const entry = await ownedEntry(target.id, actor);
+		if (!entry) throw new Error('That entry is no longer on the timeline.');
+		if (entry.date_updated) {
+			throw new Error(
+				'This entry has been edited since it was logged, and undoing the log would ' +
+					`delete it along with that edit. ${byHand}`
+			);
+		}
+		if (entry.file_id) {
+			throw new Error(
+				'This entry has a file attached now, and undoing the log would take the ' +
+					`file off the timeline with it. ${byHand}`
+			);
+		}
+
+		const deleted = await db
+			.delete(application_records)
+			.where(
+				and(
+					eq(application_records.id, entry.id),
+					isNull(application_records.date_updated),
+					isNull(application_records.file_id)
+				)
+			)
+			.returning({ id: application_records.id });
+		if (deleted.length === 0) {
+			throw new Error(`This entry changed while it was being undone. ${byHand}`);
+		}
+
+		await summarizeApplication(entry.application_id, actor.profileId);
 	}
 };
+
+/**
+ * A timeline entry, if it is still there and sits on one of this profile's
+ * applications. Entries carry no profile of their own, so ownership is the
+ * application's, the way `readOwnedRow` answers it for a profile row.
+ */
+async function ownedEntry(id: number, actor: CapabilityActor) {
+	const entry = await db.query.application_records.findFirst({
+		where: eq(application_records.id, id),
+		columns: { id: true, application_id: true, date_updated: true, file_id: true },
+		with: { application: { columns: { profile_id: true } } }
+	});
+	return entry && entry.application?.profile_id === actor.profileId ? entry : null;
+}
 
 /* ------------------------------------------------------------------ *
  * add_application

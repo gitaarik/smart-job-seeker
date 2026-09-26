@@ -1355,7 +1355,7 @@ describe('jobs and applications', () => {
 		expect(result.content[0].text).toContain('list_applications');
 	});
 
-	it('files an entry under an application, and says where to remove it', async () => {
+	it('files an entry under an application, and says it can be undone', async () => {
 		const result = await callTool(
 			'add_activity_record',
 			{
@@ -1368,12 +1368,11 @@ describe('jobs and applications', () => {
 		);
 
 		expect(result.structuredContent?.applied).toBe(true);
-		// This add has no undo: an activity record is history filed under an
-		// application, not a profile row the registry can take back. So the honest
-		// answer stays the page with the delete button, and for an application
-		// that page is one row's, not a section's.
-		expect(result.structuredContent?.undoable).toBe(false);
-		expect(result.content[0].text).toContain('/applications/44');
+		// Undoable from the changes feed, like a profile add: the undo removes the
+		// one entry the add made, while nothing of the applicant's hangs off it.
+		// The page with the delete button was the answer only while it had none.
+		expect(result.structuredContent?.undoable).toBe(true);
+		expect(result.content[0].text).toContain('/data/ai-changes');
 	});
 
 	it("refuses an application that is not this profile's", async () => {

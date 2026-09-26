@@ -21,6 +21,9 @@ import { isReorderCapability } from '../reorder-capabilities';
 let applicationRow: unknown = null;
 let jobRow: unknown = null;
 let recordRows: unknown[] = [];
+/** The one entry an undo reads, with its application's owner. */
+let recordRow: unknown = null;
+const mockRecordDelete = vi.fn();
 const mockAppUpdateSet = vi.fn().mockReturnValue({
 	where: vi.fn().mockResolvedValue(undefined)
 });
@@ -39,9 +42,15 @@ vi.mock('$lib/server/db', () => ({
 		query: {
 			applications: { findFirst: () => Promise.resolve(applicationRow) },
 			jobs: { findFirst: () => Promise.resolve(jobRow) },
-			application_records: { findMany: () => Promise.resolve(recordRows) }
+			application_records: {
+				findMany: () => Promise.resolve(recordRows),
+				findFirst: () => Promise.resolve(recordRow)
+			}
 		},
 		update: () => ({ set: (...a: unknown[]) => mockAppUpdateSet(...a) }),
+		delete: (table: unknown) => ({
+			where: (where: unknown) => ({ returning: () => mockRecordDelete(table, where) })
+		}),
 		insert: (table: unknown) => ({
 			values: (v: unknown) => {
 				if ((table as { id?: string })?.id === 'capability_edits.id') {
@@ -121,9 +130,12 @@ vi.mock('$lib/server/db/schema', () => ({
 	// the log exists to make impossible.
 	capability_edits: { id: 'capability_edits.id', profile_id: 'capability_edits.profile_id' },
 	application_records: {
+		id: 'application_records.id',
 		application_id: 'application_records.application_id',
 		event_date: 'application_records.event_date',
-		date_created: 'application_records.date_created'
+		date_created: 'application_records.date_created',
+		date_updated: 'application_records.date_updated',
+		file_id: 'application_records.file_id'
 	},
 	// The registry now includes the generated profile capabilities, so importing
 	// it reaches PROFILE_RESOURCES and every table it declares. Placeholders, not
@@ -317,6 +329,8 @@ beforeEach(() => {
 	applicationRow = null;
 	jobRow = null;
 	recordRows = [];
+	recordRow = null;
+	mockRecordDelete.mockResolvedValue([{ id: 88 }]);
 	mockDeriveRecord.mockResolvedValue(undefined);
 	mockSummarize.mockResolvedValue(undefined);
 	mockCanEditJob.mockResolvedValue(true);
@@ -2361,11 +2375,73 @@ describe('undoing a job or an application edit', () => {
 		);
 	});
 
-	it('gives an add no undo, so nothing offers one', () => {
-		// The rule the whole hide-not-delete design rests on: the registry has no
-		// delete, so an add is taken back on the page that shows it. A revert here
-		// would be that delete, arriving through the back door.
-		expect(CAPABILITIES.add_activity_record.revert).toBeUndefined();
+	describe('undoing a logged entry', () => {
+		// Not the general delete the registry refuses: the one row the add made,
+		// and only while nothing of the applicant's hangs off it. Same grounds as
+		// the profile adds.
+		const ENTRY = { id: 88, label: 'Recruiter call' };
+		const untouched = {
+			id: 88,
+			application_id: 42,
+			date_updated: null,
+			file_id: null,
+			application: { profile_id: 12 }
+		};
+
+		it('removes the row, then summarises again so nothing cites it', async () => {
+			recordRow = untouched;
+
+			await CAPABILITIES.add_activity_record.revert!(ENTRY, {}, ACTOR);
+
+			expect(mockRecordDelete).toHaveBeenCalledTimes(1);
+			expect(mockSummarize).toHaveBeenCalledWith(42, 12);
+		});
+
+		it.each([
+			['edited since it was logged', { date_updated: new Date('2026-09-26T10:00:00Z') }, /edited/],
+			['given a file since', { file_id: '5f0c1e2a-0000-4000-8000-000000000000' }, /file attached/]
+		])('refuses an entry %s, and deletes nothing', async (_what, change, message) => {
+			recordRow = { ...untouched, ...change };
+
+			await expect(CAPABILITIES.add_activity_record.revert!(ENTRY, {}, ACTOR)).rejects.toThrow(
+				message
+			);
+			expect(mockRecordDelete).not.toHaveBeenCalled();
+			expect(mockSummarize).not.toHaveBeenCalled();
+		});
+
+		it('refuses when the entry changed between the read and the delete', async () => {
+			// The delete asks the same two questions again, so an edit that lands in
+			// between is not taken with it.
+			recordRow = untouched;
+			mockRecordDelete.mockResolvedValue([]);
+
+			await expect(CAPABILITIES.add_activity_record.revert!(ENTRY, {}, ACTOR)).rejects.toThrow(
+				/changed while it was being undone/
+			);
+			expect(mockSummarize).not.toHaveBeenCalled();
+		});
+
+		it('says so when the entry is already gone', async () => {
+			await expect(CAPABILITIES.add_activity_record.revert!(ENTRY, {}, ACTOR)).rejects.toThrow(
+				/no longer on the timeline/
+			);
+		});
+
+		it("is asked about the entry's application, and only the actor's own", async () => {
+			// The logged target is the entry, so `authorize`, which checks an
+			// application id, would be asking about the wrong row.
+			const gate = CAPABILITIES.add_activity_record.authorizeRevert!;
+
+			recordRow = untouched;
+			expect(await gate(ENTRY, ACTOR)).toBe(true);
+
+			recordRow = { ...untouched, application: { profile_id: 99 } };
+			expect(await gate(ENTRY, ACTOR)).toBe(false);
+
+			recordRow = null;
+			expect(await gate(ENTRY, ACTOR)).toBe(false);
+		});
 	});
 });
 
