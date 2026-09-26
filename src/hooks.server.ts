@@ -9,12 +9,13 @@ import { internalRenderUserId } from '$lib/server/auth/internal-render';
 import { dbDirect as db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { users } from '$lib/server/db/schema';
-import { initSentry, Sentry } from '$lib/server/monitoring/sentry';
+import { Sentry } from '$lib/server/monitoring/sentry';
+import { initTelemetry } from '$lib/server/monitoring/telemetry';
 import { aiRateLimiter, createRateLimitResponse } from '$lib/server/middleware/rate-limit';
 import { shapeHtmlShell } from '$lib/server/html-shell';
 import { isPublicApiRoute } from '$lib/server/auth/public-api-routes';
 
-initSentry('sveltekit');
+initTelemetry('sveltekit');
 
 function getSystemTheme(request: Request): 'light' | 'dark' {
 	// Try to detect system preference from headers

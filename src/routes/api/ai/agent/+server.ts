@@ -32,6 +32,7 @@ import {
 	renderProposalOutcomes
 } from '$lib/server/ai-chat/proposal-outcomes';
 import { ASSISTANT_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
+import { startTrace } from '$lib/server/monitoring/telemetry';
 
 // Recent turns sent to the model as context (~20 user/assistant exchanges).
 // Older turns are dropped; summarization can be layered on later if needed.
@@ -460,37 +461,49 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	// same prompt, no schema, no capability block, no extra tokens. Only a page
 	// where the user can actually change something pays for the structured one.
 	const capable = capabilities.length > 0;
-	const result = await createAndGenerateAiChat(
-		profile_id,
-		capable ? 'personal_agent_chat_capable' : 'personal_agent_chat',
+	// The turn's root trace (planning/LANGFUSE.md § Trace model). A new thread has
+	// no id until the reply is stored below, so its first turn has no session.
+	const result = await startTrace(
 		{
-			message,
-			...(capable ? { capabilities: renderCapabilityPrompt(capabilities) } : {})
+			name: 'assistant turn',
+			kind: 'agent',
+			userId: user.id,
+			sessionId: conversation ? `assistant:${conversation.id}` : undefined,
+			metadata: { profile_id: String(profile_id), capable: String(capable) }
 		},
-		undefined,
-		{
-			profileDataFields: ASSISTANT_PROFILE_FIELDS,
-			context,
-			// Stored on the row whether or not anything was admitted: a turn that
-			// offered nothing is exactly the turn whose record explains why.
-			capabilityRecord,
-			// Fallbacks, NOT customVariables: passed as customVariables these blank
-			// every source the line above just assembled, because customVariables are
-			// the deliberate override. See placeholderDefaults in utils.ts.
-			placeholderDefaults: EMPTY_CONTEXT_VARIABLES,
-			// Prior turns replayed as real messages rather than recapped as a
-			// transcript inside the prompt — same as the four editors.
-			historyMessages: history,
-			...(capable
-				? {
-						// Translation fields only in the languages the prompt offers them in.
-						responseSchema: buildProposalSchema(
-							capabilities.map((c) => c.capability),
-							{ languages: liveLanguages(capabilities) }
-						)
-					}
-				: {})
-		}
+		() =>
+			createAndGenerateAiChat(
+				profile_id,
+				capable ? 'personal_agent_chat_capable' : 'personal_agent_chat',
+				{
+					message,
+					...(capable ? { capabilities: renderCapabilityPrompt(capabilities) } : {})
+				},
+				undefined,
+				{
+					profileDataFields: ASSISTANT_PROFILE_FIELDS,
+					context,
+					// Stored on the row whether or not anything was admitted: a turn that
+					// offered nothing is exactly the turn whose record explains why.
+					capabilityRecord,
+					// Fallbacks, NOT customVariables: passed as customVariables these blank
+					// every source the line above just assembled, because customVariables are
+					// the deliberate override. See placeholderDefaults in utils.ts.
+					placeholderDefaults: EMPTY_CONTEXT_VARIABLES,
+					// Prior turns replayed as real messages rather than recapped as a
+					// transcript inside the prompt — same as the four editors.
+					historyMessages: history,
+					...(capable
+						? {
+								// Translation fields only in the languages the prompt offers them in.
+								responseSchema: buildProposalSchema(
+									capabilities.map((c) => c.capability),
+									{ languages: liveLanguages(capabilities) }
+								)
+							}
+						: {})
+				}
+			)
 	);
 
 	if (!result.success || !result.aiChat?.response) {

@@ -12,6 +12,7 @@ import { AIMessage, type BaseMessage, HumanMessage, SystemMessage } from '@langc
 import { z } from 'zod';
 import { getEnv } from '$lib/tools/get-env';
 import { llmCache } from './cache.js';
+import { traceAttempt, traceLlmCall } from './trace';
 import { geminiResponseSchema, parseStructuredReply } from './gemini-schema';
 import { isRetryableError, withRetry } from '$lib/server/utils/retry';
 import { errorTracker } from '$lib/server/monitoring/error-tracker';
@@ -1102,10 +1103,23 @@ function usableFallback(
 /**
  * Generate chat completion with token usage tracking.
  * Returns both the content and token usage for credit billing.
+ *
+ * Traced when telemetry is on (llm/trace.ts): the call as a span named by its
+ * prompt key, and each provider attempt as a generation under it.
  */
 export async function generateChatCompletionTracked(
 	messages: ChatMessage[],
 	options: ChatCompletionOptions = {}
+): Promise<CompletionResult> {
+	return traceLlmCall(options.promptKey, (markCacheHit) =>
+		completeTracked(messages, options, markCacheHit)
+	);
+}
+
+async function completeTracked(
+	messages: ChatMessage[],
+	options: ChatCompletionOptions,
+	markCacheHit: () => void
 ): Promise<CompletionResult> {
 	const {
 		model = config.llmModel,
@@ -1120,17 +1134,29 @@ export async function generateChatCompletionTracked(
 	const cachedResponse = await llmCache.get(cacheKey, model);
 
 	if (cachedResponse) {
+		markCacheHit();
 		return { content: cachedResponse, usage: null };
 	}
 
 	const attempt = (activeProvider: string | undefined, activeModel: string) =>
-		generateWithLangChain(
-			messages,
-			activeModel,
-			maxTokens,
-			temperature,
-			structuredOutput,
-			activeProvider
+		traceAttempt(
+			{
+				provider: activeProvider || config.llmProvider,
+				model: activeModel,
+				messages,
+				temperature,
+				maxTokens,
+				structured: structuredOutput !== undefined
+			},
+			() =>
+				generateWithLangChain(
+					messages,
+					activeModel,
+					maxTokens,
+					temperature,
+					structuredOutput,
+					activeProvider
+				)
 		);
 
 	// Make completion request with retry logic

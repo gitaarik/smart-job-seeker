@@ -8,7 +8,8 @@
 import * as Sentry from '@sentry/sveltekit';
 import { isFrameworkClientError } from '$lib/monitoring/sentry-filters';
 
-function getEnvironmentName(): string {
+/** Also names the environment in Langfuse, so both tools file a box alike. */
+export function getEnvironmentName(): string {
 	const host = process.env.SJS_APP_URL_HOST || '';
 	if (host.includes('preview.')) return 'preview';
 	if (host.includes('dev.')) return 'development';
@@ -16,9 +17,12 @@ function getEnvironmentName(): string {
 	return 'development';
 }
 
+/** The processes that report, named as Sentry's `serverName`. */
+export type ProcessComponent = 'sveltekit' | 'worker' | 'scraper-agent' | 'script';
+
 let initialized = false;
 
-export function initSentry(component: 'sveltekit' | 'worker') {
+export function initSentry(component: ProcessComponent) {
 	const dsn = process.env.SENTRY_DSN;
 	if (!dsn || initialized) return;
 
