@@ -19,6 +19,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { promptFingerprint } from '../prompt-fingerprint';
 import { promptTemplates } from '../prompt-templates';
 import { promptVariables, renderPrompt } from '../render-prompt';
 
@@ -75,8 +76,8 @@ describe('score_job_match template', () => {
 
 	it('carries the candidate work-location preference (regression: was remote_options)', () => {
 		// The candidate's own work-location preference must reach the prompt.
-		expect(template.user_prompt).toContain('${preferences.work_location}');
-		expect(template.user_prompt).not.toContain('${preferences.remote_options}');
+		expect(template.user_prompt).toContain('{{preferences.work_location}}');
+		expect(template.user_prompt).not.toContain('{{preferences.remote_options}}');
 	});
 });
 
@@ -132,9 +133,9 @@ const APPLICATION_ACTIVITY_SUPPLIED_BY: Record<string, string> = {
 	followup_application_question: 'application-question-followup.ts'
 };
 
-describe('${applicationActivity} template \u2194 caller wiring', () => {
+describe('{{applicationActivity}} template \u2194 caller wiring', () => {
 	const referencing = Object.entries(promptTemplates)
-		.filter(([, t]) => `${t.system_prompt}\n${t.user_prompt}`.includes('${applicationActivity}'))
+		.filter(([, t]) => `${t.system_prompt}\n${t.user_prompt}`.includes('{{applicationActivity}}'))
 		.map(([key]) => key);
 
 	it('is referenced by every template a caller supplies it to', () => {
@@ -231,9 +232,9 @@ const PROFILE_DIRECTIVES_CONSUMER: Record<string, 'chat' | 'letters' | 'answers'
 	followup_application_question: 'answers'
 };
 
-describe('${profileDirectives} template \u2194 caller wiring', () => {
+describe('{{profileDirectives}} template \u2194 caller wiring', () => {
 	const referencing = Object.entries(promptTemplates)
-		.filter(([, t]) => `${t.system_prompt}\n${t.user_prompt}`.includes('${profileDirectives}'))
+		.filter(([, t]) => `${t.system_prompt}\n${t.user_prompt}`.includes('{{profileDirectives}}'))
 		.map(([key]) => key);
 
 	it('is referenced by exactly the templates whose callers request it', () => {
@@ -254,11 +255,11 @@ describe('${profileDirectives} template \u2194 caller wiring', () => {
 	it('sits right after the profile, in the per-profile band the prompt cache orders by', () => {
 		for (const key of referencing) {
 			const text = promptTemplates[key].system_prompt;
-			const data = text.indexOf('${data}');
-			const directives = text.indexOf('${profileDirectives}');
+			const data = text.indexOf('{{data}}');
+			const directives = text.indexOf('{{profileDirectives}}');
 			expect(directives, key).toBeGreaterThan(data);
 			// Nothing per-job or per-turn between the two.
-			const between = text.slice(data + '${data}'.length, directives);
+			const between = text.slice(data + '{{data}}'.length, directives);
 			expect(between.trim(), key).toBe('');
 		}
 	});
@@ -305,9 +306,9 @@ const ADDITIONAL_CONTEXT_SUPPLIED_BY: Record<string, string> = {
 	advise_prep_sheet: 'profile-cheatsheet.ts'
 };
 
-describe('${additionalContext} template ↔ caller wiring', () => {
+describe('{{additionalContext}} template ↔ caller wiring', () => {
 	const referencing = Object.entries(promptTemplates)
-		.filter(([, t]) => `${t.system_prompt}\n${t.user_prompt}`.includes('${additionalContext}'))
+		.filter(([, t]) => `${t.system_prompt}\n${t.user_prompt}`.includes('{{additionalContext}}'))
 		.map(([key]) => key);
 
 	it('is referenced by every template a caller supplies it to', () => {
@@ -321,7 +322,7 @@ describe('${additionalContext} template ↔ caller wiring', () => {
 
 	it('stays out of review_application_question (followup builds its own vars)', () => {
 		const t = promptTemplates['review_application_question'];
-		expect(`${t.system_prompt}\n${t.user_prompt}`).not.toContain('${additionalContext}');
+		expect(`${t.system_prompt}\n${t.user_prompt}`).not.toContain('{{additionalContext}}');
 	});
 });
 
@@ -373,9 +374,9 @@ const RELEVANT_PROJECTS_SUPPLIED_BY: Record<string, string> = {
 	write_or_advise_star_story: 'profile-story.ts'
 };
 
-describe('${relevantProjects} template ↔ caller wiring', () => {
+describe('{{relevantProjects}} template ↔ caller wiring', () => {
 	const referencing = Object.entries(promptTemplates)
-		.filter(([, t]) => `${t.system_prompt}\n${t.user_prompt}`.includes('${relevantProjects}'))
+		.filter(([, t]) => `${t.system_prompt}\n${t.user_prompt}`.includes('{{relevantProjects}}'))
 		.map(([key]) => key);
 
 	it('is referenced by every template a caller supplies it to', () => {
@@ -428,9 +429,9 @@ const RELEVANT_STORIES_SUPPLIED_BY: Record<string, string> = {
 	write_or_advise_application_question: 'application-question.ts'
 };
 
-describe('${relevantStories} template ↔ caller wiring', () => {
+describe('{{relevantStories}} template ↔ caller wiring', () => {
 	const referencing = Object.entries(promptTemplates)
-		.filter(([, t]) => `${t.system_prompt}\n${t.user_prompt}`.includes('${relevantStories}'))
+		.filter(([, t]) => `${t.system_prompt}\n${t.user_prompt}`.includes('{{relevantStories}}'))
 		.map(([key]) => key);
 
 	it('is referenced by every template a caller supplies it to', () => {
@@ -477,10 +478,10 @@ const RELEVANT_APPLICATION_TEXTS_SUPPLIED_BY: Record<string, string> = {
 	write_or_advise_application_question: 'application-question.ts'
 };
 
-describe('${relevantApplicationTexts} template ↔ caller wiring', () => {
+describe('{{relevantApplicationTexts}} template ↔ caller wiring', () => {
 	const referencing = Object.entries(promptTemplates)
 		.filter(([, t]) =>
-			`${t.system_prompt}\n${t.user_prompt}`.includes('${relevantApplicationTexts}')
+			`${t.system_prompt}\n${t.user_prompt}`.includes('{{relevantApplicationTexts}}')
 		)
 		.map(([key]) => key);
 
@@ -543,5 +544,32 @@ describe('write_cheat_sheet records handling', () => {
 		expect(full2).toMatch(/INSTEAD OF generic invented ones/);
 		expect(full2).toMatch(/outrank generic profile-to-job matching/);
 		expect(full2).toMatch(/Translate what you carry over/);
+	});
+});
+
+describe('placeholder syntax', () => {
+	// `{{name}}` since 2026-09-26: Langfuse's syntax, and an unescaped `${name}`
+	// in these backtick literals was JavaScript interpolation at module load.
+	it('writes every placeholder as {{name}}, never ${name}', () => {
+		for (const [key, t] of Object.entries(promptTemplates)) {
+			expect(`${t.system_prompt}\n${t.user_prompt}`, key).not.toContain('${');
+		}
+	});
+
+	it('fingerprints a placeholder alike in either syntax, so the switch kept every record', () => {
+		const braces = {
+			system_prompt: 'Score {{job.title}}.',
+			user_prompt: '{{data}}',
+			temperature: 0.2
+		};
+		const dollar = {
+			system_prompt: 'Score ${job.title}.',
+			user_prompt: '${data}',
+			temperature: 0.2
+		};
+		expect(promptFingerprint(braces)).toBe(promptFingerprint(dollar));
+		expect(promptFingerprint({ ...braces, user_prompt: '{{data}}!' })).not.toBe(
+			promptFingerprint(braces)
+		);
 	});
 });

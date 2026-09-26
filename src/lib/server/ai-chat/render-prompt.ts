@@ -1,12 +1,12 @@
 /**
  * Prompt templates are filled by LangChain's f-string renderer.
  *
- * The templates in prompt-templates.ts are written with `${name}` placeholders,
- * plus a few `{{name}}` ones in the scraping prompts. LangChain's f-string
- * format writes a placeholder as `{name}` and wants every literal brace doubled,
- * so a template is converted on its way in rather than rewritten at the source:
- * the prompts stay as they are written, and so do the ones already stored in
- * `ai_chats`, which follow-ups render again.
+ * The templates in prompt-templates.ts are written with `{{name}}` placeholders
+ * (Langfuse's syntax, since 2026-09-26), and the ones stored in `ai_chats` before
+ * that, which follow-ups render again, with `${name}`; both are read. LangChain's
+ * f-string format writes a placeholder as `{name}` and wants every literal brace
+ * doubled, so a template is converted on its way in rather than rewritten at the
+ * source.
  *
  * What this replaces was a find-and-replace loop, and it had two faults:
  *
