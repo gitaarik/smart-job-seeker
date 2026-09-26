@@ -32,6 +32,8 @@ vi.mock('$lib/server/db', () => ({
 				})
 			}
 		},
+		// reserveAiChatId's nextval, before any other work.
+		execute: async () => ({ rows: [{ id: '7' }] }),
 		insert: () => ({
 			values: (values: Record<string, unknown>) => {
 				inserts.push(values);
@@ -90,6 +92,22 @@ describe('createAndGenerateAiChat: the record of the call', () => {
 			prompt_fingerprint: promptFingerprint(promptTemplates.compact_job_description)
 		});
 		expect(inserts[0].prompt_fingerprint).toMatch(/^[0-9a-f]{16}$/);
+	});
+
+	it('inserts the row under the id reserved before the work began', async () => {
+		await run();
+		expect(inserts[0].id).toBe(7);
+
+		inserts.length = 0;
+		await createAndGenerateAiChat(
+			1,
+			'compact_job_description',
+			{ jobDescription: 'A long posting' },
+			undefined,
+			{ aiChatId: 4242 }
+		);
+		// A caller that reserved it to seed its trace gets its row under that id.
+		expect(inserts[0].id).toBe(4242);
 	});
 
 	it('tells the model call which prompt it is making', async () => {

@@ -11,7 +11,7 @@ import { requireAuth, requireProfileAccess } from '$lib/server/utils/api-helpers
 import { agentChatSchema, parseBody } from '$lib/server/validation/api-schemas';
 import { requireCredits } from '$lib/server/billing/require-credits';
 import type { ChatMessage } from '$lib/server/llm';
-import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
+import { createAndGenerateAiChat, reserveAiChatId } from '$lib/server/ai-chat/utils';
 import { resolveChatContext } from '$lib/server/ai-chat/chat-context';
 import { EMPTY_CONTEXT_VARIABLES } from './placeholders';
 import { isStaffUser } from './scope';
@@ -32,7 +32,7 @@ import {
 	renderProposalOutcomes
 } from '$lib/server/ai-chat/proposal-outcomes';
 import { ASSISTANT_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
-import { startTrace } from '$lib/server/monitoring/telemetry';
+import { aiChatTraceSeed, startTrace } from '$lib/server/monitoring/telemetry';
 
 // Recent turns sent to the model as context (~20 user/assistant exchanges).
 // Older turns are dropped; summarization can be layered on later if needed.
@@ -461,12 +461,16 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	// same prompt, no schema, no capability block, no extra tokens. Only a page
 	// where the user can actually change something pays for the structured one.
 	const capable = capabilities.length > 0;
-	// The turn's root trace (planning/LANGFUSE.md § Trace model). A new thread has
-	// no id until the reply is stored below, so its first turn has no session.
+	// The turn's root trace (planning/LANGFUSE.md § Trace model), seeded from its
+	// ai_chats row, whose id is reserved first so the trace can be found from the
+	// row. A new thread has no id until the reply is stored below, so its first
+	// turn has no session.
+	const aiChatId = await reserveAiChatId();
 	const result = await startTrace(
 		{
 			name: 'assistant turn',
 			kind: 'agent',
+			seed: aiChatTraceSeed(aiChatId),
 			userId: user.id,
 			sessionId: conversation ? `assistant:${conversation.id}` : undefined,
 			metadata: { profile_id: String(profile_id), capable: String(capable) }
@@ -490,6 +494,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					// every source the line above just assembled, because customVariables are
 					// the deliberate override. See placeholderDefaults in utils.ts.
 					placeholderDefaults: EMPTY_CONTEXT_VARIABLES,
+					aiChatId,
 					// Prior turns replayed as real messages rather than recapped as a
 					// transcript inside the prompt — same as the four editors.
 					historyMessages: history,

@@ -204,6 +204,15 @@ export interface TraceOptions {
 	metadata?: Record<string, string>;
 }
 
+/**
+ * The seed of the trace for the work behind one `ai_chats` row, whose id was
+ * reserved first (reserveAiChatId). It carries the environment, because dev and
+ * preview share id ranges, and it lets the trace id be recomputed from the row.
+ */
+export function aiChatTraceSeed(aiChatId: number): string {
+	return `sjs:${getEnvironmentName()}:ai_chat:${aiChatId}`;
+}
+
 /** Whether the code is running inside a trace `startTrace` opened. */
 export function isInTrace(): boolean {
 	return context.active().getValue(SJS_ROOT) === true;

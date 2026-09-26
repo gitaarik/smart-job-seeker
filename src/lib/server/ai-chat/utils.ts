@@ -3,7 +3,7 @@
  */
 
 import { db } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { ai_chats, collected_data, profiles } from '$lib/server/db/schema';
 import { config } from '$lib/server/config';
 import { errorTracker } from '$lib/server/monitoring/error-tracker';
@@ -276,6 +276,20 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<{
 }
 
 /**
+ * Reserve the id an `ai_chats` row will get, before the work that fills it
+ * starts. A unit of work that knows its row from the start can be one trace with
+ * an id recomputable from the row (aiChatTraceSeed), context assembly included.
+ * A reservation whose work fails before the insert leaves a gap in the sequence,
+ * as a rolled-back insert always did.
+ */
+export async function reserveAiChatId(): Promise<number> {
+	const result = await db.execute<{ id: string }>(
+		sql`SELECT nextval(pg_get_serial_sequence('ai_chats', 'id')) AS id`
+	);
+	return Number(result.rows[0].id);
+}
+
+/**
  * Create and fully generate an AI chat instance using the prompt templates in
  * prompt-templates.ts.
  * Orchestrates the entire process:
@@ -362,6 +376,12 @@ export async function createAndGenerateAiChat(
 		 * before the model saw them.
 		 */
 		placeholderDefaults?: Record<string, string>;
+		/**
+		 * The row's id, reserved with reserveAiChatId by a caller that opens its
+		 * trace before calling, so the trace can be seeded from it
+		 * (aiChatTraceSeed). Reserved here otherwise.
+		 */
+		aiChatId?: number;
 	}
 ): Promise<{
 	success: boolean;
@@ -383,6 +403,10 @@ export async function createAndGenerateAiChat(
 	let callStarted: number | undefined;
 
 	try {
+		// The row's id comes first, so everything below belongs to a known row
+		// (planning/LANGFUSE.md, change 6).
+		const reservedAiChatId = options?.aiChatId ?? (await reserveAiChatId());
+
 		// Two questions before doing any work, and they are not the same one.
 		// "May this account cause spend at all" fails for an expired demo, an
 		// unapproved account and a pending erasure; all three still pass the
@@ -544,6 +568,7 @@ export async function createAndGenerateAiChat(
 		const [aiChat] = await db
 			.insert(ai_chats)
 			.values({
+				id: reservedAiChatId,
 				profile_id: profileId,
 				system_prompt: promptTemplate.system_prompt,
 				user_prompt: promptTemplate.user_prompt,
