@@ -3,7 +3,6 @@
 	 * Every href here comes from filterUrl(), which calls resolve('/admin/inbox')
 	 * itself and appends the query. The rule does not follow a function call.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
@@ -94,6 +93,7 @@
 	<!-- Status filter tabs -->
 	<div class="flex flex-wrap gap-2">
 		{#each statusTabs as tab (tab.value)}
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
 			<a
 				href={filterUrl({ status: tab.value, handler: handlerFilter })}
 				class="rounded-lg border px-3 py-1.5 text-sm transition-colors {statusFilter === tab.value
@@ -103,11 +103,13 @@
 				{tab.label}
 				<span class="ml-1 text-xs opacity-70">{tab.count}</span>
 			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{/each}
 	</div>
 
 	<!-- Handler filter -->
 	<div class="flex flex-wrap gap-1.5">
+		<!-- eslint-disable svelte/no-navigation-without-resolve -->
 		<a
 			href={filterUrl({ status: statusFilter, handler: '' })}
 			class="rounded-full border px-2 py-0.5 text-xs transition-colors {!handlerFilter
@@ -115,7 +117,9 @@
 				: 'border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-text-muted)]'}"
 			>All handlers</a
 		>
+		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{#each Object.entries(handlerLabels) as [value, label] (value)}
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
 			<a
 				href={filterUrl({ status: statusFilter, handler: value })}
 				class="rounded-full border px-2 py-0.5 text-xs transition-colors {handlerFilter === value
@@ -123,6 +127,7 @@
 					: 'border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-text-muted)]'}"
 				>{label}</a
 			>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{/each}
 	</div>
 
@@ -285,6 +290,7 @@
 		{#if totalPages > 1}
 			<div class="flex items-center justify-center gap-2 pt-2">
 				{#if page > 1}
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={filterUrl({
 							status: statusFilter,
@@ -294,11 +300,13 @@
 						class="rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-text-muted)]"
 						>Previous</a
 					>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				{/if}
 				<span class="text-sm text-[var(--dash-text-muted)]">
 					Page {page} of {totalPages}
 				</span>
 				{#if page < totalPages}
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={filterUrl({
 							status: statusFilter,
@@ -308,6 +316,7 @@
 						class="rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-text-muted)]"
 						>Next</a
 					>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				{/if}
 			</div>
 		{/if}

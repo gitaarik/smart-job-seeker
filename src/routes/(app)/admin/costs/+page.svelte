@@ -3,7 +3,6 @@
 	 * These hrefs are bare query strings ("?period=...") against the page already
 	 * open. No route changes, so there is no route id to resolve.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { PageData } from './$types';
 	import { faChartLine } from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
@@ -40,6 +39,7 @@
 	<div class="flex flex-wrap items-center gap-3">
 		<span class="text-sm text-[var(--dash-text-muted)]">Period:</span>
 		{#each data.availableMonths as month (month.value)}
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
 			<a
 				href="?period={month.value}"
 				class="rounded-md px-3 py-1 text-sm transition-colors {data.currentPeriod === month.value
@@ -48,7 +48,9 @@
 			>
 				{month.label}
 			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{/each}
+		<!-- eslint-disable svelte/no-navigation-without-resolve -->
 		<a
 			href="?period=all"
 			class="rounded-md px-3 py-1 text-sm transition-colors {data.currentPeriod === 'all'
@@ -57,6 +59,7 @@
 		>
 			All time
 		</a>
+		<!-- eslint-enable svelte/no-navigation-without-resolve -->
 	</div>
 
 	<!-- Summary cards -->

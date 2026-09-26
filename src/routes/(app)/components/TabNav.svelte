@@ -2,9 +2,8 @@
 	/*
 	 * Tab hrefs are supplied by whichever page builds the tab list.
 	 * This component only renders what it is handed, so the rule has nothing
-	 * to check, and the `<a>` spans several lines so there is no line to mark.
+	 * to check.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { Snippet } from 'svelte';
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -184,6 +183,7 @@
 			<!-- Single row: standard underline tabs -->
 			<div class="flex border-b border-[var(--dash-border)]">
 				{#each tabs as tab, i (i)}
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={tab.href}
 						class="
@@ -196,6 +196,7 @@
 						{#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="h-4 w-4" />{/if}
 						{tab.label}
 					</a>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				{/each}
 			</div>
 			{#if !inset}
@@ -217,6 +218,7 @@
 					>
 						{#each row as tab, tabIdx (tabIdx)}
 							{@const active = isActive(tab.href)}
+							<!-- eslint-disable svelte/no-navigation-without-resolve -->
 							<a
 								href={tab.href}
 								class="
@@ -235,6 +237,7 @@
 								{#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="h-3.5 w-3.5" />{/if}
 								{tab.label}
 							</a>
+							<!-- eslint-enable svelte/no-navigation-without-resolve -->
 						{/each}
 					</div>
 				{/each}

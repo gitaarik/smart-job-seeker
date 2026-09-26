@@ -167,15 +167,23 @@ Five rules are worth reading rather than counting:
   Where the marks went. 27 external URLs (a scraped posting, a platform's own
   site, a tunnel live view, a link a user typed into their profile) moved to
   `lib/components/ExternalLink.svelte`, which carries one disable — use that
-  component for a new external link rather than a bare `<a>`. 11 leaf components
-  that exist to render a caller-supplied href, and 14 pages whose sites are all
-  one shape, carry a file-scoped disable naming the shape.
+  component for a new external link rather than a bare `<a>`. The rest are
+  marked on the element, with the file's one shape explained once in its
+  script. Until 2026-09-26 those 25 files carried a file-scoped disable instead,
+  which also hid any new hit in them; do not bring one back.
 
-  Two mechanics worth knowing. An inline `eslint-disable-next-line` usually does
-  NOT work here: the flagged line is normally an `href` attribute inside a
-  multi-line element, and a comment cannot sit between attributes. And a
-  file-level disable placed above `<script>` is silently ignored — the directive
-  has to be **inside** the script block to apply to the markup.
+  How to mark a site. `eslint-disable-next-line` works only when the flag lands
+  on the element's first line. It usually lands on an `href` a few lines in,
+  and a comment cannot sit between attributes, so wrap the element in
+  `<!-- eslint-disable … -->` and `<!-- eslint-enable … -->`, each on its own
+  line. Inside a multi-line expression (`use:enhance={() => { … goto(x) }}`) a
+  plain `// eslint-disable-next-line` is JavaScript and marks just the line. Two
+  traps. Where prettier hugs tags (`><code`), the line an element starts on can
+  still be inside its parent's tag, so wrap the parent. And do not close one
+  block and open the next between two inline elements: Svelte keeps the
+  whitespace on both sides of every comment it drops, so the pair adds a space
+  to the DOM. Merge touching blocks. (A file-level disable above `<script>` is
+  silently ignored; it has to be inside the script block.)
 
   When you do migrate one: a route id carries its layout group
   (`/(app)/jobs/[id]`), though a plain pathname is accepted for a static link

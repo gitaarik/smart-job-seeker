@@ -3,7 +3,6 @@
 	 * The href is a template over basePath (`/applications/${app.id}`). A template
 	 * is not a resolve() call, so the rule cannot verify it.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
@@ -629,6 +628,7 @@
 										<span class="italic">{entry.step}</span>
 									{/if}
 									{#if entry.fromFile && entry.fileId}
+										<!-- eslint-disable svelte/no-navigation-without-resolve -->
 										<a
 											href="{basePath}/activity/download?fileId={entry.fileId}"
 											class="inline-flex items-center gap-1 transition-colors hover:text-[var(--dash-primary)]"
@@ -637,6 +637,7 @@
 											Attached file
 											<FontAwesomeIcon icon={faDownload} class="h-2.5 w-2.5" />
 										</a>
+										<!-- eslint-enable svelte/no-navigation-without-resolve -->
 									{/if}
 								</div>
 							{/if}

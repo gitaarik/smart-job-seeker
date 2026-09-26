@@ -2,9 +2,8 @@
 	/*
 	 * The link is stored on the notification row, written when it was created.
 	 * This component only renders what it is handed, so the rule has nothing
-	 * to check, and the `<a>` spans several lines so there is no line to mark.
+	 * to check.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -136,6 +135,7 @@
 		{:else}
 			{#each notifications as n (n.id)}
 				{@const isUnread = !n.read_at}
+				<!-- eslint-disable svelte/no-navigation-without-resolve -->
 				<a
 					href={n.link || '#'}
 					onclick={() => {
@@ -165,6 +165,7 @@
 						<div class="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-[var(--dash-primary)]"></div>
 					{/if}
 				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			{/each}
 		{/if}
 	</div>

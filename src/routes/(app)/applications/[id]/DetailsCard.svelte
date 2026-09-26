@@ -2,9 +2,8 @@
 	/*
 	 * activityHref is a prop, resolved by the page that owns the application id.
 	 * This component only renders what it is handed, so the rule has nothing
-	 * to check, and the `<a>` spans several lines so there is no line to mark.
+	 * to check.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	/**
 	 * The details pulled out of this application's activity entries, grouped by
 	 * kind.
@@ -60,11 +59,13 @@
 								<span class="text-[var(--dash-text-muted)]"> — </span>
 								<span class="text-[var(--dash-text-secondary)]">{item.value}</span>
 								{#if item.record_id != null}
+									<!-- eslint-disable svelte/no-navigation-without-resolve -->
 									<a
 										href="{activityHref}#r{item.record_id}"
 										class="ml-1 text-xs whitespace-nowrap text-[var(--dash-text-muted)] underline transition-colors hover:text-[var(--dash-primary)]"
 										title="The entry this came from">source</a
 									>
+									<!-- eslint-enable svelte/no-navigation-without-resolve -->
 								{/if}
 							</li>
 						{/each}
@@ -76,10 +77,12 @@
 				<FontAwesomeIcon icon={faWandMagicSparkles} class="h-3 w-3" />
 				<span>
 					Picked out of your
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={activityHref}
 						class="underline transition-colors hover:text-[var(--dash-primary)]">activity entries</a
 					>{#if updatedAt}<span>, {timeAgo(updatedAt)}</span>{/if}
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				</span>
 			</p>
 		</div>

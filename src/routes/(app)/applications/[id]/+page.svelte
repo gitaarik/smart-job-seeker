@@ -2,14 +2,12 @@
 	/*
 	 * {@html linkify(note.text)} renders a user-written application note.
 	 * linkify escapes &, <, > and " first, then wraps only http(s) matches in an
-	 * anchor, so the note cannot contribute markup. Mid-line, so file level.
+	 * anchor, so the note cannot contribute markup.
 	 */
-	/* eslint-disable svelte/no-at-html-tags */
 	/*
 	 * The href comes from profileDocUrl(), which builds a public /p/<slug> document
 	 * URL. The rule does not follow a function call.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { tick } from 'svelte';
@@ -562,6 +560,7 @@
 						<!-- Only when the version is still there: the record survives a
 						     deleted library version on purpose, but a link to one is a 404. -->
 						{#if app.cv_version_sent && profileSlug && data.cvVersionExists}
+							<!-- eslint-disable svelte/no-navigation-without-resolve -->
 							<a
 								href={profileDocUrl({
 									profileSlug,
@@ -576,6 +575,7 @@
 							>
 								<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3" />
 							</a>
+							<!-- eslint-enable svelte/no-navigation-without-resolve -->
 						{/if}
 						<a
 							href={resolve('/(app)/applications/[id]/resume', { id: String(app.id) })}
@@ -821,9 +821,11 @@
 							{:else}
 								<!-- View mode -->
 								<div class="min-w-0 flex-1 border-l-2 border-[var(--dash-border)] pl-3">
+									<!-- eslint-disable svelte/no-at-html-tags -->
 									<span class="text-sm leading-relaxed whitespace-pre-wrap text-white"
 										>{@html linkify(note.text)}</span
 									>
+									<!-- eslint-enable svelte/no-at-html-tags -->
 									<span class="ml-2 text-xs text-[var(--dash-text-muted)]"
 										>{timeAgo(note.created_at)}</span
 									>

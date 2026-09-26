@@ -2,9 +2,8 @@
 	/*
 	 * activityHref is a prop, resolved by the page that owns the application id.
 	 * This component only renders what it is handed, so the rule has nothing
-	 * to check, and the `<a>` spans several lines so there is no line to mark.
+	 * to check.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	/**
 	 * The offer terms the summariser pulled out of this application's activity
 	 * entries, on the overview page.
@@ -111,6 +110,7 @@
 			<FontAwesomeIcon icon={faWandMagicSparkles} class="h-3 w-3" />
 			<span>
 				Read from your
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a href={activityHref} class="underline transition-colors hover:text-[var(--dash-primary)]"
 					>activity entries</a
 				>{#if extractedAt}<span>, {timeAgo(extractedAt)}</span>{/if}

@@ -3,7 +3,6 @@
 	 * goto(result.location) follows wherever the form action redirected to. The
 	 * server chose that target; the client has no route id to resolve.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
@@ -1013,6 +1012,7 @@
 			return async ({ result, update }) => {
 				onLoadingChange(false);
 				if (result.type === 'redirect') {
+					// eslint-disable-next-line svelte/no-navigation-without-resolve
 					await goto(result.location, { invalidateAll: true });
 				} else {
 					await update();

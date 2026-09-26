@@ -2,9 +2,8 @@
 	/*
 	 * Step hrefs come from the step definitions, already resolved there.
 	 * This component only renders what it is handed, so the rule has nothing
-	 * to check, and the `<a>` spans several lines so there is no line to mark.
+	 * to check.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowRight, faCheck } from '@fortawesome/free-solid-svg-icons';
 	import Card from './Card.svelte';
@@ -153,6 +152,7 @@
 						</div>
 
 						{#if isActive}
+							<!-- eslint-disable svelte/no-navigation-without-resolve -->
 							<a
 								href={step.href}
 								class="flex shrink-0 items-center gap-1.5 rounded-lg bg-[var(--dash-primary)] px-3 py-1.5 text-xs whitespace-nowrap text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
@@ -160,6 +160,7 @@
 								{step.actionLabel}
 								<FontAwesomeIcon icon={faArrowRight} class="h-3 w-3" />
 							</a>
+							<!-- eslint-enable svelte/no-navigation-without-resolve -->
 						{/if}
 					</div>
 				</div>

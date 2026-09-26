@@ -2,9 +2,8 @@
 	/*
 	 * Nav item hrefs come from the nav definition, already resolved there.
 	 * This component only renders what it is handed, so the rule has nothing
-	 * to check, and the `<a>` spans several lines so there is no line to mark.
+	 * to check.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { page } from '$app/stores';
 	import { resolve } from '$app/paths';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -486,6 +485,7 @@
 							<ul class="mt-1 ml-4 space-y-1 border-l border-[var(--dash-border)] pl-4">
 								{#each item.children as child (child.label)}
 									<li>
+										<!-- eslint-disable svelte/no-navigation-without-resolve -->
 										<a
 											href={child.href}
 											onclick={closeMobileMenu}
@@ -501,6 +501,7 @@
 											<FontAwesomeIcon icon={child.icon} class="h-4 w-4" />
 											<span class="text-sm">{child.label}</span>
 										</a>
+										<!-- eslint-enable svelte/no-navigation-without-resolve -->
 									</li>
 								{/each}
 							</ul>
@@ -509,6 +510,7 @@
 				{:else}
 					<!-- Single item -->
 					<li>
+						<!-- eslint-disable svelte/no-navigation-without-resolve -->
 						<a
 							href={item.href}
 							onclick={closeMobileMenu}
@@ -524,6 +526,7 @@
 							<FontAwesomeIcon icon={item.icon} class="h-4 w-4" />
 							<span class="font-medium">{item.label}</span>
 						</a>
+						<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					</li>
 				{/if}
 			{/each}
@@ -632,6 +635,7 @@
 					<ul class="mt-1 ml-4 space-y-1 border-l border-amber-500/30 pl-4">
 						{#each adminItem.children as child (child.label)}
 							<li>
+								<!-- eslint-disable svelte/no-navigation-without-resolve -->
 								<a
 									href={child.href}
 									onclick={closeMobileMenu}
@@ -647,6 +651,7 @@
 									<FontAwesomeIcon icon={child.icon} class="h-4 w-4" />
 									<span class="text-sm">{child.label}</span>
 								</a>
+								<!-- eslint-enable svelte/no-navigation-without-resolve -->
 							</li>
 						{/each}
 					</ul>

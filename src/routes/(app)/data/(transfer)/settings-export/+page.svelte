@@ -3,7 +3,6 @@
 	 * The href comes from the downloadUrl derived, which builds the download
 	 * route with its query. The rule does not follow that indirection.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { PageData } from './$types';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -109,6 +108,7 @@
 					</label>
 				</div>
 
+				<!-- eslint-disable svelte/no-navigation-without-resolve -->
 				<a
 					href={downloadUrl}
 					download
@@ -121,6 +121,7 @@
 					<FontAwesomeIcon icon={faDownload} class="h-4 w-4" />
 					Download settings.json
 				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			</div>
 		</div>
 	</Card>

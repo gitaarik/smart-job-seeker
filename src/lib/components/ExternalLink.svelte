@@ -13,7 +13,6 @@
 	 * `target` and `rel` default to opening safely in a new tab, which is what
 	 * every caller wanted anyway; pass either one to override it.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { Snippet } from 'svelte';
 	import type { HTMLAnchorAttributes } from 'svelte/elements';
 
@@ -61,4 +60,5 @@
 	});
 </script>
 
+<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 <a href={safeHref} {target} {rel} {...rest}>{@render children()}</a>

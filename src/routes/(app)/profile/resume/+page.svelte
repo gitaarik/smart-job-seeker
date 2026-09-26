@@ -4,7 +4,6 @@
 	 * current page with changed query, and profileDocUrl() builds a public /p/<slug>
 	 * document URL behind a function call.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
@@ -55,6 +54,7 @@
 		const u = new URL(page.url);
 		if (id === DEFAULT_TEMPLATE_ID) u.searchParams.delete('template');
 		else u.searchParams.set('template', id);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(u.pathname + u.search, {
 			keepFocus: true,
 			noScroll: true,
@@ -77,6 +77,7 @@
 		const u = new URL(page.url);
 		if (code === 'en') u.searchParams.delete('lang');
 		else u.searchParams.set('lang', code);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(u.pathname + u.search, {
 			keepFocus: true,
 			noScroll: true,
@@ -438,6 +439,7 @@
 									<div class="rounded-lg border border-[var(--dash-border)] px-4 py-3 text-center">
 										<p class="mb-2 text-sm font-semibold text-[var(--dash-text)]">Resume</p>
 										<div class="flex items-center justify-center gap-1.5">
+											<!-- eslint-disable svelte/no-navigation-without-resolve -->
 											<a
 												href={profileDocUrl({
 													profileSlug: ps,
@@ -463,11 +465,13 @@
 												target="_blank"
 												class="dash-link-ext">PDF</a
 											>
+											<!-- eslint-enable svelte/no-navigation-without-resolve -->
 										</div>
 									</div>
 									<div class="rounded-lg border border-[var(--dash-border)] px-4 py-3 text-center">
 										<p class="mb-2 text-sm font-semibold text-[var(--dash-text)]">CV</p>
 										<div class="flex items-center justify-center gap-1.5">
+											<!-- eslint-disable svelte/no-navigation-without-resolve -->
 											<a
 												href={profileDocUrl({
 													profileSlug: ps,
@@ -493,6 +497,7 @@
 												target="_blank"
 												class="dash-link-ext">PDF</a
 											>
+											<!-- eslint-enable svelte/no-navigation-without-resolve -->
 										</div>
 									</div>
 								</div>

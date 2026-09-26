@@ -3,10 +3,7 @@
 	 * The three {@html} sites render SCRAPED page HTML, and are safe because
 	 * highlightHtml escapes &, <, >, " and ' before it injects any markup: the
 	 * only live tags in its output are the <span> wrappers it adds itself.
-	 * Marked at file level because each sits mid-line inside an expression, so
-	 * there is no line of its own to mark.
 	 */
-	/* eslint-disable svelte/no-at-html-tags */
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
@@ -216,6 +213,7 @@
 									</div>
 								</div>
 								<div class="relative">
+									<!-- eslint-disable svelte/no-at-html-tags -->
 									<pre
 										class="html-view h-48 w-full overflow-auto rounded border border-[var(--dash-border)] p-3 font-mono text-xs"><code
 											class="html"
@@ -224,6 +222,7 @@
 												? '\n... (truncated, click Fullscreen to see all)'
 												: ''}</code
 										></pre>
+									<!-- eslint-enable svelte/no-at-html-tags -->
 								</div>
 							</div>
 
@@ -257,6 +256,7 @@
 									</div>
 								</div>
 								<div class="relative">
+									<!-- eslint-disable svelte/no-at-html-tags -->
 									<pre
 										class="html-view html-view-stripped h-48 w-full overflow-auto rounded border border-[var(--dash-border)] p-3 font-mono text-xs"><code
 											class="html"
@@ -265,6 +265,7 @@
 												? '\n... (truncated, click Fullscreen to see all)'
 												: ''}</code
 										></pre>
+									<!-- eslint-enable svelte/no-at-html-tags -->
 								</div>
 							</div>
 						</div>
@@ -335,11 +336,13 @@
 		<!-- Modal Content -->
 		<div class="flex-1 overflow-hidden">
 			{#if fullscreenFormattedContent}
+				<!-- eslint-disable svelte/no-at-html-tags -->
 				<pre
 					class="html-view h-full w-full overflow-auto p-4 font-mono text-xs {fullscreenType ===
 					'stripped'
 						? 'html-view-stripped'
 						: ''}"><code class="html">{@html highlightHtml(fullscreenFormattedContent)}</code></pre>
+				<!-- eslint-enable svelte/no-at-html-tags -->
 			{:else}
 				<div class="flex h-full items-center justify-center text-[var(--dash-text-muted)]">
 					<div class="text-center">

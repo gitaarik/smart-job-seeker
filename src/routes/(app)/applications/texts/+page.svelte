@@ -3,7 +3,6 @@
 	 * goto() here carries a bare query string against the page already open. No
 	 * route changes, so there is no route id to resolve.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { ActionData, PageData } from './$types';
 	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
 	import { enhance } from '$app/forms';
@@ -93,6 +92,7 @@
 		if (type !== 'all') {
 			params.set('type', type);
 		}
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(`?${params.toString()}`);
 	}
 

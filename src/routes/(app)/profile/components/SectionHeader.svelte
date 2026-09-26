@@ -2,9 +2,8 @@
 	/*
 	 * backHref is the caller's route, resolved where it is known.
 	 * This component only renders what it is handed, so the rule has nothing
-	 * to check, and the `<a>` spans several lines so there is no line to mark.
+	 * to check.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowLeft, faPlus } from '@fortawesome/free-solid-svg-icons';
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -36,6 +35,7 @@
 <div class="mb-6">
 	{#if backHref}
 		<div class="mb-4">
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
 			<a
 				href={backHref}
 				class="flex items-center gap-2 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
@@ -43,6 +43,7 @@
 				<FontAwesomeIcon icon={faArrowLeft} class="h-4 w-4" />
 				<span class="text-sm">{backLabel}</span>
 			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		</div>
 	{/if}
 	<div class="flex items-center justify-between">

@@ -3,7 +3,6 @@
 	 * buildUrl() returns a bare query string ("?status=...") for the page already
 	 * open: these are filter changes, not navigations to another route.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
@@ -258,14 +257,17 @@
 
 	function toggleStatus(value: string) {
 		selectedStatuses = toggleSetValue(selectedStatuses, value);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(buildUrl({ status: [...selectedStatuses].join(','), page: '1' }));
 	}
 
 	function applySearch() {
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(buildUrl({ page: '1' }));
 	}
 
 	function applyFilter(overrides: Record<string, string | undefined> = {}) {
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(buildUrl({ ...overrides, page: '1' }));
 	}
 
@@ -281,12 +283,14 @@
 
 	function togglePlatform(platformId: string) {
 		selectedPlatforms = toggleSetValue(selectedPlatforms, platformId);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(buildUrl({ platform: [...selectedPlatforms].join(','), page: '1' }));
 	}
 
 	function toggleWorkLocation(value: string) {
 		selectedWorkLocations = toggleSetValue(selectedWorkLocations, value);
 		goto(
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
 			buildUrl({
 				workLocation: [...selectedWorkLocations].join(','),
 				page: '1'
@@ -296,11 +300,13 @@
 
 	function toggleJobType(value: string) {
 		selectedJobTypes = toggleSetValue(selectedJobTypes, value);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(buildUrl({ jobType: [...selectedJobTypes].join(','), page: '1' }));
 	}
 
 	function toggleImportedBy(value: string) {
 		selectedImportedBy = toggleSetValue(selectedImportedBy, value);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(buildUrl({ importedBy: [...selectedImportedBy].join(','), page: '1' }));
 	}
 
@@ -343,6 +349,7 @@
 		datePostedFilter = '';
 		sortFilter = '';
 		goto(
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
 			buildUrl({
 				status: '',
 				search: '',

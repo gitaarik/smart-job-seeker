@@ -4,7 +4,6 @@
 	 * itself and appends the query. The rule does not follow a function call, so it
 	 * reports the call site even though the route is resolved.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -110,6 +109,7 @@
 	<!-- Type filter tabs -->
 	<div class="flex flex-wrap gap-2">
 		{#each typeTabs as tab, i (i)}
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
 			<a
 				href={filterUrl({ type: tab.value, status: statusFilter })}
 				class="rounded-lg border px-3 py-1.5 text-sm transition-colors {typeFilter === tab.value
@@ -119,12 +119,14 @@
 				{tab.label}
 				<span class="ml-1 text-xs opacity-70">{tab.count}</span>
 			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{/each}
 	</div>
 
 	<!-- Status filter -->
 	<div class="flex flex-wrap gap-1.5">
 		{#each [{ value: '', label: 'All statuses', count: allCount }, { value: 'sent', label: 'Sent', count: sentCount }, { value: 'failed', label: 'Failed', count: failedCount }] as tab (tab.value)}
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
 			<a
 				href={filterUrl({ type: typeFilter, status: tab.value })}
 				class="rounded-full border px-2 py-0.5 text-xs transition-colors {statusFilter === tab.value
@@ -132,6 +134,7 @@
 					: 'border-[var(--dash-border)] text-[var(--dash-text-muted)] hover:border-[var(--dash-text-muted)]'}"
 				>{tab.label} <span class="opacity-70">{tab.count}</span></a
 			>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{/each}
 	</div>
 
@@ -251,21 +254,25 @@
 		{#if totalPages > 1}
 			<div class="flex items-center justify-center gap-2 pt-2">
 				{#if page > 1}
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={filterUrl({ type: typeFilter, status: statusFilter, page: String(page - 1) })}
 						class="rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-text-muted)]"
 						>Previous</a
 					>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				{/if}
 				<span class="text-sm text-[var(--dash-text-muted)]">
 					Page {page} of {totalPages}
 				</span>
 				{#if page < totalPages}
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={filterUrl({ type: typeFilter, status: statusFilter, page: String(page + 1) })}
 						class="rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-text-muted)]"
 						>Next</a
 					>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				{/if}
 			</div>
 		{/if}

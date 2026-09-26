@@ -2,9 +2,8 @@
 	/*
 	 * activityHref is a prop, resolved by the page that owns the application id.
 	 * This component only renders what it is handed, so the rule has nothing
-	 * to check, and the `<a>` spans several lines so there is no line to mark.
+	 * to check.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	/**
 	 * The standing summary of this application's activity entries.
 	 *
@@ -67,20 +66,25 @@
 					<FontAwesomeIcon icon={faWandMagicSparkles} class="h-3 w-3" />
 					<span>
 						Written from your
+						<!-- eslint-disable svelte/no-navigation-without-resolve -->
 						<a
 							href={activityHref}
 							class="underline transition-colors hover:text-[var(--dash-primary)]"
 							>{entryCount} activity {entryCount === 1 ? 'entry' : 'entries'}</a
 						>{#if updatedAt}<span>, {timeAgo(updatedAt)}</span>{/if}
+						<!-- eslint-enable svelte/no-navigation-without-resolve -->
 					</span>
 				</p>
 			{:else}
 				<p class="text-sm text-[var(--dash-text-muted)]">
 					Not written yet. It is rewritten whenever an
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={activityHref}
 						class="underline transition-colors hover:text-[var(--dash-primary)]">activity entry</a
-					> changes, so adding or editing one will produce it.
+					>
+					changes, so adding or editing one will produce it.
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				</p>
 			{/if}
 		</div>

@@ -3,7 +3,6 @@
 	 * Every href here comes from buildUrl(), which calls resolve('/admin/files')
 	 * itself and appends the query. The rule does not follow a function call.
 	 */
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import type { ResolvedPathname } from '$app/types';
@@ -156,6 +155,7 @@
 	<!-- Type filters -->
 	<div class="flex flex-wrap gap-2">
 		{#each typeFilters as f (f.value)}
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
 			<a
 				href={buildUrl({ type: f.value, page: '1' })}
 				class="rounded-lg border px-3 py-1.5 text-sm transition-colors {typeFilter === f.value
@@ -164,12 +164,14 @@
 			>
 				{f.label}
 			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{/each}
 	</div>
 
 	<!-- Usage filters -->
 	<div class="flex flex-wrap gap-1.5">
 		{#each usageFilters as f (f.value)}
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
 			<a
 				href={buildUrl({ usage: f.value, page: '1' })}
 				class="rounded-full border px-2 py-0.5 text-xs transition-colors {usageFilter === f.value
@@ -178,6 +180,7 @@
 			>
 				{f.label}
 			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 		{/each}
 	</div>
 
@@ -366,23 +369,27 @@
 	{#if totalPages > 1}
 		<div class="flex items-center justify-center gap-2">
 			{#if page > 1}
+				<!-- eslint-disable svelte/no-navigation-without-resolve -->
 				<a
 					href={buildUrl({ page: String(page - 1) })}
 					class="rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-text-muted)]"
 				>
 					Previous
 				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			{/if}
 			<span class="text-sm text-[var(--dash-text-muted)]">
 				Page {page} of {totalPages}
 			</span>
 			{#if page < totalPages}
+				<!-- eslint-disable svelte/no-navigation-without-resolve -->
 				<a
 					href={buildUrl({ page: String(page + 1) })}
 					class="rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-text-muted)]"
 				>
 					Next
 				</a>
+				<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			{/if}
 		</div>
 	{/if}
