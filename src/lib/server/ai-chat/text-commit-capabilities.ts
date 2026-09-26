@@ -42,7 +42,7 @@
  * documented on `CapabilityDef`.
  */
 
-import { buildConversation, readVersion } from './entity-versions';
+import { buildConversation, readVersion, scoreVersionUse } from './entity-versions';
 import {
 	TEXT_KINDS,
 	TEXT_KIND_NAMES,
@@ -332,7 +332,9 @@ function capabilityFor(kind: TextKind): CapabilityDef {
 				);
 			}
 
-			await def.setText(target.id, actor.profileId, normalizeForKind(kind, version.content ?? ''));
+			const text = normalizeForKind(kind, version.content ?? '');
+			await def.setText(target.id, actor.profileId, text);
+			scoreVersionUse(def.versions, target.id, text);
 		},
 
 		revert: async (target, previous, actor) => {

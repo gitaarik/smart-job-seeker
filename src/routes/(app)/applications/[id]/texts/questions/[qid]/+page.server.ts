@@ -12,6 +12,7 @@ import {
 	type DeleteScope,
 	QUESTION_VERSIONS,
 	recordVersionIfChanged,
+	scoreVersionUse,
 	trimVersionsAfter,
 	type VersionSource
 } from '$lib/server/ai-chat/entity-versions';
@@ -169,6 +170,7 @@ export const actions: Actions = {
 		// replaces, and the story's was the one worth not having twice: its
 		// markdown has to fan back out into five columns.
 		await TEXT_KINDS.question.setText(qid, profileId, content);
+		scoreVersionUse(TEXT_KINDS.question.versions, qid, content);
 
 		return { success: true };
 	},

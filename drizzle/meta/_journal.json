@@ -407,6 +407,13 @@
       "when": 1790428856516,
       "tag": "0057_ai_chat_trace_id",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1790437086981,
+      "tag": "0058_product_scores",
+      "breakpoints": true
     }
   ]
 }

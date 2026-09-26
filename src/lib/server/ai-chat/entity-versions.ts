@@ -28,6 +28,9 @@ import {
 	type RetrievalMention,
 	type RetrievalRecord
 } from '$lib/server/documents/retrieval-record';
+import { scoreGeneration } from '$lib/server/monitoring/product-scores';
+import { sendsToLangfuse } from '$lib/server/monitoring/telemetry';
+import { sameText } from '$lib/utils/same-text';
 
 /**
  * Provenance of a version. Plain varchar in the DB; enforced here in TS.
@@ -338,7 +341,10 @@ export async function countVersions(vt: VersionBinding, entityId: number): Promi
 	return Number(row?.n ?? 0);
 }
 
-/** Unconditional insert of a version row. */
+/**
+ * Unconditional insert of a version row. A version a model wrote starts scored
+ * unused in Langfuse (product-scores.ts), until the applicant makes it the text.
+ */
 export async function recordVersion(
 	vt: VersionBinding,
 	v: {
@@ -349,16 +355,51 @@ export async function recordVersion(
 		aiFeedback?: string | null;
 		userRequest?: string | null;
 	}
-): Promise<void> {
-	await db.insert(vt.table).values({
-		[vt.fkName]: v.entityId,
-		content: v.content,
-		source: v.source,
-		ai_chat: v.aiChatId ?? null,
-		ai_feedback: v.aiFeedback ?? null,
-		user_request: v.userRequest ?? null
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	} as any);
+): Promise<number> {
+	const [row] = await db
+		.insert(vt.table)
+		.values({
+			[vt.fkName]: v.entityId,
+			content: v.content,
+			source: v.source,
+			ai_chat: v.aiChatId ?? null,
+			ai_feedback: v.aiFeedback ?? null,
+			user_request: v.userRequest ?? null
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		} as any)
+		.returning({ id: vt.id });
+	if (v.aiChatId && v.content) {
+		scoreGeneration(v.aiChatId, 'version_used', versionScoreKey(vt, row.id), false);
+	}
+	return row.id;
+}
+
+/** What a version's `version_used` score is about: `letter_version:123`. */
+export const versionScoreKey = (vt: VersionBinding, versionId: number): string =>
+	`${vt.fkName}_version:${versionId}`;
+
+/**
+ * Score the version the applicant just made the text, found by its text: "Use
+ * as" hands the page the version's text rather than its id. The newest version
+ * a model wrote with that text is the one; a text no model wrote scores nothing.
+ */
+export function scoreVersionUse(vt: VersionBinding, entityId: number, content: string): void {
+	if (!sendsToLangfuse()) return;
+	(async () => {
+		const rows: Array<{ id: number; content: string | null; ai_chat: number | null }> = await db
+			.select({ id: vt.id, content: vt.table.content, ai_chat: vt.table.ai_chat })
+			.from(vt.table)
+			.where(and(eq(vt.fk, entityId), isNotNull(vt.table.ai_chat)))
+			.orderBy(desc(vt.id));
+		const used = rows.find((version) => version.content && sameText(version.content, content));
+		if (used) scoreGeneration(used.ai_chat, 'version_used', versionScoreKey(vt, used.id), true);
+	})().catch((error: unknown) =>
+		console.warn(
+			`[product scores] version_used on ${vt.fkName} ${entityId}: ${
+				error instanceof Error ? error.message : String(error)
+			}`
+		)
+	);
 }
 
 /**

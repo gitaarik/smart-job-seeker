@@ -77,6 +77,7 @@ import { dbDirect as db } from '$lib/server/db';
 import { and, desc, eq, gt, inArray, isNull } from 'drizzle-orm';
 import { capability_edits } from '$lib/server/db/schema';
 import { recordChange, type EditSource } from '$lib/server/profile/change-log';
+import { scoreProposalTurn } from '$lib/server/monitoring/product-scores';
 import { isUiAction, UI_ACTIONS, type UiAction } from '$lib/server/profile/ui-actions';
 import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
 import { translatableColumns } from '$lib/server/profile/section-translations';
@@ -463,6 +464,9 @@ export async function revertEdit(editId: number, actor: CapabilityActor): Promis
 	if (marked.length === 0) {
 		return { ok: false, reason: 'already_reverted', error: 'That change was already undone.' };
 	}
+
+	// An undone proposal counts against the answer that made it.
+	if (row.proposal_id) scoreProposalTurn(row.proposal_id, 'edit_undone', `edit:${editId}`, true);
 
 	return { ok: true };
 }

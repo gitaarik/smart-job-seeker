@@ -96,7 +96,10 @@ export async function traceAttempt(
 					...usageAndCost(attempt, result.usage),
 					...(await promptAttributes(attempt.prompt, link))
 				});
-				return result;
+				// Only a generation Langfuse will receive is worth pointing at.
+				return generation.otelSpan.isRecording()
+					? { ...result, observationId: generation.id }
+					: result;
 			} catch (error) {
 				generation.update({
 					level: 'ERROR',

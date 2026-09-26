@@ -769,7 +769,8 @@ async function generateAiChat(
 				cached_input_tokens: usage?.cachedInputTokens ?? null,
 				reasoning_tokens: usage?.reasoningTokens ?? null,
 				duration_ms: durationMs,
-				credits_charged: creditsCost || null
+				credits_charged: creditsCost || null,
+				observation_id: completionResult.observationId ?? null
 			})
 			.where(eq(ai_chats.id, aiChat.id));
 

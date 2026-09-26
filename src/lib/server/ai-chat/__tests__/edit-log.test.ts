@@ -82,6 +82,11 @@ vi.mock('../capabilities', () => ({
 	describeFieldChanges: () => []
 }));
 
+const mockScoreProposalTurn = vi.fn();
+vi.mock('$lib/server/monitoring/product-scores', () => ({
+	scoreProposalTurn: (...a: unknown[]) => mockScoreProposalTurn(...a)
+}));
+
 const { readEditLog, recordEdit, revertEdit, supersedingChange } = await import('../edit-log');
 
 const ACTOR = { profileId: 12, isStaff: false };
@@ -168,6 +173,22 @@ describe('readEditLog', () => {
 });
 
 describe('revertEdit', () => {
+	it('scores the answer an undone proposal came from', async () => {
+		state.rows = [logRow({ proposal_id: 31 })];
+
+		expect(await revertEdit(1, ACTOR)).toEqual({ ok: true });
+		expect(mockScoreProposalTurn).toHaveBeenCalledWith(31, 'edit_undone', 'edit:1', true);
+	});
+
+	it('scores nothing for a change no proposal made, or an undo that did not happen', async () => {
+		state.rows = [logRow()];
+		await revertEdit(1, ACTOR);
+		state.rows = [logRow({ proposal_id: 31 })];
+		state.marked = [];
+		await revertEdit(1, ACTOR);
+		expect(mockScoreProposalTurn).not.toHaveBeenCalled();
+	});
+
 	it('writes the before-image back through the capability', async () => {
 		state.rows = [logRow()];
 

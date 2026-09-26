@@ -12,6 +12,7 @@ import {
 	ensureBaselineVersion,
 	recordVersionIfChanged,
 	type DeleteScope,
+	scoreVersionUse,
 	STORY_VERSIONS,
 	trimVersionsAfter,
 	type VersionSource
@@ -205,6 +206,7 @@ export const actions: Actions = {
 		// replaces, and the story's was the one worth not having twice: its
 		// markdown has to fan back out into five columns.
 		await TEXT_KINDS.story.setText(storyId, profileId, content);
+		scoreVersionUse(TEXT_KINDS.story.versions, storyId, content);
 
 		return { success: true };
 	},

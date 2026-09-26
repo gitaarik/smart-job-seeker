@@ -13,6 +13,7 @@ import {
 	LETTER_VERSIONS,
 	recordVersion,
 	recordVersionIfChanged,
+	scoreVersionUse,
 	trimVersionsAfter,
 	type VersionSource
 } from '$lib/server/ai-chat/entity-versions';
@@ -281,6 +282,7 @@ export const actions: Actions = {
 		// replaces, and the story's was the one worth not having twice: its
 		// markdown has to fan back out into five columns.
 		await TEXT_KINDS.letter.setText(letterId, profileId, content);
+		scoreVersionUse(TEXT_KINDS.letter.versions, letterId, content);
 
 		return { success: true };
 	},

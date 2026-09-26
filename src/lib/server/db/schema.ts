@@ -3137,7 +3137,14 @@ export const ai_chats = pgTable(
 		 * find. Null with telemetry off, for a trace the sampler dropped, and on
 		 * rows from before 2026-09-26. /admin/ai-chats links to it.
 		 */
-		trace_id: varchar({ length: 32 })
+		trace_id: varchar({ length: 32 }),
+		/**
+		 * The Langfuse generation that wrote `response`, in that trace. What an
+		 * applicant does with the answer is scored on it (monitoring/
+		 * product-scores.ts), which is what lets Langfuse add those scores up by
+		 * the prompt version the generation ran. Null wherever `trace_id` is.
+		 */
+		observation_id: varchar({ length: 16 })
 	},
 	(table) => [
 		index('ai_chats_profile_id_idx').on(table.profile_id),
@@ -3421,6 +3428,11 @@ export const capability_edits = pgTable(
 		previous: jsonb().$type<Record<string, unknown>>().notNull(),
 		/** Set when the change was undone, so the feed can say so without deleting the record. */
 		reverted_at: timestamp({ withTimezone: true, mode: 'date' }),
+		/**
+		 * The assistant's proposal this change applied, when it applied one. So an
+		 * Undo knows which answer it took back, and is scored against it.
+		 */
+		proposal_id: integer(),
 		date_created: timestamp({ withTimezone: true, mode: 'date' })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull()
@@ -3428,11 +3440,17 @@ export const capability_edits = pgTable(
 	(table) => [
 		// The only read: this profile's changes, newest first.
 		index('capability_edits_profile_idx').on(table.profile_id, table.date_created),
+		index('capability_edits_proposal_idx').on(table.proposal_id),
 		foreignKey({
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
 			name: 'capability_edits_profile_foreign'
-		}).onDelete('cascade')
+		}).onDelete('cascade'),
+		foreignKey({
+			columns: [table.proposal_id],
+			foreignColumns: [agent_message_proposals.id],
+			name: 'capability_edits_proposal_foreign'
+		}).onDelete('set null')
 	]
 );
 

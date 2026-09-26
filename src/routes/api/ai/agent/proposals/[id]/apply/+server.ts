@@ -5,7 +5,8 @@ import { and, eq } from 'drizzle-orm';
 import {
 	agent_conversations,
 	agent_message_proposals,
-	agent_messages
+	agent_messages,
+	capability_edits
 } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/utils/api-helpers';
 import {
@@ -14,6 +15,7 @@ import {
 	type CapabilityRefusal,
 	executeCapability
 } from '$lib/server/ai-chat/capabilities';
+import { scoreGeneration } from '$lib/server/monitoring/product-scores';
 
 /**
  * POST /api/ai/agent/proposals/:id/apply — commit an edit the assistant
@@ -59,6 +61,7 @@ export const POST: RequestHandler = async ({ locals, params }) => {
 		.select({
 			id: agent_message_proposals.id,
 			profile_id: agent_messages.profile_id,
+			ai_chat_id: agent_messages.ai_chat_id,
 			capability: agent_message_proposals.capability,
 			fields: agent_message_proposals.fields,
 			target: agent_message_proposals.target,
@@ -151,6 +154,19 @@ export const POST: RequestHandler = async ({ locals, params }) => {
 			created_row: outcome.created
 		})
 		.where(eq(agent_message_proposals.id, proposalId));
+
+	// The change in the edit log, tied to the proposal it came from, so an Undo
+	// of it knows which answer it took back.
+	if (outcome.editId) {
+		await db
+			.update(capability_edits)
+			.set({ proposal_id: proposalId })
+			.where(eq(capability_edits.id, outcome.editId));
+	}
+	scoreGeneration(row.ai_chat_id, 'proposal_applied', `proposal:${proposalId}`, true);
+	if (outcome.editId) {
+		scoreGeneration(row.ai_chat_id, 'edit_undone', `edit:${outcome.editId}`, false);
+	}
 
 	return json({ success: true });
 };

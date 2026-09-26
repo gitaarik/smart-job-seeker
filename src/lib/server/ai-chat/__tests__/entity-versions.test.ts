@@ -5,7 +5,10 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockInsertValues = vi.fn().mockResolvedValue(undefined);
+// recordVersion reads the new row's id back, for its version_used score.
+const mockInsertValues = vi.fn().mockReturnValue({
+	returning: vi.fn().mockResolvedValue([{ id: 1 }])
+});
 const mockInsert = vi.fn().mockReturnValue({ values: mockInsertValues });
 const mockDeleteWhere = vi.fn().mockResolvedValue(undefined);
 const mockDelete = vi.fn().mockReturnValue({ where: mockDeleteWhere });
@@ -101,6 +104,13 @@ vi.mock('$lib/server/db/schema', () => ({
 	}
 }));
 
+const mockScoreGeneration = vi.fn();
+let sendsToLangfuse = true;
+vi.mock('$lib/server/monitoring/product-scores', () => ({
+	scoreGeneration: (...a: unknown[]) => mockScoreGeneration(...a)
+}));
+vi.mock('$lib/server/monitoring/telemetry', () => ({ sendsToLangfuse: () => sendsToLangfuse }));
+
 import {
 	buildConversation,
 	ensureBaselineVersion,
@@ -110,6 +120,7 @@ import {
 	recordVersion,
 	recordVersionIfChanged,
 	deleteVersionEntry,
+	scoreVersionUse,
 	trimVersionsAfter,
 	trimVersionsFrom
 } from '../entity-versions';
@@ -120,6 +131,32 @@ describe('entity-versions engine', () => {
 		mockOrderByRows.mockResolvedValue([]);
 		mockWhereRows.mockResolvedValue([]);
 		mockLimit.mockResolvedValue([]);
+	});
+
+	it('starts a version a model wrote scored unused, and leaves a hand-written one alone', async () => {
+		await recordVersion(LETTER_VERSIONS, {
+			entityId: 42,
+			content: 'Dear team',
+			source: 'ai_generation',
+			aiChatId: 9
+		});
+		await recordVersion(LETTER_VERSIONS, { entityId: 42, content: 'Mine', source: 'manual_edit' });
+		expect(mockScoreGeneration).toHaveBeenCalledTimes(1);
+		expect(mockScoreGeneration).toHaveBeenCalledWith(9, 'version_used', 'letter_version:1', false);
+	});
+
+	it('scores the newest version a model wrote with the text that was used', async () => {
+		sendsToLangfuse = true;
+		mockOrderByRows.mockResolvedValue([
+			{ id: 5, content: 'Dear team,\n\nI build things.', ai_chat: 9 },
+			{ id: 3, content: 'An older draft', ai_chat: 8 }
+		]);
+		scoreVersionUse(LETTER_VERSIONS, 42, 'Dear team,\n\nI build things.');
+		scoreVersionUse(LETTER_VERSIONS, 42, 'Typed by hand, never generated');
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(mockScoreGeneration).toHaveBeenCalledTimes(1);
+		expect(mockScoreGeneration).toHaveBeenCalledWith(9, 'version_used', 'letter_version:5', true);
 	});
 
 	it("keys the insert by the entity's FK column name", async () => {

@@ -45,8 +45,10 @@ vi.mock('$lib/server/db/schema', () => ({
 	agent_messages: {
 		id: 'am.id',
 		conversation_id: 'am.conversation_id',
-		profile_id: 'am.profile_id'
+		profile_id: 'am.profile_id',
+		ai_chat_id: 'am.ai_chat_id'
 	},
+	capability_edits: { id: 'ce.id', proposal_id: 'ce.proposal_id' },
 	agent_message_proposals: {
 		id: 'amp.id',
 		message_id: 'amp.message_id',
@@ -58,6 +60,11 @@ vi.mock('$lib/server/db/schema', () => ({
 }));
 
 const mockExecute = vi.fn();
+const mockScore = vi.fn();
+
+vi.mock('$lib/server/monitoring/product-scores', () => ({
+	scoreGeneration: (...a: unknown[]) => mockScore(...a)
+}));
 
 vi.mock('$lib/server/ai-chat/capabilities', () => ({
 	// Only what the route itself touches: the registry, to reject a stored
@@ -85,6 +92,7 @@ function proposalRow(overrides: Record<string, unknown> = {}) {
 	return {
 		id: 77,
 		profile_id: 12,
+		ai_chat_id: 4242,
 		applied_at: null,
 		capability: 'edit_job_details',
 		rationale: 'The posting says remote.',
@@ -232,5 +240,21 @@ describe('the row an add created', () => {
 	it('is null for an edit, which created nothing', async () => {
 		await POST(event());
 		expect(mockUpdateSet).toHaveBeenCalledWith(expect.objectContaining({ created_row: null }));
+	});
+
+	it('ties the change it logged to the proposal, and scores the turn that made it', async () => {
+		mockExecute.mockResolvedValue({ ok: true, previous: {}, created: null, editId: 555 });
+		await POST(event());
+
+		expect(mockUpdateSet).toHaveBeenCalledWith({ proposal_id: 77 });
+		expect(mockScore).toHaveBeenCalledWith(4242, 'proposal_applied', 'proposal:77', true);
+		// Applied and not yet undone: the 0 an Undo would turn into a 1.
+		expect(mockScore).toHaveBeenCalledWith(4242, 'edit_undone', 'edit:555', false);
+	});
+
+	it('scores nothing when the write was refused', async () => {
+		mockExecute.mockResolvedValue({ ok: false, reason: 'invalid', error: 'no' });
+		await POST(event());
+		expect(mockScore).not.toHaveBeenCalled();
 	});
 });

@@ -640,6 +640,12 @@ export interface CompletionResult {
 	 * gemini-2.5-pro charges unpriced.
 	 */
 	fallbackUsed?: { provider: string; model: string };
+	/**
+	 * The Langfuse generation this answer came from, when its trace is being
+	 * recorded (llm/trace.ts): the `ai_chats` row keeps it, so what the applicant
+	 * then does with the answer can be scored on it.
+	 */
+	observationId?: string;
 }
 
 /**

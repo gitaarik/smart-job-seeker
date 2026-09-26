@@ -37,6 +37,7 @@ import {
 } from '$lib/server/ai-chat/proposal-outcomes';
 import { ASSISTANT_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
 import { aiChatTraceSeed, startTrace, traceStep } from '$lib/server/monitoring/telemetry';
+import { scoreGeneration } from '$lib/server/monitoring/product-scores';
 
 // Recent turns sent to the model as context (~20 user/assistant exchanges).
 // Older turns are dropped; summarization can be layered on later if needed.
@@ -643,6 +644,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					)
 					.returning({ id: agent_message_proposals.id })
 			: [];
+
+	// Each starts unapplied, so the turn's apply rate counts the ones never taken.
+	for (const { id } of stored)
+		scoreGeneration(aiChat.id, 'proposal_applied', `proposal:${id}`, false);
 
 	return json({
 		success: true,
