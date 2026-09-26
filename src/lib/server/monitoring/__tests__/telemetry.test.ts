@@ -24,6 +24,7 @@ import {
 	maskTraceData,
 	recordedTraceId,
 	startTrace,
+	traceGeneration,
 	traceStep,
 	withTraceAttributes,
 	type Telemetry
@@ -173,6 +174,98 @@ describe('steps and what a row keeps', () => {
 
 		expect(find('step')!.attributes['langfuse.observation.level']).toBe('ERROR');
 		expect(find('step')!.attributes['langfuse.observation.status_message']).toBe('no vectors');
+	});
+
+	it('records a throw that is how the work stops as a stop, not an ERROR, and rethrows it', async () => {
+		const pause = new Error('GraphInterrupt');
+		const expected = (error: unknown) => (error === pause ? 'waiting for an answer' : undefined);
+		const run = startTrace({ name: 'session', input: { goal: 'most items' }, expected }, () =>
+			traceStep(
+				'ask',
+				'span',
+				async () => {
+					throw pause;
+				},
+				undefined,
+				{ input: 'the question', metadata: { langgraph_node: 'ask', langgraph_step: 4 }, expected }
+			)
+		);
+		expect(await run.catch((error: unknown) => error)).toBe(pause);
+		await telemetry.flush();
+
+		for (const name of ['session', 'ask']) {
+			expect(find(name)!.attributes['langfuse.observation.level'], name).toBeUndefined();
+			expect(find(name)!.attributes['langfuse.observation.status_message'], name).toBe(
+				'waiting for an answer'
+			);
+		}
+		// Recorded as each started, so a step that never returned still has them.
+		expect(find('session')!.attributes['langfuse.observation.input']).toBe('{"goal":"most items"}');
+		expect(find('ask')!.attributes['langfuse.observation.input']).toBe('the question');
+		expect(find('ask')!.attributes['langfuse.observation.metadata.langgraph_node']).toBe('ask');
+		expect(find('ask')!.attributes['langfuse.observation.metadata.langgraph_step']).toBe('4');
+	});
+
+	it('still records any other throw at ERROR when a step knows its stops', async () => {
+		const run = startTrace({ name: 'unit' }, () =>
+			traceStep(
+				'step',
+				'span',
+				async () => {
+					throw new Error('run 12 not found');
+				},
+				undefined,
+				{ expected: () => undefined }
+			)
+		);
+		await expect(run).rejects.toThrow('run 12 not found');
+		await telemetry.flush();
+
+		expect(find('step')!.attributes['langfuse.observation.level']).toBe('ERROR');
+		expect(find('step')!.attributes['langfuse.observation.status_message']).toBe(
+			'run 12 not found'
+		);
+	});
+
+	it('records a model call made outside the wrapper as a generation', async () => {
+		await traceGeneration(
+			'claude',
+			'fix the selector',
+			async () => 'done',
+			() => ({
+				output: 'done'
+			})
+		);
+		await startTrace({ name: 'unit' }, () =>
+			traceGeneration(
+				'claude',
+				'fix the selector',
+				async () => ({ text: 'Fixed.' }),
+				(reply) => ({
+					output: reply.text,
+					model: 'claude-sonnet-5',
+					usageDetails: { input: 12, input_cached_tokens: 3000, output: 40 },
+					costDetails: { total: 0.21 }
+				})
+			)
+		);
+		await telemetry.flush();
+
+		const generations = exporter.getFinishedSpans().filter((s) => s.name === 'claude');
+		expect(generations, 'only inside a trace').toHaveLength(1);
+		const attributes = generations[0].attributes;
+		expect(attributes['langfuse.observation.type']).toBe('generation');
+		expect(attributes['langfuse.observation.input']).toBe('fix the selector');
+		expect(attributes['langfuse.observation.output']).toBe('Fixed.');
+		expect(attributes['langfuse.observation.model.name']).toBe('claude-sonnet-5');
+		expect(JSON.parse(String(attributes['langfuse.observation.usage_details']))).toEqual({
+			input: 12,
+			input_cached_tokens: 3000,
+			output: 40
+		});
+		expect(JSON.parse(String(attributes['langfuse.observation.cost_details']))).toEqual({
+			total: 0.21
+		});
 	});
 
 	it("records what describe makes of a root's result on the root", async () => {

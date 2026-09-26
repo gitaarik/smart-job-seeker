@@ -45,6 +45,7 @@ import { propagateAttributes } from '@langfuse/core';
 import { getEnvironmentName, initSentry, type ProcessComponent } from './sentry';
 
 export type { ProcessComponent } from './sentry';
+export type { LangfuseObservationType } from '@langfuse/tracing';
 
 /** Which sampling rate a trace falls under. It rides in the context `startTrace` sets up. */
 export type SampleGroup = 'matcher' | 'default';
@@ -234,6 +235,10 @@ export interface TraceOptions {
 	metadata?: Record<string, string>;
 	/** Overrides the box's environment for this trace, as `smoke` does for llm:smoke. */
 	environment?: string;
+	/** Recorded on the root as the trace starts, so one that fails or stops still shows it. */
+	input?: unknown;
+	/** A throw that is how the work stops, not a failure: a pause, a cancel. */
+	expected?: ExpectedStop;
 }
 
 /**
@@ -280,14 +285,19 @@ export async function startTrace<T>(
 		},
 		() =>
 			context.with(context.active().setValue(SAMPLE_GROUP, group).setValue(SJS_ROOT, true), () =>
-				startActiveObservation(
-					options.name,
-					async (root) => {
-						const result = await work();
-						if (describe) root.update(describe(result));
-						return result;
-					},
-					{ asType: (options.kind ?? 'span') as 'span', parentSpanContext }
+				observe(
+					(body) =>
+						startActiveObservation(
+							options.name,
+							(root) => {
+								if (options.input !== undefined) root.update({ input: options.input });
+								return body(root);
+							},
+							{ asType: (options.kind ?? 'span') as 'span', parentSpanContext }
+						),
+					async () => await work(),
+					describe,
+					options.expected
 				)
 			)
 	);
@@ -341,35 +351,124 @@ export interface StepRecord {
 }
 
 /**
- * Run one step of a unit of work (the retrieval, an eligibility check, a blend)
- * as a child observation of the open trace, recording what `describe` makes of
- * its result. A step that throws is recorded at ERROR level and rethrown. With
- * no trace open, or telemetry off, it only runs `work`, so a step never opens a
+ * A throw that is how the work stops normally, not a failure: LangGraph's
+ * `interrupt()` asking a person, a pause, a cancel. Says what happened, or
+ * undefined for a real failure.
+ */
+export type ExpectedStop = (error: unknown) => string | undefined;
+
+export interface StepOptions {
+	/** Recorded when the step starts, so one that fails still shows it. */
+	input?: unknown;
+	metadata?: Record<string, unknown>;
+	expected?: ExpectedStop;
+}
+
+/**
+ * Run `work` in an observation and settle it: `describe`'s record on success,
+ * ERROR on a failure. The SDK marks a span failed whenever its function throws,
+ * so an expected stop is caught inside and rethrown outside.
+ */
+async function observe<T, O extends { update(attributes: never): unknown }>(
+	start: (
+		body: (observation: O) => Promise<{ value: T } | { stopped: unknown }>
+	) => Promise<{ value: T } | { stopped: unknown }>,
+	work: () => Promise<T>,
+	describe: ((result: T) => object) | undefined,
+	expected: ExpectedStop | undefined
+): Promise<T> {
+	const outcome = await start(async (observation) => {
+		const update = (attributes: object) => observation.update(attributes as never);
+		try {
+			const value = await work();
+			if (describe) update(describe(value));
+			return { value };
+		} catch (error) {
+			const stop = expected?.(error);
+			if (stop !== undefined) {
+				update({ statusMessage: stop });
+				return { stopped: error };
+			}
+			update({
+				level: 'ERROR',
+				statusMessage: error instanceof Error ? error.message : String(error)
+			});
+			throw error;
+		}
+	});
+	if ('stopped' in outcome) throw outcome.stopped;
+	return outcome.value;
+}
+
+/**
+ * Run one step of a unit of work (the retrieval, an eligibility check, a graph
+ * node) as a child observation of the open trace, recording what `describe`
+ * makes of its result. A step that throws is recorded at ERROR level and
+ * rethrown, unless `options.expected` says the throw is how it stops. With no
+ * trace open, or telemetry off, it only runs `work`, so a step never opens a
  * trace of its own.
  */
 export async function traceStep<T>(
 	name: string,
 	kind: LangfuseObservationType,
 	work: () => Promise<T>,
-	describe?: (result: T) => StepRecord
+	describe?: (result: T) => StepRecord,
+	options: StepOptions = {}
 ): Promise<T> {
 	if (!provider || !isInTrace()) return work();
 
-	return startActiveObservation(
-		name,
-		async (step) => {
-			try {
-				const result = await work();
-				if (describe) step.update(describe(result));
-				return result;
-			} catch (error) {
-				step.update({
-					level: 'ERROR',
-					statusMessage: error instanceof Error ? error.message : String(error)
-				});
-				throw error;
-			}
-		},
-		{ asType: kind as 'span' }
+	return observe(
+		(body) =>
+			startActiveObservation(
+				name,
+				(step) => {
+					if (options.input !== undefined || options.metadata) {
+						step.update({ input: options.input, metadata: options.metadata });
+					}
+					return body(step);
+				},
+				{ asType: kind as 'span' }
+			),
+		work,
+		describe,
+		options.expected
+	);
+}
+
+export interface GenerationRecord extends StepRecord {
+	model?: string;
+	/** Langfuse's usage buckets: `input`, `input_cached_tokens`, `output` and the like. */
+	usageDetails?: Record<string, number>;
+	costDetails?: Record<string, number>;
+}
+
+/**
+ * A model call made outside the LLM wrapper, such as the Claude Code CLI, as a
+ * generation of the open trace: `input` recorded as it starts, and what
+ * `describe` reads off the reply (model, usage, cost) when it ends. Only inside
+ * a trace, like traceStep.
+ */
+export async function traceGeneration<T>(
+	name: string,
+	input: unknown,
+	work: () => Promise<T>,
+	describe: (result: T) => GenerationRecord,
+	expected?: ExpectedStop
+): Promise<T> {
+	if (!provider || !isInTrace()) return work();
+
+	return observe(
+		(body) =>
+			startActiveObservation(
+				name,
+				(generation) => {
+					generation.update({ input });
+					return body(generation);
+				},
+				{ asType: 'generation' }
+			),
+		work,
+		describe,
+		expected
 	);
 }
