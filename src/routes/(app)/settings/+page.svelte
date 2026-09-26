@@ -464,10 +464,15 @@
 				</div>
 
 				<div>
-					<label class="mb-1.5 block text-sm font-medium text-[var(--dash-text)]">
+					<p
+						id="time-format-label"
+						class="mb-1.5 block text-sm font-medium text-[var(--dash-text)]"
+					>
 						Time format
-					</label>
+					</p>
 					<div
+						role="group"
+						aria-labelledby="time-format-label"
 						class="inline-flex overflow-hidden rounded-lg border border-[var(--dash-border-input)]"
 					>
 						<button

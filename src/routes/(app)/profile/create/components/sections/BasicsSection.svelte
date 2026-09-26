@@ -9,6 +9,8 @@
 	}
 
 	let { basics = $bindable() }: Props = $props();
+	// Links each label to its field; unique per mounted section.
+	const uid = $props.id();
 
 	let isExpanded = $state(true);
 </script>
@@ -37,10 +39,11 @@
 		<div class="space-y-4 border-t border-[var(--dash-border)] p-3 sm:p-4">
 			<div class="grid gap-4 md:grid-cols-2">
 				<div>
-					<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+					<label for="{uid}-name" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
 						Full Name <span class="text-[var(--dash-error)]">*</span>
 					</label>
 					<input
+						id="{uid}-name"
 						type="text"
 						bind:value={basics.name}
 						class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -48,10 +51,11 @@
 				</div>
 
 				<div>
-					<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+					<label for="{uid}-title" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
 						Professional Title
 					</label>
 					<input
+						id="{uid}-title"
 						type="text"
 						bind:value={basics.title}
 						class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -61,8 +65,11 @@
 
 			<div class="grid gap-4 md:grid-cols-3">
 				<div>
-					<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Email</label>
+					<label for="{uid}-email" class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+						>Email</label
+					>
 					<input
+						id="{uid}-email"
 						type="email"
 						bind:value={basics.email}
 						class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -70,8 +77,11 @@
 				</div>
 
 				<div>
-					<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Phone</label>
+					<label for="{uid}-phone" class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+						>Phone</label
+					>
 					<input
+						id="{uid}-phone"
 						type="tel"
 						bind:value={basics.phone}
 						class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -79,8 +89,11 @@
 				</div>
 
 				<div>
-					<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Location</label>
+					<label for="{uid}-location" class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+						>Location</label
+					>
 					<input
+						id="{uid}-location"
 						type="text"
 						bind:value={basics.location}
 						placeholder="City, Country"
@@ -90,8 +103,11 @@
 			</div>
 
 			<div>
-				<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Summary</label>
+				<label for="{uid}-summary" class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+					>Summary</label
+				>
 				<textarea
+					id="{uid}-summary"
 					bind:value={basics.summary}
 					rows="3"
 					class="w-full resize-none rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -100,8 +116,11 @@
 
 			<div class="grid gap-4 md:grid-cols-3">
 				<div>
-					<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Website</label>
+					<label for="{uid}-website" class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+						>Website</label
+					>
 					<input
+						id="{uid}-website"
 						type="url"
 						bind:value={basics.website}
 						class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -109,8 +128,11 @@
 				</div>
 
 				<div>
-					<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">LinkedIn</label>
+					<label for="{uid}-linkedin" class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+						>LinkedIn</label
+					>
 					<input
+						id="{uid}-linkedin"
 						type="text"
 						bind:value={basics.linkedin}
 						class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -118,8 +140,11 @@
 				</div>
 
 				<div>
-					<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">GitHub</label>
+					<label for="{uid}-github" class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+						>GitHub</label
+					>
 					<input
+						id="{uid}-github"
 						type="text"
 						bind:value={basics.github}
 						class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"

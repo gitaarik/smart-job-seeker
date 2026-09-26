@@ -133,10 +133,17 @@
 
 					<!-- Scope Selection -->
 					<div class="mb-4">
-						<label class="mb-2 block text-sm font-medium text-[var(--dash-text)]"
-							>What to export</label
+						<p
+							id="export-scope-label"
+							class="mb-2 block text-sm font-medium text-[var(--dash-text)]"
 						>
-						<div class="flex flex-col gap-3 sm:flex-row">
+							What to export
+						</p>
+						<div
+							role="group"
+							aria-labelledby="export-scope-label"
+							class="flex flex-col gap-3 sm:flex-row"
+						>
 							<button
 								type="button"
 								onclick={() => (scope = 'profile')}

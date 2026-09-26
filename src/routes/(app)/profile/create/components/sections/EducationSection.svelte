@@ -16,6 +16,8 @@
 	}
 
 	let { education = $bindable() }: Props = $props();
+	// Links each label to its field; unique per mounted section.
+	const uid = $props.id();
 
 	let isExpanded = $state(false);
 	const expandedItems = new OpenRows<Education>();
@@ -64,7 +66,7 @@
 
 	{#if isExpanded}
 		<div class="divide-y divide-[var(--dash-border)] border-t border-[var(--dash-border)]">
-			{#each education as edu (edu)}
+			{#each education as edu, i (edu)}
 				<div class={expandedItems.has(edu) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
 					<div
 						class="flex items-center justify-between transition-colors hover:bg-[var(--dash-bg)]"
@@ -115,10 +117,14 @@
 						<div class="space-y-4 px-3 py-4 sm:px-4">
 							<div class="grid gap-4 md:grid-cols-2">
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-institution"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Institution
 									</label>
 									<input
+										id="{uid}-{i}-institution"
 										type="text"
 										bind:value={edu.institution}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -126,10 +132,14 @@
 								</div>
 
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-studyType"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Degree Type
 									</label>
 									<input
+										id="{uid}-{i}-studyType"
 										type="text"
 										bind:value={edu.studyType}
 										placeholder="Bachelor's, Master's, etc."
@@ -140,10 +150,14 @@
 
 							<div class="grid gap-4 md:grid-cols-2">
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-area"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Field of Study
 									</label>
 									<input
+										id="{uid}-{i}-area"
 										type="text"
 										bind:value={edu.area}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -151,10 +165,14 @@
 								</div>
 
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-location"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Location
 									</label>
 									<input
+										id="{uid}-{i}-location"
 										type="text"
 										bind:value={edu.location}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -164,10 +182,14 @@
 
 							<div class="grid gap-4 md:grid-cols-3">
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-startDate"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Start Date
 									</label>
 									<input
+										id="{uid}-{i}-startDate"
 										type="date"
 										bind:value={edu.startDate}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -175,10 +197,14 @@
 								</div>
 
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-endDate"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										End Date
 									</label>
 									<input
+										id="{uid}-{i}-endDate"
 										type="date"
 										bind:value={edu.endDate}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -186,10 +212,14 @@
 								</div>
 
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-graduationYear"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Graduation Year
 									</label>
 									<input
+										id="{uid}-{i}-graduationYear"
 										type="number"
 										bind:value={edu.graduationYear}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"

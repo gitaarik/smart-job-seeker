@@ -16,6 +16,8 @@
 	}
 
 	let { references = $bindable() }: Props = $props();
+	// Links each label to its field; unique per mounted section.
+	const uid = $props.id();
 
 	let isExpanded = $state(false);
 	const expandedItems = new OpenRows<Reference>();
@@ -59,7 +61,7 @@
 
 	{#if isExpanded}
 		<div class="divide-y divide-[var(--dash-border)] border-t border-[var(--dash-border)]">
-			{#each references as ref (ref)}
+			{#each references as ref, i (ref)}
 				<div class={expandedItems.has(ref) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
 					<div
 						class="flex items-center justify-between transition-colors hover:bg-[var(--dash-bg)]"
@@ -106,10 +108,14 @@
 						<div class="space-y-4 px-3 py-4 sm:px-4">
 							<div class="grid gap-4 md:grid-cols-2">
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-author"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Author
 									</label>
 									<input
+										id="{uid}-{i}-author"
 										type="text"
 										bind:value={ref.author}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -117,10 +123,14 @@
 								</div>
 
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-authorPosition"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Position
 									</label>
 									<input
+										id="{uid}-{i}-authorPosition"
 										type="text"
 										bind:value={ref.authorPosition}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -129,10 +139,14 @@
 							</div>
 
 							<div>
-								<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+								<label
+									for="{uid}-{i}-text"
+									class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+								>
 									Reference Text
 								</label>
 								<textarea
+									id="{uid}-{i}-text"
 									bind:value={ref.text}
 									rows="3"
 									class="w-full resize-none rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"

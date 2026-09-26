@@ -90,13 +90,16 @@
 		value = $bindable(''),
 		placeholder = '',
 		fallback = '',
-		disabled = false
+		disabled = false,
+		id
 	}: {
 		value: string;
 		placeholder?: string;
 		/** Country code to display when value is empty (e.g., from profile location) */
 		fallback?: string;
 		disabled?: boolean;
+		/** On the text input, for a `<label for>` outside the component. */
+		id?: string;
 	} = $props();
 
 	let searchText = $state('');
@@ -194,6 +197,7 @@
 
 <div class="relative" bind:this={containerEl}>
 	<input
+		{id}
 		type="text"
 		value={displayText}
 		oninput={(e) => {

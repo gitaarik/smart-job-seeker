@@ -17,6 +17,8 @@
 	}
 
 	let { work = $bindable() }: Props = $props();
+	// Links each label to its field; unique per mounted section.
+	const uid = $props.id();
 
 	let isExpanded = $state(true);
 	const expandedItems = new OpenRows<WorkExperience>(work.slice(0, 1));
@@ -71,7 +73,7 @@
 
 	{#if isExpanded}
 		<div class="divide-y divide-[var(--dash-border)] border-t border-[var(--dash-border)]">
-			{#each work as job (job)}
+			{#each work as job, i (job)}
 				<div class={expandedItems.has(job) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
 					<div
 						class="flex items-center justify-between transition-colors hover:bg-[var(--dash-bg)]"
@@ -121,10 +123,14 @@
 						<div class="space-y-4 px-3 py-4 sm:px-4">
 							<div class="grid gap-4 md:grid-cols-2">
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-position"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Position
 									</label>
 									<input
+										id="{uid}-{i}-position"
 										type="text"
 										bind:value={job.position}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -132,10 +138,14 @@
 								</div>
 
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-name"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Company
 									</label>
 									<input
+										id="{uid}-{i}-name"
 										type="text"
 										bind:value={job.name}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -145,10 +155,14 @@
 
 							<div class="grid gap-4 md:grid-cols-3">
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-location"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Location
 									</label>
 									<input
+										id="{uid}-{i}-location"
 										type="text"
 										bind:value={job.location}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -156,10 +170,14 @@
 								</div>
 
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-startDate"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Start Date
 									</label>
 									<input
+										id="{uid}-{i}-startDate"
 										type="date"
 										bind:value={job.startDate}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -167,10 +185,14 @@
 								</div>
 
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-endDate"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										End Date
 									</label>
 									<input
+										id="{uid}-{i}-endDate"
 										type="date"
 										bind:value={job.endDate}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -179,10 +201,14 @@
 							</div>
 
 							<div>
-								<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+								<label
+									for="{uid}-{i}-summary"
+									class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+								>
 									Summary
 								</label>
 								<textarea
+									id="{uid}-{i}-summary"
 									bind:value={job.summary}
 									rows="3"
 									class="w-full resize-none rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -190,9 +216,7 @@
 							</div>
 
 							<div>
-								<label class="mb-2 block text-sm font-medium text-[var(--dash-text)]">
-									Achievements
-								</label>
+								<p class="mb-2 block text-sm font-medium text-[var(--dash-text)]">Achievements</p>
 								<AchievementsList bind:achievements={job.achievements} />
 							</div>
 						</div>

@@ -33,6 +33,8 @@
 		oncancel: () => void;
 		onsave: () => void;
 	} = $props();
+	// Links the labels to their controls; unique per open picker.
+	const uid = $props.id();
 
 	// State. The picker starts on the status it is shown and owns the selection
 	// from then on; the page mounts a fresh one whenever that status changes
@@ -140,11 +142,15 @@
 	<div class="space-y-4">
 		<!-- Phase: dropdown on mobile, segmented control on desktop -->
 		<div>
-			<label class="mb-1 block text-xs tracking-wide text-[var(--dash-text-secondary)] uppercase"
+			<label
+				id="{uid}-phase-label"
+				for="{uid}-phase"
+				class="mb-1 block text-xs tracking-wide text-[var(--dash-text-secondary)] uppercase"
 				>Phase</label
 			>
 			<!-- Mobile dropdown -->
 			<select
+				id="{uid}-phase"
 				value={selectedPhase}
 				onchange={(e) => selectPhase((e.currentTarget as HTMLSelectElement).value)}
 				class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)] focus:border-[var(--dash-primary)] focus:outline-none sm:hidden"
@@ -155,6 +161,8 @@
 			</select>
 			<!-- Desktop segmented control -->
 			<div
+				role="group"
+				aria-labelledby="{uid}-phase-label"
 				class="hidden overflow-hidden rounded-lg border border-[var(--dash-border)] sm:inline-flex"
 			>
 				{#each stepperPhases as phase, i (phase.value)}
@@ -176,10 +184,13 @@
 		{#if selectedPhase === 'result'}
 			<!-- Result selection -->
 			<div>
-				<label class="mb-1 block text-xs tracking-wide text-[var(--dash-text-secondary)] uppercase"
-					>Result</label
+				<p
+					id="{uid}-result"
+					class="mb-1 block text-xs tracking-wide text-[var(--dash-text-secondary)] uppercase"
 				>
-				<div class="grid grid-cols-3 gap-2">
+					Result
+				</p>
+				<div role="group" aria-labelledby="{uid}-result" class="grid grid-cols-3 gap-2">
 					{#each resultOptions as option (option.value)}
 						<button
 							type="button"

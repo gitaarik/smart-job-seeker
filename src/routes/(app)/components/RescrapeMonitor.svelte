@@ -70,6 +70,8 @@
 		onclose,
 		oncomplete
 	}: Props = $props();
+	// Links labels to their fields; unique per open monitor.
+	const uid = $props.id();
 
 	interface LogEntry {
 		id: number | string;
@@ -364,9 +366,9 @@
 					<!-- Source URL -->
 					{#if sourceUrl}
 						<div>
-							<label class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
-								>Source URL</label
-							>
+							<p class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]">
+								Source URL
+							</p>
 							<ExternalLink
 								href={sourceUrl}
 								target="_blank"
@@ -417,9 +419,9 @@
 
 					<!-- Browser Provider -->
 					<div>
-						<label class="mb-2 block text-xs font-medium text-[var(--dash-text-secondary)]"
-							>Browser Provider</label
-						>
+						<p class="mb-2 block text-xs font-medium text-[var(--dash-text-secondary)]">
+							Browser Provider
+						</p>
 						<BrowserProviderToggle bind:value={browserProvider} disabled={started} />
 					</div>
 
@@ -428,12 +430,15 @@
 						<div>
 							<div class="mb-1 flex items-center gap-1.5">
 								<FontAwesomeIcon icon={faGlobe} class="h-3 w-3 text-[var(--dash-text-secondary)]" />
-								<label class="text-xs font-medium text-[var(--dash-text-secondary)]"
+								<label
+									for="{uid}-browser-location"
+									class="text-xs font-medium text-[var(--dash-text-secondary)]"
 									>Browser Location</label
 								>
 							</div>
 							<div class="max-w-xs">
 								<CountrySelect
+									id="{uid}-browser-location"
 									bind:value={countryCode}
 									fallback={defaultCountryCode}
 									disabled={started}

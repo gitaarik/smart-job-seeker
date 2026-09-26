@@ -96,6 +96,8 @@
 		onreorder,
 		onshownon
 	}: Props = $props();
+	// Links the edit popover's labels to its fields.
+	const uid = $props.id();
 
 	let levelOptions = $derived(_levelOptions.length > 0 ? _levelOptions : defaultLevelOptions);
 
@@ -622,10 +624,12 @@
 					>
 						<div>
 							<label
+								for="{uid}-{index}-name"
 								class="mb-1 block text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase"
 								>Name</label
 							>
 							<input
+								id="{uid}-{index}-name"
 								type="text"
 								bind:value={skills[index].name}
 								placeholder="Skill name"
@@ -638,10 +642,12 @@
 						</div>
 						<div>
 							<label
+								for="{uid}-{index}-level"
 								class="mb-1 block text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase"
 								>Level</label
 							>
 							<select
+								id="{uid}-{index}-level"
 								bind:value={skills[index].level}
 								class="w-full cursor-pointer rounded border border-[var(--dash-border)] bg-transparent px-2 py-1.5 text-sm text-[var(--dash-text)] focus:ring-1 focus:ring-[var(--dash-primary)] focus:outline-none"
 							>
@@ -653,10 +659,12 @@
 						</div>
 						<div>
 							<label
+								for="{uid}-{index}-years"
 								class="mb-1 block text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase"
 								>Years of experience</label
 							>
 							<input
+								id="{uid}-{index}-years"
 								type="number"
 								bind:value={skills[index].yearsExperience}
 								placeholder="-"

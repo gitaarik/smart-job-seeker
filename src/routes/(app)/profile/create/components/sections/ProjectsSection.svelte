@@ -18,6 +18,8 @@
 	}
 
 	let { projects = $bindable() }: Props = $props();
+	// Links each label to its field; unique per mounted section.
+	const uid = $props.id();
 
 	let isExpanded = $state(false);
 	const expandedItems = new OpenRows<SideProject>();
@@ -72,7 +74,7 @@
 
 	{#if isExpanded}
 		<div class="divide-y divide-[var(--dash-border)] border-t border-[var(--dash-border)]">
-			{#each projects as project (project)}
+			{#each projects as project, i (project)}
 				<div class={expandedItems.has(project) ? 'border-l-2 border-l-[var(--dash-primary)]' : ''}>
 					<div
 						class="flex items-center justify-between transition-colors hover:bg-[var(--dash-bg)]"
@@ -119,10 +121,14 @@
 						<div class="space-y-4 px-3 py-4 sm:px-4">
 							<div class="grid gap-4 md:grid-cols-2">
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-name"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										Project Name
 									</label>
 									<input
+										id="{uid}-{i}-name"
 										type="text"
 										bind:value={project.name}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -130,10 +136,14 @@
 								</div>
 
 								<div>
-									<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+									<label
+										for="{uid}-{i}-url"
+										class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>
 										URL
 									</label>
 									<input
+										id="{uid}-{i}-url"
 										type="url"
 										bind:value={project.url}
 										class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -142,10 +152,14 @@
 							</div>
 
 							<div>
-								<label class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+								<label
+									for="{uid}-{i}-summary"
+									class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+								>
 									Summary
 								</label>
 								<textarea
+									id="{uid}-{i}-summary"
 									bind:value={project.summary}
 									rows="3"
 									class="w-full resize-none rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
@@ -153,9 +167,7 @@
 							</div>
 
 							<div>
-								<label class="mb-2 block text-sm font-medium text-[var(--dash-text)]">
-									Technologies
-								</label>
+								<p class="mb-2 block text-sm font-medium text-[var(--dash-text)]">Technologies</p>
 								<TechnologyTagsEditor
 									bind:technologies={
 										() => project.technologies ?? [], (v) => (project.technologies = v)
@@ -164,9 +176,7 @@
 							</div>
 
 							<div>
-								<label class="mb-2 block text-sm font-medium text-[var(--dash-text)]">
-									Achievements
-								</label>
+								<p class="mb-2 block text-sm font-medium text-[var(--dash-text)]">Achievements</p>
 								<AchievementsList bind:achievements={project.achievements} />
 							</div>
 						</div>

@@ -503,7 +503,11 @@
 					/>
 					Country
 				</label>
-				<CountrySelect bind:value={country_code} placeholder="Select country..." />
+				<CountrySelect
+					id="country_code"
+					bind:value={country_code}
+					placeholder="Select country..."
+				/>
 			</div>
 
 			<div>
