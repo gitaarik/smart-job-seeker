@@ -1,12 +1,16 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	interface Props {
 		label: string;
 		href?: string | null;
 		content?: string | null;
 		type?: 'link' | 'email' | 'phone';
+		/** Rendered after the value: the location's time zone, say. */
+		children?: Snippet;
 	}
 
-	let { label, href = null, content = null, type = 'link' }: Props = $props();
+	let { label, href = null, content = null, type = 'link', children }: Props = $props();
 </script>
 
 <span class="mr-[1px] inline-block font-bold whitespace-nowrap">
@@ -25,4 +29,4 @@
 	{/if}
 {/if}
 
-<slot />
+{@render children?.()}

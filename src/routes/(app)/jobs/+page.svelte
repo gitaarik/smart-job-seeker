@@ -43,7 +43,7 @@
 	let isClearingMatches = $state(false);
 	let clearMatchResult = $state<{ count: number } | null>(null);
 	let showClearMatchConfirm = $state(false);
-	let clearMatchFormEl: HTMLFormElement;
+	let clearMatchFormEl: HTMLFormElement | undefined = $state();
 	let showAdvancedMenu = $state(false);
 
 	let platforms = $derived(data.platforms);

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
-	import { asset } from '$app/paths';
+	import { asset, resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { getAllIcons } from '$lib/data/job-icons';
 	import CategoryPill from '$lib/components/CategoryPill.svelte';
@@ -1332,10 +1332,10 @@
 						> for prominent action links that open externally (previews, exports, documents).
 					</p>
 					<div class="flex flex-wrap gap-2">
-						<a href="#" class="dash-link-ext">Resume</a>
-						<a href="#" class="dash-link-ext">Resume PDF</a>
-						<a href="#" class="dash-link-ext">CV</a>
-						<a href="#" class="dash-link-ext">CV PDF</a>
+						<a href={resolve('/(app)/profile/resume')} class="dash-link-ext">Resume</a>
+						<a href={resolve('/(app)/profile/resume')} class="dash-link-ext">Resume PDF</a>
+						<a href={resolve('/(app)/profile/resume')} class="dash-link-ext">CV</a>
+						<a href={resolve('/(app)/profile/resume')} class="dash-link-ext">CV PDF</a>
 					</div>
 				</div>
 				<div>
@@ -1348,7 +1348,7 @@
 					</p>
 					<p class="text-sm text-[var(--dash-text)]">
 						For trackable links with view limits, use <a
-							href="#"
+							href={resolve('/(app)/profile/share')}
 							class="text-[var(--dash-primary)] hover:underline">Private Links</a
 						>.
 					</p>
