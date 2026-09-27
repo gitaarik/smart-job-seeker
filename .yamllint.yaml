@@ -12,6 +12,10 @@ rules:
   indentation:
     spaces: consistent
     indent-sequences: consistent
+  # prettier checks the workflows too and puts one space before an inline
+  # comment (`uses: x@<sha> # v1.2.3`), so one has to be enough here.
+  comments:
+    min-spaces-from-content: 1
 ignore: |
   node_modules/
   .svelte-kit/
