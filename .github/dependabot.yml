@@ -11,6 +11,15 @@ updates:
       prefix: build
       include: scope
     groups:
+      # vitest pins its plugins to its own exact version (@vitest/ui 5.0.1
+      # requires vitest 5.0.1), so a major that arrives as one PR per package
+      # fails npm ci in each of them. Grouped, it arrives as one PR.
+      vitest-major:
+        patterns:
+          - vitest
+          - "@vitest/*"
+        update-types:
+          - major
       npm-minor-patch:
         update-types:
           - minor
