@@ -143,6 +143,8 @@ export async function collectProfileFileRefs(profileId: number): Promise<FileRef
 		UNION ALL
 		SELECT file_id, NULL FROM profile_document_projects WHERE profile_id = ${profileId}
 		UNION ALL
+		SELECT file_id, NULL FROM certificates WHERE profile_id = ${profileId}
+		UNION ALL
 		SELECT source_cv, NULL FROM profiles WHERE id = ${profileId}
 		UNION ALL
 		-- Deliberately not filtered by template kind: a CV template's badge and

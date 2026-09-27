@@ -48,6 +48,10 @@ import {
 } from './import-translations';
 import { deleteProfilePresentationTemplates, importResumeTemplates } from './import-templates';
 import type { ExportData, ExportedProfileData, FullExportData } from './types';
+import {
+	certificateFilesByName,
+	restoreCertificateFiles
+} from '$lib/server/profile/certificate-file';
 
 // Helper to convert JSON value for database insert
 function toJsonValue(value: unknown): unknown | undefined {
@@ -114,6 +118,9 @@ export async function importExportData(
 
 	let profileId: number;
 	let finalName: string;
+	// Certificate files the overwrite would otherwise drop: the payload carries
+	// none. See `certificateFilesByName`.
+	let keptCertificateFiles: Map<string, string[]> | null = null;
 
 	// Track old path -> new path mapping for media files
 	const mediaPathMapping = new Map<string, string>();
@@ -129,6 +136,7 @@ export async function importExportData(
 		}
 
 		// Clear the child records this payload is able to replace
+		keptCertificateFiles = await certificateFilesByName(overwriteProfileId);
 		await deleteProfileChildren(overwriteProfileId, data.scope);
 
 		// Generate unique name (excluding self)
@@ -170,6 +178,7 @@ export async function importExportData(
 		p,
 		mediaPathMapping
 	);
+	if (keptCertificateFiles) await restoreCertificateFiles(profileId, keptCertificateFiles);
 
 	// Import full account data if scope is "full"
 	let applicationsImported = 0;

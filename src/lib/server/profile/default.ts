@@ -98,6 +98,10 @@ const PROFILE_INCLUDE = {
 	// reason a role's project technologies are: tailoring reads this tree as
 	// what the applicant holds (see heldTechnologies in tailor-version.ts).
 	certificates: {
+		// The uploaded certificate stays off every page this tree renders,
+		// public ones included. Its id opens nothing without the owner check
+		// at /api/certificates/[id]/file, but a public page has no use for it.
+		columns: { file_id: false },
 		with: { certificate_skills: { orderBy: asc(certificate_skills.sort) } },
 		orderBy: asc(certificates.sort)
 	},

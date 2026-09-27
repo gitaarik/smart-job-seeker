@@ -34,6 +34,7 @@ import type {
 	Certificate,
 	Reference
 } from './types';
+import { reapCertificateFiles } from '$lib/server/profile/certificate-file';
 
 export interface DiffApplyPayload {
 	/** Basic profile fields to update (only changed+enabled ones) */
@@ -745,11 +746,16 @@ export async function applyDiffToProfile(
 				}
 			}
 		}
+		const removedFiles: (string | null)[] = [];
 		for (const name of payload.certificates.removed ?? []) {
-			await dbDirect
+			const removed = await dbDirect
 				.delete(certificates)
-				.where(and(eq(certificates.profile_id, profileId), eq(certificates.name, name)));
+				.where(and(eq(certificates.profile_id, profileId), eq(certificates.name, name)))
+				.returning({ fileId: certificates.file_id });
+			removedFiles.push(...removed.map((r) => r.fileId));
 		}
+		// After the deletes: a file is only reaped once nothing references it.
+		await reapCertificateFiles(removedFiles);
 	}
 
 	// --- Apply reference changes ---

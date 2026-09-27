@@ -1,6 +1,13 @@
 <script lang="ts">
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import TechnologyTagsEditor from '$lib/components/TechnologyTagsEditor.svelte';
+	import { resolve } from '$app/paths';
+	import type { ResolvedPathname } from '$app/types';
+	import {
+		CERTIFICATE_FILE_ACCEPT,
+		MAX_CERTIFICATE_FILE_BYTES,
+		formatFileSize
+	} from '$lib/certificate-files';
 	import type { ActionData, PageData } from './$types';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import { enhance } from '$app/forms';
@@ -9,9 +16,12 @@
 		faArrowsUpDown,
 		faCertificate,
 		faCircleNotch,
+		faFileArrowUp,
 		faGripVertical,
+		faPaperclip,
 		faPencil,
-		faTrash
+		faTrash,
+		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
 	import { dragHandleZone, dragHandle } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
@@ -21,6 +31,7 @@
 	import ConfirmModal from '../../components/ConfirmModal.svelte';
 	import ItemCard from '../../components/ItemCard.svelte';
 	import CertificateSkills from '../../components/CertificateSkills.svelte';
+	import CertificateFile from '../../components/CertificateFile.svelte';
 	import Card from '../../../components/Card.svelte';
 	import { CERTIFICATES_DEP } from './certificates-dep';
 
@@ -39,7 +50,9 @@
 	let newCredentialId = $state('');
 	let newUrl = $state('');
 	let newSkills = $state<string[]>([]);
-	let skillsError = $state<string | null>(null);
+	let newFile = $state<File | null>(null);
+	let newFileError = $state<string | null>(null);
+	let followUpError = $state<string | null>(null);
 
 	let editName = $state('');
 	let editIssuer = $state('');
@@ -126,16 +139,35 @@
 		newCredentialId = '';
 		newUrl = '';
 		newSkills = [];
+		newFile = null;
+		newFileError = null;
+	}
+
+	/** The stored document, through the route that checks who is asking. */
+	function fileHref(certificateId: number, inline: boolean): ResolvedPathname {
+		const base = resolve('/api/certificates/[id]/file', { id: String(certificateId) });
+		return (inline ? `${base}?inline=1` : base) as ResolvedPathname;
+	}
+
+	function pickNewFile(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		const chosen = input.files?.[0] ?? null;
+		input.value = '';
+		newFileError =
+			chosen && chosen.size > MAX_CERTIFICATE_FILE_BYTES
+				? `The file is larger than ${MAX_CERTIFICATE_FILE_BYTES / (1024 * 1024)} MB.`
+				: null;
+		newFile = newFileError ? null : chosen;
 	}
 
 	/**
-	 * A new certificate's skills, posted once it exists.
+	 * A new certificate's skills and file, sent once it exists.
 	 *
-	 * They need its id, which is why the add form holds them as plain chips and
-	 * not as rows saving themselves. One at a time, so they keep the order they
-	 * were typed in: each is appended as it lands.
+	 * Both need its id, which is why the add form holds them locally rather than
+	 * saving them as it does in an open card. Skills go one at a time, so they
+	 * keep the order they were typed in: each is appended as it lands.
 	 */
-	async function addSkills(certificateId: number, names: string[]) {
+	async function addExtras(certificateId: number, names: string[], file: File | null) {
 		const failed: string[] = [];
 		for (const name of names.map((n) => n.trim()).filter(Boolean)) {
 			const response = await fetch('/api/profile-section/certificate_skill', {
@@ -145,8 +177,30 @@
 			}).catch(() => null);
 			if (!response?.ok) failed.push(name);
 		}
-		skillsError = failed.length
-			? `The certificate was added, but these skills were not: ${failed.join(', ')}. Open it to add them again.`
+
+		let fileFailed: string | null = null;
+		if (file) {
+			const body = new FormData();
+			body.set('file', file);
+			const response = await fetch(
+				resolve('/api/certificates/[id]/file', { id: String(certificateId) }),
+				{
+					method: 'POST',
+					body
+				}
+			).catch(() => null);
+			if (!response?.ok) {
+				const reason = (await response?.json().catch(() => null)) as { message?: string } | null;
+				fileFailed = reason?.message ?? 'the upload failed';
+			}
+		}
+
+		const problems = [
+			failed.length ? `these skills were not saved: ${failed.join(', ')}` : null,
+			fileFailed ? `the file was not saved (${fileFailed})` : null
+		].filter(Boolean);
+		followUpError = problems.length
+			? `The certificate was added, but ${problems.join(', and ')}. Open it to add them again.`
 			: null;
 	}
 
@@ -154,7 +208,7 @@
 		return async ({ result, update }) => {
 			if (result.type === 'success') {
 				const id = Number(result.data?.id);
-				if (Number.isInteger(id) && id > 0) await addSkills(id, newSkills);
+				if (Number.isInteger(id) && id > 0) await addExtras(id, newSkills, newFile);
 			}
 			await update();
 			if (result.type === 'success') {
@@ -242,9 +296,9 @@
 		</div>
 	{/if}
 
-	{#if skillsError}
+	{#if followUpError}
 		<div class="rounded-lg border border-[var(--dash-error)] bg-[var(--dash-error-light)] p-4">
-			<p class="text-sm text-[var(--dash-error)]">{skillsError}</p>
+			<p class="text-sm text-[var(--dash-error)]">{followUpError}</p>
 		</div>
 	{/if}
 
@@ -364,6 +418,51 @@
 			<div class="mt-4">
 				<h4 class="mb-2 text-sm font-medium text-[var(--dash-text)]">Skills</h4>
 				<TechnologyTagsEditor bind:technologies={newSkills} itemLabel="Skill" />
+			</div>
+
+			<!-- Sent after the certificate exists, like the skills: it needs the id. -->
+			<div class="mt-4">
+				<h4 class="mb-2 text-sm font-medium text-[var(--dash-text)]">Certificate File</h4>
+				<div class="flex flex-wrap items-center gap-2">
+					{#if newFile}
+						<span
+							class="inline-flex min-w-0 items-center gap-1.5 rounded-lg bg-[var(--dash-bg)] px-3 py-1.5 text-sm text-[var(--dash-text)]"
+						>
+							<FontAwesomeIcon icon={faPaperclip} class="h-3 w-3 flex-shrink-0" />
+							<span class="truncate">{newFile.name}</span>
+							<span class="flex-shrink-0 text-xs text-[var(--dash-text-muted)]"
+								>{formatFileSize(newFile.size)}</span
+							>
+						</span>
+						<button
+							type="button"
+							onclick={() => (newFile = null)}
+							class="p-1 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)]"
+							aria-label="Remove the chosen file"
+						>
+							<FontAwesomeIcon icon={faXmark} class="h-3 w-3" />
+						</button>
+					{/if}
+					<label
+						class="inline-flex cursor-pointer items-center gap-1.5 px-3 py-1 text-sm text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
+					>
+						<FontAwesomeIcon icon={faFileArrowUp} class="h-3 w-3" />
+						{newFile ? 'Choose another' : 'Choose PDF or image'}
+						<input
+							type="file"
+							accept={CERTIFICATE_FILE_ACCEPT}
+							onchange={pickNewFile}
+							class="sr-only"
+						/>
+					</label>
+				</div>
+				<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+					Optional. Up to {MAX_CERTIFICATE_FILE_BYTES / (1024 * 1024)} MB. Only you can open it; it is
+					not shown on your CV or public pages.
+				</p>
+				{#if newFileError}
+					<p class="mt-1 text-sm text-[var(--dash-error)]">{newFileError}</p>
+				{/if}
 			</div>
 
 			<div class="mt-4 flex justify-end gap-2">
@@ -524,6 +623,20 @@
 					{/snippet}
 
 					{#snippet headerActions()}
+						{#if cert.file}
+							{@const image = !!cert.file.type?.startsWith('image/')}
+							<a
+								href={fileHref(cert.id, image)}
+								target={image ? '_blank' : undefined}
+								rel={image ? 'noopener' : undefined}
+								onclick={(e) => e.stopPropagation()}
+								class="p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
+								aria-label="Open the certificate file"
+								title={cert.file.filename_download}
+							>
+								<FontAwesomeIcon icon={faPaperclip} class="h-4 w-4" />
+							</a>
+						{/if}
 						<button
 							type="button"
 							onclick={(e) => {
@@ -668,6 +781,18 @@
 							onChanged={() => invalidate(CERTIFICATES_DEP)}
 						/>
 
+						<CertificateFile
+							certificateId={cert.id}
+							file={cert.file
+								? {
+										name: cert.file.filename_download,
+										type: cert.file.type,
+										size: cert.file.filesize
+									}
+								: null}
+							onChanged={() => invalidate(CERTIFICATES_DEP)}
+						/>
+
 						<div class="flex items-center">
 							<button
 								type="button"
@@ -707,7 +832,7 @@
 <ConfirmModal
 	isOpen={deleteId !== null}
 	title="Delete Certificate"
-	message="Are you sure you want to delete this certificate and its skills? This action cannot be undone."
+	message="Are you sure you want to delete this certificate, its skills and its file? This action cannot be undone."
 	onCancel={() => (deleteId = null)}
 	onConfirm={() => {
 		if (deleteId !== null) {

@@ -48,6 +48,8 @@ const state = {
 	inserts: [] as RecordedWrite[],
 	updates: [] as RecordedWrite[],
 	deletes: [] as unknown[],
+	/** The file ids handed to the reaper after a delete. */
+	reaped: [] as string[][],
 	/** What was written to the change history — see the `change log` block. */
 	logged: [] as Array<{
 		profileId: number;
@@ -65,6 +67,15 @@ vi.mock('../change-log', () => ({
 	recordChangeQuietly: (change: (typeof state.logged)[number]) => {
 		state.logged.push(change);
 		return Promise.resolve();
+	}
+}));
+
+// The reaper's SQL is proven against Postgres by scripts/verify-orphan-reap.ts;
+// here it is a spy, so these assert which files the write layer hands it.
+vi.mock('$lib/server/uploads/reap', () => ({
+	reapFileRefs: (refs: { fileIds: string[] }) => {
+		state.reaped.push(refs.fileIds);
+		return Promise.resolve({ failures: [] });
 	}
 }));
 
@@ -201,6 +212,7 @@ beforeEach(() => {
 	state.inserts = [];
 	state.updates = [];
 	state.deletes = [];
+	state.reaped = [];
 });
 
 /** A profile with two skill groups and one skill filed under the first. */
@@ -226,6 +238,18 @@ describe('the declaration', () => {
 		(_name, resource) => {
 			for (const field of resource.required) {
 				expect(Object.keys(resource.fields)).toContain(field);
+			}
+		}
+	);
+
+	it.each(Object.entries(PROFILE_RESOURCES))(
+		'%s keeps the files it owns out of what a caller can write',
+		(_name, resource) => {
+			// A writable file id is a way to point your own row at somebody else's
+			// file and read it back through the row's download route.
+			for (const column of resource.ownedFiles ?? []) {
+				expect(Object.keys(resource.fields)).not.toContain(column);
+				expect(Object.keys(resource.schema.shape)).not.toContain(column);
 			}
 		}
 	);
@@ -648,6 +672,20 @@ describe('deleteRow', () => {
 		expect(result.ok).toBe(true);
 		expect(state.deletes).toHaveLength(1);
 		expect(touchedProfile()).toBe(true);
+		expect(state.reaped).toEqual([]);
+	});
+
+	it('reaps the file a deleted certificate owned', async () => {
+		state.rows = [row({ name: 'CKA', file_id: '0b8f2a3e-1111-4c9d-8e2f-000000000001' })];
+		const result = await deleteRow('certificate', ACTOR, 42);
+		expect(result.ok).toBe(true);
+		expect(state.reaped).toEqual([['0b8f2a3e-1111-4c9d-8e2f-000000000001']]);
+	});
+
+	it('reaps nothing for a certificate that has no file', async () => {
+		state.rows = [row({ name: 'CKA', file_id: null })];
+		await deleteRow('certificate', ACTOR, 42);
+		expect(state.reaped).toEqual([]);
 	});
 });
 

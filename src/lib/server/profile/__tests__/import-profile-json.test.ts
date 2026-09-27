@@ -29,6 +29,13 @@ vi.mock('$lib/server/db/schema', () => ({
 	}
 }));
 
+// Only the naming helper is under test here; the certificate files an overwrite
+// keeps have tests of their own, and their module reaches the file reaper.
+vi.mock('$lib/server/profile/certificate-file', () => ({
+	certificateFilesByName: () => Promise.resolve(new Map()),
+	restoreCertificateFiles: () => Promise.resolve()
+}));
+
 import { getUniqueProfileName } from '../import-profile-json';
 import { dbDirect } from '$lib/server/db';
 import { findMany } from '../../__tests__/db-mocks';

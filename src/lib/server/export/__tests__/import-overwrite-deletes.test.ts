@@ -18,6 +18,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 /** Tables named in a delete()/insert(), in call order. */
 const deleted: string[] = [];
 const inserted: { table: string; values: Record<string, unknown> }[] = [];
+/** What the certificate-file helpers were asked, and when, relative to the deletes. */
+const certificateFileCalls: string[] = [];
 
 const TABLES = [
 	'profiles',
@@ -83,6 +85,19 @@ vi.mock('../import-translations', () => ({
 	deleteProfileTranslations: () => Promise.resolve(),
 	emptyCreatedTranslationIds: () => ({}),
 	importTranslations: () => Promise.resolve(0)
+}));
+// The payload carries no certificate files, so an overwrite reads them off the
+// rows it is about to delete and hands them back once the payload's rows exist.
+vi.mock('$lib/server/profile/certificate-file', () => ({
+	certificateFilesByName: (profileId: number) => {
+		const when = deleted.includes('certificates') ? 'after' : 'before';
+		certificateFileCalls.push(`read ${profileId} ${when} the delete`);
+		return Promise.resolve(new Map([['cka', ['file-1']]]));
+	},
+	restoreCertificateFiles: (profileId: number, byName: Map<string, string[]>) => {
+		certificateFileCalls.push(`restore ${profileId} ${[...byName.keys()].join(',')}`);
+		return Promise.resolve();
+	}
 }));
 vi.mock('../import-templates', () => ({
 	deleteProfilePresentationTemplates: () => Promise.resolve(),
@@ -172,6 +187,14 @@ describe('overwrite import at profile scope', () => {
 	beforeEach(() => {
 		deleted.length = 0;
 		inserted.length = 0;
+		certificateFileCalls.length = 0;
+	});
+
+	it('keeps the certificate files its payload cannot carry', async () => {
+		await importExportData(profileExport(), 'u1', { overwriteProfileId: 1 });
+
+		// Read while the rows still hold them, handed back after the import.
+		expect(certificateFileCalls).toEqual(['read 1 before the delete', 'restore 1 cka']);
 	});
 
 	it('does not touch what only a full-account payload can restore', async () => {

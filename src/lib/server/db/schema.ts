@@ -4670,15 +4670,29 @@ export const certificates = pgTable(
 		/** What the issuer verifies it by (a PMP or Microsoft certification number). */
 		credential_id: varchar({ length: 255 }),
 		url: varchar({ length: 255 }),
-		profile_id: integer().notNull()
+		profile_id: integer().notNull(),
+		/**
+		 * The certificate itself, as the applicant uploaded it: a PDF, or an image
+		 * re-encoded to WebP. Private, like every `files` row but a template's
+		 * artwork, and served only through the certificate's own download route.
+		 * Set by that route's upload and nothing else: a writable file id is a
+		 * way to point your own row at somebody else's file.
+		 */
+		file_id: uuid()
 	},
 	(table) => [
 		index('idx_certificates_profile').using('btree', table.profile_id.asc().nullsLast()),
+		index('certificates_file_idx').on(table.file_id),
 		foreignKey({
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
 			name: 'certificates_profile_foreign'
-		}).onDelete('cascade')
+		}).onDelete('cascade'),
+		foreignKey({
+			columns: [table.file_id],
+			foreignColumns: [files.id],
+			name: 'certificates_file_foreign'
+		}).onDelete('set null')
 	]
 );
 

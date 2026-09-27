@@ -26,6 +26,10 @@ import {
 import type { ExportedProfile } from './export-profile-json';
 import { generateVersionPdfs } from './generate-version-pdfs';
 import { toDateString } from '$lib/tools/date-utils';
+import {
+	certificateFilesByName,
+	restoreCertificateFiles
+} from '$lib/server/profile/certificate-file';
 
 interface ImportOptions {
 	overwriteProfileId?: number;
@@ -69,6 +73,9 @@ export async function importProfileFromJson(
 
 	let profileId: number;
 	let finalName: string;
+	// Certificate files the overwrite would otherwise drop: the payload carries
+	// none. See `certificateFilesByName`.
+	let keptCertificateFiles: Map<string, string[]> | null = null;
 
 	if (overwriteProfileId) {
 		// Overwrite existing profile - delete all child records first
@@ -81,6 +88,7 @@ export async function importProfileFromJson(
 		}
 
 		// Delete all child records (cascade doesn't always work for all relations)
+		keptCertificateFiles = await certificateFilesByName(overwriteProfileId);
 		await dbDirect.delete(highlights).where(eq(highlights.profile_id, overwriteProfileId));
 		await dbDirect.delete(education).where(eq(education.profile_id, overwriteProfileId));
 		await dbDirect.delete(languages).where(eq(languages.profile_id, overwriteProfileId));
@@ -355,6 +363,8 @@ export async function importProfileFromJson(
 			});
 		}
 	}
+
+	if (keptCertificateFiles) await restoreCertificateFiles(profileId, keptCertificateFiles);
 
 	// Project stories
 	for (const ps of p.project_stories ?? []) {

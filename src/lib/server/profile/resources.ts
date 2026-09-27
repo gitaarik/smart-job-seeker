@@ -402,6 +402,16 @@ export interface ProfileResource {
 	 */
 	schema: z.ZodObject<z.ZodRawShape>;
 	/**
+	 * Columns holding the id of a `files` row this row owns, which goes when the
+	 * row does: `deleteRow` reaps them, keeping any file something else still
+	 * references.
+	 *
+	 * Never among `fields`, and a test holds that. A caller able to write a file
+	 * id could point their own row at anybody's file and read it back through the
+	 * row's download route, so only that route's upload ever sets one.
+	 */
+	ownedFiles?: string[];
+	/**
 	 * What else goes when this section's entry is hidden, where that is more than
 	 * the entry.
 	 *
@@ -1030,7 +1040,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		notNullColumns: ['name'],
 		newRowPlacement: 'append',
 		orderBy: [asc(certificates.sort)],
-		schema: certificateBasicSchema
+		schema: certificateBasicSchema,
+		ownedFiles: ['file_id']
 	},
 
 	/** What one certificate shows the applicant can do. The side-project technology shape. */

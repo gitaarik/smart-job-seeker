@@ -35,6 +35,7 @@ import { coerceFields } from '$lib/server/utils/field-kinds';
 import { formatZodError } from '$lib/server/validation/api-schemas';
 import { isHiddenFromDocuments, setProfileOnly } from '$lib/profile-visibility';
 import { touchProfile } from './touch-profile';
+import { reapFileRefs } from '$lib/server/uploads/reap';
 import { recordChangeQuietly, type EditSource } from './change-log';
 import {
 	fieldKinds,
@@ -1146,6 +1147,7 @@ export async function deleteRow(
 
 	await db.delete(resource.table).where(eq(resource.table.id, id));
 	await touchProfile(actor.profileId);
+	await reapOwnedFiles(resource, found.row);
 
 	// The whole row as the before-image, even though nothing here can put it
 	// back: what it buys is an answer to "where did that go", which is the
@@ -1160,6 +1162,31 @@ export async function deleteRow(
 	);
 
 	return { ok: true, row: found.row };
+}
+
+/**
+ * The files a deleted row owned (see `ownedFiles`), gone with it.
+ *
+ * After the delete and never before: `reapFileRefs` removes a file only once
+ * nothing references it, so reaping first would find the row still pointing
+ * at it and keep it forever. A failure here is logged, not thrown. The row is
+ * already gone, a caller told otherwise would try again against nothing, and
+ * the orphan sweep collects what is left.
+ */
+async function reapOwnedFiles(resource: ProfileResource, row: SectionRow): Promise<void> {
+	const fileIds = (resource.ownedFiles ?? [])
+		.map((column) => row[column])
+		.filter((value): value is string => typeof value === 'string' && value !== '');
+	if (fileIds.length === 0) return;
+
+	try {
+		const { failures } = await reapFileRefs({ fileIds, mediaPaths: [] });
+		for (const failure of failures) {
+			console.warn(`[write] could not unlink ${failure.path}: ${failure.error}`);
+		}
+	} catch (err) {
+		console.warn(`[write] could not reap the files of a deleted ${resource.label}:`, err);
+	}
 }
 
 /**

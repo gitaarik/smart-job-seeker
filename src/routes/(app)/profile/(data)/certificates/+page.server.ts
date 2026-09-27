@@ -26,7 +26,8 @@ export const load: PageServerLoad = async ({ parent, depends }) => {
 			certificate_skills: {
 				columns: { id: true, name: true },
 				orderBy: asc(certificate_skills.sort)
-			}
+			},
+			file: { columns: { filename_download: true, type: true, filesize: true } }
 		}
 	});
 

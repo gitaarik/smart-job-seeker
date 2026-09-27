@@ -112,7 +112,8 @@ export const filesRelations = relations(files, ({ many }) => ({
 	profiles: many(profiles),
 	user_feedback_files: many(user_feedback_files),
 	profile_document_projects: many(profile_document_projects),
-	presentation_template_assets: many(presentation_template_assets)
+	presentation_template_assets: many(presentation_template_assets),
+	certificates: many(certificates)
 }));
 
 export const presentation_template_assetsRelations = relations(
@@ -902,6 +903,10 @@ export const certificatesRelations = relations(certificates, ({ one, many }) => 
 	profile: one(profiles, {
 		fields: [certificates.profile_id],
 		references: [profiles.id]
+	}),
+	file: one(files, {
+		fields: [certificates.file_id],
+		references: [files.id]
 	}),
 	certificate_skills: many(certificate_skills)
 }));
