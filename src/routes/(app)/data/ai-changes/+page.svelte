@@ -243,7 +243,9 @@
 								{:else}
 									{entry.target.label}
 								{/if}
-								· {when(entry.createdAt)} · by {SOURCE_LABELS[entry.source] ?? entry.source}
+								· {when(entry.createdAt)} · by {entry.direct
+									? 'the assistant, without asking'
+									: (SOURCE_LABELS[entry.source] ?? entry.source)}
 							</p>
 						</div>
 

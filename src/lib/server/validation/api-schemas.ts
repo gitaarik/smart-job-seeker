@@ -604,7 +604,13 @@ export const agentChatSchema = z.object({
 	// Only the route id and its params — the page's *data* is resolved server-side
 	// from these, never taken from the client.
 	route: trimmedString(200).optional().nullable(),
-	routeParams: z.record(z.string(), z.string()).optional().nullable()
+	routeParams: z.record(z.string(), z.string()).optional().nullable(),
+	// What the client saw pasted or dropped into the message, so the gate that
+	// may log an entry without a click can tell the applicant's own words from a
+	// pasted document's (ai-chat/direct-writes.ts). Absent from a client that does
+	// not send it, and a turn without it is never written directly. Bounded like
+	// the message, and the client caps it the same way.
+	pasted: z.array(z.string().max(8000)).max(50).optional()
 });
 
 /**

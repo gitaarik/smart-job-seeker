@@ -1,12 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm';
 import {
 	agent_conversations,
 	agent_message_proposals,
 	agent_messages,
-	ai_chats
+	ai_chats,
+	capability_edits
 } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/utils/api-helpers';
 import {
@@ -96,6 +97,26 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 		byMessage.set(p.message_id, list);
 	}
 
+	// Which applied ones were taken back since, from a receipt's Undo or the
+	// changes feed, so a resumed thread shows "Undone" rather than a receipt
+	// offering to undo something that is already gone.
+	const appliedIds = proposalRows.filter((p) => p.applied_at).map((p) => p.id);
+	const undone = new Map<number, Date>(
+		appliedIds.length > 0
+			? (
+					await db
+						.select({ proposal: capability_edits.proposal_id, at: capability_edits.reverted_at })
+						.from(capability_edits)
+						.where(
+							and(
+								inArray(capability_edits.proposal_id, appliedIds),
+								isNotNull(capability_edits.reverted_at)
+							)
+						)
+				).map((row) => [row.proposal as number, row.at as Date])
+			: []
+	);
+
 	// A PENDING proposal is rebuilt against the row's *current* values, not the
 	// ones captured when it was proposed: a thread resumes up to 12h later, by
 	// which time the user may well have made the change by hand, and showing the
@@ -147,7 +168,11 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 									applied: !!p.applied_at
 								})
 							: '',
-						applied_at: p.applied_at?.toISOString() ?? null
+						applied_at: p.applied_at?.toISOString() ?? null,
+						// `direct` when the gate wrote it without a click (a receipt, not
+						// a card), else the reason it stayed a card, or null.
+						disposition: p.disposition,
+						undone_at: undone.get(p.id)?.toISOString() ?? null
 					};
 				})
 			);

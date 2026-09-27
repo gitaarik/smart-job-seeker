@@ -8,6 +8,14 @@
 		target: { label: string };
 		changes: { field: string; label: string; from: string; to: string }[];
 		applied_at: string | null;
+		/**
+		 * `direct` when the assistant logged it without a click, because the
+		 * applicant said it had happened: the card is then a receipt with an Undo.
+		 * Otherwise why it stayed a card, or null.
+		 */
+		disposition?: string | null;
+		/** When it was taken back, from here or from the changes feed. */
+		undone_at?: string | null;
 	};
 </script>
 
@@ -20,6 +28,7 @@
 		faArrowRight,
 		faCheck,
 		faPenToSquare,
+		faRotateLeft,
 		faTriangleExclamation
 	} from '@fortawesome/free-solid-svg-icons';
 	import Spinner from '$lib/components/Spinner.svelte';
@@ -39,9 +48,15 @@
 	let { proposal }: { proposal: Proposal } = $props();
 
 	let applying = $state(false);
+	let undoing = $state(false);
 	let error = $state('');
 	// The server's word, overridden the moment this card applies the change.
 	let appliedAt = $derived<string | null>(proposal.applied_at);
+	// The same for an undo, from here or from the changes feed.
+	let undoneAt = $derived<string | null>(proposal.undone_at ?? null);
+	// Logged without a click because they said it happened: a receipt, not a
+	// question, and what it offers is the way back.
+	let direct = $derived(proposal.disposition === 'direct');
 
 	/**
 	 * The one-line summary above is honest but not reviewable: "107 characters →
@@ -76,6 +91,32 @@
 			applying = false;
 		}
 	}
+
+	async function undo() {
+		if (undoing || undoneAt) return;
+		undoing = true;
+		error = '';
+		try {
+			const res = await fetch(`/api/ai/agent/proposals/${proposal.id}/undo`, { method: 'POST' });
+			const data = await res.json().catch(() => null);
+			if (!res.ok || !data?.success) {
+				// Undone from the changes feed while this was on screen: the same end.
+				if (data?.reason === 'already_reverted') {
+					undoneAt = new Date().toISOString();
+					return;
+				}
+				error = data?.message || 'Could not undo that.';
+				return;
+			}
+			undoneAt = data.undone_at ?? new Date().toISOString();
+			await invalidateAll();
+			afterAppliedChange();
+		} catch {
+			error = 'Could not reach the server. Please try again.';
+		} finally {
+			undoing = false;
+		}
+	}
 </script>
 
 <div
@@ -83,13 +124,15 @@
 >
 	<div class="flex items-center gap-2 border-b border-[var(--dash-border)] px-3 py-2">
 		<FontAwesomeIcon
-			icon={appliedAt ? faCheck : faPenToSquare}
-			class="h-3 w-3 shrink-0 {appliedAt
-				? 'text-[var(--dash-success)]'
-				: 'text-[var(--dash-primary)]'}"
+			icon={undoneAt ? faRotateLeft : appliedAt ? faCheck : faPenToSquare}
+			class="h-3 w-3 shrink-0 {undoneAt
+				? 'text-[var(--dash-text-muted)]'
+				: appliedAt
+					? 'text-[var(--dash-success)]'
+					: 'text-[var(--dash-primary)]'}"
 		/>
 		<span class="truncate text-xs font-medium text-[var(--dash-text)]">
-			{proposal.title}
+			{direct ? 'Logged on the timeline' : proposal.title}
 		</span>
 		<span
 			class="ml-auto max-w-[45%] shrink-0 truncate text-[11px] text-[var(--dash-text-muted)]"
@@ -188,7 +231,36 @@
 
 	{#if proposal.changes.length > 0}
 		<div class="border-t border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2">
-			{#if appliedAt}
+			{#if undoneAt}
+				<p class="flex items-center gap-1.5 text-[11px] text-[var(--dash-text-muted)]">
+					<FontAwesomeIcon icon={faRotateLeft} class="h-3 w-3" />
+					Undone
+				</p>
+			{:else if direct}
+				<!--
+          Nobody clicked for this one: the assistant logged it because they
+          said it had happened. So the receipt says why, and the one control
+          it offers is the way back.
+        -->
+				<div class="flex items-center gap-2">
+					<p class="flex-1 text-[11px] text-[var(--dash-text-muted)]">
+						Logged because you said it happened.
+					</p>
+					<button
+						type="button"
+						onclick={undo}
+						disabled={undoing}
+						class="flex shrink-0 items-center gap-1.5 rounded-md border border-[var(--dash-border)] px-2.5 py-1 text-xs text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-card)] disabled:opacity-60"
+					>
+						{#if undoing}
+							<Spinner size="w-3 h-3" />
+						{:else}
+							<FontAwesomeIcon icon={faRotateLeft} class="h-3 w-3" />
+						{/if}
+						{undoing ? 'Undoing…' : 'Undo'}
+					</button>
+				</div>
+			{:else if appliedAt}
 				<p class="flex items-center gap-1.5 text-[11px] text-[var(--dash-success)]">
 					<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
 					Applied

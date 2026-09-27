@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { invalidateAll } from '$app/navigation';
+	import { afterAppliedChange } from '$lib/components/applied-change.svelte';
 	import { resolve } from '$app/paths';
 	import { tick } from 'svelte';
 	import { browser } from '$app/environment';
@@ -60,6 +62,22 @@
 	let messages = $state<ChatMessage[]>([]);
 	let conversationId = $state<number | null>(null);
 	let input = $state('');
+	/**
+	 * What was pasted or dropped into the message being written, sent with it.
+	 *
+	 * The server may log a timeline entry without a click when the applicant says
+	 * something happened, and it has to know which words are theirs: a pasted
+	 * recruiter mail saying "I sent you the offer" is not the applicant saying
+	 * so. The browser is the one place that knows what was pasted. Bounded the
+	 * way the server bounds it.
+	 */
+	let pasted = $state<string[]>([]);
+	const MAX_PASTE_MARKS = 50;
+	const MAX_PASTE_CHARS = 8000;
+	function markPasted(text: string | undefined) {
+		if (!text?.trim()) return;
+		pasted = [...pasted, text.slice(0, MAX_PASTE_CHARS)].slice(-MAX_PASTE_MARKS);
+	}
 	let sending = $state(false);
 	let errorMsg = $state('');
 	let scrollEl = $state<HTMLDivElement>();
@@ -250,6 +268,7 @@
 		conversationId = null;
 		messages = [];
 		input = '';
+		pasted = [];
 		errorMsg = '';
 		view = 'chat';
 		if (browser) localStorage.removeItem(POINTER_KEY);
@@ -292,6 +311,8 @@
 		}
 		errorMsg = '';
 		input = '';
+		const marks = pasted;
+		pasted = [];
 		messages = [...messages, { role: 'user', content: text }];
 		sending = true;
 		scrollToBottom();
@@ -307,7 +328,8 @@
 					// Where the user is as they send this — the server resolves what
 					// that means (and what they're allowed to see) from the route.
 					route: $page.route.id,
-					routeParams: $page.params
+					routeParams: $page.params,
+					pasted: marks
 				})
 			});
 			const data = await res.json().catch(() => null);
@@ -328,6 +350,12 @@
 			];
 			writePointer();
 			scrollToBottom();
+			// An entry logged without a click is already on the timeline, and the
+			// page behind the panel is very often that timeline.
+			if ((data.proposals ?? []).some((p: Proposal) => p.disposition === 'direct')) {
+				await invalidateAll();
+				afterAppliedChange();
+			}
 		} catch {
 			errorMsg = 'Failed to reach the assistant. Please try again.';
 		} finally {
@@ -602,6 +630,8 @@
 					bind:value={input}
 					onkeydown={onKeydown}
 					oninput={expandOnType}
+					onpaste={(e: ClipboardEvent) => markPasted(e.clipboardData?.getData('text/plain'))}
+					ondrop={(e: DragEvent) => markPasted(e.dataTransfer?.getData('text/plain'))}
 					onblur={() => (suppressExpand = false)}
 					placeholder="Ask your assistant…"
 					maxRows={5}

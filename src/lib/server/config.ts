@@ -118,6 +118,10 @@ export interface AppConfig {
 	// (the keyword ranker gets the last of the K slots, withGraphPick). See
 	// planning/PROJECT-RETRIEVAL-FUSION.md.
 	projectRetrievalMerge: 'fused' | 'graph_slot';
+	// Whether the assistant may write a timeline entry the applicant has just
+	// reported, without the card's Apply click. Off unless set: it is on trial on
+	// dev. See ai-chat/direct-log.ts and planning/LOG-AS-YOU-GO.md.
+	assistantDirectLogs: boolean;
 
 	// LLM Configuration
 	llmCacheTTL: number; // milliseconds
@@ -439,6 +443,7 @@ function loadConfig(): AppConfig {
 		projectRetrievalMerge: (getEnv('SJS_PROJECT_RETRIEVAL_MERGE', 'fused') === 'graph_slot'
 			? 'graph_slot'
 			: 'fused') as 'fused' | 'graph_slot',
+		assistantDirectLogs: getEnv('SJS_ASSISTANT_DIRECT_LOGS', 'false') === 'true',
 
 		// Caching (1 hour default)
 		llmCacheTTL: parseInt(getEnv('SJS_LLM_CACHE_TTL', String(1000 * 60 * 60)), 10),

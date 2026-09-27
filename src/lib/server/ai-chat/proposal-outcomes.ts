@@ -51,6 +51,8 @@ export interface ProposalOutcome {
 	/** The row an accepted add created, where one did. */
 	createdRow?: { id: number; label: string } | null;
 	applied: boolean;
+	/** Applied, then taken back from the receipt or the changes feed. */
+	undone?: boolean;
 }
 
 /**
@@ -85,6 +87,15 @@ function isAdd(capability: string): boolean {
 }
 
 function describe(proposal: ProposalOutcome): string {
+	// Said before the applied cases, because it overrides them: the change
+	// happened and was then removed, so nothing of it is in the record now. It is
+	// the applicant's call, and proposing it again unasked argues with it.
+	if (proposal.applied && proposal.undone) {
+		return (
+			`${proposal.capability} (${proposal.target.label}): APPLIED, THEN UNDONE by them. ` +
+			`Nothing of it is in the record now; do not propose it again unless they ask.`
+		);
+	}
 	if (!proposal.applied) {
 		return (
 			`${proposal.capability} (${proposal.target.label}): NOT APPLIED. The card is still ` +

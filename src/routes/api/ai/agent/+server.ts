@@ -5,7 +5,8 @@ import { and, asc, desc, eq, inArray } from 'drizzle-orm';
 import {
 	agent_conversations,
 	agent_message_proposals,
-	agent_messages
+	agent_messages,
+	capability_edits
 } from '$lib/server/db/schema';
 import { requireAuth, requireProfileAccess } from '$lib/server/utils/api-helpers';
 import { agentChatSchema, parseBody } from '$lib/server/validation/api-schemas';
@@ -36,6 +37,7 @@ import {
 	renderProposalOutcomes
 } from '$lib/server/ai-chat/proposal-outcomes';
 import { ASSISTANT_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
+import { type DirectLogOutcome, logReportedEvents } from '$lib/server/ai-chat/direct-log';
 import { aiChatTraceSeed, startTrace, traceStep } from '$lib/server/monitoring/telemetry';
 import { scoreGeneration } from '$lib/server/monitoring/product-scores';
 
@@ -59,9 +61,14 @@ async function readProposalOutcomes(messageIds: number[]): Promise<Map<number, P
 			capability: agent_message_proposals.capability,
 			target: agent_message_proposals.target,
 			created_row: agent_message_proposals.created_row,
-			applied_at: agent_message_proposals.applied_at
+			applied_at: agent_message_proposals.applied_at,
+			// Taken back since, from the card's receipt or the changes feed. An
+			// entry the gate logged is undone far more often than a clicked one,
+			// and a model told it is still there goes on citing it.
+			undone_at: capability_edits.reverted_at
 		})
 		.from(agent_message_proposals)
+		.leftJoin(capability_edits, eq(capability_edits.proposal_id, agent_message_proposals.id))
 		.where(inArray(agent_message_proposals.message_id, messageIds))
 		.orderBy(asc(agent_message_proposals.id));
 
@@ -72,7 +79,8 @@ async function readProposalOutcomes(messageIds: number[]): Promise<Map<number, P
 			capability: row.capability,
 			target: row.target,
 			createdRow: row.created_row,
-			applied: !!row.applied_at
+			applied: !!row.applied_at,
+			undone: !!row.undone_at
 		});
 		byMessage.set(row.message_id, list);
 	}
@@ -397,7 +405,7 @@ async function readCapableReply(
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = requireAuth(locals);
 
-	const { profile_id, conversation_id, message, route, routeParams } = parseBody(
+	const { profile_id, conversation_id, message, route, routeParams, pasted } = parseBody(
 		agentChatSchema,
 		await request.json()
 	);
@@ -645,9 +653,40 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					.returning({ id: agent_message_proposals.id })
 			: [];
 
+	// The gate that may write an entry for something the applicant just reported
+	// without the card's click (ai-chat/direct-log.ts). Off unless the flag is
+	// set, and asked only about timeline entries; everything else is a card as
+	// before. A failure here leaves every proposal a card rather than failing a
+	// turn whose reply is already stored.
+	let direct = new Map<number, DirectLogOutcome>();
+	try {
+		direct = await logReportedEvents({
+			actor: { profileId: profile_id, isStaff },
+			conversationId: conversation.id,
+			message,
+			pasted,
+			reply,
+			proposals: proposals.map((p, i) => ({
+				id: stored[i].id,
+				capability: p.capability,
+				fields: p.fields,
+				target: p.target
+			}))
+		});
+	} catch (e) {
+		console.error('[agent] direct logging failed, every proposal stays a card', e);
+	}
+
 	// Each starts unapplied, so the turn's apply rate counts the ones never taken.
-	for (const { id } of stored)
-		scoreGeneration(aiChat.id, 'proposal_applied', `proposal:${id}`, false);
+	// A direct write is scored applied here, once: sending "unapplied" first and
+	// "applied" after would be two writes of one score racing each other.
+	for (const { id } of stored) {
+		const written = direct.get(id)?.written;
+		scoreGeneration(aiChat.id, 'proposal_applied', `proposal:${id}`, !!written);
+		if (written?.editId) {
+			scoreGeneration(aiChat.id, 'edit_undone', `edit:${written.editId}`, false);
+		}
+	}
 
 	return json({
 		success: true,
@@ -665,6 +704,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				// Paired with the current value so the card renders a diff, not a
 				// list of new values with no idea what they replace.
 				const changes = describeChanges(proposal);
+				const outcome = direct.get(stored[i].id);
+				const appliedAt = outcome?.written?.appliedAt ?? null;
 				return {
 					id: stored[i].id,
 					capability: proposal.capability,
@@ -678,9 +719,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 						title,
 						target: proposal.target,
 						changes,
-						rationale: proposal.rationale
+						rationale: proposal.rationale,
+						applied: !!appliedAt
 					}),
-					applied_at: null
+					applied_at: appliedAt?.toISOString() ?? null,
+					// `direct` when the gate wrote it: the card is a receipt with an Undo.
+					disposition: outcome?.disposition ?? null,
+					undone_at: null
 				};
 			})
 		)

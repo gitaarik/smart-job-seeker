@@ -17,7 +17,10 @@
  *
  *  1. **Nothing is ever applied automatically.** A capability produces a
  *     proposal; the user applies it. The registry has no path that writes as a
- *     side effect of a chat turn.
+ *     side effect of a chat turn. The one exception sits outside it, behind a
+ *     flag that is off unless set: `direct-log.ts` writes a timeline entry
+ *     the applicant's own words say happened, and the card becomes a receipt
+ *     with an Undo (planning/LOG-AS-YOU-GO.md, PROMPT-INJECTION.md §11).
  *  2. **`authorize` is never implied.** `resolveEntity` in chat-context.ts
  *     resolves any job to any signed-in user, because /jobs/[id] renders any job
  *     to any signed-in user. Edit rights are a separate question, asked here,
@@ -1547,7 +1550,11 @@ const addActivityRecord: CapabilityDef = {
 	contract: `The user sometimes tells you things about an application that are
 nowhere in it yet — what a recruiter said on the phone, a number that came up, a
 condition mentioned in passing. You may propose writing that down as an entry on
-the activity log, which they review and apply.
+the activity log.
+
+Whether an entry is logged at once or waits for their click is decided after you
+answer, and the card under your reply says which. So never say you have logged
+it and never ask them to apply it: call it the entry below.
 
 This is how a fact reaches the rest of the application. An applied entry is
 re-read by the summariser, so it updates "Where this stands", the details on the
@@ -1562,12 +1569,9 @@ Fields:
   user is relaying something themselves, "message" or "feedback" when they are
   quoting the employer, "offer" only for actual offered terms.
 - "entry_title" is a short scannable line naming what happened, well under 120
-  characters ("Recruiter call — team and on-call"). Always give one. Omitting it
-  is allowed but rarely right here: the fallback takes the content's first line,
-  and an entry logged from a conversation is usually one short paragraph, so
-  the fallback title comes out as the entry repeated back with an ellipsis. The
-  derivation pass would rewrite it, except that it skips anything under 200
-  characters — which is most of what this capability writes.
+  characters ("Recruiter call — team and on-call"). Always give one: without it
+  the title falls back to the content's first line, which for a one-paragraph
+  entry is the entry repeated back with an ellipsis.
 - "entry_date" is YYYY-MM-DD and means WHEN IT HAPPENED, not today. If they say
   "they called on Tuesday", resolve it and say in your reply which date you
   used, so a wrong guess is visible and correctable. Omit it for today.

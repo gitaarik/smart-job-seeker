@@ -163,15 +163,35 @@ export function framing(turn: string): string {
 }
 
 /**
- * What the applicant typed: the turn with the client's paste marks taken out
- * exactly, then `framing()` over what is left. A block they edited after
- * pasting no longer matches its mark, which is what the second pass is for.
+ * Lines shorter than this are not matched against the paste marks on their own:
+ * "Thanks," or "Hi Sam" occurs in half of everything pasted, and taking the
+ * applicant's own short line out because a mail also had one would only ever
+ * turn a direct write into a card for no reason.
+ */
+const MARKED_LINE_MIN = 12;
+
+/**
+ * What the applicant typed: the turn with the client's paste marks taken out,
+ * then `framing()` over what is left.
+ *
+ * Taken out twice over. Each marked block whole, which handles a paste inside a
+ * typed line ("he replied: <paste>"); then any remaining line found inside a
+ * marked block, which handles a block the applicant edited after pasting: the
+ * block no longer matches, but the lines they did not touch still do, and the
+ * report in a pasted mail is on one of those far more often than not.
  */
 export function ownWords(turn: string, pasted?: readonly string[]): string {
+	const blocks = (pasted ?? []).map((block) => block.trim()).filter(Boolean);
 	let typed = turn;
-	for (const block of pasted ?? []) {
-		const trimmed = block.trim();
-		if (trimmed) typed = typed.split(trimmed).join('\n');
+	for (const block of blocks) typed = typed.split(block).join('\n');
+	if (blocks.length > 0) {
+		typed = typed
+			.split(/\r?\n/)
+			.filter((line) => {
+				const text = line.trim();
+				return text.length < MARKED_LINE_MIN || !blocks.some((block) => block.includes(text));
+			})
+			.join('\n');
 	}
 	return framing(typed);
 }

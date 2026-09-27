@@ -3338,6 +3338,20 @@ export const agent_message_proposals = pgTable(
 		 */
 		created_row: jsonb().$type<{ id: number; label: string }>(),
 		applied_at: timestamp({ withTimezone: true, mode: 'date' }),
+		/**
+		 * What the direct-write gate made of this proposal, when it was asked
+		 * (`ai-chat/direct-log.ts`): `direct` when it was written without a click,
+		 * otherwise why it stayed a card — the rule that said so, `unmarked` for a
+		 * turn that came without the client's paste marks, `refused` for one the
+		 * gate passed and the write then turned down.
+		 *
+		 * One column rather than a boolean, because the trial this exists for is
+		 * measured by which rule cost which click, and a card that says only
+		 * "not direct" cannot be told apart from a card for any other reason.
+		 * Null when the gate never ran: the flag was off, or the capability is not
+		 * one it can wave through.
+		 */
+		disposition: varchar({ length: 32 }),
 		date_created: timestamp({ withTimezone: true, mode: 'date' })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull()

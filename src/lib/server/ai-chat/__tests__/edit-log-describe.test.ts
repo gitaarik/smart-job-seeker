@@ -26,7 +26,8 @@ function entry(fields: Record<string, unknown>, previous: Record<string, unknown
 		createdAt: new Date('2026-09-23T12:00:00Z'),
 		title: 'Correct this reference',
 		revertible: true,
-		supersededBy: null
+		supersededBy: null,
+		direct: false
 	};
 }
 

@@ -421,6 +421,13 @@
       "when": 1790443614585,
       "tag": "0059_certificate_expiry_and_skills",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1790488885517,
+      "tag": "0060_proposal_disposition",
+      "breakpoints": true
     }
   ]
 }

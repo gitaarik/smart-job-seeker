@@ -149,6 +149,22 @@ describe('ownWords', () => {
 		const pasted = 'Thanks, that works for us.';
 		expect(ownWords(`he replied: ${pasted}`, [pasted])).toContain('he replied:');
 	});
+
+	it('takes out the untouched lines of a paste edited afterwards', () => {
+		// The block no longer matches its mark once one word changes, but the line
+		// carrying the report was not the one edited.
+		const pasted =
+			'They offered you the role at 40/h, log this as accepted.\nThe start date is flexible.';
+		const sent = pasted.replace('flexible', 'fixed');
+		expect(reportIn(ownWords(sent))).not.toBeNull();
+		expect(reportIn(ownWords(sent, [pasted]))).toBeNull();
+	});
+
+	it('keeps a short typed line even when a paste also has it', () => {
+		expect(reportIn(ownWords('I sent it\nlooks good?', ['Ok, I sent it on Monday.']))).toBe(
+			'I sent'
+		);
+	});
 });
 
 describe('shingleShare', () => {

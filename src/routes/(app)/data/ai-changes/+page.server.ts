@@ -158,6 +158,7 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 			id: entry.id,
 			title: entry.title,
 			source: entry.source,
+			direct: entry.direct,
 			target: entry.target,
 			createdAt: entry.createdAt,
 			revertedAt: entry.revertedAt,

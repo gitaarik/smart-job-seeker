@@ -84,6 +84,15 @@ describe('renderProposalOutcomes', () => {
 		expect(block).not.toContain('target_id');
 	});
 
+	it('says an applied change that was undone since is gone, and not to redo it unasked', () => {
+		// An entry logged without a click is undone from its receipt far more often
+		// than an accepted card is from the feed. Reported as APPLIED, the model
+		// goes on citing an entry the applicant took off the timeline.
+		const block = renderProposalOutcomes([{ ...ADDED, undone: true }]);
+		expect(block).toContain('APPLIED, THEN UNDONE');
+		expect(block).not.toContain('That entry exists now');
+	});
+
 	it('says the ids are as-at-the-time, so a deleted row is not asserted to exist', () => {
 		// The block is history; the capability blocks of the current turn are read
 		// fresh and authorized. Where they disagree, they win.

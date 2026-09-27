@@ -128,6 +128,18 @@ vi.mock('$lib/server/ai-chat/capabilities', () => ({
 	renderCapabilityPrompt: () => 'CAPABILITY BLOCK'
 }));
 
+// The direct-write gate and the product scores, mocked so the route's wiring
+// can be read: what it hands the gate, and what it answers and scores with.
+// The gate's own behaviour is ai-chat/__tests__/direct-log.test.ts.
+const mockLogReported = vi.fn();
+vi.mock('$lib/server/ai-chat/direct-log', () => ({
+	logReportedEvents: (...a: unknown[]) => mockLogReported(...a)
+}));
+const mockScore = vi.fn();
+vi.mock('$lib/server/monitoring/product-scores', () => ({
+	scoreGeneration: (...a: unknown[]) => mockScore(...a)
+}));
+
 import { POST } from '../+server';
 import { CHAT_CONTEXT_PLACEHOLDERS } from '../placeholders';
 import { promptTemplates } from '$lib/server/ai-chat/prompt-templates';
@@ -167,6 +179,7 @@ function callArgs() {
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	mockLogReported.mockResolvedValue(new Map());
 	mockRequireCredits.mockResolvedValue(undefined);
 	mockResolveChatContext.mockResolvedValue({
 		context: { sources: ['profile', 'job'] },
@@ -647,5 +660,93 @@ describe('naming a row on a list page', () => {
 
 		const body = await (await POST(event())).json();
 		expect(body.proposals).toHaveLength(1);
+	});
+});
+
+describe('logging a reported event without a click', () => {
+	const JOB = { id: 3818, label: 'Data Engineer at Acme' };
+
+	beforeEach(() => {
+		mockResolveChatContext.mockResolvedValue({
+			context: { sources: ['profile'] },
+			capabilities: [{ capability: 'edit_job_details', targets: [JOB], current: { title: 'x' } }]
+		});
+		mockCreateAndGenerate.mockResolvedValue({
+			success: true,
+			aiChat: {
+				id: 7,
+				response: JSON.stringify({
+					reply: 'Noted.',
+					proposals: [
+						{
+							capability: 'edit_job_details',
+							rationale: 'x',
+							changes: [{ field: 'salary_min', value: 6 }]
+						}
+					]
+				})
+			}
+		});
+	});
+
+	function appliedScores() {
+		return mockScore.mock.calls.filter(([, name]) => name === 'proposal_applied');
+	}
+
+	it('hands the gate the stored proposals, the message and the paste marks', async () => {
+		await POST(event('he replied: fine by us', { pasted: ['fine by us'] }));
+
+		expect(mockLogReported).toHaveBeenCalledWith(
+			expect.objectContaining({
+				actor: { profileId: 12, isStaff: false },
+				message: 'he replied: fine by us',
+				pasted: ['fine by us'],
+				reply: 'Noted.',
+				proposals: [
+					{ id: 900, capability: 'edit_job_details', fields: { salary_min: 6 }, target: JOB }
+				]
+			})
+		);
+	});
+
+	it('answers with a direct write as applied, and scores it applied once', async () => {
+		mockLogReported.mockResolvedValue(
+			new Map([
+				[
+					900,
+					{
+						disposition: 'direct',
+						written: {
+							appliedAt: new Date('2026-09-27T10:00:00Z'),
+							createdRow: { id: 5, label: 'Salary noted' },
+							editId: 77
+						}
+					}
+				]
+			])
+		);
+
+		const body = await (await POST(event())).json();
+
+		expect(body.proposals[0]).toMatchObject({
+			id: 900,
+			applied_at: '2026-09-27T10:00:00.000Z',
+			disposition: 'direct',
+			undone_at: null
+		});
+		// Once, with its final value: an "unapplied" score sent first would race it.
+		expect(appliedScores()).toEqual([[7, 'proposal_applied', 'proposal:900', true]]);
+		expect(mockScore).toHaveBeenCalledWith(7, 'edit_undone', 'edit:77', false);
+	});
+
+	it('keeps every proposal a card when the gate fails, and still answers', async () => {
+		mockLogReported.mockRejectedValue(new Error('database went away'));
+
+		const res = await POST(event());
+		const body = await res.json();
+
+		expect(res.status).toBe(200);
+		expect(body.proposals[0]).toMatchObject({ applied_at: null, disposition: null });
+		expect(appliedScores()).toEqual([[7, 'proposal_applied', 'proposal:900', false]]);
 	});
 });

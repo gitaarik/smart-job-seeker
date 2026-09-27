@@ -75,7 +75,7 @@
 
 import { dbDirect as db } from '$lib/server/db';
 import { and, desc, eq, gt, inArray, isNull } from 'drizzle-orm';
-import { capability_edits } from '$lib/server/db/schema';
+import { agent_message_proposals, capability_edits } from '$lib/server/db/schema';
 import { recordChange, type EditSource } from '$lib/server/profile/change-log';
 import { scoreProposalTurn } from '$lib/server/monitoring/product-scores';
 import { isUiAction, UI_ACTIONS, type UiAction } from '$lib/server/profile/ui-actions';
@@ -118,6 +118,12 @@ export interface EditLogEntry {
 	 * see the ordering note above.
 	 */
 	supersededBy: number | null;
+	/**
+	 * Written by the assistant without anyone clicking Apply, because the
+	 * applicant said it had happened (ai-chat/direct-log.ts). The feed says so:
+	 * "by the assistant" alone would read as a card they accepted.
+	 */
+	direct: boolean;
 }
 
 /** What the ordering rule needs of a change. Both a log row and an entry fit. */
@@ -242,7 +248,9 @@ function toEntry(row: typeof capability_edits.$inferSelect): EditLogEntry {
 		revertible: !!def?.revert && !row.reverted_at,
 		// Filled by readEditLog, which is the caller that has the newer entries to
 		// compare against. A row on its own cannot answer this.
-		supersededBy: null
+		supersededBy: null,
+		// Filled by readEditLog too: it is the proposal's to say, not the log row's.
+		direct: false
 	};
 }
 
@@ -330,7 +338,31 @@ export async function readEditLog(
 		.orderBy(desc(capability_edits.date_created), desc(capability_edits.id))
 		.limit(limit);
 
-	const entries = rows.map(toEntry);
+	// Which of them the assistant wrote without a click. A second, small query
+	// rather than a join, so the rows keep the one shape `toEntry` reads.
+	const proposalIds = rows
+		.map((row) => row.proposal_id)
+		.filter((id): id is number => typeof id === 'number');
+	const direct = new Set(
+		proposalIds.length > 0
+			? (
+					await db
+						.select({ id: agent_message_proposals.id })
+						.from(agent_message_proposals)
+						.where(
+							and(
+								inArray(agent_message_proposals.id, proposalIds),
+								eq(agent_message_proposals.disposition, 'direct')
+							)
+						)
+				).map((row) => row.id)
+			: []
+	);
+
+	const entries = rows.map((row) => ({
+		...toEntry(row),
+		direct: typeof row.proposal_id === 'number' && direct.has(row.proposal_id)
+	}));
 
 	// Newest first, so everything that could block entry `i` is already in
 	// `entries[0..i-1]` — whatever the window's size. Computed here rather than
