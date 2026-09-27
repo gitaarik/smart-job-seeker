@@ -1,6 +1,7 @@
 /**
  * One telemetry entry point for every process that makes model calls: the app,
- * the worker, the scraper agent and scripts. It starts Sentry, makes sure a
+ * the worker and the child processes it runs scrapes in, the scraper agent and
+ * scripts. It starts Sentry, makes sure a
  * context manager exists, and, when the Langfuse keys are set, gives Langfuse a
  * tracer provider of its own. See planning/LANGFUSE.md § Telemetry module.
  *
@@ -148,16 +149,17 @@ export function sendsToLangfuse(): boolean {
 /**
  * Start Sentry, a context manager when none is registered, and Langfuse when its
  * keys are set. Idempotent. `spanProcessors` replaces Langfuse's processor, for
- * tests that export to memory.
+ * tests that export to memory. `sentry: false` traces without starting Sentry,
+ * for a process that has never reported to it.
  */
 export function initTelemetry(
 	component: ProcessComponent,
-	options: { spanProcessors?: SpanProcessor[] } = {}
+	options: { spanProcessors?: SpanProcessor[]; sentry?: boolean } = {}
 ): Telemetry {
 	if (!initialised) {
 		initialised = true;
 		processName = component;
-		initSentry(component);
+		if (options.sentry !== false) initSentry(component);
 
 		// Sentry registers one when it has a DSN. Without one (a script, the scraper
 		// agent, a box with no DSN) spans would not nest, so this one takes over.

@@ -17,8 +17,12 @@ export function getEnvironmentName(): string {
 	return 'development';
 }
 
-/** The processes that report, named as Sentry's `serverName`. */
-export type ProcessComponent = 'sveltekit' | 'worker' | 'scraper-agent' | 'script';
+/**
+ * The processes that report, named as Sentry's `serverName` and in each trace's
+ * metadata. `scraper` is a child process the worker runs a scrape in, which
+ * traces but has never reported to Sentry.
+ */
+export type ProcessComponent = 'sveltekit' | 'worker' | 'scraper' | 'scraper-agent' | 'script';
 
 let initialized = false;
 
