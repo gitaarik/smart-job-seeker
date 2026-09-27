@@ -64,8 +64,10 @@ export const GET: RequestHandler = async ({ params, url, locals }) => {
 			'Content-Disposition': contentDisposition(certificate.file.filename_download, inline),
 			// Served as what it claims to be, so the list above is the decision.
 			'X-Content-Type-Options': 'nosniff',
-			// Private to this profile: a shared cache would hand it to the next caller.
-			'Cache-Control': 'private, max-age=3600'
+			// Never kept. This URL names the certificate, not the file, so a cached
+			// copy would answer for a file that has since been replaced or removed,
+			// and a private document would stay on a shared computer's disk.
+			'Cache-Control': 'private, no-store'
 		}
 	});
 };
