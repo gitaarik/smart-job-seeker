@@ -17,7 +17,7 @@ updates:
       vitest-major:
         patterns:
           - vitest
-          - "@vitest/*"
+          - '@vitest/*'
         update-types:
           - major
       npm-minor-patch:
