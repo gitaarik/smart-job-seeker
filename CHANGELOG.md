@@ -5,6 +5,24 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.37.0] - 2026-09-28
+
+10 commits since v0.36.1.
+
+### Added
+
+- Application notes now appear on the timeline; the notes list has been removed
+- Long application entries are digested with key facts kept current
+- Write a new text version directly from advice in one click
+- Telemetry now displays trace input and output, shows matched jobs and scores, and names all steps by their function
+- Langfuse integration uses a dedicated Groq API key
+
+### Fixed
+
+- LLM regenerations now receive fresh answers and properly retry responses that fail schema validation
+- Prompt variables now register under names that Langfuse can fill
+- Initial text versions are now labeled as drafts, whether from a connected app or from advice
+
 ## [0.36.1] - 2026-09-28
 
 2 commits since v0.36.0.
