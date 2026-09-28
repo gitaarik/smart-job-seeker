@@ -443,8 +443,14 @@
 		return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 	}
 
-	function entryLabel(entry: ConversationEntry): string {
-		return labels[entry.type] ?? 'Version';
+	/**
+	 * A message sent after advice goes down the revision path, so the first
+	 * version it writes is stored as `ai_revision`. There was nothing to revise,
+	 * though, so it is labelled as the draft it is.
+	 */
+	function entryLabel(entry: ConversationEntry, versionNum: number): string {
+		const type = entry.type === 'ai_revision' && versionNum === 1 ? 'ai_generation' : entry.type;
+		return labels[type] ?? 'Version';
 	}
 
 	function isUserEntry(entry: ConversationEntry): boolean {
@@ -606,7 +612,7 @@
 						<FontAwesomeIcon icon={faRobot} class="h-2.5 w-2.5 {iconColor}" />
 					</div>
 					<p class="text-xs text-[var(--dash-text-muted)]">
-						{entryLabel(entry)}
+						{entryLabel(entry, versionNum)}
 						{#if entry.date}
 							<span class="ml-1">&middot; {formatDate(entry.date)}</span>
 						{/if}
