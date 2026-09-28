@@ -344,6 +344,8 @@ async function reserveSerialId(table: 'ai_chats' | 'agent_conversations'): Promi
  * Traced as a `chain` of its own, seeded from its row, unless the caller opened
  * a trace (the assistant turn, a match) and it is a part of that one. Its
  * session is what it writes (`traceSession`), or else its context's entity.
+ * The trace shows what was asked, the caller's variables or else what the text
+ * is about, and what came back.
  */
 export async function createAndGenerateAiChat(
 	profileId: number,
@@ -370,10 +372,15 @@ export async function createAndGenerateAiChat(
 			metadata: {
 				profile_id: String(profileId),
 				...(followupTo ? { followup_to: String(followupTo) } : {})
-			}
+			},
+			input:
+				customVariables ??
+				(options?.context?.entity ? { about: options.context.entity } : undefined)
 		},
 		() =>
-			generateAiChat(profileId, promptKey, customVariables, followupTo, { ...options, aiChatId })
+			generateAiChat(profileId, promptKey, customVariables, followupTo, { ...options, aiChatId }),
+		(result) =>
+			result.success ? { output: result.aiChat?.response } : { statusMessage: result.message }
 	);
 }
 
@@ -556,7 +563,7 @@ async function generateAiChat(
 		if (options?.context) {
 			const request = options.context;
 			const ctx = await traceStep(
-				'context',
+				'retrieve_context',
 				'retriever',
 				() =>
 					assembleGenerationContext({

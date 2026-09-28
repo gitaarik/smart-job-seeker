@@ -2,8 +2,9 @@
  * The model wrapper's half of tracing (planning/LANGFUSE.md § Trace model).
  *
  * One span per logical call, named by its prompt key and marked as a cache hit
- * or miss; under it one generation per provider attempt, so retries and the
- * fallback each show. A generation records the model and its parameters, the
+ * or miss; under it one generation per provider attempt, named like the call,
+ * so retries and the fallback each show and the provider is in each one's
+ * model parameters. A generation records the model and its parameters, the
  * messages, the output, the usage in Langfuse's four separate buckets and the
  * cost the app bills from, so Langfuse and /admin/costs agree by construction,
  * and it links to the registered version of its template (prompt-registry.ts).
@@ -11,13 +12,19 @@
  * carried: a provider bills a failed call like a successful one.
  *
  * A call made outside any trace opens one of its own, in the matcher's sample
- * group when it is one of the matcher's prompts. An embedding only joins the
+ * group when it is one of the matcher's prompts, with the start of what it was
+ * asked as the input and its answer as the output. An embedding only joins the
  * trace that is open. With telemetry off each of these is just the call.
  */
 
 import { startActiveObservation, updateActiveObservation } from '@langfuse/tracing';
 import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
-import { isInTrace, isTelemetryEnabled, startTrace } from '$lib/server/monitoring/telemetry';
+import {
+	glance,
+	isInTrace,
+	isTelemetryEnabled,
+	startTrace
+} from '$lib/server/monitoring/telemetry';
 import {
 	resolvePrompt,
 	type PromptLink,
@@ -28,17 +35,23 @@ import type { ChatMessage, CompletionResult, TokenUsage } from './langchain';
 /** The matcher's calls: the bulk of the volume, so sampled. See telemetry.ts. */
 const MATCHER_PROMPTS = new Set(['score_job_match', 'extract_matched_skills']);
 
+/** What a call and its attempts are named: its prompt key, or what it does without one. */
+export function callName(promptKey: string | undefined): string {
+	return promptKey ?? 'call_model';
+}
+
 /**
  * Trace one logical call. `work` gets a function to call when the answer came
  * from the response cache, which makes the span and no generation.
  */
-export async function traceLlmCall<T>(
+export async function traceLlmCall(
 	promptKey: string | undefined,
-	work: (markCacheHit: () => void) => Promise<T>
-): Promise<T> {
+	messages: ChatMessage[],
+	work: (markCacheHit: () => void) => Promise<CompletionResult>
+): Promise<CompletionResult> {
 	if (!isTelemetryEnabled()) return work(() => {});
 
-	const name = promptKey ?? 'llm call';
+	const name = callName(promptKey);
 	const body = async () => {
 		let cache = 'miss';
 		try {
@@ -49,12 +62,25 @@ export async function traceLlmCall<T>(
 			updateActiveObservation({ metadata: { cache } });
 		}
 	};
-	return isInTrace()
-		? startActiveObservation(name, body)
-		: startTrace({ name, sampleGroup: MATCHER_PROMPTS.has(name) ? 'matcher' : 'default' }, body);
+	if (isInTrace()) return startActiveObservation(name, body);
+
+	const asked =
+		[...messages].reverse().find((message) => message.role === 'user') ??
+		messages[messages.length - 1];
+	return startTrace(
+		{
+			name,
+			sampleGroup: MATCHER_PROMPTS.has(name) ? 'matcher' : 'default',
+			input: asked ? glance(asked.content) : undefined
+		},
+		body,
+		(result) => ({ output: result.content })
+	);
 }
 
 export interface Attempt {
+	/** The call's name (callName), which the attempt's generation shares. */
+	name: string;
 	provider: string;
 	model: string;
 	messages: ChatMessage[];
@@ -77,7 +103,7 @@ export async function traceAttempt(
 
 	const link = attempt.prompt ? resolvePrompt(attempt.prompt) : null;
 	return startActiveObservation(
-		attempt.provider,
+		attempt.name,
 		async (generation) => {
 			generation.update({
 				model: attempt.model,
@@ -158,12 +184,14 @@ export function recordSentMessages(messages: ChatMessage[]): void {
 }
 
 /**
- * Trace an embedding call as an `embedding` observation, named by its provider,
+ * Trace an embedding call as an `embedding` observation named by what it
+ * embeds, with the provider in its model parameters as a generation has it,
  * inside the trace that is open. Outside one it is only the call: an embedding
  * is a step of some unit of work, never a unit of its own. The input is its
  * size, since the text is already in the step that asked for it.
  */
 export async function traceEmbedding<T extends number[] | number[][]>(
+	name: string,
 	provider: string,
 	model: string,
 	texts: string[],
@@ -172,10 +200,11 @@ export async function traceEmbedding<T extends number[] | number[][]>(
 	if (!isTelemetryEnabled() || !isInTrace()) return call();
 
 	return startActiveObservation(
-		provider,
+		name,
 		async (embedding) => {
 			embedding.update({
 				model,
+				modelParameters: { provider },
 				input: { texts: texts.length, chars: texts.reduce((sum, text) => sum + text.length, 0) }
 			});
 			try {

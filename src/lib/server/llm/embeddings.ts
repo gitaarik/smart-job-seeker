@@ -50,7 +50,7 @@ function getEmbeddingModel(): Embeddings {
 
 /** Embed a single string into a vector. */
 export async function embed(text: string): Promise<number[]> {
-	return traceEmbedding(config.embeddingProvider, config.embeddingModel, [text], () =>
+	return traceEmbedding('embed_text', config.embeddingProvider, config.embeddingModel, [text], () =>
 		getEmbeddingModel().embedQuery(text)
 	);
 }
@@ -61,7 +61,7 @@ export async function embed(text: string): Promise<number[]> {
  */
 export async function embedBatch(texts: string[]): Promise<number[][]> {
 	if (texts.length === 0) return [];
-	return traceEmbedding(config.embeddingProvider, config.embeddingModel, texts, () =>
+	return traceEmbedding('embed_texts', config.embeddingProvider, config.embeddingModel, texts, () =>
 		getEmbeddingModel().embedDocuments(texts)
 	);
 }

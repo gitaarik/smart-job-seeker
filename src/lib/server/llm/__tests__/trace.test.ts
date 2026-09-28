@@ -118,17 +118,25 @@ describe('the LLM call', () => {
 		});
 
 		const spans = await exported();
-		const call = spans.find((s) => s.name === 'write_cover_letter');
+		const call = spans.find((s) => s.name === 'write_cover_letter' && typeOf(s) === 'span');
 		expect(call, 'the call is a span named by its prompt key').toBeDefined();
 		expect(call!.attributes['langfuse.observation.metadata.cache']).toBe('miss');
+		// Called outside any trace, so the call is the root, showing what it was
+		// asked and what came back.
+		expect(call!.attributes['langfuse.observation.input']).toBe('a letter');
+		expect(call!.attributes['langfuse.observation.output']).toBe('drafted elsewhere');
 
 		const [first, second] = generations(spans).sort(
 			(a, b) => a.startTime[0] - b.startTime[0] || a.startTime[1] - b.startTime[1]
 		);
-		expect(first.name).toBe('gemini');
+		const providerOf = (span: ReadableSpan) =>
+			JSON.parse(String(span.attributes['langfuse.observation.model.parameters'])).provider;
+		// Named like the call, not after the provider, which is in the parameters.
+		expect([first.name, second.name]).toEqual(['write_cover_letter', 'write_cover_letter']);
+		expect(providerOf(first)).toBe('gemini');
 		expect(first.attributes['langfuse.observation.level']).toBe('ERROR');
 		expect(first.attributes['langfuse.observation.status_message']).toContain('overloaded');
-		expect(second.name).toBe('groq');
+		expect(providerOf(second)).toBe('groq');
 		expect(second.attributes['langfuse.observation.level']).toBeUndefined();
 		expect(second.attributes['langfuse.observation.model.name']).toBe('openai/gpt-oss-120b');
 		for (const generation of [first, second]) {

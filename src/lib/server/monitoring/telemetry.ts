@@ -220,7 +220,11 @@ export function runningVersion(): string | undefined {
 }
 
 export interface TraceOptions {
-	/** What the user or the system did: "assistant turn", "match". */
+	/**
+	 * What the user or the system did, verb first and without ids, which go in
+	 * metadata: "answer_message", "match_job". Filters and dashboards select by
+	 * it, so it stays the same across releases.
+	 */
 	name: string;
 	/** Langfuse's observation type, only where it is literally true; `span` otherwise. */
 	kind?: LangfuseObservationType;
@@ -237,7 +241,11 @@ export interface TraceOptions {
 	metadata?: Record<string, string>;
 	/** Overrides the box's environment for this trace, as `smoke` does for llm:smoke. */
 	environment?: string;
-	/** Recorded on the root as the trace starts, so one that fails or stops still shows it. */
+	/**
+	 * What a reviewer needs to see of the request at a glance, such as the user's
+	 * message; recorded as the trace starts, so one that fails or stops still
+	 * shows it. `describe` gives the root its output the same way.
+	 */
 	input?: unknown;
 	/** A throw that is how the work stops, not a failure: a pause, a cancel. */
 	expected?: ExpectedStop;
@@ -250,6 +258,14 @@ export interface TraceOptions {
  */
 export function aiChatTraceSeed(aiChatId: number): string {
 	return `sjs:${getEnvironmentName()}:ai_chat:${aiChatId}`;
+}
+
+/**
+ * The start of a long text, as a root's input: enough to tell the traces apart
+ * in a list, while the generation under the root keeps the whole of it.
+ */
+export function glance(text: string, max = 2000): string {
+	return text.length <= max ? text : `${text.slice(0, max)} … (${text.length} characters)`;
 }
 
 /** Whether the code is running inside a trace `startTrace` opened. */

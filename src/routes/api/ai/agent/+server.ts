@@ -261,7 +261,7 @@ function traceProposal(
 	candidate: ProposalCandidate,
 	read: () => Promise<ReadProposal>
 ): Promise<ReadProposal> {
-	const name = typeof candidate?.capability === 'string' ? candidate.capability : 'proposal';
+	const name = typeof candidate?.capability === 'string' ? candidate.capability : 'propose_change';
 	return traceStep(name, 'tool', read, (result) =>
 		result.ok
 			? {
@@ -477,26 +477,28 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	// The turn's root trace (planning/LANGFUSE.md § Trace model), seeded from its
 	// ai_chats row, whose id is reserved first so the trace can be found from the
-	// row. It covers what the turn may change, the generation and each proposal.
+	// row. It covers what the turn may change, the generation and each proposal,
+	// and shows the user's message and the reply, which is what a reviewer reads.
 	// A new thread's id is reserved as well, so its first turn is in its session.
 	const isStaff = isStaffUser(user);
 	const aiChatId = await reserveAiChatId();
 	const conversationId = conversation?.id ?? (await reserveConversationId());
 	const turn = await startTrace(
 		{
-			name: 'assistant turn',
+			name: 'answer_message',
 			kind: 'agent',
 			seed: aiChatTraceSeed(aiChatId),
 			userId: user.id,
 			sessionId: `assistant:${conversationId}`,
-			metadata: { profile_id: String(profile_id) }
+			metadata: { profile_id: String(profile_id) },
+			input: message
 		},
 		async () => {
 			// What the user is looking at, and what may be changed there — both resolved
 			// server-side from the route and authorized against this profile. `route` is
 			// client-supplied, so nothing derived from it is taken on trust.
 			const { context, capabilities, capabilityRecord } = await traceStep(
-				'capabilities',
+				'resolve_capabilities',
 				'span',
 				() =>
 					resolveChatContext({
@@ -566,7 +568,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					})
 				: { reply: result.aiChat.response, proposals: [] as StoredProposal[] };
 			return { ok: true as const, aiChat: result.aiChat, reply, proposals, capabilityRecord };
-		}
+		},
+		(outcome) =>
+			outcome.ok
+				? { output: outcome.reply }
+				: { statusMessage: outcome.message || 'The assistant could not respond.' }
 	);
 
 	if (!turn.ok) {

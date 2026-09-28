@@ -12,7 +12,7 @@ import { AIMessage, type BaseMessage, HumanMessage, SystemMessage } from '@langc
 import { z } from 'zod';
 import { getEnv } from '$lib/tools/get-env';
 import { llmCache } from './cache.js';
-import { recordSentMessages, traceAttempt, traceLlmCall } from './trace';
+import { callName, recordSentMessages, traceAttempt, traceLlmCall } from './trace';
 import { DEFAULT_TEMPERATURE } from '$lib/server/ai-chat/prompt-templates';
 import { promptRef } from '$lib/server/ai-chat/prompt-registry';
 import { geminiResponseSchema, parseStructuredReply } from './gemini-schema';
@@ -1131,7 +1131,7 @@ export async function generateChatCompletionTracked(
 	messages: ChatMessage[],
 	options: ChatCompletionOptions = {}
 ): Promise<CompletionResult> {
-	return traceLlmCall(options.promptKey, (markCacheHit) =>
+	return traceLlmCall(options.promptKey, messages, (markCacheHit) =>
 		completeTracked(messages, options, markCacheHit)
 	);
 }
@@ -1161,6 +1161,7 @@ async function completeTracked(
 	const attempt = (activeProvider: string | undefined, activeModel: string) =>
 		traceAttempt(
 			{
+				name: callName(options.promptKey),
 				provider: activeProvider || config.llmProvider,
 				model: activeModel,
 				messages,
