@@ -11,7 +11,13 @@
 import { db } from '$lib/server/db';
 import { and, desc, eq, isNotNull } from 'drizzle-orm';
 import { application_questions, question_versions } from '$lib/server/db/schema';
-import { createEntityFollowup, type FollowupResult } from './entity-followup';
+import {
+	applicantMessage,
+	createEntityFollowup,
+	EmptyStepError,
+	type FollowupMode,
+	type FollowupResult
+} from './entity-followup';
 import type { GenerationContextOption } from './generation-context';
 import { buildConversationMessages } from './conversation-messages';
 import { ensureBaselineVersion, QUESTION_VERSIONS, recordVersion } from './entity-versions';
@@ -52,8 +58,9 @@ export async function createApplicationQuestionFollowup(
 	followupRequest: string,
 	includeOriginalContext?: boolean,
 	updateContent?: boolean,
-	mode?: 'feedback' | 'review'
+	mode?: FollowupMode
 ): Promise<FollowupResult> {
+	const message = applicantMessage(followupRequest, mode);
 	// For review or answer-revision mode, look up the question + job context.
 	let promptType: string | undefined;
 	let extraVariables: Record<string, unknown> | undefined;
@@ -209,7 +216,7 @@ export async function createApplicationQuestionFollowup(
 					source: 'ai_revision',
 					aiChatId,
 					aiFeedback: revisionFeedback,
-					userRequest: followupRequest
+					userRequest: message
 				});
 				await db
 					.update(application_questions)
@@ -227,19 +234,20 @@ export async function createApplicationQuestionFollowup(
 					source: 'ai_advice',
 					aiChatId,
 					aiFeedback: revisionFeedback,
-					userRequest: followupRequest
+					userRequest: message
 				});
 			} else if (updateContent) {
 				// The provider came back with nothing usable. Record the turn anyway,
 				// so the message the applicant sent stays in the thread — with
 				// "Regenerate" beside it and a delete of its own — instead of
 				// disappearing behind a success that changed nothing.
+				if (!message) throw new EmptyStepError();
 				await recordVersion(QUESTION_VERSIONS, {
 					entityId: id,
 					content: null,
 					source: 'ai_advice',
 					aiChatId,
-					userRequest: followupRequest
+					userRequest: message
 				});
 			}
 		}

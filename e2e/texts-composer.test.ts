@@ -377,6 +377,11 @@ describe('texts composer — deleting a turn', () => {
 
 		// A thread exists, so the composer can only carry it forward…
 		expect(await b.page.getByRole('button', { name: 'Get advice' }).count()).toBe(0);
+		// …the advice itself offers to become a version (not clicked: that is a
+		// real generation)…
+		expect(
+			await b.page.getByRole('button', { name: 'Write a version from this advice' }).isVisible()
+		).toBe(true);
 		// …the review button follows the latest *version*, not the last entry, so
 		// asking a question after a draft does not take it away…
 		expect(await b.page.getByRole('button', { name: 'AI review' }).isVisible()).toBe(true);

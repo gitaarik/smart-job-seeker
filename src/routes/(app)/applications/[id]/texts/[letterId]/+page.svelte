@@ -110,7 +110,7 @@
 		letterId: number,
 		text: string,
 		updateContent: boolean,
-		mode?: 'feedback' | 'review',
+		mode?: 'feedback' | 'review' | 'apply_advice',
 		replaceVersionId?: number
 	) {
 		const res = await fetch(`/api/ai/letters/${letterId}/followup`, {
@@ -187,10 +187,10 @@
 
 	async function onSendFollowup(
 		text: string,
-		opts: { updateContent: boolean; replaceVersionId?: number }
+		opts: { updateContent: boolean; replaceVersionId?: number; mode?: 'apply_advice' }
 	) {
 		const letterId = await ensureLetterExists();
-		await apiFollowup(letterId, text, opts.updateContent, undefined, opts.replaceVersionId);
+		await apiFollowup(letterId, text, opts.updateContent, opts.mode, opts.replaceVersionId);
 		await invalidateAll();
 	}
 

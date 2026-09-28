@@ -43,7 +43,7 @@
 		VersionSource
 	} from '$lib/server/ai-chat/entity-versions';
 
-	type BusyMode = 'generate' | 'advice' | 'auto' | 'followup' | 'review';
+	type BusyMode = 'generate' | 'advice' | 'auto' | 'followup' | 'review' | 'apply';
 
 	let {
 		conversation,
@@ -78,9 +78,14 @@
 		 */
 		onGenerate: (mode: 'generate' | 'advice' | 'auto', instructions?: string) => Promise<void>;
 		onReview: (content: string) => Promise<void>;
+		/**
+		 * Send a message to the AI thread. `mode: 'apply_advice'` marks the text as
+		 * the editor's own request ("Write a version from this advice"), which the
+		 * server runs like any message but does not record as the applicant's.
+		 */
 		onSendFollowup: (
 			text: string,
-			opts: { updateContent: boolean; replaceVersionId?: number }
+			opts: { updateContent: boolean; replaceVersionId?: number; mode?: 'apply_advice' }
 		) => Promise<void>;
 		onSaveVersion: (content: string, opts: { deleteAfterVersionId?: number }) => Promise<void>;
 		/**
@@ -613,24 +618,31 @@
 					<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 					{@html renderSafeMarkdown(entry.aiFeedback)}
 				</div>
-				{#if !entry.content && !isEditing && entry.type !== 'ai_advice'}
+				<!-- Advice, or a review that only commented, is a suggestion nothing has
+				     acted on yet, so the turn offers to write it. Last turn only: the
+				     request continues the thread from its end, so anywhere else "your
+				     suggestions above" would mean the wrong turn. The request is the
+				     editor's wording, not the applicant's, so it goes as the
+				     `apply_advice` step, which is not recorded as their message. -->
+				{#if !entry.content && !isEditing && hasThread && entryIndex === conversation.length - 1}
 					<button
 						type="button"
 						onclick={() =>
-							run('followup', () =>
-								onSendFollowup('Please revise the text based on your feedback above.', {
-									updateContent: true
+							run('apply', () =>
+								onSendFollowup(`Now write the ${applyNoun}, applying your suggestions above.`, {
+									updateContent: true,
+									mode: 'apply_advice'
 								})
 							)}
 						disabled={busy}
-						class="mt-1 flex items-center gap-1 rounded border border-[var(--dash-border)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)] disabled:cursor-not-allowed disabled:opacity-50"
+						class="mt-2 flex items-center gap-1 rounded border border-[var(--dash-primary)] px-2 py-1 text-xs text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary-light)] disabled:cursor-not-allowed disabled:opacity-50"
 					>
-						{#if busy && busyMode === 'followup'}
+						{#if busy && busyMode === 'apply'}
 							<Spinner size="w-2.5 h-2.5" />
-							Generating...
+							Writing…
 						{:else}
 							<FontAwesomeIcon icon={faRobot} class="h-2.5 w-2.5" />
-							Generate revision from this feedback
+							Write a version from this {entry.type === 'ai_advice' ? 'advice' : 'feedback'}
 						{/if}
 					</button>
 				{/if}

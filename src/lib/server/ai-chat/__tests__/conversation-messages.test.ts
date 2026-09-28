@@ -83,6 +83,62 @@ describe('turnsToMessages', () => {
 		expect(messages[3].content).toContain('The opening buries the ask.');
 	});
 
+	it('narrates "Write a version from this advice", which records no message', async () => {
+		// The button sends the editor's own wording, which is not stored as the
+		// applicant's message. Without a turn asking for the draft, it would merge
+		// into the advice, and the advice would read as having applied itself.
+		const messages = await turnsToMessages(
+			[
+				turn({ source: 'ai_advice', ai_feedback: 'Lead with the migration.' }),
+				turn({ source: 'ai_revision', ai_feedback: 'Led with it.', content: 'Draft one.' })
+			],
+			{ noun: 'answer' }
+		);
+
+		expect(messages.map((m) => m.role)).toEqual(['user', 'assistant', 'user', 'assistant']);
+		expect(messages[1].content).toContain('Advice only');
+		expect(messages[2].content).toBe('Now write the answer, applying your suggestions above.');
+		expect(messages[3].content).toContain('Draft one.');
+	});
+
+	it('narrates the same step under a review that only commented', async () => {
+		const messages = await turnsToMessages(
+			[
+				turn({ source: 'ai_generation', content: 'Draft one.' }),
+				turn({ source: 'ai_review', ai_feedback: 'The opening buries the ask.' }),
+				// The step asked for a draft and got more advice; still the step.
+				turn({ source: 'ai_advice', ai_feedback: 'Which ask should it open on?' })
+			],
+			{ noun: 'letter' }
+		);
+
+		expect(messages.map((m) => m.role)).toEqual([
+			'user',
+			'assistant',
+			'user',
+			'assistant',
+			'user',
+			'assistant'
+		]);
+		expect(messages[4].content).toBe('Now write the letter, applying your suggestions above.');
+		expect(messages[5].content).toContain('Which ask should it open on?');
+	});
+
+	it('does not narrate advice on a self-written version as a request to write', async () => {
+		// "Get advice" with a blank box, after a version the applicant wrote. It
+		// has no message either, but nothing there asked for a draft.
+		const messages = await turnsToMessages(
+			[
+				turn({ source: 'manual_edit', content: 'My own wording.' }),
+				turn({ source: 'ai_advice', ai_feedback: 'Name the migration.' })
+			],
+			{ noun: 'answer' }
+		);
+
+		expect(messages.map((m) => m.role)).toEqual(['user', 'assistant']);
+		expect(messages.map((m) => m.content).join('\n')).not.toContain('applying your suggestions');
+	});
+
 	it('points at the current draft instead of quoting it a second time', async () => {
 		const current = 'The letter as it stands.';
 		const messages = await turnsToMessages(

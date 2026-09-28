@@ -587,7 +587,8 @@ export const followupRequestSchema = z.object({
 	followupRequest: requiredTrimmedString('Follow-up request', 5000),
 	includeOriginalContext: z.boolean().optional().default(false),
 	updateContent: z.boolean().optional().default(false),
-	mode: z.enum(['feedback', 'review']).optional(),
+	// `review` and `apply_advice` are editor steps: see FollowupMode.
+	mode: z.enum(['feedback', 'review', 'apply_advice']).optional(),
 	replaceVersionId: z.number().int().positive().optional()
 });
 

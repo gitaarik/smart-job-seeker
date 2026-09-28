@@ -86,7 +86,7 @@ function turnsToBaseMessages(turns: VersionTurn[], opts: HistoryOptions): BaseMe
 			: `_The ${noun} then read:_\n\n${content}`;
 
 	const messages: BaseMessage[] = [];
-	for (const turn of turns) {
+	for (const [i, turn] of turns.entries()) {
 		// A version the applicant wrote or pasted themselves. It carries no
 		// exchange, so it replays as them handing over new text.
 		if (turn.source === 'manual_edit') {
@@ -116,6 +116,15 @@ function turnsToBaseMessages(turns: VersionTurn[], opts: HistoryOptions): BaseMe
 			messages.push(new HumanMessage(`An app I connected rewrote the ${noun}.`));
 		} else if (turn.user_request) {
 			messages.push(new HumanMessage(turn.user_request));
+		} else if (i > 0 && !turns[i - 1].content && turns[i - 1].ai_feedback) {
+			// "Write a version from this advice", the editor's button under a turn
+			// that answered without writing anything (advice, or a review that only
+			// commented). Like a review it records no message, so it is told apart
+			// by where it sits: anything else that can follow such a turn either
+			// carries the applicant's words or is narrated above. Without this line
+			// the draft it wrote merges into the advice before it, and the advice
+			// then reads as having applied itself.
+			messages.push(new HumanMessage(`Now write the ${noun}, applying your suggestions above.`));
 		}
 
 		const reply: string[] = [];
