@@ -7,7 +7,9 @@
  * found by its label, `fp-<fingerprint>`: the fingerprint `ai_chats`, the
  * llm:smoke record and the golden baselines already carry. Registering compares
  * before it creates, because Langfuse never dedupes and every create is a new
- * version.
+ * version. A variable is registered under a name Langfuse will fill
+ * (langfuseVariable): `{{job.title}}` goes in as `{{job_title}}`, and the
+ * golden datasets name their inputs the same way.
  *
  * Who creates. On dev, the first process to use a template nobody registered
  * yet, since dev runs uncommitted edits. Everywhere else the release does,
@@ -96,11 +98,38 @@ export interface PromptConfig {
 		json_schema: { name: string; schema: Record<string, unknown>; strict: false };
 	};
 	/**
-	 * A hash of the rest. The fingerprint covers the text and the temperature
-	 * but not the response schema, which lives in ai-prompt-schemas.ts, so this
-	 * is how a schema edit on its own becomes a version too.
+	 * A hash of the rest, and of the messages as registered. The fingerprint
+	 * covers the template's text and temperature, but not the response schema,
+	 * which lives in ai-prompt-schemas.ts, nor how the text is written for
+	 * Langfuse (registeredMessages). So a change to either on its own becomes a
+	 * version too.
 	 */
 	config_hash: string;
+}
+
+/**
+ * A template variable as Langfuse fills one: a letter, then letters, digits and
+ * underscores. Filling a prompt from a dataset item, Langfuse skips any other
+ * name, so a UI experiment sent `{{job.title}}` as written. Anything else
+ * becomes an underscore.
+ */
+export function langfuseVariable(name: string): string {
+	return name.replace(/[^\p{L}\p{N}_]/gu, '_');
+}
+
+/** A template's text with every `{{name}}` in it named as Langfuse fills it. */
+function forLangfuse(text: string): string {
+	return text.replace(/\{\{([^{}]+)\}\}/g, (_match, name: string) => {
+		return `{{${langfuseVariable(name.trim())}}}`;
+	});
+}
+
+/** A version's messages as Langfuse gets them: the template, its variables renamed. */
+export function registeredMessages(template: PromptTemplate): NewVersion['messages'] {
+	return [
+		{ role: 'system', content: forLangfuse(template.system_prompt) },
+		{ role: 'user', content: forLangfuse(template.user_prompt) }
+	];
 }
 
 function promptConfig(key: string, template: PromptTemplate, fingerprint: string): PromptConfig {
@@ -117,7 +146,8 @@ function promptConfig(key: string, template: PromptTemplate, fingerprint: string
 				}
 			: {})
 	};
-	return { ...config, config_hash: hash(canonicalJson(config)) };
+	const hashed = { ...config, messages: registeredMessages(template) };
+	return { ...config, config_hash: hash(canonicalJson(hashed)) };
 }
 
 /**
@@ -217,8 +247,9 @@ export class PromptRegistry {
 		const config = current ? promptConfig(ref.key, current, ref.fingerprint) : null;
 
 		let found = await this.api.find(ref.key, label);
-		// The same text under another schema: a version of its own, which takes
-		// the label over. A box that may not create links to the text it ran.
+		// The same text under another schema, or registered differently: a version
+		// of its own, which takes the label over. A box that may not create links
+		// to the text it ran.
 		if (
 			found &&
 			config &&
@@ -233,10 +264,7 @@ export class PromptRegistry {
 			if (!current || !config || !this.options.create) return { link: null, created };
 			found = await this.api.create({
 				name: ref.key,
-				messages: [
-					{ role: 'system', content: current.system_prompt },
-					{ role: 'user', content: current.user_prompt }
-				],
+				messages: registeredMessages(current),
 				config,
 				labels: [label, ...(this.options.environmentLabel ? [this.options.environmentLabel] : [])],
 				commitMessage: this.options.commitMessage

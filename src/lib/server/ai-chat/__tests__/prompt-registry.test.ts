@@ -9,8 +9,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_TEMPERATURE, promptTemplates } from '../prompt-templates';
 import { promptFingerprint } from '../prompt-fingerprint';
 import {
+	langfuseVariable,
 	promptRef,
 	PromptRegistry,
+	registeredMessages,
 	type NewVersion,
 	type PromptApi,
 	type RegisteredVersion
@@ -80,6 +82,43 @@ describe('promptRef', () => {
 	});
 });
 
+describe('registeredMessages', () => {
+	// Langfuse's own rule (packages/shared/src/utils/stringChecks.ts): filling a
+	// prompt from a dataset item, it skips a variable whose name breaks it.
+	const LANGFUSE_VARIABLE = /^\p{L}[\p{L}\p{N}_]*$/u;
+	const variablesIn = (text: string) => [...text.matchAll(/\{\{([^{}]+)\}\}/g)].map((m) => m[1]);
+
+	it('names every variable of every template as Langfuse fills it, the text otherwise as it is', () => {
+		for (const [key, template] of Object.entries(promptTemplates)) {
+			const messages = registeredMessages(template);
+			for (const message of messages) {
+				for (const name of variablesIn(message.content)) {
+					expect(name, `${key}: {{${name}}}`).toMatch(LANGFUSE_VARIABLE);
+				}
+			}
+			const unnamed = (text: string) => text.replace(/\{\{[^{}]+\}\}/g, '{{}}');
+			expect(unnamed(messages[0].content)).toBe(unnamed(template.system_prompt));
+			expect(unnamed(messages[1].content)).toBe(unnamed(template.user_prompt));
+		}
+	});
+
+	it("never gives two of a template's variables the same name", () => {
+		for (const [key, template] of Object.entries(promptTemplates)) {
+			const names = new Set(
+				variablesIn(template.system_prompt + template.user_prompt).map((name) => name.trim())
+			);
+			const renamed = new Set([...names].map(langfuseVariable));
+			expect(renamed.size, key).toBe(names.size);
+		}
+	});
+
+	it("writes the matcher's dotted variables with underscores", () => {
+		const [, user] = registeredMessages(promptTemplates[KEY]);
+		expect(user.content).toContain('{{job_title}}');
+		expect(user.content).not.toContain('{{job.title}}');
+	});
+});
+
 describe('PromptRegistry', () => {
 	it('registers a missing version once, under its fingerprint label, and reads it after', async () => {
 		const api = new FakePromptApi();
@@ -96,10 +135,7 @@ describe('PromptRegistry', () => {
 		expect(api.calls).toEqual({ find: 1, create: 1, setLabels: 0 });
 		const [stored] = api.versions;
 		expect(stored.labels).toEqual([`fp-${current().fingerprint}`, 'development', 'latest']);
-		expect(stored.messages).toEqual([
-			{ role: 'system', content: promptTemplates[KEY].system_prompt },
-			{ role: 'user', content: promptTemplates[KEY].user_prompt }
-		]);
+		expect(stored.messages).toEqual(registeredMessages(promptTemplates[KEY]));
 		expect(stored.config).toMatchObject({
 			fingerprint: current().fingerprint,
 			temperature: promptTemplates[KEY].temperature ?? DEFAULT_TEMPERATURE,
