@@ -11,7 +11,7 @@
 	import ConversationTimeline from '$lib/components/conversation/ConversationTimeline.svelte';
 	import ConfirmModal from '../../../../profile/components/ConfirmModal.svelte';
 	import { LETTER_TYPE_LABELS, letterLabel } from '$lib/texts/letter-label';
-	import type { DeleteScope, VersionSource } from '$lib/server/ai-chat/entity-versions';
+	import type { DeleteScope, TurnLabels } from '$lib/server/ai-chat/entity-versions';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -30,13 +30,14 @@
 
 	const letterTypes = LETTER_TYPE_LABELS;
 
-	const LETTER_LABELS: Record<VersionSource, string> = {
+	const LETTER_LABELS: TurnLabels = {
 		manual_edit: 'Manual edit',
 		ai_generation: 'AI assisted letter',
 		ai_advice: 'AI recommendations',
 		ai_review: 'AI review',
 		ai_revision: 'AI revised letter',
-		agent_revision: 'Connected app revised letter'
+		agent_revision: 'Connected app revised letter',
+		agent_draft: 'Connected app drafted letter'
 	};
 
 	let typeLabel = $derived(letterTypes[letter.letter_type] || letter.letter_type);

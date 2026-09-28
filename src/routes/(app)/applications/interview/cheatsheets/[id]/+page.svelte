@@ -8,7 +8,7 @@
 	import { faArrowLeft, faCheck, faStickyNote } from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../../components/Card.svelte';
 	import ConversationTimeline from '$lib/components/conversation/ConversationTimeline.svelte';
-	import type { DeleteScope, VersionSource } from '$lib/server/ai-chat/entity-versions';
+	import type { DeleteScope, TurnLabels } from '$lib/server/ai-chat/entity-versions';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -31,13 +31,14 @@
 	});
 	let titleDirty = $derived(title.trim().length > 0 && title.trim() !== (data.sheet.title ?? ''));
 
-	const SHEET_LABELS: Record<VersionSource, string> = {
+	const SHEET_LABELS: TurnLabels = {
 		manual_edit: 'Your edit',
 		ai_generation: 'AI drafted sheet',
 		ai_advice: 'AI recommendations',
 		ai_review: 'AI review',
 		ai_revision: 'AI revised sheet',
-		agent_revision: 'Connected app revised sheet'
+		agent_revision: 'Connected app revised sheet',
+		agent_draft: 'Connected app drafted sheet'
 	};
 
 	const placeholder = 'Write or paste your cheat sheet here…';

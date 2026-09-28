@@ -9,7 +9,7 @@
 	import Card from '../../../../components/Card.svelte';
 	import ConversationTimeline from '$lib/components/conversation/ConversationTimeline.svelte';
 	import AutoGrowTextarea from '$lib/components/AutoGrowTextarea.svelte';
-	import type { DeleteScope, VersionSource } from '$lib/server/ai-chat/entity-versions';
+	import type { DeleteScope, TurnLabels } from '$lib/server/ai-chat/entity-versions';
 	import { serializeStarMarkdown } from '$lib/interview/star';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -94,13 +94,14 @@
 		{ value: 'achievement', label: 'Achievement' }
 	];
 
-	const STORY_LABELS: Record<VersionSource, string> = {
+	const STORY_LABELS: TurnLabels = {
 		manual_edit: 'Your edit',
 		ai_generation: 'AI drafted story',
 		ai_advice: 'AI recommendations',
 		ai_review: 'AI review',
 		ai_revision: 'AI revised story',
-		agent_revision: 'Connected app revised story'
+		agent_revision: 'Connected app revised story',
+		agent_draft: 'Connected app drafted story'
 	};
 
 	async function apiGenerate(

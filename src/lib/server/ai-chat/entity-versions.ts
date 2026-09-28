@@ -41,11 +41,19 @@ import { sameText } from '$lib/utils/same-text';
  * `ai_revision` because the badge it drives is the only thing on screen at the
  * moment the applicant decides whether to keep the text, and "my editor wrote
  * this" and "the agent I gave a key to wrote this" are not the same claim. The
- * labels are typed `Record<VersionSource, string>` in all four editors, so
- * adding one here is a compile error until each of them names it.
+ * labels are typed `TurnLabels` in all four editors, so adding one here is a
+ * compile error until each of them names it.
  */
 export type VersionSource =
 	'manual_edit' | 'ai_generation' | 'ai_revision' | 'ai_review' | 'ai_advice' | 'agent_revision';
+
+/**
+ * What an editor calls each turn, in its own words ("AI drafted answer", "AI
+ * revised letter"). One label has no source of its own: the first version a
+ * connected app wrote. It is stored as `agent_revision` like every other agent
+ * write, but with nothing before it there was nothing to revise.
+ */
+export type TurnLabels = Record<VersionSource, string> & { agent_draft: string };
 
 /** One entry in the reconstructed thread the editor renders. */
 export type ConversationEntry = {

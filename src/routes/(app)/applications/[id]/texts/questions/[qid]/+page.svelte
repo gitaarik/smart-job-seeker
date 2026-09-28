@@ -9,7 +9,7 @@
 	import Card from '../../../../../components/Card.svelte';
 	import AutoGrowTextarea from '$lib/components/AutoGrowTextarea.svelte';
 	import ConversationTimeline from '$lib/components/conversation/ConversationTimeline.svelte';
-	import type { DeleteScope, VersionSource } from '$lib/server/ai-chat/entity-versions';
+	import type { DeleteScope, TurnLabels } from '$lib/server/ai-chat/entity-versions';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -41,13 +41,14 @@
 		questionText.trim() !== savedQuestionText && questionText.trim().length > 0
 	);
 
-	const QUESTION_LABELS: Record<VersionSource, string> = {
+	const QUESTION_LABELS: TurnLabels = {
 		manual_edit: 'Manual edit',
 		ai_generation: 'AI drafted answer',
 		ai_advice: 'AI recommendations',
 		ai_review: 'AI review',
 		ai_revision: 'AI revised answer',
-		agent_revision: 'Connected app revised answer'
+		agent_revision: 'Connected app revised answer',
+		agent_draft: 'Connected app drafted answer'
 	};
 
 	const placeholder = 'Write or paste your answer here…';

@@ -40,7 +40,7 @@
 	import type {
 		ConversationEntry,
 		DeleteScope,
-		VersionSource
+		TurnLabels
 	} from '$lib/server/ai-chat/entity-versions';
 
 	type BusyMode = 'generate' | 'advice' | 'auto' | 'followup' | 'review' | 'apply';
@@ -71,7 +71,7 @@
 		/** Placeholder for the "write my own version" editor. */
 		placeholder: string;
 		/** Human labels per version source (entity-specific wording). */
-		labels: Record<VersionSource, string>;
+		labels: TurnLabels;
 		/**
 		 * Start an AI thread. `instructions` is the applicant's optional brief for
 		 * that first turn, typed in the composer — blank runs the plain prompt.
@@ -444,13 +444,16 @@
 	}
 
 	/**
-	 * A message sent after advice goes down the revision path, so the first
-	 * version it writes is stored as `ai_revision`. There was nothing to revise,
-	 * though, so it is labelled as the draft it is.
+	 * A first version is a draft, whatever path wrote it. A message sent after
+	 * advice goes down the revision path, so what it writes first is stored as
+	 * `ai_revision`, and a connected app's writes are all `agent_revision`. With
+	 * nothing before either there was nothing to revise, so both are labelled as
+	 * the drafts they are.
 	 */
 	function entryLabel(entry: ConversationEntry, versionNum: number): string {
-		const type = entry.type === 'ai_revision' && versionNum === 1 ? 'ai_generation' : entry.type;
-		return labels[type] ?? 'Version';
+		if (versionNum === 1 && entry.type === 'ai_revision') return labels.ai_generation;
+		if (versionNum === 1 && entry.type === 'agent_revision') return labels.agent_draft;
+		return labels[entry.type] ?? 'Version';
 	}
 
 	function isUserEntry(entry: ConversationEntry): boolean {
