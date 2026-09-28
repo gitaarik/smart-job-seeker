@@ -5,6 +5,44 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.36.0] - 2026-09-28
+
+84 commits since v0.35.0.
+
+### Added
+
+- Certificates: upload files, set expiry dates and credential IDs, link to skills
+- Direct timeline logging in AI chat with undo support
+- Langfuse telemetry for model calls, scrape runs, job matches, and worker sessions
+- Langfuse golden set experiments with automated scoring dashboards
+- Form accessibility: bind labels to input fields
+
+### Changed
+
+- Vitest upgraded to 5.x
+- Rank fusion is now the default project merge strategy
+- Stricter CI: svelte-check fails on warnings and state_referenced_locally references
+- Prompt placeholders now use {{name}} syntax for Langfuse
+
+### Fixed
+
+- Certificate files no longer cached
+- Scraper child processes now trace correctly
+- Profile creation/import errors display details
+- Admin skill graph search stays focused
+- Home page marks saved and passed jobs correctly
+- Interview source links now show target questions
+- Job page displays assistant edits
+- Assistant editor remounts after changes
+- Task notifications navigate to detail pages
+- Dialogs close on outside clicks
+- Eight session state reference bugs
+
+### Removed
+
+- Contact-info widget
+- /api/verify-turnstile endpoint
+
 ## [0.35.0] - 2026-09-25
 
 4 commits since v0.34.0.
