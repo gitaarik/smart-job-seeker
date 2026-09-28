@@ -474,7 +474,11 @@ export interface ExportedApplication {
 	company?: string;
 	source_url?: string;
 	application_sent_date?: string;
-	/** `applications.application_notes` is jsonb, not text — carried verbatim. */
+	/**
+	 * The list of notes an application kept before they moved to its timeline
+	 * (migration 0063). Only read, from export files written before that, and
+	 * imported as `note` entries (`legacy-notes.ts`).
+	 */
 	application_note?: unknown;
 	salary_expectation?: number;
 	salary_currency?: string;

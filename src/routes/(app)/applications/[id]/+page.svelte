@@ -1,10 +1,5 @@
 <script lang="ts">
 	/*
-	 * {@html linkify(note.text)} renders a user-written application note.
-	 * linkify escapes &, <, > and " first, then wraps only http(s) matches in an
-	 * anchor, so the note cannot contribute markup.
-	 */
-	/*
 	 * The href comes from profileDocUrl(), which builds a public /p/<slug> document
 	 * URL. The rule does not follow a function call.
 	 */
@@ -16,7 +11,6 @@
 		faArrowRight,
 		faBuilding,
 		faCalendar,
-		faCheck,
 		faChevronDown,
 		faClipboardList,
 		faEnvelope,
@@ -31,10 +25,8 @@
 		faPencil,
 		faPlay,
 		faMoneyBillWave,
-		faStickyNote,
 		faWrench,
-		faTrash,
-		faTimes
+		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import ConfirmModal from '../../profile/components/ConfirmModal.svelte';
 	import Card from '../../components/Card.svelte';
@@ -56,7 +48,6 @@
 	import { formatDate as fmtDate } from '$lib/format-date';
 	import { profileDocUrl } from '$lib/utils/profile-doc-url';
 	import type { DocType } from '$lib/utils/profile-doc-url';
-	import { linkify } from '$lib/utils/linkify';
 	import { letterLabel } from '$lib/texts/letter-label';
 	import { portalToBody } from '$lib/actions/portal';
 	// The first use of Kit's typed route resolution in this codebase. Every other
@@ -69,20 +60,6 @@
 	let app = $derived(data.application);
 	let job = $derived(app.job);
 	let profileSlug = $derived(data.selectedProfile?.slug);
-
-	// Older notes: the list notes were kept in before they went on the timeline.
-	// Edit and delete only; a new note is written from the Key facts card.
-	type Note = { id: string; text: string; created_at: string };
-	let notes = $derived([...((app.application_notes || []) as Note[])].reverse());
-	let editingNoteId = $state<string | null>(null);
-	let editingNoteText = $state('');
-	let confirmingDeleteId = $state<string | null>(null);
-
-	function autoResizeOnMount(el: HTMLTextAreaElement) {
-		el.style.height = 'auto';
-		el.style.height = el.scrollHeight + 'px';
-		el.focus();
-	}
 
 	// Status widget
 	let statusPickerOpen = $state(false);
@@ -688,150 +665,6 @@
 			</div>
 		</div>
 	</Card>
-
-	<!-- Older notes. Notes used to live here, in a list on the application that
-       no AI feature read. New ones go on the timeline from the Key facts card,
-       where they feed the facts, the assistant and the letters. The ones
-       written before that stay here, editable, until someone moves them:
-       nothing deletes them on the applicant's behalf. -->
-	{#if notes.length > 0}
-		<Card padding="lg">
-			<div class="space-y-3">
-				<div class="flex items-center gap-2">
-					<FontAwesomeIcon icon={faStickyNote} class="h-4 w-4 text-[var(--dash-text-secondary)]" />
-					<h2 class="flex-1 text-sm font-semibold tracking-wide text-[var(--dash-text)] uppercase">
-						Older notes
-					</h2>
-				</div>
-				<p class="text-xs text-[var(--dash-text-muted)]">
-					Kept from before notes moved to Activity. New notes go in the box under Key facts, where
-					the assistant and your letters read them too.
-				</p>
-
-				<!-- Note list -->
-				{#if notes.length > 0}
-					<ul class="mt-2 space-y-0.5">
-						{#each notes as note (note.id)}
-							<li
-								class="group -mx-2 flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-[var(--dash-bg)]"
-							>
-								{#if editingNoteId === note.id}
-									<!-- Editing mode -->
-									<form
-										method="POST"
-										action="?/updateNote"
-										class="flex flex-1 items-start gap-2"
-										use:enhance={() => {
-											return async ({ update }) => {
-												await update();
-												editingNoteId = null;
-											};
-										}}
-									>
-										<input type="hidden" name="note_id" value={note.id} />
-										<textarea
-											name="text"
-											bind:value={editingNoteText}
-											oninput={(e) => {
-												const el = e.currentTarget;
-												el.style.height = 'auto';
-												el.style.height = el.scrollHeight + 'px';
-											}}
-											onkeydown={(e) => {
-												if (e.key === 'Escape') editingNoteId = null;
-												else if (e.key === 'Enter' && !e.shiftKey) {
-													e.preventDefault();
-													if (editingNoteText.trim()) e.currentTarget.form?.requestSubmit();
-												}
-											}}
-											use:autoResizeOnMount
-											rows={1}
-											class="flex-1 resize-none overflow-hidden rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] focus:border-[var(--dash-primary)] focus:outline-none"
-										></textarea>
-										<button
-											type="submit"
-											class="p-1 text-[var(--dash-primary)] transition-colors hover:text-[var(--dash-primary-hover)]"
-										>
-											<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
-										</button>
-										<button
-											type="button"
-											onclick={() => (editingNoteId = null)}
-											class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
-										>
-											<FontAwesomeIcon icon={faTimes} class="h-3 w-3" />
-										</button>
-									</form>
-								{:else}
-									<!-- View mode -->
-									<div class="min-w-0 flex-1 border-l-2 border-[var(--dash-border)] pl-3">
-										<!-- eslint-disable svelte/no-at-html-tags -->
-										<span class="text-sm leading-relaxed whitespace-pre-wrap text-white"
-											>{@html linkify(note.text)}</span
-										>
-										<!-- eslint-enable svelte/no-at-html-tags -->
-										<span class="ml-2 text-xs text-[var(--dash-text-muted)]"
-											>{timeAgo(note.created_at)}</span
-										>
-									</div>
-									<div
-										class="flex flex-shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
-									>
-										<button
-											type="button"
-											onclick={() => {
-												editingNoteId = note.id;
-												editingNoteText = note.text;
-											}}
-											class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
-										>
-											<FontAwesomeIcon icon={faPencil} class="h-3 w-3" />
-										</button>
-										{#if confirmingDeleteId === note.id}
-											<form
-												method="POST"
-												action="?/deleteNote"
-												class="flex items-center gap-1"
-												use:enhance={() => {
-													return async ({ update }) => {
-														await update();
-														confirmingDeleteId = null;
-													};
-												}}
-											>
-												<input type="hidden" name="note_id" value={note.id} />
-												<button
-													type="submit"
-													class="px-1 py-0.5 text-xs font-medium text-[var(--dash-error)]"
-												>
-													Delete?
-												</button>
-											</form>
-											<button
-												type="button"
-												onclick={() => (confirmingDeleteId = null)}
-												class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
-											>
-												<FontAwesomeIcon icon={faTimes} class="h-3 w-3" />
-											</button>
-										{:else}
-											<button
-												type="button"
-												onclick={() => (confirmingDeleteId = note.id)}
-												class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-error)]"
-											>
-												<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
-											</button>
-										{/if}
-									</div>
-								{/if}
-							</li>
-						{/each}
-					</ul>
-				{/if}
-			</div>
-		</Card>
-	{/if}
 
 	<!-- Discontinued Info -->
 	{#if app.discontinued_reason}

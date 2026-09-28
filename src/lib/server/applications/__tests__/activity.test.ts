@@ -1,9 +1,9 @@
 /**
  * Tests for the derived "when did something last happen here".
  *
- * The interesting behaviour is all in the merge: four sources, three of them
- * aggregates from other tables and one a jsonb array on the row, with the row's
- * own creation date as a floor rather than a source. The failure this module
+ * The interesting behaviour is all in the merge: three sources, two of them
+ * aggregates from other tables and one a date on the row, with the row's own
+ * creation date as a floor rather than a source. The failure this module
  * exists to prevent — `date_updated` reporting a five-week-silent application
  * as fresh because a cover letter was generated — is not visible from either
  * page that calls it.
@@ -48,7 +48,6 @@ const row = (over: Record<string, unknown> = {}) => ({
 	id: 1,
 	date_created: new Date('2026-01-10T00:00:00Z'),
 	application_sent_date: null,
-	application_notes: null,
 	...over
 });
 
@@ -85,13 +84,6 @@ describe('attachLastActivity', () => {
 		expect(await activityOf()).toEqual(new Date('2026-09-01T12:00:00Z'));
 	});
 
-	it('takes the latest note', async () => {
-		const notes = [{ created_at: '2026-04-01T10:00:00Z' }, { created_at: '2026-07-04T10:00:00Z' }];
-		expect(await activityOf({ application_notes: notes })).toEqual(
-			new Date('2026-07-04T10:00:00Z')
-		);
-	});
-
 	it('takes the applied date for a row with no log and no records', async () => {
 		expect(await activityOf({ application_sent_date: '2026-05-05' })).toEqual(
 			new Date('2026-05-05T00:00:00Z')
@@ -103,12 +95,9 @@ describe('attachLastActivity', () => {
 		records = [
 			{ application: 1, happened: '2026-03-01', recorded: new Date('2026-03-02T00:00:00Z') }
 		];
-		expect(
-			await activityOf({
-				application_sent_date: '2026-01-20',
-				application_notes: [{ created_at: '2026-04-09T08:00:00Z' }]
-			})
-		).toEqual(new Date('2026-04-09T08:00:00Z'));
+		expect(await activityOf({ application_sent_date: '2026-04-09' })).toEqual(
+			new Date('2026-04-09T00:00:00Z')
+		);
 	});
 
 	it('never reports activity in the future', async () => {
@@ -120,10 +109,9 @@ describe('attachLastActivity', () => {
 		expect(at!.getTime()).toBeLessThanOrEqual(Date.now());
 	});
 
-	it('survives a malformed note timestamp', async () => {
-		const notes = [{ created_at: 'not a date' }, { created_at: '2026-07-04T10:00:00Z' }];
-		expect(await activityOf({ application_notes: notes })).toEqual(
-			new Date('2026-07-04T10:00:00Z')
+	it('survives a malformed applied date', async () => {
+		expect(await activityOf({ application_sent_date: 'not a date' })).toEqual(
+			new Date('2026-01-10T00:00:00Z')
 		);
 	});
 

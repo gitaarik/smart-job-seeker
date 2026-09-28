@@ -16,13 +16,12 @@
  *
  * ## What counts as activity
  *
- * The later of when a thing happened and when it was written down, over four
+ * The later of when a thing happened and when it was written down, over three
  * sources:
  *
  *  - `application_status_log` — a move through the pipeline;
- *  - `application_records` — an email, an interview recap, an upload, taking
- *    `event_date` and `date_created` both;
- *  - `application_notes` — the jsonb array on the row itself;
+ *  - `application_records` — an email, an interview recap, an upload, a note,
+ *    taking `event_date` and `date_created` both;
  *  - `application_sent_date` — for hand-created rows that have neither of the
  *    first two.
  *
@@ -51,7 +50,6 @@ export interface ActivitySource {
 	id: number;
 	date_created?: Date | null;
 	application_sent_date?: string | null;
-	application_notes?: Array<{ created_at?: string | null }> | null;
 }
 
 export type WithLastActivity<T> = T & { last_activity: Date | null };
@@ -125,14 +123,12 @@ export async function attachLastActivity<T extends ActivitySource>(
 
 	return rows.map((row) => {
 		const record = recordedBy.get(row.id);
-		const noteTimes = (row.application_notes ?? []).map((n) => n?.created_at);
 
 		const at = latest(
 			movedBy.get(row.id),
 			record?.happened,
 			record?.recorded,
 			row.application_sent_date,
-			...noteTimes,
 			row.date_created
 		);
 

@@ -30,6 +30,7 @@ import {
 	applications,
 	application_letters,
 	application_questions,
+	application_records,
 	jobs
 } from '$lib/server/db/schema';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
@@ -47,6 +48,7 @@ import {
 	type CreatedTranslationIds
 } from './import-translations';
 import { deleteProfilePresentationTemplates, importResumeTemplates } from './import-templates';
+import { legacyNoteEntries } from './legacy-notes';
 import type { ExportData, ExportedProfileData, FullExportData } from './types';
 import {
 	certificateFilesByName,
@@ -882,9 +884,6 @@ async function importFullAccountEntities(profileId: number, data: FullExportData
 				job_id: jobId,
 				status: app.status || 'draft',
 				application_sent_date: toDateString(app.application_sent_date),
-				// jsonb note list, carried verbatim through the export.
-				application_notes: toJsonValue(app.application_note) as
-					{ id: string; text: string; created_at: string }[] | undefined,
 				salary_expectation: app.salary_expectation?.toString() ?? null,
 				salary_currency: app.salary_currency || null,
 				salary_period: app.salary_period || null,
@@ -906,6 +905,16 @@ async function importFullAccountEntities(profileId: number, data: FullExportData
 				application_id: createdApp.id,
 				question: question.question || '',
 				answer: question.answer || null
+			});
+		}
+
+		// Only an export written before notes moved to the timeline has these.
+		for (const note of legacyNoteEntries(app.application_note)) {
+			await dbDirect.insert(application_records).values({
+				application_id: createdApp.id,
+				record_type: 'note',
+				...note,
+				extraction_status: 'none'
 			});
 		}
 

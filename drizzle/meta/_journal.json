@@ -442,6 +442,13 @@
       "when": 1790622816549,
       "tag": "0062_activity_entry_digests",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1790626694028,
+      "tag": "0063_drop_application_notes",
+      "breakpoints": true
     }
   ]
 }

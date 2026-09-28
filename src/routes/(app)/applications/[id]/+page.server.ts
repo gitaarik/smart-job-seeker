@@ -134,10 +134,10 @@ export const actions: Actions = {
 	},
 
 	/**
-	 * A note from the Key facts card. It used to be pushed onto the
-	 * `application_notes` list, which nothing but this page ever read; it goes on
-	 * the timeline now, so the facts, the assistant and the letters see it. The
-	 * older list keeps its edit and delete below for the notes already in it.
+	 * A note from the Key facts card. It used to be pushed onto a list on the
+	 * application, which nothing but this page ever read; it goes on the timeline
+	 * now, so the facts, the assistant and the letters see it. Migration 0063 moved
+	 * the notes already in that list onto the timeline too, and dropped it.
 	 */
 	addNote: async ({ request, locals, cookies, params }) => {
 		const user = locals.user;
@@ -199,76 +199,6 @@ export const actions: Actions = {
 				(was ? `\n\nThis replaces what was picked out before: ${was}` : ''),
 			`Correction: ${label}`
 		);
-		return { success: true };
-	},
-
-	updateNote: async ({ request, locals, cookies, params }) => {
-		const user = locals.user;
-		if (!user) return fail(401, { error: 'Not authenticated' });
-
-		const profileId = await getSelectedProfileId(cookies, user.id);
-		if (!profileId) return fail(400, { error: 'No profile selected' });
-
-		const appId = parseInt(params.id);
-		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
-
-		const existing = await db.query.applications.findFirst({
-			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId))
-		});
-		if (!existing) return fail(404, { error: 'Application not found' });
-
-		const formData = await request.formData();
-		const noteId = formData.get('note_id') as string;
-		const text = (formData.get('text') as string)?.trim();
-		if (!text) return fail(400, { error: 'Note text is required' });
-
-		const notes =
-			(existing.application_notes as Array<{ id: string; text: string; created_at: string }>) || [];
-		const note = notes.find((n) => n.id === noteId);
-		if (!note) return fail(404, { error: 'Note not found' });
-		note.text = text;
-
-		await db
-			.update(applications)
-			.set({
-				application_notes: notes,
-				date_updated: new Date()
-			})
-			.where(eq(applications.id, appId));
-
-		return { success: true };
-	},
-
-	deleteNote: async ({ request, locals, cookies, params }) => {
-		const user = locals.user;
-		if (!user) return fail(401, { error: 'Not authenticated' });
-
-		const profileId = await getSelectedProfileId(cookies, user.id);
-		if (!profileId) return fail(400, { error: 'No profile selected' });
-
-		const appId = parseInt(params.id);
-		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
-
-		const existing = await db.query.applications.findFirst({
-			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId))
-		});
-		if (!existing) return fail(404, { error: 'Application not found' });
-
-		const formData = await request.formData();
-		const noteId = formData.get('note_id') as string;
-
-		const notes =
-			(existing.application_notes as Array<{ id: string; text: string; created_at: string }>) || [];
-		const filtered = notes.filter((n) => n.id !== noteId);
-
-		await db
-			.update(applications)
-			.set({
-				application_notes: filtered,
-				date_updated: new Date()
-			})
-			.where(eq(applications.id, appId));
-
 		return { success: true };
 	},
 

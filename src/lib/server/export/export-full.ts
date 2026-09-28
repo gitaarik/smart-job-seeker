@@ -149,7 +149,6 @@ export async function buildFullExport(
 		source_url: app.job?.source_url || undefined,
 		// application_sent_date is a Drizzle date() column → already string YYYY-MM-DD.
 		application_sent_date: app.application_sent_date || undefined,
-		application_note: app.application_notes || undefined,
 		salary_expectation: app.salary_expectation ? Number(app.salary_expectation) : undefined,
 		salary_currency: app.salary_currency || undefined,
 		salary_period: app.salary_period || undefined,
