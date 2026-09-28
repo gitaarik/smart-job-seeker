@@ -590,8 +590,13 @@ the letters and question answers written on it.`,
 	},
 	read_application: {
 		name: 'read_application',
-		description: `One application: how and when it was sent, and its activity log newest
-first.
+		description: `One application: how and when it was sent, where it stands, its key facts,
+and its activity log newest first.
+
+Where it stands and the key facts are worked out by the app from every entry
+and rewritten when one changes, so they are the current state: a figure that
+was renegotiated appears once, as it stands now. Each fact names the entry it
+came from, for read_activity_entry when the exact wording matters.
 
 Read the log before proposing an entry. An entry repeating something already
 there is the failure this tool exists to prevent — the chronology is read as

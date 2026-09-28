@@ -110,7 +110,8 @@ async function main() {
 
 	// Same order as the write path: derive first, then summarise, so the digest
 	// sees real types and titles instead of the write-time fallbacks. `title` and
-	// `record_type` are both in summaryHash, so this is not cosmetic — leaving it
+	// `record_type` are both in the headings summaryHash covers, so this is not
+	// cosmetic — leaving it
 	// out means the standing summary keeps describing "message" entries named
 	// after their attachments. summarizeApplication is hash-gated, so an
 	// application whose entries did not actually move is a read and nothing more.

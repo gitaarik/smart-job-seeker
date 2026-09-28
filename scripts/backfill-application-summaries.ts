@@ -14,7 +14,10 @@
  *
  * Safe to re-run: `summarizeApplication` is hash-gated, so a second pass over
  * an already-summarised application is a DB read and nothing more. Dry-run by
- * default, because each application it does process costs an LLM call.
+ * default, because each application it does process costs LLM calls: one per
+ * long entry that has no digest yet (entry-digest.ts), then one for the
+ * summary. The write path digests only a few entries per save, so this is
+ * where an application's backlog of undigested entries is worked through.
  *
  * The selection deliberately mirrors that gate rather than approximating it.
  * When it was `hash IS NULL` and the gate was a hash over the entries, the two
@@ -34,7 +37,7 @@ import { asc, isNull, not, or, sql } from 'drizzle-orm';
 import { application_records, applications } from '$lib/server/db/schema';
 import { CONTRACT_PREFIX, summarizeApplication } from '$lib/server/ai-chat/application-summary';
 import { isComparedStatus } from '$lib/application-status';
-import { MIN_ENTRIES_FOR_SUMMARY } from '$lib/application-records';
+import { summaryIsWorthWriting } from '$lib/application-records';
 
 const APPLY = process.argv.includes('--apply');
 const LIMIT = (() => {
@@ -49,7 +52,12 @@ async function main() {
 			id: applications.id,
 			profileId: applications.profile_id,
 			status: applications.status,
-			entries: sql<number>`count(${application_records.id})`.as('entries')
+			entries: sql<number>`count(${application_records.id})`.as('entries'),
+			// Per entry, because one long entry is worth a summary on its own
+			// (summaryIsWorthWriting): a count alone cannot say that.
+			lengths: sql<
+				Array<number | null>
+			>`array_agg(length(btrim(${application_records.content})))`.as('lengths')
 		})
 		.from(applications)
 		.leftJoin(
@@ -70,12 +78,14 @@ async function main() {
 	// be paying for a line nothing shows. The same rule as the spine itself, so
 	// the two cannot drift — an accepted application is in both.
 	const eligible = rows.filter(
-		(r) => Number(r.entries) >= MIN_ENTRIES_FOR_SUMMARY && isComparedStatus(r.status)
+		(r) =>
+			summaryIsWorthWriting((r.lengths ?? []).map((n) => Number(n ?? 0))) &&
+			isComparedStatus(r.status)
 	);
 
 	console.log(
 		`${rows.length} application(s) not on the current extraction (${CONTRACT_PREFIX}); ` +
-			`${eligible.length} eligible (>= ${MIN_ENTRIES_FOR_SUMMARY} entries, in play or accepted).`
+			`${eligible.length} eligible (two entries or one long one, in play or accepted).`
 	);
 
 	if (!APPLY) {
@@ -93,7 +103,8 @@ async function main() {
 	let done = 0;
 	let skipped = 0;
 	for (const r of targets) {
-		const wrote = await summarizeApplication(r.id, r.profileId);
+		// Every stale digest, not the write path's few: this is the backlog pass.
+		const wrote = await summarizeApplication(r.id, r.profileId, { maxDigests: Infinity });
 		if (wrote) done++;
 		else skipped++;
 		console.log(`  #${r.id} (${r.entries} entries) → ${wrote ? 'summarised' : 'no-op'}`);

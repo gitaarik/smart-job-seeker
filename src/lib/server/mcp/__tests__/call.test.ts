@@ -219,7 +219,20 @@ vi.mock('$lib/server/applications/profile-applications', () => ({
 			returned_chars: text.length,
 			more: offset + text.length < ENTRY_TEXT.length
 		});
-	}
+	},
+	readApplicationStanding: (id: number, profileId: number) =>
+		Promise.resolve(
+			id === APPLICATION.id && profileId === 12
+				? {
+						summary: 'Waiting on the recruiter to set up the first round.',
+						written_at: new Date('2026-08-02T12:00:00Z'),
+						key_facts: [
+							{ category: 'requirement', label: 'Office days', value: 'Two a week', entry_id: 7 }
+						],
+						offer_terms: null
+					}
+				: null
+		)
 }));
 
 const DOCUMENT = {
@@ -1389,6 +1402,19 @@ describe('jobs and applications', () => {
 		// Rendered by the capability that writes entries, not by a second copy of
 		// its instruction here — one wording, one place to change it.
 		expect(result.content[0].text).toContain('Do not propose an entry that repeats');
+	});
+
+	// What the app worked out from the entries, before the entries: an agent
+	// asked "what did they say about office days?" should not have to read the
+	// whole log to find the fact the overview already shows.
+	it('leads with where it stands and the key facts, each naming its entry', async () => {
+		const result = await callTool('read_application', { profile_id: 12, application_id: 44 }, KEY);
+		const text = result.content[0].text;
+
+		expect(text).toContain('where it stands: Waiting on the recruiter');
+		expect(text).toContain('- Office days: Two a week (requirement, entry 7)');
+		expect(text.indexOf('key facts')).toBeLessThan(text.indexOf('Recruiter call'));
+		expect(result.structuredContent?.standing).toBeTruthy();
 	});
 
 	it('names the posting in the text, not only in the structured content', async () => {

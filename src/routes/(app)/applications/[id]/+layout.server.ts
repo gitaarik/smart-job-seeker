@@ -83,7 +83,12 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
 				extras: {
 					has_content: sql<boolean>`coalesce(btrim(${application_records.content}), '') <> ''`.as(
 						'has_content'
-					)
+					),
+					// The other number the overview needs, for the same rule the
+					// summariser applies: one long entry is worth a summary on its own.
+					content_length: sql<number>`length(coalesce(btrim(${application_records.content}), ''))`
+						.mapWith(Number)
+						.as('content_length')
 				},
 				orderBy: [desc(application_records.event_date), desc(application_records.date_created)],
 				with: {

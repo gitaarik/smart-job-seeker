@@ -19,6 +19,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import { application_records, applications } from '$lib/server/db/schema';
 import { getRecordTypeLabel } from '$lib/application-records';
 import { isSnoozed } from '$lib/application-snooze';
+import type { OfferTerms } from '$lib/application-offer';
 
 export const APPLICATION_PAGE_DEFAULT = 20;
 export const APPLICATION_PAGE_MAX = 50;
@@ -116,6 +117,51 @@ export async function readProfileApplication(
 		status_step: row.status_step,
 		application_sent_date: row.application_sent_date,
 		snoozed_until: isSnoozed(row) ? row.snoozed_until : null
+	};
+}
+
+/**
+ * What the app has worked out about one application from its entries: where it
+ * stands, its key facts and any offer's terms. The overview page shows the
+ * same three.
+ *
+ * Returned as data, not as more of the log, because an agent reading an
+ * application to answer "what did they say about office days?" should not
+ * have to read every entry to find what the app already picked out. Each fact
+ * names the entry it came from, so the entry is one read_activity_entry away.
+ */
+export interface ApplicationStanding {
+	summary: string | null;
+	/** When the three were last written: they are rebuilt when an entry changes. */
+	written_at: Date | null;
+	key_facts: Array<{ category: string; label: string; value: string; entry_id: number | null }>;
+	offer_terms: OfferTerms | null;
+}
+
+export async function readApplicationStanding(
+	applicationId: number,
+	profileId: number
+): Promise<ApplicationStanding | null> {
+	const row = await db.query.applications.findFirst({
+		where: and(eq(applications.id, applicationId), eq(applications.profile_id, profileId)),
+		columns: {
+			context_summary: true,
+			context_summary_at: true,
+			context_details: true,
+			offer_terms: true
+		}
+	});
+	if (!row) return null;
+	return {
+		summary: row.context_summary,
+		written_at: row.context_summary_at,
+		key_facts: (row.context_details ?? []).map((d) => ({
+			category: d.category,
+			label: d.label,
+			value: d.value,
+			entry_id: d.record_id
+		})),
+		offer_terms: row.offer_terms ?? null
 	};
 }
 

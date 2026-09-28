@@ -2,11 +2,52 @@ import type { Actions } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { and, eq } from 'drizzle-orm';
-import { applications } from '$lib/server/db/schema';
+import { application_records, applications } from '$lib/server/db/schema';
 import { applicationStatusError, writeApplicationStatus } from '$lib/server/applications/status';
 import { writeApplicationSnooze } from '$lib/server/applications/snooze';
 import { snoozeError } from '$lib/application-snooze';
+import { clampRecordTitle, deriveRecordTitle, today } from '$lib/application-records';
+import { deriveRecordMetadata } from '$lib/server/ai-chat/record-derivation';
+import { summarizeApplication } from '$lib/server/ai-chat/application-summary';
 import { getSelectedProfileId } from '../../profile/utils';
+
+/**
+ * Put a note on the application's timeline and let the rest of it hear.
+ *
+ * The note box and "not right?" on the Key facts card both land here, as a
+ * `note` entry: the kind the summariser reads as the applicant's own words,
+ * above whatever the documents around it say. The same passes as the Activity
+ * composer, in its order: derivation first (a title for a long note, the
+ * people it names), then the summariser, which rebuilds the key facts with
+ * this note in them. The type is passed as decided so derivation cannot
+ * re-file a note as a message, and a correction's title as well, so it stays
+ * findable as one on the timeline.
+ */
+async function addNoteEntry(
+	app: { id: number; status_step: string | null },
+	profileId: number,
+	content: string,
+	title?: string
+): Promise<void> {
+	const [created] = await db
+		.insert(application_records)
+		.values({
+			application_id: app.id,
+			record_type: 'note',
+			title: title ? clampRecordTitle(title) : deriveRecordTitle(content),
+			content,
+			step: app.status_step,
+			event_date: today(),
+			extraction_status: 'none',
+			date_created: new Date()
+		})
+		.returning({ id: application_records.id });
+
+	await deriveRecordMetadata(created.id, profileId, {
+		decided: { record_type: true, title: !!title }
+	});
+	await summarizeApplication(app.id, profileId);
+}
 
 export const actions: Actions = {
 	updateStatus: async ({ request, locals, cookies, params }) => {
@@ -92,6 +133,12 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
+	/**
+	 * A note from the Key facts card. It used to be pushed onto the
+	 * `application_notes` list, which nothing but this page ever read; it goes on
+	 * the timeline now, so the facts, the assistant and the letters see it. The
+	 * older list keeps its edit and delete below for the notes already in it.
+	 */
 	addNote: async ({ request, locals, cookies, params }) => {
 		const user = locals.user;
 		if (!user) return fail(401, { error: 'Not authenticated' });
@@ -103,7 +150,8 @@ export const actions: Actions = {
 		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
 
 		const existing = await db.query.applications.findFirst({
-			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId))
+			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+			columns: { id: true, status_step: true }
 		});
 		if (!existing) return fail(404, { error: 'Application not found' });
 
@@ -111,22 +159,46 @@ export const actions: Actions = {
 		const text = (formData.get('text') as string)?.trim();
 		if (!text) return fail(400, { error: 'Note text is required' });
 
-		const notes =
-			(existing.application_notes as Array<{ id: string; text: string; created_at: string }>) || [];
-		notes.push({
-			id: crypto.randomUUID(),
-			text,
-			created_at: new Date().toISOString()
+		await addNoteEntry(existing, profileId, text);
+		return { success: true };
+	},
+
+	/**
+	 * "Not right?" on a key fact. The fact cannot be edited where it stands: the
+	 * card is rebuilt from the entries on every change, so an edit would revert on
+	 * the next one. What is right goes on the timeline as the applicant's note,
+	 * naming the fact and what it said, and the rebuild reads the note as
+	 * overriding the entry it came from.
+	 */
+	correctFact: async ({ request, locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
+
+		const existing = await db.query.applications.findFirst({
+			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+			columns: { id: true, status_step: true }
 		});
+		if (!existing) return fail(404, { error: 'Application not found' });
 
-		await db
-			.update(applications)
-			.set({
-				application_notes: notes,
-				date_updated: new Date()
-			})
-			.where(eq(applications.id, appId));
+		const formData = await request.formData();
+		const label = ((formData.get('label') as string) ?? '').trim().slice(0, 120);
+		const was = ((formData.get('value') as string) ?? '').trim().slice(0, 600);
+		const text = ((formData.get('text') as string) ?? '').trim();
+		if (!label || !text) return fail(400, { error: 'Say what is right' });
 
+		await addNoteEntry(
+			existing,
+			profileId,
+			`Correction to "${label}": ${text}` +
+				(was ? `\n\nThis replaces what was picked out before: ${was}` : ''),
+			`Correction: ${label}`
+		);
 		return { success: true };
 	},
 

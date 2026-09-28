@@ -21,30 +21,36 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faCompass, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../components/Card.svelte';
-	import { MIN_ENTRIES_FOR_SUMMARY } from '$lib/application-records';
+	import { summaryIsWorthWriting } from '$lib/application-records';
 	import { timeAgo } from '$lib/format';
 
 	let {
 		summary,
 		updatedAt,
-		entryCount,
+		entryLengths,
 		activityHref
 	}: {
 		summary: string | null;
 		updatedAt: Date | string | null;
-		/** Entries carrying content — the same ones the summariser counts. */
-		entryCount: number;
+		/**
+		 * The length of each entry's text, 0 for one with none: the summariser's
+		 * rule is decided from exactly these (summaryIsWorthWriting).
+		 */
+		entryLengths: number[];
 		activityHref: string;
 	} = $props();
 
+	/** Entries carrying content — the same ones the summariser reads. */
+	let entryCount = $derived(entryLengths.filter((n) => n > 0).length);
+
 	/**
-	 * Below the threshold, no summary is the rule working: there is nothing to
-	 * condense that the entries do not already say. At or above it, an absent
-	 * summary means nobody has looked — a failed generation, or an application
-	 * dormant since before the feature existed — and staying silent about that
-	 * would read as "nothing has happened here", which is the opposite of true.
+	 * Below the rule, no summary is the rule working: there is nothing to
+	 * condense that the entries do not already say. Past it, an absent summary
+	 * means nobody has looked — a failed generation, or an application dormant
+	 * since before the feature existed — and staying silent about that would
+	 * read as "nothing has happened here", which is the opposite of true.
 	 */
-	let expected = $derived(entryCount >= MIN_ENTRIES_FOR_SUMMARY);
+	let expected = $derived(summaryIsWorthWriting(entryLengths));
 </script>
 
 {#if summary || expected}

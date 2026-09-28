@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
 	coerceDetails,
+	coerceEntryFacts,
 	getDetailCategoryLabel,
 	groupDetails,
+	PRIVATE_DETAIL_CATEGORIES,
 	type StoredDetail
 } from './application-details';
 
@@ -151,5 +153,47 @@ describe('getDetailCategoryLabel', () => {
 		expect(getDetailCategoryLabel('requirement')).toBe('Requirements');
 		expect(getDetailCategoryLabel('nonsense')).toBe('Also worth knowing');
 		expect(getDetailCategoryLabel(null)).toBe('Also worth knowing');
+	});
+});
+
+describe('coerceEntryFacts', () => {
+	// One entry is read once, and its digest is all the summariser sees of it:
+	// a contract alone carries more terms than an application's twelve.
+	it('keeps more than an application does', () => {
+		const many = Array.from({ length: 25 }, (_, i) => detail({ label: `Term ${i}` }));
+		expect(coerceDetails(many)).toHaveLength(12);
+		expect(coerceEntryFacts(many)).toHaveLength(20);
+	});
+
+	it('carries no citation: the entry is where it is stored', () => {
+		const [fact] = coerceEntryFacts([detail({ record_id: 9 })]);
+		expect(fact).toEqual({
+			category: 'requirement',
+			label: 'Office days',
+			value: 'Tuesdays and Thursdays, in Amsterdam'
+		});
+	});
+});
+
+describe('PRIVATE_DETAIL_CATEGORIES', () => {
+	it('names the categories a letter to an employer must not carry', () => {
+		expect([...PRIVATE_DETAIL_CATEGORIES].sort()).toEqual(['compensation', 'decision']);
+	});
+});
+
+describe('a detail that arrives as a string', () => {
+	// Measured on a real call transcript: the eleventh of eleven facts came back
+	// as a string holding its object, and a strict schema lost all eleven.
+	it('parses a string holding the object', () => {
+		const raw = [
+			detail({ label: 'Stack' }),
+			JSON.stringify({ category: 'logistics', label: 'Next round', value: 'With the CTO' })
+		];
+		expect(coerceDetails(raw).map((d) => d.label)).toEqual(['Stack', 'Next round']);
+		expect(coerceEntryFacts(raw)).toHaveLength(2);
+	});
+
+	it('drops a string that is not an object', () => {
+		expect(coerceDetails(['just words', '["a"]', '{ broken'])).toEqual([]);
 	});
 });

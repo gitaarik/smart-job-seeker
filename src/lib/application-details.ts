@@ -118,6 +118,21 @@ const asText = (v: unknown, max: number): string | null => {
 };
 
 /**
+ * A detail that arrived as a string holding its object. gpt-oss does this for
+ * one element in a list now and then, and the rest of the list is fine: parsing
+ * it keeps the detail rather than dropping it, and anything that is not an
+ * object once parsed is dropped as before.
+ */
+function parseObject(text: string): unknown {
+	try {
+		const parsed: unknown = JSON.parse(text);
+		return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+	} catch {
+		return null;
+	}
+}
+
+/**
  * Our side of the model boundary.
  *
  * Coercion lives here rather than in the wire schema because a `.transform()`
@@ -130,14 +145,19 @@ const asText = (v: unknown, max: number): string | null => {
  * linking to the wrong entry is worse than one linking to none: it invites
  * someone to verify a claim against text that does not contain it.
  */
-export function coerceDetails(raw: unknown, knownRecordIds: number[] = []): ApplicationDetail[] {
+export function coerceDetails(
+	raw: unknown,
+	knownRecordIds: number[] = [],
+	max: number = MAX_DETAILS
+): ApplicationDetail[] {
 	if (!Array.isArray(raw)) return [];
 
 	const known = new Set(knownRecordIds);
 	const seen = new Set<string>();
 	const details: ApplicationDetail[] = [];
 
-	for (const entry of raw) {
+	for (const item of raw) {
+		const entry = typeof item === 'string' ? parseObject(item) : item;
 		if (!entry || typeof entry !== 'object') continue;
 		const e = entry as Record<string, unknown>;
 
@@ -179,8 +199,52 @@ export function coerceDetails(raw: unknown, knownRecordIds: number[] = []): Appl
 	// each group, so the model's own order stands otherwise.
 	const decisions = details.filter((d) => d.category === 'decision');
 	const rest = details.filter((d) => d.category !== 'decision');
-	return [...decisions, ...rest].slice(0, MAX_DETAILS);
+	return [...decisions, ...rest].slice(0, max);
 }
+
+/**
+ * One fact as the digest pass reads it out of a single entry.
+ *
+ * The same vocabulary as the application's details, and no citation: the entry
+ * it came from is the one it is stored on. The summariser reads these in place
+ * of a long entry's text and cites the entry, so provenance survives the step.
+ */
+export interface EntryFact {
+	category: DetailCategory;
+	label: string;
+	value: string;
+}
+
+/**
+ * More than an application gets, because an entry is read once and this is all
+ * of it the summariser will ever see: a contract alone carries a dozen terms.
+ */
+const MAX_ENTRY_FACTS = 20;
+
+/**
+ * Our side of the boundary for one entry's facts: the same normalisation as
+ * `coerceDetails`, minus the citation. A decision still goes first, for the
+ * same reason as there, and the cap comes after it.
+ */
+export function coerceEntryFacts(raw: unknown): EntryFact[] {
+	return coerceDetails(raw, [], MAX_ENTRY_FACTS).map(({ category, label, value }) => ({
+		category,
+		label,
+		value
+	}));
+}
+
+/**
+ * Categories kept out of text written for somebody else: a cover letter, an
+ * answer on an application form.
+ *
+ * Both are what the applicant negotiates with. A walk-away number is their
+ * floor, and what a recruiter's band was or what the applicant asked for is
+ * the position they hold. A letter that repeats either hands it to the other
+ * side, and nothing a letter has to say needs it. The applicant's own views,
+ * the assistant and interview prep read every category.
+ */
+export const PRIVATE_DETAIL_CATEGORIES: ReadonlySet<string> = new Set(['decision', 'compensation']);
 
 /**
  * As stored: `category` is a plain string, because the column is jsonb and rows

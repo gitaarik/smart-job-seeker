@@ -28,10 +28,11 @@
 
 import { db } from '$lib/server/db';
 import { asc, eq } from 'drizzle-orm';
-import { application_records } from '$lib/server/db/schema';
+import { application_records, applications } from '$lib/server/db/schema';
 import { getFile } from '$lib/server/files';
 import { extractUpload } from '$lib/server/documents/extract';
 import { getRecordTypeLabel } from '$lib/application-records';
+import { PRIVATE_DETAIL_CATEGORIES, type StoredDetail } from '$lib/application-details';
 
 /**
  * `full` is for prompts the history is *about* (cheat sheets), where it is the
@@ -189,13 +190,42 @@ function renderBlock(entry: ActivityEntry, mode: ActivityContextMode): string {
 }
 
 /**
+ * The application's key facts, above the entries they were picked out of.
+ *
+ * They matter most where the entries are cut. In `compact` a transcript keeps
+ * 1,500 characters from its two ends and is the first entry dropped, so a cover
+ * letter for a role that was only ever described on a call was written from
+ * almost none of the call. The facts were read out of all of it, and they are
+ * what is true now rather than every figure ever mentioned.
+ *
+ * `compact` writes text for the employer to read, so it leaves out the
+ * categories the applicant negotiates with (PRIVATE_DETAIL_CATEGORIES).
+ */
+function renderKeyFacts(facts: StoredDetail[], mode: ActivityContextMode): string[] {
+	const shown =
+		mode === 'compact' ? facts.filter((f) => !PRIVATE_DETAIL_CATEGORIES.has(f.category)) : facts;
+	if (shown.length === 0) return [];
+	return [
+		'',
+		'### Key facts so far',
+		'',
+		'Picked out of every entry on this application, including any cut or left out',
+		'below, and rewritten whenever one changes, so each one is the current state.',
+		'Where an entry below says more, the entry is the source.',
+		'',
+		...shown.map((f) => `- ${f.label}: ${f.value}`)
+	];
+}
+
+/**
  * Format the stream into a prompt block, applying the per-entry ceilings and
  * the total cap. Pure — no DB access — so the budget behaviour is directly
  * testable.
  */
 export function formatActivityContext(
 	entries: ActivityEntry[],
-	mode: ActivityContextMode = 'full'
+	mode: ActivityContextMode = 'full',
+	facts: StoredDetail[] = []
 ): string {
 	const budget = TOTALS[mode];
 	const withContent = entries.filter((e) => e.content?.trim());
@@ -310,6 +340,7 @@ export function formatActivityContext(
 		...guidance,
 		...omission,
 		...truncation,
+		...renderKeyFacts(facts, mode),
 		'',
 		kept.map((e) => renderBlock(e, mode)).join('\n\n---\n\n')
 	].join('\n');
@@ -500,7 +531,14 @@ export async function applicationActivityText(
 	mode: ActivityContextMode = 'full'
 ): Promise<string> {
 	try {
-		return formatActivityContext(await loadActivityEntries(applicationId), mode);
+		const [entries, app] = await Promise.all([
+			loadActivityEntries(applicationId),
+			db.query.applications.findFirst({
+				where: eq(applications.id, applicationId),
+				columns: { context_details: true }
+			})
+		]);
+		return formatActivityContext(entries, mode, app?.context_details ?? []);
 	} catch {
 		// Context is a bonus, never a reason to fail the generation.
 		return '';

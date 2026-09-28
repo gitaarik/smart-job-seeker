@@ -78,8 +78,11 @@ import { createNotification } from '$lib/server/notifications';
 import {
 	listProfileApplications,
 	readApplicationEntry,
-	readProfileApplication
+	readApplicationStanding,
+	readProfileApplication,
+	type ApplicationStanding
 } from '$lib/server/applications/profile-applications';
+import { describeOffer } from '$lib/server/ai-chat/application-pipeline';
 import { listProfileDocuments, readProfileDocument } from '$lib/server/documents/read';
 import {
 	isTextKind,
@@ -657,6 +660,7 @@ async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolRes
 		...(await CAPABILITIES.update_application_status.current(target, actor))
 	};
 	const logged = await activity.current(target, actor);
+	const standing = await readApplicationStanding(application.id, key.profileId);
 
 	// The chronology rendered by the capability that writes into it, rather than
 	// by a second copy here. It already has to tell a model not to log the same
@@ -674,9 +678,37 @@ async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolRes
 			// otherwise has no route to the posting but list_jobs and a guess, and
 			// this record says what was sent — never what was asked for.
 			`${application.job_id === null ? '' : `posting: job ${application.job_id} — read_job for what was advertised\n`}` +
-			`\n${renderFields(fields)}\n\n${chronology}`,
-		{ application, fields, ...logged }
+			`\n${renderFields(fields)}\n\n${renderStanding(standing)}${chronology}`,
+		{ application, fields, standing, ...logged }
 	);
+}
+
+/**
+ * Where the application stands and its key facts, above the log they came from.
+ *
+ * Both are rewritten from the entries whenever one changes, so they are the
+ * current state and the entries are the evidence. Printed before the log so an
+ * agent answering "what did they say about pay?" reads the answer before it
+ * reads forty entries looking for one, and each fact carries its entry id for
+ * the read_activity_entry that checks it. Empty when nothing has been worked
+ * out yet, which for a new application is the normal case.
+ */
+function renderStanding(standing: ApplicationStanding | null): string {
+	if (!standing || (!standing.summary && standing.key_facts.length === 0)) return '';
+	const lines: string[] = [];
+	if (standing.summary) lines.push(`where it stands: ${standing.summary}`);
+	if (standing.offer_terms) lines.push(`offer: ${describeOffer(standing.offer_terms)}`);
+	if (standing.key_facts.length > 0) {
+		lines.push(
+			'key facts (picked out of the entries and kept current; the entry each came from in brackets):',
+			...standing.key_facts.map(
+				(f) =>
+					`- ${f.label}: ${f.value} (${f.category}` +
+					`${f.entry_id === null ? '' : `, entry ${f.entry_id}`})`
+			)
+		);
+	}
+	return `${lines.join('\n')}\n\n`;
 }
 
 /**

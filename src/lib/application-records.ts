@@ -132,6 +132,34 @@ export function today(): string {
 export const MIN_ENTRIES_FOR_SUMMARY = 2;
 
 /**
+ * An entry longer than this holds more than anyone takes in at a glance: the
+ * summariser reads it through its digest rather than whole, and it is worth a
+ * summary even when it is the only entry.
+ *
+ * Measured on dev in 2026-09: the median entry is ~5,000 characters, and 71 of
+ * 92 were over this.
+ */
+export const LONG_ENTRY_CHARS = 1500;
+
+/**
+ * Whether an application's entries are worth a summary and key facts, from the
+ * length of each entry's text.
+ *
+ * Two entries, or one long one. It used to be two entries flat, and that
+ * skipped exactly the applications that most needed reading: a first call kept
+ * as one long transcript is the whole of what is known about a role, and its
+ * overview showed nothing at all until something else was logged. A single
+ * SHORT entry still says everything a summary would.
+ */
+export function summaryIsWorthWriting(contentLengths: number[]): boolean {
+	const usable = contentLengths.filter((n) => n > 0);
+	return (
+		usable.length >= MIN_ENTRIES_FOR_SUMMARY ||
+		(usable.length === 1 && usable[0] > LONG_ENTRY_CHARS)
+	);
+}
+
+/**
  * Who a record involves, stored on `application_records.contacts` as
  * `[{ name, role }]`.
  *

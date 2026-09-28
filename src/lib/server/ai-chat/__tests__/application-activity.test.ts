@@ -435,3 +435,44 @@ describe('formatActivityContext — the merged guidance', () => {
 		expect(out).not.toContain('extracted from an attached file');
 	});
 });
+
+/**
+ * The key facts, above the entries. They matter most where the entries are
+ * cut: in compact mode a transcript keeps 1,500 characters from its two ends,
+ * and the facts were read out of all of it.
+ */
+describe('formatActivityContext — key facts', () => {
+	const facts = [
+		{ category: 'role_detail', label: 'Stack', value: 'FastAPI and Postgres', record_id: 3 },
+		{ category: 'logistics', label: 'Next round', value: 'With the CTO', record_id: 3 },
+		{ category: 'compensation', label: 'Recruiter budget', value: 'Up to 7,500', record_id: 3 },
+		{ category: 'decision', label: 'Walk-away', value: 'Below 7,000 not worth it', record_id: 4 }
+	];
+
+	it('puts every fact above the entries in full mode', () => {
+		const out = formatActivityContext([record({ content: 'A long call.' })], 'full', facts);
+		expect(out).toContain('### Key facts so far');
+		for (const f of facts) expect(out).toContain(`- ${f.label}: ${f.value}`);
+		expect(out.indexOf('Key facts so far')).toBeLessThan(out.indexOf('A long call.'));
+	});
+
+	// Compact writes for the employer. The applicant's floor and the money talk
+	// are what they negotiate with; a letter that repeats them hands them over.
+	it('keeps decisions and money talk out of compact mode', () => {
+		const out = formatActivityContext([record({ content: 'A long call.' })], 'compact', facts);
+		expect(out).toContain('- Stack: FastAPI and Postgres');
+		expect(out).toContain('- Next round: With the CTO');
+		expect(out).not.toContain('Recruiter budget');
+		expect(out).not.toContain('Walk-away');
+	});
+
+	it('adds no block when there are no facts, or none that may be shown', () => {
+		expect(formatActivityContext([record()], 'full', [])).not.toContain('Key facts');
+		const privateOnly = facts.filter((f) => f.category === 'decision');
+		expect(formatActivityContext([record()], 'compact', privateOnly)).not.toContain('Key facts');
+	});
+
+	it('still renders nothing when nothing is recorded', () => {
+		expect(formatActivityContext([], 'full', facts)).toBe('');
+	});
+});

@@ -4171,6 +4171,35 @@ export const application_records = pgTable(
 		 * gets fresh metadata and untouched content never pays for a second LLM call.
 		 */
 		derived_at: timestamp({ withTimezone: true, mode: 'date' }),
+		/**
+		 * What this entry says, read once from the whole of it: a line on what it is
+		 * and the facts it holds. Written by ai-chat/entry-digest.ts for entries too
+		 * long to hand the summariser whole, and read by the summariser in their
+		 * place.
+		 *
+		 * The summariser used to read the raw text of every entry, oldest first, and
+		 * stop at 40,000 characters. An application that grew past that was
+		 * summarised from its opening weeks: one with 379,000 characters over 40
+		 * entries was read to its seventh, and its overview said no contract had
+		 * been sent three days after the contract was filed. Reading each entry once,
+		 * when it is written, is what lets the application's pass see all of them.
+		 *
+		 * A projection of `content`, like the application's own details: rewritten
+		 * whole when the text changes, never edited. The type is inlined because
+		 * drizzle-kit runs outside Vite and cannot resolve `$lib`; see
+		 * $lib/application-details.ts for the fact shape.
+		 */
+		digest: jsonb().$type<{
+			gist: string;
+			facts: Array<{ category: string; label: string; value: string }>;
+		} | null>(),
+		/**
+		 * `v<n>:` + sha256 over what the digest was written from. The same gate as
+		 * `applications.context_summary_hash`: an edit that leaves the text alone
+		 * costs nothing, and a new contract version makes every digest stale.
+		 */
+		digest_hash: text(),
+		digest_at: timestamp({ withTimezone: true, mode: 'date' }),
 		date_created: timestamp({ precision: 6, withTimezone: true, mode: 'date' }).defaultNow(),
 		date_updated: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
 	},

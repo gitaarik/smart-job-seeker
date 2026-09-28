@@ -401,23 +401,58 @@ export const summarizeApplicationSchema = z.object({
 	// the summary and the offer deadline down with it. coerceDetails normalises
 	// an unknown category to "other" and drops a citation to an entry that was
 	// never shown — see $lib/application-details.ts.
+	// An element may also arrive as a string holding the object: gpt-oss did
+	// exactly that for one fact out of eleven on a real transcript, and a strict
+	// element type threw the whole answer away over it. coerceDetails parses it.
 	details: z
 		.array(
-			z.object({
-				category: z
-					.string()
-					.describe(
-						'One of: requirement, compensation, logistics, commitment, role_detail, decision, other.'
-					),
-				label: z.string().describe('Short noun phrase naming the thing.'),
-				value: z.string().describe('The fact itself, in one line.'),
-				record_id: z
-					.union([z.number(), z.string()])
-					.nullable()
-					.describe('The [entry N] number this came from, or null.')
-			})
+			z.union([
+				z.object({
+					category: z
+						.string()
+						.describe(
+							'One of: requirement, compensation, logistics, commitment, role_detail, decision, other.'
+						),
+					label: z.string().describe('Short noun phrase naming the thing.'),
+					value: z.string().describe('The fact itself, in one line.'),
+					record_id: z
+						.union([z.number(), z.string()])
+						.nullable()
+						.describe('The [entry N] number this came from, or null.')
+				}),
+				z.string()
+			])
 		)
 		.describe('Concrete details worth remembering. Empty array when there are none.')
+});
+
+/**
+ * Schema for digest_activity_entry.
+ *
+ * Loose on `category` for the same reason as summarizeApplicationSchema's
+ * details: an enum would fail the whole parse over one invented category, and
+ * the gist with it. coerceDigest normalises on our side (entry-digest.ts).
+ */
+export const digestActivityEntrySchema = z.object({
+	gist: z.string().describe('One or two sentences: what this entry is and what it establishes.'),
+	// Object or string, for the reason on summarizeApplicationSchema's details:
+	// measured here first, on a 17,000-character call transcript.
+	facts: z
+		.array(
+			z.union([
+				z.object({
+					category: z
+						.string()
+						.describe(
+							'One of: requirement, compensation, logistics, commitment, role_detail, decision, other.'
+						),
+					label: z.string().describe('Short noun phrase naming the thing.'),
+					value: z.string().describe('The fact itself, in one line, figures as written.')
+				}),
+				z.string()
+			])
+		)
+		.describe('Facts this entry states. Empty array when there are none.')
 });
 
 /**
@@ -888,6 +923,7 @@ export const aiPromptSchemas = {
 	extract_job_data: extractJobDataSchema,
 	extract_job_header: extractJobHeaderSchema,
 	derive_record_metadata: deriveRecordMetadataSchema,
+	digest_activity_entry: digestActivityEntrySchema,
 	summarize_application: summarizeApplicationSchema,
 	extract_document: extractDocumentSchema,
 	propose_project_from_code: proposeProjectFromCodeSchema,

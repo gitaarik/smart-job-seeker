@@ -10,7 +10,6 @@
 	 */
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
-	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -35,7 +34,6 @@
 		faStickyNote,
 		faWrench,
 		faTrash,
-		faPlus,
 		faTimes
 	} from '@fortawesome/free-solid-svg-icons';
 	import ConfirmModal from '../../profile/components/ConfirmModal.svelte';
@@ -51,7 +49,7 @@
 	import StatusStepper from './StatusStepper.svelte';
 	import ActivitySummaryCard from './ActivitySummaryCard.svelte';
 	import OfferCard from './OfferCard.svelte';
-	import DetailsCard from './DetailsCard.svelte';
+	import KeyFactsCard from './KeyFactsCard.svelte';
 	import { hasOfferContent } from '$lib/application-offer';
 	import { describeSnooze, isSnoozed, snoozePresets, snoozeUntil } from '$lib/application-snooze';
 	import { formatSalaryRange, timeAgo } from '$lib/format';
@@ -72,12 +70,10 @@
 	let job = $derived(app.job);
 	let profileSlug = $derived(data.selectedProfile?.slug);
 
-	// Notes
+	// Older notes: the list notes were kept in before they went on the timeline.
+	// Edit and delete only; a new note is written from the Key facts card.
 	type Note = { id: string; text: string; created_at: string };
 	let notes = $derived([...((app.application_notes || []) as Note[])].reverse());
-	let newNoteText = $state('');
-	let addingNote = $state(false);
-	let newNoteInput = $state<HTMLTextAreaElement | null>(null);
 	let editingNoteId = $state<string | null>(null);
 	let editingNoteText = $state('');
 	let confirmingDeleteId = $state<string | null>(null);
@@ -146,13 +142,10 @@
 	let letterCount = $derived(app.application_letters?.length || 0);
 	let questionCount = $derived(app.application_questions?.length || 0);
 	let fileCount = $derived((app.application_records ?? []).filter((r) => r.file_id).length);
-	// The entries the summariser reads: an extraction with no text in it is not
-	// one it could have summarised, so counting rows would overstate what the
-	// absence of a summary means. `has_content` is computed in the layout query
-	// rather than derived from the text, which this page no longer receives.
-	let summarisedEntryCount = $derived(
-		(app.application_records ?? []).filter((r) => r.has_content).length
-	);
+	// What the summariser decides from: the length of each entry's text, 0 for
+	// an extraction with nothing in it. Computed in the layout query rather than
+	// from the text, which this page no longer receives.
+	let entryLengths = $derived((app.application_records ?? []).map((r) => r.content_length ?? 0));
 	let activityHref = $derived(`/applications/${app.id}/activity`);
 	let statusLogCount = $derived(app.application_status_logs?.length || 0);
 	let recentStatusLog = $derived(app.application_status_logs?.slice(0, 5) || []);
@@ -402,13 +395,14 @@
 	<ActivitySummaryCard
 		summary={app.context_summary}
 		updatedAt={app.context_summary_at}
-		entryCount={summarisedEntryCount}
+		{entryLengths}
 		{activityHref}
 	/>
 
-	<DetailsCard
+	<KeyFactsCard
 		details={app.context_details ?? []}
 		updatedAt={app.context_summary_at}
+		{entryLengths}
 		{activityHref}
 	/>
 
@@ -695,198 +689,149 @@
 		</div>
 	</Card>
 
-	<!-- Notes -->
-	<Card padding="lg">
-		<div class="space-y-3">
-			<div class="flex items-center gap-2">
-				<FontAwesomeIcon icon={faStickyNote} class="h-4 w-4 text-[var(--dash-text-secondary)]" />
-				<h2 class="flex-1 text-sm font-semibold tracking-wide text-[var(--dash-text)] uppercase">
-					Notes
-				</h2>
-				{#if !addingNote}
-					<button
-						type="button"
-						onclick={() => {
-							addingNote = true;
-							tick().then(() => newNoteInput?.focus());
-						}}
-						class="rounded-md border border-[var(--dash-border)] px-2.5 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)]"
-					>
-						+ Add
-					</button>
-				{/if}
-			</div>
+	<!-- Older notes. Notes used to live here, in a list on the application that
+       no AI feature read. New ones go on the timeline from the Key facts card,
+       where they feed the facts, the assistant and the letters. The ones
+       written before that stay here, editable, until someone moves them:
+       nothing deletes them on the applicant's behalf. -->
+	{#if notes.length > 0}
+		<Card padding="lg">
+			<div class="space-y-3">
+				<div class="flex items-center gap-2">
+					<FontAwesomeIcon icon={faStickyNote} class="h-4 w-4 text-[var(--dash-text-secondary)]" />
+					<h2 class="flex-1 text-sm font-semibold tracking-wide text-[var(--dash-text)] uppercase">
+						Older notes
+					</h2>
+				</div>
+				<p class="text-xs text-[var(--dash-text-muted)]">
+					Kept from before notes moved to Activity. New notes go in the box under Key facts, where
+					the assistant and your letters read them too.
+				</p>
 
-			<!-- Add note input -->
-			{#if addingNote}
-				<form
-					method="POST"
-					action="?/addNote"
-					use:enhance={() => {
-						return async ({ update }) => {
-							await update();
-							newNoteText = '';
-							addingNote = false;
-						};
-					}}
-				>
-					<div class="flex items-start gap-2">
-						<textarea
-							name="text"
-							bind:this={newNoteInput}
-							bind:value={newNoteText}
-							oninput={(e) => {
-								const el = e.currentTarget;
-								el.style.height = 'auto';
-								el.style.height = el.scrollHeight + 'px';
-							}}
-							onkeydown={(e) => {
-								if (e.key === 'Escape') {
-									addingNote = false;
-									newNoteText = '';
-								} else if (e.key === 'Enter' && !e.shiftKey) {
-									e.preventDefault();
-									if (newNoteText.trim()) e.currentTarget.form?.requestSubmit();
-								}
-							}}
-							placeholder="Add a note..."
-							rows={1}
-							class="flex-1 resize-none overflow-hidden rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)] focus:border-[var(--dash-primary)] focus:outline-none"
-						></textarea>
-						<button
-							type="submit"
-							disabled={!newNoteText.trim()}
-							class="p-2 text-[var(--dash-primary)] transition-colors hover:text-[var(--dash-primary-hover)] disabled:opacity-30"
-						>
-							<FontAwesomeIcon icon={faPlus} class="h-4 w-4" />
-						</button>
-					</div>
-				</form>
-			{/if}
-
-			<!-- Note list -->
-			{#if notes.length > 0}
-				<ul class="mt-2 space-y-0.5">
-					{#each notes as note (note.id)}
-						<li
-							class="group -mx-2 flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-[var(--dash-bg)]"
-						>
-							{#if editingNoteId === note.id}
-								<!-- Editing mode -->
-								<form
-									method="POST"
-									action="?/updateNote"
-									class="flex flex-1 items-start gap-2"
-									use:enhance={() => {
-										return async ({ update }) => {
-											await update();
-											editingNoteId = null;
-										};
-									}}
-								>
-									<input type="hidden" name="note_id" value={note.id} />
-									<textarea
-										name="text"
-										bind:value={editingNoteText}
-										oninput={(e) => {
-											const el = e.currentTarget;
-											el.style.height = 'auto';
-											el.style.height = el.scrollHeight + 'px';
+				<!-- Note list -->
+				{#if notes.length > 0}
+					<ul class="mt-2 space-y-0.5">
+						{#each notes as note (note.id)}
+							<li
+								class="group -mx-2 flex items-start gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-[var(--dash-bg)]"
+							>
+								{#if editingNoteId === note.id}
+									<!-- Editing mode -->
+									<form
+										method="POST"
+										action="?/updateNote"
+										class="flex flex-1 items-start gap-2"
+										use:enhance={() => {
+											return async ({ update }) => {
+												await update();
+												editingNoteId = null;
+											};
 										}}
-										onkeydown={(e) => {
-											if (e.key === 'Escape') editingNoteId = null;
-											else if (e.key === 'Enter' && !e.shiftKey) {
-												e.preventDefault();
-												if (editingNoteText.trim()) e.currentTarget.form?.requestSubmit();
-											}
-										}}
-										use:autoResizeOnMount
-										rows={1}
-										class="flex-1 resize-none overflow-hidden rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] focus:border-[var(--dash-primary)] focus:outline-none"
-									></textarea>
-									<button
-										type="submit"
-										class="p-1 text-[var(--dash-primary)] transition-colors hover:text-[var(--dash-primary-hover)]"
 									>
-										<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
-									</button>
-									<button
-										type="button"
-										onclick={() => (editingNoteId = null)}
-										class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
-									>
-										<FontAwesomeIcon icon={faTimes} class="h-3 w-3" />
-									</button>
-								</form>
-							{:else}
-								<!-- View mode -->
-								<div class="min-w-0 flex-1 border-l-2 border-[var(--dash-border)] pl-3">
-									<!-- eslint-disable svelte/no-at-html-tags -->
-									<span class="text-sm leading-relaxed whitespace-pre-wrap text-white"
-										>{@html linkify(note.text)}</span
-									>
-									<!-- eslint-enable svelte/no-at-html-tags -->
-									<span class="ml-2 text-xs text-[var(--dash-text-muted)]"
-										>{timeAgo(note.created_at)}</span
-									>
-								</div>
-								<div
-									class="flex flex-shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
-								>
-									<button
-										type="button"
-										onclick={() => {
-											editingNoteId = note.id;
-											editingNoteText = note.text;
-										}}
-										class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
-									>
-										<FontAwesomeIcon icon={faPencil} class="h-3 w-3" />
-									</button>
-									{#if confirmingDeleteId === note.id}
-										<form
-											method="POST"
-											action="?/deleteNote"
-											class="flex items-center gap-1"
-											use:enhance={() => {
-												return async ({ update }) => {
-													await update();
-													confirmingDeleteId = null;
-												};
+										<input type="hidden" name="note_id" value={note.id} />
+										<textarea
+											name="text"
+											bind:value={editingNoteText}
+											oninput={(e) => {
+												const el = e.currentTarget;
+												el.style.height = 'auto';
+												el.style.height = el.scrollHeight + 'px';
 											}}
+											onkeydown={(e) => {
+												if (e.key === 'Escape') editingNoteId = null;
+												else if (e.key === 'Enter' && !e.shiftKey) {
+													e.preventDefault();
+													if (editingNoteText.trim()) e.currentTarget.form?.requestSubmit();
+												}
+											}}
+											use:autoResizeOnMount
+											rows={1}
+											class="flex-1 resize-none overflow-hidden rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] focus:border-[var(--dash-primary)] focus:outline-none"
+										></textarea>
+										<button
+											type="submit"
+											class="p-1 text-[var(--dash-primary)] transition-colors hover:text-[var(--dash-primary-hover)]"
 										>
-											<input type="hidden" name="note_id" value={note.id} />
-											<button
-												type="submit"
-												class="px-1 py-0.5 text-xs font-medium text-[var(--dash-error)]"
-											>
-												Delete?
-											</button>
-										</form>
+											<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
+										</button>
 										<button
 											type="button"
-											onclick={() => (confirmingDeleteId = null)}
+											onclick={() => (editingNoteId = null)}
 											class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
 										>
 											<FontAwesomeIcon icon={faTimes} class="h-3 w-3" />
 										</button>
-									{:else}
+									</form>
+								{:else}
+									<!-- View mode -->
+									<div class="min-w-0 flex-1 border-l-2 border-[var(--dash-border)] pl-3">
+										<!-- eslint-disable svelte/no-at-html-tags -->
+										<span class="text-sm leading-relaxed whitespace-pre-wrap text-white"
+											>{@html linkify(note.text)}</span
+										>
+										<!-- eslint-enable svelte/no-at-html-tags -->
+										<span class="ml-2 text-xs text-[var(--dash-text-muted)]"
+											>{timeAgo(note.created_at)}</span
+										>
+									</div>
+									<div
+										class="flex flex-shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+									>
 										<button
 											type="button"
-											onclick={() => (confirmingDeleteId = note.id)}
-											class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-error)]"
+											onclick={() => {
+												editingNoteId = note.id;
+												editingNoteText = note.text;
+											}}
+											class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
 										>
-											<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
+											<FontAwesomeIcon icon={faPencil} class="h-3 w-3" />
 										</button>
-									{/if}
-								</div>
-							{/if}
-						</li>
-					{/each}
-				</ul>
-			{/if}
-		</div>
-	</Card>
+										{#if confirmingDeleteId === note.id}
+											<form
+												method="POST"
+												action="?/deleteNote"
+												class="flex items-center gap-1"
+												use:enhance={() => {
+													return async ({ update }) => {
+														await update();
+														confirmingDeleteId = null;
+													};
+												}}
+											>
+												<input type="hidden" name="note_id" value={note.id} />
+												<button
+													type="submit"
+													class="px-1 py-0.5 text-xs font-medium text-[var(--dash-error)]"
+												>
+													Delete?
+												</button>
+											</form>
+											<button
+												type="button"
+												onclick={() => (confirmingDeleteId = null)}
+												class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
+											>
+												<FontAwesomeIcon icon={faTimes} class="h-3 w-3" />
+											</button>
+										{:else}
+											<button
+												type="button"
+												onclick={() => (confirmingDeleteId = note.id)}
+												class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-error)]"
+											>
+												<FontAwesomeIcon icon={faTrash} class="h-3 w-3" />
+											</button>
+										{/if}
+									</div>
+								{/if}
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</div>
+		</Card>
+	{/if}
 
 	<!-- Discontinued Info -->
 	{#if app.discontinued_reason}

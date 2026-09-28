@@ -266,17 +266,100 @@ Respond with a single JSON object and nothing else:
 	},
 
 	/**
+	 * Reads ONE long activity entry whole and writes what the summariser reads in
+	 * its place: a gist and the facts in it. See ai-chat/entry-digest.ts for why
+	 * the summariser stopped reading raw text.
+	 *
+	 * Extraction, so it runs on the app provider and is absent from
+	 * WRITING_PROMPT_KEYS. Everything this entry says that the summariser needs
+	 * has to be in the answer, because the summariser never sees the text: hence
+	 * "every term" for offers and contracts, and speakers attributed rather than
+	 * merged. Low temperature, because the same entry read twice should give the
+	 * same facts.
+	 */
+	digest_activity_entry: {
+		system_prompt: `You read one entry from a job applicant's record of an application and write its digest: what the entry is, and the facts in it that someone would want later without rereading it.
+
+The entry may be an email thread, a transcript of a call or an interview, the text of a document they attached (a brief, an offer, a contract), notes they wrote after a conversation, or research. It is one of several on the application. Another pass reads the digests of all of them together to work out where the application stands and what matters in it, and it never sees this entry's text: what you leave out is lost to it.
+
+## The gist
+
+One or two sentences: what this entry is, who it is between, and what it establishes or changes. For example: "Intro call with the agency recruiter: she described the role and the team, asked for a CV, and set up a first round with the CTO." Leave the details to the facts.
+
+## The facts
+
+Concrete things the entry states that matter to this application, each in one of these categories:
+
+- requirement: a condition the applicant has to meet: references, right to work, a certification, a notice period, office days, something they must send by a date
+- compensation: money and benefits: a band, a rate, a budget, what the applicant asked for and what was said about it, an offer's pay, bonus, equity or leave
+- logistics: how the process runs: the next step, who runs it, when, its format, what to prepare
+- commitment: what either side said they would do, and by when
+- role_detail: facts about the job, the team or the company that came up here: stack, team size, reporting line, product, travel, on-call, how the work is split
+- decision: what the applicant decided or concluded themselves: a walk-away number, a condition they set, why they are going ahead or not
+- other: anything else worth keeping that none of these fits
+
+For an offer or a contract, every term is a fact: pay with its amount, currency and period, bonus, equity, start date, end date or duration, notice period, probation, leave, the date to respond by, and any condition attached.
+
+- "label" is a short noun phrase: "Office days", "Hourly rate", "Next round".
+- "value" is the fact in one line, with figures, dates and names exactly as written. Say whose it is when that matters: "Recruiter's budget: up to EUR 8,000 a month" and "Applicant asked for EUR 8,000 a month" are different facts.
+- At most 20 facts. Three that matter beat ten that do not.
+
+## Rules
+
+- Only what the entry says. Never add a fact from outside it, never infer a number that is not written down, and never convert a currency.
+- A transcript's speaker labels are often anonymous ("SPEAKER_00") and sometimes wrong on short turns. Work out which speaker is the applicant from what they say, and attribute each fact to the side that said it. When you cannot tell who said something, say so in the value rather than guessing.
+- An email thread quotes its earlier messages. Take each fact once, from where it was first stated, unless a later message changes it.
+- When a figure or a date changes within the entry (a band, then a counter; a date, then a new one), give the one that stands at the end, and mention the earlier one in the same value only when the change matters.
+- Write in English, whatever language the entry is in. Keep names, figures and terms that matter as written.
+- Leave out greetings, small talk, the job ad read back, and anything about the applicant that is not about this application.
+
+## Output
+
+Respond with a single JSON object and nothing else:
+
+{
+  "gist": "a string, always present",
+  "facts": [
+    { "category": "logistics", "label": "Next round", "value": "First interview with the CTO, date to be agreed by the recruiter" },
+    { "category": "compensation", "label": "Recruiter's budget", "value": "EUR 6,500 to 7,500 a month, before holiday pay" }
+  ]
+}
+
+"facts" must always be present, as an array: use [] when the entry holds nothing of this kind. Never return a bare array as the whole response.`,
+		user_prompt: `{{about}}
+
+The entry's text:
+
+---
+{{content}}
+---`,
+		temperature: 0.2
+	},
+
+	/**
 	 * Condenses one application's whole history into a line the comparison spine
 	 * can carry, and pulls the offer's terms out of prose into fields.
 	 *
 	 * Extraction, so it runs on the app provider and is absent from
 	 * WRITING_PROMPT_KEYS. Regenerated from source on every change rather than
-	 * revised — see the column comment on applications.context_summary.
+	 * revised — see the column comment on applications.context_summary. Long
+	 * entries arrive as their digests (digest_activity_entry), short ones whole.
+	 *
+	 * Temperature 0 since the details became the overview's key facts: the card
+	 * is rebuilt on every change, so how much a rebuild varies is something the
+	 * applicant sees. Measured on one application's real input (a transcript
+	 * digest and two notes), six rebuilds each: 6 to 12 facts at 0.2, where the
+	 * low runs dropped the next interview, and 9 to 12 at 0, where every run kept
+	 * the next step, the promises, the money and the applicant's own limit.
 	 */
 	summarize_application: {
 		system_prompt: `You condense one job application's history into a short standing summary, and pull out the terms of any offer.
 
-You are given every entry the applicant has recorded against this application, oldest first: correspondence, interview rounds, feedback, briefs, offers, contracts, notes, and the text of documents they attached. Their own notes are where they write what they concluded and what they still have to find out — read them as closely as anything the employer sent, however long the documents around them are.
+You are given the history of one application, oldest first: correspondence, interview rounds, feedback, briefs, offers, contracts, notes, and documents the applicant attached. Each entry is headed "[entry N]" with its type, title and date.
+
+A short entry is shown whole. A long one (a transcript, a contract, a long thread) is shown as its digest instead: a line on what it is and the facts it holds, written from the whole of it by someone who read all of it. Read a digest's facts as what that entry says, and cite that entry for them. An entry marked "Shown: X of Y characters" is cut; never conclude that something is absent from it. When the history is too long to show every entry like this, the oldest are shortened first, and a note above the entries says how many.
+
+Their own notes are where they write what they concluded and what they still have to find out: read them as closely as anything the employer sent, however long the documents around them are. When one of their notes corrects something another entry says (a figure, a date, a name, who said what), the note is right. Use the corrected version and drop what it corrects.
 
 ## The summary
 
@@ -299,7 +382,7 @@ When there is one, fill only what is stated. Never infer a number that is not wr
 
 ## The details
 
-Concrete things this application picked up along the way that someone would want in front of them and would otherwise have to reread every entry to find. A requirement nobody put in the job ad. A salary figure named before any offer existed. Something either side promised to do. A fact about the team or the work that only came up in conversation.
+Concrete things this application picked up along the way that someone would want in front of them and would otherwise have to reread every entry to find. A requirement nobody put in the job ad. A salary figure named before any offer existed. Something either side promised to do. A fact about the team or the work that only came up in conversation. The applicant sees these as the application's key facts, and the assistant and their letters read them where the entries are too long to send whole.
 
 When the applicant's own notes hold a decision about this application, that is a detail too, as "decision": a walk-away number, a condition they set before they would go ahead, why they are staying or leaving. Nothing else records it, and it is what any comparison with another application is decided against. Quote their figures and thresholds exactly as written and all of them: a ladder of thresholds is one decision, not its middle rung. Say what it is about in their terms, since "an offer elsewhere must beat this" and "this offer must reach that" are opposite rules. Cite the note it came from, list it first, and never be the one to leave it out. It is in addition to the other details, never instead of them.
 
@@ -307,10 +390,12 @@ Write the CURRENT state of each. These entries contradict each other on purpose 
 
 - "label" is a short noun phrase: "Office days", "Notice period", "Take-home deadline".
 - "value" is the fact in one line, quoting numbers and dates as they were written.
-- "category" is one of: requirement (a condition to satisfy), compensation (money talk short of a formal offer), logistics (how the process runs from here), commitment (what either side said they would do), role_detail (a fact about the job or team that was not in the ad), decision (the applicant's own conclusion about this application, from their notes), other.
+- "category" is one of: requirement (a condition to satisfy), compensation (money talk short of a formal offer), logistics (how the process runs from here), commitment (what either side said they would do), role_detail (a fact about the job, the team or the company), decision (the applicant's own conclusion about this application, from their notes), other.
 - "record_id" is the number in the [entry N] heading you took it from. Use null rather than guessing.
 
-Only what is written down. Do not restate the job ad, do not repeat the offer's own terms — those are fields already — and do not pad the list: three details that matter beat ten that do not. Return an empty array when the entries contain nothing of this kind.
+Cover every kind the entries hold: the next step and who owns it, what either side promised, the requirements, the role and the team, the money talk, and the applicant's own decisions. A digest's facts are where to start: keep each one that still stands. A fact from an earlier entry stands unless a later entry changes it, so a new entry is never a reason to drop one, and the summary mentioning something is no reason to leave it out here.
+
+Only what is written down. You are not shown the job ad, so never leave a fact out because an ad might already say it: for a role that was only described on a call, what the entries say about the role and the team is the only description there is. Do not repeat what the offer's fields already hold, and do not pad the list with small talk or generalities. Return an empty array only when the entries say nothing of this kind.
 
 ## Output
 
@@ -339,7 +424,8 @@ or, when an offer exists and things have come up along the way:
 }
 
 All three keys must always be present. Never omit "offer" — write null. Never omit "details" — write []. Never return a bare string or array as the whole response.`,
-		user_prompt: `{{activity}}`
+		user_prompt: `{{activity}}`,
+		temperature: 0
 	},
 
 	answer_application_question: {
