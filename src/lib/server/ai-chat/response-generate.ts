@@ -56,7 +56,9 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 				fallback: writingFallback(),
 				promptKey: prompts.promptKey ?? undefined,
 				// The row's own version, which may be older than the template now.
-				promptFingerprint: prompts.promptFingerprint ?? undefined
+				promptFingerprint: prompts.promptFingerprint ?? undefined,
+				// A regenerate asks for a new answer. See ChatCompletionOptions.cache.
+				cache: false
 			}
 		);
 

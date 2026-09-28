@@ -12,6 +12,12 @@
  * generation proceeds exactly as it would with no cache at all. Nothing here
  * is allowed to turn a Redis problem into a failed or delayed LLM call.
  *
+ * Not every call looks here. A writing call runs because someone asked for a
+ * text, and a repeat of it asks for a different one, so those pass
+ * `cache: false` and neither read nor write (ChatCompletionOptions.cache in
+ * langchain.ts). What is left is the judgements and extractions, where the
+ * same input should give the same output.
+ *
  * NOTE: relative import of the Redis client, for the reason given in
  * queue/redis.ts — this module is loaded from both SvelteKit and the worker.
  */

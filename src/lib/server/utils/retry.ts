@@ -185,5 +185,12 @@ export function isRetryableError(error: Error): boolean {
 		return true;
 	}
 
+	// A structured reply that was the schema's type names instead of an answer
+	// (llm/schema-echo.ts). A bad draw by the same measure: the request that
+	// first produced one answered properly on three replays out of three.
+	if (message.includes('echoed the schema')) {
+		return true;
+	}
+
 	return false;
 }

@@ -162,6 +162,44 @@ describe('the LLM call', () => {
 		expect(mockGroqInvoke).toHaveBeenCalledTimes(1);
 	});
 
+	// "miss" would say the cache was consulted and had nothing, which is not what
+	// happened, and is the first question when a regenerate looks like a copy.
+	it('marks a call that asked for a new answer as off, and asks the model again', async () => {
+		mockGroqInvoke.mockResolvedValue(reply('a new draft'));
+		const ask = () =>
+			generateChatCompletionTracked([{ role: 'user', content: 'write it again' }], {
+				promptKey: 'write_cover_letter',
+				cache: false
+			});
+
+		await ask();
+		exporter.reset();
+		await ask();
+
+		const spans = await exported();
+		const call = spans.find((s) => typeOf(s) === 'span');
+		expect(call!.attributes['langfuse.observation.metadata.cache']).toBe('off');
+		expect(generations(spans)).toHaveLength(1);
+		expect(mockGroqInvoke).toHaveBeenCalledTimes(2);
+	});
+
+	it('shows a reply that echoed the schema as a failed attempt', async () => {
+		mockGroqInvoke.mockResolvedValueOnce(reply('{"reply":"string"}'));
+
+		await expect(
+			generateChatCompletionTracked([{ role: 'user', content: 'hi' }], {
+				promptKey: 'personal_agent_chat',
+				structuredOutput: { name: 'personal_agent_chat', schema: z.object({ reply: z.string() }) }
+			})
+		).rejects.toThrow(/echoed the schema/);
+
+		const [generation] = generations(await exported());
+		expect(generation.attributes['langfuse.observation.level']).toBe('ERROR');
+		expect(generation.attributes['langfuse.observation.status_message']).toContain(
+			'echoed the schema'
+		);
+	});
+
 	it('records the messages as sent, with the JSON reminder added for Groq', async () => {
 		mockGroqInvoke.mockResolvedValueOnce(reply('{"cause":"wrong_password"}'));
 

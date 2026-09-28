@@ -62,6 +62,7 @@ vi.mock('$lib/server/llm', async (importOriginal) => ({
 import { createAndGenerateAiChat } from '../utils';
 import { promptTemplates } from '../prompt-templates';
 import { promptFingerprint } from '../prompt-fingerprint';
+import { promptVariables } from '../render-prompt';
 
 describe('createAndGenerateAiChat: the record of the call', () => {
 	beforeEach(() => {
@@ -115,6 +116,28 @@ describe('createAndGenerateAiChat: the record of the call', () => {
 
 		expect(mockGenerate).toHaveBeenCalledTimes(1);
 		expect(mockGenerate.mock.calls[0][1]).toMatchObject({ promptKey: 'compact_job_description' });
+	});
+
+	// A writing prompt runs because someone asked for a text, and asking again
+	// wants a different one, not a copy. See ChatCompletionOptions.cache.
+	it('keeps a writing prompt out of the response cache', async () => {
+		const template = promptTemplates.answer_application_question;
+		const blanks = Object.fromEntries(
+			[...promptVariables(template.system_prompt), ...promptVariables(template.user_prompt)].map(
+				(name) => [name, '']
+			)
+		);
+
+		const result = await createAndGenerateAiChat(1, 'answer_application_question', blanks);
+
+		expect(result.success).toBe(true);
+		expect(mockGenerate.mock.calls[0][1]).toMatchObject({ cache: false });
+	});
+
+	it('lets every other prompt use it', async () => {
+		await run();
+
+		expect(mockGenerate.mock.calls[0][1]).toMatchObject({ cache: true });
 	});
 
 	it('records the thinking tokens, and counts them in the total it charges on', async () => {

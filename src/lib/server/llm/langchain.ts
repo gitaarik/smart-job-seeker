@@ -16,6 +16,7 @@ import { callName, recordSentMessages, traceAttempt, traceLlmCall } from './trac
 import { DEFAULT_TEMPERATURE } from '$lib/server/ai-chat/prompt-templates';
 import { promptRef } from '$lib/server/ai-chat/prompt-registry';
 import { geminiResponseSchema, parseStructuredReply } from './gemini-schema';
+import { isSchemaEcho } from './schema-echo';
 import { isRetryableError, withRetry } from '$lib/server/utils/retry';
 import { errorTracker } from '$lib/server/monitoring/error-tracker';
 import { config } from '$lib/server/config';
@@ -370,6 +371,23 @@ export interface ChatCompletionOptions {
 	 * links the call's generations to that version in Langfuse.
 	 */
 	promptFingerprint?: string;
+	/**
+	 * Whether the response cache may answer this call and keep its answer. On
+	 * unless this is false.
+	 *
+	 * The cache keys on the model and the exact messages (cache.ts), so an
+	 * identical request within its TTL gets the earlier answer back without a
+	 * model call. That suits a judgement or an extraction, where the same input
+	 * should give the same output. It is wrong where someone asked for a new
+	 * text: "generate again" handed them a copy of the one they had just turned
+	 * down. Sixteen Gemini writing calls on dev in August and September 2026
+	 * were answered that way, and when the model got one wrong (schema-echo.ts),
+	 * asking again returned the same wrong reply.
+	 *
+	 * False neither reads nor writes: nothing asks for a writing call's answer
+	 * again except someone who wants a different one.
+	 */
+	cache?: boolean;
 }
 
 /**
@@ -533,11 +551,14 @@ function generateCacheKey(messages: ChatMessage[], options: ChatCompletionOption
 	// existed. Dropping it leaves the key byte-identical for every existing
 	// caller, because the remaining keys keep their insertion order.
 	// `promptKey` and `promptFingerprint` are excluded for the same reason: they
-	// name the call, they do not change what is asked.
+	// name the call, they do not change what is asked. So is `cache`, which says
+	// whether to look here at all: a call that passes `cache: true` shares its
+	// entries with one that leaves it out.
 	const cacheable = { ...options };
 	delete cacheable.fallback;
 	delete cacheable.promptKey;
 	delete cacheable.promptFingerprint;
+	delete cacheable.cache;
 	return JSON.stringify({ messages, options: cacheable });
 }
 
@@ -1121,6 +1142,38 @@ function usableFallback(
 }
 
 /**
+ * Fail a structured reply that is the schema's type names instead of an answer
+ * (schema-echo.ts). It satisfies the schema, so nothing before this refuses it.
+ *
+ * Thrown from inside the attempt so that it is handled as the bad draw it is:
+ * `isRetryableError` retries it, the fallback takes it after that, the trace
+ * shows the attempt at ERROR, and the cache never sees it. The tokens ride
+ * along, as on a null parse, because the provider billed them.
+ */
+function refuseSchemaEcho(
+	result: CompletionResult,
+	name: string,
+	provider: string,
+	model: string
+): void {
+	let reply: unknown;
+	try {
+		reply = JSON.parse(result.content);
+	} catch {
+		return;
+	}
+	if (!isSchemaEcho(reply)) return;
+
+	const failure = new LLMOutputValidationError(
+		`Failed to generate JSON matching ${name}: ${provider} echoed the schema instead of ` +
+			`answering: ${result.content.substring(0, 200)}`,
+		provider,
+		model
+	);
+	throw Object.assign(failure, { usage: result.usage });
+}
+
+/**
  * Generate chat completion with token usage tracking.
  * Returns both the content and token usage for credit billing.
  *
@@ -1131,15 +1184,15 @@ export async function generateChatCompletionTracked(
 	messages: ChatMessage[],
 	options: ChatCompletionOptions = {}
 ): Promise<CompletionResult> {
-	return traceLlmCall(options.promptKey, messages, (markCacheHit) =>
-		completeTracked(messages, options, markCacheHit)
+	return traceLlmCall(options.promptKey, messages, (markCache) =>
+		completeTracked(messages, options, markCache)
 	);
 }
 
 async function completeTracked(
 	messages: ChatMessage[],
 	options: ChatCompletionOptions,
-	markCacheHit: () => void
+	markCache: (use: 'hit' | 'off') => void
 ): Promise<CompletionResult> {
 	const {
 		model = config.llmModel,
@@ -1149,13 +1202,17 @@ async function completeTracked(
 		provider
 	} = options;
 
-	// Check cache first (cached = no usage, already billed)
-	const cacheKey = generateCacheKey(messages, options);
-	const cachedResponse = await llmCache.get(cacheKey, model);
-
-	if (cachedResponse) {
-		markCacheHit();
-		return { content: cachedResponse, usage: null };
+	// Check cache first (cached = no usage, already billed), unless the caller
+	// asked for a new answer: see ChatCompletionOptions.cache.
+	const cacheKey = options.cache === false ? null : generateCacheKey(messages, options);
+	if (cacheKey === null) {
+		markCache('off');
+	} else {
+		const cachedResponse = await llmCache.get(cacheKey, model);
+		if (cachedResponse) {
+			markCache('hit');
+			return { content: cachedResponse, usage: null };
+		}
 	}
 
 	const attempt = (activeProvider: string | undefined, activeModel: string) =>
@@ -1170,15 +1227,25 @@ async function completeTracked(
 				structured: structuredOutput !== undefined,
 				prompt: promptRef(options.promptKey, options.promptFingerprint)
 			},
-			() =>
-				generateWithLangChain(
+			async () => {
+				const result = await generateWithLangChain(
 					messages,
 					activeModel,
 					maxTokens,
 					temperature,
 					structuredOutput,
 					activeProvider
-				)
+				);
+				if (structuredOutput) {
+					refuseSchemaEcho(
+						result,
+						structuredOutput.name,
+						activeProvider || config.llmProvider,
+						activeModel
+					);
+				}
+				return result;
+			}
 		);
 
 	// Make completion request with retry logic
@@ -1245,7 +1312,7 @@ async function completeTracked(
 	// Cache the raw content. Keyed on the model that was ASKED for, including
 	// when the fallback answered: the next identical request asks for the primary
 	// again, and a valid answer to that request is what the cache holds.
-	await llmCache.set(cacheKey, result.content, model, config.llmCacheTTL);
+	if (cacheKey !== null) await llmCache.set(cacheKey, result.content, model, config.llmCacheTTL);
 
 	return result;
 }

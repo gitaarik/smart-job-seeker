@@ -139,6 +139,31 @@ describe('generateAiChatResponse', () => {
 		expect(mockInvoke).toHaveBeenCalled();
 	});
 
+	// A regenerate asks for a new answer, so a second one within the cache's TTL
+	// must not be handed the first. See ChatCompletionOptions.cache.
+	it('asks the model again when the same chat is regenerated twice', async () => {
+		const mockPrompts = {
+			systemPrompt: 'You are helpful',
+			userPrompt: 'Write me an opening line',
+			promptKey: null,
+			promptFingerprint: null
+		};
+		vi.mocked(getInterpolatedPrompts)
+			.mockResolvedValueOnce(mockPrompts)
+			.mockResolvedValueOnce(mockPrompts);
+		mockInvoke
+			.mockResolvedValueOnce(new AIMessage('First line.'))
+			.mockResolvedValueOnce(new AIMessage('Another line.'));
+
+		await generateAiChatResponse(1);
+		await generateAiChatResponse(1);
+
+		expect(mockInvoke).toHaveBeenCalledTimes(2);
+		expect(mockUpdateSet).toHaveBeenLastCalledWith(
+			expect.objectContaining({ response: 'Another line.' })
+		);
+	});
+
 	it('should handle Groq API error gracefully', async () => {
 		const mockPrompts = {
 			systemPrompt: 'You are helpful',

@@ -1,9 +1,9 @@
 /**
  * The model wrapper's half of tracing (planning/LANGFUSE.md § Trace model).
  *
- * One span per logical call, named by its prompt key and marked as a cache hit
- * or miss; under it one generation per provider attempt, named like the call,
- * so retries and the fallback each show and the provider is in each one's
+ * One span per logical call, named by its prompt key and marked as a cache hit,
+ * a miss or off; under it one generation per provider attempt, named like the
+ * call, so retries and the fallback each show and the provider is in each one's
  * model parameters. A generation records the model and its parameters, the
  * messages, the output, the usage in Langfuse's four separate buckets and the
  * cost the app bills from, so Langfuse and /admin/costs agree by construction,
@@ -41,13 +41,15 @@ export function callName(promptKey: string | undefined): string {
 }
 
 /**
- * Trace one logical call. `work` gets a function to call when the answer came
- * from the response cache, which makes the span and no generation.
+ * Trace one logical call. `work` gets a function to say how the response cache
+ * was used when it was not a miss: `hit` when it answered, which makes the span
+ * and no generation, and `off` when the call asked for a new answer and never
+ * looked (ChatCompletionOptions.cache).
  */
 export async function traceLlmCall(
 	promptKey: string | undefined,
 	messages: ChatMessage[],
-	work: (markCacheHit: () => void) => Promise<CompletionResult>
+	work: (markCache: (use: 'hit' | 'off') => void) => Promise<CompletionResult>
 ): Promise<CompletionResult> {
 	if (!isTelemetryEnabled()) return work(() => {});
 
@@ -55,8 +57,8 @@ export async function traceLlmCall(
 	const body = async () => {
 		let cache = 'miss';
 		try {
-			return await work(() => {
-				cache = 'hit';
+			return await work((use) => {
+				cache = use;
 			});
 		} finally {
 			updateActiveObservation({ metadata: { cache } });

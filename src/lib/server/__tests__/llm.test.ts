@@ -423,6 +423,44 @@ describe('generateChatCompletion', () => {
 		expect(mockInvoke).toHaveBeenCalledTimes(1); // Still 1, not called again
 	});
 
+	// A writing call runs because someone asked for a text, and a repeat of it
+	// asks for a different one. See ChatCompletionOptions.cache.
+	it('asks the model every time when the caller turns the cache off', async () => {
+		const messages: ChatMessage[] = [{ role: 'user', content: 'Write it again' }];
+		mockInvoke
+			.mockResolvedValueOnce(new AIMessage('First draft'))
+			.mockResolvedValueOnce(new AIMessage('Second draft'));
+
+		expect(await generateChatCompletion(messages, { cache: false })).toBe('First draft');
+		expect(await generateChatCompletion(messages, { cache: false })).toBe('Second draft');
+		expect(mockInvoke).toHaveBeenCalledTimes(2);
+	});
+
+	it('neither reads nor writes the cache for a call that turned it off', async () => {
+		const get = vi.spyOn(llmCache, 'get');
+		const set = vi.spyOn(llmCache, 'set');
+		mockInvoke.mockResolvedValueOnce(new AIMessage('Uncached'));
+		try {
+			await generateChatCompletion([{ role: 'user', content: 'Not kept' }], { cache: false });
+
+			expect(get).not.toHaveBeenCalled();
+			expect(set).not.toHaveBeenCalled();
+		} finally {
+			get.mockRestore();
+			set.mockRestore();
+		}
+	});
+
+	// Otherwise saying `cache: true` out loud would split the cache in two.
+	it('shares entries between a call that passes cache: true and one that leaves it out', async () => {
+		const messages: ChatMessage[] = [{ role: 'user', content: 'Same key' }];
+		mockInvoke.mockResolvedValueOnce(new AIMessage('Kept'));
+
+		await generateChatCompletion(messages);
+		expect(await generateChatCompletion(messages, { cache: true })).toBe('Kept');
+		expect(mockInvoke).toHaveBeenCalledTimes(1);
+	});
+
 	it('should handle rate limit errors with enhanced messages', async () => {
 		const messages: ChatMessage[] = [{ role: 'user', content: 'Test' }];
 

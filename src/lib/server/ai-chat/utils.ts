@@ -727,7 +727,11 @@ async function generateAiChat(
 				fallback,
 				// Undefined leaves generateChatCompletionTracked on its own default.
 				temperature: promptTemplate.temperature,
-				promptKey
+				promptKey,
+				// A writing prompt runs because someone asked for a text, and asking
+				// again means they want a different one, not the cached copy. See
+				// ChatCompletionOptions.cache.
+				cache: !isWritingPrompt
 			}
 		);
 
