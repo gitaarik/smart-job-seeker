@@ -22,7 +22,9 @@
 	import Spinner from '$lib/components/Spinner.svelte';
 	import FilterTabs from '../../../components/FilterTabs.svelte';
 	import ConfirmModal from '../../../profile/components/ConfirmModal.svelte';
+	import ReorderableList from '../../../profile/components/ReorderableList.svelte';
 	import { LETTER_TYPE_LABELS, letterLabel } from '$lib/texts/letter-label';
+	import { compareTexts, textKey } from '$lib/texts/text-order';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -35,6 +37,7 @@
 	let deleteItem = $state<{ id: number; type: 'letter' | 'question' } | null>(null);
 	let showAddQuestion = $state(false);
 	let showAddMenu = $state(false);
+	let reorderMode = $state(false);
 
 	// Add form states
 	let newQuestion = $state('');
@@ -199,25 +202,25 @@
 	type QuestionItem = (typeof questions)[0] & { itemType: 'question' };
 	type Item = LetterItem | QuestionItem;
 
-	let items = $derived.by((): Item[] => {
-		const letterItems: Item[] = letters.map((l) => ({
-			...l,
-			itemType: 'letter' as const
-		}));
-		const questionItems: Item[] = questions.map((q) => ({
-			...q,
-			itemType: 'question' as const
-		}));
-
-		if (currentType === 'letters') return letterItems;
-		if (currentType === 'questions') return questionItems;
-
-		return [...letterItems, ...questionItems].sort((a, b) => {
-			const dateA = a.date_updated || a.date_created || new Date(0);
-			const dateB = b.date_updated || b.date_created || new Date(0);
-			return new Date(dateB).getTime() - new Date(dateA).getTime();
-		});
-	});
+	// One list in one order on every tab, the tabs only filtering it: newest
+	// added first, or the applicant's own once they reorder. Not by last edit,
+	// which moved a text to the top every time it was saved.
+	let allItems = $derived(
+		[
+			...letters.map((l): Item => ({ ...l, itemType: 'letter' })),
+			...questions.map((q): Item => ({ ...q, itemType: 'question' }))
+		].sort(compareTexts)
+	);
+	let items = $derived(
+		currentType === 'letters'
+			? allItems.filter((i) => i.itemType === 'letter')
+			: currentType === 'questions'
+				? allItems.filter((i) => i.itemType === 'question')
+				: allItems
+	);
+	let ordering: 'date' | 'manual' = $derived(
+		allItems.some((i) => i.sort !== null) ? 'manual' : 'date'
+	);
 
 	const letterTypes = LETTER_TYPE_LABELS;
 
@@ -226,10 +229,6 @@
 		{ value: 'letters', label: 'Letters', icon: faEnvelope },
 		{ value: 'questions', label: 'Questions', icon: faQuestionCircle }
 	];
-
-	function getItemId(item: Item): string {
-		return `${item.itemType}-${item.id}`;
-	}
 
 	function formatDate(date: Date | string | null): string {
 		if (!date) return '';
@@ -686,233 +685,263 @@
 			</div>
 		</div>
 	{:else}
-		<div class="space-y-3">
-			{#each items as item (getItemId(item))}
-				{@const itemId = getItemId(item)}
-				{@const isLetter = item.itemType === 'letter'}
+		<ReorderableList
+			bind:reorderMode
+			{items}
+			{ordering}
+			itemKey={textKey}
+			type="application-texts"
+			label="texts"
+			disabled={showAddQuestion || showPaste}
+		>
+			{#snippet row(item)}
+				<FontAwesomeIcon
+					icon={item.itemType === 'letter' ? faEnvelope : faQuestionCircle}
+					class="h-4 w-4 flex-shrink-0 {item.itemType === 'letter'
+						? 'text-blue-600'
+						: 'text-purple-600'}"
+				/>
+				<h3 class="truncate font-medium text-[var(--dash-text)]">
+					{item.itemType === 'letter' ? letterLabel(item.letter_type, item.title) : item.question}
+				</h3>
+			{/snippet}
+		</ReorderableList>
 
-				{#if isLetter}
-					{@const letterItem = item as LetterItem}
-					{@const versions = letterItem.letter_versions || []}
-					{@const versionCount = versions.filter(
-						(v: { content: string | null }) => v.content
-					).length}
-					{@const firstContentVersion = versions.find((v: { content: string | null }) => v.content)}
-					{@const isAiStarted = firstContentVersion
-						? firstContentVersion.source === 'ai_generation'
-						: !!letterItem.ai_chat_id}
-					{@const latestContent = (() => {
-						for (let i = versions.length - 1; i >= 0; i--) {
-							if (versions[i].content) return versions[i].content;
-						}
-						return letterItem.content;
-					})()}
-					{@const isExpanded = expandedId === itemId}
-					<!-- Letter Card: expandable with text preview -->
-					<Card class="overflow-hidden">
-						<button
-							type="button"
-							onclick={() => toggleExpand(itemId)}
-							class="w-full p-4 text-left {latestContent
-								? 'hover:bg-[var(--dash-bg)]'
-								: ''} transition-colors"
-							disabled={!latestContent}
-						>
-							<div class="flex items-center gap-4">
-								<div
-									class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--dash-bg)]"
-								>
-									<FontAwesomeIcon icon={faEnvelope} class="h-5 w-5 text-blue-600" />
-								</div>
-								<div class="min-w-0 flex-1">
-									<div class="flex flex-wrap items-center gap-2">
-										<h3 class="truncate font-medium text-[var(--dash-text)]">
-											{letterLabel(letterItem.letter_type, letterItem.title)}
-										</h3>
-										<span
-											class="rounded-full px-2 py-0.5 text-xs capitalize {letterItem.status ===
-											'ready'
-												? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]'
-												: letterItem.status === 'sent'
-													? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-													: 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}"
-										>
-											{letterItem.status}
-										</span>
+		{#if !reorderMode}
+			<div class="space-y-3">
+				{#each items as item (textKey(item))}
+					{@const itemId = textKey(item)}
+					{@const isLetter = item.itemType === 'letter'}
+
+					{#if isLetter}
+						{@const letterItem = item as LetterItem}
+						{@const versions = letterItem.letter_versions || []}
+						{@const versionCount = versions.filter(
+							(v: { content: string | null }) => v.content
+						).length}
+						{@const firstContentVersion = versions.find(
+							(v: { content: string | null }) => v.content
+						)}
+						{@const isAiStarted = firstContentVersion
+							? firstContentVersion.source === 'ai_generation'
+							: !!letterItem.ai_chat_id}
+						{@const latestContent = (() => {
+							for (let i = versions.length - 1; i >= 0; i--) {
+								if (versions[i].content) return versions[i].content;
+							}
+							return letterItem.content;
+						})()}
+						{@const isExpanded = expandedId === itemId}
+						<!-- Letter Card: expandable with text preview -->
+						<Card class="overflow-hidden">
+							<button
+								type="button"
+								onclick={() => toggleExpand(itemId)}
+								class="w-full p-4 text-left {latestContent
+									? 'hover:bg-[var(--dash-bg)]'
+									: ''} transition-colors"
+								disabled={!latestContent}
+							>
+								<div class="flex items-center gap-4">
+									<div
+										class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--dash-bg)]"
+									>
+										<FontAwesomeIcon icon={faEnvelope} class="h-5 w-5 text-blue-600" />
 									</div>
-									<p class="text-sm text-[var(--dash-text-secondary)]">
-										{formatDate(item.date_updated || item.date_created)}
-										{#if latestContent}
-											<span class="mx-1">&middot;</span>
-											<span class="inline-flex items-center gap-1">
-												<FontAwesomeIcon icon={isAiStarted ? faRobot : faPen} class="h-3 w-3" />
-												{isAiStarted ? 'AI assisted' : 'Self-written'}
+									<div class="min-w-0 flex-1">
+										<div class="flex flex-wrap items-center gap-2">
+											<h3 class="truncate font-medium text-[var(--dash-text)]">
+												{letterLabel(letterItem.letter_type, letterItem.title)}
+											</h3>
+											<span
+												class="rounded-full px-2 py-0.5 text-xs capitalize {letterItem.status ===
+												'ready'
+													? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]'
+													: letterItem.status === 'sent'
+														? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+														: 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}"
+											>
+												{letterItem.status}
 											</span>
-											{#if versionCount > 1}
+										</div>
+										<p class="text-sm text-[var(--dash-text-secondary)]">
+											{formatDate(item.date_updated || item.date_created)}
+											{#if latestContent}
 												<span class="mx-1">&middot;</span>
-												<span>{versionCount} versions</span>
+												<span class="inline-flex items-center gap-1">
+													<FontAwesomeIcon icon={isAiStarted ? faRobot : faPen} class="h-3 w-3" />
+													{isAiStarted ? 'AI assisted' : 'Self-written'}
+												</span>
+												{#if versionCount > 1}
+													<span class="mx-1">&middot;</span>
+													<span>{versionCount} versions</span>
+												{/if}
+											{:else}
+												<span class="mx-1">&middot;</span>
+												<span class="text-[var(--dash-text-muted)] italic">No content yet</span>
 											{/if}
-										{:else}
-											<span class="mx-1">&middot;</span>
-											<span class="text-[var(--dash-text-muted)] italic">No content yet</span>
+										</p>
+									</div>
+									<div class="flex flex-shrink-0 items-center gap-1">
+										<a
+											href={resolve('/(app)/applications/[id]/texts/[letterId]', {
+												id: String(app.id),
+												letterId: String(item.id)
+											})}
+											class="cursor-pointer p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
+											aria-label="Edit"
+											onclick={(e) => e.stopPropagation()}
+										>
+											<FontAwesomeIcon icon={faPencil} class="h-4 w-4" />
+										</a>
+										{#if latestContent}
+											<span
+												class="inline-block transition-transform duration-200 {isExpanded
+													? 'rotate-90'
+													: ''}"
+											>
+												<FontAwesomeIcon
+													icon={faChevronRight}
+													class="h-4 w-4 text-[var(--dash-text-secondary)]"
+												/>
+											</span>
 										{/if}
+									</div>
+								</div>
+							</button>
+
+							{#if isExpanded && latestContent}
+								<div
+									class="max-h-96 overflow-y-auto border-t border-[var(--dash-border)] px-4 py-3"
+								>
+									<p class="text-sm break-words whitespace-pre-wrap text-[var(--dash-text)]">
+										{latestContent}
 									</p>
+								</div>
+							{/if}
+						</Card>
+					{:else}
+						<!-- Question Card: expandable with inline editing -->
+						<Card class="overflow-hidden">
+							<!-- Header -->
+							<button
+								type="button"
+								onclick={() => toggleExpand(itemId)}
+								class="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-[var(--dash-bg)]"
+							>
+								<div class="flex min-w-0 flex-1 items-center gap-4">
+									<div
+										class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--dash-bg)]"
+									>
+										<FontAwesomeIcon icon={faQuestionCircle} class="h-5 w-5 text-purple-600" />
+									</div>
+									<div class="min-w-0 flex-1">
+										<h3 class="truncate font-medium text-[var(--dash-text)]">
+											{(item as QuestionItem).question}
+										</h3>
+										<p class="text-sm text-[var(--dash-text-secondary)]">
+											{formatDate(item.date_updated || item.date_created)}
+											{#if (item as QuestionItem).answer}
+												<span class="mx-1">&middot;</span>
+												<span class="text-[var(--dash-success)]">Answered</span>
+											{/if}
+										</p>
+									</div>
 								</div>
 								<div class="flex flex-shrink-0 items-center gap-1">
-									<a
-										href={resolve('/(app)/applications/[id]/texts/[letterId]', {
-											id: String(app.id),
-											letterId: String(item.id)
-										})}
-										class="cursor-pointer p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
-										aria-label="Edit"
-										onclick={(e) => e.stopPropagation()}
-									>
-										<FontAwesomeIcon icon={faPencil} class="h-4 w-4" />
-									</a>
-									{#if latestContent}
-										<span
-											class="inline-block transition-transform duration-200 {isExpanded
-												? 'rotate-90'
-												: ''}"
-										>
-											<FontAwesomeIcon
-												icon={faChevronRight}
-												class="h-4 w-4 text-[var(--dash-text-secondary)]"
-											/>
-										</span>
-									{/if}
-								</div>
-							</div>
-						</button>
-
-						{#if isExpanded && latestContent}
-							<div class="max-h-96 overflow-y-auto border-t border-[var(--dash-border)] px-4 py-3">
-								<p class="text-sm break-words whitespace-pre-wrap text-[var(--dash-text)]">
-									{latestContent}
-								</p>
-							</div>
-						{/if}
-					</Card>
-				{:else}
-					<!-- Question Card: expandable with inline editing -->
-					<Card class="overflow-hidden">
-						<!-- Header -->
-						<button
-							type="button"
-							onclick={() => toggleExpand(itemId)}
-							class="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-[var(--dash-bg)]"
-						>
-							<div class="flex min-w-0 flex-1 items-center gap-4">
-								<div
-									class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[var(--dash-bg)]"
-								>
-									<FontAwesomeIcon icon={faQuestionCircle} class="h-5 w-5 text-purple-600" />
-								</div>
-								<div class="min-w-0 flex-1">
-									<h3 class="truncate font-medium text-[var(--dash-text)]">
-										{(item as QuestionItem).question}
-									</h3>
-									<p class="text-sm text-[var(--dash-text-secondary)]">
-										{formatDate(item.date_updated || item.date_created)}
-										{#if (item as QuestionItem).answer}
-											<span class="mx-1">&middot;</span>
-											<span class="text-[var(--dash-success)]">Answered</span>
-										{/if}
-									</p>
-								</div>
-							</div>
-							<div class="flex flex-shrink-0 items-center gap-1">
-								<a
-									href={resolve('/(app)/applications/[id]/texts/questions/[qid]', {
-										id: String(app.id),
-										qid: String(item.id)
-									})}
-									onclick={(e) => e.stopPropagation()}
-									class="cursor-pointer p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
-									aria-label="Open answer editor"
-									title="Open editor — write, review, and iterate on this answer with AI"
-								>
-									<FontAwesomeIcon icon={faPencil} class="h-4 w-4" />
-								</a>
-								<span
-									role="button"
-									tabindex="0"
-									onclick={(e) => {
-										e.stopPropagation();
-										deleteItem = { id: item.id, type: 'question' };
-									}}
-									onkeydown={(e) => {
-										if (e.key === 'Enter' || e.key === ' ') {
-											e.preventDefault();
-											e.stopPropagation();
-											deleteItem = { id: item.id, type: 'question' };
-										}
-									}}
-									class="cursor-pointer p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-red-500"
-									aria-label="Delete question"
-								>
-									<FontAwesomeIcon icon={faTrash} class="h-4 w-4" />
-								</span>
-								<span
-									class="inline-block transition-transform duration-200 {expandedId === itemId
-										? 'rotate-90'
-										: ''}"
-								>
-									<FontAwesomeIcon
-										icon={faChevronRight}
-										class="h-4 w-4 text-[var(--dash-text-secondary)]"
-									/>
-								</span>
-							</div>
-						</button>
-
-						<!-- Expanded Content: read-only preview. Writing, AI generate,
-                 review and iteration all live on the dedicated editor page. -->
-						{#if expandedId === itemId}
-							<div class="space-y-3 border-t border-[var(--dash-border)] p-4">
-								<div class="rounded-lg border-l-2 border-purple-500 bg-[var(--dash-bg)] px-3 py-2">
-									<p
-										class="mb-1 text-xs font-semibold tracking-wide text-[var(--dash-text-muted)] uppercase"
-									>
-										Question
-									</p>
-									<p class="font-medium text-[var(--dash-text)]">
-										{(item as QuestionItem).question}
-									</p>
-								</div>
-								{#if (item as QuestionItem).answer}
-									<div class="px-3 py-1">
-										<p
-											class="mb-1 text-xs font-semibold tracking-wide text-[var(--dash-text-muted)] uppercase"
-										>
-											Answer
-										</p>
-										<p class="break-words whitespace-pre-wrap text-[var(--dash-text)]">
-											{(item as QuestionItem).answer}
-										</p>
-									</div>
-								{:else}
-									<p class="px-3 text-[var(--dash-text-secondary)] italic">No answer yet.</p>
-								{/if}
-								<div class="flex justify-end border-t border-[var(--dash-border)] pt-2">
 									<a
 										href={resolve('/(app)/applications/[id]/texts/questions/[qid]', {
 											id: String(app.id),
 											qid: String(item.id)
 										})}
-										class="flex items-center gap-1.5 rounded-lg bg-[var(--dash-primary)] px-3 py-1.5 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
+										onclick={(e) => e.stopPropagation()}
+										class="cursor-pointer p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
+										aria-label="Open answer editor"
+										title="Open editor — write, review, and iterate on this answer with AI"
 									>
-										<FontAwesomeIcon icon={faPencil} class="h-3.5 w-3.5" />
-										{(item as QuestionItem).answer ? 'Open editor' : 'Write / generate answer'}
+										<FontAwesomeIcon icon={faPencil} class="h-4 w-4" />
 									</a>
+									<span
+										role="button"
+										tabindex="0"
+										onclick={(e) => {
+											e.stopPropagation();
+											deleteItem = { id: item.id, type: 'question' };
+										}}
+										onkeydown={(e) => {
+											if (e.key === 'Enter' || e.key === ' ') {
+												e.preventDefault();
+												e.stopPropagation();
+												deleteItem = { id: item.id, type: 'question' };
+											}
+										}}
+										class="cursor-pointer p-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-red-500"
+										aria-label="Delete question"
+									>
+										<FontAwesomeIcon icon={faTrash} class="h-4 w-4" />
+									</span>
+									<span
+										class="inline-block transition-transform duration-200 {expandedId === itemId
+											? 'rotate-90'
+											: ''}"
+									>
+										<FontAwesomeIcon
+											icon={faChevronRight}
+											class="h-4 w-4 text-[var(--dash-text-secondary)]"
+										/>
+									</span>
 								</div>
-							</div>
-						{/if}
-					</Card>
-				{/if}
-			{/each}
-		</div>
+							</button>
+
+							<!-- Expanded Content: read-only preview. Writing, AI generate,
+                 review and iteration all live on the dedicated editor page. -->
+							{#if expandedId === itemId}
+								<div class="space-y-3 border-t border-[var(--dash-border)] p-4">
+									<div
+										class="rounded-lg border-l-2 border-purple-500 bg-[var(--dash-bg)] px-3 py-2"
+									>
+										<p
+											class="mb-1 text-xs font-semibold tracking-wide text-[var(--dash-text-muted)] uppercase"
+										>
+											Question
+										</p>
+										<p class="font-medium text-[var(--dash-text)]">
+											{(item as QuestionItem).question}
+										</p>
+									</div>
+									{#if (item as QuestionItem).answer}
+										<div class="px-3 py-1">
+											<p
+												class="mb-1 text-xs font-semibold tracking-wide text-[var(--dash-text-muted)] uppercase"
+											>
+												Answer
+											</p>
+											<p class="break-words whitespace-pre-wrap text-[var(--dash-text)]">
+												{(item as QuestionItem).answer}
+											</p>
+										</div>
+									{:else}
+										<p class="px-3 text-[var(--dash-text-secondary)] italic">No answer yet.</p>
+									{/if}
+									<div class="flex justify-end border-t border-[var(--dash-border)] pt-2">
+										<a
+											href={resolve('/(app)/applications/[id]/texts/questions/[qid]', {
+												id: String(app.id),
+												qid: String(item.id)
+											})}
+											class="flex items-center gap-1.5 rounded-lg bg-[var(--dash-primary)] px-3 py-1.5 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
+										>
+											<FontAwesomeIcon icon={faPencil} class="h-3.5 w-3.5" />
+											{(item as QuestionItem).answer ? 'Open editor' : 'Write / generate answer'}
+										</a>
+									</div>
+								</div>
+							{/if}
+						</Card>
+					{/if}
+				{/each}
+			</div>
+		{/if}
 	{/if}
 </div>
 

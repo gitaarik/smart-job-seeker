@@ -64,6 +64,7 @@ import {
 } from '$lib/server/ai-chat/entity-versions';
 import { parseStarMarkdown, serializeStarMarkdown } from '$lib/interview/star';
 import { LETTER_TYPE_LABELS, letterLabel } from '$lib/texts/letter-label';
+import { LETTER_ORDER, QUESTION_ORDER } from '$lib/server/texts/text-order';
 import { touchProfile } from '$lib/server/profile/touch-profile';
 import { sameText } from '$lib/utils/same-text';
 
@@ -274,8 +275,8 @@ const LETTER_TYPE_CHOICES = Object.entries(LETTER_TYPE_LABELS).map(([value, labe
  * The two profile-owned creatable kinds are hand-orderable lists, and both API
  * routes that create one compute this the same way. Reproducing it slightly
  * differently here is how an agent's cheat sheet would land somewhere the
- * applicant's own button never puts one. Letters have no `sort` column and are
- * listed newest-first, so they never reach this.
+ * applicant's own button never puts one. A letter is created with no `sort`,
+ * which is its place in date order, so letters never reach this.
  */
 async function nextSort(
 	table: typeof cheat_sheets | typeof project_stories,
@@ -297,21 +298,21 @@ function shorten(text: string | null, max = 100): string {
 	return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
 }
 
-// Hoisted: an inline array here becomes a readonly tuple and takes the whole
-// query's inferred return type with it.
-const NEWEST_LETTERS = [desc(application_letters.id)];
-
 /**
- * Two orders, because "the questions" means two different lists.
+ * Two orders, because "the letters" and "the questions" each mean two lists.
  *
- * On one application it means the questions in the order the applicant put them
- * in, which is what `sort` is for and what their page shows. Across the whole
- * profile it means the ones they are working on now — and ascending `sort`
- * there is not an order at all, since every application numbers its own
- * questions from one. A page of twenty came back holding the oldest questions
- * on the profile, and a text written a minute ago was not in it.
+ * On one application they mean what the applicant's texts page shows, in its
+ * order (LETTER_ORDER and QUESTION_ORDER; see $lib/texts/text-order.ts). Across
+ * the whole profile they mean the ones being worked on now, and that order is
+ * not one across applications at all: a manual `sort` numbers each
+ * application's texts from zero. A page of twenty questions in `sort` order
+ * came back holding the oldest on the profile, and a text written a minute ago
+ * was not in it.
+ *
+ * Hoisted: an inline array here becomes a readonly tuple and takes the whole
+ * query's inferred return type with it.
  */
-const QUESTION_ORDER = [application_questions.sort, application_questions.id];
+const NEWEST_LETTERS = [desc(application_letters.id)];
 const NEWEST_QUESTIONS = [desc(application_questions.id)];
 const NEWEST_STORIES = [desc(project_stories.id)];
 const NEWEST_SHEETS = [desc(cheat_sheets.id)];
@@ -337,7 +338,7 @@ const letterKind: CreatableKindDef = {
 					? and(eq(applications.profile_id, profileId), eq(applications.id, opts.applicationId))
 					: eq(applications.profile_id, profileId)
 			)
-			.orderBy(...NEWEST_LETTERS)
+			.orderBy(...(opts.applicationId ? LETTER_ORDER : NEWEST_LETTERS))
 			.limit(opts.limit);
 
 		return rows.map((row) => ({

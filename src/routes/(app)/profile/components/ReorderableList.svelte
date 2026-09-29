@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="T extends { id: number }">
 	import type { Snippet } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -12,14 +12,9 @@
 	import { invalidateAll } from '$app/navigation';
 	import Card from '../../components/Card.svelte';
 
-	interface Item {
-		id: number;
-		[key: string]: unknown;
-	}
-
 	interface Props {
 		/** Current items in their stored display order. */
-		items: Item[];
+		items: T[];
 		/** Whether the list is currently date-sorted or manually ordered. */
 		ordering: 'date' | 'manual';
 		/** dndzone type — must be unique per list on a page. */
@@ -30,8 +25,14 @@
 		reorderMode?: boolean;
 		/** Hide the toolbar (e.g. while an add form is open). */
 		disabled?: boolean;
+		/**
+		 * What an item is called in the order posted to `?/reorder`. Its id by
+		 * default, which the profile sections read as a number; a list drawn from
+		 * two tables, where two items can share an id, names them itself.
+		 */
+		itemKey?: (item: T) => string;
 		/** Renders the label for a single item inside a reorder row. */
-		row: Snippet<[Item]>;
+		row: Snippet<[T]>;
 	}
 
 	let {
@@ -41,12 +42,13 @@
 		label,
 		reorderMode = $bindable(false),
 		disabled = false,
+		itemKey = (item: T) => String(item.id),
 		row
 	}: Props = $props();
 
 	interface DndItem {
 		id: string;
-		item: Item;
+		item: T;
 		[key: string]: unknown;
 	}
 
@@ -58,7 +60,7 @@
 	let canReorder = $derived(items.length > 1);
 
 	function startReorder() {
-		dndItems = items.map((item) => ({ id: String(item.id), item }));
+		dndItems = items.map((item) => ({ id: itemKey(item), item }));
 		reorderMode = true;
 	}
 
@@ -81,7 +83,7 @@
 
 	async function confirmReorder() {
 		reorderSaving = true;
-		const order = dndItems.map((d) => parseInt(d.id)).filter((id) => !isNaN(id));
+		const order = dndItems.map((d) => d.id);
 		try {
 			await postAction('reorder', { order: JSON.stringify(order) });
 		} finally {

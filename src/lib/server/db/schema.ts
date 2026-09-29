@@ -4005,6 +4005,14 @@ export const application_letters = pgTable(
 	'application_letters',
 	{
 		id: serial().primaryKey().notNull(),
+		/**
+		 * Where the applicant dragged this letter among the application's texts.
+		 *
+		 * One number space with `application_questions.sort`, because the texts
+		 * page lists both as one list. Null until they reorder, and the list is in
+		 * date order; see $lib/texts/text-order.ts.
+		 */
+		sort: integer(),
 		date_created: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
 		date_updated: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
 		application_id: integer().notNull(),
@@ -4044,6 +4052,7 @@ export const application_questions = pgTable(
 	'application_questions',
 	{
 		id: serial().primaryKey().notNull(),
+		/** Shares a number space with `application_letters.sort`; see there. */
 		sort: integer(),
 		date_created: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
 		date_updated: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),

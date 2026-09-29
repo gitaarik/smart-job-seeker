@@ -4,14 +4,13 @@ import { dbDirect as db } from '$lib/server/db';
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { today } from '$lib/application-records';
 import {
-	application_letters,
-	application_questions,
 	application_records,
 	application_status_log,
 	applications,
 	letter_versions,
 	profile_versions
 } from '$lib/server/db/schema';
+import { LETTER_ORDER, QUESTION_ORDER } from '$lib/server/texts/text-order';
 
 export const load: LayoutServerLoad = async ({ parent, params }) => {
 	const layoutData = await parent();
@@ -38,8 +37,9 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
 					}
 				}
 			},
+			// In the order the texts page shows them; see $lib/texts/text-order.ts.
 			application_letters: {
-				orderBy: desc(application_letters.date_created),
+				orderBy: LETTER_ORDER,
 				with: {
 					letter_versions: {
 						orderBy: asc(letter_versions.id),
@@ -48,7 +48,7 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
 				}
 			},
 			application_questions: {
-				orderBy: asc(application_questions.sort)
+				orderBy: QUESTION_ORDER
 			},
 			application_status_logs: {
 				orderBy: desc(application_status_log.date_created)

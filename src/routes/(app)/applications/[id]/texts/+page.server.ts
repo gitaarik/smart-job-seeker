@@ -1,8 +1,9 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { applications, application_letters, application_questions } from '$lib/server/db/schema';
+import { compareTexts, parseTextKey, placeInOrder, textKey } from '$lib/texts/text-order';
 import { getSelectedProfileId } from '../../../profile/utils';
 
 export const load: PageServerLoad = async () => {
@@ -33,19 +34,13 @@ export const actions: Actions = {
 			return fail(400, { error: 'Question text is required' });
 		}
 
-		// Get the next sort order
-		const lastQuestion = await db.query.application_questions.findFirst({
-			where: eq(application_questions.application_id, appId),
-			orderBy: desc(application_questions.sort)
-		});
-
+		// No `sort`: a new text goes in date order, on top. See $lib/texts/text-order.ts.
 		const [created] = await db
 			.insert(application_questions)
 			.values({
 				application_id: appId,
 				question: question.trim(),
 				answer,
-				sort: (lastQuestion?.sort ?? 0) + 1,
 				date_created: new Date()
 			})
 			.returning({ id: application_questions.id });
@@ -149,18 +144,14 @@ export const actions: Actions = {
 
 		const now = new Date();
 
+		// One statement and one timestamp, so the set keeps its pasted order: the
+		// ids are handed out in row order and break the tie between them.
 		if (nonEmpty.length > 0) {
-			const lastQuestion = await db.query.application_questions.findFirst({
-				where: eq(application_questions.application_id, appId),
-				orderBy: desc(application_questions.sort)
-			});
-			let sort = lastQuestion?.sort ?? 0;
 			await db.insert(application_questions).values(
 				nonEmpty.map((e) => ({
 					application_id: appId,
 					question: e.question,
 					answer: e.answer || null,
-					sort: ++sort,
 					date_created: now
 				}))
 			);
@@ -309,6 +300,105 @@ export const actions: Actions = {
 		if (!question) return fail(404, { error: 'Question not found' });
 
 		await db.delete(application_questions).where(eq(application_questions.id, id));
+
+		return { success: true };
+	},
+
+	/**
+	 * Put the texts in the order the applicant dragged them into.
+	 *
+	 * `order` is the dragged list's keys (`letter:12`, `question:34`). They take
+	 * the places those texts held, and every other text keeps its own (see
+	 * `placeInOrder`), then each text is written its index. Not `date_updated`:
+	 * the list shows it as when the text was last edited, and moving it is not
+	 * an edit.
+	 */
+	reorder: async ({ request, locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
+
+		const existing = await db.query.applications.findFirst({
+			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId))
+		});
+		if (!existing) return fail(404, { error: 'Application not found' });
+
+		const formData = await request.formData();
+		let order: unknown;
+		try {
+			order = JSON.parse(formData.get('order') as string);
+		} catch {
+			return fail(400, { error: 'Invalid order' });
+		}
+		if (!Array.isArray(order) || !order.every((key) => typeof key === 'string')) {
+			return fail(400, { error: 'Invalid order' });
+		}
+
+		const columns = { id: true, sort: true, date_created: true } as const;
+		const [letters, questions] = await Promise.all([
+			db.query.application_letters.findMany({
+				where: eq(application_letters.application_id, appId),
+				columns
+			}),
+			db.query.application_questions.findMany({
+				where: eq(application_questions.application_id, appId),
+				columns
+			})
+		]);
+		const current = [
+			...letters.map((l) => ({ ...l, itemType: 'letter' as const })),
+			...questions.map((q) => ({ ...q, itemType: 'question' as const }))
+		]
+			.sort(compareTexts)
+			.map(textKey);
+
+		const placed = placeInOrder(current, order);
+		await db.transaction(async (tx) => {
+			for (const [index, key] of placed.entries()) {
+				const text = parseTextKey(key);
+				if (!text) continue;
+				const table = text.itemType === 'letter' ? application_letters : application_questions;
+				await tx
+					.update(table)
+					.set({ sort: index })
+					.where(and(eq(table.id, text.id), eq(table.application_id, appId)));
+			}
+		});
+
+		return { success: true };
+	},
+
+	/** "Sort by date": drop the manual order, back to newest added first. */
+	resetOrder: async ({ locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
+
+		const existing = await db.query.applications.findFirst({
+			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId))
+		});
+		if (!existing) return fail(404, { error: 'Application not found' });
+
+		await db.transaction(async (tx) => {
+			await tx
+				.update(application_letters)
+				.set({ sort: null })
+				.where(eq(application_letters.application_id, appId));
+			await tx
+				.update(application_questions)
+				.set({ sort: null })
+				.where(eq(application_questions.application_id, appId));
+		});
 
 		return { success: true };
 	}

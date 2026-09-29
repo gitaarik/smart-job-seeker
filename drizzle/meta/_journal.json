@@ -449,6 +449,13 @@
       "when": 1790626694028,
       "tag": "0063_drop_application_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1790683931455,
+      "tag": "0065_application_text_order",
+      "breakpoints": true
     }
   ]
 }
