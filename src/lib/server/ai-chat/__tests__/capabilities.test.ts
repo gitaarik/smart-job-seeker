@@ -916,6 +916,15 @@ describe('update_application_status', () => {
 	const apply = (fields: Record<string, unknown>, current = APPLYING) =>
 		def.apply({ id: 49, label: 'x' }, fields, current, ACTOR);
 
+	it('tells the model the words the applicant knows the statuses by', () => {
+		// The values are all a tool result shows, so a model repeats them unless
+		// told otherwise. One called an application "rejected" to an applicant
+		// whose every page says "Not selected".
+		expect(def.contract.replace(/\s+/g, ' ')).toContain(
+			'The applicant knows them as "Not selected" and "Discontinued": say those, not the values.'
+		);
+	});
+
 	it('only accepts a status the pipeline actually has', () => {
 		expect(def.validate({ status: 'interviewing' }, APPLYING).ok).toBe(true);
 		expect(def.validate({ status: 'ghosted' }, APPLYING).ok).toBe(false);
@@ -1305,6 +1314,27 @@ describe('describeProposalChanges', () => {
 			{ company: null }
 		);
 		expect(changes[0].from).toBe('—');
+	});
+
+	it('shows an application status by its label, not its stored value', () => {
+		// The card is what the applicant reads most closely, and "rejected" is the
+		// word the "Not selected" label exists to avoid. The note is their words
+		// and passes through as written.
+		const changes = describeProposalChanges(
+			'update_application_status',
+			{ status: 'rejected', status_note: 'They paused the role' },
+			{
+				status: 'interviewing',
+				status_step: 'Final interview',
+				status_action: null,
+				status_action_date: null
+			}
+		);
+
+		expect(changes).toEqual([
+			{ field: 'status', label: 'Status', from: 'Interviewing', to: 'Not selected' },
+			{ field: 'status_note', label: 'Timeline note', from: '—', to: 'They paused the role' }
+		]);
 	});
 });
 

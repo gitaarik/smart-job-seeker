@@ -572,7 +572,7 @@
 							<div
 								class="absolute top-full left-0 z-20 mt-1 min-w-[140px] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] py-1 shadow-lg"
 							>
-								{#each [{ value: 'saved', label: 'Saved' }, { value: 'rejected', label: 'Not Interested' }] as opt (opt.value)}
+								{#each [{ value: 'saved', label: 'Saved' }, { value: 'rejected', label: 'Not interested' }] as opt (opt.value)}
 									<button
 										type="button"
 										onclick={() => toggleStatus(opt.value)}

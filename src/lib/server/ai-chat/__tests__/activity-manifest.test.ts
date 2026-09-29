@@ -98,7 +98,7 @@ describe('formatActivityManifest', () => {
 			app({ id: 28, company: 'Northwind', status: 'withdrawn' })
 		]);
 
-		expect(out).toContain('(application 27) — Not Selected');
+		expect(out).toContain('(application 27) — Not selected');
 		expect(out).toContain('(application 28) — Discontinued');
 	});
 

@@ -77,7 +77,12 @@ vi.mock('$lib/server/db/schema', () => ({
 	}
 }));
 
-import { revertApplicationStatus, writeApplicationStatus } from '../status';
+import {
+	RELABELLED_STATUSES,
+	revertApplicationStatus,
+	statusForModel,
+	writeApplicationStatus
+} from '../status';
 
 const PROFILE = 12;
 const APP = 49;
@@ -272,5 +277,27 @@ describe('revertApplicationStatus', () => {
 		expect(await revertApplicationStatus(APP, PROFILE, before)).toBe(false);
 		expect(updates).toHaveLength(0);
 		expect(deletes).toHaveLength(0);
+	});
+});
+
+// A tool result shows a model the stored value, and a model repeats what it
+// reads. These are what it is shown beside it, so it can say what the applicant
+// sees on every page instead.
+describe('statusForModel', () => {
+	it('names the label beside the value where the two differ', () => {
+		expect(statusForModel('rejected')).toBe('rejected (the applicant sees "Not selected")');
+		expect(statusForModel('withdrawn')).toBe('withdrawn (the applicant sees "Discontinued")');
+		// A legacy value old rows hold reads as the phase it was renamed into.
+		expect(statusForModel('sent')).toBe('sent (the applicant sees "Applying")');
+	});
+
+	it('leaves a status alone when its label is just the value', () => {
+		expect(statusForModel('interviewing')).toBe('interviewing');
+	});
+
+	it('lists every status known by another name, for a contract to quote', () => {
+		expect(RELABELLED_STATUSES).toBe(
+			'rejected reads "Not selected" and withdrawn reads "Discontinued"'
+		);
 	});
 });

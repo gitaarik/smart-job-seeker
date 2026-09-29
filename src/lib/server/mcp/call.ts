@@ -82,6 +82,12 @@ import {
 	readProfileApplication,
 	type ApplicationStanding
 } from '$lib/server/applications/profile-applications';
+import { getStatusLabel, statusLabels } from '$lib/application-status';
+import {
+	RELABELLED_STATUSES,
+	settableStatuses,
+	statusForModel
+} from '$lib/server/applications/status';
 import { describeOffer } from '$lib/server/ai-chat/application-pipeline';
 import { listProfileDocuments, readProfileDocument } from '$lib/server/documents/read';
 import {
@@ -606,10 +612,27 @@ async function readJob(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
 }
 
 async function listApplications(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
-	const applications = await listProfileApplications(key.profileId, {
-		limit: argInt(args, 'limit') ?? undefined,
-		status: typeof args.status === 'string' ? args.status : undefined
-	});
+	const status = typeof args.status === 'string' ? args.status : undefined;
+	// A filter on a word that is not a status matches nothing, and "No
+	// applications with status" then reads as "they have none". The description
+	// once offered "applied", which is a stage, and a model that knows the labels
+	// asks for "Not selected". The legacy values old rows still hold pass: the
+	// list prints them, so a model may filter on one.
+	if (status !== undefined && !Object.hasOwn(statusLabels, status)) {
+		return fail(
+			`"${status}" is not a status. Use one of: ${settableStatuses.join(', ')}. ` +
+				`In the app, ${RELABELLED_STATUSES}.`
+		);
+	}
+
+	// The label beside the value in the structured result too, which is the half
+	// some clients show instead of the text.
+	const applications = (
+		await listProfileApplications(key.profileId, {
+			limit: argInt(args, 'limit') ?? undefined,
+			status
+		})
+	).map((app) => ({ ...app, status_label: getStatusLabel(app.status) }));
 
 	if (applications.length === 0) {
 		return ok(
@@ -625,7 +648,7 @@ async function listApplications(args: Args, key: VerifiedMcpKey): Promise<ToolRe
 			.map(
 				(app) =>
 					`- [${app.id}] ${app.job_title ?? 'Untitled'}` +
-					`${app.job_company ? ` at ${app.job_company}` : ''} — ${app.status}` +
+					`${app.job_company ? ` at ${app.job_company}` : ''} — ${statusForModel(app.status)}` +
 					// Stated in the list and not only on the record: an agent asked
 					// which applications are going stale reads this line and nothing
 					// else, and a parked one is not a neglected one.
@@ -671,7 +694,7 @@ async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolRes
 	return ok(
 		`Application ${application.id} — ${application.job_title ?? 'Untitled'}` +
 			`${application.job_company ? ` at ${application.job_company}` : ''}\n` +
-			`status: ${application.status}${application.status_step ? ` (${application.status_step})` : ''}\n` +
+			`status: ${statusForModel(application.status)}${application.status_step ? ` (${application.status_step})` : ''}\n` +
 			`${application.snoozed_until ? `snoozed: the applicant paused this until ${application.snoozed_until}\n` : ''}` +
 			// The job in the text and not only in `structuredContent`, which plenty
 			// of clients never surface. An agent handed an application id directly
@@ -679,7 +702,12 @@ async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolRes
 			// this record says what was sent — never what was asked for.
 			`${application.job_id === null ? '' : `posting: job ${application.job_id} — read_job for what was advertised\n`}` +
 			`\n${renderFields(fields)}\n\n${renderStanding(standing)}${chronology}`,
-		{ application, fields, standing, ...logged }
+		{
+			application: { ...application, status_label: getStatusLabel(application.status) },
+			fields,
+			standing,
+			...logged
+		}
 	);
 }
 

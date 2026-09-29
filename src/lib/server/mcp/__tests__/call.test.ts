@@ -174,7 +174,10 @@ const APPLICATION = {
 	job_id: 100,
 	job_title: 'Data Engineer',
 	job_company: 'Acme',
-	status: 'applied',
+	// A status whose label is not its value, so every read and list here goes
+	// through the relabelling. This was "applied" until 2026-09-29, which is a
+	// stage and no status at all.
+	status: 'rejected',
 	status_step: null,
 	application_sent_date: '2026-08-01'
 };
@@ -1425,6 +1428,39 @@ describe('jobs and applications', () => {
 
 		expect(result.content[0].text).toContain('job 100');
 		expect(result.content[0].text).toContain('read_job');
+	});
+
+	// The stored value is all a tool result showed, so an agent repeated it: it
+	// told an applicant their application was "rejected" while every page of the
+	// app said "Not selected". The label now travels with the value, in the text
+	// and in the structured half some clients show instead.
+	it('names the label the applicant knows a status by', async () => {
+		const read = await callTool('read_application', { profile_id: 12, application_id: 44 }, KEY);
+		expect(read.content[0].text).toContain('status: rejected (the applicant sees "Not selected")');
+		expect((read.structuredContent?.application as { status_label: string }).status_label).toBe(
+			'Not selected'
+		);
+
+		const list = await callTool('list_applications', { profile_id: 12 }, KEY);
+		expect(list.content[0].text).toContain('— rejected (the applicant sees "Not selected")');
+		const [listed] = list.structuredContent?.applications as { status_label: string }[];
+		expect(listed.status_label).toBe('Not selected');
+	});
+
+	it('refuses a status filter that is not a status, naming the ones that are', async () => {
+		// Matching nothing, it read as "they have no applications". The filter's
+		// description offered "applied", which is a stage, and a model that knows
+		// the labels asks for "Not selected".
+		for (const status of ['applied', 'Not selected']) {
+			const result = await callTool('list_applications', { profile_id: 12, status }, KEY);
+			expect(result.isError, status).toBe(true);
+			expect(result.content[0].text).toContain('applying, interviewing');
+			expect(result.content[0].text).toContain('rejected reads "Not selected"');
+		}
+
+		// A legacy value old rows still hold is a status the list prints, so it passes.
+		const legacy = await callTool('list_applications', { profile_id: 12, status: 'sent' }, KEY);
+		expect(legacy.isError).toBeFalsy();
 	});
 
 	it('reads a job through the fields its write tools declare', async () => {

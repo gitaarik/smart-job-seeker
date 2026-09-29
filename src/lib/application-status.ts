@@ -5,7 +5,7 @@ export const statusOptions = [
 	{ value: 'interviewing', label: 'Interviewing' },
 	{ value: 'negotiating', label: 'Negotiating' },
 	{ value: 'accepted', label: 'Accepted' },
-	{ value: 'rejected', label: 'Not Selected' },
+	{ value: 'rejected', label: 'Not selected' },
 	{ value: 'withdrawn', label: 'Discontinued' }
 ] as const;
 
@@ -21,7 +21,7 @@ export const statusLabels: Record<string, string> = {
 	offered: 'Negotiating', // backward compat
 	accepted: 'Accepted',
 	withdrawn: 'Discontinued',
-	rejected: 'Not Selected'
+	rejected: 'Not selected'
 };
 
 export function getStatusLabel(status: string): string {
@@ -39,7 +39,7 @@ export const stepperPhases = [
 
 export const resultOptions = [
 	{ value: 'accepted', label: 'Accepted' },
-	{ value: 'rejected', label: 'Not Selected' },
+	{ value: 'rejected', label: 'Not selected' },
 	{ value: 'withdrawn', label: 'Discontinued' }
 ] as const;
 

@@ -1275,13 +1275,31 @@ const updateApplicationStatus: CapabilityDef = {
 					reason: 'Moving an application through the pipeline is undone with one click.'
 				};
 	},
+	/**
+	 * The card in labels, not stored values. Asked to approve "interviewing →
+	 * rejected", the applicant was reading the one word the "Not selected" label
+	 * exists to avoid, on the surface built for reading closely. Otherwise this is
+	 * the default diff: the fields the call sent, unchanged ones dropped.
+	 */
+	describeChanges: (fields, previous) => {
+		const labelled = (values: Record<string, unknown>) =>
+			typeof values.status === 'string'
+				? { ...values, status: getStatusLabel(values.status) }
+				: values;
+		return describeFieldChanges(
+			Object.keys(updateApplicationStatus.fields).filter((field) => field in fields),
+			labelled(fields),
+			labelled(previous)
+		);
+	},
 	contract: `Where this application stands. It is what moves it between the user's
 lists, so propose it when they say something HAPPENED — not when they say what
 they are hoping for or about to do.
 
 - "status" is exactly one of: ${settableStatuses.join(', ')}.
   "rejected" is the employer saying no; "withdrawn" is the applicant stopping.
-  Never guess between those two — ask which it was.
+  Never guess between those two — ask which it was. The applicant knows them
+  as "${getStatusLabel('rejected')}" and "${getStatusLabel('withdrawn')}": say those, not the values.
 - "status_step" is the stage within that status, and must be one of the labels
   listed for it below. accepted, rejected and withdrawn have no stages; a step
   sent with one of them is refused.

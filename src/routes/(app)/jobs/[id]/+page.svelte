@@ -549,7 +549,7 @@
 							title="Not interested in this job"
 						>
 							<FontAwesomeIcon icon={faBan} class="h-4 w-4" />
-							Not Interested
+							Not interested
 						</button>
 					</form>
 

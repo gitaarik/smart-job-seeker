@@ -58,6 +58,7 @@ import {
 	APPLICATION_PAGE_DEFAULT,
 	APPLICATION_PAGE_MAX
 } from '$lib/server/applications/profile-applications';
+import { RELABELLED_STATUSES, settableStatuses } from '$lib/server/applications/status';
 import { JOB_PAGE_DEFAULT, JOB_PAGE_MAX } from '$lib/server/jobs/profile-jobs';
 import { DOCUMENT_PAGE_DEFAULT, DOCUMENT_PAGE_MAX } from '$lib/server/documents/read';
 import {
@@ -580,7 +581,9 @@ the letters and question answers written on it.`,
 				},
 				status: {
 					type: 'string',
-					description: 'Only applications in this status, e.g. "applied", "interviewing".'
+					description:
+						`Only applications in this status: one of ${settableStatuses.join(', ')}. ` +
+						`In the app, ${RELABELLED_STATUSES}.`
 				}
 			},
 			required: ['profile_id'],

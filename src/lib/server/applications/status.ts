@@ -42,6 +42,7 @@ import { application_status_log, applications } from '$lib/server/db/schema';
 import {
 	actionsByPhase,
 	actionsByStep,
+	getStatusLabel,
 	getStepperPhase,
 	statusOptions,
 	stepsByPhase
@@ -58,6 +59,30 @@ import { today } from '$lib/application-records';
  * rows hold them; nothing should write another.
  */
 export const settableStatuses: string[] = statusOptions.map((option) => option.value);
+
+/**
+ * The statuses the applicant knows by another name, for text a model reads:
+ * `rejected reads "Not selected" and withdrawn reads "Discontinued"`.
+ *
+ * The labels are deliberate. "Rejected" is the word "Not selected" exists to
+ * avoid, and a model repeats whatever a tool shows it: while the tools showed
+ * only the stored value, the assistant called applications "rejected" to an
+ * applicant whose every page said "Not selected".
+ */
+export const RELABELLED_STATUSES = statusOptions
+	.filter((option) => option.label.toLowerCase() !== option.value)
+	.map((option) => `${option.value} reads "${option.label}"`)
+	.join(' and ');
+
+/**
+ * One status for a model to read: the value the tools take, and the label the
+ * applicant sees wherever the two differ. `rejected (the applicant sees "Not
+ * selected")`, but plain `interviewing`.
+ */
+export function statusForModel(status: string): string {
+	const label = getStatusLabel(status);
+	return label.toLowerCase() === status ? status : `${status} (the applicant sees "${label}")`;
+}
 
 /** The stage labels the editor offers for a status. Empty once it is finished. */
 export function stepsFor(status: string): string[] {

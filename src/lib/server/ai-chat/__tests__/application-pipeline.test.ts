@@ -123,7 +123,9 @@ describe('formatPipelineContext', () => {
 	// absent row invites the model to go looking for it.
 	it('does not count an accepted application among the ones left out', () => {
 		const note = formatPipelineContext([row()], { finished: 2 }).replace(/\s+/g, ' ');
-		expect(note).toContain('2 finished application(s) — rejected or withdrawn — are not in');
+		expect(note).toContain(
+			'2 finished application(s), "Not selected" or "Discontinued", are not in'
+		);
 		expect(note).toContain('and what they accepted');
 	});
 

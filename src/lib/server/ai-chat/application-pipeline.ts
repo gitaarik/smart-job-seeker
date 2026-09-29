@@ -324,7 +324,10 @@ export function formatPipelineContext(
 		finished > 0
 			? [
 					'',
-					`NOTE: ${finished} finished application(s) — rejected or withdrawn —`,
+					// In the labels the activity index heads them with, which are also
+					// the only words for them the applicant has seen.
+					`NOTE: ${finished} finished application(s), ` +
+						`"${getStatusLabel('rejected')}" or "${getStatusLabel('withdrawn')}",`,
 					'are not in the table below. This table is what is IN PLAY, and what',
 					'they accepted, not everything that exists. They are listed in the',
 					'activity index with their status, so answer questions about outcomes',
