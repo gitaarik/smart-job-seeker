@@ -223,11 +223,11 @@ describe('texts composer — thread in progress', () => {
 describe('texts composer — editing a version inline', () => {
 	const b = useBrowser();
 
-	// Deliberately disjoint, so the second version is far past isSmallDiff's
-	// threshold: the diff that shows afterwards can then only have been opened
-	// on purpose, never by the auto-show.
+	// One word apart: the kind of small change that used to open as a diff by
+	// itself, on top of a save that opened it whatever the size. A version now
+	// opens as its text, so either coming back fails the last check below.
 	const V1 = 'Version one, typed by hand so this probe never spends a token.';
-	const V2 = 'Completely different wording; nothing from that first draft survives.';
+	const V2 = 'Version two, typed by hand so this probe never spends a token.';
 
 	it('writes a first version by hand', async () => {
 		await loginViaUI(b.page);
@@ -276,7 +276,7 @@ describe('texts composer — editing a version inline', () => {
 		expect(await b.page.getByRole('button', { name: /Save & AI review/i }).isVisible()).toBe(true);
 	});
 
-	it('keeps the edited version and opens the diff on the new one', async () => {
+	it('keeps the edited version and shows it as text, with the diff a click away', async () => {
 		await b.page.getByRole('button', { name: /Save as version 2/ }).click();
 		await b.page.waitForLoadState('networkidle');
 
@@ -285,8 +285,12 @@ describe('texts composer — editing a version inline', () => {
 			true
 		);
 
-		// "Hide changes" means the diff is already open. This rewrite is far too
-		// large for the auto-show, so only the post-save reveal can have done it.
+		// Nothing opened the diff, and "Show changes" does.
+		expect(await b.page.getByRole('button', { name: /Hide changes/i }).count()).toBe(0);
+		await b.page
+			.getByRole('button', { name: /Show changes/i })
+			.first()
+			.click();
 		expect(
 			await b.page
 				.getByRole('button', { name: /Hide changes/i })

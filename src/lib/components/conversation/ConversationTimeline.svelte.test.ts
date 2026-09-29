@@ -7,7 +7,7 @@
  * "revised" on a first version, with nothing before it to revise.
  */
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import ConversationTimeline from './ConversationTimeline.svelte';
 import type { ConversationEntry, TurnLabels } from '$lib/server/ai-chat/entity-versions';
 
@@ -85,5 +85,35 @@ describe('ConversationTimeline turn labels', () => {
 		]);
 
 		expect(screen.getByText('Connected app revised answer')).toBeTruthy();
+	});
+});
+
+describe('ConversationTimeline changes view', () => {
+	// The diff renders as a <pre> of insertions and strikethroughs; the text
+	// itself goes through the editor, which renders none.
+	const diff = () => document.querySelector('pre');
+
+	it('shows the newest version as its text until "Show changes" is clicked', async () => {
+		// One word apart, under a fifth of the characters: below the 30% at which
+		// a change used to open as a diff by itself.
+		renderTimeline([
+			turn({
+				type: 'manual_edit',
+				content: 'Moved our billing service from MySQL to Postgres last spring, with no downtime.'
+			}),
+			turn({
+				type: 'manual_edit',
+				content: 'Moved our billing service from MySQL to Postgres last summer, with no downtime.'
+			})
+		]);
+
+		expect(diff()).toBeNull();
+		expect(screen.queryAllByRole('button', { name: 'Hide changes' })).toHaveLength(0);
+
+		await fireEvent.click(screen.getAllByRole('button', { name: 'Show changes' })[0]);
+		expect(diff()?.textContent).toContain('summer');
+
+		await fireEvent.click(screen.getAllByRole('button', { name: 'Hide changes' })[0]);
+		expect(diff()).toBeNull();
 	});
 });

@@ -29,7 +29,7 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import AutoGrowTextarea from '$lib/components/AutoGrowTextarea.svelte';
 	import { renderSafeMarkdown } from '$lib/utils/safe-markdown';
-	import { computeDiff, isSmallDiff } from '$lib/utils/word-diff';
+	import { computeDiff } from '$lib/utils/word-diff';
 	import { sameText } from '$lib/utils/same-text';
 	import Card from '../../../routes/(app)/components/Card.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
@@ -213,9 +213,12 @@
 		keepsMessage: boolean;
 	} | null>(null);
 
-	// Diff view state: manually toggled on/off overrides auto-show
+	// Versions (by versionId) showing their diff against the one before. Only
+	// "Show changes" opens one. A small change used to open its own diff, and a
+	// text being polished changes a little each turn, so the version you came to
+	// read arrived as insertions and strikethroughs. Keyed by id, not position, so
+	// a version written after a rewind never inherits its predecessor's toggle.
 	const diffShown = new SvelteSet<number>();
-	const diffHidden = new SvelteSet<number>();
 
 	// Scroll to last entry on page load / navigation
 	afterNavigate(async () => {
@@ -250,23 +253,9 @@
 		return null;
 	}
 
-	function shouldAutoShowDiff(entryIndex: number): boolean {
-		const prev = getPreviousContent(entryIndex);
-		if (!prev) return false;
-		const entry = conversation[entryIndex];
-		if (!entry.content) return false;
-		const segments = computeDiff(prev, entry.content);
-		return isSmallDiff(segments);
-	}
-
-	function toggleDiff(entryIndex: number, currentlyShowing: boolean) {
-		if (currentlyShowing) {
-			diffShown.delete(entryIndex);
-			diffHidden.add(entryIndex);
-		} else {
-			diffHidden.delete(entryIndex);
-			diffShown.add(entryIndex);
-		}
+	function toggleDiff(versionId: number) {
+		if (diffShown.has(versionId)) diffShown.delete(versionId);
+		else diffShown.add(versionId);
 	}
 
 	async function startEdit(content: string, index: number) {
@@ -312,21 +301,6 @@
 			editContent.trim() !== (conversation[editingIndex]?.content ?? '').trim()
 	);
 
-	/**
-	 * Open the newest version's diff after a save, whatever its size. The
-	 * auto-show only fires below isSmallDiff's threshold, which hides exactly the
-	 * rewrites most worth seeing, and the version the edit was based on is behind
-	 * the collapse bar by then. Without this there is nothing on screen saying the
-	 * edit landed as a new version rather than overwriting the old one.
-	 */
-	async function revealLatestDiff() {
-		await tick();
-		const idx = conversation.findLastIndex((e) => e.content);
-		if (idx < 0) return;
-		diffHidden.delete(idx);
-		diffShown.add(idx);
-	}
-
 	function saveEdit() {
 		if (isEditingPreviousVersion()) {
 			const entry = conversation[editingIndex!];
@@ -337,7 +311,6 @@
 			run('followup', async () => {
 				await onSaveVersion(content, {});
 				editingIndex = null;
-				await revealLatestDiff();
 			});
 		}
 	}
@@ -353,7 +326,6 @@
 		run('review', async () => {
 			await onReview(content);
 			editingIndex = null;
-			await revealLatestDiff();
 		});
 	}
 
@@ -365,22 +337,19 @@
 		run('followup', async () => {
 			await onSaveVersion(pending.content, { deleteAfterVersionId: pending.versionId });
 			editingIndex = null;
-			await revealLatestDiff();
 		});
 	}
 
 	/**
 	 * Run a delete and reset the view state that a shorter trail invalidates:
-	 * both the inline editor and the diff toggles are keyed by entry index, so
-	 * after a rewind they would point at whatever moved into that slot.
+	 * the inline editors are keyed by entry index, so after a rewind they would
+	 * point at whatever moved into that slot.
 	 */
 	function runDelete(versionId: number, scope: DeleteScope) {
 		run('followup', async () => {
 			await onDelete!(versionId, scope);
 			editingIndex = null;
 			editingFeedbackIndex = null;
-			diffShown.clear();
-			diffHidden.clear();
 			userExpanded = false;
 		});
 	}
@@ -664,11 +633,7 @@
 			{@const hasPrevious = getPreviousContent(entryIndex) !== null}
 			{@const isCurrentAnswer =
 				!!onApplyVersion && !!entry.content && sameText(entry.content, currentContent)}
-			{@const showingDiff =
-				!isEditingThis &&
-				hasPrevious &&
-				(diffShown.has(entryIndex) ||
-					(!diffHidden.has(entryIndex) && shouldAutoShowDiff(entryIndex)))}
+			{@const showingDiff = !isEditingThis && hasPrevious && diffShown.has(entry.versionId)}
 			<div
 				class="{userEntry ? 'ml-6' : ''} rounded-lg border {isCurrentAnswer
 					? 'border-[var(--dash-success)]'
@@ -717,7 +682,7 @@
 						<div class="mb-1 flex justify-end">
 							<button
 								type="button"
-								onclick={() => toggleDiff(entryIndex, showingDiff)}
+								onclick={() => toggleDiff(entry.versionId)}
 								class="flex items-center gap-1 rounded border border-[var(--dash-border)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)]"
 							>
 								<FontAwesomeIcon icon={showingDiff ? faEyeSlash : faEye} class="h-2.5 w-2.5" />
@@ -794,7 +759,7 @@
 							<div class="mt-2 flex justify-end">
 								<button
 									type="button"
-									onclick={() => toggleDiff(entryIndex, showingDiff)}
+									onclick={() => toggleDiff(entry.versionId)}
 									class="flex items-center gap-1 rounded border border-[var(--dash-border)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)]"
 								>
 									<FontAwesomeIcon icon={showingDiff ? faEyeSlash : faEye} class="h-2.5 w-2.5" />
