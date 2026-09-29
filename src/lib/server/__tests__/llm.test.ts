@@ -423,6 +423,21 @@ describe('generateChatCompletion', () => {
 		expect(mockInvoke).toHaveBeenCalledTimes(1); // Still 1, not called again
 	});
 
+	// A golden run stops on a copy, and a null `usage` cannot tell it one: this
+	// mocked model reports no usage either. See CompletionResult.fromCache.
+	it('marks the answer the cache gave, and not the one the model gave', async () => {
+		const messages: ChatMessage[] = [{ role: 'user', content: 'Asked twice' }];
+		mockInvoke.mockResolvedValueOnce(new AIMessage('Answered once'));
+
+		const real = await generateChatCompletionTracked(messages);
+		const copy = await generateChatCompletionTracked(messages);
+
+		expect(real).toMatchObject({ content: 'Answered once', usage: null });
+		expect(real.fromCache).toBeUndefined();
+		expect(copy).toMatchObject({ content: 'Answered once', usage: null, fromCache: true });
+		expect(mockInvoke).toHaveBeenCalledTimes(1);
+	});
+
 	// A writing call runs because someone asked for a text, and a repeat of it
 	// asks for a different one. See ChatCompletionOptions.cache.
 	it('asks the model every time when the caller turns the cache off', async () => {

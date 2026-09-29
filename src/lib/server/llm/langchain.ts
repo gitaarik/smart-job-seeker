@@ -651,6 +651,17 @@ export interface CompletionResult {
 	content: string;
 	usage: TokenUsage | null;
 	/**
+	 * Present only when the response cache answered (llm/cache.ts). No model was
+	 * called, which is also why `usage` is null.
+	 *
+	 * For scripts that measure the model rather than use it. They turn the cache
+	 * off with llmCache.disable(), and a golden run stops on an answer carrying
+	 * this anyway, because a copy of an earlier answer is not a sample. A null
+	 * `usage` cannot tell them: a real call whose provider reported no usage has
+	 * one too.
+	 */
+	fromCache?: true;
+	/**
 	 * Present only when `options.fallback` produced this result.
 	 *
 	 * Callers that record which model ran MUST read it, because they recorded the
@@ -1211,7 +1222,7 @@ async function completeTracked(
 		const cachedResponse = await llmCache.get(cacheKey, model);
 		if (cachedResponse) {
 			markCache('hit');
-			return { content: cachedResponse, usage: null };
+			return { content: cachedResponse, usage: null, fromCache: true };
 		}
 	}
 
