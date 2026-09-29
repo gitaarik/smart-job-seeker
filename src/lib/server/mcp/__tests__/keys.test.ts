@@ -64,6 +64,11 @@ vi.mock('$lib/server/auth/crypto', () => ({
 	decryptCredential: (value: string) => (value.startsWith('enc:') ? value.slice(4) : value)
 }));
 
+const recordSeen = vi.fn();
+vi.mock('$lib/server/account/last-seen', () => ({
+	recordSeen: (userId: string) => recordSeen(userId)
+}));
+
 const {
 	generateMcpKey,
 	isAwaitingClient,
@@ -96,6 +101,7 @@ beforeEach(() => {
 	state.rows = [];
 	state.updates = [];
 	state.failUpdates = false;
+	recordSeen.mockClear();
 });
 
 describe('generateMcpKey', () => {
@@ -163,6 +169,20 @@ describe('verifyMcpKey', () => {
 		state.rows = [keyRow()];
 		await verifyMcpKey(`${MCP_KEY_PREFIX}abc`);
 		expect(state.updates[0]).toHaveProperty('last_used');
+	});
+
+	it('records the account as in use, since an agent working for it is the applicant', async () => {
+		// The idle rule pauses matching for accounts nobody uses. Someone who works
+		// through an agent and never opens the app is using it all the same.
+		state.rows = [keyRow()];
+		await verifyMcpKey(`${MCP_KEY_PREFIX}abc`);
+		expect(recordSeen).toHaveBeenCalledWith('user-1');
+	});
+
+	it('records no use for a key it refuses', async () => {
+		state.rows = [keyRow({ revoked: true })];
+		await verifyMcpKey(`${MCP_KEY_PREFIX}abc`);
+		expect(recordSeen).not.toHaveBeenCalled();
 	});
 });
 

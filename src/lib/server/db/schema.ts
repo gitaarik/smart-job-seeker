@@ -2200,7 +2200,13 @@ export const users = pgTable('users', {
 	// data roll off. The reaper in $lib/server/account/delete is what finally
 	// removes the row. Null means no pending deletion — an account that was
 	// restored is indistinguishable from one that never asked, deliberately.
-	deletion_requested_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
+	deletion_requested_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
+	// When the person last used SJS: a signed-in request or an MCP call, stamped
+	// at most once an hour by $lib/server/account/last-seen. Matching and
+	// scheduled searches stop for an account nobody has used for a month and
+	// start again on the next visit (the idle rule in account/spend-eligibility).
+	// Null means never stamped; the rule then measures from `createdAt`.
+	last_seen_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
 });
 
 /**

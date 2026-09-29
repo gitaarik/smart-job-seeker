@@ -19,6 +19,7 @@ import { dbDirect as db } from '$lib/server/db';
 import { and, desc, eq } from 'drizzle-orm';
 import { mcp_keys, profiles } from '$lib/server/db/schema';
 import { decryptCredential, encryptCredential } from '$lib/server/auth/crypto';
+import { recordSeen } from '$lib/server/account/last-seen';
 
 /**
  * Distinct from `sjs_` so the two kinds of credential are told apart before any
@@ -159,6 +160,9 @@ export async function verifyMcpKey(key: string): Promise<VerifiedMcpKey | null> 
 			.catch(() => {
 				// The next call tries again.
 			});
+		// And on the account: an agent working for the applicant is the applicant
+		// using SJS, for the idle rule in account/spend-eligibility.
+		recordSeen(row.user_id);
 
 		return {
 			keyId: row.id,

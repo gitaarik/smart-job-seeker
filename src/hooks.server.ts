@@ -14,6 +14,7 @@ import { initTelemetry } from '$lib/server/monitoring/telemetry';
 import { aiRateLimiter, createRateLimitResponse } from '$lib/server/middleware/rate-limit';
 import { shapeHtmlShell } from '$lib/server/html-shell';
 import { isPublicApiRoute } from '$lib/server/auth/public-api-routes';
+import { recordSeen } from '$lib/server/account/last-seen';
 
 initTelemetry('sveltekit');
 
@@ -115,6 +116,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 		} else {
 			event.cookies.delete('sjs_impersonate', { path: '/' });
 		}
+	}
+
+	// Record that the account is in use, for the idle rule that stops matching
+	// and scheduled searches for accounts nobody uses ($lib/server/account/
+	// last-seen). Not while an admin impersonates it: that is the admin looking.
+	if (event.locals.user && !event.locals.adminUser) {
+		recordSeen(event.locals.user.id);
 	}
 
 	const pathname = event.url.pathname;
