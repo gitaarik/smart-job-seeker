@@ -193,10 +193,7 @@ export const scoreJobMatchSchema = z.object({
 		.array(z.string())
 		.min(0)
 		.max(10)
-		.describe("Areas where candidate doesn't meet requirements"),
-	recommendation: z
-		.enum(['highly_recommend', 'recommend', 'consider', 'not_recommended'])
-		.describe('Overall recommendation')
+		.describe("Areas where candidate doesn't meet requirements")
 });
 
 /**

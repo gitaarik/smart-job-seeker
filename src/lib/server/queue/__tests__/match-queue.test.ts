@@ -40,7 +40,7 @@ vi.mock('$lib/server/monitoring/error-tracker', () => ({
 	errorTracker: { logError: (...args: unknown[]) => mocks.logError(...args) }
 }));
 
-const RESULT: MatchJobResult = { score: 58, recommendation: 'consider' };
+const RESULT: MatchJobResult = { score: 58, skip_reason: null };
 
 /** A promise that never settles — a QueueEvents stream that is not delivering. */
 const silent = () => new Promise<never>(() => {});

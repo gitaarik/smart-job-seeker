@@ -8,6 +8,7 @@
 import { Queue, QueueEvents } from 'bullmq';
 import { redisConnection } from './connection';
 import { errorTracker } from '$lib/server/monitoring/error-tracker';
+import type { SkipReason } from '$lib/match-recommendation';
 
 // ============================================================================
 // Types
@@ -21,7 +22,8 @@ export interface MatchJobData {
 
 export interface MatchJobResult {
 	score: number;
-	recommendation: string;
+	/** Why the job was never scored, or null. The recommendation word is read off `score`. */
+	skip_reason: SkipReason | null;
 }
 
 // ============================================================================
@@ -141,7 +143,7 @@ async function pollUntilFinished(
 
 /**
  * Add a match job to the queue and wait for it to complete.
- * Returns the match result (score + recommendation).
+ * Returns the match result (score, and why it was skipped if it was).
  * Throws if the job fails or times out.
  */
 export async function addMatchJob(

@@ -98,7 +98,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 					columns: {
 						job_id: true,
 						score: true,
-						recommendation: true,
 						matched_skills: true,
 						matched_skill_details: true,
 						adjacent_skills: true

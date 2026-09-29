@@ -340,7 +340,6 @@ export const actions: Actions = {
         UPDATE job_matches
         SET rescore_requested_at = NOW()
         WHERE profile_id IN (${sqlJoin(profileIds)})
-        AND recommendation IS NOT NULL
         RETURNING id
       )
       SELECT COUNT(*) as cnt FROM flagged

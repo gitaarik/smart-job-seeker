@@ -23,6 +23,7 @@ import {
 	varchar
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import type { SkipReason } from '../../match-recommendation';
 
 export const Role = pgEnum('Role', ['USER', 'ADMIN', 'SUPER_ADMIN']);
 
@@ -868,7 +869,12 @@ export const job_matches = pgTable(
 		skill_match_percentage: integer(),
 		strengths: json(),
 		gaps: json(),
-		recommendation: varchar({ length: 255 }).default('consider'),
+		/**
+		 * Why the job has no real score: it failed the eligibility check before any
+		 * model saw it. Null for a scored match, whose recommendation word is read
+		 * off `score` (`$lib/match-recommendation.ts`) rather than stored.
+		 */
+		skip_reason: varchar({ length: 32 }).$type<SkipReason>(),
 		job_date_updated_when_matched: timestamp({
 			precision: 6,
 			withTimezone: true,
@@ -4364,7 +4370,8 @@ export const job_match_history = pgTable(
 		profile_id: integer().notNull(),
 		score: integer().default(0).notNull(),
 		skill_match_percentage: integer(),
-		recommendation: varchar({ length: 255 }),
+		/** As `job_matches.skip_reason`, for this entry. */
+		skip_reason: varchar({ length: 32 }).$type<SkipReason>(),
 		match_summary: text(),
 		date_created: timestamp({ precision: 6, withTimezone: true, mode: 'date' }).defaultNow()
 	},

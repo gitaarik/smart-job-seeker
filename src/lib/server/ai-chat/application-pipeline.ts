@@ -40,6 +40,7 @@ import {
 } from '$lib/salary/conversion';
 import { getStatusLabel, isComparedStatus } from '$lib/application-status';
 import { isSnoozed } from '$lib/application-snooze';
+import { recommendationOf, type Recommendation } from '$lib/match-recommendation';
 import type { OfferTerms } from './application-summary';
 import type { StoredDetail } from '$lib/application-details';
 
@@ -129,7 +130,7 @@ export interface PipelineRow {
 	salaryAnnual: number | null;
 	workLocation: string | null;
 	matchScore: number | null;
-	matchRecommendation: string | null;
+	matchRecommendation: Recommendation | null;
 	/** What depth exists, so the model knows when to say "I can look that up". */
 	entryCount: number;
 	hasOffer: boolean;
@@ -753,7 +754,7 @@ export async function loadPipelineRows(
 			columns: {
 				job_id: true,
 				score: true,
-				recommendation: true
+				skip_reason: true
 			}
 		}),
 		db.query.application_records.findMany({
@@ -829,7 +830,7 @@ export async function loadPipelineRows(
 		const m = a.job_id != null ? scoreByJob.get(a.job_id) : undefined;
 		if (m) {
 			built[i].matchScore = m.score;
-			built[i].matchRecommendation = m.recommendation;
+			built[i].matchRecommendation = recommendationOf(m);
 		}
 	}
 

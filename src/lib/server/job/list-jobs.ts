@@ -341,8 +341,7 @@ export async function listJobs(
 						matched_skills: m.matched_skills,
 						matched_skill_details: m.matched_skill_details,
 						adjacent_skills: m.adjacent_skills,
-						match_summary: m.match_summary,
-						recommendation: m.recommendation
+						match_summary: m.match_summary
 					}
 				])
 			);
@@ -387,8 +386,7 @@ export async function listJobs(
 					matched_skills: true,
 					matched_skill_details: true,
 					adjacent_skills: true,
-					match_summary: true,
-					recommendation: true
+					match_summary: true
 				}
 			});
 

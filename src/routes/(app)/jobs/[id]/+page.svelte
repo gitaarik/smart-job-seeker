@@ -51,6 +51,7 @@
 	import { formatDateLong, formatDateTime as fmtDateTime } from '$lib/format-date';
 	import type { TimeFormat } from '$lib/format-date';
 	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
+	import { recommendationOf } from '$lib/match-recommendation';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -299,7 +300,7 @@
 			<Card padding="lg">
 				<!-- Score badge (floated) -->
 				<div class="float-right mb-2 ml-4">
-					<ScoreBadge score={match?.score ?? null} matched={!!match?.recommendation} size="xl" />
+					<ScoreBadge score={match?.score ?? null} matched={!!match} size="xl" />
 				</div>
 
 				<!-- Header fields: view, or the whole block as one form -->
@@ -896,7 +897,7 @@
 			<Card padding="lg">
 				<h2 class="mb-4 text-lg font-semibold text-[var(--dash-text)]">Match Analysis</h2>
 
-				{#if match && match.recommendation === 'filtered_out'}
+				{#if match && match.skip_reason === 'filtered_out'}
 					<!-- Filtered out - didn't pass eligibility -->
 					<p class="mb-3 text-sm text-[var(--dash-text-secondary)]">
 						This job was filtered out before AI scoring because it doesn't fit your profile
@@ -913,7 +914,7 @@
 							{/each}
 						</ul>
 					{/if}
-				{:else if match && match.recommendation}
+				{:else if match}
 					<!-- AI-scored match -->
 					{#if match.strengths && Array.isArray(match.strengths) && match.strengths.length > 0}
 						<div class="mb-4">
@@ -1031,23 +1032,18 @@
 							}}
 						>
 							<button
-								type={match?.recommendation ? 'button' : 'submit'}
-								onclick={match?.recommendation ? () => (showRematchConfirm = true) : undefined}
+								type={match ? 'button' : 'submit'}
+								onclick={match ? () => (showRematchConfirm = true) : undefined}
 								disabled={isRematching}
 								class="flex items-center gap-2 rounded-lg border border-[var(--dash-border)] px-4 py-2 text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)] disabled:opacity-50"
-								title={match?.recommendation
-									? 'Re-run AI scoring for this job'
-									: 'Run AI scoring for this job'}
+								title={match ? 'Re-run AI scoring for this job' : 'Run AI scoring for this job'}
 							>
 								{#if isRematching}
 									<Spinner size="w-4 h-4" />
 								{:else}
-									<FontAwesomeIcon
-										icon={match?.recommendation ? faSync : faSearch}
-										class="h-4 w-4"
-									/>
+									<FontAwesomeIcon icon={match ? faSync : faSearch} class="h-4 w-4" />
 								{/if}
-								{isRematching ? 'Scoring...' : match?.recommendation ? 'Re-score' : 'Score'}
+								{isRematching ? 'Scoring...' : match ? 'Re-score' : 'Score'}
 							</button>
 						</form>
 
@@ -1201,11 +1197,9 @@
 													>({entry.skill_match_percentage}% skills)</span
 												>
 											{/if}
-											{#if entry.recommendation}
-												<span class="text-[var(--dash-text-muted)]"
-													>— {entry.recommendation.replace(/_/g, ' ')}</span
-												>
-											{/if}
+											<span class="text-[var(--dash-text-muted)]"
+												>— {recommendationOf(entry).replace(/_/g, ' ')}</span
+											>
 										</div>
 										<span class="shrink-0 whitespace-nowrap text-[var(--dash-text-muted)]"
 											>{formatDateTime(entry.date_created)}</span
@@ -1229,7 +1223,7 @@
 								<div class="flex justify-between">
 									<dt class="text-[var(--dash-text-secondary)]">Recommendation</dt>
 									<dd class="text-[var(--dash-text)]">
-										{match.recommendation?.replace(/_/g, ' ') ?? '—'}
+										{recommendationOf(match).replace(/_/g, ' ')}
 									</dd>
 								</div>
 							</dl>

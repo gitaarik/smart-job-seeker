@@ -32,6 +32,7 @@ import {
 	validateJobFields
 } from '$lib/server/jobs/edit-job';
 import { classifyRegion } from '$lib/data/job-taxonomy';
+import type { SkipReason } from '$lib/match-recommendation';
 import {
 	normalizeExperienceLevels,
 	normalizeJobType,
@@ -305,7 +306,7 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
 	let matchHistory: {
 		score: number;
 		skill_match_percentage: number | null;
-		recommendation: string | null;
+		skip_reason: SkipReason | null;
 		match_summary: string | null;
 		date_created: Date | null;
 	}[] = [];
@@ -315,7 +316,7 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
 			columns: {
 				score: true,
 				skill_match_percentage: true,
-				recommendation: true,
+				skip_reason: true,
 				match_summary: true,
 				date_created: true
 			},

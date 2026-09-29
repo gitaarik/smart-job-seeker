@@ -1693,13 +1693,17 @@ Return JSON with:
 
 	score_job_match: {
 		/**
-		 * A score and a recommendation bucket are a verdict, and this one was
-		 * being sampled like prose. Measured over 12 replayed scorings on
-		 * 2026-09-08, re-running the IDENTICAL prompt moved the score by 4.5
-		 * points on average, once by 27, and flipped the recommendation bucket
-		 * once. The applicant sees that as a job whose match score changes when
-		 * they press re-score, with nothing about the job or their profile having
-		 * changed. See PromptTemplate.temperature.
+		 * A score is a verdict, and this one was being sampled like prose.
+		 * Measured over 12 replayed scorings on 2026-09-08, re-running the
+		 * IDENTICAL prompt moved the score by 4.5 points on average, once by 27,
+		 * and flipped the recommendation bucket once. The applicant sees that as
+		 * a job whose match score changes when they press re-score, with nothing
+		 * about the job or their profile having changed. See
+		 * PromptTemplate.temperature.
+		 *
+		 * It no longer asks for that bucket. The word a match shows is read off
+		 * the blended score, on the edges of the bands in the scoring guide
+		 * below ($lib/match-recommendation.ts, whose test reads them from here).
 		 */
 		temperature: 0,
 		system_prompt: `You are a technical recruiter and career advisor. Your task is to evaluate how well a job opportunity matches a candidate's profile, skills, and preferences.
@@ -1760,8 +1764,7 @@ Provide your analysis in JSON format with:
 - summary (1-2 paragraph overview of the match)
 - skill_match_percentage (0-100)
 - strengths (array of 3-5 top reasons this is a good match)
-- gaps (array of areas where candidate doesn't fully meet requirements)
-- recommendation (one of: highly_recommend, recommend, consider, not_recommended)`
+- gaps (array of areas where candidate doesn't fully meet requirements)`
 	},
 
 	write_cover_letter: {

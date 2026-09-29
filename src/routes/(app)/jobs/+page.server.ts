@@ -167,7 +167,6 @@ async function countMatchingJobs(profileId: number, url: URL): Promise<number> {
     JOIN jobs j ON j.id = jm.job_id
     ${statusJoin}
     WHERE jm.profile_id = ${profileId}
-    AND jm.recommendation IS NOT NULL
     AND ${statusFilter}
     AND ${scoreFilter}
     AND ${searchFilter}
@@ -314,7 +313,6 @@ export const actions: Actions = {
       FROM jobs j ${statusJoin}
       WHERE j.id = jm.job_id
       AND jm.profile_id = ${profileId}
-      AND jm.recommendation IS NOT NULL
       AND ${statusFilter}
       AND ${scoreFilter}
       AND ${searchFilter}

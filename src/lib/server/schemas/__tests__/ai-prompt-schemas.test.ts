@@ -240,8 +240,7 @@ describe('AI Prompt Schemas', () => {
 					'Good TypeScript skills',
 					'Relevant industry background'
 				],
-				gaps: ['Limited AWS experience', 'No Kubernetes knowledge'],
-				recommendation: 'recommend'
+				gaps: ['Limited AWS experience', 'No Kubernetes knowledge']
 			};
 			expect(() => scoreJobMatchSchema.parse(validData)).not.toThrow();
 		});
@@ -252,8 +251,7 @@ describe('AI Prompt Schemas', () => {
 				summary: 'Summary',
 				skill_match_percentage: 80,
 				strengths: ['Strength 1'],
-				gaps: ['Gap 1'],
-				recommendation: 'recommend'
+				gaps: ['Gap 1']
 			};
 			expect(() => scoreJobMatchSchema.parse(invalidScore)).toThrow();
 		});
@@ -267,22 +265,9 @@ describe('AI Prompt Schemas', () => {
 				summary: 'Summary',
 				skill_match_percentage: 62.5,
 				strengths: ['Strength 1'],
-				gaps: ['Gap 1'],
-				recommendation: 'recommend'
+				gaps: ['Gap 1']
 			};
 			expect(() => scoreJobMatchSchema.parse(fractional)).not.toThrow();
-		});
-
-		it('should enforce valid recommendation enum', () => {
-			const invalidRecommendation = {
-				score: 85,
-				summary: 'Summary',
-				skill_match_percentage: 80,
-				strengths: ['Strength 1'],
-				gaps: ['Gap 1'],
-				recommendation: 'maybe' // Invalid enum value
-			};
-			expect(() => scoreJobMatchSchema.parse(invalidRecommendation)).toThrow();
 		});
 
 		it('should enforce array size limits', () => {
@@ -291,8 +276,7 @@ describe('AI Prompt Schemas', () => {
 				summary: 'Summary',
 				skill_match_percentage: 80,
 				strengths: Array(15).fill('Strength'), // > 10
-				gaps: ['Gap 1'],
-				recommendation: 'recommend'
+				gaps: ['Gap 1']
 			};
 			expect(() => scoreJobMatchSchema.parse(tooManyStrengths)).toThrow();
 		});

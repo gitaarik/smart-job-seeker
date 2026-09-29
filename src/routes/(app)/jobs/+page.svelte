@@ -150,7 +150,7 @@
 
 	function isMatched(jobId: number): boolean {
 		const m = matchesByJobId[jobId];
-		return !!m?.recommendation;
+		return !!m;
 	}
 
 	let profileSkillLevels = $derived(data.profileSkillLevels);

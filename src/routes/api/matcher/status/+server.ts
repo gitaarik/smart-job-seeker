@@ -11,10 +11,11 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
-import { eq, and, ne, desc } from 'drizzle-orm';
+import { eq, and, desc, isNull, ne, or } from 'drizzle-orm';
 import { profiles, match_config, job_matches } from '$lib/server/db/schema';
 import { getMatcherState, isMatcherAlive } from '$lib/server/job/matcher-state';
 import { getMatchCounts, getEligibleUnmatchedCount } from '$lib/server/job/match-counts';
+import { recommendationOf } from '$lib/match-recommendation';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const user = locals.user;
@@ -51,7 +52,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	// Build where condition for recent matches
 	const recentMatchesWhere = includeIneligible
 		? eq(job_matches.profile_id, profileId)
-		: and(eq(job_matches.profile_id, profileId), ne(job_matches.recommendation, 'ineligible'));
+		: and(
+				eq(job_matches.profile_id, profileId),
+				or(isNull(job_matches.skip_reason), ne(job_matches.skip_reason, 'ineligible'))
+			);
 
 	// Run all queries in parallel
 	const [counts, eligibleUnmatched, matcherState, matcherAlive, recentMatches] = await Promise.all([
@@ -73,7 +77,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				id: true,
 				job_id: true,
 				score: true,
-				recommendation: true,
+				skip_reason: true,
 				date_created: true,
 				skill_match_percentage: true,
 				match_summary: true
@@ -98,6 +102,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		eligibleUnmatched,
 		matcherState,
 		matcherAlive,
-		recentMatches
+		recentMatches: recentMatches.map(({ skip_reason, ...match }) => ({
+			...match,
+			recommendation: recommendationOf({ score: match.score, skip_reason })
+		}))
 	});
 };

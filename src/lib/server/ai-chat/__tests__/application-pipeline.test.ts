@@ -34,7 +34,7 @@ function row(over: Partial<PipelineRow> = {}): PipelineRow {
 		salaryAnnual: 80000,
 		workLocation: 'hybrid',
 		matchScore: 82,
-		matchRecommendation: 'strong',
+		matchRecommendation: 'recommend',
 		entryCount: 5,
 		hasOffer: false,
 		summary: null,

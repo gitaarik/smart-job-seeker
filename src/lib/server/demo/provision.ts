@@ -168,14 +168,14 @@ export async function copyJobMatches(
 	const copied = await queryRawDirect<{ id: number }>(sql`
 		INSERT INTO job_matches (
 			score, reasoning, skill_match_percentage, strengths, gaps,
-			recommendation, job_date_updated_when_matched, date_created,
+			skip_reason, job_date_updated_when_matched, date_created,
 			date_updated, job_id, profile_id, llm_prompt, ai_chat_scoring,
 			matched_skills, matched_skill_details, adjacent_skills, match_summary,
 			rescore_requested_at
 		)
 		SELECT DISTINCT ON (src.job_id)
 			src.score, src.reasoning, src.skill_match_percentage, src.strengths,
-			src.gaps, src.recommendation, src.job_date_updated_when_matched,
+			src.gaps, src.skip_reason, src.job_date_updated_when_matched,
 			src.date_created, src.date_updated, src.job_id, ${targetProfileId},
 			src.llm_prompt, NULL, src.matched_skills, src.matched_skill_details,
 			src.adjacent_skills, src.match_summary, NULL

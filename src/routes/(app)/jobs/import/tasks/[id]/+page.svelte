@@ -339,7 +339,6 @@
 		job: JobDetails | null;
 		match: {
 			score: number;
-			recommendation: string | null;
 			matched_skills?: string[] | null;
 			matched_skill_details?: unknown;
 			adjacent_skills?: unknown;
@@ -1782,7 +1781,7 @@
 										<div class="hidden shrink-0 self-center md:flex">
 											<ScoreBadge
 												score={item.match?.score ?? null}
-												matched={!!item.match?.recommendation}
+												matched={!!item.match}
 												size="sm"
 											/>
 										</div>
@@ -1892,7 +1891,7 @@
 													<div class="md:hidden">
 														<ScoreBadge
 															score={item.match?.score ?? null}
-															matched={!!item.match?.recommendation}
+															matched={!!item.match}
 															size="sm"
 														/>
 													</div>

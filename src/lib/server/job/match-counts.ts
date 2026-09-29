@@ -15,8 +15,8 @@ export interface MatchCounts {
 	totalJobs: number;
 	matchedCount: number; // score > 0 (LLM evaluated, any positive score)
 	noMatchCount: number; // score = 0 with a job_matches row (not recommended + ineligible)
-	notRecommendedCount: number; // subset of noMatch: LLM said not recommended
-	ineligibleCount: number; // subset of noMatch: failed eligibility filter
+	notRecommendedCount: number; // subset of noMatch: scored, and scored 0
+	ineligibleCount: number; // subset of noMatch: failed eligibility filter (either skip_reason)
 	unmatchedCount: number; // no job_matches row yet
 }
 
@@ -141,6 +141,12 @@ export function buildVisibilityScope(
 /**
  * Get all match counts in a single query using the shared visibility scope.
  * Returns totals for matched, not recommended, ineligible, and unmatched jobs.
+ *
+ * The two parts of noMatch add up to it: a job scored 0, and a job that failed
+ * the eligibility check. The first used to count the model's stored "not
+ * recommended", which it gave to scores as high as 76, so it could outnumber
+ * the card it sits under. The second left out a job that failed the check on a
+ * match queued for one job (`filtered_out`).
  */
 export async function getMatchCounts(
 	profileId: number,
@@ -161,8 +167,8 @@ export async function getMatchCounts(
       COUNT(DISTINCT j.id)::int AS total,
       COUNT(DISTINCT j.id) FILTER (WHERE jm.score > 0)::int AS matched,
       COUNT(DISTINCT j.id) FILTER (WHERE jm.id IS NOT NULL AND jm.score = 0)::int AS no_match,
-      COUNT(DISTINCT j.id) FILTER (WHERE jm.recommendation = 'not_recommended')::int AS not_recommended,
-      COUNT(DISTINCT j.id) FILTER (WHERE jm.recommendation = 'ineligible')::int AS ineligible,
+      COUNT(DISTINCT j.id) FILTER (WHERE jm.score = 0 AND jm.skip_reason IS NULL)::int AS not_recommended,
+      COUNT(DISTINCT j.id) FILTER (WHERE jm.skip_reason IS NOT NULL)::int AS ineligible,
       COUNT(DISTINCT j.id) FILTER (WHERE jm.id IS NULL)::int AS unmatched
     ${from}
     LEFT JOIN job_matches jm ON j.id = jm.job_id AND jm.profile_id = ${profileId}

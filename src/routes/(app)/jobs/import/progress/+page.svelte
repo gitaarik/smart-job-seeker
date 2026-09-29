@@ -540,7 +540,7 @@
 							class="flex items-center gap-3 rounded-lg bg-[var(--dash-bg)] p-3 transition-colors hover:bg-[var(--dash-bg)]/80"
 						>
 							<!-- Score Badge -->
-							<ScoreBadge score={match.score} matched={match.recommendation !== null} size="sm" />
+							<ScoreBadge score={match.score} matched size="sm" />
 
 							<!-- Job Info -->
 							<div class="min-w-0 flex-1">
