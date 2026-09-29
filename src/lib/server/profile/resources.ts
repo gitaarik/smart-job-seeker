@@ -313,6 +313,16 @@ export interface ProfileResource {
 	 */
 	detailPath?: (id: number) => string;
 	/**
+	 * The row's own page, for a section whose rows have one under their
+	 * parent's. A role project is at /profile/work-experience/{role}/projects/{id},
+	 * and only the row knows its role, so this takes both ids.
+	 *
+	 * Not `detailPath`, which also opens a chat scope at the list's path plus
+	 * `[id]`: declared on a project, that would be the role's own route, and the
+	 * project's scope would replace the role's there.
+	 */
+	nestedPath?: (parentId: number, id: number) => string;
+	/**
 	 * What a person calls this section when they are not reading the navigation.
 	 *
 	 * Used only by `profile-matching.ts`, to decide whether a message is about a
@@ -615,6 +625,7 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 			path: '/profile/work-experience',
 			name: 'Work experience'
 		},
+		nestedPath: (roleId, id) => `/profile/work-experience/${roleId}/projects/${id}`,
 		// No bare "project": it is what `side_project` is called, it is half of
 		// what a job description says, and this section is reached from the page
 		// its rows live on rather than by being named.

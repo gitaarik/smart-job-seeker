@@ -89,6 +89,27 @@
 	</div>
 {/snippet}
 
+<!--
+	What a change is about, named. The name of the thing is where you would click
+	to go and look at it, so it is the link rather than a second one beside it.
+	Absent for a change whose target has no page at all, which is why this
+	branches instead of always linking. Shared by a request and a history entry,
+	so a change goes to the same place before it is applied and after.
+
+	The path is built on the server out of ids this profile owns, and never taken
+	from the URL. Not `resolve()`: it is overloaded per literal route, so a route
+	id in a variable satisfies no overload, and the paths here span several route
+	trees.
+-->
+{#snippet targetName(label: string, link: string | null)}
+	{#if link}
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+		<a class="underline hover:no-underline" href={link}>{label}</a>
+	{:else}
+		{label}
+	{/if}
+{/snippet}
+
 <div class="space-y-6">
 	<SectionHeader title="Recent Changes" icon={faHistory} />
 
@@ -129,7 +150,8 @@
 								<p class="text-sm text-[var(--dash-text-secondary)]">
 									<!-- `request_id`, as the agent's own unapplied result reports it. -->
 									<span class="font-mono">Request {request.id}</span> ·
-									{request.target.label} · asked {when(request.createdAt)} · by a connected app
+									{@render targetName(request.target.label, request.link)}
+									· asked {when(request.createdAt)} · by a connected app
 								</p>
 							</div>
 
@@ -224,25 +246,7 @@
 								{#if entry.fromRequest}
 									<span class="font-mono">· from Request {entry.fromRequest}</span>
 								{/if} ·
-								<!--
-									The name of the thing is where you would click to go and look at
-									it, so it is the link rather than a second one beside it. Absent
-									for a change whose target has no page at all, which is why this
-									branches instead of always linking.
-
-									The path comes from the log and never from the URL: `entities.ts`
-									built it, out of ids this profile owns. Not `resolve()` — it is
-									overloaded per literal route, so a route id in a variable
-									satisfies no overload, and the paths here span four route trees.
-								-->
-								{#if entry.link}
-									<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-									<a class="underline hover:no-underline" href={entry.link.path}>
-										{entry.target.label}
-									</a>
-								{:else}
-									{entry.target.label}
-								{/if}
+								{@render targetName(entry.target.label, entry.link)}
 								· {when(entry.createdAt)} · by {entry.direct
 									? 'the assistant, without asking'
 									: (SOURCE_LABELS[entry.source] ?? entry.source)}

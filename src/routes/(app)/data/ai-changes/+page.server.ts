@@ -12,6 +12,7 @@ import {
 import { targetingFor } from '$lib/server/mcp/entities';
 import type { Capability, CapabilityActor } from '$lib/server/ai-chat/capabilities';
 import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
+import { rowPagePath } from '$lib/server/profile/row-page';
 import { DIRECTIVES_PAGE } from '$lib/server/ai-chat/directive-capability';
 
 /**
@@ -44,26 +45,53 @@ function pageFor(capability: string): string | null {
 /**
  * Where to open the thing a change was about.
  *
- * The row's own page where the log kept one, and the list it lives on
- * otherwise. Both are in the log already: a verb that resolves its target
+ * The row's own page wherever there is one, and the list it lives on
+ * otherwise. A text's is in the log already: a verb that resolves its target
  * through `entities.ts` gets a `path` on it, which is how a cover letter's URL
  * survives — it is `/applications/{application}/texts/{id}`, and only whoever
- * read the row knew the first half. A profile section has none and needs none,
- * because its whole list is one page.
+ * read the row knew the first half. A job and an application are a template
+ * away from their id. A profile row's is looked up, because a role project's
+ * page is under its role and the log holds only the project.
  *
  * Offered on every entry rather than only the ones with no undo. "Take me to
  * it" is the question a history gets asked most, and it is no less the question
- * for a change that also has an Undo button.
+ * for a change that also has an Undo button. On a request it comes first:
+ * whether a rewrite fits is judged beside the text around it.
+ *
+ * `applied`, because an add's target changes meaning when it happens. Asked
+ * for, it is what the add was addressed to: the profile, or the application a
+ * record is filed under. Applied, it is the row the add made (see
+ * `executeCapability`), and only a text's carries a path. A reorder names the
+ * profile either way.
  */
-function linkFor(entry: {
-	capability: string;
-	target: { id: number; label: string; path?: string };
-}): { name: string; path: string } | null {
-	const page = pageOf(entry.capability);
-	if (entry.target.path) {
-		return { name: entry.target.label, path: entry.target.path };
+async function linkFor(
+	change: {
+		capability: string;
+		target: { id: number; label: string; path?: string };
+		applied: boolean;
+	},
+	actor: CapabilityActor
+): Promise<string | null> {
+	const { capability, target, applied } = change;
+	if (target.path) return target.path;
+
+	const verb = capability.slice(0, capability.indexOf('_'));
+	const resource = capability.slice(capability.indexOf('_') + 1);
+	if (resource in PROFILE_RESOURCES) {
+		const name = resource as ProfileResourceName;
+		const namesRow = verb !== 'reorder' && (verb !== 'add' || applied);
+		const row = namesRow
+			? await rowPagePath(name, { profileId: actor.profileId }, target.id)
+			: null;
+		return row ?? PROFILE_RESOURCES[name].page.path;
 	}
-	return page;
+
+	const targeting = targetingFor(capability as Capability);
+	if (targeting) {
+		return verb === 'add' && applied ? targeting.collection.path : targeting.page(target).path;
+	}
+
+	return pageOf(capability)?.path ?? null;
 }
 
 /**
@@ -138,14 +166,23 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 		)
 	);
 
+	// Together as well, and for a similar reason: a role project's page is
+	// under its role, which only the project's row knows. A section with no
+	// row pages resolves without a query (see `rowPagePath`).
+	const [requestLinks, entryLinks] = await Promise.all([
+		Promise.all(pending.map((request) => linkFor({ ...request, applied: false }, actor))),
+		Promise.all(entries.map((entry) => linkFor({ ...entry, applied: true }, actor)))
+	]);
+
 	return {
 		// Everything an agent asked for and nobody has answered. First on the page
 		// because it is the only part of this feed with anything outstanding — the
 		// rest is history, and history can wait.
-		pending: pending.map((request) => ({
+		pending: pending.map((request, i) => ({
 			id: request.id,
 			title: request.title,
 			target: request.target,
+			link: requestLinks[i],
 			createdAt: request.createdAt,
 			// The agent's own account of why. Rendered as text and never as markup:
 			// it was authored outside this application, by a model that may have been
@@ -154,7 +191,7 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 			changes: describeProposalChanges(request.capability, request.fields, request.previous),
 			whereInstead: pageFor(request.capability)
 		})),
-		entries: entries.map((entry) => ({
+		entries: entries.map((entry, i) => ({
 			id: entry.id,
 			title: entry.title,
 			source: entry.source,
@@ -172,7 +209,7 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 			// Preferred over `whereInstead` where there is one: a capability that
 			// knows what it left behind says it better than a page name can.
 			applicantNote: notes.get(entry.id) ?? null,
-			link: linkFor(entry),
+			link: entryLinks[i],
 			// The request this was approved as, where it was one. Null for a change
 			// that applied on its own, which is most of them.
 			fromRequest: fromRequests.get(entry.id) ?? null,
