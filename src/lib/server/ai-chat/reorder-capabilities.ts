@@ -40,6 +40,7 @@ import {
 	type ProfileResourceName
 } from '$lib/server/profile/resources';
 import { readOwnedRows, reorderRows } from '$lib/server/profile/write';
+import type { OrderGroup } from '$lib/utils/change-analysis';
 import type { CapabilityDef, ProposedChange } from './capabilities';
 
 export type ReorderCapability = `reorder_${ProfileResourceName}`;
@@ -66,19 +67,72 @@ interface OrderRow {
 	name: string;
 	/** The parent row it sorts within, or null for a section owned by the profile. */
 	parent: number | null;
+	/** What that parent is called, for the heading over its list on the card. */
+	group: string | null;
+}
+
+/**
+ * One group's rows in the order they were in, as a request records them.
+ *
+ * Kept for the card: `reorderRows` numbers the whole call, but each role reads
+ * only its own achievements, so a place counted across two roles is a place no
+ * list ever had.
+ */
+interface RecordedGroup {
+	name: string | null;
+	ids: number[];
 }
 
 /** The section's rows in the order they read today, which is the order `sort` gives. */
 async function orderRows(name: ProfileResourceName, profileId: number): Promise<OrderRow[]> {
 	const resource = PROFILE_RESOURCES[name];
-	const key = resource.owner.via === 'parent' ? resource.owner.key : null;
+	const owner = resource.owner.via === 'parent' ? resource.owner : null;
 	const rows = await readOwnedRows(name, { profileId });
 
 	return rows.map((row) => ({
 		id: Number(row.id),
 		label: resource.rowLabel(row),
 		name: resource.shortLabel?.(row) ?? resource.rowLabel(row),
-		parent: key ? Number(row[key]) : null
+		parent: owner ? Number(row[owner.key]) : null,
+		// The parent's label, which the read attaches under this field.
+		group: owner ? String(row[owner.nameField] ?? '') || null : null
+	}));
+}
+
+/** Rows split by the parent they sort within, keeping the order they came in. */
+function groupsOf(rows: OrderRow[]): RecordedGroup[] {
+	const groups = new Map<number | null, RecordedGroup>();
+	for (const row of rows) {
+		const group = groups.get(row.parent) ?? { name: row.group, ids: [] };
+		group.ids.push(row.id);
+		groups.set(row.parent, group);
+	}
+	return [...groups.values()];
+}
+
+/**
+ * The new order as the lists it will read as, each entry with the place it had.
+ *
+ * With no `groups` recorded it is one list. That is right for a section the
+ * profile owns directly, and for the two requests dev recorded before `groups`
+ * was kept, which each moved a single group; one that moved several would be
+ * numbered across them.
+ */
+function orderGroups(
+	next: unknown,
+	previous: Record<string, unknown>,
+	nameOf: (id: number) => string
+): OrderGroup[] {
+	const after = Array.isArray(next) ? (next as number[]) : [];
+	const groups = Array.isArray(previous.groups)
+		? (previous.groups as RecordedGroup[])
+		: [{ name: null, ids: Array.isArray(previous.order) ? (previous.order as number[]) : [] }];
+
+	return groups.map((group) => ({
+		name: group.name,
+		entries: after
+			.filter((id) => group.ids.includes(id))
+			.map((id) => ({ id, name: nameOf(id), was: group.ids.indexOf(id) + 1 }))
 	}));
 }
 
@@ -175,22 +229,33 @@ It always waits for their approval, and they can undo it afterwards.`,
 		 * which is the same set a person's reorder records. The names are for the
 		 * card, which is rendered from a stored request with no database to ask
 		 * (see `CapabilityDef.describeChanges`), and a list of ids asks somebody to
-		 * approve an order nobody showed them.
+		 * approve an order nobody showed them. So are the groups, in a section
+		 * that sorts within a parent: the card numbers each list on its own and
+		 * heads it with the parent's name.
 		 */
 		beforeImage: async (_t, current, _actor, fields) => {
 			const listed = new Set((fields[field] ?? []) as number[]);
 			const rows = ((current[ROWS] ?? []) as OrderRow[]).filter((row) => listed.has(row.id));
 			return {
 				order: rows.map((row) => row.id),
-				names: Object.fromEntries(rows.map((row) => [row.id, row.name]))
+				names: Object.fromEntries(rows.map((row) => [row.id, row.name])),
+				...(parent ? { groups: groupsOf(rows) } : {})
 			};
 		},
 
 		describeChanges: (fields, previous): ProposedChange[] => {
 			const names = (previous.names ?? {}) as Record<string, string>;
-			const named = (ids: unknown) =>
-				(Array.isArray(ids) ? ids : []).map((id) => names[String(id)] ?? `#${id}`).join(', ');
-			return [{ field, label: 'Order', from: named(previous.order), to: named(fields[field]) }];
+			const nameOf = (id: unknown) => names[String(id)] ?? `#${id}`;
+			const named = (ids: unknown) => (Array.isArray(ids) ? ids : []).map(nameOf).join(', ');
+			return [
+				{
+					field,
+					label: 'Order',
+					from: named(previous.order),
+					to: named(fields[field]),
+					order: orderGroups(fields[field], previous, nameOf)
+				}
+			];
 		},
 
 		apply: async (_t, fields, _current, actor) => {

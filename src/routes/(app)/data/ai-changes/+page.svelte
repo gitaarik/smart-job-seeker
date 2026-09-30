@@ -10,7 +10,8 @@
 		inlineDiff,
 		shrinkage,
 		summarizeValue,
-		type FieldChange
+		type FieldChange,
+		type OrderGroup
 	} from '$lib/utils/change-analysis';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -43,42 +44,47 @@
 {#snippet changeList(changes: FieldChange[])}
 	<dl class="mt-3 space-y-2 text-sm">
 		{#each changes as change (change.field)}
-			{@const segments = inlineDiff(change)}
 			<div>
 				<dt class="text-[var(--dash-text-secondary)]">{change.label}</dt>
 				<dd class="break-words">
-					<!--
-						A small edit reads as a diff: the word that changed is marked, instead of
-						left for the eye to find between two near-identical lines. A rewrite, a
-						value being set or cleared, and anything long fall back to old → new — the
-						long ones get their full diff from ChangeDiff below.
-					-->
-					{#if segments}
-						<DiffSegments {segments} />
+					{#if change.order}
+						<!-- A reorder adds and removes nothing, so it reads as its list. -->
+						{@render orderList(change.order)}
 					{:else}
+						{@const segments = inlineDiff(change)}
 						<!--
-							No arrow when nothing is being replaced. An add creates a row, so every
-							`from` arrives as "—", and "empty → Smart Job Seeker" reads as a field
-							that used to hold something and was cleared — on the row's own parent,
-							where it reads as the project itself having been emptied. What the add
-							is saying is just "Side project: Smart Job Seeker". Same branch as the
-							chat's ProposalCard, which has had it since it started showing creates.
+							A small edit reads as a diff: the word that changed is marked, instead of
+							left for the eye to find between two near-identical lines. A rewrite, a
+							value being set or cleared, and anything long fall back to old → new — the
+							long ones get their full diff from ChangeDiff below.
 						-->
-						{#if change.from !== '—'}
-							<span class="line-through opacity-60">{summarizeValue(change.from)}</span>
-							<span aria-hidden="true"> → </span>
+						{#if segments}
+							<DiffSegments {segments} />
+						{:else}
+							<!--
+								No arrow when nothing is being replaced. An add creates a row, so every
+								`from` arrives as "—", and "empty → Smart Job Seeker" reads as a field
+								that used to hold something and was cleared — on the row's own parent,
+								where it reads as the project itself having been emptied. What the add
+								is saying is just "Side project: Smart Job Seeker". Same branch as the
+								chat's ProposalCard, which has had it since it started showing creates.
+							-->
+							{#if change.from !== '—'}
+								<span class="line-through opacity-60">{summarizeValue(change.from)}</span>
+								<span aria-hidden="true"> → </span>
+							{/if}
+							<span>{summarizeValue(change.to)}</span>
 						{/if}
-						<span>{summarizeValue(change.to)}</span>
-					{/if}
-					<!--
-						A replacement shorter than what it replaces is the one shape of edit whose
-						loss is invisible — the new text reads perfectly well, and nothing about it
-						says what used to be there.
-					-->
-					{#if shrinkage(change) > 0}
-						<span class="text-[11px] text-amber-600 dark:text-amber-400">
-							−{shrinkage(change).toLocaleString()}
-						</span>
+						<!--
+							A replacement shorter than what it replaces is the one shape of edit whose
+							loss is invisible — the new text reads perfectly well, and nothing about it
+							says what used to be there.
+						-->
+						{#if shrinkage(change) > 0}
+							<span class="text-[11px] text-amber-600 dark:text-amber-400">
+								−{shrinkage(change).toLocaleString()}
+							</span>
+						{/if}
 					{/if}
 				</dd>
 			</div>
@@ -86,6 +92,47 @@
 	</dl>
 	<div class="mt-2">
 		<ChangeDiff {changes} />
+	</div>
+{/snippet}
+
+<!--
+	A reorder, as the list it will read as: the new order, one entry to a line,
+	and the place each entry had wherever that is not the place it has now. Not
+	a diff of the two orders, which can only show a move as a deletion in one
+	place and an insertion in another. The old place is also what an agent's
+	"moves the skill-match result up to third" is checked against.
+
+	Every entry whose place changed is marked, including one that only shifted
+	because others moved past it. Marking only a minimal set of moves would be
+	quieter, but it would pick one of several equally short explanations, and
+	not always the one the agent gave.
+-->
+{#snippet orderList(groups: OrderGroup[])}
+	<div class="mt-1 space-y-2">
+		{#each groups as group, g (g)}
+			<div>
+				{#if group.name}
+					<p class="text-xs font-medium text-[var(--dash-text-secondary)]">{group.name}</p>
+				{/if}
+				<ol>
+					{#each group.entries as entry, i (entry.id)}
+						<li class="flex gap-2">
+							<span class="w-6 shrink-0 text-right text-[var(--dash-text-muted)] tabular-nums">
+								{i + 1}.
+							</span>
+							<span class="min-w-0">
+								{entry.name}
+								{#if entry.was !== i + 1}
+									<span class="ml-1 text-xs whitespace-nowrap text-[var(--dash-primary)]">
+										<span aria-hidden="true">{entry.was > i + 1 ? '↑' : '↓'}</span> from {entry.was}
+									</span>
+								{/if}
+							</span>
+						</li>
+					{/each}
+				</ol>
+			</div>
+		{/each}
 	</div>
 {/snippet}
 

@@ -45,6 +45,7 @@ import {
 	parseTranslationField
 } from '$lib/server/profile/section-translations';
 import { localeLabel, TRANSLATION_LOCALES } from '$lib/resume-translations';
+import type { OrderGroup } from '$lib/utils/change-analysis';
 import { TEXT_CAPABILITIES, type TextCapability } from './text-version-capabilities';
 import { rowsNamedInMessage } from './profile-matching';
 import {
@@ -2489,6 +2490,8 @@ export interface ProposedChange {
 	label: string;
 	from: string;
 	to: string;
+	/** A reorder's lists, read as lists rather than diffed. See `FieldChange.order`. */
+	order?: OrderGroup[];
 }
 
 const FIELD_LABELS: Record<string, string> = {

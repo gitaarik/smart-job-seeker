@@ -273,13 +273,14 @@ function toEntry(row: typeof capability_edits.$inferSelect): EditLogEntry {
  *
  * ## And three that describe themselves better without one
  *
- * A **reorder** has nothing to say field by field; its title names the section
- * and its undo puts the order back, where a list of row ids would be true and
- * unreadable. **Hiding** and **showing** write only the tag pair that does it,
- * which is the mechanism rather than the change — "Hide this work experience"
- * is the whole of what happened. A **deletion** is the opposite: the row's
- * columns on the left and nothing on the right, which is the whole of "where
- * did that go".
+ * A **reorder** has nothing to say field by field. One an agent asked for kept
+ * the names of what it moved, so it shows the same list its approval card did;
+ * one made by dragging on the page kept only row ids, and a list of those would
+ * be true and unreadable, so its title and undo stand alone. **Hiding** and
+ * **showing** write only the tag pair that does it, which is the mechanism
+ * rather than the change — "Hide this work experience" is the whole of what
+ * happened. A **deletion** is the opposite: the row's columns on the left and
+ * nothing on the right, which is the whole of "where did that go".
  */
 export function describeLoggedChange(entry: EditLogEntry): ProposedChange[] {
 	const section = sectionOf(entry.capability);
@@ -293,7 +294,12 @@ export function describeLoggedChange(entry: EditLogEntry): ProposedChange[] {
 	}
 
 	const [verb, resource] = section;
-	if (verb === 'reorder' || verb === 'hide' || verb === 'show') return [];
+	if (verb === 'reorder') {
+		return entry.previous.names
+			? describeProposalChanges(entry.capability as Capability, entry.fields, entry.previous)
+			: [];
+	}
+	if (verb === 'hide' || verb === 'show') return [];
 
 	// Each column's translations right after it, by the same prefix-less name
 	// `byColumn` gives them (`text.nl`), so a change that rewrote the English and

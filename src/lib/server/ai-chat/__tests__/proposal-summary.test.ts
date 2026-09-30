@@ -7,7 +7,7 @@
  * is honest and useless and pasting both versions is unreadable.
  */
 import { describe, expect, it } from 'vitest';
-import { summarizeProposal } from '../proposal-summary';
+import { describeChangeLines, summarizeProposal } from '../proposal-summary';
 
 const base = {
 	title: "Edit the job's details",
@@ -185,5 +185,32 @@ describe('summarizeProposal', () => {
 		expect(out).toContain('Salary min');
 		expect(out).toContain('Salary max');
 		expect(out).toContain('Work arrangement');
+	});
+});
+
+describe('describeChangeLines', () => {
+	it('lists a reorder one entry to a line, with the place each moved entry had', () => {
+		// Its names joined into one string are long, and the long-text branch
+		// would call the new order a rewrite and quote whatever differs.
+		const lines = describeChangeLines({
+			...change('Order', 'Python, Django, FastAPI', 'Django, Python, FastAPI'),
+			order: [
+				{
+					name: 'Backend',
+					entries: [
+						{ id: 2, name: 'Django', was: 2 },
+						{ id: 1, name: 'Python', was: 1 },
+						{ id: 3, name: 'FastAPI', was: 3 }
+					]
+				}
+			]
+		});
+
+		expect(lines).toEqual([
+			'Order, Backend:',
+			'    1. Django (was 2)',
+			'    2. Python (was 1)',
+			'    3. FastAPI'
+		]);
 	});
 });

@@ -97,6 +97,18 @@ function excerpts(segments: DiffSegment[]): string[] {
  */
 export function describeChangeLines(change: ProposedChange): string[] {
 	const { label, from, to } = change;
+
+	// A reorder, as its lists: the long-text branch below would call it
+	// "rewritten" and quote the names that happen to differ at each position.
+	if (change.order) {
+		return change.order.flatMap((group) => [
+			group.name ? `${label}, ${group.name}:` : `${label}:`,
+			...group.entries.map(
+				({ name, was }, i) => `    ${i + 1}. ${name}${was === i + 1 ? '' : ` (was ${was})`}`
+			)
+		]);
+	}
+
 	const wasEmpty = from === EMPTY;
 	const isEmpty = to === EMPTY;
 

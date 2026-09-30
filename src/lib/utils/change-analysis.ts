@@ -40,6 +40,29 @@ export interface FieldChange {
 	label: string;
 	from: string;
 	to: string;
+	/**
+	 * A reorder's lists, for a reader that shows them as lists. A reorder adds
+	 * and removes nothing, so a diff of its two orders can only show a move as
+	 * an entry deleted in one place and inserted in another, and 17 entries
+	 * joined into one string made that a wall of struck-through fragments.
+	 * `from` and `to` still carry the names comma-joined, for a reader that
+	 * does not know this shape.
+	 */
+	order?: OrderGroup[];
+}
+
+/** One list a reorder changes, in its new order. */
+export interface OrderGroup {
+	/** What it sorts within (a role, a skill group), or null when the section is one list. */
+	name: string | null;
+	entries: OrderEntry[];
+}
+
+export interface OrderEntry {
+	id: number;
+	name: string;
+	/** Its place before, counted from 1 within its group. */
+	was: number;
 }
 
 export interface AnalysedChange {

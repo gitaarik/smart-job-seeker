@@ -69,4 +69,36 @@ describe('describeLoggedChange', () => {
 			{ field: 'text', label: 'Text', from: 'Rik was there.', to: 'Rik led.' }
 		]);
 	});
+
+	it('shows a reorder an agent asked for as the list its card showed', () => {
+		const changes = describeLoggedChange({
+			...entry(
+				{ 'language.order': [8, 7] },
+				{ order: [7, 8], names: { 7: 'Dutch', 8: 'English' } }
+			),
+			capability: 'reorder_language'
+		});
+
+		expect(changes.map((change) => change.order)).toEqual([
+			[
+				{
+					name: null,
+					entries: [
+						{ id: 8, name: 'English', was: 2 },
+						{ id: 7, name: 'Dutch', was: 1 }
+					]
+				}
+			]
+		]);
+	});
+
+	it('shows nothing under a reorder made by dragging, which kept only ids', () => {
+		const changes = describeLoggedChange({
+			...entry({ order: [8, 7] }, { order: [7, 8] }),
+			capability: 'reorder_language',
+			source: 'ui'
+		});
+
+		expect(changes).toEqual([]);
+	});
 });

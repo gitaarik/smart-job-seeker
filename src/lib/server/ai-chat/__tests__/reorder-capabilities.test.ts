@@ -140,7 +140,7 @@ describe('what it accepts', () => {
 });
 
 describe('the request and its card', () => {
-	it('records the order the listed rows were in, with their names', async () => {
+	it('records the order the listed rows were in, with their names and group', async () => {
 		const current = await skills.current(SECTION, ACTOR);
 		const previous = await skills.beforeImage?.(SECTION, current, ACTOR, {
 			'skill.order': [3, 1, 2]
@@ -148,14 +148,25 @@ describe('the request and its card', () => {
 
 		expect(previous).toEqual({
 			order: [1, 2, 3],
-			names: { 1: 'Python', 2: 'Django', 3: 'FastAPI' }
+			names: { 1: 'Python', 2: 'Django', 3: 'FastAPI' },
+			groups: [{ name: 'Backend', ids: [1, 2, 3] }]
 		});
 	});
 
-	it('shows the order by name, before and after', () => {
+	it('records no groups for a section the profile owns directly', async () => {
+		const current = await languages.current(SECTION, ACTOR);
+		const previous = await languages.beforeImage?.(SECTION, current, ACTOR, {
+			'language.order': [8, 7]
+		});
+
+		expect(previous).toEqual({ order: [7, 8], names: { 7: 'Dutch', 8: 'English' } });
+	});
+
+	it('shows the new order as a list, with the place each entry had', () => {
 		// Rendered from a stored request with no database to ask: the names come
 		// from what beforeImage kept. Ids alone would ask somebody to approve an
-		// order nobody showed them.
+		// order nobody showed them. This request predates `groups`, so it is one
+		// list with no heading.
 		const changes = skills.describeChanges?.(
 			{ 'skill.order': [3, 1, 2] },
 			{ order: [1, 2, 3], names: { 1: 'Python', 2: 'Django', 3: 'FastAPI' } }
@@ -166,7 +177,43 @@ describe('the request and its card', () => {
 				field: 'skill.order',
 				label: 'Order',
 				from: 'Python, Django, FastAPI',
-				to: 'FastAPI, Python, Django'
+				to: 'FastAPI, Python, Django',
+				order: [
+					{
+						name: null,
+						entries: [
+							{ id: 3, name: 'FastAPI', was: 3 },
+							{ id: 1, name: 'Python', was: 1 },
+							{ id: 2, name: 'Django', was: 2 }
+						]
+					}
+				]
+			}
+		]);
+	});
+
+	it('numbers each group on its own, however the call interleaves them', async () => {
+		// `reorderRows` numbers the whole call, but each group reads only its own
+		// entries: Docker moving past Python is not a move anyone would see.
+		const sent = { 'skill.order': [5, 3, 4, 1, 2] };
+		const current = await skills.current(SECTION, ACTOR);
+		const previous = (await skills.beforeImage?.(SECTION, current, ACTOR, sent)) ?? {};
+
+		expect(skills.describeChanges?.(sent, previous)[0].order).toEqual([
+			{
+				name: 'Backend',
+				entries: [
+					{ id: 3, name: 'FastAPI', was: 3 },
+					{ id: 1, name: 'Python', was: 1 },
+					{ id: 2, name: 'Django', was: 2 }
+				]
+			},
+			{
+				name: 'DevOps',
+				entries: [
+					{ id: 5, name: 'Linux', was: 2 },
+					{ id: 4, name: 'Docker', was: 1 }
+				]
 			}
 		]);
 	});

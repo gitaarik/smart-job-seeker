@@ -35,7 +35,9 @@
 
 	let expanded = $state(false);
 
-	const longChanges = $derived(changes.filter(isLong));
+	// Not a reorder's: its names joined into one string are long, but the list
+	// its surface renders is already the whole of it.
+	const longChanges = $derived(changes.filter((change) => !change.order && isLong(change)));
 
 	// Only while expanded, and only the long ones: see `analyseChanges`. A page
 	// showing thirty pending requests would otherwise run a quadratic diff for
