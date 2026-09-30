@@ -46,12 +46,12 @@ export interface Candidate {
 	/** Human label, shown in the review diff. Short by design. */
 	label: string;
 	/**
-	 * What the item actually SAYS, for the ranker and the model. Falls back to
-	 * the label when an item's label is already its content.
+	 * What the item actually SAYS, for the ranker, the coverage check and the
+	 * model. Falls back to the label when an item's label is already its content.
 	 *
-	 * A bullet's label carries its text and a skill category's lists the skills
-	 * in it, so for those two the label has always been both. A side project's
-	 * label is its NAME — and the name is the least informative thing about it.
+	 * A skill category's label lists the skills in it, so for that one the label
+	 * has always been both. A side project's label is its NAME — and the name is
+	 * the least informative thing about it.
 	 * The consequence, measured on one real job: the model was handed the eight
 	 * characters "LitState" and asked whether they fit a web-components role,
 	 * answered "likely unrelated hobby project", and dropped the one item in the
@@ -60,6 +60,11 @@ export interface Candidate {
 	 *
 	 * The applicant cannot fix that from their side. A project has no bullets to
 	 * add; its summary IS the content, and the summary was the part nothing read.
+	 *
+	 * A bullet's label was taken to carry its text as well, and carries the first
+	 * 80 characters of it: enough for one line in a list, and short of where a
+	 * bullet names what it was built with. So a bullet has a detail too, and it
+	 * is the whole text. See buildCandidates.
 	 */
 	detail?: string;
 	/** Rough printed length, the currency L2 spends. */

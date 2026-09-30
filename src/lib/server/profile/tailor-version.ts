@@ -284,6 +284,14 @@ export function buildCandidates(
 				entityId: achievement.id,
 				parentId: role.id,
 				label: `${roleLabel}: ${body.slice(0, 80)}`,
+				// The whole bullet, for everything that READS it rather than lists it.
+				// The label is cut to stay one line, and a bullet names its
+				// technologies last: "Cut checkout time 60% … by optimizing SQL queries
+				// and Python hot paths" reached the ranker, the coverage check and the
+				// model as "… by optimizing", against jobs that required Python.
+				// Measured on one profile, all 48 bullets ran past the cut and a third
+				// of their text was never scored.
+				detail: `${roleLabel}: ${body}`,
 				chars: body.length,
 				// A bullet on a role the document doesn't print isn't printed either.
 				visible: visibleRoles.has(role.id) && visibleAchievements.has(achievement.id),
@@ -1187,7 +1195,8 @@ export async function markCoverage(
 	}
 
 	for (const candidate of candidates) {
-		// The label carries a bullet's text; detail carries a project's summary.
+		// Detail carries what the item says: a bullet's whole text, a project's
+		// summary. The label is kept for the kinds whose name is all they say.
 		const said = `${candidate.label} ${candidate.detail ?? ''}`;
 		const named = [...answers]
 			.filter(([, wordings]) => [...wordings].some((w) => carriesName(w, said)))

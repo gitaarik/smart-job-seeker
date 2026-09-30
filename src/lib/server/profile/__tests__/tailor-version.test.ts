@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The module reaches for the database, the model and the embedding provider at
 // import time; none of that is what these tests are about.
@@ -23,8 +23,10 @@ import {
 	markCoverage,
 	pinnedReason,
 	refFor,
+	scoreCandidates,
 	shortlistFor
 } from '../tailor-version';
+import { semanticScoreUnits } from '$lib/server/documents/content-embeddings';
 import { expandUpwardBySeed } from '$lib/server/job/skill-ontology';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import type { Candidate, Decision } from '$lib/tailoring';
@@ -248,6 +250,68 @@ describe('buildCandidates: side projects', () => {
 			[]
 		).filter((c) => c.entityType === OVERRIDE_ENTITIES.sideProject);
 		expect(project.detail).toBe('LitState');
+	});
+});
+
+describe('buildCandidates: bullets', () => {
+	// Longer than the 80 characters a label keeps, with its technologies at the
+	// end, which is where a bullet usually names them. The label was the only
+	// text a bullet had, so one like this was ranked, checked for coverage and
+	// shown to the model as "... per minute by", for jobs that required Python.
+	const BULLET =
+		'Halved page load times and scaled the shop to thousands of orders per minute by tuning SQL queries and Python hot paths.';
+	const ROLE = 'Engineer at Acme';
+
+	const profile = {
+		profile_versions: [{ id: 1, slug: 'base', extension_links: [], toggles: [], overrides: [] }],
+		work_experiences: [
+			{
+				id: 1,
+				position: 'Engineer',
+				name: 'Acme',
+				tags: null,
+				start_date: '2020-01-01',
+				end_date: null,
+				work_experience_achievements: [{ id: 100, description: BULLET, tags: null }]
+			}
+		],
+		side_projects: [],
+		tech_skill_categories: []
+	} as unknown as Parameters<typeof buildCandidates>[0];
+
+	const built = () =>
+		buildCandidates(profile, 'resume', 'base', ['Python']).filter(
+			(c) => c.entityType === OVERRIDE_ENTITIES.achievement
+		);
+
+	afterEach(() => {
+		vi.mocked(semanticScoreUnits).mockReset();
+	});
+
+	it('keeps the label one short line and carries the whole bullet as detail', () => {
+		const [bullet] = built();
+		expect(bullet.label).toBe(`${ROLE}: ${BULLET.slice(0, 80)}`);
+		expect(bullet.label).not.toContain('Python');
+		expect(bullet.detail).toBe(`${ROLE}: ${BULLET}`);
+	});
+
+	it('ranks on the whole bullet, not on the part the label kept', async () => {
+		vi.mocked(semanticScoreUnits).mockResolvedValue(new Map());
+		await scoreCandidates(1, built(), { text: 'a Python job', skills: [] });
+		const calls = vi.mocked(semanticScoreUnits).mock.calls;
+		expect(calls[calls.length - 1][1][0].embedText).toBe(`${ROLE}: ${BULLET}`);
+	});
+
+	it('counts a skill the bullet names past the cut as evidence for it', async () => {
+		vi.mocked(expandUpwardBySeed).mockResolvedValue(new Map());
+		const candidates = built();
+		await markCoverage(candidates, profile, ['Python', 'Kafka']);
+		expect(candidates[0].covers).toEqual(['Python']);
+	});
+
+	it('shows the model the end of the bullet too', () => {
+		const [bullet] = built();
+		expect(shortlistFor([{ ...bullet, score: 0.55 }], [], FLOOR)).toContain('Python hot paths');
 	});
 });
 
