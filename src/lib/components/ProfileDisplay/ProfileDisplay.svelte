@@ -403,11 +403,14 @@
 
 			{#each profile.certificates as cert, index (index)}
 				<div>
-					<span class="font-bold">{cert.name}</span>{#if cert.issuer}
-						— {cert.issuer}{/if}{#if cert.date}, {formatCertificateYears(
-							cert.date,
-							cert.expiry_date
-						)}{/if}
+					<!--
+						The dash and its spaces live inside the expression: Svelte drops
+						whitespace at the start of a block, which printed "Certificate—
+						Issuer".
+					-->
+					<span class="font-bold">{cert.name}</span
+					>{#if cert.issuer}{` — ${cert.issuer}`}{/if}{#if cert.date},
+						{formatCertificateYears(cert.date, cert.expiry_date)}{/if}
 				</div>
 			{/each}
 		</section>
