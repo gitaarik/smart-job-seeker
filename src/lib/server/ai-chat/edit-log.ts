@@ -271,7 +271,7 @@ function toEntry(row: typeof capability_edits.$inferSelect): EditLogEntry {
  * prefix taken off whichever keys have one. One rendering for one kind of
  * change, whoever made it.
  *
- * ## And three that describe themselves better without one
+ * ## And four that describe themselves better without one
  *
  * A **reorder** has nothing to say field by field. One an agent asked for kept
  * the names of what it moved, so it shows the same list its approval card did;
@@ -279,8 +279,11 @@ function toEntry(row: typeof capability_edits.$inferSelect): EditLogEntry {
  * be true and unreadable, so its title and undo stand alone. **Hiding** and
  * **showing** write only the tag pair that does it, which is the mechanism
  * rather than the change — "Hide this work experience" is the whole of what
- * happened. A **deletion** is the opposite: the row's columns on the left and
- * nothing on the right, which is the whole of "where did that go".
+ * happened. A **tag change** is the same mechanism with a sentence of its own,
+ * "Where it prints: Everywhere → Not on the resume", which is what its card
+ * said; the column diff would print "!resume". A **deletion** is the opposite:
+ * the row's columns on the left and nothing on the right, which is the whole
+ * of "where did that go".
  */
 export function describeLoggedChange(entry: EditLogEntry): ProposedChange[] {
 	const section = sectionOf(entry.capability);
@@ -300,6 +303,9 @@ export function describeLoggedChange(entry: EditLogEntry): ProposedChange[] {
 			: [];
 	}
 	if (verb === 'hide' || verb === 'show') return [];
+	if (verb === 'tag') {
+		return describeProposalChanges(entry.capability as Capability, entry.fields, entry.previous);
+	}
 
 	// Each column's translations right after it, by the same prefix-less name
 	// `byColumn` gives them (`text.nl`), so a change that rewrote the English and

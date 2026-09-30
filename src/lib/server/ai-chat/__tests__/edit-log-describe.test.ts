@@ -92,6 +92,23 @@ describe('describeLoggedChange', () => {
 		]);
 	});
 
+	it('shows a tag change as where the entry prints, as its card did', () => {
+		// The column diff would print the tag strings, which are the mechanism.
+		const changes = describeLoggedChange({
+			...entry({ 'work_experience_achievement.tags': ['!resume'] }, { tags: null }),
+			capability: 'tag_work_experience_achievement'
+		});
+
+		expect(changes).toEqual([
+			{
+				field: 'work_experience_achievement.tags',
+				label: 'Where it prints',
+				from: 'Everywhere',
+				to: 'Not on the resume'
+			}
+		]);
+	});
+
 	it('shows nothing under a reorder made by dragging, which kept only ids', () => {
 		const changes = describeLoggedChange({
 			...entry({ order: [8, 7] }, { order: [7, 8] }),
