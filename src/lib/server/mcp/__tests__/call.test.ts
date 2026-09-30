@@ -581,6 +581,21 @@ describe('reads', () => {
 		});
 	});
 
+	it('returns the tags themselves, which a tag tool takes whole', async () => {
+		// A tag change replaces the list, so an agent that could only see "hidden"
+		// and "versions" would have to rebuild the list it was changing.
+		const result = await callTool(
+			'read_profile_section',
+			{ profile_id: 12, section: 'work_experience' },
+			KEY
+		);
+
+		const entries = result.structuredContent?.entries as { entry_id: number; tags: string[] }[];
+		expect(entries.find((e) => e.entry_id === 5)?.tags).toEqual([]);
+		expect(entries.find((e) => e.entry_id === 6)?.tags).toEqual(['!resume', '!cv', 'senior']);
+		expect(result.content[0].text).toMatch(/\[6\][^\n]*\(tags: !resume, !cv, senior\)/);
+	});
+
 	it('says in the text that an entry is hidden, not only in the payload', async () => {
 		const result = await callTool(
 			'read_profile_section',

@@ -71,6 +71,12 @@ vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
 	translatedLocales: () => Promise.resolve([])
 }));
 
+// The versions a tag may name are the tag tools' list, not the parents'. None here.
+vi.mock('$lib/server/ai-chat/tag-capabilities', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/ai-chat/tag-capabilities')>()),
+	libraryVersions: () => Promise.resolve([])
+}));
+
 const { tech_skill_categories } = await import('$lib/server/db/schema');
 const { toolsFor } = await import('../tools');
 

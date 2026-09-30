@@ -321,16 +321,17 @@ async function readProfileSection(args: Args, key: VerifiedMcpKey): Promise<Tool
 			)
 		};
 
-		// Visibility is not an assistant field — `tags` is `notForAssistant`
-		// precisely because a wrong value there is silent. But not returning the
-		// state at all makes every read blind to it: an agent auditing what prints
-		// cannot tell an entry it should propose hiding from one already hidden,
-		// and proposes the no-op. So the state is reported in the two terms that
-		// answer that question, and neither is a tag string it could echo back.
+		// Visibility is not an edit field — `tags` is `notForAssistant` there,
+		// because `edit_*` would write any string, and a wrong one is silent. It
+		// has a verb of its own, `tag_*`, which takes only the tags the entry's
+		// page offers and replaces the list whole, so the list is returned as it
+		// is. The two terms beside it answer the commonest question without
+		// reading tags at all: does this print, and where else.
 		if (hideable) {
 			const tags = (row.tags ?? null) as string[] | null;
 			entry.hidden = isHiddenFromDocuments(tags);
 			entry.versions = versionsOf(tags);
+			entry.tags = tags ?? [];
 		}
 
 		return entry;
@@ -370,7 +371,11 @@ async function readProfileSection(args: Args, key: VerifiedMcpKey): Promise<Tool
 	return ok(
 		`${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} in ${name}:\n\n` +
 			entries
-				.map((e) => `- [${e.entry_id}] ${e.label}${e.hidden === true ? ' — hidden' : ''}`)
+				.map((e) => {
+					const tags =
+						Array.isArray(e.tags) && e.tags.length > 0 ? ` (tags: ${e.tags.join(', ')})` : '';
+					return `- [${e.entry_id}] ${e.label}${e.hidden === true ? ' — hidden' : ''}${tags}`;
+				})
 				.join('\n') +
 			note +
 			translated,

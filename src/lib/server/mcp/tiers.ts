@@ -9,9 +9,9 @@
  * - **Tier 1 — additive and reversible.** Adding an entry, or filling a field
  *   that was empty. Direct write for a `write`-scoped key, logged, and the undo
  *   handle comes back in the tool result.
- * - **Tier 2 — overwrites of authored prose, hides and shows, reorders, anything
- *   bulk.** The tool does not write. It records a request and returns a deep
- *   link; a human approves in the app.
+ * - **Tier 2 — overwrites of authored prose, hides and shows, tag changes,
+ *   reorders, anything bulk.** The tool does not write. It records a request and
+ *   returns a deep link; a human approves in the app.
  *
  * The grading below reads a call against what the row currently holds, which is
  * the right question for a column holding content and the wrong one for a column
@@ -142,6 +142,13 @@ export function tierForWrite(opts: {
 	// fills nothing and replaces nothing, which is why this is said before it.
 	if (capability.startsWith('reorder_')) {
 		return { tier: 2, reason: 'Reordering changes what their documents lead with.' };
+	}
+
+	// A tag decides which documents print the entry: it is a hide or a show aimed
+	// at one of them. An entry with no tags would otherwise read as a blank field
+	// being filled, and go straight through.
+	if (capability.startsWith('tag_')) {
+		return { tier: 2, reason: 'Changing where an entry prints changes their documents.' };
 	}
 
 	if (recentDirectWrites >= DIRECT_WRITE_BURST) {

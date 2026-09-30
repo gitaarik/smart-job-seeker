@@ -81,6 +81,7 @@ import { MATCH_CONFIG_CAPABILITIES, type MatchConfigCapability } from './match-c
 import { DIRECTIVE_CAPABILITIES, type DirectiveCapability } from './directive-capability';
 import { TEXT_COMMIT_CAPABILITIES, type TextCommitCapability } from './text-commit-capabilities';
 import { REORDER_CAPABILITIES, type ReorderCapability } from './reorder-capabilities';
+import { TAG_CAPABILITIES, type TagCapability } from './tag-capabilities';
 import type { EditSource } from './edit-log';
 import type { TierDecision } from '$lib/server/mcp/tiers';
 import { createApplication, parseForNewApplication } from '$lib/server/applications/create';
@@ -119,7 +120,8 @@ export type Capability =
 	| TextCommitCapability
 	| MatchConfigCapability
 	| DirectiveCapability
-	| ReorderCapability;
+	| ReorderCapability
+	| TagCapability;
 
 /** The concrete row a capability acts on, once resolved from the page entity. */
 export interface CapabilityTarget {
@@ -1947,7 +1949,8 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
 	...TEXT_COMMIT_CAPABILITIES,
 	...MATCH_CONFIG_CAPABILITIES,
 	...DIRECTIVE_CAPABILITIES,
-	...REORDER_CAPABILITIES
+	...REORDER_CAPABILITIES,
+	...TAG_CAPABILITIES
 };
 
 /** A capability that resolved and authorized for this turn. */

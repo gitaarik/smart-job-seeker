@@ -20,6 +20,11 @@ vi.mock('$lib/server/profile/section-translations', async (importOriginal) => ({
 	...(await importOriginal<typeof import('$lib/server/profile/section-translations')>()),
 	translatedLocales: () => Promise.resolve(['nl'])
 }));
+// And two library versions, which is what a tag may name besides the documents.
+vi.mock('$lib/server/ai-chat/tag-capabilities', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/ai-chat/tag-capabilities')>()),
+	libraryVersions: () => Promise.resolve(['citrus', 'fullstack-django'])
+}));
 import { CAPABILITIES } from '$lib/server/ai-chat/capabilities';
 import { ENTITY_CAPABILITY_NAMES, targetingFor } from '../entities';
 import {
@@ -135,6 +140,36 @@ describe('how a write names its row', () => {
 			items: { type: 'integer' }
 		});
 		expect(tool!.annotations.title).toContain('needs your approval');
+	});
+
+	it('makes a tag change name the entry and its whole new list, and say it needs approving', () => {
+		const tool = byName.get('tag_work_experience_achievement');
+		expect(tool).toBeDefined();
+		expect(tool!.inputSchema.required).toEqual([
+			'profile_id',
+			'entry_id',
+			'work_experience_achievement.tags',
+			'rationale'
+		]);
+		expect(tool!.inputSchema.properties?.['work_experience_achievement.tags']).toEqual({
+			type: 'array',
+			items: { type: 'string' }
+		});
+		expect(tool!.annotations.title).toContain('needs your approval');
+	});
+
+	it('lists the versions a tag may name, and points the edit tools at the tag tool', async () => {
+		// The page offers these as chips; a tool description is the only place an
+		// agent can read them before it is refused for naming one wrong.
+		const tools = await toolsFor('write', 'documents', { profileId: 12 });
+		const find = (name: string) => tools.find((tool) => tool.name === name)!;
+		expect(find('tag_skill').description).toContain('  - citrus');
+		expect(find('tag_skill').description).toContain('  - fullstack-django');
+		expect(find('edit_work_experience_achievement').description).toContain(
+			'tag_work_experience_achievement'
+		);
+		// A section with no tags has no tag tool to point at.
+		expect(find('edit_language').description).not.toContain('tag_');
 	});
 
 	it('still makes an add to an application name the application', () => {

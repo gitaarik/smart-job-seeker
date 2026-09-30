@@ -146,6 +146,19 @@ describe('tierForWrite', () => {
 		).toBe(2);
 	});
 
+	it('asks before any tag change, even on an entry with no tags', () => {
+		// An empty tag list is a blank field to every generic rule below, and a
+		// tag decides which documents print the entry.
+		expect(
+			tierForWrite({
+				capability: 'tag_work_experience_achievement',
+				current: { 'work_experience_achievement.tags': [] },
+				fields: { 'work_experience_achievement.tags': ['!resume'] },
+				...noBurst
+			}).tier
+		).toBe(2);
+	});
+
 	describe('a capability that grades its own write', () => {
 		// `status` is notNull with a default, so the overwrite rule below would
 		// grade every move through the pipeline Tier 2 — putting "they invited me

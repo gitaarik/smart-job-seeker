@@ -22,6 +22,7 @@ import { PROFILE_CAPABILITY_NAMES } from '../profile-capabilities';
 import { TEXT_CAPABILITY_NAMES, isTextCapability } from '../text-version-capabilities';
 import { TEXT_COMMIT_CAPABILITY_NAMES, isTextCommitCapability } from '../text-commit-capabilities';
 import { REORDER_CAPABILITY_NAMES, isReorderCapability } from '../reorder-capabilities';
+import { TAG_CAPABILITY_NAMES, isTagCapability } from '../tag-capabilities';
 import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/resources';
 
 const TEXT = formatAbilityManifest();
@@ -70,6 +71,7 @@ describe('formatAbilityManifest', () => {
 		for (const capability of Object.keys(CAPABILITIES) as Capability[]) {
 			if (generated.has(capability) || isTextCapability(capability)) continue;
 			if (isTextCommitCapability(capability) || isReorderCapability(capability)) continue;
+			if (isTagCapability(capability)) continue;
 			expect(TEXT, capability).toContain(CAPABILITIES[capability].title);
 		}
 	});
@@ -89,6 +91,12 @@ describe('formatAbilityManifest', () => {
 		// The reorder verbs the same way, and more strictly: they exist only on the
 		// MCP server, because in the app a person drags. See reorder-capabilities.ts.
 		for (const capability of REORDER_CAPABILITY_NAMES) {
+			expect(TEXT, capability).not.toContain(CAPABILITIES[capability].title);
+		}
+
+		// And the tag verbs, for the same reason: on the page a tag is a click.
+		// See tag-capabilities.ts.
+		for (const capability of TAG_CAPABILITY_NAMES) {
 			expect(TEXT, capability).not.toContain(CAPABILITIES[capability].title);
 		}
 

@@ -44,6 +44,11 @@ import {
 	isReorderCapability,
 	REORDER_CAPABILITY_NAMES
 } from '$lib/server/ai-chat/reorder-capabilities';
+import {
+	isTagCapability,
+	libraryVersions,
+	TAG_CAPABILITY_NAMES
+} from '$lib/server/ai-chat/tag-capabilities';
 import { APPLICATION_COLLECTION, ENTITY_CAPABILITY_NAMES, targetingFor } from './entities';
 import { isTextCommitCapability } from '$lib/server/ai-chat/text-commit-capabilities';
 import {
@@ -166,8 +171,9 @@ const CREATE_CAPABILITY_NAMES: Capability[] = [
  * ones are hand-written and reach a job or an application through
  * `entities.ts`; the create ones make a row that did not exist. Nothing in the
  * registry is held back now — which is worth stating, because for one release
- * something was. The reorder verbs go the other way: they are here and in no
- * chat scope, because a person in the app drags (see `reorder-capabilities.ts`).
+ * something was. The reorder and tag verbs go the other way: they are here and
+ * in no chat scope, because a person in the app drags a list or clicks a tag on
+ * the page (see `reorder-capabilities.ts` and `tag-capabilities.ts`).
  */
 export const MCP_CAPABILITIES: Capability[] = [
 	...PROFILE_CAPABILITY_NAMES,
@@ -175,7 +181,8 @@ export const MCP_CAPABILITIES: Capability[] = [
 	...CREATE_CAPABILITY_NAMES,
 	...MATCH_CONFIG_CAPABILITY_NAMES,
 	...DIRECTIVE_CAPABILITY_NAMES,
-	...REORDER_CAPABILITY_NAMES
+	...REORDER_CAPABILITY_NAMES,
+	...TAG_CAPABILITY_NAMES
 ];
 
 // The four version verbs are already in ENTITY_CAPABILITY_NAMES: they name a
@@ -373,6 +380,38 @@ function inventoryHintFor(capability: Capability): string | undefined {
 }
 
 /**
+ * The MCP-only half of a tag verb's contract: the versions a tag may name.
+ *
+ * The contract says a version is checked against the versions they have. This
+ * is that list, so an agent can name one right the first time rather than read
+ * it out of a refusal. One read per tools/list, shared by every tag verb.
+ */
+function renderVersions(versions: string[]): string {
+	return versions.length > 0
+		? `The versions a tag may name, spelled as written here:\n\n` +
+				versions.map((version) => `  - ${version}`).join('\n')
+		: `They have no versions yet, so the only tags are "resume", "cv" and ` +
+				`"portfolio", each with or without a "!".`;
+}
+
+/**
+ * Where an edit tool points for the one column it cannot write.
+ *
+ * The edit contracts are shared with the chat, where no tag verb is offered, so
+ * they still say to send the applicant to the page for their tags. Over this
+ * server there is a tool for it, and without this line an agent reads the
+ * contract's refusal as the last word.
+ */
+function tagHintFor(capability: Capability): string | undefined {
+	if (!capability.startsWith('edit_')) return undefined;
+	const verb = `tag_${sectionFor(capability)}`;
+	return isTagCapability(verb)
+		? `Over this server "tags" does have a tool of its own: ${verb}, which asks for ` +
+				`their approval.`
+		: undefined;
+}
+
+/**
  * A translation field, described where an agent reads it: on the property.
  *
  * The chat explains these once, in its preamble. A tool has no preamble — this
@@ -397,12 +436,16 @@ function writeTool(capability: Capability, parents?: string, languages: string[]
 	const isAdd = capability.startsWith('add_');
 	const isSwitch = capability.startsWith('hide_') || capability.startsWith('show_');
 	// The verbs that are Tier 2 whatever the row holds: a hide or a show moves an
-	// entry off or back onto every document, a reorder rearranges a list the
-	// applicant ordered by hand, and a commit replaces a text they are going to
-	// send. Every other capability's tier depends on values nobody has read yet
-	// at `tools/list` time, so only these can promise it in a title.
+	// entry off or back onto every document, a tag change does the same for one
+	// of them, a reorder rearranges a list the applicant ordered by hand, and a
+	// commit replaces a text they are going to send. Every other capability's tier
+	// depends on values nobody has read yet at `tools/list` time, so only these
+	// can promise it in a title.
 	const alwaysAsks =
-		isSwitch || isReorderCapability(capability) || isTextCommitCapability(capability);
+		isSwitch ||
+		isTagCapability(capability) ||
+		isReorderCapability(capability) ||
+		isTextCommitCapability(capability);
 
 	const properties: Record<string, unknown> = { profile_id: PROFILE_ID_PROPERTY };
 	const required = ['profile_id'];
@@ -501,7 +544,8 @@ currently doing on a document: "hidden" is true when it prints on no CV and no
 export — still counted for job matching, just off every document — and
 "versions" lists the versions it is re-admitted on despite that. An entry
 already hidden does not need hiding again, and only a hidden one can be shown
-again. Where "hideable" is false the
+again. "tags" is the list behind both, as the entry's page sets it, and the
+section's tag_ tool takes a new one whole. Where "hideable" is false the
 section has no such control at all: every entry prints, and there is nothing
 to propose.`,
 		inputSchema: {
@@ -879,7 +923,8 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
 			`Read what the question needs before answering it.`,
 
 		`Changes that overwrite something the applicant wrote, hide an entry, show a ` +
-			`hidden one or reorder a section are not applied by you. They are recorded ` +
+			`hidden one, change where one prints or reorder a section are not applied by ` +
+			`you. They are recorded ` +
 			`and the applicant approves them in their own app. There is no tool that ` +
 			`approves one, and asking again will not help — say it is waiting, give ` +
 			`them the "review_at" URL that came back with it, and carry on. That link ` +
@@ -1019,10 +1064,20 @@ export async function toolsFor(
 	// so a profile that has never translated anything sees the tools it always
 	// did. Without an actor there is no profile to ask, and so no languages.
 	const languages = actor ? await translatedLocales(actor.profileId) : [];
+	// The same list the entry's page offers as chips; see tag-capabilities.ts.
+	const versions = actor ? await libraryVersions(actor.profileId) : null;
+	const extraFor = (c: Capability): string | undefined =>
+		[
+			parents?.get(c) ?? inventoryHintFor(c),
+			versions && isTagCapability(c) ? renderVersions(versions) : undefined,
+			tagHintFor(c)
+		]
+			.filter(Boolean)
+			.join('\n\n') || undefined;
 	return [
 		...tools,
 		uploadTool,
-		...MCP_CAPABILITIES.map((c) => writeTool(c, parents?.get(c) ?? inventoryHintFor(c), languages))
+		...MCP_CAPABILITIES.map((c) => writeTool(c, extraFor(c), languages))
 	];
 }
 
