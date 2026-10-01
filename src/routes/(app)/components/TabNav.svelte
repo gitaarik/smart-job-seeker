@@ -12,6 +12,8 @@
 		label: string;
 		href: string;
 		icon?: IconDefinition;
+		/** How many items the tab holds. Shown beside the label when above zero. */
+		count?: number;
 	};
 
 	let {
@@ -157,6 +159,17 @@
 	{@render tabBar()}
 {/if}
 
+<!-- In the measuring row too, so a count's width is part of the overflow sum. -->
+{#snippet counter(tab: Tab, active: boolean)}
+	{#if tab.count}
+		<span
+			class="rounded-full px-2 py-0.5 text-xs tabular-nums {active
+				? 'bg-[var(--dash-primary)]/15 text-[var(--dash-primary)]'
+				: 'bg-[var(--dash-border)]/60 text-[var(--dash-text-secondary)]'}">{tab.count}</span
+		>
+	{/if}
+{/snippet}
+
 {#snippet tabBar()}
 	<div bind:this={containerEl} class="relative">
 		<div
@@ -168,6 +181,7 @@
 				<span class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap">
 					{#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="h-4 w-4" />{/if}
 					{tab.label}
+					{@render counter(tab, false)}
 				</span>
 			{/each}
 		</div>
@@ -195,6 +209,7 @@
 					>
 						{#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="h-4 w-4" />{/if}
 						{tab.label}
+						{@render counter(tab, isActive(tab.href))}
 					</a>
 					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				{/each}
@@ -236,6 +251,7 @@
 							>
 								{#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="h-3.5 w-3.5" />{/if}
 								{tab.label}
+								{@render counter(tab, active)}
 							</a>
 							<!-- eslint-enable svelte/no-navigation-without-resolve -->
 						{/each}

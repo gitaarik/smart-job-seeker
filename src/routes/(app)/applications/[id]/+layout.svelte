@@ -29,11 +29,27 @@
 	// nothing else does — which document goes to this job, and what it says about
 	// you. It earned a tab by outgrowing a card, and moving it also takes its
 	// analysis off the Overview's load.
+	//
+	// The counts took over from the Overview's Workbench card, which listed the
+	// letters, questions and documents and then linked to these same tabs. Each
+	// counts what its tab lists: Texts its letters and questions, Activity its
+	// entries, the same number as the Activity header. That header leaves the
+	// status changes out too, as context rather than content.
 	const tabs = $derived([
 		{ label: 'Overview', href: basePath, icon: faClipboardList },
 		{ label: 'Resume', href: `${basePath}/resume`, icon: faFileLines },
-		{ label: 'Texts', href: `${basePath}/texts`, icon: faEnvelope },
-		{ label: 'Activity', href: `${basePath}/activity`, icon: faStream },
+		{
+			label: 'Texts',
+			href: `${basePath}/texts`,
+			icon: faEnvelope,
+			count: (app.application_letters?.length ?? 0) + (app.application_questions?.length ?? 0)
+		},
+		{
+			label: 'Activity',
+			href: `${basePath}/activity`,
+			icon: faStream,
+			count: app.application_records?.length ?? 0
+		},
 		{ label: 'Salary', href: `${basePath}/salary`, icon: faMoneyBillWave }
 	]);
 

@@ -1,8 +1,4 @@
 <script lang="ts">
-	/*
-	 * The href comes from profileDocUrl(), which builds a public /p/<slug> document
-	 * URL. The rule does not follow a function call.
-	 */
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
@@ -13,9 +9,7 @@
 		faCalendar,
 		faChevronDown,
 		faClipboardList,
-		faEnvelope,
 		faExternalLinkAlt,
-		faFileAlt,
 		faCalendarCheck,
 		faClock,
 		faGlobe,
@@ -25,7 +19,6 @@
 		faPencil,
 		faPlay,
 		faMoneyBillWave,
-		faWrench,
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import ConfirmModal from '../../profile/components/ConfirmModal.svelte';
@@ -46,9 +39,6 @@
 	import { describeSnooze, isSnoozed, snoozePresets, snoozeUntil } from '$lib/application-snooze';
 	import { formatSalaryRange, timeAgo } from '$lib/format';
 	import { formatDate as fmtDate } from '$lib/format-date';
-	import { profileDocUrl } from '$lib/utils/profile-doc-url';
-	import type { DocType } from '$lib/utils/profile-doc-url';
-	import { letterLabel } from '$lib/texts/letter-label';
 	import { portalToBody } from '$lib/actions/portal';
 	// The first use of Kit's typed route resolution in this codebase. Every other
 	// internal link here is a template string and sits in the lint baseline; new
@@ -59,7 +49,6 @@
 
 	let app = $derived(data.application);
 	let job = $derived(app.job);
-	let profileSlug = $derived(data.selectedProfile?.slug);
 
 	// Status widget
 	let statusPickerOpen = $state(false);
@@ -102,23 +91,6 @@
 		return fmtDate(date, { fallback: '' });
 	}
 
-	function formatCurrency(
-		amount: number | string | null,
-		currency: string | null,
-		period: string | null
-	): string {
-		if (!amount) return 'Not set';
-		const formatted = new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: currency || 'EUR',
-			maximumFractionDigits: 0
-		}).format(Number(amount));
-		return period ? `${formatted} / ${period}` : formatted;
-	}
-
-	let letterCount = $derived(app.application_letters?.length || 0);
-	let questionCount = $derived(app.application_questions?.length || 0);
-	let fileCount = $derived((app.application_records ?? []).filter((r) => r.file_id).length);
 	// What the summariser decides from: the length of each entry's text, 0 for
 	// an extraction with nothing in it. Computed in the layout query rather than
 	// from the text, which this page no longer receives.
@@ -151,217 +123,354 @@
 		{/if}
 	</div>
 
-	<!-- Status Widget (top of page) -->
-	<Card padding="lg">
-		<div class="space-y-3">
-			<div class="mb-2 flex items-center gap-2">
-				<FontAwesomeIcon icon={faClipboardList} class="h-4 w-4 text-[var(--dash-text-secondary)]" />
-				<h2 class="text-sm font-semibold tracking-wide text-[var(--dash-text)] uppercase">
-					Status
-				</h2>
-			</div>
-
-			<button
-				type="button"
-				onclick={() => (statusPickerOpen = true)}
-				class="flex w-full items-center gap-5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-5 py-4 text-left transition-colors hover:border-[var(--dash-primary)]"
-			>
-				<div class="min-w-0 flex-1 space-y-1.5">
-					<p class="text-sm font-semibold tracking-wide uppercase {getStatusDotColor(app.status)}">
-						{getStatusLabel(app.status)}
-					</p>
-					{#if app.status_step}
-						<p class="text-sm text-[var(--dash-text-secondary)] italic">{app.status_step}</p>
-					{/if}
-					{#if app.status_action}
-						{@const isWaiting = app.status_action.startsWith('Awaiting')}
-						{@const isScheduled = app.status_action === 'Scheduled'}
-						<p
-							class="flex items-center gap-1.5 text-sm font-medium {isWaiting
-								? 'text-[var(--dash-text-muted)]'
-								: isScheduled
-									? 'text-[var(--dash-success)]'
-									: 'text-[var(--dash-primary)]'}"
-						>
-							{#key app.status_action}
-								<FontAwesomeIcon
-									icon={isWaiting ? faClock : isScheduled ? faCalendarCheck : faHandPointRight}
-									class="h-3.5 w-3.5"
-								/>
-							{/key}
-							{app.status_action}
-							{#if isScheduled && app.status_action_date}
-								— {formatDate(app.status_action_date)}
-							{/if}
-						</p>
-					{/if}
+	<!-- Status and the job it is for, side by side when there is room. Both are
+	     short and each filled under half of a full-width row, and the job used
+	     to sit under Key facts, which grows with every entry, so its link out
+	     had drifted a couple of screens down. Not paired without a job: that
+	     would be a half-width card holding one line. -->
+	<div class="grid grid-cols-1 gap-6 {job ? 'md:grid-cols-2' : ''}">
+		<!-- Status Widget (top of page) -->
+		<Card padding="lg">
+			<div class="space-y-3">
+				<div class="mb-2 flex items-center gap-2">
+					<FontAwesomeIcon
+						icon={faClipboardList}
+						class="h-4 w-4 text-[var(--dash-text-secondary)]"
+					/>
+					<h2 class="text-sm font-semibold tracking-wide text-[var(--dash-text)] uppercase">
+						Status
+					</h2>
 				</div>
-				<span
-					class="inline-flex flex-shrink-0 items-center gap-1.5 text-xs text-[var(--dash-text-muted)]"
+
+				<button
+					type="button"
+					onclick={() => (statusPickerOpen = true)}
+					class="flex w-full items-center gap-5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-5 py-4 text-left transition-colors hover:border-[var(--dash-primary)]"
 				>
-					<FontAwesomeIcon icon={faPencil} class="h-3 w-3" />
-					Edit
-				</span>
-			</button>
-
-			<!-- Quick update: one-tap transitions for the current phase -->
-			{#if quickActions.length > 0}
-				<div class="pt-1">
-					<p class="mb-2 text-xs text-[var(--dash-text-muted)]">Quick update</p>
-					<div class="flex flex-wrap gap-2">
-						{#each quickActions as qa (qa.label)}
-							<form
-								method="POST"
-								action="?/updateStatus"
-								use:enhance={() => {
-									quickSaving = true;
-									return async ({ update }) => {
-										await update();
-										quickSaving = false;
-									};
-								}}
-							>
-								<input type="hidden" name="status" value={qa.status} />
-								<input type="hidden" name="step" value={qa.step ?? ''} />
-								<input type="hidden" name="action" value={qa.action ?? ''} />
-								<button
-									type="submit"
-									disabled={quickSaving}
-									class="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 {quickToneClass[
-										qa.tone
-									]}"
-								>
-									{qa.label}
-								</button>
-							</form>
-						{/each}
-					</div>
-				</div>
-			{/if}
-
-			<!-- Snooze: parking your own work on this, which is a different axis from
-			     the status above and so does not touch it. -->
-			<div class="border-t border-[var(--dash-border)] pt-3">
-				{#if snoozed && app.snoozed_until}
-					<div class="flex flex-wrap items-center justify-between gap-2">
-						<div class="min-w-0">
+					<div class="min-w-0 flex-1 space-y-1.5">
+						<p
+							class="text-sm font-semibold tracking-wide uppercase {getStatusDotColor(app.status)}"
+						>
+							{getStatusLabel(app.status)}
+						</p>
+						{#if app.status_step}
+							<p class="text-sm text-[var(--dash-text-secondary)] italic">{app.status_step}</p>
+						{/if}
+						{#if app.status_action}
+							{@const isWaiting = app.status_action.startsWith('Awaiting')}
+							{@const isScheduled = app.status_action === 'Scheduled'}
 							<p
-								class="flex items-center gap-1.5 text-sm font-medium text-[var(--dash-text-secondary)]"
+								class="flex items-center gap-1.5 text-sm font-medium {isWaiting
+									? 'text-[var(--dash-text-muted)]'
+									: isScheduled
+										? 'text-[var(--dash-success)]'
+										: 'text-[var(--dash-primary)]'}"
 							>
-								<FontAwesomeIcon icon={faMugHot} class="h-3.5 w-3.5" />
-								Snoozed until {formatDate(app.snoozed_until)} — {describeSnooze(
-									app.snoozed_until,
-									data.today
-								)}
+								{#key app.status_action}
+									<FontAwesomeIcon
+										icon={isWaiting ? faClock : isScheduled ? faCalendarCheck : faHandPointRight}
+										class="h-3.5 w-3.5"
+									/>
+								{/key}
+								{app.status_action}
+								{#if isScheduled && app.status_action_date}
+									— {formatDate(app.status_action_date)}
+								{/if}
 							</p>
-							{#if app.snooze_reason}
-								<p class="mt-0.5 text-xs text-[var(--dash-text-muted)] italic">
-									{app.snooze_reason}
-								</p>
-							{/if}
-						</div>
-						<div class="flex items-center gap-2">
-							<form method="POST" action="?/updateSnooze" use:enhance={snoozeSubmit}>
-								<input type="hidden" name="until" value="" />
-								<button
-									type="submit"
-									disabled={snoozeSaving}
-									class="flex items-center gap-1.5 rounded-lg border border-[var(--dash-primary)] px-3 py-1.5 text-sm font-medium text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary)]/10 disabled:opacity-50"
-								>
-									<FontAwesomeIcon icon={faPlay} class="h-3 w-3" />
-									Resume now
-								</button>
-							</form>
-							<button
-								type="button"
-								onclick={() => (snoozeOpen = !snoozeOpen)}
-								class="text-xs text-[var(--dash-text-muted)] underline-offset-2 hover:underline"
-							>
-								Change
-							</button>
-						</div>
+						{/if}
 					</div>
-				{:else}
-					<button
-						type="button"
-						onclick={() => (snoozeOpen = !snoozeOpen)}
-						class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
+					<span
+						class="inline-flex flex-shrink-0 items-center gap-1.5 text-xs text-[var(--dash-text-muted)]"
 					>
-						<FontAwesomeIcon icon={faMugHot} class="h-3 w-3" />
-						Snooze this application
-					</button>
-				{/if}
+						<FontAwesomeIcon icon={faPencil} class="h-3 w-3" />
+						Edit
+					</span>
+				</button>
 
-				{#if snoozeOpen}
-					<form
-						method="POST"
-						action="?/updateSnooze"
-						use:enhance={snoozeSubmit}
-						class="mt-3 space-y-3 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-3"
-					>
+				<!-- Quick update: one-tap transitions for the current phase -->
+				{#if quickActions.length > 0}
+					<div class="pt-1">
+						<p class="mb-2 text-xs text-[var(--dash-text-muted)]">Quick update</p>
 						<div class="flex flex-wrap gap-2">
-							{#each snoozePresets as preset (preset.value)}
-								<button
-									type="button"
-									onclick={() => (customUntil = snoozeUntil(preset.days, data.today))}
-									class="rounded-lg border px-3 py-1.5 text-sm transition-colors {customUntil ===
-									snoozeUntil(preset.days, data.today)
-										? 'border-[var(--dash-primary)] text-[var(--dash-primary)]'
-										: 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
+							{#each quickActions as qa (qa.label)}
+								<form
+									method="POST"
+									action="?/updateStatus"
+									use:enhance={() => {
+										quickSaving = true;
+										return async ({ update }) => {
+											await update();
+											quickSaving = false;
+										};
+									}}
 								>
-									{preset.label}
-								</button>
+									<input type="hidden" name="status" value={qa.status} />
+									<input type="hidden" name="step" value={qa.step ?? ''} />
+									<input type="hidden" name="action" value={qa.action ?? ''} />
+									<button
+										type="submit"
+										disabled={quickSaving}
+										class="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 {quickToneClass[
+											qa.tone
+										]}"
+									>
+										{qa.label}
+									</button>
+								</form>
 							{/each}
 						</div>
-
-						<div class="flex flex-wrap items-end gap-3">
-							<label class="flex flex-col gap-1 text-xs text-[var(--dash-text-muted)]">
-								Comes back on
-								<input
-									type="date"
-									name="until"
-									bind:value={customUntil}
-									min={snoozeUntil(1, data.today)}
-									required
-									class="rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1.5 text-sm text-[var(--dash-text)]"
-								/>
-							</label>
-							<label
-								class="flex min-w-[180px] flex-1 flex-col gap-1 text-xs text-[var(--dash-text-muted)]"
-							>
-								Why (optional)
-								<input
-									type="text"
-									name="reason"
-									bind:value={snoozeReason}
-									maxlength="255"
-									placeholder="Too many in flight right now"
-									class="rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1.5 text-sm text-[var(--dash-text)]"
-								/>
-							</label>
-						</div>
-
-						<div class="flex items-center gap-2">
-							<button
-								type="submit"
-								disabled={snoozeSaving || !customUntil}
-								class="rounded-lg bg-[var(--dash-primary)] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:opacity-50"
-							>
-								{snoozed ? 'Update snooze' : 'Snooze'}
-							</button>
-							<button
-								type="button"
-								onclick={closeSnooze}
-								class="px-2 py-1.5 text-sm text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]"
-							>
-								Cancel
-							</button>
-						</div>
-					</form>
+					</div>
 				{/if}
+
+				<!-- Snooze: parking your own work on this, which is a different axis from
+				     the status above and so does not touch it. -->
+				<div class="border-t border-[var(--dash-border)] pt-3">
+					{#if snoozed && app.snoozed_until}
+						<div class="flex flex-wrap items-center justify-between gap-2">
+							<div class="min-w-0">
+								<p
+									class="flex items-center gap-1.5 text-sm font-medium text-[var(--dash-text-secondary)]"
+								>
+									<FontAwesomeIcon icon={faMugHot} class="h-3.5 w-3.5" />
+									Snoozed until {formatDate(app.snoozed_until)} — {describeSnooze(
+										app.snoozed_until,
+										data.today
+									)}
+								</p>
+								{#if app.snooze_reason}
+									<p class="mt-0.5 text-xs text-[var(--dash-text-muted)] italic">
+										{app.snooze_reason}
+									</p>
+								{/if}
+							</div>
+							<div class="flex items-center gap-2">
+								<form method="POST" action="?/updateSnooze" use:enhance={snoozeSubmit}>
+									<input type="hidden" name="until" value="" />
+									<button
+										type="submit"
+										disabled={snoozeSaving}
+										class="flex items-center gap-1.5 rounded-lg border border-[var(--dash-primary)] px-3 py-1.5 text-sm font-medium text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-primary)]/10 disabled:opacity-50"
+									>
+										<FontAwesomeIcon icon={faPlay} class="h-3 w-3" />
+										Resume now
+									</button>
+								</form>
+								<button
+									type="button"
+									onclick={() => (snoozeOpen = !snoozeOpen)}
+									class="text-xs text-[var(--dash-text-muted)] underline-offset-2 hover:underline"
+								>
+									Change
+								</button>
+							</div>
+						</div>
+					{:else}
+						<button
+							type="button"
+							onclick={() => (snoozeOpen = !snoozeOpen)}
+							class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
+						>
+							<FontAwesomeIcon icon={faMugHot} class="h-3 w-3" />
+							Snooze this application
+						</button>
+					{/if}
+
+					{#if snoozeOpen}
+						<form
+							method="POST"
+							action="?/updateSnooze"
+							use:enhance={snoozeSubmit}
+							class="mt-3 space-y-3 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] p-3"
+						>
+							<div class="flex flex-wrap gap-2">
+								{#each snoozePresets as preset (preset.value)}
+									<button
+										type="button"
+										onclick={() => (customUntil = snoozeUntil(preset.days, data.today))}
+										class="rounded-lg border px-3 py-1.5 text-sm transition-colors {customUntil ===
+										snoozeUntil(preset.days, data.today)
+											? 'border-[var(--dash-primary)] text-[var(--dash-primary)]'
+											: 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
+									>
+										{preset.label}
+									</button>
+								{/each}
+							</div>
+
+							<div class="flex flex-wrap items-end gap-3">
+								<label class="flex flex-col gap-1 text-xs text-[var(--dash-text-muted)]">
+									Comes back on
+									<input
+										type="date"
+										name="until"
+										bind:value={customUntil}
+										min={snoozeUntil(1, data.today)}
+										required
+										class="rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1.5 text-sm text-[var(--dash-text)]"
+									/>
+								</label>
+								<label
+									class="flex min-w-[180px] flex-1 flex-col gap-1 text-xs text-[var(--dash-text-muted)]"
+								>
+									Why (optional)
+									<input
+										type="text"
+										name="reason"
+										bind:value={snoozeReason}
+										maxlength="255"
+										placeholder="Too many in flight right now"
+										class="rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1.5 text-sm text-[var(--dash-text)]"
+									/>
+								</label>
+							</div>
+
+							<div class="flex items-center gap-2">
+								<button
+									type="submit"
+									disabled={snoozeSaving || !customUntil}
+									class="rounded-lg bg-[var(--dash-primary)] px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:opacity-50"
+								>
+									{snoozed ? 'Update snooze' : 'Snooze'}
+								</button>
+								<button
+									type="button"
+									onclick={closeSnooze}
+									class="px-2 py-1.5 text-sm text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)]"
+								>
+									Cancel
+								</button>
+							</div>
+						</form>
+					{/if}
+				</div>
 			</div>
-		</div>
-	</Card>
+		</Card>
+
+		<!-- Job Details. A column whose details grow, so the footer stays at the
+		     bottom when the row stretches this card to the status card's height. -->
+		<Card padding="lg" class="flex flex-col">
+			{#if job}
+				<!-- Tags -->
+				{#if job.job_types || job.work_location || job.experience_levels}
+					<div class="mb-3 flex flex-wrap gap-2">
+						{#if job.job_types && Array.isArray(job.job_types)}
+							{#each job.job_types as type, i (i)}
+								<CategoryPill category="job_type" value={type} />
+							{/each}
+						{/if}
+						{#if job.work_location && Array.isArray(job.work_location)}
+							{#each job.work_location as loc, i (i)}
+								<CategoryPill category="work_location" value={loc} />
+							{/each}
+						{/if}
+						{#if job.experience_levels && Array.isArray(job.experience_levels)}
+							{#each job.experience_levels as level, i (i)}
+								<CategoryPill category="experience_level" value={level} />
+							{/each}
+						{/if}
+					</div>
+				{/if}
+
+				<!-- Details -->
+				<div class="flex grow flex-col gap-2 text-sm">
+					{#if job.company}
+						<div class="flex items-center gap-1.5">
+							<FontAwesomeIcon
+								icon={faBuilding}
+								class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
+							/>
+							<span class="text-[var(--dash-text-muted)]">Company</span>
+							<span class="text-[var(--dash-text)]">{job.company}</span>
+						</div>
+					{/if}
+					{#if job.office_location}
+						<div class="flex items-center gap-1.5">
+							<FontAwesomeIcon
+								icon={faMapMarkerAlt}
+								class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
+							/>
+							<span class="text-[var(--dash-text-muted)]">Location</span>
+							<span class="text-[var(--dash-text)]">{job.office_location}</span>
+						</div>
+					{/if}
+					{#if job.salary_min || job.salary_max}
+						<div class="flex items-center gap-1.5">
+							<FontAwesomeIcon
+								icon={faMoneyBillWave}
+								class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
+							/>
+							<span class="text-[var(--dash-text-muted)]">Salary</span>
+							<span class="text-[var(--dash-text)]">
+								{formatSalaryRange(
+									job.salary_min,
+									job.salary_max,
+									job.salary_currency,
+									job.salary_period
+								)}
+							</span>
+						</div>
+					{/if}
+					<div class="flex items-center gap-1.5">
+						<FontAwesomeIcon icon={faCalendar} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
+						<span class="text-[var(--dash-text-muted)]">Posted</span>
+						<span class="text-[var(--dash-text)]"
+							>{timeAgo(job.date_posted || job.date_created)}</span
+						>
+						<span class="text-[var(--dash-text-muted)]/50"
+							>{formatDate(job.date_posted || job.date_created)}</span
+						>
+					</div>
+					{#if job.job_platform}
+						<div class="flex items-center gap-1.5">
+							<FontAwesomeIcon icon={faGlobe} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
+							<span class="text-[var(--dash-text-muted)]">Platform</span>
+							<span class="text-[var(--dash-text)]">{job.job_platform.name}</span>
+						</div>
+					{:else if job.created_manually}
+						<div class="flex items-center gap-1.5">
+							<FontAwesomeIcon icon={faGlobe} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
+							<span class="text-[var(--dash-text-muted)]">Source</span>
+							<span class="text-[var(--dash-text)]">Added manually</span>
+						</div>
+					{/if}
+					{#if job.source_url}
+						<div class="flex items-center gap-1.5">
+							<FontAwesomeIcon
+								icon={faExternalLinkAlt}
+								class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
+							/>
+							<span class="text-[var(--dash-text-muted)]">Source</span>
+							<ExternalLink
+								href={job.source_url}
+								target="_blank"
+								rel="noopener"
+								class="truncate text-[var(--dash-primary)] transition-colors hover:text-[var(--dash-primary-hover)]"
+							>
+								{job.source_url.replace(/^https?:\/\/(?:www\.)?/, '')}
+							</ExternalLink>
+						</div>
+					{/if}
+				</div>
+
+				<!-- View Job link (footer) -->
+				{#if job.id}
+					<div
+						class="-mx-6 mt-4 -mb-6 flex items-center border-t border-[var(--dash-border)] px-6 py-3"
+					>
+						<a
+							href={resolve('/(app)/jobs/[id]', { id: String(job.id) })}
+							class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline"
+						>
+							View Job Details
+							<FontAwesomeIcon icon={faArrowRight} class="h-3 w-3" />
+						</a>
+					</div>
+				{/if}
+			{:else}
+				<p class="text-sm text-[var(--dash-text-muted)]">No job linked to this application.</p>
+			{/if}
+		</Card>
+	</div>
 
 	<!-- Offer: above everything else it competes with, because a response
        deadline is the most time-critical thing this page can carry. -->
@@ -382,289 +491,6 @@
 		{entryLengths}
 		{activityHref}
 	/>
-
-	<!-- Job Details -->
-	<Card padding="lg">
-		{#if job}
-			<!-- Tags -->
-			{#if job.job_types || job.work_location || job.experience_levels}
-				<div class="mb-3 flex flex-wrap gap-2">
-					{#if job.job_types && Array.isArray(job.job_types)}
-						{#each job.job_types as type, i (i)}
-							<CategoryPill category="job_type" value={type} />
-						{/each}
-					{/if}
-					{#if job.work_location && Array.isArray(job.work_location)}
-						{#each job.work_location as loc, i (i)}
-							<CategoryPill category="work_location" value={loc} />
-						{/each}
-					{/if}
-					{#if job.experience_levels && Array.isArray(job.experience_levels)}
-						{#each job.experience_levels as level, i (i)}
-							<CategoryPill category="experience_level" value={level} />
-						{/each}
-					{/if}
-				</div>
-			{/if}
-
-			<!-- Details -->
-			<div class="flex flex-col gap-2 text-sm">
-				{#if job.company}
-					<div class="flex items-center gap-1.5">
-						<FontAwesomeIcon icon={faBuilding} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
-						<span class="text-[var(--dash-text-muted)]">Company</span>
-						<span class="text-[var(--dash-text)]">{job.company}</span>
-					</div>
-				{/if}
-				{#if job.office_location}
-					<div class="flex items-center gap-1.5">
-						<FontAwesomeIcon
-							icon={faMapMarkerAlt}
-							class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
-						/>
-						<span class="text-[var(--dash-text-muted)]">Location</span>
-						<span class="text-[var(--dash-text)]">{job.office_location}</span>
-					</div>
-				{/if}
-				{#if job.salary_min || job.salary_max}
-					<div class="flex items-center gap-1.5">
-						<FontAwesomeIcon
-							icon={faMoneyBillWave}
-							class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
-						/>
-						<span class="text-[var(--dash-text-muted)]">Salary</span>
-						<span class="text-[var(--dash-text)]">
-							{formatSalaryRange(
-								job.salary_min,
-								job.salary_max,
-								job.salary_currency,
-								job.salary_period
-							)}
-						</span>
-					</div>
-				{/if}
-				<div class="flex items-center gap-1.5">
-					<FontAwesomeIcon icon={faCalendar} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
-					<span class="text-[var(--dash-text-muted)]">Posted</span>
-					<span class="text-[var(--dash-text)]">{timeAgo(job.date_posted || job.date_created)}</span
-					>
-					<span class="text-[var(--dash-text-muted)]/50"
-						>{formatDate(job.date_posted || job.date_created)}</span
-					>
-				</div>
-				{#if job.job_platform}
-					<div class="flex items-center gap-1.5">
-						<FontAwesomeIcon icon={faGlobe} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
-						<span class="text-[var(--dash-text-muted)]">Platform</span>
-						<span class="text-[var(--dash-text)]">{job.job_platform.name}</span>
-					</div>
-				{:else if job.created_manually}
-					<div class="flex items-center gap-1.5">
-						<FontAwesomeIcon icon={faGlobe} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
-						<span class="text-[var(--dash-text-muted)]">Source</span>
-						<span class="text-[var(--dash-text)]">Added manually</span>
-					</div>
-				{/if}
-				{#if job.source_url}
-					<div class="flex items-center gap-1.5">
-						<FontAwesomeIcon
-							icon={faExternalLinkAlt}
-							class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
-						/>
-						<span class="text-[var(--dash-text-muted)]">Source</span>
-						<ExternalLink
-							href={job.source_url}
-							target="_blank"
-							rel="noopener"
-							class="truncate text-[var(--dash-primary)] transition-colors hover:text-[var(--dash-primary-hover)]"
-						>
-							{job.source_url.replace(/^https?:\/\/(?:www\.)?/, '')}
-						</ExternalLink>
-					</div>
-				{/if}
-			</div>
-
-			<!-- View Job link (footer) -->
-			{#if job.id}
-				<div
-					class="-mx-6 mt-4 -mb-6 flex items-center border-t border-[var(--dash-border)] px-6 py-3"
-				>
-					<a
-						href={resolve('/(app)/jobs/[id]', { id: String(job.id) })}
-						class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-primary)] hover:underline"
-					>
-						View Job Details
-						<FontAwesomeIcon icon={faArrowRight} class="h-3 w-3" />
-					</a>
-				</div>
-			{/if}
-		{:else}
-			<p class="text-sm text-[var(--dash-text-muted)]">No job linked to this application.</p>
-		{/if}
-	</Card>
-
-	<!-- Application Details (Texts, Documents, Salary) -->
-	<Card padding="lg">
-		<div class="space-y-4">
-			<div class="mb-4 flex items-center gap-2">
-				<FontAwesomeIcon icon={faWrench} class="h-4 w-4 text-[var(--dash-text-secondary)]" />
-				<h2 class="text-sm font-semibold tracking-wide text-[var(--dash-text)] uppercase">
-					Workbench
-				</h2>
-			</div>
-
-			<div class="flex flex-col gap-3 text-sm">
-				<!-- Resume / CV. Shown even when nothing is recorded, because "you have
-				     not chosen one" is the state this page most needs to surface — the
-				     work of choosing lives one tab over, and a row that appears only
-				     after the fact would never tell you to go there. -->
-				<div class="flex items-center gap-1.5">
-					<FontAwesomeIcon icon={faFileAlt} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
-					{#if app.cv_sent_through}
-						{@const dt = app.cv_sent_through as DocType}
-						<span class="text-[var(--dash-text-secondary)]">
-							{dt === 'cv' ? 'CV' : 'Resume'} sent
-						</span>
-						<span class="font-medium text-[var(--dash-text)]">
-							{data.cvVersionName || (dt === 'cv' ? 'CV' : 'Resume')}
-						</span>
-						<!-- Only when the version is still there: the record survives a
-						     deleted library version on purpose, but a link to one is a 404. -->
-						{#if app.cv_version_sent && profileSlug && data.cvVersionExists}
-							<!-- eslint-disable svelte/no-navigation-without-resolve -->
-							<a
-								href={profileDocUrl({
-									profileSlug,
-									docType: dt,
-									versionSlug: app.cv_version_sent,
-									template: app.cv_template_sent,
-									locale: app.cv_locale_sent
-								})}
-								target="_blank"
-								rel="noopener"
-								class="text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
-							>
-								<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3 w-3" />
-							</a>
-							<!-- eslint-enable svelte/no-navigation-without-resolve -->
-						{/if}
-						<a
-							href={resolve('/(app)/applications/[id]/resume', { id: String(app.id) })}
-							class="dash-link text-xs">Change</a
-						>
-					{:else}
-						<span class="text-[var(--dash-text-secondary)]">Resume / CV</span>
-						<span class="text-[var(--dash-text-secondary)]">not chosen yet</span>
-						<a
-							href={resolve('/(app)/applications/[id]/resume', { id: String(app.id) })}
-							class="dash-link text-xs">Choose one</a
-						>
-					{/if}
-				</div>
-
-				<!-- Letters -->
-				{#each app.application_letters || [] as letter, i (i)}
-					<div class="flex items-center gap-1.5">
-						<FontAwesomeIcon icon={faEnvelope} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
-						<a
-							href={resolve('/(app)/applications/[id]/texts/[letterId]', {
-								id: String(app.id),
-								letterId: String(letter.id)
-							})}
-							class="font-medium text-[var(--dash-text)] transition-colors hover:text-[var(--dash-primary)]"
-						>
-							{letterLabel(letter.letter_type, letter.title)}
-						</a>
-						<span class="text-[var(--dash-text-muted)]">({letter.status})</span>
-					</div>
-				{/each}
-
-				<!-- Questions -->
-				{#if questionCount > 0}
-					<div class="flex items-center justify-between">
-						<span class="flex items-center gap-1.5 text-[var(--dash-text-secondary)]">
-							<FontAwesomeIcon
-								icon={faClipboardList}
-								class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
-							/>
-							Application Questions
-						</span>
-						<a
-							href={resolve('/(app)/applications/[id]/texts', { id: String(app.id) })}
-							class="font-medium text-[var(--dash-text)] transition-colors hover:text-[var(--dash-primary)]"
-						>
-							{questionCount}
-						</a>
-					</div>
-				{/if}
-
-				<!-- Documents -->
-				{#if fileCount > 0}
-					<div class="flex items-center justify-between">
-						<span class="flex items-center gap-1.5 text-[var(--dash-text-secondary)]">
-							<FontAwesomeIcon icon={faFileAlt} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
-							Documents
-						</span>
-						<a
-							href={resolve('/(app)/applications/[id]/activity', { id: String(app.id) })}
-							class="font-medium text-[var(--dash-text)] transition-colors hover:text-[var(--dash-primary)]"
-						>
-							{fileCount} attached
-						</a>
-					</div>
-				{/if}
-
-				<!-- Salary Expectation -->
-				{#if app.salary_expectation}
-					<div class="flex items-center gap-1.5">
-						<FontAwesomeIcon
-							icon={faMoneyBillWave}
-							class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
-						/>
-						<span class="text-[var(--dash-text-secondary)]">Salary Expectation</span>
-						<a
-							href={resolve('/(app)/applications/[id]/salary', { id: String(app.id) })}
-							class="font-medium text-[var(--dash-text)] transition-colors hover:text-[var(--dash-primary)]"
-						>
-							{formatCurrency(app.salary_expectation, app.salary_currency, app.salary_period)}
-						</a>
-					</div>
-				{/if}
-
-				<!-- No items -->
-				{#if letterCount === 0 && questionCount === 0 && fileCount === 0 && !app.salary_expectation}
-					<p class="text-sm text-[var(--dash-text-muted)]">No items added yet.</p>
-				{/if}
-			</div>
-
-			<!-- Footer links -->
-			<div
-				class="-mx-6 mt-2 -mb-6 flex flex-wrap items-center gap-4 border-t border-[var(--dash-border)] px-6 py-3"
-			>
-				<a
-					href={resolve('/(app)/applications/[id]/texts', { id: String(app.id) })}
-					class="inline-flex items-center gap-1.5 text-xs whitespace-nowrap text-[var(--dash-primary)] hover:underline"
-				>
-					Write texts <FontAwesomeIcon icon={faArrowRight} class="h-3 w-3" />
-				</a>
-				<a
-					href={resolve('/(app)/applications/[id]/activity', { id: String(app.id) })}
-					class="inline-flex items-center gap-1.5 text-xs whitespace-nowrap text-[var(--dash-primary)] hover:underline"
-				>
-					{fileCount === 0 ? 'Log activity' : 'Open activity'}
-					<FontAwesomeIcon icon={faArrowRight} class="h-3 w-3" />
-				</a>
-				{#if !app.salary_expectation}
-					<a
-						href={resolve('/(app)/applications/[id]/salary', { id: String(app.id) })}
-						class="inline-flex items-center gap-1.5 text-xs whitespace-nowrap text-[var(--dash-primary)] hover:underline"
-					>
-						Set salary <FontAwesomeIcon icon={faArrowRight} class="h-3 w-3" />
-					</a>
-				{/if}
-			</div>
-		</div>
-	</Card>
 
 	<!-- Discontinued Info -->
 	{#if app.discontinued_reason}

@@ -7,8 +7,7 @@ import {
 	application_records,
 	application_status_log,
 	applications,
-	letter_versions,
-	profile_versions
+	letter_versions
 } from '$lib/server/db/schema';
 import { LETTER_ORDER, QUESTION_ORDER } from '$lib/server/texts/text-order';
 
@@ -120,32 +119,8 @@ export const load: LayoutServerLoad = async ({ parent, params }) => {
 		error(404, 'Application not found');
 	}
 
-	// Resolve CV version name from slug.
-	//
-	// `cvVersionExists` is separate from the name because a version may carry no
-	// name at all, and because the record outlives the version: deleting a
-	// library document does not erase the true statement that it was sent. What
-	// the record cannot do once the version is gone is link anywhere, so the two
-	// questions — what to call it, and whether there is still a document behind
-	// it — have to be asked separately.
-	let cvVersionName: string | null = null;
-	let cvVersionExists = false;
-	if (application.cv_version_sent) {
-		const version = await db.query.profile_versions.findFirst({
-			where: and(
-				eq(profile_versions.slug, application.cv_version_sent),
-				eq(profile_versions.profile_id, layoutData.selectedProfile.id)
-			),
-			columns: { name: true }
-		});
-		cvVersionName = version?.name || null;
-		cvVersionExists = !!version;
-	}
-
 	return {
 		application,
-		cvVersionName,
-		cvVersionExists,
 		// The server's day, so this page and the lists that filtered on it agree
 		// about whether a snooze has elapsed regardless of the browser's timezone.
 		today: today(),
