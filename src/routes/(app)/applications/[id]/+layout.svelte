@@ -12,6 +12,7 @@
 		faStream
 	} from '@fortawesome/free-solid-svg-icons';
 	import type { Snippet } from 'svelte';
+	import { getStepperPhase } from '$lib/application-status';
 	import TabNav from '../../components/TabNav.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
@@ -35,9 +36,25 @@
 	// counts what its tab lists: Texts its letters and questions, Activity its
 	// entries, the same number as the Activity header. That header leaves the
 	// status changes out too, as context rather than content.
+	//
+	// Resume gets a dot instead. Its count could only be 0 or 1, and a count
+	// shows only above zero, so it would light up once a document is recorded
+	// and stay dark while none is: the wrong way round. The dot marks the gap,
+	// the "not chosen yet" the Workbench card used to show, and only until the
+	// application leaves Applying. Past that, a missing record is history
+	// rather than something to do.
+	const cvToRecord = $derived(
+		!app.cv_sent_through && (app.status === 'draft' || getStepperPhase(app.status) === 'applying')
+	);
+
 	const tabs = $derived([
 		{ label: 'Overview', href: basePath, icon: faClipboardList },
-		{ label: 'Resume', href: `${basePath}/resume`, icon: faFileLines },
+		{
+			label: 'Resume',
+			href: `${basePath}/resume`,
+			icon: faFileLines,
+			attention: cvToRecord ? 'No resume or CV recorded yet' : undefined
+		},
 		{
 			label: 'Texts',
 			href: `${basePath}/texts`,

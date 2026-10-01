@@ -14,6 +14,11 @@
 		icon?: IconDefinition;
 		/** How many items the tab holds. Shown beside the label when above zero. */
 		count?: number;
+		/**
+		 * What on the tab is waiting for you, in words. Shown as a dot beside the
+		 * label, with these words as the tab's tooltip.
+		 */
+		attention?: string;
 	};
 
 	let {
@@ -159,14 +164,19 @@
 	{@render tabBar()}
 {/if}
 
-<!-- In the measuring row too, so a count's width is part of the overflow sum. -->
-{#snippet counter(tab: Tab, active: boolean)}
+<!-- In the measuring row too, so their width is part of the overflow sum. -->
+{#snippet badges(tab: Tab, active: boolean)}
 	{#if tab.count}
 		<span
 			class="rounded-full px-2 py-0.5 text-xs tabular-nums {active
 				? 'bg-[var(--dash-primary)]/15 text-[var(--dash-primary)]'
 				: 'bg-[var(--dash-border)]/60 text-[var(--dash-text-secondary)]'}">{tab.count}</span
 		>
+	{/if}
+	<!-- Hidden from screen readers because the link's title already says it. -->
+	{#if tab.attention}
+		<span class="h-2 w-2 flex-shrink-0 rounded-full bg-[var(--dash-primary)]" aria-hidden="true"
+		></span>
 	{/if}
 {/snippet}
 
@@ -181,7 +191,7 @@
 				<span class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap">
 					{#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="h-4 w-4" />{/if}
 					{tab.label}
-					{@render counter(tab, false)}
+					{@render badges(tab, false)}
 				</span>
 			{/each}
 		</div>
@@ -200,6 +210,7 @@
 					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={tab.href}
+						title={tab.attention}
 						class="
             -mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors
             {isActive(tab.href)
@@ -209,7 +220,7 @@
 					>
 						{#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="h-4 w-4" />{/if}
 						{tab.label}
-						{@render counter(tab, isActive(tab.href))}
+						{@render badges(tab, isActive(tab.href))}
 					</a>
 					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				{/each}
@@ -236,6 +247,7 @@
 							<!-- eslint-disable svelte/no-navigation-without-resolve -->
 							<a
 								href={tab.href}
+								title={tab.attention}
 								class="
                 relative flex items-center gap-1.5 rounded-t-lg px-3 text-sm font-medium whitespace-nowrap transition-colors
                 {tabIdx > 0 ? '-ml-px' : ''}
@@ -251,7 +263,7 @@
 							>
 								{#if tab.icon}<FontAwesomeIcon icon={tab.icon} class="h-3.5 w-3.5" />{/if}
 								{tab.label}
-								{@render counter(tab, active)}
+								{@render badges(tab, active)}
 							</a>
 							<!-- eslint-enable svelte/no-navigation-without-resolve -->
 						{/each}
