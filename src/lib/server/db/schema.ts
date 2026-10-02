@@ -23,6 +23,7 @@ import {
 	varchar
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import type { InterviewRound } from '../../application-status';
 import type { SkipReason } from '../../match-recommendation';
 
 export const Role = pgEnum('Role', ['USER', 'ADMIN', 'SUPER_ADMIN']);
@@ -2757,18 +2758,40 @@ export const applications = pgTable(
 		salary_expectation: numeric({ precision: 10, scale: 2 }),
 		salary_currency: varchar({ length: 255 }).default('EUR'),
 		salary_period: varchar({ length: 255 }),
+		/**
+		 * The stage within `applying` or `negotiating`, from `stepsByPhase`. Null in
+		 * `interviewing`, whose position is the round it has reached, and once the
+		 * application is finished.
+		 */
 		status_step: varchar({ length: 255 }),
-		status_action: varchar({ length: 255 }),
-		status_action_date: date(),
+		/**
+		 * The interview process so far, one entry per round, in order. See
+		 * `InterviewRound` in `$lib/application-status`.
+		 *
+		 * There is no next-action column beside it any more. `status_action` held
+		 * either the default for its stage or interview dates moved along by hand
+		 * (Need to schedule, Scheduled, Awaiting result), and both are worked out
+		 * now: `nextStep` reads the stage and the rounds' dates, and so moves an
+		 * interview to "awaiting result" the day after it without anyone touching
+		 * it. See planning/INTERVIEW-ROUNDS.md.
+		 *
+		 * A list on the row rather than a child table because it is always written
+		 * whole and together with the status, by one writer that also appends the
+		 * timeline row (`server/applications/status.ts`), and the assistant undoes a
+		 * move by putting a before-image of the row back. Kept when the application
+		 * moves on, so a closed one still says how far it got; cleared when it goes
+		 * back to applying.
+		 */
+		interview_rounds: jsonb().$type<InterviewRound[]>().default([]).notNull(),
 		/**
 		 * The day this application returns to the active lists, or null if it was
 		 * never paused.
 		 *
 		 * Deliberately NOT a `status`. A status is a position in the pipeline and
-		 * moving it clears the stage and the next action, so pausing through the
-		 * status column would throw away the two fields needed to resume and then
-		 * need a `previous_status` to put them back. Pausing is orthogonal to where
-		 * the employer has got to, so it is stored orthogonally.
+		 * moving it can clear the stage, so pausing through the status column would
+		 * throw away what is needed to resume and then need a `previous_status` to
+		 * put it back. Pausing is orthogonal to where the employer has got to, so it
+		 * is stored orthogonally.
 		 *
 		 * A date rather than a flag because a paused application with nothing to
 		 * bring it back is a discontinued one, and there is already a status for
@@ -4098,8 +4121,20 @@ export const application_status_log = pgTable(
 		from_status: varchar({ length: 255 }),
 		to_status: varchar({ length: 255 }).notNull(),
 		description: text(),
+		/** The stage as it read then: "Applied", "Round 2 · Technical". */
 		step: varchar({ length: 255 }),
+		/**
+		 * The next action as it was picked, on rows from before interview rounds
+		 * replaced it (see `applications.interview_rounds`). Nothing writes it
+		 * now; it stays because these rows are a record of what was said at the
+		 * time, and the timeline still shows it on them.
+		 */
 		action: varchar({ length: 255 }),
+		/**
+		 * On those older rows, the date that action was due or booked. On newer
+		 * ones, the day the latest round was booked for when the row was written,
+		 * which is how a reschedule shows up as its own row.
+		 */
 		action_date: date()
 	},
 	(table) => [

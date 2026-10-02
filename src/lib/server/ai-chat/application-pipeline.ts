@@ -29,8 +29,13 @@
  */
 
 import { db } from '$lib/server/db';
-import { eq, inArray } from 'drizzle-orm';
-import { application_records, applications, job_matches } from '$lib/server/db/schema';
+import { eq, inArray, max } from 'drizzle-orm';
+import {
+	application_records,
+	application_status_log,
+	applications,
+	job_matches
+} from '$lib/server/db/schema';
 import { getFxRates } from '$lib/server/salary/fx';
 import {
 	convertCurrency,
@@ -38,7 +43,14 @@ import {
 	normalizeSalaryPeriod,
 	rateToHourly
 } from '$lib/salary/conversion';
-import { getStatusLabel, isComparedStatus } from '$lib/application-status';
+import {
+	getStatusLabel,
+	isComparedStatus,
+	nextStep,
+	stageLabel,
+	type NextStep
+} from '$lib/application-status';
+import { today } from '$lib/application-records';
 import { isSnoozed } from '$lib/application-snooze';
 import { recommendationOf, type Recommendation } from '$lib/match-recommendation';
 import type { OfferTerms } from './application-summary';
@@ -110,8 +122,10 @@ export interface PipelineRow {
 	 */
 	poster: string | null;
 	status: string;
+	/** Where it is within the status: "Applied", "Round 2 · Technical". */
 	step: string | null;
-	action: string | null;
+	/** What happens next, worked out from the stage: "Scheduled for 2026-10-08 15:30". */
+	next: string | null;
 	/** Days since the stage last moved — the highest-signal derived column. */
 	daysInStage: number | null;
 	/**
@@ -215,7 +229,7 @@ function renderRow(r: PipelineRow, currency: string): string {
 	const stage = [
 		getStatusLabel(r.status),
 		r.step,
-		r.action,
+		r.next,
 		r.snoozedUntil ? `SNOOZED until ${r.snoozedUntil}` : null
 	]
 		.filter(Boolean)
@@ -622,6 +636,14 @@ function namesOf(entries: Array<{ contacts?: unknown }>): string[] {
 		: all;
 }
 
+/** The next step as one entry in the row: "Scheduled for 2026-10-08 15:30". */
+function describeNext(next: NextStep | null): string | null {
+	if (!next) return null;
+	return next.date
+		? `${next.label} for ${next.date}${next.time ? ` ${next.time}` : ''}`
+		: next.label;
+}
+
 function daysSince(date: Date | string | null): number | null {
 	if (!date) return null;
 	const then = date instanceof Date ? date : new Date(date);
@@ -710,8 +732,7 @@ export async function loadPipelineRows(
 			job_id: true,
 			status: true,
 			status_step: true,
-			status_action: true,
-			status_action_date: true,
+			interview_rounds: true,
 			snoozed_until: true,
 			application_sent_date: true,
 			date_updated: true,
@@ -751,7 +772,7 @@ export async function loadPipelineRows(
 	if (live.length === 0) return { rows: [], finished };
 
 	const ids = live.map((a) => a.id);
-	const [matches, records, rates] = await Promise.all([
+	const [matches, records, moves, rates] = await Promise.all([
 		db.query.job_matches.findMany({
 			where: eq(job_matches.profile_id, profileId),
 			columns: {
@@ -769,8 +790,19 @@ export async function loadPipelineRows(
 				derived_at: true
 			}
 		}),
+		// When each stage was entered: the newest timeline row.
+		db
+			.select({
+				application: application_status_log.application,
+				at: max(application_status_log.date_created)
+			})
+			.from(application_status_log)
+			.where(inArray(application_status_log.application, ids))
+			.groupBy(application_status_log.application),
 		getFxRates()
 	]);
+	const movedAt = new Map(moves.map((m) => [m.application, m.at]));
+	const on = today();
 
 	const byApp = new Map<number, typeof records>();
 	for (const r of records) {
@@ -789,11 +821,11 @@ export async function loadPipelineRows(
 			company: a.job?.company ?? a.job?.job_poster ?? null,
 			poster: a.job?.job_poster ?? null,
 			status: a.status,
-			step: a.status_step,
-			action: a.status_action,
-			// The stage's own date first: date_updated moves on any edit, so it
+			step: stageLabel(a, on),
+			next: describeNext(nextStep(a, on)),
+			// The newest timeline row first: date_updated moves on any edit, so it
 			// would report a freshly retitled note as "the stage just changed".
-			daysInStage: daysSince(a.status_action_date ?? a.date_updated ?? a.date_created),
+			daysInStage: daysSince(movedAt.get(a.id) ?? a.date_updated ?? a.date_created),
 			// Only while it is still ahead: an elapsed snooze is not one, and
 			// stating a date in the past would read as a pause still in force.
 			snoozedUntil: isSnoozed(a) ? a.snoozed_until : null,

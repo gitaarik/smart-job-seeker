@@ -8,7 +8,12 @@ import {
 	application_records,
 	job_platforms
 } from '$lib/server/db/schema';
-import { applicationStatusError, writeApplicationStatus } from '$lib/server/applications/status';
+import {
+	applicationStatusError,
+	entryStage,
+	STAGE_COLUMNS,
+	writeApplicationStatus
+} from '$lib/server/applications/status';
 import { writeApplicationSnooze } from '$lib/server/applications/snooze';
 import { attachLastActivity } from '$lib/server/applications/activity';
 import { activeStatuses, finishedStatuses } from '$lib/application-status';
@@ -192,22 +197,19 @@ export const actions: Actions = {
 
 		// The control here sets a status and nothing else, so an unchanged one has
 		// nothing to write: without this, re-selecting the current status would
-		// clear the stage and the next action, which is what a status MOVE means
-		// and not what this is.
+		// clear the stage, which is what a status MOVE means and not what this is.
 		if (status === existing.status) return { success: true };
 
-		// Stage and next action deliberately cleared. This used to write the status
-		// column alone, so an application moved to "interviewing" through here
-		// would keep "Preparing / Send application" underneath it and never get
-		// the applied date the application page sets — the same control meaning
-		// two different things depending on which page it was on. Nothing in the
-		// UI posts here today, which is how it drifted unnoticed; converged
-		// rather than left as a trap for whoever wires it back up.
+		// Stage deliberately cleared, rounds kept (by sending none). This used to
+		// write the status column alone, so an application moved to "interviewing"
+		// through here kept "Preparing" underneath it and never got the applied
+		// date the application page sets: the same control meaning two different
+		// things depending on which page it was on. Nothing in the UI posts here
+		// today, which is how it drifted unnoticed; converged rather than left as a
+		// trap for whoever wires it back up.
 		const written = await writeApplicationStatus(id, profileId, {
 			status,
 			step: null,
-			action: null,
-			actionDate: null,
 			description: null
 		});
 		if (!written) return fail(404, { error: 'Application not found' });
@@ -266,7 +268,7 @@ export const actions: Actions = {
 
 		const existing = await db.query.applications.findFirst({
 			where: and(eq(applications.id, id), eq(applications.profile_id, profileId)),
-			columns: { id: true, status_step: true }
+			columns: { id: true, ...STAGE_COLUMNS }
 		});
 		if (!existing) return fail(404, { error: 'Application not found' });
 
@@ -276,7 +278,7 @@ export const actions: Actions = {
 			record_type: 'message',
 			title: 'Followed up',
 			content: null,
-			step: existing.status_step,
+			step: entryStage(existing),
 			event_date: today(),
 			extraction_status: 'none',
 			date_created: new Date()

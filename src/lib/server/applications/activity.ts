@@ -10,9 +10,9 @@
  * anything, and the one signal worth having — "nothing has happened here since
  * I applied" — is the one it destroys.
  *
- * `ai-chat/application-pipeline.ts` already worked around this for its own
- * `daysInStage` (`status_action_date ?? date_updated ?? date_created`, with a
- * comment saying why). This derives the real thing once, for everyone.
+ * `ai-chat/application-pipeline.ts` had already worked around this for its own
+ * `daysInStage`, with a comment saying why. This derives the real thing once,
+ * for everyone.
  *
  * ## What counts as activity
  *

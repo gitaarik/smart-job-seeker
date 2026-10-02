@@ -376,15 +376,15 @@ async function main() {
 			{
 				profile_id: profileId,
 				application_id: application.id,
-				status: 'interviewing',
-				status_step: 'Offer received',
+				status: 'negotiating',
+				status_step: 'Applied',
 				rationale: 'Verification script.'
 			},
 			KEY
 		);
 		check(
 			'a stage from another phase is refused, not queued',
-			wrongStage.isError === true && text(wrongStage).includes('Screening call')
+			wrongStage.isError === true && text(wrongStage).includes('Offer received')
 		);
 
 		const moved = await callTool(
@@ -393,8 +393,9 @@ async function main() {
 				profile_id: profileId,
 				application_id: application.id,
 				status: 'interviewing',
-				status_step: 'Technical interview',
-				status_action: 'Awaiting result',
+				round_kind: 'Technical',
+				round_date: '2099-01-08',
+				round_time: '10:00',
 				status_note: 'ZZ Verify Scratch Move',
 				rationale: 'Verification script.'
 			},
@@ -414,8 +415,8 @@ async function main() {
 		check(
 			'and the whole state lands, not only the status',
 			afterMove.status === 'interviewing' &&
-				afterMove.status_step === 'Technical interview' &&
-				afterMove.status_action === 'Awaiting result',
+				JSON.stringify(afterMove.interview_rounds) ===
+					JSON.stringify([{ kind: 'Technical', date: '2099-01-08', time: '10:00', with: null }]),
 			JSON.stringify(afterMove)
 		);
 
@@ -443,11 +444,11 @@ async function main() {
 			actor
 		);
 		check(
-			'the undo puts back the stage the move cleared, not only the status',
+			'the undo puts back the whole state, not only the status',
 			statusBack &&
 				afterUndoStatus.status === 'draft' &&
 				afterUndoStatus.status_step === null &&
-				afterUndoStatus.status_action === null,
+				JSON.stringify(afterUndoStatus.interview_rounds) === '[]',
 			JSON.stringify(afterUndoStatus)
 		);
 

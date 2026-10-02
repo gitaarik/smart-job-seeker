@@ -3,7 +3,18 @@ import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { and, eq } from 'drizzle-orm';
 import { application_records, applications } from '$lib/server/db/schema';
-import { applicationStatusError, writeApplicationStatus } from '$lib/server/applications/status';
+import {
+	applicationStatusError,
+	entryStage,
+	STAGE_COLUMNS,
+	writeApplicationStatus
+} from '$lib/server/applications/status';
+import {
+	parseRounds,
+	sameRounds,
+	type InterviewRound,
+	type StatusFacts
+} from '$lib/application-status';
 import { writeApplicationSnooze } from '$lib/server/applications/snooze';
 import { snoozeError } from '$lib/application-snooze';
 import { clampRecordTitle, deriveRecordTitle, today } from '$lib/application-records';
@@ -24,7 +35,7 @@ import { getSelectedProfileId } from '../../profile/utils';
  * findable as one on the timeline.
  */
 async function addNoteEntry(
-	app: { id: number; status_step: string | null },
+	app: StatusFacts & { id: number },
 	profileId: number,
 	content: string,
 	title?: string
@@ -36,7 +47,7 @@ async function addNoteEntry(
 			record_type: 'note',
 			title: title ? clampRecordTitle(title) : deriveRecordTitle(content),
 			content,
-			step: app.status_step,
+			step: entryStage(app),
 			event_date: today(),
 			extraction_status: 'none',
 			date_created: new Date()
@@ -68,28 +79,41 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const status = formData.get('status') as string;
 		const step = (formData.get('step') as string)?.trim() || null;
-		const action = (formData.get('action') as string)?.trim() || null;
-		const actionDate = (formData.get('action_date') as string)?.trim() || null;
 		const description = (formData.get('description') as string)?.trim() || null;
 
 		const problem = applicationStatusError(status);
 		if (problem) return fail(400, { error: problem });
 
-		// Both sides normalised to "" before comparing. They were not, and a null
-		// step never equalled the empty string the form posts for one — so this
-		// only ever short-circuited when the phase and the action both matched by
-		// accident, and every re-save of an unchanged form wrote a timeline row.
+		// The editor posts every round as JSON; a quick action posts none, which
+		// keeps the ones there (see `StatusChange.rounds`).
+		let rounds: InterviewRound[] | undefined;
+		const postedRounds = formData.get('rounds');
+		if (typeof postedRounds === 'string' && postedRounds !== '') {
+			let raw: unknown;
+			try {
+				raw = JSON.parse(postedRounds);
+			} catch {
+				return fail(400, { error: 'The rounds could not be read.' });
+			}
+			const parsed = parseRounds(raw);
+			if (!parsed.ok) return fail(400, { error: parsed.error });
+			rounds = parsed.rounds;
+		}
+
+		// Both sides normalised to "" before comparing. They were not once, and a
+		// null step never equalled the empty string the form posts for one, so
+		// every re-save of an unchanged form wrote a timeline row.
 		const unchanged =
 			status === existing.status &&
 			(step ?? '') === (existing.status_step ?? '') &&
-			(action ?? '') === (existing.status_action ?? '') &&
+			(rounds === undefined || sameRounds(rounds, existing.interview_rounds ?? [])) &&
 			!description;
 		if (unchanged) return { success: true };
 
 		const written = await writeApplicationStatus(
 			appId,
 			profileId,
-			{ status, step, action, actionDate, description },
+			{ status, step, rounds, description },
 			// The editor is the one caller that may still be correcting the entry
 			// the New Application form made a minute ago, rather than recording a
 			// move — see the option's own note.
@@ -151,7 +175,7 @@ export const actions: Actions = {
 
 		const existing = await db.query.applications.findFirst({
 			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
-			columns: { id: true, status_step: true }
+			columns: { id: true, ...STAGE_COLUMNS }
 		});
 		if (!existing) return fail(404, { error: 'Application not found' });
 
@@ -182,7 +206,7 @@ export const actions: Actions = {
 
 		const existing = await db.query.applications.findFirst({
 			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
-			columns: { id: true, status_step: true }
+			columns: { id: true, ...STAGE_COLUMNS }
 		});
 		if (!existing) return fail(404, { error: 'Application not found' });
 

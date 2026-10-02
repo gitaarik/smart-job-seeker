@@ -237,8 +237,8 @@ async function createManualJob(
  * Create an application, with the manual job behind it where there is one.
  *
  * The status it starts in is not a parameter. Every application begins at the
- * top of the pipeline — applying / Preparing / Send application — because that
- * is what "I am going to apply for this" means, and the status log's first row
+ * top of the pipeline, applying / Preparing, because that is what "I am going
+ * to apply for this" means, and the status log's first row
  * has to agree with the column for the history to read correctly. A caller that
  * knows the application is further along says so afterwards, through
  * `writeApplicationStatus`, which is the one writer that keeps the log and the
@@ -258,7 +258,6 @@ export async function createApplication(input: NewApplicationInput): Promise<Cre
 			profile_id: profileId,
 			status: 'applying',
 			status_step: 'Preparing',
-			status_action: 'Send application',
 			date_created: now,
 			date_updated: now,
 			// application_seen_date is a Drizzle date() column (string mode).
@@ -271,8 +270,7 @@ export async function createApplication(input: NewApplicationInput): Promise<Cre
 		date_created: now,
 		from_status: null,
 		to_status: 'applying',
-		step: 'Preparing',
-		action: 'Send application'
+		step: 'Preparing'
 	});
 
 	return { applicationId: application.id, jobId };

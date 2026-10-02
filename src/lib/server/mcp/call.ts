@@ -82,11 +82,12 @@ import {
 	readProfileApplication,
 	type ApplicationStanding
 } from '$lib/server/applications/profile-applications';
-import { getStatusLabel, statusLabels } from '$lib/application-status';
+import { getStatusLabel, statusLabels, type InterviewRound } from '$lib/application-status';
 import {
 	RELABELLED_STATUSES,
 	settableStatuses,
-	statusForModel
+	statusForModel,
+	describeRoundsForModel
 } from '$lib/server/applications/status';
 import { describeOffer } from '$lib/server/ai-chat/application-pipeline';
 import { listProfileDocuments, readProfileDocument } from '$lib/server/documents/read';
@@ -654,6 +655,7 @@ async function listApplications(args: Args, key: VerifiedMcpKey): Promise<ToolRe
 				(app) =>
 					`- [${app.id}] ${app.job_title ?? 'Untitled'}` +
 					`${app.job_company ? ` at ${app.job_company}` : ''} — ${statusForModel(app.status)}` +
+					`${app.stage ? `, ${app.stage}` : ''}` +
 					// Stated in the list and not only on the record: an agent asked
 					// which applications are going stale reads this line and nothing
 					// else, and a parked one is not a neglected one.
@@ -687,6 +689,15 @@ async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolRes
 		...(await details.current(target, actor)),
 		...(await CAPABILITIES.update_application_status.current(target, actor))
 	};
+	// The rounds as lines rather than `[object Object]`, in the text only: the
+	// structured result keeps the list as stored.
+	const rounds = Array.isArray(fields.interview_rounds)
+		? describeRoundsForModel(fields.interview_rounds as InterviewRound[])
+		: '';
+	const shown = {
+		...fields,
+		interview_rounds: rounds ? `\n${rounds.replace(/^/gm, '  ')}` : null
+	};
 	const logged = await activity.current(target, actor);
 	const standing = await readApplicationStanding(application.id, key.profileId);
 
@@ -699,14 +710,15 @@ async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolRes
 	return ok(
 		`Application ${application.id} — ${application.job_title ?? 'Untitled'}` +
 			`${application.job_company ? ` at ${application.job_company}` : ''}\n` +
-			`status: ${statusForModel(application.status)}${application.status_step ? ` (${application.status_step})` : ''}\n` +
+			`status: ${statusForModel(application.status)}${application.stage ? ` (${application.stage})` : ''}\n` +
+			`next step: ${application.next_step}\n` +
 			`${application.snoozed_until ? `snoozed: the applicant paused this until ${application.snoozed_until}\n` : ''}` +
 			// The job in the text and not only in `structuredContent`, which plenty
 			// of clients never surface. An agent handed an application id directly
 			// otherwise has no route to the posting but list_jobs and a guess, and
 			// this record says what was sent — never what was asked for.
 			`${application.job_id === null ? '' : `posting: job ${application.job_id} — read_job for what was advertised\n`}` +
-			`\n${renderFields(fields)}\n\n${renderStanding(standing)}${chronology}`,
+			`\n${renderFields(shown)}\n\n${renderStanding(standing)}${chronology}`,
 		{
 			application: { ...application, status_label: getStatusLabel(application.status) },
 			fields,

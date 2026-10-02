@@ -129,7 +129,8 @@ beforeEach(() => {
 	mockAppFindFirst.mockResolvedValue({
 		id: 1,
 		status: 'interviewing',
-		status_step: 'Screening call'
+		status_step: null,
+		interview_rounds: [{ kind: 'Screening', date: null, time: null, with: null }]
 	});
 	mockRecordFindFirst.mockResolvedValue({ id: 7, application_id: 1 });
 	mockReturning.mockResolvedValue([{ id: 7 }]);
@@ -198,8 +199,9 @@ describe('create action — derivation', () => {
 				title: 'Screening call went well',
 				// Typed text is the applicant's own writing.
 				record_type: 'note',
-				// The stage the application is in RIGHT NOW, not a guess.
-				step: 'Screening call',
+				// The stage the application is in RIGHT NOW, not a guess: in
+				// interviewing, the round it is at.
+				step: 'Round 1 · Screening',
 				file_id: null,
 				extraction_status: 'none'
 			})

@@ -107,15 +107,13 @@ describe('createApplication', () => {
 
 		expect(insertedInto(applications)).toMatchObject({
 			status: 'applying',
-			status_step: 'Preparing',
-			status_action: 'Send application'
+			status_step: 'Preparing'
 		});
 		expect(insertedInto(application_status_log)).toMatchObject({
 			application: result.applicationId,
 			from_status: null,
 			to_status: 'applying',
-			step: 'Preparing',
-			action: 'Send application'
+			step: 'Preparing'
 		});
 	});
 

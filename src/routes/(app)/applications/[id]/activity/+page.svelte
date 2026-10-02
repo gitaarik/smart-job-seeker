@@ -32,7 +32,7 @@
 		getRecordTypeLabel,
 		recordTypes
 	} from '$lib/application-records';
-	import { getStatusBgColor, getStatusLabel } from '$lib/application-status';
+	import { formatRoundWhen, getStatusBgColor, getStatusLabel } from '$lib/application-status';
 	import { formatDate as fmtDate } from '$lib/format-date';
 	import { renderSafeMarkdown } from '$lib/utils/safe-markdown';
 
@@ -68,6 +68,7 @@
 				to_status: string;
 				step: string | null;
 				action: string | null;
+				action_date: string | null;
 				description: string | null;
 		  };
 
@@ -103,6 +104,7 @@
 			to_status: s.to_status,
 			step: s.step,
 			action: s.action,
+			action_date: s.action_date,
 			description: s.description
 		}))
 	);
@@ -149,8 +151,16 @@
 	const contactLabel = (c: { name: string; role: string | null }) =>
 		[c.name, c.role ? getContactRoleLabel(c.role) : ''].filter(Boolean).join(' · ');
 
+	// An older row names the next action as it was picked; a newer one has none
+	// and carries the day its latest round was booked for instead.
 	const statusLabel = (e: Extract<Entry, { kind: 'status' }>) =>
-		[getStatusLabel(e.to_status), e.step, e.action].filter(Boolean).join(' · ');
+		[
+			getStatusLabel(e.to_status),
+			e.step,
+			e.action ?? (e.action_date ? `booked for ${formatRoundWhen(e.action_date, null)}` : null)
+		]
+			.filter(Boolean)
+			.join(' · ');
 
 	// ---------------------------------------------------------------------
 	// Composer

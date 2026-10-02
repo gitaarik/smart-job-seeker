@@ -14,7 +14,8 @@
  *
  * Applications sort into five tiers, and the tier is the primary key:
  *
- *  0. **Needs you** — a next action that is not a waiting one.
+ *  0. **Needs you** — a next step that is yours (`nextStep`): send it, book
+ *     the round, prepare for the one that is booked, reply to the offer.
  *  1. **Gone quiet** — waiting on the employer, past the point where silence
  *     stops being normal. See `isFollowUpDue`.
  *  2. **In play** — still live, waiting on the employer, within the window.
@@ -36,9 +37,9 @@
  *
  * Sorting stage descending *inside* each tier is what keeps that from becoming
  * the opposite failure: half-started drafts do not squat above an interview,
- * because within "needs you" the interview outranks them. Net order is
- * negotiating-with-action, interviewing-with-action, applying-with-action,
- * then the same three waiting on the employer.
+ * because within "needs you" the interview outranks them, and a third round
+ * outranks a first. Net order is negotiating, interviewing and applying with a
+ * step of yours open, then the same three waiting on the employer.
  *
  * ## Why `last_activity` is not `date_updated`
  *
@@ -57,10 +58,12 @@
 import { today } from '$lib/application-records';
 import { isSnoozed, type Snoozable } from '$lib/application-snooze';
 import {
+	currentRoundIndex,
 	finishedStatuses,
 	getStepperPhase,
-	isWaitingAction,
-	stageRanks
+	nextStep,
+	stageRanks,
+	type InterviewRound
 } from '$lib/application-status';
 
 /**
@@ -72,8 +75,8 @@ export interface Rankable extends Snoozable {
 	id: number;
 	status: string;
 	status_step?: string | null;
-	status_action?: string | null;
-	status_action_date?: string | null;
+	/** Where an interview process stands; see `nextStep` and `stageRank`. */
+	interview_rounds?: readonly InterviewRound[] | null;
 	/** Read only to tell an unsent draft from something actually out there. */
 	application_sent_date?: string | null;
 	/** From `attachLastActivity`. Falls back to `date_created` when absent. */
@@ -95,19 +98,18 @@ export type Tier = (typeof tiers)[keyof typeof tiers];
 /**
  * Which band an application falls in.
  *
- * Checked in this order on purpose: a snoozed application with an open action
- * is still parked, and a finished one is finished whatever its stale action
- * column still says. Both would otherwise be promoted to the top by a leftover
- * value nobody cleared.
+ * Checked in this order on purpose: a snoozed application with a step of yours
+ * open is still parked, and a finished one is finished whatever its stage says.
  *
- * No action at all reads as "waiting" rather than "needs you". An application
- * nobody has given a next action is not evidence of work outstanding, and the
- * top band is only worth having while everything in it is really actionable.
+ * No next step at all (a stage `nextStep` does not know) reads as "waiting"
+ * rather than "needs you". An unknown stage is not evidence of work
+ * outstanding, and the top band is only worth having while everything in it is
+ * really actionable.
  */
 export function applicationTier(app: Rankable, on: string = today()): Tier {
 	if (finishedStatuses.includes(app.status)) return tiers.finished;
 	if (isSnoozed(app, on)) return tiers.snoozed;
-	if (app.status_action && !isWaitingAction(app.status_action)) return tiers.action;
+	if (isYourMove(app, on)) return tiers.action;
 	if (isFollowUpDue(app, on)) return tiers.followUp;
 	return tiers.waiting;
 }
@@ -155,9 +157,10 @@ export function daysQuiet(app: Rankable, on: string = today()): number | null {
  *
  * A follow-up needs someone to follow up WITH, so an unsent draft never earns
  * one however long it has sat there. That case is already covered from the
- * other side — a draft carries "Send application" and lands in the top tier —
- * but a draft whose action somebody cleared would otherwise fall through to
- * here and be told to chase an employer who has never heard from them.
+ * other side (a draft's next step is "Send application", which is yours and
+ * lands it in the top tier), and this is the guard behind that one: an
+ * application nobody has sent must never be told to chase an employer who has
+ * never heard from it.
  *
  * `application_sent_date` is filled by `writeApplicationStatus` the first time
  * an application leaves the Preparing stage; the step is checked too because
@@ -178,16 +181,15 @@ function hasBeenSent(app: Rankable): boolean {
  * yours to move, and a snooze is the applicant saying "not now" in as many
  * words — turning that into a badge would be arguing with them.
  *
- * Exported because the card needs the same answer the ranking used. Deriving
- * this rather than writing a `Follow up` into `status_action` is deliberate:
- * the action column is the applicant's, a derived nudge needs no migration and
- * no job to run, and it clears itself the moment anything happens — including
- * the follow-up itself being recorded.
+ * Exported because the card needs the same answer the ranking used. Derived,
+ * like the next step it sits beside: it needs no migration and no job to run,
+ * and it clears itself the moment anything happens, including the follow-up
+ * itself being recorded.
  */
 export function isFollowUpDue(app: Rankable, on: string = today()): boolean {
 	if (finishedStatuses.includes(app.status)) return false;
 	if (isSnoozed(app, on)) return false;
-	if (app.status_action && !isWaitingAction(app.status_action)) return false;
+	if (isYourMove(app, on)) return false;
 	if (!hasBeenSent(app)) return false;
 
 	const after = followUpAfterDays[getStepperPhase(app.status)];
@@ -207,27 +209,39 @@ const phaseRank: Record<string, number> = {
 /**
  * How far along an application is. Higher is further.
  *
- * The phase carries the coarse position and `stageRanks` refines it, so a
- * "Hiring manager call" sorts above a "Screening call" without the two phases
- * ever being able to interleave. Legacy statuses (`preparing`, `sent`,
- * `offered`, `draft`) go through `getStepperPhase` rather than a second switch
- * that would have to be kept in step with it.
+ * The phase carries the coarse position and the stage refines it, so the two
+ * phases can never interleave. Legacy statuses (`preparing`, `sent`, `offered`,
+ * `draft`) go through `getStepperPhase` rather than a second switch that would
+ * have to be kept in step with it.
  *
- * The refinement is a lookup rather than the step's position in `stepsByPhase`,
- * which is what it used to be. Reading the index made every stage outrank every
- * stage listed before it, including the ones that are alternatives rather than
- * progress: a screening call and an AI interview are one position, and so are an
- * assessment, a coding challenge and a take-home. They share a rank now, and the
- * dropdown can be reordered without silently reordering the pipeline.
+ * In interviewing the refinement is the round reached, which is the first time
+ * this can say that a third interview is further along than a first: the stage
+ * labels it replaced named kinds of interview, and a technical interview, a
+ * hiring manager call and a team interview had to share a rank because the
+ * employer decides their order. Elsewhere it is a lookup in `stageRanks`
+ * rather than the step's position in `stepsByPhase`, so the dropdown can be
+ * reordered without silently reordering the pipeline.
  *
- * A step the vocabulary does not list scores 0 — the start of its phase. The
+ * A step the vocabulary does not list scores 0, the start of its phase. The
  * step list is advisory (the editor offers "Custom…"), and an unknown label
  * carries no information about progression, so it must not be read as either
  * end of one.
  */
-export function stageRank(status: string, step?: string | null): number {
-	const phase = getStepperPhase(status);
-	return (phaseRank[phase] ?? 0) * 100 + (step ? (stageRanks[phase]?.[step] ?? 0) : 0);
+export function stageRank(app: Rankable, on: string = today()): number {
+	const phase = getStepperPhase(app.status);
+	const within =
+		phase === 'interviewing'
+			? Math.min(currentRoundIndex(app.interview_rounds ?? [], on) + 1, 99)
+			: app.status_step
+				? (stageRanks[phase]?.[app.status_step] ?? 0)
+				: 0;
+	return (phaseRank[phase] ?? 0) * 100 + within;
+}
+
+/** Whether the next step is the applicant's. See `nextStep`. */
+function isYourMove(app: Rankable, on: string): boolean {
+	const next = nextStep(app, on);
+	return !!next && !next.waiting;
 }
 
 /**
@@ -265,14 +279,19 @@ function byQuietest(a: Rankable, b: Rankable): number {
 }
 
 /**
- * Soonest first, undated last.
+ * Soonest booked first, unbooked last: the interview on Monday above the one
+ * on Thursday, and both above the application still to send.
  *
- * Overdue dates are the smallest values, so they lead without a special case:
- * an interview you were meant to schedule last week outranks one due tomorrow.
+ * The time breaks a tie inside a day. An undated time sorts as the start of
+ * the day, which is the cautious reading.
  */
-function byActionDate(a: Rankable, b: Rankable): number {
-	const x = a.status_action_date;
-	const y = b.status_action_date;
+function byBooking(a: Rankable, b: Rankable, on: string): number {
+	const at = (app: Rankable) => {
+		const next = nextStep(app, on);
+		return next?.date ? `${next.date} ${next.time ?? '00:00'}` : null;
+	};
+	const x = at(a);
+	const y = at(b);
 	if (!x && !y) return 0;
 	if (!x) return 1;
 	if (!y) return -1;
@@ -298,11 +317,11 @@ export function compareApplications(a: Rankable, b: Rankable, on: string = today
 	const tier = applicationTier(a, on) - applicationTier(b, on);
 	if (tier !== 0) return tier;
 
-	const byStage = stageRank(b.status, b.status_step) - stageRank(a.status, a.status_step);
+	const byStage = stageRank(b, on) - stageRank(a, on);
 
 	switch (applicationTier(a, on)) {
 		case tiers.action:
-			return byStage || byActionDate(a, b) || byActivity(a, b) || b.id - a.id;
+			return byStage || byBooking(a, b, on) || byActivity(a, b) || b.id - a.id;
 		case tiers.followUp:
 			return byStage || byQuietest(a, b) || b.id - a.id;
 		case tiers.waiting:

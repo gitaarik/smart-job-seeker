@@ -25,13 +25,19 @@
 	import Card from '../../components/Card.svelte';
 	import CategoryPill from '$lib/components/CategoryPill.svelte';
 	import {
+		describeNextStep,
+		formatRoundWhen,
 		getStatusLabel,
 		getStatusDotColor,
 		getStatusBgColor,
 		getStatusColor,
-		getQuickStatusActions
+		getQuickStatusActions,
+		getStepperPhase,
+		nextStep,
+		stageLabel
 	} from '$lib/application-status';
 	import StatusStepper from './StatusStepper.svelte';
+	import StatusTrack from './StatusTrack.svelte';
 	import ActivitySummaryCard from './ActivitySummaryCard.svelte';
 	import OfferCard from './OfferCard.svelte';
 	import KeyFactsCard from './KeyFactsCard.svelte';
@@ -52,9 +58,25 @@
 
 	// Status widget
 	let statusPickerOpen = $state(false);
+	// Whether the editor opens with a new round ready, for "Invited to interview",
+	// "Next round" and the track's dashed node.
+	let statusPickerAddsRound = $state(false);
 	let statusSaving = $state(false);
 	let quickSaving = $state(false);
 	let quickActions = $derived(getQuickStatusActions(app.status, app.status_step));
+	let rounds = $derived(app.interview_rounds ?? []);
+	let stage = $derived(stageLabel(app, data.today));
+	let next = $derived(nextStep(app, data.today));
+	// Out of applying, or applying and waiting on a reply: either way it went out.
+	// A `draft` is the old column default for one that has not.
+	let sent = $derived(
+		app.status !== 'draft' && (getStepperPhase(app.status) !== 'applying' || !!next?.waiting)
+	);
+
+	function openStatusPicker(addRound = false) {
+		statusPickerAddsRound = addRound;
+		statusPickerOpen = true;
+	}
 
 	// Snooze. Beside the status rather than inside it: pausing your own work on
 	// an application says nothing about where the employer has got to.
@@ -144,7 +166,7 @@
 
 				<button
 					type="button"
-					onclick={() => (statusPickerOpen = true)}
+					onclick={() => openStatusPicker()}
 					class="flex w-full items-center gap-5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-5 py-4 text-left transition-colors hover:border-[var(--dash-primary)]"
 				>
 					<div class="min-w-0 flex-1 space-y-1.5">
@@ -153,29 +175,25 @@
 						>
 							{getStatusLabel(app.status)}
 						</p>
-						{#if app.status_step}
-							<p class="text-sm text-[var(--dash-text-secondary)] italic">{app.status_step}</p>
+						{#if stage}
+							<p class="text-sm text-[var(--dash-text-secondary)] italic">{stage}</p>
 						{/if}
-						{#if app.status_action}
-							{@const isWaiting = app.status_action.startsWith('Awaiting')}
-							{@const isScheduled = app.status_action === 'Scheduled'}
+						{#if next}
+							{@const scheduled = !!next.date}
 							<p
-								class="flex items-center gap-1.5 text-sm font-medium {isWaiting
+								class="flex items-center gap-1.5 text-sm font-medium {next.waiting
 									? 'text-[var(--dash-text-muted)]'
-									: isScheduled
+									: scheduled
 										? 'text-[var(--dash-success)]'
 										: 'text-[var(--dash-primary)]'}"
 							>
-								{#key app.status_action}
+								{#key next.label}
 									<FontAwesomeIcon
-										icon={isWaiting ? faClock : isScheduled ? faCalendarCheck : faHandPointRight}
+										icon={next.waiting ? faClock : scheduled ? faCalendarCheck : faHandPointRight}
 										class="h-3.5 w-3.5"
 									/>
 								{/key}
-								{app.status_action}
-								{#if isScheduled && app.status_action_date}
-									— {formatDate(app.status_action_date)}
-								{/if}
+								{describeNextStep(next, data.timeFormat)}
 							</p>
 						{/if}
 					</div>
@@ -187,36 +205,58 @@
 					</span>
 				</button>
 
+				<!-- Where it stands, drawn: applied, each round, the offer. -->
+				<StatusTrack
+					status={app.status}
+					step={app.status_step}
+					{rounds}
+					{sent}
+					today={data.today}
+					timeFormat={data.timeFormat}
+					onaddround={() => openStatusPicker(true)}
+				/>
+
 				<!-- Quick update: one-tap transitions for the current phase -->
 				{#if quickActions.length > 0}
 					<div class="pt-1">
 						<p class="mb-2 text-xs text-[var(--dash-text-muted)]">Quick update</p>
 						<div class="flex flex-wrap gap-2">
 							{#each quickActions as qa (qa.label)}
-								<form
-									method="POST"
-									action="?/updateStatus"
-									use:enhance={() => {
-										quickSaving = true;
-										return async ({ update }) => {
-											await update();
-											quickSaving = false;
-										};
-									}}
-								>
-									<input type="hidden" name="status" value={qa.status} />
-									<input type="hidden" name="step" value={qa.step ?? ''} />
-									<input type="hidden" name="action" value={qa.action ?? ''} />
+								{#if qa.addsRound}
 									<button
-										type="submit"
-										disabled={quickSaving}
-										class="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 {quickToneClass[
+										type="button"
+										onclick={() => openStatusPicker(true)}
+										class="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors {quickToneClass[
 											qa.tone
 										]}"
 									>
 										{qa.label}
 									</button>
-								</form>
+								{:else}
+									<form
+										method="POST"
+										action="?/updateStatus"
+										use:enhance={() => {
+											quickSaving = true;
+											return async ({ update }) => {
+												await update();
+												quickSaving = false;
+											};
+										}}
+									>
+										<input type="hidden" name="status" value={qa.status} />
+										<input type="hidden" name="step" value={qa.step ?? ''} />
+										<button
+											type="submit"
+											disabled={quickSaving}
+											class="rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 {quickToneClass[
+												qa.tone
+											]}"
+										>
+											{qa.label}
+										</button>
+									</form>
+								{/if}
 							{/each}
 						</div>
 					</div>
@@ -558,11 +598,17 @@
 										<p class="text-xs text-[var(--dash-text-secondary)] italic">{entry.step}</p>
 									{/if}
 									{#if entry.action}
+										<!-- A row from before interview rounds, with the action as it was picked. -->
 										<p class="text-xs font-medium text-[var(--dash-primary)]">
 											→ {entry.action}
 											{#if entry.action_date}
 												— {formatDate(entry.action_date)}
 											{/if}
+										</p>
+									{:else if entry.action_date}
+										<!-- A newer row: the day the latest round was booked for. -->
+										<p class="text-xs font-medium text-[var(--dash-success)]">
+											{`Booked for ${formatRoundWhen(entry.action_date, null)}`}
 										</p>
 									{/if}
 									{#if entry.description}
@@ -659,19 +705,21 @@
 		aria-modal="true"
 		aria-labelledby="status-picker-title"
 	>
-		<div class="pointer-events-auto w-full max-w-lg rounded-xl bg-[var(--dash-card)] p-6 shadow-lg">
+		<!-- Scrolls inside itself: a few rounds in, the editor is taller than a laptop screen. -->
+		<div
+			class="pointer-events-auto max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-xl bg-[var(--dash-card)] p-6 shadow-lg"
+		>
 			<h3 id="status-picker-title" class="mb-4 text-lg font-semibold text-[var(--dash-text)]">
 				Update Status
 			</h3>
 
-			{#key app.status + (app.status_step || '') + (app.status_action || '')}
+			{#key app.status + (app.status_step || '') + JSON.stringify(rounds) + statusPickerAddsRound}
 				<StatusStepper
 					status={app.status}
 					statusStep={app.status_step}
-					statusAction={app.status_action}
-					statusActionDate={app.status_action_date
-						? new Date(app.status_action_date).toISOString().split('T')[0]
-						: null}
+					{rounds}
+					addRound={statusPickerAddsRound}
+					timeFormat={data.timeFormat}
 					bind:saving={statusSaving}
 					oncancel={() => (statusPickerOpen = false)}
 					onsave={() => (statusPickerOpen = false)}

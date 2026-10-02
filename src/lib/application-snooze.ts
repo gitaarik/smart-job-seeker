@@ -4,17 +4,16 @@
  * ## Why this is a date and not a status
  *
  * `status` is a position in a pipeline: it drives the stepper, and moving it
- * deliberately clears `status_step` and `status_action` (see
- * `$lib/server/applications/status`). So a "postponed" status would have to
- * throw away the stage and the next action of the application being paused —
- * exactly the two things you need to pick it up again — and would then need a
- * `previous_status` column to put them back. Needing that column is the tell:
+ * deliberately clears `status_step` (see `$lib/server/applications/status`). So
+ * a "postponed" status would have to throw away the stage of the application
+ * being paused, exactly what you need to pick it up again, and would then need
+ * a `previous_status` column to put it back. Needing that column is the tell:
  * "where does this stand with the employer" and "am I working on this right
  * now" are different questions, and only the first one is a status.
  *
  * The pipeline list already separates the two: `group=active` filters on the
- * status, `group=action` filters on `status_action` and skips the waiting ones.
- * A snooze belongs on that second axis.
+ * status, `group=action` on whose move it is (`nextStep`), skipping the
+ * applications waiting on the employer. A snooze belongs on that second axis.
  *
  * ## Why a date and not a flag
  *

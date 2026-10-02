@@ -9,6 +9,8 @@ import { deleteFile, uploadFile } from '$lib/server/files';
 import { readFileIntoRecord } from '$lib/server/applications/record-files';
 import { deriveRecordMetadata } from '$lib/server/ai-chat/record-derivation';
 import { summarizeApplication } from '$lib/server/ai-chat/application-summary';
+import { entryStage, STAGE_COLUMNS } from '$lib/server/applications/status';
+import type { StatusFacts } from '$lib/application-status';
 import { projectTargetsForProfile } from '$lib/server/profile/project-targets';
 import { Buffer } from 'buffer';
 
@@ -52,7 +54,7 @@ const MAX_FILE_BYTES = 10 * 1024 * 1024;
 type Denial = ActionFailure<{ error: string }>;
 type Resolved =
 	| {
-			app: { id: number; status: string; status_step: string | null };
+			app: StatusFacts & { id: number };
 			profileId: number;
 			error: null;
 	  }
@@ -86,7 +88,7 @@ async function requireApplication(
 
 	const existing = await db.query.applications.findFirst({
 		where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
-		columns: { id: true, status: true, status_step: true }
+		columns: { id: true, ...STAGE_COLUMNS }
 	});
 	if (!existing) return deny(fail(404, { error: 'Application not found' }));
 
@@ -149,7 +151,7 @@ export const actions: Actions = {
 				content: content || null,
 				// The stage the application is in right now, because things are logged
 				// as they happen. Free, and right far more often than an LLM guess.
-				step: resolved.app.status_step,
+				step: entryStage(resolved.app),
 				event_date: today(),
 				file_id: fileId,
 				extraction_status: fileId ? 'pending' : 'none',

@@ -33,9 +33,13 @@
 	import { formatSalaryRange, timeAgo } from '$lib/format';
 	import {
 		statusOptions,
+		currentRoundIndex,
+		formatRoundWhen,
 		getStatusLabel,
 		getStatusColor,
-		getStatusDotColor
+		getStatusDotColor,
+		nextStep,
+		stageLabel
 	} from '$lib/application-status';
 	import { daysQuiet, isFollowUpDue, sortOptions } from '$lib/application-ranking';
 	import { describeSnooze, isSnoozed, snoozePresets, snoozeUntil } from '$lib/application-snooze';
@@ -512,6 +516,10 @@
 				{@const jobTypes = asStringArray(job?.job_types)}
 				{@const experienceLevels = asStringArray(job?.experience_levels)}
 				{@const followUp = isFollowUpDue(app, data.today)}
+				{@const stage = stageLabel(app, data.today)}
+				{@const next = nextStep(app, data.today)}
+				{@const rounds = app.status === 'interviewing' ? (app.interview_rounds ?? []) : []}
+				{@const roundAt = currentRoundIndex(rounds, data.today)}
 				{@const quiet = daysQuiet(app, data.today)}
 				{@const snoozed = isSnoozed(app, data.today)}
 				<!-- Relative wrapper so the snooze control can sit OUTSIDE the anchor:
@@ -653,34 +661,49 @@
 										>
 											{getStatusLabel(app.status)}
 										</span>
-										{#if app.status_step}
+										{#if stage}
 											<span
 												class="text-xs whitespace-nowrap text-[var(--dash-text-secondary)] italic"
 											>
-												{app.status_step}
+												{stage}
 											</span>
 										{/if}
-										{#if app.status_action}
-											{@const isWaiting = app.status_action.startsWith('Awaiting')}
-											{@const isScheduled = app.status_action === 'Scheduled'}
+										{#if rounds.length > 0}
+											<!-- One dot per round: behind them, where they are, still to come. -->
+											<span class="flex items-center gap-1" aria-hidden="true">
+												{#each rounds as _round, i (i)}
+													<span
+														class="h-1.5 w-1.5 rounded-full {i < roundAt
+															? 'bg-[var(--dash-primary)]'
+															: i === roundAt
+																? 'ring-[1.5px] ring-[var(--dash-primary)]'
+																: 'bg-[var(--dash-border)]'}"
+													></span>
+												{/each}
+											</span>
+										{/if}
+										{#if next}
+											{@const scheduled = !!next.date}
 											<span
-												class="flex items-center gap-1 text-xs font-medium whitespace-nowrap {isWaiting
+												class="flex items-center gap-1 text-xs font-medium whitespace-nowrap {next.waiting
 													? 'text-[var(--dash-text-muted)]'
-													: isScheduled
+													: scheduled
 														? 'text-[var(--dash-success)]'
 														: 'text-[var(--dash-primary)]'}"
 											>
-												{#key app.status_action}
+												{#key next.label}
 													<FontAwesomeIcon
-														icon={isWaiting
+														icon={next.waiting
 															? faClock
-															: isScheduled
+															: scheduled
 																? faCalendarCheck
 																: faHandPointRight}
 														class="h-3 w-3"
 													/>
 												{/key}
-												{app.status_action}
+												{scheduled
+													? formatRoundWhen(next.date, next.time, data.timeFormat)
+													: next.label}
 											</span>
 										{/if}
 									</div>

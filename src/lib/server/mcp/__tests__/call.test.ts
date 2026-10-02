@@ -179,6 +179,8 @@ const APPLICATION = {
 	// stage and no status at all.
 	status: 'rejected',
 	status_step: null,
+	stage: null,
+	next_step: 'none worked out',
 	application_sent_date: '2026-08-01'
 };
 
@@ -362,8 +364,7 @@ const APPLICATION_ROW = {
 	profile_id: 12,
 	status: 'applying',
 	status_step: 'Applied',
-	status_action: 'Awaiting response',
-	status_action_date: null,
+	interview_rounds: [],
 	cv_sent_through: null,
 	application_sent_date: '2026-08-01',
 	application_seen_date: null
@@ -964,31 +965,28 @@ describe('tier 1 — direct writes', () => {
 
 	it('writes a value it was sent even when the row already holds it', async () => {
 		// The narrowing above decides whether there is anything to do; for a
-		// one-state capability it must not decide what gets written.
-		// `update_application_status` clears the stage when the status moves and
-		// none was sent, so a next action that WAS sent and happened to match the
-		// row came out the far end as a clear nobody asked for. Reachable because
-		// "Awaiting response" belongs to applying and to negotiating alike.
+		// one-state capability it must not decide what gets written. The fields
+		// of `update_application_status` are read together (a stage or a round
+		// means nothing apart from the status it is sent with), so a status that
+		// was sent and happens to match the row still reaches the write.
 		await callTool(
 			'update_application_status',
 			{
 				profile_id: 12,
 				application_id: 44,
-				status: 'negotiating',
-				status_step: 'Offer received',
-				status_action: 'Awaiting response',
-				rationale: 'They made an offer.'
+				status: 'applying',
+				status_step: 'Preparing',
+				rationale: 'They have not sent it after all.'
 			},
 			KEY
 		);
 
-		// A move that leaves the application live is Tier 1, so this is written —
+		// A move that leaves the application live is Tier 1, so this is written,
 		// and what reaches the write is the whole state, restatement included.
 		expect(createRequest).not.toHaveBeenCalled();
 		expect(executeCapability.mock.calls[0][3]).toEqual({
-			status: 'negotiating',
-			status_step: 'Offer received',
-			status_action: 'Awaiting response'
+			status: 'applying',
+			status_step: 'Preparing'
 		});
 	});
 
@@ -1000,7 +998,6 @@ describe('tier 1 — direct writes', () => {
 				application_id: 44,
 				status: 'applying',
 				status_step: 'Applied',
-				status_action: 'Awaiting response',
 				rationale: 'Restating where it stands.'
 			},
 			KEY

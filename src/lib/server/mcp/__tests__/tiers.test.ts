@@ -168,8 +168,7 @@ describe('tierForWrite', () => {
 		const APPLYING = {
 			status: 'applying',
 			status_step: 'Applied',
-			status_action: 'Awaiting response',
-			status_action_date: null
+			interview_rounds: []
 		};
 
 		const move = (status: string, recentDirectWrites = 0) =>

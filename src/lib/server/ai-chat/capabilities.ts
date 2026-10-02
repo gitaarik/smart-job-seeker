@@ -64,16 +64,29 @@ import {
 	today
 } from '$lib/application-records';
 import {
-	actionsByPhase,
+	blankRound,
+	currentRoundIndex,
+	formatRoundWhen,
 	getStatusLabel,
+	getStepperPhase,
 	isFinishedStatus,
-	stepsByPhase
+	nextStep,
+	parseRounds,
+	roundKindValues,
+	sameRounds,
+	stageLabel,
+	stepsByPhase,
+	type InterviewRound
 } from '$lib/application-status';
 import {
-	actionsFor,
 	applicationStatusError,
+	describeNextStepForModel,
+	describeRoundsForModel,
+	entryStage,
 	revertApplicationStatus,
 	settableStatuses,
+	settleStatusChange,
+	STAGE_COLUMNS,
 	stepsFor,
 	writeApplicationStatus
 } from '$lib/server/applications/status';
@@ -302,12 +315,12 @@ export interface CapabilityDef {
 	 *
 	 * Set where the fields are ONE state rather than a patch, so that dropping
 	 * one changes the meaning of the others. `update_application_status` clears
-	 * the stage when the status moves and no stage was sent — so a stage that was
+	 * the stage when the status moves and no stage was sent, so a stage that was
 	 * sent and happened to equal the current one, narrowed away as "unchanged",
 	 * came out the far end as a clear the agent never asked for and the card
-	 * never showed. The two labels that make it reachable are real: "Awaiting
-	 * response" belongs to both applying and negotiating, "Provide references" to
-	 * both interviewing and negotiating.
+	 * never showed. The next actions that once made that reachable ("Awaiting
+	 * response" was one in two phases) are gone, and the flag stays, because a
+	 * round field still means nothing apart from the status it is sent with.
 	 *
 	 * Only the MCP path narrows. A chat proposal already stores every field it
 	 * was given, and drops the unchanged ones from the CARD rather than from the
@@ -1124,59 +1137,59 @@ want, tell them to use the status control on the page.`,
  * ------------------------------------------------------------------ */
 
 /**
- * The vocabulary, rendered from the same tables the editor's dropdowns use.
+ * The vocabulary, rendered from the same tables the editor offers.
  *
  * Written out rather than described, because "pick a sensible stage" produces a
- * new label every time and the pipeline groups on this column — one invented
- * stage is a stage of one. Built from `stepsByPhase` and `actionsByPhase` so
- * that the list a model is held to and the list a person is offered cannot
- * drift apart.
+ * new label every time and the pipeline groups on these: one invented stage is
+ * a stage of one. Built from `stepsByPhase` and `roundKinds` so that the list a
+ * model is held to and the list a person is offered cannot drift apart.
  */
 const STATUS_VOCABULARY = `Stages, by status:
 ${Object.entries(stepsByPhase)
 	.map(([status, steps]) => `  ${status}: ${steps.join(', ')}`)
 	.join('\n')}
+Round kinds: ${roundKindValues.join(', ')}`;
 
-Next actions, by status:
-${Object.entries(actionsByPhase)
-	.map(([status, actions]) => `  ${status}: ${actions.join(', ')}`)
-	.join('\n')}`;
-
-/** The four columns this capability writes, as `current` reports them. */
+/** The state this capability reads and writes, as `current` reports it. */
 interface StatusFields {
 	status: string;
 	status_step: string | null;
-	status_action: string | null;
-	status_action_date: string | null;
+	interview_rounds: InterviewRound[];
 }
 
-/** The three that hang off the status and are cleared with it. */
-type StatusStageField = 'status_step' | 'status_action' | 'status_action_date';
-
-const STAGE_FIELDS: StatusStageField[] = ['status_step', 'status_action', 'status_action_date'];
+/** The fields that describe one round, and the column of the round each one sets. */
+const ROUND_FIELDS = {
+	round_kind: 'kind',
+	round_date: 'date',
+	round_time: 'time',
+	round_with: 'with'
+} as const satisfies Record<string, keyof InterviewRound>;
 
 function statusFieldsOf(values: Record<string, unknown>): StatusFields {
 	return {
 		status: String(values.status ?? ''),
 		status_step: (values.status_step as string | null) ?? null,
-		status_action: (values.status_action as string | null) ?? null,
-		status_action_date: (values.status_action_date as string | null) ?? null
+		interview_rounds: Array.isArray(values.interview_rounds)
+			? (values.interview_rounds as InterviewRound[])
+			: []
 	};
+}
+
+/** Whether a proposal says anything about a round. */
+function sendsRound(fields: Record<string, unknown>): boolean {
+	return fields.new_round === true || Object.keys(ROUND_FIELDS).some((field) => field in fields);
 }
 
 /**
  * What the application will say once this proposal is applied.
  *
- * The rule that makes it more than a merge: **a stage belongs to the status it
- * was reached in.** Moving to "rejected" while keeping "Offer received" under
- * it describes an application nobody has, so an unproposed stage and next
- * action are dropped whenever the status itself moves, and always for a status
- * that has no stages at all. The editor does the same — its phase buttons clear
- * both.
- *
- * Shared by `validate` and `apply`, so the combination that is checked is the
- * one that gets written. Deriving it twice is how a capability comes to refuse
- * something it would have written differently anyway.
+ * Two rules make it more than a merge. **A stage belongs to the status it was
+ * reached in**, so an unproposed stage is dropped whenever the status moves, as
+ * the editor's phase buttons drop it. And **a round is added only when asked
+ * for**, or when the application has none yet: otherwise the round fields change
+ * the round it is at, which is how "the interview moved to Friday" is said.
+ * The rest (no stage in interviewing, rounds kept past it, round 1 on the way
+ * in) is `settleStatusChange`, the same rules the editor's writes go through.
  */
 function nextStatusFields(
 	fields: Record<string, unknown>,
@@ -1185,21 +1198,40 @@ function nextStatusFields(
 	const before = statusFieldsOf(current);
 	const status = 'status' in fields ? String(fields.status ?? '') : before.status;
 	const moved = status !== before.status;
+	const step =
+		'status_step' in fields
+			? ((fields.status_step as string | null) ?? null)
+			: moved
+				? null
+				: before.status_step;
 
-	const carry = (field: StatusStageField): string | null => {
-		// Null for a finished application whatever was proposed. `validate`
-		// refuses a stage sent with one, so this only ever drops a stale one.
-		if (isFinishedStatus(status)) return null;
-		if (field in fields) return (fields[field] as string | null) ?? null;
-		return moved ? null : before[field];
-	};
+	const rounds = before.interview_rounds.map((round) => ({ ...round }));
+	if (sendsRound(fields)) {
+		const patch: Partial<InterviewRound> = {};
+		for (const [field, column] of Object.entries(ROUND_FIELDS)) {
+			if (field in fields) patch[column] = (fields[field] as string | null) ?? null;
+		}
+		const at = currentRoundIndex(rounds, today());
+		if (fields.new_round === true || at === -1) rounds.push({ ...blankRound(), ...patch });
+		else rounds[at] = { ...rounds[at], ...patch };
+	}
 
+	const settled = settleStatusChange({ status, step, rounds });
 	return {
-		status,
-		status_step: carry('status_step'),
-		status_action: carry('status_action'),
-		status_action_date: carry('status_action_date')
+		status: settled.status,
+		status_step: settled.step,
+		interview_rounds: settled.rounds
 	};
+}
+
+/** The rounds as the card writes them: "1. Intro, Thu, Oct 8, 15:30 · 2. Technical". */
+function describeRoundsForCard(rounds: InterviewRound[]): string {
+	return rounds
+		.map((round, i) => {
+			const when = formatRoundWhen(round.date, round.time);
+			return `${i + 1}. ${[round.kind ?? 'Round', when, round.with].filter(Boolean).join(', ')}`;
+		})
+		.join(' · ');
 }
 
 /** One line on the timeline beside the move, not an account of what happened. */
@@ -1212,10 +1244,18 @@ const MAX_STATUS_NOTE = 300;
  *
  * That one patches three columns nobody reads but the details card. This writes
  * the column every list filters on, the board groups by and the comparison
- * spine sorts by — and it appends to `application_status_log`, which the
+ * spine sorts by, and it appends to `application_status_log`, which the
  * activity tab reads as a chronology of what happened. Two writes with the same
  * shape and nothing else in common: one is a correction, the other is an
  * assertion that the world moved.
+ *
+ * ## Rounds as flat fields
+ *
+ * The rounds are a list, and a model asked to send the whole list back drops
+ * and rewords what it was not asked about, which is how whole-text rewrites
+ * lose a tenth of their content. So it never sends the list: `new_round` and
+ * four round fields say "add one" or "change the one it is at", and the list
+ * itself is only ever shown to it.
  *
  * ## Which moves need a person, and which do not
  *
@@ -1223,10 +1263,10 @@ const MAX_STATUS_NOTE = 300;
  * `notNull` with a default and so is never blank. That is the overwrite rule
  * doing its job on a column it was not written for: a status is a state, not
  * authored content, and moving one is undone with a click and visible the
- * moment it happens — which is precisely what Tier 1 says its protection is.
+ * moment it happens, which is precisely what Tier 1 says its protection is.
  *
- * So `tierFor` splits it. A move that leaves the application live —
- * applying → interviewing → negotiating, or back again — is Tier 1: written
+ * So `tierFor` splits it. A move that leaves the application live (applying,
+ * interviewing, negotiating, a new round, a new date) is Tier 1: written
  * directly on a `write` key, logged, notified, undoable. The three statuses
  * that FINISH it are not, because they take it off the board the applicant
  * works from and each one is a claim about a decision somebody else made.
@@ -1240,29 +1280,47 @@ const updateApplicationStatus: CapabilityDef = {
 	current: async (target) => {
 		const app = await db.query.applications.findFirst({
 			where: eq(applications.id, target.id),
-			columns: {
-				status: true,
-				status_step: true,
-				status_action: true,
-				status_action_date: true
-			}
+			columns: { status: true, status_step: true, interview_rounds: true }
 		});
 		return {
 			status: app?.status ?? null,
 			status_step: app?.status_step ?? null,
-			status_action: app?.status_action ?? null,
-			status_action_date: app?.status_action_date ?? null
+			interview_rounds: app?.interview_rounds ?? []
 		};
+	},
+	/**
+	 * The rounds one per line, with where each stands today, and the next step
+	 * as the cards work it out. The default rendering would print the list as
+	 * `[object Object]`, and a model cannot say "change the round it is at"
+	 * without being told which round that is.
+	 */
+	renderState: (current) => {
+		const state = statusFieldsOf(current);
+		const on = today();
+		const rounds = describeRoundsForModel(state.interview_rounds, on);
+		return `Current values:
+
+  - status: ${state.status || '(not set)'}
+  - status_step: ${state.status_step ?? '(not set)'}
+  - stage: ${stageLabel(state, on) ?? '(none)'}
+  - next step: ${describeNextStepForModel(nextStep(state, on))}
+  - interview rounds:${rounds ? `\n${rounds.replace(/^/gm, '      ')}` : ' (none)'}`;
 	},
 	fields: {
 		status: 'string',
 		status_step: 'string',
-		status_action: 'string',
-		status_action_date: 'string',
+		new_round: 'boolean',
+		round_kind: 'string',
+		// Strings checked in `validate`, not the `date` kind: that one turns an
+		// unreadable value into null, which on a reschedule would clear the date
+		// the round already had rather than refuse the call.
+		round_date: 'string',
+		round_time: 'string',
+		round_with: 'string',
 		status_note: 'string'
 	},
-	// The stage is cleared by a status move that does not name one, so a stage
-	// that WAS named must reach `apply` even when it matches the row.
+	// The fields are one state: a stage or a round field means nothing apart from
+	// the status it is sent with, so none may be narrowed away as "unchanged".
 	writesOneState: true,
 	tierFor: (fields, current) => {
 		const next = nextStatusFields(fields, current);
@@ -1279,101 +1337,122 @@ const updateApplicationStatus: CapabilityDef = {
 				};
 	},
 	/**
-	 * The card in labels, not stored values. Asked to approve "interviewing →
-	 * rejected", the applicant was reading the one word the "Not selected" label
-	 * exists to avoid, on the surface built for reading closely. Otherwise this is
-	 * the default diff: the fields the call sent, unchanged ones dropped.
+	 * The card in labels and in the state it leads to, not in the fields sent. A
+	 * proposal says "new round, Technical, the 13th"; what the applicant has to
+	 * approve is the list of rounds that results, beside the one there now.
+	 *
+	 * Labels, not stored values: asked to approve "interviewing → rejected", the
+	 * applicant was reading the one word the "Not selected" label exists to
+	 * avoid, on the surface built for reading closely.
+	 *
+	 * The rounds are on the card only when the proposal said something about
+	 * them, so a before-image recorded before rounds existed never shows a list
+	 * appearing from nowhere.
 	 */
 	describeChanges: (fields, previous) => {
-		const labelled = (values: Record<string, unknown>) =>
-			typeof values.status === 'string'
-				? { ...values, status: getStatusLabel(values.status) }
-				: values;
-		return describeFieldChanges(
-			Object.keys(updateApplicationStatus.fields).filter((field) => field in fields),
-			labelled(fields),
-			labelled(previous)
-		);
+		const next = nextStatusFields(fields, previous);
+		const shown = (state: StatusFields) => ({
+			status: getStatusLabel(state.status),
+			status_step: state.status_step,
+			interview_rounds: describeRoundsForCard(state.interview_rounds)
+		});
+		// What was sent, read as the state it leads to. A stage cleared because the
+		// status moved is implied by the move and left off, as before rounds.
+		const names = [
+			...('status' in fields ? ['status'] : []),
+			...('status_step' in fields ? ['status_step'] : []),
+			...(sendsRound(fields) ? ['interview_rounds'] : [])
+		];
+		return [
+			...describeFieldChanges(names, shown(next), shown(statusFieldsOf(previous))),
+			...describeFieldChanges(['status_note'], fields, {})
+		];
 	},
 	contract: `Where this application stands. It is what moves it between the user's
-lists, so propose it when they say something HAPPENED — not when they say what
+lists, so propose it when they say something HAPPENED, not when they say what
 they are hoping for or about to do.
 
 - "status" is exactly one of: ${settableStatuses.join(', ')}.
   "rejected" is the employer saying no; "withdrawn" is the applicant stopping.
-  Never guess between those two — ask which it was. The applicant knows them
+  Never guess between those two: ask which it was. The applicant knows them
   as "${getStatusLabel('rejected')}" and "${getStatusLabel('withdrawn')}": say those, not the values.
-- "status_step" is the stage within that status, and must be one of the labels
-  listed for it below. accepted, rejected and withdrawn have no stages; a step
-  sent with one of them is refused.
-- "status_action" is what has to happen NEXT, from the same lists.
-- "status_action_date" is YYYY-MM-DD, and is when that next thing is due or
-  booked. Not the date of what already happened — that belongs on an activity
-  entry.
+- "status_step" is the stage, for applying and negotiating only, from the lists
+  below. Interviewing has rounds instead, and a finished application neither.
+- Interview rounds are numbered in order. "new_round": true starts the next
+  one; without it the round fields change the round it is at, which is how a
+  reschedule is said. Moving an application into interviewing starts round 1.
+  "round_kind" is one of the kinds below, "round_date" YYYY-MM-DD and
+  "round_time" HH:MM for when it is booked (leave both out until it is), and
+  "round_with" who it is with, as they said it ("Anna, the CTO"). A round that
+  is behind them needs nothing: the day after it, it reads as waiting for the
+  result on its own.
 - "status_note" is at most one short line saying why it moved, shown on the
   timeline beside it ("recruiter called after the technical"). It goes WITH a
-  move — on its own, with nothing else changing, it is refused. Anything longer
+  move; on its own, with nothing else changing, it is refused. Anything longer
   than a line is an activity entry instead.
 
-Changing the status clears the stage and the next action unless you send new
-ones with it, because a stage belongs to the status it was reached in. A move to
-"interviewing" that names no stage leaves it blank, which is honest; naming one
-you were not told about is not.
+Changing the status clears the stage unless you send a new one with it,
+because a stage belongs to the status it was reached in. The rounds stay.
 
 ${STATUS_VOCABULARY}
 
-If they describe a stage that is not in these lists, use the closest one and say
-in your reply which you picked. Do not invent a label — the pipeline groups on
-these, and a new one makes a group of one.`,
+If they describe a stage or a kind that is not in these lists, use the closest
+one and say in your reply which you picked. Do not invent a label.`,
 	validate: (fields, current) => {
 		const next = nextStatusFields(fields, current);
+		const phase = getStepperPhase(next.status);
 
 		if ('status' in fields) {
 			const problem = applicationStatusError(next.status);
 			if (problem) return { ok: false, error: problem };
 		}
 
-		if (isFinishedStatus(next.status)) {
-			const sent = STAGE_FIELDS.find((field) => fields[field]);
-			if (sent) {
-				return {
-					ok: false,
-					error:
-						`"${next.status}" finishes the application, so it has no stage or next ` +
-						`action. Leave ${sent} out, or send it as null.`
-				};
-			}
+		if (isFinishedStatus(next.status) && (fields.status_step || sendsRound(fields))) {
+			return {
+				ok: false,
+				error:
+					`"${next.status}" finishes the application, so it has no stage and takes no ` +
+					`round. Leave status_step, new_round and the round_ fields out.`
+			};
+		}
+
+		if (sendsRound(fields) && phase !== 'interviewing') {
+			return {
+				ok: false,
+				error:
+					`Rounds belong to interviewing, and "${next.status}" is not. Leave new_round ` +
+					`and the round_ fields out, or move it to interviewing with them.`
+			};
 		}
 
 		// Only what this proposal SENT is checked against the vocabulary. A stage
-		// carried over from the row may be one the applicant typed themselves —
-		// the editor offers "Custom…" — and refusing a proposal about the next
-		// action because of a label nobody proposed would make this capability
-		// stricter than the form it mirrors.
+		// or a kind carried over from the row may be one the applicant typed
+		// themselves (the editor offers "Custom…"), and refusing a proposal over a
+		// label nobody proposed would make this stricter than the form it mirrors.
 		const steps = stepsFor(next.status);
 		if (fields.status_step && !steps.includes(String(fields.status_step))) {
 			return {
 				ok: false,
 				error: steps.length
 					? `"${String(fields.status_step)}" is not a stage of "${next.status}". Use one of: ${steps.join(', ')}.`
-					: `"${next.status}" has no stages. Leave status_step out, or send it as null.`
+					: phase === 'interviewing'
+						? 'Interviewing has rounds, not stages. Leave status_step out and describe the ' +
+							'round with round_kind, round_date, round_time and round_with.'
+						: `"${next.status}" has no stages. Leave status_step out, or send it as null.`
 			};
 		}
 
-		const actions = actionsFor(next.status, next.status_step);
-		if (fields.status_action && !actions.includes(String(fields.status_action))) {
+		if (fields.round_kind && !roundKindValues.includes(String(fields.round_kind))) {
 			return {
 				ok: false,
-				error: actions.length
-					? `"${String(fields.status_action)}" is not a next action here. Use one of: ${actions.join(', ')}.`
-					: `"${next.status}" has no next actions. Leave status_action out, or send it as null.`
+				error: `"${String(fields.round_kind)}" is not a round kind. Use one of: ${roundKindValues.join(', ')}.`
 			};
 		}
 
-		const date = fields.status_action_date;
-		if (typeof date === 'string' && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-			return { ok: false, error: 'status_action_date must be a YYYY-MM-DD date' };
-		}
+		// The same reading the editor's writes get, so a date or a time a person
+		// could not save is one a model cannot propose either.
+		const rounds = parseRounds(next.interview_rounds);
+		if (!rounds.ok) return { ok: false, error: rounds.error };
 
 		const note = fields.status_note;
 		if (typeof note === 'string' && note.length > MAX_STATUS_NOTE) {
@@ -1388,19 +1467,20 @@ these, and a new one makes a group of one.`,
 
 		// A note annotates a move; it is not a thing of its own. Without this, a
 		// proposal carrying only `status_note` writes a timeline row saying the
-		// application went from "applying" to "applying" — and it does so at Tier
+		// application went from "applying" to "applying", and it does so at Tier
 		// 1, because a note has no current value to be replacing. Something worth
 		// recording on its own is an activity entry.
 		const before = statusFieldsOf(current);
 		if (
 			next.status === before.status &&
-			STAGE_FIELDS.every((field) => next[field] === before[field])
+			next.status_step === before.status_step &&
+			sameRounds(next.interview_rounds, before.interview_rounds)
 		) {
 			return {
 				ok: false,
 				error:
 					'Nothing about the status is changing, so there is no move for a note to ' +
-					'go on. Something worth recording on its own is an activity entry — use ' +
+					'go on. Something worth recording on its own is an activity entry: use ' +
 					'add_activity_record.'
 			};
 		}
@@ -1410,24 +1490,27 @@ these, and a new one makes a group of one.`,
 	apply: async (target, fields, current, actor) => {
 		const next = nextStatusFields(fields, current);
 		const note = typeof fields.status_note === 'string' ? fields.status_note.trim() : '';
+		// Read the way `validate` read them, which also pads a time typed as 9:30.
+		const rounds = parseRounds(next.interview_rounds);
+		if (!rounds.ok) throw new Error(rounds.error);
 		const written = await writeApplicationStatus(target.id, actor.profileId, {
 			status: next.status,
 			step: next.status_step,
-			action: next.status_action,
-			actionDate: next.status_action_date,
+			rounds: rounds.rounds,
 			description: note || null
 		});
 		if (!written) throw new Error('That application no longer exists.');
 	},
 
 	/**
-	 * All four columns, not only the ones proposed.
+	 * The whole state, not only the fields proposed.
 	 *
-	 * `apply` writes more than it was asked to — an unproposed stage is cleared
-	 * when the status moves — so the default before-image would record the status
-	 * alone, and an undo would put that back with the stage still missing. The
-	 * rule that makes this capability more than a patch is the same rule that
-	 * makes it need its own before-image.
+	 * `apply` writes more than it was asked to (an unproposed stage is cleared
+	 * when the status moves, round 1 appears on the way into interviewing), so
+	 * the default before-image would record the status alone, and an undo would
+	 * put that back with the stage still missing. The rule that makes this
+	 * capability more than a patch is the same rule that makes it need its own
+	 * before-image.
 	 */
 	beforeImage: async (_target, current) => ({ ...current }),
 
@@ -1435,12 +1518,14 @@ these, and a new one makes a group of one.`,
 		if (typeof previous?.status !== 'string' || previous.status === '') {
 			throw new Error('update_application_status recorded no status this can put back');
 		}
-		const before = statusFieldsOf(previous);
 		const restored = await revertApplicationStatus(target.id, actor.profileId, {
-			status: before.status,
-			step: before.status_step,
-			action: before.status_action,
-			actionDate: before.status_action_date,
+			status: previous.status,
+			step: (previous.status_step as string | null) ?? null,
+			// Absent from a before-image recorded before rounds existed, which keeps
+			// the rounds there now rather than clearing them.
+			rounds: Array.isArray(previous.interview_rounds)
+				? (previous.interview_rounds as InterviewRound[])
+				: undefined,
 			description: null
 		});
 		if (!restored) throw new Error('That application no longer exists.');
@@ -1640,7 +1725,7 @@ drop the other, and an entry is also the unit the chronology is read in.`,
 		// for the two values the insert needs and the proposal cannot carry.
 		const app = await db.query.applications.findFirst({
 			where: eq(applications.id, target.id),
-			columns: { profile_id: true, status_step: true }
+			columns: { profile_id: true, ...STAGE_COLUMNS }
 		});
 		if (!app?.profile_id) throw new Error('Application has no profile');
 
@@ -1658,7 +1743,7 @@ drop the other, and an entry is also the unit the chronology is read in.`,
 				// The stage the application is in now, same as the composer: things are
 				// logged as they happen, and this is free and right more often than a
 				// guess would be.
-				step: app.status_step,
+				step: entryStage(app),
 				event_date: typeof fields.entry_date === 'string' ? fields.entry_date : today(),
 				extraction_status: 'none',
 				date_created: new Date()
@@ -2509,6 +2594,14 @@ const FIELD_LABELS: Record<string, string> = {
 	application_sent_date: 'Sent on',
 	application_seen_date: 'Seen on',
 	status_step: 'Stage',
+	interview_rounds: 'Interview rounds',
+	new_round: 'New round',
+	round_kind: 'Round kind',
+	round_date: 'Round date',
+	round_time: 'Round time',
+	round_with: 'Round with',
+	// Not written any more, and kept so the history still names them on the
+	// changes made before interview rounds replaced the next action.
 	status_action: 'Next action',
 	status_action_date: 'Due on',
 	status_note: 'Timeline note',

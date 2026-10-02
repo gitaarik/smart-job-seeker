@@ -18,7 +18,13 @@
 	import GettingStartedFlow from '../components/GettingStartedFlow.svelte';
 	import JobCardList from '../jobs/components/JobCardList.svelte';
 	import Card from '../components/Card.svelte';
-	import { getStatusColor, getStatusLabel } from '$lib/application-status';
+	import {
+		describeNextStep,
+		getStatusColor,
+		getStatusLabel,
+		nextStep,
+		stageLabel
+	} from '$lib/application-status';
 	import { daysQuiet, isFollowUpDue } from '$lib/application-ranking';
 
 	let { data }: { data: PageData } = $props();
@@ -47,16 +53,6 @@
 	const setupComplete = $derived(
 		!!completeness && isSetupComplete(completeness, (searchTasks?.totalCount ?? 0) > 0, hasMatches)
 	);
-
-	function formatDate(date: Date | string | null): string {
-		if (!date) return '';
-		const d = typeof date === 'string' ? new Date(date) : date;
-		return d.toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
-	}
 </script>
 
 <svelte:head>
@@ -153,6 +149,8 @@
 			<div class="space-y-2">
 				{#each activeApplications as app (app.id)}
 					{@const job = app.job}
+					{@const stage = stageLabel(app, today)}
+					{@const next = nextStep(app, today)}
 					<a href={resolve('/(app)/applications/[id]', { id: String(app.id) })} class="block">
 						<Card class="transition-colors hover:bg-[var(--dash-bg)]">
 							<div class="flex items-center gap-3 p-3">
@@ -181,17 +179,18 @@
 									>
 										{getStatusLabel(app.status)}
 									</span>
-									{#if app.status_step}
+									{#if stage}
 										<p class="mt-2 text-xs text-[var(--dash-text-secondary)] italic">
-											{app.status_step}
+											{stage}
 										</p>
 									{/if}
-									{#if app.status_action}
-										<p class="mt-2 text-xs font-medium text-[var(--dash-primary)]">
-											→ {app.status_action}
-											{#if app.status_action === 'Scheduled' && app.status_action_date}
-												— {formatDate(app.status_action_date)}
-											{/if}
+									{#if next}
+										<p
+											class="mt-2 text-xs font-medium {next.waiting
+												? 'text-[var(--dash-text-muted)]'
+												: 'text-[var(--dash-primary)]'}"
+										>
+											→ {describeNextStep(next, data.timeFormat)}
 										</p>
 									{/if}
 									{#if isFollowUpDue(app, today)}

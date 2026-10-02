@@ -907,15 +907,15 @@ describe('edit_application_details', () => {
 
 describe('update_application_status', () => {
 	const def = CAPABILITIES.update_application_status;
-	const APPLYING = {
-		status: 'applying',
-		status_step: 'Applied',
-		status_action: 'Awaiting response',
-		status_action_date: null
-	};
+	const APPLYING = { status: 'applying', status_step: 'Applied', interview_rounds: [] };
+	// Far from any day the suite runs on, so "booked" and "behind them" hold.
+	const intro = { kind: 'Intro', date: '2099-01-08', time: '15:30', with: null };
+	const pastIntro = { kind: 'Intro', date: '2020-01-08', time: null, with: null };
+	const INTERVIEWING = { status: 'interviewing', status_step: null, interview_rounds: [intro] };
 
-	const apply = (fields: Record<string, unknown>, current = APPLYING) =>
+	const apply = (fields: Record<string, unknown>, current: Record<string, unknown> = APPLYING) =>
 		def.apply({ id: 49, label: 'x' }, fields, current, ACTOR);
+	const writtenRounds = () => mockWriteStatus.mock.calls.at(-1)?.[2]?.rounds;
 
 	it('tells the model the words the applicant knows the statuses by', () => {
 		// The values are all a tool result shows, so a model repeats them unless
@@ -930,71 +930,69 @@ describe('update_application_status', () => {
 		expect(def.validate({ status: 'interviewing' }, APPLYING).ok).toBe(true);
 		expect(def.validate({ status: 'ghosted' }, APPLYING).ok).toBe(false);
 		// The read-side legacy names render on old rows and must not be written
-		// onto new ones — see `settableStatuses`.
+		// onto new ones; see `settableStatuses`.
 		expect(def.validate({ status: 'offered' }, APPLYING).ok).toBe(false);
 		expect(def.validate({ status: 'draft' }, APPLYING).ok).toBe(false);
 	});
 
 	it('holds a proposed stage to the ones that status has', () => {
 		expect(
-			def.validate({ status: 'interviewing', status_step: 'Team interview' }, APPLYING).ok
+			def.validate({ status: 'negotiating', status_step: 'Contract review' }, APPLYING).ok
 		).toBe(true);
 
-		// Right label, wrong status: "Offer received" is a negotiating stage, and
-		// accepting it here is how a stage ends up under a status it cannot be
-		// reached from.
-		const wrong = def.validate({ status: 'interviewing', status_step: 'Offer received' }, APPLYING);
+		// Right label, wrong status: "Applied" is an applying stage, and accepting
+		// it here is how a stage ends up under a status it cannot be reached from.
+		const wrong = def.validate({ status: 'negotiating', status_step: 'Applied' }, APPLYING);
 		expect(wrong.ok).toBe(false);
-		expect(wrong.ok === false && wrong.error).toContain('Screening call');
+		expect(wrong.ok === false && wrong.error).toContain('Offer received');
 	});
 
-	it('refuses a stage on a status that finishes the application', () => {
+	it('sends a stage proposed for interviewing to the round fields instead', () => {
 		const refused = def.validate(
-			{ status: 'rejected', status_step: 'Technical interview' },
+			{ status: 'interviewing', status_step: 'Team interview' },
 			APPLYING
 		);
 		expect(refused.ok).toBe(false);
-		expect(refused.ok === false && refused.error).toContain('no stage');
+		expect(refused.ok === false && refused.error).toContain('round_kind');
+	});
+
+	it('refuses a stage or a round on a status that finishes the application', () => {
+		const staged = def.validate({ status: 'rejected', status_step: 'Offer received' }, APPLYING);
+		expect(staged.ok).toBe(false);
+		expect(staged.ok === false && staged.error).toContain('no stage');
+		expect(def.validate({ status: 'rejected', round_kind: 'Final' }, INTERVIEWING).ok).toBe(false);
 
 		expect(def.validate({ status: 'rejected' }, APPLYING).ok).toBe(true);
 		expect(def.validate({ status: 'rejected', status_step: null }, APPLYING).ok).toBe(true);
 	});
 
-	it('accepts a next action the stage offers, and one the phase does', () => {
-		// From actionsByStep for that stage.
-		expect(
-			def.validate(
-				{ status: 'interviewing', status_step: 'Technical interview', status_action: 'Scheduled' },
-				APPLYING
-			).ok
-		).toBe(true);
-		// From actionsByPhase, which the editor falls back to.
-		expect(
-			def.validate(
-				{
-					status: 'interviewing',
-					status_step: 'Technical interview',
-					status_action: 'Provide references'
-				},
-				APPLYING
-			).ok
-		).toBe(true);
-		expect(
-			def.validate({ status: 'interviewing', status_action: 'Send application' }, APPLYING).ok
-		).toBe(false);
+	it('refuses round fields outside interviewing', () => {
+		const refused = def.validate({ status: 'negotiating', new_round: true }, INTERVIEWING);
+		expect(refused.ok).toBe(false);
+		expect(refused.ok === false && refused.error).toContain('Rounds belong to interviewing');
+		expect(def.validate({ round_kind: 'Intro' }, APPLYING).ok).toBe(false);
 	});
 
-	it('leaves a stage the applicant typed themselves alone', () => {
-		// The editor offers "Custom…", so a stage on the row is not necessarily one
-		// from the list. Validating the CARRIED value rather than the proposed one
-		// would refuse a proposal about the next action because of a label nobody
-		// proposed — and make this stricter than the form it mirrors.
-		const custom = { ...APPLYING, status: 'interviewing', status_step: 'Coffee chat with the CTO' };
-		expect(def.validate({ status_action: 'Awaiting result' }, custom).ok).toBe(true);
+	it('holds a proposed kind to the list, and leaves one the applicant typed alone', () => {
+		expect(def.validate({ round_kind: 'Coffee chat' }, INTERVIEWING).ok).toBe(false);
+		expect(def.validate({ round_kind: 'Technical' }, INTERVIEWING).ok).toBe(true);
+
+		// The editor offers "Custom…", so a kind on the row is not necessarily one
+		// from the list, and a reschedule must not be refused over it.
+		const typed = {
+			...INTERVIEWING,
+			interview_rounds: [{ ...intro, kind: 'Coffee chat with the CTO' }]
+		};
+		expect(def.validate({ round_date: '2099-01-09' }, typed).ok).toBe(true);
+	});
+
+	it('refuses a date or a time it cannot read, rather than clearing the one there', () => {
+		expect(def.validate({ round_date: '8 January' }, INTERVIEWING).ok).toBe(false);
+		expect(def.validate({ round_time: '25:00' }, INTERVIEWING).ok).toBe(false);
 	});
 
 	it('rejects a note long enough to be the account of what happened', () => {
-		// Carried on a real move, since a note on its own is refused above.
+		// Carried on a real move, since a note on its own is refused below.
 		const withMove = (note: string) => ({ status: 'interviewing', status_note: note });
 		expect(def.validate(withMove('x'.repeat(301)), APPLYING).ok).toBe(false);
 		expect(def.validate(withMove('x'.repeat(300)), APPLYING).ok).toBe(true);
@@ -1002,7 +1000,7 @@ describe('update_application_status', () => {
 
 	it('refuses a note with no move to hang it on', async () => {
 		// A note has no current value, so `tierForWrite` would grade a note-only
-		// call additive and write it directly — a timeline row saying the
+		// call additive and write it directly: a timeline row saying the
 		// application went from "applying" to "applying".
 		const refused = def.validate({ status_note: 'they seemed keen' }, APPLYING);
 		expect(refused.ok).toBe(false);
@@ -1013,61 +1011,96 @@ describe('update_application_status', () => {
 		).toBe(true);
 	});
 
-	it('clears the stage and the next action when the status moves without them', async () => {
-		await apply({ status: 'interviewing' });
-
-		expect(mockWriteStatus).toHaveBeenCalledWith(
-			49,
-			ACTOR.profileId,
-			expect.objectContaining({ status: 'interviewing', step: null, action: null })
-		);
-	});
-
-	it('keeps them when the status is not what moved', async () => {
-		await apply({ status_action_date: '2026-09-01' });
-
-		expect(mockWriteStatus).toHaveBeenCalledWith(
-			49,
-			ACTOR.profileId,
-			expect.objectContaining({
-				status: 'applying',
-				step: 'Applied',
-				action: 'Awaiting response',
-				actionDate: '2026-09-01'
-			})
-		);
-	});
-
-	it('carries a proposed stage through the move', async () => {
+	it('starts round 1 from the round fields on the way into interviewing', async () => {
 		await apply({
 			status: 'interviewing',
-			status_step: 'Technical interview',
-			status_action: 'Scheduled',
-			status_note: '  second round with the client  '
+			round_kind: 'Intro',
+			round_date: '2099-01-08',
+			round_time: '9:30',
+			round_with: 'Anna, the CTO',
+			status_note: '  recruiter booked the first round  '
 		});
 
 		expect(mockWriteStatus).toHaveBeenCalledWith(49, ACTOR.profileId, {
 			status: 'interviewing',
-			step: 'Technical interview',
-			action: 'Scheduled',
-			actionDate: null,
-			description: 'second round with the client'
+			step: null,
+			rounds: [{ kind: 'Intro', date: '2099-01-08', time: '09:30', with: 'Anna, the CTO' }],
+			description: 'recruiter booked the first round'
 		});
 	});
 
-	it('drops the stage entirely for a status that finishes the application', async () => {
-		await apply({ status: 'rejected' });
+	it('starts an unbooked round 1 when the move says nothing about it', async () => {
+		await apply({ status: 'interviewing' });
 
-		expect(mockWriteStatus).toHaveBeenCalledWith(49, ACTOR.profileId, {
+		expect(writtenRounds()).toEqual([{ kind: null, date: null, time: null, with: null }]);
+	});
+
+	it('changes the round it is at when no new round is asked for, which is a reschedule', async () => {
+		await apply({ round_date: '2099-01-09', round_time: '10:00' }, INTERVIEWING);
+
+		expect(writtenRounds()).toEqual([{ ...intro, date: '2099-01-09', time: '10:00' }]);
+	});
+
+	it('adds the next round when asked', async () => {
+		await apply(
+			{ new_round: true, round_kind: 'Technical' },
+			{ ...INTERVIEWING, interview_rounds: [pastIntro] }
+		);
+
+		expect(writtenRounds()).toEqual([
+			pastIntro,
+			{ kind: 'Technical', date: null, time: null, with: null }
+		]);
+	});
+
+	it('changes the nearer of two booked rounds, the one it is at', async () => {
+		const team = { kind: 'Team', date: '2099-01-10', time: null, with: null };
+		await apply({ round_time: '11:00' }, { ...INTERVIEWING, interview_rounds: [intro, team] });
+
+		expect(writtenRounds()).toEqual([{ ...intro, time: '11:00' }, team]);
+	});
+
+	it('keeps the rounds through an offer and past the end', async () => {
+		await apply({ status: 'negotiating', status_step: 'Offer received' }, INTERVIEWING);
+		expect(mockWriteStatus).toHaveBeenLastCalledWith(49, ACTOR.profileId, {
+			status: 'negotiating',
+			step: 'Offer received',
+			rounds: [intro],
+			description: null
+		});
+
+		await apply(
+			{ status: 'rejected' },
+			{ ...INTERVIEWING, status: 'negotiating', status_step: 'Offer received' }
+		);
+		expect(mockWriteStatus).toHaveBeenLastCalledWith(49, ACTOR.profileId, {
 			status: 'rejected',
 			step: null,
-			action: null,
-			actionDate: null,
+			rounds: [intro],
 			description: null
 		});
 	});
 
-	it('records every column it could clear, not only the ones proposed', async () => {
+	it('clears the stage when the status moves without one', async () => {
+		await apply({ status: 'negotiating' }, APPLYING);
+
+		expect(mockWriteStatus).toHaveBeenLastCalledWith(
+			49,
+			ACTOR.profileId,
+			expect.objectContaining({ status: 'negotiating', step: null })
+		);
+	});
+
+	it('shows the model every round, which one it is at, and the next step', () => {
+		const state =
+			def.renderState?.({ ...INTERVIEWING, interview_rounds: [pastIntro, intro] }) ?? '';
+
+		expect(state).toContain('round 1: Intro, 2020-01-08 (behind them)');
+		expect(state).toContain('round 2: Intro, 2099-01-08 15:30 (booked, current)');
+		expect(state).toContain('next step: Scheduled for 2099-01-08 15:30');
+	});
+
+	it('records the whole state, not only the fields proposed', async () => {
 		// The undo case this exists for: the proposal names the status alone, the
 		// write clears the stage as well, and a before-image of the proposed
 		// fields would put the status back with the stage still gone.
@@ -1079,15 +1112,28 @@ describe('update_application_status', () => {
 	});
 
 	it('puts back what the write replaced', async () => {
-		await def.revert?.({ id: 49, label: 'x' }, APPLYING, ACTOR);
+		await def.revert?.({ id: 49, label: 'x' }, INTERVIEWING, ACTOR);
 
 		expect(mockRevertStatus).toHaveBeenCalledWith(49, ACTOR.profileId, {
-			status: 'applying',
-			step: 'Applied',
-			action: 'Awaiting response',
-			actionDate: null,
+			status: 'interviewing',
+			step: null,
+			rounds: [intro],
 			description: null
 		});
+	});
+
+	it('leaves the rounds alone when undoing a change recorded before there were any', async () => {
+		await def.revert?.(
+			{ id: 49, label: 'x' },
+			{ status: 'applying', status_step: 'Applied', status_action: 'Awaiting response' },
+			ACTOR
+		);
+
+		expect(mockRevertStatus).toHaveBeenCalledWith(
+			49,
+			ACTOR.profileId,
+			expect.objectContaining({ status: 'applying', rounds: undefined })
+		);
 	});
 
 	it('refuses an undo with no status recorded rather than writing an empty one', async () => {
@@ -1335,6 +1381,27 @@ describe('describeProposalChanges', () => {
 		expect(changes).toEqual([
 			{ field: 'status', label: 'Status', from: 'Interviewing', to: 'Not selected' },
 			{ field: 'status_note', label: 'Timeline note', from: '—', to: 'They paused the role' }
+		]);
+	});
+
+	it('shows a new round as the rounds it leads to', () => {
+		const changes = describeProposalChanges(
+			'update_application_status',
+			{ new_round: true, round_kind: 'Technical', round_date: '2099-01-13', round_time: '10:00' },
+			{
+				status: 'interviewing',
+				status_step: null,
+				interview_rounds: [{ kind: 'Intro', date: '2020-01-08', time: null, with: 'Anna' }]
+			}
+		);
+
+		expect(changes).toEqual([
+			{
+				field: 'interview_rounds',
+				label: 'Interview rounds',
+				from: '1. Intro, Wed, Jan 8, Anna',
+				to: '1. Intro, Wed, Jan 8, Anna · 2. Technical, Tue, Jan 13, 10:00'
+			}
 		]);
 	});
 });

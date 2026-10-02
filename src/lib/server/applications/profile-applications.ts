@@ -17,8 +17,10 @@
 import { db } from '$lib/server/db';
 import { and, desc, eq } from 'drizzle-orm';
 import { application_records, applications } from '$lib/server/db/schema';
-import { getRecordTypeLabel } from '$lib/application-records';
+import { getRecordTypeLabel, today } from '$lib/application-records';
 import { isSnoozed } from '$lib/application-snooze';
+import { nextStep, stageLabel, type InterviewRound } from '$lib/application-status';
+import { describeNextStepForModel } from './status';
 import type { OfferTerms } from '$lib/application-offer';
 
 export const APPLICATION_PAGE_DEFAULT = 20;
@@ -32,6 +34,14 @@ export interface ProfileApplicationSummary {
 	job_company: string | null;
 	status: string;
 	status_step: string | null;
+	/**
+	 * Where it is within the status, as the app names it: "Applied", "Round 2 ·
+	 * Technical". Worked out, because interviewing has no stage column: its
+	 * position is the round it has reached.
+	 */
+	stage: string | null;
+	/** What happens next and whose move it is, as the cards work it out. */
+	next_step: string;
 	application_sent_date: string | null;
 	/**
 	 * The day a paused application comes back, or null.
@@ -64,29 +74,48 @@ export async function listProfileApplications(
 		where: opts.status
 			? and(eq(applications.profile_id, profileId), eq(applications.status, opts.status))
 			: eq(applications.profile_id, profileId),
-		columns: {
-			id: true,
-			job_id: true,
-			status: true,
-			status_step: true,
-			application_sent_date: true,
-			snoozed_until: true
-		},
+		columns: SUMMARY_COLUMNS,
 		with: { job: { columns: { title: true, company: true } } },
 		orderBy: [desc(applications.date_created), desc(applications.id)],
 		limit
 	});
 
-	return rows.map((row) => ({
+	return rows.map(toSummary);
+}
+
+const SUMMARY_COLUMNS = {
+	id: true,
+	job_id: true,
+	status: true,
+	status_step: true,
+	interview_rounds: true,
+	application_sent_date: true,
+	snoozed_until: true
+} as const;
+
+function toSummary(row: {
+	id: number;
+	job_id: number | null;
+	status: string;
+	status_step: string | null;
+	interview_rounds: InterviewRound[];
+	application_sent_date: string | null;
+	snoozed_until: string | null;
+	job: { title: string | null; company: string | null } | null;
+}): ProfileApplicationSummary {
+	const on = today();
+	return {
 		id: row.id,
 		job_id: row.job_id,
 		job_title: row.job?.title ?? null,
 		job_company: row.job?.company ?? null,
 		status: row.status,
 		status_step: row.status_step,
+		stage: stageLabel(row, on),
+		next_step: describeNextStepForModel(nextStep(row, on)),
 		application_sent_date: row.application_sent_date,
 		snoozed_until: isSnoozed(row) ? row.snoozed_until : null
-	}));
+	};
 }
 
 /** One application, or null when it is not this profile's. */
@@ -96,28 +125,10 @@ export async function readProfileApplication(
 ): Promise<ProfileApplicationDetail | null> {
 	const row = await db.query.applications.findFirst({
 		where: and(eq(applications.id, applicationId), eq(applications.profile_id, profileId)),
-		columns: {
-			id: true,
-			job_id: true,
-			status: true,
-			status_step: true,
-			application_sent_date: true,
-			snoozed_until: true
-		},
+		columns: SUMMARY_COLUMNS,
 		with: { job: { columns: { title: true, company: true } } }
 	});
-	if (!row) return null;
-
-	return {
-		id: row.id,
-		job_id: row.job_id,
-		job_title: row.job?.title ?? null,
-		job_company: row.job?.company ?? null,
-		status: row.status,
-		status_step: row.status_step,
-		application_sent_date: row.application_sent_date,
-		snoozed_until: isSnoozed(row) ? row.snoozed_until : null
-	};
+	return row ? toSummary(row) : null;
 }
 
 /**

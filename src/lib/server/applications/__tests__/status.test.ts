@@ -88,11 +88,12 @@ const PROFILE = 12;
 const APP = 49;
 const TODAY = new Date().toISOString().slice(0, 10);
 
+const technical = { kind: 'Technical', date: '2026-09-01', time: '10:00', with: null };
+
 const move = (over: Partial<Parameters<typeof writeApplicationStatus>[2]> = {}) => ({
 	status: 'interviewing',
-	step: 'Technical interview',
-	action: 'Scheduled',
-	actionDate: '2026-09-01',
+	step: null,
+	rounds: [technical],
 	description: null,
 	...over
 });
@@ -107,48 +108,159 @@ beforeEach(() => {
 	logEntries = [];
 	newestLogRow = [];
 	nextInsertId = 500;
-	applicationRow = { id: APP, status: 'applying', application_sent_date: '2026-08-01' };
+	applicationRow = {
+		id: APP,
+		status: 'applying',
+		status_step: 'Applied',
+		interview_rounds: [],
+		application_sent_date: '2026-08-01'
+	};
 });
 
 describe('writeApplicationStatus', () => {
-	it('writes the stage onto the application and the move onto the timeline', async () => {
+	it('writes the rounds onto the application and the latest round onto the timeline', async () => {
 		const result = await writeApplicationStatus(APP, PROFILE, move());
 
 		expect(written()).toMatchObject({
 			status: 'interviewing',
-			status_step: 'Technical interview',
-			status_action: 'Scheduled',
-			status_action_date: '2026-09-01'
+			status_step: null,
+			interview_rounds: [technical]
 		});
 		expect(logged()).toMatchObject({
 			application: APP,
 			from_status: 'applying',
 			to_status: 'interviewing',
-			step: 'Technical interview',
-			action: 'Scheduled'
+			step: 'Round 1 · Technical',
+			action_date: '2026-09-01'
 		});
+		// Nothing writes the old next-action column any more.
+		expect(logged()).not.toHaveProperty('action');
 		expect(result).toMatchObject({ from: 'applying', logId: 500, replaced: false });
 	});
 
-	it('clears a stage the caller left out rather than carrying it over', async () => {
+	it('names the round just added when two are booked at once', async () => {
+		applicationRow = {
+			...applicationRow,
+			status: 'interviewing',
+			status_step: null,
+			interview_rounds: [technical]
+		};
+		const team = { kind: 'Team', date: '2026-09-03', time: null, with: null };
+
+		await writeApplicationStatus(APP, PROFILE, move({ rounds: [technical, team] }));
+
+		expect(logged()).toMatchObject({ step: 'Round 2 · Team', action_date: '2026-09-03' });
+	});
+
+	it('gives an application moved into interviewing its first round, booked or not', async () => {
+		await writeApplicationStatus(APP, PROFILE, move({ rounds: [] }));
+
+		expect(written()?.interview_rounds).toEqual([
+			{ kind: null, date: null, time: null, with: null }
+		]);
+		expect(logged()).toMatchObject({ step: 'Round 1', action_date: null });
+	});
+
+	it('drops a stage the status does not have, rather than carrying it over', async () => {
 		// The caller decides; this does not merge. A status change that kept the
 		// old stage would file "Offer received" under "Not selected".
 		await writeApplicationStatus(
 			APP,
 			PROFILE,
-			move({ status: 'rejected', step: null, action: null })
+			move({ status: 'rejected', step: 'Offer received' })
 		);
+		expect(written()).toMatchObject({ status: 'rejected', status_step: null });
 
-		expect(written()).toMatchObject({ status_step: null, status_action: null });
+		updates.length = 0;
+		await writeApplicationStatus(APP, PROFILE, move({ step: 'Technical interview' }));
+		expect(written()).toMatchObject({ status: 'interviewing', status_step: null });
 	});
 
-	it('fills in the applied date the first time it goes out', async () => {
-		applicationRow = { id: APP, status: 'applying', application_sent_date: null };
+	it('keeps the rounds past the interviews, and clears them on a move back to applying', async () => {
+		applicationRow = {
+			...applicationRow,
+			status: 'interviewing',
+			status_step: null,
+			interview_rounds: [technical]
+		};
+
+		// Sent without rounds: a quick "Not selected" has nothing to say about them.
+		await writeApplicationStatus(APP, PROFILE, {
+			status: 'rejected',
+			step: null,
+			description: null
+		});
+		expect(written()?.interview_rounds).toEqual([technical]);
+
+		updates.length = 0;
+		await writeApplicationStatus(APP, PROFILE, {
+			status: 'applying',
+			step: 'Applied',
+			description: null
+		});
+		expect(written()?.interview_rounds).toEqual([]);
+	});
+
+	it('writes no timeline row when only who a round is with changed', async () => {
+		applicationRow = {
+			...applicationRow,
+			status: 'interviewing',
+			status_step: null,
+			interview_rounds: [technical]
+		};
 
 		const result = await writeApplicationStatus(
 			APP,
 			PROFILE,
-			move({ status: 'applying', step: 'Applied', action: 'Awaiting response' })
+			move({ rounds: [{ ...technical, with: 'Anna (CTO)' }] })
+		);
+
+		expect(written()?.interview_rounds).toEqual([{ ...technical, with: 'Anna (CTO)' }]);
+		expect(inserts).toHaveLength(0);
+		expect(result).toMatchObject({ logId: null });
+	});
+
+	it('writes a row for a reschedule, carrying the new day', async () => {
+		applicationRow = {
+			...applicationRow,
+			status: 'interviewing',
+			status_step: null,
+			interview_rounds: [technical]
+		};
+
+		await writeApplicationStatus(
+			APP,
+			PROFILE,
+			move({ rounds: [{ ...technical, date: '2026-09-04' }] })
+		);
+
+		expect(logged()).toMatchObject({ step: 'Round 1 · Technical', action_date: '2026-09-04' });
+	});
+
+	it('writes a row for a note even when nothing else moved', async () => {
+		applicationRow = {
+			...applicationRow,
+			status: 'interviewing',
+			status_step: null,
+			interview_rounds: [technical]
+		};
+
+		await writeApplicationStatus(
+			APP,
+			PROFILE,
+			move({ description: 'They want a portfolio walk-through' })
+		);
+
+		expect(logged()).toMatchObject({ description: 'They want a portfolio walk-through' });
+	});
+
+	it('fills in the applied date the first time it goes out', async () => {
+		applicationRow = { ...applicationRow, status_step: 'Preparing', application_sent_date: null };
+
+		const result = await writeApplicationStatus(
+			APP,
+			PROFILE,
+			move({ status: 'applying', step: 'Applied', rounds: [] })
 		);
 
 		// A date string, not a Date: the column is a Drizzle `date()` in string
@@ -164,24 +276,25 @@ describe('writeApplicationStatus', () => {
 	});
 
 	it('does not treat still-preparing as sent', async () => {
-		applicationRow = { id: APP, status: 'applying', application_sent_date: null };
+		applicationRow = { ...applicationRow, status_step: 'Applied', application_sent_date: null };
 
 		await writeApplicationStatus(
 			APP,
 			PROFILE,
-			move({ status: 'applying', step: 'Preparing', action: 'Send application' })
+			move({ status: 'applying', step: 'Preparing', rounds: [] })
 		);
 
 		expect(written()).not.toHaveProperty('application_sent_date');
 	});
 
 	it('rewrites the creation entry when the editor is correcting it', async () => {
+		applicationRow = { ...applicationRow, status_step: 'Preparing' };
 		logEntries = [{ id: 7, from_status: null }];
 
 		const result = await writeApplicationStatus(
 			APP,
 			PROFILE,
-			move({ status: 'applying', step: 'Applied', action: 'Awaiting response' }),
+			move({ status: 'applying', step: 'Applied', rounds: [] }),
 			{ collapseInitialEntry: true }
 		);
 
@@ -202,6 +315,7 @@ describe('writeApplicationStatus', () => {
 	});
 
 	it('adds a row once there is a history to add to', async () => {
+		applicationRow = { ...applicationRow, status_step: 'Preparing' };
 		logEntries = [
 			{ id: 7, from_status: null },
 			{ id: 8, from_status: 'applying' }
@@ -210,7 +324,7 @@ describe('writeApplicationStatus', () => {
 		const result = await writeApplicationStatus(
 			APP,
 			PROFILE,
-			move({ status: 'applying', step: 'Applied', action: 'Awaiting response' }),
+			move({ status: 'applying', step: 'Applied', rounds: [] }),
 			{ collapseInitialEntry: true }
 		);
 
@@ -227,16 +341,15 @@ describe('writeApplicationStatus', () => {
 });
 
 describe('revertApplicationStatus', () => {
-	const before = {
-		status: 'applying',
-		step: 'Applied',
-		action: 'Awaiting response',
-		actionDate: null,
-		description: null
-	};
+	const before = { status: 'applying', step: 'Applied', rounds: [], description: null };
 
 	it('takes back the row its own change added', async () => {
-		applicationRow = { id: APP, status: 'interviewing', application_sent_date: '2026-08-01' };
+		applicationRow = {
+			id: APP,
+			status: 'interviewing',
+			status_step: null,
+			interview_rounds: [technical]
+		};
 		newestLogRow = [{ id: 88, from_status: 'applying', to_status: 'interviewing' }];
 
 		expect(await revertApplicationStatus(APP, PROFILE, before)).toBe(true);
@@ -244,16 +357,88 @@ describe('revertApplicationStatus', () => {
 		expect(written()).toMatchObject({
 			status: 'applying',
 			status_step: 'Applied',
-			status_action: 'Awaiting response'
+			interview_rounds: []
 		});
 		expect(deletes).toEqual(['application_status_log']);
 		expect(inserts).toHaveLength(0);
 	});
 
+	it('takes back a round added within interviewing', async () => {
+		const team = { kind: 'Team', date: null, time: null, with: null };
+		applicationRow = {
+			id: APP,
+			status: 'interviewing',
+			status_step: null,
+			interview_rounds: [technical, team]
+		};
+		newestLogRow = [{ id: 90, from_status: 'interviewing', to_status: 'interviewing' }];
+
+		await revertApplicationStatus(APP, PROFILE, {
+			status: 'interviewing',
+			step: null,
+			rounds: [technical],
+			description: null
+		});
+
+		expect(written()?.interview_rounds).toEqual([technical]);
+		expect(deletes).toEqual(['application_status_log']);
+	});
+
+	it('puts back a change the timeline never recorded without touching it', async () => {
+		// Only who the round was with: that change wrote no row, so the newest row
+		// is an earlier move and must survive the undo.
+		applicationRow = {
+			id: APP,
+			status: 'interviewing',
+			status_step: null,
+			interview_rounds: [{ ...technical, with: 'Anna (CTO)' }]
+		};
+		newestLogRow = [{ id: 91, from_status: 'applying', to_status: 'interviewing' }];
+
+		await revertApplicationStatus(APP, PROFILE, {
+			status: 'interviewing',
+			step: null,
+			rounds: [technical],
+			description: null
+		});
+
+		expect(written()?.interview_rounds).toEqual([technical]);
+		expect(deletes).toHaveLength(0);
+		expect(inserts).toHaveLength(0);
+	});
+
+	it('keeps the rounds when the before-image predates them', async () => {
+		applicationRow = {
+			id: APP,
+			status: 'negotiating',
+			status_step: 'Offer received',
+			interview_rounds: [technical]
+		};
+		newestLogRow = [{ id: 92, from_status: 'interviewing', to_status: 'negotiating' }];
+
+		await revertApplicationStatus(APP, PROFILE, {
+			status: 'interviewing',
+			step: 'Technical interview',
+			description: null
+		});
+
+		expect(written()).toMatchObject({
+			status: 'interviewing',
+			status_step: null,
+			interview_rounds: [technical]
+		});
+	});
+
 	it('records the move back instead when something else has moved it since', async () => {
 		// Deleting here would erase an edit the applicant made by hand. The move
 		// back is a real event now, so it is logged as one.
-		applicationRow = { id: APP, status: 'rejected', application_sent_date: '2026-08-01' };
+		applicationRow = {
+			id: APP,
+			status: 'rejected',
+			status_step: null,
+			interview_rounds: [],
+			application_sent_date: '2026-08-01'
+		};
 		newestLogRow = [{ id: 89, from_status: 'interviewing', to_status: 'rejected' }];
 
 		expect(await revertApplicationStatus(APP, PROFILE, before)).toBe(true);
@@ -263,7 +448,13 @@ describe('revertApplicationStatus', () => {
 	});
 
 	it('never deletes the creation entry', async () => {
-		applicationRow = { id: APP, status: 'applying', application_sent_date: null };
+		applicationRow = {
+			id: APP,
+			status: 'applying',
+			status_step: 'Preparing',
+			interview_rounds: [],
+			application_sent_date: null
+		};
 		newestLogRow = [{ id: 1, from_status: null, to_status: 'applying' }];
 
 		await revertApplicationStatus(APP, PROFILE, before);

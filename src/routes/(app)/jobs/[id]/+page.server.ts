@@ -568,7 +568,6 @@ export const actions: Actions = {
 				profile_id: profileId,
 				status: 'applying',
 				status_step: 'Preparing',
-				status_action: 'Send application',
 				date_created: now,
 				date_updated: now,
 				// application_seen_date is a Drizzle date() column (string mode).
@@ -582,8 +581,7 @@ export const actions: Actions = {
 			date_created: now,
 			from_status: null,
 			to_status: 'applying',
-			step: 'Preparing',
-			action: 'Send application'
+			step: 'Preparing'
 		});
 
 		redirect(302, `/applications/${application.id}`);
