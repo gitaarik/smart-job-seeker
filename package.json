@@ -111,7 +111,7 @@
 		"@opentelemetry/exporter-trace-otlp-http": "^0.222.0",
 		"@opentelemetry/sdk-trace-base": "^2.11.0",
 		"@opentelemetry/sdk-trace-node": "^2.11.0",
-		"@sentry/sveltekit": "^10.74.0",
+		"@sentry/sveltekit": "^11.1.0",
 		"@tiptap/core": "^3.31.3",
 		"@tiptap/extension-bubble-menu": "^3.31.3",
 		"@tiptap/extension-link": "^3.22.4",
