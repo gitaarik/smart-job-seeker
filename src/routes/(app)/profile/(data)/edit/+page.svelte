@@ -27,7 +27,7 @@
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
 	import AutoTranslateProfile from '$lib/components/AutoTranslateProfile.svelte';
 	import FieldVariants from '$lib/components/FieldVariants.svelte';
-	import { groupVariantsByField, type FieldVariant } from '$lib/field-variants';
+	import { variantsForTarget, type FieldVariant } from '$lib/field-variants';
 	import CountrySelect from '../../../jobs/components/CountrySelect.svelte';
 	import { getProfilePhotoUrl } from '$lib/utils/profile-photo-url';
 
@@ -61,9 +61,11 @@
 
 	// Alternative wordings for the prose fields above. Fetched once for all of
 	// them rather than per field, so opening this page costs one request no
-	// matter how many alternatives exist.
+	// matter how many alternatives exist. The list also carries the wordings of
+	// each role's position, which that role's own page edits; the ones for this
+	// page are the profile's own.
 	let variants = $state<FieldVariant[]>([]);
-	const variantsByField = $derived(groupVariantsByField(variants));
+	const wordingsFor = (field: string) => variantsForTarget(variants, 'profile', profile.id, field);
 
 	async function loadVariants() {
 		try {
@@ -285,7 +287,7 @@
 				/>
 				<FieldVariants
 					field="title"
-					variants={variantsByField.get('title') ?? []}
+					variants={wordingsFor('title')}
 					defaultValue={title}
 					onchange={loadVariants}
 				/>
@@ -306,7 +308,7 @@
 				/>
 				<FieldVariants
 					field="subtitle"
-					variants={variantsByField.get('subtitle') ?? []}
+					variants={wordingsFor('subtitle')}
 					defaultValue={subtitle}
 					onchange={loadVariants}
 				/>
@@ -327,7 +329,7 @@
 				/>
 				<FieldVariants
 					field="headline"
-					variants={variantsByField.get('headline') ?? []}
+					variants={wordingsFor('headline')}
 					defaultValue={headline}
 					onchange={loadVariants}
 				/>
@@ -347,7 +349,7 @@
 				/>
 				<FieldVariants
 					field="summary"
-					variants={variantsByField.get('summary') ?? []}
+					variants={wordingsFor('summary')}
 					defaultValue={summary}
 					onchange={loadVariants}
 				/>
@@ -386,7 +388,7 @@
 				{/if}
 				<FieldVariants
 					field="about_me_text"
-					variants={variantsByField.get('about_me_text') ?? []}
+					variants={wordingsFor('about_me_text')}
 					defaultValue={about_me_text}
 					onchange={loadVariants}
 				/>

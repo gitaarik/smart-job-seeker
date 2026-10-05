@@ -4,8 +4,8 @@
  * The unit tests cover the resolver, the overlay order and the decisions, and
  * none of them can see the thing this feature actually is: prose the applicant
  * chose in one place appearing on a document rendered somewhere else entirely.
- * Between the two sit two editors, an API, a version's pick, and three overlays
- * applied in a fixed order by a route — and every one of those can be right on
+ * Between the two sit two editors, an API, a version's pick, and the overlays
+ * a route applies in a fixed order — and every one of those can be right on
  * its own while the page still prints the default.
  *
  * So the assertion at the end is deliberately the crude one: fetch the rendered
@@ -171,6 +171,86 @@ describe('alternative field wordings', () => {
 				// one call is the whole teardown — and it has to run on failure too,
 				// or a leftover pick changes what every other suite reads off this
 				// profile.
+				await api(b.page, '/api/field-variants', 'DELETE', { id: variantId }).catch(() => {});
+			}
+		}
+	});
+
+	// The same chain for a role's title, which is a field of a ROLE rather than
+	// of the profile: the wording is filed under that role, the version picks it
+	// for that role, and the renderer has to find the role to change. A title is
+	// also where the per-template value used to be, so this is the path that
+	// replaced it.
+	it('prints a role’s other title when a version picks it, and the role’s own when it does not', async () => {
+		await loginViaUI(b.page);
+		let variantId: number | null = null;
+		const ROLE_LABEL = 'E2E-role-variant';
+		const ROLE_SENTINEL = 'E2E-ROLE-SENTINEL';
+		const TITLE = `${ROLE_SENTINEL} Engineer`;
+
+		try {
+			// ── written on the role's page ──
+			await b.page.goto('/profile/work-experience');
+			await b.page.waitForLoadState('networkidle');
+			await b.page.locator('a[href^="/profile/work-experience/"]').first().click();
+			await b.page.waitForURL('**/profile/work-experience/*');
+			const roleId = Number(new URL(b.page.url()).pathname.split('/').pop());
+			expect(Number.isInteger(roleId), 'should have landed on a role page').toBe(true);
+
+			const block = b.page.locator('[data-field-variants="position"]');
+			await block.getByRole('button', { name: '+ Add an alternative wording' }).click();
+			await block.getByPlaceholder('Name it — e.g. “Backend-leaning”').fill(ROLE_LABEL);
+			// Seeded from the role's own title, so this replaces rather than appends.
+			await block.getByPlaceholder('e.g., Senior Software Engineer').fill(TITLE);
+			await block.getByRole('button', { name: 'Save' }).click();
+			await block.getByText(ROLE_LABEL).waitFor({ state: 'visible', timeout: 15000 });
+
+			// Filed under this role, and not as a field of the profile.
+			const listed = await api(
+				b.page,
+				`/api/field-variants?entity=work_experience&entityId=${roleId}`,
+				'GET'
+			);
+			expect(listed.status).toBe(200);
+			const mine = JSON.parse(listed.body).variants.find(
+				(v: { label: string }) => v.label === ROLE_LABEL
+			);
+			expect(mine, 'the wording the editor just saved should be listed for the role').toBeTruthy();
+			variantId = mine.id;
+			expect(mine.entity).toBe('work_experience');
+			expect(mine.entity_id).toBe(roleId);
+			expect(mine.field).toBe('position');
+
+			// ── picked on a version ──
+			await b.page.goto('/profile/resume');
+			await b.page.waitForLoadState('networkidle');
+			await b.page.locator('a[href^="/profile/resume/"]').first().click();
+			await b.page.waitForURL('**/profile/resume/**');
+			await b.page.getByRole('heading', { name: 'Wording' }).waitFor({ state: 'visible' });
+
+			const versionSlug = await b.page.locator('input[name="slug"]').inputValue();
+			expect(versionSlug, 'the version needs a slug to be rendered by it').toBeTruthy();
+			const docUrl = () =>
+				`${getAppUrl()}/p/alex-morgan/resume` +
+				`?version=${encodeURIComponent(versionSlug)}&cb=${Date.now()}-${Math.random()}`;
+			const rendered = async () => (await b.page.request.get(docUrl())).text();
+
+			// Not on the page before anything picks it: a wording is a library row.
+			expect((await rendered()).includes(ROLE_SENTINEL)).toBe(false);
+
+			await b.page.getByRole('radio', { name: new RegExp(ROLE_LABEL) }).check();
+			await expect
+				.poll(async () => (await rendered()).includes(ROLE_SENTINEL), { timeout: 15000 })
+				.toBe(true);
+
+			// ── and the role's own title again when nothing is picked ──
+			const fieldset = b.page.locator(`[data-wording="work_experience:${roleId}:position"]`);
+			await fieldset.getByRole('radio', { name: /Your own position/ }).check();
+			await expect
+				.poll(async () => (await rendered()).includes(ROLE_SENTINEL), { timeout: 15000 })
+				.toBe(false);
+		} finally {
+			if (variantId !== null) {
 				await api(b.page, '/api/field-variants', 'DELETE', { id: variantId }).catch(() => {});
 			}
 		}

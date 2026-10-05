@@ -31,6 +31,7 @@
 	import TailoredDetails from './TailoredDetails.svelte';
 	import type { Decision, LastRun } from './types';
 	import type { ItemGroup } from '$lib/tailoring';
+	import type { WordingState } from '$lib/field-variants';
 	import { exportKey, profileDocUrl, type DocType } from '$lib/utils/profile-doc-url';
 	import {
 		hiddenSkillsKey,
@@ -86,6 +87,7 @@
 		decisions,
 		gaps,
 		items,
+		wordings,
 		coverage,
 		creditedNotNamed,
 		jobWords = [],
@@ -120,6 +122,8 @@
 		gaps: string[];
 		/** Everything the document being sent could print — see ItemPicker. */
 		items: ItemGroup[];
+		/** What it says for each field that can be worded more than one way — see JobWording. */
+		wordings: WordingState[];
 		coverage: Record<string, VersionCoverage>;
 		/**
 		 * Required skills the match credits through something related, while no
@@ -1650,7 +1654,7 @@
 							{lastRun}
 						/>
 					{:else if items.length > 0}
-						<ItemPicker {items} {docType} baseSlug={pickerBase} />
+						<ItemPicker {items} {wordings} {docType} baseSlug={pickerBase} />
 					{:else}
 						<p class="text-xs text-[var(--dash-text-secondary)]">
 							Nothing on this {docLabel} to list yet.

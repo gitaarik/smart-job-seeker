@@ -119,6 +119,13 @@ export interface ExportedFieldVariant {
 	value: string;
 	note?: string;
 	sort?: number | null;
+	/**
+	 * The role whose field this varies, by its position in `work_experiences`.
+	 * Positional, like every other reference in this payload: no database ids
+	 * travel. Absent for a field of the profile itself, which is every variant
+	 * an export written before a role could have wordings holds.
+	 */
+	work_experience_index?: number;
 }
 
 // --- Presentation templates (`presentation_templates`) ---
@@ -236,7 +243,8 @@ export interface ExportedProfileData {
 	education: ExportedEducation[];
 	languages: ExportedLanguage[];
 	/**
-	 * Alternative wordings for the scalar fields (profile_field_variants).
+	 * Alternative wordings for the fields that hold one value: the profile's
+	 * own, and each role's position (profile_field_variants).
 	 *
 	 * Optional because an export written before the feature has none, and an
 	 * importer reading one must not treat that as "delete them all".

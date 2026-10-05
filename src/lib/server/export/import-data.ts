@@ -491,27 +491,6 @@ async function importProfileEntities(
 		translated.languageIdByIndex[languageIndex] = createdLang.id;
 	}
 
-	// Alternative wordings. Their positions feed the translation overlay, so
-	// they are inserted in export order and indexed as they land — a variant
-	// whose translation cannot find it would print English on a Dutch document.
-	for (const [variantIndex, v] of (p.field_variants ?? []).entries()) {
-		if (!v?.field || !v?.value) continue;
-		const [createdVariant] = await dbDirect
-			.insert(profile_field_variants)
-			.values({
-				profile_id: profileId,
-				field: v.field,
-				label: v.label || 'Alternative',
-				value: v.value,
-				note: v.note || null,
-				sort: v.sort ?? variantIndex,
-				date_created: new Date(),
-				date_updated: new Date()
-			})
-			.returning({ id: profile_field_variants.id });
-		translated.fieldVariantIdByIndex[variantIndex] = createdVariant.id;
-	}
-
 	// References. Indexed as they land, like every other entity the translation
 	// overlay can name — the referee's position and quote are translatable, so a
 	// round trip that lost the positions would print English on a translated
@@ -688,6 +667,38 @@ async function importProfileEntities(
 				});
 			}
 		}
+	}
+
+	// Alternative wordings. Their positions feed the translation overlay, so
+	// they are inserted in export order and indexed as they land — a variant
+	// whose translation cannot find it would print English on a Dutch document.
+	//
+	// After the roles, because a role's wording names the role it belongs to by
+	// its position in the payload, and that role has to exist to be named. One
+	// that names a role this payload does not hold is skipped: without the role
+	// it would land as a field of the profile, and print nowhere.
+	for (const [variantIndex, v] of (p.field_variants ?? []).entries()) {
+		if (!v?.field || !v?.value) continue;
+		const ofRole = typeof v.work_experience_index === 'number';
+		const roleId = ofRole
+			? translated.workExperienceIdByIndex[v.work_experience_index as number]
+			: null;
+		if (ofRole && roleId === undefined) continue;
+		const [createdVariant] = await dbDirect
+			.insert(profile_field_variants)
+			.values({
+				profile_id: profileId,
+				work_experience_id: roleId ?? null,
+				field: v.field,
+				label: v.label || 'Alternative',
+				value: v.value,
+				note: v.note || null,
+				sort: v.sort ?? variantIndex,
+				date_created: new Date(),
+				date_updated: new Date()
+			})
+			.returning({ id: profile_field_variants.id });
+		translated.fieldVariantIdByIndex[variantIndex] = createdVariant.id;
 	}
 
 	// Side projects + children

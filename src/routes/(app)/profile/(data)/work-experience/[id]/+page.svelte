@@ -18,7 +18,8 @@
 	import { autoSaveField, patchBody, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
-	import TemplateOverrideField from '$lib/components/TemplateOverrideField.svelte';
+	import FieldVariants from '$lib/components/FieldVariants.svelte';
+	import type { FieldVariant } from '$lib/field-variants';
 	import AchievementsList, { type AchievementItem } from '$lib/components/AchievementsList.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
@@ -45,6 +46,31 @@
 	let bannerUrl = $state(loaded.bannerUrl);
 
 	let experience = $derived(data.experience);
+
+	// Other titles this role can go by on a document: the same job called what a
+	// particular reader calls it. Fetched here rather than loaded with the page,
+	// like the profile's own on Basic Info, so adding one does not re-run a load
+	// this auto-saving editor seeds itself from.
+	let positionWordings = $state<FieldVariant[]>([]);
+	async function loadPositionWordings(roleId: number = experience.id) {
+		try {
+			const res = await fetch(`/api/field-variants?entity=work_experience&entityId=${roleId}`);
+			// A slow answer for the role just left must not land on this one.
+			if (res.ok && roleId === experience.id) {
+				positionWordings = ((await res.json()).variants ?? []).filter(
+					(v: FieldVariant) => v.field === 'position'
+				);
+			}
+		} catch {
+			// The field still works without them; the control just stays empty.
+		}
+	}
+	$effect(() => {
+		// Read here so the list follows the role when only the id in the URL changes.
+		const roleId = experience.id;
+		positionWordings = [];
+		void loadPositionWordings(roleId);
+	});
 
 	let pageTitle = $derived(experience.position || experience.name || 'Experience');
 
@@ -502,18 +528,22 @@
 					bind:value={editPosition}
 				/>
 
-				<!-- Column 2, under the Position field it overrides, not spanning both. -->
+				<!-- Column 2, under the Position field these are alternatives to, not
+				     spanning both. Keyed on the role: the editor is one route, so moving
+				     from one role to the next swaps the props under a component that is
+				     never torn down, and an editor left open would be editing the first
+				     role's wording under the second role's field. -->
 				<div class="md:col-start-2">
-					<TemplateOverrideField
-						entity="work_experience"
-						id={experience.id}
-						field="position"
-						base={editPosition}
-						templates={data.templates}
-						overrides={data.templateOverrides}
-						label="Position"
-						hint="For a template whose house style wants a different title. Leave empty to use your own."
-					/>
+					{#key experience.id}
+						<FieldVariants
+							entity="work_experience"
+							entityId={experience.id}
+							field="position"
+							variants={positionWordings}
+							defaultValue={editPosition}
+							onchange={() => loadPositionWordings()}
+						/>
+					{/key}
 				</div>
 
 				<TranslatableField

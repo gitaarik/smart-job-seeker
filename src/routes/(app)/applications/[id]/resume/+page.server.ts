@@ -32,13 +32,16 @@ import {
 	removeSkillWordForApplication,
 	retagVersionSlug,
 	setItemStateForApplication,
+	setWordingForApplication,
 	tailorVersionForApplication,
 	undoDecision,
 	versionItemStates,
 	type VersionReach
 } from '$lib/server/profile/tailor-version';
 import { baseOnByItem, keptAsBase } from '$lib/tailoring';
-import { isOverrideEntity } from '$lib/version-overrides';
+import { isOverrideEntity, OVERRIDE_ENTITIES } from '$lib/version-overrides';
+import { isVariantEntity } from '$lib/field-variants';
+import { wordingStatesFor } from '$lib/server/profile/field-variants';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
 import { loadSkillWords, suggestPlace } from '$lib/server/profile/skill-words';
 import { provenanceFor } from '$lib/match-provenance';
@@ -394,22 +397,49 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 				});
 
 	/**
+	 * What the same document says for each field that can be worded more than
+	 * one way — its title, each role's position — for the panel's selectors.
+	 * Described for the version the panel describes: the job's own, or the
+	 * recorded library version, whose picks the job's version will inherit.
+	 */
+	const versionIdOf = (slug: string | null | undefined) =>
+		slug ? (usable.find((v) => v.slug === slug)?.id ?? null) : null;
+	const wordings =
+		panelSlug === null
+			? []
+			: await wordingStatesFor(
+					layoutData.selectedProfile.id,
+					tailored?.id ?? versionIdOf(panelSlug)
+				);
+
+	/**
 	 * Which of the applicant's own decisions put an item back the way the base has
 	 * it. Every toggle is recorded now, so that a regeneration leaves it alone,
 	 * and the review would otherwise list "you put this back" under what the
 	 * document gained.
 	 */
 	const baseOn = baseOnByItem(items);
+	// The same question for a wording: what the version this one builds on says.
+	// Asked only when a decision is about one, which most documents never have.
+	const baseWordings =
+		tailored && decisions.some((d) => d.entityType === OVERRIDE_ENTITIES.fieldVariant)
+			? new Set(
+					(await wordingStatesFor(layoutData.selectedProfile.id, versionIdOf(tailored.baseSlug)))
+						.map((w) => w.pickedId)
+						.filter((id): id is number => id !== null)
+				)
+			: undefined;
 
 	return {
 		versions: usable
 			.filter((v) => v.application_id === null)
 			.map(({ slug, name }) => ({ slug, name })),
 		items,
+		wordings,
 		tailored,
 		profileMovedOn,
 		coverage,
-		decisions: decisions.map((d) => ({ ...d, keptAsBase: keptAsBase(d, baseOn) })),
+		decisions: decisions.map((d) => ({ ...d, keptAsBase: keptAsBase(d, baseOn, baseWordings) })),
 		gaps: matchRead.gaps,
 		creditedNotNamed,
 		jobWords,
@@ -701,6 +731,77 @@ export const actions: Actions = {
 		} catch (error) {
 			return fail(400, {
 				error: error instanceof Error ? error.message : 'Could not change that item.'
+			});
+		}
+	},
+
+	/**
+	 * Say what this job's document calls something: its title, a role's
+	 * position. One of the wordings the profile already holds for that field,
+	 * the profile's own value, or text written here, which is saved as a wording
+	 * and used for this job in one step. Creates the version the way a toggle
+	 * does, and records it as the document going out when it does, for the same
+	 * reason.
+	 */
+	setWording: async ({ request, locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
+
+		const formData = await request.formData();
+		const entity = (formData.get('entity') as string) || '';
+		const entityId = parseInt((formData.get('entity_id') as string) || '');
+		const field = (formData.get('field') as string) || '';
+		if (!isVariantEntity(entity) || isNaN(entityId) || !field) {
+			return fail(400, { error: 'Invalid item' });
+		}
+		// Which of the three: `own`, an existing wording's id, or the written text.
+		const pick = (formData.get('pick') as string) || '';
+		const variantId = parseInt(pick);
+		const choice =
+			pick === 'own'
+				? null
+				: pick === 'new'
+					? { text: (formData.get('text') as string) || '' }
+					: isNaN(variantId)
+						? undefined
+						: variantId;
+		if (choice === undefined) return fail(400, { error: 'Invalid wording' });
+
+		const docType = (formData.get('doc_type') as string) === 'cv' ? 'cv' : 'resume';
+		const baseSlug = ((formData.get('base_slug') as string) || '').trim();
+
+		try {
+			const result = await setWordingForApplication({
+				profileId,
+				applicationId: appId,
+				baseSlug,
+				entity,
+				entityId,
+				field,
+				choice
+			});
+			refreshPdfs(profileId, appId, result.versionSlug);
+
+			if (result.created) {
+				await db
+					.update(applications)
+					.set({
+						cv_version_sent: result.versionSlug,
+						cv_sent_through: docType,
+						date_updated: new Date()
+					})
+					.where(and(eq(applications.id, appId), eq(applications.profile_id, profileId)));
+			}
+			return { success: true };
+		} catch (error) {
+			return fail(400, {
+				error: error instanceof Error ? error.message : 'Could not change that wording.'
 			});
 		}
 	},

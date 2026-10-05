@@ -1,5 +1,6 @@
 <!--
-	Alternative wordings for one profile field, shown under the field itself.
+	Alternative wordings for one field — of the profile, or of one role — shown
+	under the field itself.
 
 	Collapsed to a single line until there is something to see, because this is
 	an advanced control on a page whose job is the basics: a profile with no
@@ -7,9 +8,9 @@
 	"you can have more than one of these" rather than as a section to fill in.
 
 	It edits the LIBRARY, not any document. Nothing here changes what a resume
-	says — that happens when a version picks one (VersionWordings.svelte), and
-	the note under the list says so, because "add an alternative summary" would
-	otherwise read as "change my summary".
+	says — that happens when a version picks one (VersionWordings.svelte, or the
+	job's own document page), and the note under the list says so, because "add
+	an alternative summary" would otherwise read as "change my summary".
 -->
 <script lang="ts">
 	import { faPlus, faTrash, faPen, faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
@@ -19,22 +20,29 @@
 		FIELD_VARIANT_ENTITY,
 		FIELD_VARIANT_VALUE,
 		variantField,
-		type FieldVariant
+		type FieldVariant,
+		type VariantEntity
 	} from '$lib/field-variants';
 
 	interface Props {
-		/** Which profile field these vary. */
+		/**
+		 * Whose field: the profile's own (the default), or one role's. With a role,
+		 * `entityId` is that role's id; a field of the profile needs none.
+		 */
+		entity?: VariantEntity;
+		entityId?: number;
+		/** Which field these vary. */
 		field: string;
-		/** This field's variants, owned by the parent so one fetch feeds all four. */
+		/** This field's variants, owned by the parent so one fetch feeds every field on the page. */
 		variants: FieldVariant[];
 		/** The profile's own value, shown as the default at the top of the list. */
 		defaultValue: string;
 		onchange: () => void;
 	}
 
-	let { field, variants, defaultValue, onchange }: Props = $props();
+	let { entity = 'profile', entityId, field, variants, defaultValue, onchange }: Props = $props();
 
-	const spec = $derived(variantField(field));
+	const spec = $derived(variantField(entity, field));
 	const multiline = $derived(spec?.multiline ?? false);
 	const rows = $derived(spec?.rows ?? 3);
 
@@ -104,6 +112,8 @@
 			return;
 		}
 		const body = {
+			entity,
+			entityId,
 			field,
 			label: draftLabel,
 			value: draftValue,
@@ -239,8 +249,8 @@
 			{/if}
 
 			<p class="mt-2 text-[11px] text-[var(--dash-text-secondary)]">
-				Alternatives don't change any document on their own. Pick one on a resume version, or let a
-				tailored version choose the one that fits the job.
+				Alternatives don't change any document on their own. Pick one on a resume version or on a
+				job's document, or let a tailored version choose the one that fits the job.
 			</p>
 		</div>
 	{/if}

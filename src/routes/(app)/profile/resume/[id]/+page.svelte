@@ -306,18 +306,17 @@
 
 	<!-- Which of the profile's alternative wordings this version prints. Above
 	     Tagged Items because it is the same question one level up: tags decide
-	     which ITEMS this version shows, this decides what its header SAYS. -->
-	{#if data.fieldVariants.length > 0}
+	     which ITEMS this version shows, this decides what its header and its
+	     roles' titles SAY. Keyed on the version, because the picker keeps the
+	     picks it was mounted with and this page is one route for every version. -->
+	{#if data.wordings.length > 0}
 		<Card padding="responsive">
 			<h3 class="mb-3 text-sm font-semibold tracking-wide text-[var(--dash-text)] uppercase">
 				Wording
 			</h3>
-			<VersionWordings
-				versionId={version.id}
-				variants={data.fieldVariants}
-				picks={data.wordingPicks}
-				defaults={data.wordingDefaults}
-			/>
+			{#key version.id}
+				<VersionWordings versionId={version.id} wordings={data.wordings} />
+			{/key}
 		</Card>
 	{/if}
 

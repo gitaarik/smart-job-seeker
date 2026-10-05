@@ -90,8 +90,7 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	}
 
 	// The same three overlays the documents apply, in the same order — see
-	// server/profile/field-variants.ts. No template overrides: those are keyed
-	// to a document template, and this route resolves a theme instead.
+	// server/profile/field-variants.ts.
 	const langParam = url.searchParams.get('lang');
 	const translator = await loadTranslator(profile.id, isKnownLocale(langParam) ? langParam : null);
 	applyTranslations(profile, translator);

@@ -11,6 +11,7 @@ import { buildTemplateExport } from './export-templates';
 import type {
 	DocumentFilePayload,
 	ExportContentOptions,
+	ExportedFieldVariant,
 	ExportedProfileData,
 	ProfileExportData,
 	MediaFile,
@@ -206,6 +207,7 @@ export async function buildProfileExport(
 			field_variants: {
 				columns: {
 					id: true,
+					work_experience_id: true,
 					field: true,
 					label: true,
 					value: true,
@@ -382,9 +384,11 @@ export async function buildProfileExport(
 	// Same positional treatment as everything else the overlay can name: the
 	// variant's translated wording has to survive the round trip, or a
 	// re-imported profile prints English on every translated document.
-	(profile.field_variants ?? []).forEach((v: { id: number }, index: number) =>
-		translationMaps.fieldVariant.set(v.id, index)
+	const exportedVariants = exportFieldVariants(
+		profile.field_variants ?? [],
+		translationMaps.workExperience
 	);
+	exportedVariants.forEach(({ id }, index) => translationMaps.fieldVariant.set(id, index));
 
 	const translations = await buildTranslationExport(profileId, translationMaps);
 
@@ -557,21 +561,7 @@ export async function buildProfileExport(
 			proficiency: l.proficiency || undefined
 		})),
 
-		field_variants: (profile.field_variants ?? []).map(
-			(v: {
-				field: string;
-				label: string;
-				value: string;
-				note: string | null;
-				sort: number | null;
-			}) => ({
-				field: v.field,
-				label: v.label,
-				value: v.value,
-				note: v.note || undefined,
-				sort: v.sort
-			})
-		),
+		field_variants: exportedVariants.map(({ exported }) => exported),
 
 		references: profile.references.map((r) => ({
 			status: r.status || undefined,
@@ -627,4 +617,47 @@ export async function getProfileName(profileId: number): Promise<string> {
 		columns: { name: true }
 	});
 	return profile?.name?.replace(/\s+/g, '-').toLowerCase() || 'profile';
+}
+
+/**
+ * The profile's alternative wordings as the payload carries them, each with the
+ * id it had, in the order they are written.
+ *
+ * A role's wording travels with the role's POSITION in the payload, since no
+ * database ids do. One whose role is not in the payload has nowhere to land on
+ * the other side — read back without a role it would be taken for a field of
+ * the profile and print nowhere — so it is left out HERE, before positions are
+ * handed out. Skipping it later would leave a gap, and every translation of a
+ * wording after it would point one place past its own.
+ *
+ * The id is returned beside each entry because the caller numbers the
+ * translation overlay by this same order.
+ */
+export function exportFieldVariants(
+	variants: {
+		id: number;
+		work_experience_id: number | null;
+		field: string;
+		label: string;
+		value: string;
+		note: string | null;
+		sort: number | null;
+	}[],
+	/** Where each exported role sits in the payload's `work_experiences`, by its id. */
+	workExperienceIndex: Map<number, number>
+): { id: number; exported: ExportedFieldVariant }[] {
+	return variants
+		.filter((v) => v.work_experience_id === null || workExperienceIndex.has(v.work_experience_id))
+		.map((v) => ({
+			id: v.id,
+			exported: {
+				field: v.field,
+				label: v.label,
+				value: v.value,
+				note: v.note || undefined,
+				sort: v.sort,
+				work_experience_index:
+					v.work_experience_id === null ? undefined : workExperienceIndex.get(v.work_experience_id)
+			}
+		}));
 }

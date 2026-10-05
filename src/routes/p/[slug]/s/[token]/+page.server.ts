@@ -105,9 +105,8 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	applyTranslations(profile, translator);
 	locals.documentLocale = translator.locale;
 
-	// Then the wording the shared version picked, after those translations. This
-	// route has no template, so the third overlay does not apply here — see
-	// server/profile/field-variants.ts for the order the other two keep.
+	// Then the wording the shared version prints, after those translations — see
+	// server/profile/field-variants.ts for why in that order.
 	applyFieldVariants(
 		profile,
 		await loadFieldVariants(profile.id, token.profile_version, translator)

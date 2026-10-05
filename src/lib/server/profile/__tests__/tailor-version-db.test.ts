@@ -43,16 +43,20 @@ const {
 	mockGetProfile,
 	mockQueryRaw,
 	mockSemantic,
-	mockLexical
+	mockLexical,
+	mockListVariants,
+	mockCreateVariant,
+	mockSetVersionWording
 } = vi.hoisted(() => {
 	const find = {
 		applications: { findFirst: vi.fn() },
 		profiles: { findFirst: vi.fn() },
 		profile_versions: { findFirst: vi.fn(), findMany: vi.fn() },
+		profile_field_variants: { findMany: vi.fn() },
 		profile_version_overrides: { findFirst: vi.fn(), findMany: vi.fn() },
 		profile_version_skill_words: { findFirst: vi.fn(), findMany: vi.fn() },
 		job_matches: { findFirst: vi.fn() },
-		work_experiences: { findMany: vi.fn() },
+		work_experiences: { findFirst: vi.fn(), findMany: vi.fn() },
 		work_experience_achievements: { findMany: vi.fn() },
 		work_experience_technologies: { findMany: vi.fn() },
 		side_projects: { findMany: vi.fn() },
@@ -110,7 +114,10 @@ const {
 		mockGetProfile: vi.fn(),
 		mockQueryRaw: vi.fn(),
 		mockSemantic: vi.fn(),
-		mockLexical: vi.fn()
+		mockLexical: vi.fn(),
+		mockListVariants: vi.fn(),
+		mockCreateVariant: vi.fn(),
+		mockSetVersionWording: vi.fn()
 	};
 });
 
@@ -122,6 +129,15 @@ vi.mock('$lib/server/profile/default', () => ({
 	getProfileByIdentifier: (...args: unknown[]) => mockGetProfile(...args)
 }));
 vi.mock('$lib/server/ai-chat/utils', () => ({ createAndGenerateAiChat: vi.fn() }));
+// The wording library and the write that sets a version's wording are tested
+// against the database in field-variants-writes.test.ts. Here they are stand-ins,
+// so what is under test is what the job's page asks of them.
+vi.mock('$lib/server/profile/field-variants', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/profile/field-variants')>()),
+	listFieldVariants: (...args: unknown[]) => mockListVariants(...args),
+	createFieldVariant: (...args: unknown[]) => mockCreateVariant(...args),
+	setVersionWording: (...args: unknown[]) => mockSetVersionWording(...args)
+}));
 vi.mock('$lib/server/documents/content-embeddings', () => ({
 	semanticScoreUnits: (...args: unknown[]) => mockSemantic(...args),
 	poolKey: (type: string, id: number) => `${type}:${id}`
@@ -149,6 +165,7 @@ import {
 	retagVersionSlug,
 	scoreCandidates,
 	setItemStateForApplication,
+	setWordingForApplication,
 	undoDecision,
 	versionItemStates
 } from '../tailor-version';
@@ -174,6 +191,7 @@ beforeEach(() => {
 		for (const fn of Object.values(table)) fn.mockResolvedValue(undefined);
 	}
 	find.profile_versions.findMany.mockResolvedValue([]);
+	find.profile_field_variants.findMany.mockResolvedValue([]);
 	find.profile_version_overrides.findMany.mockResolvedValue([]);
 	find.profile_version_skill_words.findMany.mockResolvedValue([]);
 	find.work_experiences.findMany.mockResolvedValue([]);
@@ -184,6 +202,8 @@ beforeEach(() => {
 	find.education.findMany.mockResolvedValue([]);
 	find.references.findMany.mockResolvedValue([]);
 	mockQueryRaw.mockResolvedValue([]);
+	mockListVariants.mockResolvedValue([]);
+	mockSetVersionWording.mockResolvedValue(true);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -572,6 +592,197 @@ describe('setItemStateForApplication', () => {
 		expect(inserts.find((i) => i.table === profile_version_overrides)?.values).toMatchObject({
 			version_id: 77
 		});
+	});
+});
+
+describe('setWordingForApplication', () => {
+	/** A wording of role 9's position, as the library lists one. */
+	const wording = (id: number, value: string, roleId = 9) => ({
+		id,
+		entity: 'work_experience' as const,
+		entity_id: roleId,
+		field: 'position',
+		label: `wording ${id}`,
+		value,
+		note: null,
+		sort: id
+	});
+
+	function setTitle(
+		choice: Parameters<typeof setWordingForApplication>[0]['choice'],
+		over: Partial<Parameters<typeof setWordingForApplication>[0]> = {}
+	) {
+		return setWordingForApplication({
+			profileId: 1,
+			applicationId: 12,
+			baseSlug: 'base',
+			entity: 'work_experience',
+			entityId: 9,
+			field: 'position',
+			choice,
+			...over
+		});
+	}
+
+	/** What the version's wording was set to. */
+	const lastSet = () => mockSetVersionWording.mock.calls.at(-1)?.[0];
+
+	beforeEach(() => {
+		find.work_experiences.findFirst.mockResolvedValue({ id: 9, position: 'Lead Engineer' });
+		find.profiles.findFirst.mockResolvedValue({ id: 1, title: 'Senior Full-Stack Engineer' });
+		find.applications.findFirst.mockResolvedValue({
+			id: 12,
+			job: { title: 'Senior Python Developer', company: 'Politie' }
+		});
+		find.profile_versions.findFirst.mockResolvedValue({ id: 5, slug: 'app-12' });
+		mockListVariants.mockResolvedValue([wording(1, 'Senior Python Engineer'), wording(2, 'x', 10)]);
+	});
+
+	it('refuses a role that is not this profile’s, and a field no document prints', async () => {
+		find.work_experiences.findFirst.mockResolvedValue(undefined);
+		await expect(setTitle(1)).rejects.toThrow('Item not found');
+		// The profile's id is the only id a field of the profile answers to.
+		await expect(
+			setTitle(null, { entity: 'profile', entityId: 2, field: 'title' })
+		).rejects.toThrow('Item not found');
+		await expect(
+			setTitle(null, { entity: 'profile', entityId: 1, field: 'about_me_text' })
+		).rejects.toThrow('Item not found');
+		expect(mockSetVersionWording).not.toHaveBeenCalled();
+	});
+
+	it('picks one of the field’s wordings for this job', async () => {
+		const result = await setTitle(1);
+		expect(lastSet()).toMatchObject({
+			profileId: 1,
+			versionId: 5,
+			entity: 'work_experience',
+			entityId: 9,
+			field: 'position',
+			variantId: 1,
+			reason: 'you chose this position for this job'
+		});
+		expect(result).toEqual({ versionSlug: 'app-12', created: false });
+	});
+
+	// The id is the form's. Checked before anything is made for it, so a
+	// mismatch does not leave an empty version recorded as the document sent.
+	it('refuses another role’s wording before making a version', async () => {
+		find.profile_versions.findFirst.mockResolvedValue(undefined);
+		await expect(setTitle(2)).rejects.toThrow('Wording not found');
+		expect(inserts).toHaveLength(0);
+		expect(mockSetVersionWording).not.toHaveBeenCalled();
+	});
+
+	it('goes back to the profile’s own title', async () => {
+		await setTitle(null);
+		expect(lastSet()).toMatchObject({
+			variantId: null,
+			reason: 'you chose your own position for this job'
+		});
+	});
+
+	it('refuses to write nothing', async () => {
+		await expect(setTitle({ text: '   ' })).rejects.toThrow('Write the wording first.');
+		expect(mockCreateVariant).not.toHaveBeenCalled();
+	});
+
+	// The reason this is on the job's page: the title an agency asks for, typed
+	// once, lands on the document AND in the role's list for the next job.
+	it('saves written text as a wording of that field and picks it', async () => {
+		mockCreateVariant.mockResolvedValue(wording(7, 'Python Tech Lead'));
+		await setTitle({ text: '  Python Tech Lead ' });
+
+		expect(mockCreateVariant).toHaveBeenCalledWith({
+			profileId: 1,
+			entity: 'work_experience',
+			entityId: 9,
+			field: 'position',
+			// Named after who it was written for, and filed under the kind of job:
+			// all that is known about when it applies, and what a later run matches.
+			label: 'Politie',
+			value: 'Python Tech Lead',
+			note: 'roles like Senior Python Developer'
+		});
+		expect(lastSet()).toMatchObject({
+			variantId: 7,
+			reason: 'you wrote this position for this job'
+		});
+	});
+
+	it('names a new wording after the job when the company is not known', async () => {
+		find.applications.findFirst.mockResolvedValue({
+			id: 12,
+			job: { title: 'Senior Python Developer', company: null }
+		});
+		mockCreateVariant.mockResolvedValue(wording(7, 'Python Tech Lead'));
+		await setTitle({ text: 'Python Tech Lead' });
+		expect(mockCreateVariant.mock.calls[0][0]).toMatchObject({
+			label: 'Senior Python Developer',
+			note: 'roles like Senior Python Developer'
+		});
+	});
+
+	// A title typed again for another job, with a capital moved, is the same
+	// title. The list should not grow a second entry for it.
+	it('picks the existing wording when the written text is one already', async () => {
+		await setTitle({ text: 'senior  python engineer' });
+		expect(mockCreateVariant).not.toHaveBeenCalled();
+		expect(lastSet()).toMatchObject({
+			variantId: 1,
+			reason: 'you chose this position for this job'
+		});
+	});
+
+	it('picks nothing when the written text is the profile’s own title', async () => {
+		await setTitle({ text: 'lead engineer' });
+		expect(mockCreateVariant).not.toHaveBeenCalled();
+		expect(lastSet()).toMatchObject({ variantId: null });
+	});
+
+	it('works for the profile’s own title too', async () => {
+		mockListVariants.mockResolvedValue([]);
+		mockCreateVariant.mockResolvedValue({
+			...wording(8, 'Senior Python Engineer'),
+			entity: 'profile'
+		});
+		await setTitle(
+			{ text: 'Senior Python Engineer' },
+			{ entity: 'profile', entityId: 1, field: 'title' }
+		);
+		expect(mockCreateVariant.mock.calls[0][0]).toMatchObject({
+			entity: 'profile',
+			entityId: 1,
+			field: 'title',
+			value: 'Senior Python Engineer'
+		});
+		expect(lastSet()).toMatchObject({
+			entity: 'profile',
+			variantId: 8,
+			reason: 'you wrote this professional title for this job'
+		});
+	});
+
+	// Wanting one title for one job IS tailoring, as wanting one bullet is: the
+	// first change makes the job's version, building on the one it was sent as.
+	it('makes the job’s version when there is none yet', async () => {
+		// Neither a version of this application's own, nor the base named.
+		find.profile_versions.findFirst.mockResolvedValue(undefined);
+		returning.set(profile_versions, [{ id: 77 }]);
+
+		const result = await setTitle(1);
+		expect(result).toEqual({ versionSlug: 'app-12', created: true });
+		expect(inserts.find((w) => w.table === profile_versions)?.values).toMatchObject({
+			application_id: 12,
+			slug: 'app-12',
+			name: 'Senior Python Developer — Politie'
+		});
+		expect(lastSet()).toMatchObject({ versionId: 77 });
+	});
+
+	it('reports a wording the write refused', async () => {
+		mockSetVersionWording.mockResolvedValue(false);
+		await expect(setTitle(1)).rejects.toThrow('Wording not found');
 	});
 });
 
@@ -1170,6 +1381,46 @@ describe('describeOverrides', () => {
 
 		expect(described.label).toBe('Frontend');
 		expect(described.context).toBe('Vue, Shopify');
+	});
+
+	// The decision IS the text, so the wording is quoted; and several roles can
+	// each have a wording of one name, so a role's title says which role.
+	it('names the field a wording is for, and the role when it is a role’s', async () => {
+		find.profile_field_variants.findMany.mockResolvedValue([
+			{
+				id: 5,
+				profile_id: 1,
+				work_experience_id: null,
+				field: 'summary',
+				label: 'Backend-leaning',
+				value: 'Backend engineer of long standing.'
+			},
+			{
+				id: 6,
+				profile_id: 1,
+				work_experience_id: 9,
+				field: 'position',
+				label: 'Politie',
+				value: 'Senior Python Engineer'
+			}
+		]);
+		find.work_experiences.findMany.mockResolvedValue([
+			{ id: 9, position: 'Lead Engineer', name: 'Chipta' }
+		]);
+
+		const described = await describeOverrides([
+			row(OVERRIDE_ENTITIES.fieldVariant, 5, { action: 'include' }),
+			row(OVERRIDE_ENTITIES.fieldVariant, 6, { action: 'include' })
+		]);
+
+		expect(described.map((d) => d.label)).toEqual([
+			'Professional Summary — Backend-leaning',
+			'Position at Chipta — Politie'
+		]);
+		expect(described.map((d) => d.context)).toEqual([
+			'Backend engineer of long standing.',
+			'Senior Python Engineer'
+		]);
 	});
 
 	// The row's item is gone; the cascade already made the decision meaningless,

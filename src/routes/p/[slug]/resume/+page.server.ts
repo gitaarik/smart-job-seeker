@@ -7,10 +7,6 @@ import { DEFAULT_TEMPLATE_ID } from '$lib/resume-templates';
 import { isKnownLocale } from '$lib/resume-translations';
 import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
 import {
-	applyTemplateOverrides,
-	loadTemplateOverrides
-} from '$lib/server/profile/template-overrides';
-import {
 	applyFieldVariants,
 	loadFieldVariants,
 	withoutFieldVariants
@@ -82,10 +78,10 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	applyTranslations(profile, translator);
 	locals.documentLocale = translator.locale;
 
-	// Then the wording this version picked for the profile's scalar fields, if
-	// it picked any — after the translations whose language it has to match, and
-	// before the template's overrides, which are a force that outranks a choice.
-	// See server/profile/field-variants.ts for the full order.
+	// Then the wording this version prints for the fields that have alternatives
+	// — the profile's title and summary, a role's position — if it or a version
+	// it builds on picked any. After the translations, whose language a wording
+	// has to match. See server/profile/field-variants.ts for the order.
 	applyFieldVariants(profile, await loadFieldVariants(profile.id, versionId, translator));
 
 	// Then the skill words this version carries: a job's own word for something
@@ -99,13 +95,6 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 		'resume',
 		shownVersionId
 	);
-
-	// Then the template's own values for the fields it overrides, LAST: an
-	// override is a force ("on Citrus this role is Senior Engineer"), so it has
-	// to win over the translation of the value it replaces. Resolved in the
-	// document's language, falling back to the base one — see
-	// server/profile/template-overrides.ts.
-	applyTemplateOverrides(profile, await loadTemplateOverrides(template?.id, translator.locale));
 
 	return {
 		// Stripped of the wording library before it is serialised into the page:

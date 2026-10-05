@@ -65,8 +65,26 @@ import {
 	type ItemRow
 } from '$lib/tailoring';
 import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
-import { variantFieldLabel, variantPreview } from '$lib/field-variants';
-import { isVariantOwned } from '$lib/server/profile/field-variants';
+import {
+	isPrintedVariantField,
+	resolveWordings,
+	sameWording,
+	toFieldVariant,
+	variantFieldLabel,
+	variantPreview,
+	variantTargetKey,
+	variantsForTarget,
+	type FieldVariant,
+	type VariantEntity
+} from '$lib/field-variants';
+import {
+	createFieldVariant,
+	isVariantOwned,
+	listFieldVariants,
+	setVersionWording,
+	versionChainFor,
+	wordingRowsFor
+} from '$lib/server/profile/field-variants';
 import { loadSkillWords, versionChain, wordsToPrint } from '$lib/server/profile/skill-words';
 import { provenanceFor } from '$lib/match-provenance';
 import { templateForStorage, templatePrintsTechnologies } from '$lib/resume-templates';
@@ -88,7 +106,11 @@ import {
 import { scoreUnitAgainstQuery } from '$lib/server/documents/content-retrieval';
 import { countVersionPages } from '$lib/server/profile/page-fit';
 import { translatedLocales } from '$lib/server/profile/translations';
-import { chooseFieldVariants, variantDecisions } from '$lib/server/profile/tailor-field-variants';
+import {
+	choicesForPrintedRoles,
+	chooseFieldVariants,
+	variantDecisions
+} from '$lib/server/profile/tailor-field-variants';
 import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
 import { config } from '$lib/server/config';
 
@@ -949,23 +971,47 @@ export async function tailorVersionForApplication(opts: {
 
 	applyVerdictReasons(decisions, modelVerdicts);
 
-	// The profile's scalar fields — title, subtitle, headline, summary — cannot
-	// be tailored by including and excluding, because each holds one value. If
-	// the applicant has written alternatives, the best-fitting one is chosen
-	// here and travels as a decision like any other. Kept out of the layers
-	// above deliberately: a wording is not an item, so it has no page cost, no
-	// parent to keep alive and nothing to reorder, and folding it into the
-	// selector would mean teaching every rule about a candidate that answers to
-	// none of them. See tailor-field-variants.ts.
-	const variantPicks = variantDecisions(
-		await chooseFieldVariants({
-			profileId,
-			profile: profile as unknown as Record<string, unknown>,
-			query,
-			queryUnit: { unitType: 'job_query', unitId: job.id }
-		})
-	);
-	decisions = [...decisions, ...variantPicks];
+	// The fields that hold one value — the profile's title, subtitle, headline
+	// and summary, and each role's position — cannot be tailored by including
+	// and excluding. If the applicant has written alternatives, the best-fitting
+	// one is chosen here and travels as a decision like any other. Kept out of
+	// the layers above deliberately: a wording is not an item, so it has no page
+	// cost, no parent to keep alive and nothing to reorder, and folding it into
+	// the selector would mean teaching every rule about a candidate that answers
+	// to none of them. See tailor-field-variants.ts.
+	const wording = await wordingContextFor(profileId, applicationId, effectiveBase);
+	const variantChoices = wording
+		? await chooseFieldVariants({
+				profileId,
+				profile: profile as unknown as Record<string, unknown>,
+				query,
+				queryUnit: { unitType: 'job_query', unitId: job.id },
+				standing: wording.standing,
+				locked: wording.locked
+			})
+		: [];
+	// A role's title is chosen only where the role prints, and which roles print
+	// is the selection's to say, so the picks are narrowed per selection: the
+	// fit pass below selects again, and a tighter budget can leave a role off
+	// that a looser one brought back.
+	const basePrintedRoles = printedByFilter(profile, docType, effectiveBase).roles;
+	const variantPicksFor = (selection: Decision[]): Decision[] => {
+		if (variantChoices.length === 0) return [];
+		const printed = new Set(basePrintedRoles);
+		for (const d of selection) {
+			if (d.entityType !== OVERRIDE_ENTITIES.workExperience) continue;
+			if (d.action === 'include') printed.add(d.entityId);
+			else printed.delete(d.entityId);
+		}
+		// The applicant's own switch on a role outranks both, as it does when the
+		// document renders.
+		for (const [roleId, on] of wording?.roleSwitches ?? []) {
+			if (on) printed.add(roleId);
+			else printed.delete(roleId);
+		}
+		return variantDecisions(choicesForPrintedRoles(variantChoices, printed));
+	};
+	decisions = [...decisions, ...variantPicksFor(decisions)];
 
 	const versionId = await upsertTailoredVersion({
 		profileId,
@@ -1019,8 +1065,8 @@ export async function tailorVersionForApplication(opts: {
 		// is persisted in full: persistDecisions deletes this version's generated
 		// rows and re-inserts what it is handed, so a selection that omitted them
 		// would silently drop the chosen summary on the first budget tightening.
-		select: (budget) => [
-			...selectForJob(selectionCandidates, {
+		select: (budget) => {
+			const selection = selectForJob(selectionCandidates, {
 				floor,
 				...DEFAULT_SELECTION,
 				promotionMargin: PROMOTION_MARGIN[ranker],
@@ -1030,9 +1076,9 @@ export async function tailorVersionForApplication(opts: {
 				groupDropReason,
 				technologyDropReason,
 				restoredParentReason
-			}),
-			...variantPicks
-		]
+			});
+			return [...selection, ...variantPicksFor(selection)];
+		}
 	});
 
 	return {
@@ -1045,6 +1091,90 @@ export async function tailorVersionForApplication(opts: {
 		targetPages: fitted.targetPages,
 		pages: fitted.pages
 	};
+}
+
+/**
+ * What a run has to know about wordings before it chooses any, or null when the
+ * profile has none to choose between.
+ *
+ * `standing` is the wording each target already gets from the version this one
+ * builds on: what the document says without the run, and so what a variant has
+ * to beat. Resolved over the BASE's chain only — the job's own generated picks
+ * are about to be replaced, and comparing against them would have each run
+ * defend the last one's answer.
+ *
+ * `locked` is every target the applicant has decided on this job's version:
+ * picked by hand, typed here, or taken back off after a run picked it. The run
+ * does not score those. `persistDecisions` protects a row the applicant wrote,
+ * but a pick for a different wording of the same field is a different row, and
+ * without this a regeneration would replace the title they chose.
+ *
+ * `roleSwitches` is the applicant's own on/off for a role on this version, so
+ * a title is not chosen for a role they turned off here.
+ */
+async function wordingContextFor(
+	profileId: number,
+	applicationId: number,
+	baseSlug: string
+): Promise<{
+	standing: Map<string, FieldVariant>;
+	locked: Set<string>;
+	roleSwitches: Map<number, boolean>;
+} | null> {
+	const variants = await listFieldVariants(profileId);
+	if (variants.length === 0) return null;
+
+	const [tailored, base] = await Promise.all([
+		db.query.profile_versions.findFirst({
+			where: and(
+				eq(profile_versions.profile_id, profileId),
+				eq(profile_versions.application_id, applicationId)
+			),
+			columns: { id: true }
+		}),
+		baseSlug
+			? db.query.profile_versions.findFirst({
+					where: and(
+						eq(profile_versions.profile_id, profileId),
+						eq(profile_versions.slug, baseSlug),
+						isNull(profile_versions.application_id)
+					),
+					columns: { id: true }
+				})
+			: null
+	]);
+
+	const baseChain = base ? await versionChainFor(profileId, base.id) : [];
+	const rows = await wordingRowsFor([...(tailored ? [tailored.id] : []), ...baseChain]);
+
+	const standing = new Map(
+		[...resolveWordings(baseChain, rows, variants)].map(([key, pick]) => [key, pick.variant])
+	);
+
+	const targetOf = new Map(
+		variants.map((v) => [v.id, variantTargetKey(v.entity, v.entity_id, v.field)])
+	);
+	const locked = new Set<string>();
+	for (const row of rows) {
+		if (!tailored || row.version_id !== tailored.id || row.source !== 'user') continue;
+		const key = targetOf.get(row.entity_id);
+		if (key) locked.add(key);
+	}
+
+	const roleSwitches = new Map<number, boolean>();
+	if (tailored) {
+		const switches = await db.query.profile_version_overrides.findMany({
+			where: and(
+				eq(profile_version_overrides.version_id, tailored.id),
+				eq(profile_version_overrides.entity_type, OVERRIDE_ENTITIES.workExperience),
+				eq(profile_version_overrides.source, 'user')
+			),
+			columns: { entity_id: true, action: true }
+		});
+		for (const row of switches) roleSwitches.set(row.entity_id, row.action === 'include');
+	}
+
+	return { standing, locked, roleSwitches };
 }
 
 /**
@@ -1701,7 +1831,14 @@ export async function describeOverrides(
 			idsOf(OVERRIDE_ENTITIES.fieldVariant).length
 				? db.query.profile_field_variants.findMany({
 						where: inArray(profile_field_variants.id, idsOf(OVERRIDE_ENTITIES.fieldVariant)),
-						columns: { id: true, field: true, label: true, value: true }
+						columns: {
+							id: true,
+							profile_id: true,
+							work_experience_id: true,
+							field: true,
+							label: true,
+							value: true
+						}
 					})
 				: [],
 			// Reachable from the item panel now, so a toggle on one has to be
@@ -1730,6 +1867,8 @@ export async function describeOverrides(
 			// A dropped technology is one word, and the word alone does not say
 			// which line it left — a profile can list Docker under three roles.
 			...technologies.map((t) => t.work_experience_id).filter(Boolean),
+			// A wording for a role's title says nothing about which role without it.
+			...wordings.map((w) => w.work_experience_id).filter(Boolean),
 			...idsOf(OVERRIDE_ENTITIES.workExperience)
 		])
 	];
@@ -1742,6 +1881,7 @@ export async function describeOverrides(
 	const roleLabels = new Map(
 		roles.map((r) => [r.id, [text(r.position), text(r.name)].filter(Boolean).join(' at ')])
 	);
+	const roleNames = new Map(roles.map((r) => [r.id, r.name]));
 
 	const labels = new Map<string, string>();
 	const contexts = new Map<string, string>();
@@ -1785,13 +1925,18 @@ export async function describeOverrides(
 		labels.set(`${OVERRIDE_ENTITIES.reference}:${entry.id}`, referenceLabel(entry));
 	}
 
-	for (const w of wordings) {
+	for (const row of wordings) {
+		const w = toFieldVariant(row);
 		// The field it varies, then the applicant's name for this wording: "your
 		// Professional Summary, Backend-leaning". The label alone would be the
-		// name, which says nothing about what changed on the page.
+		// name, which says nothing about what changed on the page. A role's title
+		// names the employer too — "Position at Chipta" — since several roles can
+		// each have a wording of the same name.
+		const employer = w.entity === 'work_experience' ? text(roleNames.get(w.entity_id)) : '';
+		const field = variantFieldLabel(w.entity, w.field);
 		labels.set(
 			`${OVERRIDE_ENTITIES.fieldVariant}:${w.id}`,
-			`${variantFieldLabel(w.field)} — ${text(w.label) || 'Alternative'}`
+			`${employer ? `${field} at ${employer}` : field} — ${text(w.label) || 'Alternative'}`
 		);
 		// The wording itself is the context, because the decision IS the text:
 		// unlike a dropped bullet, nothing else on the page shows what was
@@ -2793,6 +2938,132 @@ export async function setItemStateForApplication(opts: {
 		});
 
 	return { versionSlug, created: !existing };
+}
+
+/**
+ * Set what this application's document says for one field that has wordings —
+ * the profile's title, a role's position — creating the job's version if it
+ * does not exist yet, as a toggle does.
+ *
+ * `choice` is one of the field's existing wordings, the profile's own value, or
+ * text written here. Written text is the case this exists for: an agency asks
+ * for a title for this one job. Without it that meant going to the profile to
+ * add an alternative, then to the version to pick it — two pages for one
+ * intent, and for a title on three roles, six. Here the text is saved as a
+ * wording of that field and picked for this job in one step, so it is also in
+ * the list the next time a job wants it.
+ *
+ * Text that is already one of the field's wordings picks that one rather than
+ * adding a copy, and text that is the profile's own value picks nothing: the
+ * list should not grow a second entry for a title typed twice.
+ *
+ * A new wording is named after the company it was written for, and its "when
+ * to use it" note says the kind of role, because that is all that is known
+ * about when it applies and it is what a later tailoring run has to match a
+ * job against. Both are the applicant's to change on the profile.
+ */
+export async function setWordingForApplication(opts: {
+	profileId: number;
+	applicationId: number;
+	/** What a version made here builds on; '' falls back as a run's does. */
+	baseSlug: string;
+	entity: VariantEntity;
+	entityId: number;
+	field: string;
+	/** An existing wording's id, null for the profile's own value, or text written for this job. */
+	choice: number | null | { text: string };
+}): Promise<{ versionSlug: string; created: boolean }> {
+	const { profileId, applicationId, baseSlug, entity, entityId, field, choice } = opts;
+	// A field no document prints has nothing for a document to say differently.
+	if (!isPrintedVariantField(entity, field)) throw new Error('Item not found');
+
+	// The row whose field this is: confirms it belongs to the profile, and gives
+	// the field's own value to compare written text against.
+	const owner: Record<string, unknown> | undefined =
+		entity === 'profile'
+			? entityId === profileId
+				? await db.query.profiles.findFirst({ where: eq(profiles.id, profileId) })
+				: undefined
+			: await db.query.work_experiences.findFirst({
+					where: and(eq(work_experiences.id, entityId), eq(work_experiences.profile_id, profileId))
+				});
+	if (!owner) throw new Error('Item not found');
+
+	const application = await db.query.applications.findFirst({
+		where: and(eq(applications.id, applicationId), eq(applications.profile_id, profileId)),
+		with: { job: { columns: { title: true, company: true } } }
+	});
+	if (!application) throw new Error('Application not found');
+
+	const what = variantFieldLabel(entity, field).toLowerCase();
+	const options = variantsForTarget(await listFieldVariants(profileId), entity, entityId, field);
+	let variantId: number | null;
+	let reason: string;
+	if (choice === null) {
+		variantId = null;
+		reason = `you chose your own ${what} for this job`;
+	} else if (typeof choice === 'number') {
+		// Checked before a version is made for it: the id is the form's, and a
+		// wording of another field would otherwise leave an empty version behind.
+		if (!options.some((v) => v.id === choice)) throw new Error('Wording not found');
+		variantId = choice;
+		reason = `you chose this ${what} for this job`;
+	} else {
+		const written = choice.text.trim();
+		if (!written) throw new Error('Write the wording first.');
+		const existing = options.find((v) => sameWording(v.value, written));
+		if (sameWording(text(owner[field]), written)) {
+			variantId = null;
+			reason = `you chose your own ${what} for this job`;
+		} else if (existing) {
+			variantId = existing.id;
+			reason = `you chose this ${what} for this job`;
+		} else {
+			const jobTitle = text(application.job?.title).trim();
+			const created = await createFieldVariant({
+				profileId,
+				entity,
+				entityId,
+				field,
+				label: (text(application.job?.company).trim() || jobTitle || 'For one job').slice(0, 255),
+				value: written,
+				note: jobTitle ? `roles like ${jobTitle}` : null
+			});
+			variantId = created.id;
+			reason = `you wrote this ${what} for this job`;
+		}
+	}
+
+	const existingVersion = await db.query.profile_versions.findFirst({
+		where: and(
+			eq(profile_versions.profile_id, profileId),
+			eq(profile_versions.application_id, applicationId)
+		),
+		columns: { id: true, slug: true }
+	});
+	const versionId =
+		existingVersion?.id ??
+		(await upsertTailoredVersion({
+			profileId,
+			applicationId,
+			baseSlug,
+			jobTitle: text(application.job?.title),
+			company: text(application.job?.company)
+		}));
+	const versionSlug = existingVersion?.slug ?? tailoredSlugFor(applicationId);
+
+	const written = await setVersionWording({
+		profileId,
+		versionId,
+		entity,
+		entityId,
+		field,
+		variantId,
+		reason
+	});
+	if (!written) throw new Error('Wording not found');
+
+	return { versionSlug, created: !existingVersion };
 }
 
 /**

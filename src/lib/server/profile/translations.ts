@@ -564,18 +564,33 @@ export function collectTranslatable(profile: TreeNode | null | undefined): Trans
 
 	// One group for every alternative wording, labelled by the field it varies
 	// so the editor reads "Professional Summary — Backend-leaning" rather than
-	// four rows called "Wording".
+	// four rows called "Wording". A role's wording names the employer too —
+	// "Position at Chipta — Agency" — since several roles can each have one of
+	// the same name.
+	const employerOf = new Map(
+		childrenOf(profile, 'work_experiences').map((we) => [
+			we.id,
+			typeof we.name === 'string' ? we.name : ''
+		])
+	);
 	const variantRows: TranslatableRow[] = [];
 	for (const v of childrenOf(profile, 'field_variants')) {
 		const base = String(v?.value ?? '');
 		if (!base.trim() || v.id === undefined) continue;
+		const roleId = typeof v.work_experience_id === 'number' ? v.work_experience_id : null;
+		const field = variantFieldLabel(
+			roleId === null ? 'profile' : 'work_experience',
+			String(v.field ?? '')
+		);
+		const employer = roleId === null ? '' : (employerOf.get(roleId) ?? '');
 		variantRows.push({
 			entity: 'profile_field_variant',
 			id: v.id,
 			field: 'value',
-			label: `${variantFieldLabel(String(v.field ?? ''))} — ${v.label || 'Alternative'}`,
+			label: `${employer ? `${field} at ${employer}` : field} — ${v.label || 'Alternative'}`,
 			base,
-			multiline: true
+			// A title is one line; the profile's prose fields are not.
+			multiline: roleId === null
 		});
 	}
 	if (variantRows.length) {

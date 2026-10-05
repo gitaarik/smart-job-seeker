@@ -1925,37 +1925,22 @@ export const profile_translations = pgTable(
 );
 
 /**
- * Per-template value overrides — what a field says when ONE presentation
- * template renders it.
+ * RETIRED. Nothing reads or writes this table since the `role_wordings`
+ * migration; it is kept until its removal is decided, and holds what it held
+ * on that day.
  *
- * Same sidecar shape as `profile_translations`, one axis over: a row per
- * (template, entity_type, entity_id, field, locale), applied in place before
- * render so the renderers stay unaware of it. The overridable-field vocabulary
- * lives in $lib/template-overrides.ts.
+ * It was one forced value per presentation template for a role's position
+ * ("on Citrus this role is Senior Engineer"), applied last, over everything
+ * else. A template is how a document looks, and what a title should say turned
+ * out to depend on the job: every document sent in the one template that used
+ * this had a version of its own, and all of them shared the one value, so
+ * setting it for today's job rewrote the title on every earlier document in
+ * that template.
  *
- * It exists because nothing in a profile could say "on Citrus". An item's
- * `tags` name a base document type (`resume`/`cv`) or a version slug; the
- * presentation template is chosen independently at render time, so no tag can
- * reach it. `presentation_templates.config.contact` already replaces contact fields
- * per template — this is the same statement for a field that belongs to a row,
- * and the case it was built for is a consultancy whose house style says Senior
- * Engineer where the applicant's own history says Lead Engineer.
- *
- * NOT folded into `profile_translations` by treating a template as a locale:
- * the two are independent axes and a document needs both at once (a document is
- * identified by (type, version, template, language) everywhere else here), so
- * one column could not express a Dutch Citrus CV. `locale` is on this table for
- * the same reason in reverse — an override is a value like any other and needs
- * its own translations. Rows in the base locale apply to every language until a
- * locale-specific one exists, which is what keeps a forced title from silently
- * reverting to a translation of the value it replaced.
- *
- * Keyed by template ID, not slug. Everything else addresses a template by slug
- * (`profile_exports.template`, `applications.cv_template_sent`), and
- * slug-as-reference is exactly what orphaned rows when a version was renamed.
- * The FK survives a rename and cascades a deletion. No `profile_id` column: the
- * template carries one, and a denormalised copy is one more thing that can
- * disagree with it.
+ * `profile_field_variants` answers the same question the right way round: a
+ * list of alternatives per field, and a version picks one. That migration
+ * copied every row here into the list of the role it was written for, and put
+ * the pick on the documents that had been sent in its template.
  */
 export const profile_template_overrides = pgTable(
 	'profile_template_overrides',
@@ -1989,15 +1974,16 @@ export const profile_template_overrides = pgTable(
 );
 
 /**
- * Alternative wordings for the handful of profile fields that are single
- * values — the professional title, subtitle, headline and summary.
+ * Alternative wordings for a field that holds one value: the profile's title,
+ * subtitle, headline and summary, and a role's position.
  *
  * Every other kind of tailoring this product does is a filter: an item's `tags`
  * decide which documents it belongs on, and `profile_version_overrides` decide
  * which of them one job's version prints and in what order. None of that can
- * reach a scalar column. There is exactly one `profiles.summary`, so the only
- * way to say a different thing to a backend team than to an agency was to edit
- * the profile before each send and edit it back afterwards.
+ * reach a single column. There is exactly one `profiles.summary` and one
+ * `work_experiences.position`, so the only way to say a different thing to a
+ * backend team than to an agency was to edit the profile before each send and
+ * edit it back afterwards.
  *
  * So: the column stays the default, and these are the alternatives to it. A
  * profile with no rows here renders exactly as it did — absence means "use the
@@ -2013,13 +1999,24 @@ export const profile_template_overrides = pgTable(
  * `note` is what the tailoring run matches against. A variant's own prose says
  * what the applicant is; the note says when to reach for it ("agency and
  * consultancy roles"), which is the part a job description can be compared to.
+ *
+ * `work_experience_id` says whose field it is: null for a field of the profile
+ * itself, a role's id for a field of that role. A real foreign key rather than
+ * the (entity_type, entity_id) pair the other sidecars use, because these rows
+ * are content the applicant wrote, and a wording that outlived its role would
+ * be offered, translated, exported and scored against jobs for a role that is
+ * gone. Every path that deletes a role would have had to remember them; the
+ * cascade cannot forget. The next kind of item to get wordings gets a column of
+ * its own beside this one.
  */
 export const profile_field_variants = pgTable(
 	'profile_field_variants',
 	{
 		id: serial().primaryKey().notNull(),
 		profile_id: integer().notNull(),
-		/** Column on `profiles` this varies. Vocabulary: $lib/field-variants.ts. */
+		/** The role whose field this varies; null for a field of the profile. */
+		work_experience_id: integer(),
+		/** The column this varies. Vocabulary: $lib/field-variants.ts. */
 		field: varchar({ length: 64 }).notNull(),
 		/** What the applicant calls it in the picker ("Backend-leaning"). */
 		label: varchar({ length: 255 }).notNull(),
@@ -2032,10 +2029,16 @@ export const profile_field_variants = pgTable(
 	},
 	(table): PgTableExtraConfigValue[] => [
 		index('profile_field_variants_lookup').on(table.profile_id, table.field),
+		index('profile_field_variants_work_experience_idx').on(table.work_experience_id),
 		foreignKey({
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
 			name: 'profile_field_variants_profile_foreign'
+		}).onDelete('cascade'),
+		foreignKey({
+			columns: [table.work_experience_id],
+			foreignColumns: [work_experiences.id],
+			name: 'profile_field_variants_work_experience_foreign'
 		}).onDelete('cascade')
 	]
 );
@@ -2647,7 +2650,7 @@ export const work_experiences = pgTable(
  * `config` in the first place, and the asset slots below are already keyed by
  * a free-form string for the same reason. What actually hangs off a template
  * id is worth keeping single: the asset rows, the orphan reaper's join
- * (uploads/reap.ts), the export/import pair, and profile_template_overrides.
+ * (uploads/reap.ts) and the export/import pair.
  * A second table is a second chance to forget the reaper join, which is
  * precisely how the Citrus assets were deleted on 2026-08-23.
  *

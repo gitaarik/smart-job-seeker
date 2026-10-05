@@ -1113,10 +1113,12 @@ describe('taking a decision back', () => {
 		expect(undo(OVERRIDE_ENTITIES.skill, 'include', 3).action).toBe('exclude');
 	});
 
-	it('takes a wording pick back to the default wording', () => {
+	// "Not this one here". What the field says then is the base's to decide:
+	// the profile's own value, or the wording the version it builds on picked.
+	it('takes a wording pick back off', () => {
 		expect(undo(OVERRIDE_ENTITIES.fieldVariant, 'include')).toEqual({
 			action: 'exclude',
-			reason: 'you kept your own wording'
+			reason: 'you took this wording back off'
 		});
 	});
 });
@@ -1162,6 +1164,18 @@ describe('keptAsBase', () => {
 		const wording = { entityType: OVERRIDE_ENTITIES.fieldVariant, entityId: 3 };
 		expect(keptAsBase(decision({ ...wording, action: 'exclude' }), base)).toBe(true);
 		expect(keptAsBase(decision(wording), base)).toBe(false);
+	});
+
+	// A version inherits the wording its base picked. Against a base that picks
+	// one, the two answers swap: taking that wording off is what changes the
+	// document, and picking it again changes nothing.
+	it('reads a wording against what the base picks', () => {
+		const wording = { entityType: OVERRIDE_ENTITIES.fieldVariant, entityId: 3 };
+		const basePicks = new Set([3]);
+		expect(keptAsBase(decision({ ...wording, action: 'exclude' }), base, basePicks)).toBe(false);
+		expect(keptAsBase(decision(wording), base, basePicks)).toBe(true);
+		// Another wording of the same field is a change either way.
+		expect(keptAsBase(decision({ ...wording, entityId: 4 }), base, basePicks)).toBe(false);
 	});
 });
 

@@ -65,6 +65,7 @@
 	decisions={data.decisions ?? []}
 	gaps={data.gaps ?? []}
 	items={data.items ?? []}
+	wordings={data.wordings ?? []}
 	coverage={data.coverage ?? {}}
 	creditedNotNamed={data.creditedNotNamed ?? []}
 	jobWords={data.jobWords ?? []}

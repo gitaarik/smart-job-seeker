@@ -20,6 +20,7 @@ vi.mock('$lib/server/files', () => ({
 }));
 
 import { emptyTranslationIndexMaps, resolveTranslationTarget } from '../export-translations';
+import { exportFieldVariants } from '../export-profile';
 import { emptyCreatedTranslationIds, resolveTranslationEntity } from '../import-translations';
 import { collectFileIdCandidates } from '../export-templates';
 import { rewriteConfigFileIds, splitConfigAssets } from '../import-templates';
@@ -191,5 +192,43 @@ describe('template assets across the archive boundary', () => {
 	it('passes a config with no assets through unchanged', () => {
 		const config = { accent: '#FFD400', fonts: { body: 'Carlito' } };
 		expect(splitConfigAssets(config)).toEqual({ config, assets: [] });
+	});
+});
+
+describe('alternative wordings in the payload', () => {
+	const variant = (id: number, work_experience_id: number | null) => ({
+		id,
+		work_experience_id,
+		field: work_experience_id === null ? 'title' : 'position',
+		label: `wording ${id}`,
+		value: `value ${id}`,
+		note: null,
+		sort: id
+	});
+	// Role 100 is first in the payload and role 101 second.
+	const roles = new Map([
+		[100, 0],
+		[101, 1]
+	]);
+
+	it('names a role’s wording by the role’s position, and the profile’s by nothing', () => {
+		const exported = exportFieldVariants([variant(1, null), variant(2, 101)], roles);
+		expect(exported.map((e) => e.exported.work_experience_index)).toEqual([undefined, 1]);
+		// No database id travels: the role is found again by where it sits.
+		expect(exported[1].exported).not.toHaveProperty('id');
+		expect(exported[1].exported).not.toHaveProperty('work_experience_id');
+	});
+
+	// Read back without a role it would be taken for a field of the profile. And
+	// it has to go BEFORE positions are handed out: the translation overlay is
+	// numbered by this order, so a gap would shift every later wording's
+	// translation onto its neighbour.
+	it('leaves out a wording whose role is not in the payload, without leaving a gap', () => {
+		const exported = exportFieldVariants(
+			[variant(1, null), variant(2, 999), variant(3, 100)],
+			roles
+		);
+		expect(exported.map((e) => e.id)).toEqual([1, 3]);
+		expect(exported.map((e) => e.exported.value)).toEqual(['value 1', 'value 3']);
 	});
 });

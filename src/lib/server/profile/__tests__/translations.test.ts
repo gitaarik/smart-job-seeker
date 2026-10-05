@@ -338,3 +338,32 @@ describe('applyTranslations — the whole vocabulary', () => {
 		}
 	});
 });
+
+describe('collectTranslatable — alternative wordings', () => {
+	// Several roles can each have a wording of one name, and the editor lists
+	// them in one group: without the employer two rows would read the same.
+	it('labels a role’s wording with the field and the employer, as one line', () => {
+		const groups = collectTranslatable({
+			id: 1,
+			work_experiences: [{ id: 9, name: 'Chipta', position: 'Lead Engineer' }],
+			field_variants: [
+				{ id: 5, work_experience_id: null, field: 'summary', label: 'Backend', value: 'Prose.' },
+				{
+					id: 6,
+					work_experience_id: 9,
+					field: 'position',
+					label: 'Politie',
+					value: 'Senior Python Engineer'
+				}
+			]
+		});
+		const rows = groups.find((g) => g.key === 'field-variants')?.rows ?? [];
+		expect(rows.map((r) => [r.id, r.label, r.multiline])).toEqual([
+			[5, 'Professional Summary — Backend', true],
+			[6, 'Position at Chipta — Politie', false]
+		]);
+		expect(rows.every((r) => r.entity === 'profile_field_variant' && r.field === 'value')).toBe(
+			true
+		);
+	});
+});

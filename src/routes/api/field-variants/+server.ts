@@ -11,7 +11,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import {
 	profile_field_variants,
 	profile_translations,
@@ -20,19 +20,43 @@ import {
 import { requireAuth } from '$lib/server/utils/api-helpers';
 import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
 import { touchProfile } from '$lib/server/profile/touch-profile';
-import { isVariantField, FIELD_VARIANT_ENTITY } from '$lib/field-variants';
+import { isVariantEntity, isVariantField, FIELD_VARIANT_ENTITY } from '$lib/field-variants';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-import { listFieldVariants, isVariantOwned } from '$lib/server/profile/field-variants';
+import {
+	createFieldVariant,
+	isVariantOwned,
+	isVariantTargetOwned,
+	listFieldVariants
+} from '$lib/server/profile/field-variants';
 
-/** Every variant this profile holds, for the editor. */
-export const GET: RequestHandler = async ({ locals, cookies }) => {
+/**
+ * Every variant this profile holds, for the editor.
+ *
+ * `?entity=work_experience&entityId=10` narrows it to one row's: a role's page
+ * edits that role's wordings and has no use for the rest of the list.
+ */
+export const GET: RequestHandler = async ({ locals, cookies, url }) => {
 	const user = requireAuth(locals);
 	const profileId = await getSelectedProfileId(cookies, user.id);
 	if (!profileId) error(400, 'No profile selected');
-	return json({ variants: await listFieldVariants(profileId) });
+
+	const variants = await listFieldVariants(profileId);
+	const entity = url.searchParams.get('entity');
+	if (!entity) return json({ variants });
+
+	const entityId = Number(url.searchParams.get('entityId'));
+	return json({
+		variants: variants.filter((v) => v.entity === entity && v.entity_id === entityId)
+	});
 };
 
-/** Add one alternative wording for a field. */
+/**
+ * Add one alternative wording for a field.
+ *
+ * `entity` and `entityId` say whose field: a role's, by the role's id. Left
+ * out, it is a field of the profile itself, which is all this endpoint took
+ * before a role's position could have wordings.
+ */
 export const POST: RequestHandler = async ({ locals, cookies, request }) => {
 	const user = requireAuth(locals);
 	const profileId = await getSelectedProfileId(cookies, user.id);
@@ -41,43 +65,32 @@ export const POST: RequestHandler = async ({ locals, cookies, request }) => {
 	const body = await request.json().catch(() => null);
 	if (!body || typeof body !== 'object') error(400, 'Invalid body');
 
+	const entity = body.entity == null ? 'profile' : String(body.entity);
 	const field = String(body.field ?? '');
-	if (!isVariantField(field)) error(400, 'Field cannot have variants');
+	if (!isVariantEntity(entity) || !isVariantField(entity, field)) {
+		error(400, 'Field cannot have variants');
+	}
+	const entityId = entity === 'profile' ? profileId : Number(body.entityId);
+	if (!Number.isInteger(entityId)) error(400, 'Invalid id');
+	// The id comes from the client, and a variant written onto another
+	// profile's role would be offered and printed there.
+	if (!(await isVariantTargetOwned(profileId, entity, entityId))) error(403, 'Access denied');
 
 	const value = typeof body.value === 'string' ? body.value.trim() : '';
 	if (!value) error(400, 'A variant needs a value');
-	const label = (typeof body.label === 'string' ? body.label.trim() : '') || 'Alternative';
-	const note = typeof body.note === 'string' ? body.note.trim() : '';
 
-	// Appended, not inserted: order among a field's variants is cosmetic (the
-	// picker lists them), so a new one going last is the least surprising place
-	// and needs no renumbering of the others.
-	const existing = await db
-		.select({ sort: profile_field_variants.sort })
-		.from(profile_field_variants)
-		.where(
-			and(eq(profile_field_variants.profile_id, profileId), eq(profile_field_variants.field, field))
-		)
-		.orderBy(asc(profile_field_variants.sort));
-	const nextSort = existing.reduce((max, r) => Math.max(max, r.sort ?? 0), -1) + 1;
-
-	const now = new Date();
-	const [row] = await db
-		.insert(profile_field_variants)
-		.values({
-			profile_id: profileId,
-			field,
-			label,
-			value,
-			note: note || null,
-			sort: nextSort,
-			date_created: now,
-			date_updated: now
-		})
-		.returning();
+	const variant = await createFieldVariant({
+		profileId,
+		entity,
+		entityId,
+		field,
+		label: typeof body.label === 'string' ? body.label : '',
+		value,
+		note: typeof body.note === 'string' ? body.note : null
+	});
 
 	await touchProfile(profileId);
-	return json({ success: true, variant: row });
+	return json({ success: true, variant });
 };
 
 /** Edit one. */

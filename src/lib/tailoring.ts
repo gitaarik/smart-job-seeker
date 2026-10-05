@@ -1156,15 +1156,16 @@ export interface SkillWordRow {
  * position, and taking it back means "leave it where I had it", not "hide it":
  * the include stays and the position goes. A skill's position is where a
  * surfaced skill slots in beside its relatives, not a promotion, so taking one
- * back hides it again. And a wording pick taken back is the default wording,
- * which is an exclude on the pick.
+ * back hides it again. And a wording pick taken back is an exclude on the pick:
+ * the field then says what the version this one builds on says, which is the
+ * profile's own value unless that version picked a wording itself.
  */
 export function undoneDecision(row: { entity_type: string; action: string; sort: number | null }): {
 	action: OverrideAction;
 	reason: string;
 } {
 	if (row.entity_type === OVERRIDE_ENTITIES.fieldVariant) {
-		return { action: 'exclude', reason: 'you kept your own wording' };
+		return { action: 'exclude', reason: 'you took this wording back off' };
 	}
 	if (row.action === 'exclude') return { action: 'include', reason: 'you put this back' };
 	if (row.sort !== null && row.entity_type !== OVERRIDE_ENTITIES.skill) {
@@ -1204,12 +1205,22 @@ export function keptAsBase(
 		sort: number | null;
 		source: string;
 	},
-	baseOn: Map<string, boolean>
+	baseOn: Map<string, boolean>,
+	/**
+	 * The wordings the base prints, by variant id: the picks this version would
+	 * inherit. Left out, the base is taken to pick none, which is true of every
+	 * version that builds on nothing.
+	 */
+	baseWordings?: Set<number>
 ): boolean {
 	if (decision.source !== 'user') return false;
-	// A wording has no base to agree with except "no pick", which is what an
-	// exclude on a pick says.
-	if (decision.entityType === OVERRIDE_ENTITIES.fieldVariant) return decision.action === 'exclude';
+	// A wording agrees with the base when it leaves the field saying what the
+	// base says: picking the one the base picks, or taking back off one the base
+	// does not pick. Taking off the base's own pick is a change — this document
+	// then says the profile's value where the base says something else.
+	if (decision.entityType === OVERRIDE_ENTITIES.fieldVariant) {
+		return (decision.action === 'include') === (baseWordings?.has(decision.entityId) ?? false);
+	}
 	if (decision.sort !== null) return false;
 	const base = baseOn.get(`${decision.entityType}:${decision.entityId}`);
 	return base !== undefined && base === (decision.action === 'include');

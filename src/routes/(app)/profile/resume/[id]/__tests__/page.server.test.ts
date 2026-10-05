@@ -73,6 +73,13 @@ vi.mock('../../../utils', () => ({
 	getSelectedProfileId: (...a: unknown[]) => mockGetSelectedProfileId(...a)
 }));
 
+// The load asks which wording the version prints for each field. These tests
+// are about the actions, and the schema stand-in above holds only the tables
+// they touch, so the wording module (which reads several more) is stood in for.
+vi.mock('$lib/server/profile/field-variants', () => ({
+	wordingStatesFor: vi.fn().mockResolvedValue([])
+}));
+
 vi.mock('$lib/server/profile/generate-version-pdfs', () => ({
 	generateVersionPdfs: (...a: unknown[]) => mockGenerateVersionPdfs(...a)
 }));

@@ -12,7 +12,9 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import type { ItemGroup, ItemRow, ItemSection, SkillWordRow } from '$lib/tailoring';
 	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
+	import { wordingText, type WordingState } from '$lib/field-variants';
 	import type { DocType } from '$lib/utils/profile-doc-url';
+	import JobWording from './JobWording.svelte';
 
 	/**
 	 * What is on this job's document, item by item, with a switch on each.
@@ -39,14 +41,22 @@
 	 * the checks above. Dashed, because they are not profile skills, and taken
 	 * off rather than switched off, because off is simply not having one.
 	 *
-	 * The host page must expose `setItemState` and `removeSkillWord`.
+	 * A switch says whether something prints. A few fields always print and can
+	 * be WORDED more than one way — the document's title and summary, and each
+	 * role's position — and those get a selector instead (JobWording): the top
+	 * of the document first, and a role's title inside the role.
+	 *
+	 * The host page must expose `setItemState`, `removeSkillWord` and `setWording`.
 	 */
 	let {
 		items,
+		wordings = [],
 		docType,
 		baseSlug
 	}: {
 		items: ItemGroup[];
+		/** What this document says for each field that has, or can have, wordings. */
+		wordings?: WordingState[];
 		docType: DocType;
 		/** What to build on, if the first toggle here is what creates the version. */
 		baseSlug: string;
@@ -69,6 +79,32 @@
 			groups: items.filter((group) => group.section === section.key)
 		})).filter((section) => section.groups.length > 0)
 	);
+
+	/**
+	 * The top of the document: the profile's own fields. One the profile leaves
+	 * empty and has no wordings for is not on the page and is not listed.
+	 */
+	let headerWordings = $derived(
+		wordings.filter((w) => w.entity === 'profile' && (w.own.trim() !== '' || w.options.length > 0))
+	);
+	/** A role's position as this document words it, by the role's id. */
+	let roleWordings = $derived(
+		new Map(
+			wordings
+				.filter((w) => w.entity === OVERRIDE_ENTITIES.workExperience && w.field === 'position')
+				.map((w) => [w.entityId, w])
+		)
+	);
+	/**
+	 * A role's heading as the document prints it. The group's own title is built
+	 * from the profile's position, which is not what the page says once a wording
+	 * is picked for this job.
+	 */
+	function roleTitle(group: ItemGroup): string {
+		const wording = group.entityId === null ? undefined : roleWordings.get(group.entityId);
+		if (!wording) return group.title;
+		return [wordingText(wording), wording.context].filter(Boolean).join(' at ') || group.title;
+	}
 
 	/** Roles unfolded this visit. */
 	let openRoles = $state<string[]>([]);
@@ -278,6 +314,19 @@
 {/snippet}
 
 <div class="space-y-6">
+	{#if headerWordings.length > 0}
+		<section>
+			<h4 class="mb-2 text-[10px] font-semibold tracking-wide text-[var(--dash-text)] uppercase">
+				Title and summary
+			</h4>
+			<div class="space-y-2">
+				{#each headerWordings as wording (wording.key)}
+					<JobWording {wording} {docType} {baseSlug} />
+				{/each}
+			</div>
+		</section>
+	{/if}
+
 	{#each sections as section (section.key)}
 		<section>
 			<h4 class="mb-2 text-[10px] font-semibold tracking-wide text-[var(--dash-text)] uppercase">
@@ -290,6 +339,8 @@
 						{@const bullets = prose(group)}
 						{@const tech = names(group)}
 						{@const open = openRoles.includes(group.key)}
+						{@const roleWording =
+							group.entityId === null ? undefined : roleWordings.get(group.entityId)}
 						<div class="rounded-lg border border-[var(--dash-border)] px-3 py-2">
 							<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
 								<button
@@ -303,7 +354,7 @@
 										class="h-2.5 w-2.5 shrink-0 text-[var(--dash-text-secondary)]"
 									/>
 									<span class="min-w-0 text-xs font-medium text-[var(--dash-text)]">
-										{group.title}
+										{roleTitle(group)}
 										{#if group.subtitle}
 											<span class="font-normal text-[var(--dash-text-secondary)]"
 												>· {group.subtitle}</span
@@ -329,6 +380,15 @@
 									<FontAwesomeIcon icon={faEyeSlash} class="h-2.5 w-2.5" />
 									Not on this {docLabel} — nothing under it prints until the role does.
 								</p>
+							{/if}
+
+							<!-- The role's title on this document. With the role unfolded, or
+							     whenever it is not the profile's own, so a title changed for
+							     this job is never out of sight behind a fold. -->
+							{#if roleWording && (open || roleWording.pickedId !== null)}
+								<div class="mt-2 {group.on ? '' : 'opacity-50'}">
+									<JobWording wording={roleWording} {docType} {baseSlug} />
+								</div>
 							{/if}
 
 							{#if open}

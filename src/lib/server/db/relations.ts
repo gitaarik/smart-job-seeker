@@ -513,6 +513,10 @@ export const profile_field_variantsRelations = relations(profile_field_variants,
 	profile: one(profiles, {
 		fields: [profile_field_variants.profile_id],
 		references: [profiles.id]
+	}),
+	work_experience: one(work_experiences, {
+		fields: [profile_field_variants.work_experience_id],
+		references: [work_experiences.id]
 	})
 }));
 

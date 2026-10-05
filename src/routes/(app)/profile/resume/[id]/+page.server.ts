@@ -15,8 +15,7 @@ import { chargeCredits } from '$lib/server/billing/credits';
 import { requireCredits } from '$lib/server/billing/require-credits';
 import { buildToggles } from '$lib/resume-contact-fields';
 import { isTailoredSlug } from '$lib/version-overrides';
-import { listFieldVariants, pickedVariantIds } from '$lib/server/profile/field-variants';
-import { PRINTED_VARIANT_FIELDS } from '$lib/field-variants';
+import { wordingStatesFor } from '$lib/server/profile/field-variants';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
 	const layoutData = await parent();
@@ -54,13 +53,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		where: eq(profiles.id, layoutData.selectedProfile.id),
 		columns: {
 			public_resume_version_id: true,
-			public_cv_version_id: true,
-			// The default wording of each field a variant can stand in for — the
-			// "your own summary" option in the picker below.
-			title: true,
-			subtitle: true,
-			headline: true,
-			summary: true
+			public_cv_version_id: true
 		}
 	});
 
@@ -118,36 +111,22 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 			]);
 	}
 
-	// Alternative wordings, and which this version picked. Loaded here rather
-	// than fetched by the component so the picker renders with the version
-	// instead of flickering through "no alternatives" on every page load.
-	const [fieldVariants, pickedIds] = await Promise.all([
-		listFieldVariants(layoutData.selectedProfile.id),
-		pickedVariantIds(id)
-	]);
-	// pickedIds is newest-first, so the first match per field is the pick that
-	// stands — the same rule the render resolver applies. See field-variants.ts.
-	const wordingPicks: Record<string, number | null> = {};
-	for (const f of PRINTED_VARIANT_FIELDS) {
-		wordingPicks[f.field] =
-			pickedIds.find((picked) =>
-				fieldVariants.some((v) => v.id === picked && v.field === f.field)
-			) ?? null;
-	}
+	// The fields that have alternative wordings, and which one this version
+	// prints for each: its own pick, or the one it inherits from a version it
+	// builds on. Loaded here rather than fetched by the component so the picker
+	// renders with the version instead of flickering through "no alternatives"
+	// on every page load. A field with nothing to choose between is left out;
+	// the alternatives themselves are written on the profile.
+	const wordings = (await wordingStatesFor(layoutData.selectedProfile.id, id)).filter(
+		(w) => w.options.length > 0
+	);
 
 	return {
 		version: {
 			...v,
 			extendsIds: exts?.map((e) => e.extended_id).filter((id): id is number => id !== null) ?? []
 		},
-		fieldVariants,
-		wordingPicks,
-		wordingDefaults: {
-			title: profile?.title ?? '',
-			subtitle: profile?.subtitle ?? '',
-			headline: profile?.headline ?? '',
-			summary: profile?.summary ?? ''
-		},
+		wordings,
 		allVersions,
 		publicResumeVersionId: profile?.public_resume_version_id ?? null,
 		publicCvVersionId: profile?.public_cv_version_id ?? null,
