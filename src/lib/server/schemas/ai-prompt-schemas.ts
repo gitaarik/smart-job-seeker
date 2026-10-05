@@ -197,6 +197,25 @@ export const scoreJobMatchSchema = z.object({
 });
 
 /**
+ * Schema for explain_job_match: the text a match Jev scored is shown with,
+ * written when the job is opened (ai-chat/match-explanation.ts). The same three
+ * fields score_job_match writes, without the score it no longer decides.
+ */
+export const explainJobMatchSchema = z.object({
+	summary: z
+		.string()
+		.describe('One or two sentences: why this job scored what it did for this candidate'),
+	strengths: z
+		.array(z.string())
+		.max(10)
+		.describe('Up to 5 reasons this job suits the candidate, most important first'),
+	gaps: z
+		.array(z.string())
+		.max(10)
+		.describe("Areas where the candidate doesn't fully meet the requirements, most important first")
+});
+
+/**
  * Schema for check_login_state prompt
  * Determines if user is logged in after navigating to login page
  */
@@ -927,6 +946,7 @@ export const aiPromptSchemas = {
 	write_achievement_from_answer: writeAchievementFromAnswerSchema,
 	extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
 	score_job_match: scoreJobMatchSchema,
+	explain_job_match: explainJobMatchSchema,
 	extract_matched_skills: extractMatchedSkillsSchema,
 	find_next_page_button: findNextPageButtonSchema,
 	check_login_state: checkLoginStateSchema,

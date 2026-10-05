@@ -1570,7 +1570,8 @@ async function persistDecisions(versionId: number, decisions: Decision[]): Promi
 
 /**
  * What the stored match concluded about this job — the parts a document can be
- * held to account against.
+ * held to account against. `explain` writes the match's text first when Jev
+ * scored it and it has none yet, for a caller that shows the gaps.
  *
  * `matched` matters here because the matcher is semantic and the document is
  * literal: it counts "SQL" through MySQL and PostgreSQL, so a required skill can
@@ -1579,14 +1580,35 @@ async function persistDecisions(versionId: number, decisions: Decision[]): Promi
  */
 export async function jobMatchRead(
 	profileId: number,
-	jobId: number
+	jobId: number,
+	{ explain = false }: { explain?: boolean } = {}
 ): Promise<{ gaps: string[]; matched: string[]; details: unknown }> {
 	const match = await db.query.job_matches.findFirst({
 		where: and(eq(job_matches.profile_id, profileId), eq(job_matches.job_id, jobId)),
-		columns: { gaps: true, matched_skills: true, matched_skill_details: true }
+		columns: {
+			gaps: true,
+			matched_skills: true,
+			matched_skill_details: true,
+			match_summary: true,
+			skip_reason: true
+		}
 	});
+	let gaps = match?.gaps;
+	// A match Jev scored has no gaps until its text is written, which happens
+	// when the job is first opened (needsExplanation in
+	// ai-chat/match-explanation.ts). With `explain`, a missing text is written
+	// here instead, once. Imported when needed, so a read that never writes
+	// does not load the prompt machinery.
+	if (explain && match && match.skip_reason == null && match.match_summary == null) {
+		try {
+			const { ensureMatchExplanation } = await import('../ai-chat/match-explanation');
+			gaps = (await ensureMatchExplanation(profileId, jobId))?.gaps ?? gaps;
+		} catch (error) {
+			console.warn(`[tailor] could not write the match text for job ${jobId}:`, error);
+		}
+	}
 	return {
-		gaps: asStringArray(match?.gaps).slice(0, 6),
+		gaps: asStringArray(gaps).slice(0, 6),
 		matched: asStringArray(match?.matched_skills),
 		// How each credited skill was reached, for "credited through Sentry".
 		// Unvalidated json, null on rows scored before the column existed; read

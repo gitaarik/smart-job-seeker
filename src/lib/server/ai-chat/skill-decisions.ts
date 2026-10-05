@@ -16,6 +16,7 @@
  * of 57), because each question is judged on its own rather than as part of a
  * list.
  */
+import { createHash } from 'node:crypto';
 import { promptTemplates } from './prompt-templates.js';
 import type { NoulQuestion, SystemOneRequest, SystemOneResponse } from '$lib/server/llm/typesafe';
 
@@ -89,4 +90,25 @@ export function matchedByProbability(
 	cutoff = SKILL_MATCH_CUTOFF
 ): string[] {
 	return skills.filter((_, i) => probabilities[i] > cutoff);
+}
+
+/**
+ * Which version of the decision a verdict came from, as 16 hex characters: the
+ * model, the rules, the question and the cutoff, which is everything that
+ * decides a skill here. The golden gate keys the skills set on it while the
+ * skill pass runs on Jev, as it keys the prompt on promptFingerprint, and the
+ * `ai_chats` row of every Jev call carries it.
+ */
+export function skillDecisionFingerprint(): string {
+	return createHash('sha256')
+		.update(
+			JSON.stringify([
+				SKILL_MATCH_MODEL,
+				SKILL_MATCH_RULES,
+				skillDecisionRequest('', ['{skill}']).questions,
+				SKILL_MATCH_CUTOFF
+			])
+		)
+		.digest('hex')
+		.slice(0, 16);
 }

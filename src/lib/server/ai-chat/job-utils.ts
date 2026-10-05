@@ -11,15 +11,35 @@ import { eq } from 'drizzle-orm';
 import { ai_chats, profiles, search_tasks } from '$lib/server/db/schema';
 import { tokensToCost } from '$lib/server/billing/credits';
 import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
-import { systemOne } from '$lib/server/llm/typesafe';
+import {
+	isOversize,
+	systemOne,
+	type SystemOneRequest,
+	type SystemOneResponse
+} from '$lib/server/llm/typesafe';
 import { recordedTraceId, traceGeneration } from '$lib/server/monitoring/telemetry';
-import { loadProfileData, NON_SKILL_FIELDS, renderProfileData } from './profile-data';
-import { promptFingerprint } from './prompt-fingerprint';
+import {
+	MATCH_PROFILE_LEAVES_OUT,
+	MATCH_SCORE_MODEL,
+	MATCH_SCORE_PROMPT,
+	matchDecisionFingerprint,
+	matchDecisionRequest,
+	matchScoreFrom,
+	type ScoreFactors
+} from './match-decisions';
+import {
+	loadProfileData,
+	NON_FIT_FIELDS,
+	NON_SKILL_FIELDS,
+	renderProfileData
+} from './profile-data';
 import { promptTemplates } from './prompt-templates.js';
+import { promptValues } from './render-prompt';
 import {
 	matchedByProbability,
 	SKILL_MATCH_MODEL,
 	SKILL_MATCH_PROMPT,
+	skillDecisionFingerprint,
 	skillDecisionRequest,
 	skillProbabilities
 } from './skill-decisions';
@@ -212,25 +232,35 @@ export async function createJobMatchingAiChat<T>(
 }
 
 /**
- * The matcher's skill pass on TypeSafe's Jev (skill-decisions.ts): which of
- * `skills` the profile shows.
+ * One System One call, recorded the way a prompt call is: an `ai_chats` row
+ * under the prompt's key with provider `typesafe` and the decision in its
+ * response, a generation in the open trace, and credits charged by tokens as the
+ * prompt would have been charged.
  *
- * Recorded like a prompt call so cost tracking and the traces see it: an
- * `ai_chats` row under the prompt's key with provider `typesafe` and every
- * probability in its response, a generation in the open trace, and credits
- * charged by tokens as the prompt would have been charged.
+ * `requests` are tried in order, the next one only when the one before was over
+ * the model's size limit (isOversize), so a caller can offer a smaller state.
+ * `read` turns the answer into the caller's value and what the row records, and
+ * throws when the answer is incomplete.
  *
- * Throws on any failure, including a profile over Jev's size limit, so the
- * matcher can fall back to the prompt. A failed call keeps its error on the
- * row and is charged nothing.
+ * Throws on any failure, a state still over the limit included, so the caller
+ * can fall back to the prompt. A failed call keeps its error on the row and is
+ * charged nothing.
  */
-export async function decideMatchedSkills(
-	profileId: number,
-	skills: readonly string[]
-): Promise<string[]> {
-	const template = promptTemplates[SKILL_MATCH_PROMPT];
-	const profile = await loadProfileData(profileId, undefined, { exclude: NON_SKILL_FIELDS });
-	const request = skillDecisionRequest(renderProfileData(profile.data), skills);
+async function recordDecision<T>(decision: {
+	profileId: number;
+	promptKey: string;
+	model: string;
+	/** Which version of the decision this is, stored as the row's prompt_fingerprint. */
+	fingerprint: string;
+	/** The inputs, as the row's `context`. */
+	context: Record<string, unknown>;
+	requests: SystemOneRequest[];
+	/** What the trace shows as the generation's input. */
+	traceInput: unknown;
+	read: (response: SystemOneResponse) => { value: T; recorded: unknown };
+}): Promise<{ value: T; aiChatId: number }> {
+	const { profileId, promptKey, model, requests } = decision;
+	const template = promptTemplates[promptKey];
 	const aiChatId = await reserveAiChatId();
 	await db.insert(ai_chats).values({
 		id: aiChatId,
@@ -239,39 +269,47 @@ export async function decideMatchedSkills(
 		// prompt finds this one where it found the prompt's.
 		system_prompt: template.system_prompt,
 		user_prompt: template.user_prompt,
-		context: JSON.parse(JSON.stringify({ data: profile.data, 'job.skills': skills.join('\n') })),
+		context: JSON.parse(JSON.stringify(decision.context)),
 		// What was actually sent, which here is a request rather than a prompt.
-		full_prompt: JSON.stringify(request),
-		prompt_key: SKILL_MATCH_PROMPT,
-		prompt_fingerprint: promptFingerprint(template),
+		full_prompt: JSON.stringify(requests[0]),
+		prompt_key: promptKey,
+		prompt_fingerprint: decision.fingerprint,
 		date_created: new Date(),
 		provider: 'typesafe',
-		model: SKILL_MATCH_MODEL,
+		model,
 		request_type: 'llm',
 		trace_id: recordedTraceId()
 	});
 
 	const costOf = (input: number, output: number) =>
-		estimateProviderCostUsd('typesafe', SKILL_MATCH_MODEL, input, output);
+		estimateProviderCostUsd('typesafe', model, input, output);
 	const started = performance.now();
-	let probabilities: number[];
-	let usage: { input_tokens: number; output_tokens: number };
+	let answered = 0;
+	let response: SystemOneResponse;
+	let read: { value: T; recorded: unknown };
 	try {
-		const response = await traceGeneration(
-			SKILL_MATCH_PROMPT,
-			{ skills },
-			() => systemOne(request),
-			(result) => ({
-				model: SKILL_MATCH_MODEL,
-				output: result.answers,
-				usageDetails: { input: result.usage.input_tokens, output: result.usage.output_tokens },
-				costDetails: {
-					total: costOf(result.usage.input_tokens, result.usage.output_tokens) ?? 0
-				}
-			})
-		);
-		probabilities = skillProbabilities(response, skills);
-		usage = response.usage;
+		for (;;) {
+			try {
+				response = await traceGeneration(
+					promptKey,
+					decision.traceInput,
+					() => systemOne(requests[answered]),
+					(result) => ({
+						model,
+						output: result.answers,
+						usageDetails: { input: result.usage.input_tokens, output: result.usage.output_tokens },
+						costDetails: {
+							total: costOf(result.usage.input_tokens, result.usage.output_tokens) ?? 0
+						}
+					})
+				);
+				break;
+			} catch (error) {
+				if (!isOversize(error) || answered + 1 >= requests.length) throw error;
+				answered++;
+			}
+		}
+		read = decision.read(response);
 	} catch (error) {
 		await db
 			.update(ai_chats)
@@ -283,18 +321,15 @@ export async function decideMatchedSkills(
 		throw error;
 	}
 
-	const matched = matchedByProbability(skills, probabilities);
-	const inputTokens = usage.input_tokens;
-	const outputTokens = usage.output_tokens;
+	const inputTokens = response.usage.input_tokens;
+	const outputTokens = response.usage.output_tokens;
 	const totalTokens = inputTokens + outputTokens;
 	const credits = tokensToCost(totalTokens);
 	await db
 		.update(ai_chats)
 		.set({
-			response: JSON.stringify({
-				matched_skills: matched,
-				probabilities: Object.fromEntries(skills.map((skill, i) => [skill, probabilities[i]]))
-			}),
+			...(answered > 0 ? { full_prompt: JSON.stringify(requests[answered]) } : {}),
+			response: JSON.stringify(read.recorded),
 			input_tokens: inputTokens,
 			output_tokens: outputTokens,
 			total_tokens: totalTokens,
@@ -314,17 +349,91 @@ export async function decideMatchedSkills(
 				owner.user_id,
 				credits,
 				'ai_generation',
-				`${SKILL_MATCH_PROMPT} (${totalTokens} tokens)`,
+				`${promptKey} (${totalTokens} tokens)`,
 				{
 					aiChatId,
-					promptKey: SKILL_MATCH_PROMPT,
+					promptKey,
 					tokens: { inputTokens, outputTokens, totalTokens },
 					provider: 'typesafe',
-					model: SKILL_MATCH_MODEL,
+					model,
 					providerCostUsd: costOf(inputTokens, outputTokens)
 				}
 			);
 		}
 	}
-	return matched;
+	return { value: read.value, aiChatId };
+}
+
+/**
+ * The matcher's skill pass on TypeSafe's Jev (skill-decisions.ts): which of
+ * `skills` the profile shows. Recorded by recordDecision, and throws as it
+ * does, a profile over Jev's size limit included, so the matcher can fall back
+ * to the prompt.
+ */
+export async function decideMatchedSkills(
+	profileId: number,
+	skills: readonly string[]
+): Promise<string[]> {
+	const profile = await loadProfileData(profileId, undefined, { exclude: NON_SKILL_FIELDS });
+	const { value } = await recordDecision({
+		profileId,
+		promptKey: SKILL_MATCH_PROMPT,
+		model: SKILL_MATCH_MODEL,
+		fingerprint: skillDecisionFingerprint(),
+		context: { data: profile.data, 'job.skills': skills.join('\n') },
+		requests: [skillDecisionRequest(renderProfileData(profile.data), skills)],
+		traceInput: { skills },
+		read: (response) => {
+			const probabilities = skillProbabilities(response, skills);
+			const matched = matchedByProbability(skills, probabilities);
+			return {
+				value: matched,
+				recorded: {
+					matched_skills: matched,
+					probabilities: Object.fromEntries(skills.map((skill, i) => [skill, probabilities[i]]))
+				}
+			};
+		}
+	});
+	return value;
+}
+
+/**
+ * The matcher's score on TypeSafe's Jev (match-decisions.ts): five factor
+ * questions about one job, combined into the number the prompt's `score` was.
+ * `variables` are the prompt's own, as the matcher fills them for
+ * `score_job_match`; the profile is loaded here, as the prompt loads it, less
+ * the fields MATCH_PROFILE_LEAVES_OUT names.
+ *
+ * A state over Jev's size limit is asked again with the posting cut
+ * (MATCH_DESCRIPTION_CUT). Recorded by recordDecision, and throws as it does,
+ * so the matcher can fall back to the prompt. Writes no text: the summary,
+ * strengths and gaps are written when someone opens the job
+ * (match-explanation.ts).
+ */
+export async function decideMatchScore(
+	profileId: number,
+	variables: Record<string, unknown>
+): Promise<{ score: number; factors: ScoreFactors; aiChatId: number }> {
+	const profile = await loadProfileData(profileId, undefined, {
+		exclude: [...NON_FIT_FIELDS, ...MATCH_PROFILE_LEAVES_OUT]
+	});
+	const values: Record<string, string> = {
+		...promptValues(variables),
+		data: renderProfileData(profile.data)
+	};
+	const { value, aiChatId } = await recordDecision({
+		profileId,
+		promptKey: MATCH_SCORE_PROMPT,
+		model: MATCH_SCORE_MODEL,
+		fingerprint: matchDecisionFingerprint(),
+		context: { ...variables, data: profile.data },
+		requests: [matchDecisionRequest(values), matchDecisionRequest(values, true)],
+		traceInput: { job: values['job.title'] ?? null },
+		read: (response) => {
+			const decided = matchScoreFrom(response);
+			return { value: decided, recorded: { score: decided.score, ...decided.factors } };
+		}
+	});
+	return { ...value, aiChatId };
 }

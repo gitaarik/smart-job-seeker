@@ -1766,6 +1766,82 @@ Provide your analysis in JSON format with:
 - strengths (array of 3-5 top reasons this is a good match)
 - gaps (array of areas where candidate doesn't fully meet requirements)`
 	},
+	/**
+	 * The text a match is shown with when Jev scored it. Jev decides the number
+	 * and writes nothing (match-decisions.ts), so this is asked when someone opens
+	 * the job, and only then (match-explanation.ts): most matches are never
+	 * opened, and the text was most of what `score_job_match` cost to write.
+	 *
+	 * It explains a score rather than giving one. The final score, after the
+	 * blend with the skill match, and Jev's verdict on each factor are inputs, so
+	 * the text cannot argue with the number on the page, which the prompt's own
+	 * text could: it was written next to the model's score, before the blend and
+	 * the thin-posting cap moved it.
+	 *
+	 * On the app model, as `score_job_match`'s text was, rather than the writing
+	 * model: the page is waiting for it.
+	 */
+	explain_job_match: {
+		temperature: 0,
+		system_prompt: `You are a technical recruiter and career advisor. A job has already been scored against a candidate's profile, and the score is final. Write what the candidate reads next to it: why the job scored what it did.
+
+The score runs from 0 to 100:
+- 90-100: Exceptional match - candidate exceeds requirements, perfect cultural and technical fit
+- 75-89: Strong match - candidate meets all key requirements with minor gaps
+- 60-74: Good match - candidate meets most requirements, some skill gaps addressable
+- 40-59: Moderate match - notable gaps but potentially viable with training
+- 20-39: Weak match - significant gaps in key requirements
+- 0-19: Poor match - fundamental mismatch in skills, experience, or preferences
+
+You are given how the score was reached: a verdict on each factor, and which of the job's skills the profile shows. Your text must agree with them and with the score. Do not call a weak match strong, and do not name as a strength what a verdict calls a gap.
+
+Base everything on what the candidate demonstrably has, not on skills they could likely learn or that are adjacent to what they know. Be objective and constructive, and specific: name the skills, the experience and the parts of the job you mean. Write in English, whatever language the posting is in.`,
+		user_prompt: `## Candidate Profile
+
+{{data}}
+
+### Candidate's Job Preferences:
+- Preferred job types: {{preferences.job_types}}
+- Experience levels: {{preferences.experience_levels}}
+- Remote preferences: {{preferences.work_location}}
+- Preferred locations: {{preferences.locations}}
+
+{{supportingEvidence}}
+
+## Job Opportunity
+
+**Title:** {{job.title}}
+**Company:** {{job.job_poster}}
+**Office Location:** {{job.office_location}}
+**Job Types:** {{job.job_types}}
+**Experience Levels:** {{job.experience_levels}}
+**Work Location:** {{job.work_location}}
+**Required Skills:** {{job.skills_required}}
+**Preferred Skills:** {{job.skills_preferred}}
+
+**Job Description:**
+{{job.job_description}}
+
+**Company Description:**
+{{job.company_description}}
+
+## The Score
+
+**Score:** {{match.score}} out of 100
+
+**How each factor was judged:**
+{{match.factors}}
+
+**The job's skills the profile shows:** {{match.matched_skills}}
+**The job's skills it does not show:** {{match.missing_skills}}
+
+---
+
+Provide your analysis in JSON format with:
+- summary (one or two sentences: why this job scored what it did for this candidate)
+- strengths (array of up to 5 reasons this job suits the candidate, most important first; fewer when there are fewer)
+- gaps (array of areas where the candidate doesn't fully meet the requirements, most important first)`
+	},
 
 	write_cover_letter: {
 		system_prompt: `You are an expert career coach writing a cover letter for a Software Engineer.

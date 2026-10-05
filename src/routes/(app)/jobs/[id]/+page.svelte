@@ -77,6 +77,56 @@
 	let showRematchConfirm = $state(false);
 	let rematchFormEl: HTMLFormElement | undefined = $state();
 
+	/**
+	 * The match's summary, strengths and gaps. A match Jev scored has none until
+	 * the job is first opened, so the page asks for them once it is open, never
+	 * from `load`, which the app runs on hover (oss ai-chat/match-explanation.ts).
+	 * Keyed on the match as last scored: a re-score writes the row anew without
+	 * text, and the old score's text must not stand in for the new one's.
+	 */
+	type MatchText = { summary: string; strengths: string[]; gaps: string[] };
+	const texts = (value: unknown) =>
+		Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+	let matchKey = $derived(match ? `${match.id}:${String(match.date_updated)}` : '');
+	let needsMatchText = $derived(
+		!!match && match.skip_reason == null && match.match_summary == null
+	);
+	let writtenText = $state<{ key: string; text: MatchText } | null>(null);
+	let writingKey = $state('');
+	let writeFailedKey = $state('');
+	let matchText: MatchText = $derived(
+		writtenText && writtenText.key === matchKey
+			? writtenText.text
+			: {
+					summary: match?.match_summary ?? '',
+					strengths: texts(match?.strengths),
+					gaps: texts(match?.gaps)
+				}
+	);
+	let isWritingMatchText = $derived(
+		needsMatchText && writtenText?.key !== matchKey && writeFailedKey !== matchKey
+	);
+
+	async function writeMatchText(key: string, jobId: number) {
+		writingKey = key;
+		try {
+			const res = await fetch(`/api/jobs/${jobId}/match-explanation`, { method: 'POST' });
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+			writtenText = { key, text: (await res.json()) as MatchText };
+		} catch {
+			writeFailedKey = key;
+		} finally {
+			if (writingKey === key) writingKey = '';
+		}
+	}
+
+	$effect(() => {
+		const key = matchKey;
+		if (!needsMatchText || writtenText?.key === key) return;
+		if (writingKey === key || writeFailedKey === key) return;
+		void writeMatchText(key, data.job.id);
+	});
+
 	// Staff re-parse (re-extract structured fields from stored content)
 	let isReparsing = $state(false);
 	let reparseError = $state('');
@@ -916,11 +966,33 @@
 					{/if}
 				{:else if match}
 					<!-- AI-scored match -->
-					{#if match.strengths && Array.isArray(match.strengths) && match.strengths.length > 0}
+					{#if isWritingMatchText}
+						<p class="mb-4 flex items-center gap-2 text-sm text-[var(--dash-text-muted)]">
+							<Spinner size="w-4 h-4" />
+							Writing the analysis…
+						</p>
+					{:else if needsMatchText && writeFailedKey === matchKey}
+						<p class="mb-4 text-sm text-[var(--dash-text-muted)]">
+							The analysis could not be written.
+							<button
+								type="button"
+								onclick={() => (writeFailedKey = '')}
+								class="text-[var(--dash-primary)] underline hover:text-[var(--dash-primary-hover)]"
+							>
+								Try again
+							</button>
+						</p>
+					{/if}
+
+					{#if matchText.summary}
+						<p class="mb-4 text-sm text-[var(--dash-text)]">{matchText.summary}</p>
+					{/if}
+
+					{#if matchText.strengths.length > 0}
 						<div class="mb-4">
 							<p class="mb-2 text-sm text-[var(--dash-text-secondary)]">Strengths</p>
 							<ul class="space-y-1">
-								{#each match.strengths as strength, i (i)}
+								{#each matchText.strengths as strength, i (i)}
 									<li class="flex items-start gap-2 text-sm">
 										<FontAwesomeIcon
 											icon={faCheck}
@@ -933,11 +1005,11 @@
 						</div>
 					{/if}
 
-					{#if match.gaps && Array.isArray(match.gaps) && match.gaps.length > 0}
+					{#if matchText.gaps.length > 0}
 						<div>
 							<p class="mb-2 text-sm text-[var(--dash-text-secondary)]">Gaps</p>
 							<ul class="space-y-1">
-								{#each match.gaps as gap, i (i)}
+								{#each matchText.gaps as gap, i (i)}
 									<li class="flex items-start gap-2 text-sm">
 										<FontAwesomeIcon
 											icon={faTimes}

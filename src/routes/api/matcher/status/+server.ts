@@ -79,8 +79,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				score: true,
 				skip_reason: true,
 				date_created: true,
-				skill_match_percentage: true,
-				match_summary: true
+				skill_match_percentage: true
 			},
 			with: {
 				job: {

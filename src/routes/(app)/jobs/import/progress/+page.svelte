@@ -44,7 +44,6 @@
 		status: string;
 		date_created: string | null;
 		skill_match_percentage: number | null;
-		match_summary: string | null;
 		job: {
 			id: number;
 			title: string | null;
@@ -557,11 +556,6 @@
 										</span>
 									{/if}
 								</div>
-								{#if match.match_summary}
-									<div class="mt-0.5 truncate text-xs text-[var(--dash-text-muted)]">
-										{match.match_summary}
-									</div>
-								{/if}
 							</div>
 
 							<!-- Recommendation + Time -->

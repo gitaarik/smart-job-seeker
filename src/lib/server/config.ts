@@ -95,6 +95,13 @@ export interface AppConfig {
 	// yes/no question per skill and falls back to the prompt whenever that fails
 	// (ai-chat/skill-decisions.ts). 'typesafe' with no key resolves to 'llm'.
 	skillMatchProvider: 'llm' | 'typesafe';
+	// Who decides the matcher's score (`score_job_match`). 'llm' runs the prompt,
+	// which also writes the match's summary, strengths and gaps; 'typesafe' asks
+	// Jev one question per factor the prompt weighs (ai-chat/match-decisions.ts),
+	// leaves the text to be written when the job is opened
+	// (ai-chat/match-explanation.ts), and falls back to the prompt whenever Jev
+	// fails. 'typesafe' with no key resolves to 'llm'.
+	matchScoreProvider: 'llm' | 'typesafe';
 	typesafeApiKey: string;
 
 	// Embeddings (semantic skill matching / RAG retrieval)
@@ -392,6 +399,11 @@ function loadConfig(): AppConfig {
 		cerebrasApiKey: getEnv('SJS_LLM_API_KEY_CEREBRAS', ''),
 		skillMatchProvider:
 			getEnv('SJS_LLM_SKILL_MATCH_PROVIDER', '') === 'typesafe' &&
+			getEnv('SJS_LLM_API_KEY_TYPESAFE', '')
+				? ('typesafe' as const)
+				: ('llm' as const),
+		matchScoreProvider:
+			getEnv('SJS_LLM_MATCH_SCORE_PROVIDER', '') === 'typesafe' &&
 			getEnv('SJS_LLM_API_KEY_TYPESAFE', '')
 				? ('typesafe' as const)
 				: ('llm' as const),

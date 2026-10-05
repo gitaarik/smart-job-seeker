@@ -915,11 +915,16 @@ export const job_matches = pgTable(
 		adjacent_skills: jsonb(),
 		match_summary: text(),
 		/**
-		 * How Jev judged the job, factor by factor, when TypeSafe's Jev scored it:
-		 * one answer per factor the `score_job_match` prompt weighs. Nothing on
-		 * main writes it yet; the Jev match score that does is on the
-		 * `feat/jev-match-score` branch. Added ahead of it because the migrations
-		 * after 0069 were built on this one. Null on every row the prompt scored.
+		 * How Jev judged the job, factor by factor (`ScoreFactors`,
+		 * ai-chat/match-decisions.ts), when Jev scored it. Null when the
+		 * `score_job_match` prompt did, which writes its own summary, strengths and
+		 * gaps.
+		 *
+		 * Jev writes no text, so a match it scored keeps those three null until
+		 * someone opens the job, and the explanation is then written from these
+		 * answers and the final score (ai-chat/match-explanation.ts). Re-scoring
+		 * writes the row again, text included, so a new score never carries the
+		 * old score's explanation.
 		 */
 		score_factors: jsonb(),
 		/**

@@ -300,7 +300,9 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 	const [decisions, matchRead, reach] = await Promise.all([
 		tailored ? decisionsForVersion(tailored.id).then(describeOverrides) : Promise.resolve([]),
 		layoutData.application?.job?.id
-			? jobMatchRead(layoutData.selectedProfile.id, layoutData.application.job.id)
+			? jobMatchRead(layoutData.selectedProfile.id, layoutData.application.job.id, {
+					explain: !!tailored
+				})
 			: Promise.resolve({ gaps: [], matched: [], details: null }),
 		// What each candidate document leaves out that speaks to this job, and
 		// what it puts beyond reach entirely — the measure the base suggestion

@@ -106,7 +106,17 @@ describe('copyJobMatches', () => {
 		// ai_chat_scoring slot: between llm_prompt and matched_skills.
 		expect(sql).toMatch(/src\.llm_prompt,\s*NULL,\s*src\.matched_skills/);
 		// rescore_requested_at slot: last in the select list.
-		expect(sql).toMatch(/src\.match_summary,\s*NULL\s*FROM job_matches src/);
+		expect(sql).toMatch(/src\.score_factors,\s*NULL\s*FROM job_matches src/);
+	});
+
+	it("keeps Jev's factors, which a match's text is written from", async () => {
+		mockQueryRawDirect.mockResolvedValueOnce([]);
+
+		await copyJobMatches(5, 9);
+
+		const { sql } = renderSql(mockQueryRawDirect.mock.calls[0][0]);
+		expect(sql).toMatch(/match_summary,\s*score_factors,\s*rescore_requested_at/);
+		expect(sql).toMatch(/src\.match_summary,\s*src\.score_factors,/);
 	});
 });
 
