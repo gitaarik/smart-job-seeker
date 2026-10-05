@@ -484,6 +484,13 @@
       "when": 1791207638261,
       "tag": "0068_certificate_tags",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1791220971221,
+      "tag": "0069_job_match_score_factors",
+      "breakpoints": true
     }
   ]
 }

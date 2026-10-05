@@ -915,6 +915,14 @@ export const job_matches = pgTable(
 		adjacent_skills: jsonb(),
 		match_summary: text(),
 		/**
+		 * How Jev judged the job, factor by factor, when TypeSafe's Jev scored it:
+		 * one answer per factor the `score_job_match` prompt weighs. Nothing on
+		 * main writes it yet; the Jev match score that does is on the
+		 * `feat/jev-match-score` branch. Added ahead of it because the migrations
+		 * after 0069 were built on this one. Null on every row the prompt scored.
+		 */
+		score_factors: jsonb(),
+		/**
 		 * Set when this score is deliberately invalidated (rescrape changed the
 		 * job's skills, user hit re-match, staff re-parsed it). The matcher treats
 		 * such a row as work; `upsertJobMatch` clears it after re-scoring.
