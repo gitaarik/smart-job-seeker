@@ -93,7 +93,14 @@ const PROFILE_INCLUDE = {
 		},
 		orderBy: SIDE_PROJECT_ORDER
 	},
-	references: { orderBy: asc(references.sort) },
+	references: {
+		// A referee's email and phone are theirs, given for a recruiter who asks,
+		// and this tree is serialised into every page that renders it: the public
+		// resume, the CV and share links. Left out here they reach no document;
+		// the References page and the exports read them with their own queries.
+		columns: { author_email: false, author_phone: false },
+		orderBy: asc(references.sort)
+	},
 	// A certificate's skills print on no document. They are here for the same
 	// reason a role's project technologies are: tailoring reads this tree as
 	// what the applicant holds (see heldTechnologies in tailor-version.ts).

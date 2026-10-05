@@ -1578,7 +1578,8 @@ export const references = pgTable(
 		// its author does not answer it. Deliberately NOT rendered on a public
 		// CV: see ProfileDisplay, which shows the quote and "references on
 		// request", so someone else's phone number is not published by a share
-		// link.
+		// link. Not loaded into the tree those pages serialise either
+		// (PROFILE_INCLUDE in server/profile/default.ts).
 		author_email: varchar({ length: 255 }),
 		author_phone: varchar({ length: 50 }),
 		text: text(),
