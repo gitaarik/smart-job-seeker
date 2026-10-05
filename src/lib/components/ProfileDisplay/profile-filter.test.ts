@@ -390,3 +390,67 @@ describe('filterOnTags — per-version overrides', () => {
 		).toHaveLength(0);
 	});
 });
+
+// ── References ──
+//
+// A reference has no tags, so where it prints is one rule: the CV, not the
+// resume. A version's decision about one reference is the only thing that
+// changes that, for one document: the resume going to a job that asks for
+// references, or a CV that should leave one out.
+
+describe('filterReferences', () => {
+	type Ref = { id: number; author: string };
+	const REFS: Ref[] = [
+		{ id: 13, author: 'Elmar Krack' },
+		{ id: 14, author: 'Michaël de Groot' }
+	];
+	const authors = (refs: Ref[]) => refs.map((r) => r.author);
+
+	function referencesOn(type: string, overrides: Array<Record<string, unknown>> = []) {
+		const versions = TAILORED.map((v) => (v.id === 10 ? { ...v, overrides } : v));
+		return authors(createProfileFilter(versions, type, null, 'app-45').filterReferences(REFS));
+	}
+
+	it('prints them on the CV and nowhere else', () => {
+		expect(referencesOn('cv')).toEqual(['Elmar Krack', 'Michaël de Groot']);
+		expect(referencesOn('resume')).toEqual([]);
+		expect(referencesOn('portfolio')).toEqual([]);
+		// With no type named, a render means the resume.
+		expect(authors(createProfileFilter([], null, null, '').filterReferences(REFS))).toEqual([]);
+	});
+
+	it('puts one on the resume this version decided to show it on', () => {
+		const overrides = [{ entity_type: 'reference', entity_id: 14, action: 'include' }];
+		expect(referencesOn('resume', overrides)).toEqual(['Michaël de Groot']);
+	});
+
+	it('leaves one off the CV this version decided to hide it on', () => {
+		const overrides = [{ entity_type: 'reference', entity_id: 13, action: 'exclude' }];
+		expect(referencesOn('cv', overrides)).toEqual(['Michaël de Groot']);
+	});
+
+	// The library version the tailored one extends has no decision, so it is
+	// still a resume without references.
+	it('changes only the version that decided', () => {
+		const versions = TAILORED.map((v) =>
+			v.id === 10
+				? { ...v, overrides: [{ entity_type: 'reference', entity_id: 13, action: 'include' }] }
+				: v
+		);
+		expect(
+			createProfileFilter(versions, 'resume', null, 'frontend').filterReferences(REFS)
+		).toEqual([]);
+	});
+
+	it('reads only decisions about references', () => {
+		const overrides = [{ entity_type: 'education', entity_id: 13, action: 'include' }];
+		expect(referencesOn('resume', overrides)).toEqual([]);
+	});
+
+	// The rule stands in for tags a reference does not have; it is not read as
+	// tags the reference might carry.
+	it('ignores a tags field on the row', () => {
+		const tagged = [{ id: 13, author: 'Elmar Krack', tags: ['resume'] }];
+		expect(createProfileFilter([], 'resume', null, '').filterReferences(tagged)).toEqual([]);
+	});
+});

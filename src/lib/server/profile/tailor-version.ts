@@ -30,6 +30,7 @@ import {
 	profile_version_skill_words,
 	profile_versions,
 	profiles,
+	references,
 	side_projects,
 	tech_skill_categories,
 	tech_skills,
@@ -75,6 +76,7 @@ import {
 	DOCUMENT_TEMPLATE_TAGS,
 	heldBackByTemplate,
 	isHiddenFromDocuments,
+	REFERENCE_TAGS,
 	renameTagSlug,
 	tagSlug
 } from '$lib/profile-visibility';
@@ -1641,7 +1643,7 @@ export async function describeOverrides(
 	const idsOf = (type: string) =>
 		rows.filter((r) => r.entity_type === type).map((r) => r.entity_id);
 
-	const [achievements, projects, skills, groups, technologies, wordings, schooling] =
+	const [achievements, projects, skills, groups, technologies, wordings, schooling, referees] =
 		await Promise.all([
 			idsOf(OVERRIDE_ENTITIES.achievement).length
 				? db.query.work_experience_achievements.findMany({
@@ -1686,6 +1688,12 @@ export async function describeOverrides(
 				? db.query.education.findMany({
 						where: inArray(education.id, idsOf(OVERRIDE_ENTITIES.education)),
 						columns: { id: true, area: true, study_type: true, institution: true }
+					})
+				: [],
+			idsOf(OVERRIDE_ENTITIES.reference).length
+				? db.query.references.findMany({
+						where: inArray(references.id, idsOf(OVERRIDE_ENTITIES.reference)),
+						columns: { id: true, author: true, author_position: true }
 					})
 				: []
 		]);
@@ -1749,6 +1757,10 @@ export async function describeOverrides(
 
 	for (const entry of schooling) {
 		labels.set(`${OVERRIDE_ENTITIES.education}:${entry.id}`, educationLabel(entry));
+	}
+
+	for (const entry of referees) {
+		labels.set(`${OVERRIDE_ENTITIES.reference}:${entry.id}`, referenceLabel(entry));
 	}
 
 	for (const w of wordings) {
@@ -2197,7 +2209,7 @@ function yearOf(value: unknown): string {
  * applicant looking at a hidden group wants to see.
  */
 function printedByFilter(profile: ProfileRow, docType: string, versionSlug: string) {
-	const { filterOnTags } = createProfileFilter(
+	const { filterOnTags, filterReferences } = createProfileFilter(
 		(profile.profile_versions ?? []) as never,
 		docType,
 		null,
@@ -2211,7 +2223,8 @@ function printedByFilter(profile: ProfileRow, docType: string, versionSlug: stri
 		skills: idsOf(
 			groups.flatMap((group) => filterOnTags(group.tech_skills ?? [], OVERRIDE_ENTITIES.skill))
 		),
-		education: idsOf(filterOnTags(profile.educations ?? [], OVERRIDE_ENTITIES.education))
+		education: idsOf(filterOnTags(profile.educations ?? [], OVERRIDE_ENTITIES.education)),
+		references: idsOf(filterReferences(profile.references ?? []))
 	};
 }
 
@@ -2225,6 +2238,18 @@ function printedByFilter(profile: ProfileRow, docType: string, versionSlug: stri
  */
 function templatePrintsSideProjects(template: string | null): boolean {
 	return templateForStorage(template) === null;
+}
+
+/** A referee as the References page names one: who, then their role. */
+function referenceLabel(entry: {
+	id: number;
+	author?: unknown;
+	author_position?: unknown;
+}): string {
+	return (
+		[text(entry.author), text(entry.author_position)].filter(Boolean).join(', ') ||
+		`reference ${entry.id}`
+	);
 }
 
 /** An education entry as the applicant reviews it: what, then where. */
@@ -2577,6 +2602,34 @@ export async function versionItemStates(opts: {
 		});
 	}
 
+	// No run decides about a reference and they carry no tags, so this switch is
+	// the only way one gets onto a resume: for the job that asks for references
+	// with the application rather than later. Their rule stands in for tags, so
+	// a resume's rows read "only on your CV" like any CV-only item.
+	const referees = profile.references ?? [];
+	if (referees.length > 0) {
+		groups.push({
+			key: 'references',
+			section: 'references',
+			entityType: null,
+			entityId: null,
+			title: 'References',
+			subtitle: null,
+			on: true,
+			rows: referees.map((entry) =>
+				describeItem({
+					entityType: OVERRIDE_ENTITIES.reference,
+					entityId: entry.id,
+					label: referenceLabel(entry),
+					tags: REFERENCE_TAGS,
+					on: printed.references.has(entry.id),
+					baseOn: basePrinted?.references.has(entry.id),
+					parentOn: true
+				})
+			)
+		});
+	}
+
 	return groups;
 }
 
@@ -2610,6 +2663,8 @@ function profileHoldsItem(profile: ProfileRow, entityType: string, entityId: num
 			return groups.some((group) => holds(group.tech_skills));
 		case OVERRIDE_ENTITIES.education:
 			return holds(profile.educations);
+		case OVERRIDE_ENTITIES.reference:
+			return holds(profile.references);
 		default:
 			return false;
 	}

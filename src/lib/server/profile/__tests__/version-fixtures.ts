@@ -53,6 +53,13 @@ export interface FixtureEducation {
 	tags: string[];
 }
 
+export interface FixtureReference {
+	id: number;
+	author: string;
+	author_position: string | null;
+	text: string;
+}
+
 export interface FixtureVersion {
 	id: number;
 	slug: string;
@@ -113,6 +120,14 @@ export function education(
 	return { id, area, study_type: null, institution, tags };
 }
 
+export function reference(
+	id: number,
+	author: string,
+	author_position: string | null = null
+): FixtureReference {
+	return { id, author, author_position, text: `${author} vouches for this applicant.` };
+}
+
 export function version(
 	id: number,
 	slug: string,
@@ -127,6 +142,7 @@ export interface ProfileFixture {
 	side_projects: FixtureProject[];
 	tech_skill_categories: FixtureCategory[];
 	educations: FixtureEducation[];
+	references: FixtureReference[];
 	profile_versions: FixtureVersion[];
 }
 
@@ -137,6 +153,7 @@ export function profileFixture(over: Partial<ProfileFixture> = {}): ProfileFixtu
 		side_projects: [],
 		tech_skill_categories: [],
 		educations: [],
+		references: [],
 		profile_versions: [],
 		...over
 	};

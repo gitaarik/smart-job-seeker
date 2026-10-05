@@ -276,6 +276,19 @@ export function heldBackByTemplate(tags: string[] | null | undefined, docType: s
 	return positives.length > 0 && !positives.includes(current);
 }
 
+/**
+ * Where a reference prints when no version says otherwise: the CV, and not the
+ * resume or the site.
+ *
+ * References have no `tags` column, so this one rule stands in for them, written
+ * as the tags a reference would carry. That way a reference goes through the
+ * same filter as everything else (`filterReferences` in profile-filter.ts), and
+ * a version's override beats the rule in both directions, the way it beats an
+ * item's own tags: a job-tailored resume can put one on, and a CV can leave one
+ * off.
+ */
+export const REFERENCE_TAGS: string[] = ['cv'];
+
 /** Where a held-back item is being lifted to: every document, or one version. */
 export const SHOW_ON_ALL = 'all';
 

@@ -60,7 +60,8 @@
 		{ key: 'experience', title: 'Experience' },
 		{ key: 'projects', title: 'Side projects' },
 		{ key: 'skills', title: 'Skills' },
-		{ key: 'education', title: 'Education' }
+		{ key: 'education', title: 'Education' },
+		{ key: 'references', title: 'References' }
 	];
 	let sections = $derived(
 		SECTIONS.map((section) => ({

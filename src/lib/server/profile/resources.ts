@@ -458,10 +458,13 @@ export interface ProfileResource {
  * "profile-only") holds an item back from every base template while leaving any
  * per-version tag it carries intact. A section qualifies when it has a `tags`
  * column AND every document renderer that prints it puts it through that
- * filter. Languages, references and certificates are rendered straight from the
- * profile with no filter at all, and highlights have no `tags` column, so for
- * those four there is simply no way to hide an entry — not from the assistant
- * and not from the UI either.
+ * filter. Languages and certificates are rendered straight from the profile
+ * with no filter at all. References have no `tags` column: they print by a
+ * fixed rule (the CV and not the resume, `REFERENCE_TAGS`), which only a
+ * per-document decision on the application's resume page changes. Highlights
+ * have no `tags` column either. So for those four there is simply no way to hide
+ * an entry from every document — not from the assistant and not from the UI
+ * either.
  *
  * The child collections split on the same test rather than on being children:
  *

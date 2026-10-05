@@ -28,10 +28,12 @@ import {
 	BASE_TEMPLATE_TAGS,
 	isNegated,
 	normalizeTemplateType,
+	REFERENCE_TAGS,
 	tagSlug
 } from '$lib/profile-visibility';
 import {
 	indexOverrides,
+	OVERRIDE_ENTITIES,
 	orderByOverrides,
 	overrideKey,
 	type VersionOverride
@@ -53,6 +55,12 @@ export interface ProfileFilter {
 	 * about; without it only tags apply.
 	 */
 	filterOnTags: <T extends object>(objList: T[], entityType?: string) => T[];
+	/**
+	 * The references this document prints. They have no tags, so they are read
+	 * as carrying REFERENCE_TAGS (on the CV, not the resume) and the version's
+	 * overrides decide from there.
+	 */
+	filterReferences: <T extends object>(references: T[]) => T[];
 	versionSlugs: string[];
 	toggles: string[];
 }
@@ -113,7 +121,12 @@ export function createProfileFilter(
 	});
 	const overrides = indexOverrides(overrideRows);
 
-	function filterOnTags<T extends object>(objList: T[], entityType?: string): T[] {
+	/** The filter itself, reading each item's tags through `tagsOf`. */
+	function filterWith<T extends object>(
+		objList: T[],
+		entityType: string | undefined,
+		tagsOf: (obj: T) => unknown
+	): T[] {
 		// The identifiers active for the currently-rendered surface: the base
 		// template (a document or the site) plus the viewed version's extension
 		// chain.
@@ -134,10 +147,11 @@ export function createProfileFilter(
 			if (override?.action === 'exclude') return false;
 			if (override?.action === 'include') return true;
 
-			if (!('tags' in obj && Array.isArray(obj.tags) && obj.tags.length)) {
+			const tags = tagsOf(obj);
+			if (!(Array.isArray(tags) && tags.length)) {
 				return true;
 			}
-			const tagsArr = (obj.tags as unknown[]).filter((t): t is string => typeof t === 'string');
+			const tagsArr = (tags as unknown[]).filter((t): t is string => typeof t === 'string');
 
 			const negatedIds = tagsArr.filter(isNegated).map(tagSlug).filter(Boolean);
 			const positives = tagsArr
@@ -178,5 +192,16 @@ export function createProfileFilter(
 		});
 	}
 
-	return { filterOnTags, versionSlugs, toggles };
+	function filterOnTags<T extends object>(objList: T[], entityType?: string): T[] {
+		return filterWith(objList, entityType, (obj) => ('tags' in obj ? obj.tags : undefined));
+	}
+
+	// One rule for every renderer and for the panel that lists what a document
+	// prints, so a reference cannot be on the page and off the list, or the
+	// other way round.
+	function filterReferences<T extends object>(references: T[]): T[] {
+		return filterWith(references, OVERRIDE_ENTITIES.reference, () => REFERENCE_TAGS);
+	}
+
+	return { filterOnTags, filterReferences, versionSlugs, toggles };
 }

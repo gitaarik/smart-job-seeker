@@ -42,6 +42,11 @@
 		date: string | null;
 		expiry_date?: string | null;
 	}
+	interface Reference {
+		author: string | null;
+		author_position: string | null;
+		text: string | null;
+	}
 	interface Profile {
 		name: string | null;
 		title: string | null;
@@ -57,6 +62,7 @@
 		work_experiences: WorkExperience[];
 		educations: Education[];
 		certificates?: Certificate[];
+		references?: Reference[];
 		tech_skill_categories: SkillCategory[];
 		profile_versions: VersionObj[];
 	}
@@ -97,7 +103,7 @@
 	);
 
 	const versionFromUrl = $derived(page.url.searchParams.get('version') || '');
-	const { filterOnTags, toggles } = $derived(
+	const { filterOnTags, filterReferences, toggles } = $derived(
 		createProfileFilter(profile.profile_versions, type, versionId, versionFromUrl)
 	);
 
@@ -115,6 +121,11 @@
 		filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience)
 	);
 	const education = $derived(filterOnTags(profile.educations ?? [], OVERRIDE_ENTITIES.education));
+	// The same rule as the default layout: on the CV, off the resume, unless
+	// this document's version says otherwise about one (see REFERENCE_TAGS).
+	// Before 2026-10-05 this renderer had no references section, so a branded
+	// document could not carry one even for a job that asked for them.
+	const references = $derived(filterReferences(profile.references ?? []));
 
 	// Work-experience lead line. The stored headline holds only the base text;
 	// when the template opts in, the job location is appended ("… in {location}.").
@@ -145,6 +156,11 @@
 			.filter(Boolean)
 			.join(', ');
 		return [c.name, tail].filter(Boolean).join(' – ');
+	}
+	// "Elmar Krack, Co-founder of Tender-it": the way the References page and
+	// the default layout name a referee.
+	function refLine(r: Reference): string {
+		return [r.author, r.author_position].filter(Boolean).join(', ');
 	}
 
 	const contactLocation = $derived(
@@ -325,6 +341,21 @@
 							{/each}
 						{/if}
 					</div>
+
+					{#if references.length > 0}
+						<div class="refs">
+							<h2>{templateLabel('references', locale)}</h2>
+							{#each references as r, ri (ri)}
+								<div class="ref">
+									<h3>{refLine(r)}</h3>
+									{#if r.text}<p>“{r.text}”</p>{/if}
+								</div>
+							{/each}
+							<!-- The referees' own email and phone stay off the page: the
+							     reader asks for them. -->
+							<p class="ref-note">{templateLabel('referencesOnRequest', locale)}</p>
+						</div>
+					{/if}
 				</td>
 			</tr>
 		</tbody>
@@ -605,6 +636,29 @@
 		border-top: 1px solid #d9d9d9;
 		margin: 13px 0;
 		clear: both;
+	}
+	/* Full width under the work history, kept whole so the heading never ends
+     a page without the quotes it introduces. */
+	.refs {
+		margin-top: 18px;
+		break-inside: avoid;
+	}
+	.ref {
+		margin-bottom: 8px;
+	}
+	.ref h3 {
+		font-weight: 700;
+		font-size: 9.9pt;
+		color: #111;
+		margin: 0 0 1px;
+	}
+	.ref p {
+		font-style: italic;
+		margin: 0;
+	}
+	.ref-note {
+		font-size: 8.5pt;
+		margin: 2px 0 0;
 	}
 
 	/* Media overrides last so they win over the base rules above. */

@@ -58,7 +58,8 @@ const {
 		side_projects: { findMany: vi.fn() },
 		tech_skills: { findMany: vi.fn() },
 		tech_skill_categories: { findMany: vi.fn() },
-		education: { findMany: vi.fn() }
+		education: { findMany: vi.fn() },
+		references: { findMany: vi.fn() }
 	};
 
 	const inserts: Write[] = [];
@@ -157,6 +158,7 @@ import {
 	education,
 	profileFixture,
 	project,
+	reference,
 	role,
 	skill,
 	version
@@ -180,6 +182,7 @@ beforeEach(() => {
 	find.tech_skills.findMany.mockResolvedValue([]);
 	find.tech_skill_categories.findMany.mockResolvedValue([]);
 	find.education.findMany.mockResolvedValue([]);
+	find.references.findMany.mockResolvedValue([]);
 	mockQueryRaw.mockResolvedValue([]);
 });
 
@@ -536,6 +539,22 @@ describe('setItemStateForApplication', () => {
 			{ entity_type: OVERRIDE_ENTITIES.skill, entity_id: 41, action: 'include' },
 			{ entity_type: OVERRIDE_ENTITIES.skillCategory, entity_id: 4, action: 'exclude' },
 			{ entity_type: OVERRIDE_ENTITIES.education, entity_id: 7, action: 'exclude' }
+		]);
+	});
+
+	// A reference has no tags and no run decides about one, so this switch is
+	// the only way one reaches a resume.
+	it('takes a reference, and only one this profile holds', async () => {
+		mockGetProfile.mockResolvedValue({ ...profile, references: [reference(13, 'Elmar Krack')] });
+
+		await toggle({ entityType: OVERRIDE_ENTITIES.reference, entityId: 13, on: true });
+		// 10 is a bullet's id, not a reference's.
+		await expect(toggle({ entityType: OVERRIDE_ENTITIES.reference, entityId: 10 })).rejects.toThrow(
+			'Item not found'
+		);
+
+		expect(inserts.map((i) => i.values)).toMatchObject([
+			{ entity_type: OVERRIDE_ENTITIES.reference, entity_id: 13, action: 'include', source: 'user' }
 		]);
 	});
 
@@ -960,6 +979,51 @@ describe('versionItemStates', () => {
 		expect(group(await states(), 'side-projects')?.note).toMatch(/doesn't print side projects/);
 	});
 
+	// The CV prints every reference and a resume none, unless this version put
+	// one on. With no tags, the rule is what a row names as holding one back.
+	it('lists references, off a resume unless this version put one on', async () => {
+		const include = { entity_type: OVERRIDE_ENTITIES.reference, entity_id: 14, action: 'include' };
+		mockGetProfile.mockResolvedValue({
+			...profile,
+			references: [
+				reference(13, 'Elmar Krack', 'Co-founder of Tender-it'),
+				reference(14, 'Michaël de Groot')
+			],
+			profile_versions: [
+				base,
+				version(5, 'app-12', { extension_links: [{ extended_id: 3 }], overrides: [include] })
+			]
+		});
+		find.profile_version_overrides.findMany.mockResolvedValue([
+			{ ...include, reason: 'you chose to show this', source: 'user' }
+		]);
+
+		const resume = await states();
+
+		expect(group(resume, 'references')).toMatchObject({
+			section: 'references',
+			title: 'References'
+		});
+		expect(row(resume, 'reference:13')).toMatchObject({
+			label: 'Elmar Krack, Co-founder of Tender-it',
+			on: false,
+			baseOn: false,
+			source: 'base',
+			reason: 'only on your CV'
+		});
+		expect(row(resume, 'reference:14')).toMatchObject({
+			label: 'Michaël de Groot',
+			on: true,
+			baseOn: false,
+			source: 'user',
+			reason: 'you chose to show this'
+		});
+
+		const cv = await states({ docType: 'cv' });
+
+		expect(row(cv, 'reference:13')).toMatchObject({ on: true, baseOn: true, reason: '' });
+	});
+
 	it('claims nothing about a base it cannot resolve', async () => {
 		const groups = await states({ baseSlug: null });
 
@@ -1155,6 +1219,23 @@ describe('describeOverrides', () => {
 		expect(described.label).toBe('Dutch MBO at Nova College');
 	});
 
+	// Who they are names a referee; the quote is what the page prints.
+	it('names a referee by who they are and their role', async () => {
+		find.references.findMany.mockResolvedValue([
+			{ id: 13, author: 'Elmar Krack', author_position: 'Co-founder of Tender-it' }
+		]);
+
+		const [described] = await describeOverrides([
+			row(OVERRIDE_ENTITIES.reference, 13, { action: 'include', source: 'user' })
+		]);
+
+		expect(described).toMatchObject({
+			entityType: OVERRIDE_ENTITIES.reference,
+			label: 'Elmar Krack, Co-founder of Tender-it',
+			context: null
+		});
+	});
+
 	it('asks only about the types it was given rows for', async () => {
 		find.tech_skills.findMany.mockResolvedValue([{ id: 8, name: 'Python' }]);
 
@@ -1165,6 +1246,7 @@ describe('describeOverrides', () => {
 		expect(find.work_experience_achievements.findMany).not.toHaveBeenCalled();
 		expect(find.tech_skill_categories.findMany).not.toHaveBeenCalled();
 		expect(find.work_experience_technologies.findMany).not.toHaveBeenCalled();
+		expect(find.references.findMany).not.toHaveBeenCalled();
 	});
 });
 

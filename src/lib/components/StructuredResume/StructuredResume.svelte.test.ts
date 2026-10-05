@@ -62,3 +62,61 @@ describe('StructuredResume — certificates', () => {
 		expect(screen.queryByText('Certificates')).toBeNull();
 	});
 });
+
+/**
+ * The references block, added 2026-10-05. Before, this renderer printed none,
+ * so a branded resume could not carry one even for a job that asked for them.
+ * Same rule as the default layout: the CV prints them, the resume prints the
+ * ones its version decided to show.
+ */
+describe('StructuredResume — references', () => {
+	const references = [
+		{
+			id: 13,
+			author: 'Elmar Krack',
+			author_position: 'Co-founder of Tender-it',
+			text: 'Rik took ownership of our platform.'
+		},
+		{ id: 14, author: 'Michaël de Groot', author_position: null, text: 'A pleasure to work with.' }
+	];
+	const withReferences = (overrides: Array<Record<string, unknown>> = []): Profile => ({
+		...profile([]),
+		references,
+		profile_versions: [{ id: 5, slug: 'app-91', toggles: [], extension_links: [], overrides }]
+	});
+
+	test('prints none on a resume whose version decided nothing about them', () => {
+		render(StructuredResume, {
+			props: { config: {}, type: 'resume', versionId: 5, profile: withReferences() }
+		});
+		expect(screen.queryByText('References')).toBeNull();
+		expect(screen.queryByText('Elmar Krack, Co-founder of Tender-it')).toBeNull();
+	});
+
+	test('prints every reference on a CV, with the note that contact details are on request', () => {
+		render(StructuredResume, {
+			props: { config: {}, type: 'cv', versionId: 5, profile: withReferences() }
+		});
+		expect(screen.getByText('References')).toBeTruthy();
+		expect(screen.getByText('Elmar Krack, Co-founder of Tender-it')).toBeTruthy();
+		expect(screen.getByText('“Rik took ownership of our platform.”')).toBeTruthy();
+		// No position, no dangling comma.
+		expect(screen.getByText('Michaël de Groot')).toBeTruthy();
+		expect(screen.getByText('Contact details available upon request')).toBeTruthy();
+	});
+
+	test('prints the one this resume’s version put on, in the document’s language', () => {
+		render(StructuredResume, {
+			props: {
+				config: {},
+				type: 'resume',
+				versionId: 5,
+				locale: 'nl',
+				profile: withReferences([{ entity_type: 'reference', entity_id: 13, action: 'include' }])
+			}
+		});
+		expect(screen.getByText('Referenties')).toBeTruthy();
+		expect(screen.getByText('Elmar Krack, Co-founder of Tender-it')).toBeTruthy();
+		expect(screen.queryByText('Michaël de Groot')).toBeNull();
+	});
+});

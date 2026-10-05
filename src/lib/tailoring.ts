@@ -1098,7 +1098,7 @@ export interface ItemRow {
 }
 
 /** The parts of a document the panel lists, in the order it lists them. */
-export type ItemSection = 'experience' | 'projects' | 'skills' | 'education';
+export type ItemSection = 'experience' | 'projects' | 'skills' | 'education' | 'references';
 
 export interface ItemGroup {
 	/** Stable key for the UI, and the parent this group's rows hang off. */

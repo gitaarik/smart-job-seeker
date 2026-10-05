@@ -107,6 +107,8 @@
 				extended_id: number | null;
 				extender_id: number | null;
 			}>;
+			/** The version's per-item decisions, read by createProfileFilter. */
+			overrides?: unknown;
 		}>;
 	}
 
@@ -130,13 +132,16 @@
 	// Derived, like everything below that reads the props, so the document renders
 	// whatever profile it is given rather than the first.
 	const versionFromUrl: string = $derived(page.url.searchParams.get('version') || '');
-	const { filterOnTags, toggles } = $derived(
+	const { filterOnTags, filterReferences, toggles } = $derived(
 		createProfileFilter(profile.profile_versions, type, versionId, versionFromUrl)
 	);
 
 	const work_experiences = $derived(
 		filterOnTags(profile.work_experiences, OVERRIDE_ENTITIES.workExperience)
 	);
+	// The CV prints them and the resume does not, unless this document's
+	// version says otherwise about one: see REFERENCE_TAGS.
+	const references = $derived(filterReferences(profile.references ?? []));
 
 	// Resolve visible skills per category up front: a category whose skills are
 	// all hidden (all profile-only, say) must not print an empty bullet — nor
@@ -444,13 +449,13 @@
 		</section>
 	{/if}
 
-	{#if type === 'cv' && profile.references && profile.references.length > 0}
+	{#if references.length > 0}
 		<section class="mb-6">
 			<h2 class="text-sm font-bold">{heading('references')}</h2>
 
 			<hr class="mt-1 mb-2" />
 
-			{#each profile.references as reference, index (index)}
+			{#each references as reference, index (index)}
 				<div class="mb-2">
 					<!--
 						Name and role on one line, comma-separated, the way the References

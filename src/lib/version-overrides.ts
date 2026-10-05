@@ -48,7 +48,16 @@ export const OVERRIDE_ENTITIES = {
 	 * picks newest-first so the last writer wins if two ever survive. See
 	 * pickedVariantIds in server/profile/field-variants.ts.
 	 */
-	fieldVariant: 'profile_field_variant'
+	fieldVariant: 'profile_field_variant',
+	/**
+	 * A referee's quote. References have no `tags`, so where one prints is a
+	 * fixed rule (REFERENCE_TAGS in $lib/profile-visibility: the CV, not the
+	 * resume) and this decision is the only per-document control there is:
+	 * putting one on the resume going to a job that asks for references.
+	 * Tailoring never writes one. It is the applicant's own decision, made in
+	 * the item panel.
+	 */
+	reference: 'reference'
 } as const;
 
 export type OverrideEntity = (typeof OVERRIDE_ENTITIES)[keyof typeof OVERRIDE_ENTITIES];
@@ -77,7 +86,8 @@ export const OVERRIDE_ENTITY_LABELS: Record<OverrideEntity, string> = {
 	[OVERRIDE_ENTITIES.skill]: 'Skill',
 	[OVERRIDE_ENTITIES.sideProject]: 'Side project',
 	[OVERRIDE_ENTITIES.education]: 'Education',
-	[OVERRIDE_ENTITIES.fieldVariant]: 'Wording'
+	[OVERRIDE_ENTITIES.fieldVariant]: 'Wording',
+	[OVERRIDE_ENTITIES.reference]: 'Reference'
 };
 
 /** The label, falling back to the raw type so an unknown row still says what it is. */
