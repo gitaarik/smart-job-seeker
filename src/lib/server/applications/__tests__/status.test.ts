@@ -275,6 +275,36 @@ describe('writeApplicationStatus', () => {
 		expect(written()).not.toHaveProperty('application_sent_date');
 	});
 
+	it('does not date an application that ended before it went out', async () => {
+		// The date is the only thing telling "closed before I applied" from
+		// "closed after", so filling it in here would erase the difference.
+		for (const status of ['position_closed', 'withdrawn']) {
+			updates.length = 0;
+			applicationRow = { ...applicationRow, status_step: 'Preparing', application_sent_date: null };
+
+			const result = await writeApplicationStatus(
+				APP,
+				PROFILE,
+				move({ status, step: null, rounds: [] })
+			);
+
+			expect(written(), status).not.toHaveProperty('application_sent_date');
+			expect(result?.appliedDateSet, status).toBeNull();
+		}
+	});
+
+	it('still dates one the employer turned down, which they could only do once it went out', async () => {
+		applicationRow = { ...applicationRow, status_step: 'Preparing', application_sent_date: null };
+
+		await writeApplicationStatus(
+			APP,
+			PROFILE,
+			move({ status: 'rejected', step: null, rounds: [] })
+		);
+
+		expect(written()?.application_sent_date).toBe(TODAY);
+	});
+
 	it('does not treat still-preparing as sent', async () => {
 		applicationRow = { ...applicationRow, status_step: 'Applied', application_sent_date: null };
 
@@ -478,6 +508,9 @@ describe('statusForModel', () => {
 	it('names the label beside the value where the two differ', () => {
 		expect(statusForModel('rejected')).toBe('rejected (the applicant sees "Not selected")');
 		expect(statusForModel('withdrawn')).toBe('withdrawn (the applicant sees "Discontinued")');
+		expect(statusForModel('position_closed')).toBe(
+			'position_closed (the applicant sees "Position closed")'
+		);
 		// A legacy value old rows hold reads as the phase it was renamed into.
 		expect(statusForModel('sent')).toBe('sent (the applicant sees "Applying")');
 	});
@@ -488,7 +521,8 @@ describe('statusForModel', () => {
 
 	it('lists every status known by another name, for a contract to quote', () => {
 		expect(RELABELLED_STATUSES).toBe(
-			'rejected reads "Not selected" and withdrawn reads "Discontinued"'
+			'rejected reads "Not selected", withdrawn reads "Discontinued" and ' +
+				'position_closed reads "Position closed"'
 		);
 	});
 });

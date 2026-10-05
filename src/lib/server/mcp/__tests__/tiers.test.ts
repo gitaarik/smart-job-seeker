@@ -188,8 +188,8 @@ describe('tierForWrite', () => {
 
 		it('asks before closing one', () => {
 			// Each of these takes it off the board the applicant works from, and
-			// each is a claim about a decision somebody else made.
-			for (const status of ['accepted', 'rejected', 'withdrawn']) {
+			// each is a claim about what somebody else did.
+			for (const status of ['accepted', 'rejected', 'withdrawn', 'position_closed']) {
 				const decision = move(status);
 				expect(decision.tier, status).toBe(2);
 				expect(decision.reason, status).toContain('closes it');

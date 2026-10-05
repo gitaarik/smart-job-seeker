@@ -922,12 +922,13 @@ describe('update_application_status', () => {
 		// told otherwise. One called an application "rejected" to an applicant
 		// whose every page says "Not selected".
 		expect(def.contract.replace(/\s+/g, ' ')).toContain(
-			'The applicant knows them as "Not selected" and "Discontinued": say those, not the values.'
+			'Say the labels they know, not the values: "Not selected", "Discontinued", "Position closed".'
 		);
 	});
 
 	it('only accepts a status the pipeline actually has', () => {
 		expect(def.validate({ status: 'interviewing' }, APPLYING).ok).toBe(true);
+		expect(def.validate({ status: 'position_closed' }, APPLYING).ok).toBe(true);
 		expect(def.validate({ status: 'ghosted' }, APPLYING).ok).toBe(false);
 		// The read-side legacy names render on old rows and must not be written
 		// onto new ones; see `settableStatuses`.

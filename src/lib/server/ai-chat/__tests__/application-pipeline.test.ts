@@ -124,7 +124,7 @@ describe('formatPipelineContext', () => {
 	it('does not count an accepted application among the ones left out', () => {
 		const note = formatPipelineContext([row()], { finished: 2 }).replace(/\s+/g, ' ');
 		expect(note).toContain(
-			'2 finished application(s), "Not selected" or "Discontinued", are not in'
+			'2 finished application(s), "Not selected", "Discontinued" or "Position closed", are not in'
 		);
 		expect(note).toContain('and what they accepted');
 	});

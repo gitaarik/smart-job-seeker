@@ -44,10 +44,10 @@
 
 	/**
 	 * `done` is behind them, `current` is where they are, `ahead` is still to
-	 * come (booked or not), `ended` is a closed application and `won` an
-	 * accepted one.
+	 * come (booked or not), `missed` was never reached by an application that
+	 * has ended, `ended` is a closed application and `won` an accepted one.
 	 */
-	type Mark = 'done' | 'current' | 'ahead' | 'ended' | 'won';
+	type Mark = 'done' | 'current' | 'ahead' | 'missed' | 'ended' | 'won';
 
 	interface Point {
 		key: string;
@@ -64,15 +64,18 @@
 		const list: Point[] = [];
 
 		list.push(
-			phase === 'applying' && !sent
-				? {
-						key: 'applied',
-						title: 'Applying',
-						lines: step ? [step] : [],
-						mark: 'current',
-						badge: null
-					}
-				: { key: 'applied', title: 'Applied', lines: [], mark: 'done', badge: 'check' }
+			sent
+				? { key: 'applied', title: 'Applied', lines: [], mark: 'done', badge: 'check' }
+				: phase === 'applying'
+					? {
+							key: 'applied',
+							title: 'Applying',
+							lines: step ? [step] : [],
+							mark: 'current',
+							badge: null
+						}
+					: // Ended before it went out, which two endings can (`canEndUnsent`).
+						{ key: 'applied', title: 'Not applied', lines: [], mark: 'missed', badge: null }
 		);
 
 		if (phase === 'applying') {
@@ -99,7 +102,7 @@
 			}
 		}
 
-		if (status === 'rejected' || status === 'withdrawn') {
+		if (phase === 'result' && status !== 'accepted') {
 			list.push({
 				key: 'result',
 				title: getStatusLabel(status),
@@ -134,6 +137,8 @@
 		current:
 			'bg-[var(--dash-card)] text-[var(--dash-primary)] ring-2 ring-[var(--dash-primary)] ring-offset-2 ring-offset-[var(--dash-card)]',
 		ahead: 'border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text-muted)]',
+		missed:
+			'border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text-muted)]',
 		ended: 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)] border border-[var(--dash-border)]',
 		won: 'bg-green-600 text-white'
 	};
@@ -142,6 +147,7 @@
 		done: 'done',
 		current: 'current',
 		ahead: 'still to come',
+		missed: 'never reached',
 		ended: 'ended here',
 		won: 'done'
 	};
@@ -200,7 +206,7 @@
 					</span>
 				{/if}
 				<span
-					class="mt-1.5 text-xs font-medium {point.mark === 'ahead'
+					class="mt-1.5 text-xs font-medium {point.mark === 'ahead' || point.mark === 'missed'
 						? 'text-[var(--dash-text-muted)]'
 						: 'text-[var(--dash-text)]'}"
 				>

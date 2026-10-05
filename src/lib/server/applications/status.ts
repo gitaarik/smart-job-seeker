@@ -40,6 +40,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import { application_status_log, applications } from '$lib/server/db/schema';
 import {
 	blankRound,
+	canEndUnsent,
 	currentRoundIndex,
 	getStatusLabel,
 	getStepperPhase,
@@ -67,17 +68,18 @@ export const settableStatuses: string[] = statusOptions.map((option) => option.v
 
 /**
  * The statuses the applicant knows by another name, for text a model reads:
- * `rejected reads "Not selected" and withdrawn reads "Discontinued"`.
+ * `rejected reads "Not selected", withdrawn reads "Discontinued" and …`.
  *
  * The labels are deliberate. "Rejected" is the word "Not selected" exists to
  * avoid, and a model repeats whatever a tool shows it: while the tools showed
  * only the stored value, the assistant called applications "rejected" to an
  * applicant whose every page said "Not selected".
  */
-export const RELABELLED_STATUSES = statusOptions
-	.filter((option) => option.label.toLowerCase() !== option.value)
-	.map((option) => `${option.value} reads "${option.label}"`)
-	.join(' and ');
+export const RELABELLED_STATUSES = new Intl.ListFormat('en-GB', { type: 'conjunction' }).format(
+	statusOptions
+		.filter((option) => option.label.toLowerCase() !== option.value)
+		.map((option) => `${option.value} reads "${option.label}"`)
+);
 
 /**
  * One status for a model to read: the value the tools take, and the label the
@@ -313,7 +315,10 @@ export async function writeApplicationStatus(
 	// out, and an application whose date nobody filled in reads as never sent
 	// on every list that sorts by it. Only ever fills a blank: a date the
 	// applicant typed is theirs, and a later stage change is not evidence it was
-	// wrong.
+	// wrong. Not for an ending that can come before sending (`canEndUnsent`):
+	// the date is the only thing that tells "closed before I applied" from
+	// "closed after", and filling it would record an application that never
+	// went out.
 	//
 	// `today()` rather than the Date: the column is a Drizzle `date()` in string
 	// mode, so a Date object is serialized by the driver in the server's local
@@ -321,7 +326,7 @@ export async function writeApplicationStatus(
 	const appliedDateSet =
 		!existing.application_sent_date &&
 		((after.status === 'applying' && !!after.step && after.step !== 'Preparing') ||
-			(after.status !== 'applying' && after.status !== 'draft'))
+			(after.status !== 'applying' && after.status !== 'draft' && !canEndUnsent(after.status)))
 			? today()
 			: null;
 

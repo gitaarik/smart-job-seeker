@@ -9,7 +9,8 @@ export const statusOptions = [
 	{ value: 'negotiating', label: 'Negotiating' },
 	{ value: 'accepted', label: 'Accepted' },
 	{ value: 'rejected', label: 'Not selected' },
-	{ value: 'withdrawn', label: 'Discontinued' }
+	{ value: 'withdrawn', label: 'Discontinued' },
+	{ value: 'position_closed', label: 'Position closed' }
 ] as const;
 
 export const statusFilters = [{ value: 'all', label: 'All' }, ...statusOptions] as const;
@@ -24,7 +25,8 @@ export const statusLabels: Record<string, string> = {
 	offered: 'Negotiating', // backward compat
 	accepted: 'Accepted',
 	withdrawn: 'Discontinued',
-	rejected: 'Not selected'
+	rejected: 'Not selected',
+	position_closed: 'Position closed'
 };
 
 export function getStatusLabel(status: string): string {
@@ -40,13 +42,35 @@ export const stepperPhases = [
 	{ value: 'result', label: 'Result' }
 ] as const;
 
+/**
+ * How an application can end.
+ *
+ * Apart from the job taken, they are told apart by who ended it. "Not
+ * selected" is the employer deciding against them and "Discontinued" is the
+ * applicant stopping. "Position closed" is the job going away with nobody
+ * deciding about them: a posting taken down before they applied, or a role
+ * cancelled or frozen. Before it existed, such an ending was filed as one of
+ * the other two with a note correcting it ("on hold, not a no"), and everything
+ * that reads the status rather than the note took it for a no.
+ */
 export const resultOptions = [
 	{ value: 'accepted', label: 'Accepted' },
 	{ value: 'rejected', label: 'Not selected' },
-	{ value: 'withdrawn', label: 'Discontinued' }
+	{ value: 'withdrawn', label: 'Discontinued' },
+	{ value: 'position_closed', label: 'Position closed' }
 ] as const;
 
-export const finishedStatuses = ['accepted', 'rejected', 'withdrawn'];
+export const finishedStatuses = ['accepted', 'rejected', 'withdrawn', 'position_closed'];
+
+/**
+ * The endings that can come before the application went out: the applicant can
+ * stop before sending anything, and a posting can come down before they do.
+ * Every other status past applying says it was sent. For these two only the
+ * applied date does, so the status writer does not fill it in for them.
+ */
+export function canEndUnsent(status: string): boolean {
+	return status === 'withdrawn' || status === 'position_closed';
+}
 
 /**
  * Still in play — the pipeline lists and the home dashboard.
@@ -70,7 +94,7 @@ export function isFinishedStatus(status: string): boolean {
  * other offer is weighed against, and the conditions they wrote down about it —
  * a walk-away number, say — are about exactly that. Left out as "finished", it
  * could be compared against from its own page only, which is the one page where
- * nobody asks. Rejected and withdrawn stay out: they grow without bound and say
+ * nobody asks. The other endings stay out: they grow without bound and say
  * nothing about what to do next.
  */
 export function isComparedStatus(status: string): boolean {
@@ -525,6 +549,20 @@ export function getQuickStatusActions(status: string, step: string | null): Quic
 					tone: 'advance',
 					addsRound: true
 				},
+				// Only before it went out: a posting that is gone by then is the usual
+				// way this ends, and one taken down after they applied ends nothing,
+				// since employers often stop taking applications and keep going
+				// through the ones they have.
+				...(notApplied
+					? [
+							{
+								label: 'Position closed',
+								status: 'position_closed',
+								step: null,
+								tone: 'negative' as const
+							}
+						]
+					: []),
 				notSelected
 			];
 		}
@@ -572,6 +610,7 @@ export function getStatusColor(status: string): string {
 			return 'bg-green-100 text-green-700';
 		case 'rejected':
 		case 'withdrawn':
+		case 'position_closed':
 			return 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]';
 		default:
 			return 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]';
@@ -597,6 +636,7 @@ export function getStatusDotColor(status: string): string {
 			return 'text-green-700';
 		case 'rejected':
 		case 'withdrawn':
+		case 'position_closed':
 			return 'text-[var(--dash-text-muted)]';
 		default:
 			return 'text-[var(--dash-text-muted)]';
@@ -622,6 +662,7 @@ export function getStatusBgColor(status: string): string {
 			return 'bg-green-600';
 		case 'rejected':
 		case 'withdrawn':
+		case 'position_closed':
 			return 'bg-[var(--dash-text-muted)]';
 		default:
 			return 'bg-[var(--dash-text-muted)]';

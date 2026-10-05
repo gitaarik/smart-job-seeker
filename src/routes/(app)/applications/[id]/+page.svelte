@@ -25,6 +25,7 @@
 	import Card from '../../components/Card.svelte';
 	import CategoryPill from '$lib/components/CategoryPill.svelte';
 	import {
+		canEndUnsent,
 		describeNextStep,
 		formatRoundWhen,
 		getStatusLabel,
@@ -68,9 +69,14 @@
 	let stage = $derived(stageLabel(app, data.today));
 	let next = $derived(nextStep(app, data.today));
 	// Out of applying, or applying and waiting on a reply: either way it went out.
-	// A `draft` is the old column default for one that has not.
+	// A `draft` is the old column default for one that has not. An ending that
+	// can come before sending (`canEndUnsent`) says neither, so there it is the
+	// applied date that does, or a round they were interviewed in.
 	let sent = $derived(
-		app.status !== 'draft' && (getStepperPhase(app.status) !== 'applying' || !!next?.waiting)
+		app.status !== 'draft' &&
+			(canEndUnsent(app.status)
+				? !!app.application_sent_date || rounds.length > 0
+				: getStepperPhase(app.status) !== 'applying' || !!next?.waiting)
 	);
 
 	function openStatusPicker(addRound = false) {

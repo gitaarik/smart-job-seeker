@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+	canEndUnsent,
 	currentRoundIndex,
 	describeNextStep,
+	finishedStatuses,
 	formatRoundWhen,
 	getQuickStatusActions,
 	getStepperPhase,
@@ -68,6 +70,19 @@ describe('the quick status actions', () => {
 			'Invited to interview'
 		);
 		expect(getQuickStatusActions('interviewing', null).map((q) => q.label)).toContain('Next round');
+	});
+
+	it('offer a closed position only before the application went out', () => {
+		// A posting gone before they applied is how this usually ends. One taken
+		// down after ends nothing: employers keep going through what they have.
+		const closes = (step: string | null) =>
+			getQuickStatusActions('applying', step).some((q) => q.status === 'position_closed');
+		expect(closes(null)).toBe(true);
+		expect(closes('Preparing')).toBe(true);
+		expect(closes('Applied')).toBe(false);
+		expect(
+			getQuickStatusActions('interviewing', null).some((q) => q.status === 'position_closed')
+		).toBe(false);
 	});
 });
 
@@ -246,7 +261,7 @@ describe('nextStep', () => {
 		expect(
 			nextStep({ status: 'negotiating', status_step: 'Coffee with the CEO' }, TODAY)
 		).toBeNull();
-		for (const status of ['accepted', 'rejected', 'withdrawn']) {
+		for (const status of finishedStatuses) {
 			expect(nextStep({ status }, TODAY), status).toBeNull();
 		}
 	});
@@ -332,5 +347,24 @@ describe('the compared statuses', () => {
 		expect(isComparedStatus('accepted')).toBe(true);
 		expect(isComparedStatus('rejected')).toBe(false);
 		expect(isComparedStatus('withdrawn')).toBe(false);
+		expect(isComparedStatus('position_closed')).toBe(false);
+	});
+});
+
+// "Applied" on the track, and the applied date the status writer fills in, both
+// rest on this: every status past applying says the application went out, except
+// the endings that can come first.
+describe('canEndUnsent', () => {
+	it('is the applicant stopping and the position closing, and no other status', () => {
+		expect(statusOptions.filter(({ value }) => canEndUnsent(value)).map((o) => o.value)).toEqual([
+			'withdrawn',
+			'position_closed'
+		]);
+	});
+
+	it('is only ever a way of finishing', () => {
+		for (const { value } of statusOptions) {
+			if (canEndUnsent(value)) expect(isFinishedStatus(value), value).toBe(true);
+		}
 	});
 });

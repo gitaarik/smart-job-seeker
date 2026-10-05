@@ -262,7 +262,7 @@
 			<!-- Result selection -->
 			<div>
 				<p id="{uid}-result" class={labelClass}>Result</p>
-				<div role="group" aria-labelledby="{uid}-result" class="grid grid-cols-3 gap-2">
+				<div role="group" aria-labelledby="{uid}-result" class="grid grid-cols-2 gap-2">
 					{#each resultOptions as option (option.value)}
 						<button
 							type="button"

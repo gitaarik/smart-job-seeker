@@ -44,6 +44,7 @@ import {
 	rateToHourly
 } from '$lib/salary/conversion';
 import {
+	finishedStatuses,
 	getStatusLabel,
 	isComparedStatus,
 	nextStep,
@@ -65,6 +66,13 @@ import type { StoredDetail } from '$lib/application-details';
  * strongest option" when the strongest was cut).
  */
 const MAX_APPLICATIONS = 25;
+
+/** The endings the table leaves out, by their labels: `"Not selected", … or "Position closed"`. */
+const LEFT_OUT_LABELS = new Intl.ListFormat('en-GB', { type: 'disjunction' }).format(
+	finishedStatuses
+		.filter((status) => !isComparedStatus(status))
+		.map((status) => `"${getStatusLabel(status)}"`)
+);
 
 /**
  * Char ceiling on the whole block.
@@ -340,8 +348,7 @@ export function formatPipelineContext(
 					'',
 					// In the labels the activity index heads them with, which are also
 					// the only words for them the applicant has seen.
-					`NOTE: ${finished} finished application(s), ` +
-						`"${getStatusLabel('rejected')}" or "${getStatusLabel('withdrawn')}",`,
+					`NOTE: ${finished} finished application(s), ${LEFT_OUT_LABELS},`,
 					'are not in the table below. This table is what is IN PLAY, and what',
 					'they accepted, not everything that exists. They are listed in the',
 					'activity index with their status, so answer questions about outcomes',
@@ -757,7 +764,7 @@ export async function loadPipelineRows(
 		}
 	});
 
-	// Rejected and withdrawn applications are excluded: they grow without bound
+	// Applications that ended without a job taken are excluded: they grow without bound
 	// and dilute "what am I working on". An accepted one is kept — it is the
 	// baseline the others are weighed against, see isComparedStatus — and so is
 	// the current one whatever its status: the user is looking at it, so a table

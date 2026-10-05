@@ -1269,9 +1269,9 @@ const MAX_STATUS_NOTE = 300;
  *
  * So `tierFor` splits it. A move that leaves the application live (applying,
  * interviewing, negotiating, a new round, a new date) is Tier 1: written
- * directly on a `write` key, logged, notified, undoable. The three statuses
- * that FINISH it are not, because they take it off the board the applicant
- * works from and each one is a claim about a decision somebody else made.
+ * directly on a `write` key, logged, notified, undoable. The statuses that
+ * FINISH it are not, because they take it off the board the applicant works
+ * from and each one is a claim about what somebody else did.
  * "You were rejected" is worth a person reading before it lands; "they booked
  * a second interview" is worth a notification.
  */
@@ -1375,9 +1375,11 @@ lists, so propose it when they say something HAPPENED, not when they say what
 they are hoping for or about to do.
 
 - "status" is exactly one of: ${settableStatuses.join(', ')}.
-  "rejected" is the employer saying no; "withdrawn" is the applicant stopping.
-  Never guess between those two: ask which it was. The applicant knows them
-  as "${getStatusLabel('rejected')}" and "${getStatusLabel('withdrawn')}": say those, not the values.
+  "rejected" is the employer saying no, "withdrawn" the applicant stopping,
+  "position_closed" the job going away with nobody deciding about them (a
+  posting gone before they applied, a role cancelled or frozen; one gone after
+  they applied ends nothing). Never guess which one: ask. Say the labels they
+  know, not the values: "${getStatusLabel('rejected')}", "${getStatusLabel('withdrawn')}", "${getStatusLabel('position_closed')}".
 - "status_step" is the stage, for applying and negotiating only, from the lists
   below. Interviewing has rounds instead, and a finished application neither.
 - Interview rounds are numbered in order. "new_round": true starts the next

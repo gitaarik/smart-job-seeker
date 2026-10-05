@@ -20,7 +20,7 @@
  *     stops being normal. See `isFollowUpDue`.
  *  2. **In play** — still live, waiting on the employer, within the window.
  *  3. **Snoozed** — deliberately parked.
- *  4. **Finished** — accepted, not selected, discontinued.
+ *  4. **Finished** — accepted, not selected, discontinued, position closed.
  *
  * The quiet tier is what stops a stale application from simply sinking. Sorting
  * silence to the bottom is right while nothing is owed — but past a threshold
