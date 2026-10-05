@@ -43,7 +43,7 @@
 		emptyJobFields,
 		type JobFields
 	} from '../../components/JobFieldsForm.svelte';
-	import { formatJobStatus, formatSalaryRange, timeAgo } from '$lib/format';
+	import { formatJobStatus, formatSalaryRange, jobRecruiter, timeAgo } from '$lib/format';
 	import { getStatusLabel } from '$lib/application-status';
 	import { normalizeSalaryPeriod, projectToHourly, formatCurrency } from '$lib/salary/conversion';
 	import CategoryPill from '$lib/components/CategoryPill.svelte';
@@ -68,6 +68,7 @@
 		return live;
 	}
 	let job = $derived(jobState(data.job));
+	let recruiter = $derived(jobRecruiter(job));
 	let match = $derived(data.match);
 	// The server's, overridden by a form action's result until the reload lands.
 	let jobStatus = $derived(data.jobStatus);
@@ -470,6 +471,13 @@
 								<span class="text-[var(--dash-text)]">{job.company}</span>
 							</div>
 						{/if}
+						{#if recruiter}
+							<div class="flex items-center gap-1.5">
+								<FontAwesomeIcon icon={faUser} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
+								<span class="text-[var(--dash-text-muted)]">Recruiter</span>
+								<span class="text-[var(--dash-text)]">{recruiter}</span>
+							</div>
+						{/if}
 						{#if job.office_location}
 							<div class="flex items-center gap-1.5">
 								<FontAwesomeIcon
@@ -523,13 +531,6 @@
 								>{formatDate(job.date_posted || job.date_created)}</span
 							>
 						</div>
-						{#if job.job_poster && job.job_poster !== job.job_platform?.name}
-							<div class="flex items-center gap-1.5">
-								<FontAwesomeIcon icon={faUser} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
-								<span class="text-[var(--dash-text-muted)]">Posted by</span>
-								<span class="text-[var(--dash-text)]">{job.job_poster}</span>
-							</div>
-						{/if}
 						{#if job.job_platform}
 							<div class="flex items-center gap-1.5">
 								<FontAwesomeIcon icon={faGlobe} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />

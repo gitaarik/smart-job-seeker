@@ -2584,7 +2584,7 @@ export interface ProposedChange {
 }
 
 const FIELD_LABELS: Record<string, string> = {
-	job_poster: 'Posted by',
+	job_poster: 'Recruiter',
 	office_location: 'Location',
 	source_url: 'Job URL',
 	date_posted: 'Date posted',

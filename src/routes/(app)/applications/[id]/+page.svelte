@@ -19,7 +19,8 @@
 		faPencil,
 		faPlay,
 		faMoneyBillWave,
-		faTrash
+		faTrash,
+		faUser
 	} from '@fortawesome/free-solid-svg-icons';
 	import ConfirmModal from '../../profile/components/ConfirmModal.svelte';
 	import Card from '../../components/Card.svelte';
@@ -44,7 +45,7 @@
 	import KeyFactsCard from './KeyFactsCard.svelte';
 	import { hasOfferContent } from '$lib/application-offer';
 	import { describeSnooze, isSnoozed, snoozePresets, snoozeUntil } from '$lib/application-snooze';
-	import { formatSalaryRange, timeAgo } from '$lib/format';
+	import { formatSalaryRange, jobRecruiter, timeAgo } from '$lib/format';
 	import { formatDate as fmtDate } from '$lib/format-date';
 	import { portalToBody } from '$lib/actions/portal';
 	// The first use of Kit's typed route resolution in this codebase. Every other
@@ -56,6 +57,7 @@
 
 	let app = $derived(data.application);
 	let job = $derived(app.job);
+	let recruiter = $derived(job ? jobRecruiter(job) : null);
 
 	// Status widget
 	let statusPickerOpen = $state(false);
@@ -427,6 +429,13 @@
 							/>
 							<span class="text-[var(--dash-text-muted)]">Company</span>
 							<span class="text-[var(--dash-text)]">{job.company}</span>
+						</div>
+					{/if}
+					{#if recruiter}
+						<div class="flex items-center gap-1.5">
+							<FontAwesomeIcon icon={faUser} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
+							<span class="text-[var(--dash-text-muted)]">Recruiter</span>
+							<span class="text-[var(--dash-text)]">{recruiter}</span>
 						</div>
 					{/if}
 					{#if job.office_location}

@@ -92,6 +92,22 @@ export function isSalarySingleValue(min: number | null, max: number | null): boo
 }
 
 /**
+ * The recruiter or agency presenting a job, from `job_poster`, or null when
+ * that names nobody the other rows don't. Scrapers store the platform's own
+ * name there for most postings ("Wellfound", "LinkedIn"), which the Platform
+ * row already says, and a poster that is the company is the Company row again.
+ */
+export function jobRecruiter(job: {
+	job_poster: string | null;
+	company: string | null;
+	job_platform?: { name: string } | null;
+}): string | null {
+	const poster = job.job_poster?.trim();
+	if (!poster || poster === job.company || poster === job.job_platform?.name) return null;
+	return poster;
+}
+
+/**
  * Format a date as relative time (e.g., "2 days ago", "3 weeks ago").
  */
 export function timeAgo(date: Date | string | null): string {
