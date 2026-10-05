@@ -197,7 +197,7 @@ export function matchDecisionState(values: Record<string, string>, cut = false) 
 		supporting_evidence: values.supportingEvidence ?? '',
 		job: {
 			title: values['job.title'],
-			company: values['job.job_poster'],
+			company: values['job.company'],
 			office_location: values['job.office_location'],
 			job_types: values['job.job_types'],
 			experience_levels: values['job.experience_levels'],

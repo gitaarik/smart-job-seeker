@@ -24,7 +24,7 @@ export interface MatchPreferences {
 export type MatchedJob = Pick<
 	Jobs,
 	| 'title'
-	| 'job_poster'
+	| 'company'
 	| 'office_location'
 	| 'job_types'
 	| 'experience_levels'
@@ -51,7 +51,11 @@ export function matchPromptVariables(
 		'preferences.locations': listed(preferences.locations, 'Any'),
 
 		'job.title': job.title || 'Unknown',
-		'job.job_poster': job.job_poster || 'Unknown',
+		// The employer. This used to be `job_poster`, under the prompts' "Company"
+		// label, and scrapers store the board's own name there for most postings:
+		// 60 of the golden set's 80 jobs were scored as jobs at "Wellfound" or
+		// "glassdoor.com", and some match summaries said so.
+		'job.company': job.company || 'Unknown',
 		'job.office_location': job.office_location || 'Remote/Not specified',
 		'job.job_types': listed(job.job_types, 'Not specified'),
 		'job.experience_levels': listed(job.experience_levels, 'Not specified'),

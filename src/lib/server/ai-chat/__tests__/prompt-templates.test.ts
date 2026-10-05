@@ -24,11 +24,10 @@ import { promptTemplates } from '../prompt-templates';
 import { promptVariables, renderPrompt } from '../render-prompt';
 
 /**
- * The variable keys `calculateMatch()` supplies to `createJobMatchingAiChat`
- * for the `score_job_match` template. Source of truth:
- * cloud/src/server/job/matcher.ts (the object passed alongside
- * "score_job_match"). Keep this in sync with that call — if the matcher stops
- * supplying a key or renames one, update here AND the template together.
+ * The variable keys the matcher supplies for the `score_job_match` template.
+ * Source of truth: `matchPromptVariables` in ../match-variables.ts, plus the
+ * `data` and `schema` the AI chat adds. Keep this in sync with it — if it
+ * stops supplying a key or renames one, update here AND the template together.
  */
 const MATCHER_SUPPLIED_KEYS = new Set([
 	'data',
@@ -38,7 +37,7 @@ const MATCHER_SUPPLIED_KEYS = new Set([
 	'preferences.work_location',
 	'preferences.locations',
 	'job.title',
-	'job.job_poster',
+	'job.company',
 	'job.office_location',
 	'job.job_types',
 	'job.experience_levels',

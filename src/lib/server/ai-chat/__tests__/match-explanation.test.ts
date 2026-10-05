@@ -62,7 +62,9 @@ const JEV_MATCH = {
 const JOB = {
 	id: 9,
 	title: 'Backend Engineer',
-	job_poster: 'Acme',
+	company: 'Acme',
+	// What a scraper stores here: the board, not the employer.
+	job_poster: 'Wellfound',
 	office_location: null,
 	job_types: ['full_time'],
 	experience_levels: null,
@@ -127,7 +129,8 @@ describe('match explanation', () => {
 		expect(variables['match.matched_skills']).toBe('Python, SQL');
 		expect(variables['match.missing_skills']).toBe('Kafka');
 		expect(variables['preferences.work_location']).toBe('["Remote"]');
-		expect(variables['job.job_poster']).toBe('Acme');
+		expect(variables['job.company']).toBe('Acme');
+		expect(Object.values(variables)).not.toContain('Wellfound');
 		expect(options).toEqual({ profileDataExclude: ['email_address'] });
 		expect(h.set).toHaveBeenCalledWith({
 			match_summary: 'A solid fit.',

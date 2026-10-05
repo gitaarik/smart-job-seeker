@@ -1743,7 +1743,7 @@ Be objective and constructive. Highlight both strengths and gaps clearly.`,
 ## Job Opportunity
 
 **Title:** {{job.title}}
-**Company:** {{job.job_poster}}
+**Company:** {{job.company}}
 **Office Location:** {{job.office_location}}
 **Job Types:** {{job.job_types}}
 **Experience Levels:** {{job.experience_levels}}
@@ -1811,7 +1811,7 @@ Base everything on what the candidate demonstrably has, not on skills they could
 ## Job Opportunity
 
 **Title:** {{job.title}}
-**Company:** {{job.job_poster}}
+**Company:** {{job.company}}
 **Office Location:** {{job.office_location}}
 **Job Types:** {{job.job_types}}
 **Experience Levels:** {{job.experience_levels}}

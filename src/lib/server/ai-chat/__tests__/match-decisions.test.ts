@@ -27,7 +27,7 @@ const VALUES: Record<string, string> = {
 	'preferences.work_location': '["Remote"]',
 	'preferences.locations': 'Any',
 	'job.title': 'Backend Engineer',
-	'job.job_poster': 'Acme',
+	'job.company': 'Acme',
 	'job.office_location': 'Amsterdam',
 	'job.job_types': '["full_time"]',
 	'job.experience_levels': '["senior"]',
@@ -85,7 +85,6 @@ describe('match decisions', () => {
 		expect(state.candidate_profile).toBe(VALUES.data);
 		expect(state.supporting_evidence).toBe('## Supporting evidence');
 		expect(state.candidate_preferences.work_location).toBe('["Remote"]');
-		// The prompt calls the poster the company.
 		expect(state.job.company).toBe('Acme');
 		expect(state.job.description).toHaveLength(MATCH_DESCRIPTION_CUT + 500);
 	});
