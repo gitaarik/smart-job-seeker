@@ -5,10 +5,24 @@
  * specifically designed for job scraping and matching operations.
  */
 
-import { createAndGenerateAiChat } from './utils.js';
-import { dbDirect } from '$lib/server/db';
+import { createAndGenerateAiChat, reserveAiChatId } from './utils.js';
+import { db, dbDirect } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { profiles, search_tasks } from '$lib/server/db/schema';
+import { ai_chats, profiles, search_tasks } from '$lib/server/db/schema';
+import { tokensToCost } from '$lib/server/billing/credits';
+import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
+import { systemOne } from '$lib/server/llm/typesafe';
+import { recordedTraceId, traceGeneration } from '$lib/server/monitoring/telemetry';
+import { loadProfileData, NON_SKILL_FIELDS, renderProfileData } from './profile-data';
+import { promptFingerprint } from './prompt-fingerprint';
+import { promptTemplates } from './prompt-templates.js';
+import {
+	matchedByProbability,
+	SKILL_MATCH_MODEL,
+	SKILL_MATCH_PROMPT,
+	skillDecisionRequest,
+	skillProbabilities
+} from './skill-decisions';
 
 /**
  * The options bag `createAndGenerateAiChat` accepts, derived rather than
@@ -195,4 +209,122 @@ export async function createJobMatchingAiChat<T>(
 	options?: AiChatOptions
 ): Promise<JobScrapingAiChatResult<T>> {
 	return runProfileAiChat<T>(profileId, promptKey, customVariables, options);
+}
+
+/**
+ * The matcher's skill pass on TypeSafe's Jev (skill-decisions.ts): which of
+ * `skills` the profile shows.
+ *
+ * Recorded like a prompt call so cost tracking and the traces see it: an
+ * `ai_chats` row under the prompt's key with provider `typesafe` and every
+ * probability in its response, a generation in the open trace, and credits
+ * charged by tokens as the prompt would have been charged.
+ *
+ * Throws on any failure, including a profile over Jev's size limit, so the
+ * matcher can fall back to the prompt. A failed call keeps its error on the
+ * row and is charged nothing.
+ */
+export async function decideMatchedSkills(
+	profileId: number,
+	skills: readonly string[]
+): Promise<string[]> {
+	const template = promptTemplates[SKILL_MATCH_PROMPT];
+	const profile = await loadProfileData(profileId, undefined, { exclude: NON_SKILL_FIELDS });
+	const request = skillDecisionRequest(renderProfileData(profile.data), skills);
+	const aiChatId = await reserveAiChatId();
+	await db.insert(ai_chats).values({
+		id: aiChatId,
+		profile_id: profileId,
+		// The template, as every row stores it, so whatever reads rows by their
+		// prompt finds this one where it found the prompt's.
+		system_prompt: template.system_prompt,
+		user_prompt: template.user_prompt,
+		context: JSON.parse(JSON.stringify({ data: profile.data, 'job.skills': skills.join('\n') })),
+		// What was actually sent, which here is a request rather than a prompt.
+		full_prompt: JSON.stringify(request),
+		prompt_key: SKILL_MATCH_PROMPT,
+		prompt_fingerprint: promptFingerprint(template),
+		date_created: new Date(),
+		provider: 'typesafe',
+		model: SKILL_MATCH_MODEL,
+		request_type: 'llm',
+		trace_id: recordedTraceId()
+	});
+
+	const costOf = (input: number, output: number) =>
+		estimateProviderCostUsd('typesafe', SKILL_MATCH_MODEL, input, output);
+	const started = performance.now();
+	let probabilities: number[];
+	let usage: { input_tokens: number; output_tokens: number };
+	try {
+		const response = await traceGeneration(
+			SKILL_MATCH_PROMPT,
+			{ skills },
+			() => systemOne(request),
+			(result) => ({
+				model: SKILL_MATCH_MODEL,
+				output: result.answers,
+				usageDetails: { input: result.usage.input_tokens, output: result.usage.output_tokens },
+				costDetails: {
+					total: costOf(result.usage.input_tokens, result.usage.output_tokens) ?? 0
+				}
+			})
+		);
+		probabilities = skillProbabilities(response, skills);
+		usage = response.usage;
+	} catch (error) {
+		await db
+			.update(ai_chats)
+			.set({
+				error: error instanceof Error ? error.message : String(error),
+				duration_ms: Math.round(performance.now() - started)
+			})
+			.where(eq(ai_chats.id, aiChatId));
+		throw error;
+	}
+
+	const matched = matchedByProbability(skills, probabilities);
+	const inputTokens = usage.input_tokens;
+	const outputTokens = usage.output_tokens;
+	const totalTokens = inputTokens + outputTokens;
+	const credits = tokensToCost(totalTokens);
+	await db
+		.update(ai_chats)
+		.set({
+			response: JSON.stringify({
+				matched_skills: matched,
+				probabilities: Object.fromEntries(skills.map((skill, i) => [skill, probabilities[i]]))
+			}),
+			input_tokens: inputTokens,
+			output_tokens: outputTokens,
+			total_tokens: totalTokens,
+			duration_ms: Math.round(performance.now() - started),
+			credits_charged: credits || null
+		})
+		.where(eq(ai_chats.id, aiChatId));
+
+	if (credits > 0) {
+		const owner = await db.query.profiles.findFirst({
+			where: eq(profiles.id, profileId),
+			columns: { user_id: true }
+		});
+		if (owner?.user_id) {
+			const { chargeCredits } = await import('$lib/server/billing/credits');
+			await chargeCredits(
+				owner.user_id,
+				credits,
+				'ai_generation',
+				`${SKILL_MATCH_PROMPT} (${totalTokens} tokens)`,
+				{
+					aiChatId,
+					promptKey: SKILL_MATCH_PROMPT,
+					tokens: { inputTokens, outputTokens, totalTokens },
+					provider: 'typesafe',
+					model: SKILL_MATCH_MODEL,
+					providerCostUsd: costOf(inputTokens, outputTokens)
+				}
+			);
+		}
+	}
+	return matched;
 }

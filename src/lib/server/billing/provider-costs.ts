@@ -60,7 +60,7 @@ interface TokenCost extends TokenRates {
  * directories' exported *symbols*, not their contents — it would not notice a
  * rate that had been fixed on one side only. Change both, keep them identical.
  *
- * Last updated: 2026-09-08
+ * Last updated: 2026-10-05
  */
 const PROVIDER_COSTS: Record<string, TokenCost> = {
 	/**
@@ -87,6 +87,13 @@ const PROVIDER_COSTS: Record<string, TokenCost> = {
 	'groq/meta-llama/llama-4-scout-17b-16e-instruct': { input: 0.11e-6, output: 0.34e-6 },
 	'groq/meta-llama/llama-4-maverick-17b-128e-instruct': { input: 0.5e-6, output: 0.77e-6 },
 	'groq/llama-3.3-70b-versatile': { input: 0.59e-6, output: 0.79e-6 },
+
+	/**
+	 * TypeSafe — https://docs.typesafe.ai/models. A decision model, not a chat
+	 * model: input is billed and output is free. Runs the matcher's skill pass
+	 * when SJS_LLM_SKILL_MATCH_PROVIDER is `typesafe` (ai-chat/skill-decisions.ts).
+	 */
+	'typesafe/jev-1.13.0': { input: 0.042e-6, output: 0 },
 
 	// DeepSeek — https://api-docs.deepseek.com/quick_start/pricing
 	// Using cache-miss price for input (worst case). Cache hits are ~10x cheaper.

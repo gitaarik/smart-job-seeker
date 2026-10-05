@@ -90,6 +90,12 @@ export interface AppConfig {
 	openaiApiKey: string;
 	deepseekApiKey: string;
 	cerebrasApiKey: string;
+	// Who decides the matcher's skill pass (`extract_matched_skills`). 'llm' runs
+	// the prompt on llmProvider/llmModel; 'typesafe' asks TypeSafe's Jev one
+	// yes/no question per skill and falls back to the prompt whenever that fails
+	// (ai-chat/skill-decisions.ts). 'typesafe' with no key resolves to 'llm'.
+	skillMatchProvider: 'llm' | 'typesafe';
+	typesafeApiKey: string;
 
 	// Embeddings (semantic skill matching / RAG retrieval)
 	// Separate from the completion providers: the app provider (groq) has no
@@ -384,6 +390,12 @@ function loadConfig(): AppConfig {
 		openaiApiKey: getEnv('SJS_LLM_API_KEY_OPENAI', ''),
 		deepseekApiKey: getEnv('SJS_LLM_API_KEY_DEEPSEEK', ''),
 		cerebrasApiKey: getEnv('SJS_LLM_API_KEY_CEREBRAS', ''),
+		skillMatchProvider:
+			getEnv('SJS_LLM_SKILL_MATCH_PROVIDER', '') === 'typesafe' &&
+			getEnv('SJS_LLM_API_KEY_TYPESAFE', '')
+				? ('typesafe' as const)
+				: ('llm' as const),
+		typesafeApiKey: getEnv('SJS_LLM_API_KEY_TYPESAFE', ''),
 
 		// Embeddings
 		embeddingProvider,
