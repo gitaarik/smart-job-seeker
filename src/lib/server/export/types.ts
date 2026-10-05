@@ -395,6 +395,8 @@ export interface ExportedCertificate {
 	expiry_date?: string | null;
 	credential_id?: string;
 	url?: string;
+	/** Optional: exports made before 2026-10-05 have none. */
+	tags?: unknown;
 	/** Optional: exports made before 2026-09-26 have none. */
 	skills?: ExportedCertificateSkill[];
 }

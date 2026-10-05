@@ -451,20 +451,24 @@ export interface ProfileResource {
 
 /**
  * Sections an entry can be taken off every document from — and why the other
- * four cannot.
+ * three cannot.
  *
  * Visibility on a rendered resume or CV is decided by `tags`, through
  * `profile-filter.ts`: the `!resume` + `!cv` pair (`$lib/profile-visibility`'s
  * "profile-only") holds an item back from every base template while leaving any
  * per-version tag it carries intact. A section qualifies when it has a `tags`
  * column AND every document renderer that prints it puts it through that
- * filter. Languages and certificates are rendered straight from the profile
- * with no filter at all. References have no `tags` column: they print by a
- * fixed rule (the CV and not the resume, `REFERENCE_TAGS`), which only a
- * per-document decision on the application's resume page changes. Highlights
- * have no `tags` column either. So for those four there is simply no way to hide
- * an entry from every document — not from the assistant and not from the UI
- * either.
+ * filter. Languages are rendered straight from the profile with no filter at
+ * all. References have no `tags` column: they print by a fixed rule (the CV and
+ * not the resume, `REFERENCE_TAGS`), which only a per-document decision on the
+ * application's resume page changes. Highlights have no `tags` column either.
+ * So for those three there is simply no way to hide an entry from every
+ * document — not from the assistant and not from the UI either.
+ *
+ * Certificates were the fourth until 2026-10-05, when they got the column and
+ * both renderers began filtering them. They are filtered on tags alone, with no
+ * override entity: tailoring decides nothing about a certificate, so no
+ * per-job version has an exception to make.
  *
  * The child collections split on the same test rather than on being children:
  *
@@ -512,7 +516,8 @@ export const HIDEABLE_RESOURCES = [
 	'education',
 	'side_project',
 	'skill',
-	'skill_category'
+	'skill_category',
+	'certificate'
 ] as const;
 
 export type HideableResourceName = (typeof HIDEABLE_RESOURCES)[number];
@@ -1047,7 +1052,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 				note: 'when it lapses; empty for a certificate that does not expire'
 			},
 			credential_id: { kind: 'string', note: 'the number the issuer verifies it by' },
-			url: { kind: 'string', note: 'where it can be verified' }
+			url: { kind: 'string', note: 'where it can be verified' },
+			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS }
 		},
 		required: ['name'],
 		insertDefaults: {},

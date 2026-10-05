@@ -800,9 +800,9 @@ describe('setRowVisible', () => {
 	});
 
 	it('refuses a section that has no way to be hidden', async () => {
-		// Languages, references, certificates and highlights are rendered with no
-		// filter between them and the page. Writing anything here would be the
-		// original bug again, one layer down.
+		// Languages, references and highlights are rendered with no filter
+		// between them and the page. Writing anything here would be the original
+		// bug again, one layer down.
 		state.rows = [row()];
 
 		const result = await setRowVisible('language', ACTOR, 42, false);
@@ -826,7 +826,7 @@ describe('setRowTags', () => {
 
 	it('refuses a section that carries no document tags', async () => {
 		state.rows = [row()];
-		expect(await setRowTags('certificate', ACTOR, 42, ['x'])).toMatchObject({
+		expect(await setRowTags('language', ACTOR, 42, ['x'])).toMatchObject({
 			ok: false,
 			reason: 'invalid'
 		});

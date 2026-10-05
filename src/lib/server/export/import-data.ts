@@ -546,6 +546,7 @@ async function importProfileEntities(
 				expiry_date: toDateString(cert.expiry_date),
 				credential_id: cert.credential_id || null,
 				url: cert.url || null,
+				tags: toJsonValue(cert.tags),
 				date_created: new Date()
 			})
 			.returning({ id: certificates.id });

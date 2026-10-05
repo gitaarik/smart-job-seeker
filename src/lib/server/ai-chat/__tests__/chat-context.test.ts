@@ -840,18 +840,24 @@ describe('profile section list pages', () => {
 	});
 
 	it('grants its own sections and no more', () => {
-		// Two verbs a section, not three: none of the list-page sections can be
-		// hidden — nothing filters them on a document. See HIDEABLE_RESOURCES.
-		// Certificates carry a second section, their skills, edited in the same
-		// cards, so that page grants both.
-		const children: Partial<Record<string, string[]>> = {
-			'/(app)/profile/(data)/certificates': ['edit_certificate_skill', 'add_certificate_skill']
+		// Two verbs a section, not four: languages, references and highlights
+		// cannot be hidden — nothing filters them on a document. See
+		// HIDEABLE_RESOURCES. Certificates can, since they carry tags, so their
+		// page also grants hide and show. They carry a second section too, their
+		// skills, edited in the same cards, so that page grants both.
+		const extra: Partial<Record<string, string[]>> = {
+			'/(app)/profile/(data)/certificates': [
+				'hide_certificate',
+				'show_certificate',
+				'edit_certificate_skill',
+				'add_certificate_skill'
+			]
 		};
 		for (const [route, capability] of LISTS) {
 			expect(scopeForRoute(route).capabilities, route).toEqual([
 				capability,
 				capability.replace(/^edit_/, 'add_'),
-				...(children[route] ?? [])
+				...(extra[route] ?? [])
 			]);
 		}
 	});

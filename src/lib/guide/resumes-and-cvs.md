@@ -41,9 +41,9 @@ its own rule, set from the **tags** button on that item:
 - **Hide from** — pick versions, and it appears everywhere except those.
 
 You can set this at real granularity: whole roles, **individual achievements**
-within a role, side projects, education, skill categories, skills and
-technologies. That granularity is the point — trimming a resume is usually about
-dropping three bullets, not a whole job.
+within a role, side projects, education, certificates, skill categories, skills
+and technologies. That granularity is the point — trimming a resume is usually
+about dropping three bullets, not a whole job.
 
 `resume` and `cv` are available as targets alongside your own versions, so
 "never print this on a resume, only on the longer CV" is a rule you can state

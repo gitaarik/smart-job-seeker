@@ -61,6 +61,75 @@ describe('StructuredResume — certificates', () => {
 		render(StructuredResume, { props: { config: {}, profile: profile([]) } });
 		expect(screen.queryByText('Certificates')).toBeNull();
 	});
+
+	/**
+	 * Tags, since 2026-10-05. Before, a certificate had none and this renderer
+	 * printed every one on every document, so one meant for the CV could only be
+	 * kept off a resume by deleting it.
+	 */
+	describe('tags', () => {
+		const tagged = (tags: string[] | null): Profile => ({
+			...profile([
+				{ name: 'PRINCE2 Foundation', issuer: null, date: '2019-06-01', expiry_date: null, tags },
+				{ name: 'AWS Solutions Architect', issuer: null, date: '2022-01-10', expiry_date: null }
+			]),
+			profile_versions: [{ id: 5, slug: 'senior', toggles: [], extension_links: [] }]
+		});
+
+		test('keeps one tagged for the CV off the resume, and prints it on the CV', () => {
+			const { unmount } = render(StructuredResume, {
+				props: { config: {}, type: 'resume', profile: tagged(['cv']) }
+			});
+			expect(screen.queryByText('PRINCE2 Foundation – 2019')).toBeNull();
+			expect(screen.getByText('AWS Solutions Architect – 2022')).toBeTruthy();
+			unmount();
+
+			render(StructuredResume, { props: { config: {}, type: 'cv', profile: tagged(['cv']) } });
+			expect(screen.getByText('PRINCE2 Foundation – 2019')).toBeTruthy();
+		});
+
+		test('prints one tagged onto a version on that version and not the plain document', () => {
+			const { unmount } = render(StructuredResume, {
+				props: { config: {}, type: 'resume', versionId: 5, profile: tagged(['senior']) }
+			});
+			expect(screen.getByText('PRINCE2 Foundation – 2019')).toBeTruthy();
+			unmount();
+
+			render(StructuredResume, {
+				props: { config: {}, type: 'resume', profile: tagged(['senior']) }
+			});
+			expect(screen.queryByText('PRINCE2 Foundation – 2019')).toBeNull();
+		});
+
+		test('keeps one hidden from a version off that version only', () => {
+			const { unmount } = render(StructuredResume, {
+				props: { config: {}, type: 'resume', versionId: 5, profile: tagged(['!senior']) }
+			});
+			expect(screen.queryByText('PRINCE2 Foundation – 2019')).toBeNull();
+			unmount();
+
+			render(StructuredResume, {
+				props: { config: {}, type: 'resume', profile: tagged(['!senior']) }
+			});
+			expect(screen.getByText('PRINCE2 Foundation – 2019')).toBeTruthy();
+		});
+
+		test('drops the heading when none of them prints', () => {
+			const profileOnly: Profile = {
+				...profile([
+					{
+						name: 'PRINCE2 Foundation',
+						issuer: null,
+						date: '2019-06-01',
+						expiry_date: null,
+						tags: ['!resume', '!cv']
+					}
+				])
+			};
+			render(StructuredResume, { props: { config: {}, type: 'resume', profile: profileOnly } });
+			expect(screen.queryByText('Certificates')).toBeNull();
+		});
+	});
 });
 
 /**

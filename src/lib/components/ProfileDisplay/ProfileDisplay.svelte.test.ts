@@ -75,3 +75,62 @@ describe('ProfileDisplay — references', () => {
 		expect(screen.getByText('Contact details available upon request')).toBeTruthy();
 	});
 });
+
+/**
+ * The certificates section, filtered on their tags since 2026-10-05. Before, a
+ * certificate had none and printed on every document.
+ */
+describe('ProfileDisplay — certificates', () => {
+	const withCertificates = (tags: string[] | null): Profile => ({
+		...profile(),
+		references: [],
+		certificates: [
+			{ name: 'PRINCE2 Foundation', issuer: null, date: '2019-06-01', url: null, tags },
+			{ name: 'AWS Solutions Architect', issuer: null, date: '2022-01-10', url: null }
+		],
+		profile_versions: [{ id: 5, slug: 'senior', toggles: [], extension_links: [] }]
+	});
+
+	test('keeps one tagged for the CV off the resume', () => {
+		render(ProfileDisplay, { props: { type: 'resume', profile: withCertificates(['cv']) } });
+		expect(screen.queryByText('PRINCE2 Foundation')).toBeNull();
+		expect(screen.getByText('AWS Solutions Architect')).toBeTruthy();
+	});
+
+	test('prints one tagged for the CV on the CV', () => {
+		render(ProfileDisplay, { props: { type: 'cv', profile: withCertificates(['cv']) } });
+		expect(screen.getByText('PRINCE2 Foundation')).toBeTruthy();
+	});
+
+	test('prints one tagged onto a version on that version only', () => {
+		const { unmount } = render(ProfileDisplay, {
+			props: { type: 'resume', versionId: 5, profile: withCertificates(['senior']) }
+		});
+		expect(screen.getByText('PRINCE2 Foundation')).toBeTruthy();
+		unmount();
+
+		render(ProfileDisplay, { props: { type: 'resume', profile: withCertificates(['senior']) } });
+		expect(screen.queryByText('PRINCE2 Foundation')).toBeNull();
+	});
+
+	test('drops the heading when none of them prints', () => {
+		render(ProfileDisplay, {
+			props: {
+				type: 'resume',
+				profile: {
+					...withCertificates(null),
+					certificates: [
+						{
+							name: 'PRINCE2 Foundation',
+							issuer: null,
+							date: '2019-06-01',
+							url: null,
+							tags: ['!resume', '!cv']
+						}
+					]
+				}
+			}
+		});
+		expect(screen.queryByText('CERTIFICATES')).toBeNull();
+	});
+});

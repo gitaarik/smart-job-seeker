@@ -69,6 +69,7 @@
 			date: string | null;
 			expiry_date?: string | null;
 			url: string | null;
+			tags?: string[] | unknown;
 		}>;
 		references: Array<{
 			author: string | null;
@@ -142,6 +143,9 @@
 	// The CV prints them and the resume does not, unless this document's
 	// version says otherwise about one: see REFERENCE_TAGS.
 	const references = $derived(filterReferences(profile.references ?? []));
+	// Their own tags only: tailoring decides nothing about a certificate, so
+	// there is no override entity to pass.
+	const certificates = $derived(filterOnTags(profile.certificates ?? []));
 
 	// Resolve visible skills per category up front: a category whose skills are
 	// all hidden (all profile-only, say) must not print an empty bullet — nor
@@ -399,14 +403,14 @@
 		</section>
 	{/if}
 
-	{#if profile.certificates && profile.certificates.length > 0}
+	{#if certificates.length > 0}
 		<!-- Certificates -->
 		<section class="my-3 break-inside-avoid">
 			<h2 class="h-5 text-sm font-bold">{heading('certificates')}<br /><br /></h2>
 
 			<hr class="mt-1 mb-2" />
 
-			{#each profile.certificates as cert, index (index)}
+			{#each certificates as cert, index (index)}
 				<div>
 					<!--
 						The dash and its spaces live inside the expression: Svelte drops

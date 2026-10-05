@@ -187,9 +187,9 @@ beforeEach(() => {
 describe('the generated set', () => {
 	it('covers every declared section, with the verbs that section has', () => {
 		// Not sections x 4. `hide` and `show` are not universal — see
-		// HIDEABLE_RESOURCES: languages, references, certificates and highlights
-		// are rendered on a document with no filter between them and the page, so
-		// there is nothing to write that would take one off. Asserting the product
+		// HIDEABLE_RESOURCES: languages, references and highlights are rendered
+		// on a document with no filter between them and the page, so there is
+		// nothing to write that would take one off. Asserting the product
 		// was what let the first version ship a hide that changed nothing.
 		expect(PROFILE_CAPABILITY_NAMES).toHaveLength(
 			Object.keys(PROFILE_RESOURCES).length * 2 + HIDEABLE_RESOURCES.length * 2

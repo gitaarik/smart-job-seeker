@@ -4756,6 +4756,13 @@ export const certificates = pgTable(
 		url: varchar({ length: 255 }),
 		profile_id: integer().notNull(),
 		/**
+		 * Which documents print it, in the same vocabulary as every other tagged
+		 * section: `resume` / `cv` / `portfolio`, a version slug, or any of them
+		 * negated (see $lib/profile-visibility). Null prints it everywhere, which
+		 * is how every certificate printed before the column existed.
+		 */
+		tags: json(),
+		/**
 		 * The certificate itself, as the applicant uploaded it: a PDF, or an image
 		 * re-encoded to WebP. Private, like every `files` row but a template's
 		 * artwork, and served only through the certificate's own download route.

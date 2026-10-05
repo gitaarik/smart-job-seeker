@@ -489,7 +489,8 @@ export const certificateBasicSchema = z.object({
 	date: z.string().optional().nullable(),
 	expiry_date: z.string().optional().nullable(),
 	credential_id: optionalTrimmedString(),
-	url: optionalTrimmedString(2048)
+	url: optionalTrimmedString(2048),
+	tags: z.array(z.string()).optional().nullable()
 });
 
 export const certificateSkillBasicSchema = z.object({

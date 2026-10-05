@@ -1034,9 +1034,9 @@ export async function updateRow(
  * per-version tags alone — so an entry tagged onto one tailored version keeps
  * that tag and comes back to exactly its old state when un-hidden.
  *
- * Only the three sections in HIDEABLE_RESOURCES have that mechanism; the other
- * four are rendered unfiltered and are refused here rather than written
- * pointlessly. See the note on HIDEABLE_RESOURCES for the whole picture.
+ * Only the sections in HIDEABLE_RESOURCES have that mechanism; the rest are
+ * rendered unfiltered and are refused here rather than written pointlessly.
+ * See the note on HIDEABLE_RESOURCES for the whole picture.
  */
 export async function setRowVisible(
 	name: ProfileResourceName,

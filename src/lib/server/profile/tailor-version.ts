@@ -1802,6 +1802,7 @@ const TAGGED_TABLES: { table: string; scope: (profileId: number) => SQL }[] = [
 	{ table: 'work_experiences', scope: (p) => sql`profile_id = ${p}` },
 	{ table: 'education', scope: (p) => sql`profile_id = ${p}` },
 	{ table: 'side_projects', scope: (p) => sql`profile_id = ${p}` },
+	{ table: 'certificates', scope: (p) => sql`profile_id = ${p}` },
 	{ table: 'tech_skill_categories', scope: (p) => sql`profile_id = ${p}` },
 	{
 		table: 'tech_skills',

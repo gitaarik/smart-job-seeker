@@ -477,6 +477,13 @@
       "when": 1790933512507,
       "tag": "0067_interview_rounds",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1791207638261,
+      "tag": "0068_certificate_tags",
+      "breakpoints": true
     }
   ]
 }

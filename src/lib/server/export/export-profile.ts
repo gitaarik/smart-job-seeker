@@ -239,7 +239,8 @@ export async function buildProfileExport(
 					date: true,
 					expiry_date: true,
 					credential_id: true,
-					url: true
+					url: true,
+					tags: true
 				},
 				with: {
 					certificate_skills: {
@@ -591,6 +592,7 @@ export async function buildProfileExport(
 			expiry_date: formatDate(c.expiry_date),
 			credential_id: c.credential_id || undefined,
 			url: c.url || undefined,
+			tags: c.tags,
 			skills: c.certificate_skills.map((s) => ({
 				sort: s.sort,
 				name: s.name || undefined

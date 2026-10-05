@@ -1654,9 +1654,9 @@ describe('the registry as a whole', () => {
 
 		it('admits a matched section when it fits', () => {
 			const granted = section('language');
-			const fitted = fitMatchedCapabilities(granted, [section('certificate')]);
+			const fitted = fitMatchedCapabilities(granted, [section('reference')]);
 
-			expect(fitted.map((c) => c.capability)).toContain('edit_certificate');
+			expect(fitted.map((c) => c.capability)).toContain('edit_reference');
 			// Two sections that cannot be hidden: two verbs each.
 			expect(fitted).toHaveLength(4);
 		});
@@ -1666,7 +1666,7 @@ describe('the registry as a whole', () => {
 			// is not offered, and the manifest still names it and its page — which
 			// is the answer the user got before matching existed.
 			const granted = section('language');
-			const fitted = fitMatchedCapabilities(granted, [section('certificate')], 100);
+			const fitted = fitMatchedCapabilities(granted, [section('reference')], 100);
 
 			expect(fitted).toEqual(granted);
 		});
@@ -1684,31 +1684,31 @@ describe('the registry as a whole', () => {
 			// Three verbs are one offer. Half of one would leave the model able to
 			// correct a language and not to add one, for a reason no prompt states.
 			const granted = section('language');
-			const budget = renderCapabilityPrompt([...granted, ...section('certificate')]).length;
+			const budget = renderCapabilityPrompt([...granted, ...section('reference')]).length;
 
 			const fitted = fitMatchedCapabilities(
 				granted,
-				[section('certificate'), section('education')],
+				[section('reference'), section('education')],
 				budget
 			);
 
 			const matched = fitted.filter((c) => !granted.includes(c)).map((c) => c.capability);
-			expect(matched).toEqual(['edit_certificate', 'add_certificate']);
+			expect(matched).toEqual(['edit_reference', 'add_reference']);
 		});
 
 		it('keeps the earlier match when only one fits', () => {
 			// Rank order is the matcher's, and it is the message's: the section
 			// named first is the one the user led with.
 			const granted: LiveCapability[] = [];
-			const budget = renderCapabilityPrompt(section('certificate')).length;
+			const budget = renderCapabilityPrompt(section('reference')).length;
 
 			const fitted = fitMatchedCapabilities(
 				granted,
-				[section('certificate'), section('education')],
+				[section('reference'), section('education')],
 				budget
 			);
 
-			expect(fitted.map((c) => c.capability)).toEqual(['edit_certificate', 'add_certificate']);
+			expect(fitted.map((c) => c.capability)).toEqual(['edit_reference', 'add_reference']);
 		});
 	});
 

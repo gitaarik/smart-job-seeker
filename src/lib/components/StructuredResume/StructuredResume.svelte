@@ -41,6 +41,7 @@
 		issuer: string | null;
 		date: string | null;
 		expiry_date?: string | null;
+		tags?: string[] | unknown;
 	}
 	interface Reference {
 		author: string | null;
@@ -121,6 +122,9 @@
 		filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience)
 	);
 	const education = $derived(filterOnTags(profile.educations ?? [], OVERRIDE_ENTITIES.education));
+	// Their own tags only, as in the default layout: tailoring decides nothing
+	// about a certificate, so there is no override entity to pass.
+	const certificates = $derived(filterOnTags(profile.certificates ?? []));
 	// The same rule as the default layout: on the CV, off the resume, unless
 	// this document's version says otherwise about one (see REFERENCE_TAGS).
 	// Before 2026-10-05 this renderer had no references section, so a branded
@@ -149,8 +153,7 @@
 		const tail = [e.institution, e.location].filter(Boolean).join(', ');
 		return [head, tail].filter(Boolean).join(' – ');
 	}
-	// Education's shape, one line each. Unfiltered, as in the default layout:
-	// certificates have no tags, so nothing can hold one back from a version.
+	// Education's shape, one line each.
 	function certLine(c: Certificate): string {
 		const tail = [c.issuer, formatCertificateYears(c.date, c.expiry_date)]
 			.filter(Boolean)
@@ -290,10 +293,10 @@
 									{/each}
 								</div>
 							{/if}
-							{#if profile.certificates && profile.certificates.length > 0}
+							{#if certificates.length > 0}
 								<div class="block">
 									<h2>{templateLabel('certificates', locale)}</h2>
-									{#each profile.certificates as c, ci (ci)}
+									{#each certificates as c, ci (ci)}
 										<div class="edu-item">
 											<span class="tl"><span class="ydot"></span><span class="tline"></span></span>
 											<p>{certLine(c)}</p>

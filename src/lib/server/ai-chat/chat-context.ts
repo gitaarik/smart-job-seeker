@@ -136,7 +136,7 @@ const PROFILE_SCOPE: RouteScope = {
  * narrows itself: it resolves only rows that are hidden, so on a page with none
  * it is simply not live.
  *
- * What it supports is not uniform: four sections have no `hide` or `show`,
+ * What it supports is not uniform: three sections have no `hide` or `show`,
  * because nothing filters them on a document. That is `verbsFor`'s to know, not
  * this table's.
  */

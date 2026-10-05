@@ -113,7 +113,7 @@ import type { ContextEntity } from './generation-context';
  *
  * `hide` was originally `status: 'draft'`, on the belief that documents render
  * only `published` rows. They do not; nothing filters on that column at all.
- * See HIDEABLE_RESOURCES, which also records why only three of the seven
+ * See HIDEABLE_RESOURCES, which also records why only four of the seven
  * sections have this verb.
  *
  * `show` is hide run backwards, and it was UI-only for no recorded reason: the
@@ -133,7 +133,7 @@ export const PROFILE_VERBS = ['edit', 'add', 'hide', 'show'] as const;
 /**
  * Every verb this section actually has.
  *
- * `hide` and `show` are not universal: four of the seven sections are rendered
+ * `hide` and `show` are not universal: three of the seven sections are rendered
  * on documents with no filter between them and the page, so there is nothing to
  * write that would take an entry off one, or put it back. See
  * HIDEABLE_RESOURCES. Offering the verb anyway is how the first version of this

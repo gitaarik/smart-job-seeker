@@ -351,6 +351,7 @@ export async function importProfileFromJson(
 				expiry_date: toDateString(cert.expiry_date),
 				credential_id: cert.credential_id || null,
 				url: cert.url || null,
+				tags: cert.tags ?? null,
 				date_created: new Date()
 			})
 			.returning({ id: certificates.id });

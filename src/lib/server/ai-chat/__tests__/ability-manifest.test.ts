@@ -185,7 +185,9 @@ describe('formatAbilityManifest', () => {
 		// beside — and unlike them it is the same characters for every user, so
 		// the whole of its cost is this number. Twelve areas at ~90 characters,
 		// five capability lines, and two short frames. Raised from 2,800 for the
-		// fifth, the standing directives, which measured 2,892 with it.
-		expect(TEXT.length).toBeLessThanOrEqual(2900);
+		// fifth, the standing directives, which measured 2,892 with it, and to
+		// 2,910 when certificates joined the sections that can be hidden: that
+		// list is generated from HIDEABLE_RESOURCES, and measured 2,908.
+		expect(TEXT.length).toBeLessThanOrEqual(2910);
 	});
 });

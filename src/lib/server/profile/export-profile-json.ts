@@ -165,6 +165,8 @@ export interface ExportedProfile {
 			expiry_date?: Date | null;
 			credential_id?: string;
 			url?: string;
+			/** Optional: files exported before 2026-10-05 have none. */
+			tags?: unknown;
 			/** Optional: files exported before 2026-09-26 have none. */
 			certificate_skills?: Array<{ sort?: number | null; name?: string }>;
 		}>;
@@ -335,7 +337,8 @@ export async function buildProfileJsonExport(
 					date: true,
 					expiry_date: true,
 					credential_id: true,
-					url: true
+					url: true,
+					tags: true
 				},
 				with: {
 					certificate_skills: {

@@ -20,6 +20,7 @@
 		faGripVertical,
 		faPaperclip,
 		faPencil,
+		faTags,
 		faTrash,
 		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
@@ -32,6 +33,7 @@
 	import ItemCard from '../../components/ItemCard.svelte';
 	import CertificateSkills from '../../components/CertificateSkills.svelte';
 	import CertificateFile from '../../components/CertificateFile.svelte';
+	import CertificateVersions from '../../components/CertificateVersions.svelte';
 	import Card from '../../../components/Card.svelte';
 	import { CERTIFICATES_DEP } from './certificates-dep';
 
@@ -41,6 +43,25 @@
 	let expandedId = $state<number | null>(null);
 	let showAddForm = $state(false);
 	let deleteId = $state<number | null>(null);
+
+	// The library versions a certificate's tags can name, for its tags popup.
+	let versionSlugs = $state<string[]>([]);
+	let versionSlugsLoaded = $state(false);
+	$effect(() => {
+		if (versionSlugsLoaded) return;
+		versionSlugsLoaded = true;
+		fetch('/api/profile-versions')
+			.then((res) => (res.ok ? res.json() : []))
+			.then((slugs: string[]) => {
+				versionSlugs = slugs;
+			})
+			.catch(() => {});
+	});
+
+	/** A row's tags as a list, whatever the json column holds. */
+	function tagsOf(tags: unknown): string[] {
+		return Array.isArray(tags) ? tags.filter((t): t is string => typeof t === 'string') : [];
+	}
 
 	// Form states
 	let newName = $state('');
@@ -575,11 +596,21 @@
 					{/snippet}
 
 					{#snippet badges()}
+						{@const tags = tagsOf(cert.tags)}
 						{#if isExpired(cert.expiry_date)}
 							<span
 								class="ml-2 rounded-full bg-[var(--dash-warning-light)] px-2 py-0.5 align-middle text-xs font-medium text-[var(--dash-warning)]"
 								>Expired</span
 							>
+						{/if}
+						{#if tags.length > 0}
+							<span
+								class="ml-2 inline-flex items-center gap-1 rounded-full bg-[var(--dash-primary)]/10 px-2 py-0.5 align-middle text-xs font-medium text-[var(--dash-primary)]"
+								title="Resume / CV versions"
+							>
+								<FontAwesomeIcon icon={faTags} class="h-2.5 w-2.5" />
+								{tags.map((t) => (t.startsWith('!') ? `hide from ${t.slice(1)}` : t)).join(', ')}
+							</span>
 						{/if}
 					{/snippet}
 
@@ -790,6 +821,14 @@
 										size: cert.file.filesize
 									}
 								: null}
+							onChanged={() => invalidate(CERTIFICATES_DEP)}
+						/>
+
+						<CertificateVersions
+							certificateId={cert.id}
+							name={cert.name}
+							tags={cert.tags}
+							{versionSlugs}
 							onChanged={() => invalidate(CERTIFICATES_DEP)}
 						/>
 
