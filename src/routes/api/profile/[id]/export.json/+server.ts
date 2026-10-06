@@ -5,6 +5,8 @@ import { eq, and } from 'drizzle-orm';
 import { profiles } from '$lib/server/db/schema';
 import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
 import { generateSlug } from '$lib/server/utils/slug-generator';
+import { normalizeAdjustments, storedEmployed, storedFreelance } from '$lib/salary/settings';
+import type { ExportedSalarySettings } from '$lib/server/export/types';
 
 /**
  * This endpoint's own payload shape. Deliberately not
@@ -47,12 +49,7 @@ interface ExportedProfile {
 		project_stories: unknown[];
 		application_questions?: unknown[];
 		cheat_sheets: unknown[];
-		salary_settings?: {
-			base_rate?: number | null;
-			currency?: string;
-			adjustments?: Record<string, Record<string, number>>;
-			region_overrides?: Record<string, number>;
-		};
+		salary_settings?: ExportedSalarySettings;
 	};
 }
 
@@ -345,16 +342,14 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 			references: baseProfile.references,
 			project_stories: baseProfile.project_stories,
 			cheat_sheets: baseProfile.cheat_sheets,
-			salary_settings: baseProfile.salary_base_rate
-				? {
-						base_rate: baseProfile.salary_base_rate,
-						currency: baseProfile.salary_currency ?? 'EUR',
-						adjustments: baseProfile.salary_adjustments as
-							Record<string, Record<string, number>> | undefined,
-						region_overrides: baseProfile.salary_region_overrides as
-							Record<string, number> | undefined
-					}
-				: undefined
+			salary_settings:
+				baseProfile.salary_employed != null || baseProfile.salary_freelance != null
+					? {
+							employed: storedEmployed(baseProfile.salary_employed),
+							freelance: storedFreelance(baseProfile.salary_freelance),
+							adjustments: normalizeAdjustments(baseProfile.salary_adjustments)
+						}
+					: undefined
 		}
 	};
 

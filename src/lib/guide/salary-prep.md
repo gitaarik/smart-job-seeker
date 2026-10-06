@@ -7,59 +7,82 @@ against that number.
 
 Set it up once. It takes a few minutes and it pays off on every posting after.
 
-## Your rate
+## Two asks, not one
 
-Everything is built from **one base hourly rate** and a currency, even if you
-never work by the hour — it is just the unit everything else converts from. Days,
-weeks, months and years are derived from it (8-hour days, 5-day weeks, 21.75 days
-a month).
+A salary and a freelance rate are priced differently, so Salary Prep keeps one
+of each, in the unit it is actually quoted in:
 
-### Region rates
+- **Employed**: a gross salary per month or per year. Paid leave, holiday pay and
+  a pension come with it.
+- **Freelance**: a rate per hour, per day, or a fixed fee per month (as on a B2B
+  contract). It only pays for the time you bill, and leave, pension and costs are
+  your own.
 
-A rate that's right for one market is wrong in another. Add a **region rate** and
-that region gets its own number _and its own currency_, replacing the base
-entirely rather than converting it.
+The same hourly number means very different things on each side. €50 an hour as
+an employee is a salary of about €8,700 a month; as a freelancer it leaves you
+far less, because nobody pays you for holidays, quiet weeks or your pension.
 
-### Rate adjustments
+The page opens with the asks your [Match Config](/jobs/import/config) looks
+for. If you only look for jobs, you get the salary; add a freelance rate whenever
+you want to compare.
 
-Percentages that shift your rate depending on what the job is:
+## What each one leaves you
 
-- **Employment type** — contract vs permanent
-- **Work arrangement** — on-site, hybrid, remote
-- **Company type** — agency, direct client, and so on
+Each ask shows its **take-home a month**, worked out from a few assumptions you
+can change:
 
-They stack. A remote contract at an agency applies all three, added together, to
-whichever base rate the job's region selects.
+- **Employed**: holiday pay and extra months on top of twelve salaries (8% is
+  Dutch holiday pay; a 13th month adds 8.3%), the pension your employer pays, any
+  other benefits, and tax.
+- **Freelance**: billable hours a year (default 1,680, not 2,080, because you will
+  not bill every working hour), or for a monthly fee the days off it doesn't pay
+  for; your costs and insurance; the pension you put aside; and tax.
 
-## Freelance or employed
+These are flat estimates, not real tax tables. They're for comparing two offers
+on the same footing, not for filing anything.
 
-The **Rate Preview** turns a rate into what actually reaches you: gross and
-take-home, by month and by year, for freelance _and_ for the employment salary
-that would net you the same amount. That second number is the useful one when a
-recruiter asks for a salary expectation and you've been quoting day rates.
+## Side by side
 
-Three assumptions drive it, all editable because the right value is
-country-specific and nobody's flat percentage is correct:
+With both asks set, Salary Prep compares them on what each **keeps you in a
+year**: take-home pay plus pension, and whatever else a job pays for. The pension
+counts because it is pay too, just later: a freelancer who wants the same has to
+fund it out of the rate.
 
-- **Billable hours a year** (default 1,680 — not 2,080, because you will not
-  bill every working hour)
-- **Freelance deductions** — tax, contributions and costs together (default 45%)
-- **Employment payroll tax** (default 32%)
+You see where each year's money goes, and both directions of the comparison:
 
-These are flat estimates, not real progressive tax tables. They're for comparing
-two offers on the same footing, not for filing anything.
+- the **freelance rate your salary is worth**, the least you can charge and still
+  come out even;
+- the **salary your rate is worth**, the useful number when a recruiter asks for
+  a salary expectation and you've been quoting day rates.
+
+Then how far your rate sits above or below that break-even.
+
+### Region asks
+
+A number that's right for one market is wrong in another. Under either ask you
+can add a **region ask**: that region gets its own amount _and its own currency_,
+replacing your main ask for jobs there rather than converting it.
+
+### Adjustments by job
+
+Percentages that move your ask depending on what the job is: on-site or hybrid,
+the kind of company, part-time or an internship. The ones that match a job add
+up, and apply to whichever ask the job is priced in. Postings rarely say what
+kind of company it is, so you pick that on an application's Salary tab.
 
 ## On an application
 
 An application's **Salary** tab is where the preparation gets used. Record what
 you asked for, and if the posting states a range you'll see straight away whether
-your ask sits **within, above or below** it — converted across currencies and
-periods, so a yearly range in dollars and an hourly ask in euros still compare.
+your ask sits **within, above or below** it, converted across currencies and
+periods, so a yearly range in dollars and a monthly ask in euros still compare.
 
-The rate your settings calculate _for this specific job_ is offered there as
-well, by hour, day, month or year, one click to use it. That's your region rates
-and adjustments applied to this posting's actual employment type, arrangement and
-location.
+The ask Salary Prep works out _for this specific job_ is offered there too, one
+click to use it: a salary for a permanent job, a rate for contract work, and
+both when the posting could be either. That's your region asks and adjustments
+applied to this posting's actual employment type, arrangement and location. With
+both asks set, the posting's own pay is shown as the other kind as well: what a
+contract's rate is worth as a salary, or a job's salary as a rate.
 
 > **Salary never affects your match scores.** Matching answers whether you fit
 > the work. Whether the money is acceptable is a decision that stays yours, and a

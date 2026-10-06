@@ -1,10 +1,21 @@
 import type { Actions, PageServerLoad } from './$types';
-import { fail, redirect } from '@sveltejs/kit';
+import { fail, redirect, type Cookies } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
+import { match_config, profiles } from '$lib/server/db/schema';
 import { getSelectedProfileId } from '../../profile/utils';
-import { DEFAULT_INCOME_ASSUMPTIONS, type IncomeAssumptions } from '$lib/salary/conversion';
+import { getFxRates } from '$lib/server/salary/fx';
+import { buildNormalizeMap, JOB_TYPES } from '$lib/data/job-taxonomy';
+import {
+	normalizeAdjustments,
+	normalizeEmployed,
+	normalizeFreelance,
+	storedEmployed,
+	storedFreelance,
+	wantedModes
+} from '$lib/salary/settings';
+
+const jobTypeNormalize = buildNormalizeMap(JOB_TYPES);
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();
@@ -12,152 +23,100 @@ export const load: PageServerLoad = async ({ parent }) => {
 	if (!layoutData.selectedProfile) {
 		redirect(302, '/home');
 	}
+	const profileId = layoutData.selectedProfile.id;
 
-	const profile = await db.query.profiles.findFirst({
-		where: eq(profiles.id, layoutData.selectedProfile.id),
-		columns: {
-			id: true,
-			salary_base_rate: true,
-			salary_currency: true,
-			salary_adjustments: true,
-			salary_region_overrides: true,
-			salary_income_assumptions: true
-		}
-	});
+	const [profile, configs, fxRates] = await Promise.all([
+		db.query.profiles.findFirst({
+			where: eq(profiles.id, profileId),
+			columns: { salary_employed: true, salary_freelance: true, salary_adjustments: true }
+		}),
+		db.query.match_config.findMany({
+			where: eq(match_config.profile_id, profileId),
+			columns: { job_types: true }
+		}),
+		getFxRates()
+	]);
+
+	// Which kinds of work they match on decides which asks the page opens with.
+	// Match Config stores labels ("Full-time", "Freelance"), so normalize them.
+	const jobTypes = configs.flatMap((c) =>
+		Array.isArray(c.job_types)
+			? (c.job_types as unknown[]).flatMap((t) => {
+					const canonical =
+						typeof t === 'string' ? jobTypeNormalize.get(t.trim().toLowerCase()) : undefined;
+					return canonical ? [canonical] : [];
+				})
+			: []
+	);
 
 	return {
-		salarySettings: {
-			baseRate: profile?.salary_base_rate ?? null,
-			currency: profile?.salary_currency ?? 'EUR',
-			adjustments:
-				(profile?.salary_adjustments as Record<string, Record<string, number>> | null) ?? {},
-			regionOverrides:
-				(profile?.salary_region_overrides as Record<
-					string,
-					{ rate: number; currency: string }
-				> | null) ?? {},
-			incomeAssumptions:
-				(profile?.salary_income_assumptions as Partial<IncomeAssumptions> | null) ?? null
-		},
-		profileId: layoutData.selectedProfile.id
+		employed: storedEmployed(profile?.salary_employed),
+		freelance: storedFreelance(profile?.salary_freelance),
+		adjustments: normalizeAdjustments(profile?.salary_adjustments),
+		wanted: wantedModes(jobTypes),
+		fxRates
 	};
 };
 
+/** The posted JSON: `null` stops the ask, anything else is read through `normalize`. */
+async function readSettings<T>(
+	request: Request,
+	normalize: (raw: unknown) => T
+): Promise<{ ok: true; value: T | null } | { ok: false }> {
+	const formData = await request.formData();
+	try {
+		const raw = JSON.parse(String(formData.get('settings') ?? 'null'));
+		return { ok: true, value: raw === null ? null : normalize(raw) };
+	} catch {
+		return { ok: false };
+	}
+}
+
+async function profileFor(locals: App.Locals, cookies: Cookies) {
+	if (!locals.user) return null;
+	return getSelectedProfileId(cookies, locals.user.id);
+}
+
 export const actions: Actions = {
-	saveRegionRates: async ({ request, locals, cookies }) => {
-		const user = locals.user;
-		if (!user) return fail(401, { error: 'Not authenticated' });
+	saveEmployed: async ({ request, locals, cookies }) => {
+		const profileId = await profileFor(locals, cookies);
+		if (!profileId) return fail(401, { error: 'Not signed in to a profile' });
 
-		const profileId = await getSelectedProfileId(cookies, user.id);
-		if (!profileId) return fail(400, { error: 'No profile selected' });
-
-		const formData = await request.formData();
-		const baseRate = formData.get('base_rate') as string;
-		const currency = formData.get('currency') as string;
-		const regionOverridesJson = formData.get('region_overrides') as string;
-
-		if (!baseRate || isNaN(parseInt(baseRate)) || parseInt(baseRate) < 0) {
-			return fail(400, { error: 'A valid base hourly rate is required' });
-		}
-
-		let regionOverrides: Record<string, { rate: number; currency: string }> = {};
-		try {
-			if (regionOverridesJson) {
-				regionOverrides = JSON.parse(regionOverridesJson);
-			}
-		} catch {
-			return fail(400, { error: 'Invalid region overrides format' });
-		}
+		const settings = await readSettings(request, normalizeEmployed);
+		if (!settings.ok) return fail(400, { error: 'Invalid salary settings' });
 
 		await db
 			.update(profiles)
-			.set({
-				salary_base_rate: parseInt(baseRate),
-				salary_currency: currency || 'EUR',
-				salary_region_overrides: regionOverrides as unknown as unknown,
-				date_updated: new Date()
-			})
+			.set({ salary_employed: settings.value, date_updated: new Date() })
 			.where(eq(profiles.id, profileId));
+		return { success: true };
+	},
 
+	saveFreelance: async ({ request, locals, cookies }) => {
+		const profileId = await profileFor(locals, cookies);
+		if (!profileId) return fail(401, { error: 'Not signed in to a profile' });
+
+		const settings = await readSettings(request, normalizeFreelance);
+		if (!settings.ok) return fail(400, { error: 'Invalid freelance settings' });
+
+		await db
+			.update(profiles)
+			.set({ salary_freelance: settings.value, date_updated: new Date() })
+			.where(eq(profiles.id, profileId));
 		return { success: true };
 	},
 
 	saveAdjustments: async ({ request, locals, cookies }) => {
-		const user = locals.user;
-		if (!user) return fail(401, { error: 'Not authenticated' });
+		const profileId = await profileFor(locals, cookies);
+		if (!profileId) return fail(401, { error: 'Not signed in to a profile' });
 
-		const profileId = await getSelectedProfileId(cookies, user.id);
-		if (!profileId) return fail(400, { error: 'No profile selected' });
-
-		const formData = await request.formData();
-		const adjustmentsJson = formData.get('adjustments') as string;
-
-		let adjustments: Record<string, Record<string, number>> = {};
-		try {
-			if (adjustmentsJson) {
-				adjustments = JSON.parse(adjustmentsJson);
-			}
-		} catch {
-			return fail(400, { error: 'Invalid adjustments format' });
-		}
+		const settings = await readSettings(request, normalizeAdjustments);
+		if (!settings.ok) return fail(400, { error: 'Invalid adjustments' });
 
 		await db
 			.update(profiles)
-			.set({
-				salary_adjustments: adjustments as unknown as unknown,
-				date_updated: new Date()
-			})
+			.set({ salary_adjustments: settings.value ?? {}, date_updated: new Date() })
 			.where(eq(profiles.id, profileId));
-
-		return { success: true };
-	},
-
-	saveIncomeAssumptions: async ({ request, locals, cookies }) => {
-		const user = locals.user;
-		if (!user) return fail(401, { error: 'Not authenticated' });
-
-		const profileId = await getSelectedProfileId(cookies, user.id);
-		if (!profileId) return fail(400, { error: 'No profile selected' });
-
-		const formData = await request.formData();
-		const json = formData.get('income_assumptions') as string;
-
-		let parsed: Partial<IncomeAssumptions>;
-		try {
-			parsed = JSON.parse(json);
-		} catch {
-			return fail(400, { error: 'Invalid income assumptions format' });
-		}
-
-		const num = (v: unknown, fallback: number) =>
-			typeof v === 'number' && isFinite(v) ? v : fallback;
-
-		const assumptions: IncomeAssumptions = {
-			freelanceBillableHours: Math.max(
-				num(parsed.freelanceBillableHours, DEFAULT_INCOME_ASSUMPTIONS.freelanceBillableHours),
-				0
-			),
-			freelanceDeductionPct: Math.min(
-				Math.max(
-					num(parsed.freelanceDeductionPct, DEFAULT_INCOME_ASSUMPTIONS.freelanceDeductionPct),
-					0
-				),
-				100
-			),
-			employmentTaxPct: Math.min(
-				Math.max(num(parsed.employmentTaxPct, DEFAULT_INCOME_ASSUMPTIONS.employmentTaxPct), 0),
-				100
-			)
-		};
-
-		await db
-			.update(profiles)
-			.set({
-				salary_income_assumptions: assumptions as unknown as unknown,
-				date_updated: new Date()
-			})
-			.where(eq(profiles.id, profileId));
-
 		return { success: true };
 	}
 };

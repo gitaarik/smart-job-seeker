@@ -10,6 +10,7 @@ import type {
 	ExportedDirective
 } from './settings-types';
 import { loadDirectives } from '$lib/server/ai-chat/directives';
+import { normalizeAdjustments, storedEmployed, storedFreelance } from '$lib/salary/settings';
 
 export interface SettingsExportOptions {
 	includeTasks: boolean;
@@ -117,18 +118,16 @@ export async function buildSettingsExport(
 		const profile = await db.query.profiles.findFirst({
 			where: eq(profiles.id, profileId),
 			columns: {
-				salary_base_rate: true,
-				salary_currency: true,
-				salary_adjustments: true,
-				salary_region_overrides: true
+				salary_employed: true,
+				salary_freelance: true,
+				salary_adjustments: true
 			}
 		});
 
 		result.salary = {
-			base_rate: profile?.salary_base_rate ?? null,
-			currency: profile?.salary_currency ?? null,
-			adjustments: profile?.salary_adjustments ?? null,
-			region_overrides: profile?.salary_region_overrides ?? null
+			employed: storedEmployed(profile?.salary_employed),
+			freelance: storedFreelance(profile?.salary_freelance),
+			adjustments: normalizeAdjustments(profile?.salary_adjustments)
 		} satisfies ExportedSalary;
 	}
 

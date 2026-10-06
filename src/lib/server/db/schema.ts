@@ -4002,11 +4002,20 @@ export const profiles = pgTable(
 		ui_preferences: jsonb().default({}),
 		browser_country_code: varchar({ length: 10 }),
 		browser_profile_id: varchar({ length: 100 }),
-		salary_base_rate: integer(),
-		salary_currency: varchar({ length: 10 }).default('EUR'),
+		/**
+		 * What they ask to be paid, one ask per kind of work: a salary per month
+		 * or year with what the job pays besides (`EmployedSettings`), and a rate
+		 * per hour, day or month with what freelancing costs (`FreelanceSettings`),
+		 * both in lib/salary/settings.ts. Null for a kind they have not set up.
+		 *
+		 * They replaced one hourly `salary_base_rate` plus a contract premium in
+		 * `salary_adjustments` on 2026-10-05 (migrations 0070 and 0071): one hourly
+		 * number could not be a salary and an invoice at once.
+		 */
+		salary_employed: jsonb(),
+		salary_freelance: jsonb(),
+		/** Percentages by kind of job, applied to either ask (`SalaryAdjustments`). */
 		salary_adjustments: json(),
-		salary_region_overrides: json(),
-		salary_income_assumptions: jsonb(),
 		email_digest_enabled: boolean().default(false),
 		email_digest_frequency_days: integer().default(7),
 		email_digest_min_score: integer().default(70),

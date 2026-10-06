@@ -12,7 +12,11 @@
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { collected_data } from '$lib/server/db/schema';
-import { exportProfile, type ExportedProfileKey } from '$lib/server/profile/export';
+import {
+	EXPORTED_PROFILE_KEYS,
+	exportProfile,
+	type ExportedProfileKey
+} from '$lib/server/profile/export';
 import { PROFILE_ONLY_FLAG } from '$lib/profile-visibility';
 
 export interface ProfileData {
@@ -110,6 +114,35 @@ export function markExpiredCertificates(
  * allow-list, and the prompt quietly stops seeing evidence it used to have.
  * Applied after `fields`, so passing both means "these, minus those".
  */
+const CURRENT_KEYS: ReadonlySet<string> = new Set(EXPORTED_PROFILE_KEYS);
+
+/**
+ * Only the keys today's export writes, at the top of the blob or its schema.
+ *
+ * A blob is rewritten when its profile changes, not when the export does, so
+ * one written before a snapshot change can still carry a key the export has
+ * since dropped. A drop-list (`exclude`) cannot name a key that no longer
+ * exists, so such a key would reach every prompt that filters that way. The
+ * salary columns retired on 2026-10-05 were exactly that: an old blob still
+ * held `salary_base_rate`, which NON_FIT_FIELDS could no longer name, and it
+ * would have reached `score_job_match`.
+ */
+export function withCurrentKeys<T extends Record<string, unknown>>(blob: T): T {
+	if ('fields' in blob || 'relations' in blob) {
+		const schema: Record<string, unknown> = { ...blob };
+		for (const part of ['fields', 'relations'] as const) {
+			const entries = blob[part];
+			if (entries && typeof entries === 'object') {
+				schema[part] = Object.fromEntries(
+					Object.entries(entries).filter(([k]) => CURRENT_KEYS.has(k))
+				);
+			}
+		}
+		return schema as T;
+	}
+	return Object.fromEntries(Object.entries(blob).filter(([k]) => CURRENT_KEYS.has(k))) as T;
+}
+
 export async function loadProfileData(
 	profileId: number,
 	fields?: ExportedProfileKey[],
@@ -128,10 +161,10 @@ export async function loadProfileData(
 		});
 	}
 
-	let schemaJson = record?.schema ? JSON.parse(record.schema) : {};
+	let schemaJson = withCurrentKeys(record?.schema ? JSON.parse(record.schema) : {});
 	let dataJson = markExpiredCertificates(
 		applySkillVisibility(
-			record?.data ? JSON.parse(record.data) : {},
+			withCurrentKeys(record?.data ? JSON.parse(record.data) : {}),
 			options?.documentSafe ?? false
 		),
 		new Date().toISOString().slice(0, 10)
@@ -268,9 +301,8 @@ export const NON_FIT_FIELDS: ExportedProfileKey[] = [
 	'nationality',
 	'phone_number',
 	'salary_adjustments',
-	'salary_base_rate',
-	'salary_currency',
-	'salary_region_overrides'
+	'salary_employed',
+	'salary_freelance'
 ];
 
 export const NON_SKILL_FIELDS: ExportedProfileKey[] = [
@@ -286,9 +318,8 @@ export const NON_SKILL_FIELDS: ExportedProfileKey[] = [
 	'phone_number',
 	'references',
 	'salary_adjustments',
-	'salary_base_rate',
-	'salary_currency',
-	'salary_region_overrides',
+	'salary_employed',
+	'salary_freelance',
 	'stackoverflow_profile'
 ];
 

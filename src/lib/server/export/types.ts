@@ -2,6 +2,8 @@
  * Export/Import Type Definitions
  */
 
+import type { EmployedSettings, FreelanceSettings, SalaryAdjustments } from '$lib/salary/settings';
+
 // Export scope options
 export type ExportScope = 'profile' | 'full';
 
@@ -434,12 +436,21 @@ export interface ExportedCheatSheet {
 	content?: string;
 }
 
-/** @deprecated Legacy format — kept for backward-compatible imports */
+/**
+ * A profile's salary asks, shaped as lib/salary/settings.ts shapes them.
+ * Exports taken before 2026-10-05 carry one hourly `base_rate` and its
+ * qualifiers instead; those still import, since `salaryFromExport` reads both.
+ */
 export interface ExportedSalarySettings {
+	employed?: EmployedSettings | null;
+	freelance?: FreelanceSettings | null;
+	adjustments?: SalaryAdjustments;
+	/** @deprecated The old hourly base rate, read on import only. */
 	base_rate?: number | null;
+	/** @deprecated With `base_rate`. */
 	currency?: string;
-	adjustments?: Record<string, Record<string, number>>;
-	region_overrides?: Record<string, number>;
+	/** @deprecated With `base_rate`. */
+	region_overrides?: Record<string, unknown>;
 }
 
 export interface ExportedJobPreferences {

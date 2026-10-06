@@ -79,10 +79,9 @@ export const ASSISTANT_PROFILE_FIELDS: ExportedProfileKey[] = [
 	// by no field list. This is the only caller that gets them: a cover letter
 	// does not quote a rate unprompted, and the matcher is kept away from them
 	// deliberately (see NON_FIT_FIELDS).
-	'salary_base_rate',
-	'salary_currency',
-	'salary_adjustments',
-	'salary_region_overrides'
+	'salary_employed',
+	'salary_freelance',
+	'salary_adjustments'
 ];
 
 /**

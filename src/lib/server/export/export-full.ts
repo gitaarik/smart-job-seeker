@@ -11,6 +11,7 @@ import {
 	profiles
 } from '$lib/server/db/schema';
 import { buildProfileExport } from './export-profile';
+import { normalizeAdjustments, storedEmployed, storedFreelance } from '$lib/salary/settings';
 import type {
 	DocumentFilePayload,
 	ExportContentOptions,
@@ -76,10 +77,9 @@ export async function buildFullExport(
 		dbDirect.query.profiles.findFirst({
 			where: eq(profiles.id, profileId),
 			columns: {
-				salary_base_rate: true,
-				salary_currency: true,
-				salary_adjustments: true,
-				salary_region_overrides: true
+				salary_employed: true,
+				salary_freelance: true,
+				salary_adjustments: true
 			}
 		}),
 
@@ -133,12 +133,9 @@ export async function buildFullExport(
 
 	// Transform salary settings
 	const exportedSalarySettings: ExportedSalarySettings = {
-		base_rate: profile?.salary_base_rate ?? null,
-		currency: profile?.salary_currency ?? 'EUR',
-		adjustments:
-			(profile?.salary_adjustments as Record<string, Record<string, number>> | null) ?? undefined,
-		region_overrides:
-			(profile?.salary_region_overrides as Record<string, number> | null) ?? undefined
+		employed: storedEmployed(profile?.salary_employed),
+		freelance: storedFreelance(profile?.salary_freelance),
+		adjustments: normalizeAdjustments(profile?.salary_adjustments)
 	};
 
 	// Transform applications

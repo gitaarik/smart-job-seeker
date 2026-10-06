@@ -5,6 +5,7 @@ import { eq, and } from 'drizzle-orm';
 import { profiles, applications } from '$lib/server/db/schema';
 import { getSelectedProfileId } from '../../../profile/utils';
 import { getFxRates } from '$lib/server/salary/fx';
+import { normalizeAdjustments, storedEmployed, storedFreelance } from '$lib/salary/settings';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();
@@ -13,28 +14,15 @@ export const load: PageServerLoad = async ({ parent }) => {
 	const [profile, fxRates] = await Promise.all([
 		db.query.profiles.findFirst({
 			where: eq(profiles.id, profileId),
-			columns: {
-				salary_base_rate: true,
-				salary_currency: true,
-				salary_adjustments: true,
-				salary_region_overrides: true
-			}
+			columns: { salary_employed: true, salary_freelance: true, salary_adjustments: true }
 		}),
 		getFxRates()
 	]);
 
 	return {
-		salarySettings: {
-			baseRate: profile?.salary_base_rate ?? null,
-			currency: profile?.salary_currency ?? 'EUR',
-			adjustments:
-				(profile?.salary_adjustments as Record<string, Record<string, number>> | null) ?? {},
-			regionOverrides:
-				(profile?.salary_region_overrides as Record<
-					string,
-					{ rate: number; currency: string }
-				> | null) ?? {}
-		},
+		employed: storedEmployed(profile?.salary_employed),
+		freelance: storedFreelance(profile?.salary_freelance),
+		adjustments: normalizeAdjustments(profile?.salary_adjustments),
 		fxRates
 	};
 };

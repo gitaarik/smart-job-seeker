@@ -9,6 +9,7 @@ import {
 	platform_credentials
 } from '$lib/server/db/schema';
 import type { SettingsExportData } from './settings-types';
+import { salaryFromExport, storedEmployed, storedFreelance } from '$lib/salary/settings';
 import {
 	isDirectiveTopic,
 	MAX_STATEMENT_CHARS,
@@ -262,15 +263,24 @@ export async function importSettings(
 		}
 
 		if (options.applySalary && data.salary) {
-			const s = data.salary;
+			// Either shape: a settings file from before the salary split carries an
+			// hourly base rate, converted here the way the migration converted it,
+			// keeping the assumptions this profile already has.
+			const current = await tx.query.profiles.findFirst({
+				where: eq(profiles.id, profileId),
+				columns: { salary_employed: true, salary_freelance: true }
+			});
+			const s = salaryFromExport(data.salary, {
+				employed: storedEmployed(current?.salary_employed),
+				freelance: storedFreelance(current?.salary_freelance)
+			});
 
 			await tx
 				.update(profiles)
 				.set({
-					salary_base_rate: s.base_rate,
-					salary_currency: s.currency,
-					salary_adjustments: s.adjustments,
-					salary_region_overrides: s.region_overrides
+					salary_employed: s.employed,
+					salary_freelance: s.freelance,
+					salary_adjustments: s.adjustments
 				})
 				.where(eq(profiles.id, profileId));
 

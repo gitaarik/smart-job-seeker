@@ -14,17 +14,25 @@
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
 	import {
-		hourlyToRate,
 		formatCurrency,
 		formatSalaryPeriod,
 		normalizeSalaryPeriod,
 		projectToHourly,
-		getEffectiveRate,
 		compareSalary,
-		type SalaryPeriod,
-		type SalaryAdjustments,
-		type SalaryRegionOverrides
+		type SalaryPeriod
 	} from '$lib/salary/conversion';
+	import {
+		askForJob,
+		modesForJobTypes,
+		wantedModes,
+		type AppliedAdjustment,
+		type EmployedSettings,
+		type FreelanceSettings,
+		type JobAsk,
+		type JobContext,
+		type SalaryMode
+	} from '$lib/salary/settings';
+	import { grossPayPerYear, rateAsSalary, salaryAsRate } from '$lib/salary/take-home';
 	import { isSalarySingleValue } from '$lib/format';
 	import {
 		JOB_TYPES,
@@ -44,7 +52,6 @@
 
 	let app = $derived(data.application);
 	let job = $derived(app.job);
-	let salarySettings = $derived(data.salarySettings);
 
 	let editing = $state(false);
 	let editAmount = $state('');
@@ -62,14 +69,12 @@
 		return lower;
 	}
 
-	function toSalaryEmploymentType(jobType: string): string {
-		return jobTypeNormalize.get(jobType.toLowerCase()) ?? jobType.toLowerCase();
-	}
-
 	const currencies = [
 		{ value: 'EUR', label: 'EUR', symbol: '\u20AC' },
 		{ value: 'USD', label: 'USD', symbol: '$' },
-		{ value: 'GBP', label: 'GBP', symbol: '\u00A3' }
+		{ value: 'GBP', label: 'GBP', symbol: '\u00A3' },
+		{ value: 'CHF', label: 'CHF', symbol: 'CHF' },
+		{ value: 'CAD', label: 'CAD', symbol: 'CA$' }
 	];
 
 	const periods = [
@@ -80,29 +85,23 @@
 		{ value: 'year', label: 'Year' }
 	];
 
-	const employmentTypeLabels: Record<string, string> = {
-		any: 'Any',
-		full_time: 'Full-time',
+	const adjustmentLabels: Record<string, string> = {
 		part_time: 'Part-time',
-		contract: 'Contract',
-		temporary: 'Temporary',
-		freelance: 'Freelance',
-		internship: 'Internship'
-	};
-
-	const workArrangementLabels: Record<string, string> = {
+		internship: 'Internship',
 		remote: 'Remote',
 		hybrid: 'Hybrid',
-		onsite: 'On-site'
-	};
-
-	const companyTypeLabels: Record<string, string> = {
+		onsite: 'On-site',
 		startup: 'Startup',
-		scaleup: 'Scale-up',
 		corporate: 'Corporate',
-		agency: 'Agency',
+		agency: 'Agency or consultancy',
 		consultancy: 'Consultancy'
 	};
+
+	const companyTypes = [
+		{ value: 'startup', label: 'Startup' },
+		{ value: 'corporate', label: 'Corporate' },
+		{ value: 'agency', label: 'Agency or consultancy' }
+	];
 
 	function getPeriodLabel(period: string | null | undefined): string {
 		if (!period) return '';
@@ -112,7 +111,7 @@
 
 	function startEdit() {
 		editAmount = app.salary_expectation ? String(app.salary_expectation) : '';
-		editCurrency = app.salary_currency || suggestedRates?.currency || 'EUR';
+		editCurrency = app.salary_currency || suggestions[0]?.ask.currency || 'EUR';
 		editPeriod = app.salary_period || 'month';
 		editing = true;
 	}
@@ -134,71 +133,197 @@
 		};
 	}
 
-	// Infer job context for salary calculation
-	let jobContext = $derived.by(() => {
-		const ctx: {
-			employment_type?: string;
-			work_arrangement?: string;
-			company_type?: string;
-			region?: string;
-		} = {};
+	/** The job's types as canonical values (`contract`, `full_time`, ...). */
+	const jobTypes = $derived(
+		Array.isArray(job?.job_types)
+			? (job.job_types as string[]).map(
+					(t) => jobTypeNormalize.get(t.toLowerCase()) ?? t.toLowerCase()
+				)
+			: []
+	);
+	/** Which asks this job is priced in, most likely first. */
+	const modes = $derived(modesForJobTypes(jobTypes));
 
-		if (job?.job_types && Array.isArray(job.job_types) && (job.job_types as string[]).length > 0) {
-			ctx.employment_type = toSalaryEmploymentType((job.job_types as string[])[0]);
-		}
+	/** Postings rarely say what kind of company it is, so they say it here, for this page only. */
+	let companyType = $state('');
+	const hasCompanyAdjustments = $derived(
+		Object.keys(data.adjustments.company_type ?? {}).length > 0
+	);
 
-		if (
-			job?.work_location &&
-			Array.isArray(job.work_location) &&
-			(job.work_location as string[]).length > 0
-		) {
-			ctx.work_arrangement = toSalaryWorkArrangement((job.work_location as string[])[0]);
-		}
-
-		if (job?.region) {
-			ctx.region = job.region;
-		}
-
-		return ctx;
+	const jobContext = $derived<JobContext>({
+		employment_type: ['internship', 'part_time', 'full_time'].find((t) => jobTypes.includes(t)),
+		work_arrangement:
+			Array.isArray(job?.work_location) && (job.work_location as string[]).length > 0
+				? toSalaryWorkArrangement((job.work_location as string[])[0])
+				: undefined,
+		company_type: companyType || undefined,
+		region: job?.region ?? undefined
 	});
 
-	// Calculate effective rate for this job using salary settings
-	let effective = $derived.by(() => {
-		if (!salarySettings.baseRate) return null;
-		return getEffectiveRate(
-			salarySettings.baseRate,
-			salarySettings.currency || 'EUR',
-			salarySettings.adjustments as SalaryAdjustments,
-			salarySettings.regionOverrides as SalaryRegionOverrides,
-			jobContext
-		);
+	type AskOption = { period: SalaryPeriod; label: string; amount: number };
+	type Suggestion = {
+		mode: SalaryMode;
+		title: string;
+		/** What the ask started from: the main one, or the job's region's. */
+		base: string;
+		ask: JobAsk;
+		options: AskOption[];
+	};
+
+	function employedOptions(e: EmployedSettings, amount: number): AskOption[] {
+		if (e.period === 'year') {
+			// The same split Salary Prep makes when the period is switched: a yearly
+			// figure includes the holiday pay a monthly one is quoted before.
+			return [
+				{ period: 'year', label: 'Yearly', amount },
+				{
+					period: 'month',
+					label: e.extraPayPct > 0 ? 'Monthly, before holiday pay' : 'Monthly',
+					amount: Math.round(amount / grossPayPerYear(e, 1, 'month'))
+				}
+			];
+		}
+		const yearly = Math.round(grossPayPerYear(e, amount, 'month'));
+		return [
+			{ period: 'month', label: 'Monthly', amount },
+			{
+				period: 'year',
+				label: e.extraPayPct > 0 ? 'Yearly, holiday pay included' : 'Yearly',
+				amount: yearly
+			}
+		];
+	}
+
+	function freelanceOptions(f: FreelanceSettings, amount: number): AskOption[] {
+		if (f.unit === 'hour') {
+			return [
+				{ period: 'hour', label: 'Hourly', amount },
+				{ period: 'day', label: 'Daily', amount: amount * 8 }
+			];
+		}
+		if (f.unit === 'day') {
+			return [
+				{ period: 'day', label: 'Daily', amount },
+				{ period: 'hour', label: 'Hourly', amount: Math.round(amount / 8) }
+			];
+		}
+		return [{ period: 'month', label: 'Monthly fee', amount }];
+	}
+
+	const perLabel: Record<string, string> = {
+		hour: 'an hour',
+		day: 'a day',
+		month: 'a month',
+		year: 'a year'
+	};
+
+	function baseLabel(settings: EmployedSettings | FreelanceSettings, ask: JobAsk, per: string) {
+		if (ask.region) {
+			const region = regionDisplayMap.get(ask.region) ?? ask.region;
+			const regional = settings.regions[ask.region];
+			return `Your ${region} ask, ${formatCurrency(regional.amount, regional.currency)} ${per}`;
+		}
+		return `Your ask, ${formatCurrency(settings.amount, settings.currency)} ${per}`;
+	}
+
+	/** The ask Salary Prep works out for this job, per kind of work the job could be. */
+	const suggestions = $derived.by(() => {
+		const out: Suggestion[] = [];
+		for (const mode of modes) {
+			if (mode === 'employed' && data.employed?.amount != null) {
+				const ask = askForJob('employed', data.employed, data.adjustments, jobContext);
+				if (ask) {
+					out.push({
+						mode,
+						title: 'As a salary',
+						base: baseLabel(data.employed, ask, perLabel[data.employed.period]),
+						ask,
+						options: employedOptions(data.employed, ask.amount)
+					});
+				}
+			}
+			if (mode === 'freelance' && data.freelance?.amount != null) {
+				const ask = askForJob('freelance', data.freelance, data.adjustments, jobContext);
+				if (ask) {
+					out.push({
+						mode,
+						title: 'As a freelance rate',
+						base: baseLabel(data.freelance, ask, perLabel[data.freelance.unit]),
+						ask,
+						options: freelanceOptions(data.freelance, ask.amount)
+					});
+				}
+			}
+		}
+		return out;
 	});
 
-	let suggestedRates = $derived.by(() => {
-		if (!effective) return null;
-		return {
-			hourly: effective.rate,
-			daily: hourlyToRate(effective.rate, 'day'),
-			monthly: hourlyToRate(effective.rate, 'month'),
-			yearly: hourlyToRate(effective.rate, 'year'),
-			currency: effective.currency
-		};
-	});
+	const describeAdjustments = (applied: AppliedAdjustment[]) =>
+		applied
+			.map((a) => `${adjustmentLabels[a.option] ?? a.option} ${a.pct > 0 ? '+' : ''}${a.pct}%`)
+			.join(', ');
 
 	// Apply suggested rate to the salary form
-	function useSuggested(period: SalaryPeriod) {
-		if (!suggestedRates) return;
-		const rateMap: Record<string, number> = {
-			hour: suggestedRates.hourly,
-			day: suggestedRates.daily,
-			month: suggestedRates.monthly,
-			year: suggestedRates.yearly
-		};
-		editAmount = String(rateMap[period]);
-		editCurrency = suggestedRates.currency;
-		editPeriod = period;
+	function useSuggested(option: AskOption, currency: string) {
+		editAmount = String(option.amount);
+		editCurrency = currency;
+		editPeriod = option.period;
 		editing = true;
 	}
+
+	/**
+	 * The posting's pay as the other kind of work, by their Salary Prep numbers:
+	 * a contract's rate as the salary that keeps the same, or a job's salary as
+	 * the rate that does. Needs both asks set up, since it uses the assumptions
+	 * of each.
+	 */
+	const postedAsOther = $derived.by(() => {
+		if (!job || !data.employed || !data.freelance) return null;
+		const period = normalizeSalaryPeriod(job.salary_period);
+		const currency = job.salary_currency || 'EUR';
+		const values = [job.salary_min, job.salary_max].filter((v): v is number => v != null);
+		if (values.length === 0) return null;
+		const e = data.employed;
+		const f = data.freelance;
+
+		// An hourly or daily figure is a rate unless the job is permanent (then it
+		// is a wage, and there is no rate to compare it with). A monthly one is a
+		// fee only on a contract job with no permanent type beside it: a job typed
+		// both full-time and contract is the Dutch "fulltime, tijdelijk", a
+		// fixed-term salary. Anything else is a salary.
+		const kinds = wantedModes(jobTypes);
+		const isRate =
+			period === 'hour' || period === 'day'
+				? modes.includes('freelance')
+				: period === 'month' && kinds.freelance && !kinds.employed;
+		const isSalary =
+			!isRate && (period === 'month' || period === 'year') && modes.includes('employed');
+
+		let converted: (number | null)[];
+		let currencyOut: string;
+		let per: string;
+		if (isRate && (period === 'hour' || period === 'day' || period === 'month')) {
+			converted = values.map((amount) =>
+				rateAsSalary(e, f, { amount, unit: period, currency }, data.fxRates)
+			);
+			currencyOut = e.currency;
+			per = `${perLabel[e.period]} as a salary`;
+		} else if (isSalary && (period === 'month' || period === 'year')) {
+			converted = values.map((amount) =>
+				salaryAsRate(e, f, { amount, period, currency }, data.fxRates)
+			);
+			currencyOut = f.currency;
+			per = `${perLabel[f.unit]} freelance`;
+		} else {
+			return null;
+		}
+		if (converted.some((v) => v == null)) return null;
+		const amounts = [...new Set(converted.map((v) => Math.round(v as number)))];
+		return {
+			range: amounts.map((v) => formatCurrency(v, currencyOut)).join(' \u2013 '),
+			per
+		};
+	});
 
 	// Salary comparison
 	let jobHasSalary = $derived(job && (job.salary_min != null || job.salary_max != null));
@@ -218,49 +343,24 @@
 			job.salary_duration_weeks
 		);
 	});
-
-	// Explain what adjustments are active for this job
-	let activeAdjustments = $derived.by(() => {
-		const parts: string[] = [];
-
-		if (
-			jobContext.region &&
-			(salarySettings.regionOverrides as SalaryRegionOverrides)?.[jobContext.region] != null
-		) {
-			const regionLabel = regionDisplayMap.get(jobContext.region) || jobContext.region;
-			const override = (salarySettings.regionOverrides as SalaryRegionOverrides)[jobContext.region];
-			parts.push(
-				`${regionLabel} region: ${formatCurrency(override.rate, override.currency)}/hr base`
-			);
-		}
-
-		const adj = salarySettings.adjustments as SalaryAdjustments | null;
-		if (!adj) return parts;
-
-		if (jobContext.employment_type && adj.employment_type?.[jobContext.employment_type] != null) {
-			const pct = adj.employment_type[jobContext.employment_type];
-			parts.push(
-				`${employmentTypeLabels[jobContext.employment_type] || jobContext.employment_type}: ${pct >= 0 ? '+' : ''}${pct}%`
-			);
-		}
-		if (
-			jobContext.work_arrangement &&
-			adj.work_arrangement?.[jobContext.work_arrangement] != null
-		) {
-			const pct = adj.work_arrangement[jobContext.work_arrangement];
-			parts.push(
-				`${workArrangementLabels[jobContext.work_arrangement] || jobContext.work_arrangement}: ${pct >= 0 ? '+' : ''}${pct}%`
-			);
-		}
-		if (jobContext.company_type && adj.company_type?.[jobContext.company_type] != null) {
-			const pct = adj.company_type[jobContext.company_type];
-			parts.push(
-				`${companyTypeLabels[jobContext.company_type] || jobContext.company_type}: ${pct >= 0 ? '+' : ''}${pct}%`
-			);
-		}
-		return parts;
-	});
 </script>
+
+{#snippet companyPicker()}
+	{#if hasCompanyAdjustments}
+		<label class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]">
+			Company type
+			<select
+				bind:value={companyType}
+				class="rounded-md border border-[var(--dash-border-input)] bg-[var(--dash-card)] px-2 py-1 text-xs text-[var(--dash-text)] focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+			>
+				<option value="">Not set</option>
+				{#each companyTypes as type (type.value)}
+					<option value={type.value}>{type.label}</option>
+				{/each}
+			</select>
+		</label>
+	{/if}
+{/snippet}
 
 <div class="space-y-6">
 	{#if form?.error}
@@ -328,6 +428,12 @@
 								equivalent
 							</p>
 						{/if}
+						{#if postedAsOther}
+							<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+								By your Salary Prep numbers, about {postedAsOther.range}
+								{postedAsOther.per}.
+							</p>
+						{/if}
 					</div>
 
 					{#if app.salary_expectation && salaryComparison !== 'unknown'}
@@ -368,15 +474,13 @@
 				<FontAwesomeIcon icon={faMoneyBillWave} class="h-5 w-5 text-[var(--dash-primary)]" />
 				<h2 class="text-lg font-semibold text-[var(--dash-text)]">Your Ask</h2>
 			</div>
-			{#if suggestedRates}
-				<a
-					href={resolve('/applications/salary')}
-					class="flex items-center gap-1 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
-				>
-					Salary settings
-					<FontAwesomeIcon icon={faExternalLinkAlt} class="h-2.5 w-2.5" />
-				</a>
-			{/if}
+			<a
+				href={resolve('/applications/salary')}
+				class="flex items-center gap-1 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
+			>
+				Salary Prep
+				<FontAwesomeIcon icon={faExternalLinkAlt} class="h-2.5 w-2.5" />
+			</a>
 		</div>
 
 		<Card padding="lg">
@@ -444,23 +548,29 @@
 							</div>
 						</div>
 
-						{#if suggestedRates}
-							<div class="border-t border-[var(--dash-border)] pt-2">
-								<p class="mb-2 text-xs text-[var(--dash-text-muted)]">Use calculated rate:</p>
-								<div class="flex flex-wrap gap-2">
-									{#each [{ period: 'hour' as SalaryPeriod, label: 'Hourly', amount: suggestedRates.hourly }, { period: 'day' as SalaryPeriod, label: 'Daily', amount: suggestedRates.daily }, { period: 'month' as SalaryPeriod, label: 'Monthly', amount: suggestedRates.monthly }, { period: 'year' as SalaryPeriod, label: 'Yearly', amount: suggestedRates.yearly }] as rate (rate.period)}
-										<button
-											type="button"
-											onclick={() => useSuggested(rate.period)}
-											class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-xs transition-colors hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] {editPeriod ===
-												rate.period && editAmount === String(rate.amount)
-												? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/5 text-[var(--dash-primary)]'
-												: 'text-[var(--dash-text-secondary)]'}"
+						{#if suggestions.length > 0}
+							<div class="space-y-2 border-t border-[var(--dash-border)] pt-3">
+								<p class="text-xs text-[var(--dash-text-muted)]">Use what Salary Prep works out:</p>
+								{@render companyPicker()}
+								{#each suggestions as suggestion (suggestion.mode)}
+									<div class="flex flex-wrap items-center gap-2">
+										<span class="w-36 text-xs text-[var(--dash-text-secondary)]"
+											>{suggestion.title}</span
 										>
-											{rate.label}: {formatCurrency(rate.amount, suggestedRates.currency)}
-										</button>
-									{/each}
-								</div>
+										{#each suggestion.options as option (option.period)}
+											<button
+												type="button"
+												onclick={() => useSuggested(option, suggestion.ask.currency)}
+												class="rounded-md border border-[var(--dash-border)] px-3 py-1.5 text-xs transition-colors hover:border-[var(--dash-primary)] hover:text-[var(--dash-primary)] {editPeriod ===
+													option.period && editAmount === String(option.amount)
+													? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/5 text-[var(--dash-primary)]'
+													: 'text-[var(--dash-text-secondary)]'}"
+											>
+												{option.label}: {formatCurrency(option.amount, suggestion.ask.currency)}
+											</button>
+										{/each}
+									</div>
+								{/each}
 							</div>
 						{/if}
 
@@ -505,37 +615,46 @@
 				</div>
 			{:else}
 				<!-- Empty state: show calculated rates to pick from, or prompt to set manually -->
-				{#if suggestedRates}
-					<div class="space-y-3">
+				{#if suggestions.length > 0}
+					<div class="space-y-4">
 						<p class="text-sm text-[var(--dash-text-secondary)]">
-							Choose a calculated rate or <button
+							Choose what Salary Prep works out for this job, or <button
 								type="button"
 								onclick={startEdit}
-								class="text-[var(--dash-primary)] hover:underline">enter a custom amount</button
+								class="text-[var(--dash-primary)] hover:underline">enter your own</button
 							>.
 						</p>
-						{#if activeAdjustments.length > 0}
-							<p class="text-xs text-[var(--dash-text-muted)]">
-								Base {formatCurrency(salarySettings.baseRate!, salarySettings.currency || 'EUR')}/hr
-								adjusted: {activeAdjustments.join(', ')}
-							</p>
-						{/if}
-						<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-							{#each [{ period: 'hour' as SalaryPeriod, label: 'Hourly', amount: suggestedRates.hourly }, { period: 'day' as SalaryPeriod, label: 'Daily', amount: suggestedRates.daily }, { period: 'month' as SalaryPeriod, label: 'Monthly', amount: suggestedRates.monthly }, { period: 'year' as SalaryPeriod, label: 'Yearly', amount: suggestedRates.yearly }] as rate (rate.period)}
-								<button
-									type="button"
-									onclick={() => useSuggested(rate.period)}
-									class="group rounded-lg border border-[var(--dash-border)] p-3 text-left transition-colors hover:border-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/5"
+						{@render companyPicker()}
+						{#each suggestions as suggestion (suggestion.mode)}
+							<div>
+								<p
+									class="text-xs font-medium tracking-wide text-[var(--dash-text-muted)] uppercase"
 								>
-									<p class="mb-1 text-xs text-[var(--dash-text-muted)]">{rate.label}</p>
-									<p
-										class="text-lg font-semibold text-[var(--dash-text)] group-hover:text-[var(--dash-primary)]"
-									>
-										{formatCurrency(rate.amount, suggestedRates.currency)}
-									</p>
-								</button>
-							{/each}
-						</div>
+									{suggestion.title}
+								</p>
+								<p class="mt-0.5 mb-2 text-xs text-[var(--dash-text-muted)]">
+									{suggestion.base}{#if suggestion.ask.applied.length > 0}, adjusted: {describeAdjustments(
+											suggestion.ask.applied
+										)}{/if}.
+								</p>
+								<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+									{#each suggestion.options as option (option.period)}
+										<button
+											type="button"
+											onclick={() => useSuggested(option, suggestion.ask.currency)}
+											class="group rounded-lg border border-[var(--dash-border)] p-3 text-left transition-colors hover:border-[var(--dash-primary)] hover:bg-[var(--dash-primary)]/5"
+										>
+											<p class="mb-1 text-xs text-[var(--dash-text-muted)]">{option.label}</p>
+											<p
+												class="text-lg font-semibold text-[var(--dash-text)] group-hover:text-[var(--dash-primary)]"
+											>
+												{formatCurrency(option.amount, suggestion.ask.currency)}
+											</p>
+										</button>
+									{/each}
+								</div>
+							</div>
+						{/each}
 					</div>
 				{:else}
 					<div class="py-4 text-center">
@@ -548,11 +667,11 @@
 							/>
 						</div>
 						<p class="mb-3 text-[var(--dash-text-secondary)]">
-							No salary expectation set yet.
+							No ask recorded yet.
 							<a
 								href={resolve('/applications/salary')}
-								class="text-[var(--dash-primary)] hover:underline">Configure your salary settings</a
-							> to get calculated rates, or set it manually.
+								class="text-[var(--dash-primary)] hover:underline">Set up Salary Prep</a
+							> to get one worked out for each job, or enter it yourself.
 						</p>
 						<button
 							type="button"

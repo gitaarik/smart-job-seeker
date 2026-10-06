@@ -3,7 +3,8 @@ import {
 	applySkillVisibility,
 	fitProfileToBudget,
 	formatTrimNote,
-	markExpiredCertificates
+	markExpiredCertificates,
+	withCurrentKeys
 } from '../profile-data';
 
 const entry = (n: number, size = 200) => ({ id: n, text: 'x'.repeat(size) });
@@ -164,5 +165,37 @@ describe('markExpiredCertificates', () => {
 	it('passes a blob without certificates through untouched', () => {
 		const data = { name: 'Alex' };
 		expect(markExpiredCertificates(data, today)).toBe(data);
+	});
+});
+
+describe('withCurrentKeys', () => {
+	it('drops a key the export no longer writes, which no drop-list can name', () => {
+		// A blob written before the salary split, read after it: NON_FIT_FIELDS
+		// cannot list salary_base_rate any more, so only this keeps it from the
+		// matcher.
+		const stale = {
+			name: 'Alex',
+			salary_base_rate: 50,
+			salary_currency: 'EUR',
+			salary_region_overrides: {},
+			salary_adjustments: { work_arrangement: { onsite: 15 } }
+		};
+		expect(withCurrentKeys(stale)).toEqual({
+			name: 'Alex',
+			salary_adjustments: { work_arrangement: { onsite: 15 } }
+		});
+	});
+
+	it("filters the schema blob's fields and relations the same way", () => {
+		const schema = {
+			note: 'profile',
+			fields: { name: '', salary_base_rate: '' },
+			relations: { highlights: { fields: {} }, salary_expectations: { fields: {} } }
+		};
+		expect(withCurrentKeys(schema)).toEqual({
+			note: 'profile',
+			fields: { name: '' },
+			relations: { highlights: { fields: {} } }
+		});
 	});
 });

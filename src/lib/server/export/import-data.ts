@@ -49,6 +49,7 @@ import {
 } from './import-translations';
 import { deleteProfilePresentationTemplates, importResumeTemplates } from './import-templates';
 import { legacyNoteEntries } from './legacy-notes';
+import { salaryFromExport, storedEmployed, storedFreelance } from '$lib/salary/settings';
 import type { ExportData, ExportedProfileData, FullExportData } from './types';
 import {
 	certificateFilesByName,
@@ -832,16 +833,24 @@ async function importFullAccountEntities(profileId: number, data: FullExportData
 		});
 	}
 
-	// Salary settings (new format)
+	// Salary asks, in either shape: an export from before the salary split
+	// carries an hourly base rate, converted here the way the migration did,
+	// keeping the assumptions this profile already has (it never carried them).
 	if (data.salary_settings) {
-		const ss = data.salary_settings;
+		const current = await dbDirect.query.profiles.findFirst({
+			where: eq(profiles.id, profileId),
+			columns: { salary_employed: true, salary_freelance: true }
+		});
+		const salary = salaryFromExport(data.salary_settings, {
+			employed: storedEmployed(current?.salary_employed),
+			freelance: storedFreelance(current?.salary_freelance)
+		});
 		await dbDirect
 			.update(profiles)
 			.set({
-				salary_base_rate: ss.base_rate ?? null,
-				salary_currency: ss.currency ?? 'EUR',
-				salary_adjustments: ss.adjustments ? (ss.adjustments as unknown) : undefined,
-				salary_region_overrides: ss.region_overrides ? (ss.region_overrides as unknown) : undefined
+				salary_employed: salary.employed,
+				salary_freelance: salary.freelance,
+				salary_adjustments: salary.adjustments
 			})
 			.where(eq(profiles.id, profileId));
 	}

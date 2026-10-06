@@ -7,6 +7,14 @@ import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { collected_data, profiles } from '$lib/server/db/schema';
 import { isHiddenFromDocuments, PROFILE_ONLY_FLAG } from '$lib/profile-visibility';
+import {
+	normalizeAdjustments,
+	storedEmployed,
+	storedFreelance,
+	type RegionAsks
+} from '$lib/salary/settings';
+import { compareAsks, employedYear, freelanceYear } from '$lib/salary/take-home';
+import { getFxRates } from '$lib/server/salary/fx';
 
 interface SchemaNode {
 	note?: string;
@@ -60,26 +68,22 @@ const PROFILE_SNAPSHOT_COLUMNS = {
 	 */
 	remote_start_year: true,
 	/**
-	 * What the applicant charges, and the three columns that qualify it.
+	 * What the applicant asks to be paid: a salary and a freelance rate, each in
+	 * its own unit, and the percentages that move them by job.
 	 *
 	 * Added 2026-09-22, when Phase 0 of profile memory measured the gap: asked
 	 * "what do you think I charge?", the assistant answered confidently from
 	 * numbers it found in past application negotiations, because neither salary
 	 * store reached it. `salary_expectations` was retired the same day for
-	 * reaching no prompt at all; these four are the live store, edited on Salary
-	 * Prep, and they were in no snapshot either.
+	 * reaching no prompt at all; these columns are the live store, edited on
+	 * Salary Prep.
 	 *
-	 * `salary_base_rate` is PER HOUR, `salary_adjustments` are percentages and
-	 * `salary_region_overrides` replace the base outright. None of that is
-	 * legible from the numbers alone, and the schema cannot say so — `${schema}`
-	 * is interpolated by no template, and the blob renders as bare
-	 * `JSON.stringify`. So `fetchProfileData` ships the arithmetic as a note
-	 * beside the values; see `salaryNote`.
+	 * They ship with what each ask comes to over a year, worked out the way the
+	 * page does it, and a note on how to read them; see `withSalary`.
 	 */
-	salary_base_rate: true,
-	salary_currency: true,
-	salary_adjustments: true,
-	salary_region_overrides: true
+	salary_employed: true,
+	salary_freelance: true,
+	salary_adjustments: true
 } as const;
 
 /** Field names only, for the schema mapping and the test that pins the two together. */
@@ -241,50 +245,105 @@ function buildSchemaNode(
 }
 
 /**
- * The arithmetic behind the salary columns, shipped beside them.
+ * How to read the salary columns, shipped beside them.
  *
- * `salary_base_rate` is an hourly figure, `salary_adjustments` are percentages
- * that SUM across whichever of the three dimensions a role matches, and
- * `salary_region_overrides` replace the base rate and its currency outright.
- * A model handed `{"contract": 65}` with none of that reads it as a rate, not
- * an uplift, and the cost of that misreading is a wrong number quoted to an
- * employer.
+ * A model handed `{"contract": 65}` read it as a rate rather than an uplift, and
+ * the cost of that kind of misreading is a wrong number quoted to an employer.
+ * The asks now say their own units, but the adjustments still need saying, and
+ * so does what the yearly figures mean.
  *
  * It rides inside `salary_adjustments` rather than in a key of its own because
  * `ExportedProfileKey` is `keyof PROFILE_SNAPSHOT_COLUMNS`, and that union
  * being exactly the real columns is what stops a field list asking for
  * something the snapshot never writes. Enriching a value keeps the key honest.
- * The note is synthesised even when the column is null, so a profile with a
- * base rate and no adjustments still says what the base rate means.
  */
 const SALARY_NOTE =
-	'salary_base_rate is PER HOUR in salary_currency. The percentages below are ' +
-	'summed across whichever of employment_type, work_arrangement and company_type ' +
-	'a role matches, then applied as rate = base * (1 + total / 100). A matching ' +
-	'salary_region_overrides entry replaces the base rate and currency outright, ' +
-	'before those percentages are applied. To quote another period use the same ' +
-	'working assumptions the app does: 8 hours a day, 21.75 days a month ' +
-	'(174 hours), 12 months a year. Show the multiplication when you quote a ' +
-	'figure, so a slip is visible.';
+	'salary_employed is the salary they ask for a job, before tax, per its period ' +
+	'(a monthly salary gets extraPayPct on top of twelve months: holiday pay, a ' +
+	'13th month). salary_freelance is the rate they invoice as a freelancer, per ' +
+	'its unit (a month means a fixed monthly fee). per_year is what each comes to ' +
+	'in a year by their own assumptions; "kept" is take-home pay plus pension (and ' +
+	"a job's benefits), the figure the two are compared on, and compared_with_salary " +
+	'says which rate keeps the same as the salary and the reverse. The percentages ' +
+	'below are added up across whichever of work_arrangement and company_type a job ' +
+	'matches (employment_type only for a salary) and applied to that ask: ' +
+	'ask * (1 + total / 100). A regions entry replaces the ask and its currency for ' +
+	'jobs in that region, before the percentages. Quote these numbers rather than ' +
+	'working your own, and show the multiplication when you adjust one.';
+
+const roundOrNull = (n: number | null) => (n == null ? null : Math.round(n));
 
 /**
- * Fold the note into the adjustments, or drop all four salary keys.
- *
- * No base rate means the applicant has not set one, and four null columns
- * spend blob on saying so — where an absent key already reads as "they have
- * none" to every consumer (see EXPORTED_PROFILE_KEYS).
+ * Region rows with an amount. A row still left blank on the page holds 0 and
+ * prices no job (`askForJob` skips it), so the note's "replaces the ask" would
+ * have the assistant quote it as an ask of nothing.
  */
-function withSalaryNote<T extends Record<string, unknown>>(profile: T): T {
-	if (profile.salary_base_rate == null) {
-		const copy = { ...profile };
-		delete copy.salary_base_rate;
-		delete copy.salary_currency;
-		delete copy.salary_adjustments;
-		delete copy.salary_region_overrides;
-		return copy;
+function pricedRegions(regions: RegionAsks): RegionAsks {
+	return Object.fromEntries(Object.entries(regions).filter(([, ask]) => ask.amount > 0));
+}
+
+/** Whole units, so the blob says 67651 and not 67651.20000000001. */
+function roundedYear<T extends Record<string, unknown>>(year: T): T {
+	return Object.fromEntries(
+		Object.entries(year).map(([k, v]) => [k, typeof v === 'number' ? Math.round(v) : v])
+	) as T;
+}
+
+/**
+ * The salary columns as the assistant reads them: each ask that has an amount,
+ * with its yearly figures, the comparison when there are both, and the note.
+ * An ask without an amount is left out, and with neither all three keys go,
+ * since an absent key already reads as "they have none" to every consumer (see
+ * EXPORTED_PROFILE_KEYS) and empty values spend blob on saying so.
+ */
+async function withSalary<T extends Record<string, unknown>>(profile: T): Promise<T> {
+	const storedE = storedEmployed(profile.salary_employed);
+	const storedF = storedFreelance(profile.salary_freelance);
+	const employed = storedE?.amount != null ? storedE : null;
+	const freelance = storedF?.amount != null ? storedF : null;
+
+	const copy: Record<string, unknown> = { ...profile };
+	delete copy.salary_employed;
+	delete copy.salary_freelance;
+	delete copy.salary_adjustments;
+	if (!employed && !freelance) return copy as T;
+
+	const needsRates = employed && freelance && employed.currency !== freelance.currency;
+	const comparison =
+		employed && freelance
+			? compareAsks(employed, freelance, needsRates ? await getFxRates() : {})
+			: null;
+	const employedPerYear = employed && employedYear(employed);
+	const freelancePerYear = freelance && freelanceYear(freelance);
+
+	if (employed && employedPerYear) {
+		copy.salary_employed = {
+			...employed,
+			regions: pricedRegions(employed.regions),
+			per_year: roundedYear(employedPerYear)
+		};
 	}
-	const adjustments = (profile.salary_adjustments ?? {}) as Record<string, unknown>;
-	return { ...profile, salary_adjustments: { note: SALARY_NOTE, ...adjustments } };
+	if (freelance && freelancePerYear) {
+		copy.salary_freelance = {
+			...freelance,
+			regions: pricedRegions(freelance.regions),
+			per_year: roundedYear(freelancePerYear),
+			...(comparison && {
+				compared_with_salary: {
+					rate_keeping_the_same_as_the_salary: roundOrNull(comparison.breakEvenRate),
+					salary_keeping_the_same_as_this_rate: roundOrNull(comparison.equivalentSalary),
+					rate_above_that_by_pct: roundOrNull(
+						comparison.rateVsBreakEven == null ? null : comparison.rateVsBreakEven * 100
+					)
+				}
+			})
+		};
+	}
+	copy.salary_adjustments = {
+		note: SALARY_NOTE,
+		...normalizeAdjustments(profile.salary_adjustments)
+	};
+	return copy as T;
 }
 
 /**
@@ -457,7 +516,7 @@ async function fetchProfileData(profileId: number) {
 
 	if (!profile) return profile;
 
-	return withSalaryNote({
+	return withSalary({
 		...profile,
 		tech_skill_categories: profile.tech_skill_categories.map((category) => ({
 			...category,

@@ -98,4 +98,59 @@ describe('exportProfile', () => {
 		expect(skills[0]).not.toHaveProperty('tags');
 		expect(skills[1]).not.toHaveProperty('tags');
 	});
+
+	it('ships each salary ask with its year worked out, and the comparison', async () => {
+		findFirst(db.query.profiles)
+			.mockResolvedValueOnce({ id: 1 })
+			.mockResolvedValueOnce({
+				name: 'Alex',
+				tech_skill_categories: [],
+				salary_employed: {
+					amount: 8700,
+					taxPct: 40,
+					regions: { us: { amount: 10440, currency: 'USD' }, uk: { amount: 0, currency: 'GBP' } }
+				},
+				salary_freelance: { amount: 83, taxPct: 45, costsPerYear: 0 },
+				salary_adjustments: { employment_type: { contract: 65 }, work_arrangement: { onsite: 15 } }
+			});
+		findFirst(db.query.collected_data).mockResolvedValueOnce(null);
+		const values = vi.fn().mockResolvedValue(undefined);
+		asMock(db.insert).mockReturnValue({ values });
+
+		expect((await exportProfile(1)).success).toBe(true);
+		const written = JSON.parse(values.mock.calls[0][0].data);
+
+		expect(written.salary_employed.per_year).toMatchObject({ grossPay: 112752, kept: 78926 });
+		// A region row still blank on the page prices nothing, so it is not quoted.
+		expect(written.salary_employed.regions).toEqual({ us: { amount: 10440, currency: 'USD' } });
+		expect(written.salary_freelance.compared_with_salary).toEqual({
+			rate_keeping_the_same_as_the_salary: 79,
+			salary_keeping_the_same_as_this_rate: 9145,
+			rate_above_that_by_pct: 5
+		});
+		// The old contract premium is the freelance ask now; it must not be applied twice.
+		expect(written.salary_adjustments.employment_type).toBeUndefined();
+		expect(written.salary_adjustments.note).toMatch(/salary_employed/);
+	});
+
+	it('leaves the salary keys out when neither ask has an amount', async () => {
+		findFirst(db.query.profiles)
+			.mockResolvedValueOnce({ id: 1 })
+			.mockResolvedValueOnce({
+				name: 'Alex',
+				tech_skill_categories: [],
+				salary_employed: { amount: null },
+				salary_freelance: null,
+				salary_adjustments: null
+			});
+		findFirst(db.query.collected_data).mockResolvedValueOnce(null);
+		const values = vi.fn().mockResolvedValue(undefined);
+		asMock(db.insert).mockReturnValue({ values });
+
+		await exportProfile(1);
+		const written = JSON.parse(values.mock.calls[0][0].data);
+		expect(written).not.toHaveProperty('salary_employed');
+		expect(written).not.toHaveProperty('salary_freelance');
+		expect(written).not.toHaveProperty('salary_adjustments');
+	});
 });

@@ -115,12 +115,7 @@ describe('profile field lists (composed from CORE)', () => {
 		);
 	});
 
-	const SALARY_FIELDS = [
-		'salary_base_rate',
-		'salary_currency',
-		'salary_adjustments',
-		'salary_region_overrides'
-	];
+	const SALARY_FIELDS = ['salary_employed', 'salary_freelance', 'salary_adjustments'];
 
 	it('ASSISTANT = the letter fields plus references, the long bio and salary', () => {
 		expect(set(ASSISTANT_PROFILE_FIELDS)).toEqual(
@@ -128,10 +123,9 @@ describe('profile field lists (composed from CORE)', () => {
 				...LETTER_PROFILE_FIELDS,
 				'references',
 				'about_me_text',
-				'salary_base_rate',
-				'salary_currency',
-				'salary_adjustments',
-				'salary_region_overrides'
+				'salary_employed',
+				'salary_freelance',
+				'salary_adjustments'
 			])
 		);
 	});

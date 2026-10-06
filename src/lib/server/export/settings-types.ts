@@ -1,3 +1,5 @@
+import type { ExportedSalarySettings } from './types';
+
 export interface SettingsExportData {
 	version: '1.0';
 	exported_at: string;
@@ -56,12 +58,8 @@ export interface ExportedEmailDigest {
 	send_to: string | null;
 }
 
-export interface ExportedSalary {
-	base_rate: number | null;
-	currency: string | null;
-	adjustments: unknown;
-	region_overrides: unknown;
-}
+/** The same asks a full export carries; see `ExportedSalarySettings`. */
+export type ExportedSalary = ExportedSalarySettings;
 
 /**
  * One live standing directive. The history is not carried: it is the trail of

@@ -23,7 +23,7 @@
  * that contradict each other.
  *
  * `COLUMN_BACKED_TOPICS` are the preferences that already have a real home. A
- * rate is the base rate on Salary Prep and which jobs they want is their Match
+ * rate is an ask on Salary Prep and which jobs they want is their Match
  * Config, and a directive holding either would be a second, silent copy that
  * drifts from the one the product actually uses — which is how the salary
  * stores came to disagree three ways. They are offered to the model as topics
@@ -115,7 +115,7 @@ export const COLUMN_BACKED_TOPICS = {
 	salary: {
 		label: 'Rate or salary',
 		refusal:
-			'A rate is not a directive: it is the base rate and adjustments on their Salary ' +
+			'A rate is not a directive: it is the salary and freelance rate on their Salary ' +
 			'Prep page (/applications/salary), which every salary answer is worked out from. ' +
 			'Tell them to set it there — stored here it would be a second copy that nothing uses.'
 	},
