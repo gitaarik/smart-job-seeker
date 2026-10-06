@@ -5,6 +5,48 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.0] - 2026-10-06
+
+60 commits since v0.37.0.
+
+### Added
+
+- Applications now show "Position closed" as an end status alongside interview rounds
+- Numbered rounds replace interview stages for clearer hiring process tracking
+- Recruiter name displayed beside company on applications
+- Certificate version tags to distinguish resume vs CV variants
+- Ability to include selected references on tailored job resumes
+- Workbench counts on application tabs and job info beside application status
+- Visual indicator on Resume tab when no document is recorded
+- AI agents can now reposition profile entries via MCP
+- Background work (matching, searches) pauses for inactive accounts
+- Match scoring via TypeSafe's Jev LLM with detailed score factors stored
+- Skill matching powered by Jev when enabled (SJS_LLM_SKILL_MATCH_PROVIDER)
+- Key facts now lead with next step and people involved
+- Alternative wordings for role positions in profile
+- Separate pricing inputs for salary vs freelance rates
+- Visual indicator when AI responses are served from cache
+- Drag-to-reorder for application texts
+
+### Changed
+
+- AI change history now displays tag changes and reorders as lists instead of diffs
+- Match recommendations sourced from score value instead of stored separately
+- Matcher receives company information for improved scoring accuracy
+
+### Fixed
+
+- Applications remain open when job ads are removed after applying
+- Digest entries preserved at temperature 0 when rounds are moved
+- Matcher correctly receives company name instead of job board name
+- Referees' email and phone excluded from public resume exports
+- Trim requests now allowed through job description rules
+- Version diffs shown only when "Show changes" is explicitly clicked
+- Bullet scoring evaluates complete text instead of first 80 characters
+- Consistent "Not selected" label in UI instead of "rejected"
+- Certificate issuer spacing corrected
+- Entry digest reading fixed for entries with rounds as facts
+
 ## [0.37.0] - 2026-09-28
 
 10 commits since v0.36.1.
