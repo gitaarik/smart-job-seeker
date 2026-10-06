@@ -45,6 +45,14 @@
  * telling the model to look for it took that to 2 of 3, filed under "other". A
  * field it has to fill kept him in 3 of 3 (twice in the field itself), and in
  * this shape the smoke's version of that call has had him in the field 4 of 4.
+ *
+ * A call that only moves a round is where the field still slips: the model
+ * writes the new day as a fact and leaves the rounds empty, about 1 run in 14 at
+ * temperature 0 (1 in 4 at 0.2), measured on the smoke's version of such a call
+ * on 2026-10-06. So a digest with no rounds ahead but a fact dated on or after
+ * the entry's day is read once more, with those facts named above the text
+ * (roundsLeftOut, recheckNote), and the second reading is kept when it finds a
+ * round. Only those entries pay for it.
  */
 
 import { createHash } from 'node:crypto';
@@ -283,6 +291,38 @@ export function renderDigestAbout(entry: DigestAbout, shown: number, total: numb
 }
 
 /**
+ * The facts a digest dates on or after the entry's own day, when it lists no
+ * rounds ahead: the sign that a round still to come was written down as a fact
+ * only (see "The rounds ahead" above). Empty when the digest lists a round, or
+ * when the entry has no date to count from.
+ */
+export function roundsLeftOut(digest: EntryDigest, entryDate: string | null): EntryFact[] {
+	if (digest.ahead.length > 0 || !entryDate || !dayOf(entryDate)) return [];
+	return digest.facts.filter((fact) =>
+		(`${fact.label} ${fact.value}`.match(/\b\d{4}-\d{2}-\d{2}\b/g) ?? []).some(
+			(date) => date >= entryDate
+		)
+	);
+}
+
+/**
+ * The line added above the text when an entry is read again because of
+ * roundsLeftOut. It names the dated facts and leaves the call to the model: a
+ * deadline is dated too, and stays a fact.
+ */
+export function recheckNote(facts: readonly EntryFact[]): string {
+	const listed = facts
+		.slice(0, 5)
+		.map((fact) => `"${fact.label}: ${fact.value}"`)
+		.join('; ');
+	return (
+		`A first reading of this entry listed no rounds ahead, yet dated these facts on or after its day: ${listed}. ` +
+		'If one of them is an interview, a call, an assignment or another round still to come, list it in "ahead" too, with its date and time. ' +
+		'A deadline for something to send or do is not a round.'
+	);
+}
+
+/**
  * Digest one entry, if it needs it. Returns the digest the entry now carries,
  * or null when it has none (too short, or the call failed).
  *
@@ -321,28 +361,37 @@ export async function digestEntry(
 		const text = record.content!.trim();
 		const shownText = truncateKeepingEnds(text, MAX_CHARS_READ);
 
-		const result = await createAndGenerateAiChat(
-			profileId,
-			'digest_activity_entry',
+		const about = renderDigestAbout(
 			{
-				about: renderDigestAbout(
-					{
-						...record,
-						filename: record.file?.filename_download ?? null,
-						job: record.application?.job ?? null
-					},
-					shownText.length,
-					text.length
-				),
-				content: shownText
+				...record,
+				filename: record.file?.filename_download ?? null,
+				job: record.application?.job ?? null
 			},
-			undefined,
-			{ traceSession: `application:${record.application_id}` }
+			shownText.length,
+			text.length
 		);
-		if (!result.success || !result.aiChat?.response) return null;
+		const read = async (lines: string) => {
+			const result = await createAndGenerateAiChat(
+				profileId,
+				'digest_activity_entry',
+				{ about: lines, content: shownText },
+				undefined,
+				{ traceSession: `application:${record.application_id}` }
+			);
+			return result.success && result.aiChat?.response
+				? coerceDigest(JSON.parse(result.aiChat.response))
+				: null;
+		};
 
-		const digest = coerceDigest(JSON.parse(result.aiChat.response));
+		let digest = await read(about);
 		if (!digest) return null;
+		// A round written down as a fact only: read once more, and keep that
+		// reading when it lists the round (see "The rounds ahead" above).
+		const leftOut = roundsLeftOut(digest, record.event_date);
+		if (leftOut.length) {
+			const again = await read(`${about}\n${recheckNote(leftOut)}`);
+			if (again?.ahead.length) digest = again;
+		}
 
 		// Hashed from the row as it was read, so text that changed during the call
 		// is stale on the next summary rather than stamped current.

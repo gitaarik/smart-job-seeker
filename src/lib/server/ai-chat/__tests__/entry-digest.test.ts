@@ -12,7 +12,9 @@ import {
 	hasCurrentDigest,
 	isLongEntry,
 	needsDigest,
-	renderDigestAbout
+	recheckNote,
+	renderDigestAbout,
+	roundsLeftOut
 } from '../entry-digest';
 import { LONG_ENTRY_CHARS } from '$lib/application-records';
 
@@ -260,5 +262,34 @@ describe('renderDigestAbout', () => {
 		);
 		expect(text).toContain('Shown: 50 of 200 characters.');
 		expect(text).toContain('Extracted from a file named "thread.eml".');
+	});
+});
+
+describe('roundsLeftOut', () => {
+	const fact = (label: string, value: string) => ({ category: 'logistics' as const, label, value });
+	const moved = fact('Rescheduled interview', '2026-10-08 15:30 (said as "Thursday from 3.30")');
+	const digest = (facts: ReturnType<typeof fact>[], ahead: unknown[] = []) =>
+		coerceDigest({ gist: 'A call that moves the first round.', facts, ahead })!;
+
+	it('names the facts dated on or after the entry, when no round is listed', () => {
+		const sent = fact('Applied', 'Applied on 2026-09-20');
+		expect(roundsLeftOut(digest([sent, moved]), '2026-10-02')).toEqual([moved]);
+		// The entry's own day counts: a round booked for later that day.
+		expect(roundsLeftOut(digest([moved]), '2026-10-08')).toEqual([moved]);
+	});
+
+	it('is empty when a round is listed, nothing is dated ahead, or the entry has no date', () => {
+		const listed = digest([moved], [{ kind: 'Intro', date: '2026-10-08', time: '15:30' }]);
+		expect(roundsLeftOut(listed, '2026-10-02')).toEqual([]);
+		expect(roundsLeftOut(digest([fact('Team', 'Six engineers')]), '2026-10-02')).toEqual([]);
+		expect(roundsLeftOut(digest([moved]), null)).toEqual([]);
+		expect(roundsLeftOut(digest([moved]), 'last week')).toEqual([]);
+	});
+
+	it('words the second reading so a deadline can stay a fact', () => {
+		const note = recheckNote([moved]);
+		expect(note).toContain('"Rescheduled interview: 2026-10-08 15:30');
+		expect(note).toContain('"ahead"');
+		expect(note).toContain('A deadline for something to send or do is not a round.');
 	});
 });
