@@ -1377,8 +1377,9 @@ they are hoping for or about to do.
 - "status" is exactly one of: ${settableStatuses.join(', ')}.
   "rejected" is the employer saying no, "withdrawn" the applicant stopping,
   "position_closed" the job going away with nobody deciding about them (a
-  posting gone before they applied, a role cancelled or frozen; one gone after
-  they applied ends nothing). Never guess which one: ask. Say the labels they
+  posting gone before they applied, a role cancelled or frozen). An ad gone
+  AFTER they applied ends nothing (often enough people applied): keep the
+  status. Never guess which one: ask. Say the labels they
   know, not the values: "${getStatusLabel('rejected')}", "${getStatusLabel('withdrawn')}", "${getStatusLabel('position_closed')}".
 - "status_step" is the stage, for applying and negotiating only, from the lists
   below. Interviewing has rounds instead, and a finished application neither.
