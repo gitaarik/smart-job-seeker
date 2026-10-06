@@ -274,8 +274,13 @@ Respond with a single JSON object and nothing else:
 	 * WRITING_PROMPT_KEYS. Everything this entry says that the summariser needs
 	 * has to be in the answer, because the summariser never sees the text: hence
 	 * "every term" for offers and contracts, and speakers attributed rather than
-	 * merged. Low temperature, because the same entry read twice should give the
-	 * same facts.
+	 * merged. Temperature 0, because the same entry read twice should give the
+	 * same facts, and at 0.2 it did not give the same rounds: on the llm:smoke
+	 * case of a call that only moves a round, the rounds ahead came back empty
+	 * 7 times in 26 (2026-10-06, the moved date kept only as a fact), against 0
+	 * in 40 at 0, with the other two digest cases at 10 of 10 either way.
+	 * Rewording the prompt (rounds before facts, no "Next round" label example,
+	 * a check of dated facts against the rounds) did not do it: 8 or 9 of 10.
 	 *
 	 * The rounds ahead are a field of their own, in the shape of an application's
 	 * rounds (`InterviewRound`), because a kind of fact the model has to remember
@@ -358,7 +363,7 @@ The entry's text:
 ---
 {{content}}
 ---`,
-		temperature: 0.2
+		temperature: 0
 	},
 
 	/**
