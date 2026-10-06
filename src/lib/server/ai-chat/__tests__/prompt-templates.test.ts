@@ -19,6 +19,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { detailCategoryValues } from '$lib/application-details';
+import { roundKindValues } from '$lib/application-status';
 import { promptFingerprint } from '../prompt-fingerprint';
 import { promptTemplates } from '../prompt-templates';
 import { promptVariables, renderPrompt } from '../render-prompt';
@@ -543,6 +545,25 @@ describe('write_cheat_sheet records handling', () => {
 		expect(full2).toMatch(/INSTEAD OF generic invented ones/);
 		expect(full2).toMatch(/outrank generic profile-to-job matching/);
 		expect(full2).toMatch(/Translate what you carry over/);
+	});
+});
+
+/**
+ * The digest and the summary name their vocabularies in prose, because a
+ * template is a fixed string. These hold the prose to the constants: a kind or a
+ * category the prompt never offers is one the model never picks, and one only
+ * the prompt offers is folded away by the coercion on our side.
+ */
+describe('key facts vocabularies', () => {
+	it('digest_activity_entry offers every round kind', () => {
+		const t = promptTemplates['digest_activity_entry'].system_prompt;
+		for (const kind of roundKindValues) expect(t, kind).toContain(`${kind} (`);
+	});
+
+	it('summarize_application offers every detail category', () => {
+		const t = promptTemplates['summarize_application'].system_prompt;
+		const offered = t.match(/"category" is one of: (.*)$/m)?.[1] ?? '';
+		for (const category of detailCategoryValues) expect(offered, category).toContain(category);
 	});
 });
 

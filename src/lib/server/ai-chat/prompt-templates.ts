@@ -276,9 +276,15 @@ Respond with a single JSON object and nothing else:
 	 * "every term" for offers and contracts, and speakers attributed rather than
 	 * merged. Low temperature, because the same entry read twice should give the
 	 * same facts.
+	 *
+	 * The rounds ahead are a field of their own, in the shape of an application's
+	 * rounds (`InterviewRound`), because a kind of fact the model has to remember
+	 * to list is one it drops: see "The rounds ahead" in entry-digest.ts. The kinds
+	 * are written out here as `roundKinds` holds them, and a test holds the two
+	 * together.
 	 */
 	digest_activity_entry: {
-		system_prompt: `You read one entry from a job applicant's record of an application and write its digest: what the entry is, and the facts in it that someone would want later without rereading it.
+		system_prompt: `You read one entry from a job applicant's record of an application and write its digest: what the entry is, the facts in it that someone would want later without rereading it, and what it says about the rounds still to come.
 
 The entry may be an email thread, a transcript of a call or an interview, the text of a document they attached (a brief, an offer, a contract), notes they wrote after a conversation, or research. It is one of several on the application. Another pass reads the digests of all of them together to work out where the application stands and what matters in it, and it never sees this entry's text: what you leave out is lost to it.
 
@@ -292,7 +298,7 @@ Concrete things the entry states that matter to this application, each in one of
 
 - requirement: a condition the applicant has to meet: references, right to work, a certification, a notice period, office days, something they must send by a date
 - compensation: money and benefits: a band, a rate, a budget, what the applicant asked for and what was said about it, an offer's pay, bonus, equity or leave
-- logistics: how the process runs: the next step, who runs it, when, its format, what to prepare
+- logistics: how the process runs: its steps, who to contact, what to send or prepare and by when
 - commitment: what either side said they would do, and by when
 - role_detail: facts about the job, the team or the company that came up here: stack, team size, reporting line, product, travel, on-call, how the work is split
 - decision: what the applicant decided or concluded themselves: a walk-away number, a condition they set, why they are going ahead or not
@@ -304,9 +310,25 @@ For an offer or a contract, every term is a fact: pay with its amount, currency 
 - "value" is the fact in one line, with figures, dates and names exactly as written. Say whose it is when that matters: "Recruiter's budget: up to EUR 8,000 a month" and "Applicant asked for EUR 8,000 a month" are different facts.
 - At most 20 facts. Three that matter beat ten that do not.
 
+## The rounds ahead
+
+Every interview, assignment or other round the entry says is still to come: one that is booked, moved, offered or only mentioned, however it came up. A round named in passing, in answer to another question, or on a condition ("if this goes forward, you will meet our CTO") counts: it is what the applicant prepares for, and the to-dos around it (a CV to send, a request to accept) are facts, never a round in its place. So does the round an entry is all about: a call that books it, an email that moves it. A round the entry shows is already behind the applicant is not ahead.
+
+Each round is an object:
+
+- "kind": one of Intro (getting to know each other: background, motivation, the role), Screening (a recruiter, HR or automated check before the real rounds), Technical (a technical interview, live coding or a system design), Assignment (a take-home, case study, coding challenge or test), Team (meeting the people they would work with), Final (the last round before a decision), References (they call the applicant's references). Null when the entry does not say what kind it is.
+- "date": the day it is booked for, as YYYY-MM-DD. Null until a day is set.
+- "time": the time that day, as HH:MM on a 24-hour clock. Null when none is set.
+- "with": who runs it, as the entry says: their name, their title, their organisation and how they relate to the employer ("Jane Doe, a partner at the fund that backs them"). Null when nobody is named or described.
+- "about": in one line, its format, what it covers, any condition on it and what to prepare. When this entry moves a round, give the round as it now stands and say here what it was moved from. Null when there is nothing to add.
+
+In the order they will happen. Use [] when the entry says nothing about rounds to come.
+
 ## Rules
 
 - Only what the entry says. Never add a fact from outside it, never infer a number that is not written down, and never convert a currency.
+- A day said relative to the entry ("Thursday", "next week", "tomorrow") is a date: find it in the two weeks listed above, counting from the entry's own date. In a fact, give the date and the words as said: "2026-10-08 (said as 'Thursday next week')". When it cannot be worked out, keep the words, and leave a round's "date" null.
+- A transcript's names are as the transcriber heard them. When one is plainly the employer named above, misheard ("Nor Vic Data" for Norvik Data), write the employer's name. Leave every other name as written.
 - A transcript's speaker labels are often anonymous ("SPEAKER_00") and sometimes wrong on short turns. Work out which speaker is the applicant from what they say, and attribute each fact to the side that said it. When you cannot tell who said something, say so in the value rather than guessing.
 - An email thread quotes its earlier messages. Take each fact once, from where it was first stated, unless a later message changes it.
 - When a figure or a date changes within the entry (a band, then a counter; a date, then a new one), give the one that stands at the end, and mention the earlier one in the same value only when the change matters.
@@ -320,12 +342,15 @@ Respond with a single JSON object and nothing else:
 {
   "gist": "a string, always present",
   "facts": [
-    { "category": "logistics", "label": "Next round", "value": "First interview with the CTO, date to be agreed by the recruiter" },
-    { "category": "compensation", "label": "Recruiter's budget", "value": "EUR 6,500 to 7,500 a month, before holiday pay" }
+    { "category": "compensation", "label": "Recruiter's budget", "value": "EUR 6,500 to 7,500 a month, before holiday pay" },
+    { "category": "commitment", "label": "CV", "value": "Applicant to send an updated CV to the recruiter this week" }
+  ],
+  "ahead": [
+    { "kind": "Intro", "date": null, "time": null, "with": "Jane Doe, CTO", "about": "A video call about the applicant's background; the recruiter will propose times" }
   ]
 }
 
-"facts" must always be present, as an array: use [] when the entry holds nothing of this kind. Never return a bare array as the whole response.`,
+"facts" and "ahead" must always be present, as arrays: use [] when the entry holds nothing of that kind. Give every key of a round, null when it is not said. Never return a bare array as the whole response.`,
 		user_prompt: `{{about}}
 
 The entry's text:
@@ -351,13 +376,23 @@ The entry's text:
 	 * digest and two notes), six rebuilds each: 6 to 12 facts at 0.2, where the
 	 * low runs dropped the next interview, and 9 to 12 at 0, where every run kept
 	 * the next step, the promises, the money and the applicant's own limit.
+	 *
+	 * `next_step` and `people` are defined in the category list, not in
+	 * paragraphs of their own, and the output example shows neither. Measured on
+	 * the smoke's offer fixture (2026-10-02, gpt-oss-120b): as two paragraphs
+	 * they took it from about 5.5 details a run to none at all in 6 runs of 6,
+	 * with either alone harmless; in the list it keeps 3.5 to 4.3 and was never
+	 * empty in 22 runs, while the next step came out in every run of its own
+	 * fixture. Dropping the cap paragraph made it worse, not better. This prompt
+	 * is that sensitive: measure any change on every summary case, several runs
+	 * each, and on the offer case count the details, not only whether it passes.
 	 */
 	summarize_application: {
 		system_prompt: `You condense one job application's history into a short standing summary, and pull out the terms of any offer.
 
 You are given the history of one application, oldest first: correspondence, interview rounds, feedback, briefs, offers, contracts, notes, and documents the applicant attached. Each entry is headed "[entry N]" with its type, title and date.
 
-A short entry is shown whole. A long one (a transcript, a contract, a long thread) is shown as its digest instead: a line on what it is and the facts it holds, written from the whole of it by someone who read all of it. Read a digest's facts as what that entry says, and cite that entry for them. An entry marked "Shown: X of Y characters" is cut; never conclude that something is absent from it. When the history is too long to show every entry like this, the oldest are shortened first, and a note above the entries says how many.
+A short entry is shown whole. A long one (a transcript, a contract, a long thread) is shown as its digest instead: a line on what it is, the facts it holds and the rounds it says are still to come, written from the whole of it by someone who read all of it. Read a digest's facts and rounds as what that entry says, and cite that entry for them. An entry marked "Shown: X of Y characters" is cut; never conclude that something is absent from it. When the history is too long to show every entry like this, the oldest are shortened first, and a note above the entries says how many.
 
 Their own notes are where they write what they concluded and what they still have to find out: read them as closely as anything the employer sent, however long the documents around them are. When one of their notes corrects something another entry says (a figure, a date, a name, who said what), the note is right. Use the corrected version and drop what it corrects.
 
@@ -365,7 +400,7 @@ Their own notes are where they write what they concluded and what they still hav
 
 3-6 sentences. It is read alongside a dozen other applications when the applicant asks things like "where am I with everything?" or "is this one worth the effort?", so lead with WHERE THIS STANDS and what is outstanding, not with a chronology.
 
-Say what has actually happened and what is waiting on whom. Name people where it matters. If something is overdue, unanswered, or needs a decision, that is the most important sentence and it goes first. A question the applicant noted as still open is outstanding too.
+Say what has actually happened and what is waiting on whom. Name people where it matters. If something is overdue, unanswered, or needs a decision, that is the most important sentence and it goes first. A question the applicant noted as still open is outstanding too. A request a later entry has overtaken (a CV asked for, then a round booked) is not.
 
 Never speculate about what might happen. Never repeat the job description — the reader already has it.
 
@@ -390,12 +425,14 @@ Write the CURRENT state of each. These entries contradict each other on purpose 
 
 - "label" is a short noun phrase: "Office days", "Notice period", "Take-home deadline".
 - "value" is the fact in one line, quoting numbers and dates as they were written.
-- "category" is one of: requirement (a condition to satisfy), compensation (money talk short of a formal offer), logistics (how the process runs from here), commitment (what either side said they would do), role_detail (a fact about the job, the team or the company), decision (the applicant's own conclusion about this application, from their notes), other.
+- "category" is one of: next_step (the round or step that comes next, as the most recent entry that speaks of it has it: what it is, who runs it, when, its format; a long entry says it under "Rounds ahead"; one at most, listed first), people (a person the entries name on the hiring side, with their name as the label: their title, their organisation and their part in the process; at most three), requirement (a condition to satisfy), compensation (money talk short of a formal offer), logistics (how the process runs from here), commitment (what either side said they would do), role_detail (a fact about the job, the team or the company), decision (the applicant's own conclusion about this application, from their notes), other.
 - "record_id" is the number in the [entry N] heading you took it from. Use null rather than guessing.
 
-Cover every kind the entries hold: the next step and who owns it, what either side promised, the requirements, the role and the team, the money talk, and the applicant's own decisions. A digest's facts are where to start: keep each one that still stands. A fact from an earlier entry stands unless a later entry changes it, so a new entry is never a reason to drop one, and the summary mentioning something is no reason to leave it out here.
+Cover every kind the entries hold: the next step and who owns it, the people, what either side promised, the requirements, the role and the team, the money talk, and the applicant's own decisions. A digest's facts are where to start: keep each one that still stands. A fact from an earlier entry stands unless a later entry changes it, so a new entry is never a reason to drop one, and the summary mentioning something is no reason to leave it out here.
 
 Only what is written down. You are not shown the job ad, so never leave a fact out because an ad might already say it: for a role that was only described on a call, what the entries say about the role and the team is the only description there is. Do not repeat what the offer's fields already hold, and do not pad the list with small talk or generalities. Return an empty array only when the entries say nothing of this kind.
+
+At most 12 details. When there are more, leave out first what a later entry has overtaken or what is small (a CV that was asked for before a round was booked, a link that was sent), and never the next step, a person, or one of the applicant's decisions.
 
 ## Output
 

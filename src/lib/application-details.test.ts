@@ -107,8 +107,38 @@ describe('coerceDetails', () => {
 		expect(out[0]).toMatchObject({ category: 'decision', label: 'Walk-away' });
 	});
 
+	// A title filed as a person repeats the next step and takes one of the three
+	// places the people have.
+	it('keeps people labelled by name, not by title', () => {
+		const people = ['CPTO of Acme', 'The recruiter', 'A partner', 'HR team', 'Yana', 'Ann Lee'].map(
+			(label) => detail({ category: 'people', label, value: 'Runs the first round' })
+		);
+		expect(coerceDetails(people).map((d) => d.label)).toEqual(['Yana', 'Ann Lee']);
+		// Only people: a requirement may start however it likes.
+		expect(coerceDetails([detail({ label: 'The office days' })])).toHaveLength(1);
+	});
+
 	it('accepts decision as a category rather than folding it into other', () => {
 		expect(coerceDetails([detail({ category: 'decision' })])[0].category).toBe('decision');
+	});
+
+	// The model lists details in entry order, so the newest entry's come last,
+	// and that is where what comes next is said. Measured: fourteen details for
+	// twelve places, and the cut took the interviewer and the format of the
+	// round that had just been booked.
+	it('keeps the next step past the cap, after the decisions', () => {
+		const facts = Array.from({ length: 14 }, (_, i) => detail({ label: `Term ${i}` }));
+		const next = detail({
+			category: 'next_step',
+			label: 'First round',
+			value: 'Intro with Jane Doe, CTO, on 2026-10-08 at 15:30'
+		});
+		const decision = detail({ category: 'decision', label: 'Walk-away', value: 'Below 80k, no' });
+		const out = coerceDetails([...facts, next, decision]);
+		expect(out).toHaveLength(12);
+		expect(out.slice(0, 2).map((d) => d.category)).toEqual(['decision', 'next_step']);
+		// The rest keep the model's own order.
+		expect(out[2].label).toBe('Term 0');
 	});
 
 	it('caps the list', () => {
@@ -132,6 +162,14 @@ describe('groupDetails', () => {
 
 		expect(groups.map((g) => g.category)).toEqual(['requirement', 'compensation', 'other']);
 		expect(groups.every((g) => g.items.length > 0)).toBe(true);
+	});
+
+	it('leads with the next step', () => {
+		const groups = groupDetails([
+			detail({ category: 'requirement', label: 'References' }),
+			detail({ category: 'next_step', label: 'First round' })
+		]);
+		expect(groups.map((g) => g.label)).toEqual(['Next step', 'Requirements']);
 	});
 
 	it('is empty for no details', () => {

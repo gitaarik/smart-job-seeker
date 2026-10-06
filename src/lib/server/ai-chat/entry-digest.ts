@@ -32,6 +32,19 @@
  * composer, an upload, the assistant, MCP, an undo) digests the new entry with
  * no change of its own. Hash-gated like the summary: an edit to the title costs
  * nothing, an edit to the text re-reads it.
+ *
+ * ## The rounds ahead
+ *
+ * Besides its facts, a digest says which rounds are still to come, in the shape
+ * of an application's own rounds (`InterviewRound`). A list of facts kept what
+ * comes next only by luck. Measured on a real 17,000-character intro call,
+ * where the recruiter named the first round's interviewer in passing, in answer
+ * to another question and on a condition ("if this goes forward, you will
+ * meet..."): the facts kept him in 1 run of 3, and filled their "next step" with
+ * the to-dos around it (send a CV, accept a LinkedIn request). A paragraph
+ * telling the model to look for it took that to 2 of 3, filed under "other". A
+ * field it has to fill kept him in 3 of 3 (twice in the field itself), and in
+ * this shape the smoke's version of that call has had him in the field 4 of 4.
  */
 
 import { createHash } from 'node:crypto';
@@ -41,7 +54,8 @@ import { application_records } from '$lib/server/db/schema';
 import { createAndGenerateAiChat } from './utils';
 import { truncateKeepingEnds } from './application-activity';
 import { getRecordTypeLabel, LONG_ENTRY_CHARS } from '$lib/application-records';
-import { coerceEntryFacts, type EntryFact } from '$lib/application-details';
+import { coerceEntryFacts, parseObject, type EntryFact } from '$lib/application-details';
+import { roundKindValues, type InterviewRound } from '$lib/application-status';
 
 /**
  * The digest contract's version, carried on every hash. Bump it when what a
@@ -50,8 +64,10 @@ import { coerceEntryFacts, type EntryFact } from '$lib/application-details';
  * failure this prevents.
  *
  *   v1 — gist + facts
+ *   v2 — adds `ahead`, the rounds still to come; relative days become dates,
+ *        and the employer's name corrects a transcript that misheard it
  */
-export const DIGEST_CONTRACT_VERSION = 1;
+export const DIGEST_CONTRACT_VERSION = 2;
 
 const DIGEST_PREFIX = `v${DIGEST_CONTRACT_VERSION}:`;
 
@@ -66,9 +82,26 @@ const MAX_CHARS_READ = 120000;
 /** A gist is a line or two. This only stops a runaway answer. */
 const MAX_GIST_CHARS = 600;
 
+/** More rounds than one entry ever announces. Only there so a list is bounded. */
+const MAX_AHEAD = 5;
+const MAX_WITH_CHARS = 200;
+const MAX_ABOUT_CHARS = 300;
+
+/**
+ * One round still to come, as an entry describes it: an `InterviewRound`, so
+ * what a call says about the next round reads the way the application records
+ * it, plus a line for the rest.
+ */
+export interface AheadRound extends InterviewRound {
+	/** Its format, what it covers, any condition on it, what it was moved from. */
+	about: string | null;
+}
+
 export interface EntryDigest {
 	gist: string;
 	facts: EntryFact[];
+	/** Empty when the entry says nothing about rounds to come, and for a v1 digest. */
+	ahead: AheadRound[];
 }
 
 /** The fields a digest is written from. Only these can change what it says. */
@@ -99,6 +132,23 @@ export function hasCurrentDigest(entry: DigestSource & { digest_hash: string | n
 	return !!entry.digest_hash && entry.digest_hash === digestHash(entry);
 }
 
+/**
+ * Whether the stored digest was written from this entry's text as it is now,
+ * by this contract or an older one.
+ *
+ * An older contract's digest is stale, since it lacks what the contract added
+ * since, but nothing in it is wrong, so the summariser reads it until the entry
+ * is read again. Without this a contract bump turned every long entry into a cut
+ * excerpt at once, and the write path re-reads only three per save.
+ */
+export function digestReadsCurrentText(
+	entry: DigestSource & { digest_hash: string | null }
+): boolean {
+	if (!entry.digest_hash) return false;
+	const text = (hash: string) => hash.slice(hash.indexOf(':') + 1);
+	return text(entry.digest_hash) === text(digestHash(entry));
+}
+
 /** A long entry with no digest, or one written from different text. */
 export function needsDigest(entry: DigestSource & { digest_hash: string | null }): boolean {
 	return isLongEntry(entry) && !hasCurrentDigest(entry);
@@ -117,22 +167,112 @@ export function coerceDigest(raw: unknown): EntryDigest | null {
 	if (!gistRaw) return null;
 	const gist =
 		gistRaw.length > MAX_GIST_CHARS ? gistRaw.slice(0, MAX_GIST_CHARS).trimEnd() + '…' : gistRaw;
-	return { gist, facts: coerceEntryFacts(r.facts) };
+	return { gist, facts: coerceEntryFacts(r.facts), ahead: coerceAhead(r.ahead) };
+}
+
+const asLine = (v: unknown, max: number): string | null => {
+	if (typeof v !== 'string') return null;
+	const line = v.trim().replace(/\s+/g, ' ');
+	if (!line) return null;
+	return line.length > max ? line.slice(0, max).trimEnd() + '…' : line;
+};
+
+/**
+ * The rounds ahead, field by field. A field that is not what its name says is
+ * dropped rather than the round: "next Thursday" is no date, but the round it
+ * belongs to, and who runs it, are still worth having. A kind outside
+ * `roundKinds` is dropped for the reason the assistant is held to them, and a
+ * round with nothing left in it is no round.
+ */
+export function coerceAhead(raw: unknown): AheadRound[] {
+	if (!Array.isArray(raw)) return [];
+	const rounds: AheadRound[] = [];
+	for (const item of raw) {
+		const value = typeof item === 'string' ? parseObject(item) : item;
+		if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+		const o = value as Record<string, unknown>;
+
+		const kindText = typeof o.kind === 'string' ? o.kind.trim().toLowerCase() : null;
+		const kind = roundKindValues.find((k) => k.toLowerCase() === kindText) ?? null;
+		const dateText = typeof o.date === 'string' ? o.date.trim() : '';
+		const date =
+			/^\d{4}-\d{2}-\d{2}$/.test(dateText) && !Number.isNaN(Date.parse(dateText)) ? dateText : null;
+		// 9:30, 15.30 and 15:30:00 are all a time; "3.30pm" is not, and is dropped.
+		const clock =
+			typeof o.time === 'string' ? o.time.trim().match(/^(\d{1,2})[:.](\d{2})(?::\d{2})?$/) : null;
+		const time =
+			clock && Number(clock[1]) < 24 && Number(clock[2]) < 60
+				? `${clock[1].padStart(2, '0')}:${clock[2]}`
+				: null;
+
+		const round: AheadRound = {
+			kind,
+			date,
+			time,
+			with: asLine(o.with, MAX_WITH_CHARS),
+			about: asLine(o.about, MAX_ABOUT_CHARS)
+		};
+		if (Object.values(round).some((v) => v !== null)) rounds.push(round);
+	}
+	return rounds.slice(0, MAX_AHEAD);
+}
+
+const DAY_MS = 86_400_000;
+
+/** A `YYYY-MM-DD` as UTC midnight, where that string parses, or null. */
+function dayOf(date: string): Date | null {
+	const at = new Date(`${date}T00:00:00Z`);
+	return /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(at.getTime()) ? at : null;
+}
+
+/**
+ * The entry's week and the one after, day by day: "Mon 2026-09-28, Tue ...".
+ *
+ * Measured on a call that moved a round to "Thursday from 3.30": given only
+ * the date and its weekday, gpt-oss put the round on the Wednesday one run in
+ * seven, counting the days itself. A list turns the count into a lookup, and
+ * "Thursday next week" said on a Friday is the first Thursday in it.
+ */
+function weekLines(at: Date): string[] {
+	const monday = at.getTime() - ((at.getUTCDay() + 6) % 7) * DAY_MS;
+	const week = (start: number) =>
+		Array.from({ length: 7 }, (_, i) => {
+			const day = new Date(start + i * DAY_MS);
+			const name = day.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' });
+			return `${name} ${day.toISOString().slice(0, 10)}`;
+		}).join(', ');
+	return [`Its week: ${week(monday)}`, `The week after: ${week(monday + 7 * DAY_MS)}`];
+}
+
+/** What the lines above an entry's text are written from. */
+export interface DigestAbout {
+	record_type: string | null;
+	title: string | null;
+	event_date: string | null;
+	filename: string | null;
+	/** The job the application is for: it names the employer a transcript mishears. */
+	job: { title: string | null; company: string | null } | null;
 }
 
 /**
  * The lines above the text: what kind of entry it is and when, so the model can
  * read "the recruiter" and "Monday" correctly, and how much of it is shown.
+ *
+ * The weekday and the two weeks are there because "Thursday" is a date only
+ * against them (see `weekLines`). The employer is there because a transcriber
+ * hears a company name it does not know as words it does ("Nor Vic Data" for
+ * Norvik Data), and that name is how the applicant finds the round again.
  */
-function renderAbout(
-	entry: DigestSource & { title: string | null; filename: string | null },
-	shown: number,
-	total: number
-): string {
+export function renderDigestAbout(entry: DigestAbout, shown: number, total: number): string {
+	const day = entry.event_date ? dayOf(entry.event_date) : null;
+	const weekday = day?.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
 	return [
 		`Type: ${getRecordTypeLabel(entry.record_type)}`,
 		`Title: ${entry.title?.trim() || 'Untitled'}`,
-		entry.event_date ? `Date: ${entry.event_date}` : null,
+		entry.event_date ? `Date: ${entry.event_date}${weekday ? ` (${weekday})` : ''}` : null,
+		...(day ? weekLines(day) : []),
+		entry.job?.company?.trim() ? `Employer: ${entry.job.company.trim()}` : null,
+		entry.job?.title?.trim() ? `Role: ${entry.job.title.trim()}` : null,
 		entry.filename ? `Extracted from a file named "${entry.filename}".` : null,
 		shown < total
 			? `Shown: ${shown} of ${total} characters. The middle is cut; say nothing about what it held.`
@@ -167,7 +307,13 @@ export async function digestEntry(
 				digest: true,
 				digest_hash: true
 			},
-			with: { file: { columns: { filename_download: true } } }
+			with: {
+				file: { columns: { filename_download: true } },
+				application: {
+					columns: { id: true },
+					with: { job: { columns: { title: true, company: true } } }
+				}
+			}
 		});
 		if (!record || !isLongEntry(record)) return null;
 		if (hasCurrentDigest(record)) return record.digest ? coerceDigest(record.digest) : null;
@@ -179,8 +325,12 @@ export async function digestEntry(
 			profileId,
 			'digest_activity_entry',
 			{
-				about: renderAbout(
-					{ ...record, filename: record.file?.filename_download ?? null },
+				about: renderDigestAbout(
+					{
+						...record,
+						filename: record.file?.filename_download ?? null,
+						job: record.application?.job ?? null
+					},
 					shownText.length,
 					text.length
 				),

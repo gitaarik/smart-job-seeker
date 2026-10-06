@@ -60,17 +60,19 @@ import { truncateKeepingEnds } from './application-activity';
 import {
 	coerceDigest,
 	digestEntry,
-	digestHash,
+	digestReadsCurrentText,
 	needsDigest,
+	type AheadRound,
 	type EntryDigest
 } from './entry-digest';
 import {
 	getRecordTypeLabel,
 	LONG_ENTRY_CHARS,
-	summaryIsWorthWriting
+	summaryIsWorthWriting,
+	today
 } from '$lib/application-records';
 import type { OfferTerms } from '$lib/application-offer';
-import { coerceDetails } from '$lib/application-details';
+import { coerceDetails, type ApplicationDetail } from '$lib/application-details';
 
 /**
  * Cap on what the summariser reads. It is now a backstop rather than the thing
@@ -127,8 +129,10 @@ const SHORTENED_CHARS = 300;
  *        application, which v2 dropped as not being facts about it
  *   v4 — reads long entries through their digests instead of stopping at the
  *        first 40,000 characters, and summarises a single long entry
+ *   v5 — adds `next_step` details, read from the digests' rounds ahead, and
+ *        `people`; tells the model the cap rather than letting it cut the newest
  */
-export const SUMMARY_CONTRACT_VERSION = 4;
+export const SUMMARY_CONTRACT_VERSION = 5;
 
 /** The prefix a current-contract hash starts with. Also the backfill's LIKE. */
 export const CONTRACT_PREFIX = `v${SUMMARY_CONTRACT_VERSION}:`;
@@ -143,8 +147,10 @@ export interface SummarySource {
 	content: string | null;
 	event_date: string | null;
 	/**
-	 * The entry's digest, when it has one written from its current text. A
-	 * stale digest is passed as null: it describes text that no longer exists.
+	 * The entry's digest, when it has one written from its current text. One
+	 * written from other text is passed as null: it describes text that no
+	 * longer exists. One from an older digest contract is passed as it is
+	 * (`digestReadsCurrentText`).
 	 */
 	digest: EntryDigest | null;
 }
@@ -253,6 +259,137 @@ function renderFacts(digest: EntryDigest): string {
 	);
 }
 
+/** "Intro, 2026-10-08 15:30, with Jane Doe (CTO): a call about your background". */
+function renderRound(r: AheadRound): string {
+	const when = [r.date, r.time].filter(Boolean).join(' ');
+	const head = [r.kind, when, r.with ? `with ${r.with}` : null].filter(Boolean).join(', ');
+	return head && r.about ? `${head}: ${r.about}` : head || r.about || '';
+}
+
+/**
+ * The rounds the entry says are still to come, which the next step is written
+ * from. Nothing when it names none: most entries do not, and "none" under every
+ * one of them would be noise the model reads as a claim.
+ */
+function renderAhead(digest: EntryDigest): string | null {
+	if (digest.ahead.length === 0) return null;
+	return ['Rounds ahead:', ...digest.ahead.map((r) => `- ${renderRound(r)}`)].join('\n');
+}
+
+/**
+ * The next step, when the summariser gave none and the newest entry says what
+ * it is: that entry's first round ahead, cited to it.
+ *
+ * The summariser leaves the next step out now and then (1 run in 8 on the
+ * smoke's fixture), and it is the one detail the card leads with. Only from the newest entry, because an older
+ * entry's rounds may be behind the applicant by now, as a later note would
+ * say; when the newest entry names a round to come, that round is next.
+ */
+export function nextStepFromNewest(
+	sources: SummarySource[],
+	shownIds: number[],
+	details: ApplicationDetail[]
+): ApplicationDetail | null {
+	if (details.some((d) => d.category === 'next_step')) return null;
+	const shown = new Set(shownIds);
+	const newest = sources.filter((s) => shown.has(s.id)).at(-1);
+	const round = newest?.digest?.ahead[0];
+	if (!newest || !round) return null;
+	return {
+		category: 'next_step',
+		label: 'Next round',
+		value: renderRound(round),
+		record_id: newest.id
+	};
+}
+
+/**
+ * The prompt's limit on people ("at most three"), which `peopleNamedAhead` fills
+ * up to and never past.
+ */
+const MAX_PEOPLE = 3;
+
+/** Words that sit inside a surname in lower case: "Maarten van den Berg". */
+const NAME_PARTICLE = '(?:van|von|de|der|den|di|da|du|del|della|dos|das|la|le|ten|ter|bin|al)';
+
+/**
+ * A person's name as a digest writes one: two or more capitalised words, with
+ * the particles above between them. Not "Project manager", "Hiring manager at
+ * Acme" or "CPTO of Acme", which a digest also puts in `with` and which a
+ * first-letter test let through on a real application. A first name alone
+ * ("Yana") is not taken either: too often a role is written the same way.
+ */
+const PERSON_NAME = new RegExp(
+	`^\\p{Lu}\\p{Ll}[\\p{L}'’-]*(?:\\s+(?:${NAME_PARTICLE}\\s+)*\\p{Lu}[\\p{L}'’-]*)+$`,
+	'u'
+);
+
+/**
+ * Everyone a digest names to run a round ahead whom the details never mention,
+ * as `people` details citing that entry, newest entry first.
+ *
+ * The other thing about the next step the summariser is not trusted with (the
+ * first is `nextStepFromNewest`). It writes the next step from the newest entry
+ * that speaks of it, and a call that
+ * moves a round usually gives only a title ("the CTO"), so the name an earlier
+ * call gave is dropped as replaced. Measured on one intro call naming who would
+ * run the first round and one moving that round: the name was gone in all 25
+ * runs across five ways of asking to keep it (a rule, a worked example, the
+ * rounds side by side, a list to fill, more reasoning). A `people` detail kept
+ * it 4 of 4 in one wording and 0 of 5 in the next, and a required list of
+ * people 0 of 5. Who someone is does not go stale the way a date does, so this
+ * keeps them without asking the model to judge it.
+ *
+ * A `with` that is a description rather than a name ("the CTO", "Project
+ * manager") is left to the next step, which already carries it. A round dated
+ * before `on` is behind the applicant, and its people with it. Only up to the
+ * prompt's three people, so it never crowds out what the model chose: on a
+ * 40-entry application it added the people of rounds months behind. Each says
+ * when it was said, since an undated round may be behind them too.
+ */
+export function peopleNamedAhead(
+	sources: SummarySource[],
+	shownIds: number[],
+	details: ApplicationDetail[],
+	on: string = today()
+): ApplicationDetail[] {
+	const room = MAX_PEOPLE - details.filter((d) => d.category === 'people').length;
+	if (room <= 0) return [];
+	const shown = new Set(shownIds);
+	const mentioned = details.map((d) => `${d.label} ${d.value}`.toLowerCase());
+	const added: ApplicationDetail[] = [];
+	const seen = new Set<string>();
+
+	for (const source of [...sources].reverse()) {
+		if (!shown.has(source.id)) continue;
+		for (const round of source.digest?.ahead ?? []) {
+			if (round.date && round.date < on) continue;
+			const who = round.with?.trim() ?? '';
+			const name = who.split(/[,;(]/)[0].trim();
+			const key = name.toLowerCase();
+			if (name.length > 60 || !PERSON_NAME.test(name)) continue;
+			if (seen.has(key) || mentioned.some((m) => m.includes(key))) continue;
+			seen.add(key);
+
+			const role = who.slice(name.length).replace(/^[\s,;(]+|[\s)]+$/g, '');
+			const what = renderRound({ ...round, with: null });
+			const named = `Named${source.event_date ? ` on ${source.event_date}` : ''} to run`;
+			added.push({
+				category: 'people',
+				label: name,
+				value: [
+					role ? `${role.charAt(0).toUpperCase()}${role.slice(1)}.` : null,
+					what ? `${named}: ${what}` : `${named} a round.`
+				]
+					.filter(Boolean)
+					.join(' '),
+				record_id: source.id
+			});
+		}
+	}
+	return coerceDetails(added, shownIds, room);
+}
+
 /**
  * One entry, in one of the three ways the summariser meets it: whole when it
  * is short, as its digest when it is long, and cut to both ends, and marked
@@ -279,8 +416,11 @@ function renderEntry(r: SummarySource, form: Form): string {
 			`Shown as its digest: the entry is ${text.length} characters.`,
 			'',
 			`What it is: ${r.digest.gist}`,
-			renderFacts(r.digest)
-		].join('\n');
+			renderFacts(r.digest),
+			renderAhead(r.digest)
+		]
+			.filter((l) => l !== null)
+			.join('\n');
 	}
 	const excerpt = truncateKeepingEnds(text, EXCERPT_CHARS);
 	return [
@@ -443,9 +583,7 @@ export async function summarizeApplication(
 			title: r.title,
 			content: r.content,
 			event_date: r.event_date,
-			digest:
-				written.get(r.id) ??
-				(r.digest_hash && r.digest_hash === digestHash(r) ? coerceDigest(r.digest) : null)
+			digest: written.get(r.id) ?? (digestReadsCurrentText(r) ? coerceDigest(r.digest) : null)
 		}));
 
 		const rendered = renderSourceEntries(sources);
@@ -469,6 +607,15 @@ export async function summarizeApplication(
 		const summary = asText(parsed.summary);
 		if (!summary) return false;
 
+		// Only entries this pass actually showed the model can be cited. The
+		// detail list is replaced wholesale rather than merged, which is what
+		// keeps it a projection of the current entries instead of a log that
+		// accumulates every superseded figure.
+		const fromModel = coerceDetails(parsed.details, rendered.shownIds);
+		const next = nextStepFromNewest(sources, rendered.shownIds, fromModel);
+		// Through coerceDetails again so the added step leads and the cap holds.
+		const details = next ? coerceDetails([next, ...fromModel], rendered.shownIds) : fromModel;
+
 		await db
 			.update(applications)
 			.set({
@@ -476,11 +623,7 @@ export async function summarizeApplication(
 				context_summary_hash: hash,
 				context_summary_at: new Date(),
 				offer_terms: coerceOffer(parsed.offer),
-				// Only entries this pass actually showed the model can be cited. The
-				// detail list is replaced wholesale rather than merged, which is what
-				// keeps it a projection of the current entries instead of a log that
-				// accumulates every superseded figure.
-				context_details: coerceDetails(parsed.details, rendered.shownIds)
+				context_details: [...details, ...peopleNamedAhead(sources, rendered.shownIds, details)]
 			})
 			.where(eq(applications.id, applicationId));
 

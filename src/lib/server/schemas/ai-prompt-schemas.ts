@@ -427,7 +427,7 @@ export const summarizeApplicationSchema = z.object({
 					category: z
 						.string()
 						.describe(
-							'One of: requirement, compensation, logistics, commitment, role_detail, decision, other.'
+							'One of: next_step, people, requirement, compensation, logistics, commitment, role_detail, decision, other.'
 						),
 					label: z.string().describe('Short noun phrase naming the thing.'),
 					value: z.string().describe('The fact itself, in one line.'),
@@ -468,7 +468,32 @@ export const digestActivityEntrySchema = z.object({
 				z.string()
 			])
 		)
-		.describe('Facts this entry states. Empty array when there are none.')
+		.describe('Facts this entry states. Empty array when there are none.'),
+	// Optional, and every field in a round too, though the prompt asks for all of
+	// them: gpt-oss leaves out keys it would set to null, and a strict shape here
+	// would throw away the gist and the facts over one round's missing `time`.
+	// coerceAhead reads an absent field as null and an absent list as empty.
+	ahead: z
+		.array(
+			z.union([
+				z.object({
+					kind: z
+						.string()
+						.nullish()
+						.describe('One of the round kinds listed in the prompt, or null.'),
+					date: z.string().nullish().describe('YYYY-MM-DD, or null.'),
+					time: z.string().nullish().describe('HH:MM on a 24-hour clock, or null.'),
+					with: z.string().nullish().describe('Who runs it, as the entry says, or null.'),
+					about: z
+						.string()
+						.nullish()
+						.describe('Its format, what it covers, any condition on it, or null.')
+				}),
+				z.string()
+			])
+		)
+		.optional()
+		.describe('The rounds still to come, as this entry describes them. Empty array when none.')
 });
 
 /**

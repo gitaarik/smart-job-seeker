@@ -12,10 +12,14 @@ import {
 	coerceOffer,
 	CONTRACT_PREFIX,
 	isCurrentContract,
+	nextStepFromNewest,
+	peopleNamedAhead,
 	renderSourceEntries,
 	summaryHash,
 	type SummarySource
 } from '../application-summary';
+import type { ApplicationDetail } from '$lib/application-details';
+import type { AheadRound } from '../entry-digest';
 
 function entry(over: Partial<SummarySource> = {}): SummarySource {
 	return {
@@ -68,7 +72,7 @@ describe('summaryHash', () => {
 	// the summariser reads of it is not.
 	it('changes when a long entry gains its digest', () => {
 		const long = entry({ content: 'x'.repeat(5000) });
-		const digested = { ...long, digest: { gist: 'A long thread.', facts: [] } };
+		const digested = { ...long, digest: { gist: 'A long thread.', facts: [], ahead: [] } };
 		expect(summaryHash(rendered([digested]))).not.toBe(summaryHash(rendered([long])));
 	});
 });
@@ -219,7 +223,8 @@ describe('renderSourceEntries', () => {
 				content: 'SPEAKER_00: hello. '.repeat(1000),
 				digest: {
 					gist: 'Intro call with the recruiter.',
-					facts: [{ category: 'logistics', label: 'Next round', value: 'With the CTO' }]
+					facts: [{ category: 'logistics', label: 'Next round', value: 'With the CTO' }],
+					ahead: []
 				}
 			})
 		]);
@@ -227,6 +232,39 @@ describe('renderSourceEntries', () => {
 		expect(text).toContain('What it is: Intro call with the recruiter.');
 		expect(text).toContain('- Next round [logistics]: With the CTO');
 		expect(text).not.toContain('SPEAKER_00');
+		// Most entries name no round to come, and say nothing about it.
+		expect(text).not.toContain('Rounds ahead');
+	});
+
+	// What the next step is written from: a round said in passing in one call,
+	// booked in the next.
+	it("shows a digest's rounds ahead under its facts", () => {
+		const { text } = renderSourceEntries([
+			entry({
+				id: 8,
+				record_type: 'transcript',
+				content: 'SPEAKER_00: hello. '.repeat(1000),
+				digest: {
+					gist: 'The recruiter moves the first round.',
+					facts: [],
+					ahead: [
+						{
+							kind: 'Intro',
+							date: '2026-10-08',
+							time: '15:30',
+							with: 'Jane Doe, CTO',
+							about: 'About your background; moved from 2026-10-02'
+						},
+						{ kind: null, date: null, time: null, with: null, about: 'A team round after it' }
+					]
+				}
+			})
+		]);
+		expect(text).toContain(
+			'Rounds ahead:\n' +
+				'- Intro, 2026-10-08 15:30, with Jane Doe, CTO: About your background; moved from 2026-10-02\n' +
+				'- A team round after it'
+		);
 	});
 
 	// Without a digest (a failed call, a backlog) the text is cut, and says so:
@@ -285,5 +323,153 @@ describe('renderSourceEntries', () => {
 		expect(out.shortened).toBe(0);
 		expect(out.omitted).toBe(0);
 		expect(out.text).not.toContain('NOTE:');
+	});
+});
+
+/**
+ * The name an earlier call gave for who runs a round, which the summariser
+ * drops once a later call moves that round and says only "the CTO".
+ */
+const round = (over: Partial<AheadRound> = {}): AheadRound => ({
+	kind: null,
+	date: null,
+	time: null,
+	with: null,
+	about: null,
+	...over
+});
+
+/** A long entry whose digest names these rounds ahead. */
+const withRounds = (id: number, ahead: AheadRound[]): SummarySource =>
+	entry({
+		id,
+		record_type: 'transcript',
+		content: 'x'.repeat(2000),
+		digest: { gist: 'A call.', facts: [], ahead }
+	});
+
+describe('peopleNamedAhead', () => {
+	const intro = withRounds(61, [
+		round({
+			with: 'Joost Verhoeven, a partner at the fund that backs them',
+			about: 'The first round, if it goes forward'
+		})
+	]);
+	const moved = withRounds(62, [
+		round({ kind: 'Intro', date: '2026-10-08', time: '15:30', with: 'the CTO of Acme' })
+	]);
+	const nextStep: ApplicationDetail = {
+		category: 'next_step',
+		label: 'First round',
+		value: 'Intro with the CTO of Acme on 2026-10-08 at 15:30',
+		record_id: 62
+	};
+
+	it('adds a person an earlier entry named for a round, citing that entry', () => {
+		expect(peopleNamedAhead([intro, moved], [61, 62], [nextStep])).toEqual([
+			{
+				category: 'people',
+				label: 'Joost Verhoeven',
+				value:
+					'A partner at the fund that backs them. Named on 2026-07-28 to run: The first round, if it goes forward',
+				record_id: 61
+			}
+		]);
+	});
+
+	it('adds nobody the details already mention, in any case', () => {
+		const mentioned = { ...nextStep, value: `${nextStep.value}, with JOOST VERHOEVEN` };
+		expect(peopleNamedAhead([intro, moved], [61, 62], [mentioned])).toEqual([]);
+	});
+
+	// "the CTO of Acme" is who the next step already names, and no name. The
+	// capitalised ones are what a first-letter test let through on a real
+	// application.
+	it('leaves descriptions to the next step', () => {
+		const described = withRounds(63, [
+			round({ with: 'the CPTO' }),
+			round({ with: 'CPTO of Acme' }),
+			round({ with: 'a recruiter' }),
+			round({ with: 'Project manager (name not given)' }),
+			round({ with: 'Hiring manager at Acme' }),
+			round({ with: 'Client technical interviewers' }),
+			round({ with: 'Yana, the recruiter' })
+		]);
+		expect(peopleNamedAhead([described], [63], [])).toEqual([]);
+	});
+
+	// A round dated before today is behind the applicant, and so are its people.
+	it('skips a round that is done', () => {
+		const done = withRounds(66, [round({ with: 'Ann Lee', date: '2026-09-01' })]);
+		expect(peopleNamedAhead([done], [66], [], '2026-10-02')).toEqual([]);
+		expect(peopleNamedAhead([done], [66], [], '2026-09-01')).toHaveLength(1);
+	});
+
+	// The prompt's limit, shared: the model's own people come first.
+	it('fills up to three people, counting the ones already there', () => {
+		const person = (label: string): ApplicationDetail => ({
+			category: 'people',
+			label,
+			value: 'Recruiter',
+			record_id: 61
+		});
+		expect(peopleNamedAhead([intro], [61], [person('Ann Lee'), person('Bo Chen')])).toHaveLength(1);
+		expect(
+			peopleNamedAhead([intro], [61], [person('Ann Lee'), person('Bo Chen'), person('Cy Diaz')])
+		).toEqual([]);
+	});
+
+	it('takes a name with a particle in it', () => {
+		const dutch = withRounds(65, [round({ with: 'Maarten van den Berg (the fund)' })]);
+		expect(peopleNamedAhead([dutch], [65], [])[0]).toMatchObject({
+			label: 'Maarten van den Berg',
+			value: 'The fund. Named on 2026-07-28 to run a round.'
+		});
+	});
+
+	it('reads only entries the summariser was shown, newest first, and caps the list', () => {
+		expect(peopleNamedAhead([intro, moved], [62], [nextStep])).toEqual([]);
+		const many = withRounds(
+			64,
+			['Ann Lee', 'Bo Chen', 'Cy Diaz', 'Di Evans'].map((name) => round({ with: name }))
+		);
+		const out = peopleNamedAhead([intro, many], [61, 64], []);
+		expect(out.map((p) => p.label)).toEqual(['Ann Lee', 'Bo Chen', 'Cy Diaz']);
+		expect(out[0].value).toBe('Named on 2026-07-28 to run a round.');
+	});
+});
+
+// The detail the card leads with, which the summariser leaves out now and then.
+describe('nextStepFromNewest', () => {
+	const booked = withRounds(62, [
+		round({ kind: 'Intro', date: '2026-10-08', time: '15:30', with: 'the CTO', about: 'In person' })
+	]);
+	const other: ApplicationDetail = {
+		category: 'role_detail',
+		label: 'Stack',
+		value: 'Python',
+		record_id: 62
+	};
+
+	it("writes it from the newest entry's first round ahead", () => {
+		expect(nextStepFromNewest([entry({ id: 61 }), booked], [61, 62], [other])).toEqual({
+			category: 'next_step',
+			label: 'Next round',
+			value: 'Intro, 2026-10-08 15:30, with the CTO: In person',
+			record_id: 62
+		});
+	});
+
+	it('leaves one the summariser wrote alone', () => {
+		const written = { ...other, category: 'next_step' as const, label: 'First round' };
+		expect(nextStepFromNewest([booked], [62], [written])).toBeNull();
+	});
+
+	// A round an older entry announced may be behind the applicant by now.
+	it('reads only the newest entry the summariser was shown', () => {
+		const note = entry({ id: 63, record_type: 'note', content: 'Went well, they will call.' });
+		expect(nextStepFromNewest([booked, note], [62, 63], [])).toBeNull();
+		expect(nextStepFromNewest([booked, note], [62], [])).not.toBeNull();
+		expect(nextStepFromNewest([withRounds(64, [])], [64], [])).toBeNull();
 	});
 });

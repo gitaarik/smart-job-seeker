@@ -34,6 +34,28 @@
 
 export const detailCategories = [
 	{
+		// First, because it is what the applicant prepares for. It used to be one
+		// `logistics` fact among a dozen, and on one application in 2026-10 the
+		// first round's interviewer was lost twice: the intro call's digest kept
+		// the to-dos around it instead, and the cap cut the reschedule call's
+		// version as the newest fact. See planning/APPLICATION-KEY-FACTS.md.
+		value: 'next_step',
+		label: 'Next step',
+		hint: 'The round or step that comes next, as it stands now: what it is, who runs it, when, its format'
+	},
+	{
+		// Who the applicant will meet, which no later entry makes untrue. The next
+		// step is written from the newest entry that speaks of it, and a name only
+		// an earlier call gave went with it: one call naming who would run the
+		// first round, the next moving that round with only a title. The
+		// summariser writes these for the people it reads about, and
+		// `peopleNamedAhead` adds anyone a digest named to run a round that it
+		// left out (see there for why that is code and not a prompt).
+		value: 'people',
+		label: 'People',
+		hint: "Who is who on the employer's side: a person the entries name, their role and their part in the process"
+	},
+	{
 		value: 'requirement',
 		label: 'Requirements',
 		hint:
@@ -50,7 +72,7 @@ export const detailCategories = [
 	{
 		value: 'logistics',
 		label: 'Process',
-		hint: 'How this runs from here: the next step, who runs it, when, what to ' + 'prepare'
+		hint: 'How the process runs: its steps, who to contact, what to send or prepare'
 	},
 	{
 		value: 'commitment',
@@ -121,9 +143,10 @@ const asText = (v: unknown, max: number): string | null => {
  * A detail that arrived as a string holding its object. gpt-oss does this for
  * one element in a list now and then, and the rest of the list is fine: parsing
  * it keeps the detail rather than dropping it, and anything that is not an
- * object once parsed is dropped as before.
+ * object once parsed is dropped as before. A digest's rounds ahead are read the
+ * same way (entry-digest.ts).
  */
-function parseObject(text: string): unknown {
+export function parseObject(text: string): unknown {
 	try {
 		const parsed: unknown = JSON.parse(text);
 		return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
@@ -183,6 +206,13 @@ export function coerceDetails(
 					: NaN;
 		const record_id = Number.isInteger(rawId) && known.has(rawId) ? rawId : null;
 
+		// A person is labelled with their name. "CPTO of Acme" or "The recruiter"
+		// is a title the next step already carries, and it would take one of the
+		// three places the people have (seen on a real application).
+		const firstWord = label.split(/\s+/)[0];
+		const isTitle = /^(?:the|a|an)$/i.test(firstWord) || /^\p{Lu}{2,}$/u.test(firstWord);
+		if (category === 'people' && isTitle) continue;
+
 		// Same detail, two entries — a requirement repeated in an email and again
 		// in the offer. One row, and the earliest citation stands.
 		const key = `${category}:${label.toLowerCase()}`;
@@ -192,14 +222,20 @@ export function coerceDetails(
 		details.push({ category, label, value, record_id });
 	}
 
-	// Capped AFTER the applicant's own decisions are moved to the front. A long
-	// contract yields a dozen facts on its own, and a model that lists the
-	// decision last would otherwise see it cut — the one detail nothing else
-	// records, lost to the ones a contract entry already holds. Stable within
+	// Capped AFTER the applicant's own decisions and the next step are moved to
+	// the front. A long contract yields a dozen facts on its own, and a model that
+	// lists the decision last would otherwise see it cut — the one detail nothing
+	// else records, lost to the ones a contract entry already holds. The next step
+	// for the opposite reason: the model lists facts in entry order, so the newest
+	// entry's are last, and that is where what comes next is said. Stable within
 	// each group, so the model's own order stands otherwise.
-	const decisions = details.filter((d) => d.category === 'decision');
-	const rest = details.filter((d) => d.category !== 'decision');
-	return [...decisions, ...rest].slice(0, max);
+	const first = (d: ApplicationDetail) =>
+		d.category === 'decision' ? 0 : d.category === 'next_step' ? 1 : 2;
+	return details
+		.map((d, i) => ({ d, i }))
+		.sort((a, b) => first(a.d) - first(b.d) || a.i - b.i)
+		.map(({ d }) => d)
+		.slice(0, max);
 }
 
 /**
