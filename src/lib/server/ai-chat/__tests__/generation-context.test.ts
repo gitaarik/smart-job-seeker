@@ -344,16 +344,38 @@ describe('assembleGenerationContext', () => {
 			profileId: 1,
 			query: { text: 'anything' },
 			sources: ['projects', 'stories'],
-			budgetChars: 5000
+			budgetChars: 5000,
+			output: 'reply'
 		});
 
 		// Stories rank below projects, so stories is the one that gives way.
 		expect(ctx.droppedSources).toEqual(['stories']);
 		expect(ctx.variables.relevantStories).toContain('could not be included');
+		expect(ctx.variables.relevantStories).toContain('ask the user to narrow');
 		// It must not read as an absence — that is the whole point.
 		expect(ctx.variables.relevantStories).not.toBe('');
 		expect(ctx.variables.relevantProjects).toBe('P'.repeat(4000));
 		expect(ctx.usedSources).toEqual(['projects']);
+	});
+
+	it('tells a document to write around a dropped source, not to report it', async () => {
+		// A document has nobody to ask, and the model writes what the note tells
+		// it to say into the text: told to "say so plainly", a cheat sheet put the
+		// note under both of its record headings instead of the records.
+		mockRelevantProjects.mockResolvedValue(blk('P'.repeat(4000)));
+		mockRelevantStories.mockResolvedValue(blk('S'.repeat(4000)));
+
+		const ctx = await assembleGenerationContext({
+			profileId: 1,
+			query: { text: 'anything' },
+			sources: ['projects', 'stories'],
+			budgetChars: 5000
+		});
+
+		expect(ctx.droppedSources).toEqual(['stories']);
+		expect(ctx.variables.relevantStories).toContain('was left out');
+		expect(ctx.variables.relevantStories).toContain('do not mention that it was left out');
+		expect(ctx.variables.relevantStories).not.toMatch(/say so|ask the user/);
 	});
 
 	it('distinguishes a requested-and-empty source from a dropped one', async () => {
@@ -376,7 +398,7 @@ describe('assembleGenerationContext', () => {
 		expect(ctx.variables.relevantProjects).toContain('nothing here');
 		expect(ctx.variables.relevantProjects).toMatch(/never say you lack access/i);
 		// Not the dropped wording — that would assert material that isn't there.
-		expect(ctx.variables.relevantProjects).not.toContain('could not be included');
+		expect(ctx.variables.relevantProjects).not.toMatch(/could not be included|left out/);
 	});
 
 	it("says nothing at all about a source that wasn't requested", async () => {
@@ -547,7 +569,69 @@ describe('scoped sources', () => {
 		// model as "this doesn't exist", which is how the assistant came to tell a
 		// user it had no access to documents it had just been handed.
 		expect(ctx.droppedSources).toEqual(['stories']);
-		expect(ctx.variables.relevantStories).toContain('could not be included');
+		expect(ctx.variables.relevantStories).toContain('was left out');
+	});
+
+	it('keeps a full history whole when it is larger than the evidence budget', async () => {
+		// Application 88's interview cheat sheet, at its real sizes. The history
+		// (21,962 chars, mostly one call transcript) had 16,000 to share with the
+		// job once retrieval's floor was held back, and the budgeter can only keep
+		// or drop a block, so it dropped the history whole. The sheet then said
+		// under both record headings that the records "were not provided".
+		mockJobDetails.mockResolvedValue('j'.repeat(2785));
+		mockActivity.mockResolvedValue('h'.repeat(21962));
+		mockRelevantProjects.mockResolvedValue(blk('p'.repeat(2273)));
+		mockRelevantStories.mockResolvedValue(blk('s'.repeat(2830)));
+		mockRelevantAppTexts.mockResolvedValue(blk('t'.repeat(3110)));
+
+		const ctx = await assembleGenerationContext({
+			profileId: 1,
+			query: { text: 'Senior Applied AI Engineer' },
+			entity: { type: 'application', id: 88 },
+			sources: ['job', 'application_activity', 'projects', 'stories', 'application_texts'],
+			sourceOptions: { application_activity: { detail: 'full' } }
+		});
+
+		expect(ctx.droppedSources).toEqual([]);
+		expect(ctx.variables.applicationActivity).toBe('h'.repeat(21962));
+		expect(ctx.usedSources).toHaveLength(5);
+	});
+
+	it('still rations the evidence around a full history', async () => {
+		// The history costs the budget nothing, so the same 1,200 leaves exactly
+		// what it left without one: the job and the best-ranked block.
+		mockJobDetails.mockResolvedValue('j'.repeat(500));
+		mockActivity.mockResolvedValue('h'.repeat(5000));
+		mockRelevantProjects.mockResolvedValue(blk('y'.repeat(500)));
+		mockRelevantStories.mockResolvedValue(blk('s'.repeat(500)));
+
+		const ctx = await assembleGenerationContext({
+			profileId: 1,
+			query: { text: 'anything' },
+			entity: { type: 'application', id: 42 },
+			sources: ['job', 'application_activity', 'projects', 'stories'],
+			sourceOptions: { application_activity: { detail: 'full' } },
+			budgetChars: 1200
+		});
+
+		expect(ctx.usedSources.sort()).toEqual(['application_activity', 'job', 'projects']);
+		expect(ctx.droppedSources).toEqual(['stories']);
+	});
+
+	it('still charges a compact history against the budget', async () => {
+		// Compact is the gist for a writing prompt, evidence like any other.
+		mockJobDetails.mockResolvedValue('j'.repeat(500));
+		mockActivity.mockResolvedValue('h'.repeat(5000));
+
+		const ctx = await assembleGenerationContext({
+			profileId: 1,
+			entity: { type: 'application', id: 42 },
+			sources: ['job', 'application_activity'],
+			budgetChars: 1200
+		});
+
+		expect(ctx.usedSources).toEqual(['job']);
+		expect(ctx.droppedSources).toEqual(['application_activity']);
 	});
 });
 

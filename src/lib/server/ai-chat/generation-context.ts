@@ -40,7 +40,7 @@ import {
 	type RetrievalItem,
 	type RetrievalRecord
 } from '$lib/server/documents/retrieval-record';
-import { applicationActivityText } from './application-activity';
+import { type ActivityContextMode, applicationActivityText } from './application-activity';
 import { activityManifestText } from './activity-manifest';
 import { applicationPipelineText } from './application-pipeline';
 import { jobDetailsText } from './job-context';
@@ -175,6 +175,18 @@ export interface SourceOptions {
 	directives?: { consumer: DirectiveConsumer };
 }
 
+/**
+ * What the model is writing, which decides what a block left out for budget
+ * tells it to do. See droppedNote.
+ *
+ *  - `reply`: a turn in a conversation. The user is there to answer, so the
+ *    note says the material exists and asks them to narrow what they need.
+ *  - `document`: a letter, an answer, a story, a cheat sheet, or advice on one
+ *    of them in its editor. There is nobody to ask, and anything the note tells
+ *    the model to say is written into the text.
+ */
+export type GenerationOutput = 'reply' | 'document';
+
 export interface ContextRequest {
 	profileId: number;
 	/** Required by any source that ranks by relevance. */
@@ -217,6 +229,9 @@ export interface ContextRequest {
 	 * profiles that have the most worth retrieving. The blob is reported as
 	 * `profileChars` instead; trimming it needs field-level prioritization (you
 	 * cannot clip JSON mid-string), which is its own piece of work.
+	 *
+	 * Nor is the application's history when a caller asks for it in `full`
+	 * detail. See SourceDef.unbudgeted.
 	 */
 	budgetChars?: number;
 	/**
@@ -225,6 +240,11 @@ export interface ContextRequest {
 	 * straight-priority behaviour. See fitToBudget.
 	 */
 	rankedFloorChars?: number;
+	/**
+	 * What the model is writing. Defaults to `document`, which every generator
+	 * is; the assistant chat is the one caller that replies. See GenerationOutput.
+	 */
+	output?: GenerationOutput;
 	/** How many items each ranked source may cite. Source-specific default if unset. */
 	perSourceK?: number;
 	/**
@@ -352,6 +372,21 @@ interface SourceDef {
 	 * stories and past writing whole, after all three had found real matches.
 	 */
 	ranked?: boolean;
+	/**
+	 * Whether this block goes in whole, outside `budgetChars`, instead of
+	 * competing for room in it.
+	 *
+	 * For a block the generation stands on or is about, not evidence around it:
+	 * the profile, and the application's history when a caller asks for all of
+	 * it. Both already bound themselves (fitProfileToBudget, TOTALS in
+	 * application-activity.ts), and the budgeter can only keep a block or drop
+	 * it, so charging one that is larger than the budget does not shorten it. It
+	 * removes it. Measured on application 88: an interview cheat sheet asked for
+	 * the full history (21,962 chars, most of it one call transcript), the
+	 * default budget left 16,000 for it and the job together, and the sheet was
+	 * written with no history at all, under two headings that exist to carry it.
+	 */
+	unbudgeted?(req: ContextRequest): boolean;
 }
 
 /**
@@ -466,6 +501,8 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 	profile: {
 		variable: 'data',
 		priority: 100,
+		// Who the applicant IS. See ContextRequest.budgetChars.
+		unbudgeted: () => true,
 		render: async (req) => {
 			const profile =
 				req.preloadedProfile ?? (await loadProfileData(req.profileId, req.profileFields));
@@ -499,13 +536,15 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 		// so it should outlast anything retrieved generically.
 		priority: 40,
 		looked: (req) => applicationId(req) != null,
+		// In full detail the history is the subject (a cheat sheet, the chat on an
+		// application) and is sized to hold all of one application, so it goes in
+		// whole the way the profile does. Compact is the gist for a writing prompt
+		// and still competes.
+		unbudgeted: (req) => activityDetail(req) === 'full',
 		render: async (req) => {
 			const id = applicationId(req);
 			if (id == null) return '';
-			return applicationActivityText(
-				id,
-				req.sourceOptions?.application_activity?.detail ?? 'compact'
-			);
+			return applicationActivityText(id, activityDetail(req));
 		}
 	},
 
@@ -596,6 +635,11 @@ function hasQuery(req: ContextRequest): boolean {
 /** The application in scope, if any — scoped application sources need one. */
 function applicationId(req: ContextRequest): number | null {
 	return req.entity?.type === 'application' ? req.entity.id : null;
+}
+
+/** How much of the application's history the request asks for. */
+function activityDetail(req: ContextRequest): ActivityContextMode {
+	return req.sourceOptions?.application_activity?.detail ?? 'compact';
 }
 
 /** Explicit exclusion wins; otherwise you are never your own prior art. */
@@ -732,11 +776,24 @@ const SOURCE_LABELS: Record<ContextSource, string> = {
 /**
  * Stand-in for a source that rendered but didn't fit.
  *
- * Deliberately states that the material exists and is reachable, because the
+ * A reply states that the material exists and is reachable, because the
  * failure this replaces was the model concluding from an empty section that it
  * had no access at all and telling the user so.
+ *
+ * A document must not be told to say anything. There is nobody to ask, and the
+ * model writes what the note tells it to say into the text: an interview cheat
+ * sheet on application 88 put "Records of earlier conversations for this
+ * application exist but were not provided" under both of its record headings.
+ * What was left out stays visible in the retrieval record instead.
  */
-function droppedNote(source: ContextSource): string {
+function droppedNote(source: ContextSource, output: GenerationOutput): string {
+	if (output === 'document') {
+		return (
+			`[${SOURCE_LABELS[source]} was left out of this request: there is more ` +
+			`of it than fits alongside the rest of the context. Write from what is ` +
+			`here, do not guess at what it says, and do not mention that it was left out.]`
+		);
+	}
 	return (
 		`[${SOURCE_LABELS[source]} could not be included in this reply — ` +
 		`there is more of it than fits alongside the rest of the context. It ` +
@@ -787,10 +844,11 @@ export async function assembleGenerationContext(req: ContextRequest): Promise<As
 			})
 		);
 
-	// The profile is who the applicant IS — it goes in whole, and the budget
-	// rations the evidence layered on top of it. See ContextRequest.budgetChars.
-	const profileBlock = rendered.find((b) => b.source === 'profile');
-	const evidence = rendered.filter((b) => b.source !== 'profile');
+	// The profile is who the applicant IS, and a full history is what the
+	// generation is about: those go in whole, and the budget rations the evidence
+	// layered on top of them. See SourceDef.unbudgeted.
+	const unbudgeted = (b: RenderedBlock) => !!SOURCES[b.source].unbudgeted?.(req);
+	const evidence = rendered.filter((b) => !unbudgeted(b));
 
 	const kept = new Map(
 		fitToBudget(evidence, budget, {
@@ -798,7 +856,7 @@ export async function assembleGenerationContext(req: ContextRequest): Promise<As
 			chars: req.rankedFloorChars ?? DEFAULT_RANKED_FLOOR_CHARS
 		}).map((b) => [b.source, b.text])
 	);
-	if (profileBlock?.text) kept.set('profile', profileBlock.text);
+	for (const b of rendered) if (unbudgeted(b) && b.text) kept.set(b.source, b.text);
 
 	const variables: Record<string, string> = {};
 	const usedSources: ContextSource[] = [];
@@ -821,7 +879,7 @@ export async function assembleGenerationContext(req: ContextRequest): Promise<As
 		const rendered = evidence.find((b) => b.source === source);
 		if (rendered?.text) {
 			droppedSources.push(source);
-			variables[SOURCES[source].variable] = droppedNote(source);
+			variables[SOURCES[source].variable] = droppedNote(source, req.output ?? 'document');
 		} else {
 			// Requested and empty is NOT the same as never looked, and the model
 			// has to be told which one it is holding. Only a source that ran its
@@ -832,7 +890,7 @@ export async function assembleGenerationContext(req: ContextRequest): Promise<As
 		}
 	}
 
-	const profileChars = profileBlock?.text.length ?? 0;
+	const profileChars = rendered.find((b) => b.source === 'profile')?.text.length ?? 0;
 	return {
 		variables,
 		usedSources,

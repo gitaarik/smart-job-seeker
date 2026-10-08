@@ -77,10 +77,14 @@ import { type ProfileCapability, resourceForCapability, verbsFor } from './profi
  * this one — which is the right way round, because it degrades with a note
  * where this one drops the block whole and silently.
  *
- * ⚠️ It has to move WITH the activity ceilings, not after them. `fitToBudget`
- * drops whole blocks that do not fit, and activity (40) packs after job (50) —
- * so a 150k block against a 32k budget is not a truncated history, it is no
- * history at all, silently. That is the exact failure recorded above at 20k.
+ * It used to have to move WITH the activity ceilings: `fitToBudget` keeps or
+ * drops a block whole, and activity (40) packs after job (50), so a 150k block
+ * against a 32k budget was not a truncated history but no history at all. The
+ * interview cheat sheet never got the same raise and lost its whole history to
+ * the 24000 default (application 88, 2026-10-08). Full-detail activity is now
+ * outside the budget for every caller (`unbudgeted` in generation-context.ts),
+ * so what this number rations is the job, the pipeline and retrieval, far less
+ * than 250000. Re-measure before tightening it.
  *
  * For scale, a worst-case turn is now ~250k of blocks plus the 56k exempt
  * profile blob: ~77k tokens, against a 1M-token writing model and a 131k-token
@@ -846,7 +850,10 @@ export async function resolveChatContext(opts: {
 			sources,
 			sourceOptions: { ...scope.sourceOptions, directives: { consumer: 'chat' } },
 			scopeHint,
-			budgetChars: CHAT_BUDGET_CHARS
+			budgetChars: CHAT_BUDGET_CHARS,
+			// The one caller that replies: a block left out for budget may be named
+			// to the user, who can then narrow what they need. See droppedNote.
+			output: 'reply'
 		},
 		capabilities
 	};

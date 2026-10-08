@@ -247,6 +247,8 @@ describe('resolveChatContext', () => {
 		expect(ctx.entity).toEqual({ type: 'application', id: 42 });
 		expect(ctx.sources).toContain('application_activity');
 		expect(ctx.budgetChars).toBe(CHAT_BUDGET_CHARS);
+		// A block left out for budget is named to the user, not written around.
+		expect(ctx.output).toBe('reply');
 	});
 
 	it('ranks on the message plus the role title and its skills', async () => {
