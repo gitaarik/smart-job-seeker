@@ -785,8 +785,11 @@ const SOURCE_LABELS: Record<ContextSource, string> = {
  * sheet on application 88 put "Records of earlier conversations for this
  * application exist but were not provided" under both of its record headings.
  * What was left out stays visible in the retrieval record instead.
+ *
+ * Exported for cloud's llm:smoke, which checks on a real model that a writer
+ * handed the document note keeps it out of the text.
  */
-function droppedNote(source: ContextSource, output: GenerationOutput): string {
+export function droppedNote(source: ContextSource, output: GenerationOutput): string {
 	if (output === 'document') {
 		return (
 			`[${SOURCE_LABELS[source]} was left out of this request: there is more ` +
