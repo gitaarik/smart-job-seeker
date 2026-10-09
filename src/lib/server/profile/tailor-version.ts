@@ -117,6 +117,7 @@ import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
 import {
 	COMPACT_COLUMNS,
 	promptJobDescription,
+	type CompactableJob,
 	type PromptDescription
 } from '$lib/server/jobs/compact-description';
 import { config } from '$lib/server/config';
@@ -947,6 +948,225 @@ export function pinnedReason(c: Candidate): string {
 	return c.carriedBy ? `${asked} — “${c.carriedBy}” already carries the word` : asked;
 }
 
+/** The job's side of a tailoring run: what it is ranked and reviewed against. */
+export type SelectionJob = CompactableJob & {
+	title: string | null;
+	company: string | null;
+	skills_required: unknown;
+	skills_preferred: unknown;
+	responsibilities: unknown;
+};
+
+/** Everything a run decides before the model is asked. See prepareSelection. */
+export interface PreparedSelection {
+	/** Ranked, before the review. */
+	candidates: Candidate[];
+	ranker: 'semantic' | 'lexical';
+	floor: number;
+	/** One page or two; see chooseBudget. */
+	budgetChars: number;
+	targetPages: number;
+	/** What the job is ranked against, which the wording pass reuses. */
+	query: { text: string; skills: string[] };
+	/** The rules and reasons every selection in a run is made with. */
+	options: (budget: number) => SelectionOptions;
+	/** The selection the review is shown. */
+	deterministic: Decision[];
+	shortlist: Shortlist;
+	/** What the review prompt is filled with; null when there is nothing to review. */
+	promptVariables: Record<string, string> | null;
+}
+
+/**
+ * Everything a tailoring run decides before the model is asked: the
+ * candidates, their scores, the page budget, the first selection and the review
+ * prompt.
+ *
+ * Split out of the run so the tailoring golden set (cloud
+ * `scripts/golden/tailoring`) measures the code that ships rather than a copy
+ * of it. The set hands in a frozen profile, job and posting, asks the model
+ * itself (real calls, repeated), and reads the selection at a fixed budget
+ * where a run renders pages.
+ */
+export async function prepareSelection(inputs: {
+	profileId: number;
+	profile: ProfileRow;
+	job: SelectionJob;
+	docType: string;
+	/** The version this one builds on, already resolved (see defaultBaseSlug). */
+	baseSlug: string;
+	template: string | null;
+	/** The posting as the review prompt shows it. Omitted, promptJobDescription fetches it. */
+	description?: PromptDescription;
+}): Promise<PreparedSelection> {
+	const { profileId, profile, job, docType, baseSlug, template } = inputs;
+	const requiredSkills = asStringArray(job.skills_required);
+	const preferredSkills = asStringArray(job.skills_preferred);
+	const querySkills = [...requiredSkills, ...preferredSkills];
+	const query = {
+		text: [
+			text(job.title),
+			text(job.job_description),
+			asStringArray(job.responsibilities).join('\n')
+		]
+			.filter(Boolean)
+			.join('\n'),
+		skills: querySkills
+	};
+
+	const built = buildCandidates(
+		profile,
+		docType,
+		baseSlug,
+		requiredSkills,
+		await conceptResolver(profile, querySkills),
+		template,
+		preferredSkills
+	);
+	// Evidence stays about the required list: a bullet is kept for naming what
+	// the job cannot do without, and a nice-to-have is not that.
+	await markCoverage(built, profile, requiredSkills);
+	const { candidates, ranker, floor } = await scoreCandidates(profileId, built, query);
+
+	const otherLabel = docType === 'cv' ? 'resume' : 'CV';
+	const groupDropReason = (c: Candidate) => {
+		const count = c.label.split(':')[1]?.split(',').length ?? 0;
+		return count > 0
+			? `none of these ${count} skills is what this job asks for`
+			: 'this job asks for none of the skills in this group';
+	};
+	// An old item that got here cleared a higher bar than a recent one, and the
+	// applicant is the one who decided it was old news — so the row says which
+	// judgement is being overruled, not just that something was added.
+	const OLD_ENOUGH_TO_SAY = 0.5;
+	const surfacedReason = (c: Candidate) => {
+		const dated = (c.age ?? 0) >= OLD_ENOUGH_TO_SAY ? 'older work, but ' : '';
+		if (c.profileOnly) {
+			return `${dated}kept off your documents, and this job is about it`;
+		}
+		return c.templateHeldBack
+			? `${dated}kept for your ${otherLabel} only, and it outranks what it displaces here`
+			: `${dated}not on the version this builds on, and it outranks what it displaces here`;
+	};
+	// A single word, so the reason has to carry the whole case: which line it
+	// left, and that the rule was a lookup rather than a verdict on the word.
+	const technologyDropReason = () =>
+		'this job names nothing this answers, and the tech line reads as a list';
+	// A restored role is the largest thing a run can do, so the row says what
+	// bought it: the role names itself in the diff, and the bullet that earned
+	// it is the part the applicant will want to check.
+	const restoredParentReason = (child: Candidate) => {
+		const bullet = child.label.split(': ').slice(1).join(': ') || child.label;
+		return `on your ${otherLabel} version only, and this job asks about “${bullet}”`;
+	};
+	// One page or two, decided by how much this applicant has rather than by a
+	// setting they would have to understand. The fit pass then holds the document
+	// to it by rendering, which is the only thing that actually knows.
+	const budgetChars = chooseBudget(candidates);
+	const targetPages = budgetChars === PAGE_BUDGETS.one ? 1 : 2;
+	// Every selection a run makes is made with the same rules and reasons — the
+	// first, the one after the model, and each the fit pass asks for. They were
+	// three option lists, and the one after the model had lost
+	// technologyDropReason.
+	const options = (budget: number): SelectionOptions => ({
+		floor,
+		...DEFAULT_SELECTION,
+		promotionMargin: PROMOTION_MARGIN[ranker],
+		budgetChars: budget,
+		pinnedReason,
+		surfacedReason,
+		groupDropReason,
+		technologyDropReason,
+		restoredParentReason
+	});
+	const deterministic = selectForJob(candidates, options(budgetChars));
+	const shortlist = shortlistFor(candidates, deterministic, floor);
+	const promptVariables = shortlist.text
+		? selectionPromptVariables({
+				title: job.title,
+				company: job.company,
+				description: inputs.description ?? (await promptJobDescription(job, profileId)),
+				required: requiredSkills,
+				preferred: preferredSkills,
+				shortlist
+			})
+		: null;
+
+	return {
+		candidates,
+		ranker,
+		floor,
+		budgetChars,
+		targetPages,
+		query,
+		options,
+		deterministic,
+		shortlist,
+		promptVariables
+	};
+}
+
+export interface ReviewedSelection {
+	/** The candidates with the model's verdicts folded in. */
+	candidates: Candidate[];
+	verdicts: Map<string, ModelVerdict>;
+	/** Musts marked past the limit, every one of them read as a keep. */
+	mustsIgnored: number;
+	/** Whether an answer was applied; false is the deterministic selection. */
+	modelReviewed: boolean;
+	/** The selection at a budget, carrying the model's reasons where it agreed. */
+	select: (budget: number) => Decision[];
+}
+
+/**
+ * The model's parsed answer applied to a prepared selection.
+ *
+ * Null, or an answer with no list in it, leaves the deterministic selection
+ * standing: a version built from the deterministic layers alone is a worse
+ * suggestion, not a broken one.
+ *
+ * The bare array is handled HERE rather than in the wire schema. gpt-oss
+ * answers a single-key object with a naked array often enough to plan for, but
+ * a coercion inside the schema is the wrong place for it: the schema is also
+ * what gets converted for providers that take a JSON Schema, where a
+ * preprocess/transform breaks the conversion. Groq's json_object mode rejects a
+ * top-level array at the API before we ever see it, so this covers the
+ * providers that let one through.
+ */
+export function reviewedSelection(prepared: PreparedSelection, answer: unknown): ReviewedSelection {
+	const opinions = Array.isArray(answer)
+		? answer
+		: (answer as { decisions?: unknown } | null)?.decisions;
+	if (!Array.isArray(opinions)) {
+		return {
+			candidates: prepared.candidates,
+			verdicts: new Map(),
+			mustsIgnored: 0,
+			modelReviewed: false,
+			select: (budget) => selectForJob(prepared.candidates, prepared.options(budget))
+		};
+	}
+	const applied = applyModelOpinions(
+		prepared.candidates,
+		opinions as Array<{ ref: string; action: string; reason: string }>,
+		prepared.floor,
+		prepared.shortlist.refs,
+		prepared.shortlist.mustLimit
+	);
+	return {
+		candidates: applied.candidates,
+		verdicts: applied.verdicts,
+		mustsIgnored: applied.mustsIgnored,
+		modelReviewed: true,
+		// Re-run the same selector: the model changed scores, not rules.
+		select: (budget) =>
+			applyVerdictReasons(
+				selectForJob(applied.candidates, prepared.options(budget)),
+				applied.verdicts
+			)
+	};
+}
+
 /**
  * Generate (or regenerate) the version tailored to one application.
  *
@@ -998,20 +1218,6 @@ export async function tailorVersionForApplication(opts: {
 	const profile = await getProfileByIdentifier(profileId);
 	if (!profile) throw new Error('Profile not found.');
 
-	const requiredSkills = asStringArray(job.skills_required);
-	const preferredSkills = asStringArray(job.skills_preferred);
-	const querySkills = [...requiredSkills, ...preferredSkills];
-	const query = {
-		text: [
-			text(job.title),
-			text(job.job_description),
-			asStringArray(job.responsibilities).join('\n')
-		]
-			.filter(Boolean)
-			.join('\n'),
-		skills: querySkills
-	};
-
 	// An empty base means "your plain resume", and for a profile with a public
 	// version that is not a document at all: /p/[slug]/resume serves the public
 	// version, the PDF export is keyed by slug, and every item tagged onto a
@@ -1022,129 +1228,29 @@ export async function tailorVersionForApplication(opts: {
 	// a version with no extension), so the fallback lives at the bottom where
 	// they all pass rather than at each of them.
 	const effectiveBase = baseSlug || (await defaultBaseSlug(profileId, docType));
-	const built = buildCandidates(
+	const prepared = await prepareSelection({
+		profileId,
 		profile,
+		job,
 		docType,
-		effectiveBase,
-		requiredSkills,
-		await conceptResolver(profile, querySkills),
-		template,
-		preferredSkills
-	);
-	// Evidence stays about the required list: a bullet is kept for naming what
-	// the job cannot do without, and a nice-to-have is not that.
-	await markCoverage(built, profile, requiredSkills);
-	const { candidates, ranker, floor } = await scoreCandidates(profileId, built, query);
-
-	const otherLabel = docType === 'cv' ? 'resume' : 'CV';
-	const groupDropReason = (c: Candidate) => {
-		const count = c.label.split(':')[1]?.split(',').length ?? 0;
-		return count > 0
-			? `none of these ${count} skills is what this job asks for`
-			: 'this job asks for none of the skills in this group';
-	};
-	// An old item that got here cleared a higher bar than a recent one, and the
-	// applicant is the one who decided it was old news — so the row says which
-	// judgement is being overruled, not just that something was added.
-	const OLD_ENOUGH_TO_SAY = 0.5;
-	const surfacedReason = (c: Candidate) => {
-		const dated = (c.age ?? 0) >= OLD_ENOUGH_TO_SAY ? 'older work, but ' : '';
-		if (c.profileOnly) {
-			return `${dated}kept off your documents, and this job is about it`;
-		}
-		return c.templateHeldBack
-			? `${dated}kept for your ${otherLabel} only, and it outranks what it displaces here`
-			: `${dated}not on the version this builds on, and it outranks what it displaces here`;
-	};
-	// A single word, so the reason has to carry the whole case: which line it
-	// left, and that the rule was a lookup rather than a verdict on the word.
-	const technologyDropReason = () =>
-		'this job names nothing this answers, and the tech line reads as a list';
-	// A restored role is the largest thing a run can do, so the row says what
-	// bought it: the role names itself in the diff, and the bullet that earned
-	// it is the part the applicant will want to check.
-	const restoredParentReason = (child: Candidate) => {
-		const bullet = child.label.split(': ').slice(1).join(': ') || child.label;
-		return `on your ${otherLabel} version only, and this job asks about “${bullet}”`;
-	};
-	// One page or two, decided by how much this applicant has rather than by a
-	// setting they would have to understand. The fit pass below then holds the
-	// document to it by rendering, which is the only thing that actually knows.
-	const budgetChars = chooseBudget(candidates);
-	const targetPages = budgetChars === PAGE_BUDGETS.one ? 1 : 2;
-	// Every selection this run makes is made with the same rules and reasons —
-	// the first, the one after the model, and each the fit pass asks for. They
-	// were three option lists, and the one after the model had lost
-	// technologyDropReason.
-	const selectionOptions = (budget: number): SelectionOptions => ({
-		floor,
-		...DEFAULT_SELECTION,
-		promotionMargin: PROMOTION_MARGIN[ranker],
-		budgetChars: budget,
-		pinnedReason,
-		surfacedReason,
-		groupDropReason,
-		technologyDropReason,
-		restoredParentReason
+		baseSlug: effectiveBase,
+		template
 	});
-	// Whatever the last selection ran against — the model adjusts scores, and
-	// re-selecting for the page has to see the same field it did.
-	let selectionCandidates = candidates;
-	const deterministic = selectForJob(candidates, selectionOptions(budgetChars));
+	const { ranker, budgetChars, targetPages, query } = prepared;
 
 	// ── L3 ──
-	let decisions = deterministic;
-	let modelReviewed = false;
-	let modelVerdicts = new Map<string, ModelVerdict>();
-	const shortlist = shortlistFor(candidates, deterministic, floor);
-	if (shortlist.text) {
+	let answer: unknown = null;
+	if (prepared.promptVariables) {
 		try {
 			const result = await createAndGenerateAiChat(
 				profileId,
 				'tailor_resume_selection',
-				selectionPromptVariables({
-					title: job.title,
-					company: job.company,
-					description: await promptJobDescription(job, profileId),
-					required: requiredSkills,
-					preferred: preferredSkills,
-					shortlist
-				})
+				prepared.promptVariables
 			);
 			// `response` is the raw JSON string the model returned; every caller
 			// parses it themselves (see record-derivation.ts).
-			//
-			// The bare array is handled HERE rather than in the wire schema. gpt-oss
-			// answers a single-key object with a naked array often enough to plan
-			// for, but a coercion inside the schema is the wrong place for it: the
-			// schema is also what gets converted for providers that take a JSON
-			// Schema, where a preprocess/transform breaks the conversion. Groq's
-			// json_object mode rejects a top-level array at the API before we ever
-			// see it, so this covers the providers that let one through.
-			const parsed =
+			answer =
 				result.success && result.aiChat?.response ? JSON.parse(result.aiChat.response) : null;
-			const opinions = Array.isArray(parsed)
-				? parsed
-				: (parsed as { decisions?: unknown } | null)?.decisions;
-			if (Array.isArray(opinions)) {
-				const applied = applyModelOpinions(
-					candidates,
-					opinions as Array<{ ref: string; action: string; reason: string }>,
-					floor,
-					shortlist.refs,
-					shortlist.mustLimit
-				);
-				if (applied.mustsIgnored > 0) {
-					console.warn(
-						`[tailor-version] application ${applicationId}: the review marked ${applied.mustsIgnored} lines essential against a limit of ${shortlist.mustLimit}; read as keeps`
-					);
-				}
-				modelVerdicts = applied.verdicts;
-				selectionCandidates = applied.candidates;
-				// Re-run the same selector: the model changed scores, not rules.
-				decisions = selectForJob(applied.candidates, selectionOptions(budgetChars));
-				modelReviewed = true;
-			}
 		} catch (err) {
 			// A tailored version built from the deterministic layers alone is a
 			// worse suggestion, not a broken one — so this degrades rather than
@@ -1152,8 +1258,14 @@ export async function tailorVersionForApplication(opts: {
 			console.warn('[tailor-version] model review failed, keeping deterministic selection:', err);
 		}
 	}
-
-	applyVerdictReasons(decisions, modelVerdicts);
+	const reviewed = reviewedSelection(prepared, answer);
+	if (reviewed.mustsIgnored > 0) {
+		console.warn(
+			`[tailor-version] application ${applicationId}: the review marked ${reviewed.mustsIgnored} lines essential against a limit of ${prepared.shortlist.mustLimit}; read as keeps`
+		);
+	}
+	const { modelReviewed } = reviewed;
+	let decisions = reviewed.select(budgetChars);
 
 	// The fields that hold one value — the profile's title, subtitle, headline
 	// and summary, and each role's position — cannot be tailored by including
@@ -1241,7 +1353,7 @@ export async function tailorVersionForApplication(opts: {
 		versionSlug,
 		docType,
 		template,
-		candidates: selectionCandidates,
+		candidates: reviewed.candidates,
 		targetPages,
 		budgetChars,
 		fallback: targetPages === 1 ? { targetPages: 2, budgetChars: PAGE_BUDGETS.two } : null,
@@ -1254,10 +1366,7 @@ export async function tailorVersionForApplication(opts: {
 		// document that needed a tighter budget lost the review's wording, and a
 		// line it vetoed showed the sunk score as its relevance instead.
 		select: (budget) => {
-			const selection = applyVerdictReasons(
-				selectForJob(selectionCandidates, selectionOptions(budget)),
-				modelVerdicts
-			);
+			const selection = reviewed.select(budget);
 			return [...selection, ...variantPicksFor(selection)];
 		}
 	});

@@ -24,14 +24,16 @@ import {
 	mustLimitFor,
 	pinnedReason,
 	refFor,
+	reviewedSelection,
 	scoreCandidates,
 	selectionPromptVariables,
-	shortlistFor
+	shortlistFor,
+	type PreparedSelection
 } from '../tailor-version';
 import { semanticScoreUnits } from '$lib/server/documents/content-embeddings';
 import { expandUpwardBySeed } from '$lib/server/job/skill-ontology';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-import type { Candidate, Decision } from '$lib/tailoring';
+import { selectForJob, type Candidate, type Decision } from '$lib/tailoring';
 
 function bullet(id: number, score: number, over: Partial<Candidate> = {}): Candidate {
 	return {
@@ -446,6 +448,62 @@ describe('selectionPromptVariables', () => {
 		expect(vars['job.skills_required']).toBe('none listed');
 		expect(vars['job.skills_preferred']).toBe('none listed');
 		expect(vars['job.summary']).toBe('Full Stack Automation Engineer\nCOA');
+	});
+});
+
+describe('reviewedSelection', () => {
+	const candidates = [bullet(1, 0.9), bullet(2, 0.8), bullet(3, 0.2)];
+	const options = (budget: number) => ({
+		floor: FLOOR,
+		minPerParent: 2,
+		budgetChars: budget,
+		promotionMargin: 0.02
+	});
+	const prepared: PreparedSelection = {
+		candidates,
+		ranker: 'semantic',
+		floor: FLOOR,
+		budgetChars: 300,
+		targetPages: 2,
+		query: { text: '', skills: [] },
+		options,
+		deterministic: [],
+		shortlist: { text: 'x', refs: new Set(['bullet:1', 'bullet:2', 'bullet:3']), mustLimit: 1 },
+		promptVariables: {}
+	};
+	const excluded = (ds: Decision[]) =>
+		ds.filter((d) => d.action === 'exclude').map((d) => d.entityId);
+
+	it('leaves the deterministic selection standing without an answer', () => {
+		const reviewed = reviewedSelection(prepared, null);
+		expect(reviewed.modelReviewed).toBe(false);
+		expect(reviewed.select(200)).toEqual(selectForJob(candidates, options(200)));
+		expect(reviewedSelection(prepared, { nothing: 'here' }).modelReviewed).toBe(false);
+	});
+
+	it('takes a bare array as readily as the object', () => {
+		const answer = [{ ref: 'bullet:3', action: 'must', reason: 'Asked for.' }];
+		expect(reviewedSelection(prepared, answer).candidates[2].vouched).toBe(true);
+		expect(reviewedSelection(prepared, { decisions: answer }).candidates[2].vouched).toBe(true);
+	});
+
+	it('cuts something unmarked before the line the review marked essential', () => {
+		// Without the review the 0.2 line goes first.
+		expect(excluded(reviewedSelection(prepared, null).select(200))).toEqual([3]);
+		const reviewed = reviewedSelection(prepared, {
+			decisions: [{ ref: 'bullet:3', action: 'must', reason: 'The coaching line.' }]
+		});
+		expect(excluded(reviewed.select(200))).toEqual([2]);
+	});
+
+	it('keeps the review’s reason on every selection it agrees with', () => {
+		const reviewed = reviewedSelection(prepared, {
+			decisions: [{ ref: 'bullet:2', action: 'drop', reason: 'Nothing this job does.' }]
+		});
+		for (const budget of [250, 200]) {
+			const row = reviewed.select(budget).find((d) => d.entityId === 2);
+			expect(row?.reason).toBe('Nothing this job does.');
+		}
 	});
 });
 
