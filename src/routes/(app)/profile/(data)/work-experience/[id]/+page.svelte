@@ -4,17 +4,8 @@
 	import { resolve } from '$app/paths';
 	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import {
-		faArrowLeft,
-		faBriefcase,
-		faGripVertical,
-		faPlus,
-		faTags,
-		faTimes,
-		faTrash
-	} from '@fortawesome/free-solid-svg-icons';
+	import { faArrowLeft, faBriefcase, faTrash } from '@fortawesome/free-solid-svg-icons';
 	import MediaUpload from '$lib/components/MediaUpload.svelte';
-	import SectionSaveButton from '$lib/components/SectionSaveButton.svelte';
 	import { autoSaveField, patchBody, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
@@ -24,14 +15,10 @@
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
 	import WorkExperienceProjects from '../../../components/WorkExperienceProjects.svelte';
+	import RoleTechnologies from '../../../components/RoleTechnologies.svelte';
 	import VersionTags from '$lib/components/VersionTags.svelte';
-	import VersionTagsPopup from '$lib/components/VersionTagsPopup.svelte';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
 	import Card from '../../../../components/Card.svelte';
-	import { dndzone } from 'svelte-dnd-action';
-	import { flip } from 'svelte/animate';
-
-	type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 	let { data }: { data: PageData } = $props();
 
@@ -82,9 +69,9 @@
 	// The staged-removal sets these used to keep are gone with it. They were the
 	// reason technologies and achievements stayed on a button — a delete that
 	// only took effect on commit needs a commit — and the replacement is that a
-	// delete means it now: immediately for a chip, and behind a confirmation for
-	// an achievement, whose text nothing can retype for you.
-	let techReorderState = $state<SaveState>('idle');
+	// delete means it now: immediately for a chip (see RoleTechnologies), and
+	// behind a confirmation for an achievement, whose text nothing can retype
+	// for you.
 
 	// Form states
 	const loadedBasics = basicsOf(loaded.experience);
@@ -104,14 +91,15 @@
 	let versionSlugs = $state<string[]>([]);
 
 	/**
-	 * The two child collections, each row saving itself.
+	 * The achievements, each row saving itself. The technologies are the same
+	 * shape and live in RoleTechnologies.
 	 *
-	 * `tags` is a real field on both — the version slugs that decide which
-	 * documents an entry appears on — so it goes through the same PATCH as the
-	 * text. `sectionRows` compares arrays by element, or rebuilding the tag list
-	 * on every keystroke in the name beside it would rewrite the tags each time.
+	 * `tags` is a real field — the version slugs that decide which documents an
+	 * entry appears on — so it goes through the same PATCH as the text.
+	 * `sectionRows` compares arrays by element, or rebuilding the tag list on
+	 * every keystroke in the text beside it would rewrite the tags each time.
 	 */
-	type ChildRow = { description?: string; name?: string; tags: string[] };
+	type ChildRow = { description?: string; tags: string[] };
 
 	const achievementStore = sectionRows({
 		resource: 'work_experience_achievement',
@@ -129,24 +117,6 @@
 			tags: v.tags.length > 0 ? v.tags : null
 		}),
 		canCreate: (v: ChildRow) => (v.description ?? '').trim().length > 0
-	});
-
-	const techStore = sectionRows({
-		resource: 'work_experience_technology',
-		parentKey: 'work_experience_id',
-		parentId: loaded.experience.id,
-		profileId: loaded.profileId,
-		initial: loaded.experience.work_experience_technologies,
-		toData: (t) => ({
-			name: t.name ?? '',
-			tags: Array.isArray(t.tags) ? (t.tags as string[]) : []
-		}),
-		blank: () => ({ name: '', tags: [] as string[] }),
-		toBody: (v: ChildRow) => ({
-			name: (v.name ?? '').trim(),
-			tags: v.tags.length > 0 ? v.tags : null
-		}),
-		canCreate: (v: ChildRow) => (v.name ?? '').trim().length > 0
 	});
 
 	/** One store row as the list renders it. */
@@ -207,16 +177,7 @@
 		return key === undefined ? undefined : achievementStore.rows.find((r) => r.key === key);
 	}
 
-	let lastAddedTechKey = $state<number | null>(null);
-	/** The technology whose version-tags popup is open, by row key (null = closed). */
-	let techTagKey = $state<number | null>(null);
-	// Version tags are hidden on the chips until toggled on (like the skills page).
-	let showTechVersionTags = $state(false);
-	let hasAnyTechVersionTags = $derived(
-		versionSlugs.length > 0 || techStore.rows.some((t) => t.data.tags.length > 0)
-	);
-
-	// Load version slugs for achievement tags
+	// Load version slugs for achievement and technology tags
 	let versionSlugsLoaded = $state(false);
 	$effect(() => {
 		if (versionSlugsLoaded) return;
@@ -389,73 +350,6 @@
 			childError = e instanceof Error ? e.message : 'Could not save that order';
 		}
 	}
-
-	function addTechnology() {
-		lastAddedTechKey = techStore.add().key;
-	}
-
-	function focusIfNew(node: HTMLInputElement, isNew: boolean) {
-		if (isNew) {
-			node.focus();
-			lastAddedTechKey = null;
-		}
-	}
-
-	/** A chip is one word; deleting it costs a retype, so it does not ask. */
-	async function removeTechnology(key: number) {
-		const row = techStore.rows.find((r) => r.key === key);
-		if (!row) return;
-		try {
-			await techStore.remove(row);
-		} catch (e) {
-			childError = e instanceof Error ? e.message : 'Could not delete that technology';
-		}
-	}
-
-	// --- Drag-and-drop reordering of technologies (svelte-dnd-action) ---
-	// Reordering is gated behind an explicit "Reorder" mode (like the skills
-	// page) so that clicking chips edits them normally until the user opts in.
-	const techFlipMs = 150;
-	let techReorderMode = $state(false);
-
-	interface DndTechItem {
-		id: number;
-		row: (typeof techStore.rows)[number];
-	}
-	let dndTech = $state<DndTechItem[]>([]);
-
-	function startTechReorder() {
-		dndTech = techStore.rows.map((row) => ({ id: row.key, row }));
-		techReorderMode = true;
-	}
-
-	function handleTechConsider(e: CustomEvent<{ items: DndTechItem[] }>) {
-		dndTech = e.detail.items;
-	}
-
-	function handleTechFinalize(e: CustomEvent<{ items: DndTechItem[] }>) {
-		dndTech = e.detail.items;
-	}
-
-	function cancelTechReorder() {
-		techReorderMode = false;
-		dndTech = [];
-	}
-
-	async function saveTechReorder() {
-		techReorderState = 'saving';
-		try {
-			await techStore.reorder(dndTech.map((d) => d.row));
-			techReorderState = 'idle';
-			techReorderMode = false;
-			dndTech = [];
-		} catch (e) {
-			// Stay in reorder mode so the drop the user made is still on screen.
-			techReorderState = 'error';
-			childError = e instanceof Error ? e.message : 'Could not save that order';
-			setTimeout(() => (techReorderState = 'idle'), 3000);
-		}
-	}
 </script>
 
 <svelte:head>
@@ -609,146 +503,18 @@
 		</div>
 	</Card>
 
-	<!-- Technologies -->
+	<!-- Technologies. Keyed on the role, like the position wordings above: the
+	     chips seed their store once, and a move to another role on this route
+	     would otherwise leave the first role's chips under the second. -->
 	<Card padding="lg">
-		<div class="mb-4 flex items-center justify-between">
-			<div class="flex items-center gap-3">
-				<h2 class="text-lg font-semibold text-[var(--dash-text)]">Technologies</h2>
-				<AutoSaveIndicator field={techStore.summary} idleLabel="Saves as you type" />
-			</div>
-			<div class="flex items-center gap-1.5">
-				{#if !techReorderMode && hasAnyTechVersionTags}
-					<button
-						type="button"
-						onclick={() => (showTechVersionTags = !showTechVersionTags)}
-						class="inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-medium transition-colors {showTechVersionTags
-							? 'border-teal-500/30 bg-teal-500/15 text-teal-700'
-							: 'border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}"
-					>
-						<span
-							class="inline-block h-1.5 w-1.5 rounded-full transition-colors {showTechVersionTags
-								? 'bg-teal-500'
-								: 'bg-[var(--dash-text-muted)]/30'}"
-						></span>
-						Versions
-					</button>
-				{/if}
-				{#if techStore.rows.length > 1}
-					<button
-						type="button"
-						onclick={() => (techReorderMode ? cancelTechReorder() : startTechReorder())}
-						class="inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-medium transition-colors {techReorderMode
-							? 'border-amber-500/30 bg-amber-500/15 text-amber-700'
-							: 'border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}"
-					>
-						<span
-							class="inline-block h-1.5 w-1.5 rounded-full transition-colors {techReorderMode
-								? 'bg-amber-500'
-								: 'bg-[var(--dash-text-muted)]/30'}"
-						></span>
-						Reorder
-					</button>
-				{/if}
-			</div>
-		</div>
-
-		{#if techReorderMode}
-			<div
-				class="flex flex-wrap gap-2"
-				use:dndzone={{ items: dndTech, flipDurationMs: techFlipMs, type: 'technologies' }}
-				onconsider={handleTechConsider}
-				onfinalize={handleTechFinalize}
-			>
-				{#each dndTech as item (item.id)}
-					<div animate:flip={{ duration: techFlipMs }}>
-						<div
-							class="flex cursor-grab items-center gap-1.5 rounded-lg border border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/5 py-1.5 pr-3.5 pl-2 text-sm active:cursor-grabbing"
-						>
-							<FontAwesomeIcon
-								icon={faGripVertical}
-								class="h-3 w-3 text-[var(--dash-text-muted)]"
-							/>
-							<span class="text-[var(--dash-text)]">{item.row.data.name || 'Technology'}</span>
-						</div>
-					</div>
-				{/each}
-			</div>
-			<div class="mt-4 flex items-center justify-end gap-2">
-				<span class="mr-auto text-xs text-[var(--dash-text-muted)]"
-					>Drag the chips to reorder, then save.</span
-				>
-				<button
-					type="button"
-					onclick={cancelTechReorder}
-					class="rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
-				>
-					Cancel
-				</button>
-				<SectionSaveButton state={techReorderState} onClick={saveTechReorder} />
-			</div>
-		{:else}
-			<div class="flex flex-wrap gap-2">
-				{#each techStore.rows as tech (tech.key)}
-					<div
-						class="flex items-center gap-1 rounded-lg border border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/5 py-1 pr-1 pl-3.5"
-						class:opacity-60={tech.field.status === 'saving'}
-						title={tech.field.error ?? undefined}
-					>
-						<div class="relative pr-3">
-							<span class="invisible min-w-[3ch] text-sm whitespace-pre"
-								>{tech.data.name || 'Technology'}</span
-							>
-							<input
-								type="text"
-								value={tech.data.name}
-								oninput={(e) => techStore.update(tech, { name: e.currentTarget.value })}
-								onblur={tech.field.flush}
-								placeholder="Technology"
-								aria-label="Technology"
-								use:focusIfNew={tech.key === lastAddedTechKey}
-								class="absolute inset-0 w-full border-none bg-transparent pr-3 text-sm focus:outline-none {tech
-									.field.status === 'error'
-									? 'text-[var(--dash-error)]'
-									: 'text-[var(--dash-text)]'}"
-							/>
-						</div>
-						{#if showTechVersionTags}
-							<button
-								type="button"
-								onclick={() => (techTagKey = tech.key)}
-								class="flex items-center gap-1 rounded p-1 transition-colors {tech.data.tags
-									.length > 0
-									? 'text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]'
-									: 'text-[var(--dash-text-secondary)]/50 hover:text-[var(--dash-primary)]'}"
-								aria-label="Version tags"
-								title="Resume / CV versions"
-							>
-								<FontAwesomeIcon icon={faTags} class="h-3 w-3" />
-								{#if tech.data.tags.length > 0}
-									<span class="text-[10px] leading-none font-medium">{tech.data.tags.length}</span>
-								{/if}
-							</button>
-						{/if}
-						<button
-							type="button"
-							onclick={() => removeTechnology(tech.key)}
-							class="p-1 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-error)]"
-							aria-label="Remove"
-						>
-							<FontAwesomeIcon icon={faTimes} class="h-3 w-3" />
-						</button>
-					</div>
-				{/each}
-				<button
-					type="button"
-					onclick={addTechnology}
-					class="flex items-center gap-1 rounded-lg border border-dashed border-[var(--dash-border)] px-3 py-1 text-sm text-[var(--dash-primary)] transition-colors hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary-hover)]"
-				>
-					<FontAwesomeIcon icon={faPlus} class="h-3 w-3" />
-					Add
-				</button>
-			</div>
-		{/if}
+		{#key experience.id}
+			<RoleTechnologies
+				workExperienceId={experience.id}
+				profileId={data.profileId}
+				initial={experience.work_experience_technologies}
+				{versionSlugs}
+			/>
+		{/key}
 	</Card>
 
 	<!-- Achievements -->
@@ -889,17 +655,3 @@
 		form.submit();
 	}}
 />
-
-{#if techTagKey !== null}
-	{@const row = techStore.rows.find((r) => r.key === techTagKey)}
-	{#if row}
-		<VersionTagsPopup
-			title="Technology versions"
-			subtitle={row.data.name || undefined}
-			tags={row.data.tags}
-			{versionSlugs}
-			onChange={(tags) => techStore.update(row, { tags })}
-			onClose={() => (techTagKey = null)}
-		/>
-	{/if}
-{/if}

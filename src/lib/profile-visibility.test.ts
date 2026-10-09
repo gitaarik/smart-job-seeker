@@ -7,7 +7,8 @@ import {
 	renameTagSlug,
 	setProfileOnly,
 	setVersions,
-	versionsOf
+	versionsOf,
+	versionTagsOf
 } from './profile-visibility';
 
 describe('isHiddenFromDocuments', () => {
@@ -131,6 +132,17 @@ describe('versionsOf / setVersions', () => {
 		const tags = setVersions(['!resume', '!cv'], ['backend', 'senior']);
 		expect(versionsOf(tags)).toEqual(['backend', 'senior']);
 		expect(isHiddenFromDocuments(tags)).toBe(true);
+	});
+});
+
+describe('versionTagsOf', () => {
+	it('lists version tags in both forms and leaves the base templates to the switches', () => {
+		expect(versionTagsOf(['!resume', 'cv', '!portfolio', 'backend', '!citrus'])).toEqual([
+			'backend',
+			'!citrus'
+		]);
+		expect(versionTagsOf([' !CV '])).toEqual([]);
+		expect(versionTagsOf(null)).toEqual([]);
 	});
 });
 

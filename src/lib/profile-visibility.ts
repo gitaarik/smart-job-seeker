@@ -206,6 +206,15 @@ export function versionsOf(tags: string[] | null | undefined): string[] {
 }
 
 /**
+ * Every tag naming a user-defined version, in either form: the whitelist
+ * `versionsOf` reads and the `!version` exclusions beside it. What an editor's
+ * version picker lists and badges, since the base templates are its switches.
+ */
+export function versionTagsOf(tags: string[] | null | undefined): string[] {
+	return asTagList(tags).filter((t) => !BASE_TEMPLATE_TAGS.includes(tagSlug(t)));
+}
+
+/**
  * Replace that whitelist wholesale, leaving base-template state and explicit
  * `!version` exclusions alone — those answer a different question and an editor
  * changing which versions an item appears on shouldn't silently drop them.

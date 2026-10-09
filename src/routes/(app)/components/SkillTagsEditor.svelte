@@ -2,16 +2,12 @@
 	import { onDestroy } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
-		faBan,
 		faCheck,
-		faChevronDown,
-		faChevronRight,
 		faCircleNotch,
 		faEyeSlash,
 		faGripVertical,
 		faPlus,
 		faTags,
-		faTimes,
 		faTrash,
 		faXmark
 	} from '@fortawesome/free-solid-svg-icons';
@@ -19,16 +15,15 @@
 	import { flip } from 'svelte/animate';
 	import { clickOutside, keepInView } from '$lib/actions/popover';
 	import { arraysEqual, autoSaveField } from '$lib/components/auto-save.svelte';
-	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
+	import ShowOnSwitches from '$lib/components/ShowOnSwitches.svelte';
+	import VersionTagPicker from '$lib/components/VersionTagPicker.svelte';
 	import {
 		BASE_TEMPLATE_TAGS,
-		BASE_TEMPLATES,
 		isHiddenFromDocuments,
 		setBaseTemplates,
 		setShownOn,
-		shownOnTemplate,
 		shownTemplates,
-		tagSlug
+		versionTagsOf
 	} from '$lib/profile-visibility';
 
 	export interface SkillItem {
@@ -155,26 +150,7 @@
 		savedFlashTimer = setTimeout(() => (orderSaved = false), 3000);
 	}
 
-	// Version tag editing state
-
-	/** A tag naming a base template, in either form — the switches own these. */
-	function isBaseTag(tag: string): boolean {
-		return BASE_TEMPLATE_TAGS.includes(tagSlug(tag));
-	}
-
 	let editingSkillTags = $derived(editingIndex === null ? [] : (skills[editingIndex]?.tags ?? []));
-	let editingProfileOnly = $derived(isHiddenFromDocuments(editingSkillTags));
-
-	// Chips list the version tags only. The base templates are the switches
-	// above, and offering them here as well would let the two disagree.
-	let editingTags = $derived(editingSkillTags.filter((t) => !isBaseTag(t)));
-
-	let allSuggestions = $derived.by(() => {
-		// Suggest from the stored tags, not the displayed chips: a version already
-		// decided in either form (include or exclude) shouldn't be offered again.
-		const used = new Set(editingSkillTags.map(tagSlug));
-		return versionSlugs.filter((v) => !isBaseTag(v) && !used.has(v.toLowerCase()));
-	});
 
 	/**
 	 * The skill the visibility field is currently saving for.
@@ -242,25 +218,13 @@
 
 	/** Version tags worth badging on the pill — the switches cover the rest. */
 	function versionTagCount(tags: string[] | null | undefined): number {
-		if (!Array.isArray(tags)) return 0;
-		return tags.filter((t) => !isBaseTag(t)).length;
+		return versionTagsOf(tags).length;
 	}
 
-	function addSkillTag(tag: string) {
+	/** The version picker's chips, which wait for Save like the name and level do. */
+	function changeVersionTags(tags: string[]) {
 		if (editingIndex === null) return;
-		const trimmed = tag.trim();
-		if (!trimmed) return;
-		const slug = tagSlug(trimmed);
-		const current = skills[editingIndex].tags ?? [];
-		// Skip if this version is already tagged in either include or exclude form.
-		if (current.some((t) => tagSlug(t) === slug)) return;
-		skills[editingIndex].tags = [...current, trimmed];
-	}
-
-	function removeSkillTag(tag: string) {
-		if (editingIndex === null) return;
-		skills[editingIndex].tags = (skills[editingIndex].tags ?? []).filter((t) => t !== tag);
-		if (skills[editingIndex].tags!.length === 0) skills[editingIndex].tags = null;
+		skills[editingIndex].tags = tags.length > 0 ? tags : null;
 	}
 
 	interface DndSkillItem extends SkillItem {
@@ -673,153 +637,18 @@
 								class="w-full rounded border border-[var(--dash-border)] bg-transparent px-2 py-1.5 text-sm text-[var(--dash-text)] focus:ring-1 focus:ring-[var(--dash-primary)] focus:outline-none"
 							/>
 						</div>
-						<!-- Where the skill appears. Matching always uses every skill
-                 whatever these say; they only decide what it is shown on. -->
-						<div>
-							<span class="text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase">
-								Show on
-							</span>
-							{#each BASE_TEMPLATES as template (template.tag)}
-								{@const shown = shownOnTemplate(editingSkillTags, template.tag)}
-								<button
-									type="button"
-									onclick={() => toggleTemplate(template.tag, !shown)}
-									aria-pressed={shown}
-									class="mt-1 flex w-full items-center justify-between gap-2 text-left"
-								>
-									<span class="text-xs text-[var(--dash-text)]">{template.label}</span>
-									<span
-										class="
-                      relative inline-flex h-4 w-7 shrink-0 rounded-full transition-colors {shown
-											? 'bg-emerald-500'
-											: 'bg-[var(--dash-border)]'}
-                    "
-									>
-										<span
-											class="
-                        absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all {shown
-												? 'left-3.5'
-												: 'left-0.5'}
-                      "
-										></span>
-									</span>
-								</button>
-							{/each}
-							{#if autoSavesVisibility}
-								<!--
-									Its own line, not squeezed beside the label: the popup is a
-									fixed 256px and the indicator does not wrap, so an error long
-									enough to matter would hang off the edge of it. The reserved
-									height keeps the switches from jumping as the pill comes and
-									goes.
-								-->
-								<div class="mt-1 min-h-[1rem]">
-									<AutoSaveIndicator field={visibility} />
-								</div>
-							{/if}
-							<!--
-								Says out loud that these three do not wait for Save, because the
-								Save button is still on screen three fields below and governs
-								everything else in here. The indicator is silent at rest by
-								design, and silence next to a Save button reads as "this needs
-								it".
-							-->
-							<p class="mt-1 text-[10px] leading-snug text-[var(--dash-text-muted)]">
-								{#if shownTemplates(editingSkillTags).length === 0}
-									Nowhere: counts for job matching and appears on nothing you send or publish.
-								{:else}
-									Counts for job matching either way.
-								{/if}
-								{#if autoSavesVisibility}
-									Saved as you switch.
-								{/if}
-							</p>
-						</div>
+						<ShowOnSwitches
+							tags={editingSkillTags}
+							ontoggle={toggleTemplate}
+							field={autoSavesVisibility ? visibility : undefined}
+						/>
 
-						<!-- Version Tags (collapsible) -->
-						{#if versionSlugs.length > 0}
-							<div>
-								<button
-									type="button"
-									onclick={() => (showVersionTags_popup = !showVersionTags_popup)}
-									class="mb-1 flex items-center gap-1 text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase transition-colors hover:text-[var(--dash-text-secondary)]"
-								>
-									<FontAwesomeIcon
-										icon={showVersionTags_popup ? faChevronDown : faChevronRight}
-										class="h-2 w-2"
-									/>
-									<FontAwesomeIcon icon={faTags} class="h-2.5 w-2.5" />
-									Resume / CV Versions
-									{#if !showVersionTags_popup && editingTags.length > 0}
-										<span class="text-[var(--dash-primary)] normal-case"
-											>({editingTags.length})</span
-										>
-									{/if}
-								</button>
-								{#if showVersionTags_popup}
-									{#if editingTags.length > 0}
-										<div class="mb-1.5 flex flex-wrap gap-1.5">
-											{#each editingTags as tag, i (i)}
-												{@const isNeg = tag.startsWith('!')}
-												<button
-													type="button"
-													onclick={() => removeSkillTag(tag)}
-													class="inline-flex cursor-pointer items-center gap-1 rounded border px-2 py-1 text-xs transition-colors hover:border-red-500/30 hover:bg-red-500/15 hover:text-red-500 {isNeg
-														? 'border-red-500/25 bg-red-500/10 text-red-600'
-														: 'border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'}"
-												>
-													{#if isNeg}
-														<FontAwesomeIcon icon={faBan} class="h-2.5 w-2.5" />
-													{/if}
-													{isNeg ? tag.slice(1) : tag}
-													<FontAwesomeIcon icon={faTimes} class="h-2.5 w-2.5" />
-												</button>
-											{/each}
-										</div>
-									{:else}
-										<p class="mb-1.5 text-[10px] text-[var(--dash-text-muted)] italic">
-											{editingProfileOnly ? 'No document' : 'All versions'}
-										</p>
-									{/if}
-									{#if allSuggestions.length > 0}
-										<p
-											class="mb-1 text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase"
-										>
-											{editingProfileOnly ? 'Show anyway on' : 'Show only on'}
-										</p>
-										<div class="mb-2 flex flex-wrap gap-1.5">
-											{#each allSuggestions as suggestion, i (i)}
-												<button
-													type="button"
-													onclick={() => addSkillTag(suggestion)}
-													class="inline-flex items-center gap-1 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-[var(--dash-primary)]/40 hover:text-[var(--dash-primary)]"
-												>
-													<FontAwesomeIcon icon={faPlus} class="h-2.5 w-2.5" />
-													{suggestion}
-												</button>
-											{/each}
-										</div>
-										<p
-											class="mb-1 text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase"
-										>
-											Exclude from
-										</p>
-										<div class="flex flex-wrap gap-1.5">
-											{#each allSuggestions as suggestion, i (i)}
-												<button
-													type="button"
-													onclick={() => addSkillTag('!' + suggestion)}
-													class="inline-flex items-center gap-1 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text-secondary)] transition-colors hover:border-red-500/40 hover:text-red-500"
-												>
-													<FontAwesomeIcon icon={faBan} class="h-2.5 w-2.5" />
-													{suggestion}
-												</button>
-											{/each}
-										</div>
-									{/if}
-								{/if}
-							</div>
-						{/if}
+						<VersionTagPicker
+							tags={editingSkillTags}
+							{versionSlugs}
+							onchange={changeVersionTags}
+							bind:expanded={showVersionTags_popup}
+						/>
 
 						<div class="flex items-center justify-between pt-1">
 							<button
