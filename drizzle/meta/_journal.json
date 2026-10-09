@@ -512,6 +512,13 @@
       "when": 1791283302020,
       "tag": "0072_role_wordings",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1791536356324,
+      "tag": "0073_pay_fit",
+      "breakpoints": true
     }
   ]
 }

@@ -25,6 +25,7 @@ import {
 import { sql } from 'drizzle-orm';
 import type { InterviewRound } from '../../application-status';
 import type { SkipReason } from '../../match-recommendation';
+import type { SalaryMode } from '../../salary/settings';
 
 export const Role = pgEnum('Role', ['USER', 'ADMIN', 'SUPER_ADMIN']);
 
@@ -849,7 +850,16 @@ export const match_config = pgTable(
 		name: varchar({ length: 255 }),
 		match_community_jobs: boolean().default(false).notNull(),
 		remote_only: boolean().default(false).notNull(),
-		community_max_age_days: integer()
+		community_max_age_days: integer(),
+		/**
+		 * Leave out jobs whose posted pay is below their Salary Prep ask, by more
+		 * than `below_ask_tolerance_pct`: from the job list unless it says
+		 * otherwise, from Home's top matches and from the email digest. Jobs that
+		 * state no pay, or state it in a way that cannot be read, always stay.
+		 * See `job_matches.pay_ratio`.
+		 */
+		hide_below_ask: boolean().default(false).notNull(),
+		below_ask_tolerance_pct: integer().default(10).notNull()
 	},
 	(table) => [
 		index('match_config_profile_id_idx').on(table.profile_id),
@@ -943,7 +953,23 @@ export const job_matches = pgTable(
 			precision: 6,
 			withTimezone: true,
 			mode: 'date'
-		})
+		}),
+		/**
+		 * Whether the job pays what this profile asks: the top of its posted pay
+		 * as a share of the Salary Prep ask that applies to it (1 meets it, 0.5
+		 * pays half), and which ask that was, `employed` or `freelance`. Null
+		 * when the two cannot be compared, which is about half of all postings
+		 * (no pay stated), and null is never filtered out.
+		 *
+		 * Worked out by `lib/salary/pay-fit.ts` and kept current by
+		 * `refreshPayFit` (`server/salary/pay-fit-store.ts`): when a match is
+		 * written, when the asks or a job's pay change, and by the worker every
+		 * few hours. The tolerance is NOT in here: Match Config's
+		 * `below_ask_tolerance_pct` is applied when reading, so changing it
+		 * needs no rewrite. Never part of the score.
+		 */
+		pay_ratio: doublePrecision(),
+		pay_ask: varchar({ length: 16 }).$type<SalaryMode>()
 	},
 	(table) => [
 		index('job_matches_ai_chat_scoring_idx').on(table.ai_chat_scoring),
