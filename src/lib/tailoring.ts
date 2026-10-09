@@ -128,6 +128,13 @@ export interface Candidate {
 	 */
 	roleFloor?: number;
 	/**
+	 * For a role's technology: the skill group it sits in on the applicant's
+	 * skills block ("AI & LLM engineering"), which is what the ranker reads it
+	 * with. A bare name has little for an embedding to read; the group says
+	 * which kind of thing it is. Absent when no group holds the name.
+	 */
+	area?: string;
+	/**
 	 * Whether the applicant has held it off documents entirely — the `!resume`
 	 * plus `!cv` pair. The most emphatic thing the tag vocabulary can say, and
 	 * graded accordingly: still not a veto, because a job can be about exactly
@@ -460,6 +467,23 @@ const MIN_SKILL_GROUPS = 2;
  * like an inventory.
  */
 const MIN_TECH_PER_ROLE = 6;
+
+/**
+ * How much of a long TECH line stays: half of it, never fewer than
+ * MIN_TECH_PER_ROLE and never more than fourteen, with the applicant's first
+ * three names always among them.
+ *
+ * It was six, filled first by the names the skill graph tied to the job's
+ * skill lists. On application 92, an AI-heavy posting whose lists say "AI
+ * Integration" and "Large Language Models", the graph tied seven of the AI
+ * Engineer role's 28 names to "Back-end" or "Front-end Development" (Caddy,
+ * Tailwind CSS, Groq among them), and nothing to RAG, Embeddings, MCP or LLM
+ * evaluation, so the line kept a web server and dropped the work the job was
+ * about. Half a line is enough to read as a stack and short enough not to read
+ * as an inventory; fourteen is about two printed lines of names. The first
+ * three are the role's own headline, which a job does not get to rewrite.
+ */
+export const TECH_LINE = { max: 14, headline: 3 } as const;
 
 /**
  * The bar a hidden item must clear to be worth surfacing — and the same one the
@@ -880,22 +904,28 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	// comparative, because "this job asks nothing about Firebug" is a statement
 	// about the job and not about how full the page is.
 	//
-	// What it is NOT is a relevance score on a single word. That is the objection
-	// that keeps skills include-only, and it holds here too — a bare name has no
-	// content for an embedding to read, which is why these candidates carry no
-	// score at all. The keep rule is a lookup instead: does this name answer
-	// something the posting asked for, itself or through the skill graph
-	// (`covers`, see markCoverage). PostgreSQL answers SQL; Firebug answers
-	// nothing.
+	// It ranks by relevance, which for a while it did not. A bare name embedded
+	// against a whole posting says little, so the keep rule was a lookup:
+	// does this name answer something the posting asked for, itself or through
+	// the skill graph (`covers`). The lookup is only as good as the lists the
+	// posting was boiled down to, and an AI posting listing "AI Integration"
+	// answered none of RAG, Embeddings or LLM evaluation (see TECH_LINE). Each
+	// name is now scored with its skill group beside it ("RAG (AI & LLM
+	// engineering)"), against each line of the posting, keeping its best (see
+	// prepareSelection), and that ranks well enough to choose by. The lookup
+	// adds nothing to the rank: on application 92 its ties were what kept
+	// Tailwind CSS above RAG, a promotion margin being the whole difference.
 	//
-	// Below `MIN_TECH_PER_ROLE` nothing is touched, and above it the applicant's
-	// own order fills the remaining places — no invented ranking decides which of
-	// two equally-unasked-for names survives.
+	// Kept, in this order: the applicant's first TECH_LINE.headline names, then
+	// the best-ranked up to the line's budget, then, past the budget if need be,
+	// one name for each skill the line answers. Dropping the last name that
+	// answers a skill takes the job's own word off the role; dropping the fifth
+	// of five takes nothing.
 	//
-	// Costs the budget nothing directly (chars are zero, as for a skill group),
-	// but a shorter line is genuinely shorter on the page, and the fit pass
-	// renders the document — so the space comes back as pages measured rather
-	// than as characters guessed.
+	// Below `MIN_TECH_PER_ROLE` nothing is touched. Costs the budget nothing
+	// directly (chars are zero, as for a skill group), but a shorter line is
+	// genuinely shorter on the page, and the fit pass renders the document — so
+	// the space comes back as pages measured rather than as characters guessed.
 	//
 	// Skipped entirely when nothing in this run covers anything, which is what a
 	// missing job looks like from here: with no requirements to answer, every
@@ -909,13 +939,29 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 		}
 		for (const line of byRole.values()) {
 			if (line.length <= MIN_TECH_PER_ROLE) continue;
-			let places = MIN_TECH_PER_ROLE - line.filter((t) => t.covers?.length).length;
+			const budget = Math.min(
+				TECH_LINE.max,
+				Math.max(MIN_TECH_PER_ROLE, Math.ceil(line.length / 2))
+			);
+			const kept = new Set(line.slice(0, TECH_LINE.headline));
+			const ranked = line
+				.map((t, order) => ({ t, order }))
+				.filter(({ t }) => !kept.has(t))
+				.sort((a, z) => z.t.score - a.t.score || a.order - z.order)
+				.map(({ t }) => t);
+			for (const t of ranked) {
+				if (kept.size >= budget) break;
+				kept.add(t);
+			}
+			const answered = new Set([...kept].flatMap((t) => t.covers ?? []));
+			for (const t of ranked) {
+				const missing = (t.covers ?? []).filter((req) => !answered.has(req));
+				if (kept.has(t) || missing.length === 0) continue;
+				kept.add(t);
+				for (const req of missing) answered.add(req);
+			}
 			for (const t of line) {
-				if (t.covers?.length) continue;
-				if (places > 0) {
-					places -= 1;
-					continue;
-				}
+				if (kept.has(t)) continue;
 				decisions.push({
 					entityType: t.entityType,
 					entityId: t.entityId,

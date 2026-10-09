@@ -109,6 +109,7 @@ import {
 } from '$lib/profile-visibility';
 import {
 	semanticScoreUnits,
+	semanticScoreUnitsByLine,
 	poolKey,
 	type ContentUnit
 } from '$lib/server/documents/content-embeddings';
@@ -497,6 +498,7 @@ export function buildCandidates(
 	// rendered list, and a name from somewhere else entirely would place a
 	// surfaced skill at a position nothing occupies.
 	if (templatePrintsTechnologies(template)) {
+		const areaOf = areasOfSkills(profile, conceptOf);
 		for (const role of profile.work_experiences ?? []) {
 			const printsHere = visibleRoles.has(role.id);
 			const visibleTech = new Set(
@@ -531,9 +533,10 @@ export function buildCandidates(
 					visible,
 					parentVisible: printsHere,
 					parentType: OVERRIDE_ENTITIES.workExperience,
-					// Never surfaced and never ranked — a bare name has nothing for an
-					// embedding to read. It is kept or dropped on `covers` alone, which
-					// markCoverage fills in from the skill graph.
+					// Never surfaced. Ranked with its skill group beside it, since a bare
+					// name has little for an embedding to read (see embedTextFor and the
+					// tech-line pass in $lib/tailoring).
+					area: areaOf(name) ?? undefined,
 					pinned: false,
 					score: 0
 				});
@@ -656,10 +659,92 @@ export function buildCandidates(
  *
  * Bullets and skill categories carry theirs in the label already (a category's
  * label lists the skills in it for exactly this reason). Side projects carry a
- * `detail`, because a project name says nothing a ranker can use.
+ * `detail`, because a project name says nothing a ranker can use. A role's
+ * technology carries the skill group it sits in: "RAG (AI & LLM engineering)"
+ * reads as AI work, "RAG" alone as three letters.
  */
 function embedTextFor(candidate: Candidate): string {
+	if (candidate.entityType === OVERRIDE_ENTITIES.technology && candidate.area) {
+		return `${candidate.label} (${candidate.area})`;
+	}
 	return candidate.detail || candidate.label;
+}
+
+/** The forms a skill name can appear in: "Svelte / SvelteKit" is both, "MCP (Model Context Protocol)" both. */
+function nameForms(name: string): string[] {
+	const forms = new Set<string>();
+	const add = (form: string) => {
+		const key = normalizeSkill(form);
+		if (key) forms.add(key);
+	};
+	const bare = name.replace(/\([^)]*\)/g, ' ').trim();
+	add(name);
+	add(bare);
+	for (const [, inner] of name.matchAll(/\(([^)]*)\)/g)) add(inner);
+	for (const part of bare.split(/\s*[/|,]\s*/)) add(part);
+	return [...forms];
+}
+
+/**
+ * The skills-block group each skill name sits in, as a lookup by name: by any of
+ * its forms (nameForms), or by the concept the skill graph resolves it to. The
+ * first group in the applicant's order wins where a name sits in two.
+ */
+function areasOfSkills(
+	profile: { tech_skill_categories?: { name?: unknown; tech_skills?: { name?: unknown }[] }[] },
+	conceptOf?: Map<string, string>
+): (name: string) => string | null {
+	const byForm = new Map<string, string>();
+	const byConcept = new Map<string, string>();
+	for (const category of profile.tech_skill_categories ?? []) {
+		const area = text(category.name);
+		if (!area) continue;
+		for (const skill of category.tech_skills ?? []) {
+			const name = text(skill.name);
+			if (!name) continue;
+			for (const form of nameForms(name)) if (!byForm.has(form)) byForm.set(form, area);
+			const concept = conceptOf?.get(normalizeSkill(name));
+			if (concept && !byConcept.has(concept)) byConcept.set(concept, area);
+		}
+	}
+	return (name: string) => {
+		for (const form of nameForms(name)) {
+			const area = byForm.get(form);
+			if (area) return area;
+		}
+		const concept = conceptOf?.get(normalizeSkill(name));
+		return (concept && byConcept.get(concept)) || null;
+	};
+}
+
+/** Past this many lines a posting is read only this far; see postingLines. */
+const POSTING_LINE_LIMIT = 120;
+
+/**
+ * A posting as the lines a reader takes it in: its title, each line of its
+ * description with any list marker off, and its responsibilities. A line under
+ * 25 characters ("Wie ben jij?", "Je beschikt over:") is a heading and says
+ * nothing on its own, so it is left out, and so is a line seen before.
+ */
+export function postingLines(job: {
+	title?: unknown;
+	job_description?: unknown;
+	responsibilities?: unknown;
+}): string[] {
+	const raw = [
+		text(job.title),
+		...String(job.job_description ?? '').split('\n'),
+		...asStringArray(job.responsibilities)
+	];
+	const seen = new Set<string>();
+	const lines: string[] = [];
+	for (const line of raw) {
+		const clean = line.replace(/^\s*(?:[*•\-–]|\d+[.)])\s+/, '').trim();
+		if (clean.length < 25 || seen.has(clean)) continue;
+		seen.add(clean);
+		lines.push(clean);
+	}
+	return lines.slice(0, POSTING_LINE_LIMIT);
 }
 
 /**
@@ -1109,7 +1194,37 @@ export async function prepareSelection(inputs: {
 		query.text
 	);
 	await markCoverage(built, profile, requiredSkills, preferredSkills);
-	const { candidates, ranker, floor } = await scoreCandidates(profileId, built, query);
+	const scored = await scoreCandidates(profileId, built, query);
+	const { ranker, floor } = scored;
+	// A role's technologies are scored against the posting's lines, not the
+	// whole of it: a name answers one thing a posting asks for, and the rest of
+	// the posting is about other things. Their best line is their score, which
+	// only the tech-line pass reads. Whole-posting scores stand where this
+	// cannot run.
+	const byLine =
+		ranker === 'semantic'
+			? await semanticScoreUnitsByLine(
+					profileId,
+					scored.candidates
+						.filter((c) => c.entityType === OVERRIDE_ENTITIES.technology)
+						.map((c) => ({
+							unitType: c.entityType,
+							unitId: c.entityId,
+							subId: 0,
+							embedText: embedTextFor(c)
+						})),
+					postingLines(job),
+					{ unitType: 'job_line', unitId: job.id }
+				)
+			: null;
+	const candidates = byLine
+		? scored.candidates.map((c) => {
+				const best = byLine.get(poolKey(c.entityType, c.entityId));
+				return c.entityType === OVERRIDE_ENTITIES.technology && best !== undefined
+					? { ...c, score: best }
+					: c;
+			})
+		: scored.candidates;
 
 	const otherLabel = docType === 'cv' ? 'resume' : 'CV';
 	const groupDropReason = (c: Candidate) => {
@@ -1133,8 +1248,10 @@ export async function prepareSelection(inputs: {
 	};
 	// A single word, so the reason has to carry the whole case: which line it
 	// left, and that the rule was a lookup rather than a verdict on the word.
-	const technologyDropReason = () =>
-		'this job names nothing this answers, and the tech line reads as a list';
+	const technologyDropReason = (c: Candidate) =>
+		c.covers?.length
+			? `another name on this line already answers ${c.covers.join(' and ')}`
+			: 'not among the names on this line this job is most about';
 	// A restored role is the largest thing a run can do, so the row says what
 	// bought it: the role names itself in the diff, and the bullet that earned
 	// it is the part the applicant will want to check.

@@ -23,6 +23,7 @@ import {
 	markCoverage,
 	mustLimitFor,
 	pinnedReason,
+	postingLines,
 	refFor,
 	reviewedSelection,
 	scoreCandidates,
@@ -1154,6 +1155,93 @@ describe('buildCandidates: how many bullets a role keeps', () => {
 				.map((c) => [c.parentId, c.roleFloor])
 		);
 		expect(floors).toEqual({ 8: 5, 232: 2, 12: 2 });
+	});
+});
+
+describe('buildCandidates: what a role’s technology is', () => {
+	const profile = {
+		profile_versions: [{ id: 1, slug: 'base', extension_links: [], toggles: [], overrides: [] }],
+		work_experiences: [
+			{
+				id: 232,
+				position: 'AI Engineer',
+				name: 'Own company',
+				tags: null,
+				start_date: '2025-08-04',
+				end_date: null,
+				work_experience_achievements: [],
+				work_experience_technologies: [
+					'RAG',
+					'MCP (Model Context Protocol)',
+					'SvelteKit',
+					'Hetzner VPS'
+				].map((name, i) => ({ id: 4570 + i, name, tags: null }))
+			}
+		],
+		side_projects: [],
+		tech_skill_categories: [
+			{
+				id: 473,
+				name: 'AI & LLM engineering',
+				tags: null,
+				tech_skills: ['RAG', 'MCP'].map((name, i) => ({ id: 10 + i, name, tags: null }))
+			},
+			{
+				id: 182,
+				name: 'Frontend',
+				tags: null,
+				tech_skills: [{ id: 20, name: 'Svelte / SvelteKit', tags: null }]
+			}
+		]
+	} as unknown as Parameters<typeof buildCandidates>[0];
+
+	const techs = () =>
+		buildCandidates(profile, 'resume', 'base', [], undefined, 'citrus').filter(
+			(c) => c.entityType === OVERRIDE_ENTITIES.technology
+		);
+
+	it('names the skill group it sits in, in whichever form the group writes it', () => {
+		expect(techs().map((c) => c.area ?? null)).toEqual([
+			'AI & LLM engineering',
+			'AI & LLM engineering',
+			'Frontend',
+			null
+		]);
+	});
+
+	it('is ranked with that group beside it', async () => {
+		// "RAG" alone is three letters to an embedding; with its group it reads
+		// as AI work.
+		vi.mocked(semanticScoreUnits).mockResolvedValue(new Map());
+		await scoreCandidates(1, techs(), { text: 'an AI job', skills: [] });
+		const calls = vi.mocked(semanticScoreUnits).mock.calls;
+		expect(calls[calls.length - 1][1].map((u) => u.embedText)).toEqual([
+			'RAG (AI & LLM engineering)',
+			'MCP (Model Context Protocol) (AI & LLM engineering)',
+			'SvelteKit (Frontend)',
+			'Hetzner VPS'
+		]);
+		vi.mocked(semanticScoreUnits).mockReset();
+	});
+});
+
+describe('postingLines', () => {
+	it('reads a posting a line at a time, without headings or list markers', () => {
+		expect(
+			postingLines({
+				title: 'Full Stack Automation Engineer',
+				job_description:
+					'Wie ben jij?\n* Je bouwt de hele keten. Van database tot scherm.\n\n' +
+					'- Ervaring met het coachen van ontwikkelteams is een pré.\n' +
+					'* Je bouwt de hele keten. Van database tot scherm.',
+				responsibilities: ['Automate the delivery pipeline in Azure DevOps']
+			})
+		).toEqual([
+			'Full Stack Automation Engineer',
+			'Je bouwt de hele keten. Van database tot scherm.',
+			'Ervaring met het coachen van ontwikkelteams is een pré.',
+			'Automate the delivery pipeline in Azure DevOps'
+		]);
 	});
 });
 

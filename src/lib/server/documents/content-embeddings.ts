@@ -227,3 +227,62 @@ export async function semanticScoreUnits(
 		return null;
 	}
 }
+
+/**
+ * Score each unit against every line of a text, keeping its best line: the
+ * per-line counterpart of semanticScoreUnits, for a unit that answers one part
+ * of a posting rather than reading like all of it.
+ *
+ * Against a whole posting, a short unit scores on how much the posting is
+ * about it overall. On application 92, "LLM evaluation (AI & LLM engineering)"
+ * scored 0.55 against the posting, below Playwright, and 0.73 against the one
+ * line asking for "evaluatie en monitoring", the best on its role.
+ *
+ * The lines are cached like any unit, under `linesUnit` with each line's index
+ * as its subId, so a posting is embedded once and again only where it changed.
+ * Null when embeddings are unconfigured or the provider fails, like
+ * semanticScoreUnits. Never throws.
+ */
+export async function semanticScoreUnitsByLine(
+	profileId: number,
+	units: ContentUnit[],
+	lines: string[],
+	linesUnit: { unitType: string; unitId: number }
+): Promise<Map<string, number> | null> {
+	if (!isEmbeddingConfigured() || units.length === 0 || lines.length === 0) return null;
+
+	try {
+		const lineUnits: ContentUnit[] = lines.map((embedText, subId) => ({
+			...linesUnit,
+			subId,
+			embedText
+		}));
+		const [unitVectors, lineVectors] = await Promise.all([
+			getUnitVectors(profileId, units),
+			getUnitVectors(profileId, lineUnits)
+		]);
+
+		const dims = config.embeddingWorkingDimensions;
+		const queries = lineUnits
+			.map((u) => lineVectors.get(unitKey(u)))
+			.filter((v): v is number[] => !!v?.length)
+			.map((v) => truncateVector(v, dims));
+		if (queries.length === 0) return null;
+
+		const scores = new Map<string, number>();
+		for (const u of units) {
+			const native = unitVectors.get(unitKey(u));
+			if (!native?.length) continue;
+			const vec = truncateVector(native, dims);
+			let best = -Infinity;
+			for (const q of queries) best = Math.max(best, cosineSimilarity(q, vec));
+			const pk = poolKey(u.unitType, u.unitId);
+			const prev = scores.get(pk);
+			if (prev === undefined || best > prev) scores.set(pk, best);
+		}
+		return scores;
+	} catch (err) {
+		console.warn('[content-embeddings] per-line scoring failed, keeping whole-text scores:', err);
+		return null;
+	}
+}

@@ -1087,11 +1087,41 @@ describe('a role’s tech line', () => {
 		expect(decisions.every((d) => d.action === 'exclude')).toBe(true);
 	});
 
-	it('keeps every entry that answers the job, however long the line', () => {
+	it('keeps the names that answer the job first, up to the line’s budget', () => {
+		// Half of twenty. All fourteen answer the same skill, so ten of them say it
+		// as well as fourteen would.
 		const decisions = selectForJob(line(1, 20, 14), OPTS);
-		// The floor is already met by the fourteen, so nothing else is kept for it.
-		expect(gone(decisions)).toHaveLength(6);
-		expect(gone(decisions).every((id) => id >= 114)).toBe(true);
+		expect(gone(decisions)).toEqual([110, 111, 112, 113, 114, 115, 116, 117, 118, 119]);
+	});
+
+	it('keeps the names that rank highest against the posting, after the first three', () => {
+		// Application 92: the AI names sat in the middle of the role's line, and
+		// the posting was about them.
+		const ranked = line(1, 12, 0).map((t, i) => ({ ...t, score: i < 3 ? 0.1 : 0.5 + i / 100 }));
+		// Twelve keep six: the first three, whatever they score, then the best three.
+		expect(gone(selectForJob([...ranked, ARMED], OPTS))).toEqual([103, 104, 105, 106, 107, 108]);
+	});
+
+	it('keeps a name for each skill the line answers, past the budget if need be', () => {
+		const ranked = line(1, 12, 0).map((t, i) => ({ ...t, score: 0.5 + i / 100 }));
+		ranked[4] = { ...ranked[4], score: 0.1, covers: ['Kafka'] };
+		const decisions = selectForJob([...ranked, ARMED], OPTS);
+		expect(gone(decisions)).not.toContain(104);
+		expect(gone(decisions)).toHaveLength(5);
+	});
+
+	it('ranks on relevance alone, not on what the skill graph ties to the job', () => {
+		// The graph tied Tailwind CSS to "Front-end Development" on application
+		// 92 and nothing to RAG; a margin for the tie kept the one over the other.
+		const ranked = line(1, 8, 0).map((t, i) => ({ ...t, score: i < 3 ? 0.9 : 0.5 }));
+		ranked[7] = { ...ranked[7], score: 0.49, covers: ['SQL'] };
+		ranked[2] = { ...ranked[2], covers: ['SQL'] };
+		// Six of eight: the first three (one answers SQL), then the best three.
+		expect(gone(selectForJob(ranked, OPTS))).toEqual([106, 107]);
+	});
+
+	it('stops at fourteen, however long the line', () => {
+		expect(gone(selectForJob([...line(1, 40, 0), ARMED], OPTS))).toHaveLength(26);
 	});
 
 	it('leaves a short line alone entirely', () => {
@@ -1101,9 +1131,9 @@ describe('a role’s tech line', () => {
 		expect(gone(selectForJob([...line(1, 5, 0), ARMED], OPTS))).toEqual([]);
 	});
 
-	it('fills the remaining places in the applicant’s own order', () => {
-		// No invented ranking decides between two names the job asked nothing
-		// about — the order they are written in is the only honest tiebreak.
+	it('breaks a tie in the applicant’s own order', () => {
+		// Between two names that rank the same, the order they are written in is
+		// the only honest tiebreak.
 		expect(gone(selectForJob([...line(1, 9, 0), ARMED], OPTS))).toEqual([106, 107, 108]);
 	});
 
@@ -1118,8 +1148,8 @@ describe('a role’s tech line', () => {
 		// each line down to the floor on that basis would be a decision made from
 		// the absence of information.
 		expect(gone(selectForJob(line(1, 20, 0), OPTS))).toEqual([]);
-		// And the same twenty names go the moment one of them is asked for.
-		expect(gone(selectForJob([...line(1, 20, 0), ARMED], OPTS))).toHaveLength(14);
+		// And half of the same twenty go the moment one of them is asked for.
+		expect(gone(selectForJob([...line(1, 20, 0), ARMED], OPTS))).toHaveLength(10);
 	});
 
 	it('ignores a line the document does not print', () => {

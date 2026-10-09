@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { poolKey, semanticScoreUnits } from './content-embeddings';
+import { poolKey, semanticScoreUnits, semanticScoreUnitsByLine } from './content-embeddings';
 
 describe('poolKey', () => {
 	it("namespaces by unit type so ids don't collide across types", () => {
@@ -23,5 +23,19 @@ describe('semanticScoreUnits', () => {
 
 	it('returns null for an empty unit list', async () => {
 		expect(await semanticScoreUnits(1, [], 'query')).toBeNull();
+	});
+});
+
+describe('semanticScoreUnitsByLine', () => {
+	const unit = { unitType: 'work_experience_technology', unitId: 1, subId: 0, embedText: 'RAG' };
+	const lines = { unitType: 'job_line', unitId: 9 };
+
+	it('returns null when embeddings are unconfigured', async () => {
+		expect(await semanticScoreUnitsByLine(1, [unit], ['a line of a posting'], lines)).toBeNull();
+	});
+
+	it('returns null with nothing to score or nothing to score against', async () => {
+		expect(await semanticScoreUnitsByLine(1, [], ['a line of a posting'], lines)).toBeNull();
+		expect(await semanticScoreUnitsByLine(1, [unit], [], lines)).toBeNull();
 	});
 });
