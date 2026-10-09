@@ -266,7 +266,14 @@ export function sectionRows<T extends Record<string, unknown>, R extends { id: n
 			initial: data,
 			save: (value, previous) => persist(entry, value, previous),
 			onSaved: (value) => {
-				entry.data = value;
+				// Follow what was written, which is how an Undo reaches the row: it
+				// posts the previous value through the field, not through `update`.
+				// But not over an edit made while this save was in flight. That one
+				// is still waiting in the field, and copying the older value over it
+				// showed the row going back to what it was until the next save
+				// landed: a second switch flipped back, the last letters typed
+				// vanished.
+				if (valuesEqual(entry.field.value, value)) entry.data = value;
 			},
 			// Rebuilt on every keystroke, so identity would report a change even
 			// when the user typed the same character back — and an array-valued

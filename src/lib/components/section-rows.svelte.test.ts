@@ -207,6 +207,58 @@ describe('sectionRows', () => {
 		expect(draft.id).toBeNull();
 	});
 
+	it('keeps an edit made while the previous save was in flight', async () => {
+		// The shape of two Show-on switches flipped in turn: the first save goes
+		// out, the second edit waits out the debounce, and the first one landing
+		// must not put the second switch back where it was.
+		vi.useFakeTimers();
+		try {
+			let land = () => {};
+			vi.stubGlobal('fetch', (url: string, init?: RequestInit) => {
+				sent.push({ url, method: init?.method ?? 'GET', body: JSON.parse(init?.body as string) });
+				return new Promise<Response>((resolve) => {
+					land = () => resolve({ ok: true, json: () => Promise.resolve({}) } as Response);
+				});
+			});
+			const store = sectionRows({
+				resource: 'work_experience_technology',
+				parentKey: 'work_experience_id',
+				parentId: 8,
+				profileId: 3,
+				initial: [{ id: 1, name: 'Drizzle', tags: null }],
+				toData: (r) => ({ name: r.name ?? '', tags: (r.tags as string[] | null) ?? [] }),
+				blank: () => ({ name: '', tags: [] as string[] }),
+				toBody: (v: { name: string; tags: string[] }) => ({
+					name: v.name.trim(),
+					tags: v.tags.length > 0 ? v.tags : null
+				}),
+				canCreate: (v: { name: string }) => v.name.trim().length > 0,
+				debounceMs: 700
+			});
+			const [row] = store.rows;
+
+			store.update(row, { tags: ['!resume'] });
+			row.field.flush();
+			store.update(row, { tags: ['!resume', '!cv'] });
+
+			land();
+			await settle();
+			expect(row.data.tags).toEqual(['!resume', '!cv']);
+
+			// And the second save follows, against what the first one wrote.
+			await vi.advanceTimersByTimeAsync(700);
+			expect(sent.map((r) => r.body)).toEqual([
+				{ tags: ['!resume'], expected: { tags: null } },
+				{ tags: ['!resume', '!cv'], expected: { tags: ['!resume'] } }
+			]);
+			land();
+			await settle();
+			expect(row.data.tags).toEqual(['!resume', '!cv']);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	describe('onChanged', () => {
 		/**
 		 * The hook exists for a page whose rows came from a LAYOUT load. SvelteKit
