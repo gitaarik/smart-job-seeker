@@ -1,10 +1,11 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
-import { eq, gte, and, desc } from 'drizzle-orm';
-import { profiles, users, job_matches, jobs, job_platforms } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
+import { profiles, users } from '$lib/server/db/schema';
 import { requireAuth, parseIntParam, requireProfileAccess } from '$lib/server/utils/api-helpers';
-import { sendDigestEmail, type DigestJob } from '$lib/server/email/digest';
+import { sendDigestEmail } from '$lib/server/email/digest';
+import { loadDigestMatches } from '$lib/server/email/digest-matches';
 
 const ALLOWED_FREQUENCIES = [1, 2, 3, 5, 7, 14];
 const ALLOWED_MIN_SCORES = [50, 60, 70, 80, 90];
@@ -204,60 +205,11 @@ export const POST: RequestHandler = async ({ params, locals, url }) => {
 	const since =
 		profile.email_digest_last_sent_at ?? new Date(Date.now() - frequencyDays * 86400_000);
 
-	const matches = await db
-		.select({
-			job_id: job_matches.job_id,
-			score: job_matches.score,
-			matched_skills: job_matches.matched_skills,
-			title: jobs.title,
-			company: jobs.company,
-			source_url: jobs.source_url,
-			office_location: jobs.office_location,
-			salary_min: jobs.salary_min,
-			salary_max: jobs.salary_max,
-			salary_currency: jobs.salary_currency,
-			salary_period: jobs.salary_period,
-			work_location: jobs.work_location,
-			job_types: jobs.job_types,
-			experience_levels: jobs.experience_levels,
-			skills_required: jobs.skills_required,
-			skills_preferred: jobs.skills_preferred,
-			job_description: jobs.job_description,
-			job_platform_name: job_platforms.name
-		})
-		.from(job_matches)
-		.innerJoin(jobs, eq(job_matches.job_id, jobs.id))
-		.leftJoin(job_platforms, eq(jobs.job_platform_id, job_platforms.id))
-		.where(
-			and(
-				eq(job_matches.profile_id, profileId),
-				gte(job_matches.score, minScore),
-				gte(job_matches.date_created, since)
-			)
-		)
-		.orderBy(desc(job_matches.score))
-		.limit(DIGEST_MAX_JOBS);
-
-	const digestJobs: DigestJob[] = matches.map((m) => ({
-		id: m.job_id,
-		title: m.title ?? 'Untitled',
-		company: m.company,
-		score: m.score,
-		source_url: m.source_url,
-		office_location: m.office_location,
-		salary_min: m.salary_min,
-		salary_max: m.salary_max,
-		salary_currency: m.salary_currency,
-		salary_period: m.salary_period,
-		work_location: m.work_location as string[] | null,
-		job_types: m.job_types as string[] | null,
-		experience_levels: m.experience_levels as string[] | null,
-		skills_required: m.skills_required as string[] | null,
-		skills_preferred: m.skills_preferred as string[] | null,
-		matched_skills: m.matched_skills as string[] | null,
-		job_description: m.job_description,
-		job_platform_name: m.job_platform_name
-	}));
+	const { jobs: digestJobs, belowAsk } = await loadDigestMatches(profileId, {
+		minScore,
+		since,
+		limit: DIGEST_MAX_JOBS
+	});
 
 	const appUrl = url.origin;
 	const profileName = profile.name ?? 'Your profile';
@@ -268,7 +220,8 @@ export const POST: RequestHandler = async ({ params, locals, url }) => {
 			profileName,
 			jobs: digestJobs,
 			minScore,
-			appUrl
+			appUrl,
+			belowAsk
 		});
 	}
 

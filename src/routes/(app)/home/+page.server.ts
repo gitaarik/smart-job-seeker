@@ -17,6 +17,8 @@ import { getMatchCounts } from '$lib/server/job/match-counts';
 import { getProfileSkillLevels } from '$lib/server/job/match-utils';
 import { saveJob, unsaveJob, rejectJob, unrejectJob } from '$lib/server/job/job-actions';
 import { getSelectedProfileId } from '../profile/utils';
+import { payFilterSql } from '$lib/server/salary/pay-fit-store';
+import { payBadge } from '$lib/salary/pay-fit';
 
 // Top Matches ranking: the stored jm.score is pure relevance and ignores how
 // old a posting is, so without a decay a 90-day-old job outranks a fresher,
@@ -60,11 +62,19 @@ export const load: PageServerLoad = async ({ parent }) => {
 			experience_levels: true,
 			work_location: true,
 			locations: true,
-			match_community_jobs: true
+			match_community_jobs: true,
+			hide_below_ask: true,
+			below_ask_tolerance_pct: true
 		}
 	});
 
 	const matchCommunityJobs = matchConfig?.match_community_jobs ?? false;
+
+	// The tiles link into the job list and the top five stand for its top, so
+	// both leave out what the list leaves out by default: jobs paying below the
+	// ask, when Match Config says to. See salary/pay-fit-store.ts.
+	const payTolerance = matchConfig?.below_ask_tolerance_pct ?? 10;
+	const payShown = payFilterSql(matchConfig?.hide_below_ask ? 'fit' : 'any', payTolerance);
 
 	const [
 		profileData,
@@ -112,10 +122,10 @@ export const load: PageServerLoad = async ({ parent }) => {
 			getMatchCounts(profileId, matchCommunityJobs),
 			queryRaw<{ strong80: bigint; strong70: bigint; saved: bigint; new_unreviewed: bigint }>(sql`
         SELECT
-          COUNT(*) FILTER (WHERE jm.score >= 80 AND COALESCE(js.status, 'new') != 'rejected') as strong80,
-          COUNT(*) FILTER (WHERE jm.score >= 70 AND COALESCE(js.status, 'new') != 'rejected') as strong70,
+          COUNT(*) FILTER (WHERE jm.score >= 80 AND COALESCE(js.status, 'new') != 'rejected' AND ${payShown}) as strong80,
+          COUNT(*) FILTER (WHERE jm.score >= 70 AND COALESCE(js.status, 'new') != 'rejected' AND ${payShown}) as strong70,
           COUNT(*) FILTER (WHERE js.status = 'saved') as saved,
-          COUNT(*) FILTER (WHERE js.id IS NULL AND jm.score > 0) as new_unreviewed
+          COUNT(*) FILTER (WHERE js.id IS NULL AND jm.score > 0 AND ${payShown}) as new_unreviewed
         FROM job_matches jm
         LEFT JOIN job_statuses js ON js.profile_id = jm.profile_id AND js.job_id = jm.job_id
         WHERE jm.profile_id = ${profileId}
@@ -140,6 +150,7 @@ export const load: PageServerLoad = async ({ parent }) => {
         WHERE jm.profile_id = ${profileId}
         AND jm.score >= 70
         AND COALESCE(js.status, 'new') != 'rejected'
+        AND ${payShown}
       ) ranked
       WHERE age_days <= ${TOP_MATCH_MAX_AGE_DAYS}
       ORDER BY score * exp(-GREATEST(0, age_days - ${TOP_MATCH_AGE_GRACE_DAYS}) / ${TOP_MATCH_AGE_HALFLIFE_DAYS}) DESC
@@ -269,6 +280,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 			match_summary: m.match_summary,
 			matched_skills: m.matched_skills,
 			skill_match_percentage: m.skill_match_percentage,
+			pay: payBadge(m.pay_ratio, m.pay_ask, payTolerance),
 			job: m.job!
 		}));
 

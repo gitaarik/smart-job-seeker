@@ -21,6 +21,7 @@
 	import { formatSalaryRange, timeAgo } from '$lib/format';
 	import { formatMonthDay } from '$lib/format-date';
 	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
+	import { PAY_VERDICT_LABELS, type PayBadge, type PayVerdict } from '$lib/salary/pay-fit';
 
 	interface Job {
 		id: number;
@@ -49,6 +50,8 @@
 		matched_skill_details?: unknown;
 		adjacent_skills?: unknown;
 		match_summary?: string | null;
+		/** Whether it pays their ask: worked out by the list from the stored ratio. */
+		pay?: PayBadge | null;
 	}
 
 	interface Props {
@@ -93,6 +96,12 @@
 
 	let saving = $state(false);
 	let rejecting = $state(false);
+
+	const PAY_BADGE_CLASSES: Record<PayVerdict, string> = {
+		meets: 'bg-green-500/10 text-green-700 dark:text-green-400',
+		close: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+		below: 'bg-red-500/10 text-red-700 dark:text-red-400'
+	};
 
 	function formatSalary(
 		min: number | null,
@@ -244,6 +253,14 @@
 									<FontAwesomeIcon icon={faMoneyBillWave} class="h-3 w-3" />
 									<span class="max-w-[140px] truncate sm:max-w-none">{salaryText}</span>
 								</span>
+								{#if match?.pay}
+									<span
+										class="rounded px-1.5 py-0.5 text-[11px] font-medium whitespace-nowrap {PAY_BADGE_CLASSES[
+											match.pay.verdict
+										]}"
+										title={match.pay.detail}>{PAY_VERDICT_LABELS[match.pay.verdict]}</span
+									>
+								{/if}
 							{/if}
 							{#if job.date_posted || job.date_created}
 								<span class="flex items-center gap-1 text-[var(--dash-text-secondary)]">

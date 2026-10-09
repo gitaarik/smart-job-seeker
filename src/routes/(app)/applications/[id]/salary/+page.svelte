@@ -24,7 +24,6 @@
 	import {
 		askForJob,
 		modesForJobTypes,
-		wantedModes,
 		type AppliedAdjustment,
 		type EmployedSettings,
 		type FreelanceSettings,
@@ -33,19 +32,10 @@
 		type SalaryMode
 	} from '$lib/salary/settings';
 	import { grossPayPerYear, rateAsSalary, salaryAsRate } from '$lib/salary/take-home';
+	import { canonicalJobTypes, jobContextFor, postedPayKind } from '$lib/salary/pay-fit';
 	import { isSalarySingleValue } from '$lib/format';
-	import {
-		JOB_TYPES,
-		WORK_LOCATIONS,
-		REGIONS,
-		buildNormalizeMap,
-		buildDisplayMap,
-		getPatterns
-	} from '$lib/data/job-taxonomy';
+	import { REGIONS, buildDisplayMap } from '$lib/data/job-taxonomy';
 
-	const jobTypeNormalize = buildNormalizeMap(JOB_TYPES);
-	const workLocNormalize = buildNormalizeMap(WORK_LOCATIONS);
-	const workLocPatterns = getPatterns(WORK_LOCATIONS);
 	const regionDisplayMap = buildDisplayMap(REGIONS);
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -57,17 +47,6 @@
 	let editAmount = $state('');
 	let editCurrency = $state('EUR');
 	let editPeriod = $state('month');
-
-	function toSalaryWorkArrangement(loc: string): string {
-		const lower = loc.toLowerCase().trim();
-		const canonical = workLocNormalize.get(lower);
-		if (canonical) return canonical;
-		for (const p of workLocPatterns) {
-			if (p.mode === 'includes' && lower.includes(p.pattern)) return p.canonical;
-			if (p.mode === 'startsWith' && lower.startsWith(p.pattern)) return p.canonical;
-		}
-		return lower;
-	}
 
 	const currencies = [
 		{ value: 'EUR', label: 'EUR', symbol: '\u20AC' },
@@ -134,13 +113,7 @@
 	}
 
 	/** The job's types as canonical values (`contract`, `full_time`, ...). */
-	const jobTypes = $derived(
-		Array.isArray(job?.job_types)
-			? (job.job_types as string[]).map(
-					(t) => jobTypeNormalize.get(t.toLowerCase()) ?? t.toLowerCase()
-				)
-			: []
-	);
+	const jobTypes = $derived(canonicalJobTypes(job?.job_types));
 	/** Which asks this job is priced in, most likely first. */
 	const modes = $derived(modesForJobTypes(jobTypes));
 
@@ -150,15 +123,18 @@
 		Object.keys(data.adjustments.company_type ?? {}).length > 0
 	);
 
-	const jobContext = $derived<JobContext>({
-		employment_type: ['internship', 'part_time', 'full_time'].find((t) => jobTypes.includes(t)),
-		work_arrangement:
-			Array.isArray(job?.work_location) && (job.work_location as string[]).length > 0
-				? toSalaryWorkArrangement((job.work_location as string[])[0])
-				: undefined,
-		company_type: companyType || undefined,
-		region: job?.region ?? undefined
-	});
+	// Read the way the job list's pay check reads it (lib/salary/pay-fit.ts), so a
+	// job this tab prices at your ask is not one the list hides as below it.
+	const jobContext = $derived<JobContext>(
+		jobContextFor(
+			{
+				job_types: job?.job_types,
+				work_location: job?.work_location,
+				region: job?.region
+			},
+			companyType
+		)
+	);
 
 	type AskOption = { period: SalaryPeriod; label: string; amount: number };
 	type Suggestion = {
@@ -286,29 +262,19 @@
 		const e = data.employed;
 		const f = data.freelance;
 
-		// An hourly or daily figure is a rate unless the job is permanent (then it
-		// is a wage, and there is no rate to compare it with). A monthly one is a
-		// fee only on a contract job with no permanent type beside it: a job typed
-		// both full-time and contract is the Dutch "fulltime, tijdelijk", a
-		// fixed-term salary. Anything else is a salary.
-		const kinds = wantedModes(jobTypes);
-		const isRate =
-			period === 'hour' || period === 'day'
-				? modes.includes('freelance')
-				: period === 'month' && kinds.freelance && !kinds.employed;
-		const isSalary =
-			!isRate && (period === 'month' || period === 'year') && modes.includes('employed');
+		// A rate or a fee, a salary, or neither: see `postedPayKind`.
+		const kind = postedPayKind(period, jobTypes);
 
 		let converted: (number | null)[];
 		let currencyOut: string;
 		let per: string;
-		if (isRate && (period === 'hour' || period === 'day' || period === 'month')) {
+		if (kind === 'freelance' && (period === 'hour' || period === 'day' || period === 'month')) {
 			converted = values.map((amount) =>
 				rateAsSalary(e, f, { amount, unit: period, currency }, data.fxRates)
 			);
 			currencyOut = e.currency;
 			per = `${perLabel[e.period]} as a salary`;
-		} else if (isSalary && (period === 'month' || period === 'year')) {
+		} else if (kind === 'employed' && (period === 'month' || period === 'year')) {
 			converted = values.map((amount) =>
 				salaryAsRate(e, f, { amount, period, currency }, data.fxRates)
 			);

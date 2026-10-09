@@ -20,6 +20,7 @@ import {
 	normalizeWorkLocation
 } from '$lib/data/job-normalize';
 import { normalizeSalaryPeriod } from '$lib/salary/conversion';
+import { refreshPayFitQuietly } from '$lib/server/salary/pay-fit-store';
 import { datePostedOrNull, detectPlatformId } from './job-fields';
 
 /** Matches the `jobs.title` varchar width — a longer value errors at the DB. */
@@ -163,6 +164,10 @@ export async function applyJobFields(jobId: number, fields: JobFieldValues): Pro
 			date_updated: new Date()
 		})
 		.where(eq(jobsTable.id, jobId));
+
+	// Pay, job types, work location and region all decide whether the job pays
+	// each matched profile's ask.
+	await refreshPayFitQuietly({ jobId }, 'a job edit');
 }
 
 /**

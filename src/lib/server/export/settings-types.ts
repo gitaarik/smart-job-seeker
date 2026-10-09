@@ -48,6 +48,9 @@ export interface ExportedMatchConfig {
 	match_community_jobs: boolean;
 	remote_only: boolean;
 	community_max_age_days: number | null;
+	/** Absent in files exported before the pay setting existed. */
+	hide_below_ask?: boolean;
+	below_ask_tolerance_pct?: number;
 }
 
 export interface ExportedEmailDigest {

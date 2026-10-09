@@ -150,6 +150,9 @@ async function mintDemoUser(link: DemoLinks): Promise<DemoCredentials> {
  * re-score: the clone carries the source's profile content and match config,
  * so scoring would compute the same function of the same inputs. Jobs added
  * after the source was scored have no row either way and still get matched.
+ * The pay ratio comes along on the same grounds: the clone carries the
+ * source's Salary Prep asks, and the worker's next pay refresh would write
+ * the same numbers.
  *
  * Deliberately NOT carried over: `ai_chat_scoring` (FK into the source
  * profile's LLM-call log; NULL is already the normal state for ineligible
@@ -171,14 +174,15 @@ export async function copyJobMatches(
 			skip_reason, job_date_updated_when_matched, date_created,
 			date_updated, job_id, profile_id, llm_prompt, ai_chat_scoring,
 			matched_skills, matched_skill_details, adjacent_skills, match_summary,
-			score_factors, rescore_requested_at
+			score_factors, rescore_requested_at, pay_ratio, pay_ask
 		)
 		SELECT DISTINCT ON (src.job_id)
 			src.score, src.reasoning, src.skill_match_percentage, src.strengths,
 			src.gaps, src.skip_reason, src.job_date_updated_when_matched,
 			src.date_created, src.date_updated, src.job_id, ${targetProfileId},
 			src.llm_prompt, NULL, src.matched_skills, src.matched_skill_details,
-			src.adjacent_skills, src.match_summary, src.score_factors, NULL
+			src.adjacent_skills, src.match_summary, src.score_factors, NULL,
+			src.pay_ratio, src.pay_ask
 		FROM job_matches src
 		WHERE src.profile_id = ${sourceProfileId}
 			AND NOT EXISTS (

@@ -515,6 +515,25 @@
 					Only jobs scoring at or above this threshold will be included.
 				</p>
 			</div>
+
+			<!-- Pay: Match Config's setting, said here because it decides what the email leaves out -->
+			<div>
+				<p class="mb-1.5 text-sm font-medium text-[var(--dash-text)]">Pay</p>
+				<p class="text-xs text-[var(--dash-text-muted)]">
+					{#if data.pay.hideBelowAsk}
+						Jobs paying {data.pay.tolerancePct > 0
+							? `more than ${data.pay.tolerancePct}% below`
+							: 'below'} your ask are left out, and the email says how many.
+					{:else}
+						Jobs paying below your ask are included.
+					{/if}
+					Change this in
+					<a
+						href={resolve('/(app)/jobs/import/config')}
+						class="text-[var(--dash-primary)] hover:underline">Match Config</a
+					>.
+				</p>
+			</div>
 		{/if}
 
 		{#if digestError}

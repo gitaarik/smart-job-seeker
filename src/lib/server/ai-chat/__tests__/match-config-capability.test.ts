@@ -23,7 +23,9 @@ const stored = {
 	locations: [] as string[],
 	remote_only: false,
 	match_community_jobs: true,
-	community_max_age_days: null as number | null
+	community_max_age_days: null as number | null,
+	hide_below_ask: false,
+	below_ask_tolerance_pct: 10
 };
 
 vi.mock('$lib/server/job/match-preferences', async (importOriginal) => {
@@ -108,6 +110,12 @@ describe('validate', () => {
 		expect(def.validate({ 'match.community_max_age_days': 30 }, {}).ok).toBe(true);
 	});
 
+	it('refuses a tolerance outside none to half the ask', () => {
+		expect(def.validate({ 'match.below_ask_tolerance_pct': -1 }, {}).ok).toBe(false);
+		expect(def.validate({ 'match.below_ask_tolerance_pct': 60 }, {}).ok).toBe(false);
+		expect(def.validate({ 'match.below_ask_tolerance_pct': 15 }, {}).ok).toBe(true);
+	});
+
 	it('says nothing about a field that was not sent', () => {
 		expect(def.validate({}, {}).ok).toBe(true);
 	});
@@ -134,6 +142,20 @@ describe('apply', () => {
 		// column means "no opinion" and must not be written as "off".
 		await def.apply(TARGET, { 'match.remote_only': null }, {}, ACTOR);
 		expect(written[0]).toEqual({ profileId: 3, values: {} });
+	});
+
+	it('writes the pay setting, and no tolerance it could not read', async () => {
+		await def.apply(
+			TARGET,
+			{ 'match.hide_below_ask': true, 'match.below_ask_tolerance_pct': 15 },
+			{},
+			ACTOR
+		);
+		await def.apply(TARGET, { 'match.below_ask_tolerance_pct': null }, {}, ACTOR);
+		expect(written).toEqual([
+			{ profileId: 3, values: { hide_below_ask: true, below_ask_tolerance_pct: 15 } },
+			{ profileId: 3, values: {} }
+		]);
 	});
 
 	it('clears a list sent empty', async () => {
@@ -170,6 +192,12 @@ describe('contract', () => {
 		// "excluded keywords or industries" on this very page.
 		expect(def.contract).toMatch(/industry/i);
 		expect(def.contract).toMatch(/keyword/i);
-		expect(def.contract).toMatch(/salary floor/i);
+	});
+
+	it('sends a pay figure to Salary Prep, where the ask the filter uses lives', () => {
+		// The floor is the ask: a number written anywhere else would be a second
+		// salary store that nothing reads.
+		expect(def.contract).toContain('/applications/salary');
+		expect(def.contract).not.toMatch(/no salary floor/i);
 	});
 });

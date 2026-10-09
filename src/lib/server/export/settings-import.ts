@@ -15,6 +15,7 @@ import {
 	MAX_STATEMENT_CHARS,
 	writeDirectives
 } from '$lib/server/ai-chat/directives';
+import { refreshPayFitQuietly } from '$lib/server/salary/pay-fit-store';
 
 export interface SettingsImportOptions {
 	replaceExistingTasks: boolean;
@@ -214,6 +215,14 @@ export async function importSettings(
 				where: eq(match_config.profile_id, profileId)
 			});
 			const mc = data.match_config;
+			// A file from before the pay setting existed says nothing about it, which
+			// leaves the profile's own choice standing rather than turning it off.
+			const pay = {
+				...(typeof mc.hide_below_ask === 'boolean' ? { hide_below_ask: mc.hide_below_ask } : {}),
+				...(typeof mc.below_ask_tolerance_pct === 'number'
+					? { below_ask_tolerance_pct: mc.below_ask_tolerance_pct }
+					: {})
+			};
 			if (existing) {
 				await tx
 					.update(match_config)
@@ -226,7 +235,8 @@ export async function importSettings(
 						locations: mc.locations,
 						match_community_jobs: mc.match_community_jobs,
 						remote_only: mc.remote_only,
-						community_max_age_days: mc.community_max_age_days
+						community_max_age_days: mc.community_max_age_days,
+						...pay
 					})
 					.where(eq(match_config.profile_id, profileId));
 			} else {
@@ -241,7 +251,8 @@ export async function importSettings(
 					locations: mc.locations,
 					match_community_jobs: mc.match_community_jobs,
 					remote_only: mc.remote_only,
-					community_max_age_days: mc.community_max_age_days
+					community_max_age_days: mc.community_max_age_days,
+					...pay
 				});
 			}
 			summary.matchConfigUpdated = true;
@@ -309,6 +320,10 @@ export async function importSettings(
 			}
 		}
 	});
+
+	// After the commit: the refresh reads through its own connection, and new
+	// asks change whether every match pays them.
+	if (summary.salaryUpdated) await refreshPayFitQuietly({ profileId }, 'a settings import');
 
 	return summary;
 }

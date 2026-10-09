@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { match_config, profiles } from '$lib/server/db/schema';
 import { getSelectedProfileId } from '../../profile/utils';
 import { getFxRates } from '$lib/server/salary/fx';
+import { refreshPayFitQuietly } from '$lib/server/salary/pay-fit-store';
 import { buildNormalizeMap, JOB_TYPES } from '$lib/data/job-taxonomy';
 import {
 	normalizeAdjustments,
@@ -89,6 +90,8 @@ export const actions: Actions = {
 			.update(profiles)
 			.set({ salary_employed: settings.value, date_updated: new Date() })
 			.where(eq(profiles.id, profileId));
+		// The job list and the digest compare every match with the ask.
+		await refreshPayFitQuietly({ profileId }, 'a salary save');
 		return { success: true };
 	},
 
@@ -103,6 +106,7 @@ export const actions: Actions = {
 			.update(profiles)
 			.set({ salary_freelance: settings.value, date_updated: new Date() })
 			.where(eq(profiles.id, profileId));
+		await refreshPayFitQuietly({ profileId }, 'a freelance rate save');
 		return { success: true };
 	},
 
@@ -117,6 +121,7 @@ export const actions: Actions = {
 			.update(profiles)
 			.set({ salary_adjustments: settings.value ?? {}, date_updated: new Date() })
 			.where(eq(profiles.id, profileId));
+		await refreshPayFitQuietly({ profileId }, 'an adjustments save');
 		return { success: true };
 	}
 };

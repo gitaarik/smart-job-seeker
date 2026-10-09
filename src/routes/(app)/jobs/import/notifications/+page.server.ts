@@ -2,11 +2,12 @@ import type { PageServerLoad } from './$types';
 import { dbDirect as db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { profiles, users } from '$lib/server/db/schema';
+import { readPayFilter } from '$lib/server/salary/pay-fit-store';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { profileId, user } = await parent();
 
-	const [profile, userRecord] = await Promise.all([
+	const [profile, userRecord, pay] = await Promise.all([
 		db.query.profiles.findFirst({
 			where: eq(profiles.id, profileId),
 			columns: {
@@ -24,7 +25,9 @@ export const load: PageServerLoad = async ({ parent }) => {
 		db.query.users.findFirst({
 			where: eq(users.id, user.id),
 			columns: { timezone: true, email: true }
-		})
+		}),
+		// Match Config's, not the digest's: the page only says what it does here.
+		readPayFilter(profileId)
 	]);
 
 	// Only use timezone values that are valid IANA identifiers
@@ -44,6 +47,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 		) ?? null;
 
 	return {
+		pay,
 		emailDigest: {
 			enabled: profile?.email_digest_enabled ?? false,
 			frequency_days: profile?.email_digest_frequency_days ?? 7,

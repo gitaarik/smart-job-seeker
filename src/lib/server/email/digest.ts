@@ -7,6 +7,7 @@
 import { sendEmail } from './index';
 import { getScoreGradient } from '$lib/score-colors';
 import { formatWorkLocation, formatJobType, formatExperienceLevel } from '$lib/format';
+import { PAY_VERDICT_LABELS, type PayVerdict } from '$lib/salary/pay-fit';
 
 export interface DigestJob {
 	id: number;
@@ -19,6 +20,8 @@ export interface DigestJob {
 	salary_max: number | null;
 	salary_currency: string | null;
 	salary_period: string | null;
+	/** Whether it pays their ask, when that could be read. */
+	pay: PayVerdict | null;
 	work_location: string[] | null;
 	job_types: string[] | null;
 	experience_levels: string[] | null;
@@ -35,7 +38,15 @@ export interface DigestOptions {
 	jobs: DigestJob[];
 	minScore: number;
 	appUrl: string;
+	/** New matches left out for paying below the ask (Match Config's setting). */
+	belowAsk?: number;
 }
+
+const PAY_PILL_COLORS: Record<PayVerdict, [string, string]> = {
+	meets: ['#dcfce7', '#15803d'],
+	close: ['#fef3c7', '#b45309'],
+	below: ['#fee2e2', '#b91c1c']
+};
 
 function formatSalary(
 	min: number | null,
@@ -143,7 +154,7 @@ function buildDigestHtml(opts: DigestOptions): string {
               <!-- Category pills -->
               ${pills.length > 0 ? `<div style="margin-bottom: 6px;">${pills.join('')}</div>` : ''}
               <!-- Salary -->
-              ${salary ? `<div style="font-size: 13px; color: #16a34a; font-weight: 500;">${escapeHtml(salary)}</div>` : ''}
+              ${salary ? `<div style="font-size: 13px; color: #16a34a; font-weight: 500;">${escapeHtml(salary)}${job.pay ? ` ${pillHtml(PAY_VERDICT_LABELS[job.pay], ...PAY_PILL_COLORS[job.pay])}` : ''}</div>` : ''}
             </td>
             <td style="vertical-align: top; text-align: right; width: 50px; padding-left: 12px;">
               <div style="width: 48px; height: 48px; border-radius: 8px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; background-color: ${scoreColors.bg}; color: ${scoreColors.text};${scoreColors.glow ? ` box-shadow: ${scoreColors.glow};` : ''}">
@@ -214,6 +225,14 @@ function buildDigestHtml(opts: DigestOptions): string {
       <p style="margin: 8px 0 0; color: #bfdbfe; font-size: 14px;">
         ${opts.jobs.length} job${opts.jobs.length === 1 ? '' : 's'} matching score ${opts.minScore}+
       </p>
+      ${
+				opts.belowAsk
+					? `<p style="margin: 6px 0 0; color: #bfdbfe; font-size: 12px;">
+        ${opts.belowAsk} more paying below your ask ${opts.belowAsk === 1 ? 'was' : 'were'} left out.
+        <a href="${opts.appUrl}/jobs?minScore=${opts.minScore}&amp;pay=below" style="color: #ffffff;">See ${opts.belowAsk === 1 ? 'it' : 'them'}</a>
+      </p>`
+					: ''
+			}
     </div>
 
     <!-- Job cards -->
@@ -252,6 +271,11 @@ export async function sendDigestEmail(opts: DigestOptions): Promise<void> {
 		subject,
 		html,
 		type: 'digest',
-		metadata: { profileName: opts.profileName, jobCount: opts.jobs.length, minScore: opts.minScore }
+		metadata: {
+			profileName: opts.profileName,
+			jobCount: opts.jobs.length,
+			minScore: opts.minScore,
+			belowAsk: opts.belowAsk ?? 0
+		}
 	});
 }

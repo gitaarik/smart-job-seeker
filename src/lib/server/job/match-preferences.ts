@@ -39,6 +39,8 @@ export interface MatchPreferenceValues {
 	remote_only?: boolean;
 	match_community_jobs?: boolean;
 	community_max_age_days?: number | null;
+	hide_below_ask?: boolean;
+	below_ask_tolerance_pct?: number;
 }
 
 /** What a read gives back: every column, with the list ones never null. */
@@ -51,6 +53,8 @@ export interface MatchPreferences {
 	remote_only: boolean;
 	match_community_jobs: boolean;
 	community_max_age_days: number | null;
+	hide_below_ask: boolean;
+	below_ask_tolerance_pct: number;
 }
 
 function shape(row: typeof match_config.$inferSelect): MatchPreferences {
@@ -62,7 +66,9 @@ function shape(row: typeof match_config.$inferSelect): MatchPreferences {
 		locations: (row.locations as string[] | null) ?? [],
 		remote_only: row.remote_only,
 		match_community_jobs: row.match_community_jobs,
-		community_max_age_days: row.community_max_age_days ?? null
+		community_max_age_days: row.community_max_age_days ?? null,
+		hide_below_ask: row.hide_below_ask,
+		below_ask_tolerance_pct: row.below_ask_tolerance_pct
 	};
 }
 
@@ -111,7 +117,13 @@ export async function writeMatchPreferences(
 		const list = values[key];
 		data[key] = list && list.length > 0 ? list : null;
 	}
-	for (const key of ['remote_only', 'match_community_jobs', 'community_max_age_days'] as const) {
+	for (const key of [
+		'remote_only',
+		'match_community_jobs',
+		'community_max_age_days',
+		'hide_below_ask',
+		'below_ask_tolerance_pct'
+	] as const) {
 		if (values[key] === undefined) continue;
 		data[key] = values[key];
 	}

@@ -86,7 +86,9 @@ export async function buildSettingsExport(
 				locations: mc.locations,
 				match_community_jobs: mc.match_community_jobs,
 				remote_only: mc.remote_only,
-				community_max_age_days: mc.community_max_age_days
+				community_max_age_days: mc.community_max_age_days,
+				hide_below_ask: mc.hide_below_ask,
+				below_ask_tolerance_pct: mc.below_ask_tolerance_pct
 			} satisfies ExportedMatchConfig;
 		}
 	}

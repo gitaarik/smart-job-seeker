@@ -105,8 +105,18 @@ describe('copyJobMatches', () => {
 		const { sql } = renderSql(mockQueryRawDirect.mock.calls[0][0]);
 		// ai_chat_scoring slot: between llm_prompt and matched_skills.
 		expect(sql).toMatch(/src\.llm_prompt,\s*NULL,\s*src\.matched_skills/);
-		// rescore_requested_at slot: last in the select list.
-		expect(sql).toMatch(/src\.score_factors,\s*NULL\s*FROM job_matches src/);
+		// rescore_requested_at slot: right after the factors, before the pay columns.
+		expect(sql).toMatch(/src\.score_factors,\s*NULL,\s*src\.pay_ratio/);
+	});
+
+	it('keeps the pay ratio, which the asks the clone shares would reproduce', async () => {
+		mockQueryRawDirect.mockResolvedValueOnce([]);
+
+		await copyJobMatches(5, 9);
+
+		const { sql } = renderSql(mockQueryRawDirect.mock.calls[0][0]);
+		expect(sql).toMatch(/rescore_requested_at,\s*pay_ratio,\s*pay_ask\s*\)/);
+		expect(sql).toMatch(/src\.pay_ratio,\s*src\.pay_ask\s*FROM job_matches src/);
 	});
 
 	it("keeps Jev's factors, which a match's text is written from", async () => {

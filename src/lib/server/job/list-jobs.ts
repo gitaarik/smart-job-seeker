@@ -13,6 +13,14 @@ import { and, eq, inArray, type SQL, sql } from 'drizzle-orm';
 import { dbDirect as db, queryRaw, sqlJoin } from '$lib/server/db';
 import { job_matches, job_statuses, jobs as jobsTable, match_config } from '$lib/server/db/schema';
 import { buildVisibilityScope } from '$lib/server/job/match-counts';
+import {
+	effectivePayMode,
+	parsePayFilterMode,
+	payFilterJobSql,
+	payFilterSql,
+	readPayFilter,
+	type PayFilterMode
+} from '$lib/server/salary/pay-fit-store';
 
 export interface JobListFilters {
 	status: string;
@@ -24,6 +32,19 @@ export interface JobListFilters {
 	datePosted: string;
 	importedBy: string;
 	sort: string;
+	/** `any`, `fit` or `below`; empty follows the profile's Match Config. */
+	pay: string;
+}
+
+/** How the list treated pay, for the filter control and the "hidden" line. */
+export interface JobListPay {
+	mode: PayFilterMode;
+	/** True when the mode is the profile's standing choice rather than the URL's. */
+	isDefault: boolean;
+	tolerancePct: number;
+	hasAsks: boolean;
+	/** Jobs the `fit` mode left out, counted on the first page only. */
+	hidden: number | null;
 }
 
 export interface JobListResult {
@@ -34,6 +55,7 @@ export interface JobListResult {
 	savedJobIds: number[];
 	rejectedJobIds: number[];
 	totalCount: number;
+	pay: JobListPay;
 }
 
 export const JOB_LIST_PAGE_SIZE = 20;
@@ -67,7 +89,8 @@ export function parseJobListFilters(url: URL): JobListFilters {
 		minScore: url.searchParams.get('minScore') || '',
 		datePosted: url.searchParams.get('datePosted') || '',
 		importedBy: url.searchParams.get('importedBy') || '',
-		sort: url.searchParams.get('sort') || ''
+		sort: url.searchParams.get('sort') || '',
+		pay: url.searchParams.get('pay') || ''
 	};
 }
 
@@ -149,6 +172,26 @@ export async function listJobs(
 ): Promise<JobListResult> {
 	const offset = (page - 1) * limit;
 	const topSort = filters.sort === 'top';
+
+	// Pay is filtered on the stored ratio (salary/pay-fit-store.ts). With no
+	// `pay` in the URL the list follows Match Config, and says how many jobs that
+	// left out, so a default that hides things is never a silent one. Not on a
+	// Saved or Not interested view, though: a job they marked themselves is
+	// theirs to see, whatever it pays.
+	const paySetting = await readPayFilter(profileId);
+	const requestedPay = parsePayFilterMode(filters.pay);
+	const payMode = effectivePayMode(
+		requestedPay,
+		filters.status ? { hideBelowAsk: false } : paySetting
+	);
+	const pay: JobListPay = {
+		mode: payMode,
+		isDefault: requestedPay === null,
+		tolerancePct: paySetting.tolerancePct,
+		hasAsks: paySetting.hasAsks,
+		hidden: null
+	};
+	const countHidden = payMode === 'fit' && offset === 0;
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let jobs: any[] = [];
@@ -280,8 +323,7 @@ export async function listJobs(
 		// Top matches with no explicit threshold still excludes "scored, no match".
 		const effectiveScoreFilter = topSort && !filters.minScore ? sql`jm.score > 0` : scoreFilter;
 
-		const matchRows = await queryRaw<{ id: number; cnt: bigint }>(sql`
-      SELECT jm.id, COUNT(*) OVER() as cnt
+		const matchesWhere = sql`
       FROM job_matches jm
       JOIN jobs j ON j.id = jm.job_id
       ${statusJoin}
@@ -293,10 +335,23 @@ export async function listJobs(
       AND ${dateFilter}
       AND ${jsonFilter}
       AND ${importedByFilter}
+    `;
+		const matchRows = await queryRaw<{ id: number; cnt: bigint }>(sql`
+      SELECT jm.id, COUNT(*) OVER() as cnt
+      ${matchesWhere}
+      AND ${payFilterSql(payMode, paySetting.tolerancePct)}
       ORDER BY ${orderBy}
       LIMIT ${limit}
       OFFSET ${offset}
     `);
+		if (countHidden) {
+			const [hidden] = await queryRaw<{ n: bigint }>(sql`
+        SELECT COUNT(*) AS n
+        ${matchesWhere}
+        AND ${payFilterSql('below', paySetting.tolerancePct)}
+      `);
+			pay.hidden = Number(hidden?.n ?? 0);
+		}
 
 		totalCount = matchRows.length > 0 ? Number(matchRows[0].cnt) : 0;
 		const matchIds = matchRows.map((r) => r.id);
@@ -341,7 +396,9 @@ export async function listJobs(
 						matched_skills: m.matched_skills,
 						matched_skill_details: m.matched_skill_details,
 						adjacent_skills: m.adjacent_skills,
-						match_summary: m.match_summary
+						match_summary: m.match_summary,
+						pay_ratio: m.pay_ratio,
+						pay_ask: m.pay_ask
 					}
 				])
 			);
@@ -350,18 +407,30 @@ export async function listJobs(
 		}
 	} else {
 		// "all" — query the jobs table directly.
-		const jobRows = await queryRaw<{ id: number; cnt: bigint }>(sql`
-      SELECT j.id, COUNT(*) OVER() as cnt
+		const jobsWhere = sql`
       FROM jobs j
       WHERE ${searchFilter}
       AND ${platformFilter}
       AND ${dateFilter}
       AND ${jsonFilter}
       AND ${importedByFilter}
+    `;
+		const jobRows = await queryRaw<{ id: number; cnt: bigint }>(sql`
+      SELECT j.id, COUNT(*) OVER() as cnt
+      ${jobsWhere}
+      AND ${payFilterJobSql(payMode, paySetting.tolerancePct, profileId)}
       ORDER BY ${DATE_ORDER}
       LIMIT ${limit}
       OFFSET ${offset}
     `);
+		if (countHidden) {
+			const [hidden] = await queryRaw<{ n: bigint }>(sql`
+        SELECT COUNT(*) AS n
+        ${jobsWhere}
+        AND ${payFilterJobSql('below', paySetting.tolerancePct, profileId)}
+      `);
+			pay.hidden = Number(hidden?.n ?? 0);
+		}
 
 		totalCount = jobRows.length > 0 ? Number(jobRows[0].cnt) : 0;
 		const jobIds = jobRows.map((r) => r.id);
@@ -386,7 +455,9 @@ export async function listJobs(
 					matched_skills: true,
 					matched_skill_details: true,
 					adjacent_skills: true,
-					match_summary: true
+					match_summary: true,
+					pay_ratio: true,
+					pay_ask: true
 				}
 			});
 
@@ -402,5 +473,5 @@ export async function listJobs(
 		}
 	}
 
-	return { jobs, matchesByJobId, savedJobIds, rejectedJobIds, totalCount };
+	return { jobs, matchesByJobId, savedJobIds, rejectedJobIds, totalCount, pay };
 }

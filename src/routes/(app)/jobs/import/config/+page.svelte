@@ -11,6 +11,7 @@
 	import { resolve } from '$app/paths';
 	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
+	import { formatCurrency } from '$lib/salary/conversion';
 
 	let { data }: { data: PageData } = $props();
 
@@ -152,6 +153,48 @@
 		})
 	);
 
+	// The pay switch and its tolerance save as one PATCH, like the community pair.
+	type PayConfig = { enabled: boolean; tolerancePct: number };
+	let hideBelowAsk = $state<boolean>(loaded.config.hide_below_ask);
+	let belowAskTolerance = $state<number>(loaded.config.below_ask_tolerance_pct);
+	const payField = autoSaveField<PayConfig>({
+		armOnInteraction: true,
+		initial: {
+			enabled: loaded.config.hide_below_ask,
+			tolerancePct: loaded.config.below_ask_tolerance_pct
+		},
+		save: (v, prev) => {
+			const changed = diffPayload(
+				{ hide_below_ask: v.enabled, below_ask_tolerance_pct: v.tolerancePct },
+				{ hide_below_ask: prev.enabled, below_ask_tolerance_pct: prev.tolerancePct }
+			);
+			if (Object.keys(changed).length === 0) return Promise.resolve();
+			return patchConfig(changed);
+		},
+		onSaved: (v) => {
+			hideBelowAsk = v.enabled;
+			belowAskTolerance = v.tolerancePct;
+		},
+		equal: recordsEqual
+	});
+	$effect(() => payField.set({ enabled: hideBelowAsk, tolerancePct: belowAskTolerance }));
+
+	const PER: Record<string, string> = {
+		hour: 'an hour',
+		day: 'a day',
+		month: 'a month',
+		year: 'a year'
+	};
+	type AskSummary = { amount: number; currency: string; per: string } | null;
+	const askText = (ask: AskSummary, as: string) =>
+		ask ? `${formatCurrency(ask.amount, ask.currency)} ${PER[ask.per]} ${as}` : null;
+	/** "€8,700 a month as a salary, €83 an hour freelance": what "my ask" means here. */
+	const asksText = $derived(
+		[askText(data.asks.employed, 'as a salary'), askText(data.asks.freelance, 'freelance')]
+			.filter(Boolean)
+			.join(', ')
+	);
+
 	// String proxy for RadioGroup binding
 	let communityMaxAgeDaysStr = $derived(
 		communityMaxAgeDays === null ? 'all' : String(communityMaxAgeDays)
@@ -239,6 +282,7 @@
 		experienceLevelsField.arm();
 		locationsField.arm();
 		communityField.arm();
+		payField.arm();
 	}}
 >
 	<p class="text-sm text-[var(--dash-text-secondary)]">
@@ -456,6 +500,70 @@
 		{#if experienceLevelsField.status !== 'idle'}
 			<div class="mt-3">
 				<AutoSaveIndicator field={experienceLevelsField} />
+			</div>
+		{/if}
+	</Card>
+
+	<!-- Pay -->
+	<Card padding="responsive">
+		<ToggleSwitch
+			bind:checked={hideBelowAsk}
+			label="Hide jobs that pay below my ask"
+			description="Compares the most a job says it pays with your ask: a salary with your salary, a freelance or contract rate with your rate. Applies to Job Matches, Home and the email digest; the job list can still show them. Jobs that don't say what they pay are always shown."
+		/>
+		<p class="mt-3 text-xs text-[var(--dash-text-muted)]">
+			{#if asksText}
+				Your ask: {asksText}.
+			{:else}
+				You haven't set an ask yet, so nothing is hidden.
+			{/if}
+			<a
+				href={resolve('/(app)/applications/salary')}
+				class="text-[var(--dash-primary)] hover:underline"
+				>{asksText ? 'Change it on Salary Prep' : 'Set one on Salary Prep'}</a
+			>.
+		</p>
+		{#if hideBelowAsk}
+			<div class="mt-4 border-t border-[var(--dash-border)] pt-4">
+				<p class="mb-2 text-xs text-[var(--dash-text-muted)]">
+					How far below your ask a job may pay and still show:
+				</p>
+				<div class="flex flex-wrap gap-2">
+					{#each data.options.belowAskTolerances as pct (pct)}
+						<button
+							type="button"
+							onclick={() => (belowAskTolerance = pct)}
+							class="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors {belowAskTolerance ===
+							pct
+								? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+								: 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
+						>
+							<span
+								class="flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full border {belowAskTolerance ===
+								pct
+									? 'border-[var(--dash-primary)]'
+									: 'border-[var(--dash-border)]'}"
+							>
+								{#if belowAskTolerance === pct}
+									<span class="h-2 w-2 rounded-full bg-[var(--dash-primary)]"></span>
+								{/if}
+							</span>
+							{pct}%
+						</button>
+					{/each}
+				</div>
+				{#if data.belowAsk.compared > 0}
+					{@const hidden = data.belowAsk.below[belowAskTolerance] ?? 0}
+					<p class="mt-2 text-xs text-[var(--dash-text-muted)]">
+						Right now this hides {hidden.toLocaleString()} of the {data.belowAsk.compared.toLocaleString()}
+						matched {data.belowAsk.compared === 1 ? 'job' : 'jobs'} whose pay could be compared.
+					</p>
+				{/if}
+			</div>
+		{/if}
+		{#if payField.status !== 'idle'}
+			<div class="mt-3">
+				<AutoSaveIndicator field={payField} />
 			</div>
 		{/if}
 	</Card>

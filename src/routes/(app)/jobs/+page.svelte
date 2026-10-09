@@ -6,6 +6,7 @@
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { navigating } from '$app/stores';
 	import { tick } from 'svelte';
 	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
@@ -21,6 +22,7 @@
 		faGlobe,
 		faListCheck,
 		faLocationDot,
+		faMoneyBillWave,
 		faSearch,
 		faSitemap,
 		faSync,
@@ -34,6 +36,7 @@
 	import JobCard from './components/JobCard.svelte';
 	import SkillPill from './components/SkillPill.svelte';
 	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
+	import { payBadge } from '$lib/salary/pay-fit';
 	import ConfirmModal from '../profile/components/ConfirmModal.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -138,6 +141,7 @@
 		const m = matchesByJobId[jobId];
 		if (!m || m.score === 0) return null;
 		return {
+			pay: payBadge(m.pay_ratio, m.pay_ask, data.pay.tolerancePct),
 			id: m.id,
 			score: m.score,
 			skill_match_percentage: m.skill_match_percentage,
@@ -182,6 +186,7 @@
 	let minScoreFilter = $state('');
 	let datePostedFilter = $state('');
 	let sortFilter = $state('');
+	let payFilter = $state('');
 	let expandedId = $state<number | null>(null);
 	let searchInputEl: HTMLInputElement;
 	let openDropdown = $state<string | null>(null);
@@ -197,6 +202,7 @@
 		minScoreFilter = filters.minScore;
 		datePostedFilter = filters.datePosted;
 		sortFilter = filters.sort;
+		payFilter = filters.pay;
 		expandedId = null;
 	});
 
@@ -239,6 +245,7 @@
 		const dp = overrides.datePosted ?? datePostedFilter;
 		const ib = overrides.importedBy ?? importedByString;
 		const srt = overrides.sort ?? sortFilter;
+		const pay = overrides.pay ?? payFilter;
 		const pg = overrides.page ?? '1';
 
 		if (st) params.set('status', st);
@@ -250,6 +257,7 @@
 		if (dp) params.set('datePosted', dp);
 		if (ib) params.set('importedBy', ib);
 		if (srt) params.set('sort', srt);
+		if (pay) params.set('pay', pay);
 		if (pg !== '1') params.set('page', pg);
 
 		return `?${params.toString()}`;
@@ -327,6 +335,18 @@
 		applyFilter({ datePosted: value });
 	}
 
+	function setPay(value: string) {
+		payFilter = value;
+		applyFilter({ pay: value });
+	}
+
+	/** Short names for the pay modes, as the filter button shows them. */
+	const PAY_MODE_LABELS: Record<string, string> = {
+		any: 'Any pay',
+		fit: 'Hide below my ask',
+		below: 'Only below my ask'
+	};
+
 	function toggleDropdown(name: string) {
 		openDropdown = openDropdown === name ? null : name;
 	}
@@ -348,6 +368,7 @@
 		minScoreFilter = '';
 		datePostedFilter = '';
 		sortFilter = '';
+		payFilter = '';
 		goto(
 			// eslint-disable-next-line svelte/no-navigation-without-resolve
 			buildUrl({
@@ -360,6 +381,7 @@
 				datePosted: '',
 				importedBy: '',
 				sort: '',
+				pay: '',
 				page: '1'
 			})
 		);
@@ -398,7 +420,8 @@
 			filters.minScore ||
 			filters.datePosted ||
 			filters.importedBy ||
-			filters.sort
+			filters.sort ||
+			filters.pay
 	);
 
 	// Empty state messages
@@ -651,6 +674,76 @@
 										<span class="text-[var(--dash-text)]">{opt.label}</span>
 									</button>
 								{/each}
+							</div>
+						{/if}
+					</div>
+
+					<!-- Pay: follows Match Config unless the URL says otherwise -->
+					<div class="relative" data-dropdown="pay">
+						<button
+							type="button"
+							onclick={() => toggleDropdown('pay')}
+							class="
+                flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition-colors {data
+								.pay.mode !== 'any'
+								? 'border-[var(--dash-primary)]/30 bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+								: 'border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-border)]'}
+              "
+						>
+							<FontAwesomeIcon icon={faMoneyBillWave} class="h-3 w-3 opacity-60" />
+							{data.pay.mode === 'any' ? 'Pay' : PAY_MODE_LABELS[data.pay.mode]}
+							{#if data.pay.mode === 'any'}
+								<FontAwesomeIcon icon={faChevronDown} class="h-2.5 w-2.5 opacity-50" />
+							{/if}
+						</button>
+						{#if openDropdown === 'pay'}
+							<div
+								class="absolute top-full left-0 z-20 mt-1 w-56 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] py-1 shadow-lg"
+							>
+								{#each ['any', 'fit', 'below'] as value (value)}
+									<button
+										type="button"
+										onclick={() => {
+											setPay(value);
+											openDropdown = null;
+										}}
+										class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs transition-colors hover:bg-[var(--dash-bg)]"
+									>
+										<span
+											class="
+                        flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border {data
+												.pay.mode === value
+												? 'border-[var(--dash-primary)]'
+												: 'border-[var(--dash-border)]'}
+                      "
+										>
+											{#if data.pay.mode === value}
+												<span class="h-2 w-2 rounded-full bg-[var(--dash-primary)]"></span>
+											{/if}
+										</span>
+										<span class="text-[var(--dash-text)]">{PAY_MODE_LABELS[value]}</span>
+									</button>
+								{/each}
+								<div class="my-1 border-t border-[var(--dash-border)]"></div>
+								<p class="px-3 py-1.5 text-[11px] leading-snug text-[var(--dash-text-muted)]">
+									{#if data.pay.hasAsks}
+										Compared with your ask on
+										<a
+											href={resolve('/(app)/applications/salary')}
+											class="text-[var(--dash-primary)] hover:underline">Salary Prep</a
+										>. Jobs that don't state pay always show. The default is in
+										<a
+											href={resolve('/(app)/jobs/import/config')}
+											class="text-[var(--dash-primary)] hover:underline">Match Config</a
+										>.
+									{:else}
+										Set an ask on
+										<a
+											href={resolve('/(app)/applications/salary')}
+											class="text-[var(--dash-primary)] hover:underline">Salary Prep</a
+										> to use this.
+									{/if}
+								</p>
 							</div>
 						{/if}
 					</div>
@@ -1006,6 +1099,27 @@
 				<span class="mx-1">•</span>
 				showing {jobs.length.toLocaleString()}
 			{/if}
+		{/if}
+		{#if data.pay.hidden}
+			<p class="mt-1 text-xs">
+				{data.pay.hidden.toLocaleString()}
+				{data.pay.hidden === 1 ? 'job pays' : 'jobs pay'} below your ask and
+				{data.pay.hidden === 1 ? 'is' : 'are'} hidden.
+				<button
+					type="button"
+					onclick={() => setPay('any')}
+					class="text-[var(--dash-primary)] hover:underline">Show them</button
+				>
+				{#if data.pay.isDefault}
+					<span class="text-[var(--dash-text-muted)]"
+						>(your default in
+						<a
+							href={resolve('/(app)/jobs/import/config')}
+							class="text-[var(--dash-primary)] hover:underline">Match Config</a
+						>)</span
+					>
+				{/if}
+			</p>
 		{/if}
 	</div>
 

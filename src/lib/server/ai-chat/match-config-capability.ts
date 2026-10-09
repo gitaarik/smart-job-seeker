@@ -33,6 +33,7 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { match_config } from '$lib/server/db/schema';
 import type { CapabilityDef, CapabilityTarget } from './capabilities';
+import { MAX_BELOW_ASK_TOLERANCE_PCT } from '$lib/salary/pay-fit';
 import {
 	EXPERIENCE_LEVEL_OPTIONS,
 	JOB_TYPE_OPTIONS,
@@ -62,7 +63,9 @@ const FIELD = {
 	locations: 'match.locations',
 	remoteOnly: 'match.remote_only',
 	communityJobs: 'match.match_community_jobs',
-	communityMaxAge: 'match.community_max_age_days'
+	communityMaxAge: 'match.community_max_age_days',
+	hideBelowAsk: 'match.hide_below_ask',
+	belowAskTolerance: 'match.below_ask_tolerance_pct'
 } as const;
 
 /** `["Senior", "Lead"]`, for a contract that has to be exact about strings. */
@@ -129,7 +132,9 @@ const editMatchConfig: CapabilityDef = {
 			[FIELD.locations]: config.locations,
 			[FIELD.remoteOnly]: config.remote_only,
 			[FIELD.communityJobs]: config.match_community_jobs,
-			[FIELD.communityMaxAge]: config.community_max_age_days
+			[FIELD.communityMaxAge]: config.community_max_age_days,
+			[FIELD.hideBelowAsk]: config.hide_below_ask,
+			[FIELD.belowAskTolerance]: config.below_ask_tolerance_pct
 		};
 	},
 
@@ -147,7 +152,9 @@ const editMatchConfig: CapabilityDef = {
 		[FIELD.locations]: 'stringArray',
 		[FIELD.remoteOnly]: 'boolean',
 		[FIELD.communityJobs]: 'boolean',
-		[FIELD.communityMaxAge]: 'int'
+		[FIELD.communityMaxAge]: 'int',
+		[FIELD.hideBelowAsk]: 'boolean',
+		[FIELD.belowAskTolerance]: 'int'
 	},
 
 	contract: `These are the applicant's standing preferences for which jobs get
@@ -166,6 +173,10 @@ about one posting.
   just the ones their own searches found.
 - "${FIELD.communityMaxAge}" — how many days old a community job may be. Only
   meaningful while the one above is true.
+- "${FIELD.hideBelowAsk}" — true hides jobs paying below their ask, which is
+  set on Salary Prep (/applications/salary), not here: for a figure, propose
+  this and send them there.
+- "${FIELD.belowAskTolerance}" — percent below the ask still shown, 0-${MAX_BELOW_ASK_TOLERANCE_PCT}.
 
 The three closed lists must use these exact strings, capitals included. A value
 outside them is refused, and would match nothing if it were not.
@@ -176,10 +187,10 @@ freelance" means sending every existing type plus "Freelance". Omit a field
 entirely to leave it alone.
 
 There is nothing else in this config. It cannot exclude an industry, a domain,
-a company or a keyword, and it has no salary floor. If they ask for one of
-those, say plainly that this is not something the app can filter on yet. Do not
-propose it as a location, do not fold it into another field, and do not tell
-them to go and set it somewhere — there is nowhere.`,
+a company or a keyword. If they ask for one of those, say plainly that this is
+not something the app can filter on yet. Do not propose it as a location, do
+not fold it into another field, and do not tell them to go and set it
+somewhere — there is nowhere.`,
 
 	/**
 	 * Every list is replaced whole, so the four move together as one state and a
@@ -199,6 +210,18 @@ them to go and set it somewhere — there is nowhere.`,
 		const age = fields[FIELD.communityMaxAge];
 		if (age !== undefined && age !== null && (Number(age) < 1 || Number(age) > 365)) {
 			return { ok: false, error: `${FIELD.communityMaxAge} must be between 1 and 365 days` };
+		}
+
+		const tolerance = fields[FIELD.belowAskTolerance];
+		if (
+			tolerance !== undefined &&
+			tolerance !== null &&
+			!(Number(tolerance) >= 0 && Number(tolerance) <= MAX_BELOW_ASK_TOLERANCE_PCT)
+		) {
+			return {
+				ok: false,
+				error: `${FIELD.belowAskTolerance} must be between 0 and ${MAX_BELOW_ASK_TOLERANCE_PCT}`
+			};
 		}
 
 		return { ok: true };
@@ -232,7 +255,7 @@ function patchFrom(fields: Record<string, unknown>): MatchPreferenceValues {
 	}
 	if (FIELD.workLocation in fields) patch.work_location = listOf(fields[FIELD.workLocation]);
 	if (FIELD.locations in fields) patch.locations = listOf(fields[FIELD.locations]);
-	// The two booleans are notNull columns: a coerced null means the model sent
+	// The booleans are notNull columns: a coerced null means the model sent
 	// something unreadable, which is "no opinion", not "turn it off".
 	if (typeof fields[FIELD.remoteOnly] === 'boolean') {
 		patch.remote_only = fields[FIELD.remoteOnly] as boolean;
@@ -243,6 +266,14 @@ function patchFrom(fields: Record<string, unknown>): MatchPreferenceValues {
 	if (FIELD.communityMaxAge in fields) {
 		const age = fields[FIELD.communityMaxAge];
 		patch.community_max_age_days = age === null || age === undefined ? null : Number(age);
+	}
+	if (typeof fields[FIELD.hideBelowAsk] === 'boolean') {
+		patch.hide_below_ask = fields[FIELD.hideBelowAsk] as boolean;
+	}
+	// A notNull column too: no number means no opinion, not zero.
+	const tolerance = fields[FIELD.belowAskTolerance];
+	if (tolerance !== null && tolerance !== undefined && Number.isFinite(Number(tolerance))) {
+		patch.below_ask_tolerance_pct = Math.round(Number(tolerance));
 	}
 	return patch;
 }

@@ -26,6 +26,12 @@ The page opens with the asks your [Match Config](/jobs/import/config) looks
 for. If you only look for jobs, you get the salary; add a freelance rate whenever
 you want to compare.
 
+Your asks also do something outside this page: Match Config can **hide jobs that
+pay below them**, from your job list, your overview and the email digest. A job
+paid as a salary is held to your salary ask and one paid as a rate to your
+freelance rate, so set the ones you would actually take. See
+[Matching & alerts](/guide/matching#pay).
+
 ## What each one leaves you
 
 Each ask shows its **take-home a month**, worked out from a few assumptions you

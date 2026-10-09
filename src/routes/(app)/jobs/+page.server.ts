@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
 	const limit = JOB_LIST_PAGE_SIZE;
 
-	const { jobs, matchesByJobId, savedJobIds, rejectedJobIds, totalCount } = await listJobs(
+	const { jobs, matchesByJobId, savedJobIds, rejectedJobIds, totalCount, pay } = await listJobs(
 		profileId,
 		filters,
 		page,
@@ -56,6 +56,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		rejectedJobIds,
 		matchesByJobId,
 		profileSkillLevels,
+		pay,
 		filters: {
 			status: filters.status,
 			search: filters.search,
@@ -65,7 +66,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 			minScore: filters.minScore,
 			datePosted: filters.datePosted,
 			importedBy: filters.importedBy,
-			sort: filters.sort
+			sort: filters.sort,
+			pay: filters.pay
 		}
 	};
 };

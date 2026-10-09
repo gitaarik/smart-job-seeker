@@ -1,5 +1,6 @@
 <script lang="ts">
 	import JobCard from './JobCard.svelte';
+	import type { PayBadge } from '$lib/salary/pay-fit';
 
 	interface Job {
 		id: number;
@@ -26,6 +27,7 @@
 		matched_skill_details?: unknown;
 		adjacent_skills?: unknown;
 		match_summary?: string | null;
+		pay?: PayBadge | null;
 	}
 
 	interface MatchItem {
@@ -43,6 +45,8 @@
 		matched_skill_details?: unknown;
 		adjacent_skills?: unknown;
 		skill_match_percentage: number | null;
+		/** Optional for the same reason: only a caller that knows the tolerance has one. */
+		pay?: PayBadge | null;
 		job: Job;
 	}
 
@@ -112,7 +116,8 @@
 			matched_skills: item.matched_skills as string[] | null,
 			matched_skill_details: item.matched_skill_details,
 			adjacent_skills: item.adjacent_skills,
-			match_summary: item.match_summary
+			match_summary: item.match_summary,
+			pay: item.pay
 		};
 	}
 </script>

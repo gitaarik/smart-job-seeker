@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { LOGIN_MODES } from '$lib/import-tasks/sign-in';
+import { MAX_BELOW_ASK_TOLERANCE_PCT } from '$lib/salary/pay-fit';
 import { error as httpError } from '@sveltejs/kit';
 
 const trimmedString = (maxLen = 255) => z.string().trim().max(maxLen);
@@ -178,7 +179,9 @@ export const jobPreferencesSchema = z.object({
 	locations: z.array(z.string()).optional().nullable(),
 	remote_only: z.boolean().optional(),
 	match_community_jobs: z.boolean().optional(),
-	community_max_age_days: z.number().int().positive().nullable().optional()
+	community_max_age_days: z.number().int().positive().nullable().optional(),
+	hide_below_ask: z.boolean().optional(),
+	below_ask_tolerance_pct: z.number().int().min(0).max(MAX_BELOW_ASK_TOLERANCE_PCT).optional()
 });
 
 export const jobPreferencesPatchSchema = z.object({
@@ -192,7 +195,9 @@ export const jobPreferencesPatchSchema = z.object({
 	locations: z.array(z.string()).optional().nullable(),
 	remote_only: z.boolean().optional(),
 	match_community_jobs: z.boolean().optional(),
-	community_max_age_days: z.number().int().positive().nullable().optional()
+	community_max_age_days: z.number().int().positive().nullable().optional(),
+	hide_below_ask: z.boolean().optional(),
+	below_ask_tolerance_pct: z.number().int().min(0).max(MAX_BELOW_ASK_TOLERANCE_PCT).optional()
 });
 
 // Platform create
