@@ -3,8 +3,8 @@
 	 * The technologies under one role, as chips that each save themselves.
 	 *
 	 * Shaped like the skills on the Skills page: a chip opens a small editor with
-	 * its name, the Resume / CV / Site switches and its version tags, and a
-	 * technology off every document is dimmed and marked on the chip. Before
+	 * its name, the Resume / CV / Site switches and its version tags, and the
+	 * chip itself says where it is held back (`VisibilityMark`). Before
 	 * that a chip was an input with a tag button, which could pick versions but
 	 * not the site, and a chip held back from the resume looked like any other.
 	 *
@@ -19,7 +19,6 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faCheck,
-		faEyeSlash,
 		faGripVertical,
 		faPlus,
 		faTags,
@@ -32,6 +31,7 @@
 	import SectionSaveButton from '$lib/components/SectionSaveButton.svelte';
 	import ShowOnSwitches from '$lib/components/ShowOnSwitches.svelte';
 	import VersionTagPicker from '$lib/components/VersionTagPicker.svelte';
+	import VisibilityMark from '$lib/components/VisibilityMark.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import { isHiddenFromDocuments, setShownOn, versionTagsOf } from '$lib/profile-visibility';
 
@@ -294,9 +294,7 @@
 				>
 					<FontAwesomeIcon icon={faGripVertical} class="h-3 w-3 text-[var(--dash-text-muted)]" />
 					<span class="text-[var(--dash-text)]">{item.row.data.name || 'Technology'}</span>
-					{#if profileOnly}
-						<FontAwesomeIcon icon={faEyeSlash} class="h-2.5 w-2.5 text-[var(--dash-text-muted)]" />
-					{/if}
+					<VisibilityMark tags={item.row.data.tags} />
 				</div>
 			</div>
 		{/each}
@@ -334,14 +332,7 @@
 							? 'text-[var(--dash-error)]'
 							: 'text-[var(--dash-text)]'}>{tech.data.name || 'Technology'}</span
 					>
-					{#if profileOnly}
-						<span title="Profile-only — counts for matching, not shown on documents">
-							<FontAwesomeIcon
-								icon={faEyeSlash}
-								class="h-2.5 w-2.5 text-[var(--dash-text-muted)]"
-							/>
-						</span>
-					{/if}
+					<VisibilityMark tags={tech.data.tags} />
 					{#if showVersionTags && versionTags.length > 0}
 						<span
 							class="inline-flex items-center gap-1 rounded border border-teal-500/30 bg-teal-500/15 px-1.5 py-0.5 text-[10px] font-medium text-teal-600"

@@ -4,7 +4,6 @@
 	import {
 		faCheck,
 		faCircleNotch,
-		faEyeSlash,
 		faGripVertical,
 		faPlus,
 		faTags,
@@ -17,6 +16,7 @@
 	import { arraysEqual, autoSaveField } from '$lib/components/auto-save.svelte';
 	import ShowOnSwitches from '$lib/components/ShowOnSwitches.svelte';
 	import VersionTagPicker from '$lib/components/VersionTagPicker.svelte';
+	import VisibilityMark from '$lib/components/VisibilityMark.svelte';
 	import {
 		BASE_TEMPLATE_TAGS,
 		isHiddenFromDocuments,
@@ -480,14 +480,7 @@
 				>
 					<FontAwesomeIcon icon={faGripVertical} class="h-3 w-3 text-[var(--dash-text-muted)]" />
 					<span class="text-[var(--dash-text)]">{item.skill.name || 'new skill'}</span>
-					{#if profileOnly}
-						<span title="Profile-only — counts for matching, not shown on documents">
-							<FontAwesomeIcon
-								icon={faEyeSlash}
-								class="h-2.5 w-2.5 text-[var(--dash-text-muted)]"
-							/>
-						</span>
-					{/if}
+					<VisibilityMark tags={item.skill.tags} />
 					{#if showLevel && item.skill.level}
 						<span
 							class="
@@ -548,14 +541,7 @@
           "
 				>
 					<span class="text-[var(--dash-text)]">{skill.name || 'new skill'}</span>
-					{#if profileOnly}
-						<span title="Profile-only — counts for matching, not shown on documents">
-							<FontAwesomeIcon
-								icon={faEyeSlash}
-								class="h-2.5 w-2.5 text-[var(--dash-text-muted)]"
-							/>
-						</span>
-					{/if}
+					<VisibilityMark tags={skill.tags} />
 					{#if showLevel && skill.level}
 						<span
 							class="
