@@ -31,6 +31,8 @@ import {
 	type PreparedSelection
 } from '../tailor-version';
 import { semanticScoreUnits } from '$lib/server/documents/content-embeddings';
+import { promptTemplates } from '$lib/server/ai-chat/prompt-templates';
+import { renderPrompt } from '$lib/server/ai-chat/render-prompt';
 import { expandUpwardBySeed } from '$lib/server/job/skill-ontology';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import { selectForJob, type Candidate, type Decision } from '$lib/tailoring';
@@ -441,6 +443,17 @@ describe('selectionPromptVariables', () => {
 		expect(vars['job.skills_preferred']).toBe('Team Coaching');
 		expect(vars.must_limit).toBe('3');
 		expect(vars.shortlist).toBe(shortlist.text);
+	});
+
+	it('fills every slot of the review prompt, the system half included', () => {
+		// The must limit lives in the rules. A slot this does not fill throws here,
+		// and outside production it throws in the run too, which skips the review.
+		const vars = fill({ text: 'Je bouwt de hele keten.', compacted: false });
+		const template = promptTemplates.tailor_resume_selection;
+		expect(renderPrompt(template.system_prompt, vars)).toContain('Mark at most 3 lines MUST');
+		const user = renderPrompt(template.user_prompt, vars);
+		expect(user).toContain('Skills it lists as a plus: Team Coaching');
+		expect(user).toContain(shortlist.text);
 	});
 
 	it('says an empty list is empty rather than leaving a blank', () => {
