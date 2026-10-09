@@ -13,6 +13,7 @@ import {
 	PAGE_BUDGETS,
 	PROMOTION_MARGIN,
 	promotionsFor,
+	roleFloorFor,
 	tightenBudget,
 	selectForJob,
 	surfaceBar,
@@ -957,6 +958,36 @@ describe('coverage — the last line naming a required skill', () => {
 		const dropped = excluded(selectForJob(candidates, { ...OPTS, budgetChars: 200 }));
 		expect(dropped).toContain(2);
 		expect(dropped).not.toContain(1);
+	});
+});
+
+describe('roleFloorFor', () => {
+	it('keeps more of a long, recent role, up to five', () => {
+		// Chipta: nine and a half years, ended a year and a half ago.
+		expect(roleFloorFor(9.5, 0.08)).toBe(5);
+		expect(roleFloorFor(4, 0)).toBe(3);
+		expect(roleFloorFor(25, 0)).toBe(5);
+	});
+
+	it('leaves a short or an old role at the plain minimum', () => {
+		expect(roleFloorFor(1.2, 0)).toBe(2);
+		expect(roleFloorFor(9.5, 0.6)).toBe(2);
+		expect(roleFloorFor(0, 0)).toBe(2);
+	});
+});
+
+describe('a role’s floor', () => {
+	const excluded = (ds: ReturnType<typeof selectForJob>) =>
+		ds.filter((d) => d.action === 'exclude').map((d) => d.entityId);
+
+	it('holds a long role at its floor when a newer one reads more like the posting', () => {
+		// Six lines from a long role scoring under four from a short one, on a
+		// page with room for seven. By score alone the long role went to two.
+		const long = [1, 2, 3, 4, 5, 6].map((id) => bullet(id, 8, 0.5 + id / 100, { roleFloor: 5 }));
+		const short = [11, 12, 13, 14].map((id) => bullet(id, 232, 0.6 + id / 100));
+		const dropped = excluded(selectForJob([...long, ...short], { ...OPTS, budgetChars: 700 }));
+		expect(dropped.filter((id) => id < 10)).toEqual([1]);
+		expect(dropped.filter((id) => id > 10)).toEqual([11, 12]);
 	});
 });
 

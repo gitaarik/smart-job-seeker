@@ -55,6 +55,7 @@ import {
 	TAIL_RESTORE_ATTEMPTS,
 	TAIL_RESTORE_MISSES,
 	PROMOTION_MARGIN,
+	roleFloorFor,
 	selectForJob,
 	surfaceBar,
 	surfaceScore,
@@ -66,7 +67,13 @@ import {
 	type ItemRow,
 	type SelectionOptions
 } from '$lib/tailoring';
-import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
+import {
+	carrierOf,
+	carriesName,
+	carriesNameLoosely,
+	hiddenSkillsKey,
+	mentions
+} from '$lib/version-coverage';
 import {
 	isPrintedVariantField,
 	resolveWordings,
@@ -239,6 +246,55 @@ function ageScale(profile: ProfileRow, now: number): (ended: unknown) => number 
 	};
 }
 
+/**
+ * Words a group name can be made of that say nothing about its area, and that
+ * nearly every posting uses ("skills", "tools", "technologies"). Left out of the
+ * mention check, or a group called "Skills" would be named by every posting.
+ */
+const GENERIC_GROUP_WORDS = new Set([
+	'skill',
+	'skills',
+	'tool',
+	'tools',
+	'tooling',
+	'other',
+	'others',
+	'misc',
+	'general',
+	'technology',
+	'technologies',
+	'technical',
+	'framework',
+	'frameworks',
+	'language',
+	'languages',
+	'stack',
+	'expertise',
+	'knowledge',
+	'methodology',
+	'methodologies',
+	'engineering'
+]);
+
+/**
+ * A group's name as the terms a posting might name it by: "DevOps & Cloud" is
+ * "DevOps" and "Cloud", "AI & LLM engineering" is "AI" and "LLM engineering",
+ * "Tooling & Methodology" is nothing.
+ */
+function groupNameTerms(name: string): string[] {
+	return name
+		.split(/\s*(?:[,&/|]|\band\b)\s*/i)
+		.map((part) => part.trim())
+		.filter(
+			(part) =>
+				part &&
+				!part
+					.toLowerCase()
+					.split(/\s+/)
+					.every((w) => GENERIC_GROUP_WORDS.has(w))
+		);
+}
+
 export function buildCandidates(
 	profile: ProfileRow,
 	docType: string,
@@ -266,7 +322,13 @@ export function buildCandidates(
 	 * (see Candidate.pinnedFor); only the run that writes decisions passes it,
 	 * since nothing else asks what a skill pin would add.
 	 */
-	preferredSkills: string[] = []
+	preferredSkills: string[] = [],
+	/**
+	 * The posting's text, which keeps a skill group its words name (see the
+	 * group loop below). Only the run that writes decisions passes it, for the
+	 * same reason as `preferredSkills`.
+	 */
+	posting = ''
 ): Candidate[] {
 	const { filterOnTags } = createProfileFilter(
 		(profile.profile_versions ?? []) as never,
@@ -282,7 +344,16 @@ export function buildCandidates(
 	);
 	const wanted = (lowerName: string) => required.has(lowerName) || preferred.has(lowerName);
 	const candidates: Candidate[] = [];
-	const ageOf = ageScale(profile, Date.now());
+	const now = Date.now();
+	const ageOf = ageScale(profile, now);
+	/** Years in a role, to today for a current one; 0 when its dates do not parse. */
+	const yearsIn = (role: { start_date?: unknown; end_date?: unknown }) => {
+		const start = Date.parse(String(role.start_date ?? ''));
+		const end = role.end_date ? Date.parse(String(role.end_date)) : now;
+		return Number.isNaN(start) || Number.isNaN(end) || end <= start
+			? 0
+			: (end - start) / MS_PER_YEAR;
+	};
 
 	const visibleRoles = new Set(
 		filterOnTags(profile.work_experiences ?? [], OVERRIDE_ENTITIES.workExperience).map((w) => w.id)
@@ -318,6 +389,7 @@ export function buildCandidates(
 				(a) => a.id
 			)
 		);
+		const roleFloor = roleFloorFor(yearsIn(role), ageOf(role.end_date));
 		for (const achievement of role.work_experience_achievements ?? []) {
 			const body = text(achievement.description);
 			if (!body) continue;
@@ -343,6 +415,7 @@ export function buildCandidates(
 				visibleIfParentShown: visibleAchievements.has(achievement.id),
 				// A bullet is as old as the role it sits in — it has no dates of its own.
 				age: ageOf(role.end_date),
+				roleFloor,
 				templateHeldBack: heldBackByTemplate(asStringArray(achievement.tags), docType),
 				profileOnly: isHiddenFromDocuments(asStringArray(achievement.tags)),
 				pinned: false,
@@ -489,6 +562,15 @@ export function buildCandidates(
 			const name = text(skill.name);
 			return !!name && wanted(name.toLowerCase());
 		});
+		// A group whose area the posting names in its own words. The skill lists
+		// are what an extraction made of the posting, and "Van database tot
+		// scherm" became "Full Stack Development", so application 92's Databases
+		// group held nothing either list named, scored 0.47 as a keyword list
+		// against the whole posting, and went, as it did again when the review
+		// was asked. The posting said "database" all along.
+		const named =
+			!!posting &&
+			[...groupNameTerms(text(category.name)), ...names].some((term) => mentions(posting, term));
 		candidates.push({
 			entityType: OVERRIDE_ENTITIES.skillCategory,
 			entityId: category.id,
@@ -502,9 +584,11 @@ export function buildCandidates(
 			visible: true,
 			// A group holding a skill this job requires is not up for discussion —
 			// dropping it would take the required skill with it, since the filter
-			// reaches the category before the skills inside it.
-			pinned: holdsRequired,
-			score: holdsRequired ? 1 : 0
+			// reaches the category before the skills inside it. Nor is one the
+			// posting names: the rule that drops a group says "this job asks for
+			// none of these", and the review cannot overrule a posting that does.
+			pinned: holdsRequired || named,
+			score: holdsRequired || named ? 1 : 0
 		});
 	}
 
@@ -1021,11 +1105,10 @@ export async function prepareSelection(inputs: {
 		requiredSkills,
 		await conceptResolver(profile, querySkills),
 		template,
-		preferredSkills
+		preferredSkills,
+		query.text
 	);
-	// Evidence stays about the required list: a bullet is kept for naming what
-	// the job cannot do without, and a nice-to-have is not that.
-	await markCoverage(built, profile, requiredSkills);
+	await markCoverage(built, profile, requiredSkills, preferredSkills);
 	const { candidates, ranker, floor } = await scoreCandidates(profileId, built, query);
 
 	const otherLabel = docType === 'cv' ? 'resume' : 'CV';
@@ -1580,13 +1663,32 @@ export async function markCoverage(
 	profile: Parameters<typeof heldTechnologies>[0] & {
 		tech_skill_categories?: { tech_skills?: { name?: unknown }[] }[];
 	},
-	requiredSkills: string[]
+	requiredSkills: string[],
+	/**
+	 * The job's nice-to-haves, which count as evidence too. They were left out
+	 * on the reasoning that a bullet is kept for naming what the job cannot do
+	 * without (D24), and application 92 is what that cost: the posting lists
+	 * mentoring and coaching development teams as a plus, "Mentored junior &
+	 * medior devs" was the only line saying so, and the trim cut it at 0.55.
+	 * The guarantee still protects only the LAST line naming each skill, so a
+	 * few more skills buy a few more protected lines, not a re-sort.
+	 */
+	preferredSkills: string[] = []
 ): Promise<void> {
-	if (requiredSkills.length === 0) return;
+	// Required first, so a skill on both lists keeps the required spelling.
+	const asked: string[] = [];
+	const seen = new Set<string>();
+	for (const raw of [...requiredSkills, ...preferredSkills]) {
+		const skill = raw.trim();
+		if (!skill || seen.has(skill.toLowerCase())) continue;
+		seen.add(skill.toLowerCase());
+		asked.push(skill);
+	}
+	if (asked.length === 0) return;
 
-	// Required skill → the wordings that answer it. The requirement's own
-	// spelling is always one of them, which is what survives a graph failure.
-	const answers = new Map<string, Set<string>>(requiredSkills.map((r) => [r, new Set([r])]));
+	// Skill asked for → the wordings that answer it. The skill's own spelling is
+	// always one of them, which is what survives a graph failure.
+	const answers = new Map<string, Set<string>>(asked.map((r) => [r, new Set([r])]));
 
 	// Every wording the applicant holds, not just the ones in their skills block.
 	// This is vocabulary for the graph walk and says nothing about printing: it
@@ -1605,7 +1707,7 @@ export async function markCoverage(
 	];
 	try {
 		const reach = await expandUpwardBySeed(held);
-		const wanted = new Map(requiredSkills.map((r) => [normalizeSkill(r), r]));
+		const wanted = new Map(asked.map((r) => [normalizeSkill(r), r]));
 		for (const name of held) {
 			for (const c of reach.get(normalizeSkill(name)) ?? []) {
 				const req = wanted.get(c.slug);
@@ -1620,8 +1722,10 @@ export async function markCoverage(
 		// Detail carries what the item says: a bullet's whole text, a project's
 		// summary. The label is kept for the kinds whose name is all they say.
 		const said = `${candidate.label} ${candidate.detail ?? ''}`;
+		// By word root, so a line can name a skill in another form of the word:
+		// "Mentored" names "Mentoring", "tested" names "Testing".
 		const named = [...answers]
-			.filter(([, wordings]) => [...wordings].some((w) => carriesName(w, said)))
+			.filter(([, wordings]) => [...wordings].some((w) => carriesNameLoosely(w, said)))
 			.map(([req]) => req);
 		if (named.length > 0) candidate.covers = named;
 	}

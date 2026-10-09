@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
 	carrierOf,
 	carriesName,
+	carriesNameLoosely,
 	hiddenSkillsKey,
+	mentions,
 	recommendBase,
 	specWarning,
-	type VersionCoverage
+	type VersionCoverage,
+	wordRoot
 } from './version-coverage';
 
 /** `hidden` as [name, liftable] — unliftable is the half that ranks a base. */
@@ -127,6 +130,56 @@ describe('recommendBase', () => {
 		expect(recommendBase('cv', CANDIDATES, { outOfReach, coverage: {} })?.versionSlug).toBe(
 			'frontend'
 		);
+	});
+});
+
+describe('wordRoot', () => {
+	it('meets the forms a resume line and a skill list write one word in', () => {
+		expect(['mentoring', 'mentored', 'mentor', 'mentors'].map(wordRoot)).toEqual(
+			Array(4).fill('mentor')
+		);
+		expect(wordRoot('database')).toBe(wordRoot('databases'));
+		expect(wordRoot('process')).toBe(wordRoot('processes'));
+		expect(wordRoot('service')).toBe(wordRoot('services'));
+	});
+
+	it('leaves short words as they are', () => {
+		expect(['led', 'uses', 'aws', 'api', 'line'].map(wordRoot)).toEqual([
+			'led',
+			'uses',
+			'aws',
+			'api',
+			'line'
+		]);
+	});
+});
+
+describe('carriesNameLoosely', () => {
+	it('finds a skill named in another form of the word', () => {
+		// Application 92: the posting lists Mentoring as a plus, and the line
+		// that says so says "Mentored".
+		expect(carriesNameLoosely('Mentoring', 'Mentored junior & medior devs')).toBe(true);
+		expect(carriesNameLoosely('Testing', 'tested every release')).toBe(true);
+	});
+
+	it('still reads whole words', () => {
+		expect(carriesNameLoosely('SQL', 'MySQL')).toBe(false);
+		expect(carriesNameLoosely('Git', 'GitHub Actions')).toBe(false);
+		expect(carriesNameLoosely('SQL', 'SQL optimization')).toBe(true);
+	});
+});
+
+describe('mentions', () => {
+	it('reads a posting the way a reader does', () => {
+		expect(mentions('Je bouwt de hele keten. Van database tot scherm.', 'Databases')).toBe(true);
+		// A compound written as two words in one place and one in the other.
+		expect(mentions('in [front-end- en back-endstack]', 'Frontend')).toBe(true);
+		expect(mentions('a modern frontend team', 'Front end')).toBe(true);
+	});
+
+	it('does not find what the posting does not say', () => {
+		expect(mentions('pipelines and paved roads in Azure DevOps', 'Databases')).toBe(false);
+		expect(mentions('we use MySQL', 'SQL')).toBe(false);
 	});
 });
 

@@ -84,6 +84,55 @@ export function carriesName(needle: string, haystack: string): boolean {
 }
 
 /**
+ * A word with its inflection taken off, so "Mentored" and "Mentoring" meet at
+ * "mentor", and "database" and "databases" at "databas".
+ *
+ * One suffix, and only where four letters remain, which keeps "led", "uses"
+ * and "AWS" as they are; a closing "e" goes too, so a word and its plural meet
+ * whichever way the plural is spelled. Deliberately small: it is for the forms
+ * a resume line and a job's skill list write the same word in, not an English
+ * stemmer.
+ */
+export function wordRoot(word: string): string {
+	let root = word.toLowerCase();
+	for (const suffix of ['ing', 'ed', 'es', 's']) {
+		if (suffix === 's' && root.endsWith('ss')) continue;
+		if (root.endsWith(suffix) && root.length - suffix.length >= 4) {
+			root = root.slice(0, -suffix.length);
+			break;
+		}
+	}
+	return root.length >= 5 && root.endsWith('e') ? root.slice(0, -1) : root;
+}
+
+/**
+ * carriesName, compared word by word on roots (wordRoot): "Mentoring" is named
+ * by "Mentored junior & medior devs". Everything carriesName finds, this finds.
+ */
+export function carriesNameLoosely(needle: string, haystack: string): boolean {
+	const want = skillWords(needle).map(wordRoot);
+	const have = skillWords(haystack).map(wordRoot);
+	if (want.length === 0 || want.length > have.length) return false;
+	return have.some((_, i) => want.every((w, j) => have[i + j] === w));
+}
+
+/**
+ * Whether a posting names a term the way a reader would say it does: whole
+ * words by root (carriesNameLoosely), and a compound written as one word or as
+ * two, so "front-end" names "Frontend".
+ */
+export function mentions(posting: string, term: string): boolean {
+	if (carriesNameLoosely(term, posting)) return true;
+	const joined = skillWords(term).join('');
+	if (joined.length < 4) return false;
+	const root = wordRoot(joined);
+	const words = skillWords(posting);
+	return words.some(
+		(word, i) => wordRoot(word) === root || wordRoot(word + (words[i + 1] ?? '')) === root
+	);
+}
+
+/**
  * The first of `printed` that carries `name` — the evidence for "the word is
  * already on the page". Skips the skill's own name: a document printing SQL
  * outright isn't carrying it, it's showing it, and that is a different answer

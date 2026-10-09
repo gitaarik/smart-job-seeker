@@ -1081,6 +1081,82 @@ describe('buildCandidates: a required skill the page already shows at a role', (
 	});
 });
 
+describe('buildCandidates: a skill group the posting names', () => {
+	const profileWith = (groups: Array<{ id: number; name: string; skills: string[] }>) =>
+		({
+			profile_versions: [{ id: 1, slug: 'base', extension_links: [], toggles: [], overrides: [] }],
+			work_experiences: [],
+			side_projects: [],
+			tech_skill_categories: groups.map((g) => ({
+				id: g.id,
+				name: g.name,
+				tags: null,
+				tech_skills: g.skills.map((name, i) => ({ id: g.id * 100 + i, name, tags: null }))
+			}))
+		}) as unknown as Parameters<typeof buildCandidates>[0];
+
+	const GROUPS = [
+		{ id: 183, name: 'Databases', skills: ['PostgreSQL', 'MySQL'] },
+		{ id: 182, name: 'Frontend', skills: ['React'] },
+		{ id: 9, name: 'Skills', skills: ['Jira'] }
+	];
+	// Application 92's posting, as far as this concerns it. Neither skill list
+	// names a database: the extraction made "Full Stack Development" of it.
+	const POSTING = 'Je bouwt de hele keten. Van database tot scherm. De juiste skills.';
+	const pinned = (posting?: string) =>
+		buildCandidates(profileWith(GROUPS), 'resume', 'base', [], undefined, null, [], posting)
+			.filter((c) => c.entityType === OVERRIDE_ENTITIES.skillCategory && c.pinned)
+			.map((c) => c.entityId);
+
+	it('keeps a group whose area the posting names in its own words', () => {
+		expect(pinned(POSTING)).toEqual([183]);
+	});
+
+	it('does not count a group name every posting uses', () => {
+		// "skills" is in the posting; it says nothing about which ones.
+		expect(pinned(POSTING)).not.toContain(9);
+	});
+
+	it('pins nothing on the posting when it is not passed', () => {
+		expect(pinned()).toEqual([]);
+	});
+});
+
+describe('buildCandidates: how many bullets a role keeps', () => {
+	const YEAR = 365.25 * 24 * 60 * 60 * 1000;
+	const ago = (years: number) => new Date(Date.now() - years * YEAR).toISOString().slice(0, 10);
+	const profile = {
+		profile_versions: [{ id: 1, slug: 'base', extension_links: [], toggles: [], overrides: [] }],
+		work_experiences: [
+			// Chipta's shape: nine and a half years, ended a year and a half ago.
+			{ id: 8, position: 'Lead Engineer', name: 'Chipta', start: 11, end: 1.5 },
+			{ id: 232, position: 'AI Engineer', name: 'Own company', start: 1.2, end: null },
+			{ id: 12, position: 'Developer', name: 'Old Co', start: 19, end: 15 }
+		].map((r) => ({
+			id: r.id,
+			position: r.position,
+			name: r.name,
+			tags: null,
+			start_date: ago(r.start),
+			end_date: r.end === null ? null : ago(r.end),
+			work_experience_achievements: [
+				{ id: r.id * 10, description: `what ${r.name} did`, tags: null }
+			]
+		})),
+		side_projects: [],
+		tech_skill_categories: []
+	} as unknown as Parameters<typeof buildCandidates>[0];
+
+	it('gives a long, recent role a higher floor than a short or an old one', () => {
+		const floors = Object.fromEntries(
+			buildCandidates(profile, 'resume', 'base', [])
+				.filter((c) => c.entityType === OVERRIDE_ENTITIES.achievement)
+				.map((c) => [c.parentId, c.roleFloor])
+		);
+		expect(floors).toEqual({ 8: 5, 232: 2, 12: 2 });
+	});
+});
+
 describe('markCoverage: what the applicant holds, and where it is written down', () => {
 	// A requirement is answered by the words an item says, and the graph is what
 	// knows PostgreSQL answers SQL. What it can answer for is whatever it was
@@ -1133,6 +1209,20 @@ describe('markCoverage: what the applicant holds, and where it is written down',
 		);
 		const bullet = bulletSaying('Cut checkout latency by tuning PostgreSQL');
 		await markCoverage([bullet], profile, ['SQL']);
+		expect(bullet.covers).toEqual(['SQL']);
+	});
+
+	it('counts what the job lists as a plus, in any form of the word', async () => {
+		// Application 92 lists Mentoring as a plus; the only line about it says
+		// "Mentored", and the trim cut it.
+		const bullet = bulletSaying('Mentored junior & medior devs through code review');
+		await markCoverage([bullet], profile, ['Python'], ['Mentoring']);
+		expect(bullet.covers).toEqual(['Mentoring']);
+	});
+
+	it('files a skill on both lists under the required spelling', async () => {
+		const bullet = bulletSaying('Tuned the SQL queries');
+		await markCoverage([bullet], profile, ['SQL'], ['sql']);
 		expect(bullet.covers).toEqual(['SQL']);
 	});
 

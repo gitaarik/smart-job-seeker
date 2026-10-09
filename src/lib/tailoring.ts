@@ -123,6 +123,11 @@ export interface Candidate {
 	 */
 	age?: number;
 	/**
+	 * For a bullet: how many bullets its role keeps however tight the page is.
+	 * Absent means the plain minimum (`minPerParent`). See roleFloorFor.
+	 */
+	roleFloor?: number;
+	/**
 	 * Whether the applicant has held it off documents entirely — the `!resume`
 	 * plus `!cv` pair. The most emphatic thing the tag vocabulary can say, and
 	 * graded accordingly: still not a veto, because a job can be about exactly
@@ -522,6 +527,37 @@ export const HOLD_BACK_PENALTY = { template: 0.25, profile: 0.5 } as const;
 export const RECENCY_GRACE = 0.35;
 
 /**
+ * How many bullets a role keeps however tight the page is: one more than the
+ * plain minimum for every three years in a recent role, up to five.
+ *
+ * The minimum was two for every role, and the page trim ranks every bullet
+ * against every other, so a long role whose lines read less like a posting
+ * than a newer role's went down to two. Application 92: twelve bullets for a
+ * fourteen-month role and two for nine and a half years as Lead Engineer at
+ * Chipta, the second most recent job on the page. A reader takes a resume a
+ * role at a time, and a long, recent role told in two lines reads as one that
+ * did not matter.
+ *
+ * "Recent" is the age discount's grace band (RECENCY_GRACE): further back than
+ * that, which era a resume covers is the applicant's own call (see
+ * OLD_ENOUGH_TO_LEAVE_ALONE). The numbers are a first answer, and the tailoring
+ * golden set is what should tune them.
+ */
+export const ROLE_FLOOR = { yearsPerLine: 3, max: 5 } as const;
+
+export function roleFloorFor(
+	years: number,
+	age: number,
+	minimum = DEFAULT_SELECTION.minPerParent
+): number {
+	if (!(years > 0) || age > RECENCY_GRACE) return minimum;
+	return Math.max(
+		minimum,
+		Math.min(ROLE_FLOOR.max, minimum + Math.floor(years / ROLE_FLOOR.yearsPerLine))
+	);
+}
+
+/**
  * Past this, a whole role is history rather than news, and the applicant's
  * decision to keep it off a document stands unexamined.
  *
@@ -782,8 +818,10 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 		if (candidate.pinned) return false;
 		const siblings = keptPerParent.get(candidate.parentId) ?? 0;
 		// A free-standing group (side projects share a null parent) keeps one, so
-		// the section does not silently disappear; a role keeps minPerParent.
-		const floorForParent = candidate.parentId === null ? 1 : minPerParent;
+		// the section does not silently disappear; a role keeps minPerParent, or
+		// more when it is long and recent (roleFloorFor).
+		const floorForParent =
+			candidate.parentId === null ? 1 : Math.max(minPerParent, candidate.roleFloor ?? 0);
 		return siblings > floorForParent;
 	}
 
