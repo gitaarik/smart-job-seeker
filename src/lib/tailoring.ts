@@ -169,6 +169,25 @@ export interface Candidate {
 	 * Empty for most items and unset when there is no job to compare against.
 	 */
 	covers?: string[];
+	/**
+	 * The model review marked it essential for this job: the trim treats it like
+	 * the last line naming a requirement, so everything unmarked goes first and
+	 * the page still has the final word.
+	 *
+	 * This is how the review protects anything at all. Its "keep" only lifts a
+	 * score to the floor, and the page trim ranks everything above the floor by
+	 * score, so a keep changed nothing for a line already above it. Measured on
+	 * application 92: a job listing team coaching as a plus, and the two bullets
+	 * about leading and mentoring a team were cut on cosine (0.56 and 0.55) by a
+	 * trim the model had no say in. Set by applyModelOpinions in tailor-version.ts.
+	 */
+	vouched?: boolean;
+	/**
+	 * The model review said it does not help for this job. Its score is sunk
+	 * below any floor, which is what makes it go first, so the score no longer
+	 * says anything a reason line could quote.
+	 */
+	vetoed?: boolean;
 	/** L1 relevance to this job. Comparable within one run, not across runs. */
 	score: number;
 	/**
@@ -888,12 +907,6 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	// and the model are actually good for.
 	const printedChars = () =>
 		kept.filter((c) => !dropped.has(dropKey(c))).reduce((sum, c) => sum + c.chars, 0);
-	const trimReason = (c: Candidate) =>
-		c.covers?.length
-			? `trimmed to fit the page — the last line naming ${c.covers.join(' and ')}, and nothing cheaper was left`
-			: c.score < floor
-				? `the least relevant thing on a full page, and off-topic for this job (${c.score.toFixed(2)})`
-				: `trimmed to fit the page — the least relevant line left (${c.score.toFixed(2)})`;
 
 	// Worst first, and between two the job values equally, the older one — the
 	// only place age touches what a document already shows, and only as a
@@ -933,12 +946,43 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 			)
 		);
 
-	const lastEvidence: Candidate[] = [];
+	/**
+	 * Why a line left, worked out when it leaves, because that is when the claim
+	 * is true or false.
+	 *
+	 * "The last line naming SQL" used to be written on every trimmed line that
+	 * named a requirement, whether or not another line still did. Application 92
+	 * had it on five lines for the same requirement, which no reader can square.
+	 * And a line the review vetoed had its sunk score quoted as relevance:
+	 * "off-topic for this job (-1.00)" is the model's verdict wearing the
+	 * ranker's number.
+	 */
+	const trimReason = (c: Candidate) => {
+		const score = `(${c.score.toFixed(2)})`;
+		if (c.vetoed) return 'the review judged it no help for this job';
+		if (c.covers?.length && !coveredElsewhere(c)) {
+			return `trimmed to fit the page — the last line naming ${c.covers.join(' and ')}, and nothing cheaper was left`;
+		}
+		if (c.vouched) {
+			return 'trimmed to fit the page — marked essential for this job, but nothing cheaper was left';
+		}
+		if (c.covers?.length) {
+			return `trimmed to fit the page — another line still names ${c.covers.join(' and ')} ${score}`;
+		}
+		return c.score < floor
+			? `the least relevant thing on a full page, and off-topic for this job ${score}`
+			: `trimmed to fit the page — the least relevant line left ${score}`;
+	};
+
+	// A line the review marked essential waits with the last evidence. Both are
+	// claims that the line matters more than its score says, and both give way
+	// to the page once everything unclaimed has gone.
+	const deferred: Candidate[] = [];
 	for (const candidate of worstFirst) {
 		if (printedChars() <= budgetChars) break;
 		if (!canDrop(candidate)) continue;
-		if (!coveredElsewhere(candidate)) {
-			lastEvidence.push(candidate);
+		if (candidate.vouched || !coveredElsewhere(candidate)) {
+			deferred.push(candidate);
 			continue;
 		}
 		drop(candidate, trimReason(candidate));
@@ -948,8 +992,13 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	// would just move the failure somewhere the applicant cannot see it, so once
 	// everything else is gone these go too — worst first, saying what is being
 	// given up.
-	for (const candidate of lastEvidence) {
+	//
+	// canDrop is asked again because it was answered before the first pass ran.
+	// A role's siblings can have gone since, and the minimum per role is not one
+	// of the guarantees the page gets to override.
+	for (const candidate of deferred) {
 		if (printedChars() <= budgetChars) break;
+		if (!canDrop(candidate)) continue;
 		drop(candidate, trimReason(candidate));
 	}
 

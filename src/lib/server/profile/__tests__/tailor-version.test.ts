@@ -21,9 +21,11 @@ import {
 	applyVerdictReasons,
 	buildCandidates,
 	markCoverage,
+	mustLimitFor,
 	pinnedReason,
 	refFor,
 	scoreCandidates,
+	selectionPromptVariables,
 	shortlistFor
 } from '../tailor-version';
 import { semanticScoreUnits } from '$lib/server/documents/content-embeddings';
@@ -52,6 +54,12 @@ describe('refFor', () => {
 		expect(refFor({ entityType: OVERRIDE_ENTITIES.achievement, entityId: 7 })).toBe('bullet:7');
 		expect(refFor({ entityType: OVERRIDE_ENTITIES.sideProject, entityId: 7 })).toBe('project:7');
 		expect(refFor({ entityType: OVERRIDE_ENTITIES.skill, entityId: 7 })).toBe('skill:7');
+	});
+
+	it('gives a role’s technology its own name, not the skills block’s', () => {
+		// They are different tables. Application 92's review was shown 28 of them
+		// as `skill:`, which also claimed a skills-block row that did not exist.
+		expect(refFor({ entityType: OVERRIDE_ENTITIES.technology, entityId: 7 })).toBe('tech:7');
 	});
 });
 
@@ -114,13 +122,97 @@ describe('applyModelOpinions', () => {
 		expect(adjusted[0].score).toBe(1);
 	});
 
-	it('ignores a verdict that is neither keep nor drop', () => {
+	it('ignores a verdict that is neither must, keep nor drop', () => {
 		const { candidates: adjusted } = applyModelOpinions(
 			[bullet(1, 0.9)],
 			[{ ref: 'bullet:1', action: 'maybe', reason: 'Unsure.' }],
 			FLOOR
 		);
-		expect(adjusted[0].score).toBe(0.9);
+		expect(adjusted[0]).toEqual(bullet(1, 0.9));
+	});
+
+	it('flags a dropped candidate, so no reason quotes its sunk score', () => {
+		const { candidates: adjusted } = applyModelOpinions(
+			[bullet(1, 0.9)],
+			[{ ref: 'bullet:1', action: 'drop', reason: 'Not relevant here.' }],
+			FLOOR
+		);
+		expect(adjusted[0].vetoed).toBe(true);
+	});
+
+	it('changes nothing with a keep on a line above the floor', () => {
+		// Which is why must exists: the trim ranks everything above the floor by
+		// score, so this verdict cannot keep a line the page would cut.
+		const { candidates: adjusted } = applyModelOpinions(
+			[bullet(1, 0.56)],
+			[{ ref: 'bullet:1', action: 'keep', reason: 'Shows team leadership.' }],
+			FLOOR
+		);
+		expect(adjusted[0]).toEqual(bullet(1, 0.56));
+	});
+
+	it('marks a must as vouched, which the trim does hear', () => {
+		const { candidates: adjusted, verdicts } = applyModelOpinions(
+			[bullet(1, 0.56), bullet(2, 0.3)],
+			[
+				{ ref: 'bullet:1', action: 'MUST', reason: 'The posting asks for coaching.' },
+				{ ref: 'bullet:2', action: 'must', reason: 'The only database line.' }
+			],
+			FLOOR,
+			undefined,
+			2
+		);
+		expect(adjusted[0]).toMatchObject({ vouched: true, score: 0.56 });
+		// A must is a keep as well, so a line under the floor is lifted to it.
+		expect(adjusted[1]).toMatchObject({ vouched: true, score: FLOOR });
+		expect(verdicts.get('bullet:1')?.action).toBe('must');
+	});
+
+	it('reads every must as a keep when there are more than the limit', () => {
+		// Marking most of the page essential is not a choice between lines.
+		const { candidates: adjusted, mustsIgnored } = applyModelOpinions(
+			[bullet(1, 0.56), bullet(2, 0.7), bullet(3, 0.3)],
+			[
+				{ ref: 'bullet:1', action: 'must', reason: 'a' },
+				{ ref: 'bullet:2', action: 'must', reason: 'b' },
+				{ ref: 'bullet:3', action: 'must', reason: 'c' }
+			],
+			FLOOR,
+			undefined,
+			2
+		);
+		expect(adjusted.some((c) => c.vouched)).toBe(false);
+		expect(adjusted[2].score).toBe(FLOOR);
+		expect(mustsIgnored).toBe(3);
+	});
+
+	it('lets a must protect a hidden item the run surfaced, never make one eligible', () => {
+		// The lift to the floor is what the surfacing bar reads as "add it", and a
+		// hidden item keeps the score it had.
+		const hidden = bullet(1, 0.45, { visible: false });
+		const { candidates: adjusted } = applyModelOpinions(
+			[hidden],
+			[{ ref: 'bullet:1', action: 'must', reason: 'Mentoring, which the job asks for.' }],
+			FLOOR,
+			undefined,
+			1
+		);
+		expect(adjusted[0]).toMatchObject({ vouched: true, score: 0.45 });
+	});
+
+	it('discards a verdict about a real item it was not shown', () => {
+		const { candidates: adjusted, verdicts } = applyModelOpinions(
+			[bullet(1, 0.9), bullet(2, 0.9)],
+			[
+				{ ref: 'bullet:1', action: 'drop', reason: 'Shown, so it counts.' },
+				{ ref: 'bullet:2', action: 'drop', reason: 'Never on the shortlist.' }
+			],
+			FLOOR,
+			new Set(['bullet:1'])
+		);
+		expect(adjusted[0].vetoed).toBe(true);
+		expect(adjusted[1]).toEqual(bullet(2, 0.9));
+		expect(verdicts.has('bullet:2')).toBe(false);
 	});
 });
 
@@ -159,6 +251,15 @@ describe('applyVerdictReasons', () => {
 		applyVerdictReasons(decisions, new Map());
 		expect(decisions[0].reason).toBe('earned its place on the page for this job');
 	});
+
+	it('reads a must as agreeing with an include', () => {
+		const decisions = [decision('include', 1, 'not on the version this builds on')];
+		applyVerdictReasons(
+			decisions,
+			new Map([['bullet:1', { action: 'must', reason: 'The posting asks for coaching.' }]])
+		);
+		expect(decisions[0].reason).toBe('The posting asks for coaching.');
+	});
 });
 
 describe('shortlistFor', () => {
@@ -169,29 +270,98 @@ describe('shortlistFor', () => {
 		sort: null,
 		reason: 'below floor'
 	});
+	const lines = (shortlist: { text: string }) => shortlist.text.split('\n');
 
-	it('puts the proposed drops first — they are the consequential decisions', () => {
-		const candidates = [bullet(1, 0.95), bullet(2, 0.9), bullet(3, 0.05)];
-		const lines = shortlistFor(candidates, [dropDecision(3)], FLOOR).split('\n');
-		expect(lines[0]).toContain('bullet:3');
-		expect(lines[0]).toContain('| drop');
+	it('lists the lines in the order the document prints them', () => {
+		// So the model reads a role at a time and can see what each one keeps.
+		const candidates = [bullet(1, 0.95), bullet(2, 0.52), bullet(3, 0.05)];
+		const shown = lines(shortlistFor(candidates, [dropDecision(3)], FLOOR));
+		expect(shown.map((l) => l.split(' | ')[0])).toEqual(['bullet:1', 'bullet:2', 'bullet:3']);
+		expect(shown[2]).toMatch(/\| drop$/);
+		expect(shown[0]).toMatch(/\| keep$/);
 	});
 
-	it('then offers what sits closest to the floor, not what scores highest', () => {
-		// The obvious keeps need no second opinion; the borderline ones do.
-		const candidates = [bullet(1, 0.99), bullet(2, 0.52), bullet(3, 0.95)];
-		const lines = shortlistFor(candidates, [], FLOOR).split('\n');
-		expect(lines[0]).toContain('bullet:2');
+	it('keeps the proposed drops, then what sits nearest the floor, when it must cut', () => {
+		// Past the limit the doubtful lines stay; the obvious keeps go first.
+		const many = Array.from({ length: 100 }, (_, i) => bullet(i + 1, 0.99 - i * 0.001));
+		const doubtful = bullet(500, 0.51);
+		const dropped = bullet(501, 0.98);
+		const shortlist = shortlistFor([...many, doubtful, dropped], [dropDecision(501)], FLOOR);
+		expect(lines(shortlist)).toHaveLength(80);
+		expect(shortlist.refs.has('bullet:500')).toBe(true);
+		expect(shortlist.refs.has('bullet:501')).toBe(true);
+		// The strongest keeps are what went.
+		expect(shortlist.refs.has('bullet:1')).toBe(false);
 	});
 
 	it('never shows the model a pinned item', () => {
 		const skill = bullet(5, 1, { entityType: OVERRIDE_ENTITIES.skill, pinned: true });
-		expect(shortlistFor([skill, bullet(1, 0.9)], [], FLOOR)).not.toContain('skill:5');
+		expect(shortlistFor([skill, bullet(1, 0.9)], [], FLOOR).text).not.toContain('skill:5');
+	});
+
+	it('leaves out a role’s technologies, whose fate no verdict changes', () => {
+		// The tech-line rule keeps or drops them on `covers` alone. On application
+		// 92 they were 28 of the 40 lines the model was shown.
+		const tech = bullet(9, 0, { entityType: OVERRIDE_ENTITIES.technology, chars: 0 });
+		const shortlist = shortlistFor([tech, bullet(1, 0.9)], [], FLOOR);
+		expect(shortlist.text).not.toContain(':9');
+		expect([...shortlist.refs]).toEqual(['bullet:1']);
+	});
+
+	it('leaves out a hidden item the run cannot put on the page', () => {
+		// Listed as "keep", it told the model the page held a line it did not.
+		const belowBar = bullet(2, 0.4, { visible: false });
+		const roleHeldForCv = bullet(3, 0.9, {
+			visible: false,
+			parentVisible: false,
+			parentHeldBack: 'template'
+		});
+		const shortlist = shortlistFor([bullet(1, 0.9), belowBar, roleHeldForCv], [], FLOOR);
+		expect([...shortlist.refs]).toEqual(['bullet:1']);
+	});
+
+	it('offers a hidden item the run surfaced: keep when it prints, drop when trimmed', () => {
+		// A must can still save the trimmed one, so the model sees it.
+		const added = bullet(2, 0.7, { visible: false });
+		const trimmed = bullet(3, 0.6, { visible: false });
+		const include: Decision = {
+			entityType: OVERRIDE_ENTITIES.achievement,
+			entityId: 2,
+			action: 'include',
+			sort: null,
+			reason: 'surfaced'
+		};
+		const shown = lines(shortlistFor([added, trimmed], [include], FLOOR));
+		expect(shown[0]).toMatch(/^bullet:2 .*\| keep$/);
+		expect(shown[1]).toMatch(/^bullet:3 .*\| drop$/);
+	});
+
+	it('offers a skill group, so a group about to be dropped can be kept', () => {
+		const group = bullet(183, 0.47, {
+			entityType: OVERRIDE_ENTITIES.skillCategory,
+			parentId: null,
+			chars: 0,
+			label: 'Databases: PostgreSQL, MySQL'
+		});
+		const drop: Decision = { ...dropDecision(183), entityType: OVERRIDE_ENTITIES.skillCategory };
+		expect(shortlistFor([group], [drop], FLOOR).text).toBe(
+			'skillgroup:183 | Databases: PostgreSQL, MySQL | 0.47 | drop'
+		);
+	});
+
+	it('returns the refs it showed and a must limit to match', () => {
+		const shortlist = shortlistFor(
+			Array.from({ length: 20 }, (_, i) => bullet(i + 1, 0.6)),
+			[],
+			FLOOR
+		);
+		expect(shortlist.refs.size).toBe(20);
+		expect(shortlist.mustLimit).toBe(mustLimitFor(20));
 	});
 
 	it('flattens whitespace so one candidate is one line', () => {
 		const messy = bullet(1, 0.9, { label: 'first line\n\tsecond   line' });
-		expect(shortlistFor([messy], [], FLOOR).split('\n')).toHaveLength(1);
+		expect(lines(shortlistFor([messy], [], FLOOR))).toHaveLength(1);
 	});
 
 	it('shows the model what an item says, not what it is called', () => {
@@ -203,7 +373,7 @@ describe('shortlistFor', () => {
 			label: 'LitState',
 			detail: 'LitState — Reactive state management library for Lit Web Components.'
 		});
-		const line = shortlistFor([project], [], FLOOR);
+		const line = shortlistFor([project], [], FLOOR).text;
 		expect(line).toContain('Lit Web Components');
 		expect(line.split('\n')).toHaveLength(1);
 	});
@@ -214,7 +384,68 @@ describe('shortlistFor', () => {
 			label: 'Verbose',
 			detail: 'x'.repeat(900)
 		});
-		expect(shortlistFor([project], [], FLOOR).length).toBeLessThan(400);
+		expect(shortlistFor([project], [], FLOOR).text.length).toBeLessThan(400);
+	});
+});
+
+describe('mustLimitFor', () => {
+	it('allows about one line in five, never more than eight, never none', () => {
+		expect(mustLimitFor(50)).toBe(8);
+		expect(mustLimitFor(20)).toBe(4);
+		expect(mustLimitFor(3)).toBe(1);
+		expect(mustLimitFor(0)).toBe(1);
+	});
+});
+
+describe('selectionPromptVariables', () => {
+	const shortlist = {
+		text: 'bullet:1 | x | 0.60 | keep',
+		refs: new Set(['bullet:1']),
+		mustLimit: 3
+	};
+	const fill = (
+		description: { text: string | null; compacted: boolean },
+		required = ['Azure DevOps'],
+		preferred = ['Team Coaching']
+	) =>
+		selectionPromptVariables({
+			title: 'Full Stack Automation Engineer',
+			company: 'COA',
+			description,
+			required,
+			preferred,
+			shortlist
+		});
+
+	it('puts the whole posting in, its last line too', () => {
+		// The 4,000-character cut ended application 92's posting at "Je beschikt
+		// over: * Minimaal h", before everything the job asks for.
+		const posting = `${'Dit ga je doen. '.repeat(400)}\nErvaring met het coachen van ontwikkelteams is een pré.`;
+		const summary = fill({ text: posting, compacted: false })['job.summary'];
+		expect(posting.length).toBeGreaterThan(6000);
+		expect(summary).toContain('coachen van ontwikkelteams is een pré.');
+		expect(summary).not.toContain('shortened');
+	});
+
+	it('says when the posting is a shortened copy', () => {
+		expect(fill({ text: 'Short version.', compacted: true })['job.summary']).toContain(
+			'shortened copy of the posting'
+		);
+	});
+
+	it('keeps the required and the nice-to-have skills apart', () => {
+		const vars = fill({ text: 'x', compacted: false });
+		expect(vars['job.skills_required']).toBe('Azure DevOps');
+		expect(vars['job.skills_preferred']).toBe('Team Coaching');
+		expect(vars.must_limit).toBe('3');
+		expect(vars.shortlist).toBe(shortlist.text);
+	});
+
+	it('says an empty list is empty rather than leaving a blank', () => {
+		const vars = fill({ text: null, compacted: false }, [], []);
+		expect(vars['job.skills_required']).toBe('none listed');
+		expect(vars['job.skills_preferred']).toBe('none listed');
+		expect(vars['job.summary']).toBe('Full Stack Automation Engineer\nCOA');
 	});
 });
 
@@ -311,7 +542,9 @@ describe('buildCandidates: bullets', () => {
 
 	it('shows the model the end of the bullet too', () => {
 		const [bullet] = built();
-		expect(shortlistFor([{ ...bullet, score: 0.55 }], [], FLOOR)).toContain('Python hot paths');
+		expect(shortlistFor([{ ...bullet, score: 0.55 }], [], FLOOR).text).toContain(
+			'Python hot paths'
+		);
 	});
 });
 

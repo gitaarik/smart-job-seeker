@@ -1617,18 +1617,27 @@ Return the matched skills as a JSON object with a "matched_skills" array contain
 		temperature: 0,
 		system_prompt: `You help an applicant decide which parts of their EXISTING resume to show for one specific job.
 
-You are reviewing a shortlist that a deterministic ranker already produced. Your job is judgment the ranker cannot do: it scores text similarity, you can see that a bullet about migrating a monolith matters for a platform role even when the wording does not overlap.
+You are reviewing what a deterministic ranker selected. It scores how much each line reads like the posting. Your job is the judgment it cannot make: that a bullet about migrating a monolith matters for a platform role even when the wording does not overlap, or that a line about mentoring developers answers a posting that asks for coaching.
+
+How the page is decided:
+- The page is short. After your review, lines are cut until it fits, the lowest score first.
+- DROP: the line does not help for this job, so it goes first. It is your judgment of the line, not agreement that the page is full: a useful line the ranker had no room for is a KEEP.
+- KEEP: the line stays in the ranker's order, and may still be cut for space.
+- MUST: the line is cut only after every line not marked MUST has gone. It is for the few lines a reader of THIS posting has to see: the best evidence for something the posting asks for, whether a required skill, something it lists as a plus, or what its text says about the work, the team or the role. Spend it where the ranker scored a line low; a high score is safe already. Mark at most {{must_limit}} lines MUST; if you mark more, none of them count.
 
 Rules you must follow:
-- You may only KEEP or DROP entries from the shortlist. You cannot add anything, and you cannot write, reword, or improve any text. The applicant's own wording is what ships.
+- You may only judge entries from the shortlist. You cannot add anything, and you cannot write, reword, or improve any text. The applicant's own wording is what ships.
+- Read the whole posting, not only its skills lists. What it says about the team, seniority, ownership or coaching is as much a requirement as a named technology.
 - Never drop something that shows a skill the job explicitly requires.
-- Prefer keeping concrete, measurable achievements over generic ones.
+- Prefer concrete, measurable achievements over generic ones.
 - Drop an entry only when it genuinely does not help for THIS job — an unrelated technology, a hobby project with no bearing, a duplicate point already made better elsewhere.
-- The skills list is what the job NAMES, not a whitelist. Neighbouring experience in the same paradigm is evidence and should be kept, with the connection stated in the reason: a Lit web-components library for a team whose frontend is web components, a Flask REST package for a FastAPI role, Vue work for a React role, Postgres for a NoSQL one. "Not one of the listed technologies" is not a reason to drop something.
-- If you are unsure, keep it. The deterministic layers already trimmed for length; you are correcting mistakes, not trimming further.
-- Give a verdict for EVERY line in the shortlist, including the ones you agree with. A "keep" with a reason is what the applicant sees next to that bullet, so it is worth writing.
+- The skills lists are what the job NAMES, not a whitelist. Neighbouring experience in the same paradigm is evidence and should be kept, with the connection stated in the reason: a Lit web-components library for a team whose frontend is web components, a Flask REST package for a FastAPI role, Vue work for a React role, Postgres for a NoSQL one. "Not one of the listed technologies" is not a reason to drop something.
+- A skillgroup line is a whole area of the applicant's skills block, and dropping it takes that area off the resume. Drop one only when the work this posting describes has no use for that area, whatever its skills lists name.
+- The lines are in the order the document prints them, so you can read each role as a reader would. A long or recent role left holding only minor lines undersells the applicant.
+- If you are unsure, say KEEP.
+- Give a verdict for EVERY line in the shortlist, including the ones you agree with. Your reason is shown to the applicant next to any change it explains, so it is worth writing.
 
-Return a JSON OBJECT — never a bare array. It has exactly one key, "decisions", whose value is an array of objects, each with exactly three string keys: "ref" (copied exactly from the shortlist), "action" ("keep" or "drop"), and "reason" (one short sentence addressed to the applicant, e.g. "This is the only bullet that shows Kubernetes.").
+Return a JSON OBJECT — never a bare array. It has exactly one key, "decisions", whose value is an array of objects, each with exactly three string keys: "ref" (copied exactly from the shortlist), "action" ("must", "keep" or "drop"), and "reason" (one short sentence addressed to the applicant, e.g. "This is the only bullet that shows Kubernetes.").
 
 Shape, exactly:
 {"decisions": [{"ref": "bullet:412", "action": "drop", "reason": "..."}]}
@@ -1638,13 +1647,14 @@ One entry per shortlist line, in the same order. Never a bare array: the outer v
 
 {{job.summary}}
 
-Skills this job asks for: {{job.skills}}
+Skills this job requires: {{job.skills_required}}
+Skills it lists as a plus: {{job.skills_preferred}}
 
-The shortlist. Each line is: ref | what it is | relevance score the ranker gave it | what the ranker proposes.
+The shortlist. Each line is: ref | what it says | relevance score the ranker gave it | what the ranker proposes (keep: it prints; drop: it does not, most often for room on the page rather than relevance).
 
 {{shortlist}}
 
-Give a verdict for every line above.`
+Give a verdict for every line above, with at most {{must_limit}} of them MUST.`
 	},
 
 	find_next_page_button: {

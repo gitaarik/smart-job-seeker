@@ -911,9 +911,15 @@ describe('coverage — the last line naming a required skill', () => {
 			bullet(3, 10, 0.2, { covers: ['SQL'] }),
 			bullet(4, 10, 0.8)
 		];
-		const dropped = excluded(selectForJob(candidates, { ...OPTS, budgetChars: 300 }));
+		const decisions = selectForJob(candidates, { ...OPTS, budgetChars: 300 });
+		const dropped = excluded(decisions);
 		expect(dropped).toContain(2);
 		expect(dropped).not.toContain(3);
+		// And its reason does not claim it was the last: bullet 3 still names SQL.
+		// Application 92 had "the last line naming" on five lines for one skill.
+		const reason = decisions.find((d) => d.entityId === 2)?.reason ?? '';
+		expect(reason).not.toContain('the last line');
+		expect(reason).toContain('another line still names SQL');
 	});
 
 	it('gives the page the last word when nothing cheaper is left', () => {
@@ -951,6 +957,63 @@ describe('coverage — the last line naming a required skill', () => {
 		const dropped = excluded(selectForJob(candidates, { ...OPTS, budgetChars: 200 }));
 		expect(dropped).toContain(2);
 		expect(dropped).not.toContain(1);
+	});
+});
+
+describe('what the review marked essential', () => {
+	const excluded = (ds: ReturnType<typeof selectForJob>) =>
+		ds.filter((d) => d.action === 'exclude').map((d) => d.entityId);
+
+	it('cuts an unmarked line before a marked one the ranker likes less', () => {
+		// Application 92: "Led a distributed development team" at 0.56 went for
+		// space, on a job that lists team coaching as a plus.
+		const candidates = [
+			bullet(1, 10, 0.9),
+			bullet(2, 10, 0.2, { vouched: true }),
+			bullet(3, 10, 0.8),
+			bullet(4, 10, 0.7)
+		];
+		const dropped = excluded(selectForJob(candidates, { ...OPTS, budgetChars: 300 }));
+		expect(dropped).toEqual([4]);
+	});
+
+	it('still gives the page the last word, and says what it gave up', () => {
+		const decisions = selectForJob(
+			[
+				bullet(1, 10, 0.9, { vouched: true }),
+				bullet(2, 10, 0.8, { vouched: true }),
+				bullet(3, 10, 0.2, { vouched: true })
+			],
+			{ ...OPTS, budgetChars: 100 }
+		);
+		const row = decisions.find((d) => d.action === 'exclude');
+		expect(row?.entityId).toBe(3);
+		expect(row?.reason).toContain('marked essential for this job');
+	});
+
+	it('never takes a role under its minimum to make room', () => {
+		// The deferred pass used to drop without asking canDrop again, so a page
+		// tight enough could empty a role. Two is the floor, page or no page.
+		const decisions = selectForJob(
+			[
+				bullet(1, 10, 0.9, { vouched: true }),
+				bullet(2, 10, 0.8, { covers: ['SQL'] }),
+				bullet(3, 10, 0.2, { vouched: true })
+			],
+			{ ...OPTS, budgetChars: 0 }
+		);
+		expect(excluded(decisions)).toHaveLength(1);
+	});
+
+	it('does not quote a vetoed line’s sunk score as its relevance', () => {
+		// "off-topic for this job (-1.00)" was the model's verdict wearing the
+		// ranker's number.
+		const decisions = selectForJob(
+			[bullet(1, 10, 0.9), bullet(2, 10, 0.8), bullet(3, 10, -1, { vetoed: true })],
+			{ ...OPTS, budgetChars: 200 }
+		);
+		const row = decisions.find((d) => d.entityId === 3);
+		expect(row?.reason).toBe('the review judged it no help for this job');
 	});
 });
 

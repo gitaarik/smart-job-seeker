@@ -308,12 +308,13 @@ export const extractJobsFromSearchPageSchema = z
  * Schema for tailor_resume_selection prompt
  *
  * The model reviews a shortlist the deterministic layers already produced and
- * says which entries it would keep or drop for this job. Deliberately loose —
- * `ref` and `action` are plain strings, validated in code against the shortlist
- * — because a strict enum here buys nothing (an unknown ref is dropped either
- * way) and costs a retry loop when the model answers with a near-miss. Same
- * lesson as the capability proposals: a flat LIST of decisions survives round
- * trips that an object with optional keys does not.
+ * says which entries it would drop, keep, or mark essential (must) for this
+ * job. Deliberately loose — `ref` and `action` are plain strings, validated in
+ * code against the shortlist — because a strict enum here buys nothing (an
+ * unknown ref is dropped either way) and costs a retry loop when the model
+ * answers with a near-miss. Same lesson as the capability proposals: a flat
+ * LIST of decisions survives round trips that an object with optional keys
+ * does not.
  */
 export const tailorResumeSelectionSchema = z.object({
 	decisions: z
@@ -321,7 +322,7 @@ export const tailorResumeSelectionSchema = z.object({
 			z
 				.object({
 					ref: z.string().describe('The exact ref string from the shortlist, e.g. "bullet:412".'),
-					action: z.string().describe('Either "keep" or "drop".'),
+					action: z.string().describe('One of "must", "keep" or "drop".'),
 					reason: z.string().describe('One short sentence, addressed to the applicant, saying why.')
 				})
 				.passthrough()

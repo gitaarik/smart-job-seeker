@@ -43,6 +43,7 @@ import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filt
 import { isReservedVersionSlug, OVERRIDE_ENTITIES, tailoredSlugFor } from '$lib/version-overrides';
 import {
 	beyondReach,
+	canBringBack,
 	canSurface,
 	chooseBudget,
 	DEFAULT_SELECTION,
@@ -62,7 +63,8 @@ import {
 	type Candidate,
 	type Decision,
 	type ItemGroup,
-	type ItemRow
+	type ItemRow,
+	type SelectionOptions
 } from '$lib/tailoring';
 import { carrierOf, carriesName, hiddenSkillsKey } from '$lib/version-coverage';
 import {
@@ -112,13 +114,28 @@ import {
 	variantDecisions
 } from '$lib/server/profile/tailor-field-variants';
 import { createAndGenerateAiChat } from '$lib/server/ai-chat/utils';
+import {
+	COMPACT_COLUMNS,
+	promptJobDescription,
+	type PromptDescription
+} from '$lib/server/jobs/compact-description';
 import { config } from '$lib/server/config';
 
 /** Lexical scores are small integers; cosine scores sit in 0..1. */
 const LEXICAL_FLOOR = 1;
 
-/** How many shortlist lines the model is shown. Beyond this it is noise. */
-const SHORTLIST_LIMIT = 40;
+/**
+ * How many shortlist lines the model is shown at most.
+ *
+ * It was 40, and on application 92 all 40 were proposed drops: 28 of them a
+ * role's technologies, whose fate no verdict changes, and the rest the lines
+ * already being cut. The skill group being dropped and every line staying on
+ * the page were past the cut, so the review never saw the page it was
+ * reviewing. With only the lines a verdict can change (see shortlistFor), a
+ * two-page profile here comes to about 50; 80 shows all of it, and the
+ * priority in shortlistFor decides what goes past that.
+ */
+const SHORTLIST_LIMIT = 80;
 
 export interface TailorResult {
 	versionId: number;
@@ -607,14 +624,27 @@ export async function scoreCandidates(
 }
 
 /**
- * L3. The model's opinions folded back in as adjusted scores, so the
+ * L3. The model's opinions folded back in as adjusted scores and flags, so the
  * deterministic selector — not the model — has the last word on every hard rule.
  *
- * A "drop" sinks the candidate below any floor; a "keep" lifts it above one.
- * Anything the model says about a ref that isn't on the shortlist is discarded.
+ * Three verdicts, because two could not say anything the trim would hear:
+ *
+ * - **drop** sinks the candidate below any floor, so it goes first.
+ * - **keep** lifts a line on the document to the floor and no further. That
+ *   rescues a skill group from the group rule, which is absolute at the floor,
+ *   and does nothing for a line already above it: the page trim ranks
+ *   everything above the floor by score.
+ * - **must** is the one a trim hears. It sets `vouched`, which defers the line
+ *   until everything unmarked has gone (see selectForJob). It is the only way
+ *   the review can keep a line the page would otherwise cut, and the reason it
+ *   exists is application 92, where the two bullets about leading and mentoring
+ *   a team went for space against a job that asked for coaching.
+ *
+ * Only for the refs the model was shown (`shown`): an echoed or invented ref
+ * that happens to name a real item is discarded, not applied.
  */
 export interface ModelVerdict {
-	/** "keep" or "drop", as the model said it. */
+	/** "must", "keep" or "drop", as the model said it. */
 	action: string;
 	reason: string;
 }
@@ -622,27 +652,56 @@ export interface ModelVerdict {
 export function applyModelOpinions(
 	candidates: Candidate[],
 	opinions: Array<{ ref: string; action: string; reason: string }>,
-	floor: number
-): { candidates: Candidate[]; verdicts: Map<string, ModelVerdict> } {
+	floor: number,
+	/** The refs on the shortlist. Omitted, every candidate counts as shown. */
+	shown?: Set<string>,
+	/**
+	 * How many musts are still a selection — see mustLimitFor. Past it, none are
+	 * honoured: the trim falls back to the ranker's order, which is what a run
+	 * with no review does.
+	 */
+	mustLimit = Infinity
+): { candidates: Candidate[]; verdicts: Map<string, ModelVerdict>; mustsIgnored: number } {
 	const verdicts = new Map<string, ModelVerdict>();
 	const byRef = new Map(candidates.map((c) => [refFor(c), c]));
-	const adjusted = new Map<string, number>();
+	const adjusted = new Map<string, Partial<Candidate>>();
 
-	for (const opinion of opinions) {
-		const candidate = byRef.get(String(opinion.ref).trim());
-		if (!candidate || candidate.pinned) continue;
-		const action = String(opinion.action).trim().toLowerCase();
+	const usable = opinions
+		.map((opinion) => ({
+			opinion,
+			ref: String(opinion.ref).trim(),
+			action: String(opinion.action).trim().toLowerCase()
+		}))
+		.filter(({ ref }) => (!shown || shown.has(ref)) && byRef.get(ref)?.pinned === false);
+
+	// Marking most of the page essential is not a choice between lines, and
+	// protecting all of it protects nothing: the same arithmetic as the coverage
+	// guarantee, which once protected 40 of 66 lines and changed no output. So a
+	// verdict past the limit is read as keep rather than trimmed to it, because
+	// any rule for WHICH musts to honour would be this code choosing, not the
+	// model.
+	const musts = usable.filter(({ action }) => action === 'must').length;
+	const honourMusts = musts <= mustLimit;
+
+	for (const { opinion, ref, action } of usable) {
+		const candidate = byRef.get(ref);
+		if (!candidate) continue;
 		if (action === 'drop') {
-			adjusted.set(refFor(candidate), floor - Math.abs(floor) - 1);
-		} else if (action === 'keep') {
-			// Only for something already ON the document. "Keep" about a hidden
-			// item means "I have no objection", not "add it" — but a lift to the
-			// floor is exactly what the surfacing bar reads as "add it", and the
-			// model says keep to most of the shortlist. It surfaced three filler
-			// side projects onto an AI role and pushed real bullets off the page
-			// to make room for them.
-			if (!candidate.visible) continue;
-			adjusted.set(refFor(candidate), Math.max(candidate.score, floor));
+			adjusted.set(ref, { score: floor - Math.abs(floor) - 1, vetoed: true });
+		} else if (action === 'keep' || action === 'must') {
+			const vouched = action === 'must' && honourMusts;
+			// The lift is only for something already ON the document. "Keep" about
+			// a hidden item means "I have no objection", not "add it" — but a lift
+			// to the floor is exactly what the surfacing bar reads as "add it", and
+			// the model says keep to most of the shortlist. It surfaced three filler
+			// side projects onto an AI role and pushed real bullets off the page to
+			// make room for them. A must on a hidden item the run already surfaced
+			// protects it in the trim; it never makes an item eligible.
+			if (!candidate.visible && !vouched) continue;
+			adjusted.set(ref, {
+				...(candidate.visible ? { score: Math.max(candidate.score, floor) } : {}),
+				...(vouched ? { vouched: true } : {})
+			});
 		} else {
 			continue;
 		}
@@ -650,15 +709,16 @@ export function applyModelOpinions(
 		// worth printing next to a decision that agrees with it — see where these
 		// are applied.
 		const reason = text(opinion.reason);
-		if (reason) verdicts.set(refFor(candidate), { action, reason });
+		if (reason) verdicts.set(ref, { action, reason });
 	}
 
 	return {
 		candidates: candidates.map((c) => {
-			const score = adjusted.get(refFor(c));
-			return score === undefined ? c : { ...c, score };
+			const change = adjusted.get(refFor(c));
+			return change === undefined ? c : { ...c, ...change };
 		}),
-		verdicts
+		verdicts,
+		mustsIgnored: honourMusts ? 0 : musts
 	};
 }
 
@@ -671,21 +731,15 @@ export function refFor(candidate: Pick<Candidate, 'entityType' | 'entityId'>): s
 				? 'project'
 				: candidate.entityType === OVERRIDE_ENTITIES.skillCategory
 					? 'skillgroup'
-					: 'skill';
+					: // Its own name: a role's technology is a different table from the
+						// skills block, and the two share id space no more than a bullet and
+						// a project do.
+						candidate.entityType === OVERRIDE_ENTITIES.technology
+						? 'tech'
+						: 'skill';
 	return `${short}:${candidate.entityId}`;
 }
 
-/**
- * The lines the model is asked to judge.
- *
- * Ordered by where the ranker is most likely to be WRONG, not by relevance.
- * Proposed drops come first — they are the consequential decisions, and a bad
- * one removes something the applicant wanted — then whatever sits closest to
- * the floor in either direction, which is where a similarity score and a human
- * reading of a job disagree. Sorting by score instead would spend the whole
- * budget on the obvious keeps and truncate exactly the items worth a second
- * opinion.
- */
 /**
  * How much of an item's text the model sees per line. Enough for a project
  * summary (measured: 197-268 characters on this profile), short enough that
@@ -693,33 +747,155 @@ export function refFor(candidate: Pick<Candidate, 'entityType' | 'entityId'>): s
  */
 const SHORTLIST_DETAIL_CHARS = 300;
 
+/**
+ * What the review can change: the trimmable prose, and the skill groups the
+ * group rule drops. Not a role's technologies, which the tech-line rule keeps or
+ * drops on `covers` alone, so a verdict about one is read by nothing — on
+ * application 92 they were 28 of the 40 lines shown, labelled `skill:`, and the
+ * model's attention went on them. Not a pinned skill, which nothing removes.
+ */
+const REVIEWED_ENTITIES = new Set<string>([...DROPPABLE_ENTITIES, OVERRIDE_ENTITIES.skillCategory]);
+
+/**
+ * How many lines the review may mark essential: about one in five, never more
+ * than eight. Eight covers the handful of things a posting asks for with a
+ * line of evidence each; past that a must is no longer a choice. See
+ * applyModelOpinions, which honours none when the model marks more.
+ */
+export function mustLimitFor(lines: number): number {
+	return Math.max(1, Math.min(8, Math.round(lines / 5)));
+}
+
+export interface Shortlist {
+	/** One line per item, in the order the document prints them. */
+	text: string;
+	/** The refs it shows, so a verdict about anything else is discarded. */
+	refs: Set<string>;
+	/** How many lines the review may mark essential. */
+	mustLimit: number;
+}
+
+/**
+ * The lines the model is asked to judge: every line whose fate its verdict can
+ * change, in the order the document prints them.
+ *
+ * "Can change" is narrower than "is a candidate", and the difference was most of
+ * what the model was shown on application 92 — a role's technologies, decided
+ * by a rule that reads no score (see REVIEWED_ENTITIES). Hidden items the run
+ * cannot surface are left out for the same reason; they used to be listed as
+ * "keep", which told the model the page held lines it did not.
+ *
+ * The proposal says what the selection would print: keep when it prints, drop
+ * when it does not. That covers the trimmed lines and the hidden ones it would
+ * have surfaced but had no room for, which a must can still save.
+ *
+ * In print order so the model reads the page the way a reader does, a role at a
+ * time, and can see a ten-year role left holding three minor lines. Order used
+ * to be "proposed drops first, then nearest the floor", so a truncated list kept
+ * the doubtful lines. That priority now only decides what goes when there are
+ * more than SHORTLIST_LIMIT lines, which a page of prose seldom reaches once the
+ * technologies are out.
+ */
 export function shortlistFor(
 	candidates: Candidate[],
 	decisions: Decision[],
 	floor: number
-): string {
-	const dropped = new Set(
-		decisions.filter((d) => d.action === 'exclude').map((d) => `${d.entityType}:${d.entityId}`)
+): Shortlist {
+	const key = (c: { entityType: string; entityId: number }) => `${c.entityType}:${c.entityId}`;
+	const excluded = new Set(decisions.filter((d) => d.action === 'exclude').map(key));
+	const included = new Set(decisions.filter((d) => d.action === 'include').map(key));
+
+	/** Whether the selection prints it; null when no verdict could change that. */
+	const prints = (c: Candidate): boolean | null => {
+		if (c.pinned || !REVIEWED_ENTITIES.has(c.entityType)) return null;
+		if (c.visible) return !excluded.has(key(c));
+		// A bullet on a role the run brings back prints with it, unless trimmed.
+		const ridesAlong =
+			c.visibleIfParentShown === true &&
+			c.parentType !== undefined &&
+			c.parentId !== null &&
+			included.has(`${c.parentType}:${c.parentId}`);
+		if (ridesAlong) return !excluded.has(key(c));
+		if (included.has(key(c))) return true;
+		// Surfaced and then trimmed for room: the trim is the only thing between
+		// it and the page, and the trim is what a must speaks to.
+		if (canBringBack(c) && surfaceScore(c, floor) >= floor) return false;
+		return null;
+	};
+
+	const reviewed = candidates
+		.map((c, order) => ({ c, order, prints: prints(c) }))
+		.filter((x): x is { c: Candidate; order: number; prints: boolean } => x.prints !== null);
+
+	// Over the limit, the doubtful lines stay: what is on the page and proposed
+	// for removal first, then whatever sits nearest the floor.
+	const proposedDrop = (x: (typeof reviewed)[number]) => x.c.visible && !x.prints;
+	const kept = new Set(
+		[...reviewed]
+			.sort(
+				(a, z) =>
+					Number(proposedDrop(z)) - Number(proposedDrop(a)) ||
+					Math.abs(a.c.score - floor) - Math.abs(z.c.score - floor)
+			)
+			.slice(0, SHORTLIST_LIMIT)
+			.map((x) => x.order)
 	);
-	const key = (c: Candidate) => `${c.entityType}:${c.entityId}`;
-	const judgeable = candidates.filter((c) => !c.pinned);
+	const shown = reviewed.filter((x) => kept.has(x.order));
 
-	const proposedDrops = judgeable.filter((c) => dropped.has(key(c)));
-	const rest = judgeable
-		.filter((c) => !dropped.has(key(c)))
-		.sort((a, z) => Math.abs(a.score - floor) - Math.abs(z.score - floor));
-
-	return [...proposedDrops, ...rest]
-		.slice(0, SHORTLIST_LIMIT)
-		.map((c) => {
-			const proposal = dropped.has(key(c)) ? 'drop' : 'keep';
+	const text = shown
+		.map(({ c, prints }) => {
 			// What it says, not what it is called. Asked to judge "LitState" against
 			// a web-components job, the model called it a likely unrelated hobby
 			// project; its summary names Lit web components in the first six words.
 			const said = (c.detail || c.label).replace(/\s+/g, ' ');
-			return `${refFor(c)} | ${said.slice(0, SHORTLIST_DETAIL_CHARS)} | ${c.score.toFixed(2)} | ${proposal}`;
+			return `${refFor(c)} | ${said.slice(0, SHORTLIST_DETAIL_CHARS)} | ${c.score.toFixed(2)} | ${prints ? 'keep' : 'drop'}`;
 		})
 		.join('\n');
+
+	return {
+		text,
+		refs: new Set(shown.map(({ c }) => refFor(c))),
+		mustLimit: mustLimitFor(shown.length)
+	};
+}
+
+/**
+ * What the review prompt is filled with.
+ *
+ * The posting goes in whole, or compacted when it is long, and never clipped.
+ * It was cut at 4,000 characters, and application 92's posting ended at
+ * "Je beschikt over: * Minimaal h": the list of what the job asks for, with the
+ * line about coaching development teams in it, never reached the model.
+ * promptJobDescription is how the writing prompts already handle a long posting:
+ * it drops boilerplate and keeps the employer's own wording.
+ *
+ * The two skills lists stay apart. Joined, "Team Coaching" read as a requirement
+ * as much as "Azure DevOps" did, and the model could not weigh a nice-to-have as
+ * one.
+ */
+export function selectionPromptVariables(opts: {
+	title: unknown;
+	company: unknown;
+	description: PromptDescription;
+	required: string[];
+	preferred: string[];
+	shortlist: Shortlist;
+}): Record<string, string> {
+	const posting = text(opts.description.text);
+	return {
+		'job.summary': [
+			text(opts.title),
+			text(opts.company),
+			posting,
+			opts.description.compacted && posting ? '(This is a shortened copy of the posting.)' : ''
+		]
+			.filter(Boolean)
+			.join('\n'),
+		'job.skills_required': opts.required.join(', ') || 'none listed',
+		'job.skills_preferred': opts.preferred.join(', ') || 'none listed',
+		must_limit: String(opts.shortlist.mustLimit),
+		shortlist: opts.shortlist.text
+	};
 }
 
 /**
@@ -746,7 +922,9 @@ export function applyVerdictReasons(
 		const verdict = verdicts.get(refFor(decision));
 		if (!verdict) continue;
 		const agrees =
-			decision.action === 'exclude' ? verdict.action === 'drop' : verdict.action === 'keep';
+			decision.action === 'exclude'
+				? verdict.action === 'drop'
+				: verdict.action === 'keep' || verdict.action === 'must';
 		if (agrees) decision.reason = verdict.reason;
 	}
 	return decisions;
@@ -800,10 +978,9 @@ export async function tailorVersionForApplication(opts: {
 		with: {
 			job: {
 				columns: {
-					id: true,
+					...COMPACT_COLUMNS,
 					title: true,
 					company: true,
-					job_description: true,
 					skills_required: true,
 					skills_preferred: true,
 					responsibilities: true
@@ -895,36 +1072,45 @@ export async function tailorVersionForApplication(opts: {
 	// document to it by rendering, which is the only thing that actually knows.
 	const budgetChars = chooseBudget(candidates);
 	const targetPages = budgetChars === PAGE_BUDGETS.one ? 1 : 2;
-	// Whatever the last selection ran against — the model adjusts scores, and
-	// re-selecting for the page has to see the same field it did.
-	let selectionCandidates = candidates;
-	const deterministic = selectForJob(candidates, {
+	// Every selection this run makes is made with the same rules and reasons —
+	// the first, the one after the model, and each the fit pass asks for. They
+	// were three option lists, and the one after the model had lost
+	// technologyDropReason.
+	const selectionOptions = (budget: number): SelectionOptions => ({
 		floor,
 		...DEFAULT_SELECTION,
 		promotionMargin: PROMOTION_MARGIN[ranker],
-		budgetChars,
+		budgetChars: budget,
 		pinnedReason,
 		surfacedReason,
 		groupDropReason,
 		technologyDropReason,
 		restoredParentReason
 	});
+	// Whatever the last selection ran against — the model adjusts scores, and
+	// re-selecting for the page has to see the same field it did.
+	let selectionCandidates = candidates;
+	const deterministic = selectForJob(candidates, selectionOptions(budgetChars));
 
 	// ── L3 ──
 	let decisions = deterministic;
 	let modelReviewed = false;
 	let modelVerdicts = new Map<string, ModelVerdict>();
 	const shortlist = shortlistFor(candidates, deterministic, floor);
-	if (shortlist) {
+	if (shortlist.text) {
 		try {
-			const result = await createAndGenerateAiChat(profileId, 'tailor_resume_selection', {
-				'job.summary': [text(job.title), text(job.company), text(job.job_description)]
-					.filter(Boolean)
-					.join('\n')
-					.slice(0, 4000),
-				'job.skills': querySkills.join(', '),
-				shortlist
-			});
+			const result = await createAndGenerateAiChat(
+				profileId,
+				'tailor_resume_selection',
+				selectionPromptVariables({
+					title: job.title,
+					company: job.company,
+					description: await promptJobDescription(job, profileId),
+					required: requiredSkills,
+					preferred: preferredSkills,
+					shortlist
+				})
+			);
 			// `response` is the raw JSON string the model returned; every caller
 			// parses it themselves (see record-derivation.ts).
 			//
@@ -944,21 +1130,19 @@ export async function tailorVersionForApplication(opts: {
 				const applied = applyModelOpinions(
 					candidates,
 					opinions as Array<{ ref: string; action: string; reason: string }>,
-					floor
+					floor,
+					shortlist.refs,
+					shortlist.mustLimit
 				);
+				if (applied.mustsIgnored > 0) {
+					console.warn(
+						`[tailor-version] application ${applicationId}: the review marked ${applied.mustsIgnored} lines essential against a limit of ${shortlist.mustLimit}; read as keeps`
+					);
+				}
 				modelVerdicts = applied.verdicts;
 				selectionCandidates = applied.candidates;
 				// Re-run the same selector: the model changed scores, not rules.
-				decisions = selectForJob(applied.candidates, {
-					floor,
-					...DEFAULT_SELECTION,
-					promotionMargin: PROMOTION_MARGIN[ranker],
-					budgetChars,
-					pinnedReason,
-					surfacedReason,
-					groupDropReason,
-					restoredParentReason
-				});
+				decisions = selectForJob(applied.candidates, selectionOptions(budgetChars));
 				modelReviewed = true;
 			}
 		} catch (err) {
@@ -1065,18 +1249,15 @@ export async function tailorVersionForApplication(opts: {
 		// is persisted in full: persistDecisions deletes this version's generated
 		// rows and re-inserts what it is handed, so a selection that omitted them
 		// would silently drop the chosen summary on the first budget tightening.
+		//
+		// So do the model's reasons, for the same reason. Without them every
+		// document that needed a tighter budget lost the review's wording, and a
+		// line it vetoed showed the sunk score as its relevance instead.
 		select: (budget) => {
-			const selection = selectForJob(selectionCandidates, {
-				floor,
-				...DEFAULT_SELECTION,
-				promotionMargin: PROMOTION_MARGIN[ranker],
-				budgetChars: budget,
-				pinnedReason,
-				surfacedReason,
-				groupDropReason,
-				technologyDropReason,
-				restoredParentReason
-			});
+			const selection = applyVerdictReasons(
+				selectForJob(selectionCandidates, selectionOptions(budget)),
+				modelVerdicts
+			);
 			return [...selection, ...variantPicksFor(selection)];
 		}
 	});
