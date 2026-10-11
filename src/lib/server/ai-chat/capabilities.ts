@@ -96,6 +96,7 @@ import { DIRECTIVE_CAPABILITIES, type DirectiveCapability } from './directive-ca
 import { TEXT_COMMIT_CAPABILITIES, type TextCommitCapability } from './text-commit-capabilities';
 import { REORDER_CAPABILITIES, type ReorderCapability } from './reorder-capabilities';
 import { TAG_CAPABILITIES, type TagCapability } from './tag-capabilities';
+import { VERSION_CAPABILITIES, type VersionCapability } from './version-capabilities';
 import type { EditSource } from './edit-log';
 import type { TierDecision } from '$lib/server/mcp/tiers';
 import { createApplication, parseForNewApplication } from '$lib/server/applications/create';
@@ -135,7 +136,8 @@ export type Capability =
 	| MatchConfigCapability
 	| DirectiveCapability
 	| ReorderCapability
-	| TagCapability;
+	| TagCapability
+	| VersionCapability;
 
 /** The concrete row a capability acts on, once resolved from the page entity. */
 export interface CapabilityTarget {
@@ -273,6 +275,13 @@ export interface CapabilityDef {
 	 * a section that has no entries.
 	 */
 	singleton?: boolean;
+	/**
+	 * Sending no fields is a whole request: the verb's own act needs nothing
+	 * more, and every field it has is optional (a delete with nowhere named to
+	 * move what depends on it). Without this, a call that sends none is refused
+	 * as one whose field names were all misspelled.
+	 */
+	noFieldsNeeded?: boolean;
 	/**
 	 * This capability's current state, for the model to propose against.
 	 *
@@ -2041,7 +2050,8 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
 	...MATCH_CONFIG_CAPABILITIES,
 	...DIRECTIVE_CAPABILITIES,
 	...REORDER_CAPABILITIES,
-	...TAG_CAPABILITIES
+	...TAG_CAPABILITIES,
+	...VERSION_CAPABILITIES
 };
 
 /** A capability that resolved and authorized for this turn. */
@@ -2399,7 +2409,11 @@ export async function executeCapability(
 	// hiding an entry says everything it has to say by naming one. The refusal
 	// is for a capability that asked for values and got none, which is a model
 	// that produced nothing while its reply promised otherwise.
-	if (Object.keys(def.fields).length > 0 && Object.keys(fields).length === 0) {
+	if (
+		!def.noFieldsNeeded &&
+		Object.keys(def.fields).length > 0 &&
+		Object.keys(fields).length === 0
+	) {
 		return { ok: false, reason: 'empty', error: 'Nothing to change.' };
 	}
 

@@ -55,6 +55,7 @@ import { isTextCapability } from './text-version-capabilities';
 import { isTextCommitCapability } from './text-commit-capabilities';
 import { isReorderCapability } from './reorder-capabilities';
 import { isTagCapability } from './tag-capabilities';
+import { isVersionCapability } from './version-capabilities';
 import { MATCH_CONFIG_CAPABILITY_NAMES } from './match-config-capability';
 import { DIRECTIVE_CAPABILITY_NAMES, DIRECTIVES_PAGE } from './directive-capability';
 
@@ -164,16 +165,18 @@ function isDirectiveCapability(capability: Capability): boolean {
 
 function entityCapabilities(): Capability[] {
 	const generated = new Set<string>(PROFILE_CAPABILITY_NAMES);
-	// A reorder and a tag change are MCP-only: no page offers them, so naming
-	// them here would promise the chat a verb it is never given. See
-	// `reorder-capabilities.ts` and `tag-capabilities.ts`.
+	// A reorder, a tag change and the version verbs are MCP-only: no page offers
+	// them to the chat, so naming them here would promise a verb it is never
+	// given. See `reorder-capabilities.ts`, `tag-capabilities.ts` and
+	// `version-capabilities.ts`.
 	return (Object.keys(CAPABILITIES) as Capability[]).filter(
 		(c) =>
 			!generated.has(c) &&
 			!isTextCapability(c) &&
 			!isTextCommitCapability(c) &&
 			!isReorderCapability(c) &&
-			!isTagCapability(c)
+			!isTagCapability(c) &&
+			!isVersionCapability(c)
 	);
 }
 

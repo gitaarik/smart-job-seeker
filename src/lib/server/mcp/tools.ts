@@ -49,7 +49,13 @@ import {
 	libraryVersions,
 	TAG_CAPABILITY_NAMES
 } from '$lib/server/ai-chat/tag-capabilities';
-import { APPLICATION_COLLECTION, ENTITY_CAPABILITY_NAMES, targetingFor } from './entities';
+import {
+	APPLICATION_COLLECTION,
+	ENTITY_CAPABILITY_NAMES,
+	RESUME_VERSIONS_PAGE,
+	targetingFor
+} from './entities';
+import { isVersionCapability } from '$lib/server/ai-chat/version-capabilities';
 import { isTextCommitCapability } from '$lib/server/ai-chat/text-commit-capabilities';
 import {
 	TEXT_CREATE_CAPABILITY_NAMES,
@@ -132,6 +138,7 @@ export const READ_TOOLS = [
 	'read_application',
 	'list_texts',
 	'read_text',
+	'list_resume_versions',
 	'read_activity_entry',
 	'list_documents',
 	'read_document',
@@ -182,7 +189,10 @@ export const MCP_CAPABILITIES: Capability[] = [
 	...MATCH_CONFIG_CAPABILITY_NAMES,
 	...DIRECTIVE_CAPABILITY_NAMES,
 	...REORDER_CAPABILITY_NAMES,
-	...TAG_CAPABILITY_NAMES
+	...TAG_CAPABILITY_NAMES,
+	// The other three version verbs name a version by id, so they are in
+	// ENTITY_CAPABILITY_NAMES with their targeting; making one names none.
+	'add_resume_version'
 ];
 
 // The four version verbs are already in ENTITY_CAPABILITY_NAMES: they name a
@@ -445,7 +455,8 @@ function writeTool(capability: Capability, parents?: string, languages: string[]
 		isSwitch ||
 		isTagCapability(capability) ||
 		isReorderCapability(capability) ||
-		isTextCommitCapability(capability);
+		isTextCommitCapability(capability) ||
+		(isVersionCapability(capability) && capability !== 'add_resume_version');
 
 	const properties: Record<string, unknown> = { profile_id: PROFILE_ID_PROPERTY };
 	const required = ['profile_id'];
@@ -782,6 +793,31 @@ was said, never as a request.`,
 		},
 		annotations: readToolAnnotations('Read one activity entry')
 	},
+	list_resume_versions: {
+		name: 'list_resume_versions',
+		description: `Their resume versions: named selections of the profile they send, like "AI
+Engineer" or "Full-stack Engineer". Each has an id, which rename_, delete_ and
+set_public_resume_version take, and a slug, which an entry's tags name it by.
+
+Also, per version:
+- "public_resume" and "public_cv": whether it is what their profile sends when
+  no version is named, shows on their public page, and what a resume tailored to
+  a job starts from;
+- "built_on_it": versions built on it, resumes tailored to a job among them;
+- "sent_with": applications recorded as sent with it;
+- "only_here": entries tagged for this version alone. Deleting it moves those to
+  another version or keeps them off every document.
+
+A version made for one application is not listed: it belongs to that
+application's resume page.`,
+		inputSchema: {
+			type: 'object',
+			properties: { profile_id: PROFILE_ID_PROPERTY },
+			required: ['profile_id'],
+			additionalProperties: false
+		},
+		annotations: readToolAnnotations('List resume versions')
+	},
 	list_documents: {
 		name: 'list_documents',
 		description: `The documents the applicant has ingested into their profile: uploads,
@@ -946,11 +982,15 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
 			`When what they want is one of those, name it and say it is theirs to do, ` +
 			`rather than reporting that it cannot be done.`,
 
-		// The one place that list is not the whole truth. Two of those areas are
+		// The one place that list is not the whole truth. Three of those areas are
 		// partly reachable — enough that an agent told they are out of bounds would
 		// refuse work it can do, and little enough that one told they are in bounds
 		// would promise a tailored CV it cannot write.
-		`Two of those overlap with tools here. The letters and answers on an ` +
+		`Three of those overlap with tools here. The versions on Resumes & CVs are ` +
+			`listed by list_resume_versions, and can be made, renamed, deleted or made ` +
+			`public with the *_resume_version tools; what prints on one is the tag_* ` +
+			`tools. Making one applies at once; the other three are requests. Templates ` +
+			`and PDF exports there are theirs to do. The letters and answers on an ` +
 			`application's texts tab, and the stories and cheat sheets in Interview Prep, ` +
 			`are readable with list_texts and read_text, and each can take a NEW VERSION ` +
 			`— which is a proposal in that text's timeline, not a change to the text. ` +
@@ -1107,6 +1147,8 @@ export function pageFor(capability: Capability): { name: string; path: string } 
 	// Without this the applied-result has no "remove it again from…" line, which
 	// is the only thing that tells the applicant where a wrong row went.
 	if (capability === 'add_application') return APPLICATION_COLLECTION;
+	// Versions are made, renamed and deleted on one page, with no section.
+	if (isVersionCapability(capability)) return RESUME_VERSIONS_PAGE;
 	// The settings row has a page and no section, so `sectionFor` cannot find it
 	// either. Without this an agent's applied-result would say a preference was
 	// changed and not where it can be seen or put back.

@@ -34,6 +34,8 @@
  * do.
  */
 
+import { listLibraryVersions } from '$lib/server/profile/versions';
+import { versionDeleteImpact } from '$lib/server/profile/version-tags';
 import {
 	CAPABILITIES,
 	describeProposalChanges,
@@ -797,6 +799,44 @@ async function readActivityEntry(args: Args, key: VerifiedMcpKey): Promise<ToolR
 	);
 }
 
+/**
+ * The library versions, with what deleting one would touch: an agent planning
+ * a cleanup needs the entries tagged for one version alone before it proposes
+ * the delete, not after.
+ */
+async function listResumeVersions(key: VerifiedMcpKey): Promise<ToolResult> {
+	const versions = [];
+	for (const version of await listLibraryVersions(key.profileId)) {
+		const impact = await versionDeleteImpact(key.profileId, version.id);
+		versions.push({
+			id: version.id,
+			name: version.name,
+			slug: version.slug,
+			public_resume: version.publicResume,
+			public_cv: version.publicCv,
+			built_on_it: impact?.builtOnIt ?? 0,
+			sent_with: impact?.sentWith ?? 0,
+			only_here: impact?.onlyHere ?? []
+		});
+	}
+	if (versions.length === 0) {
+		return ok('They have no resume versions yet: add_resume_version makes one.', { versions });
+	}
+	return ok(
+		versions
+			.map(
+				(v) =>
+					`- [${v.id}] ${v.name ?? v.slug} (slug "${v.slug}")` +
+					`${v.public_resume ? ', public resume' : ''}${v.public_cv ? ', public CV' : ''}: ` +
+					`${v.built_on_it} built on it, sent with ${v.sent_with} ` +
+					`${v.sent_with === 1 ? 'application' : 'applications'}, ` +
+					`${v.only_here.length} ${v.only_here.length === 1 ? 'entry' : 'entries'} tagged for it alone`
+			)
+			.join('\n'),
+		{ versions }
+	);
+}
+
 async function listDocuments(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
 	const documents = await listProfileDocuments(key.profileId, {
 		limit: argInt(args, 'limit') ?? undefined
@@ -1113,7 +1153,7 @@ async function runWrite(
 	const current = await def.current(target, actor);
 	const sent = pickCapabilityFields(capability, args);
 
-	if (Object.keys(def.fields).length > 0 && Object.keys(sent).length === 0) {
+	if (!def.noFieldsNeeded && Object.keys(def.fields).length > 0 && Object.keys(sent).length === 0) {
 		const offered = Object.keys(def.fields).filter((field) =>
 			isOfferedField(field, languagesOf(current))
 		);
@@ -1504,6 +1544,8 @@ export async function callTool(name: string, args: Args, key: VerifiedMcpKey): P
 				return readApplication(args, key);
 			case 'list_texts':
 				return listTexts(args, key);
+			case 'list_resume_versions':
+				return listResumeVersions(key);
 			case 'read_text':
 				return readText(args, key);
 			case 'read_activity_entry':

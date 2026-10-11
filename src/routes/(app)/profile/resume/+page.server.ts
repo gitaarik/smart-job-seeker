@@ -16,7 +16,7 @@ import { requireCredits } from '$lib/server/billing/require-credits';
 import { DEFAULT_TEMPLATE_ID, templateForStorage } from '$lib/resume-templates';
 import { getResumeTemplatesForProfile } from '$lib/server/profile/resume-templates';
 import { BASE_LOCALE, isKnownLocale, LOCALES } from '$lib/resume-translations';
-import { isReservedVersionSlug, isTailoredSlug } from '$lib/version-overrides';
+import { createVersion, VersionError } from '$lib/server/profile/versions';
 
 export const load: PageServerLoad = async ({ parent, url }) => {
 	const layoutData = await parent();
@@ -167,42 +167,17 @@ export const actions: Actions = {
 			.map((v) => parseInt(v as string))
 			.filter((v) => !isNaN(v));
 
-		// Auto-generate slug from name if not provided
-		if (!slug && name?.trim()) {
-			slug = name
-				.toLowerCase()
-				.trim()
-				.replace(/[^\w\s-]/g, '')
-				.replace(/[\s_]+/g, '-')
-				.replace(/-+/g, '-')
-				.replace(/^-+|-+$/g, '');
+		// The rules every caller keeps (createVersion): a slug from the name when
+		// none is given, never a reserved one, and unique on the profile, which
+		// this form did not check, so two versions could share every item tag.
+		let created: { id: number; slug: string };
+		try {
+			created = await createVersion(profileId, { name, slug });
+		} catch (e) {
+			if (e instanceof VersionError) return fail(400, { error: e.message });
+			throw e;
 		}
-
-		if (!slug) {
-			return fail(400, { error: 'Name is required' });
-		}
-
-		// Two reserved namespaces, both of which would surface as the wrong thing
-		// being shown rather than as an error: `app-<id>` belongs to job-tailored
-		// versions, and the base template names are what an item's tags use to
-		// say which template it appears on.
-		if (isReservedVersionSlug(slug)) {
-			return fail(400, {
-				error: isTailoredSlug(slug)
-					? 'Slugs starting with "app-<number>" are reserved for job-tailored versions.'
-					: `"${slug}" is reserved: it names a base template, which item tags use to choose where they appear.`
-			});
-		}
-
-		const [created] = await db
-			.insert(profile_versions)
-			.values({
-				slug,
-				name: name?.trim() || null,
-				profile_id: profileId,
-				date_created: new Date()
-			})
-			.returning();
+		slug = created.slug;
 
 		for (const parentId of extendsIds) {
 			const parent = await db.query.profile_versions.findFirst({

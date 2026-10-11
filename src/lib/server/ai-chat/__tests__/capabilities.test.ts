@@ -18,6 +18,7 @@ import { isTextCapability } from '../text-version-capabilities';
 import { isTextCommitCapability } from '../text-commit-capabilities';
 import { isReorderCapability } from '../reorder-capabilities';
 import { isTagCapability } from '../tag-capabilities';
+import { isVersionCapability } from '../version-capabilities';
 
 let applicationRow: unknown = null;
 let jobRow: unknown = null;
@@ -1481,7 +1482,8 @@ describe('the registry as a whole', () => {
 		//
 		// The reorder verbs are out for the same reason in a stronger form: no
 		// route grants one, so there is no page they could be live on at all. The
-		// tag verbs are out on exactly those terms (see tag-capabilities.ts).
+		// tag and version verbs are out on exactly those terms (see
+		// tag-capabilities.ts and version-capabilities.ts).
 		const live = (Object.keys(CAPABILITIES) as Capability[])
 			.filter(
 				(capability) =>
@@ -1489,7 +1491,8 @@ describe('the registry as a whole', () => {
 					!isTextCapability(capability) &&
 					!isTextCommitCapability(capability) &&
 					!isReorderCapability(capability) &&
-					!isTagCapability(capability)
+					!isTagCapability(capability) &&
+					!isVersionCapability(capability)
 			)
 			.map((capability) => ({ capability, targets: [{ id: 1, label: 'x' }], current: {} }));
 

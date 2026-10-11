@@ -23,6 +23,7 @@ import { TEXT_CAPABILITY_NAMES, isTextCapability } from '../text-version-capabil
 import { TEXT_COMMIT_CAPABILITY_NAMES, isTextCommitCapability } from '../text-commit-capabilities';
 import { REORDER_CAPABILITY_NAMES, isReorderCapability } from '../reorder-capabilities';
 import { TAG_CAPABILITY_NAMES, isTagCapability } from '../tag-capabilities';
+import { isVersionCapability } from '../version-capabilities';
 import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/resources';
 
 const TEXT = formatAbilityManifest();
@@ -71,7 +72,7 @@ describe('formatAbilityManifest', () => {
 		for (const capability of Object.keys(CAPABILITIES) as Capability[]) {
 			if (generated.has(capability) || isTextCapability(capability)) continue;
 			if (isTextCommitCapability(capability) || isReorderCapability(capability)) continue;
-			if (isTagCapability(capability)) continue;
+			if (isTagCapability(capability) || isVersionCapability(capability)) continue;
 			expect(TEXT, capability).toContain(CAPABILITIES[capability].title);
 		}
 	});

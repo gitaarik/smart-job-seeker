@@ -55,7 +55,9 @@ vi.mock('drizzle-orm', () => ({
 	ne: vi.fn((c: unknown, v: unknown) => ({ c, v })),
 	or: vi.fn((...a: unknown[]) => a),
 	asc: vi.fn((c: unknown) => c),
-	isNull: vi.fn((c: unknown) => c)
+	isNull: vi.fn((c: unknown) => c),
+	// The shared version rules compare slugs without case (versions.ts).
+	sql: vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => ({ strings, values }))
 }));
 
 vi.mock('$lib/server/db/schema', () => ({
@@ -84,14 +86,18 @@ vi.mock('$lib/server/profile/generate-version-pdfs', () => ({
 	generateVersionPdfs: (...a: unknown[]) => mockGenerateVersionPdfs(...a)
 }));
 
-vi.mock('$lib/server/profile/tailor-version', () => ({
-	retagVersionSlug: (...a: unknown[]) => mockRetagVersionSlug(...a)
+vi.mock('$lib/server/profile/version-tags', () => ({
+	retagVersionSlug: (...a: unknown[]) => mockRetagVersionSlug(...a),
+	versionDeleteImpact: vi.fn().mockResolvedValue(null)
 }));
 
 vi.mock('$lib/server/billing/credits', () => ({ chargeCredits: vi.fn() }));
 vi.mock('$lib/server/billing/require-credits', () => ({ requireCredits: vi.fn() }));
 vi.mock('$lib/resume-contact-fields', () => ({ buildToggles: vi.fn(() => []) }));
-vi.mock('$lib/version-overrides', () => ({ isTailoredSlug: vi.fn(() => false) }));
+vi.mock('$lib/version-overrides', () => ({
+	isTailoredSlug: vi.fn(() => false),
+	isReservedVersionSlug: vi.fn(() => false)
+}));
 
 import { actions } from '../+page.server';
 
@@ -123,15 +129,18 @@ describe('library version editor', () => {
 		mockRetagVersionSlug.mockResolvedValue(0);
 		mockGenerateVersionPdfs.mockReturnValue(Promise.resolve());
 		// Default: the version exists, and no other version claims the new slug.
-		mockVersionFindFirst.mockResolvedValue(undefined);
-		mockVersionFindFirst.mockResolvedValueOnce({
+		// Looked up twice: by the action, and by the shared rule it calls
+		// (renameVersion, deleteVersion in $lib/server/profile/versions).
+		const version = {
 			id: 7,
 			profile_id: 12,
 			slug: 'frontend',
 			name: 'Frontend',
 			application_id: null,
 			toggles: []
-		});
+		};
+		mockVersionFindFirst.mockResolvedValue(undefined);
+		mockVersionFindFirst.mockResolvedValueOnce(version).mockResolvedValueOnce(version);
 	});
 
 	describe('update', () => {
@@ -178,19 +187,21 @@ describe('library version editor', () => {
 		it('checks for a clash when a version gets its first slug, but retags nothing', async () => {
 			mockVersionFindFirst.mockReset();
 			mockVersionFindFirst.mockResolvedValue(undefined);
-			mockVersionFindFirst.mockResolvedValueOnce({
+			const slugless = {
 				id: 7,
 				profile_id: 12,
 				slug: null,
 				name: null,
 				application_id: null,
 				toggles: []
-			});
+			};
+			mockVersionFindFirst.mockResolvedValueOnce(slugless).mockResolvedValueOnce(slugless);
 
 			await actions.update(createEvent({ slug: 'frontend', name: 'Frontend' }));
 
-			// Two lookups: the version itself, then the clash check.
-			expect(mockVersionFindFirst).toHaveBeenCalledTimes(2);
+			// Three lookups: the version by the action, again by renameVersion, then
+			// the clash check.
+			expect(mockVersionFindFirst).toHaveBeenCalledTimes(3);
 			expect(mockRetagVersionSlug).not.toHaveBeenCalled();
 			expect(updates.some((u) => tableOf(u) === 'applications')).toBe(false);
 		});

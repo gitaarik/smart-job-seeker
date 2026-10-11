@@ -66,17 +66,19 @@ import {
 	type TextCreateCapability
 } from '$lib/server/ai-chat/text-create-capabilities';
 
+import { listLibraryVersions } from '$lib/server/profile/versions';
+
 /** A resolved row, or the sentence to hand back to the agent instead. */
 export type EntityResolution = { target: CapabilityTarget } | { error: string };
 
 export interface EntityTargeting {
-	entity: 'job' | 'application' | TextKind;
+	entity: 'job' | 'application' | 'resume_version' | TextKind;
 	/** The argument that names the row. Domain-named, because it is one. */
-	arg: 'job_id' | 'application_id' | 'text_id';
+	arg: 'job_id' | 'application_id' | 'text_id' | 'version_id';
 	/** The schema description for that argument. */
 	argDescription: string;
 	/** The tool that hands out ids, named in every refusal that needs one. */
-	listTool: 'list_jobs' | 'list_applications' | 'list_texts';
+	listTool: 'list_jobs' | 'list_applications' | 'list_texts' | 'list_resume_versions';
 	resolve(id: number, actor: CapabilityActor): Promise<EntityResolution>;
 	/**
 	 * Where a person changes this by hand — for a result that has to say so.
@@ -96,6 +98,34 @@ export interface EntityTargeting {
 	 */
 	collection: { name: string; path: string };
 }
+
+/** The Resumes & CVs page, where a person makes, renames and deletes versions. */
+export const RESUME_VERSIONS_PAGE = { name: 'Resumes & CVs', path: '/profile/resume' };
+
+/**
+ * A library resume version, named by id. One made for an application is that
+ * application's, changed on its resume page, and named by none of these verbs.
+ */
+const versionTargeting: EntityTargeting = {
+	entity: 'resume_version',
+	arg: 'version_id',
+	argDescription: 'Which resume version, by the id returned from list_resume_versions.',
+	listTool: 'list_resume_versions',
+	page: (target) => ({ name: 'resume version', path: `/profile/resume/${target.id}` }),
+	collection: RESUME_VERSIONS_PAGE,
+	resolve: async (id, actor) => {
+		const version = (await listLibraryVersions(actor.profileId)).find((v) => v.id === id);
+		if (!version) {
+			return {
+				error:
+					`There is no resume version ${id} on this profile. Call list_resume_versions ` +
+					`for the ids. A version made for one application is not one of them: it is ` +
+					`changed on that application's resume page.`
+			};
+		}
+		return { target: { id: version.id, label: version.name?.trim() || version.slug } };
+	}
+};
 
 const jobTargeting: EntityTargeting = {
 	entity: 'job',
@@ -285,7 +315,11 @@ export const ENTITY_TARGETING: Partial<Record<Capability, EntityTargeting>> = {
 	// And one per kind again for the verb that commits one of those versions.
 	...TEXT_COMMIT_TARGETING,
 	// And the creates that name an application to be started under.
-	...TEXT_CREATE_TARGETING
+	...TEXT_CREATE_TARGETING,
+	// The version verbs that name an existing version. Making one names none.
+	rename_resume_version: versionTargeting,
+	delete_resume_version: versionTargeting,
+	set_public_resume_version: versionTargeting
 };
 
 export const ENTITY_CAPABILITY_NAMES = Object.keys(ENTITY_TARGETING) as Capability[];
