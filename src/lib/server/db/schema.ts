@@ -1933,6 +1933,10 @@ export const profile_versions = pgTable(
  * (entity_type, entity_id, field, locale). Sparse and additive: a missing row
  * falls back to the English base at render time. The translatable-field
  * vocabulary lives in resume-translations.ts.
+ *
+ * `entity_id` is no foreign key, since one table serves eleven kinds of row; a
+ * row's translations go with it through the delete trigger described on
+ * `profile_version_overrides`.
  */
 export const profile_translations = pgTable(
 	'profile_translations',
@@ -1956,6 +1960,8 @@ export const profile_translations = pgTable(
 			table.locale
 		),
 		index('profile_translations_lookup').on(table.profile_id, table.locale),
+		// For the delete trigger, which knows the row but not its profile.
+		index('profile_translations_entity_idx').on(table.entity_type, table.entity_id),
 		foreignKey({
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
@@ -2529,6 +2535,18 @@ export const profile_version_extensions = pgTable(
  * cannot defend in the room it is read in, so every generated decision carries
  * why. `source` keeps a regeneration from silently overwriting a decision the
  * applicant made by hand.
+ *
+ * The version is the only foreign key. `entity_id` names a row in whichever
+ * table `entity_type` says, so no cascade reaches it when that row goes. A
+ * delete trigger on each of those tables does instead
+ * (`delete_entity_sidecars`, migration 0076), and clears the row's
+ * `profile_translations` with it. That covers every way a row is deleted: the
+ * profile editor, a resume import, an assistant's undo, and the cascade from
+ * the role a bullet sits under. Before it, each of those paths had to
+ * remember, and the skills page did not: 11 overrides were left naming
+ * skills and technologies that no longer existed (found 2026-10-11). An entity
+ * type added to either vocabulary needs its table's trigger too, which
+ * `entity-sidecars.test.ts` checks.
  */
 export const profile_version_overrides = pgTable(
 	'profile_version_overrides',
@@ -2555,6 +2573,8 @@ export const profile_version_overrides = pgTable(
 			table.entity_type,
 			table.entity_id
 		),
+		// For the delete trigger, which knows the row but not the versions naming it.
+		index('profile_version_overrides_entity_idx').on(table.entity_type, table.entity_id),
 		foreignKey({
 			columns: [table.version_id],
 			foreignColumns: [profile_versions.id],

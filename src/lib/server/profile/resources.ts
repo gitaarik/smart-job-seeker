@@ -445,6 +445,10 @@ export interface ProfileResource {
 	 *
 	 * Absent means nothing in the section is translated, which is most of them:
 	 * a certificate or a technology is called the same thing in every language.
+	 *
+	 * A new one needs the delete trigger that clears a deleted row's
+	 * translations (see `profile_version_overrides` in schema.ts), on this
+	 * section's table; `entity-sidecars.test.ts` fails until it has one.
 	 */
 	translationEntity?: string;
 }

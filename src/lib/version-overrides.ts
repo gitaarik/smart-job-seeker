@@ -24,6 +24,10 @@ import { BASE_TEMPLATE_TAGS } from './profile-visibility';
  * Entity vocabulary. These strings are persisted in
  * `profile_version_overrides.entity_type`, so renaming one orphans existing
  * rows — treat as append-only, same contract as resume-translations.ts.
+ *
+ * A new entity also needs a delete trigger on its table, or its overrides
+ * outlive the rows they name (see `profile_version_overrides` in schema.ts);
+ * `entity-sidecars.test.ts` fails until it has one.
  */
 export const OVERRIDE_ENTITIES = {
 	workExperience: 'work_experience',
