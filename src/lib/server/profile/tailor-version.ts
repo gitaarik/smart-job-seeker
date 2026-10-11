@@ -96,7 +96,8 @@ import {
 } from '$lib/server/profile/field-variants';
 import { loadSkillWords, versionChain, wordsToPrint } from '$lib/server/profile/skill-words';
 import { provenanceFor } from '$lib/match-provenance';
-import { templateForStorage, templatePrintsTechnologies } from '$lib/resume-templates';
+import { BUILT_IN_SECTIONS, type DocumentSections } from '$lib/resume-templates';
+import { documentSectionsFor } from '$lib/server/profile/resume-templates';
 import { assumedLevels, expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
 import { careerLevel, takenForGranted } from '$lib/server/job/assumed-levels';
 import { normalizeSkill } from '$lib/skills';
@@ -311,16 +312,17 @@ export function buildCandidates(
 	 */
 	conceptOf?: Map<string, string>,
 	/**
-	 * The presentation template this document renders in — the third part of
-	 * "which document", alongside docType and baseSlug. Only the generic
-	 * renderer prints a role's TECH line, so it is what decides whether a
-	 * required skill named there is already on the page.
+	 * What the document's template prints (documentSectionsFor): the third part
+	 * of "which document", alongside docType and baseSlug. It decides whether a
+	 * required skill named on a role's TECH line is already on the page, and
+	 * whether side projects are candidates at all. One a template leaves out
+	 * has no place on the page, so it gets no candidate: nothing to rank, to
+	 * show the review, or to count against the budget.
 	 *
-	 * Omitted by the callers that want scores or droppable items, neither of
-	 * which the tech line can change; the default is the built-in layout, which
-	 * prints no technologies, so leaving it out keeps the previous answer.
+	 * Omitted by the callers that want scores or droppable items. The default is
+	 * the built-in layout, which keeps the answer they have always had.
 	 */
-	template?: string | null,
+	sections: DocumentSections = BUILT_IN_SECTIONS,
 	/**
 	 * The job's nice-to-haves. A skill named here is pinned like a required one
 	 * (see Candidate.pinnedFor); only the run that writes decisions passes it,
@@ -431,7 +433,7 @@ export function buildCandidates(
 	const visibleProjects = new Set(
 		filterOnTags(profile.side_projects ?? [], OVERRIDE_ENTITIES.sideProject).map((p) => p.id)
 	);
-	for (const project of profile.side_projects ?? []) {
+	for (const project of sections.sideProjects ? (profile.side_projects ?? []) : []) {
 		const summary = text(project.summary);
 		candidates.push({
 			entityType: OVERRIDE_ENTITIES.sideProject,
@@ -500,7 +502,7 @@ export function buildCandidates(
 	// Not added to `printedInCategory`: an anchor is an index into one category's
 	// rendered list, and a name from somewhere else entirely would place a
 	// surfaced skill at a position nothing occupies.
-	if (templatePrintsTechnologies(template)) {
+	if (sections.technologies) {
 		const areaOf = areasOfSkills(profile, conceptOf);
 		for (const role of profile.work_experiences ?? []) {
 			const printsHere = visibleRoles.has(role.id);
@@ -1222,11 +1224,15 @@ export async function prepareSelection(inputs: {
 	docType: string;
 	/** The version this one builds on, already resolved (see defaultBaseSlug). */
 	baseSlug: string;
-	template: string | null;
+	/**
+	 * What the template it is sent in prints, already resolved
+	 * (documentSectionsFor): the golden set hands in its frozen answer.
+	 */
+	sections: DocumentSections;
 	/** The posting as the review prompt shows it. Omitted, promptJobDescription fetches it. */
 	description?: PromptDescription;
 }): Promise<PreparedSelection> {
-	const { profileId, profile, job, docType, baseSlug, template } = inputs;
+	const { profileId, profile, job, docType, baseSlug, sections } = inputs;
 	const requiredSkills = asStringArray(job.skills_required);
 	const preferredSkills = asStringArray(job.skills_preferred);
 	const querySkills = [...requiredSkills, ...preferredSkills];
@@ -1247,7 +1253,7 @@ export async function prepareSelection(inputs: {
 		baseSlug,
 		requiredSkills,
 		await conceptResolver(profile, querySkills),
-		template,
+		sections,
 		preferredSkills,
 		query.text
 	);
@@ -1518,7 +1524,7 @@ export async function tailorVersionForApplication(opts: {
 		job,
 		docType,
 		baseSlug: effectiveBase,
-		template
+		sections: await documentSectionsFor(profileId, template)
 	});
 	const { ranker, budgetChars, targetPages, query } = prepared;
 
@@ -2966,18 +2972,6 @@ function printedByFilter(profile: ProfileRow, docType: string, versionSlug: stri
 	};
 }
 
-/**
- * Whether this template prints side projects at all.
- *
- * The mirror image of `templatePrintsTechnologies`: the built-in layout has a
- * projects section, and the generic renderer every DB-backed template goes
- * through has none. Local rather than beside that one, because only the panel
- * asks it: nothing ranks or fits a document differently because of it.
- */
-function templatePrintsSideProjects(template: string | null): boolean {
-	return templateForStorage(template) === null;
-}
-
 /** A referee as the References page names one: who, then their role. */
 function referenceLabel(entry: {
 	id: number;
@@ -3064,9 +3058,9 @@ export async function versionItemStates(opts: {
 	// version do, and this panel exists to agree with the document: on a template
 	// that prints a role's TECH line, a required skill named there is already
 	// showing, and saying otherwise would have the panel argue with the page.
-	const template = application?.cv_template_sent ?? null;
+	const sections = await documentSectionsFor(profileId, application?.cv_template_sent);
 
-	const built = buildCandidates(profile, docType, versionSlug, requiredSkills, undefined, template);
+	const built = buildCandidates(profile, docType, versionSlug, requiredSkills, undefined, sections);
 	const printed = printedByFilter(profile, docType, versionSlug);
 
 	// The same two questions asked of the base, so a decision can be told apart
@@ -3077,7 +3071,7 @@ export async function versionItemStates(opts: {
 			? []
 			: baseSlug === versionSlug
 				? built
-				: buildCandidates(profile, docType, baseSlug, requiredSkills, undefined, template);
+				: buildCandidates(profile, docType, baseSlug, requiredSkills, undefined, sections);
 	const basePrinted =
 		baseSlug === null
 			? null
@@ -3242,8 +3236,12 @@ export async function versionItemStates(opts: {
 		});
 	}
 
+	// A template without the section gives them no candidates, so there is
+	// nothing to switch: a switch that changes nothing on the page reads as a
+	// broken one. The group stays to say why the projects are not listed.
 	const projects = built.filter((c) => c.entityType === OVERRIDE_ENTITIES.sideProject);
-	if (projects.length > 0) {
+	const leftOut = !sections.sideProjects && (profile.side_projects ?? []).length > 0;
+	if (projects.length > 0 || leftOut) {
 		groups.push({
 			key: 'side-projects',
 			section: 'projects',
@@ -3251,12 +3249,10 @@ export async function versionItemStates(opts: {
 			entityId: null,
 			title: 'Side projects',
 			subtitle: null,
-			on: true,
-			// Switches that change nothing on the page read as switches that are
-			// broken, so the panel says why before anyone tries one.
-			note: templatePrintsSideProjects(template)
-				? null
-				: "This template doesn't print side projects, so these change nothing on it.",
+			on: sections.sideProjects,
+			note: leftOut
+				? "This template doesn't print side projects. Pick one that does to put them on."
+				: null,
 			rows: projects.map((c) => describe(c))
 		});
 	}

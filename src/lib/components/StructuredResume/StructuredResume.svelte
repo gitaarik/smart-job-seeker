@@ -9,7 +9,7 @@
 	import type { VersionObj } from '../ProfileDisplay/profile-filter';
 	import { isContactHidden } from '$lib/resume-contact-fields';
 	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
-	import { assetUrl, type ResumeTemplateConfig } from '$lib/resume-templates';
+	import { assetUrl, documentSections, type ResumeTemplateConfig } from '$lib/resume-templates';
 	import { templateLabel } from '$lib/resume-template-labels';
 	import { resumeDocumentDescription, resumeDocumentTitle } from '$lib/resume-head';
 
@@ -48,6 +48,14 @@
 		author_position: string | null;
 		text: string | null;
 	}
+	interface SideProject {
+		name: string | null;
+		url: string | null;
+		start_date: string | null;
+		end_date?: string | null;
+		summary: string | null;
+		tags?: string[] | unknown;
+	}
 	interface Profile {
 		name: string | null;
 		title: string | null;
@@ -64,6 +72,7 @@
 		educations: Education[];
 		certificates?: Certificate[];
 		references?: Reference[];
+		side_projects?: SideProject[];
 		tech_skill_categories: SkillCategory[];
 		profile_versions: VersionObj[];
 	}
@@ -91,6 +100,9 @@
 	const footerUrl = $derived(assetUrl(A.footer));
 	const dividerUrl = $derived(assetUrl(A.divider));
 	const appendLocation = $derived(config.rules?.appendLocationToHeadline ?? false);
+	// The optional parts this template prints, read the way tailoring and
+	// coverage read them, so neither weighs a part the page leaves out.
+	const sections = $derived(documentSections({ config }));
 
 	const rootStyle = $derived(
 		[
@@ -130,6 +142,13 @@
 	// Before 2026-10-05 this renderer had no references section, so a branded
 	// document could not carry one even for a job that asked for them.
 	const references = $derived(filterReferences(profile.references ?? []));
+	// Only on a template that prints them. Until 2026-10-11 this renderer had no
+	// projects section at all, so a template could not carry one.
+	const projects = $derived(
+		sections.sideProjects
+			? filterOnTags(profile.side_projects ?? [], OVERRIDE_ENTITIES.sideProject)
+			: []
+	);
 
 	// Work-experience lead line. The stored headline holds only the base text;
 	// when the template opts in, the job location is appended ("… in {location}.").
@@ -143,6 +162,7 @@
 		return base.endsWith('.') ? base : base + '.';
 	}
 	function tech(job: WorkExperience): string {
+		if (!sections.technologies) return '';
 		return filterOnTags(job.work_experience_technologies ?? [], OVERRIDE_ENTITIES.technology)
 			.map((t) => t.name ?? '')
 			.filter(Boolean)
@@ -344,6 +364,32 @@
 							{/each}
 						{/if}
 					</div>
+
+					<!-- Laid out as a role is, the project in the role's place: what the
+					     default layout prints of one, in this template's dress. -->
+					{#if projects.length > 0}
+						<div class="projects">
+							<h2>{templateLabel('sideProjects', locale)}</h2>
+							{#each projects as project, pi (pi)}
+								{@const dates = formatDateRangeCompact(
+									project.start_date,
+									project.end_date,
+									templateLabel('present', locale)
+								)}
+								<div class="job">
+									<div class="job-meta">
+										<div class="job-title">{project.name}</div>
+										{#if dates}<div class="job-date">{dates}</div>{/if}
+									</div>
+									<div class="job-body">
+										{#if project.summary}<p class="lead">{project.summary}</p>{/if}
+										{#if project.url}<p class="link">{project.url}</p>{/if}
+									</div>
+								</div>
+								{#if pi < projects.length - 1}<hr class="jdiv" />{/if}
+							{/each}
+						</div>
+					{/if}
 
 					{#if references.length > 0}
 						<div class="refs">
@@ -639,6 +685,24 @@
 		border-top: 1px solid #d9d9d9;
 		margin: 13px 0;
 		clear: both;
+	}
+	/* Full width under the work history, like the references. A project is
+     kept whole; the heading may end a page only with the first one under it. */
+	.projects {
+		margin-top: 18px;
+		clear: both;
+	}
+	.projects h2 {
+		break-after: avoid;
+	}
+	.projects .job {
+		break-inside: avoid;
+	}
+	.link {
+		margin: 2px 0 0;
+		font-size: 8.5pt;
+		color: #555;
+		overflow-wrap: anywhere;
 	}
 	/* Full width under the work history, kept whole so the heading never ends
      a page without the quotes it introduces. */

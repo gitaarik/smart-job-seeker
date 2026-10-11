@@ -189,3 +189,83 @@ describe('StructuredResume — references', () => {
 		expect(screen.queryByText('Michaël de Groot')).toBeNull();
 	});
 });
+
+/**
+ * The optional parts a template prints, read from its config (DocumentSections)
+ * the way tailoring and coverage read them. Until 2026-10-11 this renderer had
+ * no projects section, and the TECH line printed on every template.
+ */
+describe('StructuredResume — the parts a template prints', () => {
+	const withWork = (): Profile => ({
+		...profile([]),
+		work_experiences: [
+			{
+				name: 'Chipta',
+				location: null,
+				position: 'Lead Engineer',
+				start_date: '2015-09-01',
+				end_date: '2025-03-01',
+				headline: null,
+				tags: null,
+				work_experience_achievements: [],
+				work_experience_technologies: [{ name: 'Django' }, { name: 'React' }]
+			}
+		],
+		side_projects: [
+			{
+				name: 'LitState',
+				url: 'https://github.com/gitaarik/lit-state',
+				start_date: '2020-04-01',
+				end_date: null,
+				summary: 'State management for Lit web components.',
+				tags: null
+			},
+			{
+				name: 'Jazzchords',
+				url: null,
+				start_date: '2012-01-01',
+				end_date: '2013-01-01',
+				summary: 'A chord trainer.',
+				tags: ['!resume']
+			}
+		]
+	});
+
+	test('prints the TECH line and no side projects when the config says nothing', () => {
+		render(StructuredResume, { props: { config: {}, type: 'resume', profile: withWork() } });
+		expect(screen.getByText('Django, React')).toBeTruthy();
+		expect(screen.queryByText('Side projects')).toBeNull();
+		expect(screen.queryByText('LitState')).toBeNull();
+	});
+
+	test('prints the side projects a template asks for, through the same tags', () => {
+		render(StructuredResume, {
+			props: {
+				config: { sections: { sideProjects: true } },
+				type: 'resume',
+				locale: 'nl',
+				profile: withWork()
+			}
+		});
+		expect(screen.getByText('Nevenprojecten')).toBeTruthy();
+		expect(screen.getByText('LitState')).toBeTruthy();
+		expect(screen.getByText('04/2020 - Heden')).toBeTruthy();
+		expect(screen.getByText('State management for Lit web components.')).toBeTruthy();
+		expect(screen.getByText('https://github.com/gitaarik/lit-state')).toBeTruthy();
+		// Kept off resumes by its own tag, as the default layout keeps it off.
+		expect(screen.queryByText('Jazzchords')).toBeNull();
+	});
+
+	test('leaves the TECH line off a template that turns it off', () => {
+		render(StructuredResume, {
+			props: {
+				config: { sections: { technologies: false } },
+				type: 'resume',
+				profile: withWork()
+			}
+		});
+		expect(screen.getByText('Lead Engineer')).toBeTruthy();
+		expect(screen.queryByText('Django, React')).toBeNull();
+		expect(screen.queryByText('TECH:')).toBeNull();
+	});
+});

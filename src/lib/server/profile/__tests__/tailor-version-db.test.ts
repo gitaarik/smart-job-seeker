@@ -63,7 +63,8 @@ const {
 		tech_skills: { findMany: vi.fn() },
 		tech_skill_categories: { findMany: vi.fn() },
 		education: { findMany: vi.fn() },
-		references: { findMany: vi.fn() }
+		references: { findMany: vi.fn() },
+		presentation_templates: { findFirst: vi.fn() }
 	};
 
 	const inserts: Write[] = [];
@@ -1243,15 +1244,27 @@ describe('versionItemStates', () => {
 	});
 
 	// Switches that change nothing on the page read as switches that are broken.
-	it('says when the template has no projects section', async () => {
-		expect(group(await states(), 'side-projects')?.note).toBeNull();
+	it('says when the template has no projects section, and lists none to switch', async () => {
+		expect(group(await states(), 'side-projects')).toMatchObject({ note: null, on: true });
 
 		find.applications.findFirst.mockResolvedValue({
 			id: 12,
 			cv_template_sent: 'citrus',
 			job: null
 		});
-		expect(group(await states(), 'side-projects')?.note).toMatch(/doesn't print side projects/);
+		const citrus = (config: object) => ({ id: 1, name: 'Citrus', slug: 'citrus', config });
+		find.presentation_templates.findFirst.mockResolvedValueOnce(citrus({}));
+		const leftOut = group(await states(), 'side-projects');
+		expect(leftOut?.note).toMatch(/doesn't print side projects/);
+		expect(leftOut).toMatchObject({ on: false, rows: [] });
+
+		// The template's own config decides: one that prints them lists them.
+		find.presentation_templates.findFirst.mockResolvedValueOnce(
+			citrus({ sections: { sideProjects: true } })
+		);
+		const printed = group(await states(), 'side-projects');
+		expect(printed).toMatchObject({ note: null, on: true });
+		expect(printed?.rows.map((r) => r.label)).toEqual(['Monkful']);
 	});
 
 	// The CV prints every reference and a resume none, unless this version put

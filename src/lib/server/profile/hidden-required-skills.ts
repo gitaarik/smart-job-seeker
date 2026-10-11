@@ -40,7 +40,7 @@ import {
 } from '$lib/server/db/schema';
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
 import { DOCUMENT_TEMPLATE_TAGS, SHOW_ON_ALL, tagsForShowOn } from '$lib/profile-visibility';
-import { templatePrintsTechnologies } from '$lib/resume-templates';
+import { documentSectionsFor } from '$lib/server/profile/resume-templates';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import {
 	carrierOf,
@@ -68,9 +68,10 @@ export interface CoverageScope {
 	/**
 	 * The presentation template the document is recorded as going out in.
 	 *
-	 * A skills question with a template answer: the generic renderer prints a
-	 * role's TECH line and the built-in layout prints none, so a required skill
-	 * listed against a role is on the page in one and missing from the other.
+	 * A skills question with a template answer: a template may print a role's
+	 * TECH line (DocumentSections) and the built-in layout prints none, so a
+	 * required skill listed against a role is on the page in one and missing
+	 * from the other.
 	 *
 	 * It is the RECORDED template, not whatever the picker is currently showing
 	 * — the map is precomputed per (base template × version) and the picker is
@@ -109,7 +110,7 @@ export async function getVersionCoverage(
 	const applicationId = scope.applicationId ?? null;
 	// Only fetched for a template that renders them, which is no profile's
 	// default and most profiles never.
-	const printsTech = templatePrintsTechnologies(scope.template);
+	const printsTech = (await documentSectionsFor(profileId, scope.template)).technologies;
 	const [versions, categories, roles] = await Promise.all([
 		db.query.profile_versions.findMany({
 			where: and(

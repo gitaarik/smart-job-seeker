@@ -5,7 +5,12 @@ vi.mock('$lib/server/db', () => ({
 		query: {
 			profile_versions: { findMany: vi.fn() },
 			tech_skill_categories: { findMany: vi.fn() },
-			work_experiences: { findMany: vi.fn() }
+			work_experiences: { findMany: vi.fn() },
+			// A branded template whose config says nothing about its parts, so it
+			// prints what the generic renderer always has: the tech line included.
+			presentation_templates: {
+				findFirst: vi.fn(async () => ({ id: 1, name: 'Citrus', slug: 'citrus', config: {} }))
+			}
 		}
 	}
 }));
@@ -295,6 +300,23 @@ describe('getVersionCoverage — a skill printed at a role', () => {
 			name: 'Kubernetes',
 			carriedBy: 'Kubernetes operators'
 		});
+	});
+
+	// The template's own config decides, not which renderer draws it.
+	it('stays hidden on a template whose config leaves the tech line out', async () => {
+		setup(HELD_BACK);
+		withRoles([{ id: 1, tech: [{ id: 500, name: 'Kubernetes' }] }]);
+		vi.mocked(db.query.presentation_templates.findFirst).mockResolvedValueOnce({
+			id: 2,
+			name: 'Plain',
+			slug: 'plain',
+			config: { sections: { technologies: false } }
+		} as never);
+
+		const coverage = await getVersionCoverage(1, ['Kubernetes'], { template: 'plain' });
+
+		expect(names(coverage[hiddenSkillsKey('resume', '')].hidden)).toEqual(['Kubernetes']);
+		expect(db.query.work_experiences.findMany).not.toHaveBeenCalled();
 	});
 });
 

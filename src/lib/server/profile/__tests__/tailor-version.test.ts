@@ -37,7 +37,11 @@ import { promptTemplates } from '$lib/server/ai-chat/prompt-templates';
 import { renderPrompt } from '$lib/server/ai-chat/render-prompt';
 import { assumedLevels, expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
+import { BUILT_IN_SECTIONS, documentSections, type DocumentSections } from '$lib/resume-templates';
 import { selectForJob, type Candidate, type Decision } from '$lib/tailoring';
+
+/** A DB-backed template whose config says nothing: the generic renderer's parts, tech line included. */
+const TEMPLATE = documentSections({ config: {} });
 
 function bullet(id: number, score: number, over: Partial<Candidate> = {}): Candidate {
 	return {
@@ -643,6 +647,27 @@ describe('buildCandidates: side projects', () => {
 		).filter((c) => c.entityType === OVERRIDE_ENTITIES.sideProject);
 		expect(project.detail).toBe('LitState');
 	});
+
+	// A project on a template with no projects section has no place on the page.
+	// As a candidate it took budget the page never spent, a slot in the review,
+	// and a turn in the fill pass (application 92, 2026-10-11).
+	it('offers none on a template that leaves them out, and all on one that prints them', () => {
+		const projects = (sections?: DocumentSections) =>
+			buildCandidates(
+				profileWith([{ id: 7, name: 'LitState', summary: 'State management.' }]),
+				'resume',
+				'base',
+				[],
+				undefined,
+				sections
+			).filter((c) => c.entityType === OVERRIDE_ENTITIES.sideProject);
+
+		expect(projects()).toHaveLength(1);
+		expect(projects(TEMPLATE)).toEqual([]);
+		expect(
+			projects(documentSections({ config: { sections: { sideProjects: true } } }))
+		).toHaveLength(1);
+	});
 });
 
 describe('buildCandidates: bullets', () => {
@@ -927,7 +952,16 @@ describe('buildCandidates: a skill the job lists as a plus', () => {
 		skills: Array<{ id: number; name: string; tags?: string[] | null }>,
 		required: string[],
 		preferred: string[]
-	) => buildCandidates(profileWith(skills), 'resume', 'base', required, undefined, null, preferred);
+	) =>
+		buildCandidates(
+			profileWith(skills),
+			'resume',
+			'base',
+			required,
+			undefined,
+			undefined,
+			preferred
+		);
 
 	it('pins a hidden skill named only in the preferred list', () => {
 		const jira = build(
@@ -1092,8 +1126,11 @@ describe('buildCandidates: a required skill the page already shows at a role', (
 			]
 		}) as unknown as Parameters<typeof buildCandidates>[0];
 
-	const kafka = (profile: Parameters<typeof buildCandidates>[0], template: string | null = null) =>
-		buildCandidates(profile, 'resume', 'base', ['Kafka'], undefined, template).find(
+	const kafka = (
+		profile: Parameters<typeof buildCandidates>[0],
+		sections: DocumentSections = BUILT_IN_SECTIONS
+	) =>
+		buildCandidates(profile, 'resume', 'base', ['Kafka'], undefined, sections).find(
 			(c) => c.entityType === OVERRIDE_ENTITIES.skill && c.label === 'Kafka'
 		);
 
@@ -1102,24 +1139,26 @@ describe('buildCandidates: a required skill the page already shows at a role', (
 	it('leaves it alone on a template that prints the tech line', () => {
 		// `visible` is "the document already shows this", answered by name — the
 		// same reading that stops a skill held in two categories being added twice.
-		expect(kafka(profileWith(TECH), 'citrus')).toMatchObject({ pinned: true, visible: true });
+		expect(kafka(profileWith(TECH), TEMPLATE)).toMatchObject({ pinned: true, visible: true });
 	});
 
 	it('still surfaces it on the layout that prints no technologies', () => {
 		// The built-in default renders no TECH line anywhere, so on that document
 		// the word really is missing and the skills block is the only way to say it.
 		expect(kafka(profileWith(TECH))).toMatchObject({ pinned: true, visible: false });
-		expect(kafka(profileWith(TECH), 'default')).toMatchObject({ visible: false });
+		// And on a template whose config leaves the line out.
+		const untechnical = documentSections({ config: { sections: { technologies: false } } });
+		expect(kafka(profileWith(TECH), untechnical)).toMatchObject({ visible: false });
 	});
 
 	it('does not read a tech line off a role the document omits', () => {
 		// The role is filtered before its technologies are, exactly as the renderer
 		// does it — a hidden role takes its whole TECH list with it.
-		expect(kafka(profileWith(TECH, ['other-version']), 'citrus')?.visible).toBe(false);
+		expect(kafka(profileWith(TECH, ['other-version']), TEMPLATE)?.visible).toBe(false);
 	});
 
 	it('honours a technology held back on this document', () => {
-		expect(kafka(profileWith([{ id: 100, name: 'Kafka', tags: ['cv'] }]), 'citrus')?.visible).toBe(
+		expect(kafka(profileWith([{ id: 100, name: 'Kafka', tags: ['cv'] }]), TEMPLATE)?.visible).toBe(
 			false
 		);
 	});
@@ -1137,7 +1176,7 @@ describe('buildCandidates: a required skill the page already shows at a role', (
 			'base',
 			['Kafka'],
 			undefined,
-			'citrus'
+			TEMPLATE
 		).filter((c) => c.entityType === OVERRIDE_ENTITIES.technology);
 		expect(techs.map((c) => c.label)).toEqual(['Kafka', 'Varnish']);
 		expect(techs[0]).toMatchObject({
@@ -1163,7 +1202,7 @@ describe('buildCandidates: a required skill the page already shows at a role', (
 		// An anchor is an index into ONE category's rendered list. A name from a
 		// role's tech line has no position there, and using it as one would slot
 		// the surfaced skill where nothing is.
-		const found = kafka(profileWith([{ id: 100, name: 'Kafka Streams' }]), 'citrus');
+		const found = kafka(profileWith([{ id: 100, name: 'Kafka Streams' }]), TEMPLATE);
 		expect(found?.visible).toBe(false);
 		expect(found?.anchor).toBeNull();
 		// It is still on the page inside a longer name, which the reason says.
@@ -1194,7 +1233,7 @@ describe('buildCandidates: a skill group the posting names', () => {
 	// names a database: the extraction made "Full Stack Development" of it.
 	const POSTING = 'Je bouwt de hele keten. Van database tot scherm. De juiste skills.';
 	const pinned = (posting?: string) =>
-		buildCandidates(profileWith(GROUPS), 'resume', 'base', [], undefined, null, [], posting)
+		buildCandidates(profileWith(GROUPS), 'resume', 'base', [], undefined, undefined, [], posting)
 			.filter((c) => c.entityType === OVERRIDE_ENTITIES.skillCategory && c.pinned)
 			.map((c) => c.entityId);
 
@@ -1285,7 +1324,7 @@ describe('buildCandidates: what a role’s technology is', () => {
 	} as unknown as Parameters<typeof buildCandidates>[0];
 
 	const techs = () =>
-		buildCandidates(profile, 'resume', 'base', [], undefined, 'citrus').filter(
+		buildCandidates(profile, 'resume', 'base', [], undefined, TEMPLATE).filter(
 			(c) => c.entityType === OVERRIDE_ENTITIES.technology
 		);
 

@@ -8,7 +8,13 @@
  * is shared with the portfolio kind in `presentation-templates.ts`.
  */
 
-import type { ResumeTemplate, ResumeTemplateConfig } from '$lib/resume-templates';
+import {
+	documentSections,
+	templateForStorage,
+	type DocumentSections,
+	type ResumeTemplate,
+	type ResumeTemplateConfig
+} from '$lib/resume-templates';
 import {
 	loadTemplateOfKind,
 	loadTemplatesOfKind,
@@ -30,6 +36,29 @@ export async function getResumeTemplate(
 	slug: string
 ): Promise<ResumeTemplate | null> {
 	return loadTemplateOfKind<ResumeTemplateConfig>(profileId, KIND, slug);
+}
+
+/**
+ * What a document sent in this template prints; see documentSections.
+ *
+ * Read by slug, so the slug must be a `document` one. Since the portfolio kind
+ * joined `presentation_templates` a slug no longer identifies a template on its
+ * own: the unique key is (profile, kind, slug), and "citrus" may name a
+ * document template and a theme at once. Every caller reads it out of a
+ * document-only column (`profile_exports.template`,
+ * `applications.cv_template_sent`), which is a contract rather than something
+ * the types enforce; a portfolio theme is not a document and the question does
+ * not apply to it.
+ *
+ * A slug naming no published template gets the built-in layout's answer,
+ * because that is what renders for it.
+ */
+export async function documentSectionsFor(
+	profileId: number,
+	slug: string | null | undefined
+): Promise<DocumentSections> {
+	const stored = templateForStorage(slug);
+	return documentSections(stored ? await getResumeTemplate(profileId, stored) : null);
 }
 
 /** Whether a CV template id belongs to this profile. */
