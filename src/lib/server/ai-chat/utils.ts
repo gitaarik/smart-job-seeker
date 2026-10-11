@@ -87,6 +87,21 @@ const WRITING_PROMPT_KEYS = new Set<string>([
 ]);
 
 /**
+ * Where a prompt runs: the tailoring review on its own pair (see
+ * config.llmTailorProvider), user-facing writing on the writing pair, and
+ * everything else on the app's extraction pair. One function, so the golden set
+ * and llm:smoke send a prompt where the app sends it.
+ */
+export function promptRoute(promptKey: string): { provider: string; model: string } {
+	if (promptKey === 'tailor_resume_selection') {
+		return { provider: config.llmTailorProvider, model: config.llmTailorModel };
+	}
+	return WRITING_PROMPT_KEYS.has(promptKey)
+		? { provider: config.llmWritingProvider, model: config.llmWritingModel }
+		: { provider: config.llmProvider, model: config.llmModel };
+}
+
+/**
  * Non-writing prompts that may fail over to the extraction fallback.
  *
  * An ALLOWLIST rather than the denylist the writing split uses, because the two
@@ -652,12 +667,10 @@ async function generateAiChat(
 			{ blankMissing: config.isProduction }
 		);
 
-		// Resolve provider/model by prompt type: user-facing writing runs on the
-		// writing provider/model, everything else on the app (extraction) provider.
-		// Used for the record stamp, generation, and cost accounting alike.
+		// Resolve provider/model by prompt (promptRoute). Used for the record stamp,
+		// generation, and cost accounting alike.
 		const isWritingPrompt = WRITING_PROMPT_KEYS.has(promptKey);
-		const activeProvider = isWritingPrompt ? config.llmWritingProvider : config.llmProvider;
-		const activeModel = isWritingPrompt ? config.llmWritingModel : config.llmModel;
+		const { provider: activeProvider, model: activeModel } = promptRoute(promptKey);
 		// Failover target by class: writing gets the writing pair, the extractive
 		// prompts get the extraction pair (off by default), and everything left —
 		// the judgements — gets none. See llm/fallback.ts for why the two classes

@@ -75,6 +75,12 @@ export interface AppConfig {
 	// app provider/model.
 	llmWritingModel: string;
 	llmWritingProvider: string;
+	// Model + provider for the tailoring review (`tailor_resume_selection`), the
+	// call that decides which resume lines a reader of one posting must see. Its
+	// own pair because it is a judgement, not writing, and measured best on a
+	// model neither of the other two pairs uses. See loadConfig.
+	llmTailorProvider: string;
+	llmTailorModel: string;
 	// Second provider/model tried once when a WRITING call fails for a reason a
 	// different provider could survive. Empty provider = no failover, which is
 	// also what an unusable target (no API key, or the writing pair itself)
@@ -247,6 +253,20 @@ function loadConfig(): AppConfig {
 	const llmWritingModel =
 		getEnv('SJS_LLM_WRITING_MODEL', '') ||
 		(llmWritingProvider === 'gemini' ? 'gemini-2.5-pro' : getModelForProvider(llmWritingProvider));
+	/**
+	 * The tailoring review reads a posting against a shortlist of resume lines
+	 * and marks what a reader must see. gpt-oss-120b, the app pair, judged lines
+	 * by their subject ("a Telegram tool is niche") where the posting asked for
+	 * what the work shows; Gemini 3.8 Flash did not. On the tailoring golden set,
+	 * the same prompt kept 98.8% of the musts on it against 91.6% (2026-10-11,
+	 * planning/TAILORED-VERSIONS.md D36), at about 30s and $0.02 a review rather
+	 * than 5s and $0.002. Keyed on the Gemini key like the writing pair, so a
+	 * missing key falls back to the app pair rather than failing every review.
+	 */
+	const llmTailorProvider = getEnv('SJS_LLM_TAILOR_PROVIDER', '') || preferredWritingProvider;
+	const llmTailorModel =
+		getEnv('SJS_LLM_TAILOR_MODEL', '') ||
+		(llmTailorProvider === 'gemini' ? 'gemini-3.8-flash' : getModelForProvider(llmTailorProvider));
 
 	const PROVIDER_KEY_ENV: Record<string, string> = {
 		groq: 'SJS_LLM_API_KEY_GROQ',
@@ -388,6 +408,8 @@ function loadConfig(): AppConfig {
 					: getModelForProvider(llmTranslateProvider)),
 		llmWritingProvider,
 		llmWritingModel,
+		llmTailorProvider,
+		llmTailorModel,
 		llmWritingFallbackProvider,
 		llmWritingFallbackModel,
 		llmFallbackProvider,

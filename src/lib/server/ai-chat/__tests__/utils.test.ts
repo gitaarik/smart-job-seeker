@@ -2,9 +2,45 @@
  * Tests for AI Chat Utilities (pure functions)
  */
 
-import { describe, expect, it } from 'vitest';
-import { EXTRACTION_FALLBACK_PROMPT_KEYS, instructionsBlock, makeFullPrompt } from '../utils';
+import { afterEach, describe, expect, it } from 'vitest';
+import { config } from '$lib/server/config';
+import {
+	EXTRACTION_FALLBACK_PROMPT_KEYS,
+	instructionsBlock,
+	makeFullPrompt,
+	promptRoute
+} from '../utils';
 import { promptTemplates } from '../prompt-templates';
+
+describe('promptRoute', () => {
+	const saved = { ...config };
+	afterEach(() => {
+		Object.assign(config, saved);
+	});
+
+	it('sends the tailoring review to its own pair, writing to the writing pair, the rest to the app', () => {
+		Object.assign(config, {
+			llmProvider: 'groq',
+			llmModel: 'openai/gpt-oss-120b',
+			llmWritingProvider: 'gemini',
+			llmWritingModel: 'gemini-2.5-pro',
+			llmTailorProvider: 'gemini',
+			llmTailorModel: 'gemini-3.8-flash'
+		});
+		expect(promptRoute('tailor_resume_selection')).toEqual({
+			provider: 'gemini',
+			model: 'gemini-3.8-flash'
+		});
+		expect(promptRoute('write_cover_letter')).toEqual({
+			provider: 'gemini',
+			model: 'gemini-2.5-pro'
+		});
+		expect(promptRoute('extract_job_data')).toEqual({
+			provider: 'groq',
+			model: 'openai/gpt-oss-120b'
+		});
+	});
+});
 
 describe('makeFullPrompt', () => {
 	it('combines system and user prompts', () => {
