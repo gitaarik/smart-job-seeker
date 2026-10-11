@@ -109,9 +109,13 @@ export async function createVersion(
 	const problem = await slugProblem(profileId, slug);
 	if (problem) throw new VersionError(problem);
 
+	// Published, as a tailored version is: the renderers resolve a version from
+	// the profile's published ones only (server/profile/default.ts), so a draft
+	// rendered as the plain document, its tags ignored, and was missing from the
+	// picker an application sends from. Nothing in the app publishes one later.
 	const [created] = await db
 		.insert(profile_versions)
-		.values({ slug, name, profile_id: profileId, date_created: new Date() })
+		.values({ slug, name, status: 'published', profile_id: profileId, date_created: new Date() })
 		.returning({ id: profile_versions.id });
 	return { id: created.id, slug, name };
 }

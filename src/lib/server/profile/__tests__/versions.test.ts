@@ -85,7 +85,8 @@ describe('createVersion', () => {
 		expect(made).toEqual({ id: 300, slug: 'ai-engineer', name: 'AI Engineer' });
 		expect(writes[0]).toMatchObject({
 			op: 'insert',
-			values: { slug: 'ai-engineer', profile_id: 1 }
+			// Published: a draft renders as the plain document, its tags ignored.
+			values: { slug: 'ai-engineer', profile_id: 1, status: 'published' }
 		});
 	});
 
