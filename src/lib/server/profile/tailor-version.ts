@@ -943,6 +943,12 @@ export interface Shortlist {
 	refs: Set<string>;
 	/** How many lines the review may mark essential. */
 	mustLimit: number;
+	/**
+	 * Shown lines the coverage guarantee is holding: ref → the asked skills it
+	 * is the last printed line naming. A drop on one of them releases those
+	 * skills (see reviewedSelection).
+	 */
+	heldFor: Map<string, string[]>;
 }
 
 /**
@@ -1012,20 +1018,48 @@ export function shortlistFor(
 	);
 	const shown = reviewed.filter((x) => kept.has(x.order));
 
+	// The printed lines that are the last on the page naming something the job
+	// asked for, which the selector's coverage guarantee holds whatever their
+	// score. The review is told, with the word the line says it in, because the
+	// guarantee cannot tell a line that shows a skill from one that mentions it.
+	// On application 92 it held LitState for "Version Control" on "open-sourced
+	// on GitHub", and cut the Smart Job Seeker project to make room.
+	const printedEvidence = reviewed.filter(
+		(x) => x.prints && DROPPABLE_ENTITIES.includes(x.c.entityType)
+	);
+	const heldFor = new Map<string, string[]>();
+	for (const { c } of shown) {
+		if (!printedEvidence.some((x) => x.c === c)) continue;
+		const alone = (c.covers ?? []).filter(
+			(req) => !printedEvidence.some((x) => x.c !== c && x.c.covers?.includes(req))
+		);
+		if (alone.length > 0) heldFor.set(refFor(c), alone);
+	}
+	const heldNote = (c: Candidate, skills: string[]) =>
+		`, the last line naming ${skills
+			.map((req) => {
+				const as = c.coveredAs?.[req];
+				return as && normalizeSkill(as) !== normalizeSkill(req) ? `${req} (as "${as}")` : req;
+			})
+			.join(' and ')}`;
+
 	const text = shown
 		.map(({ c, prints }) => {
 			// What it says, not what it is called. Asked to judge "LitState" against
 			// a web-components job, the model called it a likely unrelated hobby
 			// project; its summary names Lit web components in the first six words.
 			const said = (c.detail || c.label).replace(/\s+/g, ' ');
-			return `${refFor(c)} | ${said.slice(0, SHORTLIST_DETAIL_CHARS)} | ${c.score.toFixed(2)} | ${prints ? 'keep' : 'drop'}`;
+			const held = heldFor.get(refFor(c));
+			const proposal = prints ? `keep${held ? heldNote(c, held) : ''}` : 'drop';
+			return `${refFor(c)} | ${said.slice(0, SHORTLIST_DETAIL_CHARS)} | ${c.score.toFixed(2)} | ${proposal}`;
 		})
 		.join('\n');
 
 	return {
 		text,
 		refs: new Set(shown.map(({ c }) => refFor(c))),
-		mustLimit: mustLimitFor(shown.length)
+		mustLimit: mustLimitFor(shown.length),
+		heldFor
 	};
 }
 
@@ -1314,6 +1348,8 @@ export interface ReviewedSelection {
 	mustsIgnored: number;
 	/** Whether an answer was applied; false is the deterministic selection. */
 	modelReviewed: boolean;
+	/** Asked skills no line is held for, because the review dropped the line that was. */
+	released: string[];
 	/** The selection at a budget, carrying the model's reasons where it agreed. */
 	select: (budget: number) => Decision[];
 }
@@ -1343,6 +1379,7 @@ export function reviewedSelection(prepared: PreparedSelection, answer: unknown):
 			verdicts: new Map(),
 			mustsIgnored: 0,
 			modelReviewed: false,
+			released: [],
 			select: (budget) => selectForJob(prepared.candidates, prepared.options(budget))
 		};
 	}
@@ -1353,17 +1390,39 @@ export function reviewedSelection(prepared: PreparedSelection, answer: unknown):
 		prepared.shortlist.refs,
 		prepared.shortlist.mustLimit
 	);
+
+	// A drop on a line the shortlist said was held for a skill is a verdict on
+	// that claim: the line names the skill only in passing, or the skill needs
+	// no line for this job. So the skill is released, and no line is held for
+	// it. Freeing the line alone would hand the guarantee to the next line
+	// naming the skill the same way: on application 92, from LitState's
+	// "open-sourced on GitHub" to the "100+ GitHub stars" of Django Admin
+	// Relation Links. A drop on any other line frees nothing; the model was
+	// not told it was the last.
+	const vetoed = new Set(applied.candidates.filter((c) => c.vetoed).map((c) => refFor(c)));
+	const released = new Set(
+		[...prepared.shortlist.heldFor]
+			.filter(([ref]) => vetoed.has(ref))
+			.flatMap(([, skills]) => skills)
+	);
+	const candidates =
+		released.size === 0
+			? applied.candidates
+			: applied.candidates.map((c) =>
+					c.covers?.some((req) => released.has(req))
+						? { ...c, covers: c.covers.filter((req) => !released.has(req)) }
+						: c
+				);
+
 	return {
-		candidates: applied.candidates,
+		candidates,
 		verdicts: applied.verdicts,
 		mustsIgnored: applied.mustsIgnored,
 		modelReviewed: true,
+		released: [...released],
 		// Re-run the same selector: the model changed scores, not rules.
 		select: (budget) =>
-			applyVerdictReasons(
-				selectForJob(applied.candidates, prepared.options(budget)),
-				applied.verdicts
-			)
+			applyVerdictReasons(selectForJob(candidates, prepared.options(budget)), applied.verdicts)
 	};
 }
 
@@ -1856,11 +1915,20 @@ export async function markCoverage(
 		// summary. The label is kept for the kinds whose name is all they say.
 		const said = `${candidate.label} ${candidate.detail ?? ''}`;
 		// By word root, so a line can name a skill in another form of the word:
-		// "Mentored" names "Mentoring", "tested" names "Testing".
-		const named = [...answers]
-			.filter(([, wordings]) => [...wordings].some((w) => carriesNameLoosely(w, said)))
-			.map(([req]) => req);
-		if (named.length > 0) candidate.covers = named;
+		// "Mentored" names "Mentoring", "tested" names "Testing". The first
+		// wording found is the one kept, and the skill's own spelling and its
+		// concept's name come first, so the graph's word is shown only when the
+		// line has no plainer one.
+		const coveredAs: Record<string, string> = {};
+		for (const [req, wordings] of answers) {
+			const word = [...wordings].find((w) => carriesNameLoosely(w, said));
+			if (word) coveredAs[req] = word;
+		}
+		const named = Object.keys(coveredAs);
+		if (named.length > 0) {
+			candidate.covers = named;
+			candidate.coveredAs = coveredAs;
+		}
 	}
 }
 

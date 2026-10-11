@@ -304,6 +304,29 @@ describe('shortlistFor', () => {
 		expect(shortlistFor([skill, bullet(1, 0.9)], [], FLOOR).text).not.toContain('skill:5');
 	});
 
+	it('says which line is the last on the page naming an asked skill, and by what word', () => {
+		// Application 92: LitState was held for "Version Control" on
+		// "open-sourced on GitHub", and nothing told the review so.
+		const shortlist = shortlistFor(
+			[
+				bullet(1, 0.9, { covers: ['SQL'] }),
+				bullet(2, 0.8, {
+					covers: ['SQL', 'Version Control'],
+					coveredAs: { SQL: 'SQL', 'Version Control': 'GitHub' }
+				}),
+				bullet(3, 0.3, { covers: ['Mentoring'] })
+			],
+			[dropDecision(3)],
+			FLOOR
+		);
+		expect(lines(shortlist)).toEqual([
+			'bullet:1 | bullet 1 | 0.90 | keep',
+			'bullet:2 | bullet 2 | 0.80 | keep, the last line naming Version Control (as "GitHub")',
+			'bullet:3 | bullet 3 | 0.30 | drop'
+		]);
+		expect([...shortlist.heldFor]).toEqual([['bullet:2', ['Version Control']]]);
+	});
+
 	it('leaves out a role’s technologies, whose fate no verdict changes', () => {
 		// The tech-line rule keeps or drops them on `covers` alone. On application
 		// 92 they were 28 of the 40 lines the model was shown.
@@ -406,7 +429,8 @@ describe('selectionPromptVariables', () => {
 	const shortlist = {
 		text: 'bullet:1 | x | 0.60 | keep',
 		refs: new Set(['bullet:1']),
-		mustLimit: 3
+		mustLimit: 3,
+		heldFor: new Map()
 	};
 	const fill = (
 		description: { text: string | null; compacted: boolean },
@@ -482,7 +506,12 @@ describe('reviewedSelection', () => {
 		query: { text: '', skills: [] },
 		options,
 		deterministic: [],
-		shortlist: { text: 'x', refs: new Set(['bullet:1', 'bullet:2', 'bullet:3']), mustLimit: 1 },
+		shortlist: {
+			text: 'x',
+			refs: new Set(['bullet:1', 'bullet:2', 'bullet:3']),
+			mustLimit: 1,
+			heldFor: new Map()
+		},
 		promptVariables: {}
 	};
 	const excluded = (ds: Decision[]) =>
@@ -508,6 +537,28 @@ describe('reviewedSelection', () => {
 			decisions: [{ ref: 'bullet:3', action: 'must', reason: 'The coaching line.' }]
 		});
 		expect(excluded(reviewed.select(200))).toEqual([2]);
+	});
+
+	it('releases the skill a dropped line was held for, so no other line is held instead', () => {
+		const held = [bullet(1, 0.9), bullet(2, 0.8), bullet(3, 0.2, { covers: ['Version Control'] })];
+		const answer = {
+			decisions: [{ ref: 'bullet:3', action: 'drop', reason: 'Only hosted on GitHub.' }]
+		};
+		// Not told it was the last line naming the skill, the drop frees nothing:
+		// the line waits with the guarantee and the 0.8 line goes for room.
+		const untold = reviewedSelection({ ...prepared, candidates: held }, answer);
+		expect(untold.released).toEqual([]);
+		expect(excluded(untold.select(200))).toEqual([2]);
+		const told = reviewedSelection(
+			{
+				...prepared,
+				candidates: held,
+				shortlist: { ...prepared.shortlist, heldFor: new Map([['bullet:3', ['Version Control']]]) }
+			},
+			answer
+		);
+		expect(told.released).toEqual(['Version Control']);
+		expect(excluded(told.select(200))).toEqual([3]);
 	});
 
 	it('keeps the review’s reason on every selection it agrees with', () => {
@@ -1319,6 +1370,25 @@ describe('markCoverage: what the applicant holds, and where it is written down',
 		const bullet = bulletSaying('Built a RAG pipeline over the support docs');
 		await markCoverage([bullet], ragProfile, ['LLM'], ['Large Language Models']);
 		expect(bullet.covers).toEqual(['LLM', 'Large Language Models']);
+	});
+
+	it('records the word a line names a requirement by, for the review to judge', async () => {
+		vi.mocked(expandUpwardBySeed).mockResolvedValue(
+			new Map([['github', [{ slug: 'git' }, { slug: 'versioncontrol' }]]]) as never
+		);
+		const bullet = bulletSaying('LitState, open-sourced on GitHub with over 150 stars');
+		const holdsGitHub = { tech_skill_categories: [{ tech_skills: [{ name: 'GitHub' }] }] };
+		await markCoverage([bullet], holdsGitHub, ['Version Control']);
+		expect(bullet.coveredAs).toEqual({ 'Version Control': 'GitHub' });
+	});
+
+	it('records the skill’s own spelling when the line has it', async () => {
+		vi.mocked(expandUpwardBySeed).mockResolvedValue(
+			new Map([['postgresql', [{ slug: 'sql' }]]]) as never
+		);
+		const bullet = bulletSaying('Tuned the SQL behind the PostgreSQL reports');
+		await markCoverage([bullet], profile, ['SQL']);
+		expect(bullet.coveredAs).toEqual({ SQL: 'SQL' });
 	});
 
 	it('seeds the graph with every place a skill name is written down', async () => {

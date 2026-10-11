@@ -182,6 +182,13 @@ export interface Candidate {
 	 */
 	covers?: string[];
 	/**
+	 * The word this item names each of its `covers` by: "GitHub" for Version
+	 * Control, reached through the graph. Shown to the review on a line the
+	 * coverage guarantee is holding, which is how it tells a line that shows the
+	 * skill from one that mentions it in passing (see shortlistFor).
+	 */
+	coveredAs?: Record<string, string>;
+	/**
 	 * The model review marked it essential for this job: the trim treats it like
 	 * the last line naming a requirement, so everything unmarked goes first and
 	 * the page still has the final word.

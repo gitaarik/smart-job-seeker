@@ -1624,6 +1624,7 @@ How the page is decided:
 - DROP: the line does not help for this job, so it goes first. It is your judgment of the line, not agreement that the page is full: a useful line the ranker had no room for is a KEEP.
 - KEEP: the line stays in the ranker's order, and may still be cut for space.
 - MUST: the line is cut only after every line not marked MUST has gone. It is for the few lines a reader of THIS posting has to see: the best evidence for something the posting asks for, whether a required skill, something it lists as a plus, or what its text says about the work, the team or the role. Spend it where the ranker scored a line low; a high score is safe already. Mark at most {{must_limit}} lines MUST; if you mark more, none of them count.
+- A proposal reading "keep, the last line naming X" is a line kept for X, a skill the job asks for, because no other line on the page names it. Where the line names X by another word, that word is in brackets. KEEP it when the line shows X. When it only mentions X in passing, DROP it: a project that is merely hosted on GitHub is not version-control work. Then no line is held for X, and the room goes to the next line by score.
 
 Rules you must follow:
 - You may only judge entries from the shortlist. You cannot add anything, and you cannot write, reword, or improve any text. The applicant's own wording is what ships.
@@ -1650,7 +1651,7 @@ One entry per shortlist line, in the same order. Never a bare array: the outer v
 Skills this job requires: {{job.skills_required}}
 Skills it lists as a plus: {{job.skills_preferred}}
 
-The shortlist. Each line is: ref | what it says | relevance score the ranker gave it | what the ranker proposes (keep: it prints; drop: it does not, most often for room on the page rather than relevance).
+The shortlist. Each line is: ref | what it says | relevance score the ranker gave it | what the ranker proposes (keep: it prints; keep, the last line naming X: it prints because nothing else on the page names X; drop: it does not, most often for room on the page rather than relevance).
 
 {{shortlist}}
 
