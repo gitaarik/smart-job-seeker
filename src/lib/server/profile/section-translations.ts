@@ -305,31 +305,6 @@ export async function translatedSince(
 	);
 }
 
-/**
- * Remove every translation of one row, in every language.
- *
- * For a row that is going away. The overlay has no foreign key to the row it
- * translates — one table serves eleven kinds of row — so nothing else would.
- */
-export async function deleteRowTranslations(
-	profileId: number,
-	name: ProfileResourceName,
-	id: number
-): Promise<void> {
-	const entity = PROFILE_RESOURCES[name].translationEntity;
-	if (!entity) return;
-
-	await db
-		.delete(profile_translations)
-		.where(
-			and(
-				eq(profile_translations.profile_id, profileId),
-				eq(profile_translations.entity_type, entity),
-				eq(profile_translations.entity_id, id)
-			)
-		);
-}
-
 function isBlank(value: unknown): boolean {
 	return value === null || value === undefined || (typeof value === 'string' && !value.trim());
 }

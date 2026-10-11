@@ -12,16 +12,11 @@ import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
 import { and, eq, inArray } from 'drizzle-orm';
-import {
-	profile_field_variants,
-	profile_translations,
-	profile_version_overrides
-} from '$lib/server/db/schema';
+import { profile_field_variants } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/utils/api-helpers';
 import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
 import { touchProfile } from '$lib/server/profile/touch-profile';
-import { isVariantEntity, isVariantField, FIELD_VARIANT_ENTITY } from '$lib/field-variants';
-import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
+import { isVariantEntity, isVariantField } from '$lib/field-variants';
 import {
 	createFieldVariant,
 	isVariantOwned,
@@ -127,12 +122,10 @@ export const PUT: RequestHandler = async ({ locals, cookies, request }) => {
 /**
  * Remove one.
  *
- * Its picks go with it through the cascade on `profile_version_overrides`, and
+ * Its picks and its translations go with it, through the delete trigger on
+ * `profile_field_variants` (see `profile_version_overrides` in schema.ts), and
  * every version that had picked it falls back to the profile's own value — the
- * same thing "no pick" has always meant, so no document breaks. Its
- * translations do not cascade (that sidecar has no foreign key to anything but
- * the profile), so they are deleted here; leaving them would be rows keyed to
- * an id that can be reissued.
+ * same thing "no pick" has always meant, so no document breaks.
  */
 export const DELETE: RequestHandler = async ({ locals, cookies, request }) => {
 	const user = requireAuth(locals);
@@ -144,23 +137,6 @@ export const DELETE: RequestHandler = async ({ locals, cookies, request }) => {
 	if (!Number.isInteger(id)) error(400, 'Invalid id');
 	if (!(await isVariantOwned(id, profileId))) error(403, 'Access denied');
 
-	await db
-		.delete(profile_version_overrides)
-		.where(
-			and(
-				eq(profile_version_overrides.entity_type, OVERRIDE_ENTITIES.fieldVariant),
-				eq(profile_version_overrides.entity_id, id)
-			)
-		);
-	await db
-		.delete(profile_translations)
-		.where(
-			and(
-				eq(profile_translations.profile_id, profileId),
-				eq(profile_translations.entity_type, FIELD_VARIANT_ENTITY),
-				eq(profile_translations.entity_id, id)
-			)
-		);
 	await db.delete(profile_field_variants).where(eq(profile_field_variants.id, id));
 
 	await touchProfile(profileId);

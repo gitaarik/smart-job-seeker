@@ -116,7 +116,6 @@ const translations = {
 	languages: [] as string[],
 	values: {} as Record<number, Record<string, string>>,
 	writes: [] as { name: string; id: number; values: Record<string, unknown>; stamp?: Date }[],
-	removed: [] as { name: string; id: number }[],
 	writtenSince: false
 };
 
@@ -148,11 +147,7 @@ vi.mock('$lib/server/profile/section-translations', async (importOriginal) => {
 			}
 			return Promise.resolve();
 		},
-		translatedSince: () => Promise.resolve(translations.writtenSince),
-		deleteRowTranslations: (_profileId: number, name: string, id: number) => {
-			translations.removed.push({ name, id });
-			return Promise.resolve();
-		}
+		translatedSince: () => Promise.resolve(translations.writtenSince)
 	};
 });
 
@@ -180,7 +175,6 @@ beforeEach(() => {
 	translations.languages = [];
 	translations.values = {};
 	translations.writes = [];
-	translations.removed = [];
 	translations.writtenSince = false;
 });
 
@@ -1663,15 +1657,6 @@ describe('translations', () => {
 				/translation has been changed since it was added/
 			);
 			expect(state.deletes).toHaveLength(0);
-		});
-
-		it('removes the row’s translations along with the row', async () => {
-			state.row = { id: 99, profile_id: 12, date_created: new Date('2026-09-23T12:00:00Z') };
-
-			await addReference.revert?.({ id: 99, label: 'x' }, {}, ACTOR);
-
-			expect(state.deletes).toEqual([{ resource: 'reference', actor: { profileId: 12 }, id: 99 }]);
-			expect(translations.removed).toEqual([{ name: 'reference', id: 99 }]);
 		});
 	});
 

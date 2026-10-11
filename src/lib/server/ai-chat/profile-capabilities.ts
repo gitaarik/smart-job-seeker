@@ -69,7 +69,6 @@ import {
 	validatePatch
 } from '$lib/server/profile/write';
 import {
-	deleteRowTranslations,
 	languagesOf,
 	LANGUAGES_KEY,
 	parseTranslationField,
@@ -1154,15 +1153,12 @@ a duplicate of anything already in one:\n\n${lines.join('\n')}`;
 				);
 			}
 
+			// Its translations go with it, through the table's delete trigger (see
+			// `profile_version_overrides` in schema.ts).
 			const result = await deleteRow(name, { profileId: actor.profileId }, t.id);
 			if (!result.ok) {
 				throw new Error(`add_${name} could not be undone: ${result.error}`);
 			}
-
-			// After the row, so a refused delete leaves its translations with it.
-			// Nothing else would remove them: the overlay has no foreign key to the
-			// row it translates.
-			await deleteRowTranslations(actor.profileId, name, t.id);
 		},
 
 		apply: async (_t, proposed, _current, actor) => {
