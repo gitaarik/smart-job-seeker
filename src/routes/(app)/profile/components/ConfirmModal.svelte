@@ -2,6 +2,7 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faExclamationTriangle, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
 	import { portalToBody } from '$lib/actions/portal';
+	import type { Snippet } from 'svelte';
 
 	interface Props {
 		isOpen: boolean;
@@ -12,6 +13,8 @@
 		variant?: 'destructive' | 'primary';
 		onConfirm: () => void;
 		onCancel: () => void;
+		/** More than a sentence: shown under the message. */
+		children?: Snippet;
 	}
 
 	let {
@@ -22,7 +25,8 @@
 		cancelLabel = 'Cancel',
 		variant = 'destructive',
 		onConfirm,
-		onCancel
+		onCancel,
+		children
 	}: Props = $props();
 
 	const iconBg = $derived(
@@ -71,6 +75,9 @@
 						{title}
 					</h3>
 					<p class="text-sm whitespace-pre-line text-[var(--dash-text-secondary)]">{message}</p>
+					{#if children}
+						<div class="mt-3">{@render children()}</div>
+					{/if}
 				</div>
 			</div>
 

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
 	heldBackByTemplate,
 	isHiddenFromDocuments,
+	onlyOnVersion,
+	retireVersionTag,
 	setShownOn,
 	shownTemplates,
 	renameTagSlug,
@@ -182,6 +184,45 @@ describe('renameTagSlug', () => {
 		expect(renameTagSlug(null, 'app-45', 'enexis')).toEqual([]);
 		// An empty needle would otherwise match every tag and rename the lot.
 		expect(renameTagSlug(['backend'], '  ', null)).toEqual(['backend']);
+	});
+});
+
+describe('retiring a version tag', () => {
+	it('knows an item that depends on one version', () => {
+		expect(onlyOnVersion(['fullstack-django'], 'Fullstack-Django')).toBe(true);
+		// A base-template whitelist is not a version.
+		expect(onlyOnVersion(['cv', 'fullstack-react'], 'fullstack-react')).toBe(true);
+		expect(onlyOnVersion(['fullstack-django', 'fullstack-python'], 'fullstack-django')).toBe(false);
+		expect(onlyOnVersion(['!resume', '!cv'], 'fullstack-django')).toBe(false);
+		expect(onlyOnVersion([], 'fullstack-django')).toBe(false);
+	});
+
+	it('just drops the tag where the item names other versions too', () => {
+		expect(retireVersionTag(['fullstack-django', 'fullstack-python'], 'fullstack-django')).toEqual([
+			'fullstack-python'
+		]);
+	});
+
+	it('moves an item that named only the retired version', () => {
+		expect(retireVersionTag(['cv', 'fullstack-react'], 'fullstack-react', 'full-stack')).toEqual([
+			'cv',
+			'full-stack'
+		]);
+	});
+
+	it('keeps it off every template rather than putting it on every version', () => {
+		// Jazzchords: tagged only for the Django version. Dropping the tag alone
+		// would have printed it on every document, the Citrus CV included.
+		expect(retireVersionTag(['fullstack-django'], 'fullstack-django')).toEqual([
+			'!resume',
+			'!cv',
+			'!portfolio'
+		]);
+		expect(retireVersionTag(['cv', '!portfolio', 'fullstack-react'], 'fullstack-react')).toEqual([
+			'!portfolio',
+			'!resume',
+			'!cv'
+		]);
 	});
 });
 

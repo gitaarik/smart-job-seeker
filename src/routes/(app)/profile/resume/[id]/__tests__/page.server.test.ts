@@ -206,10 +206,12 @@ describe('library version editor', () => {
 			}
 		}
 
-		it('drops item tags naming the retired slug', async () => {
+		it('retires the slug on item tags, keeping items tagged for it alone off', async () => {
 			await runDelete();
 
-			expect(mockRetagVersionSlug).toHaveBeenCalledWith(12, 'frontend', null);
+			// No version chosen to move them to: null, which retagVersionSlug reads
+			// as off every document rather than on every version.
+			expect(mockRetagVersionSlug).toHaveBeenCalledWith(12, 'frontend', null, null);
 		});
 
 		it('keeps the record of having sent it', async () => {

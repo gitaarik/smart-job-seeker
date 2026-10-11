@@ -10,7 +10,7 @@ import {
 import { eq, and, ne, or, asc, isNull } from 'drizzle-orm';
 import { getSelectedProfileId } from '../../utils';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
-import { retagVersionSlug } from '$lib/server/profile/tailor-version';
+import { retagVersionSlug, versionDeleteImpact } from '$lib/server/profile/tailor-version';
 import { chargeCredits } from '$lib/server/billing/credits';
 import { requireCredits } from '$lib/server/billing/require-credits';
 import { buildToggles } from '$lib/resume-contact-fields';
@@ -121,6 +121,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		(w) => w.options.length > 0
 	);
 
+	// What the delete dialog has to say before anyone confirms it.
+	const deleteImpact = await versionDeleteImpact(layoutData.selectedProfile.id, id);
+
 	return {
 		version: {
 			...v,
@@ -128,6 +131,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		},
 		wordings,
 		allVersions,
+		deleteImpact,
 		publicResumeVersionId: profile?.public_resume_version_id ?? null,
 		publicCvVersionId: profile?.public_cv_version_id ?? null,
 		tagUsage: {
@@ -307,7 +311,7 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	delete: async ({ locals, cookies, params }) => {
+	delete: async ({ request, locals, cookies, params }) => {
 		const user = locals.user;
 		if (!user) {
 			return fail(401, { error: 'Not authenticated' });
@@ -329,6 +333,27 @@ export const actions: Actions = {
 
 		if (!existing) {
 			return fail(404, { error: 'Version not found' });
+		}
+
+		// Where the items tagged for this version alone go: another library
+		// version, or (none chosen) off every document. Never onto every version,
+		// which is what dropping their only version tag would do.
+		const moveToId = parseInt(String((await request.formData()).get('moveTo') ?? ''));
+		let moveTo: string | null = null;
+		if (!isNaN(moveToId)) {
+			const target = await db.query.profile_versions.findFirst({
+				where: and(
+					eq(profile_versions.id, moveToId),
+					eq(profile_versions.profile_id, profileId),
+					isNull(profile_versions.application_id),
+					ne(profile_versions.id, id)
+				),
+				columns: { slug: true }
+			});
+			if (!target?.slug) {
+				return fail(400, { error: 'The version to move them to was not found' });
+			}
+			moveTo = target.slug;
 		}
 
 		// Clear public version references if this version was public
@@ -370,7 +395,7 @@ export const actions: Actions = {
 		// — and the slug is not retired with the version: nothing stops a later
 		// version from being created under the same one, which would silently
 		// inherit every item tagged onto this one.
-		if (existing.slug) await retagVersionSlug(profileId, existing.slug, null);
+		if (existing.slug) await retagVersionSlug(profileId, existing.slug, null, moveTo);
 
 		// `applications.cv_version_sent` is deliberately NOT cleared here, which is
 		// the opposite of what discarding a tailored version does. That one is a

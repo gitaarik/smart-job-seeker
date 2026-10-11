@@ -255,6 +255,43 @@ export function renameTagSlug(
 }
 
 /**
+ * Whether `slug` is the only version this item is whitelisted for.
+ *
+ * Such an item depends on the version: positive version tags are a whitelist,
+ * and a list naming none is no whitelist at all, so taking this one tag away
+ * puts the item on every version instead of one.
+ */
+export function onlyOnVersion(tags: string[] | null | undefined, slug: string): boolean {
+	const target = tagSlug(slug);
+	const versions = splitTags(tags).positives.filter((p) => !BASE_TEMPLATE_TAGS.includes(p));
+	return versions.length === 1 && versions[0] === target;
+}
+
+/**
+ * An item's tags once version `slug` is retired.
+ *
+ * Dropping the tag (renameTagSlug with null) is right for an item that names
+ * other versions too. For one that named only this version it would widen the
+ * item from one document to all of them: deleting the old Django version would
+ * have put Jazzchords on the Citrus CV. Such an item moves to `moveTo` when one
+ * is given, and otherwise stays where it was, which is now nowhere: every base
+ * template negated, and its base-template whitelist with it.
+ */
+export function retireVersionTag(
+	tags: string[] | null | undefined,
+	slug: string,
+	moveTo: string | null = null
+): string[] {
+	if (!onlyOnVersion(tags, slug)) return renameTagSlug(tags, slug, null);
+	if (moveTo) return renameTagSlug(tags, slug, moveTo);
+	const kept = renameTagSlug(tags, slug, null).filter(
+		(tag) => isNegated(tag) || !BASE_TEMPLATE_TAGS.includes(tagSlug(tag))
+	);
+	const negated = new Set(kept.filter(isNegated).map(tagSlug));
+	return [...kept, ...BASE_TEMPLATE_TAGS.filter((t) => !negated.has(t)).map((t) => `!${t}`)];
+}
+
+/**
  * Whether a BASE TEMPLATE rule holds this item back, rather than a version tag.
  *
  * The two are different instructions and only one is a per-job matter. "Not on

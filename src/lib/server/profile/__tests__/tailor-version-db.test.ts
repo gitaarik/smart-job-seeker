@@ -167,6 +167,7 @@ import {
 	setItemStateForApplication,
 	setWordingForApplication,
 	undoDecision,
+	versionDeleteImpact,
 	versionItemStates
 } from '../tailor-version';
 import {
@@ -307,18 +308,37 @@ describe('retagVersionSlug', () => {
 	});
 
 	describe('retiring a slug', () => {
-		it('drops the tag and keeps the rest', async () => {
-			const { written } = tagScan({ tech_skills: [{ id: 9, tags: ['backend', 'cv'] }] });
+		it('drops the tag and keeps the rest when the item names another version', async () => {
+			const { written } = tagScan({
+				tech_skills: [{ id: 9, tags: ['backend', 'frontend', 'cv'] }]
+			});
 
 			expect(await retagVersionSlug(1, 'backend', null)).toBe(1);
-			expect(written[0].params).toContain(JSON.stringify(['cv']));
+			expect(written[0].params).toContain(JSON.stringify(['frontend', 'cv']));
+		});
+
+		// Dropping its only version tag would put it on every version.
+		it('keeps an item tagged for the retired version alone off every document', async () => {
+			const { written } = tagScan({ tech_skills: [{ id: 9, tags: ['backend', 'cv'] }] });
+
+			await retagVersionSlug(1, 'backend', null);
+
+			expect(written[0].params).toContain(JSON.stringify(['!resume', '!cv', '!portfolio']));
+		});
+
+		it('moves an item tagged for the retired version alone where it is told', async () => {
+			const { written } = tagScan({ tech_skills: [{ id: 9, tags: ['backend'] }] });
+
+			await retagVersionSlug(1, 'backend', null, 'full-stack');
+
+			expect(written[0].params).toContain(JSON.stringify(['full-stack']));
 		});
 
 		// An empty array and no tags at all mean the same thing to the filter;
 		// storing NULL keeps the column's two "unrestricted" states from
 		// multiplying.
-		it('writes NULL when the tag was the only one', async () => {
-			const { written } = tagScan({ tech_skills: [{ id: 9, tags: ['backend'] }] });
+		it('writes NULL when nothing is left', async () => {
+			const { written } = tagScan({ tech_skills: [{ id: 9, tags: ['!backend'] }] });
 
 			await retagVersionSlug(1, 'backend', null);
 
@@ -337,6 +357,49 @@ describe('retagVersionSlug', () => {
 		});
 
 		expect(await retagVersionSlug(1, 'backend', 'senior-backend')).toBe(3);
+	});
+});
+
+describe('versionDeleteImpact', () => {
+	it('lists what deleting a version touches, items tagged for it alone among them', async () => {
+		find.profile_versions.findFirst.mockResolvedValue({ slug: 'Fullstack-Django' });
+		find.profiles.findFirst.mockResolvedValue({
+			public_resume_version_id: 85,
+			public_cv_version_id: 90
+		});
+		mockQueryRaw.mockImplementation((query: SQL) => {
+			const { sql } = render(query);
+			if (sql.includes('FROM side_projects')) {
+				return Promise.resolve([
+					{ label: 'Jazzchords', tags: ['fullstack-django'] },
+					{ label: 'TeleCoder', tags: ['fullstack-django', 'fullstack-django-svelte'] }
+				]);
+			}
+			if (sql.includes('FROM work_experience_achievements')) {
+				return Promise.resolve([
+					{ label: 'Facilitated market expansion', tags: ['cv', 'fullstack-django'] }
+				]);
+			}
+			if (sql.includes('FROM applications')) return Promise.resolve([{ n: 1 }]);
+			if (sql.includes('FROM profile_version_extensions')) return Promise.resolve([{ n: 0 }]);
+			return Promise.resolve([]);
+		});
+
+		expect(await versionDeleteImpact(1, 85)).toEqual({
+			onlyHere: [
+				{ kind: 'Side project', label: 'Jazzchords' },
+				{ kind: 'Bullet', label: 'Facilitated market expansion' }
+			],
+			builtOnIt: 0,
+			sentWith: 1,
+			publicResume: true,
+			publicCv: false
+		});
+	});
+
+	it('is null for a version the profile does not hold', async () => {
+		find.profile_versions.findFirst.mockResolvedValue(undefined);
+		expect(await versionDeleteImpact(1, 999)).toBeNull();
 	});
 });
 

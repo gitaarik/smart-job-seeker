@@ -23,6 +23,11 @@
 	let version = $derived(data.version);
 	let versionTitle = $derived(version.name || version.slug || 'Version');
 	let showDeleteModal = $state(false);
+	// The delete dialog: what deleting would touch, and where the items tagged
+	// for this version alone go. '' keeps them off every document.
+	let impact = $derived(data.deleteImpact);
+	let moveToId = $state('');
+	const SHOW_ONLY_HERE = 8;
 	let showAdvanced = $state(false);
 
 	// Form states follow `data` (a submit with use:enhance reloads it); editing
@@ -487,15 +492,79 @@
 	isOpen={showDeleteModal}
 	title="Delete Version"
 	message="Are you sure you want to delete this resume version? Associated share links may stop working. This action cannot be undone."
+	confirmLabel="Delete"
 	onCancel={() => (showDeleteModal = false)}
 	onConfirm={() => {
 		const form = document.createElement('form');
 		form.method = 'POST';
 		form.action = `?/delete`;
+		if (moveToId) {
+			const input = document.createElement('input');
+			input.type = 'hidden';
+			input.name = 'moveTo';
+			input.value = moveToId;
+			form.appendChild(input);
+		}
 		document.body.appendChild(form);
 		form.submit();
 	}}
-/>
+>
+	{#if impact}
+		<ul class="list-disc space-y-1 pl-5 text-sm text-[var(--dash-text-secondary)]">
+			{#if impact.publicResume || impact.publicCv}
+				<li>
+					It is your public {impact.publicResume && impact.publicCv
+						? 'resume and CV'
+						: impact.publicResume
+							? 'resume'
+							: 'CV'}. Nothing is public until you pick another.
+				</li>
+			{/if}
+			{#if impact.builtOnIt > 0}
+				<li>
+					{impact.builtOnIt}
+					{impact.builtOnIt === 1 ? 'version is' : 'versions are'} built on it. They keep their own choices
+					but lose this one as their starting point.
+				</li>
+			{/if}
+			{#if impact.sentWith > 0}
+				<li>
+					{impact.sentWith}
+					{impact.sentWith === 1 ? 'application was' : 'applications were'} sent with it. They keep that
+					record, without a link to the version.
+				</li>
+			{/if}
+		</ul>
+		{#if impact.onlyHere.length > 0}
+			<div class="mt-3 rounded-lg border border-[var(--dash-border)] p-3 text-sm">
+				<p class="text-[var(--dash-text)]">
+					{impact.onlyHere.length}
+					{impact.onlyHere.length === 1 ? 'item is' : 'items are'} tagged for this version only:
+				</p>
+				<ul class="mt-1 space-y-0.5 text-[var(--dash-text-secondary)]">
+					{#each impact.onlyHere.slice(0, SHOW_ONLY_HERE) as item, i (i)}
+						<li>{item.kind}: {item.label}</li>
+					{/each}
+					{#if impact.onlyHere.length > SHOW_ONLY_HERE}
+						<li>and {impact.onlyHere.length - SHOW_ONLY_HERE} more</li>
+					{/if}
+				</ul>
+				<label class="mt-2 flex flex-col gap-1 text-[var(--dash-text)]">
+					Where they go
+					<select
+						bind:value={moveToId}
+						class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1"
+					>
+						<option value="">Keep them off every document</option>
+						{#each data.allVersions as other (other.id)}
+							<option value={String(other.id)}>Move them to {other.name || other.slug}</option>
+						{/each}
+					</select>
+				</label>
+			</div>
+		{/if}
+	{/if}
+</ConfirmModal>
 
 <style>
 	:global(.tagged-items .dash-link-ext) {
