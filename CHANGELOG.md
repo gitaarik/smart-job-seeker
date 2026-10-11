@@ -5,6 +5,39 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.0] - 2026-10-11
+
+51 commits since v0.38.0.
+
+### Added
+
+- Side projects can print on a template that does not list them, and templates say which optional sections they print
+- Connected AI agents (MCP) can manage resume versions, including deleting one with a safeguard
+- Job matches show pay-fit columns, and match config lets you set the pay fit
+- Matching finds the job skills a profile is taken to have
+- Skill ontology records and proposes the level from which each skill is taken for granted
+- Ontology can apply a reviewed plan of rulings in one pass
+- Show or hide a role's technologies on the resume, CV and site, and mark individual skill and technology chips as hidden from part of the resume, CV or site
+
+### Changed
+
+- Tailoring runs its review on its own model, Gemini 3.8 Flash by default, and the review sees the page and protects a line
+- Tailoring holds no line for a skill taken for granted, and skill matching leaves those skills out
+- Jobs that pay below your ask are hidden from matches and the digest
+- Tailoring tells the review which lines the coverage guarantee holds for
+
+### Fixed
+
+- A newly published library version now renders
+- Deleting a resume version no longer puts its items on every version
+- A side project held off resumes only on a review must is brought back
+- Tailoring sheds extra musts from the best-scored lines only, not all of them
+- A role's tech line is ranked by what the posting is about
+- Tailoring keeps a skill group the posting names and a long role's bullets
+- Tailoring resolves the job's skill names through the graph for evidence
+- An edit made while a row's previous save was in flight is no longer lost
+- The AI cheat sheet covers the application's whole history
+
 ## [0.38.0] - 2026-10-06
 
 60 commits since v0.37.0.
