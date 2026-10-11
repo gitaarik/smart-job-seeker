@@ -1772,6 +1772,15 @@ async function conceptResolver(
  * `related` hop stays out. A MariaDB line is a reasonable suggestion for a MySQL
  * job and not an answer to a MySQL requirement.
  *
+ * Both sides go through it. The walk resolves the applicant's aliases itself;
+ * the job's are resolved here, or a requirement spelled as an alias meets
+ * nothing. Application 92 asks for "Large Language Models", an approved alias
+ * of LLM: the walk from RAG, LangChain and prompt caching reached `llm`, this
+ * looked for `largelanguagemodels`, and four of its sixteen requirements had
+ * no evidence on a resume full of it. The concept's own name answers as well,
+ * so a line saying "security" names an "Information Security" requirement.
+ * `impliesSkill` resolves the wanted side the same way.
+ *
  * Degrades to the literal reading if the graph cannot be reached; a bullet that
  * spells the requirement out is still found.
  */
@@ -1823,12 +1832,19 @@ export async function markCoverage(
 		)
 	];
 	try {
-		const reach = await expandUpwardBySeed(held);
-		const wanted = new Map(asked.map((r) => [normalizeSkill(r), r]));
+		const [reach, concepts] = await Promise.all([expandUpwardBySeed(held), resolveConcepts(asked)]);
+		// Concept → the requirements it stands for. A job can list one skill
+		// under two names, and each name is answered.
+		const wanted = new Map<string, string[]>();
+		for (const req of asked) {
+			const concept = concepts.get(normalizeSkill(req));
+			const slug = concept?.slug ?? normalizeSkill(req);
+			wanted.set(slug, [...(wanted.get(slug) ?? []), req]);
+			if (concept) answers.get(req)?.add(concept.label);
+		}
 		for (const name of held) {
 			for (const c of reach.get(normalizeSkill(name)) ?? []) {
-				const req = wanted.get(c.slug);
-				if (req) answers.get(req)?.add(name);
+				for (const req of wanted.get(c.slug) ?? []) answers.get(req)?.add(name);
 			}
 		}
 	} catch (err) {

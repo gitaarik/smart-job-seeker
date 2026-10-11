@@ -34,7 +34,7 @@ import {
 import { semanticScoreUnits } from '$lib/server/documents/content-embeddings';
 import { promptTemplates } from '$lib/server/ai-chat/prompt-templates';
 import { renderPrompt } from '$lib/server/ai-chat/render-prompt';
-import { expandUpwardBySeed } from '$lib/server/job/skill-ontology';
+import { expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import { selectForJob, type Candidate, type Decision } from '$lib/tailoring';
 
@@ -1278,6 +1278,47 @@ describe('markCoverage: what the applicant holds, and where it is written down',
 	beforeEach(() => {
 		vi.mocked(expandUpwardBySeed).mockReset();
 		vi.mocked(expandUpwardBySeed).mockResolvedValue(new Map());
+		vi.mocked(resolveConcepts).mockReset();
+		vi.mocked(resolveConcepts).mockResolvedValue(new Map());
+	});
+
+	// Application 92: the walk from RAG reaches LLM, and the job spells LLM
+	// "Large Language Models", an approved alias of it.
+	const ragProfile = { tech_skill_categories: [{ tech_skills: [{ name: 'RAG' }] }] };
+	const llm = { id: 7, slug: 'llm', label: 'LLM' };
+	const ragReachesLlm = () =>
+		vi
+			.mocked(expandUpwardBySeed)
+			.mockResolvedValue(new Map([['rag', [{ slug: 'rag' }, { slug: 'llm' }]]]) as never);
+
+	it('answers a requirement the job spells as an alias of what the walk reached', async () => {
+		ragReachesLlm();
+		vi.mocked(resolveConcepts).mockResolvedValue(new Map([['largelanguagemodels', llm]]));
+		const bullet = bulletSaying('Built a RAG pipeline over the support docs');
+		await markCoverage([bullet], ragProfile, ['Large Language Models']);
+		expect(bullet.covers).toEqual(['Large Language Models']);
+	});
+
+	it("counts the concept's own name as naming the requirement", async () => {
+		vi.mocked(resolveConcepts).mockResolvedValue(
+			new Map([['informationsecurity', { id: 9, slug: 'security', label: 'Security' }]])
+		);
+		const bullet = bulletSaying('Automated supply-chain security with Dependabot');
+		await markCoverage([bullet], profile, ['Information Security']);
+		expect(bullet.covers).toEqual(['Information Security']);
+	});
+
+	it('answers each name a job lists one skill under', async () => {
+		ragReachesLlm();
+		vi.mocked(resolveConcepts).mockResolvedValue(
+			new Map([
+				['llm', llm],
+				['largelanguagemodels', llm]
+			])
+		);
+		const bullet = bulletSaying('Built a RAG pipeline over the support docs');
+		await markCoverage([bullet], ragProfile, ['LLM'], ['Large Language Models']);
+		expect(bullet.covers).toEqual(['LLM', 'Large Language Models']);
 	});
 
 	it('seeds the graph with every place a skill name is written down', async () => {
