@@ -827,8 +827,9 @@ export function applyModelOpinions(
 	/** The refs on the shortlist. Omitted, every candidate counts as shown. */
 	shown?: Set<string>,
 	/**
-	 * How many musts are still a selection — see mustLimitFor. Past it, none are
-	 * honoured: the trim falls back to the ranker's order, which is what a run
+	 * How many musts are still a selection — see mustLimitFor. Past it, the
+	 * musts on the best-scored lines stop counting first; past twice it, none
+	 * count, and the trim falls back to the ranker's order, which is what a run
 	 * with no review does.
 	 */
 	mustLimit = Infinity
@@ -847,12 +848,28 @@ export function applyModelOpinions(
 
 	// Marking most of the page essential is not a choice between lines, and
 	// protecting all of it protects nothing: the same arithmetic as the coverage
-	// guarantee, which once protected 40 of 66 lines and changed no output. So a
-	// verdict past the limit is read as keep rather than trimmed to it, because
-	// any rule for WHICH musts to honour would be this code choosing, not the
-	// model.
-	const musts = usable.filter(({ action }) => action === 'must').length;
-	const honourMusts = musts <= mustLimit;
+	// guarantee, which once protected 40 of 66 lines and changed no output. So
+	// past twice the limit every must is read as keep.
+	//
+	// A few over is a slip, not that, and reading all of them as keeps threw away
+	// eight real choices to refuse a ninth: 3 of 42 reviews on the tailoring
+	// golden set marked 9 against a limit of 8 (2026-10-11). So up to twice the
+	// limit, the musts on the best-scored lines stop counting first. A high score
+	// prints anyway, as the prompt tells the model, so a must there protects
+	// nothing; the ones that count are where the review overrules the ranker,
+	// which is what musts are for. The prompt keeps the stricter "none of them
+	// count", which is what holds the model to the limit.
+	const mustRefs = [
+		...new Set(usable.filter(({ action }) => action === 'must').map(({ ref }) => ref))
+	];
+	const scoreOf = (ref: string) => byRef.get(ref)?.score ?? 0;
+	const honoured = new Set(
+		mustRefs.length <= mustLimit
+			? mustRefs
+			: mustRefs.length > 2 * mustLimit
+				? []
+				: [...mustRefs].sort((a, b) => scoreOf(a) - scoreOf(b)).slice(0, mustLimit)
+	);
 
 	for (const { opinion, ref, action } of usable) {
 		const candidate = byRef.get(ref);
@@ -860,7 +877,7 @@ export function applyModelOpinions(
 		if (action === 'drop') {
 			adjusted.set(ref, { score: floor - Math.abs(floor) - 1, vetoed: true });
 		} else if (action === 'keep' || action === 'must') {
-			const vouched = action === 'must' && honourMusts;
+			const vouched = action === 'must' && honoured.has(ref);
 			// The lift is only for something already ON the document. "Keep" about
 			// a hidden item means "I have no objection", not "add it" — but a lift
 			// to the floor is exactly what the surfacing bar reads as "add it", and
@@ -889,7 +906,7 @@ export function applyModelOpinions(
 			return change === undefined ? c : { ...c, ...change };
 		}),
 		verdicts,
-		mustsIgnored: honourMusts ? 0 : musts
+		mustsIgnored: mustRefs.length - honoured.size
 	};
 }
 
@@ -931,7 +948,8 @@ const REVIEWED_ENTITIES = new Set<string>([...DROPPABLE_ENTITIES, OVERRIDE_ENTIT
  * How many lines the review may mark essential: about one in five, never more
  * than eight. Eight covers the handful of things a posting asks for with a
  * line of evidence each; past that a must is no longer a choice. See
- * applyModelOpinions, which honours none when the model marks more.
+ * applyModelOpinions, which sheds the extra musts from the best-scored lines,
+ * and honours none past twice the limit.
  */
 export function mustLimitFor(lines: number): number {
 	return Math.max(1, Math.min(8, Math.round(lines / 5)));
@@ -1348,7 +1366,7 @@ export interface ReviewedSelection {
 	/** The candidates with the model's verdicts folded in. */
 	candidates: Candidate[];
 	verdicts: Map<string, ModelVerdict>;
-	/** Musts marked past the limit, every one of them read as a keep. */
+	/** Musts read as keeps because the review marked more than its limit. */
 	mustsIgnored: number;
 	/** Whether an answer was applied; false is the deterministic selection. */
 	modelReviewed: boolean;
@@ -1524,7 +1542,7 @@ export async function tailorVersionForApplication(opts: {
 	const reviewed = reviewedSelection(prepared, answer);
 	if (reviewed.mustsIgnored > 0) {
 		console.warn(
-			`[tailor-version] application ${applicationId}: the review marked ${reviewed.mustsIgnored} lines essential against a limit of ${prepared.shortlist.mustLimit}; read as keeps`
+			`[tailor-version] application ${applicationId}: the review marked more lines essential than its limit of ${prepared.shortlist.mustLimit}; ${reviewed.mustsIgnored} of them read as keeps`
 		);
 	}
 	const { modelReviewed } = reviewed;

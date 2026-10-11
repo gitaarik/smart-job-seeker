@@ -174,8 +174,9 @@ describe('applyModelOpinions', () => {
 		expect(verdicts.get('bullet:1')?.action).toBe('must');
 	});
 
-	it('reads every must as a keep when there are more than the limit', () => {
-		// Marking most of the page essential is not a choice between lines.
+	it('sheds the musts on the best-scored lines when there are a few more than the limit', () => {
+		// A high score prints anyway, so a must there protects nothing: the slip
+		// costs that one, not the eight that are a real choice.
 		const { candidates: adjusted, mustsIgnored } = applyModelOpinions(
 			[bullet(1, 0.56), bullet(2, 0.7), bullet(3, 0.3)],
 			[
@@ -187,9 +188,44 @@ describe('applyModelOpinions', () => {
 			undefined,
 			2
 		);
+		expect(adjusted.map((c) => !!c.vouched)).toEqual([true, false, true]);
+		// Shed to a keep, which lifts nothing that is above the floor already.
+		expect(adjusted[1]).toMatchObject({ score: 0.7 });
+		expect(mustsIgnored).toBe(1);
+	});
+
+	it('reads every must as a keep past twice the limit', () => {
+		// Marking most of the page essential is not a choice between lines.
+		const { candidates: adjusted, mustsIgnored } = applyModelOpinions(
+			[bullet(1, 0.56), bullet(2, 0.7), bullet(3, 0.3)],
+			[
+				{ ref: 'bullet:1', action: 'must', reason: 'a' },
+				{ ref: 'bullet:2', action: 'must', reason: 'b' },
+				{ ref: 'bullet:3', action: 'must', reason: 'c' }
+			],
+			FLOOR,
+			undefined,
+			1
+		);
 		expect(adjusted.some((c) => c.vouched)).toBe(false);
 		expect(adjusted[2].score).toBe(FLOOR);
 		expect(mustsIgnored).toBe(3);
+	});
+
+	it('counts a must the model repeats for one line once', () => {
+		const { candidates: adjusted, mustsIgnored } = applyModelOpinions(
+			[bullet(1, 0.56), bullet(2, 0.3)],
+			[
+				{ ref: 'bullet:1', action: 'must', reason: 'a' },
+				{ ref: 'bullet:1', action: 'must', reason: 'a again' },
+				{ ref: 'bullet:2', action: 'must', reason: 'b' }
+			],
+			FLOOR,
+			undefined,
+			2
+		);
+		expect(adjusted.every((c) => c.vouched)).toBe(true);
+		expect(mustsIgnored).toBe(0);
 	});
 
 	it('lets a must protect a hidden item the run surfaced, never make one eligible', () => {
