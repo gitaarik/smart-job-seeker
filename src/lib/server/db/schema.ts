@@ -619,6 +619,20 @@ export const skill_concepts = pgTable(
 		slug: varchar({ length: 255 }).notNull(),
 		/** How it should be written when shown to someone: "PostgreSQL", not "postgresql". */
 		label: varchar({ length: 255 }).notNull(),
+		/**
+		 * From which career level the skill is taken for granted in `assumed_for`,
+		 * so a resume needs no line proving it: `junior`, `medior` or `senior`.
+		 * Null is never, which is what every skill was until a review gave it a
+		 * level (planning/SKILL-ONTOLOGY.md § Assumed levels).
+		 */
+		assumed_from: varchar({ length: 8 }),
+		/**
+		 * The line of work it is taken for granted in, as reviewed: "software
+		 * developers", "office workers", "everyone". How an applicant is known
+		 * to be in one is code (LINES_OF_WORK in job/assumed-levels.ts); a line
+		 * of work it cannot recognise applies to no one.
+		 */
+		assumed_for: varchar({ length: 32 }),
 		date_created: timestamp({ withTimezone: true, mode: 'date' })
 			.default(sql`now()`)
 			.notNull()
