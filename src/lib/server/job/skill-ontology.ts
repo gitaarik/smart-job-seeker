@@ -162,6 +162,29 @@ export async function resolveConcepts(names: string[]): Promise<Map<string, Conc
 }
 
 /**
+ * The level from which each of these concepts is taken for granted, and the
+ * line of work that holds in, for the ones that have one: slug → level.
+ * Concepts without a level are absent. See assumed-levels.ts for what reads it.
+ */
+export async function assumedLevels(
+	slugs: string[]
+): Promise<Map<string, { from: string; for: string | null }>> {
+	const out = new Map<string, { from: string; for: string | null }>();
+	const wanted = [...new Set(slugs.filter(Boolean))];
+	if (wanted.length === 0) return out;
+	const rows = await queryRawDirect<{
+		slug: string;
+		assumed_from: string;
+		assumed_for: string | null;
+	}>(sql`
+		SELECT slug, assumed_from, assumed_for FROM skill_concepts
+		WHERE slug IN (${inList(wanted)}) AND assumed_from IS NOT NULL
+	`);
+	for (const r of rows) out.set(r.slug, { from: r.assumed_from, for: r.assumed_for });
+	return out;
+}
+
+/**
  * Every concept reachable UPWARD from these skills, including the skills
  * themselves — the set a job's requirement may be satisfied by.
  *

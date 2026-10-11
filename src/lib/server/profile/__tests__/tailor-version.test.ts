@@ -12,6 +12,7 @@ vi.mock('$lib/server/documents/content-retrieval', () => ({
 	scoreUnitAgainstQuery: vi.fn(() => 0)
 }));
 vi.mock('$lib/server/job/skill-ontology', () => ({
+	assumedLevels: vi.fn(async () => new Map()),
 	expandUpwardBySeed: vi.fn(async () => new Map()),
 	resolveConcepts: vi.fn(async () => new Map())
 }));
@@ -34,7 +35,7 @@ import {
 import { semanticScoreUnits } from '$lib/server/documents/content-embeddings';
 import { promptTemplates } from '$lib/server/ai-chat/prompt-templates';
 import { renderPrompt } from '$lib/server/ai-chat/render-prompt';
-import { expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
+import { assumedLevels, expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
 import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import { selectForJob, type Candidate, type Decision } from '$lib/tailoring';
 
@@ -512,7 +513,8 @@ describe('reviewedSelection', () => {
 			mustLimit: 1,
 			heldFor: new Map()
 		},
-		promptVariables: {}
+		promptVariables: {},
+		takenForGranted: []
 	};
 	const excluded = (ds: Decision[]) =>
 		ds.filter((d) => d.action === 'exclude').map((d) => d.entityId);
@@ -1331,6 +1333,8 @@ describe('markCoverage: what the applicant holds, and where it is written down',
 		vi.mocked(expandUpwardBySeed).mockResolvedValue(new Map());
 		vi.mocked(resolveConcepts).mockReset();
 		vi.mocked(resolveConcepts).mockResolvedValue(new Map());
+		vi.mocked(assumedLevels).mockReset();
+		vi.mocked(assumedLevels).mockResolvedValue(new Map());
 	});
 
 	// Application 92: the walk from RAG reaches LLM, and the job spells LLM
@@ -1389,6 +1393,68 @@ describe('markCoverage: what the applicant holds, and where it is written down',
 		const bullet = bulletSaying('Tuned the SQL behind the PostgreSQL reports');
 		await markCoverage([bullet], profile, ['SQL']);
 		expect(bullet.coveredAs).toEqual({ SQL: 'SQL' });
+	});
+
+	describe('a skill taken for granted', () => {
+		// Application 92: a senior developer's resume held LitState for "Version
+		// Control" because its summary says "open-sourced on GitHub".
+		const developer = (start: string) => ({
+			tech_skill_categories: [
+				{
+					tech_skills: [
+						{ name: 'GitHub' },
+						{ name: 'Python' },
+						{ name: 'Django' },
+						{ name: 'React' }
+					]
+				}
+			],
+			work_experiences: [{ start_date: start, end_date: null }]
+		});
+		const litState = () => bulletSaying('LitState, open-sourced on GitHub with over 150 stars');
+		const takenFrom = (from: string, line: string) =>
+			vi
+				.mocked(assumedLevels)
+				.mockResolvedValue(new Map([['versioncontrol', { from, for: line }]]));
+
+		beforeEach(() => {
+			vi.mocked(resolveConcepts).mockResolvedValue(
+				new Map([['versioncontrol', { id: 3, slug: 'versioncontrol', label: 'Version control' }]])
+			);
+			vi.mocked(expandUpwardBySeed).mockResolvedValue(
+				new Map([
+					['github', [{ slug: 'versioncontrol' }, { slug: 'softwaredevelopment' }]],
+					['python', [{ slug: 'softwaredevelopment' }]],
+					['django', [{ slug: 'softwaredevelopment' }]],
+					['react', [{ slug: 'softwaredevelopment' }]]
+				]) as never
+			);
+		});
+
+		it('holds no line for it', async () => {
+			takenFrom('junior', 'software developers');
+			const bullet = litState();
+			const assumed = await markCoverage([bullet], developer('2010-01-01'), ['Version Control']);
+			expect(assumed).toEqual(['Version Control']);
+			expect(bullet.covers).toBeUndefined();
+		});
+
+		it('holds one below the level it is taken for granted from', async () => {
+			takenFrom('senior', 'software developers');
+			const bullet = litState();
+			const lastYear = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+			expect(await markCoverage([bullet], developer(lastYear), ['Version Control'])).toEqual([]);
+			expect(bullet.covers).toEqual(['Version Control']);
+		});
+
+		it('holds one outside the line of work it is taken for granted in', async () => {
+			takenFrom('junior', 'marketers');
+			const bullet = litState();
+			expect(await markCoverage([bullet], developer('2010-01-01'), ['Version Control'])).toEqual(
+				[]
+			);
+			expect(bullet.covers).toEqual(['Version Control']);
+		});
 	});
 
 	it('seeds the graph with every place a skill name is written down', async () => {

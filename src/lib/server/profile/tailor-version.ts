@@ -97,7 +97,8 @@ import {
 import { loadSkillWords, versionChain, wordsToPrint } from '$lib/server/profile/skill-words';
 import { provenanceFor } from '$lib/match-provenance';
 import { templateForStorage, templatePrintsTechnologies } from '$lib/resume-templates';
-import { expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
+import { assumedLevels, expandUpwardBySeed, resolveConcepts } from '$lib/server/job/skill-ontology';
+import { careerLevel, takenForGranted } from '$lib/server/job/assumed-levels';
 import { normalizeSkill } from '$lib/skills';
 import {
 	DOCUMENT_TEMPLATE_TAGS,
@@ -1178,6 +1179,8 @@ export interface PreparedSelection {
 	shortlist: Shortlist;
 	/** What the review prompt is filled with; null when there is nothing to review. */
 	promptVariables: Record<string, string> | null;
+	/** Asked skills taken for granted for this applicant, which hold no line (markCoverage). */
+	takenForGranted: string[];
 }
 
 /**
@@ -1227,7 +1230,7 @@ export async function prepareSelection(inputs: {
 		preferredSkills,
 		query.text
 	);
-	await markCoverage(built, profile, requiredSkills, preferredSkills);
+	const takenForGranted = await markCoverage(built, profile, requiredSkills, preferredSkills);
 	const scored = await scoreCandidates(profileId, built, query);
 	const { ranker, floor } = scored;
 	// A role's technologies are scored against the posting's lines, not the
@@ -1336,7 +1339,8 @@ export async function prepareSelection(inputs: {
 		options,
 		deterministic,
 		shortlist,
-		promptVariables
+		promptVariables,
+		takenForGranted
 	};
 }
 
@@ -1840,13 +1844,26 @@ async function conceptResolver(
  * so a line saying "security" names an "Information Security" requirement.
  * `impliesSkill` resolves the wanted side the same way.
  *
+ * ## What needs no line
+ *
+ * A skill taken for granted at the applicant's level in their line of work is
+ * not evidence anyone reads, so it holds no line: Git for a senior developer.
+ * Application 92 required "Version Control", the only line left naming it was
+ * LitState's "open-sourced on GitHub", and keeping it cut the Smart Job Seeker
+ * project. Which skills those are is reviewed data on the concept
+ * (assumed-levels.ts); the skill is still asked for, ranked against and pinned
+ * in the skills block, only no line is kept on its account.
+ *
  * Degrades to the literal reading if the graph cannot be reached; a bullet that
- * spells the requirement out is still found.
+ * spells the requirement out is still found, and nothing is taken for granted.
+ *
+ * Returns the asked skills it took for granted.
  */
 export async function markCoverage(
 	candidates: Candidate[],
 	profile: Parameters<typeof heldTechnologies>[0] & {
 		tech_skill_categories?: { tech_skills?: { name?: unknown }[] }[];
+		work_experiences?: { start_date?: unknown; end_date?: unknown }[];
 	},
 	requiredSkills: string[],
 	/**
@@ -1859,7 +1876,7 @@ export async function markCoverage(
 	 * few more skills buy a few more protected lines, not a re-sort.
 	 */
 	preferredSkills: string[] = []
-): Promise<void> {
+): Promise<string[]> {
 	// Required first, so a skill on both lists keeps the required spelling.
 	const asked: string[] = [];
 	const seen = new Set<string>();
@@ -1869,7 +1886,7 @@ export async function markCoverage(
 		seen.add(skill.toLowerCase());
 		asked.push(skill);
 	}
-	if (asked.length === 0) return;
+	if (asked.length === 0) return [];
 
 	// Skill asked for → the wordings that answer it. The skill's own spelling is
 	// always one of them, which is what survives a graph failure.
@@ -1890,6 +1907,7 @@ export async function markCoverage(
 			].filter(Boolean)
 		)
 	];
+	const assumed: string[] = [];
 	try {
 		const [reach, concepts] = await Promise.all([expandUpwardBySeed(held), resolveConcepts(asked)]);
 		// Concept → the requirements it stands for. A job can list one skill
@@ -1904,6 +1922,21 @@ export async function markCoverage(
 		for (const name of held) {
 			for (const c of reach.get(normalizeSkill(name)) ?? []) {
 				for (const req of wanted.get(c.slug) ?? []) answers.get(req)?.add(name);
+			}
+		}
+
+		const levels = await assumedLevels([...wanted.keys()]);
+		if (levels.size > 0) {
+			const heldIn = (lines: readonly string[]) =>
+				held.filter((name) =>
+					(reach.get(normalizeSkill(name)) ?? []).some((c) => lines.includes(c.slug))
+				).length;
+			const level = careerLevel(profile.work_experiences ?? []);
+			for (const slug of takenForGranted(levels, level, heldIn)) {
+				for (const req of wanted.get(slug) ?? []) {
+					answers.delete(req);
+					assumed.push(req);
+				}
 			}
 		}
 	} catch (err) {
@@ -1930,6 +1963,7 @@ export async function markCoverage(
 			candidate.coveredAs = coveredAs;
 		}
 	}
+	return assumed;
 }
 
 /**

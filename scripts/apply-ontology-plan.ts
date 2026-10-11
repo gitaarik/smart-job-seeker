@@ -24,8 +24,9 @@
  * Merges first, because they delete concepts and the pending rows hanging off
  * them. Then the staged aliases, so a rejected alias is out of the way before a
  * concept takes its name. Then new concepts and new aliases, rejections,
- * approvals, and new edges last, so every guard has the approvals before it to
+ * approvals, and new edges, so every guard has the approvals before it to
  * check against. Every edge goes through `refuseNewRelation`, as in the queue.
+ * Assumed levels come last, so a level can be set on a concept the plan made.
  *
  * A dry run checks each row against the database as it stands, so it cannot
  * see the plan's own earlier steps: an edge to a concept the plan creates shows
@@ -37,6 +38,7 @@ import { sql } from 'drizzle-orm';
 import { dbDirect as db, queryRawDirect } from '../src/lib/server/db';
 import { normalizeSkill } from '../src/lib/skills';
 import { refuseNewRelation } from '../src/lib/server/job/skill-relation-guards';
+import { LEVELS, LINES_OF_WORK, type Level } from '../src/lib/server/job/assumed-levels';
 import {
 	approve,
 	draw,
@@ -71,6 +73,12 @@ interface Plan {
 	};
 	concepts?: [label: string, why: string][];
 	edges?: { reject?: Ruling[]; approve?: Ruling[]; draw?: Ruling[] };
+	/**
+	 * From which level each concept is taken for granted, and in which line of
+	 * work (`skill_concepts.assumed_from`, `assumed_for`; see
+	 * src/lib/server/job/assumed-levels.ts). A null level is never.
+	 */
+	levels?: [concept: string, level: Level | null, assumedFor: string | null][];
 }
 
 interface AliasRow {
@@ -265,6 +273,49 @@ async function addAliases(rulings: [string, string, string][], source: string): 
 	return t;
 }
 
+async function setLevels(rulings: [string, Level | null, string | null][]): Promise<Tally> {
+	const t = tally();
+	console.log(`\n── assumed levels (${rulings.length})`);
+	for (const [concept, level, assumedFor] of rulings) {
+		if (level !== null && !LEVELS.includes(level)) {
+			t.problems.push(`"${level}" is not a level, so ${concept} was left alone`);
+			continue;
+		}
+		// Stored as ruled, but a line of work the code cannot recognise applies to
+		// no one (LINES_OF_WORK). Not a failure: "office workers" is that on
+		// purpose. Said, so it is not mistaken for a level in force.
+		if (level !== null && !(assumedFor && assumedFor in LINES_OF_WORK)) {
+			console.log(`  dormant   ${concept}: no one is recognised as "${assumedFor}" yet`);
+		}
+		const rows = await queryRawDirect<{
+			id: number;
+			assumed_from: string | null;
+			assumed_for: string | null;
+		}>(sql`
+			SELECT id, assumed_from, assumed_for FROM skill_concepts WHERE slug = ${normalizeSkill(concept)}
+		`);
+		const row = rows[0];
+		if (!row) {
+			t.absent++;
+			console.log(`  absent    ${concept}`);
+			continue;
+		}
+		const line = level === null ? null : assumedFor;
+		if (row.assumed_from === level && row.assumed_for === line) {
+			t.settled++;
+			continue;
+		}
+		if (APPLY) {
+			await db.execute(sql`
+				UPDATE skill_concepts SET assumed_from = ${level}, assumed_for = ${line} WHERE id = ${row.id}
+			`);
+		}
+		t.applied++;
+		console.log(`  level     ${concept}: ${level ? `from ${level}, for ${line}` : 'never'}`);
+	}
+	return t;
+}
+
 async function main(): Promise<void> {
 	const plan = JSON.parse(readFileSync(0, 'utf8')) as Plan;
 	if (!plan.source || plan.source.length > 32) {
@@ -286,6 +337,7 @@ async function main(): Promise<void> {
 	merge(t, await reject('reject edges', plan.edges?.reject ?? [], APPLY));
 	merge(t, await approve('approve edges', plan.edges?.approve ?? [], APPLY, refuseNewRelation));
 	merge(t, await draw('new edges', plan.edges?.draw ?? [], APPLY, refuseNewRelation, plan.source));
+	merge(t, await setLevels(plan.levels ?? []));
 
 	console.log(`\nafter: ${await snapshot()}`);
 	report(t, APPLY);
