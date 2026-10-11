@@ -884,7 +884,8 @@ export function applyModelOpinions(
 			// the model says keep to most of the shortlist. It surfaced three filler
 			// side projects onto an AI role and pushed real bullets off the page to
 			// make room for them. A must on a hidden item the run already surfaced
-			// protects it in the trim; it never makes an item eligible.
+			// protects it in the trim; it never makes an item eligible, except a side
+			// project held off resumes, which only a must brings back (waitsForMust).
 			if (!candidate.visible && !vouched) continue;
 			adjusted.set(ref, {
 				...(candidate.visible ? { score: Math.max(candidate.score, floor) } : {}),

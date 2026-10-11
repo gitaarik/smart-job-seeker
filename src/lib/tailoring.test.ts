@@ -348,6 +348,29 @@ describe('surfacing hidden evidence', () => {
 		expect(decisions).toContainEqual(expect.objectContaining({ entityId: 9, action: 'include' }));
 	});
 
+	it('keeps a side project held off resumes off, unless the review marks it a must', () => {
+		const held = (over: Partial<Candidate>): Candidate => ({
+			entityType: OVERRIDE_ENTITIES.sideProject,
+			entityId: 9,
+			parentId: null,
+			label: 'Adyengo',
+			chars: 100,
+			visible: false,
+			pinned: false,
+			score: 0.9,
+			...over
+		});
+		const included = (c: Candidate) =>
+			selectForJob([bullet(1, 10, 0.4), c], OPTS).some(
+				(d) => d.entityId === 9 && d.action === 'include'
+			);
+		expect(included(held({ templateHeldBack: true }))).toBe(false);
+		expect(included(held({ profileOnly: true }))).toBe(false);
+		expect(included(held({ templateHeldBack: true, vouched: true }))).toBe(true);
+		// A version tag says "show it on X", not "keep it off": scored as before.
+		expect(included(held({}))).toBe(true);
+	});
+
 	it('surfaces everything above the bar when the page has room', () => {
 		// There was a cap of three here, on the reasoning that wanting more meant
 		// the base was the wrong version. Version tags answer for a CLASS of jobs;

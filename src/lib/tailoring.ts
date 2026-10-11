@@ -150,7 +150,8 @@ export interface Candidate {
 	 * resume revisits: an item that outranks half of what this one prints has
 	 * earned the space, and something weaker loses it to the page budget. It is
 	 * carried so the decision can SAY where the item came from, because that is
-	 * the one a reader will want to check.
+	 * the one a reader will want to check. A side project held back this way
+	 * waits for the review's must instead (waitsForMust).
 	 */
 	templateHeldBack?: boolean;
 	/**
@@ -693,6 +694,27 @@ export function canSurface(candidate: Candidate): boolean {
  * words instead, next to a button that turns it on. An alternative write-up
  * would put the same job on the page twice.
  */
+/**
+ * A side project the applicant keeps off resumes ("CV only", or off every
+ * document) comes back only when the review marks it a MUST for this job.
+ *
+ * Priced instead (D13), it came back whenever it read as related, and a 2014
+ * Django payments package reads as related to every Python posting: on the
+ * tailoring golden set Adyengo and Monkful printed on six jobs whose labels
+ * said keep them off, three of them as "the last line naming" Flask or
+ * Packages. A bullet is different: one held back is detail inside a role the
+ * page already shows, and the CI-gate and security bullets come back that way
+ * on the jobs that ask for them. A whole entry the applicant left off their
+ * resume needs someone to judge that this job is about it, which is the
+ * review's call rather than an embedding's. Without a review, it stays off.
+ */
+export function waitsForMust(candidate: Candidate): boolean {
+	return (
+		candidate.entityType === OVERRIDE_ENTITIES.sideProject &&
+		(candidate.templateHeldBack === true || candidate.profileOnly === true)
+	);
+}
+
 export function canBringBack(candidate: Candidate): boolean {
 	return (
 		!candidate.visible &&
@@ -790,7 +812,7 @@ export function selectForJob(candidates: Candidate[], options: SelectionOptions)
 	// reason to drop is how a role ends up showing two lines.
 	const surfaced = new Set<string>();
 	for (const candidate of candidates.filter(
-		(c) => canBringBack(c) && surfaceScore(c, floor) >= floor
+		(c) => canBringBack(c) && surfaceScore(c, floor) >= floor && (!waitsForMust(c) || c.vouched)
 	)) {
 		surfaced.add(dropKey(candidate));
 	}
