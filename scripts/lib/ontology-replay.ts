@@ -73,6 +73,8 @@ export function merge(into: Tally, from: Tally): Tally {
 
 interface EdgeRow {
 	id: number;
+	from_id: number;
+	to_id: number;
 	approved: boolean;
 	rejected: boolean;
 }
@@ -86,7 +88,8 @@ interface EdgeRow {
  */
 async function findEdge(from: string, relation: string, to: string): Promise<EdgeRow | null> {
 	const rows = await queryRawDirect<EdgeRow>(sql`
-		SELECT r.id, (r.approved_at IS NOT NULL) AS approved, (r.rejected_at IS NOT NULL) AS rejected
+		SELECT r.id, r.from_id, r.to_id,
+		       (r.approved_at IS NOT NULL) AS approved, (r.rejected_at IS NOT NULL) AS rejected
 		FROM skill_relations r
 		JOIN skill_concepts f ON f.id = r.from_id
 		JOIN skill_concepts t ON t.id = r.to_id
@@ -135,6 +138,62 @@ export async function reject(title: string, rulings: Ruling[], apply: boolean): 
 		}
 		t.applied++;
 		console.log(`  reject    #${edge.id} ${from} ${relation} ${to}  — ${why}`);
+	}
+	return t;
+}
+
+/**
+ * Rule a set of proposed claims true: the review queue's Approve, by slug.
+ *
+ * Only for rows that already exist; a claim nobody proposed is a `draw`. The
+ * guard is the queue's, with the row itself passed as `exceptId` so it is not
+ * found as its own duplicate. A rejected row is left alone and reported:
+ * overruling a rejection is a person's call, and a replay that quietly made it
+ * would undo review on every target it reached.
+ */
+export async function approve(
+	title: string,
+	rulings: Ruling[],
+	apply: boolean,
+	guard: (
+		from: number,
+		to: number,
+		relation: string,
+		exceptId?: number
+	) => Promise<{ error: string } | null>
+): Promise<Tally> {
+	const t = tally();
+	console.log(`\n── ${title} (${rulings.length})`);
+	for (const [from, relation, to, why] of rulings) {
+		const edge = await findEdge(from, relation, to);
+		if (!edge) {
+			t.absent++;
+			console.log(`  absent    ${from} ${relation} ${to}`);
+			continue;
+		}
+		if (edge.approved) {
+			t.settled++;
+			console.log(`  already   #${edge.id} ${from} ${relation} ${to}`);
+			continue;
+		}
+		if (edge.rejected) {
+			t.problems.push(`"${from} ${relation} ${to}" is rejected here, so it was left alone`);
+			console.log(`  REJECTED  #${edge.id} ${from} ${relation} ${to} — left alone`);
+			continue;
+		}
+		const refusal = await guard(edge.from_id, edge.to_id, relation, edge.id);
+		if (refusal) {
+			t.problems.push(`refused "${from} ${relation} ${to}": ${refusal.error}`);
+			console.log(`  REFUSED   #${edge.id} ${from} ${relation} ${to} — ${refusal.error}`);
+			continue;
+		}
+		if (apply) {
+			await db.execute(sql`
+				UPDATE skill_relations SET approved_at = now(), rejected_at = NULL WHERE id = ${edge.id}
+			`);
+		}
+		t.applied++;
+		console.log(`  approve   #${edge.id} ${from} ${relation} ${to}  — ${why}`);
 	}
 	return t;
 }
@@ -248,7 +307,8 @@ export async function deleteConcepts(
 export async function mergeConcept(
 	title: string,
 	merges: [dead: string, keep: string, why: string][],
-	apply: boolean
+	apply: boolean,
+	source = 'audit:merge'
 ): Promise<Tally> {
 	const t = tally();
 	console.log(`\n── ${title} (${merges.length})`);
@@ -268,7 +328,7 @@ export async function mergeConcept(
 		if (apply) {
 			await db.execute(sql`
 				INSERT INTO skill_aliases (concept_id, alias, source, approved_at)
-				VALUES (${k.id}, ${normalizeSkill(dead)}, 'audit:merge', now())
+				VALUES (${k.id}, ${normalizeSkill(dead)}, ${source}, now())
 				ON CONFLICT (alias) DO UPDATE SET concept_id = ${k.id}, approved_at = now()
 			`);
 			await db.execute(sql`DELETE FROM skill_concepts WHERE id = ${d.id}`);
