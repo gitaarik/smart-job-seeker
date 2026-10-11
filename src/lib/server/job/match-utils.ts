@@ -4,10 +4,23 @@
 
 import { dbDirect as db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { languages, tech_skills, tech_skill_categories } from '$lib/server/db/schema';
+import {
+	languages,
+	tech_skills,
+	tech_skill_categories,
+	work_experiences
+} from '$lib/server/db/schema';
 import { normalizeSkill } from '$lib/skills';
 import type { AdjacentSkill, SkillProvenance } from '$lib/match-provenance';
-import { approvedAliasesOf, expandUpward, expandUpwardBySeed, relatedTo } from './skill-ontology';
+import {
+	approvedAliasesOf,
+	assumedLevels,
+	expandUpward,
+	expandUpwardBySeed,
+	relatedTo,
+	resolveConcepts
+} from './skill-ontology';
+import { careerLevel, takenForGranted } from './assumed-levels';
 
 /**
  * Proficiencies at which a language is a skill someone can be hired for.
@@ -197,6 +210,13 @@ export interface ProfileReach {
 	spelling: Map<string, string>;
 	/** Concept the profile reaches -> the closest skill that reached it. */
 	byReached: Map<string, { seed: string; depth: number }>;
+	/**
+	 * Concept the profile reaches -> every profile skill that reaches it. How
+	 * much of a profile sits in a line of work (skillsTakenForGranted) is a
+	 * count, and `byReached` keeps only the closest skill, which answers "which
+	 * skill matched" and not "how many".
+	 */
+	seedsByReached: Map<string, Set<string>>;
 	/** The flat expanded skill list, for the exact-match gates downstream. */
 	expanded: string[];
 	/**
@@ -228,7 +248,13 @@ export async function profileReach(profileId: number): Promise<ProfileReach> {
 		if (key && !spelling.has(key)) spelling.set(key, s);
 	}
 	if (base.length === 0)
-		return { spelling, byReached: new Map(), expanded: base, adjacent: new Map() };
+		return {
+			spelling,
+			byReached: new Map(),
+			seedsByReached: new Map(),
+			expanded: base,
+			adjacent: new Map()
+		};
 
 	const reach = await expandUpwardBySeed(base).catch((err) => {
 		console.warn('[match-utils] ontology expansion failed, continuing without it:', err);
@@ -241,12 +267,16 @@ export async function profileReach(profileId: number): Promise<ProfileReach> {
 	// because the alternative, first-seen, makes the answer depend on the order
 	// `getProfileSkills` happened to return rows in.
 	const byReached = new Map<string, { seed: string; depth: number }>();
+	const seedsByReached = new Map<string, Set<string>>();
 	const labels: string[] = [];
 	for (const [seed, reached] of reach) {
 		for (const r of reached) {
 			labels.push(r.label);
 			const prev = byReached.get(r.slug);
 			if (!prev || r.depth < prev.depth) byReached.set(r.slug, { seed, depth: r.depth });
+			const seeds = seedsByReached.get(r.slug) ?? new Set<string>();
+			seeds.add(seed);
+			seedsByReached.set(r.slug, seeds);
 		}
 	}
 
@@ -287,7 +317,54 @@ export async function profileReach(profileId: number): Promise<ProfileReach> {
 		if (!adjacent.has(r.slug)) adjacent.set(r.slug, { seed: r.seed });
 	}
 
-	return { spelling, byReached, expanded: [...new Set([...base, ...labels])], adjacent };
+	return {
+		spelling,
+		byReached,
+		seedsByReached,
+		expanded: [...new Set([...base, ...labels])],
+		adjacent
+	};
+}
+
+/** The date ranges of a profile's roles, which is what careerLevel reads. */
+export async function getProfileRoles(
+	profileId: number
+): Promise<{ start_date: string | null; end_date: string | null }[]> {
+	return db
+		.select({ start_date: work_experiences.start_date, end_date: work_experiences.end_date })
+		.from(work_experiences)
+		.where(eq(work_experiences.profile_id, profileId));
+}
+
+/**
+ * The job's skills this profile can be taken to have without evidence: those
+ * taken for granted at its level in its line of work (assumed-levels.ts), as
+ * the job spells them. Empty when none apply.
+ *
+ * The matcher leaves them out of the skill match. A senior developer matching
+ * Git says nothing about fit, and a profile that never listed Git has no gap
+ * there either; counted, each one moved the percentage as much as RAG.
+ */
+export async function skillsTakenForGranted(
+	profileId: number,
+	jobSkills: string[],
+	reach: ProfileReach
+): Promise<Set<string>> {
+	if (jobSkills.length === 0) return new Set();
+	const concepts = await resolveConcepts(jobSkills);
+	const slugOf = (skill: string) =>
+		concepts.get(normalizeSkill(skill))?.slug ?? normalizeSkill(skill);
+	const levels = await assumedLevels(jobSkills.map(slugOf));
+	if (levels.size === 0) return new Set();
+	const level = careerLevel(await getProfileRoles(profileId));
+	const heldIn = (lines: readonly string[]) => {
+		const seeds = new Set<string>();
+		for (const line of lines)
+			for (const seed of reach.seedsByReached.get(line) ?? []) seeds.add(seed);
+		return seeds.size;
+	};
+	const granted = takenForGranted(levels, level, heldIn);
+	return new Set(jobSkills.filter((skill) => granted.has(slugOf(skill))));
 }
 
 /**

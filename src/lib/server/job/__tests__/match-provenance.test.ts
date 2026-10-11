@@ -56,6 +56,7 @@ function reachOf(
 	return {
 		spelling,
 		byReached: new Map(Object.entries(reached)),
+		seedsByReached: new Map(),
 		expanded: own,
 		adjacent: new Map()
 	};
