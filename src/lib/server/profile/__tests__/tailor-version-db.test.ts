@@ -1253,15 +1253,15 @@ describe('versionItemStates', () => {
 			job: null
 		});
 		const citrus = (config: object) => ({ id: 1, name: 'Citrus', slug: 'citrus', config });
-		find.presentation_templates.findFirst.mockResolvedValueOnce(citrus({}));
+		find.presentation_templates.findFirst.mockResolvedValueOnce(
+			citrus({ sections: { technologies: true, sideProjects: false } })
+		);
 		const leftOut = group(await states(), 'side-projects');
 		expect(leftOut?.note).toMatch(/doesn't print side projects/);
 		expect(leftOut).toMatchObject({ on: false, rows: [] });
 
-		// The template's own config decides: one that prints them lists them.
-		find.presentation_templates.findFirst.mockResolvedValueOnce(
-			citrus({ sections: { sideProjects: true } })
-		);
+		// The template's own config decides, and one that says nothing prints them.
+		find.presentation_templates.findFirst.mockResolvedValueOnce(citrus({}));
 		const printed = group(await states(), 'side-projects');
 		expect(printed).toMatchObject({ note: null, on: true });
 		expect(printed?.rows.map((r) => r.label)).toEqual(['Monkful']);

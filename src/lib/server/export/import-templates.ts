@@ -24,7 +24,11 @@ import { eq, inArray } from 'drizzle-orm';
 import { files, presentation_template_assets, presentation_templates } from '$lib/server/db/schema';
 import { uploadFile } from '$lib/server/files';
 import type { ExportedResumeTemplate } from './types';
-import type { ResumeTemplateConfig } from '$lib/resume-templates';
+import {
+	LEGACY_TEMPLATE_SECTIONS,
+	withSections,
+	type ResumeTemplateConfig
+} from '$lib/resume-templates';
 import { DEFAULT_TEMPLATE_KIND, isTemplateKind } from '$lib/presentation-templates';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -149,7 +153,9 @@ export async function importResumeTemplates(
 				.replace(/(^-|-$)/g, '') ||
 			'imported-template';
 
-		const { config, assets } = splitConfigAssets(rewriteConfigFileIds(template.config, idMap));
+		const { config: split, assets } = splitConfigAssets(
+			rewriteConfigFileIds(template.config, idMap)
+		);
 
 		// An archive written before the kinds split carries no `kind`, and
 		// everything in one is a CV template — which is what the column
@@ -159,6 +165,11 @@ export async function importResumeTemplates(
 		const declaredKind = template.kind ?? '';
 		const kind = isTemplateKind(declaredKind) ? declaredKind : DEFAULT_TEMPLATE_KIND;
 		const slug = claimSlug(kind, wantedSlug);
+		// A document template exported without `sections` was made before a
+		// template could choose, when the renderer had no projects section, and
+		// it comes back printing what it printed then. Since templates could
+		// choose, every export writes them in (export-templates.ts).
+		const config = kind === 'document' ? withSections(split, LEGACY_TEMPLATE_SECTIONS) : split;
 
 		const [row] = await dbDirect
 			.insert(presentation_templates)

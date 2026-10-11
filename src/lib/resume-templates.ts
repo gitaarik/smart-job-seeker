@@ -73,7 +73,7 @@ export interface ResumeTemplateConfig {
  * at three, because the promise was about a different document.
  *
  * Only the parts something decides about are listed. Another one joins with
- * its key here, its value in the two defaults below, and the renderer's check.
+ * its key here, its value in each of the answers below, and the renderer's check.
  */
 export interface DocumentSections {
 	/** A role's technology line ("TECH: Python, Django"). */
@@ -89,15 +89,49 @@ export const BUILT_IN_SECTIONS: Readonly<DocumentSections> = {
 };
 
 /**
- * What the generic renderer prints for a template whose config does not say:
- * what it printed before a template could choose, so no template made before
- * then changes. Something that creates templates should write `sections` out
- * in full rather than lean on these.
+ * What a template prints when its config does not say: every part the generic
+ * renderer has (Rik, 2026-10-11: side projects are on for new templates).
+ * Templates made before then were made without a projects section; they say
+ * so in their config (LEGACY_TEMPLATE_SECTIONS), which is why changing this
+ * changed none of them. Change it again the same way.
  */
 export const TEMPLATE_DEFAULT_SECTIONS: Readonly<DocumentSections> = {
 	technologies: true,
+	sideProjects: true
+};
+
+/**
+ * What the generic renderer printed before a template could choose (until
+ * 2026-10-11): no side projects, because it had no such section. Migration
+ * 0075 wrote it into every template that existed, and the importer writes it
+ * into one from an archive written before then (withSections).
+ */
+export const LEGACY_TEMPLATE_SECTIONS: Readonly<DocumentSections> = {
+	technologies: true,
 	sideProjects: false
 };
+
+/**
+ * A document template's config with `sections` written in, when it has none.
+ *
+ * An exported config always says what it prints (the export writes in what
+ * the defaults gave it), so one that does not was written before templates
+ * could choose. That is how the importer tells an old archive from a template
+ * that leans on today's defaults, which would otherwise read the same. A
+ * config that is not an object is left alone.
+ */
+export function withSections(config: unknown, sections: Readonly<DocumentSections>): unknown {
+	if (
+		config !== null &&
+		config !== undefined &&
+		(typeof config !== 'object' || Array.isArray(config))
+	)
+		return config;
+	const object = (config ?? {}) as Record<string, unknown>;
+	const current = object.sections;
+	if (current && typeof current === 'object' && !Array.isArray(current)) return config;
+	return { ...object, sections: { ...sections } };
+}
 
 /**
  * What a document prints in this template. Null is the built-in layout, which

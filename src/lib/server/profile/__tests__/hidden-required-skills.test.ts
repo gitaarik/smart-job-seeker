@@ -6,10 +6,14 @@ vi.mock('$lib/server/db', () => ({
 			profile_versions: { findMany: vi.fn() },
 			tech_skill_categories: { findMany: vi.fn() },
 			work_experiences: { findMany: vi.fn() },
-			// A branded template whose config says nothing about its parts, so it
-			// prints what the generic renderer always has: the tech line included.
+			// A branded template that prints the tech line, as Citrus does.
 			presentation_templates: {
-				findFirst: vi.fn(async () => ({ id: 1, name: 'Citrus', slug: 'citrus', config: {} }))
+				findFirst: vi.fn(async () => ({
+					id: 1,
+					name: 'Citrus',
+					slug: 'citrus',
+					config: { sections: { technologies: true, sideProjects: false } }
+				}))
 			}
 		}
 	}

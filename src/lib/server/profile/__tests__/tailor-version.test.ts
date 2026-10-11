@@ -40,7 +40,7 @@ import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import { BUILT_IN_SECTIONS, documentSections, type DocumentSections } from '$lib/resume-templates';
 import { selectForJob, type Candidate, type Decision } from '$lib/tailoring';
 
-/** A DB-backed template whose config says nothing: the generic renderer's parts, tech line included. */
+/** A DB-backed template whose config says nothing: every part the generic renderer has. */
 const TEMPLATE = documentSections({ config: {} });
 
 function bullet(id: number, score: number, over: Partial<Candidate> = {}): Candidate {
@@ -663,10 +663,10 @@ describe('buildCandidates: side projects', () => {
 			).filter((c) => c.entityType === OVERRIDE_ENTITIES.sideProject);
 
 		expect(projects()).toHaveLength(1);
-		expect(projects(TEMPLATE)).toEqual([]);
-		expect(
-			projects(documentSections({ config: { sections: { sideProjects: true } } }))
-		).toHaveLength(1);
+		expect(projects(TEMPLATE)).toHaveLength(1);
+		expect(projects(documentSections({ config: { sections: { sideProjects: false } } }))).toEqual(
+			[]
+		);
 	});
 });
 

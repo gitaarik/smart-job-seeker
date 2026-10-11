@@ -193,7 +193,8 @@ describe('StructuredResume — references', () => {
 /**
  * The optional parts a template prints, read from its config (DocumentSections)
  * the way tailoring and coverage read them. Until 2026-10-11 this renderer had
- * no projects section, and the TECH line printed on every template.
+ * no projects section, and the TECH line printed on every template; a template
+ * that says nothing now prints both.
  */
 describe('StructuredResume — the parts a template prints', () => {
 	const withWork = (): Profile => ({
@@ -231,14 +232,27 @@ describe('StructuredResume — the parts a template prints', () => {
 		]
 	});
 
-	test('prints the TECH line and no side projects when the config says nothing', () => {
+	test('prints the TECH line and the side projects when the config says nothing', () => {
 		render(StructuredResume, { props: { config: {}, type: 'resume', profile: withWork() } });
+		expect(screen.getByText('Django, React')).toBeTruthy();
+		expect(screen.getByText('Side projects')).toBeTruthy();
+		expect(screen.getByText('LitState')).toBeTruthy();
+	});
+
+	test('leaves the side projects off a template that says so, as Citrus does', () => {
+		render(StructuredResume, {
+			props: {
+				config: { sections: { technologies: true, sideProjects: false } },
+				type: 'resume',
+				profile: withWork()
+			}
+		});
 		expect(screen.getByText('Django, React')).toBeTruthy();
 		expect(screen.queryByText('Side projects')).toBeNull();
 		expect(screen.queryByText('LitState')).toBeNull();
 	});
 
-	test('prints the side projects a template asks for, through the same tags', () => {
+	test('prints them through the same tags, in the document’s language', () => {
 		render(StructuredResume, {
 			props: {
 				config: { sections: { sideProjects: true } },

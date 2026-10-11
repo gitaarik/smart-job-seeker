@@ -25,7 +25,7 @@ import { asc, eq, inArray } from 'drizzle-orm';
 import { files, presentation_templates } from '$lib/server/db/schema';
 import { getFile } from '$lib/server/files';
 import { foldAssetsIntoConfig } from '$lib/server/profile/presentation-templates';
-import type { ResumeTemplateConfig } from '$lib/resume-templates';
+import { documentSections, withSections, type ResumeTemplateConfig } from '$lib/resume-templates';
 import type { ExportedResumeTemplate, ExportedTemplateAsset, TemplateAssetPayload } from './types';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -70,10 +70,17 @@ export async function buildTemplateExport(
 
 	for (const [index, row] of rows.entries()) {
 		const assets: ExportedTemplateAsset[] = [];
-		const config = foldAssetsIntoConfig(
+		const folded = foldAssetsIntoConfig(
 			(row.config ?? {}) as ResumeTemplateConfig,
 			row.presentation_template_assets
 		);
+		// A document template always says what it prints in the archive, with the
+		// defaults it leans on written in: an importer reads a config without
+		// `sections` as one made before templates could choose (withSections).
+		const config =
+			row.kind === 'document'
+				? (withSections(folded, documentSections({ config: folded })) as ResumeTemplateConfig)
+				: folded;
 
 		if (includeAssets) {
 			const candidates = collectFileIdCandidates(config);

@@ -526,6 +526,13 @@
       "when": 1791724846502,
       "tag": "0074_assumed_levels",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1791745016033,
+      "tag": "0075_template_sections",
+      "breakpoints": true
     }
   ]
 }
