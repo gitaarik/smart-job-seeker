@@ -1,6 +1,8 @@
 #!/bin/bash
 # Production app startup script
-# The app is already built inside the Docker image — just run migrations and start.
+# The app is already built inside the Docker image. This builds the schema of an
+# empty database (or restores one, with DB_RESTORE=true) and starts the server.
+# Pending migrations on an existing database are deploy.sh's step, not this one.
 
 set -e
 
@@ -47,8 +49,12 @@ else
     echo "Restoring from smart backup..."
     db_query -f /db-dumps/smart.sql
   else
-    echo "=== No backup found, creating tables with drizzle-kit push ==="
-    npx dotenvx run -- drizzle-kit push
+    # From the migrations, which is how deploy.sh expects to find it. This was
+    # `drizzle-kit push`, which builds the tables from schema.ts but leaves the
+    # migration journal empty, so deploy.sh's migrate step then re-ran 0000 and
+    # died on its first statement; push also creates no triggers (0030, 0076).
+    echo "=== No backup found, building schema from migrations ==="
+    npx dotenvx run -- npx tsx scripts/migrate-deploy.ts
   fi
 fi
 
