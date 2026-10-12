@@ -190,8 +190,13 @@
 >
 	<!-- Header Section -->
 	<header>
-		<h1 class="h-9 text-2xl font-bold">{profile.name}<br /><br /></h1>
-		<h2 class="h-5 text-sm">{profile.title}<br /><br /></h2>
+		<!-- An anonymous document has no name to lead with (server/profile/
+		     anonymity.ts), so the title takes its place rather than leaving the
+		     heading empty. -->
+		<h1 class="h-9 text-2xl font-bold">{profile.name || profile.title}<br /><br /></h1>
+		{#if profile.name}
+			<h2 class="h-5 text-sm">{profile.title}<br /><br /></h2>
+		{/if}
 		<h2 class="mt-1 h-5 text-xs">{profile.subtitle}<br /><br /></h2>
 	</header>
 
@@ -440,7 +445,7 @@
 		</section>
 	{/if}
 
-	{#if toggles.includes('nationality')}
+	{#if toggles.includes('nationality') && profile.nationality}
 		<!-- Nationality -->
 		<section class="my-3 break-inside-avoid">
 			<h2 class="text-sm font-bold">{heading('nationality')}</h2>

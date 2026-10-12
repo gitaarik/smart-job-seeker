@@ -17,6 +17,7 @@
 	import VersionWordings from '$lib/components/VersionWordings.svelte';
 	import ConfirmModal from '../../components/ConfirmModal.svelte';
 	import { CONTACT_FIELDS, isContactHidden } from '$lib/resume-contact-fields';
+	import { ANONYMOUS_DESCRIPTION, isAnonymous } from '$lib/resume-anonymity';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -48,6 +49,7 @@
 		return visible;
 	}
 	let editContactVisible = $derived(contactState(data.version.toggles));
+	let editAnonymous = $derived(isAnonymous(data.version.toggles));
 
 	function slugify(text: string): string {
 		return text
@@ -294,6 +296,35 @@
 							</label>
 						{/each}
 					</div>
+				</div>
+
+				<!-- Anonymous: what this version says about who the applicant is, the
+				     same kind of decision as the contact fields above. -->
+				<div>
+					<h3 class="mb-1 text-sm font-semibold tracking-wide text-[var(--dash-text)] uppercase">
+						Anonymous
+					</h3>
+					<label class="flex cursor-pointer items-start gap-1.5 text-sm text-[var(--dash-text)]">
+						<input
+							type="checkbox"
+							name="anonymous"
+							checked={editAnonymous}
+							onchange={(e) => (editAnonymous = e.currentTarget.checked)}
+							class="mt-0.5 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+						/>
+						<span>
+							Leave out who you are
+							<span class="block text-xs text-[var(--dash-text-secondary)]">
+								For an employer that reads applications without names. {ANONYMOUS_DESCRIPTION} Versions
+								built on this one are anonymous too.
+							</span>
+						</span>
+					</label>
+					{#if data.anonymousThrough}
+						<p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
+							Already anonymous, because it builds on {data.anonymousThrough}.
+						</p>
+					{/if}
 				</div>
 
 				<!-- Actions -->

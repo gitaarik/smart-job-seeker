@@ -1,9 +1,10 @@
 import { launchBrowser } from '$lib/server/browser/utils';
 import { config } from '$lib/server/config';
 import { dbDirect as db } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
-import { profiles } from '$lib/server/db/schema';
+import { and, eq, inArray } from 'drizzle-orm';
+import { profile_exports, profiles } from '$lib/server/db/schema';
 import { createProfileExport } from '$lib/server/profile/exports';
+import { isAnonymousVersion } from '$lib/server/profile/anonymity';
 import { buildExportUrl } from '$lib/server/utils/export-url-builder';
 
 const APP_INTERNAL_URL = 'http://localhost:5173';
@@ -122,6 +123,9 @@ export async function generateVersionPdfs(
 		return;
 	}
 
+	// An anonymous document's file name is the first thing its reader sees of it.
+	const anonymous = await isAnonymousVersion(profileId, versionSlug);
+
 	const context = await launchBrowser({ headless: true });
 
 	try {
@@ -157,11 +161,11 @@ export async function generateVersionPdfs(
 			const pdfBuffer = await page.pdf(pdfSettingsFor(template));
 			const buffer = Buffer.from(pdfBuffer);
 
-			const displayName = profile.name || `Profile ${profileId}`;
+			const displayName = anonymous ? null : profile.name || `Profile ${profileId}`;
 			const docLabel = doc.type === 'cv' ? 'CV' : 'Resume';
-			const filename = `${displayName} - ${docLabel} - ${versionSlug}${
-				template ? ` - ${template}` : ''
-			}${locale ? ` - ${locale}` : ''}.pdf`;
+			const filename = `${[displayName, docLabel, versionSlug, template, locale]
+				.filter(Boolean)
+				.join(' - ')}.pdf`;
 
 			const sourceUrl = buildExportUrl({ route });
 
@@ -186,5 +190,35 @@ export async function generateVersionPdfs(
 		console.log(`[generate-version-pdfs] Done generating PDFs for version "${versionSlug}"`);
 	} finally {
 		await context.close();
+	}
+}
+
+/**
+ * Render again every PDF already stored for these versions, in each template
+ * and language it was exported in.
+ *
+ * For a change to everything a version prints rather than to one pair of its
+ * documents: a version made anonymous otherwise left each stored file naming
+ * the applicant until something else happened to render that one again, and
+ * the PDF route serves the stored file. One render at a time.
+ */
+export async function regenerateStoredPdfs(profileId: number, slugs: string[]): Promise<void> {
+	if (slugs.length === 0) return;
+	const stored = await db
+		.selectDistinct({
+			slug: profile_exports.export_format,
+			template: profile_exports.template,
+			locale: profile_exports.locale
+		})
+		.from(profile_exports)
+		.where(
+			and(
+				eq(profile_exports.profile_id, profileId),
+				eq(profile_exports.file_type, 'pdf'),
+				inArray(profile_exports.export_format, slugs)
+			)
+		);
+	for (const { slug, template, locale } of stored) {
+		if (slug) await generateVersionPdfs(profileId, slug, template, locale);
 	}
 }

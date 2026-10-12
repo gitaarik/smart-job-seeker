@@ -41,6 +41,7 @@ import {
 import { getProfileByIdentifier } from '$lib/server/profile/default';
 import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
 import { isReservedVersionSlug, OVERRIDE_ENTITIES, tailoredSlugFor } from '$lib/version-overrides';
+import { withAnonymous } from '$lib/resume-anonymity';
 import {
 	beyondReach,
 	canBringBack,
@@ -2295,6 +2296,12 @@ async function upsertTailoredVersion(opts: {
 	}
 
 	const name = [jobTitle || 'Tailored', company].filter(Boolean).join(' — ');
+	// An application read without names makes its documents anonymous from the
+	// first render, including a version made again after one was discarded.
+	const application = await db.query.applications.findFirst({
+		where: and(eq(applications.id, applicationId), eq(applications.profile_id, profileId)),
+		columns: { anonymous: true }
+	});
 	const [created] = await db
 		.insert(profile_versions)
 		.values({
@@ -2306,6 +2313,7 @@ async function upsertTailoredVersion(opts: {
 			// and sends it. It stays out of every library listing by application_id,
 			// not by status.
 			status: 'published',
+			toggles: application?.anonymous ? withAnonymous(null, true) : null,
 			date_created: new Date()
 		})
 		.returning();

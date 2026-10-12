@@ -5,6 +5,7 @@ import { getLatestExportWithFile } from '$lib/server/profile/export-files';
 import { checkProfileAccess, getVersionSlugById } from '$lib/server/profile/access-control';
 import { incrementTokenVisit } from '$lib/server/auth/token-validation';
 import { templateForStorage } from '$lib/resume-templates';
+import { isAnonymousChain } from '$lib/server/profile/anonymity';
 import { BASE_LOCALE, isKnownLocale } from '$lib/resume-translations';
 
 /**
@@ -104,9 +105,16 @@ export const GET: RequestHandler = async ({ params, url, locals, getClientAddres
 
 	// Serve the PDF file
 	const localeSuffix = localeFilter ? `-${localeFilter}` : '';
+	// The profile slug is the applicant's name, so an anonymous document's file
+	// goes without it: the file name is the first thing its reader sees.
+	const anonymous = isAnonymousChain(
+		profile.profile_versions ?? [],
+		profile.profile_versions?.find((v) => v.slug === effectiveVersion)?.id
+	);
+	const prefix = anonymous ? 'cv' : `${slug}-cv`;
 	const filename = effectiveVersion
-		? `${slug}-cv-${effectiveVersion}${localeSuffix}.pdf`
-		: `${slug}-cv${localeSuffix}.pdf`;
+		? `${prefix}-${effectiveVersion}${localeSuffix}.pdf`
+		: `${prefix}${localeSuffix}.pdf`;
 
 	// The file_id is a fresh UUID on every regeneration, so it doubles as a
 	// content hash. `no-cache` forces the browser (and Caddy) to revalidate on

@@ -134,3 +134,28 @@ describe('ProfileDisplay — certificates', () => {
 		expect(screen.queryByText('CERTIFICATES')).toBeNull();
 	});
 });
+
+describe('ProfileDisplay — a document without a name', () => {
+	// What an anonymous version renders (server/profile/anonymity.ts): the tree
+	// arrives with no name and no nationality.
+	test('leads with the title, printed once', () => {
+		render(ProfileDisplay, {
+			props: {
+				type: 'cv',
+				versionId: 5,
+				profile: { ...profile(), name: null, title: 'Senior Engineer' }
+			}
+		});
+		expect(screen.getByRole('heading', { level: 1 }).textContent?.trim()).toBe('Senior Engineer');
+		expect(screen.getAllByText('Senior Engineer')).toHaveLength(1);
+	});
+
+	test('prints no nationality heading when there is none to print', () => {
+		const withToggle = profile();
+		withToggle.profile_versions[0].toggles = ['nationality'];
+		render(ProfileDisplay, {
+			props: { type: 'cv', versionId: 5, profile: { ...withToggle, nationality: null } }
+		});
+		expect(screen.queryByText('NATIONALITY')).toBeNull();
+	});
+});

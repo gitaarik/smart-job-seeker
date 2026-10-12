@@ -77,6 +77,7 @@
 	templates={data.templates ?? []}
 	availableLocales={data.availableLocales ?? []}
 	pdfKeys={data.pdfKeys ?? []}
+	anonymousSlugs={data.anonymousSlugs ?? []}
 	{profileSlug}
 	{lastRun}
 	specWarning={data.specWarning ?? null}

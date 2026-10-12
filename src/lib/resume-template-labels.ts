@@ -31,7 +31,8 @@ export type TemplateLabelKey =
 	| 'contactWebsite'
 	| 'note'
 	| 'graduationYear'
-	| 'referencesOnRequest';
+	| 'referencesOnRequest'
+	| 'ownBusiness';
 
 export const TEMPLATE_LABELS: Readonly<Record<TemplateLabelKey, Readonly<Record<string, string>>>> =
 	{
@@ -161,6 +162,15 @@ export const TEMPLATE_LABELS: Readonly<Record<TemplateLabelKey, Readonly<Record<
 			de: 'Kontaktdaten auf Anfrage erhältlich',
 			fr: 'Coordonnées disponibles sur demande',
 			es: 'Datos de contacto disponibles a petición'
+		},
+		// Where an anonymous document names the applicant's own business, which is
+		// usually named after them (server/profile/anonymity.ts).
+		ownBusiness: {
+			en: 'Own business',
+			nl: 'Eigen onderneming',
+			de: 'Eigenes Unternehmen',
+			fr: 'Entreprise individuelle',
+			es: 'Empresa propia'
 		}
 	};
 

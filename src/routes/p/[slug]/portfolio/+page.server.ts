@@ -103,7 +103,7 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	return {
 		// Only what the page renders: the tree is serialised into it, and the
 		// rest of it is private. See server/profile/page-profile.ts.
-		profile: pageProfile(profile, versionId),
+		profile: pageProfile(profile, versionId, translator.locale),
 		theme,
 		locale: translator.locale,
 		versionId: versionId ?? null,

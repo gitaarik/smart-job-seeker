@@ -19,6 +19,8 @@
  * the one place every route hands the tree over.
  */
 
+import { isAnonymous } from '$lib/resume-anonymity';
+import { anonymiseTree, identityOf } from '$lib/server/profile/anonymity';
 import { withoutFieldVariants } from '$lib/server/profile/field-variants';
 import { versionChain } from '$lib/server/profile/skill-words';
 
@@ -170,19 +172,31 @@ function pageVersions(
 		}));
 }
 
+/** Whether the page renders an anonymous version: one in its chain says so. */
+export function pageIsAnonymous(page: { profile_versions: ReadonlyArray<{ toggles: unknown }> }) {
+	return page.profile_versions.some((version) => isAnonymous(version.toggles));
+}
+
 /**
  * The tree a document route returns for the page to render.
  *
  * `versionId` is the version the renderer will apply: the one the load
  * resolved, or the `?version=` slug it falls back to (renderedVersionId).
- * Applied after the overlays, which need the whole tree.
+ * Applied after the overlays, which need the whole tree. `locale` is the
+ * document's, for the words an anonymous one prints in place of a name.
  */
 export function pageProfile<T extends { profile_versions?: ReadonlyArray<TreeVersion> | null }>(
 	profile: T,
-	versionId: number | null | undefined
+	versionId: number | null | undefined,
+	locale: string | null = null
 ): PageProfile<T> {
+	// Read before the private columns go: the applicant's own company name is
+	// one of them, and it is how an anonymous page recognises their business.
+	const identity = identityOf(profile);
 	const page: Record<string, unknown> = { ...withoutFieldVariants(profile) };
 	for (const column of PRIVATE_PROFILE_COLUMNS) delete page[column];
-	page.profile_versions = pageVersions(profile.profile_versions ?? [], versionId);
+	const versions = pageVersions(profile.profile_versions ?? [], versionId);
+	page.profile_versions = versions;
+	if (pageIsAnonymous({ profile_versions: versions })) anonymiseTree(page, identity, locale);
 	return page as PageProfile<T>;
 }

@@ -264,8 +264,11 @@
 		<tbody>
 			<tr>
 				<td>
-					<h1>{profile.name}</h1>
-					{#if profile.title}<div class="subtitle">{profile.title}</div>{/if}
+					<!-- An anonymous document has no name to lead with (server/profile/
+					     anonymity.ts), so the title takes its place rather than leaving
+					     the heading empty. -->
+					<h1>{profile.name || profile.title}</h1>
+					{#if profile.name && profile.title}<div class="subtitle">{profile.title}</div>{/if}
 					{#if dividerUrl}<div class="wave"><img src={dividerUrl} alt="" /></div>{/if}
 
 					{#if profile.summary}

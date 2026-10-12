@@ -28,6 +28,7 @@
 	import AddSkillWord from './AddSkillWord.svelte';
 	import ItemPicker from './ItemPicker.svelte';
 	import TailoredActions from './TailoredActions.svelte';
+	import AnonymousSwitch from './AnonymousSwitch.svelte';
 	import TailoredDetails from './TailoredDetails.svelte';
 	import type { Decision, LastRun } from './types';
 	import type { ItemGroup } from '$lib/tailoring';
@@ -101,6 +102,7 @@
 		templates = [],
 		availableLocales = [],
 		pdfKeys = [],
+		anonymousSlugs = [],
 		lastRun = null,
 		specWarning = null
 	}: {
@@ -111,6 +113,8 @@
 			cv_template_sent?: string | null;
 			/** Language it goes out in; null is the base English. */
 			cv_locale_sent?: string | null;
+			/** Read without the applicant's name — see `applications.anonymous`. */
+			anonymous?: boolean;
 		};
 		/** The applicant's own library of versions. */
 		versions: { slug: string; name: string }[];
@@ -187,6 +191,8 @@
 		availableLocales?: { code: string; label: string; nativeLabel: string }[];
 		/** Which (type, version, template, language) combinations have a PDF on disk. */
 		pdfKeys?: string[];
+		/** The versions whose documents print no name. */
+		anonymousSlugs?: string[];
 		lastRun?: LastRun | null;
 		/** Said when the job's own spec is too thin to tailor against. */
 		specWarning?: { kind: 'empty' | 'thin'; message: string } | null;
@@ -1214,6 +1220,20 @@
 					{/if}
 				</div>
 			{/if}
+			<!-- Beside what is being sent, because it is a fact about who reads it:
+			     the employer's procedure, true whichever document goes. -->
+			<div class="mt-4 border-t border-[var(--dash-border)] pt-3">
+				<AnonymousSwitch
+					anonymous={!!app.anonymous}
+					sending={recorded
+						? {
+								label: recordedLabel,
+								anonymous: !!app.cv_version_sent && anonymousSlugs.includes(app.cv_version_sent),
+								fromLibrary: !!app.cv_version_sent && !choseTailored
+							}
+						: null}
+				/>
+			</div>
 		</Card>
 
 		{#if hasJob}

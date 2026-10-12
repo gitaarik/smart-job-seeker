@@ -4,12 +4,17 @@ import { dbDirect as db, queryRaw, sql } from '$lib/server/db';
 import { profile_versions, profile_version_extensions, profiles } from '$lib/server/db/schema';
 import { eq, and, ne, asc, isNull } from 'drizzle-orm';
 import { getSelectedProfileId } from '../../utils';
-import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
+import {
+	generateVersionPdfs,
+	regenerateStoredPdfs
+} from '$lib/server/profile/generate-version-pdfs';
+import { anonymityReach, anonymousThrough } from '$lib/server/profile/anonymity';
 import { versionDeleteImpact } from '$lib/server/profile/version-tags';
 import { deleteVersion, renameVersion, VersionError } from '$lib/server/profile/versions';
 import { chargeCredits } from '$lib/server/billing/credits';
 import { requireCredits } from '$lib/server/billing/require-credits';
 import { buildToggles } from '$lib/resume-contact-fields';
+import { isAnonymous, withAnonymous } from '$lib/resume-anonymity';
 import { isTailoredSlug } from '$lib/version-overrides';
 import { wordingStatesFor } from '$lib/server/profile/field-variants';
 
@@ -120,6 +125,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	// What the delete dialog has to say before anyone confirms it.
 	const deleteImpact = await versionDeleteImpact(layoutData.selectedProfile.id, id);
 
+	// Its own toggle is the checkbox; this is the case the checkbox cannot show.
+	const inheritedAnonymity = await anonymousThrough(layoutData.selectedProfile.id, id);
+
 	return {
 		version: {
 			...v,
@@ -128,6 +136,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		wordings,
 		allVersions,
 		deleteImpact,
+		anonymousThrough: inheritedAnonymity,
 		publicResumeVersionId: profile?.public_resume_version_id ?? null,
 		publicCvVersionId: profile?.public_cv_version_id ?? null,
 		tagUsage: {
@@ -195,7 +204,9 @@ export const actions: Actions = {
 		// left checked. buildToggles() turns the rest into `hide:<key>` tokens and
 		// preserves any non-contact toggles (e.g. "nationality") already stored.
 		const visibleContacts = formData.getAll('contactVisible').map(String);
-		const toggles = buildToggles(visibleContacts, existing.toggles);
+		const anonymous = formData.get('anonymous') === 'on';
+		const anonymityChanged = anonymous !== isAnonymous(existing.toggles);
+		const toggles = withAnonymous(buildToggles(visibleContacts, existing.toggles), anonymous);
 
 		// Name and slug through the rules every caller keeps (renameVersion): a slug
 		// unique on the profile, never one a tag would read as a base template, and
@@ -261,7 +272,15 @@ export const actions: Actions = {
 
 		await requireCredits(user.id, 1);
 		await chargeCredits(user.id, 1, 'pdf_export', 'PDF export');
-		generateVersionPdfs(profileId, newSlug).catch(console.error);
+		// Turning anonymity on or off changes every document this version prints,
+		// and every one built on it: their stored PDFs are rendered again after
+		// this one, in turn, or they would go on naming the applicant (or not).
+		generateVersionPdfs(profileId, newSlug)
+			.then(async () => {
+				if (!anonymityChanged) return;
+				await regenerateStoredPdfs(profileId, await anonymityReach(profileId, id));
+			})
+			.catch(console.error);
 
 		return { success: true };
 	},

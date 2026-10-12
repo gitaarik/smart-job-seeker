@@ -283,3 +283,25 @@ describe('StructuredResume — the parts a template prints', () => {
 		expect(screen.queryByText('TECH:')).toBeNull();
 	});
 });
+
+describe('StructuredResume — a document without a name', () => {
+	// What an anonymous version renders (server/profile/anonymity.ts): the tree
+	// arrives with no name, and the heading must not.
+	test('leads with the title, printed once', () => {
+		render(StructuredResume, {
+			props: { config: {}, profile: { ...profile([]), name: null, title: 'Senior Engineer' } }
+		});
+
+		expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Senior Engineer');
+		expect(screen.getAllByText('Senior Engineer')).toHaveLength(1);
+	});
+
+	test('keeps the title under the name when there is one', () => {
+		render(StructuredResume, {
+			props: { config: {}, profile: { ...profile([]), title: 'Senior Engineer' } }
+		});
+
+		expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Alex Morgan');
+		expect(screen.getByText('Senior Engineer')).toBeTruthy();
+	});
+});

@@ -42,7 +42,12 @@ import { baseOnByItem, keptAsBase } from '$lib/tailoring';
 import { isOverrideEntity, OVERRIDE_ENTITIES } from '$lib/version-overrides';
 import { isVariantEntity } from '$lib/field-variants';
 import { wordingStatesFor } from '$lib/server/profile/field-variants';
-import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
+import {
+	generateVersionPdfs,
+	regenerateStoredPdfs
+} from '$lib/server/profile/generate-version-pdfs';
+import { withAnonymous } from '$lib/resume-anonymity';
+import { isAnonymousChain } from '$lib/server/profile/anonymity';
 import { loadSkillWords, suggestPlace } from '$lib/server/profile/skill-words';
 import { provenanceFor } from '$lib/match-provenance';
 
@@ -155,8 +160,11 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 					name: true,
 					application_id: true,
 					// When a run last decided this document — see `profileMovedOn`.
-					date_updated: true
+					date_updated: true,
+					// With the links below, whether each document prints a name.
+					toggles: true
 				},
+				with: { extension_links: { columns: { extended_id: true } } },
 				orderBy: asc(profile_versions.sort)
 			}),
 			// Precomputed for every template x version pair rather than just the saved
@@ -455,6 +463,12 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		templates: templates.map((t) => ({ slug: t.slug, name: t.name })),
 		availableLocales,
 		pdfKeys,
+		// The documents that print no name: the version, or one it builds on, is
+		// anonymous. Against `application.anonymous`, the card can tell when this
+		// application is read without names and its document still names them.
+		anonymousSlugs: usable
+			.filter((v) => isAnonymousChain(profileVersions, v.id))
+			.map((v) => v.slug),
 		// Everything on this page keys off the job's required skills, and an empty
 		// list makes every pass quietly do less while producing a document that
 		// looks exactly like a good one. Said out loud rather than left silent.
@@ -1094,5 +1108,73 @@ export const actions: Actions = {
 			console.error('[tailor-version] PDF render failed for', app.cv_version_sent, err);
 			return fail(500, { error: "The PDF couldn't be rendered. Try again in a moment." });
 		}
+	},
+
+	/**
+	 * Mark this application as read without names, or not.
+	 *
+	 * Writes the application and its own tailored version together (see
+	 * `applications.anonymous`), then renders that version's PDFs again, awaited:
+	 * a file stored before the switch still carries the name, and the next one
+	 * the applicant downloads is the one that has to be anonymous. Every
+	 * template and language it was ever exported in, not only the recorded
+	 * pair, because any of them is one link away.
+	 *
+	 * A library version is left alone. Other applications send it too, so
+	 * making it anonymous is a decision for Resumes & CVs; the card says so when
+	 * this application records one.
+	 */
+	setAnonymous: async ({ request, locals, cookies, params }) => {
+		const user = locals.user;
+		if (!user) return fail(401, { error: 'Not authenticated' });
+
+		const profileId = await getSelectedProfileId(cookies, user.id);
+		if (!profileId) return fail(400, { error: 'No profile selected' });
+
+		const appId = parseInt(params.id);
+		if (isNaN(appId)) return fail(400, { error: 'Invalid application ID' });
+
+		const app = await db.query.applications.findFirst({
+			where: and(eq(applications.id, appId), eq(applications.profile_id, profileId)),
+			columns: { id: true }
+		});
+		if (!app) return fail(404, { error: 'Application not found' });
+
+		const anonymous = (await request.formData()).get('anonymous') === 'on';
+		await db
+			.update(applications)
+			.set({ anonymous, date_updated: new Date() })
+			.where(eq(applications.id, appId));
+
+		const own = await db.query.profile_versions.findFirst({
+			where: and(
+				eq(profile_versions.profile_id, profileId),
+				eq(profile_versions.application_id, appId)
+			),
+			columns: { id: true, slug: true, toggles: true }
+		});
+		if (!own?.slug) return { success: true, anonymousSaved: true, pdfError: null };
+
+		// Not `date_updated`: that stamps when a run last decided this document,
+		// and this decides nothing about what it contains.
+		await db
+			.update(profile_versions)
+			.set({ toggles: withAnonymous(own.toggles, anonymous) })
+			.where(eq(profile_versions.id, own.id));
+
+		// Saved either way, like setCvSent: a failed render is a line on the page,
+		// and the PDF button on the row is the retry.
+		try {
+			await regenerateStoredPdfs(profileId, [own.slug]);
+		} catch (err) {
+			console.error('[tailor-version] PDF render failed for', own.slug, err);
+			return {
+				success: true,
+				anonymousSaved: true,
+				pdfError:
+					"Saved, but the PDF couldn't be made again, so the stored one may still name you. Use the PDF button on the row to try again."
+			};
+		}
+		return { success: true, anonymousSaved: true, pdfError: null };
 	}
 };

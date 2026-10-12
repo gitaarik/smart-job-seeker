@@ -7,7 +7,8 @@ import { DEFAULT_TEMPLATE_ID } from '$lib/resume-templates';
 import { isKnownLocale } from '$lib/resume-translations';
 import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
 import { applyFieldVariants, loadFieldVariants } from '$lib/server/profile/field-variants';
-import { pageProfile } from '$lib/server/profile/page-profile';
+import { pageIsAnonymous, pageProfile } from '$lib/server/profile/page-profile';
+import { anonymousTemplate } from '$lib/server/profile/anonymity';
 import {
 	applySkillWords,
 	loadDocumentSkillWords,
@@ -91,13 +92,17 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 		shownVersionId
 	);
 
+	// Only what the page renders: the tree is serialised into it, and the rest
+	// of it is private. See server/profile/page-profile.ts.
+	const page = pageProfile(profile, shownVersionId, translator.locale);
+
 	return {
-		// Only what the page renders: the tree is serialised into it, and the
-		// rest of it is private. See server/profile/page-profile.ts.
-		profile: pageProfile(profile, shownVersionId),
+		profile: page,
 		locale: translator.locale,
 		versionId,
 		accessType: accessResult.accessType,
-		template
+		// Without the brand's contact points when the document is anonymous:
+		// they stand in for the applicant's own and name them too.
+		template: pageIsAnonymous(page) ? anonymousTemplate(template) : template
 	};
 };
