@@ -15,9 +15,9 @@
  * (anonymity-check.ts).
  */
 
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { dbDirect as db } from '$lib/server/db';
-import { profile_versions } from '$lib/server/db/schema';
+import { applications, profile_versions, profiles } from '$lib/server/db/schema';
 import { isAnonymous } from '$lib/resume-anonymity';
 import { templateLabel } from '$lib/resume-template-labels';
 import type { ResumeTemplate } from '$lib/resume-templates';
@@ -263,6 +263,107 @@ export function anonymiseTree(page: Row, identity: Identity, locale: string | nu
 		credential_id: null
 	}));
 }
+
+/**
+ * The profile blob a writer reads (collected_data) without who the applicant
+ * is, for a letter or an answer to an application read without names.
+ *
+ * The same rules as a page (anonymiseTree), over the blob's own shape, which
+ * has no columns a page lacks to begin with: the writer is never told the name,
+ * so it cannot sign with it.
+ */
+export function anonymiseProfileData(
+	data: Record<string, unknown>,
+	identity: Identity
+): Record<string, unknown> {
+	const out: Row = { ...data };
+	for (const key of IDENTITY_COLUMNS) delete out[key];
+	delete out.references;
+	out.work_experiences = rows(out.work_experiences).map((role) => {
+		const projects = rows(role.work_experience_projects).map((project) =>
+			withoutOwnLinks(project, identity, ['url', 'repo_url'])
+		);
+		if (!isOwnBusiness(role.name, identity)) {
+			return {
+				...withoutOwnLinks(role, identity, ['website']),
+				work_experience_projects: projects
+			};
+		}
+		return {
+			...role,
+			name: templateLabel('ownBusiness', null),
+			location: null,
+			website: null,
+			work_experience_projects: projects
+		};
+	});
+	out.side_projects = rows(out.side_projects).map((project) =>
+		withoutOwnLinks(project, identity, ['url', 'repo_url'])
+	);
+	out.certificates = rows(out.certificates).map((certificate) => ({
+		...certificate,
+		url: null,
+		credential_id: null
+	}));
+	return out;
+}
+
+/**
+ * The prompts whose text goes to the employer: a cover letter and an answer to
+ * one of their questions, and the advice and reviews on both. Not a cheat
+ * sheet, which is the applicant's own, and not a follow-up, which is written
+ * once the employer has met them. A new prompt that writes to the employer
+ * belongs here.
+ */
+const EMPLOYER_FACING_PROMPTS = new Set([
+	'write_cover_letter',
+	'write_or_advise_cover_letter',
+	'advise_cover_letter',
+	'review_cover_letter',
+	'answer_application_question',
+	'write_or_advise_application_question',
+	'advise_application_question',
+	'review_application_question',
+	'revise_application_question',
+	'followup_application_question'
+]);
+
+/** The assistant, which drafts those texts as well and is told the same. */
+const CHAT_PROMPTS = new Set(['personal_agent_chat', 'personal_agent_chat_capable']);
+
+/**
+ * Whether a generation is for an application read without names, and how.
+ *
+ * Null when it is not. Otherwise who the applicant is, and whether to take it
+ * out of the profile the model reads (`strip`): yes for what goes to the
+ * employer, no for the chat, which is talking to the applicant and still has
+ * to know their name, but is given the note so a letter it drafts is
+ * anonymous too.
+ */
+export async function writingAnonymity(
+	profileId: number,
+	promptKey: string,
+	entity: { type: string; id: number } | null | undefined
+): Promise<{ identity: Identity; strip: boolean } | null> {
+	if (entity?.type !== 'application') return null;
+	const strip = EMPLOYER_FACING_PROMPTS.has(promptKey);
+	if (!strip && !CHAT_PROMPTS.has(promptKey)) return null;
+	const application = await db.query.applications.findFirst({
+		where: and(eq(applications.id, entity.id), eq(applications.profile_id, profileId)),
+		columns: { anonymous: true }
+	});
+	if (!application?.anonymous) return null;
+	const row = await db.query.profiles.findFirst({ where: eq(profiles.id, profileId) });
+	return { identity: identityOf(row ?? {}), strip };
+}
+
+/**
+ * What a writer is told about an application read without names, after the
+ * profile it writes from. Said rather than left to the missing fields: a
+ * letter with no name to sign grows a "[Your name]" otherwise.
+ */
+export const ANONYMOUS_WRITING_NOTE =
+	'This application is anonymous: the employer reads it without the applicant\'s name, so that the people choosing are not swayed by a name, an age, a nationality or an address. Anything written for it must not give the applicant\'s name, contact details, nationality, age or where they live. End a letter with a greeting and no name, and no placeholder for one. Call their own business "my own business".';
 
 /**
  * The template an anonymous document is dressed in: the same, without the

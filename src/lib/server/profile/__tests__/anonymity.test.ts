@@ -10,18 +10,21 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
+const dbMock = vi.hoisted(() => ({ query: {} as Record<string, { findFirst: unknown }> }));
 vi.mock('$lib/server/db', () => ({
 	db: {},
-	dbDirect: {}
+	dbDirect: dbMock
 }));
 
 const {
+	anonymiseProfileData,
 	anonymiseTree,
 	anonymousTemplate,
 	identityOf,
 	isAnonymousChain,
 	isOwnBusiness,
-	leadsToApplicant
+	leadsToApplicant,
+	writingAnonymity
 } = await import('../anonymity');
 const { pageIsAnonymous, pageProfile } = await import('../page-profile');
 const { ANONYMOUS_TOGGLE, isAnonymous, withAnonymous } = await import('$lib/resume-anonymity');
@@ -249,5 +252,77 @@ describe('anonymousTemplate', () => {
 		expect(anonymousTemplate(template).config).toEqual({ accent: '#ff0', contact: {} });
 		expect(template.config.contact).toEqual({ email: 'alex@brand.example' });
 		expect(anonymousTemplate(null)).toBeNull();
+	});
+});
+
+describe('anonymiseProfileData', () => {
+	it('gives the writer the work without who did it', () => {
+		// The collected_data blob's own keys (exportProfile), not the page tree's.
+		const source = profile();
+		const blob = {
+			name: source.name,
+			title: source.title,
+			summary: source.summary,
+			email_address: source.email_address,
+			phone_number: source.phone_number,
+			location: source.location,
+			location_timezone: source.location_timezone,
+			nationality: source.nationality,
+			personal_website: source.personal_website,
+			linkedin_profile: source.linkedin_profile,
+			github_profile: source.github_profile,
+			stackoverflow_profile: source.stackoverflow_profile,
+			references: source.references,
+			highlights: [{ text: 'Shipped the checkout rewrite' }],
+			work_experiences: source.work_experiences,
+			side_projects: source.side_projects,
+			certificates: source.certificates
+		};
+		const data = anonymiseProfileData(blob, identityOf(source));
+		for (const key of ['name', 'email_address', 'phone_number', 'location', 'nationality']) {
+			expect(data, key).not.toHaveProperty(key);
+		}
+		expect(data).not.toHaveProperty('references');
+		expect(data.summary).toBe('Engineer with ten years of experience.');
+		expect((data.work_experiences as Array<{ name: string }>).map((w) => w.name)).toEqual([
+			'Own business',
+			'Acme',
+			'Own business'
+		]);
+		const text = JSON.stringify(data).toLowerCase();
+		for (const mark of ['alex', 'morgan', 'amorgan77', 'utrecht', 'sam lee']) {
+			expect(text, mark).not.toContain(mark);
+		}
+	});
+});
+
+describe('writingAnonymity', () => {
+	const application = { type: 'application', id: 92 };
+	function answer(anonymous: boolean) {
+		dbMock.query.applications = { findFirst: vi.fn(async () => ({ anonymous })) };
+		dbMock.query.profiles = { findFirst: vi.fn(async () => profile()) };
+	}
+
+	it('strips the profile for a letter or an answer to an anonymous application', async () => {
+		answer(true);
+		for (const key of ['write_cover_letter', 'answer_application_question']) {
+			const result = await writingAnonymity(1, key, application);
+			expect(result?.strip, key).toBe(true);
+			expect(result?.identity.name).toBe('Alex Morgan');
+		}
+	});
+
+	it("tells the chat without taking the applicant's name from it", async () => {
+		answer(true);
+		expect((await writingAnonymity(1, 'personal_agent_chat', application))?.strip).toBe(false);
+	});
+
+	it("leaves the applicant's own texts, other entities and named applications alone", async () => {
+		answer(true);
+		expect(await writingAnonymity(1, 'write_cheat_sheet', application)).toBeNull();
+		expect(await writingAnonymity(1, 'write_cover_letter', { type: 'job', id: 3 })).toBeNull();
+		expect(await writingAnonymity(1, 'write_cover_letter', null)).toBeNull();
+		answer(false);
+		expect(await writingAnonymity(1, 'write_cover_letter', application)).toBeNull();
 	});
 });

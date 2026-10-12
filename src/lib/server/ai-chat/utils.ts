@@ -40,6 +40,11 @@ import type { ExportedProfileKey } from '$lib/server/profile/export';
 import type { RetrievalRecord } from '$lib/server/documents/retrieval-record';
 import type { CapabilityRecord } from './capability-record';
 import { applySkillVisibility, loadProfileData, renderProfileData } from './profile-data';
+import {
+	ANONYMOUS_WRITING_NOTE,
+	anonymiseProfileData,
+	writingAnonymity
+} from '$lib/server/profile/anonymity';
 import { promptValues, renderPrompt, unfilledVariables } from './render-prompt';
 
 /**
@@ -563,6 +568,15 @@ async function generateAiChat(
 			documentSafe: WRITING_PROMPT_KEYS.has(promptKey),
 			exclude: options?.profileDataExclude
 		});
+		// An application whose employer reads it without names
+		// (applications.anonymous): what is written for that employer is written
+		// from a profile without who the applicant is, and both it and the chat
+		// are told so, the chat because it drafts those texts too. Before the
+		// context is assembled, whose `profile` source renders this same blob.
+		const anonymity = await writingAnonymity(profileId, promptKey, options?.context?.entity);
+		if (anonymity?.strip) {
+			profileBlob.data = anonymiseProfileData(profileBlob.data, anonymity.identity);
+		}
 		const schemaJson = profileBlob.schema;
 		const dataJson = profileBlob.data;
 
@@ -621,6 +635,10 @@ async function generateAiChat(
 			...assembled,
 			...promptValues(customVariables ?? {})
 		};
+		// After the layering, so it follows whichever profile block won it.
+		if (anonymity && interpolationVariables.data) {
+			interpolationVariables.data += `\n\n${ANONYMOUS_WRITING_NOTE}`;
+		}
 
 		// Step 5b: Every placeholder the template uses must have a value by now,
 		// even if it is only the "" a placeholderDefaults entry gives it. The
