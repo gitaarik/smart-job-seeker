@@ -19,11 +19,8 @@ import { incrementTokenVisit } from '$lib/server/auth/token-validation';
 import { getPortfolioThemeById, getPortfolioTheme } from '$lib/server/profile/portfolio-themes';
 import { isKnownLocale } from '$lib/resume-translations';
 import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
-import {
-	applyFieldVariants,
-	loadFieldVariants,
-	withoutFieldVariants
-} from '$lib/server/profile/field-variants';
+import { applyFieldVariants, loadFieldVariants } from '$lib/server/profile/field-variants';
+import { pageProfile } from '$lib/server/profile/page-profile';
 import { applySkillWords, loadDocumentSkillWords } from '$lib/server/profile/skill-words';
 import type { PageServerLoad } from './$types';
 
@@ -104,13 +101,9 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	);
 
 	return {
-		// Stripped of the wording library before serialising: the variants are
-		// in the tree for the server's benefit, and a public page must not
-		// carry the alternatives it did not use.
-		profile: {
-			...withoutFieldVariants(profile),
-			profile_versions: profile.profile_versions
-		},
+		// Only what the page renders: the tree is serialised into it, and the
+		// rest of it is private. See server/profile/page-profile.ts.
+		profile: pageProfile(profile, versionId),
 		theme,
 		locale: translator.locale,
 		versionId: versionId ?? null,
