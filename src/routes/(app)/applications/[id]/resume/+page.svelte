@@ -78,6 +78,7 @@
 	availableLocales={data.availableLocales ?? []}
 	pdfKeys={data.pdfKeys ?? []}
 	anonymousSlugs={data.anonymousSlugs ?? []}
+	anonymityHits={data.anonymityHits ?? null}
 	{profileSlug}
 	{lastRun}
 	specWarning={data.specWarning ?? null}

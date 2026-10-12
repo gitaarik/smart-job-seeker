@@ -34,6 +34,31 @@ export function withAnonymous(toggles: unknown, anonymous: boolean): string[] {
 	return anonymous ? [...rest, ANONYMOUS_TOGGLE] : rest;
 }
 
+/** What the leak check (server/profile/anonymity-check.ts) can find in a PDF. */
+export type LeakKind =
+	'name' | 'business' | 'email' | 'phone' | 'handle' | 'address' | 'registration' | 'hometown';
+
+/** One place a PDF still names the applicant. */
+export interface LeakHit {
+	kind: LeakKind;
+	/** The words found, as the PDF has them. */
+	term: string;
+	/** The text around them, as the reader will see it. */
+	context: string;
+}
+
+/** How each kind of hit is named to the applicant. */
+export const LEAK_LABELS: Readonly<Record<LeakKind, string>> = {
+	name: 'Your name',
+	business: 'Your business name',
+	email: 'Your email address',
+	phone: 'Your phone number',
+	handle: 'Your username or website',
+	address: 'Your address',
+	registration: 'Your KvK or VAT number',
+	hometown: 'Your home town'
+};
+
 /** What an anonymous document leaves out, in the words the switches use. */
 export const ANONYMOUS_DESCRIPTION =
-	'No name, contact details, nationality or references, and your own business prints as "Own business".';
+	'No name, contact details, nationality or references, and your own business prints as "Own business". The PDF is then read for anything else that still names you.';

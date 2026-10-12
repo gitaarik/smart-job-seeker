@@ -29,6 +29,7 @@
 	import ItemPicker from './ItemPicker.svelte';
 	import TailoredActions from './TailoredActions.svelte';
 	import AnonymousSwitch from './AnonymousSwitch.svelte';
+	import type { LeakHit } from '$lib/resume-anonymity';
 	import TailoredDetails from './TailoredDetails.svelte';
 	import type { Decision, LastRun } from './types';
 	import type { ItemGroup } from '$lib/tailoring';
@@ -103,6 +104,7 @@
 		availableLocales = [],
 		pdfKeys = [],
 		anonymousSlugs = [],
+		anonymityHits = null,
 		lastRun = null,
 		specWarning = null
 	}: {
@@ -193,6 +195,8 @@
 		pdfKeys?: string[];
 		/** The versions whose documents print no name. */
 		anonymousSlugs?: string[];
+		/** What the recorded PDF still says about who they are; null when unread. */
+		anonymityHits?: LeakHit[] | null;
 		lastRun?: LastRun | null;
 		/** Said when the job's own spec is too thin to tailor against. */
 		specWarning?: { kind: 'empty' | 'thin'; message: string } | null;
@@ -1232,6 +1236,7 @@
 								fromLibrary: !!app.cv_version_sent && !choseTailored
 							}
 						: null}
+					hits={anonymityHits}
 				/>
 			</div>
 		</Card>

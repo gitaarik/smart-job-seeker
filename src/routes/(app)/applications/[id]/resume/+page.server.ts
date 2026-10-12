@@ -46,8 +46,9 @@ import {
 	generateVersionPdfs,
 	regenerateStoredPdfs
 } from '$lib/server/profile/generate-version-pdfs';
-import { withAnonymous } from '$lib/resume-anonymity';
+import { withAnonymous, type LeakHit } from '$lib/resume-anonymity';
 import { isAnonymousChain } from '$lib/server/profile/anonymity';
+import { checkStoredPdf } from '$lib/server/profile/anonymity-check';
 import { loadSkillWords, suggestPlace } from '$lib/server/profile/skill-words';
 import { provenanceFor } from '$lib/match-provenance';
 
@@ -66,6 +67,41 @@ async function sentAs(profileId: number, appId: number): Promise<SentAs> {
 		columns: { cv_template_sent: true, cv_locale_sent: true }
 	});
 	return { template: row?.cv_template_sent ?? null, locale: row?.cv_locale_sent ?? null };
+}
+
+/**
+ * What the PDF this application records it is sending still says about who
+ * the applicant is, read from the stored file itself (anonymity-check.ts).
+ *
+ * Only for an application read without names, and null when there is no file
+ * to read. A check that fails says nothing rather than taking the page down
+ * with it: the card then shows no verdict, which is not a clean one.
+ */
+async function recordedPdfLeaks(
+	profileId: number,
+	app:
+		| {
+				anonymous?: boolean | null;
+				cv_sent_through?: string | null;
+				cv_version_sent?: string | null;
+				cv_template_sent?: string | null;
+				cv_locale_sent?: string | null;
+		  }
+		| null
+		| undefined
+): Promise<LeakHit[] | null> {
+	if (!app?.anonymous || !app.cv_version_sent) return null;
+	try {
+		return await checkStoredPdf(profileId, {
+			type: app.cv_sent_through === 'cv' ? 'cv' : 'resume',
+			version: app.cv_version_sent,
+			template: app.cv_template_sent ?? null,
+			locale: app.cv_locale_sent ?? null
+		});
+	} catch (err) {
+		console.error('[anonymity-check] could not read the PDF for', app.cv_version_sent, err);
+		return null;
+	}
 }
 
 /**
@@ -469,6 +505,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
 		anonymousSlugs: usable
 			.filter((v) => isAnonymousChain(profileVersions, v.id))
 			.map((v) => v.slug),
+		anonymityHits: await recordedPdfLeaks(layoutData.selectedProfile.id, layoutData.application),
 		// Everything on this page keys off the job's required skills, and an empty
 		// list makes every pass quietly do less while producing a document that
 		// looks exactly like a good one. Said out loud rather than left silent.
