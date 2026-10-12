@@ -2900,6 +2900,19 @@ export const applications = pgTable(
 		cv_template_sent: varchar({ length: 255 }),
 		cv_locale_sent: varchar({ length: 16 }),
 		/**
+		 * The employer reads this application without the applicant's name: an
+		 * anonymous procedure, common in Dutch public-sector hiring.
+		 *
+		 * A fact about the employer's procedure, so it lives here rather than only
+		 * on a document. The documents read it as the `anonymous` toggle on this
+		 * application's own tailored version ($lib/resume-anonymity.ts), which the
+		 * switch writes along with this column and a new tailored version starts
+		 * with. Kept here as well because that version can be discarded and made
+		 * again, and the second one must not quietly print the name; and because
+		 * what is written for the application (a letter, an answer) has to know too.
+		 */
+		anonymous: boolean().default(false).notNull(),
+		/**
 		 * A digest of everything recorded on this application, for the
 		 * cross-application comparison spine. The spine can afford one line per
 		 * application, not their histories — this is what makes that line say

@@ -1,0 +1,1 @@
+ALTER TABLE "applications" ADD COLUMN "anonymous" boolean DEFAULT false NOT NULL;
