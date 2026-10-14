@@ -2097,7 +2097,8 @@ export const side_project_technologies = pgTable(
 		date_created: timestamp({ withTimezone: true, mode: 'date' }),
 		date_updated: timestamp({ withTimezone: true, mode: 'date' }),
 		name: varchar({ length: 255 }),
-		side_project_id: integer().notNull()
+		side_project_id: integer().notNull(),
+		tags: json()
 	},
 	(table) => [
 		foreignKey({
@@ -2370,7 +2371,8 @@ export const work_experience_project_technologies = pgTable(
 		date_created: timestamp({ withTimezone: true, mode: 'date' }),
 		date_updated: timestamp({ withTimezone: true, mode: 'date' }),
 		work_experience_project_id: integer(),
-		name: varchar({ length: 255 })
+		name: varchar({ length: 255 }),
+		tags: json()
 	},
 	(table) => [
 		foreignKey({

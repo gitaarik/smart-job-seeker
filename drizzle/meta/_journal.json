@@ -547,6 +547,13 @@
       "when": 1791814403930,
       "tag": "0077_application_anonymous",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1791980143168,
+      "tag": "0078_technology_tags",
+      "breakpoints": true
     }
   ]
 }
