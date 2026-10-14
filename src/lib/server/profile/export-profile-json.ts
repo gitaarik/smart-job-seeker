@@ -90,6 +90,7 @@ export interface ExportedProfile {
 				status?: string;
 				sort?: number | null;
 				name?: string;
+				tags?: unknown;
 			}>;
 			projects: Array<{
 				status?: string;
@@ -103,6 +104,7 @@ export interface ExportedProfile {
 				work_experience_project_technologies: Array<{
 					sort?: number | null;
 					name?: string;
+					tags?: unknown;
 				}>;
 			}>;
 		}>;
@@ -124,6 +126,7 @@ export interface ExportedProfile {
 			technologies: Array<{
 				sort?: number | null;
 				name?: string;
+				tags?: unknown;
 			}>;
 		}>;
 		education: Array<{
@@ -244,7 +247,7 @@ export async function buildProfileJsonExport(
 						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_technologies: {
-						columns: { status: true, sort: true, name: true },
+						columns: { status: true, sort: true, name: true, tags: true },
 						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_projects: {
@@ -260,7 +263,7 @@ export async function buildProfileJsonExport(
 						},
 						with: {
 							work_experience_project_technologies: {
-								columns: { sort: true, name: true },
+								columns: { sort: true, name: true, tags: true },
 								orderBy: (t, { asc }) => asc(t.sort)
 							}
 						},
@@ -289,7 +292,7 @@ export async function buildProfileJsonExport(
 						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					side_project_technologies: {
-						columns: { sort: true, name: true },
+						columns: { sort: true, name: true, tags: true },
 						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},

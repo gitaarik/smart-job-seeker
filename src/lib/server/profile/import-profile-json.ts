@@ -459,7 +459,8 @@ export async function importProfileFromJson(
 				work_experience_id: createdWork.id,
 				status: t.status || 'draft',
 				sort: t.sort ?? null,
-				name: t.name || null
+				name: t.name || null,
+				tags: t.tags ?? null
 			});
 		}
 
@@ -483,7 +484,8 @@ export async function importProfileFromJson(
 				await dbDirect.insert(work_experience_project_technologies).values({
 					work_experience_project_id: createdProj.id,
 					sort: pt.sort ?? null,
-					name: pt.name || null
+					name: pt.name || null,
+					tags: pt.tags ?? null
 				});
 			}
 		}
@@ -517,9 +519,12 @@ export async function importProfileFromJson(
 		}
 
 		for (const t of sp.technologies ?? []) {
-			await dbDirect
-				.insert(side_project_technologies)
-				.values({ side_project_id: createdSp.id, sort: t.sort ?? null, name: t.name || null });
+			await dbDirect.insert(side_project_technologies).values({
+				side_project_id: createdSp.id,
+				sort: t.sort ?? null,
+				name: t.name || null,
+				tags: t.tags ?? null
+			});
 		}
 	}
 

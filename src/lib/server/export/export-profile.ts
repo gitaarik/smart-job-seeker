@@ -118,7 +118,7 @@ export async function buildProfileExport(
 						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_technologies: {
-						columns: { status: true, sort: true, name: true },
+						columns: { status: true, sort: true, name: true, tags: true },
 						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_projects: {
@@ -136,7 +136,7 @@ export async function buildProfileExport(
 						},
 						with: {
 							work_experience_project_technologies: {
-								columns: { sort: true, name: true },
+								columns: { sort: true, name: true, tags: true },
 								orderBy: (t, { asc }) => asc(t.sort)
 							}
 						},
@@ -167,7 +167,7 @@ export async function buildProfileExport(
 						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					side_project_technologies: {
-						columns: { sort: true, name: true },
+						columns: { sort: true, name: true, tags: true },
 						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},
@@ -495,7 +495,8 @@ export async function buildProfileExport(
 			technologies: work.work_experience_technologies.map((t) => ({
 				status: t.status || undefined,
 				sort: t.sort,
-				name: t.name || undefined
+				name: t.name || undefined,
+				tags: t.tags
 			})),
 			projects: work.work_experience_projects.map((p) => ({
 				status: p.status || undefined,
@@ -508,7 +509,8 @@ export async function buildProfileExport(
 				outcome: p.outcome || undefined,
 				technologies: p.work_experience_project_technologies.map((t) => ({
 					sort: t.sort,
-					name: t.name || undefined
+					name: t.name || undefined,
+					tags: t.tags
 				}))
 			}))
 		})),
@@ -532,7 +534,8 @@ export async function buildProfileExport(
 			})),
 			technologies: proj.side_project_technologies.map((t) => ({
 				sort: t.sort,
-				name: t.name || undefined
+				name: t.name || undefined,
+				tags: t.tags
 			}))
 		})),
 

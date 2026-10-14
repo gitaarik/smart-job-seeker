@@ -325,6 +325,7 @@ export interface ExportedWorkExperienceTechnology {
 	status?: string;
 	sort?: number | null;
 	name?: string;
+	tags?: unknown;
 }
 
 export interface ExportedWorkExperienceProject {
@@ -342,6 +343,7 @@ export interface ExportedWorkExperienceProject {
 export interface ExportedWorkExperienceProjectTechnology {
 	sort?: number | null;
 	name?: string;
+	tags?: unknown;
 }
 
 export interface ExportedSideProject {
@@ -369,6 +371,7 @@ export interface ExportedSideProjectAchievement {
 export interface ExportedSideProjectTechnology {
 	sort?: number | null;
 	name?: string;
+	tags?: unknown;
 }
 
 export interface ExportedEducation {

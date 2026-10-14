@@ -148,7 +148,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_technologies: {
-						columns: { status: true, sort: true, name: true },
+						columns: { status: true, sort: true, name: true, tags: true },
 						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_projects: {
@@ -164,7 +164,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 						},
 						with: {
 							work_experience_project_technologies: {
-								columns: { sort: true, name: true },
+								columns: { sort: true, name: true, tags: true },
 								orderBy: (t, { asc }) => asc(t.sort)
 							}
 						},
@@ -196,7 +196,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					side_project_technologies: {
-						columns: { sort: true, name: true },
+						columns: { sort: true, name: true, tags: true },
 						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},

@@ -635,7 +635,8 @@ async function importProfileEntities(
 				work_experience_id: createdWork.id,
 				status: t.status || 'draft',
 				sort: t.sort ?? null,
-				name: t.name || null
+				name: t.name || null,
+				tags: t.tags ?? null
 			});
 		}
 
@@ -663,7 +664,8 @@ async function importProfileEntities(
 				await dbDirect.insert(work_experience_project_technologies).values({
 					work_experience_project_id: createdProj.id,
 					sort: pt.sort ?? null,
-					name: pt.name || null
+					name: pt.name || null,
+					tags: pt.tags ?? null
 				});
 			}
 		}
@@ -756,7 +758,8 @@ async function importProfileEntities(
 			await dbDirect.insert(side_project_technologies).values({
 				side_project_id: createdSp.id,
 				sort: t.sort ?? null,
-				name: t.name || null
+				name: t.name || null,
+				tags: t.tags ?? null
 			});
 		}
 	}
