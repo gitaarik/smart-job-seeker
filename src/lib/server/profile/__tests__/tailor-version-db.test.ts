@@ -237,14 +237,14 @@ describe('retagVersionSlug', () => {
 		expect(mockQueryRaw).not.toHaveBeenCalled();
 	});
 
-	// Eight tables carry a `tags` array that can name a version. A table missed
+	// Ten tables carry a `tags` array that can name a version. A table missed
 	// here is a set of items that silently stop printing on the renamed version.
 	it('scans every table that can name a version, scoped to the profile', async () => {
 		const { selected } = tagScan({});
 
 		await retagVersionSlug(7, 'backend', 'senior-backend');
 
-		expect(selected).toHaveLength(8);
+		expect(selected).toHaveLength(10);
 		const all = selected.join('\n');
 		for (const table of [
 			'work_experiences',
@@ -254,9 +254,11 @@ describe('retagVersionSlug', () => {
 			'tech_skill_categories',
 			'tech_skills',
 			'work_experience_achievements',
-			'work_experience_technologies'
+			'work_experience_technologies',
+			'work_experience_project_technologies',
+			'side_project_technologies'
 		]) {
-			expect(all, `${table} is not scanned`).toContain(`FROM ${table}`);
+			expect(all, `${table} is not scanned`).toContain(`FROM ${table}\n`);
 		}
 		// `app-<id>` slugs are unique per profile only, so an unscoped rewrite
 		// would reach another applicant's tags.
@@ -370,13 +372,13 @@ describe('versionDeleteImpact', () => {
 		});
 		mockQueryRaw.mockImplementation((query: SQL) => {
 			const { sql } = render(query);
-			if (sql.includes('FROM side_projects')) {
+			if (sql.includes('FROM side_projects\n')) {
 				return Promise.resolve([
 					{ label: 'Jazzchords', tags: ['fullstack-django'] },
 					{ label: 'TeleCoder', tags: ['fullstack-django', 'fullstack-django-svelte'] }
 				]);
 			}
-			if (sql.includes('FROM work_experience_achievements')) {
+			if (sql.includes('FROM work_experience_achievements\n')) {
 				return Promise.resolve([
 					{ label: 'Facilitated market expansion', tags: ['cv', 'fullstack-django'] }
 				]);
@@ -486,8 +488,8 @@ describe('promoteToLibrary', () => {
 		const sendRecord = updates.find((u) => u.table === applications);
 		expect(sendRecord?.set).toMatchObject({ cv_version_sent: 'senior-backend' });
 		expect(render(sendRecord!.where as SQL).params).toContain('app-12');
-		// The tag scan ran for the old slug.
-		expect(selected.length).toBe(8);
+		// The tag scan ran for the old slug, across every tagged table.
+		expect(selected.length).toBe(10);
 	});
 
 	it('leaves both alone when there was no old slug to follow', async () => {

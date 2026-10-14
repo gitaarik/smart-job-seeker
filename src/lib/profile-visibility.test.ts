@@ -10,7 +10,9 @@ import {
 	setProfileOnly,
 	setVersions,
 	versionsOf,
-	versionTagsOf
+	templateNames,
+	versionTagsOf,
+	visibilityAmong
 } from './profile-visibility';
 
 describe('isHiddenFromDocuments', () => {
@@ -145,6 +147,36 @@ describe('versionTagsOf', () => {
 		]);
 		expect(versionTagsOf([' !CV '])).toEqual([]);
 		expect(versionTagsOf(null)).toEqual([]);
+	});
+});
+
+describe('templateNames', () => {
+	it('names templates the way a sentence would', () => {
+		expect(templateNames(['cv'], 'or')).toBe('the CV');
+		expect(templateNames(['resume', 'portfolio'], 'or')).toBe('the resume or the site');
+		expect(templateNames(['resume', 'cv'], 'and')).toBe('the resume and the CV');
+		expect(templateNames(['resume', 'cv', 'portfolio'], 'or')).toBe(
+			'the resume, the CV or the site'
+		);
+	});
+});
+
+describe('visibilityAmong', () => {
+	it('reads a list the documents print by the profile-only pair, whatever the site does', () => {
+		expect(visibilityAmong(null)).toEqual({ hidden: [], off: false });
+		expect(visibilityAmong(['!cv'])).toEqual({ hidden: ['cv'], off: false });
+		expect(visibilityAmong(['!resume', '!cv'])).toEqual({ hidden: ['resume', 'cv'], off: true });
+		expect(visibilityAmong(['!portfolio'])).toEqual({ hidden: ['portfolio'], off: false });
+	});
+
+	it('counts only the templates that print the list', () => {
+		const site = ['portfolio'];
+		expect(visibilityAmong(null, site)).toEqual({ hidden: [], off: false });
+		// Off the documents says nothing about a list no document prints.
+		expect(visibilityAmong(['!resume', '!cv'], site)).toEqual({ hidden: [], off: false });
+		expect(visibilityAmong(['!portfolio'], site)).toEqual({ hidden: ['portfolio'], off: true });
+		// A whitelist naming another template keeps it off the site as well.
+		expect(visibilityAmong(['cv'], site)).toEqual({ hidden: ['portfolio'], off: true });
 	});
 });
 

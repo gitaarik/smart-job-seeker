@@ -1,19 +1,25 @@
 <script lang="ts">
 	/**
-	 * The technologies under one role, as chips that each save themselves.
+	 * A list of technologies as chips that each save themselves: a role's, a role
+	 * project's or a side project's, which are the same list in three tables.
 	 *
 	 * Shaped like the skills on the Skills page: a chip opens a small editor with
-	 * its name, the Resume / CV / Site switches and its version tags, and the
-	 * chip itself says where it is held back (`VisibilityMark`). Before
-	 * that a chip was an input with a tag button, which could pick versions but
-	 * not the site, and a chip held back from the resume looked like any other.
+	 * its name, the Show-on switches and its version tags, and the chip itself
+	 * says where it is held back (`VisibilityMark`). Before that a role's chip
+	 * was an input with a tag button, which could pick versions but not the
+	 * site, and the two project lists could not be held back from anything.
 	 *
-	 * Unlike the skill editor there is no Save or Cancel: everything on this page
-	 * saves as you type, so the editor writes as it goes and Done only closes it.
+	 * `templates` is what prints the list. A role's technologies reach the
+	 * resume, the CV and the site; a project's reach the site and no document,
+	 * so their chips get the Site switch alone.
+	 *
+	 * Unlike the skill editor there is no Save or Cancel: these pages save as you
+	 * type, so the editor writes as it goes and Done only closes it.
 	 *
 	 * A component of its own so the store is created at component init, which is
 	 * what gives its per-chip `autoSaveField`s an `onDestroy` to deregister from.
-	 * The page keys it on the role, so `workExperienceId` never changes under it.
+	 * Its parent never changes under it: the role page keys it on the role, and
+	 * each project page is its own route.
 	 */
 	import { untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -33,18 +39,39 @@
 	import VersionTagPicker from '$lib/components/VersionTagPicker.svelte';
 	import VisibilityMark from '$lib/components/VisibilityMark.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
-	import { isHiddenFromDocuments, setShownOn, versionTagsOf } from '$lib/profile-visibility';
+	import {
+		BASE_TEMPLATE_TAGS,
+		setShownOn,
+		versionTagsOf,
+		visibilityAmong
+	} from '$lib/profile-visibility';
 
 	let {
-		workExperienceId,
+		resource,
+		parentKey,
+		parentId,
 		profileId,
 		initial = [],
-		versionSlugs = []
+		versionSlugs,
+		templates = BASE_TEMPLATE_TAGS,
+		onChanged
 	}: {
-		workExperienceId: number;
+		/** The section, as `PROFILE_RESOURCES` names it. */
+		resource:
+			| 'work_experience_technology'
+			| 'work_experience_project_technology'
+			| 'side_project_technology';
+		/** The foreign key naming the role or project the list belongs to. */
+		parentKey: string;
+		parentId: number;
 		profileId: number;
 		initial?: Array<{ id: number; name: string | null; tags: unknown }>;
+		/** The profile's versions, when the page has them already; else fetched here. */
 		versionSlugs?: string[];
+		/** The base templates that print this list (see above). */
+		templates?: readonly string[];
+		/** Called after every write lands, for a page whose rows came from a layout load. */
+		onChanged?: () => void;
 	} = $props();
 	// Links the editor's label to its field.
 	const uid = $props.id();
@@ -59,11 +86,11 @@
 	// The store starts from the props once and owns the chips from then on (see
 	// above); after a proposal is applied from the chat panel the page mounts it
 	// again.
-	const seed = untrack(() => ({ workExperienceId, profileId, initial }));
+	const seed = untrack(() => ({ resource, parentKey, parentId, profileId, initial }));
 	const store = sectionRows({
-		resource: 'work_experience_technology',
-		parentKey: 'work_experience_id',
-		parentId: seed.workExperienceId,
+		resource: seed.resource,
+		parentKey: seed.parentKey,
+		parentId: seed.parentId,
 		profileId: seed.profileId,
 		initial: seed.initial,
 		toData: (t) => ({
@@ -75,18 +102,45 @@
 			name: v.name.trim(),
 			tags: v.tags.length > 0 ? v.tags : null
 		}),
-		canCreate: (v: Technology) => v.name.trim().length > 0
+		canCreate: (v: Technology) => v.name.trim().length > 0,
+		onChanged: () => onChanged?.()
 	});
 
 	type Row = (typeof store.rows)[number];
 
 	let error = $state<string | null>(null);
 
+	// The version picker's list. The role page loads it for its achievements as
+	// well and passes it in; the project pages have nothing else that needs it.
+	let fetchedSlugs = $state<string[]>([]);
+	let slugs = $derived(versionSlugs ?? fetchedSlugs);
+	$effect(() => {
+		if (versionSlugs !== undefined) return;
+		fetch('/api/profile-versions')
+			.then((res) => (res.ok ? res.json() : []))
+			.then((list: string[]) => (fetchedSlugs = list))
+			.catch(() => {});
+	});
+
 	// Version badges are hidden on the chips until toggled on (like the skills page).
 	let showVersionTags = $state(false);
 	let hasAnyVersionTags = $derived(
-		versionSlugs.length > 0 || store.rows.some((t) => versionTagsOf(t.data.tags).length > 0)
+		slugs.length > 0 || store.rows.some((t) => versionTagsOf(t.data.tags).length > 0)
 	);
+
+	/**
+	 * Add chips from outside: the technologies a repo scan or a suggestion
+	 * offered and the applicant ticked. The store is created in here (see
+	 * above), so a parent reaches it through this, via `bind:this`. A blank
+	 * draft is not written, so each name goes in through `update`.
+	 */
+	export function addTechnologies(names: string[]) {
+		for (const name of names) {
+			const trimmed = name.trim();
+			if (!trimmed) continue;
+			store.update(store.add(), { name: trimmed });
+		}
+	}
 
 	// --- The editor popup ---
 
@@ -285,16 +339,16 @@
 		onfinalize={handleFinalize}
 	>
 		{#each dndItems as item (item.id)}
-			{@const profileOnly = isHiddenFromDocuments(item.row.data.tags)}
+			{@const off = visibilityAmong(item.row.data.tags, templates).off}
 			<div animate:flip={{ duration: flipMs }}>
 				<div
-					class="flex cursor-grab items-center gap-1.5 rounded-lg border border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/5 py-1.5 pr-3.5 pl-2 text-sm active:cursor-grabbing {profileOnly
+					class="flex cursor-grab items-center gap-1.5 rounded-lg border border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/5 py-1.5 pr-3.5 pl-2 text-sm active:cursor-grabbing {off
 						? 'opacity-60'
 						: ''}"
 				>
 					<FontAwesomeIcon icon={faGripVertical} class="h-3 w-3 text-[var(--dash-text-muted)]" />
 					<span class="text-[var(--dash-text)]">{item.row.data.name || 'Technology'}</span>
-					<VisibilityMark tags={item.row.data.tags} />
+					<VisibilityMark tags={item.row.data.tags} {templates} />
 				</div>
 			</div>
 		{/each}
@@ -315,7 +369,7 @@
 {:else}
 	<div class="flex flex-wrap gap-2">
 		{#each store.rows as tech (tech.key)}
-			{@const profileOnly = isHiddenFromDocuments(tech.data.tags)}
+			{@const off = visibilityAmong(tech.data.tags, templates).off}
 			{@const versionTags = versionTagsOf(tech.data.tags)}
 			<div class="relative">
 				<button
@@ -323,7 +377,7 @@
 					onclick={() => open(tech)}
 					aria-expanded={editingKey === tech.key}
 					title={tech.field.error ?? undefined}
-					class="flex items-center gap-1.5 rounded-lg border border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/5 px-3.5 py-1.5 text-sm transition-colors hover:border-[var(--dash-primary)]/40 {profileOnly
+					class="flex items-center gap-1.5 rounded-lg border border-[var(--dash-primary)]/20 bg-[var(--dash-primary)]/5 px-3.5 py-1.5 text-sm transition-colors hover:border-[var(--dash-primary)]/40 {off
 						? 'opacity-60'
 						: ''}"
 				>
@@ -332,7 +386,7 @@
 							? 'text-[var(--dash-error)]'
 							: 'text-[var(--dash-text)]'}>{tech.data.name || 'Technology'}</span
 					>
-					<VisibilityMark tags={tech.data.tags} />
+					<VisibilityMark tags={tech.data.tags} {templates} />
 					{#if showVersionTags && versionTags.length > 0}
 						<span
 							class="inline-flex items-center gap-1 rounded border border-teal-500/30 bg-teal-500/15 px-1.5 py-0.5 text-[10px] font-medium text-teal-600"
@@ -377,11 +431,12 @@
 							ontoggle={(template, shown) =>
 								retag(tech, setShownOn(tech.data.tags, template, shown))}
 							field={tech.id === null ? undefined : tech.field}
+							{templates}
 						/>
 
 						<VersionTagPicker
 							tags={tech.data.tags}
-							{versionSlugs}
+							versionSlugs={slugs}
 							onchange={(tags) => retag(tech, tags)}
 							bind:expanded={versionsExpanded}
 						/>

@@ -15,7 +15,7 @@
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
 	import WorkExperienceProjects from '../../../components/WorkExperienceProjects.svelte';
-	import RoleTechnologies from '../../../components/RoleTechnologies.svelte';
+	import TechnologyChips from '../../../components/TechnologyChips.svelte';
 	import VersionTags from '$lib/components/VersionTags.svelte';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
 	import Card from '../../../../components/Card.svelte';
@@ -69,7 +69,7 @@
 	// The staged-removal sets these used to keep are gone with it. They were the
 	// reason technologies and achievements stayed on a button — a delete that
 	// only took effect on commit needs a commit — and the replacement is that a
-	// delete means it now: immediately for a chip (see RoleTechnologies), and
+	// delete means it now: immediately for a chip (see TechnologyChips), and
 	// behind a confirmation for an achievement, whose text nothing can retype
 	// for you.
 
@@ -92,7 +92,7 @@
 
 	/**
 	 * The achievements, each row saving itself. The technologies are the same
-	 * shape and live in RoleTechnologies.
+	 * shape and live in TechnologyChips.
 	 *
 	 * `tags` is a real field — the version slugs that decide which documents an
 	 * entry appears on — so it goes through the same PATCH as the text.
@@ -508,8 +508,10 @@
 	     would otherwise leave the first role's chips under the second. -->
 	<Card padding="lg">
 		{#key experience.id}
-			<RoleTechnologies
-				workExperienceId={experience.id}
+			<TechnologyChips
+				resource="work_experience_technology"
+				parentKey="work_experience_id"
+				parentId={experience.id}
 				profileId={data.profileId}
 				initial={experience.work_experience_technologies}
 				{versionSlugs}

@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/svelte';
-import RoleTechnologies from './RoleTechnologies.svelte';
+import TechnologyChips from './TechnologyChips.svelte';
 
 /**
- * A role's technology chips, and the Resume / CV / Site switches they gained.
+ * Technology chips, and the Show-on switches they gained: all three on a
+ * role's list, the Site switch alone on a project's, which no document prints.
  *
  * Mounted for real against a stubbed fetch, because what is worth pinning is
  * the write each click produces: the switches rewrite the whole tag array, so a
@@ -36,6 +37,9 @@ beforeEach(() => {
 		}
 	);
 	vi.stubGlobal('fetch', (url: string, init?: RequestInit) => {
+		if (url === '/api/profile-versions') {
+			return Promise.resolve(new Response(JSON.stringify(['citrus']), { status: 200 }));
+		}
 		sent.push({
 			url,
 			method: init?.method ?? 'GET',
@@ -62,9 +66,33 @@ const settle = async () => {
 	for (let i = 0; i < 6; i++) await Promise.resolve();
 };
 
-function renderChips(initial: Array<{ id: number; name: string; tags: string[] | null }>) {
-	render(RoleTechnologies, {
-		props: { workExperienceId: 232, profileId: 1, initial, versionSlugs: ['citrus'] }
+type Initial = Array<{ id: number; name: string; tags: string[] | null }>;
+
+/** A role's list, as the role page mounts it. */
+function renderChips(initial: Initial) {
+	render(TechnologyChips, {
+		props: {
+			resource: 'work_experience_technology',
+			parentKey: 'work_experience_id',
+			parentId: 232,
+			profileId: 1,
+			initial,
+			versionSlugs: ['citrus']
+		}
+	});
+}
+
+/** A side project's list, as its page mounts it: the site alone, versions fetched. */
+function renderProjectChips(initial: Initial) {
+	return render(TechnologyChips, {
+		props: {
+			resource: 'side_project_technology',
+			parentKey: 'side_project_id',
+			parentId: 40,
+			profileId: 1,
+			initial,
+			templates: ['portfolio']
+		}
 	});
 }
 
@@ -73,7 +101,7 @@ const chip = (name: string) => screen.getByRole('button', { name: new RegExp(nam
 const templateSwitch = (label: string) => screen.getByRole('button', { name: label });
 const patches = () => sent.filter((r) => r.method === 'PATCH');
 
-describe('RoleTechnologies', () => {
+describe('TechnologyChips on a role', () => {
 	test('a switch writes the tags at once and keeps the version tags beside them', async () => {
 		renderChips([{ id: 7, name: 'Drizzle ORM', tags: ['!citrus'] }]);
 
@@ -201,5 +229,70 @@ describe('RoleTechnologies', () => {
 		]);
 		expect(screen.queryByRole('button', { name: /Groq/ })).toBeNull();
 		expect(chip('Gemini')).toBeTruthy();
+	});
+});
+
+describe('TechnologyChips on a project', () => {
+	test('offers the Site switch alone, and says why', async () => {
+		renderProjectChips([{ id: 9, name: 'Svelte', tags: null }]);
+
+		await fireEvent.click(chip('Svelte'));
+
+		expect(templateSwitch('Site').getAttribute('aria-pressed')).toBe('true');
+		expect(screen.queryByRole('button', { name: 'Resume' })).toBeNull();
+		expect(screen.queryByRole('button', { name: 'CV' })).toBeNull();
+		expect(screen.getByText(/The resume and the CV don't list these\./)).toBeTruthy();
+	});
+
+	test('a technology kept off the site is written so and reads as off everything', async () => {
+		renderProjectChips([{ id: 9, name: 'jQuery', tags: null }]);
+
+		await fireEvent.click(chip('jQuery'));
+		await fireEvent.click(templateSwitch('Site'));
+		await settle();
+		await fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+		expect(sent).toEqual([
+			{
+				url: '/api/profile-section/side_project_technology/9',
+				method: 'PATCH',
+				body: { tags: ['!portfolio'], expected: { tags: null } }
+			}
+		]);
+		expect(chip('jQuery').className).toContain('opacity-60');
+		expect(screen.getByTitle('Not on the site: counts for job matching only')).toBeTruthy();
+	});
+
+	test('a chip off the resume and the CV is not marked where no document prints it', () => {
+		renderProjectChips([{ id: 9, name: 'Redis', tags: ['!resume', '!cv'] }]);
+
+		expect(chip('Redis').className).not.toContain('opacity-60');
+		expect(screen.queryByTitle(/Profile-only|Not on/)).toBeNull();
+	});
+
+	test('fetches the versions itself when the page has none to give', async () => {
+		renderProjectChips([{ id: 9, name: 'Svelte', tags: null }]);
+		await settle();
+
+		// The legend's Versions toggle shows once there is a version to tag onto.
+		expect(screen.getByRole('button', { name: 'Versions' })).toBeTruthy();
+	});
+
+	test('adds the technologies a scan offered, through the store', async () => {
+		vi.useFakeTimers();
+		const { component } = renderProjectChips([]);
+
+		component.addTechnologies(['Tauri', '  ']);
+		await vi.advanceTimersByTimeAsync(700);
+		await settle();
+
+		expect(sent).toEqual([
+			{
+				url: '/api/profile-section/side_project_technology',
+				method: 'POST',
+				body: { name: 'Tauri', tags: null, side_project_id: 40, profile_id: 1 }
+			}
+		]);
+		expect(chip('Tauri')).toBeTruthy();
 	});
 });

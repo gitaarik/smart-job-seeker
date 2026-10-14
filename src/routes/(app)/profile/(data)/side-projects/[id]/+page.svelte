@@ -14,12 +14,13 @@
 	import AchievementsList, { type AchievementItem } from '$lib/components/AchievementsList.svelte';
 	import { projectDetailDep } from '$lib/project-detail';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
-	import TechnologyTagsEditor from '$lib/components/TechnologyTagsEditor.svelte';
+	import { SITE_TEMPLATE_TAGS } from '$lib/profile-visibility';
 	import ProjectRepoFetch from '$lib/components/ProjectRepoFetch.svelte';
 	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
 	import VersionTags from '$lib/components/VersionTags.svelte';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
 	import ProjectSourcesPointer from '../../../components/ProjectSourcesPointer.svelte';
+	import TechnologyChips from '../../../components/TechnologyChips.svelte';
 	import Card from '../../../../components/Card.svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -53,9 +54,10 @@
 	}
 
 	// Both child collections save as you type now, through `sectionRows` and
-	// `/api/profile-section/…`. The staged-removal sets that used to require a
-	// commit are gone with them: a chip goes immediately, and an achievement —
-	// a sentence nothing can retype for the applicant — asks first.
+	// `/api/profile-section/…` (the technologies in TechnologyChips). The
+	// staged-removal sets that used to require a commit are gone with them: a
+	// chip goes immediately, and an achievement — a sentence nothing can retype
+	// for the applicant — asks first.
 
 	// Form states
 	const loadedBasics = basicsOf(loaded.project);
@@ -85,27 +87,12 @@
 		onChanged: refresh
 	});
 
-	const techStore = sectionRows({
-		resource: 'side_project_technology',
-		parentKey: 'side_project_id',
-		parentId: loaded.project.id,
-		profileId: loaded.profileId,
-		initial: loaded.project.side_project_technologies,
-		toData: (t) => ({ name: t.name ?? '' }),
-		blank: () => ({ name: '' }),
-		toBody: (v: { name: string }) => ({ name: v.name.trim() }),
-		canCreate: (v: { name: string }) => v.name.trim().length > 0,
-		onChanged: refresh
-	});
-
 	/**
-	 * What the two list components render, kept in step with their stores.
+	 * What the achievements list renders, kept in step with its store.
 	 *
-	 * Both components own an array and report by index; the stores own the saves.
+	 * The list owns an array and reports by index; the store owns the saves.
 	 * Achievements can be reordered, so their entries carry a `key` and are
-	 * matched by it. Technologies cannot, so index alignment is enough — the
-	 * order only ever changes through the add and remove below, which move both
-	 * sides together.
+	 * matched by it.
 	 */
 	let editAchievements = $state<AchievementItem[]>(
 		achievementStore.rows.map((row) => ({
@@ -115,8 +102,6 @@
 			tags: null
 		}))
 	);
-	let editTechnologies = $state<string[]>(techStore.rows.map((row) => row.data.name));
-	let lastAddedTechIndex = $state<number | null>(null);
 	let confirmingAchievement = $state<number | null>(null);
 
 	/**
@@ -243,19 +228,20 @@
 		achievementStore.update(row, { description: achievement });
 	}
 
+	/** The chips component owns its own store, so ticked technologies reach it by ref. */
+	let technologiesRef = $state<{ addTechnologies: (names: string[]) => void } | null>(null);
+
 	/**
-	 * Add the technology chips the user ticked.
-	 *
-	 * `add()` makes a local draft and `update()` is what actually creates it —
-	 * a blank draft is deliberately not written (see section-rows), so the name
-	 * has to go through update rather than being handed to add.
+	 * What the repo scan and the suggestions should not offer again. Read from
+	 * the layout's load, which `refresh` re-runs after every write, as on a role
+	 * project's page.
 	 */
+	const currentTechnologies = $derived(
+		(data.project.side_project_technologies ?? []).map((t) => t.name ?? '').filter(Boolean)
+	);
+
 	function applyRepoTechnologies(names: string[]) {
-		for (const name of names) {
-			const row = techStore.add();
-			editTechnologies = [...editTechnologies, name];
-			techStore.update(row, { name });
-		}
+		technologiesRef?.addTechnologies(names);
 	}
 
 	function applyRepoMetadata(values: Partial<Record<string, string>>) {
@@ -327,36 +313,6 @@
 			);
 		} catch (e) {
 			childError = e instanceof Error ? e.message : 'Could not save that order';
-		}
-	}
-
-	// Technologies have no reorder, so the editor's index and the store's row
-	// index stay aligned: only these two functions change the length, and they
-	// change both sides at once.
-	function addTechnology() {
-		techStore.add();
-		editTechnologies = [...editTechnologies, ''];
-		lastAddedTechIndex = editTechnologies.length - 1;
-	}
-
-	function changeTechnology(index: number, value: string) {
-		const row = techStore.rows[index];
-		if (row) techStore.update(row, { name: value });
-	}
-
-	function flushTechnology(index: number) {
-		techStore.rows[index]?.field.flush();
-	}
-
-	/** A chip is one word; deleting it costs a retype, so it does not ask. */
-	async function removeTechnology(index: number) {
-		const row = techStore.rows[index];
-		try {
-			if (row) await techStore.remove(row);
-			editTechnologies = editTechnologies.filter((_, i) => i !== index);
-			if (lastAddedTechIndex === index) lastAddedTechIndex = null;
-		} catch (e) {
-			childError = e instanceof Error ? e.message : 'Could not delete that technology';
 		}
 	}
 </script>
@@ -465,7 +421,7 @@
 				start_date: editStartDate,
 				end_date: editEndDate
 			}}
-			currentTechnologies={editTechnologies}
+			{currentTechnologies}
 			onApply={applyRepoMetadata}
 			onApplyTechnologies={applyRepoTechnologies}
 			onSetRepoUrl={(v) => (editRepoUrl = v)}
@@ -474,7 +430,7 @@
 			kind="side_project"
 			projectId={project.id}
 			currentSummary={editSummary}
-			currentTechnologies={editTechnologies}
+			{currentTechnologies}
 			onApplySummary={(v) => (editSummary = v)}
 			onApplyTechnologies={applyRepoTechnologies}
 			onApplyAchievement={applyDraftedAchievement}
@@ -486,19 +442,15 @@
 
 	<!-- Technologies -->
 	<Card padding="lg">
-		<div class="mb-4 flex items-center gap-3">
-			<h2 class="text-lg font-semibold text-[var(--dash-text)]">Technologies</h2>
-			<AutoSaveIndicator field={techStore.summary} idleLabel="Saves as you type" />
-		</div>
-
-		<TechnologyTagsEditor
-			bind:technologies={editTechnologies}
-			lastAddedIndex={lastAddedTechIndex}
-			onAdd={addTechnology}
-			onRemove={removeTechnology}
-			onItemChange={changeTechnology}
-			onItemBlur={flushTechnology}
-			onFocused={() => (lastAddedTechIndex = null)}
+		<TechnologyChips
+			bind:this={technologiesRef}
+			resource="side_project_technology"
+			parentKey="side_project_id"
+			parentId={project.id}
+			profileId={data.profileId}
+			initial={loaded.project.side_project_technologies}
+			templates={SITE_TEMPLATE_TAGS}
+			onChanged={refresh}
 		/>
 	</Card>
 

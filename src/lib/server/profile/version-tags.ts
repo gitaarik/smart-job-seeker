@@ -75,6 +75,22 @@ const TAGGED_TABLES: {
 		label: sql`name`,
 		scope: (p) =>
 			sql`work_experience_id IN (SELECT id FROM work_experiences WHERE profile_id = ${p})`
+	},
+	{
+		table: 'work_experience_project_technologies',
+		kind: 'Project technology',
+		label: sql`name`,
+		scope: (p) =>
+			sql`work_experience_project_id IN (
+			      SELECT id FROM work_experience_projects
+			       WHERE work_experience_id IN (SELECT id FROM work_experiences WHERE profile_id = ${p})
+			    )`
+	},
+	{
+		table: 'side_project_technologies',
+		kind: 'Side project technology',
+		label: sql`name`,
+		scope: (p) => sql`side_project_id IN (SELECT id FROM side_projects WHERE profile_id = ${p})`
 	}
 ];
 

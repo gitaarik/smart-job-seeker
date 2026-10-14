@@ -482,16 +482,20 @@ export interface ProfileResource {
  *  - **Role technologies** have `tags`, are filtered in `StructuredResume`, and
  *    are not printed by `ProfileDisplay` at all — nothing to filter is not the
  *    same failure as printing them unfiltered, so they hide too.
- *  - **Role projects, project technologies and the side-project pair** have no
- *    `tags` column. Projects additionally render on no document — they feed the
+ *  - **Role projects and side-project achievements** have no `tags` column.
+ *    Role projects additionally render on no document — they feed the
  *    generation context, not the layout — so there is nothing a hide could take
  *    them off of.
+ *  - **Project technologies and side-project technologies** carry `tags`
+ *    (migration 0078), but only the public site lists them. A hide writes the
+ *    document pair, which would leave them exactly where they were, so they
+ *    stay out; the site switch on their chips is how they come off the site.
  *
- * The public portfolio at /p/[slug]/portfolio prints roles, achievements and
- * technologies with no filter at all, which is true of the five original
- * sections as well. It is a portfolio page rather than a document, and this list
- * is about documents; the hide contract says "every CV and every export" and
- * means it.
+ * The public portfolio at /p/[slug]/portfolio reads the same tags, with
+ * `portfolio` as its base template, so the site has a switch of its own beside
+ * the resume and the CV. It is a portfolio page rather than a document, and this
+ * list is about documents; the hide contract says "every CV and every export"
+ * and means it.
  *
  * Skills and their categories are filtered on both sides — `ProfileDisplay`
  * filters the groups and then the skills inside each, and `StructuredResume`
@@ -807,7 +811,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 			work_experience_project: {
 				kind: 'string',
 				note: 'the project it was used on, named exactly as one of the projects listed below'
-			}
+			},
+			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS }
 		},
 		required: ['name', 'work_experience_project'],
 		insertDefaults: {},
@@ -967,7 +972,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 			side_project: {
 				kind: 'string',
 				note: 'the project it was used on, named exactly as one of the projects listed below'
-			}
+			},
+			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS }
 		},
 		required: ['name', 'side_project'],
 		insertDefaults: {},

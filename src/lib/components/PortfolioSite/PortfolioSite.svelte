@@ -11,8 +11,10 @@
 	 * `createProfileFilter`. An item hidden from documents by the `!resume`/
 	 * `!cv` pair is NOT automatically hidden here: those tags name base
 	 * document types, and a portfolio is a third one. What hides an item from
-	 * the site is the version the site publishes, which is the applicant's own
-	 * choice of what this audience sees.
+	 * the site is its own Site switch (`!portfolio`) or the version the site
+	 * publishes, which is the applicant's own choice of what this audience sees.
+	 * A project's technologies print here and nowhere else, so for them the
+	 * switch is the whole of it.
 	 *
 	 * A section the profile cannot fill renders nothing at all rather than an
 	 * empty heading, which is what lets a theme list a section the data has not
@@ -191,6 +193,7 @@
 					</ul>
 				{:else if section === 'work'}
 					{#each work as role (role.id)}
+						{@const technologies = show(role.work_experience_technologies, 'technology')}
 						<article class="entry">
 							<h3>
 								{role.position}{#if role.name}
@@ -208,9 +211,9 @@
 									{/each}
 								</ul>
 							{/if}
-							{#if role.work_experience_technologies?.length}
+							{#if technologies.length}
 								<ul class="tags">
-									{#each show(role.work_experience_technologies, 'technology') as t (t.id)}
+									{#each technologies as t (t.id)}
 										<li>{t.name}</li>
 									{/each}
 								</ul>
@@ -219,6 +222,9 @@
 					{/each}
 				{:else if section === 'projects'}
 					{#each roleProjects as p (p.id)}
+						{@const technologies = show(p.work_experience_project_technologies)}
+						<!-- A project's technologies print here and on no document, so
+						     the site is the one place their tags are read. -->
 						<article class="entry">
 							<h3>
 								{#if p.url}<a href={p.url} rel="noopener">{p.name}</a>{:else}{p.name}{/if}
@@ -226,9 +232,9 @@
 							{#if p.company}<p class="meta">{p.company}</p>{/if}
 							{#if p.description}<p class="prose">{p.description}</p>{/if}
 							{#if p.outcome}<p class="prose outcome">{p.outcome}</p>{/if}
-							{#if p.work_experience_project_technologies?.length}
+							{#if technologies.length}
 								<ul class="tags">
-									{#each p.work_experience_project_technologies as t (t.id)}
+									{#each technologies as t (t.id)}
 										<li>{t.name}</li>
 									{/each}
 								</ul>
@@ -237,6 +243,7 @@
 					{/each}
 				{:else if section === 'sideProjects'}
 					{#each sideProjects as p (p.id)}
+						{@const technologies = show(p.side_project_technologies)}
 						<article class="entry">
 							<h3>
 								{#if p.url}<a href={p.url} rel="noopener">{p.name}</a>{:else}{p.name}{/if}
@@ -253,9 +260,9 @@
 									{/each}
 								</ul>
 							{/if}
-							{#if p.side_project_technologies?.length}
+							{#if technologies.length}
 								<ul class="tags">
-									{#each p.side_project_technologies as t (t.id)}
+									{#each technologies as t (t.id)}
 										<li>{t.name}</li>
 									{/each}
 								</ul>

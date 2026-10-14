@@ -3,17 +3,27 @@
 	 * The Resume / CV / Site switches: which base templates one profile item
 	 * appears on.
 	 *
-	 * Shared by the skill editor and a role's technology chips, so the two ask
+	 * Shared by the skill editor and every list of technology chips, so they ask
 	 * the same question in the same words. A switch reports the flip and the
 	 * caller writes it, through `setShownOn`, because only the caller knows
 	 * whether that write is a PATCH now or part of a create later.
+	 *
+	 * A list the documents never print gets no switch for them: a project's
+	 * technologies appear on the site alone, and a Resume switch beside them
+	 * would move nothing. The line under the switches says which are missing.
 	 *
 	 * Matching always uses every item whatever these say; they only decide what
 	 * it is shown on.
 	 */
 	import AutoSaveIndicator from './AutoSaveIndicator.svelte';
 	import type { SaveStatus } from './auto-save.svelte';
-	import { BASE_TEMPLATES, shownOnTemplate, shownTemplates } from '$lib/profile-visibility';
+	import {
+		BASE_TEMPLATE_TAGS,
+		BASE_TEMPLATES,
+		shownOnTemplate,
+		shownTemplates,
+		templateNames
+	} from '$lib/profile-visibility';
 
 	interface Props {
 		/** The item's tags as stored, version tags and all. */
@@ -24,14 +34,26 @@
 		 * switches carry its status pill and say they do not wait for a Save.
 		 */
 		field?: SaveStatus;
+		/** The base templates that print the item's list; only these get a switch. */
+		templates?: readonly string[];
 	}
 
-	let { tags, ontoggle, field }: Props = $props();
+	let { tags, ontoggle, field, templates = BASE_TEMPLATE_TAGS }: Props = $props();
+
+	let offered = $derived(BASE_TEMPLATES.filter((t) => templates.includes(t.tag)));
+	let missing = $derived(BASE_TEMPLATE_TAGS.filter((t) => !templates.includes(t)));
+	let missingNote = $derived.by(() => {
+		if (missing.length === 0) return '';
+		const names = templateNames(missing, 'and');
+		const verb = missing.length === 1 ? "doesn't" : "don't";
+		return `${names.charAt(0).toUpperCase()}${names.slice(1)} ${verb} list these.`;
+	});
+	let shownSomewhere = $derived(shownTemplates(tags).some((t) => templates.includes(t)));
 </script>
 
 <div>
 	<span class="text-[10px] tracking-wide text-[var(--dash-text-muted)] uppercase"> Show on </span>
-	{#each BASE_TEMPLATES as template (template.tag)}
+	{#each offered as template (template.tag)}
 		{@const shown = shownOnTemplate(tags, template.tag)}
 		<button
 			type="button"
@@ -75,7 +97,8 @@
 		a Save button reads as "this needs it".
 	-->
 	<p class="mt-1 text-[10px] leading-snug text-[var(--dash-text-muted)]">
-		{#if shownTemplates(tags).length === 0}
+		{missingNote}
+		{#if !shownSomewhere}
 			Nowhere: counts for job matching and appears on nothing you send or publish.
 		{:else}
 			Counts for job matching either way.

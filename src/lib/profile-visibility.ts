@@ -34,9 +34,9 @@
  * to show.
  */
 export const BASE_TEMPLATES = [
-	{ tag: 'resume', surface: 'document', label: 'Resume' },
-	{ tag: 'cv', surface: 'document', label: 'CV' },
-	{ tag: 'portfolio', surface: 'site', label: 'Site' }
+	{ tag: 'resume', surface: 'document', label: 'Resume', noun: 'the resume' },
+	{ tag: 'cv', surface: 'document', label: 'CV', noun: 'the CV' },
+	{ tag: 'portfolio', surface: 'site', label: 'Site', noun: 'the site' }
 ] as const;
 
 /** Tags naming a base template rather than a user-defined version. */
@@ -55,6 +55,22 @@ export const BASE_TEMPLATE_TAGS: string[] = BASE_TEMPLATES.map((t) => t.tag);
 export const DOCUMENT_TEMPLATE_TAGS: string[] = BASE_TEMPLATES.filter(
 	(t) => t.surface === 'document'
 ).map((t) => t.tag);
+
+/**
+ * The base templates that are published rather than sent: the public site.
+ * Also the whole of what prints a project's technologies, which no document
+ * lists, so their editors offer this switch alone.
+ */
+export const SITE_TEMPLATE_TAGS: string[] = BASE_TEMPLATES.filter((t) => t.surface === 'site').map(
+	(t) => t.tag
+);
+
+/** Base templates named in a sentence: "the resume or the site". */
+export function templateNames(tags: readonly string[], conjunction: 'and' | 'or'): string {
+	const nouns = tags.map((tag) => BASE_TEMPLATES.find((t) => t.tag === tag)?.noun ?? tag);
+	if (nouns.length <= 2) return nouns.join(` ${conjunction} `);
+	return `${nouns.slice(0, -1).join(', ')} ${conjunction} ${nouns[nouns.length - 1]}`;
+}
 
 /**
  * Field marking a held-back skill inside the `collected_data` AI snapshot.
@@ -152,6 +168,29 @@ export function shownOnTemplate(tags: string[] | null | undefined, type: string)
 /** The base templates this item currently appears on. */
 export function shownTemplates(tags: string[] | null | undefined): string[] {
 	return BASE_TEMPLATE_TAGS.filter((t) => shownOnTemplate(tags, t));
+}
+
+/**
+ * Where an item stands among the base templates that print its list.
+ *
+ * Not every list reaches all three: a project's technologies print on the site
+ * and on no document. `hidden` is what the item is held back from, of those.
+ * `off` is whether it reaches none that matter. Where the documents print the
+ * list that is the profile-only pair, whatever the site does, because "on my
+ * site, off my CV" is still off everything sent; where only the site prints
+ * it, off the site is off everything.
+ */
+export function visibilityAmong(
+	tags: string[] | null | undefined,
+	templates: readonly string[] = BASE_TEMPLATE_TAGS
+): { hidden: string[]; off: boolean } {
+	const shown = shownTemplates(tags);
+	const hidden = templates.filter((t) => !shown.includes(t));
+	const printsDocuments = DOCUMENT_TEMPLATE_TAGS.every((t) => templates.includes(t));
+	return {
+		hidden,
+		off: printsDocuments ? isHiddenFromDocuments(tags) : hidden.length === templates.length
+	};
 }
 
 /**

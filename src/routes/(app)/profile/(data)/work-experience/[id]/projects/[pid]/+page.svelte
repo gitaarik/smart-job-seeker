@@ -23,8 +23,9 @@
 	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
+	import { SITE_TEMPLATE_TAGS } from '$lib/profile-visibility';
 	import Card from '../../../../../../components/Card.svelte';
-	import ProjectTechnologies from '../../../../../components/ProjectTechnologies.svelte';
+	import TechnologyChips from '../../../../../components/TechnologyChips.svelte';
 	import ProjectSourcesPointer from '../../../../../components/ProjectSourcesPointer.svelte';
 	import {
 		blankProject,
@@ -253,11 +254,14 @@
 	</Card>
 
 	<Card padding="lg">
-		<ProjectTechnologies
+		<TechnologyChips
 			bind:this={technologiesRef}
-			projectId={data.project.id}
+			resource="work_experience_project_technology"
+			parentKey="work_experience_project_id"
+			parentId={data.project.id}
 			profileId={data.profileId}
 			initial={technologies}
+			templates={SITE_TEMPLATE_TAGS}
 			onChanged={refresh}
 		/>
 	</Card>

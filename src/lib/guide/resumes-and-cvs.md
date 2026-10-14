@@ -45,6 +45,10 @@ within a role, side projects, education, certificates, skill categories, skills
 and technologies. That granularity is the point — trimming a resume is usually
 about dropping three bullets, not a whole job.
 
+A project's technologies, on a role's project or a side project, appear only on
+your public site, never on a resume or CV, so their chips have a **Site** switch
+and no other.
+
 `resume` and `cv` are available as targets alongside your own versions, so
 "never print this on a resume, only on the longer CV" is a rule you can state
 directly.

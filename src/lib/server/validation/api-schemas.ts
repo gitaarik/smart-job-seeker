@@ -436,7 +436,8 @@ export const workExperienceTechnologyBasicSchema = z.object({
 
 export const workExperienceProjectTechnologyBasicSchema = z.object({
 	name: requiredTrimmedString('Technology name').optional(),
-	work_experience_project: requiredTrimmedString('Project').optional()
+	work_experience_project: requiredTrimmedString('Project').optional(),
+	tags: z.array(z.string()).optional().nullable()
 });
 
 export const sideProjectAchievementBasicSchema = z.object({
@@ -446,7 +447,8 @@ export const sideProjectAchievementBasicSchema = z.object({
 
 export const sideProjectTechnologyBasicSchema = z.object({
 	name: requiredTrimmedString('Technology name').optional(),
-	side_project: requiredTrimmedString('Side project').optional()
+	side_project: requiredTrimmedString('Side project').optional(),
+	tags: z.array(z.string()).optional().nullable()
 });
 
 // Side project update
