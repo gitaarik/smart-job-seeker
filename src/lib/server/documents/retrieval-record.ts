@@ -102,6 +102,26 @@ export interface RetrievalItem {
 }
 
 /** What one generation retrieved. Stored on `ai_chats.retrieval`. */
+/**
+ * One read the assistant's agent made on a turn (planning/ASSISTANT-AGENT.md
+ * § Records and tracing), on the turn's first row: which tool, with what,
+ * how much came back and whether it was a slice with more to read, how long
+ * it took, in which round, and whether the tool answered or refused.
+ */
+export interface ReadRecord {
+	tool: string;
+	args: Record<string, unknown>;
+	/** The result's size before any cut. */
+	chars: number;
+	/** Where a sliced read ended, when it said there was more. */
+	offsetEnd?: number;
+	ms: number;
+	round: number;
+	ok: boolean;
+	/** Answered from the turn's memo: the same call was made before. */
+	fromMemo?: boolean;
+}
+
 export interface RetrievalRecord {
 	/**
 	 * ContextSource names. Strings rather than the union so this module stays
@@ -126,6 +146,8 @@ export interface RetrievalRecord {
 	query?: { text: string; skills?: string[] };
 	/** Every item the ranked sources cited, best-first within each source. */
 	items: RetrievalItem[];
+	/** The agent's reads this turn, when it made any. */
+	reads?: ReadRecord[];
 }
 
 /**

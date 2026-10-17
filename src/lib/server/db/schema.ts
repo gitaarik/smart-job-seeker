@@ -3205,6 +3205,14 @@ export const ai_chats = pgTable(
 		 */
 		capabilities: json(),
 		followup_to: integer(),
+		/**
+		 * The first call of a turn that made several (ai-chat/agent): this row
+		 * is one of its later rounds. Null on the first row and on every
+		 * single-call generation, so `parent_id IS NULL` counts turns and the
+		 * rest counts the extra calls per turn (planning/ASSISTANT-AGENT.md
+		 * § Records and tracing). Each row prices its own call.
+		 */
+		parent_id: integer(),
 		error: text(),
 		/**
 		 * The key in prompt-templates.ts this call rendered, and
@@ -3273,12 +3281,18 @@ export const ai_chats = pgTable(
 	(table) => [
 		index('ai_chats_profile_id_idx').on(table.profile_id),
 		index('ai_chats_followup_to_idx').on(table.followup_to),
+		index('ai_chats_parent_id_idx').on(table.parent_id),
 		index('ai_chats_request_type_idx').on(table.request_type),
 		index('ai_chats_date_created_idx').on(table.date_created),
 		foreignKey({
 			columns: [table.followup_to],
 			foreignColumns: [table.id],
 			name: 'ai_chats_followup_to_foreign'
+		}).onDelete('set null'),
+		foreignKey({
+			columns: [table.parent_id],
+			foreignColumns: [table.id],
+			name: 'ai_chats_parent_id_foreign'
 		}).onDelete('set null'),
 		foreignKey({
 			columns: [table.profile_id],

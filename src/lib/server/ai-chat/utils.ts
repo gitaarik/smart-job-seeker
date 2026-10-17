@@ -9,7 +9,9 @@ import { config } from '$lib/server/config';
 import { errorTracker } from '$lib/server/monitoring/error-tracker';
 import {
 	type ChatMessage,
+	type CompletionResult,
 	extractionFallback,
+	type FallbackTarget,
 	generateChatCompletionTracked,
 	isFatalLLMError,
 	isLLMOutputValidationMessage,
@@ -63,6 +65,7 @@ import { promptValues, renderPrompt, unfilledVariables } from './render-prompt';
 const WRITING_PROMPT_KEYS = new Set<string>([
 	'personal_agent_chat',
 	'personal_agent_chat_capable',
+	'personal_agent_chat_agent',
 	'write_cover_letter',
 	'write_or_advise_cover_letter',
 	'advise_cover_letter',
@@ -167,6 +170,23 @@ ${trimmed}`;
  * separate messages, not as this concatenation, so the headers exist to make
  * the message boundaries legible when reading a stored prompt back.
  */
+/**
+ * One prior message of the full prompt. An assistant message that called
+ * tools shows the calls beside whatever text it wrote, and a tool message is
+ * headed by the tool that answered, so a round of the agent's loop reads on
+ * the row as the model saw it.
+ */
+function renderHistoryMessage(m: ChatMessage): string {
+	if (m.role === 'assistant' && m.toolCalls?.length) {
+		const calls = m.toolCalls.map((c) => `${c.name}(${JSON.stringify(c.args)})`).join('\n');
+		return `## ASSISTANT:\n\n${m.content ? `${m.content}\n\n` : ''}[calls]\n${calls}`;
+	}
+	if (m.role === 'tool') {
+		return `## TOOL (${m.name}${m.isError ? ', refused' : ''}):\n\n${m.content}`;
+	}
+	return `## ${m.role.toUpperCase()}:\n\n${m.content}`;
+}
+
 export function makeFullPrompt(
 	systemPrompt: string,
 	userPrompt: string,
@@ -182,7 +202,7 @@ export function makeFullPrompt(
 
 ----------------
 
-${historyMessages.map((m) => `## ${m.role.toUpperCase()}:\n\n${m.content}`).join('\n\n')}
+${historyMessages.map(renderHistoryMessage).join('\n\n')}
 `
 			: '';
 
@@ -414,88 +434,486 @@ function sessionForEntity(entity?: ContextEntity): string | undefined {
 		: `${entity.type}:${entity.id}`;
 }
 
+/**
+ * A generation's prompt, assembled and rendered: everything
+ * createAndGenerateAiChat works out before it calls the model, for a caller
+ * that makes the calls itself (ai-chat/agent/turn.ts, which makes several per
+ * turn and records each with `recordCall`).
+ */
+export interface AssembledGeneration {
+	ok: true;
+	promptKey: string;
+	template: NonNullable<ReturnType<typeof fetchPromptTemplate>>;
+	/** Both prompts with their placeholders filled. */
+	systemPrompt: string;
+	userPrompt: string;
+	/** The raw variables, as the row's `context` column keeps them. */
+	context: Record<string, unknown>;
+	retrieval: RetrievalRecord | null;
+	anonymity: Awaited<ReturnType<typeof writingAnonymity>>;
+	isWritingPrompt: boolean;
+	/** The provider and model the prompt is routed to (promptRoute). */
+	route: { provider: string; model: string };
+	fallback: FallbackTarget | undefined;
+}
+
+export async function assembleGeneration(
+	profileId: number,
+	promptKey: string,
+	customVariables?: Record<string, unknown>,
+	options?: Pick<
+		GenerationOptions,
+		'profileDataFields' | 'profileDataExclude' | 'context' | 'placeholderDefaults'
+	>
+): Promise<AssembledGeneration | { ok: false; message: string }> {
+	// Step 1: Get prompt template from code
+	const promptTemplate = fetchPromptTemplate(promptKey);
+
+	if (!promptTemplate) {
+		return {
+			ok: false,
+			message: `AI prompt template not found for key: '${promptKey}'. Please ensure it exists in prompt-templates.ts.`
+		};
+	}
+
+	// Step 2/3: Fetch and field-filter the collected_data blob. Shared with the
+	// context provider's `profile` source, which renders this same object.
+	const profileDataFields = options?.context?.profileFields ?? options?.profileDataFields;
+	// Writing prompts speak for the applicant, so they don't get skills kept
+	// off documents. Everything else — scoring above all — needs the whole
+	// profile, or it reports a skill the applicant just added as a gap.
+	const profileBlob = await loadProfileData(profileId, profileDataFields, {
+		documentSafe: WRITING_PROMPT_KEYS.has(promptKey),
+		exclude: options?.profileDataExclude
+	});
+	// An application whose employer reads it without names
+	// (applications.anonymous): what is written for that employer is written
+	// from a profile without who the applicant is, and both it and the chat
+	// are told so, the chat because it drafts those texts too. Before the
+	// context is assembled, whose `profile` source renders this same blob.
+	const anonymity = await writingAnonymity(profileId, promptKey, options?.context?.entity);
+	if (anonymity?.strip) {
+		profileBlob.data = anonymiseProfileData(profileBlob.data, anonymity.identity);
+	}
+	const schemaJson = profileBlob.schema;
+	const dataJson = profileBlob.data;
+
+	// Step 3b: Assemble the declared evidence. Every requested source gets a
+	// key (empty string when it found nothing), so a template referencing a
+	// placeholder never ships a literal `${…}` to the model.
+	let assembled: Record<string, string> = {};
+	// What retrieval picked, kept aside for the row. It is stored separately
+	// from `context` (which carries the same evidence as rendered prose) so it
+	// survives the retention pass that nulls the bulky prompt columns — the
+	// questions it answers are asked long after the generation.
+	let retrieval: RetrievalRecord | null = null;
+	if (options?.context) {
+		const request = options.context;
+		const ctx = await traceStep(
+			'retrieve_context',
+			'retriever',
+			() =>
+				assembleGenerationContext({
+					...request,
+					profileId,
+					profileFields: profileDataFields,
+					// Already loaded above for ${schema} — don't pay for it twice.
+					preloadedProfile: profileBlob
+				}),
+			// The record the row keeps, not the rendered blocks: those are in the
+			// prompt, which the generation under this trace already holds.
+			(result) => ({
+				input: { sources: request.sources, entity: request.entity, query: request.query },
+				output: result.retrieval
+			})
+		);
+		assembled = ctx.variables;
+		retrieval = ctx.retrieval;
+	}
+
+	// Step 4: Prepare context (raw variables as JSON objects)
+	const context = {
+		schema: schemaJson,
+		data: dataJson,
+		...(options?.placeholderDefaults || {}),
+		...assembled,
+		...(customVariables || {})
+	} as Record<string, unknown>;
+
+	// Step 5: Prepare variables for interpolation (stringified for prompts).
+	// Layered lowest-to-highest: placeholder fallbacks, then the base blob,
+	// then assembled evidence (the `profile` source renders `data` under the
+	// budget), then explicit customVariables, which are the override. A
+	// customVariable that is undefined or null overrides nothing: promptValues
+	// leaves it out rather than sending the model "undefined" or "null".
+	const interpolationVariables: Record<string, string> = {
+		...(options?.placeholderDefaults || {}),
+		schema: JSON.stringify(schemaJson, null, 2),
+		data: renderProfileData(dataJson),
+		...assembled,
+		...promptValues(customVariables ?? {})
+	};
+	// After the layering, so it follows whichever profile block won it.
+	if (anonymity && interpolationVariables.data) {
+		interpolationVariables.data += `\n\n${ANONYMOUS_WRITING_NOTE}`;
+	}
+
+	// Step 5b: Every placeholder the template uses must have a value by now,
+	// even if it is only the "" a placeholderDefaults entry gives it. The
+	// renderer would refuse a gap on its own, but it names only the first
+	// one and not the prompt, so the whole list is worked out here.
+	// Outside production a gap fails the call, so the caller is fixed while
+	// someone is looking at it. In production the answer is still worth
+	// having, so the gap is reported and rendered as "".
+	const unfilled = [
+		...new Set([
+			...unfilledVariables(promptTemplate.system_prompt, interpolationVariables),
+			...unfilledVariables(promptTemplate.user_prompt, interpolationVariables)
+		])
+	];
+	if (unfilled.length > 0) {
+		// Say which ones the caller did pass, as undefined or null: the fix for
+		// those is wherever the value came from, not the call.
+		const described = unfilled.map((name) => {
+			const passed = customVariables?.[name];
+			return customVariables && name in customVariables && passed == null
+				? `${name} (passed as ${passed})`
+				: name;
+		});
+		const problem = new Error(
+			`Prompt '${promptKey}' has no value for: ${described.join(', ')}. ` +
+				`Supply it from the caller, or pass "" through placeholderDefaults.`
+		);
+		if (!config.isProduction) throw problem;
+		errorTracker.logError('Unfilled prompt placeholders', problem, {
+			operation: 'createAndGenerateAiChat',
+			metadata: { promptKey, unfilled }
+		});
+	}
+
+	// Step 6: Fill both prompts with the stringified variables (render-prompt.ts)
+	const interpolatedSystemPrompt = renderPrompt(
+		promptTemplate.system_prompt,
+		interpolationVariables,
+		{ blankMissing: config.isProduction }
+	);
+	const interpolatedUserPrompt = renderPrompt(promptTemplate.user_prompt, interpolationVariables, {
+		blankMissing: config.isProduction
+	});
+
+	// Resolve provider/model by prompt (promptRoute). Used for the record stamp,
+	// generation, and cost accounting alike.
+	const isWritingPrompt = WRITING_PROMPT_KEYS.has(promptKey);
+	const { provider: activeProvider, model: activeModel } = promptRoute(promptKey);
+	// Failover target by class: writing gets the writing pair, the extractive
+	// prompts get the extraction pair (off by default), and everything left —
+	// the judgements — gets none. See llm/fallback.ts for why the two classes
+	// want different providers, and EXTRACTION_FALLBACK_PROMPT_KEYS above for
+	// why that last group is a silence rather than an omission.
+	const fallback = isWritingPrompt
+		? writingFallback()
+		: EXTRACTION_FALLBACK_PROMPT_KEYS.has(promptKey)
+			? extractionFallback()
+			: undefined;
+
+	return {
+		ok: true,
+		promptKey,
+		template: promptTemplate,
+		systemPrompt: interpolatedSystemPrompt,
+		userPrompt: interpolatedUserPrompt,
+		context,
+		retrieval,
+		anonymity,
+		isWritingPrompt,
+		route: { provider: activeProvider, model: activeModel },
+		fallback
+	};
+}
+
+/** A structured answer as the row keeps it: re-serialised when it parses, as it came otherwise. */
+function normaliseJson(content: string): string {
+	try {
+		return JSON.stringify(JSON.parse(content));
+	} catch {
+		return content;
+	}
+}
+
+export interface RecordCallOptions {
+	profileId: number;
+	assembled: AssembledGeneration;
+	/**
+	 * The row's id, reserved with reserveAiChatId by a caller that opened its
+	 * trace from it (aiChatTraceSeed). Reserved here otherwise.
+	 */
+	aiChatId?: number;
+	/**
+	 * The first row of a turn that makes several calls (ai-chat/agent): this
+	 * row is one of its later rounds, and counts under it.
+	 */
+	parentId?: number | null;
+	followupTo?: number;
+	capabilityRecord?: CapabilityRecord | null;
+	/** The row's `context` and `retrieval`; the assembly's unless said otherwise. */
+	context?: Record<string, unknown> | null;
+	retrieval?: RetrievalRecord | null;
+	/** Prior messages as the call sends them, for the row's full prompt. */
+	historyMessages?: ChatMessage[];
+	/** The call itself, made with whatever the caller binds: a schema, tools. */
+	call: () => Promise<CompletionResult>;
+	/** What of the answer the row keeps; the content as it came unless said otherwise. */
+	storeResponse?: (content: string) => string;
+}
+
+export interface RecordedCall {
+	aiChatId: number;
+	result: CompletionResult;
+	durationMs: number;
+}
+
+/**
+ * One model call as one `ai_chats` row (planning/LANGFUSE.md § The LLM call;
+ * planning/ASSISTANT-AGENT.md § Records and tracing): the row stamped before
+ * the call with the template, the context, the retrieval record and the
+ * provider asked, and after it with the answer, the usage, the provider that
+ * answered, the time and the credits, which are charged to the profile's
+ * owner. A call that fails leaves its error and what it cost on the row, and
+ * the error is rethrown for the caller to classify.
+ *
+ * createAndGenerateAiChat makes one of these per generation; the assistant's
+ * agent makes one per round of its loop, the later rounds under the first.
+ */
+export async function recordCall(opts: RecordCallOptions): Promise<RecordedCall> {
+	const { profileId, assembled } = opts;
+	const { promptKey, template: promptTemplate } = assembled;
+	const { provider: activeProvider, model: activeModel } = assembled.route;
+	// The row's id comes first, so everything below belongs to a known row
+	// (planning/LANGFUSE.md, change 6).
+	const reservedAiChatId = opts.aiChatId ?? (await reserveAiChatId());
+
+	// The record with template prompts (not interpolated)
+	const [aiChat] = await db
+		.insert(ai_chats)
+		.values({
+			id: reservedAiChatId,
+			profile_id: profileId,
+			system_prompt: promptTemplate.system_prompt,
+			user_prompt: promptTemplate.user_prompt,
+			context: JSON.parse(
+				JSON.stringify(opts.context === undefined ? assembled.context : opts.context)
+			),
+			retrieval: opts.retrieval === undefined ? assembled.retrieval : opts.retrieval,
+			capabilities: opts.capabilityRecord ?? null,
+			followup_to: opts.followupTo,
+			parent_id: opts.parentId ?? null,
+			prompt_key: promptKey,
+			prompt_fingerprint: promptFingerprint(promptTemplate),
+			date_created: new Date(),
+			provider: activeProvider,
+			model: activeModel,
+			request_type: 'llm',
+			trace_id: recordedTraceId()
+		})
+		.returning();
+
+	// The full prompt (interpolated combination), as the model sees it
+	const historyMessages = opts.historyMessages ?? [];
+	const fullPrompt = makeFullPrompt(assembled.systemPrompt, assembled.userPrompt, historyMessages);
+	await db.update(ai_chats).set({ full_prompt: fullPrompt }).where(eq(ai_chats.id, aiChat.id));
+
+	const callStarted = performance.now();
+	let completionResult: CompletionResult;
+	try {
+		completionResult = await opts.call();
+	} catch (error) {
+		// The provider bills a failed call like a successful one, and the row is
+		// the one place left that can say what it cost.
+		const usage = (error as { usage?: TokenUsage } | null)?.usage;
+		await db
+			.update(ai_chats)
+			.set({
+				error: error instanceof Error ? error.message : 'Unknown error',
+				duration_ms: Math.round(performance.now() - callStarted),
+				...(usage
+					? {
+							input_tokens: usage.inputTokens,
+							output_tokens: usage.outputTokens,
+							total_tokens: usage.totalTokens,
+							cached_input_tokens: usage.cachedInputTokens,
+							reasoning_tokens: usage.reasoningTokens
+						}
+					: {})
+			})
+			.where(eq(ai_chats.id, aiChat.id));
+		console.error(
+			`      📋 Error details: ai_chat ID ${aiChat.id}: ${error instanceof Error ? error.message : String(error)}`
+		);
+		throw error;
+	}
+	const durationMs = Math.round(performance.now() - callStarted);
+
+	// The answer and what it cost
+	const responseToSave = opts.storeResponse
+		? opts.storeResponse(completionResult.content)
+		: completionResult.content;
+	const usage = completionResult.usage;
+	const creditsCost = usage ? tokensToCost(usage.totalTokens) : 0;
+
+	/**
+	 * What actually generated this, which is not always what the row was
+	 * stamped with at insert time: the stamp is written before the call, and a
+	 * writing call that failed over ran somewhere else.
+	 *
+	 * Re-stamping is not cosmetic. estimateProviderCostUsd prices by
+	 * "provider/model" and returns null on a key it doesn't know, so a row left
+	 * claiming the primary is a row priced against a model that never ran —
+	 * and /admin/costs groups by these two columns, so the error compounds
+	 * rather than showing up as one odd number.
+	 */
+	const ranOn = completionResult.fallbackUsed ?? {
+		provider: activeProvider,
+		model: activeModel
+	};
+
+	await db
+		.update(ai_chats)
+		.set({
+			response: responseToSave,
+			provider: ranOn.provider,
+			model: ranOn.model,
+			input_tokens: usage?.inputTokens ?? null,
+			output_tokens: usage?.outputTokens ?? null,
+			total_tokens: usage?.totalTokens ?? null,
+			cached_input_tokens: usage?.cachedInputTokens ?? null,
+			reasoning_tokens: usage?.reasoningTokens ?? null,
+			duration_ms: durationMs,
+			credits_charged: creditsCost || null,
+			observation_id: completionResult.observationId ?? null
+		})
+		.where(eq(ai_chats.id, aiChat.id));
+
+	// Charge credits if we have a user and usage
+	if (usage && creditsCost > 0) {
+		const profileForCredits = await db.query.profiles.findFirst({
+			where: eq(profiles.id, profileId),
+			columns: { user_id: true }
+		});
+		if (profileForCredits?.user_id) {
+			const { chargeCredits } = await import('$lib/server/billing/credits');
+			const providerCostUsd = estimateProviderCostUsd(
+				ranOn.provider,
+				ranOn.model,
+				usage.inputTokens,
+				usage.outputTokens,
+				usage.cachedInputTokens,
+				usage.reasoningTokens
+			);
+			await chargeCredits(
+				profileForCredits.user_id,
+				creditsCost,
+				'ai_generation',
+				`${promptKey} (${usage.totalTokens} tokens)`,
+				{
+					aiChatId: aiChat.id,
+					promptKey,
+					tokens: usage,
+					provider: ranOn.provider,
+					model: ranOn.model,
+					providerCostUsd
+				}
+			);
+		}
+	}
+
+	return { aiChatId: aiChat.id, result: completionResult, durationMs };
+}
+
+/** What a generation may be given besides its variables. See each field. */
+export interface GenerationOptions {
+	/** Top-level profile data keys to include. If omitted, all data is included. */
+	profileDataFields?: ExportedProfileKey[];
+	/**
+	 * Top-level profile data keys to REMOVE, applied after
+	 * `profileDataFields`. For a prompt that wants nearly the whole blob but
+	 * demonstrably not one or two parts of it, this is the safe direction to
+	 * express that: an allow-list silently starves the prompt the next time
+	 * the export grows a field. See NON_SKILL_FIELDS in profile-data.ts.
+	 */
+	profileDataExclude?: ExportedProfileKey[];
+	/**
+	 * Evidence to assemble for this generation — which sources, what it's
+	 * about, how big a budget. Assembled here and merged into the interpolation
+	 * variables, so a call site declares intent instead of hand-wiring
+	 * retrieval and then spreading the result. See generation-context.ts.
+	 *
+	 * `profileId` comes from the argument above; `profileFields` defaults to
+	 * `profileDataFields` so there is one profile field list, not two.
+	 * Explicit `customVariables` still win, as an escape hatch.
+	 */
+	context?: Omit<ContextRequest, 'profileId' | 'preloadedProfile'>;
+	/**
+	 * What the caller was allowed to propose on this turn, for the row.
+	 *
+	 * Passed in rather than assembled here, unlike the retrieval record: the
+	 * capability decision belongs to the agent chat and is made before the
+	 * prompt is built (it decides WHICH prompt is built — capable or plain).
+	 * This function only stores it. See ai-chat/capability-record.ts.
+	 */
+	capabilityRecord?: CapabilityRecord;
+	/**
+	 * Prior turns of this thread, replayed between the system prompt and the
+	 * new user message so the model sees an actual conversation rather than a
+	 * recap of one. Built by conversation-messages.ts from the version trail.
+	 */
+	historyMessages?: ChatMessage[];
+	/**
+	 * Schema override for prompts whose output shape isn't fixed at the prompt
+	 * key. The assistant's capability replies are the case this exists for:
+	 * which edits are proposable depends on the page and the user's rights, so
+	 * the schema is built per turn (see capabilities.buildProposalSchema)
+	 * rather than looked up in the static registry.
+	 */
+	responseSchema?: z.ZodType<unknown>;
+	/**
+	 * Fallbacks for placeholders a template references but this call may not
+	 * fill — spread BENEATH the assembled evidence, so they cover the gaps
+	 * without overwriting anything real.
+	 *
+	 * The distinction matters, and getting it wrong is silent. A caller whose
+	 * template references every context placeholder has to pre-fill them with
+	 * "" or the call fails outside production (an unsupplied one used to ship
+	 * to the model as the literal text "${jobDetails}"). Doing that through
+	 * `customVariables` looks equivalent
+	 * and is not: customVariables are the deliberate override and win over
+	 * assembled evidence, so the empties blank the very sources the call just
+	 * paid to assemble. That is exactly what happened to the personal
+	 * assistant — it requested job, records, documents, projects, stories and
+	 * past texts on every application page and then overwrote all six with ""
+	 * before the model saw them.
+	 */
+	placeholderDefaults?: Record<string, string>;
+	/**
+	 * The row's id, reserved with reserveAiChatId by a caller that opens its
+	 * trace before calling, so the trace can be seeded from it
+	 * (aiChatTraceSeed). Reserved here otherwise.
+	 */
+	aiChatId?: number;
+	/**
+	 * The trace's session, `application_letter:12`: the thing the generation
+	 * writes, which is narrower than the entity its context is about (the
+	 * letter, not its application), or the application of a caller that
+	 * assembles no context. The context's entity when absent.
+	 */
+	traceSession?: string;
+}
+
 async function generateAiChat(
 	profileId: number,
 	promptKey: string,
 	customVariables?: Record<string, unknown>,
 	followupTo?: number,
-	options?: {
-		/** Top-level profile data keys to include. If omitted, all data is included. */
-		profileDataFields?: ExportedProfileKey[];
-		/**
-		 * Top-level profile data keys to REMOVE, applied after
-		 * `profileDataFields`. For a prompt that wants nearly the whole blob but
-		 * demonstrably not one or two parts of it, this is the safe direction to
-		 * express that: an allow-list silently starves the prompt the next time
-		 * the export grows a field. See NON_SKILL_FIELDS in profile-data.ts.
-		 */
-		profileDataExclude?: ExportedProfileKey[];
-		/**
-		 * Evidence to assemble for this generation — which sources, what it's
-		 * about, how big a budget. Assembled here and merged into the interpolation
-		 * variables, so a call site declares intent instead of hand-wiring
-		 * retrieval and then spreading the result. See generation-context.ts.
-		 *
-		 * `profileId` comes from the argument above; `profileFields` defaults to
-		 * `profileDataFields` so there is one profile field list, not two.
-		 * Explicit `customVariables` still win, as an escape hatch.
-		 */
-		context?: Omit<ContextRequest, 'profileId' | 'preloadedProfile'>;
-		/**
-		 * What the caller was allowed to propose on this turn, for the row.
-		 *
-		 * Passed in rather than assembled here, unlike the retrieval record: the
-		 * capability decision belongs to the agent chat and is made before the
-		 * prompt is built (it decides WHICH prompt is built — capable or plain).
-		 * This function only stores it. See ai-chat/capability-record.ts.
-		 */
-		capabilityRecord?: CapabilityRecord;
-		/**
-		 * Prior turns of this thread, replayed between the system prompt and the
-		 * new user message so the model sees an actual conversation rather than a
-		 * recap of one. Built by conversation-messages.ts from the version trail.
-		 */
-		historyMessages?: ChatMessage[];
-		/**
-		 * Schema override for prompts whose output shape isn't fixed at the prompt
-		 * key. The assistant's capability replies are the case this exists for:
-		 * which edits are proposable depends on the page and the user's rights, so
-		 * the schema is built per turn (see capabilities.buildProposalSchema)
-		 * rather than looked up in the static registry.
-		 */
-		responseSchema?: z.ZodType<unknown>;
-		/**
-		 * Fallbacks for placeholders a template references but this call may not
-		 * fill — spread BENEATH the assembled evidence, so they cover the gaps
-		 * without overwriting anything real.
-		 *
-		 * The distinction matters, and getting it wrong is silent. A caller whose
-		 * template references every context placeholder has to pre-fill them with
-		 * "" or the call fails outside production (an unsupplied one used to ship
-		 * to the model as the literal text "${jobDetails}"). Doing that through
-		 * `customVariables` looks equivalent
-		 * and is not: customVariables are the deliberate override and win over
-		 * assembled evidence, so the empties blank the very sources the call just
-		 * paid to assemble. That is exactly what happened to the personal
-		 * assistant — it requested job, records, documents, projects, stories and
-		 * past texts on every application page and then overwrote all six with ""
-		 * before the model saw them.
-		 */
-		placeholderDefaults?: Record<string, string>;
-		/**
-		 * The row's id, reserved with reserveAiChatId by a caller that opens its
-		 * trace before calling, so the trace can be seeded from it
-		 * (aiChatTraceSeed). Reserved here otherwise.
-		 */
-		aiChatId?: number;
-		/**
-		 * The trace's session, `application_letter:12`: the thing the generation
-		 * writes, which is narrower than the entity its context is about (the
-		 * letter, not its application), or the application of a caller that
-		 * assembles no context. The context's entity when absent.
-		 */
-		traceSession?: string;
-	}
+	options?: GenerationOptions
 ): Promise<{
 	success: boolean;
 	message: string;
@@ -510,10 +928,10 @@ async function generateAiChat(
 		date_updated: Date | null;
 	};
 }> {
-	// Track aiChat ID so we can save errors to the record if creation succeeds but generation fails
+	// The row's id once the call has been recorded, so a failure after that
+	// (the re-read below) still lands on the record. A failure of the call
+	// itself is already on the row: recordCall writes it before rethrowing.
 	let aiChatId: number | undefined;
-	// Set when the model call starts, so a failed call records how long it took too.
-	let callStarted: number | undefined;
 
 	try {
 		// The row's id comes first, so everything below belongs to a known row
@@ -548,192 +966,17 @@ async function generateAiChat(
 			}
 		}
 
-		// Step 1: Get prompt template from code
-		const promptTemplate = fetchPromptTemplate(promptKey);
+		const assembled = await assembleGeneration(profileId, promptKey, customVariables, options);
+		if (!assembled.ok) return { success: false, message: assembled.message };
+		const {
+			template: promptTemplate,
+			systemPrompt: interpolatedSystemPrompt,
+			userPrompt: interpolatedUserPrompt,
+			isWritingPrompt,
+			route: { provider: activeProvider, model: activeModel },
+			fallback
+		} = assembled;
 
-		if (!promptTemplate) {
-			return {
-				success: false,
-				message: `AI prompt template not found for key: '${promptKey}'. Please ensure it exists in prompt-templates.ts.`
-			};
-		}
-
-		// Step 2/3: Fetch and field-filter the collected_data blob. Shared with the
-		// context provider's `profile` source, which renders this same object.
-		const profileDataFields = options?.context?.profileFields ?? options?.profileDataFields;
-		// Writing prompts speak for the applicant, so they don't get skills kept
-		// off documents. Everything else — scoring above all — needs the whole
-		// profile, or it reports a skill the applicant just added as a gap.
-		const profileBlob = await loadProfileData(profileId, profileDataFields, {
-			documentSafe: WRITING_PROMPT_KEYS.has(promptKey),
-			exclude: options?.profileDataExclude
-		});
-		// An application whose employer reads it without names
-		// (applications.anonymous): what is written for that employer is written
-		// from a profile without who the applicant is, and both it and the chat
-		// are told so, the chat because it drafts those texts too. Before the
-		// context is assembled, whose `profile` source renders this same blob.
-		const anonymity = await writingAnonymity(profileId, promptKey, options?.context?.entity);
-		if (anonymity?.strip) {
-			profileBlob.data = anonymiseProfileData(profileBlob.data, anonymity.identity);
-		}
-		const schemaJson = profileBlob.schema;
-		const dataJson = profileBlob.data;
-
-		// Step 3b: Assemble the declared evidence. Every requested source gets a
-		// key (empty string when it found nothing), so a template referencing a
-		// placeholder never ships a literal `${…}` to the model.
-		let assembled: Record<string, string> = {};
-		// What retrieval picked, kept aside for the row. It is stored separately
-		// from `context` (which carries the same evidence as rendered prose) so it
-		// survives the retention pass that nulls the bulky prompt columns — the
-		// questions it answers are asked long after the generation.
-		let retrieval: RetrievalRecord | null = null;
-		if (options?.context) {
-			const request = options.context;
-			const ctx = await traceStep(
-				'retrieve_context',
-				'retriever',
-				() =>
-					assembleGenerationContext({
-						...request,
-						profileId,
-						profileFields: profileDataFields,
-						// Already loaded above for ${schema} — don't pay for it twice.
-						preloadedProfile: profileBlob
-					}),
-				// The record the row keeps, not the rendered blocks: those are in the
-				// prompt, which the generation under this trace already holds.
-				(result) => ({
-					input: { sources: request.sources, entity: request.entity, query: request.query },
-					output: result.retrieval
-				})
-			);
-			assembled = ctx.variables;
-			retrieval = ctx.retrieval;
-		}
-
-		// Step 4: Prepare context (raw variables as JSON objects)
-		const context = {
-			schema: schemaJson,
-			data: dataJson,
-			...(options?.placeholderDefaults || {}),
-			...assembled,
-			...(customVariables || {})
-		} as Record<string, unknown>;
-
-		// Step 5: Prepare variables for interpolation (stringified for prompts).
-		// Layered lowest-to-highest: placeholder fallbacks, then the base blob,
-		// then assembled evidence (the `profile` source renders `data` under the
-		// budget), then explicit customVariables, which are the override. A
-		// customVariable that is undefined or null overrides nothing: promptValues
-		// leaves it out rather than sending the model "undefined" or "null".
-		const interpolationVariables: Record<string, string> = {
-			...(options?.placeholderDefaults || {}),
-			schema: JSON.stringify(schemaJson, null, 2),
-			data: renderProfileData(dataJson),
-			...assembled,
-			...promptValues(customVariables ?? {})
-		};
-		// After the layering, so it follows whichever profile block won it.
-		if (anonymity && interpolationVariables.data) {
-			interpolationVariables.data += `\n\n${ANONYMOUS_WRITING_NOTE}`;
-		}
-
-		// Step 5b: Every placeholder the template uses must have a value by now,
-		// even if it is only the "" a placeholderDefaults entry gives it. The
-		// renderer would refuse a gap on its own, but it names only the first
-		// one and not the prompt, so the whole list is worked out here.
-		// Outside production a gap fails the call, so the caller is fixed while
-		// someone is looking at it. In production the answer is still worth
-		// having, so the gap is reported and rendered as "".
-		const unfilled = [
-			...new Set([
-				...unfilledVariables(promptTemplate.system_prompt, interpolationVariables),
-				...unfilledVariables(promptTemplate.user_prompt, interpolationVariables)
-			])
-		];
-		if (unfilled.length > 0) {
-			// Say which ones the caller did pass, as undefined or null: the fix for
-			// those is wherever the value came from, not the call.
-			const described = unfilled.map((name) => {
-				const passed = customVariables?.[name];
-				return customVariables && name in customVariables && passed == null
-					? `${name} (passed as ${passed})`
-					: name;
-			});
-			const problem = new Error(
-				`Prompt '${promptKey}' has no value for: ${described.join(', ')}. ` +
-					`Supply it from the caller, or pass "" through placeholderDefaults.`
-			);
-			if (!config.isProduction) throw problem;
-			errorTracker.logError('Unfilled prompt placeholders', problem, {
-				operation: 'createAndGenerateAiChat',
-				metadata: { promptKey, unfilled }
-			});
-		}
-
-		// Step 6: Fill both prompts with the stringified variables (render-prompt.ts)
-		const interpolatedSystemPrompt = renderPrompt(
-			promptTemplate.system_prompt,
-			interpolationVariables,
-			{ blankMissing: config.isProduction }
-		);
-		const interpolatedUserPrompt = renderPrompt(
-			promptTemplate.user_prompt,
-			interpolationVariables,
-			{ blankMissing: config.isProduction }
-		);
-
-		// Resolve provider/model by prompt (promptRoute). Used for the record stamp,
-		// generation, and cost accounting alike.
-		const isWritingPrompt = WRITING_PROMPT_KEYS.has(promptKey);
-		const { provider: activeProvider, model: activeModel } = promptRoute(promptKey);
-		// Failover target by class: writing gets the writing pair, the extractive
-		// prompts get the extraction pair (off by default), and everything left —
-		// the judgements — gets none. See llm/fallback.ts for why the two classes
-		// want different providers, and EXTRACTION_FALLBACK_PROMPT_KEYS above for
-		// why that last group is a silence rather than an omission.
-		const fallback = isWritingPrompt
-			? writingFallback()
-			: EXTRACTION_FALLBACK_PROMPT_KEYS.has(promptKey)
-				? extractionFallback()
-				: undefined;
-
-		// Step 7: Create the ai_chats record with template prompts (not interpolated)
-		const [aiChat] = await db
-			.insert(ai_chats)
-			.values({
-				id: reservedAiChatId,
-				profile_id: profileId,
-				system_prompt: promptTemplate.system_prompt,
-				user_prompt: promptTemplate.user_prompt,
-				context: JSON.parse(JSON.stringify(context)),
-				retrieval,
-				capabilities: options?.capabilityRecord ?? null,
-				followup_to: followupTo,
-				prompt_key: promptKey,
-				prompt_fingerprint: promptFingerprint(promptTemplate),
-				date_created: new Date(),
-				provider: activeProvider,
-				model: activeModel,
-				request_type: 'llm',
-				trace_id: recordedTraceId()
-			})
-			.returning();
-		aiChatId = aiChat.id;
-
-		// Step 6: Generate and save full_prompt (interpolated combination)
-		const historyMessages = options?.historyMessages ?? [];
-		const fullPrompt = makeFullPrompt(
-			interpolatedSystemPrompt,
-			interpolatedUserPrompt,
-			historyMessages
-		);
-
-		await db.update(ai_chats).set({ full_prompt: fullPrompt }).where(eq(ai_chats.id, aiChat.id));
-
-		// Step 7: Generate AI response using generic LLM function
 		// Schema from the caller when the shape is decided per call, else the code
 		// registry keyed by prompt (no longer the database format field).
 		const zodSchema = options?.responseSchema ?? getSchemaForPrompt(promptKey);
@@ -743,115 +986,45 @@ async function generateAiChat(
 					schema: zodSchema
 				}
 			: undefined;
+		const historyMessages = options?.historyMessages ?? [];
 
-		callStarted = performance.now();
-		const completionResult = await generateChatCompletionTracked(
-			[
-				{ role: 'system', content: interpolatedSystemPrompt },
-				...historyMessages,
-				{ role: 'user', content: interpolatedUserPrompt }
-			],
-			{
-				structuredOutput,
-				provider: activeProvider,
-				model: activeModel,
-				fallback,
-				// Undefined leaves generateChatCompletionTracked on its own default.
-				temperature: promptTemplate.temperature,
-				promptKey,
-				// A writing prompt runs because someone asked for a text, and asking
-				// again means they want a different one, not the cached copy. See
-				// ChatCompletionOptions.cache.
-				cache: !isWritingPrompt
-			}
-		);
-
-		const durationMs = Math.round(performance.now() - callStarted);
-
-		// Step 8: Save response + token usage
-		const responseContent = completionResult.content;
-		const responseToSave = structuredOutput
-			? (() => {
-					try {
-						return JSON.stringify(JSON.parse(responseContent));
-					} catch {
-						return responseContent;
-					}
-				})()
-			: responseContent;
-
-		const usage = completionResult.usage;
-		const creditsCost = usage ? tokensToCost(usage.totalTokens) : 0;
-
-		/**
-		 * What actually generated this, which is not always what the row was
-		 * stamped with at insert time: the stamp is written before the call, and a
-		 * writing call that failed over ran somewhere else.
-		 *
-		 * Re-stamping is not cosmetic. estimateProviderCostUsd prices by
-		 * "provider/model" and returns null on a key it doesn't know, so a row left
-		 * claiming the primary is a row priced against a model that never ran —
-		 * and /admin/costs groups by these two columns, so the error compounds
-		 * rather than showing up as one odd number.
-		 */
-		const ranOn = completionResult.fallbackUsed ?? {
-			provider: activeProvider,
-			model: activeModel
-		};
-
-		await db
-			.update(ai_chats)
-			.set({
-				response: responseToSave,
-				provider: ranOn.provider,
-				model: ranOn.model,
-				input_tokens: usage?.inputTokens ?? null,
-				output_tokens: usage?.outputTokens ?? null,
-				total_tokens: usage?.totalTokens ?? null,
-				cached_input_tokens: usage?.cachedInputTokens ?? null,
-				reasoning_tokens: usage?.reasoningTokens ?? null,
-				duration_ms: durationMs,
-				credits_charged: creditsCost || null,
-				observation_id: completionResult.observationId ?? null
-			})
-			.where(eq(ai_chats.id, aiChat.id));
-
-		// Charge credits if we have a user and usage
-		if (usage && creditsCost > 0) {
-			const profileForCredits = await db.query.profiles.findFirst({
-				where: eq(profiles.id, profileId),
-				columns: { user_id: true }
-			});
-			if (profileForCredits?.user_id) {
-				const { chargeCredits } = await import('$lib/server/billing/credits');
-				const providerCostUsd = estimateProviderCostUsd(
-					ranOn.provider,
-					ranOn.model,
-					usage.inputTokens,
-					usage.outputTokens,
-					usage.cachedInputTokens,
-					usage.reasoningTokens
-				);
-				await chargeCredits(
-					profileForCredits.user_id,
-					creditsCost,
-					'ai_generation',
-					`${promptKey} (${usage.totalTokens} tokens)`,
+		const recorded = await recordCall({
+			profileId,
+			assembled,
+			aiChatId: reservedAiChatId,
+			followupTo,
+			capabilityRecord: options?.capabilityRecord ?? null,
+			historyMessages,
+			call: () =>
+				generateChatCompletionTracked(
+					[
+						{ role: 'system', content: interpolatedSystemPrompt },
+						...historyMessages,
+						{ role: 'user', content: interpolatedUserPrompt }
+					],
 					{
-						aiChatId: aiChat.id,
+						structuredOutput,
+						provider: activeProvider,
+						model: activeModel,
+						fallback,
+						// Undefined leaves generateChatCompletionTracked on its own default.
+						temperature: promptTemplate.temperature,
 						promptKey,
-						tokens: usage,
-						provider: ranOn.provider,
-						model: ranOn.model,
-						providerCostUsd
+						// A writing prompt runs because someone asked for a text, and asking
+						// again means they want a different one, not the cached copy. See
+						// ChatCompletionOptions.cache.
+						cache: !isWritingPrompt
 					}
-				);
-			}
-		}
+				),
+			// A structured answer is kept as the JSON it parsed to, or as it came
+			// when it did not parse.
+			storeResponse: structuredOutput ? normaliseJson : undefined
+		});
+		aiChatId = recorded.aiChatId;
 
 		// Step 9: Fetch and return the complete ai_chats record
 		const completeAiChat = await db.query.ai_chats.findFirst({
-			where: eq(ai_chats.id, aiChat.id),
+			where: eq(ai_chats.id, recorded.aiChatId),
 			columns: {
 				id: true,
 				profile_id: true,
@@ -867,7 +1040,7 @@ async function generateAiChat(
 		if (!completeAiChat) {
 			return {
 				success: false,
-				message: `Failed to retrieve created ai_chats record with ID ${aiChat.id}`
+				message: `Failed to retrieve created ai_chats record with ID ${recorded.aiChatId}`
 			};
 		}
 
@@ -892,9 +1065,6 @@ async function generateAiChat(
 				.update(ai_chats)
 				.set({
 					error: errorMessage,
-					...(callStarted !== undefined
-						? { duration_ms: Math.round(performance.now() - callStarted) }
-						: {}),
 					...(usage
 						? {
 								input_tokens: usage.inputTokens,
@@ -906,7 +1076,7 @@ async function generateAiChat(
 						: {})
 				})
 				.where(eq(ai_chats.id, aiChatId));
-			console.error(`      📋 Error details: ai_chat ID ${aiChatId}`);
+			console.error(`      📋 Error details: ai_chat ID ${aiChatId}: ${errorMessage}`);
 		}
 
 		// Re-throw fatal LLM errors so they can abort scraping
