@@ -1,3 +1,5 @@
+import { readsForPanel } from '../../agent-turn';
+import type { RetrievalRecord } from '$lib/server/documents/retrieval-record';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
@@ -67,7 +69,8 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 			id: agent_messages.id,
 			role: agent_messages.role,
 			content: agent_messages.content,
-			capabilities: ai_chats.capabilities
+			capabilities: ai_chats.capabilities,
+			retrieval: ai_chats.retrieval
 		})
 		.from(agent_messages)
 		.leftJoin(ai_chats, eq(agent_messages.ai_chat_id, ai_chats.id))
@@ -181,8 +184,14 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 				role: m.role,
 				content: m.content,
 				proposals,
-				// Why this turn could propose what it did. Staff only.
-				...(actor.isStaff && m.capabilities ? { capabilityRecord: m.capabilities } : {})
+				// What the turn read, for the line under the reply (the agent's turns
+				// only; an earlier turn read nothing and shows nothing).
+				reads: readsForPanel((m.retrieval as RetrievalRecord | null)?.reads),
+				// Why this turn could propose what it did, and its reads in full. Staff only.
+				...(actor.isStaff && m.capabilities ? { capabilityRecord: m.capabilities } : {}),
+				...(actor.isStaff && (m.retrieval as RetrievalRecord | null)?.reads
+					? { readRecords: (m.retrieval as RetrievalRecord).reads }
+					: {})
 			};
 		})
 	);

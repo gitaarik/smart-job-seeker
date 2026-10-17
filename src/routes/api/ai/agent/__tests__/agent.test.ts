@@ -15,6 +15,36 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockCreateAndGenerate = vi.fn();
 const mockResolveChatContext = vi.fn();
+const mockSpendBlock = vi.fn();
+const mockRunTurn = vi.fn();
+const mockStreamTurn = vi.fn();
+// Whether the session is staff: the route reads it from the session claims,
+// which requireAuth is mocked to return without.
+const mockIsStaff = vi.fn(() => false);
+vi.mock('../scope', () => ({ isStaffUser: () => mockIsStaff() }));
+// The agent flag, flipped per test: off is today's call to the byte.
+const flags = vi.hoisted(() => ({ assistantAgent: false }));
+
+vi.mock('$lib/server/config', async (importOriginal) => {
+	const original = await importOriginal<typeof import('$lib/server/config')>();
+	return {
+		...original,
+		config: new Proxy(original.config, {
+			get: (target, key) =>
+				key === 'assistantAgent' ? flags.assistantAgent : target[key as keyof typeof target]
+		})
+	};
+});
+
+vi.mock('$lib/server/ai-chat/agent/turn', () => ({
+	runTurn: (...a: unknown[]) => mockRunTurn(...a),
+	streamTurn: (...a: unknown[]) => mockStreamTurn(...a)
+}));
+
+vi.mock('$lib/server/ai-chat/agent/events', () => ({
+	describeRead: (call: { name: string; args: Record<string, unknown> }) =>
+		`${call.name} ${Object.values(call.args).join('/')}`.trim()
+}));
 const mockInsertValues = vi.fn();
 const mockProposalInsert = vi.fn();
 const mockRequireCredits = vi.fn().mockResolvedValue(undefined);
@@ -88,7 +118,8 @@ vi.mock('$lib/server/billing/require-credits', () => ({
 vi.mock('$lib/server/ai-chat/utils', () => ({
 	createAndGenerateAiChat: (...a: unknown[]) => mockCreateAndGenerate(...a),
 	reserveAiChatId: async () => 4242,
-	reserveConversationId: async () => 4343
+	reserveConversationId: async () => 4343,
+	spendBlock: (...a: unknown[]) => mockSpendBlock(...a)
 }));
 
 vi.mock('$lib/server/ai-chat/chat-context', () => ({
@@ -155,10 +186,15 @@ const EVIDENCE_KEYS = [
 	'relevantApplicationTexts'
 ];
 
-function event(message = 'What does this job ask for?', overrides: Record<string, unknown> = {}) {
+function event(
+	message = 'What does this job ask for?',
+	overrides: Record<string, unknown> = {},
+	headers: Record<string, string> = {}
+) {
 	return {
 		locals: { user: { id: 'user-1' } },
 		request: {
+			headers: new Headers(headers),
 			json: async () => ({
 				profile_id: 12,
 				conversation_id: null,
@@ -179,6 +215,9 @@ function callArgs() {
 
 beforeEach(() => {
 	vi.clearAllMocks();
+	flags.assistantAgent = false;
+	mockIsStaff.mockReturnValue(false);
+	mockSpendBlock.mockResolvedValue(null);
 	mockLogReported.mockResolvedValue(new Map());
 	mockRequireCredits.mockResolvedValue(undefined);
 	mockResolveChatContext.mockResolvedValue({
@@ -748,5 +787,154 @@ describe('logging a reported event without a click', () => {
 		expect(res.status).toBe(200);
 		expect(body.proposals[0]).toMatchObject({ applied_at: null, disposition: null });
 		expect(appliedScores()).toEqual([[7, 'proposal_applied', 'proposal:900', false]]);
+	});
+});
+
+/**
+ * With the agent on (planning/ASSISTANT-AGENT.md, Phase 4): the turn is the
+ * graph, answered as JSON in the shape the panel consumed before, or as the
+ * stream of its steps when the client asks for one. The turn itself is
+ * mocked; what it does is graph.test.ts.
+ */
+describe('with the agent on', () => {
+	const outcome = {
+		reply: 'From the graph.',
+		conversation: { id: 4343, title: 'What does this job ask for?' },
+		messageId: 101,
+		proposals: [],
+		reads: [{ tool: 'read_job', args: { job_id: 3818 }, chars: 500, ms: 3, round: 1, ok: true }],
+		capabilityRecord: { entries: [], chars: 0, budgetChars: 0 },
+		aiChatId: 4242,
+		rounds: 2,
+		capped: null
+	};
+
+	/** The stream's events, one per `data:` frame. */
+	async function framesOf(res: Response) {
+		const text = await res.text();
+		return text
+			.split('\n\n')
+			.filter(Boolean)
+			.map((frame) => JSON.parse(frame.replace(/^data: /, '')));
+	}
+
+	beforeEach(() => {
+		flags.assistantAgent = true;
+		mockRunTurn.mockResolvedValue(outcome);
+	});
+
+	it("is today's call to the byte with the flag off", async () => {
+		flags.assistantAgent = false;
+		await POST(event());
+		expect(mockCreateAndGenerate).toHaveBeenCalledTimes(1);
+		expect(mockRunTurn).not.toHaveBeenCalled();
+		expect(mockStreamTurn).not.toHaveBeenCalled();
+	});
+
+	it('runs the turn as the graph and answers the shape the panel knows, with the reads', async () => {
+		const res = await POST(event('What does this job ask for?', { pasted: ['a paste'] }));
+		const body = await res.json();
+
+		expect(mockCreateAndGenerate).not.toHaveBeenCalled();
+		expect(mockRunTurn).toHaveBeenCalledWith({
+			userId: 'user-1',
+			profileId: 12,
+			isStaff: false,
+			conversation: null,
+			conversationId: 4343,
+			aiChatId: 4242,
+			message: 'What does this job ask for?',
+			route: '/(app)/jobs/[id]',
+			routeParams: { id: '3818' },
+			pasted: ['a paste']
+		});
+		expect(body).toEqual({
+			success: true,
+			reply: 'From the graph.',
+			conversation_id: 4343,
+			title: 'What does this job ask for?',
+			message_id: 101,
+			proposals: [],
+			reads: [{ tool: 'read_job', label: 'read_job 3818' }]
+		});
+	});
+
+	it('gives staff the record, the reads in full, the rounds and the cap', async () => {
+		mockIsStaff.mockReturnValue(true);
+		const res = await POST(event());
+		const body = await res.json();
+		expect(mockRunTurn).toHaveBeenCalledWith(expect.objectContaining({ isStaff: true }));
+		expect(body).toMatchObject({
+			capabilityRecord: { entries: [] },
+			readRecords: outcome.reads,
+			rounds: 2,
+			capped: null
+		});
+	});
+
+	it('streams the steps, the tool calls and the reply, in that order, when asked to', async () => {
+		mockStreamTurn.mockImplementation(
+			async (_input: unknown, onEvent: (event: unknown) => void) => {
+				onEvent({ type: 'step', node: 'prepare' });
+				onEvent({ type: 'step', node: 'agent' });
+				onEvent({ type: 'tool', name: 'read_job', label: 'Reading job 3818', status: 'started' });
+				onEvent({ type: 'tool', name: 'read_job', label: 'Reading job 3818', status: 'done' });
+				return outcome;
+			}
+		);
+
+		const res = await POST(event('x', {}, { accept: 'text/event-stream' }));
+
+		expect(res.status).toBe(200);
+		expect(res.headers.get('content-type')).toBe('text/event-stream');
+		expect(res.headers.get('cache-control')).toBe('no-cache');
+		const frames = await framesOf(res);
+		expect(frames.map((f) => f.type)).toEqual(['step', 'step', 'tool', 'tool', 'reply']);
+		expect(frames[2]).toMatchObject({ label: 'Reading job 3818', status: 'started' });
+		expect(frames[4]).toMatchObject({
+			success: true,
+			reply: 'From the graph.',
+			conversation_id: 4343,
+			message_id: 101,
+			reads: [{ tool: 'read_job', label: 'read_job 3818' }]
+		});
+		expect(mockRunTurn).not.toHaveBeenCalled();
+	});
+
+	it('ends the stream with an error when the turn fails, after the steps it reached', async () => {
+		mockStreamTurn.mockImplementation(
+			async (_input: unknown, onEvent: (event: unknown) => void) => {
+				onEvent({ type: 'step', node: 'prepare' });
+				throw new Error('database went away');
+			}
+		);
+
+		const res = await POST(event('x', {}, { accept: 'text/event-stream' }));
+		const frames = await framesOf(res);
+		expect(frames.map((f) => f.type)).toEqual(['step', 'error']);
+		expect(frames[1].message).toBe('The assistant could not respond.');
+	});
+
+	it('answers a failed turn with 422 and the same words as before', async () => {
+		mockRunTurn.mockRejectedValue(new Error('groq: failed to generate JSON'));
+		const res = await POST(event());
+		expect(res.status).toBe(422);
+		expect((await res.json()).message).toContain("didn't come back in a usable form");
+	});
+
+	it('refuses before any turn when the account may not spend', async () => {
+		mockSpendBlock.mockResolvedValue(
+			'Out of credits. Please upgrade your plan or buy extra credits.'
+		);
+		const res = await POST(event());
+		expect(res.status).toBe(422);
+		expect((await res.json()).message).toContain('Out of credits');
+		expect(mockRunTurn).not.toHaveBeenCalled();
+	});
+
+	it('still needs the thread to belong to this profile', async () => {
+		const res = await POST(event('Carry on', { conversation_id: 5 }));
+		expect(res.status).toBe(404);
+		expect(mockRunTurn).not.toHaveBeenCalled();
 	});
 });

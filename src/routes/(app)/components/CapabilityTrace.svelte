@@ -21,8 +21,15 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronDown, faChevronUp, faWrench } from '@fortawesome/free-solid-svg-icons';
 	import type { CapabilityRecord } from '$lib/server/ai-chat/capability-record';
+	import type { ReadRecord } from '$lib/server/documents/retrieval-record';
 
-	let { record = null }: { record?: CapabilityRecord | null } = $props();
+	// `reads`: what the agent's turn read, in full (planning/ASSISTANT-AGENT.md
+	// § Records and tracing), beside why it could propose what it did. The
+	// applicant's line under the reply names them; this is the record.
+	let {
+		record = null,
+		reads = null
+	}: { record?: CapabilityRecord | null; reads?: ReadRecord[] | null } = $props();
 
 	let expanded = $state(false);
 
@@ -32,7 +39,7 @@
 	// A turn that resolved nothing at all is the ordinary case on most pages and
 	// says nothing worth a line. A turn that resolved something — admitted or
 	// dropped — is the one worth being able to open.
-	let show = $derived(!!record && record.entries.length > 0);
+	let show = $derived((!!record && record.entries.length > 0) || (reads?.length ?? 0) > 0);
 
 	const TIER_LABELS: Record<string, string> = {
 		subject: "the page's own",
@@ -42,7 +49,7 @@
 	};
 </script>
 
-{#if show && record}
+{#if show}
 	<div class="mt-1 text-[11px] text-[var(--dash-text-muted)]">
 		<button
 			type="button"
@@ -57,6 +64,9 @@
 						· {dropped.length} dropped for budget
 					</span>
 				{/if}
+				{#if reads?.length}
+					· {reads.length} read{reads.length === 1 ? '' : 's'}
+				{/if}
 			</span>
 			<FontAwesomeIcon
 				icon={expanded ? faChevronUp : faChevronDown}
@@ -66,7 +76,7 @@
 
 		{#if expanded}
 			<ul class="mt-1 ml-4 space-y-0.5 font-mono">
-				{#each record.entries as entry, i (i)}
+				{#each record?.entries ?? [] as entry, i (i)}
 					<li class={entry.admitted ? '' : 'text-[var(--dash-error)]'}>
 						{entry.admitted ? '✓' : '✗'}
 						{entry.capability} · {TIER_LABELS[entry.tier] ?? entry.tier} · {entry.targets}
@@ -74,9 +84,24 @@
 					</li>
 				{/each}
 			</ul>
-			<p class="mt-1 ml-4 font-mono">
-				block {record.chars} / {record.budgetChars} chars
-			</p>
+			{#if record}
+				<p class="mt-1 ml-4 font-mono">
+					block {record.chars} / {record.budgetChars} chars
+				</p>
+			{/if}
+			{#if reads?.length}
+				<ul class="mt-1 ml-4 space-y-0.5 font-mono">
+					{#each reads as read, i (i)}
+						<li class={read.ok ? '' : 'text-[var(--dash-error)]'}>
+							{read.ok ? '✓' : '✗'}
+							{read.tool}
+							{JSON.stringify(read.args)} · {read.chars} chars · round {read.round} · {read.ms} ms
+							{#if read.fromMemo}· from the memo{/if}
+							{#if read.offsetEnd !== undefined}· more at {read.offsetEnd}{/if}
+						</li>
+					{/each}
+				</ul>
+			{/if}
 		{/if}
 	</div>
 {/if}

@@ -631,6 +631,34 @@ export async function assembleGeneration(
 	};
 }
 
+/**
+ * Why this profile's owner may cause no spend right now, or null: the two
+ * questions every generation asks before doing any work, and they are not the
+ * same one. "May this account cause spend at all" fails for an expired demo,
+ * an unapproved account and a pending erasure; all three still pass the budget
+ * check, and matching charges no credits anyway. Asked first, so a profile
+ * whose owner is gone never reaches getBalance, which upserts into
+ * credit_balances and throws on the missing FK. A profile with no owner is
+ * never blocked.
+ */
+export async function spendBlock(profileId: number): Promise<string | null> {
+	const profile = await db.query.profiles.findFirst({
+		where: eq(profiles.id, profileId),
+		columns: { user_id: true }
+	});
+	if (!profile?.user_id) return null;
+	const eligibility = await getSpendEligibility(profile.user_id);
+	if (!eligibility.allowed) {
+		return `AI operations are disabled for this account: ${describeSpendBlock(eligibility.reason)}.`;
+	}
+	const { getBalance } = await import('$lib/server/billing/credits');
+	const balance = await getBalance(profile.user_id);
+	if (balance.available <= 0) {
+		return 'Out of credits. Please upgrade your plan or buy extra credits.';
+	}
+	return null;
+}
+
 /** A structured answer as the row keeps it: re-serialised when it parses, as it came otherwise. */
 function normaliseJson(content: string): string {
 	try {
@@ -938,33 +966,8 @@ async function generateAiChat(
 		// (planning/LANGFUSE.md, change 6).
 		const reservedAiChatId = options?.aiChatId ?? (await reserveAiChatId());
 
-		// Two questions before doing any work, and they are not the same one.
-		// "May this account cause spend at all" fails for an expired demo, an
-		// unapproved account and a pending erasure; all three still pass the
-		// budget check below, and matching charges no credits anyway. Asked
-		// first, so a profile whose owner is gone never reaches getBalance,
-		// which upserts into credit_balances and throws on the missing FK.
-		const profile = await db.query.profiles.findFirst({
-			where: eq(profiles.id, profileId),
-			columns: { user_id: true }
-		});
-		if (profile?.user_id) {
-			const eligibility = await getSpendEligibility(profile.user_id);
-			if (!eligibility.allowed) {
-				return {
-					success: false,
-					message: `AI operations are disabled for this account: ${describeSpendBlock(eligibility.reason)}.`
-				};
-			}
-			const { getBalance } = await import('$lib/server/billing/credits');
-			const balance = await getBalance(profile.user_id);
-			if (balance.available <= 0) {
-				return {
-					success: false,
-					message: 'Out of credits. Please upgrade your plan or buy extra credits.'
-				};
-			}
-		}
+		const blocked = await spendBlock(profileId);
+		if (blocked) return { success: false, message: blocked };
 
 		const assembled = await assembleGeneration(profileId, promptKey, customVariables, options);
 		if (!assembled.ok) return { success: false, message: assembled.message };

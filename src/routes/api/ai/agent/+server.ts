@@ -50,6 +50,8 @@ import {
 import { ASSISTANT_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
 import { type DirectLogOutcome, logReportedEvents } from '$lib/server/ai-chat/direct-log';
 import { aiChatTraceSeed, startTrace, traceStep } from '$lib/server/monitoring/telemetry';
+import { config } from '$lib/server/config';
+import { respondWithAgent } from './agent-turn';
 import { scoreGeneration } from '$lib/server/monitoring/product-scores';
 
 /**
@@ -183,6 +185,22 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			return json({ success: false, message: 'Conversation not found.' }, { status: 404 });
 		}
 		conversation = existing;
+	}
+
+	// With the flag on, the turn is the agent's graph (planning/ASSISTANT-AGENT.md);
+	// off, it is today's call, to the byte, until the trial ends.
+	if (config.assistantAgent) {
+		return respondWithAgent({
+			request,
+			userId: user.id,
+			isStaff: isStaffUser(user),
+			profileId: profile_id,
+			conversation: conversation ?? null,
+			message,
+			route,
+			routeParams: routeParams ?? {},
+			pasted
+		});
 	}
 
 	// Prior turns (oldest → newest), capped to the recent window. The new message

@@ -38,12 +38,14 @@ import type { ReadRecord, RetrievalRecord } from '$lib/server/documents/retrieva
 import { scoreGeneration } from '$lib/server/monitoring/product-scores';
 import { traceStep } from '$lib/server/monitoring/telemetry';
 import { TurnExecutor } from './executor';
+import type { TurnEvent } from './events';
 import {
 	type AssistantTurnDeps,
 	type Finished,
 	type ModelCall,
 	type Prepared,
-	runAssistantTurn
+	runAssistantTurn,
+	streamAssistantTurn
 } from './graph';
 import { deriveTitle, loadThreadHistory } from './history';
 import { dedupeProposals, type StoredProposal } from './proposals';
@@ -446,4 +448,12 @@ export function assistantTurnDeps(): AssistantTurnDeps<TurnInput, TurnOutcome, A
 /** One turn of the assistant, start to finish. The route calls this with the flag on. */
 export function runTurn(input: TurnInput): Promise<TurnOutcome> {
 	return runAssistantTurn(assistantTurnDeps(), input);
+}
+
+/** The same turn, with its steps and tool calls told to the panel as they happen. */
+export function streamTurn(
+	input: TurnInput,
+	onEvent: (event: TurnEvent) => void
+): Promise<TurnOutcome> {
+	return streamAssistantTurn(assistantTurnDeps(), input, onEvent);
 }

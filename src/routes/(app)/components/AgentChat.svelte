@@ -13,6 +13,8 @@
 	import ProposalCard, { type Proposal } from './ProposalCard.svelte';
 	import CapabilityTrace from './CapabilityTrace.svelte';
 	import type { CapabilityRecord } from '$lib/server/ai-chat/capability-record';
+	import type { ReadRecord } from '$lib/server/documents/retrieval-record';
+	import type { TurnEvent, TurnNode } from '$lib/server/ai-chat/agent/events';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faChevronLeft,
@@ -34,10 +36,30 @@
 		 */
 		proposals?: Proposal[];
 		/**
-		 * Why this turn could propose what it did. Present only for staff — the
-		 * server omits it for everyone else, so its absence is the gate.
+		 * What the turn read before answering, in the user's terms (the agent's
+		 * turns only; see planning/ASSISTANT-AGENT.md). Shown as a line under
+		 * the reply, so what the assistant had in front of it is never a guess.
+		 */
+		reads?: { tool: string; label: string }[];
+		/**
+		 * Why this turn could propose what it did, and its reads in full. Present
+		 * only for staff — the server omits them for everyone else, so their
+		 * absence is the gate.
 		 */
 		capabilityRecord?: CapabilityRecord;
+		readRecords?: ReadRecord[];
+	};
+	/** The reply as the server answers it, from the JSON body or the stream's last event. */
+	type ReplyPayload = {
+		success: true;
+		reply: string;
+		conversation_id: number;
+		title: string | null;
+		message_id: number;
+		proposals?: Proposal[];
+		reads?: { tool: string; label: string }[];
+		capabilityRecord?: CapabilityRecord;
+		readRecords?: ReadRecord[];
 	};
 	type ConversationSummary = {
 		id: number;
@@ -79,6 +101,18 @@
 		pasted = [...pasted, text.slice(0, MAX_PASTE_CHARS)].slice(-MAX_PASTE_MARKS);
 	}
 	let sending = $state(false);
+	/**
+	 * What the agent is doing right now, where the spinner's "Thinking…" was:
+	 * the step, or the tool call it is on. Only the agent's turns say; the
+	 * chat as it was answers in one piece.
+	 */
+	let activity = $state<string | null>(null);
+	const STEP_LABELS: Record<TurnNode, string> = {
+		prepare: 'Reading the page…',
+		agent: 'Thinking…',
+		tools: 'Looking things up…',
+		finish: 'Writing it down…'
+	};
 	let errorMsg = $state('');
 	let scrollEl = $state<HTMLDivElement>();
 	let view = $state<'chat' | 'history'>('chat');
@@ -320,7 +354,12 @@
 		try {
 			const res = await fetch('/api/ai/agent', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: {
+					'Content-Type': 'application/json',
+					// The agent's turn is told step by step. The server answers with a
+					// stream only when the agent is on, and with JSON otherwise.
+					Accept: 'text/event-stream, application/json'
+				},
 				body: JSON.stringify({
 					profile_id: profileId,
 					conversation_id: conversationId,
@@ -332,35 +371,84 @@
 					pasted: marks
 				})
 			});
-			const data = await res.json().catch(() => null);
+			const data = res.headers.get('content-type')?.includes('text/event-stream')
+				? await readTurnStream(res)
+				: await res.json().catch(() => null);
 			if (!res.ok || !data?.success) {
 				errorMsg = data?.message || 'The assistant could not respond.';
 				return;
 			}
-			conversationId = data.conversation_id;
-			messages = [
-				...messages,
-				{
-					role: 'assistant',
-					content: data.reply,
-					proposals: data.proposals ?? [],
-					// Undefined for everyone but staff — the server decides, not this.
-					capabilityRecord: data.capabilityRecord
-				}
-			];
-			writePointer();
-			scrollToBottom();
-			// An entry logged without a click is already on the timeline, and the
-			// page behind the panel is very often that timeline.
-			if ((data.proposals ?? []).some((p: Proposal) => p.disposition === 'direct')) {
-				await invalidateAll();
-				afterAppliedChange();
-			}
+			await takeReply(data);
 		} catch {
 			errorMsg = 'Failed to reach the assistant. Please try again.';
 		} finally {
 			sending = false;
+			activity = null;
 		}
+	}
+
+	/** The reply, kept and shown, from the JSON body or the stream's last event. */
+	async function takeReply(data: ReplyPayload) {
+		conversationId = data.conversation_id;
+		messages = [
+			...messages,
+			{
+				role: 'assistant',
+				content: data.reply,
+				proposals: data.proposals ?? [],
+				reads: data.reads ?? [],
+				// Undefined for everyone but staff — the server decides, not this.
+				capabilityRecord: data.capabilityRecord,
+				readRecords: data.readRecords
+			}
+		];
+		writePointer();
+		scrollToBottom();
+		// An entry logged without a click is already on the timeline, and the
+		// page behind the panel is very often that timeline.
+		if ((data.proposals ?? []).some((p: Proposal) => p.disposition === 'direct')) {
+			await invalidateAll();
+			afterAppliedChange();
+		}
+	}
+
+	/**
+	 * The agent's turn as the server streams it: one event per `data:` line,
+	 * the steps and the tool calls as they happen, then the reply or the error
+	 * as the last one. Read with fetch rather than EventSource, which cannot
+	 * POST. What comes back is the payload the JSON branch answers with, or
+	 * the failure it would have answered with.
+	 */
+	async function readTurnStream(
+		res: Response
+	): Promise<ReplyPayload | { success: false; message: string } | null> {
+		const reader = res.body?.getReader();
+		if (!reader) return null;
+		const decoder = new TextDecoder();
+		let buffer = '';
+		for (;;) {
+			const { value, done } = await reader.read();
+			if (done) break;
+			buffer += decoder.decode(value, { stream: true });
+			let at: number;
+			while ((at = buffer.indexOf('\n\n')) !== -1) {
+				const frame = buffer.slice(0, at);
+				buffer = buffer.slice(at + 2);
+				const line = frame.split('\n').find((l) => l.startsWith('data: '));
+				if (!line) continue;
+				const event = JSON.parse(line.slice('data: '.length)) as TurnEvent;
+				if (event.type === 'step') {
+					activity = STEP_LABELS[event.node] ?? activity;
+				} else if (event.type === 'tool') {
+					if (event.status === 'started') activity = `${event.label}…`;
+				} else if (event.type === 'reply') {
+					return event as unknown as ReplyPayload;
+				} else if (event.type === 'error') {
+					return { success: false, message: event.message };
+				}
+			}
+		}
+		return { success: false, message: 'The assistant stopped before answering.' };
 	}
 
 	function onKeydown(e: KeyboardEvent) {
@@ -602,7 +690,15 @@
 								{#each msg.proposals ?? [] as proposal (proposal.id)}
 									<ProposalCard {proposal} />
 								{/each}
-								<CapabilityTrace record={msg.capabilityRecord ?? null} />
+								{#if msg.reads?.length}
+									<p class="mt-1 px-1 text-[11px] text-[var(--dash-text-muted)]">
+										Read: {msg.reads.map((read) => read.label).join(' · ')}
+									</p>
+								{/if}
+								<CapabilityTrace
+									record={msg.capabilityRecord ?? null}
+									reads={msg.readRecords ?? null}
+								/>
 							</div>
 						</div>
 					{/if}
@@ -612,7 +708,7 @@
 						<div
 							class="rounded-2xl rounded-bl-sm bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text-muted)]"
 						>
-							Thinking…
+							{activity ?? 'Thinking…'}
 						</div>
 					</div>
 				{/if}

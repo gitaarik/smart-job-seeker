@@ -141,6 +141,11 @@ export interface AppConfig {
 	// reported, without the card's Apply click. Off unless set: it is on trial on
 	// dev. See ai-chat/direct-log.ts and planning/LOG-AS-YOU-GO.md.
 	assistantDirectLogs: boolean;
+	// Whether the assistant answers as an agent over the MCP tools (one LangGraph
+	// graph per turn, ai-chat/agent) rather than with one structured call. Off
+	// unless set: on trial on dev first, then preview. With it off the chat is
+	// today's call to the byte. See planning/ASSISTANT-AGENT.md.
+	assistantAgent: boolean;
 
 	// LLM Configuration
 	llmCacheTTL: number; // milliseconds
@@ -490,6 +495,7 @@ function loadConfig(): AppConfig {
 			? 'graph_slot'
 			: 'fused') as 'fused' | 'graph_slot',
 		assistantDirectLogs: getEnv('SJS_ASSISTANT_DIRECT_LOGS', 'false') === 'true',
+		assistantAgent: getEnv('SJS_ASSISTANT_AGENT', 'false') === 'true',
 
 		// Caching (1 hour default)
 		llmCacheTTL: parseInt(getEnv('SJS_LLM_CACHE_TTL', String(1000 * 60 * 60)), 10),

@@ -20,8 +20,10 @@ import {
 	MAX_TOOL_CALLS,
 	type ModelCall,
 	type Prepared,
-	runAssistantTurn
+	runAssistantTurn,
+	streamAssistantTurn
 } from '../graph';
+import type { TurnEvent } from '../events';
 import { PROPOSAL_RECEIPT, type TurnExecutor } from '../executor';
 import type { StoredProposal } from '../proposals';
 
@@ -311,6 +313,49 @@ describe('the turn', () => {
 		it('refuses a turn whose reply is empty', async () => {
 			const { deps, world } = fakeDeps([says('   ')]);
 			await expect(runAssistantTurn(deps, { message: 'x' })).rejects.toThrow(/wrote no reply/);
+			expect(world.finished).toBeNull();
+		});
+	});
+
+	describe('streamed', () => {
+		it('tells each node as it starts and each tool call as it starts and ends, then hands back the outcome', async () => {
+			const read = call('read_job', { job_id: 7 }, 'c1');
+			const { deps } = fakeDeps([says('', [read]), says('It pays 6.')]);
+			const events: TurnEvent[] = [];
+
+			const outcome = await streamAssistantTurn(deps, { message: 'hello' }, (e) => events.push(e));
+
+			expect(outcome).toMatchObject({ reply: 'It pays 6.', rounds: 2 });
+			expect(events).toEqual([
+				{ type: 'step', node: 'prepare' },
+				{ type: 'step', node: 'agent' },
+				{ type: 'step', node: 'tools' },
+				{ type: 'tool', name: 'read_job', label: 'Reading job 7', status: 'started' },
+				{ type: 'tool', name: 'read_job', label: 'Reading job 7', status: 'done' },
+				{ type: 'step', node: 'agent' },
+				{ type: 'step', node: 'finish' }
+			]);
+		});
+
+		it('marks a refused call as refused', async () => {
+			const bad = call('read_job', { job_id: 999, refuse: true }, 'r1');
+			const { deps } = fakeDeps([says('', [bad]), says('No such job.')]);
+			const events: TurnEvent[] = [];
+			await streamAssistantTurn(deps, { message: 'hello' }, (e) => events.push(e));
+			expect(
+				events.filter((e) => e.type === 'tool').map((e) => (e as { status: string }).status)
+			).toEqual(['started', 'refused']);
+		});
+
+		it('throws what the turn threw, after the steps it did reach', async () => {
+			const { deps, world } = fakeDeps([says('', [call('read_job', { job_id: 1 })])], {
+				failExecute: true
+			});
+			const events: TurnEvent[] = [];
+			await expect(
+				streamAssistantTurn(deps, { message: 'x' }, (e) => events.push(e))
+			).rejects.toThrow(/database went away/);
+			expect(events.map((e) => e.type)).toEqual(['step', 'step', 'step', 'tool']);
 			expect(world.finished).toBeNull();
 		});
 	});

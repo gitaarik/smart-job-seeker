@@ -20,12 +20,20 @@
  * real implementation. No checkpointer: the thread is the record, and the
  * interrupt is reserved for the first multi-step task (the plan, § Reserved).
  */
-import { Annotation, END, START, StateGraph } from '@langchain/langgraph';
+import { dispatchCustomEvent } from '@langchain/core/callbacks/dispatch';
+import {
+	Annotation,
+	END,
+	type LangGraphRunnableConfig,
+	START,
+	StateGraph
+} from '@langchain/langgraph';
 import type { ChatMessage, CompletionResult, ToolCall, ToolDefinition } from '$lib/server/llm';
 import type { ReadRecord } from '$lib/server/documents/retrieval-record';
 import { isReadTool } from '$lib/server/mcp/tools';
 import { traced } from '$lib/server/monitoring/langgraph';
 import { glance, traceStep } from '$lib/server/monitoring/telemetry';
+import { describeToolCall, TURN_EVENT, type TurnEvent, type TurnNode } from './events';
 import type { ExecutedCall } from './executor';
 import type { StoredProposal } from './proposals';
 
@@ -140,6 +148,20 @@ function preparedOf<P extends Prepared>(state: TurnState): P {
 	return state.prepared as P;
 }
 
+/**
+ * A tool event for whoever is streaming the turn (streamAssistantTurn). A
+ * turn run with `invoke` has nobody listening, which is fine; a node run
+ * outside any run manager would have nowhere to dispatch to, and that is
+ * fine too.
+ */
+async function emit(config: LangGraphRunnableConfig, event: TurnEvent): Promise<void> {
+	try {
+		await dispatchCustomEvent(TURN_EVENT, event, config);
+	} catch {
+		// No run to dispatch under: nothing is listening.
+	}
+}
+
 /** Where a sliced read ended, from the line it prints when there is more. */
 function offsetEndOf(content: string): number | undefined {
 	const match = content.match(/Call again with offset (\d+)/);
@@ -191,7 +213,7 @@ export function buildAssistantTurnGraph<Input, Outcome, P extends Prepared>(
 		};
 	};
 
-	const tools = async (state: TurnState): Promise<TurnUpdate> => {
+	const tools = async (state: TurnState, config: LangGraphRunnableConfig): Promise<TurnUpdate> => {
 		const prepared = preparedOf<P>(state);
 		const round = state.round;
 		const rowOfThisRound = state.aiChatIds[state.aiChatIds.length - 1];
@@ -202,12 +224,21 @@ export function buildAssistantTurnGraph<Input, Outcome, P extends Prepared>(
 		const room = Math.max(MAX_TOOL_CALLS - state.calls, 0);
 		const run = state.pending.slice(0, room);
 		const left = state.pending.slice(room);
-		// Every call that runs, in parallel. A read is a tool observation of its
-		// own; a write traces itself as the proposal it becomes (proposals.ts).
+		// Every call that runs, in parallel, each announced to the panel as it
+		// starts and as it ends. A read is a tool observation of its own; a write
+		// traces itself as the proposal it becomes (proposals.ts).
+		for (const call of run) {
+			await emit(config, {
+				type: 'tool',
+				name: call.name,
+				label: describeToolCall(call),
+				status: 'started'
+			});
+		}
 		const executed = await Promise.all(
-			run.map((call) =>
-				isReadTool(call.name)
-					? traceStep(
+			run.map(async (call) => {
+				const done = isReadTool(call.name)
+					? await traceStep(
 							call.name,
 							'tool',
 							() => prepared.execute(call),
@@ -219,8 +250,15 @@ export function buildAssistantTurnGraph<Input, Outcome, P extends Prepared>(
 									: {})
 							})
 						)
-					: prepared.execute(call)
-			)
+					: await prepared.execute(call);
+				await emit(config, {
+					type: 'tool',
+					name: call.name,
+					label: describeToolCall(call),
+					status: done.isError ? 'refused' : 'done'
+				});
+				return done;
+			})
 		);
 
 		const reads: ReadRecord[] = executed
@@ -350,7 +388,7 @@ export function buildAssistantTurnGraph<Input, Outcome, P extends Prepared>(
 		.compile();
 }
 
-/** One turn, start to finish, as the route runs it. */
+/** One turn, start to finish, as the route runs it without a stream. */
 export async function runAssistantTurn<Input, Outcome, P extends Prepared>(
 	deps: AssistantTurnDeps<Input, Outcome, P>,
 	input: Input
@@ -358,4 +396,38 @@ export async function runAssistantTurn<Input, Outcome, P extends Prepared>(
 	const graph = buildAssistantTurnGraph(deps);
 	const final = await graph.invoke({ input }, { recursionLimit: RECURSION_LIMIT });
 	return final.outcome as Outcome;
+}
+
+const NODES = new Set<string>(['prepare', 'agent', 'tools', 'finish']);
+
+/**
+ * One turn, with each node's start and each tool call told to `onEvent` as it
+ * happens, from the graph's own event stream (planning/ASSISTANT-AGENT.md
+ * § Streaming). The reply is not streamed by the token: the provider layer's
+ * call stays an invoke, and the outcome is handed back whole.
+ */
+export async function streamAssistantTurn<Input, Outcome, P extends Prepared>(
+	deps: AssistantTurnDeps<Input, Outcome, P>,
+	input: Input,
+	onEvent: (event: TurnEvent) => void
+): Promise<Outcome> {
+	const graph = buildAssistantTurnGraph(deps);
+	let outcome: Outcome | undefined;
+	let finished = false;
+	for await (const event of graph.streamEvents(
+		{ input },
+		{ version: 'v2', recursionLimit: RECURSION_LIMIT }
+	)) {
+		const node = event.metadata?.langgraph_node as string | undefined;
+		if (event.event === 'on_chain_start' && node && event.name === node && NODES.has(node)) {
+			onEvent({ type: 'step', node: node as TurnNode });
+		} else if (event.event === 'on_custom_event' && event.name === TURN_EVENT) {
+			onEvent(event.data as TurnEvent);
+		} else if (event.event === 'on_chain_end' && node === 'finish' && event.name === 'finish') {
+			outcome = (event.data?.output as { outcome?: Outcome } | undefined)?.outcome;
+			finished = true;
+		}
+	}
+	if (!finished) throw new Error('The turn ended without finishing.');
+	return outcome as Outcome;
 }
