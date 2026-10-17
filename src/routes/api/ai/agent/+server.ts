@@ -1,12 +1,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
-import { and, asc, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import {
 	agent_conversations,
 	agent_message_proposals,
-	agent_messages,
-	capability_edits
+	agent_messages
 } from '$lib/server/db/schema';
 import { requireAuth, requireProfileAccess } from '$lib/server/utils/api-helpers';
 import { agentChatSchema, parseBody } from '$lib/server/validation/api-schemas';
@@ -43,62 +42,15 @@ import {
 	type ProposalOutcome,
 	renderProposalOutcomes
 } from '$lib/server/ai-chat/proposal-outcomes';
+import {
+	deriveTitle,
+	MAX_CONTEXT_MESSAGES,
+	readProposalOutcomes
+} from '$lib/server/ai-chat/agent/history';
 import { ASSISTANT_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
 import { type DirectLogOutcome, logReportedEvents } from '$lib/server/ai-chat/direct-log';
 import { aiChatTraceSeed, startTrace, traceStep } from '$lib/server/monitoring/telemetry';
 import { scoreGeneration } from '$lib/server/monitoring/product-scores';
-
-// Recent turns sent to the model as context (~20 user/assistant exchanges).
-// Older turns are dropped; summarization can be layered on later if needed.
-const MAX_CONTEXT_MESSAGES = 40;
-
-/**
- * What each of a window's turns proposed and whether it was applied, grouped by
- * turn.
- *
- * Read straight from the proposal rows rather than through the transcript
- * endpoint's richer shape: this needs the fate of a proposal, not its diff, and
- * rebuilding the diffs would mean a `current` read per proposal per turn — the
- * expensive half of that endpoint, spent to produce something no one reads.
- */
-async function readProposalOutcomes(messageIds: number[]): Promise<Map<number, ProposalOutcome[]>> {
-	const rows = await db
-		.select({
-			message_id: agent_message_proposals.message_id,
-			capability: agent_message_proposals.capability,
-			target: agent_message_proposals.target,
-			created_row: agent_message_proposals.created_row,
-			applied_at: agent_message_proposals.applied_at,
-			// Taken back since, from the card's receipt or the changes feed. An
-			// entry the gate logged is undone far more often than a clicked one,
-			// and a model told it is still there goes on citing it.
-			undone_at: capability_edits.reverted_at
-		})
-		.from(agent_message_proposals)
-		.leftJoin(capability_edits, eq(capability_edits.proposal_id, agent_message_proposals.id))
-		.where(inArray(agent_message_proposals.message_id, messageIds))
-		.orderBy(asc(agent_message_proposals.id));
-
-	const byMessage = new Map<number, ProposalOutcome[]>();
-	for (const row of rows) {
-		const list = byMessage.get(row.message_id) ?? [];
-		list.push({
-			capability: row.capability,
-			target: row.target,
-			createdRow: row.created_row,
-			applied: !!row.applied_at,
-			undone: !!row.undone_at
-		});
-		byMessage.set(row.message_id, list);
-	}
-	return byMessage;
-}
-
-/** First line of the opening message, trimmed to a sane title length. */
-function deriveTitle(message: string): string {
-	const firstLine = message.split('\n')[0].trim();
-	return firstLine.length > 80 ? firstLine.slice(0, 77) + '…' : firstLine;
-}
 
 /**
  * Field-by-field diff for the card, using the values captured when the

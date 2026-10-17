@@ -25,9 +25,11 @@ import {
 	chatReadTools,
 	READ_TOOLS,
 	toolsFor,
-	withoutProfileId
+	withoutProfileId,
+	writeToolsFor
 } from '$lib/server/mcp/tools';
-import { CHAT_SLICE_CHARS, chatToolSet } from '../tools';
+import { CAPABILITIES, type Capability } from '$lib/server/ai-chat/capabilities';
+import { CHAT_SLICE_CHARS, chatToolSet, toolDefinition } from '../tools';
 
 const actor = { profileId: 12, isStaff: false };
 const live = (capability: string, id: number, label: string) => ({
@@ -122,6 +124,30 @@ describe("the turn's tool set", () => {
 	it('binds nothing a page did not make live', async () => {
 		const set = await chatToolSet([], actor);
 		expect(set.definitions.map((d) => d.name)).toEqual(set.reads);
+	});
+});
+
+/**
+ * The ratchets the prose block's two re-base to, on the JSON the provider is
+ * sent (planning/ASSISTANT-AGENT.md § The prompt). Measured 2026-10-17: the
+ * eleven reads 13,746 chars; the heaviest write tool, with no parents block,
+ * add_activity_record. A contract that grows shows up here first.
+ */
+describe('the tool definitions, as JSON', () => {
+	const READ_TOOLS_CHARS = 14_000;
+	const PER_WRITE_TOOL_CHARS = 5_700;
+
+	it('keep the eleven reads under their budget', () => {
+		const json = JSON.stringify(chatReadTools(CHAT_SLICE_CHARS).map(toolDefinition));
+		expect(json.length).toBeLessThanOrEqual(READ_TOOLS_CHARS);
+	});
+
+	it('keep every write tool under the per-capability cap', async () => {
+		for (const capability of Object.keys(CAPABILITIES) as Capability[]) {
+			const [tool] = await writeToolsFor([capability]);
+			const json = JSON.stringify(toolDefinition(withoutProfileId(tool)));
+			expect(json.length, capability).toBeLessThanOrEqual(PER_WRITE_TOOL_CHARS);
+		}
 	});
 });
 
