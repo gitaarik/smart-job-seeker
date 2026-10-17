@@ -32,9 +32,10 @@ vi.mock('$lib/server/config', () => ({
 	}
 }));
 
-const { mockGroqInvoke, mockGeminiInvoke, mockResolvePrompt } = vi.hoisted(() => ({
+const { mockGroqInvoke, mockGeminiInvoke, mockGeminiBind, mockResolvePrompt } = vi.hoisted(() => ({
 	mockGroqInvoke: vi.fn(),
 	mockGeminiInvoke: vi.fn(),
+	mockGeminiBind: vi.fn(),
 	mockResolvePrompt: vi.fn()
 }));
 
@@ -58,6 +59,10 @@ vi.mock('@langchain/google-genai', () => ({
 		constructor() {}
 		async invoke(messages: unknown) {
 			return mockGeminiInvoke(messages);
+		}
+		bindTools(tools: unknown, kwargs?: unknown) {
+			mockGeminiBind(tools, kwargs);
+			return { invoke: (messages: unknown) => mockGeminiInvoke(messages) };
 		}
 	}
 }));
@@ -213,6 +218,65 @@ describe('the LLM call', () => {
 		expect(input).toHaveLength(1);
 		expect(input[0].content).toContain('Page text: locked out');
 		expect(input[0].content).toContain('Output ONLY a valid JSON object');
+	});
+});
+
+describe('a generation with tools', () => {
+	it('records the tools bound, the exchange as sent and the calls made', async () => {
+		mockGeminiInvoke.mockResolvedValueOnce(
+			new AIMessage({
+				content: '',
+				tool_calls: [{ id: 'call_2', name: 'read_job', args: { job_id: 7 }, type: 'tool_call' }],
+				additional_kwargs: { __signatures__: { call_2: 'sig' } },
+				usage_metadata: { input_tokens: 10, output_tokens: 5, total_tokens: 15 }
+			})
+		);
+
+		const result = await generateChatCompletionTracked(
+			[
+				{ role: 'user', content: 'what does job 7 pay?' },
+				{
+					role: 'assistant',
+					content: '',
+					toolCalls: [{ id: 'call_1', name: 'list_jobs', args: {} }],
+					providerData: { __signatures__: { call_1: 'sig' } }
+				},
+				{ role: 'tool', toolCallId: 'call_1', name: 'list_jobs', content: '[{"id":7}]' }
+			],
+			{
+				provider: 'gemini',
+				model: 'gemini-2.5-pro',
+				promptKey: 'personal_agent_chat',
+				tools: [
+					{ name: 'list_jobs', description: 'Their jobs.', parameters: { type: 'object' } },
+					{ name: 'read_job', description: 'One job.', parameters: { type: 'object' } }
+				]
+			}
+		);
+
+		expect(result.toolCalls).toEqual([{ id: 'call_2', name: 'read_job', args: { job_id: 7 } }]);
+		const spans = await exported();
+		const call = spans.find((s) => typeOf(s) === 'span');
+		// Never consulted: a round's answer depends on what the tools returned.
+		expect(call!.attributes['langfuse.observation.metadata.cache']).toBe('off');
+
+		const [generation] = generations(spans);
+		expect(generation.attributes['langfuse.observation.metadata.tools']).toBe(
+			JSON.stringify(['list_jobs', 'read_job'])
+		);
+		const input = JSON.parse(String(generation.attributes['langfuse.observation.input']));
+		expect(input).toHaveLength(3);
+		expect(input[1]).toEqual({
+			role: 'assistant',
+			content: '',
+			toolCalls: [{ id: 'call_1', name: 'list_jobs', args: {} }]
+		});
+		expect(input[2]).toMatchObject({ role: 'tool', toolCallId: 'call_1', content: '[{"id":7}]' });
+		const output = JSON.parse(String(generation.attributes['langfuse.observation.output']));
+		expect(output).toEqual({
+			content: '',
+			tool_calls: [{ id: 'call_2', name: 'read_job', args: { job_id: 7 } }]
+		});
 	});
 });
 

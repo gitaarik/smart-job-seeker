@@ -8,7 +8,14 @@ import { ChatCerebras } from '@langchain/cerebras';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import { ChatOpenAI } from '@langchain/openai';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import { AIMessage, type BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
+import {
+	AIMessage,
+	type BaseMessage,
+	HumanMessage,
+	SystemMessage,
+	ToolMessage
+} from '@langchain/core/messages';
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { getEnv } from '$lib/tools/get-env';
 import { llmCache } from './cache.js';
@@ -304,12 +311,55 @@ function handleLLMError(error: unknown, provider: string, model: string): never 
 }
 
 /**
- * Chat message format for LLM requests
+ * A tool the model may call: a function definition with a JSON Schema for its
+ * arguments, which is what the MCP server already generates for every read
+ * and every capability (mcp/tools.ts). Sent to each provider in OpenAI's
+ * function shape, which LangChain's Groq and Gemini bindings both take as it
+ * is; Gemini's drops `additionalProperties` on the way, and reads the rest.
  */
-export interface ChatMessage {
-	role: 'system' | 'user' | 'assistant';
-	content: string;
+export interface ToolDefinition {
+	name: string;
+	description: string;
+	/** A JSON Schema object for the arguments. */
+	parameters: Record<string, unknown>;
 }
+
+/** One call the model asked for. The id pairs it with the tool message that answers it. */
+export interface ToolCall {
+	id: string;
+	name: string;
+	args: Record<string, unknown>;
+}
+
+/**
+ * Chat message format for LLM requests.
+ *
+ * Four roles. An assistant message may carry the calls the model made beside
+ * its text, and a tool message answers one of them by id; `convertMessages`
+ * replays both as the provider's own call and result messages, so a loop that
+ * executes the calls and asks again sends the exchange the provider expects.
+ * `providerData` is whatever the provider attached to the calls and wants back
+ * with them (Gemini's thought signatures): opaque here, replayed whole, and
+ * left out of the trace.
+ */
+export type ChatMessage =
+	| { role: 'system' | 'user'; content: string }
+	| {
+			role: 'assistant';
+			content: string;
+			toolCalls?: ToolCall[];
+			providerData?: Record<string, unknown>;
+	  }
+	| {
+			role: 'tool';
+			content: string;
+			/** The id of the call this answers. */
+			toolCallId: string;
+			/** The tool that was called. Gemini requires it on the answer. */
+			name: string;
+			/** The tool refused or failed; the provider may show the model the answer as an error. */
+			isError?: boolean;
+	  };
 
 /**
  * JSON schema for structured output
@@ -388,6 +438,28 @@ export interface ChatCompletionOptions {
 	 * again except someone who wants a different one.
 	 */
 	cache?: boolean;
+	/**
+	 * Tools the model may call on this turn. The result then carries
+	 * `toolCalls` when it asked for any, beside whatever text it wrote, and the
+	 * loop that executes them and asks again, with the calls and their results
+	 * replayed as messages, belongs to the caller (ai-chat/agent).
+	 *
+	 * Not combined with `structuredOutput`: both providers implement that
+	 * through tool calling, so one call cannot have both.
+	 *
+	 * The response cache is off for a call with tools. The answer to a round
+	 * depends on what the tools returned as much as on the messages, and a loop
+	 * handed a copy of an earlier round repeats it. Nor is a tool-calling
+	 * round ever the same question twice: the one that is, is the loop's own
+	 * memo to keep (same tool, same arguments).
+	 */
+	tools?: ToolDefinition[];
+	/**
+	 * Whether the model may call them. 'auto', the default, leaves it to the
+	 * model; 'none' makes this call a reply, which is how a loop ends a round
+	 * that has reached its cap: the model is told so and cannot call again.
+	 */
+	toolChoice?: 'auto' | 'none';
 }
 
 /**
@@ -401,9 +473,22 @@ function convertMessages(messages: ChatMessage[]): BaseMessage[] {
 			case 'user':
 				return new HumanMessage(msg.content);
 			case 'assistant':
-				return new AIMessage(msg.content);
+				return msg.toolCalls?.length
+					? new AIMessage({
+							content: msg.content,
+							tool_calls: msg.toolCalls.map((call) => ({ ...call, type: 'tool_call' as const })),
+							...(msg.providerData ? { additional_kwargs: msg.providerData } : {})
+						})
+					: new AIMessage(msg.content);
+			case 'tool':
+				return new ToolMessage({
+					content: msg.content,
+					tool_call_id: msg.toolCallId,
+					name: msg.name,
+					status: msg.isError ? 'error' : 'success'
+				});
 			default:
-				throw new Error(`Unknown message role: ${msg.role}`);
+				throw new Error(`Unknown message role: ${(msg as { role: string }).role}`);
 		}
 	});
 }
@@ -678,6 +763,15 @@ export interface CompletionResult {
 	 * then does with the answer can be scored on it.
 	 */
 	observationId?: string;
+	/**
+	 * The calls the model asked for, when the call bound tools and it made
+	 * any; `content` then holds whatever text it wrote beside them, often
+	 * nothing. Absent on a reply that made none, which is how a loop knows the
+	 * reply is the answer.
+	 */
+	toolCalls?: ToolCall[];
+	/** What the provider attached to those calls and wants back with them. See ChatMessage. */
+	providerData?: Record<string, unknown>;
 }
 
 /**
@@ -784,7 +878,8 @@ async function generateWithLangChain(
 	maxTokens: number,
 	temperature: number,
 	structuredOutput?: StructuredOutputConfig,
-	providerOverride?: string
+	providerOverride?: string,
+	tools?: BoundTools
 ): Promise<CompletionResult> {
 	const provider = providerOverride || config.llmProvider;
 
@@ -794,6 +889,10 @@ async function generateWithLangChain(
 
 		// Convert messages to LangChain format
 		const langChainMessages = convertMessages(messages);
+
+		if (tools) {
+			return await generateWithTools(chatModel, langChainMessages, tools, provider, model);
+		}
 
 		// Handle structured output if structuredOutput is provided
 		if (structuredOutput) {
@@ -1133,6 +1232,92 @@ async function generateWithLangChain(
 	}
 }
 
+/** The tools a call binds, and whether the model may call them. */
+interface BoundTools {
+	definitions: ToolDefinition[];
+	choice: 'auto' | 'none';
+}
+
+/** The tools a call binds, or undefined for a call without any. */
+function boundTools(options: ChatCompletionOptions): BoundTools | undefined {
+	if (!options.tools?.length) return undefined;
+	if (options.structuredOutput) {
+		throw new Error(
+			'A call cannot bind tools and ask for structured output at once: both providers ' +
+				'implement structured output through tool calling.'
+		);
+	}
+	return { definitions: options.tools, choice: options.toolChoice ?? 'auto' };
+}
+
+/** The text of a reply, which arrives as blocks when the model also called tools or thought. */
+function replyText(content: BaseMessage['content']): string {
+	if (typeof content === 'string') return content;
+	return content
+		.map((block) => ('text' in block && typeof block.text === 'string' ? block.text : ''))
+		.join('');
+}
+
+/**
+ * One call with tools bound. The result is the model's text and the calls it
+ * made, in the order it made them.
+ *
+ * Every provider here takes the definitions in OpenAI's function shape and
+ * hands the calls back parsed on `tool_calls`; one whose arguments did not
+ * parse lands on `invalid_tool_calls` instead, and is failed here as the bad
+ * generation it is rather than passed on as a call with no arguments.
+ */
+async function generateWithTools(
+	chatModel: BaseChatModel,
+	messages: BaseMessage[],
+	tools: BoundTools,
+	provider: string,
+	model: string
+): Promise<CompletionResult> {
+	if (!chatModel.bindTools) {
+		throw new Error(`The ${provider} model binding has no tool calling.`);
+	}
+	const bound = chatModel.bindTools(
+		tools.definitions.map((tool) => ({
+			type: 'function' as const,
+			function: { name: tool.name, description: tool.description, parameters: tool.parameters }
+		})),
+		// Only when it says something: each provider's default is 'auto'.
+		tools.choice === 'none' ? { tool_choice: 'none' } : undefined
+	);
+	const result = await bound.invoke(messages);
+	const usage = extractTokenUsage(result);
+
+	const invalid = result.invalid_tool_calls ?? [];
+	if (invalid.length > 0) {
+		const failure = new LLMOutputValidationError(
+			`${provider} returned a tool call whose arguments are not JSON: ` +
+				invalid.map((call) => `${call.name ?? '?'} (${call.error ?? 'unparseable'})`).join('; '),
+			provider,
+			model
+		);
+		throw Object.assign(failure, { usage });
+	}
+
+	const toolCalls: ToolCall[] = (result.tool_calls ?? []).map((call) => ({
+		// Gemini's API numbers nothing; its binding makes an id up, and this
+		// does the same for any provider that leaves it out, since the answer
+		// has to name the call it answers.
+		id: call.id ?? randomUUID(),
+		name: call.name,
+		args: call.args
+	}));
+	const content = replyText(result.content);
+	if (toolCalls.length === 0 && !content) {
+		throw new Error(`No content returned from ${provider}`);
+	}
+	return {
+		content,
+		usage,
+		...(toolCalls.length > 0 ? { toolCalls, providerData: result.additional_kwargs } : {})
+	};
+}
+
 /**
  * The fallback to use, or undefined when there isn't a usable one: unset, or
  * pointing at the pair that just failed.
@@ -1212,10 +1397,12 @@ async function completeTracked(
 		structuredOutput,
 		provider
 	} = options;
+	const tools = boundTools(options);
 
 	// Check cache first (cached = no usage, already billed), unless the caller
-	// asked for a new answer: see ChatCompletionOptions.cache.
-	const cacheKey = options.cache === false ? null : generateCacheKey(messages, options);
+	// asked for a new answer (see ChatCompletionOptions.cache) or bound tools
+	// (ChatCompletionOptions.tools).
+	const cacheKey = options.cache === false || tools ? null : generateCacheKey(messages, options);
 	if (cacheKey === null) {
 		markCache('off');
 	} else {
@@ -1236,6 +1423,7 @@ async function completeTracked(
 				temperature,
 				maxTokens,
 				structured: structuredOutput !== undefined,
+				tools: tools?.definitions.map((tool) => tool.name),
 				prompt: promptRef(options.promptKey, options.promptFingerprint)
 			},
 			async () => {
@@ -1245,7 +1433,8 @@ async function completeTracked(
 					maxTokens,
 					temperature,
 					structuredOutput,
-					activeProvider
+					activeProvider,
+					tools
 				);
 				if (structuredOutput) {
 					refuseSchemaEcho(

@@ -89,8 +89,30 @@ export interface Attempt {
 	temperature: number;
 	maxTokens: number;
 	structured: boolean;
+	/** The names of the tools the call bound, when it bound any. */
+	tools?: string[];
 	/** The template the call rendered, whose registered version it links to. */
 	prompt?: PromptRef | null;
+}
+
+/**
+ * The messages as the generation records them: what the provider was shown,
+ * less what it attached for itself. `providerData` is the provider's own
+ * (Gemini's thought signatures), replayed whole and read by nobody.
+ */
+function recordedMessages(messages: ChatMessage[]): ChatMessage[] {
+	return messages.map((message) => {
+		if (message.role !== 'assistant' || !message.providerData) return message;
+		const { providerData: _, ...rest } = message;
+		return rest;
+	});
+}
+
+/** What a generation answered: its text, with the calls it made when it made any. */
+function recordedOutput(result: CompletionResult) {
+	return result.toolCalls?.length
+		? { content: result.content, tool_calls: result.toolCalls }
+		: result.content;
 }
 
 /**
@@ -115,12 +137,13 @@ export async function traceAttempt(
 					maxTokens: attempt.maxTokens,
 					responseFormat: attempt.structured ? 'json' : 'text'
 				},
-				input: attempt.messages
+				...(attempt.tools ? { metadata: { tools: attempt.tools } } : {}),
+				input: recordedMessages(attempt.messages)
 			});
 			try {
 				const result = await call();
 				generation.update({
-					output: result.content,
+					output: recordedOutput(result),
 					...usageAndCost(attempt, result.usage),
 					...(await promptAttributes(attempt.prompt, link))
 				});

@@ -22,7 +22,9 @@ export {
 	LLMQuotaExceededError,
 	LLMRateLimitError,
 	type StructuredOutputConfig,
-	type TokenUsage
+	type TokenUsage,
+	type ToolCall,
+	type ToolDefinition
 } from './langchain.js';
 
 export { extractionFallback, type FallbackTarget, writingFallback } from './fallback.js';
