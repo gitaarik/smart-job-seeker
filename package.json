@@ -143,7 +143,7 @@
 		"pg": "^8.23.0",
 		"postal-mime": "^3.0.0",
 		"remove-markdown": "^0.7.0",
-		"sharp": "^0.35.4",
+		"sharp": "^0.35.5",
 		"stripe": "^22.6.2",
 		"svelte-dnd-action": "^0.9.79",
 		"tsx": "^4.23.15",
