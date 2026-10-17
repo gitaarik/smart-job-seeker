@@ -24,6 +24,11 @@ import {
 import type { CapabilityRecord } from '$lib/server/ai-chat/capability-record';
 import { resolveChatContext } from '$lib/server/ai-chat/chat-context';
 import { type DirectLogOutcome, logReportedEvents } from '$lib/server/ai-chat/direct-log';
+import {
+	AGENT_MANIFEST_BUDGET_CHARS,
+	MANIFEST_BUDGET_CHARS
+} from '$lib/server/ai-chat/activity-manifest';
+import { DEFAULT_BUDGET_CHARS } from '$lib/server/ai-chat/generation-context';
 import type { ContextEntity } from '$lib/server/ai-chat/generation-context';
 import { ASSISTANT_PROFILE_FIELDS } from '$lib/server/ai-chat/profile-fields';
 import { summarizeProposal } from '$lib/server/ai-chat/proposal-summary';
@@ -241,7 +246,13 @@ export function assistantTurnDeps(): AssistantTurnDeps<TurnInput, TurnOutcome, A
 						...context,
 						// The index for a reader with the read tools: its application
 						// lines say what the budget left out. See ManifestReader.
-						sourceOptions: { ...context.sourceOptions, activity_manifest: { reader: 'agent' } }
+						sourceOptions: { ...context.sourceOptions, activity_manifest: { reader: 'agent' } },
+						// The agent's index is larger (AGENT_MANIFEST_BUDGET_CHARS), and the
+						// evidence budget grows by the same amount so it squeezes out none of
+						// the job, the activity or the ranked blocks beside it.
+						budgetChars:
+							(context.budgetChars ?? DEFAULT_BUDGET_CHARS) +
+							(AGENT_MANIFEST_BUDGET_CHARS - MANIFEST_BUDGET_CHARS)
 					},
 					placeholderDefaults: blankDefaults(template)
 				}

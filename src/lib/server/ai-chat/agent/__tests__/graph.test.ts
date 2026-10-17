@@ -14,6 +14,8 @@ import {
 	type AssistantTurnDeps,
 	buildAssistantTurnGraph,
 	capNote,
+	claimsProposal,
+	claimsRead,
 	type Finished,
 	MAX_READ_CHARS,
 	MAX_ROUNDS,
@@ -21,7 +23,9 @@ import {
 	type ModelCall,
 	type Prepared,
 	runAssistantTurn,
-	streamAssistantTurn
+	streamAssistantTurn,
+	UNPROPOSED_NOTE,
+	UNREAD_NOTE
 } from '../graph';
 import type { TurnEvent } from '../events';
 import { PROPOSAL_RECEIPT, type TurnExecutor } from '../executor';
@@ -204,6 +208,131 @@ describe('the turn', () => {
 		expect(
 			world.calls[1].messages.slice(-3).map((m) => (m.role === 'tool' ? m.toolCallId : m.role))
 		).toEqual(['a', 'b', 'c']);
+	});
+
+	describe('a reply that claims a proposal the turn does not hold', () => {
+		const claim =
+			"Of course. I've proposed an update to the job details to reflect that. " +
+			"You'll see the change proposed below for you to approve.";
+
+		it('goes back to the model once, with the note, and the call it then makes counts', async () => {
+			const write = call('edit_job_details', { salary_min: 6 }, 'w1');
+			const { outcome, world } = await run([
+				says(claim),
+				says('', [write]),
+				says('Proposed, and waiting for you.')
+			]);
+
+			expect(world.calls).toHaveLength(3);
+			const second = world.calls[1].messages;
+			expect(roles(second).slice(-3)).toEqual(['user', 'assistant', 'user']);
+			expect(second[second.length - 2]).toEqual({ role: 'assistant', content: claim });
+			expect(second[second.length - 1]).toEqual({ role: 'user', content: UNPROPOSED_NOTE });
+			expect(world.calls[1].toolChoice).toBe('auto');
+			expect(outcome.proposed).toHaveLength(1);
+			expect(outcome.reply).toBe('Proposed, and waiting for you.');
+			expect(outcome.rounds).toBe(3);
+		});
+
+		it('takes the second reply as it is, so a turn cannot loop on the note', async () => {
+			const { outcome, world } = await run([says(claim), says(claim)]);
+			expect(world.calls).toHaveLength(2);
+			expect(outcome.reply).toBe(claim);
+			expect(outcome.rounds).toBe(2);
+		});
+
+		it('leaves a reply alone when the turn holds the proposal it talks about', async () => {
+			const write = call('edit_job_details', { salary_min: 6 }, 'w1');
+			const { outcome, world } = await run([says('', [write]), says(claim)]);
+			expect(world.calls).toHaveLength(2);
+			expect(outcome.reply).toBe(claim);
+		});
+
+		it('leaves a forced last round alone, which could not have called anyway', async () => {
+			const read = (id: string) => call('read_job', { job_id: 1 }, id);
+			const { outcome, world } = await run([
+				says('', [read('a')]),
+				says('', [read('b')]),
+				says('', [read('c')]),
+				says(claim)
+			]);
+			expect(world.calls).toHaveLength(MAX_ROUNDS);
+			expect(outcome.reply).toBe(claim);
+		});
+
+		it('knows the claim when it sees one', () => {
+			expect(claimsProposal(claim)).toBe(true);
+			expect(claimsProposal("I've updated the salary to 120k for you.")).toBe(true);
+			expect(claimsProposal('The change is ready for you to review below.')).toBe(true);
+			expect(claimsProposal('Both changes are waiting for your approval.')).toBe(true);
+			expect(claimsProposal('The salary on the posting is 120k; is that what you meant?')).toBe(
+				false
+			);
+			expect(
+				claimsProposal('Three things you could tighten: the summary, the dates, the title.')
+			).toBe(false);
+			expect(
+				claimsProposal('Did you have a conversation with him that we have not recorded?')
+			).toBe(false);
+		});
+	});
+
+	describe('a reply that claims a read the turn never made', () => {
+		const invented =
+			"I've just reviewed the transcripts from your application with SOUS. " +
+			'He explained that SOUS is currently bootstrapped and profitable.';
+		const denial =
+			"I've looked through all the notes and messages on file for that one, and I " +
+			"can't see any mention of funding.";
+
+		it('goes back to the model once, with the note, and the read it then makes counts', async () => {
+			const read = call('read_activity_entry', { entry_id: 45 }, 'r1');
+			const { outcome, world } = await run([
+				says(invented),
+				says('', [read]),
+				says('He said: a seed round, two years of runway.')
+			]);
+
+			expect(world.calls).toHaveLength(3);
+			const second = world.calls[1].messages;
+			expect(second[second.length - 2]).toEqual({ role: 'assistant', content: invented });
+			expect(second[second.length - 1]).toEqual({ role: 'user', content: UNREAD_NOTE });
+			expect(outcome.reads).toHaveLength(1);
+			expect(outcome.reply).toBe('He said: a seed round, two years of runway.');
+		});
+
+		it('sends the "can\'t see" reply back the same way', async () => {
+			const { outcome, world } = await run([says(denial), says('I have not read that call yet.')]);
+			expect(world.calls).toHaveLength(2);
+			expect(world.calls[1].messages[world.calls[1].messages.length - 1]).toEqual({
+				role: 'user',
+				content: UNREAD_NOTE
+			});
+			expect(outcome.reply).toBe('I have not read that call yet.');
+		});
+
+		it('leaves a reply alone when the turn did read', async () => {
+			const read = call('read_activity_entry', { entry_id: 12 }, 'r1');
+			const { outcome, world } = await run([says('', [read]), says(denial)]);
+			expect(world.calls).toHaveLength(2);
+			expect(outcome.reply).toBe(denial);
+		});
+
+		it('knows the claim when it sees one', () => {
+			expect(claimsRead(invented)).toBe(true);
+			expect(claimsRead(denial)).toBe(true);
+			expect(claimsRead("I can't find anyone named William in your profile.")).toBe(true);
+			expect(claimsRead('There is no record of a call with him.')).toBe(true);
+			expect(claimsRead('Your summary could lead with the migration you ran at Chipta.')).toBe(
+				false
+			);
+			expect(claimsRead('Did you have a conversation with him that we have not recorded?')).toBe(
+				false
+			);
+			expect(claimsRead('The posting asks for Kafka, which your profile does not list.')).toBe(
+				false
+			);
+		});
 	});
 
 	it('hands a refusal back marked as one, and goes on', async () => {

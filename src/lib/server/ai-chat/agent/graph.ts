@@ -11,7 +11,10 @@
  * through the MCP read tools, a write into a buffered proposal with a
  * receipt. The loop ends when the model writes a reply, or at a cap, where
  * the model is told so in the last tool result and gets one more call that
- * cannot call again. `finish` is what the route did after the model: the
+ * cannot call again. A reply that claims a proposal or a read the turn does
+ * not hold goes back to `agent` once with a note (unfoundedClaim). `finish`
+ * is what
+ * the route did after the model: the
  * exchange and the cards stored, the direct-log gate, the scores, the
  * payload. A turn that fails anywhere stores nothing.
  *
@@ -127,6 +130,8 @@ export const AssistantTurnState = Annotation.Root({
 	/** The calls the last model call asked for, for `tools` to run. */
 	pending: Annotation<ToolCall[]>({ reducer: last, default: () => [] }),
 	capped: Annotation<string | null>({ reducer: last, default: () => null }),
+	/** Whether the model has been sent back once for a reply that claimed a proposal or a read it never made. */
+	corrected: Annotation<boolean>({ reducer: last, default: () => false }),
 	reply: Annotation<string | null>({ reducer: last, default: () => null }),
 	outcome: Annotation<unknown>({ reducer: last, default: () => null })
 });
@@ -141,6 +146,73 @@ export function capNote(reason: string): string {
 		`[This turn's reading is spent (${reason}). Answer now from what you have; ` +
 		`you cannot call another tool on this turn.]`
 	);
+}
+
+/**
+ * Whether a reply says a change was proposed, set or recorded. The trial's
+ * third live check (planning/ASSISTANT-AGENT.md § Phase 6) got "I've proposed
+ * an update to the job details ... You'll see the change proposed below for
+ * you to approve" from a round that made no tool call: the receipt's wording,
+ * learned from the prompt, with nothing behind it, and the worst reply a turn
+ * can give, since the user then waits for a card that never comes. English
+ * only, like the prompt; a false hit costs one more model call and nothing
+ * else, because the note below tells the model what to do either way.
+ */
+export function claimsProposal(text: string): boolean {
+	return (
+		/\bI(?:['’]ve| have)? (?:proposed|put forward|drafted|prepared|set up|queued|submitted|recorded|logged|added|updated|changed|set|applied|made)\b/i.test(
+			text
+		) ||
+		/\b(?:proposal|change|update|card)s? (?:is |are )?(?:now )?(?:ready|waiting|below|under (?:my|this) reply)\b/i.test(
+			text
+		) ||
+		/\bfor you to (?:approve|review|apply)\b/i.test(text) ||
+		/\byou(?:['’]ll| will) see (?:the|a|it|them|this)\b/i.test(text)
+	);
+}
+
+/** What the model is told, as the user, when its reply claimed a proposal the turn does not hold. */
+export const UNPROPOSED_NOTE =
+	'[Nothing was proposed on this turn: you made no tool call, so no card will appear under ' +
+	'your reply. If the user asked for a change, call the tool for it now. Otherwise write your ' +
+	'reply again without saying that anything was proposed, set, changed or recorded.]';
+
+/**
+ * Whether a reply says the model read, reviewed or searched the record, or
+ * that something is not in it. The trial's first live check asked what an
+ * interviewer had said: one turn answered "I've looked through all the notes
+ * and messages on file for that one, and I can't see any mention of funding",
+ * another "I've just reviewed the transcripts ... he explained that SOUS is
+ * currently bootstrapped and profitable", and neither had read a thing. The
+ * first is the "can't see" reply the plan set out to remove, the second is
+ * invented history. Same handling as the proposal claim: back once with the
+ * note, which also covers the honest case where what it describes is printed
+ * in the prompt.
+ */
+export function claimsRead(text: string): boolean {
+	return (
+		/\bI(?:['’]ve| have)? (?:just )?(?:reviewed|read|re-read|looked (?:at|through|into|over)|gone through|went through|checked|searched|pulled up|opened|dug into)\b[^.]{0,80}?\b(?:transcript|note|entr(?:y|ies)|log|record|message|email|application|document|history|timeline)s?\b/i.test(
+			text
+		) ||
+		/\bI (?:can(?:['’])?t|cannot|don(?:['’])?t|do not|couldn(?:['’])?t|could not) (?:see|find)\b/i.test(
+			text
+		) ||
+		/\bthere(?:['’]s| is| are)? (?:no|nothing) (?:mention|record|note|trace)\b/i.test(text)
+	);
+}
+
+/** What the model is told, as the user, when its reply claimed a read the turn never made. */
+export const UNREAD_NOTE =
+	'[You read nothing with a tool on this turn. If what you describe is printed in this prompt, ' +
+	'write your reply again as it was. Otherwise read it now, with read_application for an ' +
+	"application's log and read_activity_entry for an entry's words, or say plainly that you have " +
+	'not read it.]';
+
+/** The note a reply earns when it claims what the turn does not hold, or null when it claims nothing. */
+export function unfoundedClaim(state: TurnState, text: string): string | null {
+	if (state.proposed.length === 0 && claimsProposal(text)) return UNPROPOSED_NOTE;
+	if (state.reads.length === 0 && claimsRead(text)) return UNREAD_NOTE;
+	return null;
 }
 
 function preparedOf<P extends Prepared>(state: TurnState): P {
@@ -197,6 +269,25 @@ export function buildAssistantTurnGraph<Input, Outcome, P extends Prepared>(
 		});
 		const calls = result.toolCalls ?? [];
 		if (calls.length === 0 || toolChoice === 'none') {
+			// A reply that says a change was proposed, or something was read, from
+			// a turn holding no such thing, goes back once with the note: the model
+			// then makes the call it skipped or rewrites the reply without the
+			// claim. Not on a round that could not call, where the reply is what
+			// it is.
+			const note =
+				toolChoice === 'auto' && !state.corrected ? unfoundedClaim(state, result.content) : null;
+			if (note) {
+				return {
+					round,
+					aiChatIds: [aiChatId],
+					pending: [],
+					corrected: true,
+					messages: [
+						{ role: 'assistant', content: result.content },
+						{ role: 'user', content: note }
+					]
+				};
+			}
 			return { round, aiChatIds: [aiChatId], pending: [], reply: result.content };
 		}
 		// Text beside the calls is discarded, from the reply and from the
@@ -340,52 +431,60 @@ export function buildAssistantTurnGraph<Input, Outcome, P extends Prepared>(
 		return { outcome };
 	};
 
-	return new StateGraph(AssistantTurnState)
-		.addNode(
-			'prepare',
-			traced('prepare', 'span', prepare, {
-				describe: (update) => ({
-					output: {
-						tools: update.prepared?.tools.map((tool) => tool.name),
-						history: update.prepared?.history.length
-					}
+	return (
+		new StateGraph(AssistantTurnState)
+			.addNode(
+				'prepare',
+				traced('prepare', 'span', prepare, {
+					describe: (update) => ({
+						output: {
+							tools: update.prepared?.tools.map((tool) => tool.name),
+							history: update.prepared?.history.length
+						}
+					})
 				})
-			})
-		)
-		.addNode(
-			'agent',
-			traced('agent', 'span', agent, {
-				describe: (update) => ({
-					output: {
-						round: update.round,
-						calls: update.pending?.map((call) => call.name) ?? [],
-						...(update.reply ? { reply: glance(update.reply) } : {})
-					}
+			)
+			.addNode(
+				'agent',
+				traced('agent', 'span', agent, {
+					describe: (update) => ({
+						output: {
+							round: update.round,
+							calls: update.pending?.map((call) => call.name) ?? [],
+							...(update.corrected ? { corrected: true } : {}),
+							...(update.reply ? { reply: glance(update.reply) } : {})
+						}
+					})
 				})
-			})
-		)
-		.addNode(
-			'tools',
-			traced('tools', 'span', tools, {
-				describe: (update) => ({
-					output: {
-						reads: update.reads?.map((read) => `${read.tool} ${read.chars}`),
-						proposed: update.proposed?.map((p) => p.proposal.capability),
-						capped: update.capped
-					}
+			)
+			.addNode(
+				'tools',
+				traced('tools', 'span', tools, {
+					describe: (update) => ({
+						output: {
+							reads: update.reads?.map((read) => `${read.tool} ${read.chars}`),
+							proposed: update.proposed?.map((p) => p.proposal.capability),
+							capped: update.capped
+						}
+					})
 				})
-			})
-		)
-		.addNode('finish', traced('finish', 'span', finish, { describe: () => ({ output: 'stored' }) }))
-		.addEdge(START, 'prepare')
-		.addEdge('prepare', 'agent')
-		.addConditionalEdges('agent', (state) => (state.pending.length > 0 ? 'tools' : 'finish'), [
-			'tools',
-			'finish'
-		])
-		.addEdge('tools', 'agent')
-		.addEdge('finish', END)
-		.compile();
+			)
+			.addNode(
+				'finish',
+				traced('finish', 'span', finish, { describe: () => ({ output: 'stored' }) })
+			)
+			.addEdge(START, 'prepare')
+			.addEdge('prepare', 'agent')
+			// Calls to run, or a reply; a corrected round has neither and goes again.
+			.addConditionalEdges(
+				'agent',
+				(state) => (state.pending.length > 0 ? 'tools' : state.reply === null ? 'agent' : 'finish'),
+				['tools', 'agent', 'finish']
+			)
+			.addEdge('tools', 'agent')
+			.addEdge('finish', END)
+			.compile()
+	);
 }
 
 /** One turn, start to finish, as the route runs it without a stream. */

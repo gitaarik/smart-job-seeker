@@ -55,6 +55,20 @@ import { getStatusLabel } from '$lib/application-status';
  * here, so it trims rather than grows.
  */
 export const MANIFEST_BUDGET_CHARS = 6000;
+/**
+ * The agent's index (planning/ASSISTANT-AGENT.md § Phase 6). The chat reads
+ * the index to say what exists; the agent reads it to decide what to go and
+ * get, and in the trial it went only for what the index named. Asked what a
+ * named interviewer had said, with his application trimmed to its newest
+ * entry and the line saying "6 entries on file, 1 listed here", two live
+ * turns and the smoke case at temperature 0.2 all answered without a read;
+ * shown the entry's title, the model reads it. So the agent gets an index
+ * that lists nearly everything: profile 1's 109 entries over 41 applications
+ * are about 14,000 chars, some 3,500 tokens, on a prefix the provider
+ * caches across the turn's rounds. The trim note above still covers what a
+ * busier profile does not fit.
+ */
+export const AGENT_MANIFEST_BUDGET_CHARS = 16_000;
 
 /**
  * Who reads the index: the chat as it is, which can only say that a thing
@@ -329,6 +343,12 @@ export function formatActivityManifest(
 		fattest.entries.shift();
 		trimmed++;
 	}
+	// Applications the index now shows only part of. Their own line says so;
+	// the note at the top says what that means for a reader with tools, and
+	// only when there is such a line (the trial's first live turn answered a
+	// question about one of them from the index alone, see the agent's smoke
+	// case on the SOUS index).
+	const partial = working.filter((a, i) => a.entries.length < apps[i].entries.length).length;
 
 	return [
 		// NOTE ON WRAPPING: joined with "\n", so a phrase split across two entries
@@ -345,7 +365,14 @@ export function formatActivityManifest(
 					'and its text is not in this prompt, read it with your tools:',
 					"read_application for an application's complete log, read_activity_entry",
 					"for an entry's own words — rather than answering as though there were",
-					'nothing to find.'
+					'nothing to find.',
+					...(partial > 0
+						? [
+								'Where an application says "entries on file" and fewer "listed here", the',
+								'rest are not in this prompt at all: a question about that application,',
+								'or about someone named on it, starts with read_application.'
+							]
+						: [])
 				]
 			: [
 					'and its text is not in this prompt, say so, and',
@@ -496,7 +523,12 @@ export async function activityManifestText(
 			loadActivityManifest(profileId, currentApplicationId),
 			loadDocumentManifest(profileId)
 		]);
-		return formatActivityManifest(apps, MANIFEST_BUDGET_CHARS, docs, reader);
+		return formatActivityManifest(
+			apps,
+			reader === 'agent' ? AGENT_MANIFEST_BUDGET_CHARS : MANIFEST_BUDGET_CHARS,
+			docs,
+			reader
+		);
 	} catch {
 		// Context is a bonus, never a reason to fail the generation.
 		return '';
