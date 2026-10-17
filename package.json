@@ -99,6 +99,7 @@
 		"@langchain/core": "^1.2.12",
 		"@langchain/google-genai": "^2.3.2",
 		"@langchain/groq": "^1.3.1",
+		"@langchain/langgraph": "^1.4.17",
 		"@langchain/openai": "^1.5.13",
 		"@langfuse/client": "^5.11.1",
 		"@langfuse/core": "^5.11.1",
