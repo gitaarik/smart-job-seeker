@@ -109,6 +109,7 @@ import {
 	isMcpCapability,
 	isReadTool,
 	pageFor,
+	type ReadTool,
 	sectionFor,
 	MCP_CAPABILITIES,
 	UPLOAD_TOOL
@@ -118,7 +119,27 @@ import { isSupportedUpload, SUPPORTED_UPLOAD_EXTENSIONS } from '$lib/server/file
 import { findAttachableRecord } from '$lib/server/applications/record-files';
 import { getEnv } from '$lib/tools/get-env';
 import { JOB_CAPABILITIES } from './entities';
-import type { VerifiedMcpKey } from './keys';
+import type { McpReadScope, McpScope, VerifiedMcpKey } from './keys';
+
+/**
+ * Who is reading: the three fields of a key the read tools use, and nothing
+ * else. A `VerifiedMcpKey` satisfies it as it is, and the chat reads with one
+ * built per turn (ai-chat/agent/executor.ts), as a `propose` actor and with no
+ * key behind it. The read functions below still call it `key`, which on the
+ * MCP route it is.
+ */
+export interface ReadActor {
+	profileId: number;
+	scope: McpScope;
+	readScope: McpReadScope;
+	/**
+	 * How much of a long text one read returns, for the three reads that slice
+	 * (read_text, read_activity_entry, read_document). The server's own size
+	 * (60,000) when unset. The chat reads 6,000 at a time: a slice sits in the
+	 * turn's context and is paid for again on every round after it.
+	 */
+	sliceChars?: number;
+}
 
 /** What a tool call answers with. `isError` is the protocol's, not an exception. */
 export interface ToolResult {
@@ -241,7 +262,7 @@ async function directivesForAgents(
 	};
 }
 
-async function listProfileSections(key: VerifiedMcpKey): Promise<ToolResult> {
+async function listProfileSections(key: ReadActor): Promise<ToolResult> {
 	const [counts, directives] = await Promise.all([
 		profileEditCounts(key.profileId),
 		directivesForAgents(key.profileId)
@@ -281,7 +302,7 @@ async function listProfileSections(key: VerifiedMcpKey): Promise<ToolResult> {
 	);
 }
 
-async function readProfileSection(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+async function readProfileSection(args: Args, key: ReadActor): Promise<ToolResult> {
 	const section = args.section;
 	if (typeof section !== 'string' || !(section in PROFILE_RESOURCES)) {
 		return fail(`Unknown section "${String(section)}".`);
@@ -386,7 +407,7 @@ async function readProfileSection(args: Args, key: VerifiedMcpKey): Promise<Tool
 	);
 }
 
-async function listChanges(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+async function listChanges(args: Args, key: ReadActor): Promise<ToolResult> {
 	const requested = argInt(args, 'limit') ?? 20;
 	const entries = await readEditLog(key.profileId, Math.min(Math.max(requested, 1), 50));
 
@@ -455,7 +476,7 @@ function excerptChange(change: ProposedChange): ProposedChange {
  * field written to be read by whoever decides, and cutting it would hide the
  * argument while showing the claim.
  */
-async function listPendingChanges(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+async function listPendingChanges(args: Args, key: ReadActor): Promise<ToolResult> {
 	const requested = argInt(args, 'limit') ?? 20;
 	const limit = Math.min(Math.max(requested, 1), 50);
 
@@ -532,7 +553,7 @@ async function listPendingChanges(args: Args, key: VerifiedMcpKey): Promise<Tool
  * because an agent that cannot see the unedittable ones cannot tell the
  * applicant *why* it did not fix the salary on the one they asked about.
  */
-async function listJobs(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+async function listJobs(args: Args, key: ReadActor): Promise<ToolResult> {
 	const jobs = await listProfileJobs(key.profileId, {
 		limit: argInt(args, 'limit') ?? undefined,
 		editableOnly: args.editable_only === true
@@ -594,7 +615,7 @@ function renderFields(fields: Record<string, unknown>): string {
 		.join('\n');
 }
 
-async function readJob(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+async function readJob(args: Args, key: ReadActor): Promise<ToolResult> {
 	const id = argInt(args, 'job_id');
 	if (id === null) return fail('job_id is required. Call list_jobs for the ids.');
 
@@ -619,7 +640,7 @@ async function readJob(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
 	);
 }
 
-async function listApplications(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+async function listApplications(args: Args, key: ReadActor): Promise<ToolResult> {
 	const status = typeof args.status === 'string' ? args.status : undefined;
 	// A filter on a word that is not a status matches nothing, and "No
 	// applications with status" then reads as "they have none". The description
@@ -669,7 +690,7 @@ async function listApplications(args: Args, key: VerifiedMcpKey): Promise<ToolRe
 	);
 }
 
-async function readApplication(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+async function readApplication(args: Args, key: ReadActor): Promise<ToolResult> {
 	const id = argInt(args, 'application_id');
 	if (id === null) return fail('application_id is required. Call list_applications for the ids.');
 
@@ -767,7 +788,7 @@ function renderStanding(standing: ApplicationStanding | null): string {
  * both means a mistyped entry id fails rather than quietly returning a
  * different application's history.
  */
-async function readActivityEntry(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+async function readActivityEntry(args: Args, key: ReadActor): Promise<ToolResult> {
 	const applicationId = argInt(args, 'application_id');
 	const entryId = argInt(args, 'entry_id');
 	if (applicationId === null || entryId === null) {
@@ -780,7 +801,8 @@ async function readActivityEntry(args: Args, key: VerifiedMcpKey): Promise<ToolR
 	}
 
 	const entry = await readApplicationEntry(entryId, key.profileId, {
-		offset: argInt(args, 'offset') ?? 0
+		offset: argInt(args, 'offset') ?? 0,
+		maxChars: key.sliceChars
 	});
 	if (!entry) {
 		return fail(`There is no entry ${entryId} on this profile. Call read_application for the ids.`);
@@ -804,7 +826,7 @@ async function readActivityEntry(args: Args, key: VerifiedMcpKey): Promise<ToolR
  * a cleanup needs the entries tagged for one version alone before it proposes
  * the delete, not after.
  */
-async function listResumeVersions(key: VerifiedMcpKey): Promise<ToolResult> {
+async function listResumeVersions(key: ReadActor): Promise<ToolResult> {
 	const versions = [];
 	for (const version of await listLibraryVersions(key.profileId)) {
 		const impact = await versionDeleteImpact(key.profileId, version.id);
@@ -837,7 +859,7 @@ async function listResumeVersions(key: VerifiedMcpKey): Promise<ToolResult> {
 	);
 }
 
-async function listDocuments(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+async function listDocuments(args: Args, key: ReadActor): Promise<ToolResult> {
 	const documents = await listProfileDocuments(key.profileId, {
 		limit: argInt(args, 'limit') ?? undefined
 	});
@@ -859,12 +881,13 @@ async function listDocuments(args: Args, key: VerifiedMcpKey): Promise<ToolResul
 	);
 }
 
-async function readDocument(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+async function readDocument(args: Args, key: ReadActor): Promise<ToolResult> {
 	const id = argInt(args, 'document_id');
 	if (id === null) return fail('document_id is required. Call list_documents for the ids.');
 
 	const doc = await readProfileDocument(id, key.profileId, {
-		offset: argInt(args, 'offset') ?? 0
+		offset: argInt(args, 'offset') ?? 0,
+		maxChars: key.sliceChars
 	});
 	if (!doc) {
 		return fail(`There is no document ${id} on this profile. Call list_documents for the ids.`);
@@ -898,7 +921,7 @@ function asTextKind(value: unknown) {
  * their own writing about their own record, which is what a base `record` key
  * is for.
  */
-async function listTexts(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+async function listTexts(args: Args, key: ReadActor): Promise<ToolResult> {
 	const kind = asTextKind(args.kind);
 	if (args.kind !== undefined && !kind) {
 		return fail(`"${String(args.kind)}" is not a kind. One of: ${TEXT_KIND_NAMES.join(', ')}.`);
@@ -964,7 +987,7 @@ async function listTexts(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
 	);
 }
 
-async function readText(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
+async function readText(args: Args, key: ReadActor): Promise<ToolResult> {
 	const kind = asTextKind(args.kind);
 	if (!kind) {
 		return fail(
@@ -977,7 +1000,8 @@ async function readText(args: Args, key: VerifiedMcpKey): Promise<ToolResult> {
 	if (id === null) return fail('text_id is required. Call list_texts for the ids.');
 
 	const text = await readProfileText(kind, id, key.profileId, {
-		offset: argInt(args, 'offset') ?? 0
+		offset: argInt(args, 'offset') ?? 0,
+		maxChars: key.sliceChars
 	});
 	if (!text) {
 		return fail(
@@ -1517,49 +1541,7 @@ export async function callTool(name: string, args: Args, key: VerifiedMcpKey): P
 	const mismatch = profileMismatch(args, key);
 	if (mismatch) return mismatch;
 
-	if (isReadTool(name)) {
-		// The read scope, enforced here and not only by hiding the tool. A client
-		// that remembers a tool list from before the key was re-minted, or one that
-		// simply tries a name it read about, gets the same answer as a write above
-		// its scope: a refusal that names where to change it.
-		if (key.readScope !== 'documents' && (DOCUMENT_TOOLS as readonly string[]).includes(name)) {
-			return fail(
-				`This key reads the applicant's own record — their profile, jobs and ` +
-					`applications — and not the documents and messages they have collected. ` +
-					`They can widen it on their MCP keys page; there is nothing you can do ` +
-					`from here.`
-			);
-		}
-
-		switch (name) {
-			case 'read_profile_section':
-				return readProfileSection(args, key);
-			case 'list_jobs':
-				return listJobs(args, key);
-			case 'read_job':
-				return readJob(args, key);
-			case 'list_applications':
-				return listApplications(args, key);
-			case 'read_application':
-				return readApplication(args, key);
-			case 'list_texts':
-				return listTexts(args, key);
-			case 'list_resume_versions':
-				return listResumeVersions(key);
-			case 'read_text':
-				return readText(args, key);
-			case 'read_activity_entry':
-				return readActivityEntry(args, key);
-			case 'list_documents':
-				return listDocuments(args, key);
-			case 'read_document':
-				return readDocument(args, key);
-			case 'list_changes':
-				return listChanges(args, key);
-			default:
-				return listPendingChanges(args, key);
-		}
-	}
+	if (isReadTool(name)) return readTool(name, args, key);
 
 	if (name === UPLOAD_TOOL) return requestFileUpload(args, key);
 
@@ -1575,4 +1557,56 @@ export async function callTool(name: string, args: Args, key: VerifiedMcpKey): P
 	}
 
 	return runWrite(name, args, key);
+}
+
+/**
+ * One read, for whoever is reading. The MCP route arrives here from `callTool`
+ * with its key, once the stated profile has been checked against it; the chat
+ * arrives with the turn's actor and no `profile_id` in the arguments, since
+ * the actor says which profile and the model was never given the field.
+ */
+export async function readTool(name: ReadTool, args: Args, key: ReadActor): Promise<ToolResult> {
+	if (name === 'list_profile_sections') return listProfileSections(key);
+
+	// The read scope, enforced here and not only by hiding the tool. A client
+	// that remembers a tool list from before the key was re-minted, or one that
+	// simply tries a name it read about, gets the same answer as a write above
+	// its scope: a refusal that names where to change it.
+	if (key.readScope !== 'documents' && (DOCUMENT_TOOLS as readonly string[]).includes(name)) {
+		return fail(
+			`This key reads the applicant's own record — their profile, jobs and ` +
+				`applications — and not the documents and messages they have collected. ` +
+				`They can widen it on their MCP keys page; there is nothing you can do ` +
+				`from here.`
+		);
+	}
+
+	switch (name) {
+		case 'read_profile_section':
+			return readProfileSection(args, key);
+		case 'list_jobs':
+			return listJobs(args, key);
+		case 'read_job':
+			return readJob(args, key);
+		case 'list_applications':
+			return listApplications(args, key);
+		case 'read_application':
+			return readApplication(args, key);
+		case 'list_texts':
+			return listTexts(args, key);
+		case 'list_resume_versions':
+			return listResumeVersions(key);
+		case 'read_text':
+			return readText(args, key);
+		case 'read_activity_entry':
+			return readActivityEntry(args, key);
+		case 'list_documents':
+			return listDocuments(args, key);
+		case 'read_document':
+			return readDocument(args, key);
+		case 'list_changes':
+			return listChanges(args, key);
+		default:
+			return listPendingChanges(args, key);
+	}
 }

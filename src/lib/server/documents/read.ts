@@ -97,7 +97,7 @@ export async function listProfileDocuments(
 export async function readProfileDocument(
 	documentId: number,
 	profileId: number,
-	opts: { offset?: number } = {}
+	opts: { offset?: number; maxChars?: number } = {}
 ): Promise<ProfileDocumentText | null> {
 	const row = await db.query.profile_document_projects.findFirst({
 		where: and(
@@ -131,7 +131,9 @@ export async function readProfileDocument(
 		.join('\n\n');
 
 	const offset = Math.max(opts.offset ?? 0, 0);
-	const text = whole.slice(offset, offset + DOCUMENT_READ_CHARS);
+	// A smaller slice for a reader with less room, which the chat is (mcp/call.ts
+	// ReadActor.sliceChars); the server's size otherwise.
+	const text = whole.slice(offset, offset + (opts.maxChars ?? DOCUMENT_READ_CHARS));
 
 	return {
 		id: row.id,

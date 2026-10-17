@@ -211,7 +211,7 @@ export interface ApplicationEntryText {
 export async function readApplicationEntry(
 	entryId: number,
 	profileId: number,
-	opts: { offset?: number } = {}
+	opts: { offset?: number; maxChars?: number } = {}
 ): Promise<ApplicationEntryText | null> {
 	// Joined through the application, so the profile scope is the same query that
 	// finds the row rather than a check a later edit could forget.
@@ -233,7 +233,9 @@ export async function readApplicationEntry(
 
 	const whole = row.content ?? '';
 	const offset = Math.max(opts.offset ?? 0, 0);
-	const text = whole.slice(offset, offset + ENTRY_READ_CHARS);
+	// A smaller slice for a reader with less room, which the chat is (mcp/call.ts
+	// ReadActor.sliceChars); the server's size otherwise.
+	const text = whole.slice(offset, offset + (opts.maxChars ?? ENTRY_READ_CHARS));
 
 	return {
 		entry_id: row.id,

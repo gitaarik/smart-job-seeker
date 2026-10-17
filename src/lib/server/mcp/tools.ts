@@ -270,7 +270,10 @@ const RATIONALE_PROPERTY = {
  * One read per distinct parent SECTION, not per capability — seven sections
  * hang off four parents, and `add_` and `edit_` of each want the same list.
  */
-async function parentBlocksFor(actor: ProfileActor): Promise<Map<Capability, string>> {
+async function parentBlocksFor(
+	actor: ProfileActor,
+	capabilities: Capability[]
+): Promise<Map<Capability, string>> {
 	const reads = new Map<ProfileResourceName, Promise<string[]>>();
 	const wanted: {
 		capability: Capability;
@@ -279,7 +282,7 @@ async function parentBlocksFor(actor: ProfileActor): Promise<Map<Capability, str
 		field: string;
 	}[] = [];
 
-	for (const capability of MCP_CAPABILITIES) {
+	for (const capability of capabilities) {
 		const section = sectionFor(capability);
 		if (!section) continue;
 
@@ -441,7 +444,11 @@ function translationProperty(base: string, locale: string): Record<string, unkno
 	};
 }
 
-function writeTool(capability: Capability, parents?: string, languages: string[] = []): McpTool {
+export function writeTool(
+	capability: Capability,
+	parents?: string,
+	languages: string[] = []
+): McpTool {
 	const def = CAPABILITIES[capability];
 	const isAdd = capability.startsWith('add_');
 	const isSwitch = capability.startsWith('hide_') || capability.startsWith('show_');
@@ -1094,18 +1101,35 @@ export async function toolsFor(
 
 	if (scope === 'read') return tools;
 
-	// Without an actor this is the shape and nothing else — every tool, every
-	// schema, and contracts that still say "listed below" with nothing under
-	// them. That is the right answer for a caller asking what this server
-	// offers, and the wrong one to serve to an agent, which is why the route
-	// passes the key's profile.
-	const parents = actor ? await parentBlocksFor(actor) : null;
+	return [...tools, uploadTool, ...(await writeToolsFor(MCP_CAPABILITIES, actor))];
+}
+
+/**
+ * One write tool per capability, with the blocks the registry's contracts
+ * promise: the parents a parent-owned section may name, where an add reads
+ * what it might duplicate, the versions a tag may name, the tag verb an edit
+ * points at, and a translation field per language the profile writes in.
+ * `toolsFor` builds the server's list from it; the chat builds a turn's from
+ * the capabilities live on its page (ai-chat/agent/tools.ts).
+ *
+ * Without an actor this is the shape and nothing else — every tool, every
+ * schema, and contracts that still say "listed below" with nothing under
+ * them. That is the right answer for a caller asking what this server
+ * offers, and the wrong one to serve to an agent, which is why the route
+ * passes the key's profile.
+ */
+export async function writeToolsFor(
+	capabilities: Capability[],
+	actor?: ProfileActor
+): Promise<McpTool[]> {
+	const parents = actor ? await parentBlocksFor(actor, capabilities) : null;
 	// A translation field is listed only in a language this profile writes in,
 	// so a profile that has never translated anything sees the tools it always
 	// did. Without an actor there is no profile to ask, and so no languages.
 	const languages = actor ? await translatedLocales(actor.profileId) : [];
 	// The same list the entry's page offers as chips; see tag-capabilities.ts.
-	const versions = actor ? await libraryVersions(actor.profileId) : null;
+	const versions =
+		actor && capabilities.some(isTagCapability) ? await libraryVersions(actor.profileId) : null;
 	const extraFor = (c: Capability): string | undefined =>
 		[
 			parents?.get(c) ?? inventoryHintFor(c),
@@ -1114,11 +1138,52 @@ export async function toolsFor(
 		]
 			.filter(Boolean)
 			.join('\n\n') || undefined;
-	return [
-		...tools,
-		uploadTool,
-		...MCP_CAPABILITIES.map((c) => writeTool(c, extraFor(c), languages))
-	];
+	return capabilities.map((c) => writeTool(c, extraFor(c), languages));
+}
+
+/**
+ * The reads the chat does not bind. It knows its profile and holds the
+ * directives in its prompt (list_profile_sections), and its thread replays
+ * what each turn proposed and whether it was applied (list_changes,
+ * list_pending_changes); the changes feed is a page.
+ */
+export const CHAT_HELD_BACK_READS = [
+	'list_profile_sections',
+	'list_changes',
+	'list_pending_changes'
+] as const;
+
+/**
+ * A tool's schema without `profile_id`. The chat's executor acts for one
+ * profile and supplies it (mcp/call.ts ReadActor), so the model has no id to
+ * get wrong — the opposite reason to the one every MCP tool requires it for
+ * (PROFILE_ID_PROPERTY), and the same conclusion.
+ */
+export function withoutProfileId(tool: McpTool): McpTool {
+	const { profile_id: _, ...properties } = tool.inputSchema.properties ?? {};
+	return {
+		...tool,
+		inputSchema: {
+			...tool.inputSchema,
+			properties,
+			required: (tool.inputSchema.required ?? []).filter((name) => name !== 'profile_id')
+		}
+	};
+}
+
+/**
+ * The read tools as the chat binds them: eleven of the fourteen, without
+ * `profile_id`, and naming the size the chat reads at where a description
+ * names the server's, so the model expects the slice it gets.
+ */
+export function chatReadTools(sliceChars: number): McpTool[] {
+	const slice = sliceChars.toLocaleString('en-US');
+	return READ_TOOLS.filter(
+		(name) => !(CHAT_HELD_BACK_READS as readonly string[]).includes(name)
+	).map((name) => {
+		const tool = withoutProfileId(readTools[name]);
+		return { ...tool, description: tool.description.replace(/\b60,?000\b/g, slice) };
+	});
 }
 
 /**

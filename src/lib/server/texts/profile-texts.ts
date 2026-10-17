@@ -811,7 +811,7 @@ export async function readProfileText(
 	kind: TextKind,
 	id: number,
 	profileId: number,
-	opts: { offset?: number } = {}
+	opts: { offset?: number; maxChars?: number } = {}
 ): Promise<ProfileTextDetail | null> {
 	const def = TEXT_KINDS[kind];
 	const row = await def.read(id, profileId);
@@ -823,7 +823,9 @@ export async function readProfileText(
 	const { text } = currentText(row, latest ? { content: latest.content ?? null } : undefined);
 
 	const offset = Math.max(opts.offset ?? 0, 0);
-	const slice = text.slice(offset, offset + TEXT_READ_CHARS);
+	// A smaller slice for a reader with less room, which the chat is (mcp/call.ts
+	// ReadActor.sliceChars); the server's size otherwise.
+	const slice = text.slice(offset, offset + (opts.maxChars ?? TEXT_READ_CHARS));
 
 	return {
 		...summary,

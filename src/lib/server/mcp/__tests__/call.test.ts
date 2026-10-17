@@ -209,10 +209,14 @@ vi.mock('$lib/server/applications/profile-applications', () => ({
 	listProfileApplications: () => Promise.resolve([APPLICATION]),
 	readProfileApplication: (id: number, profileId: number) =>
 		Promise.resolve(id === APPLICATION.id && profileId === 12 ? APPLICATION : null),
-	readApplicationEntry: (entryId: number, profileId: number, opts?: { offset?: number }) => {
+	readApplicationEntry: (
+		entryId: number,
+		profileId: number,
+		opts?: { offset?: number; maxChars?: number }
+	) => {
 		if (entryId !== 7 || profileId !== 12) return Promise.resolve(null);
 		const offset = opts?.offset ?? 0;
-		const text = ENTRY_TEXT.slice(offset, offset + 100);
+		const text = ENTRY_TEXT.slice(offset, offset + (opts?.maxChars ?? 100));
 		return Promise.resolve({
 			entry_id: 7,
 			type: 'Transcript',
@@ -381,7 +385,7 @@ vi.mock('$lib/server/db', () => ({
 	dbDirect: { query: {} }
 }));
 
-const { callTool } = await import('../call');
+const { callTool, readTool } = await import('../call');
 
 const KEY = {
 	keyId: 3,
@@ -1870,5 +1874,60 @@ describe('translations', () => {
 
 		expect(result.isError).toBe(true);
 		expect(result.content[0].text).toContain('work_experience.summary.nl');
+	});
+});
+
+/**
+ * The read half, for an actor with no key behind it: the chat reads this way
+ * (planning/ASSISTANT-AGENT.md, Phase 2). A key is such an actor too.
+ */
+describe('readTool', () => {
+	const reader = {
+		profileId: 12,
+		scope: 'propose' as const,
+		readScope: 'documents' as const,
+		sliceChars: 50
+	};
+
+	it('reads for the actor, with no profile_id in the arguments', async () => {
+		const result = await readTool('read_job', { job_id: 100 }, reader);
+		expect(result.isError).toBeUndefined();
+		expect(result.content[0].text).toContain('Job 100');
+	});
+
+	it("reads at the actor's slice, and says where to continue at that size", async () => {
+		const result = await readTool(
+			'read_activity_entry',
+			{ application_id: 44, entry_id: 7 },
+			reader
+		);
+		const entry = result.structuredContent?.entry as { returned_chars: number; more: boolean };
+		expect(entry.returned_chars).toBe(50);
+		expect(entry.more).toBe(true);
+		expect(result.content[0].text).toContain('offset 50');
+
+		const next = await readTool(
+			'read_activity_entry',
+			{ application_id: 44, entry_id: 7, offset: 50 },
+			reader
+		);
+		expect((next.structuredContent?.entry as { offset: number }).offset).toBe(50);
+	});
+
+	it("reads at the server's size for a key, which says none", async () => {
+		const result = await readTool('read_activity_entry', { application_id: 44, entry_id: 7 }, KEY);
+		expect((result.structuredContent?.entry as { returned_chars: number }).returned_chars).toBe(
+			100
+		);
+	});
+
+	it('still refuses the document tools to a record-only actor', async () => {
+		const result = await readTool(
+			'read_activity_entry',
+			{ application_id: 44, entry_id: 7 },
+			{ ...reader, readScope: 'record' }
+		);
+		expect(result.isError).toBe(true);
+		expect(result.content[0].text).toContain('not the documents');
 	});
 });
