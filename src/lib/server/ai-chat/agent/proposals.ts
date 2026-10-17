@@ -41,7 +41,16 @@ export type ProposalCandidate = {
  * `what` names the change in the user's terms — a capability title where we
  * have one, since the ids are ours and mean nothing to them.
  */
-export type DroppedProposal = { what: string | null; why: string };
+export type DroppedProposal = {
+	what: string | null;
+	why: string;
+	/**
+	 * What went wrong, for a caller that can say what to do instead: the
+	 * executor's refusal names the live capabilities for an `unlive` drop and
+	 * the tool's fields for an `empty` one. The user-facing notice reads `why`.
+	 */
+	kind: 'unnamed' | 'unlive' | 'target' | 'empty' | 'invalid';
+};
 
 export type ReadProposal =
 	{ ok: true; proposal: StoredProposal } | { ok: false; drop: DroppedProposal };
@@ -71,7 +80,7 @@ export async function readProposal(
 	if (!candidate || typeof candidate.capability !== 'string') {
 		return {
 			ok: false,
-			drop: { what: null, why: "it didn't name a change to make" }
+			drop: { what: null, why: "it didn't name a change to make", kind: 'unnamed' }
 		};
 	}
 
@@ -84,7 +93,8 @@ export async function readProposal(
 			ok: false,
 			drop: {
 				what: titleFor(candidate.capability),
-				why: "that isn't something you can change from this page"
+				why: "that isn't something you can change from this page",
+				kind: 'unlive'
 			}
 		};
 	}
@@ -110,7 +120,8 @@ export async function readProposal(
 			ok: false,
 			drop: {
 				what: title,
-				why: named ? "it named one that isn't on this page" : "it didn't say which one to change"
+				why: named ? "it named one that isn't on this page" : "it didn't say which one to change",
+				kind: 'target'
 			}
 		};
 	}
@@ -133,7 +144,7 @@ export async function readProposal(
 			// the wire schema offers every live capability's names under one enum,
 			// so the model can file a job field under an application proposal, and
 			// fieldsFromChanges drops what doesn't belong.
-			drop: { what: title, why: 'it came back with no usable fields' }
+			drop: { what: title, why: 'it came back with no usable fields', kind: 'empty' }
 		};
 	}
 
@@ -145,7 +156,7 @@ export async function readProposal(
 	const valid = CAPABILITIES[match.capability].validate(fields, current);
 	if (!valid.ok) {
 		console.warn(`[agent] dropped an invalid proposal: ${valid.error}`);
-		return { ok: false, drop: { what: title, why: valid.error } };
+		return { ok: false, drop: { what: title, why: valid.error, kind: 'invalid' } };
 	}
 
 	return {

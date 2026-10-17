@@ -140,9 +140,32 @@ describe('a write', () => {
 			call('edit_job_details', { job_id: 100, salary_min: 6, rationale: 'r' })
 		);
 		expect(done.content).toBe(
-			"Not recorded: that isn't something you can change from this page. Nothing has changed."
+			"Not recorded: that isn't something you can change from this page. Nothing can be " +
+				'changed from this page. Nothing has changed.'
 		);
 		expect(done.isError).toBe(true);
+	});
+
+	it('names the changes the page does offer when the call named one it does not', async () => {
+		const done = await new TurnExecutor({ actor, live: [job] }).execute(
+			call('add_activity_record', { application_id: 44, entry_content: 'Sent.', rationale: 'r' })
+		);
+		expect(done.content).toBe(
+			"Not recorded: that isn't something you can change from this page. The changes you " +
+				'can propose on this page: edit_job_details. Nothing has changed.'
+		);
+	});
+
+	it("names the tool's fields when none of the ones sent were usable", async () => {
+		const done = await new TurnExecutor({ actor, live: [job] }).execute(
+			call('edit_job_details', { job_id: 100, pay: 6, rationale: 'r' })
+		);
+		expect(done.content).toContain('Not recorded: it came back with no usable fields.');
+		expect(done.content).toContain(
+			'The fields edit_job_details takes, each sent flat under its own name: '
+		);
+		expect(done.content).toContain('salary_min');
+		expect(done.proposal).toBeUndefined();
 	});
 
 	it('keeps one proposal for the same call made twice', async () => {
@@ -176,6 +199,26 @@ describe('candidateFromCall', () => {
 				{ field: 'language.proficiency', value: 'C1' }
 			]
 		});
+	});
+
+	it('flattens a field sent nested where its name has a dot', () => {
+		expect(
+			candidateFromCall(
+				call('edit_language', {
+					entry_id: 9,
+					language: { name: 'Spanish', proficiency: 'conversational' },
+					rationale: 'r'
+				})
+			).changes
+		).toEqual([
+			{ field: 'language.name', value: 'Spanish' },
+			{ field: 'language.proficiency', value: 'conversational' }
+		]);
+		// An object under a name no field starts with is left as it came.
+		expect(
+			candidateFromCall(call('edit_language', { entry_id: 9, extra: { a: 1 }, rationale: 'r' }))
+				.changes
+		).toEqual([{ field: 'extra', value: { a: 1 } }]);
 	});
 
 	it('names the row by the argument the MCP tool uses for it', () => {

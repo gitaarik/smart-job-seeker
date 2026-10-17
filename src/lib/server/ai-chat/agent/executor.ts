@@ -18,7 +18,11 @@
  * where to continue, so they are left as they are.
  */
 import type { ToolCall } from '$lib/server/llm';
-import type { CapabilityActor, LiveCapability } from '$lib/server/ai-chat/capabilities';
+import {
+	CAPABILITIES,
+	type CapabilityActor,
+	type LiveCapability
+} from '$lib/server/ai-chat/capabilities';
 import { readTool, type ReadActor } from '$lib/server/mcp/call';
 import { targetingFor } from '$lib/server/mcp/entities';
 import { isMcpCapability, isReadTool } from '$lib/server/mcp/tools';
@@ -34,13 +38,17 @@ import {
 
 /**
  * What the model is told when a write call has been recorded. The wording is
- * the line against the one failure this shape invites: with a call made and
+ * the line against the two failures this shape invites: with a call made and
  * an answer in the conversation, the model has the shape of an action it
- * took, and the apply rate is where drift would show.
+ * took, and the apply rate is where drift would show; and told only that
+ * nothing had changed, it made the same call again (the spike,
+ * planning/ASSISTANT-AGENT.md § The spike, Result). So it says what to do
+ * next, and what to say.
  */
 export const PROPOSAL_RECEIPT =
-	'Recorded as a proposal. The user will see it as a card under your reply and ' +
-	'decide there; nothing has changed yet, and you must not say it has.';
+	'Recorded as a proposal. The user will see it as a card under your reply and can ' +
+	'apply it there. Do not call this tool again for the same change. Write your reply ' +
+	'now, and say the change is proposed and waiting for them, never that it has been made.';
 
 /** The reads that return a slice and say where to continue; never cut here. */
 const SLICED_READS = new Set(['read_text', 'read_activity_entry', 'read_document']);
@@ -155,7 +163,7 @@ export class TurnExecutor {
 			return {
 				call,
 				kind: 'propose',
-				content: `Not recorded: ${read.drop.why}. Nothing has changed.`,
+				content: refusal(read.drop, call, this.options.live),
 				isError: true,
 				drop: read.drop,
 				chars: 0,
@@ -176,11 +184,35 @@ export class TurnExecutor {
 }
 
 /**
+ * What a refused write call is answered with: the reason, and where one
+ * exists, the way out. A bare refusal had the model drop the request from its
+ * reply without a word, or explain the refusal with a reason it made up (the
+ * spike, planning/ASSISTANT-AGENT.md § The spike, Result).
+ */
+function refusal(drop: DroppedProposal, call: ToolCall, live: LiveCapability[]): string {
+	const hint =
+		drop.kind === 'unlive'
+			? live.length > 0
+				? ` The changes you can propose on this page: ${live.map((c) => c.capability).join(', ')}.`
+				: ' Nothing can be changed from this page.'
+			: drop.kind === 'empty' && isMcpCapability(call.name)
+				? ` The fields ${call.name} takes, each sent flat under its own name: ` +
+					`${Object.keys(CAPABILITIES[call.name].fields).join(', ')}.`
+				: '';
+	return `Not recorded: ${drop.why}.${hint} Nothing has changed.`;
+}
+
+/**
  * A write tool call as a proposal candidate. The call's arguments are the
  * capability's fields, the id of the row named as the MCP tool names it
  * (job_id, application_id, text_id, version_id, or entry_id for a profile
  * row), and the rationale; a `profile_id` the model was never given is
  * dropped rather than trusted.
+ *
+ * A field sent nested where its name has a dot (`{language: {name}}` for
+ * `language.name`) is flattened one level: the names say which section a
+ * field belongs to, and a model reads that as an object often enough that
+ * refusing it lost a request outright (the spike, message 2 of run 5).
  */
 export function candidateFromCall(call: ToolCall): ProposalCandidate {
 	const { rationale, profile_id: _profile, ...rest } = call.args;
@@ -192,8 +224,34 @@ export function candidateFromCall(call: ToolCall): ProposalCandidate {
 		capability: call.name,
 		target_id: targetId,
 		rationale,
-		changes: Object.entries(fields).map(([field, value]) => ({ field, value }))
+		changes: Object.entries(flattenFields(call.name, fields)).map(([field, value]) => ({
+			field,
+			value
+		}))
 	};
+}
+
+function flattenFields(
+	capability: string,
+	fields: Record<string, unknown>
+): Record<string, unknown> {
+	const names = isMcpCapability(capability) ? Object.keys(CAPABILITIES[capability].fields) : [];
+	const flat: Record<string, unknown> = {};
+	for (const [key, value] of Object.entries(fields)) {
+		const nested =
+			value !== null &&
+			typeof value === 'object' &&
+			!Array.isArray(value) &&
+			names.some((name) => name.startsWith(`${key}.`));
+		if (!nested) {
+			flat[key] = value;
+			continue;
+		}
+		for (const [sub, inner] of Object.entries(value as Record<string, unknown>)) {
+			flat[`${key}.${sub}`] = inner;
+		}
+	}
+	return flat;
 }
 
 /**

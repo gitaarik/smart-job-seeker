@@ -41,7 +41,7 @@ import {
 	type RetrievalRecord
 } from '$lib/server/documents/retrieval-record';
 import { type ActivityContextMode, applicationActivityText } from './application-activity';
-import { activityManifestText } from './activity-manifest';
+import { activityManifestText, type ManifestReader } from './activity-manifest';
 import { applicationPipelineText } from './application-pipeline';
 import { jobDetailsText } from './job-context';
 import { formatPageScope, type PageScope } from './page-scope';
@@ -173,6 +173,8 @@ export interface SourceOptions {
 	 * discipline as `scopeHint`. A request without it renders nothing.
 	 */
 	directives?: { consumer: DirectiveConsumer };
+	/** Who reads the index; the chat as it is unless said otherwise. See ManifestReader. */
+	activity_manifest?: { reader: ManifestReader };
 }
 
 /**
@@ -495,7 +497,12 @@ const SOURCES: Record<ContextSource, SourceDef> = {
 		// Always "looked": every profile has an answer, even if the answer is that
 		// nothing has been recorded anywhere yet.
 		looked: () => true,
-		render: async (req) => activityManifestText(req.profileId, applicationId(req) ?? undefined)
+		render: async (req) =>
+			activityManifestText(
+				req.profileId,
+				applicationId(req) ?? undefined,
+				req.sourceOptions?.activity_manifest?.reader
+			)
 	},
 
 	profile: {

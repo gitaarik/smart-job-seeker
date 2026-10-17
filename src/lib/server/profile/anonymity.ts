@@ -329,7 +329,11 @@ const EMPLOYER_FACING_PROMPTS = new Set([
 ]);
 
 /** The assistant, which drafts those texts as well and is told the same. */
-const CHAT_PROMPTS = new Set(['personal_agent_chat', 'personal_agent_chat_capable']);
+const CHAT_PROMPTS = new Set([
+	'personal_agent_chat',
+	'personal_agent_chat_capable',
+	'personal_agent_chat_agent'
+]);
 
 /**
  * Whether a generation is for an application read without names, and how.

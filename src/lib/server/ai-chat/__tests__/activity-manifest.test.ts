@@ -243,6 +243,30 @@ describe('formatActivityManifest', () => {
 			expect(out).toContain('Every application is listed');
 		});
 
+		it("for the agent, says on the application's own line what it left out", () => {
+			// The reader with the read tools: a model trusts the data block over a
+			// guideline, so the admission goes on the line (the spike,
+			// planning/ASSISTANT-AGENT.md § The spike, Result).
+			const busy = many(40, 1);
+			const out = formatActivityManifest([busy], 700, [], 'agent');
+			expect(out).toMatch(
+				/\(application 1\)[^\n]*· 40 entries on file, \d+ listed here; read_application lists them all/
+			);
+			expect(out).toContain('read it with your tools');
+			expect(out).not.toContain("offer to go through it on that application's own page");
+
+			// The chat as it is reads neither: its line is as it was, and it is told
+			// to offer the page.
+			const chat = formatActivityManifest([busy], 700);
+			expect(chat).not.toContain('entries on file');
+			expect(chat).toContain("offer to go through it on that application's own page");
+		});
+
+		it('says nothing on a line whose application lost nothing, whoever reads', () => {
+			const out = formatActivityManifest([app()], MANIFEST_BUDGET_CHARS, [], 'agent');
+			expect(out).not.toContain('entries on file');
+		});
+
 		it('says nothing about trimming when everything fits', () => {
 			const out = formatActivityManifest([app()]);
 

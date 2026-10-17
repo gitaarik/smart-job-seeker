@@ -57,6 +57,14 @@ import { getStatusLabel } from '$lib/application-status';
 export const MANIFEST_BUDGET_CHARS = 6000;
 
 /**
+ * Who reads the index: the chat as it is, which can only say that a thing
+ * exists, or the assistant's agent (ai-chat/agent), which has the read tools
+ * and is told to use them. The two differ in one paragraph and in whether an
+ * application's line admits what the budget left out of it.
+ */
+export type ManifestReader = 'chat' | 'agent';
+
+/**
  * The documents half, budgeted apart from the applications half.
  *
  * Separate so that neither can starve the other: a profile with forty documents
@@ -144,11 +152,20 @@ export interface ManifestApplication {
  * Same failure this block was built to remove, one field over: it fixed
  * EXISTENCE and not STATUS.
  */
-function heading(app: ManifestApplication): string {
+function heading(app: ManifestApplication, onFile?: number): string {
 	const name = [app.position, app.company].filter(Boolean).join(' at ') || 'Untitled application';
 	const status = app.status ? ` — ${getStatusLabel(app.status)}` : '';
 	const via = app.poster && app.poster !== app.company ? ` · via ${app.poster}` : '';
-	return `### ${name} (application ${app.id})${status}${via}${
+	// What the budget left out of this application, for a reader that can go
+	// and get it. On the line itself and not only in the note at the top: a
+	// model trusts the data block over a guideline, and an index that read as
+	// complete had it denying that an entry existed (the spike,
+	// planning/ASSISTANT-AGENT.md § The spike, Result).
+	const trimmed =
+		onFile !== undefined && app.entries.length < onFile
+			? ` · ${onFile} entries on file, ${app.entries.length} listed here; read_application lists them all`
+			: '';
+	return `### ${name} (application ${app.id})${status}${via}${trimmed}${
 		app.isCurrent ? ' · the one on screen, shown in full above' : ''
 	}`;
 }
@@ -283,16 +300,17 @@ export function transcriptGaps(apps: ManifestApplication[]): string[] {
 export function formatActivityManifest(
 	apps: ManifestApplication[],
 	budgetChars = MANIFEST_BUDGET_CHARS,
-	docs: ManifestDocument[] = []
+	docs: ManifestDocument[] = [],
+	reader: ManifestReader = 'chat'
 ): string {
 	if (apps.length === 0 && docs.length === 0) return '';
 
 	const working = apps.map((a) => ({ ...a, entries: [...a.entries] }));
 	const body = () =>
 		working
-			.map((a) =>
+			.map((a, i) =>
 				[
-					heading(a),
+					heading(a, reader === 'agent' ? apps[i].entries.length : undefined),
 					...people(a),
 					...(a.entries.length === 0 ? ['- nothing recorded yet'] : a.entries.map(line))
 				].join('\n')
@@ -322,9 +340,18 @@ export function formatActivityManifest(
 		'An index, not the contents: it says what exists, so you can tell the',
 		'difference between something you cannot see and something that is not',
 		'there. Every entry listed here is real. If one of them holds the answer',
-		'and its text is not in this prompt, say so, and',
-		"offer to go through it on that application's own page —",
-		'rather than answering as though there were nothing to find.',
+		...(reader === 'agent'
+			? [
+					'and its text is not in this prompt, read it with your tools:',
+					"read_application for an application's complete log, read_activity_entry",
+					"for an entry's own words — rather than answering as though there were",
+					'nothing to find.'
+				]
+			: [
+					'and its text is not in this prompt, say so, and',
+					"offer to go through it on that application's own page —",
+					'rather than answering as though there were nothing to find.'
+				]),
 		...(trimmed > 0
 			? [
 					'',
@@ -461,14 +488,15 @@ export async function loadDocumentManifest(profileId: number): Promise<ManifestD
 
 export async function activityManifestText(
 	profileId: number,
-	currentApplicationId?: number
+	currentApplicationId?: number,
+	reader: ManifestReader = 'chat'
 ): Promise<string> {
 	try {
 		const [apps, docs] = await Promise.all([
 			loadActivityManifest(profileId, currentApplicationId),
 			loadDocumentManifest(profileId)
 		]);
-		return formatActivityManifest(apps, MANIFEST_BUDGET_CHARS, docs);
+		return formatActivityManifest(apps, MANIFEST_BUDGET_CHARS, docs, reader);
 	} catch {
 		// Context is a bonus, never a reason to fail the generation.
 		return '';

@@ -113,6 +113,7 @@ const APPLICATION_ACTIVITY_SUPPLIED_BY: Record<string, string> = {
 	// Same caller, same evidence — the capable variant only adds
 	// ${capabilities} on top and is chosen per turn.
 	personal_agent_chat_capable: 'routes/api/ai/agent',
+	personal_agent_chat_agent: 'routes/api/ai/agent',
 	// ai-chat/application-letter.ts — all letter types share customVariables.
 	write_cover_letter: 'application-letter.ts',
 	write_or_advise_cover_letter: 'application-letter.ts',
@@ -213,6 +214,7 @@ const PROFILE_DIRECTIVES_CONSUMER: Record<string, 'chat' | 'letters' | 'answers'
 	// routes/api/ai/agent, through chat-context.ts's ALWAYS sources.
 	personal_agent_chat: 'chat',
 	personal_agent_chat_capable: 'chat',
+	personal_agent_chat_agent: 'chat',
 	// ai-chat/application-letter.ts and its followup: cover letters and job
 	// cheat sheets alike, since both are written for this application.
 	write_cover_letter: 'letters',
@@ -356,6 +358,7 @@ const RELEVANT_PROJECTS_SUPPLIED_BY: Record<string, string> = {
 	// Same caller, same evidence — the capable variant only adds
 	// ${capabilities} on top and is chosen per turn.
 	personal_agent_chat_capable: 'routes/api/ai/agent',
+	personal_agent_chat_agent: 'routes/api/ai/agent',
 	// ai-chat/application-letter.ts — generate and auto modes (both letter types);
 	// auto may write a draft, which needs the retrieval.
 	write_cover_letter: 'application-letter.ts',
@@ -416,6 +419,7 @@ const RELEVANT_STORIES_SUPPLIED_BY: Record<string, string> = {
 	// Same caller, same evidence — the capable variant only adds
 	// ${capabilities} on top and is chosen per turn.
 	personal_agent_chat_capable: 'routes/api/ai/agent',
+	personal_agent_chat_agent: 'routes/api/ai/agent',
 	// ai-chat/profile-cheatsheet.ts — generate + auto, via the generation-context
 	// provider (sources include "stories").
 	write_prep_sheet: 'profile-cheatsheet.ts',
@@ -464,6 +468,7 @@ const RELEVANT_APPLICATION_TEXTS_SUPPLIED_BY: Record<string, string> = {
 	// Same caller, same evidence — the capable variant only adds
 	// ${capabilities} on top and is chosen per turn.
 	personal_agent_chat_capable: 'routes/api/ai/agent',
+	personal_agent_chat_agent: 'routes/api/ai/agent',
 	write_prep_sheet: 'profile-cheatsheet.ts',
 	write_or_advise_prep_sheet: 'profile-cheatsheet.ts',
 	write_star_story: 'profile-story.ts',

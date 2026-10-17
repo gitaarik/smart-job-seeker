@@ -108,7 +108,8 @@ describe('readProposal', () => {
 			ok: false,
 			drop: {
 				what: 'Correct this language',
-				why: "that isn't something you can change from this page"
+				why: "that isn't something you can change from this page",
+				kind: 'unlive'
 			}
 		});
 	});
@@ -116,7 +117,7 @@ describe('readProposal', () => {
 	it('refuses one that named nothing, with no title to give it', async () => {
 		expect(await readProposal({}, [job], actor)).toEqual({
 			ok: false,
-			drop: { what: null, why: "it didn't name a change to make" }
+			drop: { what: null, why: "it didn't name a change to make", kind: 'unnamed' }
 		});
 	});
 
@@ -201,7 +202,7 @@ describe('readProposal', () => {
 		);
 		expect(read).toEqual({
 			ok: false,
-			drop: { what: "Edit the job's details", why: 'Title cannot be empty' }
+			drop: { what: "Edit the job's details", why: 'Title cannot be empty', kind: 'invalid' }
 		});
 	});
 });
@@ -225,8 +226,12 @@ describe('renderDropNotice', () => {
 	it('is empty for no drops and names each drop in the user’s terms', () => {
 		expect(renderDropNotice([])).toBe('');
 		const notice = renderDropNotice([
-			{ what: 'Correct this language', why: 'it named one that isn’t on this page' },
-			{ what: null, why: 'it didn’t name a change to make' }
+			{
+				what: 'Correct this language',
+				why: 'it named one that isn’t on this page',
+				kind: 'target'
+			},
+			{ what: null, why: 'it didn’t name a change to make', kind: 'unnamed' }
 		]);
 		expect(notice).toContain("*Some changes I described couldn't be offered:*");
 		expect(notice).toContain('- **Correct this language** — it named one that isn’t on this page.');
