@@ -29,13 +29,16 @@ vi.mock('$lib/server/config', () => ({
 }));
 
 const { groq, gemini } = vi.hoisted(() => ({
-	groq: { bind: vi.fn(), invoke: vi.fn() },
-	gemini: { bind: vi.fn(), invoke: vi.fn() }
+	groq: { bind: vi.fn(), invoke: vi.fn(), built: vi.fn() },
+	gemini: { bind: vi.fn(), invoke: vi.fn(), built: vi.fn() }
 }));
 
 vi.mock('@langchain/groq', () => ({
 	ChatGroq: class ChatGroq {
-		constructor() {}
+		disableStreaming = false;
+		constructor() {
+			groq.built(this);
+		}
 		async invoke(messages: unknown) {
 			return groq.invoke(messages);
 		}
@@ -48,7 +51,10 @@ vi.mock('@langchain/groq', () => ({
 
 vi.mock('@langchain/google-genai', () => ({
 	ChatGoogleGenerativeAI: class ChatGoogleGenerativeAI {
-		constructor() {}
+		disableStreaming = false;
+		constructor() {
+			gemini.built(this);
+		}
 		async invoke(messages: unknown) {
 			return gemini.invoke(messages);
 		}
@@ -135,6 +141,28 @@ describe('a call with tools', () => {
 		expect(result.toolCalls).toEqual([{ id: 'call_1', name: 'read_job', args: { job_id: 7 } }]);
 		expect(result.providerData).toEqual({ __signatures__: { call_1: 'sig' } });
 		expect(result.usage?.totalTokens).toBe(15);
+	});
+
+	it('is built with streaming off, so a call inside a streamed graph reports one usage block', async () => {
+		// google-genai 2.3.2 repeats the cached count on every streamed chunk and
+		// LangChain adds the chunks up (langchain.ts, withoutStreaming). The field
+		// is set on the instance, because the constructor ignores it.
+		groq.invoke.mockResolvedValueOnce(new AIMessage({ content: 'ok', usage_metadata: usage }));
+		await generateChatCompletionTracked([{ role: 'user', content: 'hi' }], { tools: [readJob] });
+		expect(groq.built).toHaveBeenCalledTimes(1);
+		expect((groq.built.mock.calls[0][0] as { disableStreaming: boolean }).disableStreaming).toBe(
+			true
+		);
+
+		gemini.invoke.mockResolvedValueOnce(new AIMessage({ content: 'ok', usage_metadata: usage }));
+		await generateChatCompletionTracked([{ role: 'user', content: 'hi' }], {
+			provider: 'gemini',
+			model: 'gemini-2.5-pro'
+		});
+		expect(gemini.built).toHaveBeenCalledTimes(1);
+		expect((gemini.built.mock.calls[0][0] as { disableStreaming: boolean }).disableStreaming).toBe(
+			true
+		);
 	});
 
 	it('is a plain reply, with no calls at all, when the model made none', async () => {

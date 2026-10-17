@@ -494,6 +494,25 @@ function convertMessages(messages: ChatMessage[]): BaseMessage[] {
 }
 
 /**
+ * Streaming off, on every model. Nothing here streams tokens, but a call made
+ * inside a graph that is being read with `streamEvents` (the assistant agent,
+ * ai-chat/agent/graph.ts) inherits that handler, and a LangChain chat model
+ * then streams the response and adds the chunks up. google-genai 2.3.2
+ * reports input and output tokens as deltas per chunk, so those sum right,
+ * and the cached count as the whole on every chunk, so that one does not: the
+ * first agent turn with a cache hit recorded 143,829 cached tokens on a
+ * 25,784-token call (ai_chats 153573, 2026-10-17). With streaming off,
+ * `invoke` is one response with one usage block, whichever caller runs it.
+ * Set on the instance: the constructor field of the same name is declared and
+ * ignored (core 1.2.12). Token streaming of the reply, when it comes, has to
+ * lift this and fix the count instead.
+ */
+function withoutStreaming<M extends BaseChatModel>(model: M): M {
+	model.disableStreaming = true;
+	return model;
+}
+
+/**
  * Create appropriate LangChain chat model based on provider
  */
 function createLangChainModel(
@@ -513,13 +532,15 @@ function createLangChainModel(
 			// Cap reasoning to "low" so a JSON answer always fits; it also cuts
 			// latency and cost. Only reasoning models accept this param, so gate it.
 			const isReasoningModel = /gpt-oss/i.test(model);
-			return new ChatGroq({
-				apiKey,
-				model,
-				temperature,
-				maxTokens,
-				...(isReasoningModel ? { reasoningEffort: 'low' } : {})
-			});
+			return withoutStreaming(
+				new ChatGroq({
+					apiKey,
+					model,
+					temperature,
+					maxTokens,
+					...(isReasoningModel ? { reasoningEffort: 'low' } : {})
+				})
+			);
 		}
 
 		case 'gemini': {
@@ -553,36 +574,42 @@ function createLangChainModel(
 			// don't think, which is every Gemini before 2.5.
 			const thinks = /gemini-(2\.5|[3-9])/.test(model);
 			const thinkingBudget = Math.max(128, Math.floor(maxTokens / 2));
-			return new ChatGoogleGenerativeAI({
-				apiKey,
-				model,
-				temperature,
-				maxOutputTokens: thinks ? maxTokens + thinkingBudget : maxTokens,
-				...(thinks ? { thinkingConfig: { thinkingBudget } } : {})
-			});
+			return withoutStreaming(
+				new ChatGoogleGenerativeAI({
+					apiKey,
+					model,
+					temperature,
+					maxOutputTokens: thinks ? maxTokens + thinkingBudget : maxTokens,
+					...(thinks ? { thinkingConfig: { thinkingBudget } } : {})
+				})
+			);
 		}
 
 		case 'openai': {
 			const apiKey = config.openaiApiKey;
-			return new ChatOpenAI({
-				apiKey,
-				model,
-				temperature,
-				maxTokens
-			});
+			return withoutStreaming(
+				new ChatOpenAI({
+					apiKey,
+					model,
+					temperature,
+					maxTokens
+				})
+			);
 		}
 
 		case 'deepseek': {
 			const apiKey = config.deepseekApiKey;
-			return new ChatOpenAI({
-				apiKey,
-				model,
-				temperature,
-				maxTokens,
-				configuration: {
-					baseURL: 'https://api.deepseek.com'
-				}
-			});
+			return withoutStreaming(
+				new ChatOpenAI({
+					apiKey,
+					model,
+					temperature,
+					maxTokens,
+					configuration: {
+						baseURL: 'https://api.deepseek.com'
+					}
+				})
+			);
 		}
 
 		case 'cerebras': {
