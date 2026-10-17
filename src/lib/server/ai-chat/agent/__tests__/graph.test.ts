@@ -259,6 +259,27 @@ describe('the turn', () => {
 			expect(outcome.capped).toBe(`${MAX_TOOL_CALLS} tool calls`);
 		});
 
+		it('runs no more calls in one round than the turn has room for, and answers the rest', async () => {
+			const asked = Array.from({ length: MAX_TOOL_CALLS + 3 }, (_, i) =>
+				call('read_job', { job_id: i }, `q${i}`)
+			);
+			const { outcome, world } = await run([says('', asked), says('Enough.')]);
+
+			expect(world.executed).toHaveLength(MAX_TOOL_CALLS);
+			const answers = world.calls[1].messages.slice(-asked.length);
+			// Every call the model made is answered, the ones left out with a refusal.
+			expect(answers.map((m) => (m.role === 'tool' ? m.toolCallId : m.role))).toEqual(
+				asked.map((c) => c.id)
+			);
+			expect(answers.slice(MAX_TOOL_CALLS).every((m) => m.role === 'tool' && m.isError)).toBe(true);
+			expect((answers.at(-1) as { content: string }).content).toContain('Not run');
+			expect((answers.at(-1) as { content: string }).content).toContain(
+				capNote(`${MAX_TOOL_CALLS} tool calls`)
+			);
+			expect(outcome.capped).toBe(`${MAX_TOOL_CALLS} tool calls`);
+			expect(world.calls[1].toolChoice).toBe('none');
+		});
+
 		it('stops at the read budget, counting a memo hit as nothing', async () => {
 			const big = call('read_job', { job_id: 1, chars: MAX_READ_CHARS }, 'big');
 			const { outcome, world } = await run([says('', [big]), says('Enough.')]);

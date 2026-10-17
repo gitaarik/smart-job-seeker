@@ -195,10 +195,17 @@ export function buildAssistantTurnGraph<Input, Outcome, P extends Prepared>(
 		const prepared = preparedOf<P>(state);
 		const round = state.round;
 		const rowOfThisRound = state.aiChatIds[state.aiChatIds.length - 1];
-		// Every requested call, in parallel. A read is a tool observation of its
+		// A round runs what the turn's budget has room for. One answer can ask
+		// for any number of calls at once, so the cap is held here and not only
+		// between rounds; a call left out is answered too, since the provider
+		// wants an answer to every call it made.
+		const room = Math.max(MAX_TOOL_CALLS - state.calls, 0);
+		const run = state.pending.slice(0, room);
+		const left = state.pending.slice(room);
+		// Every call that runs, in parallel. A read is a tool observation of its
 		// own; a write traces itself as the proposal it becomes (proposals.ts).
 		const executed = await Promise.all(
-			state.pending.map((call) =>
+			run.map((call) =>
 				isReadTool(call.name)
 					? traceStep(
 							call.name,
@@ -243,22 +250,32 @@ export function buildAssistantTurnGraph<Input, Outcome, P extends Prepared>(
 		const capped =
 			round >= MAX_ROUNDS - 1
 				? 'the last round'
-				: calls >= MAX_TOOL_CALLS
+				: calls >= MAX_TOOL_CALLS || left.length > 0
 					? `${MAX_TOOL_CALLS} tool calls`
 					: readChars >= MAX_READ_CHARS
 						? `${MAX_READ_CHARS.toLocaleString('en-US')} characters read`
 						: null;
 
-		const messages: ChatMessage[] = executed.map((done, i) => ({
+		const answered: ChatMessage[] = executed.map((done) => ({
 			role: 'tool',
 			toolCallId: done.call.id,
 			name: done.call.name,
-			content:
-				capped && i === executed.length - 1
-					? `${done.content}\n\n${capNote(capped)}`
-					: done.content,
+			content: done.content,
 			isError: done.isError
 		}));
+		const refused: ChatMessage[] = left.map((call) => ({
+			role: 'tool',
+			toolCallId: call.id,
+			name: call.name,
+			content: `Not run: this turn's budget of ${MAX_TOOL_CALLS} tool calls is spent.`,
+			isError: true
+		}));
+		const messages = [...answered, ...refused];
+		// The cap, told in the last result of the round.
+		if (capped && messages.length > 0) {
+			const lastMessage = messages[messages.length - 1] as Extract<ChatMessage, { role: 'tool' }>;
+			lastMessage.content = `${lastMessage.content}\n\n${capNote(capped)}`;
+		}
 		return {
 			messages,
 			calls: executed.length,
