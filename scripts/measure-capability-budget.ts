@@ -22,6 +22,8 @@ import {
 	resolveCapabilities
 } from '$lib/server/ai-chat/capabilities';
 import { CAPABILITY_PROMPT_BUDGET_CHARS } from '$lib/server/ai-chat/capabilities';
+import { chatToolSet } from '$lib/server/ai-chat/agent/tools';
+import { TOOL_DEFINITIONS_BUDGET_CHARS } from '$lib/server/ai-chat/agent/turn';
 import {
 	admissionOrder,
 	scopeForRoute,
@@ -127,6 +129,15 @@ async function main() {
 								.join(', ')
 						: ''
 				}`
+		);
+		// The same page as the agent binds it: the definitions the provider is
+		// sent, against their own ratchet (planning/ASSISTANT-AGENT.md § The prompt).
+		const asTools = await chatToolSet(admitted, { profileId, isStaff: false });
+		const toolChars = JSON.stringify(asTools.definitions).length;
+		console.log(
+			`${''.padEnd(34)}     as tool definitions: ${toolChars} chars of ` +
+				`${TOOL_DEFINITIONS_BUDGET_CHARS}, ${asTools.writes.length} write tools` +
+				`${toolChars > TOOL_DEFINITIONS_BUDGET_CHARS ? '  OVER' : ''}`
 		);
 		// Incremental, not standalone: a section's rows are printed once for all
 		// its verbs, so a verb measured alone would count a list the section is

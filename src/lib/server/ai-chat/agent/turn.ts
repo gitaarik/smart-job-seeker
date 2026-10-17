@@ -54,12 +54,18 @@ export const ASSISTANT_AGENT_PROMPT = 'personal_agent_chat_agent';
 
 /**
  * What a page's tool definitions may come to, as the JSON the provider is
- * sent: the ratchet the prose block's 24,000 chars re-base to. Measured
- * 2026-10-17 (the spike): 28,812 on an application page with 18 tools,
- * 21,294 to 25,685 on a job page. A capability's contract that grows shows
- * up here, as it did there.
+ * sent: the ratchet the prose block's 24,000 chars re-base to, recorded on
+ * every turn (capabilityRecord.chars) and measured per page by
+ * scripts/measure-capability-budget.ts. Measured 2026-10-17 on profile 1:
+ * 28,812 on an application page with 18 tools, 21,294 to 25,685 on a job
+ * page, and 39,569 on the busiest role page, where every parent-owned
+ * tool (an achievement, a technology, a project under a role) repeats the
+ * list of roles its parent field may name, which the prose block printed
+ * once. Printing it once, or only the page's own role on a role page, is
+ * the tunable that brings that page down; until then the ratchet sits above
+ * it. A capability's contract that grows shows up here first.
  */
-export const TOOL_DEFINITIONS_BUDGET_CHARS = 32_000;
+export const TOOL_DEFINITIONS_BUDGET_CHARS = 40_000;
 
 export interface TurnInput {
 	userId: string;
