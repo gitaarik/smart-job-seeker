@@ -19,6 +19,7 @@
 		faTrash
 	} from '@fortawesome/free-solid-svg-icons';
 	import Card from '../../../components/Card.svelte';
+	import CopyButton from '../../../components/CopyButton.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import FilterTabs from '../../../components/FilterTabs.svelte';
 	import ConfirmModal from '../../../profile/components/ConfirmModal.svelte';
@@ -896,6 +897,7 @@
 							<!-- Expanded Content: read-only preview. Writing, AI generate,
                  review and iteration all live on the dedicated editor page. -->
 							{#if expandedId === itemId}
+								{@const answer = (item as QuestionItem).answer}
 								<div class="space-y-3 border-t border-[var(--dash-border)] p-4">
 									<div
 										class="rounded-lg border-l-2 border-purple-500 bg-[var(--dash-bg)] px-3 py-2"
@@ -909,15 +911,18 @@
 											{(item as QuestionItem).question}
 										</p>
 									</div>
-									{#if (item as QuestionItem).answer}
+									{#if answer}
 										<div class="px-3 py-1">
-											<p
-												class="mb-1 text-xs font-semibold tracking-wide text-[var(--dash-text-muted)] uppercase"
-											>
-												Answer
-											</p>
+											<div class="mb-1 flex items-center justify-between gap-3">
+												<p
+													class="text-xs font-semibold tracking-wide text-[var(--dash-text-muted)] uppercase"
+												>
+													Answer
+												</p>
+												<CopyButton text={answer} size="sm" label="Copy" title="Copy the answer" />
+											</div>
 											<p class="break-words whitespace-pre-wrap text-[var(--dash-text)]">
-												{(item as QuestionItem).answer}
+												{answer}
 											</p>
 										</div>
 									{:else}
@@ -932,7 +937,7 @@
 											class="flex items-center gap-1.5 rounded-lg bg-[var(--dash-primary)] px-3 py-1.5 text-sm text-white transition-colors hover:bg-[var(--dash-primary-hover)]"
 										>
 											<FontAwesomeIcon icon={faPencil} class="h-3.5 w-3.5" />
-											{(item as QuestionItem).answer ? 'Open editor' : 'Write / generate answer'}
+											{answer ? 'Open editor' : 'Write / generate answer'}
 										</a>
 									</div>
 								</div>
