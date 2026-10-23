@@ -38,10 +38,12 @@
 	class="inline-flex items-center gap-1.5 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-text)]"
 	title={copied ? 'Copied!' : title}
 >
-	<FontAwesomeIcon
-		icon={copied ? faCheck : faCopy}
-		class="{size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} {copied ? 'text-[var(--dash-success)]' : ''}"
-	/>
+	{#key copied}
+		<FontAwesomeIcon
+			icon={copied ? faCheck : faCopy}
+			class="{size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} {copied ? 'text-[var(--dash-success)]' : ''}"
+		/>
+	{/key}
 	{#if label}
 		<span
 			class="{size === 'sm' ? 'text-xs' : 'text-sm'} {copied ? 'text-[var(--dash-success)]' : ''}"
