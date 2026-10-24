@@ -83,6 +83,7 @@
 		}>;
 		side_projects: Array<{
 			name: string | null;
+			project_role?: string | null;
 			url: string | null;
 			repo_url: string | null;
 			stars: number | null;
@@ -355,7 +356,7 @@
 			{#each filterOnTags(profile.side_projects, OVERRIDE_ENTITIES.sideProject) as project, index (index)}
 				<div class="mb-3">
 					<div class="mb-0 text-xs font-bold">
-						{project.name} | {formatDateRangeCompact(
+						{project.name}{#if project.project_role}{` | ${project.project_role}`}{/if} | {formatDateRangeCompact(
 							project.start_date,
 							project.end_date,
 							presentLabel

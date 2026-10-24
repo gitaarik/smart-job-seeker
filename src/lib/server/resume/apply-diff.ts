@@ -566,6 +566,7 @@ export async function applyDiffToProfile(
 					profile_id: profileId,
 					status: 'draft',
 					name: p.name || null,
+					project_role: p.role || null,
 					url: p.url || null,
 					repo_url: p.repoUrl || null,
 					summary: p.summary || null,
@@ -596,6 +597,7 @@ export async function applyDiffToProfile(
 			if (!existing) continue;
 			const updateData: Record<string, unknown> = {};
 			if (mod.fields.name !== undefined) updateData.name = mod.fields.name || null;
+			if (mod.fields.role !== undefined) updateData.project_role = mod.fields.role || null;
 			if (mod.fields.url !== undefined) updateData.url = mod.fields.url || null;
 			if (mod.fields.repoUrl !== undefined) updateData.repo_url = mod.fields.repoUrl || null;
 			if (mod.fields.summary !== undefined) updateData.summary = mod.fields.summary || null;

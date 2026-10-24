@@ -302,6 +302,15 @@
 								</ExternalLink>
 							{/if}
 
+							{#if project.project_role}
+								<div>
+									<p class="mb-1 text-xs tracking-wide text-[var(--dash-text-secondary)] uppercase">
+										Your role
+									</p>
+									<p class="text-sm text-[var(--dash-text)]">{project.project_role}</p>
+								</div>
+							{/if}
+
 							{#if project.summary}
 								<div>
 									<p class="mb-1 text-xs tracking-wide text-[var(--dash-text-secondary)] uppercase">

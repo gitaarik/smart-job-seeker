@@ -50,6 +50,7 @@
 	}
 	interface SideProject {
 		name: string | null;
+		project_role?: string | null;
 		url: string | null;
 		start_date: string | null;
 		end_date?: string | null;
@@ -382,6 +383,7 @@
 								<div class="job">
 									<div class="job-meta">
 										<div class="job-title">{project.name}</div>
+										{#if project.project_role}<div class="job-co">{project.project_role}</div>{/if}
 										{#if dates}<div class="job-date">{dates}</div>{/if}
 									</div>
 									<div class="job-body">

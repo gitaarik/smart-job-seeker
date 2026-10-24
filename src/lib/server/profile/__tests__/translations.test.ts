@@ -104,6 +104,22 @@ describe('collectTranslatable — work experience projects', () => {
 		expect(projectRows.every((r) => r.id === 4)).toBe(true);
 	});
 
+	it('lists the role after the name, on one line', () => {
+		const groups = collectTranslatable(
+			profileWithProject({ ...project, project_role: 'Tech lead' })
+		);
+		const projectRows = (groups.find((g) => g.key === 'we-9')?.rows ?? []).filter(
+			(r) => r.entity === 'work_experience_project'
+		);
+
+		expect(projectRows.map((r) => [r.field, r.label, r.multiline])).toEqual([
+			['name', 'Payments rewrite — Project name', false],
+			['project_role', 'Payments rewrite — Your role', false],
+			['description', 'Payments rewrite — Description', true],
+			['outcome', 'Payments rewrite — Outcome', true]
+		]);
+	});
+
 	it('skips empty fields and falls back to a positional label', () => {
 		const groups = collectTranslatable(
 			profileWithProject({ id: 4, name: '', description: 'Something', outcome: '' })

@@ -39,6 +39,7 @@
 	interface InitialProject {
 		id: number;
 		name: string | null;
+		project_role: string | null;
 		url: string | null;
 		repo_url: string | null;
 		start_date: string | Date | null;
@@ -207,6 +208,7 @@
 	function summaryLine(row: SectionRow<ProjectData>): string {
 		const c = row.id ? counts[row.id] : undefined;
 		const parts: string[] = [];
+		if (row.data.project_role.trim()) parts.push(row.data.project_role.trim());
 		if (c?.technologies)
 			parts.push(`${c.technologies} ${c.technologies === 1 ? 'technology' : 'technologies'}`);
 		if (c?.sources) parts.push(`${c.sources} ${c.sources === 1 ? 'source' : 'sources'}`);

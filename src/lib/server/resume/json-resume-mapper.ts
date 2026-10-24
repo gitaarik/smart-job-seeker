@@ -171,6 +171,7 @@ export function mapJsonResumeToInternal(jsonResume: JsonResumeSchema): ResumeDat
 		})),
 		projects: jsonResume.projects?.map((project) => ({
 			name: project.name || '',
+			role: project.roles?.filter(Boolean).join(', ') || undefined,
 			url: project.url,
 			summary: project.description,
 			startDate: project.startDate,

@@ -413,6 +413,7 @@ export const workExperienceBasicSchema = z.object({
 export const workExperienceProjectBasicSchema = z.object({
 	name: requiredTrimmedString('Project name').optional(),
 	work_experience: requiredTrimmedString('Work experience').optional(),
+	project_role: optionalTrimmedString(),
 	url: optionalTrimmedString(2048),
 	repo_url: optionalTrimmedString(),
 	start_date: z.string().optional().nullable(),
@@ -456,6 +457,7 @@ export const sideProjectTechnologyBasicSchema = z.object({
 export const sideProjectBasicSchema = z.object({
 	section: z.literal('basic').optional(),
 	name: requiredTrimmedString('Project name').optional(),
+	project_role: optionalTrimmedString(),
 	url: optionalTrimmedString(2048),
 	repo_url: optionalTrimmedString(),
 	summary: optionalTrimmedString(10000),

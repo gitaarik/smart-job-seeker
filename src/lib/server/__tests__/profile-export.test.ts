@@ -53,6 +53,8 @@ describe('exportProfile', () => {
 			.mockResolvedValueOnce({ id: 1 }) // existence check
 			.mockResolvedValueOnce({
 				name: 'Alex',
+				work_experiences: [],
+				side_projects: [],
 				tech_skill_categories: [
 					{
 						name: 'Backend',
@@ -104,6 +106,8 @@ describe('exportProfile', () => {
 			.mockResolvedValueOnce({ id: 1 })
 			.mockResolvedValueOnce({
 				name: 'Alex',
+				work_experiences: [],
+				side_projects: [],
 				tech_skill_categories: [],
 				salary_employed: {
 					amount: 8700,
@@ -138,6 +142,8 @@ describe('exportProfile', () => {
 			.mockResolvedValueOnce({ id: 1 })
 			.mockResolvedValueOnce({
 				name: 'Alex',
+				work_experiences: [],
+				side_projects: [],
 				tech_skill_categories: [],
 				salary_employed: { amount: null },
 				salary_freelance: null,
@@ -152,5 +158,46 @@ describe('exportProfile', () => {
 		expect(written).not.toHaveProperty('salary_employed');
 		expect(written).not.toHaveProperty('salary_freelance');
 		expect(written).not.toHaveProperty('salary_adjustments');
+	});
+
+	it("keeps a project's own role only where the applicant gave one", async () => {
+		// A null on every project would reach every prompt, the matcher's
+		// included, for a field nearly nobody fills in.
+		findFirst(db.query.profiles)
+			.mockResolvedValueOnce({ id: 1 })
+			.mockResolvedValueOnce({
+				name: 'Alex',
+				work_experiences: [
+					{
+						name: 'Acme',
+						work_experience_projects: [
+							{ name: 'Scan app', project_role: 'Architect', description: 'Built it.' },
+							{ name: 'Test suite', project_role: null, description: 'Wrote it.' },
+							{ name: 'Docs', project_role: '  ', description: 'Wrote them.' }
+						]
+					}
+				],
+				side_projects: [
+					{ name: 'Django', project_role: 'Contributor', summary: 'Fixes.' },
+					{ name: 'LitState', project_role: null, summary: 'Mine.' }
+				],
+				tech_skill_categories: []
+			});
+		findFirst(db.query.collected_data).mockResolvedValueOnce(null);
+		const values = vi.fn().mockResolvedValue(undefined);
+		asMock(db.insert).mockReturnValue({ values });
+
+		expect((await exportProfile(1)).success).toBe(true);
+		const written = JSON.parse(values.mock.calls[0][0].data);
+
+		expect(written.work_experiences[0].work_experience_projects).toEqual([
+			{ name: 'Scan app', project_role: 'Architect', description: 'Built it.' },
+			{ name: 'Test suite', description: 'Wrote it.' },
+			{ name: 'Docs', description: 'Wrote them.' }
+		]);
+		expect(written.side_projects).toEqual([
+			{ name: 'Django', project_role: 'Contributor', summary: 'Fixes.' },
+			{ name: 'LitState', summary: 'Mine.' }
+		]);
 	});
 });

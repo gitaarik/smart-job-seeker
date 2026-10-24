@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { diffResumeData } from './resume-diff';
-import type { Certificate, ResumeData } from '$lib/server/resume/types';
+import type { Certificate, ResumeData, SideProject } from '$lib/server/resume/types';
 
 const withCertificates = (certificates: Certificate[]): ResumeData => ({
 	basics: { name: 'Alex Morgan' },
@@ -52,5 +52,38 @@ describe('diffResumeData — certificates', () => {
 		);
 		const changed = diff.certificates[0].fieldDiffs?.filter((d) => d.changed).map((d) => d.field);
 		expect(changed).toEqual(['expiryDate', 'credentialId']);
+	});
+});
+
+describe('diffResumeData — a side project’s role', () => {
+	const withProjects = (projects: SideProject[]): ResumeData => ({
+		basics: { name: 'Alex Morgan' },
+		projects
+	});
+	const django: SideProject = { name: 'Django', role: 'Contributor', summary: 'Fixes.' };
+
+	it('offers the role a source states', () => {
+		const diff = diffResumeData(
+			withProjects([django]),
+			withProjects([{ ...django, role: 'Maintainer' }])
+		);
+		const changed = diff.projects[0].fieldDiffs?.filter((d) => d.changed);
+		expect(changed?.map((d) => [d.field, d.current, d.incoming])).toEqual([
+			['role', 'Contributor', 'Maintainer']
+		]);
+	});
+
+	it('reads a source that gives no role, or a null one, as silent rather than clearing it', () => {
+		// The parser returns null for a project whose CV says nothing about it.
+		const silent = { name: 'Django', summary: 'Fixes.' };
+		expect(diffResumeData(withProjects([django]), withProjects([silent])).projects[0].type).toBe(
+			'unchanged'
+		);
+		expect(
+			diffResumeData(
+				withProjects([django]),
+				withProjects([{ ...silent, role: null as unknown as string }])
+			).projects[0].type
+		).toBe('unchanged');
 	});
 });

@@ -2640,6 +2640,7 @@ const FIELD_LABELS: Record<string, string> = {
 	study_type: 'Qualification',
 	repo_url: 'Repository',
 	stars: 'GitHub stars',
+	project_role: 'Your role',
 	language_code: 'Language code',
 	author_position: 'Their role',
 	author_email: 'Their email',

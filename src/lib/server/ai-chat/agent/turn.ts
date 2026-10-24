@@ -71,8 +71,13 @@ export const ASSISTANT_AGENT_PROMPT = 'personal_agent_chat_agent';
  * once. Printing it once, or only the page's own role on a role page, is
  * the tunable that brings that page down; until then the ratchet sits above
  * it. A capability's contract that grows shows up here first.
+ *
+ * 41,500 since 2026-10-24, when a project's own role took that page from
+ * 39,745 to 40,967. The field's note is the smaller part of that: a column
+ * that prints in other languages also gets a property per language the
+ * profile translates into, on every tool that writes it.
  */
-export const TOOL_DEFINITIONS_BUDGET_CHARS = 40_000;
+export const TOOL_DEFINITIONS_BUDGET_CHARS = 41_500;
 
 export interface TurnInput {
 	userId: string;

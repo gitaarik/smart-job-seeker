@@ -299,6 +299,25 @@ describe('mapJsonResumeToInternal', () => {
 		expect(result.projects?.[0].summary).toBe('A popular JavaScript library');
 		expect(result.projects?.[0].achievements).toHaveLength(2);
 		expect(result.projects?.[0].technologies).toHaveLength(3);
+		// No `roles` in the file: no role, rather than an empty one.
+		expect(result.projects?.[0].role).toBeUndefined();
+	});
+
+	it("keeps a project's roles as the applicant's role in it", async () => {
+		const jsonResume: JsonResumeSchema = {
+			basics: { name: 'John Doe' },
+			projects: [
+				{ name: 'Django', roles: ['Contributor', 'Release manager'] },
+				{ name: 'Empty', roles: [] }
+			]
+		};
+
+		const result = await mapJsonResumeToInternal(jsonResume);
+
+		expect(result.projects?.map((p) => p.role)).toEqual([
+			'Contributor, Release manager',
+			undefined
+		]);
 	});
 
 	it('should map references correctly', async () => {

@@ -63,6 +63,7 @@ Return a JSON object with this exact structure:
   "projects": [
     {
       "name": "Project Name",
+      "role": "Their part in it, such as Contributor",
       "url": "https://...",
       "summary": "Description",
       "technologies": ["Tech1"]
@@ -84,7 +85,8 @@ Guidelines:
 - Be thorough - extract all relevant details
 - For work experience: "summary" is a brief 1-2 sentence overview of the role. All bullet points, accomplishments, metrics, and specific results go in "achievements". Do NOT put bullet-point content in summary.
 - For education: if the resume only shows a single year (e.g. "MSc Computer Science, 2020"), treat it as the graduation year, NOT as a start or end date. Only use startDate/endDate when the resume explicitly provides date ranges for the education period.
-- For certificates: "date" is when it was issued. Only give "expiryDate" when the resume says when it expires or until when it is valid, and "credentialId" when it states the certificate's ID or number.`;
+- For certificates: "date" is when it was issued. Only give "expiryDate" when the resume says when it expires or until when it is valid, and "credentialId" when it states the certificate's ID or number.
+- For projects: "role" is the person's own part in the project ("Contributor", "Co-founder", "Lead developer"), and only when the resume states it. Never infer one.`;
 
 // Helper: accept string, null, or undefined → string | undefined
 const nullableString = z
@@ -183,6 +185,7 @@ const LanguageSchema = z.object({
 
 const SideProjectSchema = z.object({
 	name: nullableString,
+	role: nullableString,
 	url: nullableString,
 	summary: nullableString,
 	startDate: nullableString,

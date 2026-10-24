@@ -172,7 +172,7 @@ export function applyTranslations(
 			overlay(tr, 'work_experience_achievement', a, 'description');
 		}
 		for (const p of childrenOf(we, 'work_experience_projects')) {
-			for (const f of ['name', 'description', 'outcome']) {
+			for (const f of ['name', 'project_role', 'description', 'outcome']) {
 				overlay(tr, 'work_experience_project', p, f);
 			}
 		}
@@ -189,7 +189,7 @@ export function applyTranslations(
 	}
 
 	for (const sp of childrenOf(profile, 'side_projects')) {
-		for (const f of ['name', 'summary']) {
+		for (const f of ['name', 'project_role', 'summary']) {
 			overlay(tr, 'side_project', sp, f);
 		}
 		for (const a of childrenOf(sp, 'side_project_achievements')) {

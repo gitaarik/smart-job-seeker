@@ -48,6 +48,50 @@ function site(over: Record<string, unknown> = {}, config: Record<string, unknown
 }
 
 describe('ShowcaseSite', () => {
+	test("prints a project's own role under its name, and nothing for one without", () => {
+		const c = site({
+			work_experiences: [
+				{
+					id: 1,
+					name: 'TechCorp',
+					position: 'Engineer',
+					work_experience_achievements: [],
+					work_experience_technologies: [],
+					work_experience_projects: [
+						{
+							id: 2,
+							name: 'Scan app',
+							project_role: 'Architect',
+							work_experience_project_technologies: []
+						},
+						{
+							id: 3,
+							name: 'Test suite',
+							project_role: null,
+							work_experience_project_technologies: []
+						}
+					]
+				}
+			],
+			side_projects: [
+				{
+					id: 4,
+					name: 'Django',
+					project_role: 'Contributor',
+					side_project_achievements: [],
+					side_project_technologies: []
+				}
+			]
+		});
+		const titled = (name: string) =>
+			[...c.querySelectorAll('h3')].find((h) => h.textContent?.trim() === name);
+
+		const scanCard = titled('Scan app')?.closest('div.rounded-lg');
+		expect(scanCard?.textContent).toContain('Architect');
+		expect(titled('Test suite')?.closest('div.rounded-lg')?.textContent).not.toContain('Architect');
+		expect(titled('Django')?.closest('header')?.textContent).toContain('Contributor');
+	});
+
 	test('splits highlights: key skills and contact-for beside the About me, the rest as a card', () => {
 		const c = site();
 		const boxes = [...c.querySelectorAll('h3')].map((h) => h.textContent?.trim());

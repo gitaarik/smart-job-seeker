@@ -62,6 +62,7 @@
 	// Form states
 	const loadedBasics = basicsOf(loaded.project);
 	let editName = $state(loadedBasics.name);
+	let editRole = $state(loadedBasics.role);
 	let editUrl = $state(loadedBasics.url);
 	let editRepoUrl = $state(loadedBasics.repoUrl);
 	let editSummary = $state(loadedBasics.summary);
@@ -137,6 +138,7 @@
 
 	type ProjectBasics = {
 		name: string;
+		role: string;
 		url: string;
 		repoUrl: string;
 		summary: string;
@@ -149,6 +151,7 @@
 	function basicsOf(p: PageData['project']): ProjectBasics {
 		return {
 			name: p.name || '',
+			role: p.project_role || '',
 			url: p.url || '',
 			repoUrl: p.repo_url || '',
 			summary: p.summary || '',
@@ -161,6 +164,7 @@
 	function basicsBody(v: ProjectBasics) {
 		return {
 			name: v.name,
+			project_role: v.role,
 			url: v.url,
 			repo_url: v.repoUrl,
 			summary: v.summary,
@@ -188,6 +192,7 @@
 		},
 		onSaved: (v) => {
 			editName = v.name;
+			editRole = v.role;
 			editUrl = v.url;
 			editRepoUrl = v.repoUrl;
 			editSummary = v.summary;
@@ -202,6 +207,7 @@
 	$effect(() =>
 		basicsField.set({
 			name: editName,
+			role: editRole,
 			url: editUrl,
 			repoUrl: editRepoUrl,
 			summary: editSummary,
@@ -334,6 +340,16 @@
 					/>
 				</div>
 
+				<TranslatableField
+					entity="side_project"
+					id={project.id}
+					field="project_role"
+					label="Your role"
+					bind:value={editRole}
+					placeholder="e.g. Contributor, Co-founder"
+					hint="Leave empty if it's your own project."
+				/>
+
 				<div>
 					<label for="edit-url" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
 						URL
@@ -355,19 +371,6 @@
 					bind:value={editRepoUrl}
 					placeholder="e.g., View on GitHub"
 				/>
-
-				<div>
-					<label for="edit-stars" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
-						GitHub Stars
-					</label>
-					<input
-						type="number"
-						id="edit-stars"
-						bind:value={editStars}
-						min="0"
-						class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-					/>
-				</div>
 
 				<div>
 					<label
@@ -392,6 +395,19 @@
 						type="date"
 						id="edit-end-date"
 						bind:value={editEndDate}
+						class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+					/>
+				</div>
+
+				<div>
+					<label for="edit-stars" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+						GitHub Stars
+					</label>
+					<input
+						type="number"
+						id="edit-stars"
+						bind:value={editStars}
+						min="0"
 						class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 					/>
 				</div>

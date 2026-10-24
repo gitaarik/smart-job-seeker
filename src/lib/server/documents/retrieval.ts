@@ -184,6 +184,19 @@ function dedupe(arr: string[]): string[] {
 	return out;
 }
 
+/**
+ * What a project's heading says beside its title: where it was done, and the
+ * applicant's own part in it when they gave one ("at Acme Corp; role: tech
+ * lead"). In the heading rather than the citation so the 800-character clip
+ * can never cut it, and so the writer reads the part they played before the
+ * prose that describes it. Empty for a side project with no role, as before.
+ */
+export function projectContext(company: string | null, role: string | null): string {
+	return [company ? `at ${company}` : '', role?.trim() ? `role: ${role.trim()}` : '']
+		.filter(Boolean)
+		.join('; ');
+}
+
 function buildCitation(description: string, docSummaries: string[], techs: string[]): string {
 	const parts: string[] = [];
 	if (description.trim()) parts.push(description.trim());
@@ -334,7 +347,7 @@ export async function loadRankableProjects(
 	const [sideRows, weRows] = await Promise.all([
 		db.query.side_projects.findMany({
 			where: eq(side_projects.profile_id, profileId),
-			columns: { id: true, name: true, summary: true },
+			columns: { id: true, name: true, project_role: true, summary: true },
 			with: {
 				side_project_technologies: { columns: { name: true } },
 				side_project_achievements: { columns: { description: true } },
@@ -346,7 +359,13 @@ export async function loadRankableProjects(
 			columns: { id: true, name: true },
 			with: {
 				work_experience_projects: {
-					columns: { id: true, name: true, description: true, outcome: true },
+					columns: {
+						id: true,
+						name: true,
+						project_role: true,
+						description: true,
+						outcome: true
+					},
 					with: {
 						work_experience_project_technologies: { columns: { name: true } },
 						profile_document_projects: { columns: docCols }
@@ -414,7 +433,7 @@ export async function loadRankableProjects(
 			'side_project',
 			sp.id,
 			sp.name.trim(),
-			'',
+			projectContext(null, sp.project_role),
 			description,
 			techs,
 			sp.profile_document_projects
@@ -432,7 +451,7 @@ export async function loadRankableProjects(
 				'work_experience_project',
 				wep.id,
 				wep.name.trim(),
-				we.name ? `at ${we.name}` : '',
+				projectContext(we.name, wep.project_role),
 				description,
 				techs,
 				wep.profile_document_projects,

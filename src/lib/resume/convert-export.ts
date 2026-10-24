@@ -85,6 +85,7 @@ export function convertExportToResumeData(exported: ExportedProfile): ResumeData
 		})),
 		projects: p.side_projects?.map((proj) => ({
 			name: proj.name || '',
+			role: proj.project_role,
 			url: proj.url,
 			repoUrl: proj.repo_url,
 			summary: proj.summary,

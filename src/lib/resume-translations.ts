@@ -96,6 +96,7 @@ export const TRANSLATABLE_FIELDS: TranslatableField[] = [
 	},
 
 	{ entity: 'work_experience_project', field: 'name', label: 'Project name' },
+	{ entity: 'work_experience_project', field: 'project_role', label: 'Your role' },
 	{ entity: 'work_experience_project', field: 'description', label: 'Description' },
 	{ entity: 'work_experience_project', field: 'outcome', label: 'Outcome' },
 
@@ -106,6 +107,7 @@ export const TRANSLATABLE_FIELDS: TranslatableField[] = [
 	{ entity: 'education', field: 'summary', label: 'Summary' },
 
 	{ entity: 'side_project', field: 'name', label: 'Name' },
+	{ entity: 'side_project', field: 'project_role', label: 'Your role' },
 	{ entity: 'side_project', field: 'summary', label: 'Summary' },
 
 	{

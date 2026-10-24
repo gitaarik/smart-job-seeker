@@ -209,7 +209,9 @@
 							<h3>
 								{#if p.url}<a href={p.url} rel="noopener">{p.name}</a>{:else}{p.name}{/if}
 							</h3>
-							{#if p.company}<p class="meta">{p.company}</p>{/if}
+							{#if p.project_role || p.company}
+								<p class="meta">{[p.project_role, p.company].filter(Boolean).join(' · ')}</p>
+							{/if}
 							{#if p.description}<p class="prose">{p.description}</p>{/if}
 							{#if p.outcome}<p class="prose outcome">{p.outcome}</p>{/if}
 							{#if technologies.length}
@@ -229,7 +231,9 @@
 								{#if p.url}<a href={p.url} rel="noopener">{p.name}</a>{:else}{p.name}{/if}
 							</h3>
 							<p class="meta">
-								{formatDateRangeVerbose(p.start_date, p.end_date)}{#if p.repo_url}
+								{[p.project_role, formatDateRangeVerbose(p.start_date, p.end_date)]
+									.filter(Boolean)
+									.join(' · ')}{#if p.repo_url}
 									· <a href={p.repo_url} rel="noopener">source</a>{/if}
 							</p>
 							{#if p.summary}<p class="prose">{p.summary}</p>{/if}

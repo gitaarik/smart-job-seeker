@@ -700,6 +700,15 @@
 																</div>
 															{/if}
 														</div>
+														{#if p.project_role}
+															<div class="flex items-center text-sm">
+																<FontAwesomeIcon
+																	icon={faUserTie}
+																	class="mr-2 h-3 w-3 flex-shrink-0"
+																/>
+																<span>{p.project_role}</span>
+															</div>
+														{/if}
 													</div>
 
 													<div class="space-y-6">
@@ -844,6 +853,15 @@
 											<div class="break-inside-avoid" class:mt-10={i === 0}>
 												<header class="mb-4">
 													<h3 class="text-2xl font-semibold text-(--pf-bright)">{p.name}</h3>
+													{#if p.project_role}
+														<div class="mt-2 flex items-center text-sm">
+															<FontAwesomeIcon
+																icon={faUserTie}
+																class="mr-2 h-3 w-3 flex-shrink-0"
+															/>
+															<span>{p.project_role}</span>
+														</div>
+													{/if}
 												</header>
 												{#if p.summary}
 													<p class="leading-relaxed whitespace-pre-line print:text-sm">

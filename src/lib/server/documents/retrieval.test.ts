@@ -8,12 +8,13 @@ vi.mock('$lib/server/job/skill-ontology', () => ({
 // Only rankedProfileProjects reaches these: the profile's projects and their
 // cosine scores, faked so the merge switch can be driven end to end.
 const sideProjects = vi.fn();
+const workExperiences = vi.fn(async (): Promise<unknown[]> => []);
 const semanticScoreProjects = vi.fn();
 vi.mock('$lib/server/db', () => ({
 	dbDirect: {
 		query: {
 			side_projects: { findMany: () => sideProjects() },
-			work_experiences: { findMany: async () => [] }
+			work_experiences: { findMany: () => workExperiences() }
 		}
 	}
 }));
@@ -30,6 +31,7 @@ import {
 	formatSupportingEvidence,
 	mergeProjectRankings,
 	pickGraphSlot,
+	projectContext,
 	type RankableProject,
 	rankBySemanticScores,
 	rankedProfileProjects,
@@ -155,6 +157,73 @@ describe('formatProjectCitations', () => {
 		const out = formatProjectCitations([ranked()]);
 		expect(out).not.toContain('THE SUBJECT');
 		expect(out).not.toContain('was not inferred');
+	});
+});
+
+describe('projectContext', () => {
+	it('names the employer, and the role when the applicant gave one', () => {
+		expect(projectContext('Acme Corp', null)).toBe('at Acme Corp');
+		expect(projectContext('Acme Corp', 'Tech lead')).toBe('at Acme Corp; role: Tech lead');
+	});
+
+	it('gives a side project its role alone, and nothing without one', () => {
+		expect(projectContext(null, 'Contributor')).toBe('role: Contributor');
+		expect(projectContext(null, null)).toBe('');
+		expect(projectContext(null, '  ')).toBe('');
+	});
+});
+
+describe("rankedProfileProjects: a project's heading carries the applicant's role", () => {
+	const job = { title: 'Frontend Engineer', skills_required: ['Svelte'] };
+
+	beforeEach(() => {
+		expandForRetrieval.mockReset();
+		expandForRetrieval.mockResolvedValue(new Map());
+		sideProjects.mockResolvedValue([
+			{
+				id: 1,
+				name: 'Django',
+				project_role: 'Contributor',
+				summary: '',
+				side_project_technologies: [{ name: 'Svelte' }],
+				side_project_achievements: [],
+				profile_document_projects: []
+			}
+		]);
+		workExperiences.mockResolvedValue([
+			{
+				id: 9,
+				name: 'Acme',
+				work_experience_projects: [
+					{
+						id: 2,
+						name: 'Scan app',
+						project_role: 'Architect',
+						description: '',
+						outcome: '',
+						work_experience_project_technologies: [{ name: 'Svelte' }],
+						profile_document_projects: []
+					}
+				]
+			}
+		]);
+		semanticScoreProjects.mockResolvedValue(
+			new Map([
+				['side_project:1', 0.9],
+				['work_experience_project:2', 0.8]
+			])
+		);
+	});
+	afterEach(() => {
+		workExperiences.mockResolvedValue([]);
+	});
+
+	it('beside the employer for a role project, on its own for a side project', async () => {
+		const { ranked } = await rankedProfileProjects(1, job, 3);
+		expect(Object.fromEntries(ranked.map((p) => [p.title, p.context]))).toEqual({
+			Django: 'role: Contributor',
+			'Scan app': 'at Acme; role: Architect'
+		});
 	});
 });
 

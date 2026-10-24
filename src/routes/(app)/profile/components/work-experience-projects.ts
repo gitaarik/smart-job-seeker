@@ -8,6 +8,7 @@
  */
 export interface ProjectData extends Record<string, unknown> {
 	name: string;
+	project_role: string;
 	url: string;
 	repo_url: string;
 	/** `YYYY-MM-DD`, which is what `<input type="date">` reads and writes. */
@@ -32,6 +33,7 @@ export function dateInputValue(value: unknown): string {
 export type LoadedProject = {
 	id: number;
 	name: string | null;
+	project_role: string | null;
 	url: string | null;
 	repo_url: string | null;
 	start_date: string | Date | null;
@@ -44,6 +46,7 @@ export type LoadedProject = {
 export function toProjectData(row: LoadedProject): ProjectData {
 	return {
 		name: row.name ?? '',
+		project_role: row.project_role ?? '',
 		url: row.url ?? '',
 		repo_url: row.repo_url ?? '',
 		start_date: dateInputValue(row.start_date),
@@ -56,6 +59,7 @@ export function toProjectData(row: LoadedProject): ProjectData {
 export function blankProject(): ProjectData {
 	return {
 		name: '',
+		project_role: '',
 		url: '',
 		repo_url: '',
 		start_date: '',
@@ -69,6 +73,7 @@ export function blankProject(): ProjectData {
 export function projectBody(v: ProjectData): Record<string, unknown> {
 	return {
 		name: v.name.trim(),
+		project_role: v.project_role.trim() || null,
 		url: v.url.trim() || null,
 		repo_url: v.repo_url.trim() || null,
 		start_date: v.start_date || null,

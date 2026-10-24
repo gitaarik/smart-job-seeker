@@ -83,6 +83,8 @@ export interface Language {
  */
 export interface SideProject {
 	name: string;
+	/** The applicant's part in it, when the CV says ("Contributor"). Stored as `project_role`. */
+	role?: string;
 	url?: string;
 	repoUrl?: string;
 	summary?: string;

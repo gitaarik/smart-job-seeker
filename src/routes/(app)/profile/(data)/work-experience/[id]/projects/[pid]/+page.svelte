@@ -123,6 +123,17 @@
 					onblur={row.field.flush}
 					placeholder="e.g. Payments rewrite"
 				/>
+				<TranslatableField
+					entity="work_experience_project"
+					id={row.id ?? 0}
+					field="project_role"
+					autocomplete="off"
+					label="Your role"
+					bind:value={() => row.data.project_role, (v) => set({ project_role: v })}
+					onblur={row.field.flush}
+					placeholder="e.g. Tech lead"
+					hint="Leave empty if it's the same as your job title."
+				/>
 				<div>
 					<label for="proj-url" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
 						URL
@@ -191,7 +202,7 @@
 				rows={4}
 				bind:value={() => row.data.description, (v) => set({ description: v })}
 				onblur={row.field.flush}
-				placeholder="What was the project and your role in it?"
+				placeholder="What was the project, and what did you do on it?"
 			/>
 
 			<TranslatableField

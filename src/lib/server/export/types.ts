@@ -332,6 +332,7 @@ export interface ExportedWorkExperienceProject {
 	status?: string;
 	sort?: number | null;
 	name: string;
+	project_role?: string;
 	url?: string;
 	start_date?: string | null;
 	end_date?: string | null;
@@ -350,6 +351,7 @@ export interface ExportedSideProject {
 	status?: string;
 	sort?: number | null;
 	name?: string;
+	project_role?: string;
 	start_date?: string | null;
 	end_date?: string | null;
 	url?: string;

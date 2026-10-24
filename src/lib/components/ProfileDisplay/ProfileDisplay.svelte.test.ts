@@ -159,3 +159,37 @@ describe('ProfileDisplay — a document without a name', () => {
 		expect(screen.queryByText('NATIONALITY')).toBeNull();
 	});
 });
+
+describe('ProfileDisplay — side projects', () => {
+	const project = {
+		url: null,
+		repo_url: null,
+		stars: null,
+		end_date: null,
+		summary: null,
+		tags: null
+	};
+
+	test("puts a project's role between its name and its dates, and nothing without one", () => {
+		const { container } = render(ProfileDisplay, {
+			props: {
+				type: 'resume',
+				profile: {
+					...profile(),
+					references: [],
+					side_projects: [
+						{ ...project, name: 'LitState', project_role: 'Creator', start_date: '2020-04-01' },
+						{ ...project, name: 'Jazzchords', start_date: '2012-01-01' }
+					]
+				}
+			}
+		});
+		const headers = [...container.querySelectorAll('div.font-bold')]
+			.map((el) => el.textContent?.replace(/\s+/g, ' ').trim() ?? '')
+			.filter((text) => /^(LitState|Jazzchords)/.test(text));
+
+		expect(headers).toHaveLength(2);
+		expect(headers[0]).toMatch(/^LitState \| Creator \| \d/);
+		expect(headers[1]).toMatch(/^Jazzchords \| \d/);
+	});
+});

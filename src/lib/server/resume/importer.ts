@@ -350,6 +350,7 @@ async function createSideProject(profileId: number, project: SideProject): Promi
 		.values({
 			profile_id: profileId,
 			name: project.name,
+			project_role: project.role || null,
 			url: project.url || null,
 			repo_url: project.repoUrl || null,
 			summary: project.summary || null,

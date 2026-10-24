@@ -97,3 +97,66 @@ describe('PortfolioSite technologies', () => {
 		expect(listedUnder(site, 'Recipe Finder')).toBeNull();
 	});
 });
+
+describe("PortfolioSite projects: the applicant's own role", () => {
+	function siteWithRoles(roles: { project?: string; side?: string }) {
+		const profile = {
+			name: 'Alex Morgan',
+			profile_versions: [],
+			work_experiences: [
+				{
+					id: 1,
+					position: 'Engineer',
+					name: 'TechCorp',
+					work_experience_achievements: [],
+					work_experience_technologies: [],
+					work_experience_projects: [
+						{
+							id: 2,
+							name: 'Payments rewrite',
+							project_role: roles.project ?? null,
+							work_experience_project_technologies: []
+						}
+					]
+				}
+			],
+			side_projects: [
+				{
+					id: 3,
+					name: 'Recipe Finder',
+					project_role: roles.side ?? null,
+					start_date: '2021-01-01',
+					end_date: '2022-06-01',
+					repo_url: 'https://github.com/alex/recipes',
+					side_project_achievements: [],
+					side_project_technologies: []
+				}
+			]
+		};
+		const { container } = render(PortfolioSite, { props: { profile, theme: null } });
+		return container;
+	}
+
+	/** An entry's meta line as it reads, whitespace collapsed the way a browser shows it. */
+	function metaUnder(container: HTMLElement, heading: string): string | undefined {
+		const entry = [...container.querySelectorAll('article.entry')].find((a) =>
+			a.querySelector('h3')?.textContent?.includes(heading)
+		);
+		return entry?.querySelector('p.meta')?.textContent?.replace(/\s+/g, ' ').trim();
+	}
+
+	test("puts a role project's role before its company, and the company alone without one", () => {
+		expect(metaUnder(siteWithRoles({ project: 'Tech lead' }), 'Payments rewrite')).toBe(
+			'Tech lead · TechCorp'
+		);
+		expect(metaUnder(siteWithRoles({}), 'Payments rewrite')).toBe('TechCorp');
+	});
+
+	test("puts a side project's role before its dates", () => {
+		const withRole = metaUnder(siteWithRoles({ side: 'Contributor' }), 'Recipe Finder');
+		const without = metaUnder(siteWithRoles({}), 'Recipe Finder');
+
+		expect(withRole).toBe(`Contributor · ${without}`);
+		expect(without).toMatch(/^Jan 2021/);
+	});
+});

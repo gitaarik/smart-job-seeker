@@ -430,9 +430,22 @@ function diffLanguages(current: Language[], incoming: Language[]): ItemDiff<Lang
 
 // --- Projects diff ---
 
+/**
+ * One side project, with the applicant's role in it diffed only where the
+ * source states one.
+ *
+ * A CV seldom says what part someone played in a project, and the parser is
+ * told to give a role only when it does, so a project without one arrives as
+ * null or not at all. A source that says nothing is not one that clears it, as
+ * for a certificate's expiry: diffed like the fields around it, every re-import
+ * would offer to wipe the role typed in here, pre-ticked.
+ */
 function diffProjectItem(current: SideProject, incoming: SideProject): ItemDiff<SideProject> {
 	const fieldDiffs = [
 		diffField('name', 'Name', current.name, incoming.name),
+		...(normalize(incoming.role)
+			? [diffField('role', 'Your role', current.role, incoming.role)]
+			: []),
 		diffField('url', 'URL', current.url, incoming.url),
 		diffField('repoUrl', 'Repo URL', current.repoUrl, incoming.repoUrl),
 		diffField('summary', 'Summary', current.summary, incoming.summary),

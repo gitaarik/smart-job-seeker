@@ -270,6 +270,29 @@ describe('StructuredResume — the parts a template prints', () => {
 		expect(screen.queryByText('Jazzchords')).toBeNull();
 	});
 
+	test("prints a side project's role where a role's company goes, and nothing without one", () => {
+		const base = withWork();
+		const sides = base.side_projects ?? [];
+		const { container } = render(StructuredResume, {
+			props: {
+				config: {},
+				type: 'resume',
+				profile: {
+					...base,
+					side_projects: [
+						{ ...sides[0], project_role: 'Creator and maintainer' },
+						{ ...sides[1], tags: null }
+					]
+				}
+			}
+		});
+		expect(screen.getByText('Jazzchords')).toBeTruthy();
+		const projects = container.querySelector('.projects');
+		expect(
+			[...(projects?.querySelectorAll('.job-co') ?? [])].map((el) => el.textContent?.trim())
+		).toEqual(['Creator and maintainer']);
+	});
+
 	test('leaves the TECH line off a template that turns it off', () => {
 		render(StructuredResume, {
 			props: {

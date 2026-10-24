@@ -117,7 +117,15 @@ const PROFILE_SCHEMA_MAPPING = {
 						fields: ['name']
 					},
 					work_experience_projects: {
-						fields: ['name', 'url', 'start_date', 'end_date', 'description', 'outcome'],
+						fields: [
+							'name',
+							'project_role',
+							'url',
+							'start_date',
+							'end_date',
+							'description',
+							'outcome'
+						],
 						relations: {
 							work_experience_project_technologies: {
 								fields: ['name']
@@ -127,7 +135,16 @@ const PROFILE_SCHEMA_MAPPING = {
 				}
 			},
 			side_projects: {
-				fields: ['name', 'start_date', 'end_date', 'url', 'stars', 'summary', 'repo_url'],
+				fields: [
+					'name',
+					'project_role',
+					'start_date',
+					'end_date',
+					'url',
+					'stars',
+					'summary',
+					'repo_url'
+				],
 				relations: {
 					side_project_achievements: {
 						fields: ['description']
@@ -347,6 +364,26 @@ async function withSalary<T extends Record<string, unknown>>(profile: T): Promis
 }
 
 /**
+ * A project as the snapshot carries it: `project_role` only where the applicant
+ * gave one.
+ *
+ * Every other empty column ships as null, and this one breaks that on purpose.
+ * Nearly every project has no role of its own, so a null on each would add a
+ * key to every project in every prompt, the matcher's included, and the matcher
+ * measurably moves on formatting alone (see NON_FIT_FIELDS in
+ * ai-chat/profile-data.ts). Left out, a profile that sets no role sends exactly
+ * what it sent before the column existed, and an absent key already reads as
+ * "none" to every consumer.
+ */
+function withoutEmptyProjectRole<T extends { project_role: string | null }>(
+	project: T
+): T | Omit<T, 'project_role'> {
+	if (project.project_role?.trim()) return project;
+	const { project_role: _, ...rest } = project;
+	return rest;
+}
+
+/**
  * Fetch complete profile data with all relations
  * Internal helper function used by exportProfile
  *
@@ -404,6 +441,7 @@ async function fetchProfileData(profileId: number) {
 					work_experience_projects: {
 						columns: {
 							name: true,
+							project_role: true,
 							url: true,
 							start_date: true,
 							end_date: true,
@@ -424,6 +462,7 @@ async function fetchProfileData(profileId: number) {
 			side_projects: {
 				columns: {
 					name: true,
+					project_role: true,
 					start_date: true,
 					end_date: true,
 					url: true,
@@ -518,6 +557,11 @@ async function fetchProfileData(profileId: number) {
 
 	return withSalary({
 		...profile,
+		work_experiences: profile.work_experiences.map((role) => ({
+			...role,
+			work_experience_projects: role.work_experience_projects.map(withoutEmptyProjectRole)
+		})),
+		side_projects: profile.side_projects.map(withoutEmptyProjectRole),
 		tech_skill_categories: profile.tech_skill_categories.map((category) => ({
 			...category,
 			// Held back from documents is not the same as absent. This snapshot is

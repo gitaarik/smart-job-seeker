@@ -96,6 +96,7 @@ export interface ExportedProfile {
 				status?: string;
 				sort?: number | null;
 				name: string;
+				project_role?: string | null;
 				url?: string;
 				start_date?: Date | null;
 				end_date?: Date | null;
@@ -112,6 +113,7 @@ export interface ExportedProfile {
 			status?: string;
 			sort?: number | null;
 			name?: string;
+			project_role?: string;
 			start_date?: Date | null;
 			end_date?: Date | null;
 			url?: string;
@@ -255,6 +257,7 @@ export async function buildProfileJsonExport(
 							status: true,
 							sort: true,
 							name: true,
+							project_role: true,
 							url: true,
 							start_date: true,
 							end_date: true,
@@ -278,6 +281,7 @@ export async function buildProfileJsonExport(
 					status: true,
 					sort: true,
 					name: true,
+					project_role: true,
 					start_date: true,
 					end_date: true,
 					url: true,
@@ -456,6 +460,7 @@ export async function buildProfileJsonExport(
 				status: proj.status || undefined,
 				sort: proj.sort,
 				name: proj.name || undefined,
+				project_role: proj.project_role || undefined,
 				start_date: proj.start_date,
 				end_date: proj.end_date,
 				url: proj.url || undefined,
