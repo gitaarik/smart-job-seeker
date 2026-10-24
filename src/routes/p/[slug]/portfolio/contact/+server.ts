@@ -5,7 +5,8 @@
  * this is the only way they leave the server for an anonymous visitor, and it
  * asks the same questions the page does before answering: the profile has to
  * be one the caller may see as a portfolio (published, a share token, or its
- * owner), and the theme has to be one that gates contact at all.
+ * owner), the version they may see must not be anonymous, and the theme has to
+ * be one that gates contact at all.
  *
  * Not under /api/, so the session gate in hooks.server.ts does not apply: the
  * visitor is anonymous by design, and the Turnstile check is the whole of what
@@ -15,8 +16,9 @@
 import { error, json } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
-import { profiles } from '$lib/server/db/schema';
+import { profile_versions, profiles } from '$lib/server/db/schema';
 import { checkProfileAccess } from '$lib/server/profile/access-control';
+import { isAnonymousChain } from '$lib/server/profile/anonymity';
 import {
 	getPortfolioThemeById,
 	getPortfolioThemesForProfile
@@ -47,6 +49,20 @@ export const POST: RequestHandler = async ({ params, request, locals, getClientA
 		routeType: 'portfolio'
 	});
 	if (!access.allowed) throw error(404, 'Not found');
+
+	// An anonymous version prints no name, email or phone (anonymiseTree), so
+	// its page offers no button; a share link to one must not reach the
+	// details here either, or the link holder learns who it is by asking. The
+	// version is the one access control resolved: the published one, or the
+	// token's. The owner is asking about themselves.
+	if (access.accessType !== 'owner') {
+		const versions = await db.query.profile_versions.findMany({
+			where: eq(profile_versions.profile_id, profile.id),
+			columns: { id: true, toggles: true },
+			with: { extension_links: { columns: { extended_id: true } } }
+		});
+		if (isAnonymousChain(versions, access.versionId)) throw error(404, 'Not found');
+	}
 
 	// The theme the page would have rendered with: the published one, or for a
 	// share link of a site not yet published, the first one, as s/[token] picks.

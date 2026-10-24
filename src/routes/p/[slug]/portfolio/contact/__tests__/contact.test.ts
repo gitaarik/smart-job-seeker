@@ -13,11 +13,27 @@ const mockAccess = vi.fn();
 const mockThemeById = vi.fn();
 const mockThemes = vi.fn();
 const mockVerify = vi.fn();
+const mockVersions = vi.fn();
 
 vi.mock('$lib/server/db', () => ({
-	db: { query: { profiles: { findFirst: () => mockProfile() } } }
+	db: {
+		query: {
+			profiles: { findFirst: () => mockProfile() },
+			profile_versions: { findMany: () => mockVersions() }
+		}
+	}
 }));
-vi.mock('$lib/server/db/schema', () => ({ profiles: { slug: 'slug', id: 'id' } }));
+vi.mock('$lib/server/db/schema', () => ({
+	profiles: { slug: 'slug', id: 'id' },
+	profile_versions: { profile_id: 'profile_id' }
+}));
+vi.mock('$lib/server/profile/anonymity', async () => {
+	const { isAnonymous } = await import('$lib/resume-anonymity');
+	return {
+		isAnonymousChain: (versions: { id: number; toggles: unknown }[], id: number) =>
+			versions.some((v) => v.id === id && isAnonymous(v.toggles))
+	};
+});
 vi.mock('drizzle-orm', () => ({ eq: () => ({}) }));
 vi.mock('$lib/server/profile/access-control', () => ({
 	checkProfileAccess: (o: unknown) => mockAccess(o)
@@ -67,7 +83,8 @@ async function post(body: unknown, user: { id: string } | null = null) {
 beforeEach(() => {
 	vi.clearAllMocks();
 	mockProfile.mockResolvedValue(PROFILE);
-	mockAccess.mockResolvedValue({ allowed: true, accessType: 'public' });
+	mockAccess.mockResolvedValue({ allowed: true, accessType: 'public', versionId: 5 });
+	mockVersions.mockResolvedValue([{ id: 5, toggles: [], extension_links: [] }]);
 	mockThemeById.mockResolvedValue(SHOWCASE);
 	mockThemes.mockResolvedValue([SHOWCASE]);
 	mockVerify.mockResolvedValue({ success: true });
@@ -114,6 +131,16 @@ describe('portfolio contact endpoint', () => {
 		const res = await post({ turnstileToken: 'good', accessToken: 'share' });
 		expect(res.status).toBe(200);
 		expect(mockAccess).toHaveBeenCalledWith(expect.objectContaining({ token: 'share' }));
+	});
+
+	it('refuses a share link to an anonymous version, whose page shows no details', async () => {
+		const { withAnonymous } = await import('$lib/resume-anonymity');
+		mockAccess.mockResolvedValue({ allowed: true, accessType: 'token', versionId: 7 });
+		mockVersions.mockResolvedValue([
+			{ id: 7, toggles: withAnonymous([], true), extension_links: [] }
+		]);
+		expect((await post({ turnstileToken: 'good', accessToken: 'share' })).status).toBe(404);
+		expect(mockVerify).not.toHaveBeenCalled();
 	});
 
 	it('404s an unknown profile', async () => {
