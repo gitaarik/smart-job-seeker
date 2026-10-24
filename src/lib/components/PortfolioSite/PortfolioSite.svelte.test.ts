@@ -160,3 +160,61 @@ describe("PortfolioSite projects: the applicant's own role", () => {
 		expect(without).toMatch(/^Jan 2021/);
 	});
 });
+
+describe('PortfolioSite separators', () => {
+	// Svelte drops the whitespace a block starts with, so a " · " written
+	// inside {#if} printed as "Engineer· TechCorp" until 2026-10-24.
+	function rendered(sideProject: Record<string, unknown>) {
+		const profile = {
+			name: 'Alex Morgan',
+			profile_versions: [],
+			work_experiences: [
+				{
+					id: 1,
+					position: 'Engineer',
+					name: 'TechCorp',
+					location: 'Utrecht',
+					start_date: '2020-01-01',
+					end_date: '2022-01-01',
+					work_experience_achievements: [],
+					work_experience_technologies: [],
+					work_experience_projects: []
+				}
+			],
+			side_projects: [
+				{
+					id: 3,
+					name: 'Recipe Finder',
+					side_project_achievements: [],
+					side_project_technologies: [],
+					...sideProject
+				}
+			]
+		};
+		const { container } = render(PortfolioSite, { props: { profile, theme: null } });
+		const entry = (heading: string) =>
+			[...container.querySelectorAll('article.entry')].find((a) =>
+				a.querySelector('h3')?.textContent?.includes(heading)
+			);
+		const text = (el: Element | null | undefined) => el?.textContent?.replace(/\s+/g, ' ').trim();
+		return { entry, text };
+	}
+
+	test("keeps the space before a role's employer and its location", () => {
+		const { entry, text } = rendered({});
+		const role = entry('Engineer');
+		expect(text(role?.querySelector('h3'))).toBe('Engineer · TechCorp');
+		expect(text(role?.querySelector('p.meta'))).toMatch(/2022 · Utrecht$/);
+	});
+
+	test("keeps the space before a side project's source link, and drops the dot when nothing precedes it", () => {
+		const repo = { repo_url: 'https://github.com/alex/recipes' };
+		const dated = rendered({ ...repo, start_date: '2021-01-01', end_date: '2022-06-01' });
+		expect(dated.text(dated.entry('Recipe Finder')?.querySelector('p.meta'))).toMatch(
+			/2022 · source$/
+		);
+
+		const bare = rendered(repo);
+		expect(bare.text(bare.entry('Recipe Finder')?.querySelector('p.meta'))).toBe('source');
+	});
+});

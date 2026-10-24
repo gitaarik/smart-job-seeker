@@ -175,13 +175,17 @@
 					{#each work as role (role.id)}
 						{@const technologies = show(role.work_experience_technologies, 'technology')}
 						<article class="entry">
+							<!-- Each separator sits inside an expression: Svelte drops the
+							     whitespace a block starts with, so a literal " · " inside
+							     {#if} printed as "Engineer· TechCorp". -->
 							<h3>
-								{role.position}{#if role.name}
-									· {role.name}{/if}
+								{role.position}{#if role.name}{` · ${role.name}`}{/if}
 							</h3>
 							<p class="meta">
-								{formatDateRangeVerbose(role.start_date, role.end_date)}{#if role.location}
-									· {role.location}{/if}
+								{formatDateRangeVerbose(
+									role.start_date,
+									role.end_date
+								)}{#if role.location}{` · ${role.location}`}{/if}
 							</p>
 							{#if role.summary}<p class="prose">{role.summary}</p>{/if}
 							{#if role.work_experience_achievements?.length}
@@ -226,15 +230,17 @@
 				{:else if section === 'sideProjects'}
 					{#each sideProjects as p (p.id)}
 						{@const technologies = show(p.side_project_technologies)}
+						{@const meta = [p.project_role, formatDateRangeVerbose(p.start_date, p.end_date)]
+							.filter(Boolean)
+							.join(' · ')}
 						<article class="entry">
 							<h3>
 								{#if p.url}<a href={p.url} rel="noopener">{p.name}</a>{:else}{p.name}{/if}
 							</h3>
 							<p class="meta">
-								{[p.project_role, formatDateRangeVerbose(p.start_date, p.end_date)]
-									.filter(Boolean)
-									.join(' · ')}{#if p.repo_url}
-									· <a href={p.repo_url} rel="noopener">source</a>{/if}
+								{meta}{#if p.repo_url}{meta ? ' · ' : ''}<a href={p.repo_url} rel="noopener"
+										>source</a
+									>{/if}
 							</p>
 							{#if p.summary}<p class="prose">{p.summary}</p>{/if}
 							{#if p.side_project_achievements?.length}
