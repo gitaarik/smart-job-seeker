@@ -92,6 +92,7 @@ import {
 } from '$lib/server/applications/status';
 import { TEXT_CREATE_CAPABILITIES, type TextCreateCapability } from './text-create-capabilities';
 import { MATCH_CONFIG_CAPABILITIES, type MatchConfigCapability } from './match-config-capability';
+import { BASIC_INFO_CAPABILITIES, type BasicInfoCapability } from './basic-info-capability';
 import { DIRECTIVE_CAPABILITIES, type DirectiveCapability } from './directive-capability';
 import { TEXT_COMMIT_CAPABILITIES, type TextCommitCapability } from './text-commit-capabilities';
 import { REORDER_CAPABILITIES, type ReorderCapability } from './reorder-capabilities';
@@ -134,6 +135,7 @@ export type Capability =
 	| TextCreateCapability
 	| TextCommitCapability
 	| MatchConfigCapability
+	| BasicInfoCapability
 	| DirectiveCapability
 	| ReorderCapability
 	| TagCapability
@@ -2048,6 +2050,7 @@ export const CAPABILITIES: Record<Capability, CapabilityDef> = {
 	...TEXT_CREATE_CAPABILITIES,
 	...TEXT_COMMIT_CAPABILITIES,
 	...MATCH_CONFIG_CAPABILITIES,
+	...BASIC_INFO_CAPABILITIES,
 	...DIRECTIVE_CAPABILITIES,
 	...REORDER_CAPABILITIES,
 	...TAG_CAPABILITIES,
@@ -2641,7 +2644,9 @@ const FIELD_LABELS: Record<string, string> = {
 	author_position: 'Their role',
 	author_email: 'Their email',
 	author_phone: 'Their phone',
-	institution: 'School'
+	institution: 'School',
+	// The profile row's bio, as its page labels it.
+	about_me_text: 'About me'
 };
 
 function labelFor(field: string): string {

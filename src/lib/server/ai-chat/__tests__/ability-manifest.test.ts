@@ -185,10 +185,13 @@ describe('formatAbilityManifest', () => {
 		// It ships on every turn on every page, like the two manifests it sits
 		// beside — and unlike them it is the same characters for every user, so
 		// the whole of its cost is this number. Twelve areas at ~90 characters,
-		// five capability lines, and two short frames. Raised from 2,800 for the
-		// fifth, the standing directives, which measured 2,892 with it, and to
-		// 2,910 when certificates joined the sections that can be hidden: that
-		// list is generated from HIDEABLE_RESOURCES, and measured 2,908.
-		expect(TEXT.length).toBeLessThanOrEqual(2910);
+		// six capability lines, and two short frames. Raised from 2,800 for the
+		// fifth, the standing directives, which measured 2,892 with it, to 2,910
+		// when certificates joined the sections that can be hidden (that list is
+		// generated from HIDEABLE_RESOURCES, and measured 2,908), and to 3,040 for
+		// the sixth, Basic Info's texts, which measured 3,035. Its "not their name
+		// or contact details" is 35 of those: without it a request to change an
+		// email address is answered with a page to go and ask on.
+		expect(TEXT.length).toBeLessThanOrEqual(3040);
 	});
 });

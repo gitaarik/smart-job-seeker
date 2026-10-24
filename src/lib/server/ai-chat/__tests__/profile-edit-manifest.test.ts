@@ -65,7 +65,8 @@ describe('formatProfileEditManifest', () => {
 		// of them before the child collections joined, which is where the extra
 		// 150 went, and one more line when certificates got their skills. A line
 		// is the whole cost of a section here: this block is counts and page
-		// names, never contents.
-		expect(formatProfileEditManifest(ALL).length).toBeLessThanOrEqual(1460);
+		// names, never contents. Raised to 1,490 for the profile row's own texts,
+		// a line with no count, which measured 1,490.
+		expect(formatProfileEditManifest(ALL).length).toBeLessThanOrEqual(1490);
 	});
 });

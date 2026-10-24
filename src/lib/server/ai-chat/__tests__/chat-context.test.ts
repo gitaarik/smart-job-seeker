@@ -360,6 +360,17 @@ describe('resolveChatContext — orientation blocks', () => {
 		expect(scopeForRoute('/(app)/jobs/[id]').sources).toContain('job');
 	});
 
+	it('offers the profile row’s texts on Basic Info and nowhere else', async () => {
+		// On Basic Info the capability is the page's subject. On a section page it
+		// would be five texts and their translations on top of a budget the
+		// section already fills, and the ability manifest names this page instead.
+		expect(scopeForRoute('/(app)/profile/(data)/edit').capabilities).toEqual(['edit_profile']);
+		expect(scopeForRoute('/(app)/profile').capabilities ?? []).not.toContain('edit_profile');
+		expect(
+			scopeForRoute('/(app)/profile/(data)/work-experience/[id]').capabilities ?? []
+		).not.toContain('edit_profile');
+	});
+
 	it('gives the dashboard the pipeline, which is what it is for', async () => {
 		const scope = scopeForRoute('/(app)/home');
 

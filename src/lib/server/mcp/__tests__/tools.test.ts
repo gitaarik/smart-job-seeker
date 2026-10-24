@@ -306,6 +306,51 @@ describe('translation fields', () => {
 	});
 });
 
+describe('the profile row', () => {
+	function propertyNames(tool: { inputSchema: { properties?: Record<string, unknown> } }) {
+		return Object.keys(tool.inputSchema.properties ?? {});
+	}
+
+	it('edits the five texts without naming an entry', () => {
+		// One row, and the key already says whose: an `entry_id` here would be an
+		// argument with exactly one right answer for the agent to get wrong.
+		const tool = byName.get('edit_profile')!;
+		expect(tool.inputSchema.required).toEqual(['profile_id', 'rationale']);
+		expect(propertyNames(tool)).toEqual([
+			'profile_id',
+			'profile.title',
+			'profile.subtitle',
+			'profile.headline',
+			'profile.summary',
+			'profile.about_me_text',
+			'rationale'
+		]);
+	});
+
+	it('cannot reach the name, the contact details or the slug', () => {
+		const names = propertyNames(byName.get('edit_profile')!);
+		for (const column of ['name', 'slug', 'email_address', 'phone_number', 'linkedin_profile']) {
+			expect(names).not.toContain(`profile.${column}`);
+		}
+	});
+
+	it('takes the Dutch of each text where the profile writes Dutch', async () => {
+		const tools = await toolsFor('write', 'documents', { profileId: 12 });
+		const names = propertyNames(tools.find((tool) => tool.name === 'edit_profile')!);
+		expect(names).toContain('profile.about_me_text.nl');
+		expect(names).not.toContain('profile.about_me_text.de');
+	});
+
+	it('is read through read_profile_section, and says where a person edits it', () => {
+		const section = byName.get('read_profile_section')!.inputSchema.properties?.section as {
+			enum: string[];
+		};
+		expect(section.enum[0]).toBe('profile');
+		expect(pageFor('edit_profile')).toEqual({ name: 'Basic Info', path: '/profile/edit' });
+		expect(sectionFor('edit_profile')).toBeNull();
+	});
+});
+
 describe('sectionFor', () => {
 	it('answers null for a capability that is not about a section', () => {
 		// It used to cast: `edit_job_details` sliced to "job_details" and was

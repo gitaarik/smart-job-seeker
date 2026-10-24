@@ -57,6 +57,8 @@ import { isReorderCapability } from './reorder-capabilities';
 import { isTagCapability } from './tag-capabilities';
 import { isVersionCapability } from './version-capabilities';
 import { MATCH_CONFIG_CAPABILITY_NAMES } from './match-config-capability';
+import { isBasicInfoCapability } from './basic-info-capability';
+import { BASIC_INFO_PAGE } from '$lib/server/profile/basic-info';
 import { DIRECTIVE_CAPABILITY_NAMES, DIRECTIVES_PAGE } from './directive-capability';
 
 /** One area of the app, as the navigation names it. */
@@ -192,6 +194,7 @@ function byEntity(): {
 	job: string[];
 	application: string[];
 	settings: string[];
+	basicInfo: string[];
 	everywhere: string[];
 	other: string[];
 } {
@@ -199,6 +202,7 @@ function byEntity(): {
 		job: [] as string[],
 		application: [] as string[],
 		settings: [] as string[],
+		basicInfo: [] as string[],
 		everywhere: [] as string[],
 		other: [] as string[]
 	};
@@ -208,6 +212,11 @@ function byEntity(): {
 		// one thing this block exists not to say. It gets a line naming its page.
 		if (isMatchConfigCapability(capability)) {
 			groups.settings.push(CAPABILITIES[capability].title);
+			continue;
+		}
+		// The profile row's own texts: the same shape, one page and no entity.
+		if (isBasicInfoCapability(capability)) {
+			groups.basicInfo.push(CAPABILITIES[capability].title);
 			continue;
 		}
 		// Offered on every page, so it has no page to name — and "Elsewhere" is
@@ -252,6 +261,10 @@ export function formatAbilityManifest(areas: readonly AppArea[] = APP_AREAS): st
 			: '',
 		`- On each profile page listed above: correct or add an entry. Hiding or ` +
 			`unhiding one is offered on ${join(hideable)} only.`,
+		groups.basicInfo.length
+			? `- On ${BASIC_INFO_PAGE.name} (${BASIC_INFO_PAGE.path}): ` +
+				`${groups.basicInfo.join(' · ')}. Not their name or contact details.`
+			: '',
 		// Short on purpose: this block ships on every turn on every page, and its
 		// size is ratcheted. What the config cannot do is stated here in one
 		// clause because that is the sentence the model got wrong with no

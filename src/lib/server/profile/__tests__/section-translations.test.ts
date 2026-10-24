@@ -91,6 +91,55 @@ describe('parseTranslationField', () => {
 	});
 });
 
+describe('the profile row', () => {
+	// Not a section, and translated like one: its texts' twins are named, parsed
+	// and refused exactly as a section's are, so `edit_profile` needs none of
+	// this written again.
+	it('translates the five texts an agent writes, and not the location', () => {
+		expect(translatableColumns('profile')).toEqual([
+			'title',
+			'subtitle',
+			'headline',
+			'summary',
+			'about_me_text'
+		]);
+		// The overlay translates the location as well; no agent writes it.
+		expect(TRANSLATABLE_FIELDS).toContainEqual(
+			expect.objectContaining({ entity: 'profile', field: 'location' })
+		);
+		expect(parseTranslationField('profile.location.nl')).toBeNull();
+		expect(parseTranslationField('profile.email_address.nl')).toBeNull();
+	});
+
+	it('reads a twin the way a section’s is read', () => {
+		expect(parseTranslationField('profile.about_me_text.nl')).toEqual({
+			section: 'profile',
+			column: 'about_me_text',
+			locale: 'nl',
+			base: 'profile.about_me_text'
+		});
+	});
+
+	it('refuses clearing English its Dutch still prints for', () => {
+		const refusal = translationRefusal(
+			'profile',
+			{ 'profile.summary': null },
+			{ 'profile.summary': 'Old.', 'profile.summary.nl': 'Oud.' },
+			['nl']
+		);
+		expect(refusal).toContain('"profile.summary.nl"');
+	});
+
+	it('names a Dutch summary left behind by a rewritten English one', () => {
+		expect(
+			staleTranslations(
+				{ 'profile.summary': 'New.' },
+				{ 'profile.summary': 'Old.', 'profile.summary.nl': 'Oud.' }
+			)
+		).toEqual(['profile.summary.nl']);
+	});
+});
+
 describe('isOfferedField', () => {
 	it('offers a translation only in a language the profile writes in', () => {
 		expect(isOfferedField('reference.text.nl', ['nl'])).toBe(true);

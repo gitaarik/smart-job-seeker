@@ -29,6 +29,15 @@
  * Writing to any other language is refused rather than offered, because one
  * field of it would add that language to every language picker with the rest of
  * the document still in English.
+ *
+ * ## The profile row is the one owner that is not a section
+ *
+ * Its title, headline, summary and About Me translate like any section's text
+ * (`profile.summary.nl`), but the row is not in `PROFILE_RESOURCES` — see
+ * `basic-info.ts`. So everything here takes a `TranslatedPart`, which is a
+ * section or `PROFILE_ROW`, and asks `entityOf` and `translatableColumns` rather
+ * than the declaration directly. The row's translations are stored under entity
+ * `profile` with the profile's own id, which is what the page writes too.
  */
 
 import { and, eq, inArray } from 'drizzle-orm';
@@ -36,8 +45,21 @@ import { dbDirect as db } from '$lib/server/db';
 import { profile_translations } from '$lib/server/db/schema';
 import { isTranslatable, localeLabel, TRANSLATION_LOCALES } from '$lib/resume-translations';
 import { assistantFields, PROFILE_RESOURCES, type ProfileResourceName } from './resources';
+import { BASIC_INFO_COLUMNS, PROFILE_ROW } from './basic-info';
 import { isEntityOwned } from './translations';
 import { touchProfile } from './touch-profile';
+
+/** What a translation field can belong to: a section, or the profile row's own texts. */
+export type TranslatedPart = ProfileResourceName | typeof PROFILE_ROW;
+
+/** What `profile_translations` calls this part's rows, where it translates anything. */
+function entityOf(name: TranslatedPart): string | undefined {
+	return name === PROFILE_ROW ? PROFILE_ROW : PROFILE_RESOURCES[name].translationEntity;
+}
+
+function isTranslatedPart(name: string): name is TranslatedPart {
+	return name === PROFILE_ROW || name in PROFILE_RESOURCES;
+}
 
 /**
  * The languages a profile has started — every one it holds a translation in.
@@ -50,9 +72,13 @@ export { translatedLocales } from './translations';
  *
  * The overlay's vocabulary decides which, narrowed to what the assistant may
  * write at all: a translation of a column it cannot touch would be a way round
- * `notForAssistant`.
+ * `notForAssistant`. On the profile row, that is the five `edit_profile` writes
+ * — its location translates too, and is not one of them.
  */
-export function translatableColumns(name: ProfileResourceName): string[] {
+export function translatableColumns(name: TranslatedPart): string[] {
+	if (name === PROFILE_ROW) {
+		return BASIC_INFO_COLUMNS.filter((column) => isTranslatable(PROFILE_ROW, column));
+	}
 	const resource = PROFILE_RESOURCES[name];
 	const entity = resource.translationEntity;
 	if (!entity) return [];
@@ -60,17 +86,13 @@ export function translatableColumns(name: ProfileResourceName): string[] {
 }
 
 /** `reference.text` in Dutch: `reference.text.nl`. */
-export function translationField(
-	name: ProfileResourceName,
-	column: string,
-	locale: string
-): string {
+export function translationField(name: TranslatedPart, column: string, locale: string): string {
 	return `${name}.${column}.${locale}`;
 }
 
 /** What one translation field is the translation of. */
 export interface TranslationField {
-	section: ProfileResourceName;
+	section: TranslatedPart;
 	column: string;
 	locale: string;
 	/** The English field it translates, named the way a capability names it. */
@@ -90,16 +112,14 @@ export function parseTranslationField(field: string): TranslationField | null {
 	if (parts.length !== 3) return null;
 
 	const [section, column, locale] = parts;
-	if (!TRANSLATION_LOCALES.includes(locale) || !(section in PROFILE_RESOURCES)) return null;
+	if (!TRANSLATION_LOCALES.includes(locale) || !isTranslatedPart(section)) return null;
+	if (!translatableColumns(section).includes(column)) return null;
 
-	const name = section as ProfileResourceName;
-	if (!translatableColumns(name).includes(column)) return null;
-
-	return { section: name, column, locale, base: `${name}.${column}` };
+	return { section, column, locale, base: `${section}.${column}` };
 }
 
 /** Every translation field this section has, in every language, for a capability's `fields`. */
-export function translationFieldKinds(name: ProfileResourceName): Record<string, 'string'> {
+export function translationFieldKinds(name: TranslatedPart): Record<string, 'string'> {
 	return Object.fromEntries(
 		translatableColumns(name).flatMap((column) =>
 			TRANSLATION_LOCALES.map((locale) => [translationField(name, column, locale), 'string'])
@@ -120,7 +140,7 @@ export function isOfferedField(field: string, languages: string[]): boolean {
 
 /** The translation fields in a change that belong to this section, and nothing else. */
 export function translationsIn(
-	name: ProfileResourceName,
+	name: TranslatedPart,
 	fields: Record<string, unknown>
 ): Record<string, unknown> {
 	return Object.fromEntries(
@@ -158,11 +178,11 @@ export function languageList(languages: string[]): string {
  */
 export async function readTranslations(
 	profileId: number,
-	name: ProfileResourceName,
+	name: TranslatedPart,
 	ids: number[],
 	languages: string[]
 ): Promise<Map<number, Record<string, string>>> {
-	const entity = PROFILE_RESOURCES[name].translationEntity;
+	const entity = entityOf(name);
 	const columns = translatableColumns(name);
 	const found = new Map<number, Record<string, string>>();
 	if (!entity || columns.length === 0 || ids.length === 0 || languages.length === 0) return found;
@@ -209,17 +229,18 @@ export async function readTranslations(
  */
 export async function writeTranslations(
 	profileId: number,
-	name: ProfileResourceName,
+	name: TranslatedPart,
 	id: number,
 	values: Record<string, unknown>,
 	opts: { stamp?: Date } = {}
 ): Promise<void> {
-	const entity = PROFILE_RESOURCES[name].translationEntity;
+	const entity = entityOf(name);
 	const writes = Object.entries(translationsIn(name, values));
 	if (!entity || writes.length === 0) return;
 
 	if (!(await isEntityOwned(entity, id, profileId))) {
-		throw new Error(`There is no ${PROFILE_RESOURCES[name].label} ${id} on this profile.`);
+		const label = name === PROFILE_ROW ? 'profile' : PROFILE_RESOURCES[name].label;
+		throw new Error(`There is no ${label} ${id} on this profile.`);
 	}
 
 	const now = opts.stamp ?? new Date();
@@ -327,7 +348,7 @@ function isBlank(value: unknown): boolean {
  * refuse the same things in the same words.
  */
 export function translationRefusal(
-	name: ProfileResourceName,
+	name: TranslatedPart,
 	proposed: Record<string, unknown>,
 	current: Record<string, unknown>,
 	languages: string[]

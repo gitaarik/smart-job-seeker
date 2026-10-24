@@ -19,6 +19,7 @@ import { isTextCommitCapability } from '../text-commit-capabilities';
 import { isReorderCapability } from '../reorder-capabilities';
 import { isTagCapability } from '../tag-capabilities';
 import { isVersionCapability } from '../version-capabilities';
+import { isBasicInfoCapability } from '../basic-info-capability';
 
 let applicationRow: unknown = null;
 let jobRow: unknown = null;
@@ -1365,6 +1366,26 @@ describe('describeProposalChanges', () => {
 		expect(changes[0].from).toBe('—');
 	});
 
+	it('labels the profile row’s texts as their page does, each Dutch after its English', () => {
+		// "About me text" is the column name read aloud; the page says "About me".
+		// And the order is the capability's field order, which puts a translation
+		// right after the text it translates, so a card reads in pairs.
+		const changes = describeProposalChanges(
+			'edit_profile',
+			{
+				'profile.about_me_text': 'A new bio.',
+				'profile.summary.nl': 'Een nieuwe samenvatting.',
+				'profile.summary': 'A new summary.'
+			},
+			{
+				'profile.about_me_text': 'The old bio.',
+				'profile.summary': 'The old summary.',
+				'profile.summary.nl': null
+			}
+		);
+		expect(changes.map((c) => c.label)).toEqual(['Summary', 'Summary (Dutch)', 'About me']);
+	});
+
 	it('shows an application status by its label, not its stored value', () => {
 		// The card is what the applicant reads most closely, and "rejected" is the
 		// word the "Not selected" label exists to avoid. The note is their words
@@ -1484,6 +1505,12 @@ describe('the registry as a whole', () => {
 		// route grants one, so there is no page they could be live on at all. The
 		// tag and version verbs are out on exactly those terms (see
 		// tag-capabilities.ts and version-capabilities.ts).
+		//
+		// `edit_profile` is out on the first reason rather than these: it is live
+		// on one page, Basic Info, beside nothing in this union but the
+		// directives. Added here it measured 25,125, for an arrangement no route
+		// reaches, so the page it does reach is measured on its own below — with
+		// its values, which are most of what it costs.
 		const live = (Object.keys(CAPABILITIES) as Capability[])
 			.filter(
 				(capability) =>
@@ -1492,11 +1519,46 @@ describe('the registry as a whole', () => {
 					!isTextCommitCapability(capability) &&
 					!isReorderCapability(capability) &&
 					!isTagCapability(capability) &&
-					!isVersionCapability(capability)
+					!isVersionCapability(capability) &&
+					!isBasicInfoCapability(capability)
 			)
 			.map((capability) => ({ capability, targets: [{ id: 1, label: 'x' }], current: {} }));
 
 		expect(renderCapabilityPrompt(live).length).toBeLessThanOrEqual(CAPABILITY_PROMPT_BUDGET_CHARS);
+	});
+
+	it('keeps Basic Info inside the budget with long texts in two languages', () => {
+		// `edit_profile` shows its five texts whole, translations included, so on
+		// this page the values cost more than the contract does. Sized past what a
+		// real profile holds: the About Me at LinkedIn's 2,600-character ceiling,
+		// a long summary, and a Dutch version of everything a little longer than
+		// the English, as Dutch runs.
+		const english = {
+			'profile.title': 'Senior Full-Stack AI Engineer',
+			'profile.subtitle': 'Senior Full-Stack AI Engineer - Scaling Python & Node.js systems',
+			'profile.headline': 'x'.repeat(200),
+			'profile.summary': 'x'.repeat(900),
+			'profile.about_me_text': 'x'.repeat(2600)
+		};
+		const dutch = Object.fromEntries(
+			Object.entries(english).map(([field, value]) => [
+				`${field}.nl`,
+				'y'.repeat(Math.round(value.length * 1.1))
+			])
+		);
+
+		const live: LiveCapability[] = [
+			{
+				capability: 'edit_profile',
+				targets: [{ id: 1, label: 'your Basic Info' }],
+				current: { ...english, ...dutch, translationLocales: ['nl'] },
+				languages: ['nl']
+			},
+			{ capability: 'edit_directives', targets: [{ id: 1, label: 'x' }], current: {} }
+		];
+
+		const measured = renderCapabilityPrompt(live).length;
+		expect(measured).toBeLessThanOrEqual(CAPABILITY_PROMPT_BUDGET_CHARS);
 	});
 
 	it('keeps the worst page a message can reach inside the budget', () => {

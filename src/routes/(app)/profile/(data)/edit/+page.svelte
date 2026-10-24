@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { untrack } from 'svelte';
+	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
 	import { armOn } from '$lib/actions/arm-on';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -36,8 +37,11 @@
 	const profile = $derived(data.profile);
 
 	// Every card below starts from the profile as it was at mount and owns its
-	// values from then on: each saves itself, and nothing else writes these
-	// columns while the page is open (the assistant has no capability for them).
+	// values from then on: each saves itself. The assistant can rewrite the
+	// title, subtitle, headline, summary and About Me from the chat panel
+	// (`edit_profile`), and a proposal applied there mounts the page again rather
+	// than leaving these cards on the old text for the next save to put back.
+	remountOnAppliedChange();
 	const loaded = untrack(() => data.profile);
 	let photoUrl = $state(getProfilePhotoUrl(loaded));
 

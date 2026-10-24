@@ -527,6 +527,22 @@ const ROUTE_SCOPES: Record<string, RouteScope> = {
 			subject: null
 		}
 	},
+	/**
+	 * Basic Info, where the profile row's own texts are edited by hand. Only
+	 * here: the capability shows all five texts and their translations in full,
+	 * which a section page already near its budget cannot also carry, and the
+	 * ability manifest names this page everywhere else.
+	 */
+	'/profile/edit': {
+		...PROFILE_SCOPE,
+		capabilities: ['edit_profile'],
+		hint: {
+			page:
+				'their Basic Info: name, contact details, and the title, headline, summary ' +
+				'and About Me at the top of their profile',
+			subject: null
+		}
+	},
 	...PROFILE_SECTION_SCOPES
 };
 

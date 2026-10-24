@@ -90,6 +90,11 @@ import { localeLabel } from '$lib/resume-translations';
 import type { FieldKind } from '$lib/server/utils/field-kinds';
 import { MATCH_CONFIG_CAPABILITY_NAMES } from '$lib/server/ai-chat/match-config-capability';
 import {
+	BASIC_INFO_CAPABILITY_NAMES,
+	isBasicInfoCapability
+} from '$lib/server/ai-chat/basic-info-capability';
+import { BASIC_INFO_PAGE, PROFILE_ROW } from '$lib/server/profile/basic-info';
+import {
 	DIRECTIVE_CAPABILITY_NAMES,
 	DIRECTIVES_PAGE
 } from '$lib/server/ai-chat/directive-capability';
@@ -187,6 +192,7 @@ export const MCP_CAPABILITIES: Capability[] = [
 	...ENTITY_CAPABILITY_NAMES,
 	...CREATE_CAPABILITY_NAMES,
 	...MATCH_CONFIG_CAPABILITY_NAMES,
+	...BASIC_INFO_CAPABILITY_NAMES,
 	...DIRECTIVE_CAPABILITY_NAMES,
 	...REORDER_CAPABILITY_NAMES,
 	...TAG_CAPABILITY_NAMES,
@@ -528,7 +534,12 @@ export function writeTool(
 	};
 }
 
-const SECTION_ENUM = PROFILE_RESOURCE_NAMES as string[];
+/**
+ * The sections, and the profile row's own texts first: not a section, but read
+ * the same way and by the same tool, since "read before you write" should not
+ * need a second tool for the one part of the profile that is not a list.
+ */
+const SECTION_ENUM = [PROFILE_ROW, ...PROFILE_RESOURCE_NAMES] as string[];
 
 const readTools: Record<ReadTool, McpTool> = {
 	list_profile_sections: {
@@ -565,7 +576,11 @@ already hidden does not need hiding again, and only a hidden one can be shown
 again. "tags" is the list behind both, as the entry's page sets it, and the
 section's tag_ tool takes a new one whole. Where "hideable" is false the
 section has no such control at all: every entry prints, and there is nothing
-to propose.`,
+to propose.
+
+"profile" is not a list: it is the profile's own title, subtitle, headline,
+summary and About Me, returned as one entry with no id. edit_profile changes
+them.`,
 		inputSchema: {
 			type: 'object',
 			properties: {
@@ -1220,6 +1235,8 @@ export function pageFor(capability: Capability): { name: string; path: string } 
 	if (capability === 'edit_match_config') return MATCH_CONFIG_PAGE;
 	// The same shape: a profile-wide set with one page and no section.
 	if (capability === 'edit_directives') return DIRECTIVES_PAGE;
+	// And the profile row's own texts, which are on its Basic Info page.
+	if (isBasicInfoCapability(capability)) return BASIC_INFO_PAGE;
 	if (isTextCreateCapability(capability)) {
 		return TEXT_KINDS[kindForTextCreateCapability(capability)].collection;
 	}

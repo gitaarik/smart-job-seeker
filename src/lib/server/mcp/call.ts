@@ -66,6 +66,7 @@ import { isHiddenFromDocuments, versionsOf } from '$lib/profile-visibility';
 import { readOwnedRows } from '$lib/server/profile/write';
 import {
 	isOfferedField,
+	LANGUAGES_KEY,
 	languageList,
 	languagesOf,
 	parseTranslationField,
@@ -75,6 +76,7 @@ import {
 	translatedLocales,
 	translationField
 } from '$lib/server/profile/section-translations';
+import { BASIC_INFO_PAGE, PROFILE_ROW } from '$lib/server/profile/basic-info';
 import { readEditLog } from '$lib/server/ai-chat/edit-log';
 import { createNotification } from '$lib/server/notifications';
 import {
@@ -267,18 +269,30 @@ async function listProfileSections(key: ReadActor): Promise<ToolResult> {
 		profileEditCounts(key.profileId),
 		directivesForAgents(key.profileId)
 	]);
-	const sections = counts.map(({ name, rows }) => {
-		const resource = PROFILE_RESOURCES[name];
-		return {
-			section: name,
-			entries: rows,
-			page: resource.page.name,
-			tools: MCP_CAPABILITIES.filter((c) => sectionFor(c) === name)
-		};
-	});
+	const sections = [
+		// The profile row's own texts, first because they head every CV. Always one
+		// entry: the row exists for as long as the profile does.
+		{
+			section: PROFILE_ROW,
+			entries: 1,
+			page: BASIC_INFO_PAGE.name,
+			tools: ['edit_profile']
+		},
+		...counts.map(({ name, rows }) => {
+			const resource = PROFILE_RESOURCES[name];
+			return {
+				section: name,
+				entries: rows,
+				page: resource.page.name,
+				tools: MCP_CAPABILITIES.filter((c) => sectionFor(c) === name)
+			};
+		})
+	];
 
-	const lines = sections.map(
-		(s) => `- ${s.section} (${s.page}): ${s.entries} ${s.entries === 1 ? 'entry' : 'entries'}`
+	const lines = sections.map((s) =>
+		s.section === PROFILE_ROW
+			? `- ${s.section} (${s.page}): their title, subtitle, headline, summary and About Me`
+			: `- ${s.section} (${s.page}): ${s.entries} ${s.entries === 1 ? 'entry' : 'entries'}`
 	);
 
 	// The profile is what this tool is about, but it is also the tool an agent is
@@ -302,8 +316,54 @@ async function listProfileSections(key: ReadActor): Promise<ToolResult> {
 	);
 }
 
+/**
+ * The profile row's own texts, in the shape a section comes back in: one entry,
+ * each column followed by its translations — the values `edit_profile` diffs
+ * against, read through it so the two cannot disagree.
+ *
+ * The values go in the text as well as the payload, where a section's text lists
+ * only labels. A section's rows are in the chat's profile block already; these
+ * five are the subject when they are asked for, and the chat reads the text
+ * alone.
+ */
+async function readProfileRow(key: ReadActor): Promise<ToolResult> {
+	const actor: CapabilityActor = { profileId: key.profileId, isStaff: false };
+	const current = await CAPABILITIES.edit_profile.current(
+		{ id: key.profileId, label: BASIC_INFO_PAGE.name },
+		actor
+	);
+	const languages = languagesOf(current);
+	const fields = Object.fromEntries(
+		Object.entries(current).filter(([field]) => field !== LANGUAGES_KEY)
+	);
+
+	const lines = Object.entries(fields).map(([field, value]) =>
+		value === null || value === '' ? `- ${field}: (not set)` : `- ${field}: ${String(value)}`
+	);
+	const translated =
+		languages.length > 0
+			? `\n\nA field ending in ${languages.map((locale) => `".${locale}"`).join(' or ')} is ` +
+				`what their ${languageList(languages)} CV prints in place of the English field ` +
+				`before it. edit_profile writes it too, and it goes stale whenever the English ` +
+				`changes without it.`
+			: '';
+
+	return ok(
+		`Their profile's own texts, from their ${BASIC_INFO_PAGE.name} page ` +
+			`(${BASIC_INFO_PAGE.path}). One entry with no id: edit_profile changes it.\n\n` +
+			lines.join('\n') +
+			translated,
+		{
+			section: PROFILE_ROW,
+			hideable: false,
+			entries: [{ label: BASIC_INFO_PAGE.name, fields }]
+		}
+	);
+}
+
 async function readProfileSection(args: Args, key: ReadActor): Promise<ToolResult> {
 	const section = args.section;
+	if (section === PROFILE_ROW) return readProfileRow(key);
 	if (typeof section !== 'string' || !(section in PROFILE_RESOURCES)) {
 		return fail(`Unknown section "${String(section)}".`);
 	}

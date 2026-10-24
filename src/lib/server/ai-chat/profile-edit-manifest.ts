@@ -33,6 +33,7 @@ import {
 	type ProfileResourceName
 } from '$lib/server/profile/resources';
 import { countOwnedRows } from '$lib/server/profile/write';
+import { BASIC_INFO_PAGE } from '$lib/server/profile/basic-info';
 
 export interface ManifestSection {
 	name: ProfileResourceName;
@@ -63,10 +64,15 @@ function describeCount(rows: number): string {
 }
 
 export function formatProfileEditManifest(sections: ManifestSection[]): string {
-	const lines = sections.map(({ name, rows }) => {
-		const { page, title } = PROFILE_RESOURCES[name];
-		return `- ${title} — ${describeCount(rows)}. On their ${page.name} page.`;
-	});
+	const lines = [
+		// Not a section, so it has no count: the profile row's own texts, which
+		// exist for as long as the profile does. See `profile/basic-info.ts`.
+		`- Title, subtitle, headline, summary and About Me — on their ${BASIC_INFO_PAGE.name} page.`,
+		...sections.map(({ name, rows }) => {
+			const { page, title } = PROFILE_RESOURCES[name];
+			return `- ${title} — ${describeCount(rows)}. On their ${page.name} page.`;
+		})
+	];
 
 	return [
 		'## Parts of their profile they can change',

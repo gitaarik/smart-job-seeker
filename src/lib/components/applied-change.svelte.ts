@@ -1,4 +1,5 @@
 import { onDestroy } from 'svelte';
+import { translations } from '$lib/stores/translations.svelte';
 
 /**
  * Mounting an editor again after the assistant's change to it is applied.
@@ -36,6 +37,11 @@ export function remountOnAppliedChange(): void {
 /** Call once `data` holds the applied change, i.e. after `invalidateAll()`. */
 export function afterAppliedChange(): void {
 	if (editors > 0) epoch++;
+	// A change can carry translations too (`profile.summary.nl`), and the
+	// language tabs read those from one store loaded once per visit rather than
+	// from `data`. Re-read it wherever a page has loaded it, or the Dutch tab
+	// goes on showing the old text beside the new English.
+	if (translations.loaded) void translations.reload();
 }
 
 /** What the dashboard layout keys its page on. */

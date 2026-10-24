@@ -114,6 +114,19 @@ vi.mock('$lib/server/ai-chat/profile-edit-manifest', () => ({
 
 vi.mock('$lib/server/ai-chat/edit-log', () => ({ readEditLog: () => Promise.resolve([]) }));
 
+/** The profile row's own texts: two written, one empty, for the two tiers. */
+const BASIC_INFO = {
+	title: 'Senior Engineer',
+	subtitle: null,
+	headline: 'Builds web platforms.',
+	summary: 'What the applicant wrote about themselves.',
+	about_me_text: 'A longer bio.'
+};
+vi.mock('$lib/server/profile/basic-info', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/server/profile/basic-info')>()),
+	readBasicInfo: () => Promise.resolve(BASIC_INFO)
+}));
+
 // The standing directives list_profile_sections returns. The read alone is
 // stubbed; the topic list and labels stay real, since they are what the text
 // is built from.
@@ -1929,5 +1942,94 @@ describe('readTool', () => {
 		);
 		expect(result.isError).toBe(true);
 		expect(result.content[0].text).toContain('not the documents');
+	});
+});
+
+describe('the profile row', () => {
+	function inDutch() {
+		translations.languages = ['nl'];
+		translations.values = { 12: { 'profile.summary.nl': 'Wat de sollicitant schreef.' } };
+	}
+
+	it('is listed first, as the one part of the profile that is not a section', async () => {
+		const result = await callTool('list_profile_sections', {}, KEY);
+		const sections = result.structuredContent?.sections as { section: string; tools: string[] }[];
+		expect(sections[0]).toMatchObject({ section: 'profile', tools: ['edit_profile'] });
+		expect(result.content[0].text).toContain('profile (Basic Info)');
+	});
+
+	it('is read with its values in the text, which is all the chat sees', async () => {
+		const result = await callTool(
+			'read_profile_section',
+			{ profile_id: 12, section: 'profile' },
+			KEY
+		);
+		const text = result.content[0].text;
+		expect(text).toContain('- profile.summary: What the applicant wrote about themselves.');
+		expect(text).toContain('- profile.subtitle: (not set)');
+		expect(text).toContain('edit_profile');
+
+		const entries = result.structuredContent?.entries as Record<string, unknown>[];
+		expect(entries).toHaveLength(1);
+		expect(entries[0]).not.toHaveProperty('entry_id');
+	});
+
+	it('shows each text’s Dutch where the profile writes Dutch', async () => {
+		inDutch();
+		const result = await callTool(
+			'read_profile_section',
+			{ profile_id: 12, section: 'profile' },
+			KEY
+		);
+		const fields = (result.structuredContent?.entries as { fields: Record<string, unknown> }[])[0]
+			.fields;
+		expect(fields['profile.summary.nl']).toBe('Wat de sollicitant schreef.');
+		expect(fields['profile.title.nl']).toBeNull();
+		// The language list rides in `current` for `validate`; it is not a field.
+		expect(fields).not.toHaveProperty('translationLocales');
+		expect(result.content[0].text).toContain('Dutch CV');
+	});
+
+	it('asks before rewriting a text the applicant wrote', async () => {
+		const result = await callTool(
+			'edit_profile',
+			{ profile_id: 12, 'profile.summary': 'A sharper summary.', rationale: 'Leads with AI.' },
+			KEY
+		);
+		expect(executeCapability).not.toHaveBeenCalled();
+		expect(createRequest).toHaveBeenCalledTimes(1);
+		expect(result.structuredContent?.applied).toBe(false);
+	});
+
+	it('fills an empty one directly on a write key', async () => {
+		const result = await callTool(
+			'edit_profile',
+			{ profile_id: 12, 'profile.subtitle': 'Python and TypeScript.', rationale: 'They had none.' },
+			KEY
+		);
+		expect(createRequest).not.toHaveBeenCalled();
+		expect(executeCapability).toHaveBeenCalledTimes(1);
+		expect(result.structuredContent?.applied).toBe(true);
+	});
+
+	it('refuses a field it does not have, such as the email address', async () => {
+		const result = await callTool(
+			'edit_profile',
+			{ profile_id: 12, 'profile.email_address': 'someone@example.com', rationale: 'Asked to.' },
+			KEY
+		);
+		expect(result.isError).toBe(true);
+		expect(executeCapability).not.toHaveBeenCalled();
+		expect(createRequest).not.toHaveBeenCalled();
+	});
+
+	it('warns when the English summary changes and its Dutch does not', async () => {
+		inDutch();
+		const result = await callTool(
+			'edit_profile',
+			{ profile_id: 12, 'profile.summary': 'A sharper summary.', rationale: 'Leads with AI.' },
+			KEY
+		);
+		expect(result.structuredContent?.stale_translations).toEqual(['profile.summary.nl']);
 	});
 });
