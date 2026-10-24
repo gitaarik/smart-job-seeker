@@ -14,6 +14,7 @@ import { BASE_LOCALE, isKnownLocale } from '$lib/resume-translations';
 import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
 import { applyFieldVariants, loadFieldVariants } from '$lib/server/profile/field-variants';
 import { pageProfile } from '$lib/server/profile/page-profile';
+import { gatesContact, withoutContact } from '$lib/server/profile/portfolio-contact';
 import {
 	applySkillWords,
 	loadDocumentSkillWords,
@@ -143,10 +144,17 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 		if (!theme) theme = (await getPortfolioThemesForProfile(profile.id))[0] ?? null;
 	}
 
+	// Only what the page renders: the tree is serialised into it, and the rest
+	// of it is private. See server/profile/page-profile.ts. A showcase keeps the
+	// contact details out as well; see server/profile/portfolio-contact.ts.
+	const shown = pageProfile(profile, shownVersionId, translator.locale);
+	const gated = format === 'portfolio' && gatesContact(theme) ? withoutContact(shown) : null;
+
 	return {
-		// Only what the page renders: the tree is serialised into it, and the
-		// rest of it is private. See server/profile/page-profile.ts.
-		profile: pageProfile(profile, shownVersionId, translator.locale),
+		profile: gated?.profile ?? shown,
+		contact: gated?.contact ?? null,
+		// The contact endpoint asks for the link's token, as the page did.
+		accessToken: gated ? tokenString : null,
 		locale: translator.locale,
 		versionId: token.profile_version,
 		format,

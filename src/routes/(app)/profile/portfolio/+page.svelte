@@ -20,7 +20,16 @@
 	import { resolve } from '$app/paths';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { assetUrl } from '$lib/presentation-templates';
-	import { themeSections, type PortfolioSection } from '$lib/portfolio-themes';
+	import {
+		defaultSections,
+		PALETTE_ROLE_LABELS,
+		PALETTE_ROLES,
+		resolvePalette,
+		themeLayout,
+		themeSections,
+		type PortfolioLayout,
+		type PortfolioSection
+	} from '$lib/portfolio-themes';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -57,6 +66,7 @@
 	let orderDraft = $state<Record<number, PortfolioSection[]>>({});
 	let enabledDraft = $state<Record<number, SvelteSet<PortfolioSection>>>({});
 	let accentDraft = $state<Record<number, string>>({});
+	let layoutDraft = $state<Record<number, PortfolioLayout>>({});
 
 	const DEFAULT_ACCENT = '#2563eb';
 
@@ -92,6 +102,11 @@
 		{ key: 'hero', label: 'Hero image', hint: 'Wide image behind the header.' },
 		{ key: 'ogImage', label: 'Social preview', hint: 'Image used when the link is shared.' },
 		{ key: 'favicon', label: 'Favicon', hint: 'The browser tab icon.' },
+		{
+			key: 'photo',
+			label: 'Photo',
+			hint: 'Beside the About me (showcase). Without one, your profile photo.'
+		},
 		{ key: 'thumbnail', label: 'Thumbnail', hint: 'Shown in this list.' }
 	] as const;
 
@@ -103,6 +118,26 @@
 		// none shows them all, which is what `themeSections` already returns.
 		enabledDraft[theme.id] = new SvelteSet(theme.config.sections ?? order);
 		accentDraft[theme.id] = theme.config.accent ?? DEFAULT_ACCENT;
+		layoutDraft[theme.id] = themeLayout(theme.config);
+	}
+
+	const LAYOUT_LABELS: Record<PortfolioLayout, string> = {
+		basic: 'Basic: one column of sections',
+		showcase: 'Showcase: full-height header, About me, quotes band, career cards'
+	};
+
+	/**
+	 * Switch the editor to another layout. A theme that never chose its
+	 * sections follows the layout's default order, so the list re-seeds to the
+	 * new one; a theme that chose keeps its choice.
+	 */
+	function changeLayout(theme: (typeof themes)[number], layout: PortfolioLayout) {
+		layoutDraft[theme.id] = layout;
+		if (!theme.config.sections) {
+			const order = [...defaultSections(layout)];
+			orderDraft[theme.id] = order;
+			enabledDraft[theme.id] = new SvelteSet(order);
+		}
 	}
 
 	function openEditor(theme: (typeof themes)[number]) {
@@ -409,6 +444,20 @@
 						>
 							<input type="hidden" name="themeId" value={theme.id} />
 
+							<label>
+								<span class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Layout</span>
+								<select
+									name="layout"
+									value={layoutDraft[theme.id]}
+									onchange={(e) => changeLayout(theme, e.currentTarget.value as PortfolioLayout)}
+									class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)]"
+								>
+									{#each data.layouts as layout (layout)}
+										<option value={layout}>{LAYOUT_LABELS[layout]}</option>
+									{/each}
+								</select>
+							</label>
+
 							<div class="grid gap-4 sm:grid-cols-3">
 								<label>
 									<span class="mb-1 block text-sm font-medium text-[var(--dash-text)]">Accent</span>
@@ -492,6 +541,16 @@
 											<span class="flex-1 text-sm text-[var(--dash-text)]">
 												{SECTION_LABELS[section] ?? section}
 											</span>
+											{#if layoutDraft[theme.id] === 'showcase' && section !== 'header'}
+												<input
+													name="title.{section}"
+													value={theme.config.titles?.[section] ?? ''}
+													maxlength="80"
+													placeholder="Heading"
+													aria-label="Heading for {SECTION_LABELS[section] ?? section}"
+													class="w-40 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-xs text-[var(--dash-text)]"
+												/>
+											{/if}
 											<button
 												type="button"
 												title="Move up"
@@ -514,6 +573,100 @@
 									{/each}
 								</ul>
 							</fieldset>
+
+							{#if layoutDraft[theme.id] === 'showcase'}
+								<input type="hidden" name="showcaseFields" value="1" />
+
+								<fieldset>
+									<legend class="mb-1 text-sm font-medium text-[var(--dash-text)]">Palette</legend>
+									<p class="mb-2 text-xs text-[var(--dash-text-secondary)]">
+										One colour per role, for each scheme. Buttons and highlighted text follow the
+										accent until you set them here.
+									</p>
+									<div class="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 gap-y-1 text-sm">
+										<span></span>
+										<span class="text-xs text-[var(--dash-text-secondary)]">Light</span>
+										<span class="text-xs text-[var(--dash-text-secondary)]">Dark</span>
+										{#each PALETTE_ROLES as role (role)}
+											<span class="text-[var(--dash-text)]">{PALETTE_ROLE_LABELS[role]}</span>
+											{#each ['light', 'dark'] as const as scheme (scheme)}
+												<input
+													type="color"
+													name="palette.{scheme}.{role}"
+													value={resolvePalette(theme.config, scheme)[role]}
+													aria-label="{PALETTE_ROLE_LABELS[role]}, {scheme}"
+													class="h-8 w-14 rounded border border-[var(--dash-border)]"
+												/>
+											{/each}
+										{/each}
+									</div>
+								</fieldset>
+
+								<fieldset class="flex flex-col gap-2 text-sm text-[var(--dash-text-secondary)]">
+									<legend class="mb-1 text-sm font-medium text-[var(--dash-text)]">Behaviour</legend
+									>
+									<label class="flex items-center gap-2">
+										<input
+											type="checkbox"
+											name="schemeSwitcher"
+											checked={!!theme.config.schemeSwitcher}
+										/>
+										Let visitors switch between light and dark
+									</label>
+									<label class="flex items-center gap-2">
+										<input type="checkbox" name="animations" checked={!!theme.config.animations} />
+										Fade sections in as visitors scroll
+									</label>
+									<label class="flex items-center gap-2">
+										<input type="checkbox" name="logoTint" checked={!!theme.config.logoTint} />
+										Paint the logo in the button colour (for a one-colour logo)
+									</label>
+								</fieldset>
+
+								<label>
+									<span class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+										>Contact text</span
+									>
+									<span class="mb-1 block text-xs text-[var(--dash-text-secondary)]">
+										Shown above your email and phone once a visitor opens "Get in touch". Those two
+										stay off the page until a Cloudflare check has passed.
+									</span>
+									<textarea
+										name="contactIntro"
+										rows="2"
+										maxlength="500"
+										value={theme.config.contactIntro ?? ''}
+										class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)]"
+									></textarea>
+								</label>
+
+								<div class="grid gap-4 sm:grid-cols-2">
+									<label>
+										<span class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+											>Footer note</span
+										>
+										<input
+											name="footerNote"
+											maxlength="200"
+											value={theme.config.footerNote ?? ''}
+											placeholder="e.g. a credit for your logo"
+											class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)]"
+										/>
+									</label>
+									<label>
+										<span class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+											>Footer note link</span
+										>
+										<input
+											name="footerNoteUrl"
+											type="url"
+											value={theme.config.footerNoteUrl ?? ''}
+											placeholder="https://"
+											class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)]"
+										/>
+									</label>
+								</div>
+							{/if}
 
 							<div>
 								<button
@@ -541,7 +694,9 @@
 									{@const current =
 										slot.key === 'thumbnail'
 											? theme.config.thumbnail
-											: theme.config.assets?.[slot.key as 'logo' | 'hero' | 'ogImage' | 'favicon']}
+											: theme.config.assets?.[
+													slot.key as 'logo' | 'hero' | 'ogImage' | 'favicon' | 'photo'
+												]}
 									<div class="flex items-center gap-3">
 										{#if current}
 											<img src={assetUrl(current)} alt="" class="h-10 w-10 rounded object-cover" />

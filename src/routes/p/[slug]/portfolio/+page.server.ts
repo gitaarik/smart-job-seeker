@@ -22,6 +22,7 @@ import { applyTranslations, loadTranslator } from '$lib/server/profile/translati
 import { applyFieldVariants, loadFieldVariants } from '$lib/server/profile/field-variants';
 import { pageProfile } from '$lib/server/profile/page-profile';
 import { applySkillWords, loadDocumentSkillWords } from '$lib/server/profile/skill-words';
+import { gatesContact, withoutContact } from '$lib/server/profile/portfolio-contact';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals, getClientAddress }) => {
@@ -100,10 +101,17 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 		versionId
 	);
 
+	// Only what the page renders: the tree is serialised into it, and the rest
+	// of it is private. See server/profile/page-profile.ts. A showcase keeps the
+	// contact details out as well, behind its Turnstile gate; see
+	// server/profile/portfolio-contact.ts.
+	const shown = pageProfile(profile, versionId, translator.locale);
+	const gated = gatesContact(theme) ? withoutContact(shown) : null;
+
 	return {
-		// Only what the page renders: the tree is serialised into it, and the
-		// rest of it is private. See server/profile/page-profile.ts.
-		profile: pageProfile(profile, versionId, translator.locale),
+		profile: gated?.profile ?? shown,
+		contact: gated?.contact ?? null,
+		accessToken: accessResult.accessType === 'token' ? token : null,
 		theme,
 		locale: translator.locale,
 		versionId: versionId ?? null,

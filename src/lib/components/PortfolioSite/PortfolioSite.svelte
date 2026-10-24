@@ -8,7 +8,8 @@
 	 * the document renderer keeps — so no branding lives in this repo.
 	 *
 	 * Version tags apply exactly as they do on a resume or CV, through the same
-	 * `createProfileFilter`. An item hidden from documents by the `!resume`/
+	 * `createProfileFilter` (by way of `siteLists`, which the showcase layout
+	 * reads too). An item hidden from documents by the `!resume`/
 	 * `!cv` pair is NOT automatically hidden here: those tags name base
 	 * document types, and a portfolio is a third one. What hides an item from
 	 * the site is its own Site switch (`!portfolio`) or the version the site
@@ -20,7 +21,7 @@
 	 * empty heading, which is what lets a theme list a section the data has not
 	 * caught up with yet.
 	 */
-	import { createProfileFilter } from '$lib/components/ProfileDisplay/profile-filter';
+	import { siteLists } from './site-lists';
 	import { themeSections, type PortfolioTheme } from '$lib/portfolio-themes';
 	import { assetUrl } from '$lib/presentation-templates';
 	import { formatDateRangeVerbose } from '$lib/tools/date-utils';
@@ -37,44 +38,23 @@
 
 	let { profile, theme, versionId = null }: Props = $props();
 
-	// One loose row type for the whole tree, for the same reason `profile` is
-	// loose: spreading a `Record<string, unknown>` drops its index signature,
-	// so every derived list below would lose the fields the markup reads.
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	type Row = Record<string, any>;
-
 	const config = $derived(theme?.config ?? {});
 	const sections = $derived(themeSections(config));
 	const accent = $derived(config.accent ?? '#2563eb');
 	const headingFont = $derived(config.fonts?.heading ?? 'Poppins');
 	const bodyFont = $derived(config.fonts?.body ?? 'Noto Sans');
 
-	// 'portfolio' as the base type, beside 'resume' and 'cv'. A version's own
-	// slug still selects, so a version built for the site filters as usual.
-	const filter = $derived(
-		createProfileFilter(profile.profile_versions, 'portfolio', versionId, '')
-	);
-
-	const show = <T extends Row>(list: T[] | undefined, entity?: string): T[] =>
-		list?.length ? filter.filterOnTags(list, entity) : [];
-
-	const work = $derived(show(profile.work_experiences, 'work_experience'));
-	const roleProjects: Row[] = $derived(
-		work.flatMap((w: Row) =>
-			((w.work_experience_projects ?? []) as Row[]).map((p) => ({ ...p, company: w.name }))
-		)
-	);
-	const sideProjects = $derived(show(profile.side_projects, 'side_project'));
-	const skillCategories: Row[] = $derived(
-		show(profile.tech_skill_categories, 'skill_category')
-			.map((c: Row) => ({ ...c, tech_skills: show((c.tech_skills ?? []) as Row[], 'skill') }))
-			.filter((c: Row) => c.tech_skills.length > 0)
-	);
-	const educations = $derived(show(profile.educations, 'education'));
-	const certificates = $derived(show(profile.certificates));
-	const languages = $derived(show(profile.languages));
-	const references = $derived(show(profile.references));
-	const highlights = $derived(show(profile.highlights));
+	const lists = $derived(siteLists(profile, versionId));
+	const show = $derived(lists.show);
+	const work = $derived(lists.work);
+	const roleProjects = $derived(lists.roleProjects);
+	const sideProjects = $derived(lists.sideProjects);
+	const skillCategories = $derived(lists.skillCategories);
+	const educations = $derived(lists.educations);
+	const certificates = $derived(lists.certificates);
+	const languages = $derived(lists.languages);
+	const references = $derived(lists.references);
+	const highlights = $derived(lists.highlights);
 
 	/** Whether a section has anything to render, asked before its heading is. */
 	function hasContent(section: string): boolean {

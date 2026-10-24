@@ -35,9 +35,14 @@ import { Buffer } from 'buffer';
 import { uploadFile } from '$lib/server/files';
 import { getSelectedProfileId } from '../utils';
 import { getPortfolioThemesForProfile } from '$lib/server/profile/portfolio-themes';
+import { applyShowcaseFields } from '$lib/server/profile/portfolio-theme-form';
 import {
+	defaultSections,
+	isPortfolioLayout,
 	isPortfolioSection,
+	PORTFOLIO_LAYOUTS,
 	PORTFOLIO_SECTIONS,
+	themeLayout,
 	type PortfolioSection,
 	type PortfolioThemeConfig
 } from '$lib/portfolio-themes';
@@ -46,7 +51,7 @@ import {
 const KIND = 'portfolio';
 
 /** Asset slots a theme reads, and what each accepts. */
-const ASSET_SLOTS = ['logo', 'hero', 'ogImage', 'favicon', 'thumbnail'] as const;
+const ASSET_SLOTS = ['logo', 'hero', 'ogImage', 'favicon', 'photo', 'thumbnail'] as const;
 type AssetSlot = (typeof ASSET_SLOTS)[number];
 
 function isAssetSlot(value: string): value is AssetSlot {
@@ -156,6 +161,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 		themes,
 		versions,
 		sections: PORTFOLIO_SECTIONS,
+		layouts: PORTFOLIO_LAYOUTS,
 		fonts: FONTS,
 		profileSlug: layoutData.selectedProfile.slug,
 		publishedVersionId: published?.public_portfolio_version_id ?? null,
@@ -237,6 +243,15 @@ export const actions: Actions = {
 		const body = String(form.get('bodyFont') ?? '');
 		const scheme = String(form.get('colorScheme') ?? '');
 
+		const stored = (theme.config ?? {}) as PortfolioThemeConfig;
+		const next: PortfolioThemeConfig = { ...stored };
+
+		const layoutField = String(form.get('layout') ?? '');
+		const layout = isPortfolioLayout(layoutField) ? layoutField : themeLayout(stored);
+		// Absent is `basic`, so a theme that never chose stays a row with no key.
+		if (layout === 'basic') delete next.layout;
+		else next.layout = layout;
+
 		const chosen = form
 			.getAll('sections')
 			.map(String)
@@ -245,9 +260,6 @@ export const actions: Actions = {
 		// The checkboxes say which sections; the hidden order field says in what
 		// sequence. Intersecting them keeps one source for each question.
 		const sections = order.filter((s) => chosen.includes(s));
-
-		const stored = (theme.config ?? {}) as PortfolioThemeConfig;
-		const next: PortfolioThemeConfig = { ...stored };
 
 		if (accent) next.accent = accent;
 		else delete next.accent;
@@ -261,14 +273,24 @@ export const actions: Actions = {
 		if (scheme === 'light' || scheme === 'dark') next.colorScheme = scheme;
 		else delete next.colorScheme;
 
-		// Absent means "every section in the default order"; storing the full
-		// list instead would freeze today's vocabulary into the row and hide a
-		// section added later from every existing theme.
-		const isDefault =
-			sections.length === PORTFOLIO_SECTIONS.length &&
-			sections.every((s, i) => s === PORTFOLIO_SECTIONS[i]);
-		if (isDefault) delete next.sections;
-		else next.sections = sections;
+		// Absent means "every section in the layout's default order"; storing the
+		// full list instead would freeze today's vocabulary into the row and hide
+		// a section added later from every existing theme. The editor still shows
+		// the old layout's order when the layout has just changed, so that order
+		// counts as untouched too, and the new layout's default takes over.
+		const isOrder = (want: readonly PortfolioSection[]) =>
+			sections.length === want.length && sections.every((s, i) => s === want[i]);
+		if (isOrder(defaultSections(layout)) || isOrder(defaultSections(themeLayout(stored)))) {
+			delete next.sections;
+		} else next.sections = sections;
+
+		// The showcase's own fields arrive only when the editor drew them, which
+		// it does for that layout alone. A basic theme's save leaves them as
+		// stored, so switching to basic and back does not lose a palette.
+		if (form.get('showcaseFields')) {
+			const problem = applyShowcaseFields(next, form);
+			if (problem) return fail(400, { error: problem });
+		}
 
 		await db
 			.update(presentation_templates)
