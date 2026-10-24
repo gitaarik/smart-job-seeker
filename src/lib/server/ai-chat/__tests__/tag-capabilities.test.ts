@@ -40,6 +40,7 @@ const { TAG_CAPABILITIES, TAG_CAPABILITY_NAMES, checkTags, isTagCapability, wher
 	await import('../tag-capabilities');
 const { HIDEABLE_RESOURCES } = await import('$lib/server/profile/resources');
 const { verbsFor } = await import('../profile-capabilities');
+const { pickCapabilityFields } = await import('../capabilities');
 
 const ACTOR = { profileId: 12, isStaff: false };
 const ENTRY = { id: 7, label: 'Shipped a desktop app' };
@@ -108,6 +109,22 @@ describe('checkTags', () => {
 
 	it('takes an empty list, which prints it everywhere', () => {
 		expect(checkTags([], versions)).toEqual({ ok: true, tags: [] });
+	});
+
+	it('takes an empty list the way a call delivers it, coerced to null', async () => {
+		// The test above hands `checkTags` the list itself. A real call goes
+		// through `pickCapabilityFields` first, which is where `[]` becomes null,
+		// and every "print it everywhere" over MCP was refused there.
+		state.tags = ['!resume', '!cv'];
+		const fields = pickCapabilityFields('tag_work_experience_achievement', { [FIELD]: [] });
+		expect(fields).toEqual({ [FIELD]: null });
+
+		expect(await validate(fields[FIELD])).toEqual({ ok: true });
+		expect(achievement.describeChanges!(fields, { tags: state.tags })).toEqual([
+			{ field: FIELD, label: 'Where it prints', from: 'Not on the resume or CV', to: 'Everywhere' }
+		]);
+		await achievement.apply(ENTRY, fields, {}, ACTOR);
+		expect(state.written).toEqual([{ resource: 'work_experience_achievement', id: 7, tags: [] }]);
 	});
 
 	it('refuses anything but a list of strings', () => {

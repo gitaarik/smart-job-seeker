@@ -88,11 +88,17 @@ export async function libraryVersions(profileId: number): Promise<string[]> {
  * dropped rather than refused — it changes nothing — but a tag and its own
  * negation are refused: the negation wins in `profile-filter.ts`, so the
  * positive half says something the document will not do.
+ *
+ * Null is the empty list. Every field is coerced on the way in
+ * (`pickCapabilityFields`), and for a list that turns `[]` into null, "clear
+ * this column". Refusing it as not a list made "print it everywhere"
+ * impossible to ask for over MCP, the one thing an empty list is for.
  */
 export function checkTags(
 	value: unknown,
 	versions: string[]
 ): { ok: true; tags: string[] } | { ok: false; error: string } {
+	if (value === null) return { ok: true, tags: [] };
 	if (!Array.isArray(value) || value.some((tag) => typeof tag !== 'string')) {
 		return {
 			ok: false,
