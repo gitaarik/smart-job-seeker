@@ -2193,6 +2193,12 @@ export const work_experience_projects = pgTable(
 		date_updated: timestamp({ withTimezone: true, mode: 'date' }),
 		work_experience_id: integer(),
 		name: varchar({ length: 255 }),
+		// The applicant's own part in the project ("tech lead", "sole developer"),
+		// for the projects where that is not what the role's position already
+		// says. Empty is the usual case and prints nothing. Not called `role`: in
+		// this codebase a role IS a work experience, and the assistant reads this
+		// row's `work_experience` field as "the role it was part of".
+		project_role: varchar({ length: 255 }),
 		url: varchar({ length: 255 }),
 		// Mirrors side_projects.repo_url. Often empty here — most work code is
 		// private — but a role project with a public repo can be read the same way
@@ -2316,6 +2322,10 @@ export const side_projects = pgTable(
 		date_created: timestamp({ withTimezone: true, mode: 'date' }),
 		date_updated: timestamp({ withTimezone: true, mode: 'date' }),
 		name: varchar({ length: 255 }),
+		// The applicant's part in it when the project is not simply theirs:
+		// "contributor" to someone else's open-source project, "co-founder".
+		// Empty means they made it. Named as on work_experience_projects.
+		project_role: varchar({ length: 255 }),
 		start_date: date(),
 		end_date: date(),
 		profile_id: integer().notNull(),
