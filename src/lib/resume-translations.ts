@@ -70,6 +70,10 @@ export const TRANSLATABLE_FIELDS: TranslatableField[] = [
 	{ entity: 'profile', field: 'title', label: 'Title' },
 	{ entity: 'profile', field: 'about_me_text', label: 'About me' },
 	{ entity: 'profile', field: 'location', label: 'Location' },
+	// What the applicant's business does. No document prints it, but its homes
+	// are in more than one language: a Dutch KvK register, an English contract
+	// or side-work notice.
+	{ entity: 'profile', field: 'business_activities', label: 'Business activities' },
 
 	// An alternative wording is prose the applicant wrote, exactly like the
 	// column it stands in for, so it needs the same treatment in a non-English

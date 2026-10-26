@@ -9,6 +9,9 @@
 	import CopyButton from '../../../components/CopyButton.svelte';
 	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
+	import TranslatableField from '$lib/components/TranslatableField.svelte';
+	import { BASE_LOCALE } from '$lib/resume-translations';
+	import { translations } from '$lib/stores/translations.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -29,6 +32,13 @@
 	let kvk_number = $state(loadedCompany.kvk_number);
 	let vat_id = $state(loadedCompany.vat_id);
 	let business_activities = $state(loadedCompany.business_activities);
+	// The copy button and the count follow the language tab the field is on:
+	// the Dutch text is the one the KvK form takes.
+	const shownActivities = $derived(
+		translations.activeLocale === BASE_LOCALE
+			? business_activities
+			: translations.get('profile', profileId, 'business_activities')
+	);
 
 	const loadedAddress = {
 		street_address: loaded.street_address || '',
@@ -163,26 +173,24 @@
 				KvK register, a contract, a notice), and this is where it is kept.
 			-->
 			<div class="md:col-span-2">
-				<label
-					for="business_activities"
-					class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
-				>
-					Business Activities
-				</label>
-				<textarea
-					id="business_activities"
-					bind:value={business_activities}
+				<TranslatableField
+					entity="profile"
+					id={profileId}
+					field="business_activities"
 					autocomplete="off"
-					rows="4"
+					label="Business Activities"
+					multiline
+					rows={4}
+					bind:value={business_activities}
 					placeholder="What your business does, as registered with the chamber of commerce"
-					class={inputClass}></textarea>
-				{#if business_activities.trim()}
+				/>
+				{#if shownActivities.trim()}
 					<div class="mt-1 flex items-center justify-between gap-3">
 						<span class="text-xs text-[var(--dash-text-secondary)]">
-							{business_activities.length.toLocaleString()} characters
+							{shownActivities.length.toLocaleString()} characters
 						</span>
 						<CopyButton
-							text={business_activities}
+							text={shownActivities}
 							size="sm"
 							label="Copy"
 							title="Copy the business activities"

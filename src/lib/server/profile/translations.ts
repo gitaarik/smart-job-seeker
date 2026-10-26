@@ -159,7 +159,15 @@ export function applyTranslations(
 	// rather than every field being keyed on `undefined`.
 	const profileId = profile.id;
 	if (profileId === undefined) return profile;
-	for (const f of ['summary', 'headline', 'subtitle', 'title', 'about_me_text', 'location']) {
+	for (const f of [
+		'summary',
+		'headline',
+		'subtitle',
+		'title',
+		'about_me_text',
+		'location',
+		'business_activities'
+	]) {
 		const base = profile[f];
 		profile[f] = tr.t('profile', profileId, f, base == null ? null : String(base));
 	}
@@ -440,6 +448,7 @@ const MULTILINE_FIELDS = new Set([
 	'outcome',
 	'note',
 	'about_me_text',
+	'business_activities',
 	// A reference is a paragraph someone else wrote; `text` is translatable on
 	// no other entity, so this does not widen anything else.
 	'text'
