@@ -4055,8 +4055,15 @@ export const profiles = pgTable(
 		company_name: varchar({ length: 255 }),
 		street_address: varchar({ length: 255 }),
 		postal_code: varchar({ length: 20 }),
+		// The business address's town, beside the street and postal code above.
+		// Not where the applicant is for a job search: that is `location`, which
+		// can say "Amsterdam area" or "Remote" where an address cannot.
+		city: varchar({ length: 255 }),
 		vat_id: varchar({ length: 50 }),
 		kvk_number: varchar({ length: 50 }),
+		// What the applicant's own business does, as registered (a KvK
+		// "activiteitenomschrijving"). Private like the rest of the block.
+		business_activities: text(),
 		about_me_text: text(),
 		meta_image_url: varchar({ length: 500 }),
 		dev_start_year: integer(),
