@@ -386,8 +386,10 @@ function buildProfileUpdateData(p: ExportedProfileData, name: string) {
 		company_name: p.company_name || null,
 		street_address: p.street_address || null,
 		postal_code: p.postal_code || null,
+		city: p.city || null,
 		vat_id: p.vat_id || null,
 		kvk_number: p.kvk_number || null,
+		business_activities: p.business_activities || null,
 		// Note: profile_photo_path is set later via media import
 		date_updated: new Date()
 	};

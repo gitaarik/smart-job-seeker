@@ -37,6 +37,13 @@ const PROFILE_FIELDS: Record<string, FieldKind> = {
 	npm_profile: 'string',
 	pypi_profile: 'string',
 	country_code: 'string',
+	company_name: 'string',
+	street_address: 'string',
+	postal_code: 'string',
+	city: 'string',
+	vat_id: 'string',
+	kvk_number: 'string',
+	business_activities: 'string',
 	browser_language: 'string',
 	browser_timezone: 'string',
 	browser_country_code: 'string'

@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import {
 		faBriefcase,
+		faBuilding,
 		faCertificate,
 		faCode,
 		faGlobe,
@@ -23,7 +24,8 @@
 		{ label: 'Education', href: '/profile/education', icon: faGraduationCap },
 		{ label: 'Certificates', href: '/profile/certificates', icon: faCertificate },
 		{ label: 'Languages', href: '/profile/languages', icon: faGlobe },
-		{ label: 'References', href: '/profile/references', icon: faUserFriends }
+		{ label: 'References', href: '/profile/references', icon: faUserFriends },
+		{ label: 'Business', href: '/profile/business', icon: faBuilding }
 	];
 
 	function isTabActive(href: string): boolean {

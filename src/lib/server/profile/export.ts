@@ -83,7 +83,20 @@ const PROFILE_SNAPSHOT_COLUMNS = {
 	 */
 	salary_employed: true,
 	salary_freelance: true,
-	salary_adjustments: true
+	salary_adjustments: true,
+	/**
+	 * The applicant's own business: its name, its KvK number and what it is
+	 * registered to do. For the assistant, which is asked to write a side-work
+	 * notice to a new employer or to weigh a B2B offer against a non-compete,
+	 * and could do neither without knowing what the business does.
+	 *
+	 * The address and the VAT number stay out. They go on an invoice, which no
+	 * prompt writes, and every byte here is paid for by every prompt that takes
+	 * the whole blob.
+	 */
+	company_name: true,
+	kvk_number: true,
+	business_activities: true
 } as const;
 
 /** Field names only, for the schema mapping and the test that pins the two together. */

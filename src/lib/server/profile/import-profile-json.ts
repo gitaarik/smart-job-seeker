@@ -207,8 +207,10 @@ export async function importProfileFromJson(
 				company_name: p.company_name || null,
 				street_address: p.street_address || null,
 				postal_code: p.postal_code || null,
+				city: p.city || null,
 				vat_id: p.vat_id || null,
 				kvk_number: p.kvk_number || null,
+				business_activities: p.business_activities || null,
 				date_updated: new Date()
 			})
 			.where(eq(profiles.id, overwriteProfileId));
@@ -271,8 +273,10 @@ export async function importProfileFromJson(
 				company_name: p.company_name || null,
 				street_address: p.street_address || null,
 				postal_code: p.postal_code || null,
+				city: p.city || null,
 				vat_id: p.vat_id || null,
 				kvk_number: p.kvk_number || null,
+				business_activities: p.business_activities || null,
 				date_created: new Date(),
 				date_updated: new Date()
 			})

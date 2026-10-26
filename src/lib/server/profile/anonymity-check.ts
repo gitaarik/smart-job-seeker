@@ -109,6 +109,9 @@ export function identityTerms(profile: object): IdentityTerm[] {
 
 	add('address', text(row.street_address));
 	add('address', text(row.postal_code));
+	// The address's town: the same "worth a look" as `location` below, under the
+	// same kind so a town written in both is one term.
+	add('hometown', text(row.city));
 	add('registration', digits(text(row.kvk_number)) || null);
 	// A VAT number has letters in it ("NL…B01"), so it is looked for as written.
 	add('registration', text(row.vat_id)?.replace(/\s+/g, ''));

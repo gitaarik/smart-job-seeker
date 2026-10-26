@@ -117,7 +117,9 @@ describe('profile field lists (composed from CORE)', () => {
 
 	const SALARY_FIELDS = ['salary_employed', 'salary_freelance', 'salary_adjustments'];
 
-	it('ASSISTANT = the letter fields plus references, the long bio and salary', () => {
+	const BUSINESS_FIELDS = ['company_name', 'kvk_number', 'business_activities'];
+
+	it('ASSISTANT = the letter fields plus references, the long bio, salary and business', () => {
 		expect(set(ASSISTANT_PROFILE_FIELDS)).toEqual(
 			set([
 				...LETTER_PROFILE_FIELDS,
@@ -125,9 +127,26 @@ describe('profile field lists (composed from CORE)', () => {
 				'about_me_text',
 				'salary_employed',
 				'salary_freelance',
-				'salary_adjustments'
+				'salary_adjustments',
+				...BUSINESS_FIELDS
 			])
 		);
+	});
+
+	it("keeps the applicant's own business out of every document generator", () => {
+		// The assistant takes it for a side-work notice or a B2B offer. A letter
+		// or a story has no use for a KvK number, and one that named the business
+		// unprompted would be writing about the applicant's side line, not the job.
+		for (const list of [
+			CORE_PROFILE_FIELDS,
+			STORY_PROFILE_FIELDS,
+			CHEATSHEET_PROFILE_FIELDS,
+			LETTER_PROFILE_FIELDS,
+			QUESTION_PROFILE_FIELDS
+		]) {
+			for (const field of BUSINESS_FIELDS) expect(list).not.toContain(field);
+		}
+		for (const field of BUSINESS_FIELDS) expect(ASSISTANT_PROFILE_FIELDS).toContain(field);
 	});
 
 	it('keeps the long bio out of every document generator', () => {

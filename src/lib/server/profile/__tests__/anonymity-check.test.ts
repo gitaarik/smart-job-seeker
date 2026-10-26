@@ -26,6 +26,7 @@ const row = {
 	github_profile: 'https://github.com/gitaarik',
 	street_address: 'Voorbeeldstraat 12',
 	postal_code: '2011 AB',
+	city: 'Haarlem',
 	kvk_number: '12345678',
 	vat_id: 'NL001234567B01',
 	location: 'Haarlem, The Netherlands'
@@ -55,6 +56,17 @@ describe('identityTerms', () => {
 				'hometown:Haarlem'
 			])
 		);
+	});
+
+	it("takes the business address's town once, as the hometown", () => {
+		const terms = identityTerms({ city: 'Zandvoort', location: 'Haarlem, NL' });
+		expect(terms).toEqual([
+			{ kind: 'hometown', term: 'Zandvoort' },
+			{ kind: 'hometown', term: 'Haarlem' }
+		]);
+		// Written in both, it is one term.
+		const same = identityTerms({ ...row }).filter((t) => t.kind === 'hometown');
+		expect(same).toEqual([{ kind: 'hometown', term: 'Haarlem' }]);
 	});
 
 	it('leaves out name particles and generic mailboxes', () => {

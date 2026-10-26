@@ -141,6 +141,24 @@ describe('PATCH /api/profile/[id]', () => {
 		);
 	});
 
+	it('saves the Business tab fields', async () => {
+		// They had columns and an export long before any form could write them,
+		// so nothing in this route used to accept them.
+		mockFindFirst.mockResolvedValueOnce({ id: 1, slug: 'test' });
+		const business = {
+			company_name: 'Jane Doe Software',
+			kvk_number: '12345678',
+			vat_id: 'NL001234567B01',
+			business_activities: 'Ontwikkelen van software.',
+			street_address: 'Main Street 12',
+			postal_code: '1234 AB',
+			city: 'Haarlem'
+		};
+		const response = await PATCH(createEvent({ body: business }));
+		expect(response.status).toBe(200);
+		expect(mockUpdateSet).toHaveBeenCalledWith(expect.objectContaining(business));
+	});
+
 	it('only updates allowed fields', async () => {
 		mockFindFirst.mockResolvedValueOnce({ id: 1, slug: 'test' });
 		const event = createEvent({

@@ -338,6 +338,16 @@ export const profileUpdateSchema = z.object({
 	npm_profile: optionalTrimmedString(),
 	pypi_profile: optionalTrimmedString(),
 	country_code: optionalTrimmedString(10),
+	// The applicant's own business, edited on the Business tab. Lengths are the
+	// columns'; the activity description is a few sentences in a register, so
+	// its cap is a sanity bound.
+	company_name: optionalTrimmedString(),
+	street_address: optionalTrimmedString(),
+	postal_code: optionalTrimmedString(20),
+	city: optionalTrimmedString(),
+	vat_id: optionalTrimmedString(50),
+	kvk_number: optionalTrimmedString(50),
+	business_activities: optionalTrimmedString(5000),
 	browser_language: optionalTrimmedString(50),
 	browser_timezone: optionalTrimmedString(100),
 	browser_country_code: z

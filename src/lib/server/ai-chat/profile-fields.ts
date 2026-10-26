@@ -81,7 +81,13 @@ export const ASSISTANT_PROFILE_FIELDS: ExportedProfileKey[] = [
 	// deliberately (see NON_FIT_FIELDS).
 	'salary_employed',
 	'salary_freelance',
-	'salary_adjustments'
+	'salary_adjustments',
+	// Their own business, for a side-work notice to an employer or a B2B offer
+	// weighed against a non-compete. Like the salary, no letter needs it, and
+	// the matcher is kept away from it (NON_FIT_FIELDS).
+	'company_name',
+	'kvk_number',
+	'business_activities'
 ];
 
 /**

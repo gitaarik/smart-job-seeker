@@ -439,8 +439,10 @@ export async function buildProfileExport(
 		company_name: profile.company_name || undefined,
 		street_address: profile.street_address || undefined,
 		postal_code: profile.postal_code || undefined,
+		city: profile.city || undefined,
 		vat_id: profile.vat_id || undefined,
 		kvk_number: profile.kvk_number || undefined,
+		business_activities: profile.business_activities || undefined,
 		profile_photo_path: profile.profile_photo_path || undefined,
 
 		profile_versions: profile.profile_versions.map((pv) => ({

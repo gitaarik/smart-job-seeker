@@ -34,8 +34,10 @@ export interface ExportedProfile {
 		company_name?: string;
 		street_address?: string;
 		postal_code?: string;
+		city?: string;
 		vat_id?: string;
 		kvk_number?: string;
+		business_activities?: string;
 		profile_versions: Array<{
 			status?: string;
 			sort?: number | null;
@@ -416,8 +418,10 @@ export async function buildProfileJsonExport(
 			company_name: baseProfile.company_name || undefined,
 			street_address: baseProfile.street_address || undefined,
 			postal_code: baseProfile.postal_code || undefined,
+			city: baseProfile.city || undefined,
 			vat_id: baseProfile.vat_id || undefined,
 			kvk_number: baseProfile.kvk_number || undefined,
+			business_activities: baseProfile.business_activities || undefined,
 			profile_versions: baseProfile.profile_versions.map((pv) => ({
 				status: pv.status || undefined,
 				sort: pv.sort,

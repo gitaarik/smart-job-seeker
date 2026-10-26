@@ -285,6 +285,10 @@ export async function loadProfileData(
  * `location_timezone` STAY, because where someone is really does bear on a
  * commute or an overlapping working day.
  *
+ * The applicant's own business (name, KvK number, what it does) is identity
+ * too, and joined the snapshot for the assistant only. It was never in a
+ * score, so listing it here moves none.
+ *
  * Dropping the identity FIELDS is not the same as scrubbing identity, and this
  * does not claim to. A name still reaches the model wherever the applicant's
  * own prose carries it -- the dev profile has an eponymous employer, "Rik
@@ -295,7 +299,10 @@ export async function loadProfileData(
  * computed from inputs the design says do not belong in them.
  */
 export const NON_FIT_FIELDS: ExportedProfileKey[] = [
+	'business_activities',
+	'company_name',
 	'email_address',
+	'kvk_number',
 	'location_url',
 	'name',
 	'nationality',
@@ -306,7 +313,10 @@ export const NON_FIT_FIELDS: ExportedProfileKey[] = [
 ];
 
 export const NON_SKILL_FIELDS: ExportedProfileKey[] = [
+	'business_activities',
+	'company_name',
 	'email_address',
+	'kvk_number',
 	'github_profile',
 	'linkedin_profile',
 	'location',

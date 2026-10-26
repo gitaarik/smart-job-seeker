@@ -228,8 +228,10 @@ export interface ExportedProfileData {
 	company_name?: string;
 	street_address?: string;
 	postal_code?: string;
+	city?: string;
 	vat_id?: string;
 	kvk_number?: string;
+	business_activities?: string;
 
 	// Media paths
 	profile_photo_path?: string;
