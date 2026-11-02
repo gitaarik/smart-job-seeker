@@ -5,6 +5,39 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.0] - 2026-11-02
+
+56 commits since v0.39.0.
+
+### Added
+
+- Accepted applications take the job's own stages, so the pipeline matches the role.
+- Business tab on your profile for your own company, with a city, an activity description, and translatable activities.
+- Projects and side projects have a role field, so you can state your part in each one.
+- Portfolio showcase layout, which themes can pick.
+- Show or hide each project's technologies on your public site, and choose where they print.
+- Copy an answer from the texts list on an application.
+- Agents can rewrite your profile's title, headline, summary, and About Me through MCP.
+- Anonymous applications send documents and AI chat output without your name, and the PDF reader flags any text that still names you.
+- The assistant chat can be answered by the agent behind a feature flag, with its steps streamed as it works.
+
+### Changed
+
+- An application is recorded as read when it is read without your name, for anonymous applications.
+
+### Fixed
+
+- Public portfolio pages render only the profile they show.
+- The anonymous portfolio version no longer shows your contact details.
+- Portfolio meta separators keep the space before them.
+- Technology tags survive both export and import.
+- A tag tool accepts an empty list.
+- Copy buttons switch to a check mark once they have copied.
+- The assistant reads before it answers, and flags replies that claim actions the turn did not perform.
+- The assistant's tool-call cap holds within a round, not only between rounds.
+- Streamed agent runs count cached tokens once.
+- Deleting a profile row also removes its version overrides and translations.
+
 ## [0.39.0] - 2026-10-11
 
 51 commits since v0.38.0.
