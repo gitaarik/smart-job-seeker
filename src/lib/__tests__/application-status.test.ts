@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	acceptedStages,
 	canEndUnsent,
 	currentRoundIndex,
 	describeNextStep,
@@ -17,7 +18,8 @@ import {
 	stageLabel,
 	stageRanks,
 	statusOptions,
-	stepsByPhase,
+	stepsByStatus,
+	stepsFor,
 	type InterviewRound
 } from '../application-status';
 
@@ -34,7 +36,7 @@ function round(over: Partial<InterviewRound> = {}): InterviewRound {
 // rejected, and an undo of that state fails validation.
 describe('the quick status actions', () => {
 	const everyQuickAction = statusOptions.flatMap(({ value }) =>
-		[null, ...(stepsByPhase[getStepperPhase(value)] ?? [])].flatMap((step) =>
+		[null, ...stepsFor(value)].flatMap((step) =>
 			getQuickStatusActions(value, step).map((quick) => ({ from: `${value}/${step}`, quick }))
 		)
 	);
@@ -46,16 +48,31 @@ describe('the quick status actions', () => {
 	it('write a stage the status actually has', () => {
 		for (const { from, quick } of everyQuickAction) {
 			if (quick.step === null) continue;
-			const steps = stepsByPhase[getStepperPhase(quick.status)] ?? [];
-			expect(steps, `${from} → ${quick.label}`).toContain(quick.step);
+			expect(stepsFor(quick.status), `${from} → ${quick.label}`).toContain(quick.step);
 		}
 	});
 
-	it('leave the stage off interviewing, whose position is its round, and off a finished status', () => {
+	it('leave the stage off interviewing, whose position is its round, and off every ending but accepted', () => {
 		for (const { from, quick } of everyQuickAction) {
 			const phase = getStepperPhase(quick.status);
-			if (phase !== 'interviewing' && phase !== 'result') continue;
+			if (phase !== 'interviewing' && (phase !== 'result' || quick.status === 'accepted')) continue;
 			expect(quick.step, `${from} → ${quick.label}`).toBeNull();
+		}
+	});
+
+	it('move a job they have taken along: started, ended, and started again from ended', () => {
+		const moves = (step: string | null) =>
+			getQuickStatusActions('accepted', step).map((q) => [q.label, q.step]);
+		expect(moves(null)).toEqual([
+			['Started', acceptedStages.started],
+			['Ended', acceptedStages.ended]
+		]);
+		expect(moves(acceptedStages.signed)).toEqual(moves(null));
+		expect(moves(acceptedStages.started)).toEqual([['Ended', acceptedStages.ended]]);
+		expect(moves(acceptedStages.ended)).toEqual([['Started again', acceptedStages.started]]);
+		// Nothing moves after the other endings.
+		for (const status of ['rejected', 'withdrawn', 'position_closed']) {
+			expect(getQuickStatusActions(status, null), status).toEqual([]);
 		}
 	});
 
@@ -87,11 +104,11 @@ describe('the quick status actions', () => {
 });
 
 // A stage list keyed by label alone would let one label in two phases share a
-// rank, which `stageRanks` being nested by phase is there to prevent.
+// rank, which `stageRanks` being nested by status is there to prevent.
 describe('the stage labels', () => {
-	it('name one position each, across every phase', () => {
+	it('name one position each, across every status', () => {
 		const seen = new Map<string, string>();
-		for (const [phase, steps] of Object.entries(stepsByPhase)) {
+		for (const [phase, steps] of Object.entries(stepsByStatus)) {
 			for (const step of steps) {
 				expect(seen.get(step) ?? phase, `"${step}" is also a stage of`).toBe(phase);
 				seen.set(step, phase);
@@ -100,7 +117,18 @@ describe('the stage labels', () => {
 	});
 
 	it('are not offered for interviewing, which counts rounds instead', () => {
-		expect(stepsByPhase.interviewing).toBeUndefined();
+		expect(stepsByStatus.interviewing).toBeUndefined();
+		expect(stepsFor('interviewing')).toEqual([]);
+	});
+
+	it('are the job’s own under accepted, and absent from the other endings', () => {
+		expect(stepsFor('accepted')).toEqual(['Contract signed', 'Started', 'Ended']);
+		for (const status of ['rejected', 'withdrawn', 'position_closed']) {
+			expect(stepsFor(status), status).toEqual([]);
+		}
+		// A legacy status reads as its phase, so old rows keep their stage list.
+		expect(stepsFor('offered')).toEqual(stepsFor('negotiating'));
+		expect(stepsFor('preparing')).toEqual(stepsFor('applying'));
 	});
 });
 
@@ -109,7 +137,7 @@ describe('the stage labels', () => {
 // level with its earliest stage instead of after it.
 describe('the stage ranks', () => {
 	it('cover every offered stage, and nothing else', () => {
-		for (const [phase, steps] of Object.entries(stepsByPhase)) {
+		for (const [phase, steps] of Object.entries(stepsByStatus)) {
 			for (const step of steps) {
 				expect(stageRanks[phase]?.[step], `${phase}/${step}`).toBeTypeOf('number');
 			}
@@ -179,11 +207,13 @@ describe('stageLabel', () => {
 		);
 	});
 
-	it('is the stage itself elsewhere, and nothing once the application is finished', () => {
+	it('is the stage itself elsewhere, the job’s under accepted, and nothing after the other endings', () => {
 		expect(stageLabel({ status: 'applying', status_step: 'Applied' }, TODAY)).toBe('Applied');
 		expect(stageLabel({ status: 'negotiating', status_step: 'Contract review' }, TODAY)).toBe(
 			'Contract review'
 		);
+		expect(stageLabel({ status: 'accepted', status_step: 'Ended' }, TODAY)).toBe('Ended');
+		expect(stageLabel({ status: 'accepted', status_step: null }, TODAY)).toBeNull();
 		expect(
 			stageLabel(
 				{ status: 'rejected', status_step: 'Offer received', interview_rounds: [round()] },
@@ -267,7 +297,7 @@ describe('nextStep', () => {
 	});
 
 	it('covers every negotiating stage the editor offers', () => {
-		for (const status_step of stepsByPhase.negotiating) {
+		for (const status_step of stepsByStatus.negotiating) {
 			expect(nextStep({ status: 'negotiating', status_step }, TODAY), status_step).not.toBeNull();
 		}
 	});
@@ -348,6 +378,15 @@ describe('the compared statuses', () => {
 		expect(isComparedStatus('rejected')).toBe(false);
 		expect(isComparedStatus('withdrawn')).toBe(false);
 		expect(isComparedStatus('position_closed')).toBe(false);
+	});
+
+	it('let an accepted job go once its stage says it ended, and keep one with no stage as before', () => {
+		expect(isComparedStatus('accepted', acceptedStages.signed)).toBe(true);
+		expect(isComparedStatus('accepted', acceptedStages.started)).toBe(true);
+		expect(isComparedStatus('accepted', acceptedStages.ended)).toBe(false);
+		expect(isComparedStatus('accepted', null)).toBe(true);
+		// The stage only ever lets an accepted job go; it never brings another ending in.
+		expect(isComparedStatus('rejected', acceptedStages.started)).toBe(false);
 	});
 });
 

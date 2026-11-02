@@ -959,7 +959,7 @@ describe('update_application_status', () => {
 		expect(refused.ok === false && refused.error).toContain('round_kind');
 	});
 
-	it('refuses a stage or a round on a status that finishes the application', () => {
+	it('refuses a stage or a round on an ending, except the job’s own stages under accepted', () => {
 		const staged = def.validate({ status: 'rejected', status_step: 'Offer received' }, APPLYING);
 		expect(staged.ok).toBe(false);
 		expect(staged.ok === false && staged.error).toContain('no stage');
@@ -967,6 +967,21 @@ describe('update_application_status', () => {
 
 		expect(def.validate({ status: 'rejected' }, APPLYING).ok).toBe(true);
 		expect(def.validate({ status: 'rejected', status_step: null }, APPLYING).ok).toBe(true);
+
+		// A job they have taken moves on its own stages, and on nothing else.
+		expect(def.validate({ status: 'accepted', status_step: 'Ended' }, APPLYING).ok).toBe(true);
+		const wrong = def.validate({ status: 'accepted', status_step: 'Offer received' }, APPLYING);
+		expect(wrong.ok).toBe(false);
+		expect(wrong.ok === false && wrong.error).toContain('Contract signed');
+		expect(def.validate({ status: 'accepted', round_kind: 'Final' }, INTERVIEWING).ok).toBe(false);
+	});
+
+	it('closes an application at tier 2, and moves the stage of a job they hold at tier 1', () => {
+		const ACCEPTED = { status: 'accepted', status_step: 'Started', interview_rounds: [] };
+		expect(def.tierFor?.({ status: 'accepted' }, APPLYING)?.tier).toBe(2);
+		expect(def.tierFor?.({ status: 'rejected' }, APPLYING)?.tier).toBe(2);
+		expect(def.tierFor?.({ status: 'accepted', status_step: 'Ended' }, ACCEPTED)?.tier).toBe(1);
+		expect(def.tierFor?.({ status: 'interviewing', new_round: true }, APPLYING)?.tier).toBe(1);
 	});
 
 	it('refuses round fields outside interviewing', () => {

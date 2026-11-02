@@ -24,7 +24,7 @@
  *
  * ## The vocabulary is advisory, and stays that way
  *
- * `stepsByPhase` populates the editor's stage dropdown and `roundKinds` its
+ * `stepsByStatus` populates the editor's stage dropdown and `roundKinds` its
  * round kinds, and both also offer "Custom…". A stage or a kind is therefore a
  * label rather than an enum, and this module does not enforce one:
  * `applicationStatusError` checks the *status*, which really is closed.
@@ -44,11 +44,11 @@ import {
 	currentRoundIndex,
 	getStatusLabel,
 	getStepperPhase,
+	hasStages,
 	roundLabel,
 	roundState,
 	stageLabel,
 	statusOptions,
-	stepsByPhase,
 	type InterviewRound,
 	type NextStep,
 	type StatusFacts
@@ -89,11 +89,6 @@ export const RELABELLED_STATUSES = new Intl.ListFormat('en-GB', { type: 'conjunc
 export function statusForModel(status: string): string {
 	const label = getStatusLabel(status);
 	return label.toLowerCase() === status ? status : `${status} (the applicant sees "${label}")`;
-}
-
-/** The stage labels the editor offers for a status. Empty for interviewing and once finished. */
-export function stepsFor(status: string): string[] {
-	return stepsByPhase[getStepperPhase(status)] ?? [];
 }
 
 /**
@@ -150,7 +145,10 @@ export function describeNextStepForModel(next: NextStep | null): string {
 /** What a caller wants the application to say now. Absent is not "unchanged"; see `writeApplicationStatus`. */
 export interface StatusChange {
 	status: string;
-	/** The stage, for applying and negotiating. Dropped for interviewing and once finished. */
+	/**
+	 * The stage, for applying, negotiating and accepted (whose stage is the job's).
+	 * Dropped for interviewing and for the other endings.
+	 */
 	step: string | null;
 	/**
 	 * The interview rounds, whole. Optional only so that a caller with nothing
@@ -172,10 +170,11 @@ export interface SettledStatus {
 /**
  * What a status does to the stage and the rounds, for every writer.
  *
- * - A stage belongs to applying and negotiating. Interviewing's position is its
- *   round, and a finished application has none, so the stage goes for both:
- *   "Offer received" kept under "Not selected" describes an application nobody
- *   has.
+ * - A stage belongs to the statuses that list one (`hasStages`): applying,
+ *   negotiating, and accepted, whose stage is the job's. Interviewing's
+ *   position is its round, and the other endings have none, so the stage goes
+ *   for those: "Offer received" kept under "Not selected" describes an
+ *   application nobody has.
  * - Rounds are kept through negotiating and past the end, because "Not selected
  *   after round 2" is the history of this application. They are cleared by a
  *   move back to applying, since an application that has not been interviewed
@@ -187,7 +186,7 @@ export function settleStatusChange(
 	next: Pick<StatusChange, 'status' | 'step'> & { rounds: InterviewRound[] }
 ): SettledStatus {
 	const phase = getStepperPhase(next.status);
-	const step = phase === 'applying' || phase === 'negotiating' ? next.step : null;
+	const step = hasStages(next.status) ? next.step : null;
 	let rounds = phase === 'applying' ? [] : next.rounds;
 	if (phase === 'interviewing' && rounds.length === 0) rounds = [blankRound()];
 	return { status: next.status, step, rounds };

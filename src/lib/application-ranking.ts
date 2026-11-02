@@ -62,7 +62,7 @@ import {
 	finishedStatuses,
 	getStepperPhase,
 	nextStep,
-	stageRanks,
+	stageRanksFor,
 	type InterviewRound
 } from '$lib/application-status';
 
@@ -219,7 +219,7 @@ const phaseRank: Record<string, number> = {
  * labels it replaced named kinds of interview, and a technical interview, a
  * hiring manager call and a team interview had to share a rank because the
  * employer decides their order. Elsewhere it is a lookup in `stageRanks`
- * rather than the step's position in `stepsByPhase`, so the dropdown can be
+ * rather than the step's position in `stepsByStatus`, so the dropdown can be
  * reordered without silently reordering the pipeline.
  *
  * A step the vocabulary does not list scores 0, the start of its phase. The
@@ -233,7 +233,7 @@ export function stageRank(app: Rankable, on: string = today()): number {
 		phase === 'interviewing'
 			? Math.min(currentRoundIndex(app.interview_rounds ?? [], on) + 1, 99)
 			: app.status_step
-				? (stageRanks[phase]?.[app.status_step] ?? 0)
+				? (stageRanksFor(app.status)[app.status_step] ?? 0)
 				: 0;
 	return (phaseRank[phase] ?? 0) * 100 + within;
 }

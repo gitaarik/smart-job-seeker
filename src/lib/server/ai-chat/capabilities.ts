@@ -75,7 +75,8 @@ import {
 	roundKindValues,
 	sameRounds,
 	stageLabel,
-	stepsByPhase,
+	stepsByStatus,
+	stepsFor,
 	type InterviewRound
 } from '$lib/application-status';
 import {
@@ -87,7 +88,6 @@ import {
 	settableStatuses,
 	settleStatusChange,
 	STAGE_COLUMNS,
-	stepsFor,
 	writeApplicationStatus
 } from '$lib/server/applications/status';
 import { TEXT_CREATE_CAPABILITIES, type TextCreateCapability } from './text-create-capabilities';
@@ -1154,11 +1154,11 @@ want, tell them to use the status control on the page.`,
  *
  * Written out rather than described, because "pick a sensible stage" produces a
  * new label every time and the pipeline groups on these: one invented stage is
- * a stage of one. Built from `stepsByPhase` and `roundKinds` so that the list a
- * model is held to and the list a person is offered cannot drift apart.
+ * a stage of one. Built from `stepsByStatus` and `roundKinds` so that the list
+ * a model is held to and the list a person is offered cannot drift apart.
  */
 const STATUS_VOCABULARY = `Stages, by status:
-${Object.entries(stepsByPhase)
+${Object.entries(stepsByStatus)
 	.map(([status, steps]) => `  ${status}: ${steps.join(', ')}`)
 	.join('\n')}
 Round kinds: ${roundKindValues.join(', ')}`;
@@ -1337,17 +1337,24 @@ const updateApplicationStatus: CapabilityDef = {
 	writesOneState: true,
 	tierFor: (fields, current) => {
 		const next = nextStatusFields(fields, current);
-		return isFinishedStatus(next.status)
-			? {
-					tier: 2,
-					reason:
-						`Marking an application "${getStatusLabel(next.status)}" closes it and takes ` +
-						`it off their active list.`
-				}
-			: {
-					tier: 1,
-					reason: 'Moving an application through the pipeline is undone with one click.'
-				};
+		const before = statusFieldsOf(current);
+		// Into an ending is the move that closes it. A stage move within one (a job
+		// they hold marked Started or Ended) leaves it where it is.
+		if (!isFinishedStatus(next.status) || next.status === before.status) {
+			return {
+				tier: 1,
+				reason:
+					next.status === before.status && isFinishedStatus(next.status)
+						? 'Moving the stage of a job they have taken is undone with one click.'
+						: 'Moving an application through the pipeline is undone with one click.'
+			};
+		}
+		return {
+			tier: 2,
+			reason:
+				`Marking an application "${getStatusLabel(next.status)}" closes it and takes ` +
+				`it off their active list.`
+		};
 	},
 	/**
 	 * The card in labels and in the state it leads to, not in the fields sent. A
@@ -1381,39 +1388,38 @@ const updateApplicationStatus: CapabilityDef = {
 			...describeFieldChanges(['status_note'], fields, {})
 		];
 	},
-	contract: `Where this application stands. It is what moves it between the user's
-lists, so propose it when they say something HAPPENED, not when they say what
-they are hoping for or about to do.
+	contract: `Where this application stands, which moves it between the user's lists.
+Propose it when they say something HAPPENED, not what they hope or plan to do.
 
 - "status" is exactly one of: ${settableStatuses.join(', ')}.
   "rejected" is the employer saying no, "withdrawn" the applicant stopping,
   "position_closed" the job going away with nobody deciding about them (a
-  posting gone before they applied, a role cancelled or frozen). An ad gone
-  AFTER they applied ends nothing (often enough people applied): keep the
-  status. Never guess which one: ask. Say the labels they
-  know, not the values: "${getStatusLabel('rejected')}", "${getStatusLabel('withdrawn')}", "${getStatusLabel('position_closed')}".
-- "status_step" is the stage, for applying and negotiating only, from the lists
-  below. Interviewing has rounds instead, and a finished application neither.
+  posting gone before they applied, a role cancelled or frozen); one gone AFTER
+  they applied ends nothing: keep the status. Never guess which one: ask. Say
+  the labels they know, not the values: "${getStatusLabel('rejected')}", "${getStatusLabel('withdrawn')}", "${getStatusLabel('position_closed')}".
+- "status_step" is the stage, for applying, negotiating and accepted, from the
+  lists below. Interviewing has rounds instead; other endings have neither.
+  Accepted's stages are the job's own. A job that ended is still accepted: the
+  application succeeded; "withdrawn" is stopping an APPLICATION, never a job
+  held.
 - Interview rounds are numbered in order. "new_round": true starts the next
-  one; without it the round fields change the round it is at, which is how a
-  reschedule is said. Moving an application into interviewing starts round 1.
-  "round_kind" is one of the kinds below, "round_date" YYYY-MM-DD and
-  "round_time" HH:MM for when it is booked (leave both out until it is), and
-  "round_with" who it is with, as they said it ("Anna, the CTO"). A round that
-  is behind them needs nothing: the day after it, it reads as waiting for the
-  result on its own.
-- "status_note" is at most one short line saying why it moved, shown on the
-  timeline beside it ("recruiter called after the technical"). It goes WITH a
-  move; on its own, with nothing else changing, it is refused. Anything longer
-  than a line is an activity entry instead.
+  one; without it the round fields change the round it is at (a reschedule).
+  Moving into interviewing starts round 1. "round_kind" is one of the kinds
+  below, "round_date" YYYY-MM-DD and "round_time" HH:MM once booked (leave both
+  out until then), "round_with" who it is with, as they said it ("Anna, the
+  CTO"). A round behind them needs nothing: the day after, it reads as waiting
+  for the result on its own.
+- "status_note" is one short line saying why it moved, shown on the timeline
+  beside it ("recruiter called after the technical"). It goes WITH a move; on
+  its own it is refused. Anything longer is an activity entry instead.
 
-Changing the status clears the stage unless you send a new one with it,
-because a stage belongs to the status it was reached in. The rounds stay.
+Changing the status clears the stage unless you send a new one: a stage belongs
+to the status it was reached in. The rounds stay.
 
 ${STATUS_VOCABULARY}
 
-If they describe a stage or a kind that is not in these lists, use the closest
-one and say in your reply which you picked. Do not invent a label.`,
+A stage or kind not in these lists: use the closest one and say which you
+picked. Do not invent a label.`,
 	validate: (fields, current) => {
 		const next = nextStatusFields(fields, current);
 		const phase = getStepperPhase(next.status);
@@ -1423,12 +1429,12 @@ one and say in your reply which you picked. Do not invent a label.`,
 			if (problem) return { ok: false, error: problem };
 		}
 
-		if (isFinishedStatus(next.status) && (fields.status_step || sendsRound(fields))) {
+		if (isFinishedStatus(next.status) && sendsRound(fields)) {
 			return {
 				ok: false,
 				error:
-					`"${next.status}" finishes the application, so it has no stage and takes no ` +
-					`round. Leave status_step, new_round and the round_ fields out.`
+					`"${next.status}" finishes the application, so it takes no round. Leave ` +
+					`new_round and the round_ fields out.`
 			};
 		}
 

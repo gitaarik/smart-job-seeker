@@ -348,9 +348,10 @@ export function formatPipelineContext(
 					'',
 					// In the labels the activity index heads them with, which are also
 					// the only words for them the applicant has seen.
-					`NOTE: ${finished} finished application(s), ${LEFT_OUT_LABELS},`,
-					'are not in the table below. This table is what is IN PLAY, and what',
-					'they accepted, not everything that exists. They are listed in the',
+					`NOTE: ${finished} finished application(s), ${LEFT_OUT_LABELS}, are not in`,
+					'the table below; an accepted job whose stage says it has ended counts among',
+					'them. This table is what is IN PLAY, and what they accepted and still hold,',
+					'not everything that exists. They are listed in the',
 					'activity index with their status, so answer questions about outcomes',
 					'and history from there rather than saying there are none.'
 				]
@@ -766,10 +767,12 @@ export async function loadPipelineRows(
 
 	// Applications that ended without a job taken are excluded: they grow without bound
 	// and dilute "what am I working on". An accepted one is kept — it is the
-	// baseline the others are weighed against, see isComparedStatus — and so is
-	// the current one whatever its status: the user is looking at it, so a table
-	// that omits it reads as a bug.
-	const live = rows.filter((a) => isComparedStatus(a.status) || a.id === currentApplicationId);
+	// baseline the others are weighed against, see isComparedStatus — until its
+	// stage says the job itself has ended, and so is the current one whatever its
+	// status: the user is looking at it, so a table that omits it reads as a bug.
+	const live = rows.filter(
+		(a) => isComparedStatus(a.status, a.status_step) || a.id === currentApplicationId
+	);
 	// The count of what the filter dropped is returned, not swallowed. Excluding
 	// them is right — see the comment above — but doing it SILENTLY is what let
 	// "what patterns come up across my rejected applications?" be answered with

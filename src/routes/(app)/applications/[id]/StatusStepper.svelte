@@ -9,8 +9,8 @@
 		formatRoundWhen,
 		roundState,
 		stepperPhases,
-		stepsByPhase,
-		defaultStepByPhase,
+		stepsFor,
+		defaultStepByStatus,
 		resultOptions,
 		roundKinds,
 		roundKindValues,
@@ -119,10 +119,12 @@
 	);
 
 	// Derived
-	let stepOptions = $derived(stepsByPhase[selectedPhase] || []);
 
 	// The actual DB status to submit
 	let submitStatus = $derived(selectedPhase === 'result' ? selectedResult : selectedPhase);
+	// The stages that status offers: a result's own once one is picked, which only
+	// Accepted has, since its stages are the job's. Interviewing shows rounds.
+	let stepOptions = $derived(selectedPhase === 'interviewing' ? [] : stepsFor(submitStatus));
 	let submitStep = $derived(customStepActive ? customStepText : selectedStep);
 
 	/**
@@ -147,9 +149,21 @@
 		customStepActive = false;
 		customStepText = '';
 		selectedResult = '';
-		selectedStep = phase === 'result' ? '' : defaultStepByPhase[phase] || '';
+		selectedStep = phase === 'result' ? '' : defaultStepByStatus[phase] || '';
 		// Being moved to interviewing means being invited to a round, open to fill in.
 		if (phase === 'interviewing' && rows.length === 0) addRow();
+	}
+
+	/**
+	 * A result's stage: the one the application had when the editor opened, when
+	 * that is the result shown, else the result's default. Only Accepted has any.
+	 */
+	function selectResult(value: string) {
+		selectedResult = value;
+		customStepActive = false;
+		customStepText = '';
+		selectedStep =
+			value === shown.status ? shown.statusStep || '' : defaultStepByStatus[value] || '';
 	}
 
 	function onStepChange(e: Event) {
@@ -214,11 +228,7 @@
 	}}
 >
 	<input type="hidden" name="status" value={submitStatus} />
-	<input
-		type="hidden"
-		name="step"
-		value={selectedPhase === 'applying' || selectedPhase === 'negotiating' ? submitStep : ''}
-	/>
+	<input type="hidden" name="step" value={stepOptions.length > 0 ? submitStep : ''} />
 	<input type="hidden" name="rounds" value={JSON.stringify(submitRounds)} />
 
 	<div class="space-y-4">
@@ -266,7 +276,7 @@
 					{#each resultOptions as option (option.value)}
 						<button
 							type="button"
-							onclick={() => (selectedResult = option.value)}
+							onclick={() => selectResult(option.value)}
 							class="rounded-lg border-2 px-3 py-2.5 text-center text-sm font-medium transition-all
                 {selectedResult === option.value
 								? option.value === 'accepted'
@@ -410,8 +420,10 @@
 					for the result on its own.
 				</p>
 			</div>
-		{:else if stepOptions.length > 0}
-			<!-- Stage dropdown, for applying and negotiating -->
+		{/if}
+
+		{#if stepOptions.length > 0}
+			<!-- Stage dropdown: applying's, negotiating's, or the job's own under Accepted -->
 			<div>
 				<label for="{uid}-step" class={labelClass}>Stage</label>
 				<select

@@ -174,6 +174,11 @@ describe('writeApplicationStatus', () => {
 		updates.length = 0;
 		await writeApplicationStatus(APP, PROFILE, move({ step: 'Technical interview' }));
 		expect(written()).toMatchObject({ status: 'interviewing', status_step: null });
+
+		// Accepted is the one ending with stages, the job's own, so it keeps one.
+		updates.length = 0;
+		await writeApplicationStatus(APP, PROFILE, move({ status: 'accepted', step: 'Ended' }));
+		expect(written()).toMatchObject({ status: 'accepted', status_step: 'Ended' });
 	});
 
 	it('keeps the rounds past the interviews, and clears them on a move back to applying', async () => {

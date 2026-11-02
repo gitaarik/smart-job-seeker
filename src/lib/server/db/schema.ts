@@ -2848,9 +2848,10 @@ export const applications = pgTable(
 		salary_currency: varchar({ length: 255 }).default('EUR'),
 		salary_period: varchar({ length: 255 }),
 		/**
-		 * The stage within `applying` or `negotiating`, from `stepsByPhase`. Null in
-		 * `interviewing`, whose position is the round it has reached, and once the
-		 * application is finished.
+		 * The stage within `applying`, `negotiating` or `accepted`, from
+		 * `stepsByStatus`; under `accepted` it is the job's own (Contract signed,
+		 * Started, Ended). Null in `interviewing`, whose position is the round it has
+		 * reached, and after the other endings.
 		 */
 		status_step: varchar({ length: 255 }),
 		/**
@@ -4312,7 +4313,7 @@ export const application_records = pgTable(
 		content: text(),
 		/** When the interview/email/event happened — distinct from date_created. */
 		event_date: date(),
-		/** Stage label, from `stepsByPhase` in $lib/application-status. */
+		/** Stage label, from `stepsByStatus` in $lib/application-status. */
 		step: varchar({ length: 255 }),
 		status_log: integer(),
 		sort: integer(),

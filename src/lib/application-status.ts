@@ -96,9 +96,17 @@ export function isFinishedStatus(status: string): boolean {
  * could be compared against from its own page only, which is the one page where
  * nobody asks. The other endings stay out: they grow without bound and say
  * nothing about what to do next.
+ *
+ * Until the job itself ends. An accepted application carries the job's own
+ * stage (`acceptedStages`), and once that says Ended there is no job to weigh
+ * an offer against: a contract that ran out, or was ended in probation, is
+ * history like the other endings. The row stays "accepted", because the
+ * application succeeded; only the comparison lets it go. A row written before
+ * accepted had stages carries none, and stays in as it always did.
  */
-export function isComparedStatus(status: string): boolean {
-	return !isFinishedStatus(status) || status === 'accepted';
+export function isComparedStatus(status: string, step: string | null = null): boolean {
+	if (!isFinishedStatus(status)) return true;
+	return status === 'accepted' && step !== acceptedStages.ended;
 }
 
 export function getStepperPhase(status: string): string {
@@ -111,7 +119,7 @@ export function getStepperPhase(status: string): string {
 // --- Stages ---
 
 /**
- * The stages of the phases that have them, in the order they are offered.
+ * The stages of the statuses that have them, in the order they are offered.
  *
  * Interviewing is not here. Its position is the ROUND it has reached, and a
  * round is a record of its own (`InterviewRound`, below) rather than a label
@@ -149,8 +157,31 @@ export function getStepperPhase(status: string): string {
  * to offer, while a background check is mostly a CONDITION of an offer already
  * made, and in the Netherlands a VOG is something the applicant has to go and
  * apply for themselves after agreeing terms.
+ *
+ * Accepted has stages too, and they are the job's rather than the
+ * application's: the application succeeded, and what moves from then on is the
+ * job it produced. "Contract signed" until they start, "Started" while they
+ * work there, "Ended" once that job is over, for whatever reason: a fixed term
+ * that ran out, a probation ended, a resignation, a layoff. The why is the note
+ * on the move, not a stage: one label per reason would be a list of reasons,
+ * and nothing reads the reason. What reads the stage is the comparison
+ * (`isComparedStatus`), which keeps an accepted job as the baseline until it
+ * says Ended. The ending is not a status of its own, because a status past the
+ * pipeline says how the APPLICATION ended, and a job that ended was still an
+ * application that was accepted: filed as "Discontinued" it would read as the
+ * applicant walking away from an application, in every list and count that
+ * reads the status rather than the note, the same misreading "Position closed"
+ * exists to prevent. The table is keyed by status, not by phase, for the same
+ * reason: "result" is one phase holding four statuses, and only one of them has
+ * anything after it.
  */
-export const stepsByPhase: Record<string, string[]> = {
+export const acceptedStages = {
+	signed: 'Contract signed',
+	started: 'Started',
+	ended: 'Ended'
+} as const;
+
+export const stepsByStatus: Record<string, string[]> = {
 	applying: ['Preparing', 'Applied'],
 	negotiating: [
 		'Offer received',
@@ -158,15 +189,16 @@ export const stepsByPhase: Record<string, string[]> = {
 		'Revised offer received',
 		'Background check',
 		'Contract review'
-	]
+	],
+	accepted: [acceptedStages.signed, acceptedStages.started, acceptedStages.ended]
 };
 
 /**
  * How far through its phase each stage is. Higher is further; `stageRank` adds
  * the phase on top, and in interviewing the round number takes this one's place.
  *
- * Nested by phase rather than one flat map, so a stage can never be scored by a
- * number belonging to a same-named stage of another phase.
+ * Nested by status rather than one flat map, so a stage can never be scored by
+ * a number belonging to a same-named stage of another status.
  *
  * A stage with no entry scores 0, the same as the earliest stage of its phase.
  * That is deliberate for the custom labels the editor allows: see `stageRank`.
@@ -182,13 +214,46 @@ export const stageRanks: Record<string, Record<string, number>> = {
 		// between the two would assert something only the employer knows.
 		'Background check': 3,
 		'Contract review': 3
+	},
+	accepted: {
+		[acceptedStages.signed]: 0,
+		[acceptedStages.started]: 1,
+		[acceptedStages.ended]: 2
 	}
 };
 
-export const defaultStepByPhase: Record<string, string> = {
+export const defaultStepByStatus: Record<string, string> = {
 	applying: 'Preparing',
-	negotiating: 'Offer received'
+	negotiating: 'Offer received',
+	accepted: acceptedStages.signed
 };
+
+/**
+ * The key a status's stages and ranks are listed under: the status itself, or
+ * for a legacy status (`preparing`, `sent`, `offered`) the phase it reads as. A
+ * status with no stages has no key, and `stepsFor` says so with an empty list.
+ */
+function stageKey(status: string): string {
+	return status in stepsByStatus ? status : getStepperPhase(status);
+}
+
+/**
+ * The stages a status offers. Empty for interviewing, whose position is its
+ * round, and for every ending but accepted.
+ */
+export function stepsFor(status: string): string[] {
+	return stepsByStatus[stageKey(status)] ?? [];
+}
+
+/** The ranks of a status's stages, see `stageRanks`. Empty wherever `stepsFor` is. */
+export function stageRanksFor(status: string): Record<string, number> {
+	return stageRanks[stageKey(status)] ?? {};
+}
+
+/** Whether a status carries a stage at all. */
+export function hasStages(status: string): boolean {
+	return stepsFor(status).length > 0;
+}
 
 // --- Interview rounds ---
 
@@ -375,12 +440,13 @@ export interface StatusFacts {
 }
 
 /**
- * The line under the status: "Applied", "Round 2 · Technical", "Offer received".
- * Null for a finished application and for a stage nobody set.
+ * The line under the status: "Applied", "Round 2 · Technical", "Offer received",
+ * and under Accepted the job's own: "Started", "Ended". Null for a stage nobody
+ * set, and for the endings that have none.
  */
 export function stageLabel(app: StatusFacts, on: string = today()): string | null {
 	const phase = getStepperPhase(app.status);
-	if (phase === 'result') return null;
+	if (phase === 'result') return hasStages(app.status) ? app.status_step || null : null;
 	if (phase === 'interviewing') {
 		const rounds = app.interview_rounds ?? [];
 		const index = currentRoundIndex(rounds, on);
@@ -584,9 +650,35 @@ export function getQuickStatusActions(status: string, step: string | null): Quic
 				{ label: 'Discontinued', status: 'withdrawn', step: null, tone: 'negative' },
 				notSelected
 			];
+		case 'result':
+			return acceptedQuickActions(status, step);
 		default:
 			return [];
 	}
+}
+
+/**
+ * The one-tap moves of a job they have taken: that they started, that it
+ * ended, and from Ended that it started again, since a fixed term is sometimes
+ * renewed and a door left open sometimes reopens. The other endings have none:
+ * nothing moves after them.
+ */
+function acceptedQuickActions(status: string, step: string | null): QuickStatusAction[] {
+	if (status !== 'accepted') return [];
+	const started: QuickStatusAction = {
+		label: 'Started',
+		status,
+		step: acceptedStages.started,
+		tone: 'advance'
+	};
+	const ended: QuickStatusAction = {
+		label: 'Ended',
+		status,
+		step: acceptedStages.ended,
+		tone: 'negative'
+	};
+	if (step === acceptedStages.ended) return [{ ...started, label: 'Started again' }];
+	return step === acceptedStages.started ? [ended] : [started, ended];
 }
 
 // --- Status colors ---

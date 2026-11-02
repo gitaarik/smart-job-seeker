@@ -115,7 +115,8 @@
 			list.push({
 				key: 'result',
 				title: getStatusLabel(status),
-				lines: [],
+				// The job's own stage under the result: "Started", or "Ended" once it is over.
+				lines: step ? [step] : [],
 				mark: 'won',
 				badge: 'check'
 			});
