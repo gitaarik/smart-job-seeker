@@ -255,9 +255,22 @@ function loadConfig(): AppConfig {
 	const preferredWritingProvider = geminiApiKey ? 'gemini' : llmProvider;
 	const llmTranslateProvider = getEnv('SJS_LLM_TRANSLATE_PROVIDER', '') || preferredWritingProvider;
 	const llmWritingProvider = getEnv('SJS_LLM_WRITING_PROVIDER', '') || preferredWritingProvider;
+	/**
+	 * gemini-3.8-flash since 2026-11-03. gemini-2.5-pro, the writing model
+	 * before it, is retired on 2026-12-01 and every request to it is served by
+	 * 3.8 Flash from then on, so the pair names the model that answers rather
+	 * than riding the redirect: ai_chats and the cost table then record what
+	 * ran. Chosen over gemini-3.1-pro-preview on five replayed dev turns
+	 * (oss scripts/compare-writing-models.ts, 2026-11-03): Flash read the record
+	 * more thoroughly and faster, 3.1 Pro wrote tighter prose but missed on
+	 * substance twice, and it is a preview with the preview's lifetime. Same
+	 * 1M-token context as 2.5 Pro, so the assistant's budget is unchanged.
+	 */
 	const llmWritingModel =
 		getEnv('SJS_LLM_WRITING_MODEL', '') ||
-		(llmWritingProvider === 'gemini' ? 'gemini-2.5-pro' : getModelForProvider(llmWritingProvider));
+		(llmWritingProvider === 'gemini'
+			? 'gemini-3.8-flash'
+			: getModelForProvider(llmWritingProvider));
 	/**
 	 * The tailoring review reads a posting against a shortlist of resume lines
 	 * and marks what a reader must see. gpt-oss-120b, the app pair, judged lines
@@ -302,7 +315,7 @@ function loadConfig(): AppConfig {
 	 * and the golden sets only ever validate the CONFIGURED pair.
 	 *
 	 * gpt-oss-120b is the shallower writer of the two and a 131k window against
-	 * gemini-2.5-pro's 1M, so the app provider is the available answer rather
+	 * gemini-3.8-flash's 1M, so the app provider is the available answer rather
 	 * than the good one. `SJS_LLM_WRITING_FALLBACK_PROVIDER=openai` is the
 	 * one-variable upgrade, and it is deliberately NOT the default: probed
 	 * 2026-09-19, that account has no credits, and a default pointing at it
@@ -409,7 +422,7 @@ function loadConfig(): AppConfig {
 			(llmTranslateProvider === 'groq'
 				? 'llama-3.3-70b-versatile'
 				: llmTranslateProvider === 'gemini'
-					? 'gemini-2.5-pro'
+					? 'gemini-3.8-flash'
 					: getModelForProvider(llmTranslateProvider)),
 		llmWritingProvider,
 		llmWritingModel,

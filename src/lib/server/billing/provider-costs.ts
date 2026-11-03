@@ -111,10 +111,16 @@ const PROVIDER_COSTS: Record<string, TokenCost> = {
 	// the pricing page on 2026-08-06 and corrected. Nothing currently runs on it.
 	'gemini/gemini-2.5-flash': { input: 0.3e-6, output: 2.5e-6, cachedInput: 0.03e-6 },
 	/**
-	 * The writing model — every cover letter, application answer, STAR story,
-	 * cheat sheet and assistant turn. It was missing from this table entirely, so
-	 * `estimateProviderCostUsd` returned null for all 178 of its charges: the one
-	 * model where cost actually matters was the one nobody was measuring.
+	 * The writing model until 2026-11-03 — every cover letter, application
+	 * answer, STAR story, cheat sheet and assistant turn. It was missing from
+	 * this table entirely, so `estimateProviderCostUsd` returned null for all
+	 * 178 of its charges: the one model where cost actually matters was the one
+	 * nobody was measuring.
+	 *
+	 * Google retires it on 2026-12-01: from then a request naming it is served
+	 * by gemini-3.8-flash and billed at that rate. The writing pair moved to
+	 * 3.8-flash ahead of that (config.ts); this row stays for the charges it
+	 * already priced.
 	 */
 	'gemini/gemini-2.5-pro': {
 		input: 1.25e-6,
@@ -130,7 +136,9 @@ const PROVIDER_COSTS: Record<string, TokenCost> = {
 	/**
 	 * The 3.x line, priced 2026-09-08 off the pricing page above.
 	 *
-	 * None of these is the writing model. `gemini-3.5-flash-lite` was pinned as
+	 * `gemini-3.8-flash` is the writing and translation model since 2026-11-03
+	 * (config.ts) and the tailoring review's since 2026-10-11; the two lite
+	 * models are not. `gemini-3.5-flash-lite` was pinned as
 	 * one on 2026-09-08 — replayed over nine stored turns it came out ~4x cheaper
 	 * than 2.5-pro with no measurable quality regression — and unpinned again on
 	 * 2026-09-10, because those nine turns were all PROSE. On the capability
