@@ -679,10 +679,16 @@
 		border-radius: 50%;
 		background: #555;
 	}
+	/* The TECH line never opens a page on its own, or in pieces: when it does not
+	   fit, the role's last bullet goes over with it. On the Citrus CV of
+	   2026-11-03 it stood alone at the top of page 3. Moving the whole role
+	   (page-breaks.ts) would have emptied most of page 2, so this is the fix. */
 	.tech {
 		margin-top: 5px;
 		font-size: 8.5pt;
 		color: #3a3a3a;
+		break-before: avoid;
+		break-inside: avoid;
 	}
 	.tech span {
 		font-weight: 700;
