@@ -8,6 +8,7 @@ import { generateChatCompletionTracked } from '$lib/server/llm';
 import type { ChatMessage } from '$lib/server/llm';
 import { config } from '$lib/server/config';
 import type { ResumeData } from './types';
+import { liftWorkMode } from './work-mode-from-location';
 import { tokensToCost, chargeCredits } from '$lib/server/billing/credits';
 import { estimateProviderCostUsd } from '$lib/server/billing/provider-costs';
 
@@ -314,7 +315,7 @@ export async function parseResumeWithLLM(resumeText: string, userId?: string): P
 	// After filtering, convert empty arrays to undefined so the diff engine
 	// treats absent sections as "not present" rather than "all deleted".
 	if (resumeData.work) {
-		resumeData.work = resumeData.work.filter((w) => w.name && w.position);
+		resumeData.work = resumeData.work.filter((w) => w.name && w.position).map(liftWorkMode);
 		if (resumeData.work.length === 0) resumeData.work = undefined;
 	}
 	if (resumeData.education) {

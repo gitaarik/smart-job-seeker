@@ -26,6 +26,7 @@ import {
 import type { ExportedProfile } from './export-profile-json';
 import { generateVersionPdfs } from './generate-version-pdfs';
 import { toDateString } from '$lib/tools/date-utils';
+import { asWorkMode } from '$lib/work-mode';
 import {
 	certificateFilesByName,
 	restoreCertificateFiles
@@ -435,6 +436,7 @@ export async function importProfileFromJson(
 				profile_id: profileId,
 				name: w.name || '',
 				location: w.location || '',
+				work_mode: asWorkMode(w.work_mode),
 				description: '',
 				position: w.position || '',
 				summary: w.summary || '',

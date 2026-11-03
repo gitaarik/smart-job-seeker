@@ -5,6 +5,7 @@
 
 import type { ResumeData } from '$lib/server/resume/types';
 import type { ExportedProfile } from '$lib/server/profile/export-profile-json';
+import { asWorkMode } from '$lib/work-mode';
 
 const validLevels = ['expert', 'proficient', 'intermediate', 'beginner'] as const;
 type Level = (typeof validLevels)[number];
@@ -51,6 +52,7 @@ export function convertExportToResumeData(exported: ExportedProfile): ResumeData
 			name: w.name || '',
 			position: w.position || '',
 			location: w.location,
+			workMode: asWorkMode(w.work_mode) ?? undefined,
 			website: w.website,
 			startDate: dateToString(w.start_date),
 			endDate: dateToString(w.end_date),

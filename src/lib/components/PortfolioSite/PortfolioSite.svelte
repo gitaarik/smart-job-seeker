@@ -25,6 +25,7 @@
 	import { themeSections, type PortfolioTheme } from '$lib/portfolio-themes';
 	import { assetUrl } from '$lib/presentation-templates';
 	import { formatDateRangeVerbose } from '$lib/tools/date-utils';
+	import { rolePlace } from '$lib/work-mode';
 
 	interface Props {
 		// The profile tree from PROFILE_INCLUDE. Typed loosely for the same
@@ -174,6 +175,7 @@
 				{:else if section === 'work'}
 					{#each work as role (role.id)}
 						{@const technologies = show(role.work_experience_technologies, 'technology')}
+						{@const place = rolePlace(role)}
 						<article class="entry">
 							<!-- Each separator sits inside an expression: Svelte drops the
 							     whitespace a block starts with, so a literal " · " inside
@@ -185,7 +187,7 @@
 								{formatDateRangeVerbose(
 									role.start_date,
 									role.end_date
-								)}{#if role.location}{` · ${role.location}`}{/if}
+								)}{#if place}{` · ${place}`}{/if}
 							</p>
 							{#if role.summary}<p class="prose">{role.summary}</p>{/if}
 							{#if role.work_experience_achievements?.length}

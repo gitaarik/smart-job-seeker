@@ -12,6 +12,7 @@
 	import { isContactHidden } from '$lib/resume-contact-fields';
 	import { OVERRIDE_ENTITIES } from '$lib/version-overrides';
 	import { resumeDocumentDescription, resumeDocumentTitle } from '$lib/resume-head';
+	import { rolePlace } from '$lib/work-mode';
 
 	interface Profile {
 		name: string | null;
@@ -29,6 +30,7 @@
 		work_experiences: Array<{
 			name: string | null;
 			location: string | null;
+			work_mode?: string | null;
 			position: string | null;
 			// Drizzle `date()` columns return strings; `timestamp()` returns Date.
 			// The relevant columns are `date()`, so the wire type is string.
@@ -295,11 +297,17 @@
 
 			{#each work_experiences as job, index (index)}
 				<div class="mb-[-10px]">
+					<!-- Joined, so a role with no place prints no empty "| |" between
+					     the bars. -->
 					<div class="mb-1 text-xs font-bold">
-						{job.name} |
-						{job.location} |
-						{job.position} |
-						{formatDateRangeCompact(job.start_date, job.end_date, presentLabel)}
+						{[
+							job.name,
+							rolePlace(job, locale),
+							job.position,
+							formatDateRangeCompact(job.start_date, job.end_date, presentLabel)
+						]
+							.filter(Boolean)
+							.join(' | ')}
 					</div>
 
 					{#if job.note}

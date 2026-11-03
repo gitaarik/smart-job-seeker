@@ -13,6 +13,8 @@
  * unit test enforces it so a new heading cannot ship half-English.
  */
 
+import type { WorkMode } from './work-mode';
+
 export type TemplateLabelKey =
 	| 'skills'
 	| 'contactDetails'
@@ -32,7 +34,9 @@ export type TemplateLabelKey =
 	| 'note'
 	| 'graduationYear'
 	| 'referencesOnRequest'
-	| 'ownBusiness';
+	| 'ownBusiness'
+	| 'inPlace'
+	| 'forEmployer';
 
 export const TEMPLATE_LABELS: Readonly<Record<TemplateLabelKey, Readonly<Record<string, string>>>> =
 	{
@@ -171,6 +175,23 @@ export const TEMPLATE_LABELS: Readonly<Record<TemplateLabelKey, Readonly<Record<
 			de: 'Eigenes Unternehmen',
 			fr: 'Entreprise individuelle',
 			es: 'Empresa propia'
+		},
+		// The two words a role's lead line puts around its employer and place,
+		// "…, remote for Acme in Austin, US." (headlineWithPlace in work-mode.ts).
+		// The line used a bare English " in " for every locale before these.
+		inPlace: {
+			en: 'in',
+			nl: 'in',
+			de: 'in',
+			fr: 'à',
+			es: 'en'
+		},
+		forEmployer: {
+			en: 'for',
+			nl: 'voor',
+			de: 'für',
+			fr: 'pour',
+			es: 'para'
 		}
 	};
 
@@ -214,6 +235,36 @@ export const PROFICIENCY_LABELS: Readonly<Record<string, Readonly<Record<string,
 		de: 'Grundkenntnisse',
 		fr: 'Notions de base',
 		es: 'Básico'
+	}
+};
+
+/**
+ * A role's work mode (`work_experiences.work_mode`, see work-mode.ts) as the
+ * documents print it: on its own after the place ("Austin, US · Remote"), and
+ * lowercased inside a lead line ("…, remote for Acme in Austin, US."). A fixed
+ * vocabulary like proficiency, so it is localized here with the chrome.
+ */
+export const WORK_MODE_LABELS: Readonly<Record<WorkMode, Readonly<Record<string, string>>>> = {
+	onsite: {
+		en: 'On-site',
+		nl: 'Op locatie',
+		de: 'Vor Ort',
+		fr: 'Sur site',
+		es: 'Presencial'
+	},
+	hybrid: {
+		en: 'Hybrid',
+		nl: 'Hybride',
+		de: 'Hybrid',
+		fr: 'Hybride',
+		es: 'Híbrido'
+	},
+	remote: {
+		en: 'Remote',
+		nl: 'Remote',
+		de: 'Remote',
+		fr: 'À distance',
+		es: 'En remoto'
 	}
 };
 

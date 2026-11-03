@@ -35,6 +35,7 @@ import type {
 	Reference
 } from './types';
 import { reapCertificateFiles } from '$lib/server/profile/certificate-file';
+import { asWorkMode } from '$lib/work-mode';
 
 export interface DiffApplyPayload {
 	/** Basic profile fields to update (only changed+enabled ones) */
@@ -250,6 +251,8 @@ export async function applyDiffToProfile(
 					name: w.name || '',
 					position: w.position || '',
 					location: w.location || '',
+					// The payload is posted by the review page; only the vocabulary lands.
+					work_mode: asWorkMode(w.workMode),
 					description: '',
 					summary: w.summary || '',
 					status: 'draft',
@@ -292,6 +295,7 @@ export async function applyDiffToProfile(
 			if (mod.fields.name !== undefined) updateData.name = mod.fields.name;
 			if (mod.fields.position !== undefined) updateData.position = mod.fields.position;
 			if (mod.fields.location !== undefined) updateData.location = mod.fields.location || '';
+			if (mod.fields.workMode !== undefined) updateData.work_mode = asWorkMode(mod.fields.workMode);
 			if (mod.fields.website !== undefined) updateData.website = mod.fields.website || null;
 			if (mod.fields.startDate !== undefined)
 				updateData.start_date = parseDate(mod.fields.startDate);

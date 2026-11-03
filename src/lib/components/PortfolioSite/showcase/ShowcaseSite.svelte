@@ -70,6 +70,7 @@
 	import SchemeSwitcher from './SchemeSwitcher.svelte';
 	import { ContactState } from './contact-state.svelte';
 	import { loadSchemePreference, saveSchemePreference, type SchemePreference } from './scheme';
+	import { rolePlace } from '$lib/work-mode';
 	import 'aos/dist/aos.css';
 
 	interface Props {
@@ -543,6 +544,7 @@
 											{@const technologies = show(role.work_experience_technologies, 'technology')}
 											{@const roleLogo = getWorkExperienceLogoUrl(role)}
 											{@const roleSite = web(role.website)}
+											{@const place = rolePlace(role)}
 											<section class="break-inside-avoid" class:mt-12={i === 0}>
 												<header class="mb-6 print:mb-4">
 													<div class="flex items-start justify-between">
@@ -603,13 +605,13 @@
 																			)}</span
 																		>
 																	</div>
-																	{#if role.location}
+																	{#if place}
 																		<div class="flex items-center">
 																			<FontAwesomeIcon
 																				icon={faMapMarkerAlt}
 																				class="mr-2 h-3 w-3 flex-shrink-0"
 																			/>
-																			<span>{role.location}</span>
+																			<span>{place}</span>
 																		</div>
 																	{/if}
 																</div>

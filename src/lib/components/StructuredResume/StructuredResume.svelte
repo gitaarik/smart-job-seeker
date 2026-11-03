@@ -12,10 +12,12 @@
 	import { assetUrl, documentSections, type ResumeTemplateConfig } from '$lib/resume-templates';
 	import { templateLabel } from '$lib/resume-template-labels';
 	import { resumeDocumentDescription, resumeDocumentTitle } from '$lib/resume-head';
+	import { headlineWithPlace } from '$lib/work-mode';
 
 	interface WorkExperience {
 		name: string | null;
 		location: string | null;
+		work_mode?: string | null;
 		position: string | null;
 		start_date: string | null;
 		end_date?: string | null;
@@ -152,14 +154,13 @@
 	);
 
 	// Work-experience lead line. The stored headline holds only the base text;
-	// when the template opts in, the job location is appended ("… in {location}.").
+	// when the template opts in, where the role was done is appended ("… in
+	// {location}.", or "…, remote for {company} in {location}." for a remote
+	// role: see headlineWithPlace).
 	function lead(job: WorkExperience): string {
 		const base = (job.headline ?? '').trim();
 		if (!base) return '';
-		if (appendLocation) {
-			const loc = (job.location ?? '').trim();
-			return base + (loc ? ` in ${loc}` : '') + '.';
-		}
+		if (appendLocation) return headlineWithPlace(base, job, locale);
 		return base.endsWith('.') ? base : base + '.';
 	}
 	function tech(job: WorkExperience): string {

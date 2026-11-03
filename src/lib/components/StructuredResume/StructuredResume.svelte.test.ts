@@ -328,3 +328,70 @@ describe('StructuredResume — a document without a name', () => {
 		expect(screen.getByText('Senior Engineer')).toBeTruthy();
 	});
 });
+
+/**
+ * A role's headline on a template that appends where it was done (Citrus).
+ * Before `work_mode`, a remote role kept "remote" in its location, and the line
+ * ended "…judged by senior engineers in Austin, US (remote).", which put the
+ * engineers in Austin.
+ */
+describe('StructuredResume — the lead line on a template that appends the place', () => {
+	const withRole = (role: Partial<Profile['work_experiences'][number]>): Profile => ({
+		...profile([]),
+		work_experiences: [
+			{
+				name: 'Acme',
+				location: 'Austin, US',
+				position: 'Code Reviewer',
+				start_date: '2026-10-01',
+				end_date: null,
+				headline: 'Reviews code changes judged by senior engineers',
+				tags: null,
+				...role
+			}
+		]
+	});
+	const config = { rules: { appendLocationToHeadline: true } };
+
+	test('names the employer before the place on a remote role, in the document’s language', () => {
+		const { unmount } = render(StructuredResume, {
+			props: { config, type: 'cv', profile: withRole({ work_mode: 'remote' }) }
+		});
+		expect(
+			screen.getByText(
+				'Reviews code changes judged by senior engineers, remote for Acme in Austin, US.'
+			)
+		).toBeTruthy();
+		unmount();
+
+		render(StructuredResume, {
+			props: {
+				config,
+				type: 'cv',
+				locale: 'nl',
+				profile: withRole({
+					work_mode: 'remote',
+					location: 'Austin, VS',
+					headline: 'Reviewt codewijzigingen'
+				})
+			}
+		});
+		expect(
+			screen.getByText('Reviewt codewijzigingen, remote voor Acme in Austin, VS.')
+		).toBeTruthy();
+	});
+
+	test('prints a role that has not said exactly as before', () => {
+		render(StructuredResume, { props: { config, type: 'cv', profile: withRole({}) } });
+		expect(
+			screen.getByText('Reviews code changes judged by senior engineers in Austin, US.')
+		).toBeTruthy();
+	});
+
+	test('prints no place on a template that does not append it', () => {
+		render(StructuredResume, {
+			props: { config: {}, type: 'cv', profile: withRole({ work_mode: 'remote' }) }
+		});
+		expect(screen.getByText('Reviews code changes judged by senior engineers.')).toBeTruthy();
+	});
+});

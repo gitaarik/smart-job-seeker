@@ -33,6 +33,7 @@ import type {
 	SkillCategory,
 	WorkExperience
 } from './types';
+import { asWorkMode } from '$lib/work-mode';
 
 /**
  * Resume importer dates come as ISO-ish strings; destination columns are
@@ -252,6 +253,7 @@ async function createWorkExperience(profileId: number, work: WorkExperience): Pr
 			name: work.name,
 			position: work.position,
 			location: work.location || '',
+			work_mode: asWorkMode(work.workMode),
 			description: '',
 			summary: work.summary || '',
 			website: work.website || null,

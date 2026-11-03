@@ -299,6 +299,7 @@ export interface ExportedTechSkill {
 export interface ExportedWorkExperience {
 	name?: string;
 	location?: string;
+	work_mode?: string;
 	position?: string;
 	summary?: string;
 	status?: string;

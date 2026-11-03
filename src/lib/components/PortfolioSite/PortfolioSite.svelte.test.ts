@@ -257,3 +257,35 @@ describe('PortfolioSite separators', () => {
 		expect(bare.text(bare.entry('Recipe Finder')?.querySelector('p.meta'))).toBe('source');
 	});
 });
+
+describe('PortfolioSite — where a role was done', () => {
+	function metaFor(role: { location: string; work_mode: string | null }) {
+		const profile = {
+			name: 'Alex Morgan',
+			profile_versions: [],
+			work_experiences: [
+				{
+					id: 1,
+					position: 'Engineer',
+					name: 'TechCorp',
+					start_date: '2024-10-01',
+					end_date: null,
+					...role,
+					work_experience_achievements: [],
+					work_experience_technologies: [],
+					work_experience_projects: []
+				}
+			],
+			side_projects: []
+		};
+		const { container } = render(PortfolioSite, { props: { profile, theme: null } });
+		return container.querySelector('article.entry p.meta')?.textContent?.trim() ?? '';
+	}
+
+	test('puts the work mode after the place, and nothing for on-site', () => {
+		expect(metaFor({ location: 'Austin, US', work_mode: 'remote' })).toMatch(
+			/ · Austin, US · Remote$/
+		);
+		expect(metaFor({ location: 'Utrecht, NL', work_mode: 'onsite' })).toMatch(/ · Utrecht, NL$/);
+	});
+});

@@ -87,3 +87,25 @@ describe('diffResumeData — a side project’s role', () => {
 		).toBe('unchanged');
 	});
 });
+
+describe('diffResumeData — a role’s work mode', () => {
+	const withWork = (work: NonNullable<ResumeData['work']>): ResumeData => ({
+		basics: { name: 'Alex Morgan' },
+		work
+	});
+	const acme = { name: 'Acme', position: 'Engineer', location: 'Austin, US' };
+
+	it('offers the mode a source states', () => {
+		const diff = diffResumeData(withWork([acme]), withWork([{ ...acme, workMode: 'remote' }]));
+		const changed = diff.work[0].fieldDiffs?.filter((d) => d.changed);
+		expect(changed?.map((d) => [d.field, d.current, d.incoming])).toEqual([
+			['workMode', undefined, 'remote']
+		]);
+	});
+
+	it('reads a source that says nothing about it as silent rather than clearing it', () => {
+		// A CV whose location gives a place only: it is not saying "on-site".
+		const diff = diffResumeData(withWork([{ ...acme, workMode: 'remote' }]), withWork([acme]));
+		expect(diff.work[0].type).toBe('unchanged');
+	});
+});

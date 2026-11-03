@@ -193,3 +193,38 @@ describe('ProfileDisplay — side projects', () => {
 		expect(headers[1]).toMatch(/^Jazzchords \| \d/);
 	});
 });
+
+describe('ProfileDisplay — where a role was done', () => {
+	const withRole = (role: Record<string, unknown>): Profile => ({
+		...profile(),
+		work_experiences: [
+			{
+				name: 'Acme',
+				location: 'Austin, US',
+				position: 'Code Reviewer',
+				start_date: '2024-10-01',
+				end_date: '2025-10-01',
+				tags: null,
+				...role
+			}
+		]
+	});
+
+	test('puts the work mode after the place', () => {
+		render(ProfileDisplay, {
+			props: { type: 'cv', profile: withRole({ work_mode: 'remote' }) }
+		});
+		expect(screen.getByText(/^Acme \| Austin, US · Remote \| Code Reviewer \| /)).toBeTruthy();
+	});
+
+	test('prints an on-site role as its place, and no empty part for a role without one', () => {
+		const { unmount } = render(ProfileDisplay, {
+			props: { type: 'cv', profile: withRole({ work_mode: 'onsite' }) }
+		});
+		expect(screen.getByText(/^Acme \| Austin, US \| Code Reviewer \| /)).toBeTruthy();
+		unmount();
+
+		render(ProfileDisplay, { props: { type: 'cv', profile: withRole({ location: '' }) } });
+		expect(screen.getByText(/^Acme \| Code Reviewer \| /)).toBeTruthy();
+	});
+});

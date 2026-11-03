@@ -3,6 +3,8 @@
  * Used for CV/resume parsing and profile creation
  */
 
+import type { WorkMode } from '$lib/work-mode';
+
 /**
  * Basic profile information
  */
@@ -29,6 +31,11 @@ export interface WorkExperience {
 	name: string;
 	position: string;
 	location?: string;
+	/**
+	 * How the role was worked. No parser is asked for it: a CV says it inside
+	 * the location, and `liftWorkMode` moves it here.
+	 */
+	workMode?: WorkMode;
 	website?: string;
 	startDate?: string;
 	endDate?: string;

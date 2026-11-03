@@ -75,6 +75,7 @@ import {
 	work_experiences
 } from '$lib/server/db/schema';
 import { SKILL_LEVELS } from '$lib/data/field-labels';
+import { WORK_MODES } from '$lib/work-mode';
 import type { FieldKind } from '$lib/server/utils/field-kinds';
 import { versionsOf } from '$lib/profile-visibility';
 import {
@@ -589,7 +590,11 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 		fields: {
 			name: { kind: 'string', note: 'the employer or client' },
 			position: { kind: 'string', note: 'the job title held there' },
-			location: { kind: 'string', note: 'where the role was based' },
+			location: {
+				kind: 'string',
+				note: 'where the employer is, a place: never "remote", which is work_mode'
+			},
+			work_mode: { kind: 'string', allowed: [...WORK_MODES] },
 			website: { kind: 'string', note: "the employer's site" },
 			headline: { kind: 'string', note: 'a one-line framing of the role, shown above the summary' },
 			description: {

@@ -19,6 +19,7 @@
 	import VersionTags from '$lib/components/VersionTags.svelte';
 	import ConfirmModal from '../../../components/ConfirmModal.svelte';
 	import Card from '../../../../components/Card.svelte';
+	import { WORK_MODE_OPTIONS } from '$lib/work-mode';
 
 	let { data }: { data: PageData } = $props();
 
@@ -78,6 +79,7 @@
 	let editName = $state(loadedBasics.name);
 	let editPosition = $state(loadedBasics.position);
 	let editLocation = $state(loadedBasics.location);
+	let editWorkMode = $state(loadedBasics.workMode);
 	let editWebsite = $state(loadedBasics.website);
 	let editHeadline = $state(loadedBasics.headline);
 	let editSummary = $state(loadedBasics.summary);
@@ -200,6 +202,8 @@
 		name: string;
 		position: string;
 		location: string;
+		/** '' when not said; the select's empty option. */
+		workMode: string;
 		website: string;
 		headline: string;
 		summary: string;
@@ -212,6 +216,7 @@
 			name: e.name || '',
 			position: e.position || '',
 			location: e.location || '',
+			workMode: e.work_mode || '',
 			website: e.website || '',
 			headline: e.headline || '',
 			summary: e.summary || '',
@@ -225,6 +230,7 @@
 			name: v.name,
 			position: v.position,
 			location: v.location,
+			work_mode: v.workMode || null,
 			website: v.website,
 			headline: v.headline,
 			summary: v.summary,
@@ -253,6 +259,7 @@
 			editName = v.name;
 			editPosition = v.position;
 			editLocation = v.location;
+			editWorkMode = v.workMode;
 			editWebsite = v.website;
 			editHeadline = v.headline;
 			editSummary = v.summary;
@@ -267,6 +274,7 @@
 			name: editName,
 			position: editPosition,
 			location: editLocation,
+			workMode: editWorkMode,
 			website: editWebsite,
 			headline: editHeadline,
 			summary: editSummary,
@@ -440,13 +448,40 @@
 					{/key}
 				</div>
 
-				<TranslatableField
-					entity="work_experience"
-					id={experience.id}
-					field="location"
-					label="Location"
-					bind:value={editLocation}
-				/>
+				<!-- Where the company is, and how the work was done, apart: a
+				     template that prints the place inside a sentence words the
+				     arrangement itself (see $lib/work-mode.ts). Stacked rather than
+				     side by side: this cell is a quarter of the page on a wide
+				     screen, too narrow for the field's language switch and a select. -->
+				<div class="space-y-3">
+					<TranslatableField
+						entity="work_experience"
+						id={experience.id}
+						field="location"
+						label="Location"
+						bind:value={editLocation}
+						placeholder="e.g. Amsterdam, NL"
+						hint="Where the company is"
+					/>
+					<div>
+						<label
+							for="edit-work-mode"
+							class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+						>
+							Work mode
+						</label>
+						<select
+							id="edit-work-mode"
+							bind:value={editWorkMode}
+							class="w-full rounded-md border border-[var(--dash-border)] px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+						>
+							<option value="">Not said</option>
+							{#each WORK_MODE_OPTIONS as option (option.value)}
+								<option value={option.value}>{option.label}</option>
+							{/each}
+						</select>
+					</div>
+				</div>
 
 				<div>
 					<label for="edit-website" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">

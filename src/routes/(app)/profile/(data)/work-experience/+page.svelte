@@ -10,6 +10,7 @@
 	import ItemCard from '../../components/ItemCard.svelte';
 	import ReorderableList from '../../components/ReorderableList.svelte';
 	import { getWorkExperienceLogoUrl } from '$lib/utils/entity-media-url';
+	import { rolePlace } from '$lib/work-mode';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -283,9 +284,10 @@
 
 						{#snippet subtitle()}
 							<span class="max-w-[150px] truncate sm:max-w-none">{exp.name}</span>
-							{#if exp.location}
+							{@const place = rolePlace(exp)}
+							{#if place}
 								<span class="text-[var(--dash-text-muted)]">•</span>
-								<span class="max-w-[100px] truncate sm:max-w-none">{exp.location}</span>
+								<span class="max-w-[100px] truncate sm:max-w-none">{place}</span>
 							{/if}
 						{/snippet}
 

@@ -4,6 +4,7 @@
  */
 
 import type { ResumeData } from './types';
+import { liftWorkMode } from './work-mode-from-location';
 
 /**
  * JSON Resume Schema interface (based on https://jsonresume.org/schema/)
@@ -34,6 +35,7 @@ export interface JsonResumeSchema {
 	work?: Array<{
 		name?: string; // Company name
 		position?: string;
+		location?: string;
 		url?: string;
 		startDate?: string;
 		endDate?: string;
@@ -129,15 +131,20 @@ export function mapJsonResumeToInternal(jsonResume: JsonResumeSchema): ResumeDat
 			github,
 			stackoverflow
 		},
-		work: jsonResume.work?.map((job) => ({
-			name: job.name || '',
-			position: job.position || '',
-			website: job.url,
-			startDate: job.startDate,
-			endDate: job.endDate,
-			summary: job.summary,
-			achievements: job.highlights || []
-		})),
+		// JSON Resume has no field for remote work, so it is read out of the
+		// location, as from a CV.
+		work: jsonResume.work?.map((job) =>
+			liftWorkMode({
+				name: job.name || '',
+				position: job.position || '',
+				location: job.location,
+				website: job.url,
+				startDate: job.startDate,
+				endDate: job.endDate,
+				summary: job.summary,
+				achievements: job.highlights || []
+			})
+		),
 		education: jsonResume.education?.map((edu) => {
 			// Try to extract graduation year from endDate
 			let graduationYear: number | undefined;

@@ -215,6 +215,11 @@ function diffWorkItem(current: WorkExperience, incoming: WorkExperience): ItemDi
 		diffField('name', 'Company', current.name, incoming.name),
 		diffField('position', 'Position', current.position, incoming.position),
 		diffField('location', 'Location', current.location, incoming.location),
+		// Only when the source states one: a CV says a role was remote and never
+		// that it was not, so one that is silent is not asking to clear it.
+		...(normalize(incoming.workMode)
+			? [diffField('workMode', 'Work mode', current.workMode, incoming.workMode)]
+			: []),
 		diffField('website', 'Website', current.website, incoming.website),
 		diffField('startDate', 'Start Date', current.startDate, incoming.startDate),
 		diffField('endDate', 'End Date', current.endDate, incoming.endDate),

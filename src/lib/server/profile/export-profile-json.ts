@@ -70,6 +70,7 @@ export interface ExportedProfile {
 		work_experiences: Array<{
 			name?: string;
 			location?: string;
+			work_mode?: string;
 			position?: string;
 			summary?: string;
 			status?: string;
@@ -237,6 +238,7 @@ export async function buildProfileJsonExport(
 					id: true,
 					name: true,
 					location: true,
+					work_mode: true,
 					position: true,
 					summary: true,
 					status: true,
@@ -450,6 +452,7 @@ export async function buildProfileJsonExport(
 			work_experiences: baseProfile.work_experiences.map((work) => ({
 				name: work.name || undefined,
 				location: work.location || undefined,
+				work_mode: work.work_mode || undefined,
 				position: work.position || undefined,
 				summary: work.summary || undefined,
 				status: work.status || undefined,

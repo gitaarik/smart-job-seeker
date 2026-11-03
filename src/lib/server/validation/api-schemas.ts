@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { LOGIN_MODES } from '$lib/import-tasks/sign-in';
 import { MAX_BELOW_ASK_TOLERANCE_PCT } from '$lib/salary/pay-fit';
+import { WORK_MODES } from '$lib/work-mode';
 import { error as httpError } from '@sveltejs/kit';
 
 const trimmedString = (maxLen = 255) => z.string().trim().max(maxLen);
@@ -383,6 +384,7 @@ export const workExperienceBasicSchema = z.object({
 	name: requiredTrimmedString('Company name').optional(),
 	position: requiredTrimmedString('Position').optional(),
 	location: optionalTrimmedString(),
+	work_mode: z.enum(WORK_MODES).optional().nullable(),
 	website: optionalTrimmedString(2048),
 	headline: optionalTrimmedString(255),
 	/**

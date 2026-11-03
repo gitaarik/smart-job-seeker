@@ -121,7 +121,16 @@ const PROFILE_SCHEMA_MAPPING = {
 				}
 			},
 			work_experiences: {
-				fields: ['name', 'location', 'position', 'summary', 'start_date', 'end_date', 'website'],
+				fields: [
+					'name',
+					'location',
+					'work_mode',
+					'position',
+					'summary',
+					'start_date',
+					'end_date',
+					'website'
+				],
 				relations: {
 					work_experience_achievements: {
 						fields: ['description']
@@ -436,6 +445,7 @@ async function fetchProfileData(profileId: number) {
 				columns: {
 					name: true,
 					location: true,
+					work_mode: true,
 					position: true,
 					summary: true,
 					start_date: true,

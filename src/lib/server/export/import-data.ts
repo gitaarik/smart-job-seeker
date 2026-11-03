@@ -35,6 +35,7 @@ import {
 } from '$lib/server/db/schema';
 import { generateVersionPdfs } from '$lib/server/profile/generate-version-pdfs';
 import { toDateString } from '$lib/tools/date-utils';
+import { asWorkMode } from '$lib/work-mode';
 import {
 	deleteProfileDocuments,
 	emptyCreatedProjectIds,
@@ -587,6 +588,7 @@ async function importProfileEntities(
 				profile_id: profileId,
 				name: w.name || '',
 				location: w.location || '',
+				work_mode: asWorkMode(w.work_mode),
 				description: '', // Field deprecated
 				position: w.position || '',
 				summary: w.summary || '',
