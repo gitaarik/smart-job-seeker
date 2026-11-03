@@ -395,3 +395,48 @@ describe('StructuredResume — the lead line on a template that appends the plac
 		expect(screen.getByText('Reviews code changes judged by senior engineers.')).toBeTruthy();
 	});
 });
+
+/**
+ * The PDF export moves a role a page break splits onto the next page, and finds
+ * the roles by this attribute (server/profile/page-breaks.ts). Without it the
+ * export prints as if the feature did not exist, and nothing else would say so.
+ */
+describe('StructuredResume — the entries the PDF export keeps whole', () => {
+	test('marks every role, and no side project', () => {
+		const role = (name: string) => ({
+			name,
+			location: null,
+			position: 'Engineer',
+			start_date: '2020-01-01',
+			end_date: null,
+			headline: null,
+			tags: null,
+			work_experience_achievements: [{ description: `Built ${name}`, tags: null }]
+		});
+		const { container } = render(StructuredResume, {
+			props: {
+				config: {},
+				type: 'resume',
+				profile: {
+					...profile([]),
+					work_experiences: [role('Acme'), role('Globex')],
+					side_projects: [
+						{
+							name: 'LitState',
+							url: null,
+							start_date: '2020-04-01',
+							end_date: null,
+							summary: 'State management for Lit web components.',
+							tags: null
+						}
+					]
+				}
+			}
+		});
+		const marked = [...container.querySelectorAll('[data-keep-whole]')];
+		expect(marked.map((el) => el.querySelector('.job-co')?.textContent)).toEqual([
+			'Acme',
+			'Globex'
+		]);
+	});
+});

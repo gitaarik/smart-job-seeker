@@ -296,7 +296,9 @@
 			<hr class="mt-1 mb-2" />
 
 			{#each work_experiences as job, index (index)}
-				<div class="mb-[-10px]">
+				<!-- The PDF export moves a role a page break splits onto the next page
+				     when that costs nothing (server/profile/page-breaks.ts). -->
+				<div class="mb-[-10px]" data-keep-whole>
 					<!-- Joined, so a role with no place prints no empty "| |" between
 					     the bars. -->
 					<div class="mb-1 text-xs font-bold">

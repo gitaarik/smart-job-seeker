@@ -5,6 +5,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { profile_exports, profiles } from '$lib/server/db/schema';
 import { createProfileExport } from '$lib/server/profile/exports';
 import { isAnonymousVersion } from '$lib/server/profile/anonymity';
+import { printKeepingEntriesWhole } from '$lib/server/profile/page-breaks';
 import { buildExportUrl } from '$lib/server/utils/export-url-builder';
 
 const APP_INTERNAL_URL = 'http://localhost:5173';
@@ -158,8 +159,9 @@ export async function generateVersionPdfs(
 
 			await settleForPrint(page);
 
-			const pdfBuffer = await page.pdf(pdfSettingsFor(template));
-			const buffer = Buffer.from(pdfBuffer);
+			// A role a page break splits moves to the next page when that costs no
+			// page and splits nothing else (page-breaks.ts).
+			const buffer = await printKeepingEntriesWhole(page, pdfSettingsFor(template));
 
 			const displayName = anonymous ? null : profile.name || `Profile ${profileId}`;
 			const docLabel = doc.type === 'cv' ? 'CV' : 'Resume';

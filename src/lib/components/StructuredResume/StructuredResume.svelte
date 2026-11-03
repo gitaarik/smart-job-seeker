@@ -339,7 +339,9 @@
 									OVERRIDE_ENTITIES.achievement
 								)}
 								{@const techLine = tech(job)}
-								<div class="job">
+								<!-- The PDF export moves a role a page break splits onto the next
+								     page when that costs nothing (server/profile/page-breaks.ts). -->
+								<div class="job" data-keep-whole>
 									<div class="job-meta">
 										<div class="job-title">{job.position}</div>
 										<div class="job-co">{job.name}</div>
