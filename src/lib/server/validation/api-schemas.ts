@@ -429,7 +429,8 @@ export const workExperienceProjectBasicSchema = z.object({
 	start_date: z.string().optional().nullable(),
 	end_date: z.string().optional().nullable(),
 	description: optionalTrimmedString(10000),
-	outcome: optionalTrimmedString(10000)
+	outcome: optionalTrimmedString(10000),
+	tags: z.array(z.string()).optional().nullable()
 });
 
 export const workExperienceAchievementBasicSchema = z.object({

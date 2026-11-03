@@ -98,6 +98,45 @@ describe('PortfolioSite technologies', () => {
 	});
 });
 
+describe('PortfolioSite role projects', () => {
+	/** The headings of the entries the site prints, for a role with these projects. */
+	function headingsFor(projects: { id: number; name: string; tags: string[] | null }[]) {
+		const profile = {
+			name: 'Alex Morgan',
+			profile_versions: [],
+			work_experiences: [
+				{
+					id: 1,
+					position: 'Engineer',
+					name: 'TechCorp',
+					work_experience_achievements: [],
+					work_experience_technologies: [],
+					work_experience_projects: projects.map((p) => ({
+						...p,
+						work_experience_project_technologies: []
+					}))
+				}
+			],
+			side_projects: []
+		};
+		const { container } = render(PortfolioSite, { props: { profile, theme: null } });
+		return [...container.querySelectorAll('article.entry h3')].map(
+			(h) => h.textContent?.trim() ?? ''
+		);
+	}
+
+	test('leaves a project switched off the site out, and keeps one held back from the documents only', () => {
+		const headings = headingsFor([
+			{ id: 2, name: 'Payments rewrite', tags: null },
+			{ id: 3, name: 'Vendor assessment', tags: ['!portfolio'] },
+			{ id: 4, name: 'Internal tooling', tags: ['!resume', '!cv'] }
+		]);
+		expect(headings.some((h) => h.includes('Payments rewrite'))).toBe(true);
+		expect(headings.some((h) => h.includes('Internal tooling'))).toBe(true);
+		expect(headings.some((h) => h.includes('Vendor assessment'))).toBe(false);
+	});
+});
+
 describe("PortfolioSite projects: the applicant's own role", () => {
 	function siteWithRoles(roles: { project?: string; side?: string }) {
 		const profile = {

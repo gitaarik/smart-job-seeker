@@ -340,6 +340,7 @@ export interface ExportedWorkExperienceProject {
 	end_date?: string | null;
 	description?: string;
 	outcome?: string;
+	tags?: unknown;
 	technologies: ExportedWorkExperienceProjectTechnology[];
 }
 

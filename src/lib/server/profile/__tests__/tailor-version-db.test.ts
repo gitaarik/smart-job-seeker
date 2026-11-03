@@ -237,14 +237,14 @@ describe('retagVersionSlug', () => {
 		expect(mockQueryRaw).not.toHaveBeenCalled();
 	});
 
-	// Ten tables carry a `tags` array that can name a version. A table missed
+	// Eleven tables carry a `tags` array that can name a version. A table missed
 	// here is a set of items that silently stop printing on the renamed version.
 	it('scans every table that can name a version, scoped to the profile', async () => {
 		const { selected } = tagScan({});
 
 		await retagVersionSlug(7, 'backend', 'senior-backend');
 
-		expect(selected).toHaveLength(10);
+		expect(selected).toHaveLength(11);
 		const all = selected.join('\n');
 		for (const table of [
 			'work_experiences',
@@ -255,6 +255,7 @@ describe('retagVersionSlug', () => {
 			'tech_skills',
 			'work_experience_achievements',
 			'work_experience_technologies',
+			'work_experience_projects',
 			'work_experience_project_technologies',
 			'side_project_technologies'
 		]) {
@@ -489,7 +490,7 @@ describe('promoteToLibrary', () => {
 		expect(sendRecord?.set).toMatchObject({ cv_version_sent: 'senior-backend' });
 		expect(render(sendRecord!.where as SQL).params).toContain('app-12');
 		// The tag scan ran for the old slug, across every tagged table.
-		expect(selected.length).toBe(10);
+		expect(selected.length).toBe(11);
 	});
 
 	it('leaves both alone when there was no old slug to follow', async () => {

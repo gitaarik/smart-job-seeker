@@ -16,6 +16,8 @@ export interface ProjectData extends Record<string, unknown> {
 	end_date: string;
 	description: string;
 	outcome: string;
+	/** As stored: the Site switch and any version tags. `[]` is the editor's null. */
+	tags: string[];
 }
 
 /** A date column as the editor needs it: the day, with no timezone in it. */
@@ -40,6 +42,7 @@ export type LoadedProject = {
 	end_date: string | Date | null;
 	description: string | null;
 	outcome: string | null;
+	tags?: unknown;
 };
 
 /** One loaded project row as the editor's own shape. */
@@ -52,7 +55,8 @@ export function toProjectData(row: LoadedProject): ProjectData {
 		start_date: dateInputValue(row.start_date),
 		end_date: dateInputValue(row.end_date),
 		description: row.description ?? '',
-		outcome: row.outcome ?? ''
+		outcome: row.outcome ?? '',
+		tags: Array.isArray(row.tags) ? row.tags.filter((t): t is string => typeof t === 'string') : []
 	};
 }
 
@@ -65,7 +69,8 @@ export function blankProject(): ProjectData {
 		start_date: '',
 		end_date: '',
 		description: '',
-		outcome: ''
+		outcome: '',
+		tags: []
 	};
 }
 
@@ -79,7 +84,8 @@ export function projectBody(v: ProjectData): Record<string, unknown> {
 		start_date: v.start_date || null,
 		end_date: v.end_date || null,
 		description: v.description.trim() || null,
-		outcome: v.outcome.trim() || null
+		outcome: v.outcome.trim() || null,
+		tags: v.tags.length > 0 ? v.tags : null
 	};
 }
 

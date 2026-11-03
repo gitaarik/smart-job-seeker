@@ -24,7 +24,9 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faChevronRight, faGripVertical, faPlus } from '@fortawesome/free-solid-svg-icons';
 	import SectionSaveButton from '$lib/components/SectionSaveButton.svelte';
+	import VisibilityMark from '$lib/components/VisibilityMark.svelte';
 	import { sectionRows, type SectionRow } from '$lib/components/section-rows.svelte';
+	import { SITE_TEMPLATE_TAGS } from '$lib/profile-visibility';
 	import ConfirmModal from './ConfirmModal.svelte';
 	import {
 		blankProject,
@@ -46,6 +48,7 @@
 		end_date: string | Date | null;
 		description: string | null;
 		outcome: string | null;
+		tags?: unknown;
 		work_experience_project_technologies: { id: number; name: string | null }[];
 		profile_document_projects: { id: number }[];
 	}
@@ -298,6 +301,8 @@
 									: ''}"
 							>
 								{row.data.name.trim() || 'Untitled project'}
+								<!-- Off the site is the only "off" a project has; see its page. -->
+								<VisibilityMark tags={row.data.tags} templates={SITE_TEMPLATE_TAGS} />
 							</span>
 							{#if summaryLine(row)}
 								<span class="mt-0.5 block text-xs text-[var(--dash-text-muted)]">

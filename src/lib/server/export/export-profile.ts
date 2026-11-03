@@ -133,7 +133,8 @@ export async function buildProfileExport(
 							start_date: true,
 							end_date: true,
 							description: true,
-							outcome: true
+							outcome: true,
+							tags: true
 						},
 						with: {
 							work_experience_project_technologies: {
@@ -512,6 +513,7 @@ export async function buildProfileExport(
 				end_date: formatDate(p.end_date),
 				description: p.description || undefined,
 				outcome: p.outcome || undefined,
+				tags: p.tags,
 				technologies: p.work_experience_project_technologies.map((t) => ({
 					sort: t.sort,
 					name: t.name || undefined,

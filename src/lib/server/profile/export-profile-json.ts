@@ -104,6 +104,7 @@ export interface ExportedProfile {
 				end_date?: Date | null;
 				description?: string;
 				outcome?: string;
+				tags?: unknown;
 				work_experience_project_technologies: Array<{
 					sort?: number | null;
 					name?: string;
@@ -264,7 +265,8 @@ export async function buildProfileJsonExport(
 							start_date: true,
 							end_date: true,
 							description: true,
-							outcome: true
+							outcome: true,
+							tags: true
 						},
 						with: {
 							work_experience_project_technologies: {

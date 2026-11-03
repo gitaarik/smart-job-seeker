@@ -77,6 +77,13 @@ const TAGGED_TABLES: {
 			sql`work_experience_id IN (SELECT id FROM work_experiences WHERE profile_id = ${p})`
 	},
 	{
+		table: 'work_experience_projects',
+		kind: 'Role project',
+		label: sql`name`,
+		scope: (p) =>
+			sql`work_experience_id IN (SELECT id FROM work_experiences WHERE profile_id = ${p})`
+	},
+	{
 		table: 'work_experience_project_technologies',
 		kind: 'Project technology',
 		label: sql`name`,

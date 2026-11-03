@@ -45,8 +45,11 @@ export function siteLists(profile: any, versionId: number | null): SiteLists {
 	return {
 		show,
 		work,
+		// A project's own Site switch, read the way a technology's is. No override
+		// entity: tailoring decides nothing about a role project, so no version
+		// has a per-job exception to make.
 		roleProjects: work.flatMap((w: Row) =>
-			((w.work_experience_projects ?? []) as Row[]).map((p) => ({ ...p, company: w.name }))
+			show((w.work_experience_projects ?? []) as Row[]).map((p) => ({ ...p, company: w.name }))
 		),
 		sideProjects: show(profile.side_projects, 'side_project'),
 		skillCategories: show(profile.tech_skill_categories, 'skill_category')

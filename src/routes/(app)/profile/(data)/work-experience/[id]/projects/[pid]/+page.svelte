@@ -18,12 +18,13 @@
 	import { resolve } from '$app/paths';
 	import { projectDetailDep } from '$lib/project-detail';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
+	import ShowOnSwitches from '$lib/components/ShowOnSwitches.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
 	import ProjectRepoFetch from '$lib/components/ProjectRepoFetch.svelte';
 	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
-	import { SITE_TEMPLATE_TAGS } from '$lib/profile-visibility';
+	import { SITE_TEMPLATE_TAGS, setShownOn } from '$lib/profile-visibility';
 	import Card from '../../../../../../components/Card.svelte';
 	import TechnologyChips from '../../../../../components/TechnologyChips.svelte';
 	import ProjectSourcesPointer from '../../../../../components/ProjectSourcesPointer.svelte';
@@ -216,6 +217,23 @@
 				bind:value={() => row.data.outcome, (v) => set({ outcome: v })}
 				onblur={row.field.flush}
 				placeholder="What changed because of it?"
+			/>
+		</div>
+
+		<!--
+			Only the site lists a role's projects, so this is the one switch a
+			project has; the documents' switches would move nothing. Flushed at
+			once, like a technology's: the row's auto-save otherwise waits for the
+			next keystroke, and a switch has no next keystroke.
+		-->
+		<div class="mt-6 max-w-xs">
+			<ShowOnSwitches
+				tags={row.data.tags}
+				ontoggle={(template, shown) => {
+					set({ tags: setShownOn(row.data.tags, template, shown) });
+					row.field.flush();
+				}}
+				templates={SITE_TEMPLATE_TAGS}
 			/>
 		</div>
 

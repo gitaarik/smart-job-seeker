@@ -482,14 +482,13 @@ export interface ProfileResource {
  *  - **Role technologies** have `tags`, are filtered in `StructuredResume`, and
  *    are not printed by `ProfileDisplay` at all — nothing to filter is not the
  *    same failure as printing them unfiltered, so they hide too.
- *  - **Role projects and side-project achievements** have no `tags` column.
- *    Role projects additionally render on no document — they feed the
- *    generation context, not the layout — so there is nothing a hide could take
- *    them off of.
- *  - **Project technologies and side-project technologies** carry `tags`
- *    (migration 0078), but only the public site lists them. A hide writes the
- *    document pair, which would leave them exactly where they were, so they
- *    stay out; the site switch on their chips is how they come off the site.
+ *  - **Side-project achievements** have no `tags` column.
+ *  - **Role projects, project technologies and side-project technologies**
+ *    carry `tags` (migrations 0078 and 0082), but only the public site lists
+ *    them; no document prints a role project, which feeds the generation
+ *    context instead. A hide writes the document pair, which would leave them
+ *    exactly where they were, so they stay out; the Site switch on a project's
+ *    page and on the chips is how they come off the site.
  *
  * The public portfolio at /p/[slug]/portfolio reads the same tags, with
  * `portfolio` as its base template, so the site has a switch of its own beside
@@ -622,9 +621,10 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	 * `assembleGenerationContext`'s `projects` source ranks them against the job
 	 * being written for, and a cover letter or an interview answer is built out
 	 * of the two or three that fit. So they are the applicant's evidence rather
-	 * than their layout, and the consequence for this file is `hide`: there is
-	 * nothing to take a project off, so it does not get the verb. See
-	 * HIDEABLE_RESOURCES.
+	 * than their layout, and the consequence for this file is `hide`: no document
+	 * to take a project off, so it does not get the verb (see HIDEABLE_RESOURCES).
+	 * The public portfolio site does list them, and for that a project's page has
+	 * a Site switch, written through `tags` the way a technology's is.
 	 */
 	work_experience_project: {
 		table: work_experience_projects,
@@ -670,7 +670,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 				kind: 'string',
 				note: 'what the project was and what the applicant did on it'
 			},
-			outcome: { kind: 'string', note: 'what it changed — the result, not the work' }
+			outcome: { kind: 'string', note: 'what it changed — the result, not the work' },
+			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS }
 		},
 		required: ['name', 'work_experience'],
 		insertDefaults: {},

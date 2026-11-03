@@ -481,7 +481,8 @@ export async function importProfileFromJson(
 					start_date: toDateString(proj.start_date),
 					end_date: toDateString(proj.end_date),
 					description: proj.description || null,
-					outcome: proj.outcome || null
+					outcome: proj.outcome || null,
+					tags: proj.tags ?? null
 				})
 				.returning();
 
