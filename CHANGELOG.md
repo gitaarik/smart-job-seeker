@@ -5,6 +5,25 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.41.0] - 2026-11-03
+
+10 commits since v0.40.0.
+
+### Added
+
+- Roles have a work mode, printed in brackets after the place and worded to suit each resume template
+- Role projects can be switched off the portfolio site
+
+### Changed
+
+- A role that a page break would split moves to the next page when that leaves room
+
+### Fixed
+
+- A role's TECH line stays with its last bullet across a page break
+- Profile export includes every column it previously dropped
+- Profile export and import carry a role's headline and company blurb
+
 ## [0.40.0] - 2026-11-02
 
 56 commits since v0.39.0.
