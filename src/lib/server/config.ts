@@ -81,6 +81,10 @@ export interface AppConfig {
 	// model neither of the other two pairs uses. See loadConfig.
 	llmTailorProvider: string;
 	llmTailorModel: string;
+	// How hard a Gemini 3.x model thinks before it answers, for every Gemini
+	// call the app makes (writing, translation, the tailoring review). The
+	// 2.5 line takes a numeric budget instead; see createLangChainModel.
+	geminiThinkingLevel: 'LOW' | 'MEDIUM' | 'HIGH';
 	// Second provider/model tried once when a WRITING call fails for a reason a
 	// different provider could survive. Empty provider = no failover, which is
 	// also what an unusable target (no API key, or the writing pair itself)
@@ -286,6 +290,27 @@ function loadConfig(): AppConfig {
 		getEnv('SJS_LLM_TAILOR_MODEL', '') ||
 		(llmTailorProvider === 'gemini' ? 'gemini-3.8-flash' : getModelForProvider(llmTailorProvider));
 
+	/**
+	 * MEDIUM is the model's own default and what the old numeric budget was
+	 * getting on gemini-3.8-flash (probed 2026-11-03: a budget of 4,096 thinks
+	 * like MEDIUM, one of 2,048 or less does not think at all). LOW turns
+	 * thinking off on 3.8 Flash; HIGH roughly half as much again as MEDIUM, at
+	 * the output rate. Accepted in any case; an unknown value is MEDIUM and
+	 * says so, because a typo here should not take every writing call down.
+	 */
+	const thinkingLevelWanted = getEnv('SJS_LLM_GEMINI_THINKING_LEVEL', 'medium').toUpperCase();
+	const geminiThinkingLevel: AppConfig['geminiThinkingLevel'] =
+		thinkingLevelWanted === 'LOW' ||
+		thinkingLevelWanted === 'MEDIUM' ||
+		thinkingLevelWanted === 'HIGH'
+			? thinkingLevelWanted
+			: 'MEDIUM';
+	if (geminiThinkingLevel !== thinkingLevelWanted) {
+		console.warn(
+			`SJS_LLM_GEMINI_THINKING_LEVEL=${thinkingLevelWanted} is not low, medium or high; using medium`
+		);
+	}
+
 	const PROVIDER_KEY_ENV: Record<string, string> = {
 		groq: 'SJS_LLM_API_KEY_GROQ',
 		gemini: 'SJS_LLM_API_KEY_GEMINI',
@@ -428,6 +453,7 @@ function loadConfig(): AppConfig {
 		llmWritingModel,
 		llmTailorProvider,
 		llmTailorModel,
+		geminiThinkingLevel,
 		llmWritingFallbackProvider,
 		llmWritingFallbackModel,
 		llmFallbackProvider,

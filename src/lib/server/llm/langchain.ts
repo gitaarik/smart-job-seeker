@@ -545,17 +545,18 @@ function createLangChainModel(
 
 		case 'gemini': {
 			const apiKey = config.geminiApiKey;
-			// Gemini 2.5 thinks before it answers, and the thoughts are billed as
-			// output AND charged against maxOutputTokens — the same shape as the
-			// gpt-oss reasoning problem handled above, on the provider where nothing
-			// bounded it. They appear in `total_tokens` and in neither of the other
-			// two counts, so the budget can be exhausted by tokens no log shows: a
-			// turn asking for a full job-description rewrite spent 7,219 thinking and
-			// had 958 left for the answer against a cap of 8,192. The JSON stopped
-			// mid-object, withStructuredOutput parsed it to null, and the user got an
-			// error for a turn that had cost real money. Identical prompt, other runs:
-			// ~3,800 thinking and a complete answer — which is why it presents as
-			// intermittent rather than as the systematic mis-sizing it is.
+			// Gemini thinks before it answers, and the thoughts are billed as output
+			// AND charged against maxOutputTokens — the same shape as the gpt-oss
+			// reasoning problem handled above, on the provider where nothing bounded
+			// it. They appear in `total_tokens` and in neither of the other two
+			// counts, so the budget can be exhausted by tokens no log shows: a turn
+			// asking for a full job-description rewrite spent 7,219 thinking and had
+			// 958 left for the answer against a cap of 8,192 (2.5 Pro). The JSON
+			// stopped mid-object, withStructuredOutput parsed it to null, and the
+			// user got an error for a turn that had cost real money. Identical
+			// prompt, other runs: ~3,800 thinking and a complete answer — which is
+			// why it presents as intermittent rather than as the systematic
+			// mis-sizing it is.
 			//
 			// `maxTokens` means "how long an answer may be" — it is what every
 			// non-thinking provider above gets, for the answer alone. So the thoughts
@@ -563,16 +564,41 @@ function createLangChainModel(
 			// it. Sharing is the bug; halving the budget and hoping is the same bug
 			// with a smaller constant.
 			//
-			// The budget is a steer, not a ceiling: asked for 4,096 the model has
-			// still returned 5,571 (measured). That is exactly why the ceiling is the
-			// sum and not the max of the two — a soft budget inside a hard cap needs
-			// the slack to be somewhere, and here it is above the answer's share
-			// instead of inside it. 2.5 Pro cannot have thinking turned off and
-			// rejects a budget below 128.
+			// Two generations, two dials:
+			//
+			//  - 2.5 takes a numeric `thinkingBudget`. It is a steer, not a ceiling:
+			//    asked for 4,096 the model has still returned 5,571 (measured), which
+			//    is why the cap is the sum and not the max of the two. 2.5 Pro cannot
+			//    have thinking turned off and rejects a budget below 128.
+			//  - 3.x takes a `thinkingLevel` and ignores the sampling parameters.
+			//    Probed on gemini-3.8-flash 2026-11-03 (same prompt throughout): a
+			//    budget of 2,048 or less turned thinking OFF outright, 4,096 or more
+			//    thought like MEDIUM (~500 thoughts on a 300-token answer), LOW did
+			//    not think at all, HIGH about half as much again as MEDIUM. So on 3.x
+			//    the budget was an on/off switch keyed on `maxTokens`; the level says
+			//    what is meant (config.geminiThinkingLevel, MEDIUM by default, which
+			//    is what the 8,192-token default was getting). The thoughts' room is
+			//    one full answer's worth: the probes thought 1-2x their answer, and
+			//    a hard turn thinks more while answering less. `temperature` is left
+			//    out: "deprecated and ignored" since 3.6, and the docs say a later
+			//    generation returns a 400 for it.
 			//
 			// Only for models that have it: the field is an error on models that
 			// don't think, which is every Gemini before 2.5.
-			const thinks = /gemini-(2\.5|[3-9])/.test(model);
+			const generation = /gemini-(\d+)(?:\.(\d+))?/.exec(model);
+			const major = generation ? Number(generation[1]) : 0;
+			const minor = generation?.[2] ? Number(generation[2]) : 0;
+			if (major >= 3) {
+				return withoutStreaming(
+					new ChatGoogleGenerativeAI({
+						apiKey,
+						model,
+						maxOutputTokens: maxTokens * 2,
+						thinkingConfig: { thinkingLevel: config.geminiThinkingLevel }
+					})
+				);
+			}
+			const thinks = major === 2 && minor >= 5;
 			const thinkingBudget = Math.max(128, Math.floor(maxTokens / 2));
 			return withoutStreaming(
 				new ChatGoogleGenerativeAI({
