@@ -2686,7 +2686,12 @@ export const work_experiences = pgTable(
 	'work_experiences',
 	{
 		name: text().notNull(),
+		// Where the employer is. How the work was done is `work_mode`.
 		location: text().notNull(),
+		// onsite | hybrid | remote, the job side's `work_location` words; null
+		// when the applicant has not said, which prints as a role did before the
+		// column (migration 0083). See $lib/work-mode.ts.
+		work_mode: varchar({ length: 16 }),
 		description: text().notNull(),
 		position: text().notNull(),
 		// Short one-line lead shown above the achievements on a resume (used by the
