@@ -279,10 +279,11 @@ const TEXT_COMMIT_TARGETING = Object.fromEntries(
 /**
  * A create whose row hangs off an application, which names that application.
  *
- * `add_letter` is the only one today. It is an `add_` that still takes an id,
- * for exactly the reason `add_activity_record` does: the id is the application
- * the new row is filed under, not a row being changed. A story and a cheat
- * sheet hang off the profile instead, so they name nothing and are not here —
+ * `add_letter` and `add_question` are the two today. Each is an `add_` that
+ * still takes an id, for exactly the reason `add_activity_record` does: the id
+ * is the application the new row is filed under, not a row being changed. A
+ * story and a cheat sheet hang off the profile instead, so they name nothing
+ * and are not here —
  * and that is read off the same declaration the capability itself branches on,
  * rather than listed a second time. Without targeting, an application-owned
  * create would ship a tool with no way to say which application it meant.

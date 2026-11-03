@@ -53,6 +53,7 @@ import { PROFILE_RESOURCES, PROFILE_RESOURCE_NAMES } from '$lib/server/profile/r
 import { targetingFor } from '$lib/server/mcp/entities';
 import { isTextCapability } from './text-version-capabilities';
 import { isTextCommitCapability } from './text-commit-capabilities';
+import { isTextCreateCapability } from './text-create-capabilities';
 import { isReorderCapability } from './reorder-capabilities';
 import { isTagCapability } from './tag-capabilities';
 import { isVersionCapability } from './version-capabilities';
@@ -156,6 +157,12 @@ export const APP_AREAS: readonly AppArea[] = [
  * Their button is the one in that same editor, three lines under the version it
  * commits, so a chat offering to press it is offering to do the thing the
  * applicant is already looking at.
+ *
+ * So do the create verbs (`add_<kind>`), which were listed here by accident
+ * until 2026-11-03. They resolve against an application or the profile, so the
+ * grouping put "Start a new letter" on an application's page, but no route
+ * grants one, and the chat that read that line had no such verb to offer. In
+ * the app, starting a text is that page's own New button.
  */
 function isMatchConfigCapability(capability: Capability): boolean {
 	return (MATCH_CONFIG_CAPABILITY_NAMES as string[]).includes(capability);
@@ -167,15 +174,17 @@ function isDirectiveCapability(capability: Capability): boolean {
 
 function entityCapabilities(): Capability[] {
 	const generated = new Set<string>(PROFILE_CAPABILITY_NAMES);
-	// A reorder, a tag change and the version verbs are MCP-only: no page offers
-	// them to the chat, so naming them here would promise a verb it is never
-	// given. See `reorder-capabilities.ts`, `tag-capabilities.ts` and
-	// `version-capabilities.ts`.
+	// A reorder, a tag change, the version verbs and the text creates are
+	// MCP-only: no page offers them to the chat, so naming them here would
+	// promise a verb it is never given. See `reorder-capabilities.ts`,
+	// `tag-capabilities.ts`, `version-capabilities.ts` and
+	// `text-create-capabilities.ts`.
 	return (Object.keys(CAPABILITIES) as Capability[]).filter(
 		(c) =>
 			!generated.has(c) &&
 			!isTextCapability(c) &&
 			!isTextCommitCapability(c) &&
+			!isTextCreateCapability(c) &&
 			!isReorderCapability(c) &&
 			!isTagCapability(c) &&
 			!isVersionCapability(c)

@@ -166,10 +166,10 @@ export function isReadTool(name: string): name is ReadTool {
  * so the only thing missing was the listing.
  *
  * Filtered rather than listed, because a create is only in this group while
- * nothing owns its row but the profile. `add_letter` starts a row under an
- * application, so it names one, and `entities.ts` has already put it in
- * ENTITY_CAPABILITY_NAMES — listing it here as well would offer the same tool
- * twice.
+ * nothing owns its row but the profile. `add_letter` and `add_question` start
+ * a row under an application, so they name one, and `entities.ts` has already
+ * put them in ENTITY_CAPABILITY_NAMES — listing them here as well would offer
+ * the same tool twice.
  */
 const CREATE_CAPABILITY_NAMES: Capability[] = [
 	'add_application',
@@ -384,9 +384,10 @@ function inventoryHintFor(capability: Capability): string | undefined {
 	if (capability === 'add_application') {
 		return 'For what they already have — the list this contract says to check — call list_applications.';
 	}
-	// The three text creates say the same "listed below" and had nothing below
-	// them either. One call answers all three: `list_texts` takes a kind, and for
-	// a letter an application_id, which is the scope its duplicate check uses.
+	// The text creates say the same "listed below" and had nothing below them
+	// either. One call answers all of them: `list_texts` takes a kind, and for a
+	// letter or a question an application_id, which is the scope its duplicate
+	// check uses.
 	if (isTextCreateCapability(capability)) {
 		const kind = kindForTextCreateCapability(capability);
 		const scope = textCreateOwner(kind) === 'application' ? ' and that application_id' : '';

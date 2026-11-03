@@ -16,6 +16,7 @@ import { z } from 'zod';
 import { PROFILE_CAPABILITY_NAMES } from '../profile-capabilities';
 import { isTextCapability } from '../text-version-capabilities';
 import { isTextCommitCapability } from '../text-commit-capabilities';
+import { isTextCreateCapability } from '../text-create-capabilities';
 import { isReorderCapability } from '../reorder-capabilities';
 import { isTagCapability } from '../tag-capabilities';
 import { isVersionCapability } from '../version-capabilities';
@@ -1521,6 +1522,12 @@ describe('the registry as a whole', () => {
 		// tag and version verbs are out on exactly those terms (see
 		// tag-capabilities.ts and version-capabilities.ts).
 		//
+		// So are the text creates (`add_<kind>`), which were in this union by
+		// oversight until 2026-11-03, when `add_question` took it from under the
+		// ceiling to 25,578. Their `resolve` answers for an application or the
+		// profile, but no route grants one, and the ability manifest drops them on
+		// the same day for the same reason.
+		//
 		// `edit_profile` is out on the first reason rather than these: it is live
 		// on one page, Basic Info, beside nothing in this union but the
 		// directives. Added here it measured 25,125, for an arrangement no route
@@ -1532,6 +1539,7 @@ describe('the registry as a whole', () => {
 					!PROFILE_CAPABILITY_NAMES.includes(capability as never) &&
 					!isTextCapability(capability) &&
 					!isTextCommitCapability(capability) &&
+					!isTextCreateCapability(capability) &&
 					!isReorderCapability(capability) &&
 					!isTagCapability(capability) &&
 					!isVersionCapability(capability) &&

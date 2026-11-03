@@ -21,6 +21,7 @@ import { CAPABILITIES, type Capability } from '../capabilities';
 import { PROFILE_CAPABILITY_NAMES } from '../profile-capabilities';
 import { TEXT_CAPABILITY_NAMES, isTextCapability } from '../text-version-capabilities';
 import { TEXT_COMMIT_CAPABILITY_NAMES, isTextCommitCapability } from '../text-commit-capabilities';
+import { TEXT_CREATE_CAPABILITY_NAMES, isTextCreateCapability } from '../text-create-capabilities';
 import { REORDER_CAPABILITY_NAMES, isReorderCapability } from '../reorder-capabilities';
 import { TAG_CAPABILITY_NAMES, isTagCapability } from '../tag-capabilities';
 import { isVersionCapability } from '../version-capabilities';
@@ -72,6 +73,7 @@ describe('formatAbilityManifest', () => {
 		for (const capability of Object.keys(CAPABILITIES) as Capability[]) {
 			if (generated.has(capability) || isTextCapability(capability)) continue;
 			if (isTextCommitCapability(capability) || isReorderCapability(capability)) continue;
+			if (isTextCreateCapability(capability)) continue;
 			if (isTagCapability(capability) || isVersionCapability(capability)) continue;
 			expect(TEXT, capability).toContain(CAPABILITIES[capability].title);
 		}
@@ -86,6 +88,14 @@ describe('formatAbilityManifest', () => {
 		// A version of one that DOES resolve from a page has to be added here on
 		// purpose rather than by inheriting this exclusion.
 		for (const capability of [...TEXT_CAPABILITY_NAMES, ...TEXT_COMMIT_CAPABILITY_NAMES]) {
+			expect(TEXT, capability).not.toContain(CAPABILITIES[capability].title);
+		}
+
+		// The creates too, which this block listed for two months: they resolve
+		// against an application or the profile, so the grouping put "Start a new
+		// letter" on an application's page, and no route has ever granted one.
+		// See text-create-capabilities.ts.
+		for (const capability of TEXT_CREATE_CAPABILITY_NAMES) {
 			expect(TEXT, capability).not.toContain(CAPABILITIES[capability].title);
 		}
 

@@ -15,13 +15,23 @@
  * what it authorizes, which list it checks for a duplicate — differs, and the
  * cases below are paired so a branch that answers the profile's question for an
  * application fails rather than passing quietly.
+ *
+ * The third is the question, which hangs off an application like a letter and
+ * is named by what the employer asked. Its line used to be the absence of the
+ * verb and is now its contract, so the contract is under test as much as the
+ * code, along with the one check the code adds: a duplicate is the whole
+ * question, not the line the list cuts it to.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$lib/server/db', () => ({ db: {}, dbDirect: {} }));
 
-/** Labels already on the profile, or on the application, per test. */
-let existing: string[] = [];
+/**
+ * Labels already on the profile, or on the application, per test. An object
+ * where the label is not the whole of it: a question's label is cut short, and
+ * `prompt` is what it actually asks.
+ */
+let existing: (string | { label: string; prompt: string })[] = [];
 /** The one application this profile owns. */
 const OWNED_APPLICATION = 55;
 
@@ -55,7 +65,7 @@ vi.mock('$lib/server/applications/profile-applications', () => ({
 vi.mock('$lib/server/texts/profile-texts', async (importOriginal) => {
 	const actual = await importOriginal<typeof import('$lib/server/texts/profile-texts')>();
 
-	const stub = (kind: 'letter' | 'story' | 'cheat_sheet') => {
+	const stub = (kind: 'letter' | 'question' | 'story' | 'cheat_sheet') => {
 		const def = actual.TEXT_KINDS[kind];
 		const create = def.create;
 		return {
@@ -63,9 +73,9 @@ vi.mock('$lib/server/texts/profile-texts', async (importOriginal) => {
 			list: (profileId: number, opts: { applicationId?: number; limit: number }) => {
 				listed(kind, profileId, opts);
 				return Promise.resolve(
-					existing.map((label, index) => ({
+					existing.map((entry, index) => ({
 						id: index + 1,
-						label,
+						...(typeof entry === 'string' ? { label: entry } : entry),
 						applicationId: null,
 						committed: null,
 						path: `/texts/${kind}/${index + 1}`
@@ -89,7 +99,8 @@ vi.mock('$lib/server/texts/profile-texts', async (importOriginal) => {
 					return Promise.resolve({
 						id: 77,
 						// What the list will call it: the type's label for a letter, and
-						// the title itself for the two that carry one.
+						// the title or the question itself for the rest. (A real question's
+						// label is cut at a hundred characters; nothing here is that long.)
 						label:
 							create.decides === 'choice'
 								? (create.choices.find((choice) => choice.value === value)?.label ?? value)
@@ -108,13 +119,14 @@ vi.mock('$lib/server/texts/profile-texts', async (importOriginal) => {
 		TEXT_KINDS: {
 			...actual.TEXT_KINDS,
 			letter: stub('letter'),
+			question: stub('question'),
 			story: stub('story'),
 			cheat_sheet: stub('cheat_sheet')
 		}
 	};
 });
 
-const { TEXT_CREATE_KIND_NAMES, TEXT_KINDS, TEXT_KIND_NAMES } =
+const { QUESTION_MAX, TEXT_CREATE_KIND_NAMES, TEXT_KINDS, TEXT_KIND_NAMES } =
 	await import('$lib/server/texts/profile-texts');
 const { TEXT_CREATE_CAPABILITIES, TEXT_CREATE_CAPABILITY_NAMES, isTextCreateCapability } =
 	await import('../text-create-capabilities');
@@ -125,7 +137,10 @@ const APPLICATION = { id: OWNED_APPLICATION, label: 'Staff Engineer at Acme' };
 
 /** The target each capability is called with: an application, or the profile. */
 const targetFor = (capability: (typeof TEXT_CREATE_CAPABILITY_NAMES)[number]) =>
-	capability === 'add_letter' ? APPLICATION : PROFILE;
+	TEXT_KINDS[capability.slice('add_'.length) as (typeof TEXT_CREATE_KIND_NAMES)[number]].create
+		.owner === 'application'
+		? APPLICATION
+		: PROFILE;
 
 /** The state `validate` is handed, read the way a real call reads it. */
 const stateFor = (capability: (typeof TEXT_CREATE_CAPABILITY_NAMES)[number]) =>
@@ -152,14 +167,26 @@ describe('which kinds may be started at all', () => {
 		}
 	});
 
-	it('leaves the one kind that asserts something about an employer alone', () => {
-		// A question's label IS what the employer asked, so minting one asserts
-		// that a company said something. That is inventing history, which is the
-		// line this whole surface is drawn around. A letter is not that: it is a
-		// document started under an application the applicant already made, and it
-		// lands empty.
-		expect(TEXT_CREATE_CAPABILITY_NAMES).toEqual(['add_letter', 'add_story', 'add_cheat_sheet']);
-		expect(isTextCreateCapability('add_question')).toBe(false);
+	it('starts every kind, and holds a question to what the employer asked', () => {
+		// A question was kept out for a release: its label IS what the employer
+		// asked, so starting one asserts that a company said something. That line
+		// did not go when the verb arrived. It moved into the contract, which is
+		// where "only what the applicant told you" is held for every other add,
+		// so the contract is what this pins.
+		expect(TEXT_CREATE_CAPABILITY_NAMES).toEqual([
+			'add_letter',
+			'add_question',
+			'add_story',
+			'add_cheat_sheet'
+		]);
+		expect(isTextCreateCapability('add_question')).toBe(true);
+
+		const contract = TEXT_CREATE_CAPABILITIES.add_question.contract;
+		expect(contract).toContain('word for word');
+		expect(contract).toContain('Do not write one');
+		// The question an agent is likeliest to invent is the one it expects in an
+		// interview, and that one has a home of its own.
+		expect(contract).toContain('add_cheat_sheet');
 	});
 });
 
@@ -493,5 +520,119 @@ describe('undoing a create', () => {
 
 		textRow = null;
 		expect(await sheet.authorizeRevert?.(CREATED, ACTOR)).toBe(false);
+	});
+});
+
+/**
+ * The question, which is the one kind whose name is not the agent's to choose.
+ *
+ * Everything else about it is the letter's shape: started under an application
+ * the applicant already has, authorized against it, undone under it. What is
+ * its own is the field (the question as asked, copied), a bound that is not a
+ * column's, and a duplicate check over the whole question.
+ */
+describe('starting a question', () => {
+	const add = () => TEXT_CREATE_CAPABILITIES.add_question;
+	const LONG =
+		'Describe a time you shipped something under a deadline you did not set. ' +
+		'Include what you cut to make it, who you told, and what you would do differently now.';
+
+	it('takes the question and nothing to answer it with', () => {
+		expect(Object.keys(add().fields)).toEqual(['question_asked']);
+		expect(add().requiredFields).toEqual(['question_asked']);
+	});
+
+	it('says the answer is what the version verb writes', () => {
+		// "Write the question with add_question_version" would send the agent to
+		// rewrite what the employer asked, which is the one thing it must not do.
+		const contract = add().contract;
+		expect(contract).toMatch(/Write the answer with\s+add_question_version/);
+		expect(contract).not.toMatch(/Write the question/);
+		expect(contract).toContain('application_id');
+		expect(contract).toContain('does not create the application');
+	});
+
+	it('refuses a blank question', async () => {
+		const state = await stateFor('add_question');
+		expect(add().validate({ question_asked: '  \n ' }, state)).toEqual({
+			ok: false,
+			error: expect.stringContaining('question_asked')
+		});
+	});
+
+	it('refuses more than one question can be, and says where an answer goes', async () => {
+		// The column is `text`, so nothing below would stop a whole form, or a
+		// question with its answer appended, landing as one row.
+		const state = await stateFor('add_question');
+		expect(add().validate({ question_asked: 'x'.repeat(QUESTION_MAX) }, state)).toEqual({
+			ok: true
+		});
+		expect(add().validate({ question_asked: 'x'.repeat(QUESTION_MAX + 1) }, state)).toEqual({
+			ok: false,
+			error: expect.stringContaining('add_question_version')
+		});
+	});
+
+	it('refuses the same question again, however it was spaced or capitalised', async () => {
+		existing = [
+			{ label: 'Why do you want to work here?', prompt: 'Why do you want to work here?' }
+		];
+		const state = await stateFor('add_question');
+		expect(add().validate({ question_asked: 'why do you want\nto work HERE? ' }, state)).toEqual({
+			ok: false,
+			error: expect.stringContaining('add_question_version')
+		});
+	});
+
+	it('compares the whole question, not the line the list cuts it to', async () => {
+		// Compared by label, a long question sent twice would never match its own
+		// shortened label, and two that open the same way would be refused as one.
+		existing = [{ label: `${LONG.slice(0, 99)}…`, prompt: LONG }];
+		const state = await stateFor('add_question');
+
+		expect(add().validate({ question_asked: LONG }, state)).toMatchObject({ ok: false });
+		expect(
+			add().validate({ question_asked: `${LONG.slice(0, 120)} And what did it cost?` }, state)
+		).toEqual({ ok: true });
+	});
+
+	it('checks the application it is started on for a duplicate', async () => {
+		await stateFor('add_question');
+		expect(listed).toHaveBeenCalledWith(
+			'question',
+			12,
+			expect.objectContaining({ applicationId: OWNED_APPLICATION })
+		);
+	});
+
+	it('writes the question as it arrived, under the application', async () => {
+		// Trimmed and nothing more: a question with its parts on separate lines
+		// keeps them, since the answer is judged against exactly this.
+		const asked = 'Tell us about:\n- a system you designed\n- one you inherited';
+		const state = await stateFor('add_question');
+		const target = await add().apply(APPLICATION, { question_asked: `  ${asked}\n` }, state, ACTOR);
+
+		expect(inserted).toHaveBeenCalledWith('question', OWNED_APPLICATION, asked);
+		expect(target).toEqual({ id: 77, label: asked, path: '/texts/question/77' });
+	});
+
+	it('tells the agent the answer is still to write', () => {
+		const note = add().appliedNote?.(
+			{ id: 77, label: 'Why do you want to work here?' },
+			{ name: 'Applications', path: '/applications' }
+		);
+		expect(note).toContain('has no answer yet');
+		expect(note).toContain('add_question_version');
+		expect(note).toContain('77');
+	});
+
+	it('is undone under the application it was started on', async () => {
+		await add().revert?.({ id: 77, label: 'Why do you want to work here?' }, {}, ACTOR);
+		expect(removed).toHaveBeenCalledWith('question', 77, OWNED_APPLICATION);
+	});
+
+	it('refuses an application the profile does not own', async () => {
+		expect(await add().authorize(APPLICATION, ACTOR)).toBe(true);
+		expect(await add().authorize({ id: 999, label: 'theirs' }, ACTOR)).toBe(false);
 	});
 });

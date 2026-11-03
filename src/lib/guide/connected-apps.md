@@ -118,3 +118,8 @@ can read a cover letter, an answer, a story or a cheat sheet, and it can write a
 the ones the app's own editor writes, with a diff and a delete on it — and the
 text itself does not change. Until you save one of its versions, your letter
 says exactly what it said before.
+
+It can also start a text that does not exist yet, but only an empty one: a
+story or a cheat sheet with a title, a letter on one of your applications, or a
+question on one, copied word for word from what the employer asked. The words
+still arrive as a version, the same way.

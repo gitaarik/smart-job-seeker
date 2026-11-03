@@ -80,6 +80,17 @@ export const TEXT_READ_CHARS = 60000;
  */
 export const TITLE_MAX = 255;
 
+/**
+ * Longest question a create will start, in characters.
+ *
+ * The column is `text` and holds anything, so this is not a column's limit but
+ * a bound on what one question is. The longest of the 71 on the dev database in
+ * November 2026 ran to 347 characters, which leaves a real question six times
+ * that to spare. What it refuses is a call holding more than a question: a
+ * whole form pasted into one row, or the answer sent along with it.
+ */
+export const QUESTION_MAX = 2000;
+
 export const TEXT_PAGE_DEFAULT = 20;
 export const TEXT_PAGE_MAX = 50;
 
@@ -108,12 +119,21 @@ export type TextKind = (typeof TEXT_KIND_NAMES)[number];
  * an agent asked for a cover letter had nowhere to put one, and the applicant
  * had to go and click New before the work could start.
  *
- * A QUESTION is the one that stays out, and the distinction is not technical. A
- * question's label IS what the employer asked, so minting one asserts that a
- * company said something. That is inventing history, which is the line this
- * whole surface is drawn around, and an empty row does not make it safe.
+ * A QUESTION was kept out until 2026-11-03, and not for a technical reason. Its
+ * label IS what the employer asked, so starting one asserts that a company said
+ * something. That is true, and it is just as true of an activity entry saying
+ * what a recruiter told them, or a work experience naming an employer, and
+ * neither of those verbs is withheld for it. Everywhere else on this surface the
+ * line is "only what the applicant told you", and the contract is what holds
+ * it. A question is held to it the same way: its one field is the question as
+ * the employer worded it, copied from what the applicant gave the agent or from
+ * the posting, and its contract says in as many words not to write one, reword
+ * one, or file one the agent expects to come up in an interview. What keeping it
+ * out cost was the common case. An applicant with a form in front of them typed
+ * every question into the app by hand before an agent could write a word of an
+ * answer.
  */
-export const TEXT_CREATE_KIND_NAMES = ['letter', 'story', 'cheat_sheet'] as const;
+export const TEXT_CREATE_KIND_NAMES = ['letter', 'question', 'story', 'cheat_sheet'] as const;
 export type CreatableTextKind = (typeof TEXT_CREATE_KIND_NAMES)[number];
 
 export function isTextKind(value: unknown): value is TextKind {
@@ -148,12 +168,19 @@ interface TextRow {
  * content IS the text, with no version and no diff, so a whole document would
  * land on the record having been read by nobody.
  *
- * Two shapes, because the three creatable kinds are named two different ways. A
- * story and a cheat sheet are named by a subject the applicant supplies, so the
- * field is free text bounded by the column. A letter is named by its TYPE —
- * a cover letter or an interview cheat sheet, the same two values the page's
- * own New button offers — so its field is a choice, and `label` is what the
- * list will call it.
+ * Three shapes, because the four creatable kinds are named three different
+ * ways. A story and a cheat sheet are named by a subject the applicant
+ * supplies, so the field is free text bounded by the column. A letter is named
+ * by its TYPE — a cover letter or an interview cheat sheet, the same two values
+ * the page's own New button offers — so its field is a choice, and `label` is
+ * what the list will call it.
+ *
+ * A question is named by what the employer asked, so its field is a `prompt`:
+ * free text like a title, but copied rather than chosen, which changes two
+ * things downstream. It is compared whole for a duplicate, because the list
+ * cuts a question at a hundred characters and two that open the same way
+ * would read as one. And its bound is what one question runs to rather than a
+ * column, because the column has none.
  *
  * A choice can also be `named`, and the letter is: the type alone made two
  * cheat sheets on one application the same row twice, so it carries an optional
@@ -164,6 +191,15 @@ interface TextRow {
 export type TextCreateDef = {
 	/** Whose row it is: the profile itself, or one application on it. */
 	owner: 'profile' | 'application';
+	/**
+	 * What a create starts, where that is not the kind's own `noun`.
+	 *
+	 * A question's text is its answer, so to every verb that writes one the kind
+	 * is "answer". What a create starts is the question the answer goes under,
+	 * and a tool called "Start a new answer" would be describing the version
+	 * verb. Absent where the row and its text are one thing.
+	 */
+	noun?: string;
 	/** The wire field carrying that decision. Prefixed, as every field here is. */
 	field: string;
 	/**
@@ -188,6 +224,7 @@ export type TextCreateDef = {
 	remove(id: number, ownerId: number): Promise<void>;
 } & (
 	| { decides: 'title'; maxLength: number }
+	| { decides: 'prompt'; maxLength: number }
 	| {
 			decides: 'choice';
 			choices: readonly { value: string; label: string }[];
@@ -209,8 +246,9 @@ export interface TextKindDef {
 	list(profileId: number, opts: { applicationId?: number; limit: number }): Promise<TextRow[]>;
 	read(id: number, profileId: number): Promise<TextRow | null>;
 	/**
-	 * How to start an empty one from outside the app. Absent for the kind that
-	 * may not be; see TEXT_CREATE_KIND_NAMES for which and why.
+	 * How to start an empty one from outside the app. Absent for a kind that may
+	 * not be. Every kind may today; TEXT_CREATE_KIND_NAMES says why each one is
+	 * there, and it is the place a kind would be taken out again.
 	 *
 	 * Optional on the interface and required of every kind the policy lists —
 	 * `TEXT_KINDS` is typed so that a name added to TEXT_CREATE_KIND_NAMES
@@ -291,8 +329,13 @@ async function nextSort(
 	return (last?.sort ?? -1) + 1;
 }
 
-/** Trim a question down to something that fits on one line of a list. */
-function shorten(text: string | null, max = 100): string {
+/**
+ * Trim a question down to something that fits on one line of a list.
+ *
+ * Exported for the create's duplicate refusal, which quotes the question it ran
+ * into the way the list shows it rather than all of it.
+ */
+export function shorten(text: string | null, max = 100): string {
 	const flat = (text ?? '').replace(/\s+/g, ' ').trim();
 	if (!flat) return '';
 	return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
@@ -425,7 +468,7 @@ const letterKind: CreatableKindDef = {
 	}
 };
 
-const questionKind: TextKindDef = {
+const questionKind: CreatableKindDef = {
 	kind: 'question',
 	noun: 'answer',
 	collection: { name: 'Applications', path: '/applications' },
@@ -472,6 +515,53 @@ const questionKind: TextKindDef = {
 			prompt: row.question,
 			path: `/applications/${row.application_id}/texts/questions/${row.id}`
 		};
+	},
+	/**
+	 * The question, with no answer under it yet.
+	 *
+	 * The columns the texts page's own Add Question writes, less the answer. No
+	 * `sort`, so it goes in date order, on top, where that button puts one (see
+	 * $lib/texts/text-order.ts). The wording is stored as it arrived, trimmed and
+	 * nothing more: a question with its parts on separate lines keeps them, since
+	 * the answer will be judged against exactly this.
+	 */
+	create: {
+		owner: 'application',
+		noun: 'question',
+		field: 'question_asked',
+		decides: 'prompt',
+		maxLength: QUESTION_MAX,
+		insert: async (applicationId, question) => {
+			const [row] = await db
+				.insert(application_questions)
+				.values({
+					application_id: applicationId,
+					question,
+					answer: null,
+					date_created: new Date()
+				})
+				.returning({ id: application_questions.id, question: application_questions.question });
+
+			return {
+				id: row.id,
+				label: shorten(row.question),
+				applicationId,
+				committed: null,
+				prompt: row.question,
+				path: `/applications/${applicationId}/texts/questions/${row.id}`
+			};
+		},
+
+		remove: async (id, applicationId) => {
+			await db
+				.delete(application_questions)
+				.where(
+					and(
+						eq(application_questions.id, id),
+						eq(application_questions.application_id, applicationId)
+					)
+				);
+		}
 	},
 
 	setText: async (id, _profileId, content) => {

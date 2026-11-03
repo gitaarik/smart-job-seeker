@@ -39,7 +39,7 @@ import {
 	story_versions
 } from '$lib/server/db/schema';
 import { serializeStarMarkdown } from '$lib/interview/star';
-import { listProfileTexts, readProfileText } from '$lib/server/texts/profile-texts';
+import { QUESTION_MAX, listProfileTexts, readProfileText } from '$lib/server/texts/profile-texts';
 import { callTool } from '$lib/server/mcp/call';
 import { createMcpKey } from '$lib/server/mcp/keys';
 import { toolsFor } from '$lib/server/mcp/tools';
@@ -385,6 +385,118 @@ async function main() {
 			madeSheet.length === 1 && madeSheet[0].content == null
 		);
 
+		/* --- a question, as the employer asked it --------------------------- */
+
+		check('add_question is offered', names.has('add_question'));
+
+		// Two paragraphs on purpose: the wording is stored as it arrived, trimmed
+		// and nothing more, so a question in parts keeps its parts.
+		const ASKED = 'What is your notice period?\n\n(In weeks, please.)';
+		const startedQuestion = await callTool(
+			'add_question',
+			{
+				profile_id: profileId,
+				application_id: application.id,
+				question_asked: `  ${ASKED}\n`,
+				rationale: 'The application form asks it, and they pasted the form.'
+			},
+			KEY
+		);
+		check(
+			'a question can be started under an application',
+			startedQuestion.isError === undefined,
+			text(startedQuestion).slice(0, 80)
+		);
+		const asked = await db
+			.select({ id: application_questions.id, answer: application_questions.answer })
+			.from(application_questions)
+			.where(
+				and(
+					eq(application_questions.application_id, application.id),
+					eq(application_questions.question, ASKED)
+				)
+			);
+		check('it is on that application, once, worded as it was asked', asked.length === 1);
+		check(
+			'with no answer, so the answer still has to arrive as a version',
+			asked[0]?.answer == null
+		);
+		check(
+			'the result hands back the id the second call needs',
+			asked[0] !== undefined && text(startedQuestion).includes(String(asked[0].id)),
+			text(startedQuestion).slice(0, 80)
+		);
+
+		const duplicateQuestion = await callTool(
+			'add_question',
+			{
+				profile_id: profileId,
+				application_id: application.id,
+				// The fixture's question, broken and cased the way a paste breaks it.
+				question_asked: 'why do you want to work\nHERE?',
+				rationale: 'The same question again.'
+			},
+			KEY
+		);
+		check(
+			'the same question again, spaced and cased differently, is refused',
+			duplicateQuestion.isError === true &&
+				text(duplicateQuestion).includes('add_question_version'),
+			text(duplicateQuestion).slice(0, 80)
+		);
+
+		const wholeForm = await callTool(
+			'add_question',
+			{
+				profile_id: profileId,
+				application_id: application.id,
+				question_asked: 'x'.repeat(QUESTION_MAX + 1),
+				rationale: 'A whole form in one row.'
+			},
+			KEY
+		);
+		check('more than one question can be is refused', wholeForm.isError === true);
+
+		const unownedQuestion = await callTool(
+			'add_question',
+			{
+				profile_id: profileId,
+				application_id: application.id + 10_000_000,
+				question_asked: 'Why us?',
+				rationale: 'An application this key cannot reach.'
+			},
+			KEY
+		);
+		check(
+			'a question on an application this profile does not own is refused',
+			unownedQuestion.isError === true
+		);
+
+		// The pair the create exists for: the question, then its answer as a
+		// version, and the question still unanswered until the applicant takes it.
+		if (asked[0]) {
+			const answered = await callTool(
+				'add_question_version',
+				{
+					profile_id: profileId,
+					text_id: asked[0].id,
+					question_content: 'Four weeks from signing.',
+					rationale: 'They told me their notice period.'
+				},
+				KEY
+			);
+			check(
+				'its answer is written as a version',
+				answered.isError === undefined,
+				text(answered).slice(0, 80)
+			);
+			const [afterAnswer] = await db
+				.select({ answer: application_questions.answer })
+				.from(application_questions)
+				.where(eq(application_questions.id, asked[0].id));
+			check('THE QUESTION STILL HAS NO ANSWER until they take one', afterAnswer?.answer == null);
+		}
+
 		/* --- the write, and what it must not touch -------------------------- */
 
 		const wrote = await callTool(
@@ -553,7 +665,19 @@ async function main() {
 		// question cascade from the application — deleted explicitly anyway, so a
 		// missing cascade shows up here rather than as rows nobody looks at.
 		await db.delete(letter_versions).where(eq(letter_versions.letter, letter.id));
-		await db.delete(question_versions).where(eq(question_versions.question, question.id));
+		// Every question on the scratch application, not only the fixture: the
+		// create verb starts one of its own, and an answer version goes under it.
+		const scratchQuestions = (
+			await db
+				.select({ id: application_questions.id })
+				.from(application_questions)
+				.where(eq(application_questions.application_id, application.id))
+		).map((row) => row.id);
+		if (scratchQuestions.length > 0) {
+			await db
+				.delete(question_versions)
+				.where(inArray(question_versions.question, scratchQuestions));
+		}
 		await db.delete(story_versions).where(eq(story_versions.story, story.id));
 		await db.delete(cheat_sheet_versions).where(eq(cheat_sheet_versions.cheat_sheet, sheet.id));
 		// Every letter on the scratch application, not only the fixture: the create
@@ -571,7 +695,9 @@ async function main() {
 					eq(cheat_sheets.title, 'ZZ Verify Started Sheet')
 				)
 			);
-		await db.delete(application_questions).where(eq(application_questions.id, question.id));
+		await db
+			.delete(application_questions)
+			.where(eq(application_questions.application_id, application.id));
 		await db.delete(project_stories).where(eq(project_stories.id, story.id));
 		await db.delete(cheat_sheets).where(eq(cheat_sheets.id, sheet.id));
 		await db.delete(applications).where(eq(applications.id, application.id));
