@@ -4,7 +4,28 @@
 
 import { dbDirect } from '$lib/server/db';
 import { asc, eq } from 'drizzle-orm';
-import { profile_field_variants, profiles, work_experiences } from '$lib/server/db/schema';
+import { profile_field_variants, profiles } from '$lib/server/db/schema';
+import {
+	CERTIFICATE_COLUMNS,
+	CERTIFICATE_SKILL_COLUMNS,
+	EDUCATION_COLUMNS,
+	FIELD_VARIANT_COLUMNS,
+	HIGHLIGHT_COLUMNS,
+	LANGUAGE_COLUMNS,
+	PROFILE_COLUMNS,
+	REFERENCE_COLUMNS,
+	ROLE_ACHIEVEMENT_COLUMNS,
+	ROLE_COLUMNS,
+	ROLE_PROJECT_COLUMNS,
+	ROLE_PROJECT_TECHNOLOGY_COLUMNS,
+	ROLE_TECHNOLOGY_COLUMNS,
+	SIDE_PROJECT_ACHIEVEMENT_COLUMNS,
+	SIDE_PROJECT_COLUMNS,
+	SIDE_PROJECT_TECHNOLOGY_COLUMNS,
+	SKILL_CATEGORY_COLUMNS,
+	SKILL_COLUMNS,
+	VERSION_COLUMNS
+} from './export-columns';
 import { buildDocumentExport, type ProjectIndexMaps } from './export-documents';
 import { buildTranslationExport, emptyTranslationIndexMaps } from './export-translations';
 import { buildTemplateExport } from './export-templates';
@@ -17,40 +38,6 @@ import type {
 	MediaFile,
 	TemplateAssetPayload
 } from './types';
-
-/** What an imported role takes from the import itself rather than the payload. */
-type RoleColumnLeftOut = 'profile_id' | 'date_created' | 'date_updated';
-
-/**
- * A role's columns as this export reads them, checked against the table: a
- * column added to `work_experiences` fails the type check here until it is
- * exported (read here and written in the mapping below) or named in
- * RoleColumnLeftOut. The headline and the company blurb were added after this
- * list was first written, and every export and demo copy dropped both until
- * 2026-11-03.
- */
-const ROLE_COLUMNS = {
-	// Not written out: the documents' and translations' index maps need it.
-	id: true,
-	name: true,
-	location: true,
-	work_mode: true,
-	position: true,
-	headline: true,
-	description: true,
-	summary: true,
-	status: true,
-	sort: true,
-	start_date: true,
-	end_date: true,
-	website: true,
-	tags: true,
-	logo_path: true,
-	banner_path: true
-} as const satisfies Record<
-	Exclude<keyof typeof work_experiences.$inferSelect, RoleColumnLeftOut>,
-	true
->;
 
 /**
  * Build profile export data
@@ -67,6 +54,7 @@ export async function buildProfileExport(
 	const { includeMedia = false, includeDocuments = false } = options;
 	const profile = await dbDirect.query.profiles.findFirst({
 		where: eq(profiles.id, profileId),
+		columns: PROFILE_COLUMNS,
 		with: {
 			profile_versions: {
 				// Library only. The payload keys versions by slug and carries no
@@ -75,13 +63,7 @@ export async function buildProfileExport(
 				// designed to stay out of. Known limitation: a tailored version does
 				// not survive a full export/import round trip.
 				where: (t, { isNull }) => isNull(t.application_id),
-				columns: {
-					status: true,
-					sort: true,
-					slug: true,
-					name: true,
-					toggles: true
-				},
+				columns: VERSION_COLUMNS,
 				with: {
 					extension_links: {
 						with: {
@@ -94,27 +76,14 @@ export async function buildProfileExport(
 				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			highlights: {
-				columns: { status: true, sort: true, text: true, fa_icon: true },
+				columns: HIGHLIGHT_COLUMNS,
 				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			tech_skill_categories: {
-				columns: {
-					// id: translation overlay targets categories by position
-					id: true,
-					status: true,
-					sort: true,
-					name: true,
-					fa_icon: true
-				},
+				columns: SKILL_CATEGORY_COLUMNS,
 				with: {
 					tech_skills: {
-						columns: {
-							status: true,
-							sort: true,
-							name: true,
-							years_experience: true,
-							level: true
-						},
+						columns: SKILL_COLUMNS,
 						with: {
 							tech_skill_type: { columns: { slug: true } }
 						},
@@ -127,38 +96,18 @@ export async function buildProfileExport(
 				columns: ROLE_COLUMNS,
 				with: {
 					work_experience_achievements: {
-						columns: {
-							id: true,
-							status: true,
-							sort: true,
-							description: true,
-							fa_icon: true,
-							tags: true
-						},
+						columns: ROLE_ACHIEVEMENT_COLUMNS,
 						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_technologies: {
-						columns: { status: true, sort: true, name: true, tags: true },
+						columns: ROLE_TECHNOLOGY_COLUMNS,
 						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					work_experience_projects: {
-						columns: {
-							// Needed to attach documents by position; not emitted in the output.
-							id: true,
-							status: true,
-							sort: true,
-							name: true,
-							project_role: true,
-							url: true,
-							start_date: true,
-							end_date: true,
-							description: true,
-							outcome: true,
-							tags: true
-						},
+						columns: ROLE_PROJECT_COLUMNS,
 						with: {
 							work_experience_project_technologies: {
-								columns: { sort: true, name: true, tags: true },
+								columns: ROLE_PROJECT_TECHNOLOGY_COLUMNS,
 								orderBy: (t, { asc }) => asc(t.sort)
 							}
 						},
@@ -168,108 +117,40 @@ export async function buildProfileExport(
 				orderBy: (t, { asc, desc }) => [asc(t.sort), desc(t.start_date)]
 			},
 			side_projects: {
-				columns: {
-					id: true,
-					status: true,
-					sort: true,
-					name: true,
-					project_role: true,
-					start_date: true,
-					end_date: true,
-					url: true,
-					stars: true,
-					summary: true,
-					repo_url: true,
-					image_path: true,
-					banner_path: true,
-					tags: true
-				},
+				columns: SIDE_PROJECT_COLUMNS,
 				with: {
 					side_project_achievements: {
-						columns: { id: true, description: true, sort: true },
+						columns: SIDE_PROJECT_ACHIEVEMENT_COLUMNS,
 						orderBy: (t, { asc }) => asc(t.sort)
 					},
 					side_project_technologies: {
-						columns: { sort: true, name: true, tags: true },
+						columns: SIDE_PROJECT_TECHNOLOGY_COLUMNS,
 						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},
 				orderBy: (t, { asc, desc }) => [asc(t.sort), desc(t.start_date)]
 			},
 			educations: {
-				columns: {
-					id: true,
-					status: true,
-					sort: true,
-					institution: true,
-					location: true,
-					url: true,
-					area: true,
-					study_type: true,
-					graduation_year: true,
-					start_date: true,
-					end_date: true,
-					summary: true,
-					logo_path: true,
-					banner_path: true,
-					tags: true
-				},
+				columns: EDUCATION_COLUMNS,
 				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			languages: {
-				columns: {
-					id: true,
-					status: true,
-					sort: true,
-					name: true,
-					language_code: true,
-					proficiency: true
-				},
+				columns: LANGUAGE_COLUMNS,
 				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			field_variants: {
-				columns: {
-					id: true,
-					work_experience_id: true,
-					field: true,
-					label: true,
-					value: true,
-					note: true,
-					sort: true
-				},
+				columns: FIELD_VARIANT_COLUMNS,
 				orderBy: [asc(profile_field_variants.sort), asc(profile_field_variants.id)]
 			},
 			references: {
-				columns: {
-					// `id` for the translation index map below: a referee's position
-					// and quote are translatable, so the overlay names this row by
-					// its position in the exported array.
-					id: true,
-					status: true,
-					sort: true,
-					author: true,
-					author_position: true,
-					author_email: true,
-					author_phone: true,
-					text: true
-				},
+				columns: REFERENCE_COLUMNS,
 				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			certificates: {
-				columns: {
-					status: true,
-					sort: true,
-					name: true,
-					issuer: true,
-					date: true,
-					expiry_date: true,
-					credential_id: true,
-					url: true,
-					tags: true
-				},
+				columns: CERTIFICATE_COLUMNS,
 				with: {
 					certificate_skills: {
-						columns: { sort: true, name: true },
+						columns: CERTIFICATE_SKILL_COLUMNS,
 						orderBy: (t, { asc }) => asc(t.sort)
 					}
 				},
@@ -434,6 +315,7 @@ export async function buildProfileExport(
 		title: profile.title || undefined,
 		slug: profile.slug || undefined,
 		location: profile.location || undefined,
+		country_code: profile.country_code || undefined,
 		phone_number: profile.phone_number || undefined,
 		email_address: profile.email_address || undefined,
 		personal_website: profile.personal_website || undefined,
@@ -479,21 +361,26 @@ export async function buildProfileExport(
 			status: h.status || undefined,
 			sort: h.sort,
 			text: h.text || undefined,
-			fa_icon: h.fa_icon || undefined
+			type: h.type || undefined,
+			fa_icon: h.fa_icon || undefined,
+			icon_name: h.icon_name || undefined
 		})),
 
 		tech_skill_categories: profile.tech_skill_categories.map((cat) => ({
 			status: cat.status || undefined,
 			sort: cat.sort,
 			name: cat.name || undefined,
+			note: cat.note || undefined,
 			fa_icon: cat.fa_icon || undefined,
+			tags: cat.tags,
 			tech_skills: cat.tech_skills.map((skill) => ({
 				status: skill.status || undefined,
 				sort: skill.sort,
 				name: skill.name || undefined,
 				years_experience: skill.years_experience?.toString() || undefined,
 				level: skill.level || undefined,
-				tech_type: skill.tech_skill_type?.slug || null
+				tech_type: skill.tech_skill_type?.slug || null,
+				tags: skill.tags
 			}))
 		})),
 
@@ -532,6 +419,7 @@ export async function buildProfileExport(
 				name: p.name || '',
 				project_role: p.project_role || undefined,
 				url: p.url || undefined,
+				repo_url: p.repo_url || undefined,
 				start_date: formatDate(p.start_date),
 				end_date: formatDate(p.end_date),
 				description: p.description || undefined,

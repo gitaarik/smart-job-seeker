@@ -192,6 +192,8 @@ export interface ExportedProfileData {
 	title?: string;
 	slug?: string;
 	location?: string;
+	/** In no export before 2026-11-03. */
+	country_code?: string;
 
 	// Contact
 	phone_number?: string;
@@ -276,14 +278,20 @@ export interface ExportedHighlight {
 	status?: string;
 	sort?: number | null;
 	text?: string;
+	/** In no export before 2026-11-03, nor `icon_name`. */
+	type?: string;
 	fa_icon?: string;
+	icon_name?: string;
 }
 
 export interface ExportedTechSkillCategory {
 	status?: string;
 	sort?: number | null;
 	name?: string;
+	/** The private hint that tells two groups of one name apart. In no export before 2026-11-03, nor `tags`. */
+	note?: string;
 	fa_icon?: string;
+	tags?: unknown;
 	tech_skills: ExportedTechSkill[];
 }
 
@@ -294,6 +302,8 @@ export interface ExportedTechSkill {
 	years_experience?: string;
 	level?: string;
 	tech_type?: string | null;
+	/** In no export before 2026-11-03: a restored profile printed every skill on every version. */
+	tags?: unknown;
 }
 
 export interface ExportedWorkExperience {
@@ -341,6 +351,8 @@ export interface ExportedWorkExperienceProject {
 	name: string;
 	project_role?: string;
 	url?: string;
+	/** In no export before 2026-11-03. */
+	repo_url?: string;
 	start_date?: string | null;
 	end_date?: string | null;
 	description?: string;

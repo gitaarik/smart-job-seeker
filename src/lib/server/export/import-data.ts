@@ -361,6 +361,7 @@ function buildProfileUpdateData(p: ExportedProfileData, name: string) {
 		name,
 		title: p.title || null,
 		location: p.location || null,
+		country_code: p.country_code || null,
 		phone_number: p.phone_number || null,
 		email_address: p.email_address || null,
 		personal_website: p.personal_website || null,
@@ -440,7 +441,10 @@ async function importProfileEntities(
 			status: h.status || 'draft',
 			sort: h.sort ?? null,
 			text: h.text || null,
-			fa_icon: h.fa_icon || null
+			// Undefined leaves the column's default, as before the export carried it.
+			type: h.type || undefined,
+			fa_icon: h.fa_icon || null,
+			icon_name: h.icon_name || null
 		});
 	}
 
@@ -559,7 +563,9 @@ async function importProfileEntities(
 				status: cat.status || 'draft',
 				sort: cat.sort ?? null,
 				name: cat.name || null,
-				fa_icon: cat.fa_icon || null
+				note: cat.note || null,
+				fa_icon: cat.fa_icon || null,
+				tags: toJsonValue(cat.tags)
 			})
 			.returning();
 
@@ -573,7 +579,8 @@ async function importProfileEntities(
 				name: skill.name || null,
 				years_experience: skill.years_experience ? parseInt(String(skill.years_experience)) : null,
 				level: skill.level || null,
-				tech_type_id: skill.tech_type ? (techTypeBySlug.get(skill.tech_type) ?? null) : null
+				tech_type_id: skill.tech_type ? (techTypeBySlug.get(skill.tech_type) ?? null) : null,
+				tags: toJsonValue(skill.tags)
 			});
 		}
 	}
@@ -657,6 +664,7 @@ async function importProfileEntities(
 					name: proj.name || null,
 					project_role: proj.project_role || null,
 					url: proj.url || null,
+					repo_url: proj.repo_url || null,
 					start_date: toDateString(proj.start_date),
 					end_date: toDateString(proj.end_date),
 					description: proj.description || null,
