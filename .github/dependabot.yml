@@ -35,6 +35,22 @@ updates:
       - dependency-name: typescript
         update-types:
           - version-update:semver-major
+      # OpenTelemetry's 3.0 SDK line moves as one or not at all: core and
+      # sdk-trace-* 3.x need api 1.10, the 2.x SDK declares api <1.10, and
+      # exporter-trace-otlp-http 0.300 needs sdk-trace 3. Langfuse keeps us on
+      # 2.x: @langfuse/otel 6.1.1 (2026-11-03) still peers on core ^2 and an
+      # exporter <0.300. The minor/patch group offered api 1.10.0 and exporter
+      # 0.300.0 beside the 2.x SDK (#96), which npm cannot resolve. Drop these
+      # three when Langfuse takes OTel 3.
+      - dependency-name: '@opentelemetry/api'
+        versions:
+          - '>=1.10.0'
+      - dependency-name: '@opentelemetry/exporter-trace-otlp-http'
+        versions:
+          - '>=0.300.0'
+      - dependency-name: '@opentelemetry/*'
+        update-types:
+          - version-update:semver-major
 
   # --- Docker images ---
   - package-ecosystem: docker
