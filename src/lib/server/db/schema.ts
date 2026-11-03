@@ -2209,7 +2209,13 @@ export const work_experience_projects = pgTable(
 		start_date: date(),
 		end_date: date(),
 		description: text(),
-		outcome: text()
+		outcome: text(),
+		// Where the project is shown. Only the public site lists role projects,
+		// so this carries the Site switch (`!portfolio`) and a version's tags,
+		// the way a project's technologies do (migration 0078). The documents
+		// never print a project, so the `!resume` + `!cv` pair means nothing
+		// here and the section stays out of HIDEABLE_RESOURCES.
+		tags: json()
 	},
 	(table) => [
 		foreignKey({
