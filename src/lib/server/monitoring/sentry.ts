@@ -35,6 +35,13 @@ export function initSentry(component: ProcessComponent) {
 		environment: getEnvironmentName(),
 		serverName: component,
 		tracesSampleRate: 0,
+		// Sentry 11 registers module load hooks so libraries emit spans; nothing
+		// here records spans, so they would only add a loader to every import.
+		enableRuntimeChannelInjection: false,
+		// Sentry 11 fills user.ip_address by default, which 10 never sent. Its
+		// other new defaults stay: cookies and auth headers now arrive masked,
+		// where 10 sent them raw.
+		dataCollection: { userInfo: false },
 		beforeSend(event) {
 			const value = event.exception?.values?.[0]?.value;
 			return isFrameworkClientError(value) ? null : event;

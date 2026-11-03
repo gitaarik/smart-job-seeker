@@ -38,6 +38,8 @@ if (dsn) {
 		dsn,
 		environment,
 		tracesSampleRate: 0,
+		// Sentry 11 has the server infer the sender's IP by default; 10 did not.
+		dataCollection: { userInfo: false },
 		beforeSend(event) {
 			const value = event.exception?.values?.[0]?.value;
 			return isFrameworkClientError(value) ? null : event;

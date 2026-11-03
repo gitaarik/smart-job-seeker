@@ -1,10 +1,18 @@
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { sentrySvelteKit } from '@sentry/sveltekit';
+import { sentrySvelteKit } from '@sentry/sveltekit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	plugins: [tailwindcss(), sentrySvelteKit({ autoInstrument: false }), sveltekit()],
+	plugins: [
+		tailwindcss(),
+		// No build-time instrumentation: Sentry 11 would move pg, ioredis and the
+		// @langchain packages into ssr.noExternal to instrument them, bundling a
+		// second copy beside the external packages that import them. Nothing here
+		// records spans (tracesSampleRate 0), so it would buy nothing.
+		sentrySvelteKit({ autoInstrument: false, buildTimeInstrumentation: false }),
+		sveltekit()
+	],
 	ssr: {
 		// Keep CJS packages external so Node loads them natively instead of
 		// bundling require() calls into the ESM server build.
@@ -16,10 +24,11 @@ export default defineConfig({
 		external: ['cheerio', 'drizzle-orm', 'bullmq', 'pdf-parse'],
 		// @xyflow/svelte ships uncompiled .svelte files in dist. Vite's svelte
 		// plugin normally spots those via the package's `svelte` export condition
-		// and pulls it in automatically, but Sentry's import-in-the-middle hook
-		// gets the load first and hands it to Node, which has no idea what a
-		// .svelte file is — the route 500s on SSR with ERR_UNKNOWN_FILE_EXTENSION.
-		// Naming it here keeps the transform with Vite, where it belongs.
+		// and pulls it in automatically, but Sentry 10's import-in-the-middle hook
+		// got the load first and handed it to Node, which has no idea what a
+		// .svelte file is — the route 500ed on SSR with ERR_UNKNOWN_FILE_EXTENSION.
+		// Sentry 11's load hooks are off (monitoring/sentry.ts); naming it here
+		// still keeps the transform with Vite, where it belongs.
 		noExternal: ['@xyflow/svelte']
 	},
 	server: {
