@@ -5,6 +5,14 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.0] - 2026-11-03
+
+3 commits since v0.41.0.
+
+### Changed
+
+- Writing and translation now use Gemini 3.8 Flash by default.
+
 ## [0.41.0] - 2026-11-03
 
 10 commits since v0.40.0.
