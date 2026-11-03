@@ -23,9 +23,6 @@ Thumbs.db
 !.env.test
 !.env.project
 !.env.vault
-# Using dotenvx now, and `.env.production` is encrypted,
-# and should be committed to the repo.
-!.env.production
 
 # Vite
 vite.config.js.timestamp-*

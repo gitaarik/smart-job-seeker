@@ -142,11 +142,11 @@ describe('StructuredResume — references', () => {
 	const references = [
 		{
 			id: 13,
-			author: 'Elmar Krack',
-			author_position: 'Co-founder of Tender-it',
+			author: 'Eva Bakker',
+			author_position: 'Co-founder of Tulip Labs',
 			text: 'Rik took ownership of our platform.'
 		},
-		{ id: 14, author: 'Michaël de Groot', author_position: null, text: 'A pleasure to work with.' }
+		{ id: 14, author: 'Noël de Vries', author_position: null, text: 'A pleasure to work with.' }
 	];
 	const withReferences = (overrides: Array<Record<string, unknown>> = []): Profile => ({
 		...profile([]),
@@ -159,7 +159,7 @@ describe('StructuredResume — references', () => {
 			props: { config: {}, type: 'resume', versionId: 5, profile: withReferences() }
 		});
 		expect(screen.queryByText('References')).toBeNull();
-		expect(screen.queryByText('Elmar Krack, Co-founder of Tender-it')).toBeNull();
+		expect(screen.queryByText('Eva Bakker, Co-founder of Tulip Labs')).toBeNull();
 	});
 
 	test('prints every reference on a CV, with the note that contact details are on request', () => {
@@ -167,10 +167,10 @@ describe('StructuredResume — references', () => {
 			props: { config: {}, type: 'cv', versionId: 5, profile: withReferences() }
 		});
 		expect(screen.getByText('References')).toBeTruthy();
-		expect(screen.getByText('Elmar Krack, Co-founder of Tender-it')).toBeTruthy();
+		expect(screen.getByText('Eva Bakker, Co-founder of Tulip Labs')).toBeTruthy();
 		expect(screen.getByText('“Rik took ownership of our platform.”')).toBeTruthy();
 		// No position, no dangling comma.
-		expect(screen.getByText('Michaël de Groot')).toBeTruthy();
+		expect(screen.getByText('Noël de Vries')).toBeTruthy();
 		expect(screen.getByText('Contact details available upon request')).toBeTruthy();
 	});
 
@@ -185,8 +185,8 @@ describe('StructuredResume — references', () => {
 			}
 		});
 		expect(screen.getByText('Referenties')).toBeTruthy();
-		expect(screen.getByText('Elmar Krack, Co-founder of Tender-it')).toBeTruthy();
-		expect(screen.queryByText('Michaël de Groot')).toBeNull();
+		expect(screen.getByText('Eva Bakker, Co-founder of Tulip Labs')).toBeTruthy();
+		expect(screen.queryByText('Noël de Vries')).toBeNull();
 	});
 });
 

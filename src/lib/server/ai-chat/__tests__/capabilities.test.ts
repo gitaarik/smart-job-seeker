@@ -2709,15 +2709,15 @@ describe('translations', () => {
 		{
 			id: 13,
 			profile_id: 12,
-			author: 'Elmar Krack',
-			author_position: 'Co-founder of Tender-it',
+			author: 'Eva Bakker',
+			author_position: 'Co-founder of Tulip Labs',
 			text: 'Rik demonstrated exceptional technical leadership.'
 		},
 		{
 			id: 14,
 			profile_id: 12,
-			author: 'Michaël de Groot',
-			author_position: 'Founder of Chipta',
+			author: 'Noël de Vries',
+			author_position: 'Founder of Northgate',
 			text: 'Rik modernized our client-facing interfaces.'
 		}
 	];
@@ -2726,7 +2726,7 @@ describe('translations', () => {
 	async function referencesPage(): Promise<LiveCapability[]> {
 		sectionRows = { reference: REFERENCES };
 		profileLanguages = ['nl'];
-		translatedRows = { 13: { 'reference.author_position.nl': 'Medeoprichter van Tender-it' } };
+		translatedRows = { 13: { 'reference.author_position.nl': 'Medeoprichter van Tulip Labs' } };
 		return resolveCapabilities(['edit_reference', 'add_reference'], null, ACTOR);
 	}
 
@@ -2786,10 +2786,10 @@ describe('translations', () => {
 		const prompt = renderCapabilityPrompt(await referencesPage());
 
 		expect(prompt).toContain(
-			'target_id 13: Elmar Krack, Co-founder of Tender-it (Dutch: author_position)'
+			'target_id 13: Eva Bakker, Co-founder of Tulip Labs (Dutch: author_position)'
 		);
 		// No note on a row with nothing translated: its absence is the information.
-		expect(prompt).toMatch(/target_id 14: Michaël de Groot, Founder of Chipta\n/);
+		expect(prompt).toMatch(/target_id 14: Noël de Vries, Founder of Northgate\n/);
 		expect(prompt.match(/Their CV also exists in Dutch/g)).toHaveLength(1);
 		// The fields are listed, because the schema's enum steers a model reaching
 		// for a translation a section lacks to the English field instead.

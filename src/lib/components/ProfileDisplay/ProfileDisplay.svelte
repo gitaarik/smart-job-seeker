@@ -480,7 +480,7 @@
 					<!--
 						Name and role on one line, comma-separated, the way the References
 						page labels the same row (`rowLabel` in profile/resources.ts) — a
-						referee is "Elmar Krack, Co-founder of Tender-it" everywhere they
+						referee is "Eva Bakker, Co-founder of Tulip Labs" everywhere they
 						appear. The role is translated by applyTranslations before this
 						renders, so a non-English CV gets the overlay for free; the name is
 						deliberately not translatable.

@@ -18,11 +18,11 @@ vi.mock('$app/state', () => ({ page: { url: new URL('http://localhost/p/alex-mor
 const references = [
 	{
 		id: 13,
-		author: 'Elmar Krack',
-		author_position: 'Co-founder of Tender-it',
+		author: 'Eva Bakker',
+		author_position: 'Co-founder of Tulip Labs',
 		text: 'Rik took ownership of our platform.'
 	},
-	{ id: 14, author: 'Michaël de Groot', author_position: null, text: 'A pleasure to work with.' }
+	{ id: 14, author: 'Noël de Vries', author_position: null, text: 'A pleasure to work with.' }
 ];
 
 const profile = (overrides: Array<Record<string, unknown>> = []): Profile => ({

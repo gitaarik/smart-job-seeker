@@ -1358,17 +1358,19 @@ describe('undoing an add', () => {
 describe('translations', () => {
 	const reference = PROFILE_CAPABILITIES.edit_reference;
 	const addReference = PROFILE_CAPABILITIES.add_reference;
-	const REFERENCE = { id: 13, label: 'Elmar Krack, Co-founder of Tender-it' };
+	const REFERENCE = { id: 13, label: 'Eva Bakker, Co-founder of Tulip Labs' };
 
 	/** A profile that writes in Dutch, with reference 13's position already in it. */
 	function inDutch() {
 		translations.languages = ['nl'];
-		translations.values = { 13: { 'reference.author_position.nl': 'Medeoprichter van Tender-it' } };
+		translations.values = {
+			13: { 'reference.author_position.nl': 'Medeoprichter van Tulip Labs' }
+		};
 		state.row = {
 			id: 13,
 			profile_id: 12,
-			author: 'Elmar Krack',
-			author_position: 'Co-founder of Tender-it',
+			author: 'Eva Bakker',
+			author_position: 'Co-founder of Tulip Labs',
 			text: 'Rik demonstrated exceptional technical leadership.'
 		};
 	}
@@ -1407,7 +1409,7 @@ describe('translations', () => {
 			expect(keys[keys.indexOf('reference.author_position') + 1]).toBe(
 				'reference.author_position.nl'
 			);
-			expect(current['reference.author_position.nl']).toBe('Medeoprichter van Tender-it');
+			expect(current['reference.author_position.nl']).toBe('Medeoprichter van Tulip Labs');
 		});
 
 		it('reads an unwritten translation as null, so filling it reads as additive', async () => {
@@ -1423,7 +1425,7 @@ describe('translations', () => {
 		});
 
 		it('is exactly what it was for a profile that has never translated anything', async () => {
-			state.row = { id: 13, profile_id: 12, author: 'Elmar Krack' };
+			state.row = { id: 13, profile_id: 12, author: 'Eva Bakker' };
 			const current = await reference.current(REFERENCE, ACTOR);
 
 			expect(Object.keys(current).some((key) => key.endsWith('.nl'))).toBe(false);
@@ -1604,14 +1606,14 @@ describe('translations', () => {
 
 			expect(
 				addReference.validate(
-					{ 'reference.author': 'Michaël de Groot', 'reference.text.nl': 'Rik moderniseerde.' },
+					{ 'reference.author': 'Noël de Vries', 'reference.text.nl': 'Rik moderniseerde.' },
 					current
 				).ok
 			).toBe(false);
 			expect(
 				addReference.validate(
 					{
-						'reference.author': 'Michaël de Groot',
+						'reference.author': 'Noël de Vries',
 						'reference.text': 'Rik modernized.',
 						'reference.text.nl': 'Rik moderniseerde.'
 					},
@@ -1628,7 +1630,7 @@ describe('translations', () => {
 			const target = await addReference.apply(
 				{ id: 12, label: 'x' },
 				{
-					'reference.author': 'Michaël de Groot',
+					'reference.author': 'Noël de Vries',
 					'reference.text': 'Rik modernized.',
 					'reference.text.nl': 'Rik moderniseerde.'
 				},
@@ -1637,7 +1639,7 @@ describe('translations', () => {
 			);
 
 			expect(state.creates[0].values).toEqual({
-				author: 'Michaël de Groot',
+				author: 'Noël de Vries',
 				text: 'Rik modernized.'
 			});
 			expect(target).toMatchObject({ id: 99 });
@@ -1664,7 +1666,7 @@ describe('translations', () => {
 		it('notes what each listed row already has, so a list is not blind to it', async () => {
 			inDutch();
 			const answer = await reference.translations?.(
-				[REFERENCE, { id: 14, label: 'Michaël de Groot, Founder of Chipta' }],
+				[REFERENCE, { id: 14, label: 'Noël de Vries, Founder of Northgate' }],
 				ACTOR
 			);
 

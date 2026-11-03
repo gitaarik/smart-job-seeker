@@ -633,7 +633,7 @@ describe('setItemStateForApplication', () => {
 	// A reference has no tags and no run decides about one, so this switch is
 	// the only way one reaches a resume.
 	it('takes a reference, and only one this profile holds', async () => {
-		mockGetProfile.mockResolvedValue({ ...profile, references: [reference(13, 'Elmar Krack')] });
+		mockGetProfile.mockResolvedValue({ ...profile, references: [reference(13, 'Eva Bakker')] });
 
 		await toggle({ entityType: OVERRIDE_ENTITIES.reference, entityId: 13, on: true });
 		// 10 is a bullet's id, not a reference's.
@@ -1277,8 +1277,8 @@ describe('versionItemStates', () => {
 		mockGetProfile.mockResolvedValue({
 			...profile,
 			references: [
-				reference(13, 'Elmar Krack', 'Co-founder of Tender-it'),
-				reference(14, 'Michaël de Groot')
+				reference(13, 'Eva Bakker', 'Co-founder of Tulip Labs'),
+				reference(14, 'Noël de Vries')
 			],
 			profile_versions: [
 				base,
@@ -1296,14 +1296,14 @@ describe('versionItemStates', () => {
 			title: 'References'
 		});
 		expect(row(resume, 'reference:13')).toMatchObject({
-			label: 'Elmar Krack, Co-founder of Tender-it',
+			label: 'Eva Bakker, Co-founder of Tulip Labs',
 			on: false,
 			baseOn: false,
 			source: 'base',
 			reason: 'only on your CV'
 		});
 		expect(row(resume, 'reference:14')).toMatchObject({
-			label: 'Michaël de Groot',
+			label: 'Noël de Vries',
 			on: true,
 			baseOn: false,
 			source: 'user',
@@ -1553,7 +1553,7 @@ describe('describeOverrides', () => {
 	// Who they are names a referee; the quote is what the page prints.
 	it('names a referee by who they are and their role', async () => {
 		find.references.findMany.mockResolvedValue([
-			{ id: 13, author: 'Elmar Krack', author_position: 'Co-founder of Tender-it' }
+			{ id: 13, author: 'Eva Bakker', author_position: 'Co-founder of Tulip Labs' }
 		]);
 
 		const [described] = await describeOverrides([
@@ -1562,7 +1562,7 @@ describe('describeOverrides', () => {
 
 		expect(described).toMatchObject({
 			entityType: OVERRIDE_ENTITIES.reference,
-			label: 'Elmar Krack, Co-founder of Tender-it',
+			label: 'Eva Bakker, Co-founder of Tulip Labs',
 			context: null
 		});
 	});

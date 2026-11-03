@@ -182,7 +182,7 @@
 			.join(', ');
 		return [c.name, tail].filter(Boolean).join(' – ');
 	}
-	// "Elmar Krack, Co-founder of Tender-it": the way the References page and
+	// "Eva Bakker, Co-founder of Tulip Labs": the way the References page and
 	// the default layout name a referee.
 	function refLine(r: Reference): string {
 		return [r.author, r.author_position].filter(Boolean).join(', ');

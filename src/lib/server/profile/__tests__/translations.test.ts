@@ -212,42 +212,42 @@ describe('references in the translation layer', () => {
 		return { id: 1, references: refs };
 	}
 
-	const elmar = {
+	const eva = {
 		id: 13,
-		author: 'Elmar Krack',
-		author_position: 'Co-founder of Tender-it',
-		author_email: 'elmar@tender-it.example',
+		author: 'Eva Bakker',
+		author_position: 'Co-founder of Tulip Labs',
+		author_email: 'eva@tuliplabs.example',
 		author_phone: '+31 6 1234 5678',
 		text: 'Rik built our entire platform from the ground up.'
 	};
 
 	it('overlays the position and the quote', () => {
-		const p = profileWith({ ...elmar });
+		const p = profileWith({ ...eva });
 		applyTranslations(
 			p,
 			translator({
-				'reference:13:author_position': 'Medeoprichter van Tender-it',
+				'reference:13:author_position': 'Medeoprichter van Tulip Labs',
 				'reference:13:text': 'Rik heeft ons hele platform vanaf nul gebouwd.'
 			})
 		);
-		expect(p.references[0].author_position).toBe('Medeoprichter van Tender-it');
+		expect(p.references[0].author_position).toBe('Medeoprichter van Tulip Labs');
 		expect(p.references[0].text).toBe('Rik heeft ons hele platform vanaf nul gebouwd.');
 	});
 
 	// A name is a name in every language, and the contact fields are not prose.
 	// An overlay on any of them would be a second place for them to drift.
 	it('leaves the name and the contact details alone', () => {
-		const p = profileWith({ ...elmar });
+		const p = profileWith({ ...eva });
 		applyTranslations(
 			p,
 			translator({
-				'reference:13:author': 'Elmar de Kraker',
+				'reference:13:author': 'Eva de Bakker',
 				'reference:13:author_email': 'nee@example.com',
 				'reference:13:author_phone': '+31 0 0000 0000'
 			})
 		);
-		expect(p.references[0].author).toBe('Elmar Krack');
-		expect(p.references[0].author_email).toBe('elmar@tender-it.example');
+		expect(p.references[0].author).toBe('Eva Bakker');
+		expect(p.references[0].author_email).toBe('eva@tuliplabs.example');
 		expect(p.references[0].author_phone).toBe('+31 6 1234 5678');
 		expect(isTranslatable('reference', 'author')).toBe(false);
 		expect(isTranslatable('reference', 'author_email')).toBe(false);
@@ -260,22 +260,22 @@ describe('references in the translation layer', () => {
 	});
 
 	it('gives each referee its own editor group, with the quote as a textarea', () => {
-		const groups = collectTranslatable(profileWith({ ...elmar }, { id: 14, author: 'Michael' }));
+		const groups = collectTranslatable(profileWith({ ...eva }, { id: 14, author: 'Noël' }));
 
 		expect(groups.find((g) => g.key === 'ref-13')).toEqual({
 			key: 'ref-13',
-			title: 'Reference — Elmar Krack',
+			title: 'Reference — Eva Bakker',
 			rows: [
 				expect.objectContaining({
 					field: 'author_position',
 					label: 'Position',
-					base: 'Co-founder of Tender-it',
+					base: 'Co-founder of Tulip Labs',
 					multiline: false
 				}),
 				expect.objectContaining({
 					field: 'text',
 					label: 'Reference',
-					base: elmar.text,
+					base: eva.text,
 					multiline: true
 				})
 			]

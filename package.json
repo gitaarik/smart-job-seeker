@@ -23,7 +23,6 @@
 		"docker:db:create-dev-seed": "docker compose exec app npx vite-node scripts/create-dev-seed.ts",
 		"docker:db:migrate:new": "docker compose exec app npx drizzle-kit generate",
 		"docker:db:migrate:deploy": "docker compose exec app npx drizzle-kit migrate",
-		"docker:db:push:production": "npx tsx scripts/db-push-production.ts",
 		"docker:seed:test-user": "docker compose exec app npm run host:seed:test-user",
 		"docker:demo:seed-template": "docker compose exec app npm run host:demo:seed-template",
 		"host:dev": "dotenvx run -- vite dev",

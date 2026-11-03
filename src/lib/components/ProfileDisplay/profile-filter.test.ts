@@ -401,8 +401,8 @@ describe('filterOnTags — per-version overrides', () => {
 describe('filterReferences', () => {
 	type Ref = { id: number; author: string };
 	const REFS: Ref[] = [
-		{ id: 13, author: 'Elmar Krack' },
-		{ id: 14, author: 'Michaël de Groot' }
+		{ id: 13, author: 'Eva Bakker' },
+		{ id: 14, author: 'Noël de Vries' }
 	];
 	const authors = (refs: Ref[]) => refs.map((r) => r.author);
 
@@ -412,7 +412,7 @@ describe('filterReferences', () => {
 	}
 
 	it('prints them on the CV and nowhere else', () => {
-		expect(referencesOn('cv')).toEqual(['Elmar Krack', 'Michaël de Groot']);
+		expect(referencesOn('cv')).toEqual(['Eva Bakker', 'Noël de Vries']);
 		expect(referencesOn('resume')).toEqual([]);
 		expect(referencesOn('portfolio')).toEqual([]);
 		// With no type named, a render means the resume.
@@ -421,12 +421,12 @@ describe('filterReferences', () => {
 
 	it('puts one on the resume this version decided to show it on', () => {
 		const overrides = [{ entity_type: 'reference', entity_id: 14, action: 'include' }];
-		expect(referencesOn('resume', overrides)).toEqual(['Michaël de Groot']);
+		expect(referencesOn('resume', overrides)).toEqual(['Noël de Vries']);
 	});
 
 	it('leaves one off the CV this version decided to hide it on', () => {
 		const overrides = [{ entity_type: 'reference', entity_id: 13, action: 'exclude' }];
-		expect(referencesOn('cv', overrides)).toEqual(['Michaël de Groot']);
+		expect(referencesOn('cv', overrides)).toEqual(['Noël de Vries']);
 	});
 
 	// The library version the tailored one extends has no decision, so it is
@@ -450,7 +450,7 @@ describe('filterReferences', () => {
 	// The rule stands in for tags a reference does not have; it is not read as
 	// tags the reference might carry.
 	it('ignores a tags field on the row', () => {
-		const tagged = [{ id: 13, author: 'Elmar Krack', tags: ['resume'] }];
+		const tagged = [{ id: 13, author: 'Eva Bakker', tags: ['resume'] }];
 		expect(createProfileFilter([], 'resume', null, '').filterReferences(tagged)).toEqual([]);
 	});
 });

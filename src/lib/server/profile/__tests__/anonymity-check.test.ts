@@ -20,7 +20,7 @@ const row = {
 	name: 'Rik Wanders',
 	company_name: 'Rik Wanders Software',
 	email_address: 'rik@rikwanders.tech',
-	phone_number: '+31649118511',
+	phone_number: '+31687654321',
 	personal_website: 'https://www.rikwanders.tech/',
 	linkedin_profile: 'https://www.linkedin.com/in/rik-wanders-software',
 	github_profile: 'https://github.com/gitaarik',
@@ -44,7 +44,7 @@ describe('identityTerms', () => {
 				'name:Wanders',
 				'business:Rik Wanders Software',
 				'email:rik@rikwanders.tech',
-				'phone:649118511',
+				'phone:687654321',
 				'handle:rik-wanders-software',
 				'handle:gitaarik',
 				'handle:rikwanders.tech',
@@ -108,10 +108,10 @@ describe('findLeaks', () => {
 	});
 
 	it('finds a phone number however it is written', () => {
-		for (const written of ['+31649118511', '06-49118511', '06 4911 8511', '(06) 49 11 85 11']) {
+		for (const written of ['+31687654321', '06-87654321', '06 8765 4321', '(06) 87 65 43 21']) {
 			expect(kinds(`Bel ${written} gerust`), written).toEqual(['phone']);
 		}
-		expect(kinds('order 1649118511 shipped')).toEqual([]);
+		expect(kinds('order 1687654321 shipped')).toEqual([]);
 	});
 
 	it('finds a handle the PDF broke across two lines', () => {

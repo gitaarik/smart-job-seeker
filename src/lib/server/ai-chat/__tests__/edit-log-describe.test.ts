@@ -19,7 +19,7 @@ function entry(fields: Record<string, unknown>, previous: Record<string, unknown
 		id: 1,
 		capability: 'edit_reference',
 		source: 'mcp',
-		target: { id: 13, label: 'Elmar Krack, Co-founder of Tender-it' },
+		target: { id: 13, label: 'Eva Bakker, Co-founder of Tulip Labs' },
 		fields,
 		previous,
 		revertedAt: null,
@@ -49,7 +49,7 @@ describe('describeLoggedChange', () => {
 	it('shows a change of the translation alone', () => {
 		const changes = describeLoggedChange(
 			entry(
-				{ 'reference.author_position.nl': 'Oprichter van Chipta' },
+				{ 'reference.author_position.nl': 'Oprichter van Northgate' },
 				{ 'reference.author_position.nl': 'Oprichter' }
 			)
 		);
@@ -59,7 +59,7 @@ describe('describeLoggedChange', () => {
 				field: 'author_position.nl',
 				label: 'Their role (Dutch)',
 				from: 'Oprichter',
-				to: 'Oprichter van Chipta'
+				to: 'Oprichter van Northgate'
 			}
 		]);
 	});
