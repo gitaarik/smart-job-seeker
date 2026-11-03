@@ -78,12 +78,27 @@ vi.mock('$lib/server/profile/generate-version-pdfs', () => ({
 }));
 vi.mock('../import-documents', () => ({
 	deleteProfileDocuments: () => Promise.resolve(),
-	emptyCreatedProjectIds: () => ({}),
+	// The real shape, which an imported role writes its new id into.
+	emptyCreatedProjectIds: () => ({
+		workExperienceIdByIndex: [],
+		workExperienceProjectIdByIndex: new Map(),
+		sideProjectIdByIndex: []
+	}),
 	importDocuments: () => Promise.resolve(0)
 }));
 vi.mock('../import-translations', () => ({
 	deleteProfileTranslations: () => Promise.resolve(),
-	emptyCreatedTranslationIds: () => ({}),
+	emptyCreatedTranslationIds: () => ({
+		workExperienceIdByIndex: [],
+		workExperienceAchievementIdByIndex: new Map(),
+		sideProjectIdByIndex: [],
+		sideProjectAchievementIdByIndex: new Map(),
+		educationIdByIndex: [],
+		techSkillCategoryIdByIndex: [],
+		languageIdByIndex: [],
+		referenceIdByIndex: [],
+		fieldVariantIdByIndex: []
+	}),
 	importTranslations: () => Promise.resolve(0)
 }));
 // The payload carries no certificate files, so an overwrite reads them off the
@@ -234,5 +249,60 @@ describe('overwrite import at profile scope', () => {
 		expect(deleted).toEqual(
 			expect.arrayContaining(['applications', 'project_stories', 'cheat_sheets'])
 		);
+	});
+});
+
+/**
+ * Not a delete rule, but this file's harness is the one that sees what an
+ * import writes. A role's headline and company blurb were in no export and
+ * were written empty by every import (and every demo copy) until 2026-11-03.
+ */
+describe('a role, restored', () => {
+	beforeEach(() => {
+		deleted.length = 0;
+		inserted.length = 0;
+	});
+
+	it('keeps its headline, company blurb, place and work mode', async () => {
+		const payload = profileExport() as unknown as {
+			profile: { work_experiences: Record<string, unknown>[] };
+		};
+		payload.profile.work_experiences = [
+			{
+				name: 'Acme',
+				position: 'Code Reviewer',
+				location: 'Austin, US',
+				work_mode: 'remote',
+				headline: 'Reviews code changes judged by senior engineers',
+				description: 'A code review firm.',
+				achievements: [],
+				technologies: [],
+				projects: []
+			}
+		];
+		await importExportData(payload as never, 'u1', { overwriteProfileId: 1 });
+
+		expect(inserted.find((row) => row.table === 'work_experiences')?.values).toMatchObject({
+			location: 'Austin, US',
+			work_mode: 'remote',
+			headline: 'Reviews code changes judged by senior engineers',
+			description: 'A code review firm.'
+		});
+	});
+
+	it('restores a payload from before them with the two left empty', async () => {
+		const payload = profileExport() as unknown as {
+			profile: { work_experiences: Record<string, unknown>[] };
+		};
+		payload.profile.work_experiences = [
+			{ name: 'Acme', position: 'Code Reviewer', achievements: [], technologies: [], projects: [] }
+		];
+		await importExportData(payload as never, 'u1', { overwriteProfileId: 1 });
+
+		expect(inserted.find((row) => row.table === 'work_experiences')?.values).toMatchObject({
+			headline: null,
+			description: '',
+			work_mode: null
+		});
 	});
 });

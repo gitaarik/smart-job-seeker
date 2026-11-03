@@ -589,8 +589,9 @@ async function importProfileEntities(
 				name: w.name || '',
 				location: w.location || '',
 				work_mode: asWorkMode(w.work_mode),
-				description: '', // Field deprecated
+				description: w.description || '',
 				position: w.position || '',
+				headline: w.headline || null,
 				summary: w.summary || '',
 				status: w.status || 'draft',
 				sort: w.sort ?? null,

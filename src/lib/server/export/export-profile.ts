@@ -4,7 +4,7 @@
 
 import { dbDirect } from '$lib/server/db';
 import { asc, eq } from 'drizzle-orm';
-import { profile_field_variants, profiles } from '$lib/server/db/schema';
+import { profile_field_variants, profiles, work_experiences } from '$lib/server/db/schema';
 import { buildDocumentExport, type ProjectIndexMaps } from './export-documents';
 import { buildTranslationExport, emptyTranslationIndexMaps } from './export-translations';
 import { buildTemplateExport } from './export-templates';
@@ -17,6 +17,40 @@ import type {
 	MediaFile,
 	TemplateAssetPayload
 } from './types';
+
+/** What an imported role takes from the import itself rather than the payload. */
+type RoleColumnLeftOut = 'profile_id' | 'date_created' | 'date_updated';
+
+/**
+ * A role's columns as this export reads them, checked against the table: a
+ * column added to `work_experiences` fails the type check here until it is
+ * exported (read here and written in the mapping below) or named in
+ * RoleColumnLeftOut. The headline and the company blurb were added after this
+ * list was first written, and every export and demo copy dropped both until
+ * 2026-11-03.
+ */
+const ROLE_COLUMNS = {
+	// Not written out: the documents' and translations' index maps need it.
+	id: true,
+	name: true,
+	location: true,
+	work_mode: true,
+	position: true,
+	headline: true,
+	description: true,
+	summary: true,
+	status: true,
+	sort: true,
+	start_date: true,
+	end_date: true,
+	website: true,
+	tags: true,
+	logo_path: true,
+	banner_path: true
+} as const satisfies Record<
+	Exclude<keyof typeof work_experiences.$inferSelect, RoleColumnLeftOut>,
+	true
+>;
 
 /**
  * Build profile export data
@@ -90,22 +124,7 @@ export async function buildProfileExport(
 				orderBy: (t, { asc }) => asc(t.sort)
 			},
 			work_experiences: {
-				columns: {
-					id: true,
-					name: true,
-					location: true,
-					work_mode: true,
-					position: true,
-					summary: true,
-					status: true,
-					sort: true,
-					start_date: true,
-					end_date: true,
-					website: true,
-					tags: true,
-					logo_path: true,
-					banner_path: true
-				},
+				columns: ROLE_COLUMNS,
 				with: {
 					work_experience_achievements: {
 						columns: {
@@ -483,6 +502,8 @@ export async function buildProfileExport(
 			location: work.location || undefined,
 			work_mode: work.work_mode || undefined,
 			position: work.position || undefined,
+			headline: work.headline || undefined,
+			description: work.description || undefined,
 			summary: work.summary || undefined,
 			status: work.status || undefined,
 			sort: work.sort,

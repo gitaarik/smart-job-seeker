@@ -301,6 +301,10 @@ export interface ExportedWorkExperience {
 	location?: string;
 	work_mode?: string;
 	position?: string;
+	/** In no export before 2026-11-03; an older payload restores it empty. */
+	headline?: string;
+	/** The company blurb. Same history as `headline`. */
+	description?: string;
 	summary?: string;
 	status?: string;
 	sort?: number | null;
