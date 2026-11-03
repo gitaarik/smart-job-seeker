@@ -284,7 +284,7 @@ describe('PortfolioSite — where a role was done', () => {
 
 	test('puts the work mode after the place, and nothing for on-site', () => {
 		expect(metaFor({ location: 'Austin, US', work_mode: 'remote' })).toMatch(
-			/ · Austin, US · Remote$/
+			/ · Austin, US \(remote\)$/
 		);
 		expect(metaFor({ location: 'Utrecht, NL', work_mode: 'onsite' })).toMatch(/ · Utrecht, NL$/);
 	});

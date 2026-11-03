@@ -47,7 +47,13 @@ export interface RoleWhere {
 }
 
 /**
- * Where a role was done, for a header or a meta line: "Austin, US · Remote".
+ * Where a role was done, for a header or a meta line: "Austin, US (remote)",
+ * or "Remote" for a role with no place.
+ *
+ * In brackets, the way a CV usually writes it and the way a position already
+ * carries "(contract)". Not a middot, which a document has no other use for,
+ * and not a dash, which the default layout's header already spends on the
+ * date range two parts later.
  *
  * On-site adds nothing. A place on its own already says the work was done
  * there, and printing "On-site" beside every office job is noise the reader
@@ -56,7 +62,9 @@ export interface RoleWhere {
 export function rolePlace(role: RoleWhere, locale?: string | null): string {
 	const mode = asWorkMode(role.work_mode);
 	const label = mode && mode !== 'onsite' ? workModeLabel(mode, locale) : '';
-	return [(role.location ?? '').trim(), label].filter(Boolean).join(' · ');
+	const location = (role.location ?? '').trim();
+	if (!label) return location;
+	return location ? `${location} (${label.toLowerCase()})` : label;
 }
 
 /**

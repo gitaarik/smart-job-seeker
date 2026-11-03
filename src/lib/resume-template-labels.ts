@@ -240,9 +240,10 @@ export const PROFICIENCY_LABELS: Readonly<Record<string, Readonly<Record<string,
 
 /**
  * A role's work mode (`work_experiences.work_mode`, see work-mode.ts) as the
- * documents print it: on its own after the place ("Austin, US · Remote"), and
- * lowercased inside a lead line ("…, remote for Acme in Austin, US."). A fixed
- * vocabulary like proficiency, so it is localized here with the chrome.
+ * documents print it: on its own for a role with no place ("Remote"), and
+ * lowercased after one ("Austin, US (remote)") or inside a lead line
+ * ("…, remote for Acme in Austin, US."). A fixed vocabulary like proficiency,
+ * so it is localized here with the chrome.
  */
 export const WORK_MODE_LABELS: Readonly<Record<WorkMode, Readonly<Record<string, string>>>> = {
 	onsite: {

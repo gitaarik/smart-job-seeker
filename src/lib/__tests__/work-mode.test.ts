@@ -29,9 +29,9 @@ describe('asWorkMode', () => {
 
 describe('rolePlace', () => {
 	it('prints the place, then a mode that adds something', () => {
-		expect(rolePlace({ location: 'Austin, US', work_mode: 'remote' })).toBe('Austin, US · Remote');
+		expect(rolePlace({ location: 'Austin, US', work_mode: 'remote' })).toBe('Austin, US (remote)');
 		expect(rolePlace({ location: 'Utrecht, NL', work_mode: 'hybrid' }, 'nl')).toBe(
-			'Utrecht, NL · Hybride'
+			'Utrecht, NL (hybride)'
 		);
 	});
 

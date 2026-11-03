@@ -214,7 +214,7 @@ describe('ProfileDisplay — where a role was done', () => {
 		render(ProfileDisplay, {
 			props: { type: 'cv', profile: withRole({ work_mode: 'remote' }) }
 		});
-		expect(screen.getByText(/^Acme \| Austin, US · Remote \| Code Reviewer \| /)).toBeTruthy();
+		expect(screen.getByText(/^Acme \| Austin, US \(remote\) \| Code Reviewer \| /)).toBeTruthy();
 	});
 
 	test('prints an on-site role as its place, and no empty part for a role without one', () => {
