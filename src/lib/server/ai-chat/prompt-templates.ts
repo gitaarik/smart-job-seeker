@@ -1638,7 +1638,10 @@ If a job has minimal information (e.g., only title and company visible):
   "skills_preferred": null,
   "remote": null,
   "date_posted": null
-}`
+}
+
+Return one JSON object holding a "jobs" array with one entry per job, in page order: {"jobs": [ ... ]}.
+When the page shows no job listings at all (an empty search result, a login wall, an unrelated page), return {"jobs": []} and nothing else.`
 	},
 
 	extract_matched_skills: {
