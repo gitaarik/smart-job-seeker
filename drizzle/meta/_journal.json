@@ -589,6 +589,13 @@
       "when": 1793698847915,
       "tag": "0083_role_work_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1794068546002,
+      "tag": "0084_platform_search_url_templates",
+      "breakpoints": true
     }
   ]
 }
