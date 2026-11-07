@@ -5,6 +5,29 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.43.0] - 2026-11-07
+
+27 commits since v0.42.0.
+
+### Added
+
+- Dribbble and Glassdoor keyword search URL templates now ship as data, so they can be updated without a code change.
+
+### Changed
+
+- Gemini 3.x models now use thinking levels and no longer receive sampling parameters, which matches what the provider accepts.
+- MCP application questions are now sent to the employer's wording, not a paraphrase.
+- Security and dependency updates: zod 4.6.7, better-auth 1.7.15, Sentry 11.7.0, postal-mime 4.0.8, dotenvx 2.38.2, the npm minor and patch group, and patches for sharp, vite, vitest, hono and transitive packages.
+
+### Fixed
+
+- Scraper dismisses cookie banners before filling the search form, and only treats a dismissal as done once it has taken effect.
+- Search-page extraction states what it returns when a page has no listings, instead of failing without explanation.
+
+### Removed
+
+- Unused environment variables and the legacy production environment were removed from the tree.
+
 ## [0.42.0] - 2026-11-03
 
 3 commits since v0.41.0.
