@@ -556,7 +556,7 @@
 				</div>
 				<div>
 					<label for="new-cred-password" class="mb-1 block text-sm text-[var(--dash-text)]">
-						Password
+						Password <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span>
 					</label>
 					<div class="relative">
 						<input
@@ -574,6 +574,9 @@
 							<FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} class="h-4 w-4" />
 						</button>
 					</div>
+					<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+						Leave it empty for sites that sign you in with a code sent to your email.
+					</p>
 				</div>
 				<!-- Advanced: security answer -->
 				<button
