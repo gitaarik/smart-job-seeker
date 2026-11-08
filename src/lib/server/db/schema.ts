@@ -5458,7 +5458,9 @@ export const media_presets = pgTable(
 		date_created: timestamp({ withTimezone: true, mode: 'date' })
 	},
 	(table) => [
-		uniqueIndex('media_presets_shared_key').on(table.key).where(sql`profile_id IS NULL`),
+		uniqueIndex('media_presets_shared_key')
+			.on(table.key)
+			.where(sql`profile_id IS NULL`),
 		index('media_presets_profile_idx').on(table.profile_id),
 		foreignKey({
 			columns: [table.profile_id],
