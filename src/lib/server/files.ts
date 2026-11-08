@@ -37,6 +37,10 @@ const EXT_TO_MIME: Record<string, string> = {
 	'.htm': 'text/html',
 	'.json': 'application/json',
 	'.txt': 'text/plain',
+	// A recruiter's email, read by documents/extract-email.ts. The Activity tab
+	// took these all along (its form checks no list), stored as octet-stream,
+	// while MCP's request_file_upload refused them for not being here.
+	'.eml': 'message/rfc822',
 	'.zip': 'application/zip',
 	'.jpg': 'image/jpeg',
 	'.jpeg': 'image/jpeg',
