@@ -2,6 +2,7 @@ import {
 	type AnyPgColumn,
 	bigint,
 	boolean,
+	check,
 	date,
 	doublePrecision,
 	foreignKey,
@@ -15,6 +16,7 @@ import {
 	pgTable,
 	type PgTableExtraConfigValue,
 	serial,
+	smallint,
 	text,
 	timestamp,
 	unique,
@@ -26,6 +28,7 @@ import { sql } from 'drizzle-orm';
 import type { InterviewRound } from '../../application-status';
 import type { SkipReason } from '../../match-recommendation';
 import type { SalaryMode } from '../../salary/settings';
+import type { SafeZone } from '../../media-library';
 
 export const Role = pgEnum('Role', ['USER', 'ADMIN', 'SUPER_ADMIN']);
 
@@ -812,10 +815,17 @@ export const education = pgTable(
 		profile_id: integer().notNull(),
 		summary: text(),
 		tags: json(),
+		/** Superseded by `logo_id`; read only until migrate-media-library.ts has run. */
 		logo_path: varchar({ length: 255 }),
-		banner_path: varchar({ length: 255 })
+		/** Superseded by `banner_id`; read only until migrate-media-library.ts has run. */
+		banner_path: varchar({ length: 255 }),
+		/** Media library renditions (see `media_renditions`). */
+		logo_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' }),
+		banner_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' })
 	},
 	(table) => [
+		index('education_logo_idx').on(table.logo_id),
+		index('education_banner_idx').on(table.banner_id),
 		foreignKey({
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
@@ -2340,10 +2350,17 @@ export const side_projects = pgTable(
 		stars: integer(),
 		summary: text(),
 		tags: json(),
+		/** Superseded by `image_id`; read only until migrate-media-library.ts has run. */
 		image_path: varchar({ length: 255 }),
-		banner_path: varchar({ length: 255 })
+		/** Superseded by `banner_id`; read only until migrate-media-library.ts has run. */
+		banner_path: varchar({ length: 255 }),
+		/** Media library renditions (see `media_renditions`). */
+		image_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' }),
+		banner_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' })
 	},
 	(table) => [
+		index('side_projects_image_idx').on(table.image_id),
+		index('side_projects_banner_idx').on(table.banner_id),
 		foreignKey({
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
@@ -2708,10 +2725,17 @@ export const work_experiences = pgTable(
 		end_date: date(),
 		website: varchar({ length: 255 }),
 		tags: json(),
+		/** Superseded by `logo_id`; read only until migrate-media-library.ts has run. */
 		logo_path: varchar({ length: 255 }),
-		banner_path: varchar({ length: 255 })
+		/** Superseded by `banner_id`; read only until migrate-media-library.ts has run. */
+		banner_path: varchar({ length: 255 }),
+		/** Media library renditions (see `media_renditions`). */
+		logo_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' }),
+		banner_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' })
 	},
 	(table) => [
+		index('work_experiences_logo_idx').on(table.logo_id),
+		index('work_experiences_banner_idx').on(table.banner_id),
 		foreignKey({
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],
@@ -2818,7 +2842,14 @@ export const presentation_template_assets = pgTable(
 		 * thumbnail.
 		 */
 		key: varchar({ length: 64 }).notNull(),
-		file_id: uuid().notNull(),
+		/**
+		 * The image, either as a plain file or as a media library rendition,
+		 * never both (the check below). CV template artwork stays a file: it
+		 * travels with its template, and seeds/ owns Citrus's. A portfolio
+		 * theme's images come from the library since 2026-11.
+		 */
+		file_id: uuid(),
+		rendition_id: uuid(),
 		date_created: timestamp({ withTimezone: true, mode: 'date' })
 	},
 	(table) => [
@@ -2827,6 +2858,18 @@ export const presentation_template_assets = pgTable(
 		// "Which templates use this file", asked by the public asset route on
 		// every cold fetch and by the orphan reaper for every file it examines.
 		index('presentation_template_assets_file_idx').on(table.file_id),
+		index('presentation_template_assets_rendition_idx').on(table.rendition_id),
+		check(
+			'presentation_template_assets_one_source',
+			sql`num_nonnulls(${table.file_id}, ${table.rendition_id}) = 1`
+		),
+		// The row is the slot, so a rendition that goes takes the slot with it,
+		// the way a deleted file does.
+		foreignKey({
+			columns: [table.rendition_id],
+			foreignColumns: [media_renditions.id],
+			name: 'presentation_template_assets_rendition_foreign'
+		}).onDelete('cascade'),
 		foreignKey({
 			columns: [table.template_id],
 			foreignColumns: [presentation_templates.id],
@@ -4116,7 +4159,16 @@ export const profiles = pgTable(
 		}),
 		source_cv: uuid(),
 		location: varchar({ length: 255 }),
+		/** Superseded by `profile_photo_id`; read only until migrate-media-library.ts has run. */
 		profile_photo_path: varchar({ length: 255 }),
+		/**
+		 * The profile photo, a rendition in the media library. Typed through
+		 * `AnyPgColumn` for the reason `public_portfolio_theme_id` gives:
+		 * `media_items` points back at `profiles`, so this edge closes a cycle.
+		 */
+		profile_photo_id: uuid().references((): AnyPgColumn => media_renditions.id, {
+			onDelete: 'set null'
+		}),
 		browser_user_agent: varchar({ length: 500 }),
 		browser_language: varchar({ length: 50 }),
 		browser_timezone: varchar({ length: 100 }),
@@ -4150,6 +4202,7 @@ export const profiles = pgTable(
 	},
 	(table) => [
 		index('profiles_user_id_idx').using('btree', table.user_id.asc().nullsLast()),
+		index('profiles_profile_photo_idx').on(table.profile_photo_id),
 		foreignKey({
 			columns: [table.public_cv_version_id],
 			foreignColumns: [profile_versions.id],
@@ -5297,6 +5350,231 @@ export const files = pgTable('files', {
 		.default(sql`CURRENT_TIMESTAMP`)
 		.notNull()
 });
+
+// --- Media library (see planning/MEDIA-LIBRARY.md) ---
+//
+// Every image a profile shows or hands to a platform, kept once as the
+// original it was uploaded as and cut into a rendition for each place it goes.
+// Until 2026-11 each image slot kept its own copy instead, fitted inside 800px
+// and re-encoded on upload, so no slot kept an original, one picture in two
+// slots was two unrelated files, and nothing knew what size a site wanted.
+
+/**
+ * One uploaded image, as it was uploaded.
+ *
+ * The original (`file_id`) is private for good: nothing serves it publicly and
+ * nothing re-encodes it. Its metadata is cut out on the way in without
+ * touching the pixels (`server/media/strip-metadata.ts`). The orientation the
+ * camera wrote goes with the rest, so it is kept here and applied whenever a
+ * rendition is drawn.
+ *
+ * An item never changes once written. A new version of a picture is a new
+ * item whose `replaces_id` names the one it supersedes, and that link is what
+ * lets the media page list the platforms still showing the old one.
+ */
+export const media_items = pgTable(
+	'media_items',
+	{
+		id: serial().primaryKey().notNull(),
+		profile_id: integer().notNull(),
+		/** photo | banner | logo | icon | other (`MEDIA_KINDS`). */
+		kind: varchar({ length: 16 }).default('other').notNull(),
+		label: varchar({ length: 255 }),
+		/** The original: the upload's own bytes, less their metadata. */
+		file_id: uuid().notNull(),
+		/** Pixel size as the picture is seen, with `orientation` applied. */
+		width: integer().notNull(),
+		height: integer().notNull(),
+		/** What `file_id` holds, read from its bytes: jpeg | png | webp | gif | svg. */
+		format: varchar({ length: 8 }).notNull(),
+		has_alpha: boolean().default(false).notNull(),
+		/** The EXIF orientation (1-8) the upload carried. 1 is upright as stored. */
+		orientation: smallint().default(1).notNull(),
+		replaces_id: integer().references((): AnyPgColumn => media_items.id, {
+			onDelete: 'set null'
+		}),
+		/** The banner template this was rendered from; null for an upload. */
+		template_id: integer().references((): AnyPgColumn => presentation_templates.id, {
+			onDelete: 'set null'
+		}),
+		date_created: timestamp({ withTimezone: true, mode: 'date' })
+	},
+	(table) => [
+		index('media_items_profile_idx').on(table.profile_id),
+		index('media_items_file_idx').on(table.file_id),
+		index('media_items_replaces_idx').on(table.replaces_id),
+		index('media_items_template_idx').on(table.template_id),
+		foreignKey({
+			columns: [table.profile_id],
+			foreignColumns: [profiles.id],
+			name: 'media_items_profile_foreign'
+		}).onDelete('cascade'),
+		foreignKey({
+			columns: [table.file_id],
+			foreignColumns: [files.id],
+			name: 'media_items_file_foreign'
+		}).onDelete('cascade')
+	]
+);
+
+/**
+ * What a platform asks for in one image slot: a pixel size, the formats it
+ * takes, the largest file it accepts, the shape it crops to and what it
+ * covers.
+ *
+ * Platforms change these, so they are rows rather than code. The shared ones
+ * (`profile_id` null) are seeded by migration and named by `key`, which is
+ * also how an export refers to them, since their ids differ per database. A
+ * profile can add its own for a site that wants something odd.
+ *
+ * `source_url` and `verified_on` say which page the numbers came from and when
+ * someone last read it. A preset without them is a guess, and the page says
+ * so.
+ */
+export const media_presets = pgTable(
+	'media_presets',
+	{
+		id: serial().primaryKey().notNull(),
+		profile_id: integer(),
+		/** Stable name of a shared preset ('linkedin-background'); null on a profile's own. */
+		key: varchar({ length: 64 }),
+		platform: varchar({ length: 100 }).notNull(),
+		slot: varchar({ length: 100 }).notNull(),
+		/** The kind of item it suits, which is where the page offers it first. */
+		kind: varchar({ length: 16 }).default('other').notNull(),
+		width: integer().notNull(),
+		height: integer().notNull(),
+		/** Accepted output formats, preferred first (`OUTPUT_FORMATS`). */
+		formats: jsonb().$type<string[]>().default(['jpeg', 'png']).notNull(),
+		max_bytes: integer(),
+		/** none | circle | rounded: the shape the platform shows it in. */
+		mask: varchar({ length: 16 }).default('none').notNull(),
+		/** Rectangles in preset pixels (`SafeZone`). */
+		safe_zone: jsonb().$type<SafeZone[]>(),
+		note: text(),
+		source_url: varchar({ length: 500 }),
+		verified_on: date(),
+		sort: integer(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' })
+	},
+	(table) => [
+		uniqueIndex('media_presets_shared_key').on(table.key).where(sql`profile_id IS NULL`),
+		index('media_presets_profile_idx').on(table.profile_id),
+		foreignKey({
+			columns: [table.profile_id],
+			foreignColumns: [profiles.id],
+			name: 'media_presets_profile_foreign'
+		}).onDelete('cascade')
+	]
+);
+
+/**
+ * An item cut to one shape: a crop of the original, at one pixel size, in one
+ * format. Slots point at these, so a profile photo is a rendition and never
+ * the original.
+ *
+ * A rendition is named by what it is made of, which is why the unique key is
+ * every input: it never changes, and a new crop is a new rendition. That is
+ * what lets `/assets/<id>` tell a cache to keep it for a year, and what lets an
+ * application record exactly which picture went up on a platform. The bytes
+ * are a cache (`file_id`, null until first drawn) and can always be rebuilt
+ * from the original; the row is kept while anything points at it.
+ *
+ * The id is a uuid because it is a public URL. A serial would let anyone walk
+ * every profile photo in the database by counting.
+ */
+export const media_renditions = pgTable(
+	'media_renditions',
+	{
+		id: uuid().defaultRandom().primaryKey().notNull(),
+		item_id: integer().notNull(),
+		/** The preset it was cut for; null for a free crop, which is what slots use. */
+		preset_id: integer(),
+		/** The crop, in pixels of the upright original. */
+		crop_x: integer().notNull(),
+		crop_y: integer().notNull(),
+		crop_w: integer().notNull(),
+		crop_h: integer().notNull(),
+		/** The size it is drawn at. */
+		width: integer().notNull(),
+		height: integer().notNull(),
+		/** jpeg | png | webp (`OUTPUT_FORMATS`). */
+		format: varchar({ length: 8 }).notNull(),
+		/** The encoder quality the render settled on to fit the preset's size limit. */
+		quality: smallint(),
+		file_id: uuid(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' })
+	},
+	(table) => [
+		// Leads with item_id, so it is also the index for "every rendition of an item".
+		unique('media_renditions_identity_key')
+			.on(
+				table.item_id,
+				table.preset_id,
+				table.crop_x,
+				table.crop_y,
+				table.crop_w,
+				table.crop_h,
+				table.width,
+				table.height,
+				table.format
+			)
+			.nullsNotDistinct(),
+		index('media_renditions_preset_idx').on(table.preset_id),
+		index('media_renditions_file_idx').on(table.file_id),
+		foreignKey({
+			columns: [table.item_id],
+			foreignColumns: [media_items.id],
+			name: 'media_renditions_item_foreign'
+		}).onDelete('cascade'),
+		// No action rather than restrict: deleting a profile removes its presets
+		// and its renditions in one statement, and no action is checked at the end
+		// of it. Deleting a preset something was cut for is refused.
+		foreignKey({
+			columns: [table.preset_id],
+			foreignColumns: [media_presets.id],
+			name: 'media_renditions_preset_foreign'
+		}),
+		foreignKey({
+			columns: [table.file_id],
+			foreignColumns: [files.id],
+			name: 'media_renditions_file_foreign'
+		}).onDelete('set null')
+	]
+);
+
+/**
+ * Which picture went up on a platform, and when.
+ *
+ * Platforms are applications in SJS on purpose (signing up is applying), so
+ * this hangs off an application. The newest row per preset is what that
+ * platform shows; when its rendition's item has since been replaced, the media
+ * page lists the application as still showing the old version.
+ */
+export const application_media = pgTable(
+	'application_media',
+	{
+		id: serial().primaryKey().notNull(),
+		application_id: integer().notNull(),
+		rendition_id: uuid().notNull(),
+		date_uploaded: date().notNull(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' })
+	},
+	(table) => [
+		index('application_media_application_idx').on(table.application_id),
+		index('application_media_rendition_idx').on(table.rendition_id),
+		foreignKey({
+			columns: [table.application_id],
+			foreignColumns: [applications.id],
+			name: 'application_media_application_foreign'
+		}).onDelete('cascade'),
+		foreignKey({
+			columns: [table.rendition_id],
+			foreignColumns: [media_renditions.id],
+			name: 'application_media_rendition_foreign'
+		}).onDelete('cascade')
+	]
+);
 
 // --- Document ingestion (see planning/DOCUMENT-INGESTION.md) ---
 // A user uploads files / a ZIP to their profile; we extract text and summarize

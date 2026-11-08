@@ -35,21 +35,39 @@ interface TemplateRow {
 	name: string;
 	slug: string;
 	config: unknown;
-	presentation_template_assets?: { key: string; file_id: string }[];
+	presentation_template_assets?: TemplateAssetRow[];
 }
 
-/** The asset rows as the config keys they used to be. */
+/**
+ * One slot's image: a plain file (CV template artwork) or a media library
+ * rendition (a portfolio theme's images, since 2026-11). Exactly one is set.
+ */
+export interface TemplateAssetRow {
+	key: string;
+	file_id: string | null;
+	rendition_id: string | null;
+}
+
+/**
+ * The asset rows as the config keys they used to be.
+ *
+ * Both kinds of row fold to a bare id, because `/assets/[id]` serves a file
+ * and a rendition alike, so the renderer's `assetUrl()` needs to know nothing
+ * about which one it was handed.
+ */
 export function foldAssetsIntoConfig<TConfig extends object>(
 	config: TConfig,
-	rows: { key: string; file_id: string }[]
+	rows: TemplateAssetRow[]
 ): TConfig {
 	if (rows.length === 0) return config;
 
 	const assets: Record<string, string> = {};
 	let thumbnail: string | undefined;
 	for (const row of rows) {
-		if (row.key === 'thumbnail') thumbnail = row.file_id;
-		else assets[row.key] = row.file_id;
+		const id = row.file_id ?? row.rendition_id;
+		if (!id) continue;
+		if (row.key === 'thumbnail') thumbnail = id;
+		else assets[row.key] = id;
 	}
 
 	const folded = { ...config } as TConfig & { assets?: object; thumbnail?: string };
@@ -71,7 +89,7 @@ function toTemplate<TConfig extends object>(r: TemplateRow): LoadedTemplate<TCon
 
 /** Every template read here needs its artwork; there is no reader that does not. */
 const withAssets = {
-	presentation_template_assets: { columns: { key: true, file_id: true } }
+	presentation_template_assets: { columns: { key: true, file_id: true, rendition_id: true } }
 } as const;
 
 /** All published templates of one kind for a profile, in sort order. */

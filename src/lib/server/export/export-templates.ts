@@ -62,7 +62,9 @@ export async function buildTemplateExport(
 	const rows = await dbDirect.query.presentation_templates.findMany({
 		where: eq(presentation_templates.profile_id, profileId),
 		orderBy: [asc(presentation_templates.sort), asc(presentation_templates.id)],
-		with: { presentation_template_assets: { columns: { key: true, file_id: true } } }
+		with: {
+			presentation_template_assets: { columns: { key: true, file_id: true, rendition_id: true } }
+		}
 	});
 
 	const templates: ExportedResumeTemplate[] = [];

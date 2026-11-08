@@ -5,6 +5,7 @@ import {
 	ai_prompts,
 	api_keys,
 	application_letters,
+	application_media,
 	application_questions,
 	application_records,
 	application_status_log,
@@ -36,6 +37,9 @@ import {
 	languages,
 	letter_versions,
 	match_config,
+	media_items,
+	media_presets,
+	media_renditions,
 	platform_credentials,
 	platform_profiles,
 	presentation_template_assets,
@@ -98,7 +102,8 @@ export const applicationsRelations = relations(applications, ({ one, many }) => 
 	application_letters: many(application_letters),
 	application_questions: many(application_questions),
 	application_status_logs: many(application_status_log),
-	application_records: many(application_records)
+	application_records: many(application_records),
+	application_media: many(application_media)
 }));
 
 export const filesRelations = relations(files, ({ many }) => ({
@@ -113,7 +118,9 @@ export const filesRelations = relations(files, ({ many }) => ({
 	user_feedback_files: many(user_feedback_files),
 	profile_document_projects: many(profile_document_projects),
 	presentation_template_assets: many(presentation_template_assets),
-	certificates: many(certificates)
+	certificates: many(certificates),
+	media_items: many(media_items),
+	media_renditions: many(media_renditions)
 }));
 
 export const presentation_template_assetsRelations = relations(
@@ -126,9 +133,70 @@ export const presentation_template_assetsRelations = relations(
 		file: one(files, {
 			fields: [presentation_template_assets.file_id],
 			references: [files.id]
+		}),
+		rendition: one(media_renditions, {
+			fields: [presentation_template_assets.rendition_id],
+			references: [media_renditions.id]
 		})
 	})
 );
+
+export const media_itemsRelations = relations(media_items, ({ one, many }) => ({
+	profile: one(profiles, {
+		fields: [media_items.profile_id],
+		references: [profiles.id]
+	}),
+	file: one(files, {
+		fields: [media_items.file_id],
+		references: [files.id]
+	}),
+	replaces: one(media_items, {
+		fields: [media_items.replaces_id],
+		references: [media_items.id],
+		relationName: 'media_items_replaces'
+	}),
+	replaced_by: many(media_items, { relationName: 'media_items_replaces' }),
+	template: one(presentation_templates, {
+		fields: [media_items.template_id],
+		references: [presentation_templates.id]
+	}),
+	renditions: many(media_renditions)
+}));
+
+export const media_presetsRelations = relations(media_presets, ({ one, many }) => ({
+	profile: one(profiles, {
+		fields: [media_presets.profile_id],
+		references: [profiles.id]
+	}),
+	renditions: many(media_renditions)
+}));
+
+export const media_renditionsRelations = relations(media_renditions, ({ one, many }) => ({
+	item: one(media_items, {
+		fields: [media_renditions.item_id],
+		references: [media_items.id]
+	}),
+	preset: one(media_presets, {
+		fields: [media_renditions.preset_id],
+		references: [media_presets.id]
+	}),
+	file: one(files, {
+		fields: [media_renditions.file_id],
+		references: [files.id]
+	}),
+	application_media: many(application_media)
+}));
+
+export const application_mediaRelations = relations(application_media, ({ one }) => ({
+	application: one(applications, {
+		fields: [application_media.application_id],
+		references: [applications.id]
+	}),
+	rendition: one(media_renditions, {
+		fields: [application_media.rendition_id],
+		references: [media_renditions.id]
+	})
+}));
 
 export const presentation_templatesRelations = relations(
 	presentation_templates,
@@ -225,7 +293,9 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
 	job_importers: many(job_importers),
 	verification_email_addresses: many(verification_email_addresses),
 	certificates: many(certificates),
-	field_variants: many(profile_field_variants)
+	field_variants: many(profile_field_variants),
+	media_items: many(media_items),
+	media_presets: many(media_presets)
 }));
 
 export const configRelations = relations(config, ({ one }) => ({
