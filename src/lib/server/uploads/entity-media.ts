@@ -24,7 +24,6 @@ import {
 	SlotError,
 	type EntitySlot
 } from '$lib/server/media/slots';
-import { requireMediaQuota } from '$lib/server/billing/require-media-quota';
 
 interface UploadResult {
 	success: boolean;
@@ -103,13 +102,11 @@ export function entitySlot(entityType: string, field: string): EntitySlot | null
 export async function saveEntityMedia(
 	slot: EntitySlot,
 	entityId: number,
-	file: File,
-	userId: string
+	file: File
 ): Promise<UploadResult> {
 	try {
 		const profileId = await entityProfileId(slot, entityId);
 		if (!profileId) return { success: false, error: 'Not found', status: 404 };
-		await requireMediaQuota(userId, file.size);
 		const item = await createMediaItem({
 			profileId,
 			kind: slot.spec.kind,
@@ -124,7 +121,7 @@ export async function saveEntityMedia(
 			return { success: false, error: error.message, status: 400 };
 		if (error instanceof SlotError)
 			return { success: false, error: error.message, status: error.status };
-		// requireMediaQuota refuses with SvelteKit's error(), which the route rethrows.
+		// The media budget refuses with SvelteKit's error(), which the route rethrows.
 		if (error && typeof error === 'object' && 'status' in error && 'body' in error) throw error;
 		console.error('Failed to save entity media:', error);
 		return { success: false, error: getErrorMessage(error, 'Upload failed'), status: 500 };

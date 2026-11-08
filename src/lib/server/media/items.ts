@@ -2,17 +2,28 @@
  * Media items: adding an original to a profile's library, and taking one out.
  */
 
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { dbDirect as db } from '$lib/server/db';
-import { media_items, media_renditions } from '$lib/server/db/schema';
+import {
+	media_items,
+	media_renditions,
+	presentation_templates,
+	profiles
+} from '$lib/server/db/schema';
 import { deleteFile, uploadFile } from '$lib/server/files';
+import { requireMediaQuota } from '$lib/server/billing/require-media-quota';
 import {
 	isMediaKind,
 	itemPreviewUrl,
 	type MediaItemView,
 	type MediaKind
 } from '$lib/media-library';
-import { FORMAT_EXTENSIONS, FORMAT_MIME_TYPES, prepareOriginal } from './originals';
+import {
+	FORMAT_EXTENSIONS,
+	FORMAT_MIME_TYPES,
+	MediaUploadError,
+	prepareOriginal
+} from './originals';
 import { deleteUnusedRenditions } from './renditions';
 
 export type MediaItemRow = typeof media_items.$inferSelect;
@@ -39,9 +50,44 @@ export function filenameStem(filename: string): string {
 
 /**
  * Store an upload as a new item. Throws `MediaUploadError` with a sentence for
- * the uploader when the file cannot be taken.
+ * the uploader when the file cannot be taken, and SvelteKit's 403 when it does
+ * not fit the account's media budget.
+ *
+ * Every way into the library comes through here (a slot, the grid, the picker,
+ * a new version, a banner drawing, an archive from before the library), so
+ * this is where the budget is checked and where the ids a caller hands in are
+ * held to the same profile: a door added later cannot skip either.
  */
 export async function createMediaItem(input: NewMediaItem): Promise<MediaItemRow> {
+	const [owner, replaces, template] = await Promise.all([
+		db.query.profiles.findFirst({
+			where: eq(profiles.id, input.profileId),
+			columns: { user_id: true }
+		}),
+		input.replacesId
+			? db.query.media_items.findFirst({
+					where: and(
+						eq(media_items.id, input.replacesId),
+						eq(media_items.profile_id, input.profileId)
+					),
+					columns: { id: true }
+				})
+			: undefined,
+		input.templateId
+			? db.query.presentation_templates.findFirst({
+					where: and(
+						eq(presentation_templates.id, input.templateId),
+						eq(presentation_templates.profile_id, input.profileId)
+					),
+					columns: { id: true }
+				})
+			: undefined
+	]);
+	if (!owner) throw new MediaUploadError('No such profile.');
+	if (input.replacesId && !replaces) {
+		throw new MediaUploadError("The picture this replaces is not in this profile's library.");
+	}
+
 	const prepared = await prepareOriginal(input.bytes);
 	const stem = filenameStem(input.filename) || 'image';
 	const stored = await uploadFile({
@@ -52,24 +98,35 @@ export async function createMediaItem(input: NewMediaItem): Promise<MediaItemRow
 	});
 
 	try {
-		const [row] = await db
-			.insert(media_items)
-			.values({
-				profile_id: input.profileId,
-				kind: isMediaKind(input.kind) ? input.kind : 'other',
-				label: input.label?.trim() || stem,
-				file_id: stored.id,
-				width: prepared.width,
-				height: prepared.height,
-				format: prepared.format,
-				has_alpha: prepared.hasAlpha,
-				orientation: prepared.orientation,
-				replaces_id: input.replacesId ?? null,
-				template_id: input.templateId ?? null,
-				date_created: new Date()
-			})
-			.returning();
-		return row;
+		return await db.transaction(async (tx) => {
+			if (owner.user_id) {
+				// One store at a time per account between the budget check and the
+				// insert, and the check reads through this transaction: two uploads at
+				// once could otherwise both fit under the cap that together they break.
+				await tx.execute(
+					sql`SELECT pg_advisory_xact_lock(hashtext(${`media-quota:${owner.user_id}`}))`
+				);
+				await requireMediaQuota(owner.user_id, prepared.bytes.length, tx);
+			}
+			const [row] = await tx
+				.insert(media_items)
+				.values({
+					profile_id: input.profileId,
+					kind: isMediaKind(input.kind) ? input.kind : 'other',
+					label: input.label?.trim() || stem,
+					file_id: stored.id,
+					width: prepared.width,
+					height: prepared.height,
+					format: prepared.format,
+					has_alpha: prepared.hasAlpha,
+					orientation: prepared.orientation,
+					replaces_id: replaces?.id ?? null,
+					template_id: template?.id ?? null,
+					date_created: new Date()
+				})
+				.returning();
+			return row;
+		});
 	} catch (err) {
 		await deleteFile(stored.id).catch(() => {});
 		throw err;
@@ -161,4 +218,14 @@ export function toItemView(row: MediaItemRow, bytes: number | null): MediaItemVi
 		previewUrl: itemPreviewUrl(row.id),
 		originalUrl: `/api/media/items/${row.id}/original`
 	};
+}
+
+/** The stored size of every original in a profile's library. */
+export async function mediaLibraryBytes(profileId: number): Promise<number> {
+	const rows = await db.query.media_items.findMany({
+		where: eq(media_items.profile_id, profileId),
+		columns: { id: true },
+		with: { file: { columns: { filesize: true } } }
+	});
+	return rows.reduce((sum, row) => sum + (row.file?.filesize ?? 0), 0);
 }

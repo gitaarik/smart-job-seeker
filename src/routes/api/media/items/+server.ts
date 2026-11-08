@@ -13,7 +13,6 @@ import { requireAuth, requireProfileAccess } from '$lib/server/utils/api-helpers
 import { getSelectedProfileId } from '$lib/server/profile/selected-profile';
 import { createMediaItem, listMediaItemViews, toItemView } from '$lib/server/media/items';
 import { MediaUploadError } from '$lib/server/media/originals';
-import { requireMediaQuota } from '$lib/server/billing/require-media-quota';
 import { isMediaKind } from '$lib/media-library';
 
 async function profileFor(
@@ -50,7 +49,6 @@ export const POST: RequestHandler = async ({ request, cookies, locals }) => {
 	if (!(file instanceof File) || file.size === 0) error(400, 'Choose an image to upload');
 	const kind = String(form.get('kind') ?? 'other');
 
-	await requireMediaQuota(user.id, file.size);
 	try {
 		const item = await createMediaItem({
 			profileId,

@@ -8,7 +8,7 @@
  */
 
 import type { Actions, PageServerLoad } from './$types';
-import { fail, redirect } from '@sveltejs/kit';
+import { fail, isHttpError, redirect } from '@sveltejs/kit';
 import { getSelectedProfileId } from '../utils';
 import {
 	createMediaItem,
@@ -19,7 +19,6 @@ import {
 import { MediaUploadError } from '$lib/server/media/originals';
 import { mediaUsage, usesByItem } from '$lib/server/media/usage';
 import { stalePlatforms } from '$lib/server/media/live';
-import { requireMediaQuota } from '$lib/server/billing/require-media-quota';
 import { isMediaKind } from '$lib/media-library';
 
 export const load: PageServerLoad = async ({ parent }) => {
@@ -67,7 +66,6 @@ export const actions: Actions = {
 		const kind = String(form.get('kind') ?? 'other');
 		const replacesId = Number(form.get('replacesId')) || null;
 
-		await requireMediaQuota(who.userId, file.size);
 		try {
 			const item = await createMediaItem({
 				profileId: who.profileId,
@@ -80,6 +78,8 @@ export const actions: Actions = {
 			return { uploaded: item.id };
 		} catch (err) {
 			if (err instanceof MediaUploadError) return fail(400, { error: err.message });
+			// Over the media budget: say so on the form rather than on an error page.
+			if (isHttpError(err)) return fail(err.status, { error: err.body.message });
 			throw err;
 		}
 	},

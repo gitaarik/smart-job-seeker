@@ -9,7 +9,7 @@
  */
 
 import type { Actions, PageServerLoad } from './$types';
-import { error, fail, redirect } from '@sveltejs/kit';
+import { error, fail, isHttpError, redirect } from '@sveltejs/kit';
 import { and, asc, desc, eq, isNull } from 'drizzle-orm';
 import { dbDirect as db } from '$lib/server/db';
 import {
@@ -297,6 +297,8 @@ export const actions: Actions = {
 			const drawn = await drawBannerTemplate(profileId, banner.id);
 			return { drawn: drawn.length, bannerId: banner.id };
 		} catch (err) {
+			// Over the media budget, or a size the browser could not draw.
+			if (isHttpError(err)) return fail(err.status, { error: err.body.message });
 			return fail(400, {
 				error: err instanceof Error ? err.message : 'Could not draw the banner.'
 			});

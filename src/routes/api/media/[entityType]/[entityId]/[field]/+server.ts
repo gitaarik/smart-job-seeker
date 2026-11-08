@@ -53,7 +53,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		error(400, 'No file provided');
 	}
 
-	const result = await saveEntityMedia(slot, entityId, file, user.id);
+	const result = await saveEntityMedia(slot, entityId, file);
 	if (!result.success) {
 		error(result.status ?? 400, result.error || 'Upload failed');
 	}

@@ -22,7 +22,7 @@
  */
 
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
-import { fail, redirect, type ActionFailure } from '@sveltejs/kit';
+import { fail, isHttpError, redirect, type ActionFailure } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { presentation_templates, profiles, profile_versions } from '$lib/server/db/schema';
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
@@ -30,7 +30,6 @@ import { Buffer } from 'buffer';
 import { createMediaItem } from '$lib/server/media/items';
 import { MediaUploadError } from '$lib/server/media/originals';
 import { assignThemeSlot, clearThemeSlot, SlotError } from '$lib/server/media/slots';
-import { requireMediaQuota } from '$lib/server/billing/require-media-quota';
 import { THEME_MEDIA_SLOTS, type Crop } from '$lib/media-library';
 import { getSelectedProfileId } from '../utils';
 import { getPortfolioThemesForProfile } from '$lib/server/profile/portfolio-themes';
@@ -324,7 +323,7 @@ export const actions: Actions = {
 	uploadAsset: async (event) => {
 		const profileId = await selectedProfile(event);
 		if (typeof profileId !== 'number') return profileId;
-		const { request, locals } = event;
+		const { request } = event;
 		const form = await request.formData();
 		const themeId = Number(form.get('themeId'));
 		const slot = String(form.get('slot') ?? '');
@@ -340,7 +339,6 @@ export const actions: Actions = {
 		}
 
 		try {
-			if (locals.user) await requireMediaQuota(locals.user.id, file.size);
 			const item = await createMediaItem({
 				profileId,
 				kind: THEME_MEDIA_SLOTS[slot].kind,
@@ -351,6 +349,7 @@ export const actions: Actions = {
 			await assignThemeSlot(themeId, profileId, slot, item.id);
 		} catch (err) {
 			if (err instanceof MediaUploadError) return fail(400, { error: err.message });
+			if (isHttpError(err)) return fail(err.status, { error: err.body.message });
 			throw err;
 		}
 

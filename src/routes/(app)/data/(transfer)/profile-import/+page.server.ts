@@ -1,5 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
-import { fail, redirect, isRedirect } from '@sveltejs/kit';
+import { fail, redirect, isHttpError, isRedirect } from '@sveltejs/kit';
+import { requireMediaQuota } from '$lib/server/billing/require-media-quota';
+import { mediaLibraryBytes } from '$lib/server/media/items';
 import { getSelectedProfileId } from '../../../profile/utils';
 import {
 	importExportData,
@@ -124,6 +126,27 @@ export const actions: Actions = {
 
 				if (!validateExportData(data)) {
 					return fail(400, { error: 'Invalid export format in ZIP file' });
+				}
+
+				// The archive's pictures count against the media budget the way uploads
+				// do. Checked before anything is written, so a refusal leaves no
+				// half-imported profile; an overwrite that brings a library frees the
+				// one it replaces.
+				const incoming = [
+					...(data.media_library?.items ?? []).map(
+						(item) => libraryFiles.get(item.archivePath)?.length ?? 0
+					),
+					...[...mediaFiles.values()].map((bytes) => bytes.length)
+				].reduce((sum, size) => sum + size, 0);
+				const freed =
+					overwriteProfileId && data.media_library
+						? await mediaLibraryBytes(overwriteProfileId)
+						: 0;
+				try {
+					await requireMediaQuota(user.id, Math.max(0, incoming - freed));
+				} catch (err) {
+					if (isHttpError(err)) return fail(err.status, { error: err.body.message });
+					throw err;
 				}
 
 				// Delete old media files if overwriting

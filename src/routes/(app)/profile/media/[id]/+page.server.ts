@@ -9,7 +9,7 @@
  */
 
 import type { Actions, PageServerLoad } from './$types';
-import { error, fail, redirect } from '@sveltejs/kit';
+import { error, fail, isHttpError, redirect } from '@sveltejs/kit';
 import { and, desc, eq } from 'drizzle-orm';
 import { dbDirect as db } from '$lib/server/db';
 import { applications, media_items } from '$lib/server/db/schema';
@@ -38,7 +38,6 @@ import {
 	pruneSupersededCrops
 } from '$lib/server/media/renditions';
 import { replaceInSlots } from '$lib/server/media/slots';
-import { requireMediaQuota } from '$lib/server/billing/require-media-quota';
 import { recordUpload } from '$lib/server/media/live';
 import { centredCrop, clampCrop, cropWarnings, isMediaKind, type Crop } from '$lib/media-library';
 
@@ -53,8 +52,8 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 				where: and(eq(media_items.id, itemId), eq(media_items.profile_id, profileId)),
 				with: {
 					file: { columns: { filesize: true } },
-					replaces: { columns: { id: true, label: true } },
-					replaced_by: { columns: { id: true, label: true } },
+					replaces: { columns: { id: true, label: true, profile_id: true } },
+					replaced_by: { columns: { id: true, label: true, profile_id: true } },
 					template: { columns: { id: true, name: true } }
 				}
 			})
@@ -79,8 +78,15 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	const item = toItemView(row, row.file?.filesize ?? null);
 	return {
 		item,
-		replaces: row.replaces ?? null,
-		replacedBy: row.replaced_by,
+		// Within the profile only: createMediaItem refuses a link across profiles,
+		// and this is the second lock on showing one.
+		replaces:
+			row.replaces?.profile_id === profileId
+				? { id: row.replaces.id, label: row.replaces.label }
+				: null,
+		replacedBy: row.replaced_by
+			.filter((newer) => newer.profile_id === profileId)
+			.map((newer) => ({ id: newer.id, label: newer.label })),
 		template: row.template ?? null,
 		uses,
 		applications: platforms,
@@ -189,7 +195,7 @@ export const actions: Actions = {
 
 	/** A new version of this picture: a new item that replaces this one. */
 	uploadVersion: async (event) => {
-		const { profileId, userId } = await profileFor(event);
+		const { profileId } = await profileFor(event);
 		const item = await itemForProfile(Number(event.params.id), profileId);
 		if (!item) return fail(404, { error: 'No such picture.' });
 		const form = await event.request.formData();
@@ -197,7 +203,6 @@ export const actions: Actions = {
 		if (!(file instanceof File) || file.size === 0) {
 			return fail(400, { error: 'Choose the new version to upload.' });
 		}
-		await requireMediaQuota(userId, file.size);
 		let created;
 		try {
 			created = await createMediaItem({
@@ -210,6 +215,7 @@ export const actions: Actions = {
 			});
 		} catch (err) {
 			if (err instanceof MediaUploadError) return fail(400, { error: err.message });
+			if (isHttpError(err)) return fail(err.status, { error: err.body.message });
 			throw err;
 		}
 		if (form.get('useEverywhere')) await replaceInSlots(item.id, created.id, profileId);
