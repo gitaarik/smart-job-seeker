@@ -8,9 +8,10 @@
  * renditions into free crops rather than dropping them.
  */
 
+import { isHttpError } from '@sveltejs/kit';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { dbDirect, queryRawDirect } from '$lib/server/db';
-import { media_items, media_presets, media_renditions } from '$lib/server/db/schema';
+import { media_items, media_presets, media_renditions, profiles } from '$lib/server/db/schema';
 import { deleteFile, uploadFile } from '$lib/server/files';
 import { reapFileRefs } from '$lib/server/uploads/reap';
 import {
@@ -23,6 +24,7 @@ import {
 } from '$lib/media-library';
 import { FORMAT_EXTENSIONS, FORMAT_MIME_TYPES, prepareOriginal } from '$lib/server/media/originals';
 import { OUTPUT_MIME_TYPES } from '$lib/server/media/renditions';
+import { insertWithinBudget } from '$lib/server/media/items';
 import type { ExportedMediaLibrary } from './types';
 
 export interface MediaLibraryIdMaps {
@@ -93,8 +95,17 @@ export async function importMediaLibrary(
 	// Items. The original is checked like any upload (which also takes out any
 	// metadata an archive from elsewhere might carry), but its orientation and
 	// size come from the row: the stored bytes no longer say which way is up.
+	// Each insert goes through the account's media budget under its lock, like
+	// an upload; the import route checks the archive's total up front, and this
+	// is what holds if another upload lands in between.
+	const owner = await dbDirect.query.profiles.findFirst({
+		where: eq(profiles.id, profileId),
+		columns: { user_id: true }
+	});
 	const itemDims = new Map<number, { width: number; height: number }>();
+	let overBudget = false;
 	for (const item of library.items ?? []) {
+		if (overBudget) break;
 		const buffer = files.get(item.archivePath);
 		if (!buffer) {
 			console.warn(`[Import] Media original missing from archive: ${item.archivePath}`);
@@ -114,9 +125,9 @@ export async function importMediaLibrary(
 				title: stem,
 				mimeType: FORMAT_MIME_TYPES[prepared.format]
 			});
-			const [row] = await dbDirect
-				.insert(media_items)
-				.values({
+			let row: { id: number };
+			try {
+				row = await insertWithinBudget(owner?.user_id ?? null, prepared.bytes.length, {
 					profile_id: profileId,
 					kind: isMediaKind(item.kind) ? item.kind : 'other',
 					label: item.label ?? null,
@@ -127,12 +138,21 @@ export async function importMediaLibrary(
 					has_alpha: prepared.hasAlpha,
 					orientation,
 					date_created: item.date_created ? new Date(item.date_created) : now
-				})
-				.returning({ id: media_items.id });
+				});
+			} catch (err) {
+				await deleteFile(stored.id).catch(() => {});
+				throw err;
+			}
 			maps.items.set(item.id, row.id);
 			itemDims.set(row.id, { width, height });
 			if (item.template?.kind && item.template.slug) maps.itemTemplates.set(item.id, item.template);
 		} catch (error) {
+			if (isHttpError(error) && error.status === 403) {
+				// Over the media budget: what is restored stays, the rest is skipped.
+				console.warn(`[Import] Media budget reached; the rest of the library is not restored.`);
+				overBudget = true;
+				continue;
+			}
 			console.warn(`[Import] Could not restore media item ${item.label ?? item.id}:`, error);
 		}
 	}

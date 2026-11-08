@@ -34,8 +34,8 @@ function chain(result: unknown) {
 	return obj;
 }
 
-vi.mock('$lib/server/db', () => ({
-	dbDirect: {
+vi.mock('$lib/server/db', () => {
+	const dbDirect: Record<string, unknown> = {
 		query: new Proxy(
 			{},
 			{
@@ -54,13 +54,20 @@ vi.mock('$lib/server/db', () => ({
 			}
 		}),
 		update: () => chain([]),
-		delete: () => chain([])
-	},
-	queryRawDirect: (query: { queryChunks?: unknown[] }) => {
-		updated.push({ sql: JSON.stringify(query.queryChunks ?? []), values: [] });
-		return Promise.resolve([]);
-	}
-}));
+		delete: () => chain([]),
+		// insertWithinBudget's transaction and advisory lock: the same object
+		// stands in for the transaction, and the lock is a no-op.
+		execute: () => Promise.resolve(),
+		transaction: (fn: (tx: unknown) => unknown) => fn(dbDirect)
+	};
+	return {
+		dbDirect,
+		queryRawDirect: (query: { queryChunks?: unknown[] }) => {
+			updated.push({ sql: JSON.stringify(query.queryChunks ?? []), values: [] });
+			return Promise.resolve([]);
+		}
+	};
+});
 
 let png: Buffer;
 vi.mock('$lib/server/files', () => ({

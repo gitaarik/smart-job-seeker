@@ -98,39 +98,51 @@ export async function createMediaItem(input: NewMediaItem): Promise<MediaItemRow
 	});
 
 	try {
-		return await db.transaction(async (tx) => {
-			if (owner.user_id) {
-				// One store at a time per account between the budget check and the
-				// insert, and the check reads through this transaction: two uploads at
-				// once could otherwise both fit under the cap that together they break.
-				await tx.execute(
-					sql`SELECT pg_advisory_xact_lock(hashtext(${`media-quota:${owner.user_id}`}))`
-				);
-				await requireMediaQuota(owner.user_id, prepared.bytes.length, tx);
-			}
-			const [row] = await tx
-				.insert(media_items)
-				.values({
-					profile_id: input.profileId,
-					kind: isMediaKind(input.kind) ? input.kind : 'other',
-					label: input.label?.trim() || stem,
-					file_id: stored.id,
-					width: prepared.width,
-					height: prepared.height,
-					format: prepared.format,
-					has_alpha: prepared.hasAlpha,
-					orientation: prepared.orientation,
-					replaces_id: replaces?.id ?? null,
-					template_id: template?.id ?? null,
-					date_created: new Date()
-				})
-				.returning();
-			return row;
+		return await insertWithinBudget(owner.user_id, prepared.bytes.length, {
+			profile_id: input.profileId,
+			kind: isMediaKind(input.kind) ? input.kind : 'other',
+			label: input.label?.trim() || stem,
+			file_id: stored.id,
+			width: prepared.width,
+			height: prepared.height,
+			format: prepared.format,
+			has_alpha: prepared.hasAlpha,
+			orientation: prepared.orientation,
+			replaces_id: replaces?.id ?? null,
+			template_id: template?.id ?? null,
+			date_created: new Date()
 		});
 	} catch (err) {
 		await deleteFile(stored.id).catch(() => {});
 		throw err;
 	}
+}
+
+/**
+ * Insert an item row inside its account's media budget.
+ *
+ * One store at a time per account between the budget check and the insert,
+ * and the check reads through the same transaction: two stores at once could
+ * otherwise both fit under the cap that together they break. Every insert into
+ * `media_items` goes through here (an upload, a banner drawing, an archive's
+ * library being restored); the conversion script is the one exception, since
+ * it moves pictures the account already has.
+ *
+ * Throws SvelteKit's 403 when the original does not fit.
+ */
+export async function insertWithinBudget(
+	userId: string | null,
+	bytes: number,
+	values: typeof media_items.$inferInsert
+): Promise<MediaItemRow> {
+	return db.transaction(async (tx) => {
+		if (userId) {
+			await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${`media-quota:${userId}`}))`);
+			await requireMediaQuota(userId, bytes, tx);
+		}
+		const [row] = await tx.insert(media_items).values(values).returning();
+		return row;
+	});
 }
 
 /** Every item of a profile, newest first. */
