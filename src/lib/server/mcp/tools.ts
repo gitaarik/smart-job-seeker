@@ -1051,8 +1051,9 @@ Three steps:
 2. Call this with that "entry_id" and the "filename" you will send.
 3. PUT the file's bytes to the "upload_url" this returns, as the raw body —
    not multipart, not base64, not JSON. Any HTTP client can do it; with curl it
-   is: curl -X PUT --data-binary @<path> -H "authorization: Bearer <your key>"
-   "<upload_url>"
+   is: curl -X PUT --data-binary @<path> "<upload_url>"
+   The link carries the permission, so no key or authorization header goes
+   with it.
 
 The link is good for 15 minutes, for that one entry, once. An entry that already
 has a file will not take another — add a new entry for a new file. Attaching a

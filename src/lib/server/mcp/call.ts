@@ -1569,15 +1569,18 @@ async function requestFileUpload(args: Args, key: VerifiedMcpKey): Promise<ToolR
 		);
 	}
 
-	const grant = signUploadGrant({ profileId: key.profileId, applicationId, recordId }, filename);
+	const grant = signUploadGrant(
+		{ keyId: key.keyId, profileId: key.profileId, applicationId, recordId },
+		filename
+	);
 	const base = getEnv('SJS_APP_URL_HOST', 'http://localhost:5173').replace(/\/$/, '');
 	const uploadUrl = `${base}/api/mcp/upload?grant=${encodeURIComponent(grant)}`;
 
 	return ok(
 		`Ready for "${filename}" on entry ${recordId} ("${record.title}").\n\n` +
 			`PUT the raw bytes to:\n${uploadUrl}\n\n` +
-			`Send your API key as the authorization header on that request too — the ` +
-			`link alone is not enough. It is good for ${Math.round(GRANT_MAX_AGE_MS / 60000)} ` +
+			`No authorization header is needed: the link carries the permission, so keep ` +
+			`it to yourself until it is used. It is good for ${Math.round(GRANT_MAX_AGE_MS / 60000)} ` +
 			`minutes, once, up to ${Math.round(MAX_UPLOAD_BYTES / (1024 * 1024))}MB. The reply ` +
 			`will say whether any text could be read out of it.`,
 		{

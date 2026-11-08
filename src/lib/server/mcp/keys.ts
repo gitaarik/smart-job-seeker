@@ -16,7 +16,7 @@
 
 import crypto from 'crypto';
 import { dbDirect as db } from '$lib/server/db';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, type SQL } from 'drizzle-orm';
 import { mcp_keys, profiles } from '$lib/server/db/schema';
 import { decryptCredential, encryptCredential } from '$lib/server/auth/crypto';
 import { recordSeen } from '$lib/server/account/last-seen';
@@ -119,7 +119,21 @@ export function readStoredMcpKey(stored: string | null): string | null {
  */
 export async function verifyMcpKey(key: string): Promise<VerifiedMcpKey | null> {
 	if (!key || !key.startsWith(MCP_KEY_PREFIX)) return null;
+	return findLiveKey(eq(mcp_keys.key_hash, hashMcpKey(key)));
+}
 
+/**
+ * The key an upload link was issued to, if it would still verify.
+ *
+ * Every check `verifyMcpKey` makes, found by id, because a link carries the
+ * key's id and never its secret. A key revoked, expired or moved to another
+ * profile since takes its outstanding links with it. See `upload-grants.ts`.
+ */
+export async function verifyMcpKeyById(keyId: number): Promise<VerifiedMcpKey | null> {
+	return findLiveKey(eq(mcp_keys.id, keyId));
+}
+
+async function findLiveKey(match: SQL): Promise<VerifiedMcpKey | null> {
 	try {
 		const [row] = await db
 			.select({
@@ -138,7 +152,7 @@ export async function verifyMcpKey(key: string): Promise<VerifiedMcpKey | null> 
 			})
 			.from(mcp_keys)
 			.leftJoin(profiles, eq(profiles.id, mcp_keys.profile_id))
-			.where(eq(mcp_keys.key_hash, hashMcpKey(key)))
+			.where(match)
 			.limit(1);
 
 		if (!row) return null;

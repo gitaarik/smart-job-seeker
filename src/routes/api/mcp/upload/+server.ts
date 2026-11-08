@@ -7,20 +7,20 @@
  * agent asks for a link with `request_file_upload` and then PUTs the file here
  * itself, so the bytes are never seen by the model at all.
  *
- * ## Two credentials, both required
+ * ## The link is the credential
  *
- * The signed grant says *what* may be written — one file, on one entry, of one
- * profile, for fifteen minutes. The bearer key says *who* is asking. Requiring
- * both means a grant found in a shell history or a proxy log is not on its own
- * a way in, and a valid key is not a way to write to an entry it was not given
- * a grant for.
+ * The signed grant says what may be written: one file, on one entry, of one
+ * profile, for fifteen minutes. It also names the key it was issued to, and
+ * that key is looked up again here, so a key revoked, expired, narrowed to read
+ * or moved to another profile since then closes its links as well.
  *
- * The two must also agree: a key for profile A may not spend a grant issued for
- * profile B, even though both are individually valid.
+ * No authorization header is needed, and one that is sent is not read. This
+ * door used to require the key too; `upload-grants.ts` says why that asked
+ * agents for something their clients keep from them.
  */
 
 import type { RequestHandler } from './$types';
-import { verifyMcpKey } from '$lib/server/mcp/keys';
+import { verifyMcpKeyById } from '$lib/server/mcp/keys';
 import { MAX_UPLOAD_BYTES, verifyUploadGrant } from '$lib/server/mcp/upload-grants';
 import { attachFileToRecord } from '$lib/server/applications/record-files';
 import { mcpRateLimiter, createRateLimitResponse } from '$lib/server/middleware/rate-limit';
@@ -32,32 +32,7 @@ function json(body: unknown, status = 200): Response {
 	});
 }
 
-function unauthorized(): Response {
-	return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-		status: 401,
-		headers: {
-			'content-type': 'application/json',
-			'www-authenticate': 'Bearer realm="smart-job-seeker"'
-		}
-	});
-}
-
 export const PUT: RequestHandler = async ({ request, url }) => {
-	const header = request.headers.get('authorization');
-	const [scheme, token] = header?.split(' ') ?? [];
-	if (!token || scheme?.toLowerCase() !== 'bearer') return unauthorized();
-
-	const key = await verifyMcpKey(token);
-	if (!key) return unauthorized();
-
-	if (!mcpRateLimiter.tryConsumeKey(`mcp:${key.keyId}`)) {
-		return createRateLimitResponse(mcpRateLimiter.retryAfterSeconds());
-	}
-
-	if (key.scope === 'read') {
-		return json({ error: 'This key is read-only, so it cannot attach anything.' }, 403);
-	}
-
 	const grantToken = url.searchParams.get('grant');
 	if (!grantToken) return json({ error: 'No grant. Call request_file_upload first.' }, 400);
 
@@ -69,9 +44,24 @@ export const PUT: RequestHandler = async ({ request, url }) => {
 		);
 	}
 
-	// Individually valid is not the same as valid together.
-	if (grant.profileId !== key.profileId) {
-		return json({ error: 'That upload link was not issued to this key.' }, 403);
+	// Before the lookup, so a link replayed in a loop costs a counter, not a query.
+	if (!mcpRateLimiter.tryConsumeKey(`mcp:${grant.keyId}`)) {
+		return createRateLimitResponse(mcpRateLimiter.retryAfterSeconds());
+	}
+
+	const key = await verifyMcpKeyById(grant.keyId);
+	if (!key || key.profileId !== grant.profileId) {
+		return json(
+			{
+				error:
+					'The key this link was issued to no longer works, so neither does the link. ' +
+					'Check the key on the Connected Apps page.'
+			},
+			403
+		);
+	}
+	if (key.scope === 'read') {
+		return json({ error: 'This key is read-only, so it cannot attach anything.' }, 403);
 	}
 
 	// The declared length first, so an oversized body is refused before it is

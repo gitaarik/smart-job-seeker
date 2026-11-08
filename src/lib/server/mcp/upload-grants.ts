@@ -37,6 +37,23 @@
  * to fill one hole in one entry that already exists, which is also what makes a
  * leaked grant cheap: the worst it buys is one file on one entry of one profile,
  * for fifteen minutes, and only while that entry has no file yet.
+ *
+ * ## The link is the credential
+ *
+ * Until 2026-11-08 the PUT had to carry the agent's API key as well, so that a
+ * grant found in a shell history or a proxy log was not a way in on its own.
+ * That asked agents for something their clients keep from them. An MCP client
+ * holds the key for its own connection and does not hand it to the shell the
+ * model runs commands in: Claude Code keeps it in its config, and its auto mode
+ * refuses, rightly, to dig it out. The agents that could comply were the ones
+ * willing to paste a long-lived key into a curl command, which writes it into
+ * the very shell history the rule was guarding.
+ *
+ * So the grant alone authorizes the upload, as a presigned URL does. It carries
+ * the id of the key it was issued to, and the endpoint looks that key up again:
+ * revoking a key, letting it expire or narrowing it to read closes its links
+ * too, and the secret never has to leave the client. What a leaked link buys is
+ * what the paragraph above says, and no more.
  */
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
@@ -61,6 +78,8 @@ function sign(payload: string): string {
 }
 
 export interface UploadGrant {
+	/** The key it was issued to, checked again at upload time. */
+	keyId: number;
 	profileId: number;
 	applicationId: number;
 	recordId: number;
@@ -75,7 +94,8 @@ export interface UploadGrant {
  * "a PDF on entry 73" while the bytes arrived as something else.
  */
 export function signUploadGrant(grant: UploadGrant, filename: string, nowMs = Date.now()): string {
-	const payload = [nowMs, grant.profileId, grant.applicationId, grant.recordId, filename].join(':');
+	const { keyId, profileId, applicationId, recordId } = grant;
+	const payload = [nowMs, keyId, profileId, applicationId, recordId, filename].join(':');
 	return `${Buffer.from(payload).toString('base64url')}.${sign(payload)}`;
 }
 
@@ -103,14 +123,16 @@ export function verifyUploadGrant(token: string, nowMs = Date.now()): VerifiedGr
 	if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
 
 	// A filename may contain ':', so the split is bounded and the tail rejoined.
+	// A grant from before the key's id joined the payload has one field fewer,
+	// fails this count or the endpoint's key check, and was dead in 15 minutes.
 	const parts = payload.split(':');
-	if (parts.length < 5) return null;
-	const [issued, profileId, applicationId, recordId] = parts.slice(0, 4).map(Number);
-	const filename = parts.slice(4).join(':');
+	if (parts.length < 6) return null;
+	const [issued, keyId, profileId, applicationId, recordId] = parts.slice(0, 5).map(Number);
+	const filename = parts.slice(5).join(':');
 
 	if (!Number.isFinite(issued) || nowMs - issued > GRANT_MAX_AGE_MS || issued > nowMs) return null;
-	if (![profileId, applicationId, recordId].every(Number.isInteger)) return null;
+	if (![keyId, profileId, applicationId, recordId].every(Number.isInteger)) return null;
 	if (!filename) return null;
 
-	return { profileId, applicationId, recordId, filename };
+	return { keyId, profileId, applicationId, recordId, filename };
 }

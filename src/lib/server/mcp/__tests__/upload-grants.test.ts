@@ -6,10 +6,14 @@
  * signature borrowed from a different grant, and a link that has simply been
  * lying around too long.
  */
+import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
+import { getEnv } from '$lib/tools/get-env';
 import { GRANT_MAX_AGE_MS, signUploadGrant, verifyUploadGrant } from '../upload-grants';
 
-const GRANT = { profileId: 1, applicationId: 57, recordId: 73 };
+// The key id differs from every other number, so a field read from the wrong
+// position shows up as a wrong value rather than passing by coincidence.
+const GRANT = { keyId: 9, profileId: 1, applicationId: 57, recordId: 73 };
 const NOW = 1_760_000_000_000;
 
 describe('signUploadGrant / verifyUploadGrant', () => {
@@ -76,11 +80,24 @@ describe('signUploadGrant / verifyUploadGrant', () => {
 	it('refuses a well-signed grant that names nothing', () => {
 		// Not reachable through signUploadGrant, which is the point: verify must
 		// stand on its own, because the only thing it can assume is the signature.
-		const payload = `${NOW}:1:57:73:`;
+		const payload = `${NOW}:9:1:57:73:`;
 		const token = `${Buffer.from(payload).toString('base64url')}.${
-			signUploadGrant({ profileId: 1, applicationId: 57, recordId: 73 }, '', NOW).split('.')[1]
+			signUploadGrant(GRANT, '', NOW).split('.')[1]
 		}`;
 
 		expect(verifyUploadGrant(token, NOW)).toBeNull();
+	});
+
+	it('refuses a link minted before it named its key', () => {
+		// The old five-field form, correctly signed. Read as the new one it would
+		// take the profile for the key and the application for the profile.
+		const payload = `${NOW}:1:57:73:contract.pdf`;
+		const signature = createHmac('sha256', getEnv('SJS_AUTH_SECRET'))
+			.update(payload)
+			.digest('base64url');
+
+		expect(
+			verifyUploadGrant(`${Buffer.from(payload).toString('base64url')}.${signature}`, NOW)
+		).toBeNull();
 	});
 });
