@@ -24,6 +24,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockQuery = vi.fn();
 const mockReadFile = vi.fn();
+const mockPublicRendition = vi.fn();
 
 vi.mock('$lib/server/db', () => ({
 	queryRawDirect: (...a: unknown[]) => mockQuery(...a)
@@ -32,6 +33,9 @@ vi.mock('drizzle-orm', () => ({
 	sql: (strings: TemplateStringsArray, ...values: unknown[]) => ({ strings, values })
 }));
 vi.mock('fs/promises', () => ({ readFile: (...a: unknown[]) => mockReadFile(...a) }));
+vi.mock('$lib/server/media/serve', () => ({
+	publicRendition: (...a: unknown[]) => mockPublicRendition(...a)
+}));
 
 import { GET } from '../+server';
 
@@ -54,6 +58,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	mockQuery.mockResolvedValue(row());
 	mockReadFile.mockResolvedValue(Buffer.from('bytes'));
+	mockPublicRendition.mockResolvedValue(null);
 	vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
@@ -106,9 +111,10 @@ describe('a public asset', () => {
 		expect(res.headers.get('Content-Type')).toBe('application/octet-stream');
 	});
 
-	it('404s when no row holds it', async () => {
+	it('404s when no file and no public rendition holds it', async () => {
 		mockQuery.mockResolvedValue([]);
 		await expect(get(UUID)).rejects.toMatchObject({ status: 404 });
+		expect(mockPublicRendition).toHaveBeenCalledWith(UUID);
 	});
 
 	// A row whose bytes were never stored, or were reaped from under it.
@@ -149,5 +155,37 @@ describe('a file nothing public points at', () => {
 	it('leaves a breadcrumb, since the other cause is a missing allowlist entry', async () => {
 		await expect(get(UUID)).rejects.toMatchObject({ status: 404 });
 		expect(console.warn).toHaveBeenCalledWith(expect.stringContaining(UUID));
+	});
+});
+
+/**
+ * A media library rendition: the profile photo and the other slots point at
+ * these, and the id that is not a file is tried as one. Whether it is public
+ * is `publicRendition`'s call (server/media/serve.ts); the route only serves
+ * what it is handed, with the same headers as a file.
+ */
+describe('a rendition id', () => {
+	beforeEach(() => {
+		mockQuery.mockResolvedValue([]);
+	});
+
+	it('serves a public rendition with the immutable headers', async () => {
+		mockPublicRendition.mockResolvedValue({ bytes: Buffer.from('jpeg'), type: 'image/jpeg' });
+		const res = await get(UUID);
+		expect(res.status).toBe(200);
+		expect(res.headers.get('Content-Type')).toBe('image/jpeg');
+		expect(res.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+		expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
+	});
+
+	it('404s one that is not public', async () => {
+		mockPublicRendition.mockResolvedValue(null);
+		await expect(get(UUID)).rejects.toMatchObject({ status: 404 });
+	});
+
+	it('is never tried for an id that is a file, public or not', async () => {
+		mockQuery.mockResolvedValue(row({ is_public: false }));
+		await expect(get(UUID)).rejects.toMatchObject({ status: 404 });
+		expect(mockPublicRendition).not.toHaveBeenCalled();
 	});
 });

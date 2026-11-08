@@ -13,6 +13,7 @@ import {
 import { buildProfileExport } from './export-profile';
 import { normalizeAdjustments, storedEmployed, storedFreelance } from '$lib/salary/settings';
 import type {
+	ArchiveFilePayload,
 	DocumentFilePayload,
 	ExportContentOptions,
 	TemplateAssetPayload,
@@ -35,13 +36,15 @@ export async function buildFullExport(
 	mediaFiles: MediaFile[];
 	documentFiles: DocumentFilePayload[];
 	templateAssets: TemplateAssetPayload[];
+	libraryFiles: ArchiveFilePayload[];
 }> {
 	// Start with profile data
 	const {
 		data: profileExport,
 		mediaFiles,
 		documentFiles,
-		templateAssets
+		templateAssets,
+		libraryFiles
 	} = await buildProfileExport(profileId, options);
 
 	// Fetch additional data
@@ -106,6 +109,11 @@ export async function buildFullExport(
 						question: true,
 						answer: true
 					}
+				},
+				// Which picture went up on this platform: the rendition travels in
+				// the media library, so a record is only worth carrying with it.
+				application_media: {
+					columns: { rendition_id: true, date_uploaded: true }
 				}
 			},
 			orderBy: (t, { desc }) => desc(t.date_created)
@@ -161,7 +169,13 @@ export async function buildFullExport(
 				question: q.question || undefined,
 				answer: q.answer || undefined
 			})
-		)
+		),
+		media: profileExport.media_library
+			? app.application_media.map((m) => ({
+					rendition: m.rendition_id,
+					date_uploaded: m.date_uploaded
+				}))
+			: undefined
 	}));
 
 	// Build full export data
@@ -175,6 +189,7 @@ export async function buildFullExport(
 		documents: profileExport.documents,
 		translations: profileExport.translations,
 		resume_templates: profileExport.resume_templates,
+		media_library: profileExport.media_library,
 		profile: profileExport.profile,
 		project_stories: exportedProjectStories,
 		cheat_sheets: exportedCheatSheets,
@@ -182,5 +197,5 @@ export async function buildFullExport(
 		applications: exportedApplications
 	};
 
-	return { data: exportData, mediaFiles, documentFiles, templateAssets };
+	return { data: exportData, mediaFiles, documentFiles, templateAssets, libraryFiles };
 }

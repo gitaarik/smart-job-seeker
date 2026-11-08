@@ -24,16 +24,14 @@
 import type { Actions, PageServerLoad, RequestEvent } from './$types';
 import { fail, redirect, type ActionFailure } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
-import {
-	presentation_template_assets,
-	presentation_templates,
-	profiles,
-	profile_versions
-} from '$lib/server/db/schema';
+import { presentation_templates, profiles, profile_versions } from '$lib/server/db/schema';
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import { Buffer } from 'buffer';
-import { uploadFile } from '$lib/server/files';
-import { stripImageMetadata } from '$lib/server/uploads/public-image';
+import { createMediaItem } from '$lib/server/media/items';
+import { MediaUploadError } from '$lib/server/media/originals';
+import { assignThemeSlot, clearThemeSlot, SlotError } from '$lib/server/media/slots';
+import { requireMediaQuota } from '$lib/server/billing/require-media-quota';
+import { THEME_MEDIA_SLOTS, type Crop } from '$lib/media-library';
 import { getSelectedProfileId } from '../utils';
 import { getPortfolioThemesForProfile } from '$lib/server/profile/portfolio-themes';
 import { applyShowcaseFields } from '$lib/server/profile/portfolio-theme-form';
@@ -59,8 +57,22 @@ function isAssetSlot(value: string): value is AssetSlot {
 	return (ASSET_SLOTS as readonly string[]).includes(value);
 }
 
-/** Image types only: every one of these slots is painted, not downloaded. */
-const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
+/**
+ * A crop from a form field, as JSON; null when absent or not one. It is
+ * clamped to the picture where the rendition is made (`slotRendition`).
+ */
+function parseCrop(raw: FormDataEntryValue | null): Crop | null {
+	if (typeof raw !== 'string' || !raw) return null;
+	try {
+		const { x, y, w, h } = JSON.parse(raw) as Record<string, unknown>;
+		if ([x, y, w, h].every((n) => typeof n === 'number' && Number.isFinite(n))) {
+			return { x, y, w, h } as Crop;
+		}
+	} catch {
+		// not JSON: no crop
+	}
+	return null;
+}
 
 const FONTS = ['Poppins', 'Carlito', 'Noto Sans'];
 
@@ -302,18 +314,17 @@ export const actions: Actions = {
 	},
 
 	/**
-	 * Put an image in one slot.
+	 * Put an uploaded image in one slot.
 	 *
-	 * The row is upserted on (template_id, key), so replacing a logo leaves the
-	 * previous file with nothing pointing at it. That file is not deleted here:
-	 * a blob may be referenced from more than one place, and deciding it is
-	 * unreachable is the orphan reaper's job — it can see these rows now that
-	 * they carry a foreign key, which is the whole reason the table exists.
+	 * Since 2026-11 the upload goes into the profile's media library, and the
+	 * slot shows a rendition of it (planning/MEDIA-LIBRARY.md): the original is
+	 * kept, so the slot can be cropped again later, and the same picture can
+	 * fill a slot on another theme without being uploaded twice.
 	 */
 	uploadAsset: async (event) => {
 		const profileId = await selectedProfile(event);
 		if (typeof profileId !== 'number') return profileId;
-		const { request } = event;
+		const { request, locals } = event;
 		const form = await request.formData();
 		const themeId = Number(form.get('themeId'));
 		const slot = String(form.get('slot') ?? '');
@@ -327,39 +338,46 @@ export const actions: Actions = {
 		if (!(file instanceof File) || file.size === 0) {
 			return fail(400, { error: 'Choose an image to upload.' });
 		}
-		const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
-		if (!IMAGE_EXTENSIONS.includes(ext)) {
-			return fail(400, { error: `Images only (${IMAGE_EXTENSIONS.join(', ')}).` });
-		}
 
-		// `/assets/[id]` serves this to anyone, so it goes up without the EXIF a
-		// phone photo carries, location included (see public-image.ts).
-		let bytes: Buffer;
 		try {
-			bytes = await stripImageMetadata(Buffer.from(await file.arrayBuffer()));
-		} catch {
-			return fail(400, { error: 'That file could not be read as an image.' });
+			if (locals.user) await requireMediaQuota(locals.user.id, file.size);
+			const item = await createMediaItem({
+				profileId,
+				kind: THEME_MEDIA_SLOTS[slot].kind,
+				label: `${theme.name} ${THEME_MEDIA_SLOTS[slot].label.toLowerCase()}`,
+				filename: file.name,
+				bytes: Buffer.from(await file.arrayBuffer())
+			});
+			await assignThemeSlot(themeId, profileId, slot, item.id);
+		} catch (err) {
+			if (err instanceof MediaUploadError) return fail(400, { error: err.message });
+			throw err;
 		}
 
-		const stored = await uploadFile({
-			filename: file.name,
-			buffer: bytes,
-			title: `${theme.name} ${slot}`
-		});
+		return { uploaded: slot };
+	},
 
-		await db
-			.insert(presentation_template_assets)
-			.values({
-				template_id: themeId,
-				key: slot,
-				file_id: stored.id,
-				date_created: new Date()
-			})
-			.onConflictDoUpdate({
-				target: [presentation_template_assets.template_id, presentation_template_assets.key],
-				set: { file_id: stored.id, date_created: new Date() }
-			});
+	/** Fill a slot with a picture already in the library, cropped. */
+	pickAsset: async (event) => {
+		const profileId = await selectedProfile(event);
+		if (typeof profileId !== 'number') return profileId;
+		const form = await event.request.formData();
+		const themeId = Number(form.get('themeId'));
+		const slot = String(form.get('slot') ?? '');
+		const itemId = Number(form.get('itemId'));
 
+		if (!isAssetSlot(slot)) return fail(400, { error: 'Unknown image slot.' });
+		if (!Number.isInteger(itemId) || itemId <= 0) return fail(400, { error: 'Choose an image.' });
+
+		const theme = await ownedTheme(profileId, themeId);
+		if (!theme) return fail(404, { error: 'No such theme.' });
+
+		try {
+			await assignThemeSlot(themeId, profileId, slot, itemId, parseCrop(form.get('crop')));
+		} catch (err) {
+			if (err instanceof SlotError) return fail(err.status, { error: err.message });
+			throw err;
+		}
 		return { uploaded: slot };
 	},
 
@@ -376,14 +394,9 @@ export const actions: Actions = {
 		const theme = await ownedTheme(profileId, themeId);
 		if (!theme) return fail(404, { error: 'No such theme.' });
 
-		await db
-			.delete(presentation_template_assets)
-			.where(
-				and(
-					eq(presentation_template_assets.template_id, themeId),
-					eq(presentation_template_assets.key, slot)
-				)
-			);
+		// The row goes, and a rendition nothing else shows goes with it. A plain
+		// file is left to the orphan reaper, as it always was: it may be shared.
+		await clearThemeSlot(themeId, slot);
 
 		return { removed: slot };
 	},

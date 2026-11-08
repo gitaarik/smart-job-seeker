@@ -33,6 +33,9 @@ import type {
 	education,
 	highlights,
 	languages,
+	media_items,
+	media_presets,
+	media_renditions,
 	profile_field_variants,
 	profile_versions,
 	profiles,
@@ -88,6 +91,9 @@ export const PROFILE_COLUMNS = {
 	telegram_username: true,
 	meta_image_url: true,
 	profile_photo_path: true,
+	// A media library rendition, by its source id: the import maps it to the
+	// rendition it makes from the archive's library (import-media-library.ts).
+	profile_photo_id: true,
 	dev_start_year: true,
 	python_js_start_year: true,
 	remote_start_year: true,
@@ -207,7 +213,10 @@ export const ROLE_COLUMNS = {
 	sort: true,
 	tags: true,
 	logo_path: true,
-	banner_path: true
+	banner_path: true,
+	// Renditions by source id, mapped on import like `profile_photo_id`.
+	logo_id: true,
+	banner_id: true
 } as const satisfies Decided<typeof work_experiences>;
 
 export const ROLE_ACHIEVEMENT_COLUMNS = {
@@ -276,7 +285,10 @@ export const SIDE_PROJECT_COLUMNS = {
 	end_date: true,
 	tags: true,
 	image_path: true,
-	banner_path: true
+	banner_path: true,
+	// Renditions by source id, mapped on import like `profile_photo_id`.
+	image_id: true,
+	banner_id: true
 } as const satisfies Decided<typeof side_projects>;
 
 export const SIDE_PROJECT_ACHIEVEMENT_COLUMNS = {
@@ -315,7 +327,10 @@ export const EDUCATION_COLUMNS = {
 	summary: true,
 	tags: true,
 	logo_path: true,
-	banner_path: true
+	banner_path: true,
+	// Renditions by source id, mapped on import like `profile_photo_id`.
+	logo_id: true,
+	banner_id: true
 } as const satisfies Decided<typeof education>;
 
 export const LANGUAGE_COLUMNS = {
@@ -384,3 +399,71 @@ export const CERTIFICATE_SKILL_COLUMNS = {
 	sort: true,
 	name: true
 } as const satisfies Decided<typeof certificate_skills>;
+
+// --- Media library (export-media-library.ts) ---
+//
+// Carried only when the archive carries media, since an item is nothing
+// without its original. Each row keeps its source `id`, because renditions name
+// their item, slots name their rendition and a new version names the one it
+// replaces by it; the import maps every one to the id it makes.
+
+export const MEDIA_ITEM_COLUMNS = {
+	date_created: true,
+	// Numbers the library: renditions and `replaces_id` refer to it.
+	id: true,
+	profile_id: false,
+	kind: true,
+	label: true,
+	// The original travels as bytes in the archive, at the item's `archivePath`.
+	file_id: false,
+	width: true,
+	height: true,
+	format: true,
+	has_alpha: true,
+	orientation: true,
+	replaces_id: true,
+	// Carried as the template's kind and slug: a template id is this database's.
+	template_id: false
+} as const satisfies Decided<typeof media_items>;
+
+export const MEDIA_PRESET_COLUMNS = {
+	date_created: false,
+	// Numbers the profile's own presets, which renditions refer to.
+	id: true,
+	profile_id: false,
+	// Only a profile's own presets travel, and they have no key; a shared one is
+	// named by its key on the rendition instead.
+	key: false,
+	platform: true,
+	slot: true,
+	kind: true,
+	width: true,
+	height: true,
+	formats: true,
+	max_bytes: true,
+	mask: true,
+	safe_zone: true,
+	note: true,
+	source_url: true,
+	verified_on: true,
+	sort: true
+} as const satisfies Decided<typeof media_presets>;
+
+export const MEDIA_RENDITION_COLUMNS = {
+	date_created: true,
+	// Numbers the renditions: slots and application records refer to them.
+	id: true,
+	item_id: true,
+	// Carried as `preset`: a shared preset's key, or an own preset's source id.
+	preset_id: true,
+	crop_x: true,
+	crop_y: true,
+	crop_w: true,
+	crop_h: true,
+	width: true,
+	height: true,
+	format: true,
+	quality: true,
+	// The drawn bytes travel in the archive, at the rendition's `archivePath`.
+	file_id: false
+} as const satisfies Decided<typeof media_renditions>;

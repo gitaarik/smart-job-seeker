@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ActionData, PageData } from './$types';
-	import { enhance } from '$app/forms';
+	import { deserialize, enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faArrowDown,
@@ -20,6 +21,8 @@
 	import { resolve } from '$app/paths';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { assetUrl } from '$lib/presentation-templates';
+	import MediaPicker from '$lib/components/media/MediaPicker.svelte';
+	import { THEME_MEDIA_SLOTS, type Crop, type ThemeMediaSlot } from '$lib/media-library';
 	import {
 		defaultSections,
 		PALETTE_ROLE_LABELS,
@@ -109,6 +112,44 @@
 		},
 		{ key: 'thumbnail', label: 'Thumbnail', hint: 'Shown in this list.' }
 	] as const;
+
+	/** The theme slot the library picker is open for, if any. */
+	let pickerFor = $state<{ themeId: number; slot: ThemeMediaSlot } | null>(null);
+
+	/**
+	 * Fill a slot from the library. Posted to the page's own action rather than
+	 * a separate endpoint, so the ownership checks the other image actions make
+	 * are the same code.
+	 */
+	async function pickAsset(
+		themeId: number,
+		slot: ThemeMediaSlot,
+		itemId: number,
+		crop: Crop | null
+	) {
+		const body = new FormData();
+		body.set('themeId', String(themeId));
+		body.set('slot', slot);
+		body.set('itemId', String(itemId));
+		if (crop) body.set('crop', JSON.stringify(crop));
+		const response = await fetch('?/pickAsset', {
+			method: 'POST',
+			body,
+			headers: { 'x-sveltekit-action': 'true' }
+		});
+		const result = deserialize(await response.text());
+		if (result.type === 'failure') {
+			throw new Error(
+				String(
+					(result.data as { error?: string } | undefined)?.error ?? 'Could not use that picture'
+				)
+			);
+		}
+		if (result.type === 'error') throw new Error('Could not use that picture');
+		await invalidateAll();
+		const fresh = data.themes.find((t) => t.id === themeId);
+		if (fresh && editingId === themeId) seed(fresh);
+	}
 
 	/** Load one theme's stored design into the editor's state. */
 	function seed(theme: (typeof themes)[number]) {
@@ -709,6 +750,13 @@
 											<p class="text-sm text-[var(--dash-text)]">{slot.label}</p>
 											<p class="text-xs text-[var(--dash-text-secondary)]">{slot.hint}</p>
 										</div>
+										<button
+											type="button"
+											onclick={() => (pickerFor = { themeId: theme.id, slot: slot.key })}
+											class="rounded-lg border border-[var(--dash-border)] px-2 py-1 text-xs text-[var(--dash-text)] hover:border-[var(--dash-primary)]"
+										>
+											Library
+										</button>
 										<form
 											method="POST"
 											action="?/uploadAsset"
@@ -721,7 +769,7 @@
 											<input
 												type="file"
 												name="file"
-												accept="image/png,image/jpeg,image/webp,image/gif"
+												accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,image/avif,image/tiff"
 												onchange={(e) => e.currentTarget.form?.requestSubmit()}
 												class="max-w-[12rem] text-xs text-[var(--dash-text-secondary)]"
 											/>
@@ -753,6 +801,19 @@
 		{/each}
 	</div>
 </div>
+
+{#if pickerFor}
+	{@const target = pickerFor}
+	<MediaPicker
+		title={THEME_MEDIA_SLOTS[target.slot].label}
+		kind={THEME_MEDIA_SLOTS[target.slot].kind}
+		aspect={'aspect' in THEME_MEDIA_SLOTS[target.slot]
+			? (THEME_MEDIA_SLOTS[target.slot] as { aspect: number }).aspect
+			: null}
+		onpick={(itemId, crop) => pickAsset(target.themeId, target.slot, itemId, crop)}
+		onclose={() => (pickerFor = null)}
+	/>
+{/if}
 
 <!--
 	The confirm dialog cannot submit by itself — it takes a callback, not a

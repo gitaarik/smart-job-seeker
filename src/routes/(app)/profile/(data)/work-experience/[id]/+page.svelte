@@ -606,7 +606,7 @@
 				<MediaUpload
 					entityType="work_experience"
 					entityId={experience.id}
-					field="logo_path"
+					field="logo"
 					currentUrl={logoUrl}
 					label="Company Logo"
 					showHint={false}
@@ -618,7 +618,7 @@
 				<MediaUpload
 					entityType="work_experience"
 					entityId={experience.id}
-					field="banner_path"
+					field="banner"
 					currentUrl={bannerUrl}
 					label="Company Banner"
 					showHint={false}

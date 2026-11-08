@@ -1,12 +1,14 @@
 /**
- * Generate URL for profile photo: "profiles/abc123.jpg" -> "/uploads/profiles/abc123.jpg".
- *
- * Had a second branch for `profile_picture_id`, the uuid of a `files` row served
- * from `/assets/<uuid>`, which is how photos were stored before `uploads/`. That
- * column is gone; see getEntityMediaUrl for the same story on entity logos.
+ * The profile photo's URL: its media library rendition, or, on a database
+ * `scripts/migrate-media-library.ts` has not converted yet, the old file
+ * under `uploads/` ("profiles/abc123.jpg" -> "/uploads/profiles/abc123.jpg").
+ * See getEntityMediaUrl for the same story on entity logos.
  */
+import { getEntityMediaUrl } from './entity-media-url';
+
 export function getProfilePhotoUrl(
-	profile: { profile_photo_path?: string | null } | null | undefined
+	profile:
+		{ profile_photo_id?: string | null; profile_photo_path?: string | null } | null | undefined
 ): string | null {
-	return profile?.profile_photo_path ? `/uploads/${profile.profile_photo_path}` : null;
+	return profile ? getEntityMediaUrl(profile.profile_photo_id, profile.profile_photo_path) : null;
 }

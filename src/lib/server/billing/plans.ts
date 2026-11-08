@@ -12,6 +12,7 @@ export interface PlanLimits {
 	extraCredits: boolean;
 	maxDocumentProjects: number; // -1 = unlimited
 	maxDocumentBytes: number; // -1 = unlimited
+	maxMediaBytes: number; // media library originals; -1 = unlimited
 }
 
 export interface PlanDefinition {
@@ -31,7 +32,8 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
 		creditsPerMonth: 999999,
 		extraCredits: false,
 		maxDocumentProjects: -1,
-		maxDocumentBytes: -1
+		maxDocumentBytes: -1,
+		maxMediaBytes: -1
 	},
 	seeker: {
 		profiles: -1,
@@ -39,7 +41,8 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
 		creditsPerMonth: 999999,
 		extraCredits: false,
 		maxDocumentProjects: -1,
-		maxDocumentBytes: -1
+		maxDocumentBytes: -1,
+		maxMediaBytes: -1
 	},
 	hunter: {
 		profiles: -1,
@@ -47,7 +50,8 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
 		creditsPerMonth: 999999,
 		extraCredits: false,
 		maxDocumentProjects: -1,
-		maxDocumentBytes: -1
+		maxDocumentBytes: -1,
+		maxMediaBytes: -1
 	},
 	contractor: {
 		profiles: -1,
@@ -55,7 +59,8 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
 		creditsPerMonth: 999999,
 		extraCredits: false,
 		maxDocumentProjects: -1,
-		maxDocumentBytes: -1
+		maxDocumentBytes: -1,
+		maxMediaBytes: -1
 	}
 };
 

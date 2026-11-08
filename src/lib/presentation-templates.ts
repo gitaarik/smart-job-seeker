@@ -14,8 +14,12 @@
  * one table rather than two.
  */
 
-/** What a template dresses. The `kind` column stores exactly these. */
-export const TEMPLATE_KINDS = ['document', 'portfolio'] as const;
+/**
+ * What a template dresses. The `kind` column stores exactly these. A `banner`
+ * is a layout drawn at each platform's banner size from the profile's own
+ * name and title (planning/MEDIA-LIBRARY.md, `$lib/banner-templates.ts`).
+ */
+export const TEMPLATE_KINDS = ['document', 'portfolio', 'banner'] as const;
 export type TemplateKind = (typeof TEMPLATE_KINDS)[number];
 
 export const DEFAULT_TEMPLATE_KIND: TemplateKind = 'document';

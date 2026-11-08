@@ -229,7 +229,7 @@
 		<MediaUpload
 			entityType="profile"
 			entityId={profile.id}
-			field="profile_photo_path"
+			field="photo"
 			currentUrl={photoUrl}
 			label=""
 			onUpload={(url) => (photoUrl = url)}

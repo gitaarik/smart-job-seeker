@@ -312,7 +312,7 @@
 				<MediaUpload
 					entityType="education"
 					entityId={education.id}
-					field="logo_path"
+					field="logo"
 					currentUrl={logoUrl}
 					label="Institution Logo"
 					showHint={false}
@@ -324,7 +324,7 @@
 				<MediaUpload
 					entityType="education"
 					entityId={education.id}
-					field="banner_path"
+					field="banner"
 					currentUrl={bannerUrl}
 					label="Institution Banner"
 					showHint={false}

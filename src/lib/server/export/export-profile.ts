@@ -29,7 +29,9 @@ import {
 import { buildDocumentExport, type ProjectIndexMaps } from './export-documents';
 import { buildTranslationExport, emptyTranslationIndexMaps } from './export-translations';
 import { buildTemplateExport } from './export-templates';
+import { buildMediaLibraryExport } from './export-media-library';
 import type {
+	ArchiveFilePayload,
 	DocumentFilePayload,
 	ExportContentOptions,
 	ExportedFieldVariant,
@@ -50,6 +52,8 @@ export async function buildProfileExport(
 	mediaFiles: MediaFile[];
 	documentFiles: DocumentFilePayload[];
 	templateAssets: TemplateAssetPayload[];
+	/** The media library's originals and drawn renditions (only with media). */
+	libraryFiles: ArchiveFilePayload[];
 }> {
 	const { includeMedia = false, includeDocuments = false } = options;
 	const profile = await dbDirect.query.profiles.findFirst({
@@ -303,6 +307,13 @@ export async function buildProfileExport(
 		includeMedia
 	);
 
+	// The media library: its originals are media, so it follows the same switch.
+	// The slots below carry their rendition ids either way; without the library
+	// an import has nothing to map them to and leaves the slots empty, as a
+	// path without its file always did.
+	const library = includeMedia ? await buildMediaLibraryExport(profileId) : null;
+	const hasLibrary = !!library && library.library.items.length > 0;
+
 	// Helper to format dates (handles both Date objects and date strings from Drizzle)
 	const formatDate = (date: Date | string | null): string | null => {
 		if (!date) return null;
@@ -347,6 +358,7 @@ export async function buildProfileExport(
 		kvk_number: profile.kvk_number || undefined,
 		business_activities: profile.business_activities || undefined,
 		profile_photo_path: profile.profile_photo_path || undefined,
+		profile_photo_id: profile.profile_photo_id || undefined,
 
 		profile_versions: profile.profile_versions.map((pv) => ({
 			status: pv.status || undefined,
@@ -400,6 +412,8 @@ export async function buildProfileExport(
 			tags: work.tags,
 			logo_path: work.logo_path || undefined,
 			banner_path: work.banner_path || undefined,
+			logo_id: work.logo_id || undefined,
+			banner_id: work.banner_id || undefined,
 			achievements: work.work_experience_achievements.map((a) => ({
 				status: a.status || undefined,
 				sort: a.sort,
@@ -446,6 +460,8 @@ export async function buildProfileExport(
 			repo_url: proj.repo_url || undefined,
 			image_path: proj.image_path || undefined,
 			banner_path: proj.banner_path || undefined,
+			image_id: proj.image_id || undefined,
+			banner_id: proj.banner_id || undefined,
 			tags: proj.tags,
 			achievements: proj.side_project_achievements.map((a) => ({
 				description: a.description || undefined,
@@ -472,6 +488,8 @@ export async function buildProfileExport(
 			summary: edu.summary || undefined,
 			logo_path: edu.logo_path || undefined,
 			banner_path: edu.banner_path || undefined,
+			logo_id: edu.logo_id || undefined,
+			banner_id: edu.banner_id || undefined,
 			tags: edu.tags
 		})),
 
@@ -518,16 +536,23 @@ export async function buildProfileExport(
 		version: '2.0',
 		exported_at: new Date().toISOString(),
 		scope: 'profile',
-		has_media: includeMedia && mediaFiles.length > 0,
+		has_media: includeMedia && (mediaFiles.length > 0 || hasLibrary),
 		media_files: includeMedia && mediaFiles.length > 0 ? mediaFiles : undefined,
 		has_documents: hasDocuments,
 		documents: hasDocuments ? documents : undefined,
 		translations: translations.length > 0 ? translations : undefined,
 		resume_templates: templates.length > 0 ? templates : undefined,
+		media_library: hasLibrary ? library?.library : undefined,
 		profile: profileData
 	};
 
-	return { data: exportData, mediaFiles, documentFiles, templateAssets };
+	return {
+		data: exportData,
+		mediaFiles,
+		documentFiles,
+		templateAssets,
+		libraryFiles: hasLibrary ? (library?.files ?? []) : []
+	};
 }
 
 /**

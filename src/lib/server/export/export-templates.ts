@@ -20,10 +20,19 @@
  * through it rather than querying the table.
  */
 
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { dbDirect } from '$lib/server/db';
-import { asc, eq, inArray } from 'drizzle-orm';
-import { files, presentation_templates } from '$lib/server/db/schema';
+import { and, asc, eq, inArray } from 'drizzle-orm';
+import {
+	files,
+	media_items,
+	media_renditions,
+	presentation_templates
+} from '$lib/server/db/schema';
 import { getFile } from '$lib/server/files';
+import { ensureRendered } from '$lib/server/media/renditions';
+import { OUTPUT_EXTENSIONS } from '$lib/media-library';
 import { foldAssetsIntoConfig } from '$lib/server/profile/presentation-templates';
 import { documentSections, withSections, type ResumeTemplateConfig } from '$lib/resume-templates';
 import type { ExportedResumeTemplate, ExportedTemplateAsset, TemplateAssetPayload } from './types';
@@ -106,6 +115,34 @@ export async function buildTemplateExport(
 					assetPayloads.push({ archivePath, buffer });
 				} catch (error) {
 					console.warn(`[Export] Could not read template asset ${file.id}:`, error);
+				}
+			}
+
+			// A slot showing a media library rendition (a portfolio theme's images
+			// since 2026-11) travels as its picture, marked, so an archive that also
+			// carries the library can restore it as a rendition again.
+			const knownIds = new Set(known.map((file) => file.id));
+			const others = candidates.filter((id) => !knownIds.has(id));
+			const renditions = others.length
+				? await dbDirect
+						.select({ id: media_renditions.id })
+						.from(media_renditions)
+						.innerJoin(media_items, eq(media_items.id, media_renditions.item_id))
+						.where(and(inArray(media_renditions.id, others), eq(media_items.profile_id, profileId)))
+				: [];
+			for (const { id } of renditions) {
+				try {
+					const drawn = await ensureRendered(id);
+					if (!drawn) continue;
+					const buffer = await readFile(
+						join(process.cwd(), 'uploads', 'files', drawn.filenameDisk)
+					);
+					const filename = `${id}${OUTPUT_EXTENSIONS[drawn.format]}`;
+					const archivePath = `templates/${String(index + 1).padStart(2, '0')}-${row.slug || 'template'}/${filename}`;
+					assets.push({ file_id: id, archivePath, filename, rendition: true });
+					assetPayloads.push({ archivePath, buffer });
+				} catch (error) {
+					console.warn(`[Export] Could not read template rendition ${id}:`, error);
 				}
 			}
 		}

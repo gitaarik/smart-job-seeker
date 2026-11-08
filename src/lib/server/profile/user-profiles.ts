@@ -18,6 +18,7 @@ export interface ProfileSummary {
 	title: string | null;
 	is_default: boolean | null;
 	profile_photo_path: string | null;
+	profile_photo_id: string | null;
 }
 
 /**
@@ -32,7 +33,8 @@ export async function getProfilesByUserId(userId: string): Promise<ProfileSummar
 			slug: true,
 			title: true,
 			is_default: true,
-			profile_photo_path: true
+			profile_photo_path: true,
+			profile_photo_id: true
 		},
 		orderBy: [
 			desc(profiles.is_default), // Default profile first

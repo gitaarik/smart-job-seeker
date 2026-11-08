@@ -1,33 +1,40 @@
 /**
- * Entity media upload handler
- * Generic server-side handler for uploading media to any entity type
+ * The image slots on profile rows: a profile's photo, the logos and banners of
+ * roles and education, a side project's image and banner.
+ *
+ * Since 2026-11 a slot points at a media library rendition rather than holding
+ * its own shrunk copy (see planning/MEDIA-LIBRARY.md and server/media/). An
+ * upload through a slot is an upload to the library, shown in that slot at
+ * full frame; the original is kept, so the slot can be cropped or redrawn
+ * later without asking for the file again.
  */
 
-import { writeFile, mkdir, unlink } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { v4 as uuidv4 } from 'uuid';
 import { dbDirect } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { profiles, work_experiences, education, side_projects } from '$lib/server/db/schema';
 import { getErrorMessage } from '$lib/server/utils/errors';
-import { processEntityImage, type EntityImageOptions } from './public-image';
-
-const UPLOADS_DIR = join(process.cwd(), 'uploads');
-
-// Allowed entity types and their valid fields
-const ENTITY_CONFIG: Record<string, { fields: string[]; table: string }> = {
-	profile: { fields: ['profile_photo_path'], table: 'profiles' },
-	work_experience: { fields: ['logo_path', 'banner_path'], table: 'work_experiences' },
-	education: { fields: ['logo_path', 'banner_path'], table: 'education' },
-	side_project: { fields: ['image_path', 'banner_path'], table: 'side_projects' }
-};
+import type { Crop } from '$lib/media-library';
+import { createMediaItem } from '$lib/server/media/items';
+import { MediaUploadError } from '$lib/server/media/originals';
+import {
+	assignEntitySlot,
+	clearEntitySlot,
+	entityProfileId,
+	resolveEntitySlot,
+	SlotError,
+	type EntitySlot
+} from '$lib/server/media/slots';
+import { requireMediaQuota } from '$lib/server/billing/require-media-quota';
 
 interface UploadResult {
 	success: boolean;
-	path?: string;
+	renditionId?: string;
 	url?: string;
 	error?: string;
+	status?: number;
 }
+
+const ENTITY_TYPES = ['profile', 'work_experience', 'education', 'side_project'];
 
 /**
  * Validate that user owns the entity via profile
@@ -37,8 +44,7 @@ export async function validateEntityOwnership(
 	entityId: number,
 	userId: string
 ): Promise<boolean> {
-	const config = ENTITY_CONFIG[entityType];
-	if (!config) return false;
+	if (!ENTITY_TYPES.includes(entityType)) return false;
 
 	let profileId: number | null = null;
 
@@ -85,209 +91,78 @@ export async function validateEntityOwnership(
 	return !!profile;
 }
 
-/**
- * Validate entity type and field
- */
-export function validateEntityField(entityType: string, field: string): boolean {
-	const config = ENTITY_CONFIG[entityType];
-	if (!config) return false;
-	return config.fields.includes(field);
+/** The slot a route's entity type and field name refer to, or null. */
+export function entitySlot(entityType: string, field: string): EntitySlot | null {
+	return resolveEntitySlot(entityType, field);
 }
 
 /**
- * Save entity media file
+ * Put an uploaded file in a slot: it becomes a library item, and the slot
+ * shows all of it.
  */
 export async function saveEntityMedia(
-	entityType: string,
+	slot: EntitySlot,
 	entityId: number,
-	field: string,
 	file: File,
-	options: EntityImageOptions = {}
+	userId: string
 ): Promise<UploadResult> {
-	// Validate file type
-	const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-	if (!allowedTypes.includes(file.type)) {
-		return { success: false, error: 'Invalid file type' };
-	}
-
-	// Validate file size (5MB max)
-	const maxSize = 5 * 1024 * 1024;
-	if (file.size > maxSize) {
-		return { success: false, error: 'File too large (max 5MB)' };
-	}
-
 	try {
-		const buffer = Buffer.from(await file.arrayBuffer());
-
-		// Resized, converted, and without its EXIF: these are served to anyone,
-		// and a phone photo's EXIF says where it was taken (see public-image.ts).
-		const { bytes: outputBuffer, ext } = await processEntityImage(buffer, file.type, options);
-
-		// Generate filename and path
-		const subdir = entityType.replace('_', '-') + 's';
-		const filename = `${uuidv4()}${ext}`;
-		const relativePath = `${subdir}/${filename}`;
-		const absolutePath = join(UPLOADS_DIR, relativePath);
-
-		// Ensure directory exists
-		await mkdir(dirname(absolutePath), { recursive: true });
-
-		// Write file
-		await writeFile(absolutePath, outputBuffer);
-
-		// Update database
-		await updateEntityMediaPath(entityType, entityId, field, relativePath);
-
-		return {
-			success: true,
-			path: relativePath,
-			url: `/uploads/${relativePath}`
-		};
+		const profileId = await entityProfileId(slot, entityId);
+		if (!profileId) return { success: false, error: 'Not found', status: 404 };
+		await requireMediaQuota(userId, file.size);
+		const item = await createMediaItem({
+			profileId,
+			kind: slot.spec.kind,
+			label: null,
+			filename: file.name,
+			bytes: Buffer.from(await file.arrayBuffer())
+		});
+		const shown = await assignEntitySlot(slot, entityId, item.id);
+		return { success: true, ...shown };
 	} catch (error) {
+		if (error instanceof MediaUploadError)
+			return { success: false, error: error.message, status: 400 };
+		if (error instanceof SlotError)
+			return { success: false, error: error.message, status: error.status };
+		// requireMediaQuota refuses with SvelteKit's error(), which the route rethrows.
+		if (error && typeof error === 'object' && 'status' in error && 'body' in error) throw error;
 		console.error('Failed to save entity media:', error);
+		return { success: false, error: getErrorMessage(error, 'Upload failed'), status: 500 };
+	}
+}
+
+/** Show an item already in the library in a slot, cropped as given. */
+export async function pickEntityMedia(
+	slot: EntitySlot,
+	entityId: number,
+	itemId: number,
+	crop: Crop | null
+): Promise<UploadResult> {
+	try {
+		const shown = await assignEntitySlot(slot, entityId, itemId, crop);
+		return { success: true, ...shown };
+	} catch (error) {
+		if (error instanceof SlotError)
+			return { success: false, error: error.message, status: error.status };
+		console.error('Failed to set entity media:', error);
 		return {
 			success: false,
-			error: getErrorMessage(error, 'Upload failed')
+			error: getErrorMessage(error, 'Could not use that image'),
+			status: 500
 		};
 	}
 }
 
-/**
- * Delete entity media file
- */
+/** Empty a slot. The image stays in the library. */
 export async function deleteEntityMedia(
-	entityType: string,
-	entityId: number,
-	field: string
+	slot: EntitySlot,
+	entityId: number
 ): Promise<{ success: boolean; error?: string }> {
 	try {
-		// Get current path
-		const currentPath = await getEntityMediaPath(entityType, entityId, field);
-
-		if (currentPath) {
-			// Delete file
-			try {
-				await unlink(join(UPLOADS_DIR, currentPath));
-			} catch {
-				// File might not exist
-			}
-		}
-
-		// Clear database field
-		await updateEntityMediaPath(entityType, entityId, field, null);
-
+		await clearEntitySlot(slot, entityId);
 		return { success: true };
 	} catch (error) {
 		console.error('Failed to delete entity media:', error);
-		return {
-			success: false,
-			error: getErrorMessage(error, 'Delete failed')
-		};
-	}
-}
-
-/**
- * Get current media path for entity
- */
-async function getEntityMediaPath(
-	entityType: string,
-	entityId: number,
-	field: string
-): Promise<string | null> {
-	switch (entityType) {
-		case 'profile': {
-			const entity = await dbDirect.query.profiles.findFirst({
-				where: eq(profiles.id, entityId),
-				columns: { profile_photo_path: true }
-			});
-			if (field === 'profile_photo_path') return entity?.profile_photo_path ?? null;
-			return null;
-		}
-		case 'work_experience': {
-			const entity = await dbDirect.query.work_experiences.findFirst({
-				where: eq(work_experiences.id, entityId),
-				columns: { logo_path: true, banner_path: true }
-			});
-			if (field === 'logo_path') return entity?.logo_path ?? null;
-			if (field === 'banner_path') return entity?.banner_path ?? null;
-			return null;
-		}
-		case 'education': {
-			const entity = await dbDirect.query.education.findFirst({
-				where: eq(education.id, entityId),
-				columns: { logo_path: true, banner_path: true }
-			});
-			if (field === 'logo_path') return entity?.logo_path ?? null;
-			if (field === 'banner_path') return entity?.banner_path ?? null;
-			return null;
-		}
-		case 'side_project': {
-			const entity = await dbDirect.query.side_projects.findFirst({
-				where: eq(side_projects.id, entityId),
-				columns: { image_path: true, banner_path: true }
-			});
-			if (field === 'image_path') return entity?.image_path ?? null;
-			if (field === 'banner_path') return entity?.banner_path ?? null;
-			return null;
-		}
-		default:
-			return null;
-	}
-}
-
-/**
- * Update entity media path in database
- */
-async function updateEntityMediaPath(
-	entityType: string,
-	entityId: number,
-	field: string,
-	path: string | null
-): Promise<void> {
-	switch (entityType) {
-		case 'profile':
-			if (field === 'profile_photo_path') {
-				await dbDirect
-					.update(profiles)
-					.set({ profile_photo_path: path, date_updated: new Date() })
-					.where(eq(profiles.id, entityId));
-			}
-			break;
-		case 'work_experience':
-			if (field === 'logo_path') {
-				await dbDirect
-					.update(work_experiences)
-					.set({ logo_path: path })
-					.where(eq(work_experiences.id, entityId));
-			} else if (field === 'banner_path') {
-				await dbDirect
-					.update(work_experiences)
-					.set({ banner_path: path })
-					.where(eq(work_experiences.id, entityId));
-			}
-			break;
-		case 'education':
-			if (field === 'logo_path') {
-				await dbDirect.update(education).set({ logo_path: path }).where(eq(education.id, entityId));
-			} else if (field === 'banner_path') {
-				await dbDirect
-					.update(education)
-					.set({ banner_path: path })
-					.where(eq(education.id, entityId));
-			}
-			break;
-		case 'side_project':
-			if (field === 'image_path') {
-				await dbDirect
-					.update(side_projects)
-					.set({ image_path: path })
-					.where(eq(side_projects.id, entityId));
-			} else if (field === 'banner_path') {
-				await dbDirect
-					.update(side_projects)
-					.set({ banner_path: path })
-					.where(eq(side_projects.id, entityId));
-			}
-			break;
+		return { success: false, error: getErrorMessage(error, 'Delete failed') };
 	}
 }

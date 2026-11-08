@@ -119,7 +119,8 @@ export const actions: Actions = {
 			if (isZip) {
 				// Handle ZIP import (v2.0 format with media)
 				const buffer = Buffer.from(await file.arrayBuffer());
-				const { data, mediaFiles, documentTexts, templateAssets } = await parseExportZip(buffer);
+				const { data, mediaFiles, documentTexts, templateAssets, libraryFiles } =
+					await parseExportZip(buffer);
 
 				if (!validateExportData(data)) {
 					return fail(400, { error: 'Invalid export format in ZIP file' });
@@ -134,7 +135,8 @@ export const actions: Actions = {
 				const result = await importExportData(data, user.id, {
 					overwriteProfileId,
 					documentTexts,
-					templateAssets
+					templateAssets,
+					libraryFiles
 				});
 
 				// Import media files if present
@@ -143,7 +145,8 @@ export const actions: Actions = {
 						mediaFiles,
 						data.media_files,
 						result.profileId,
-						result.mediaPathMapping
+						result.mediaPathMapping,
+						result.librarySlots
 					);
 
 					if (mediaResult.failed > 0) {

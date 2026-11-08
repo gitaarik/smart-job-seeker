@@ -506,7 +506,7 @@
 				<MediaUpload
 					entityType="side_project"
 					entityId={project.id}
-					field="image_path"
+					field="image"
 					currentUrl={imageUrl}
 					label="Project Image"
 					showHint={false}
@@ -525,7 +525,7 @@
 				<MediaUpload
 					entityType="side_project"
 					entityId={project.id}
-					field="banner_path"
+					field="banner"
 					currentUrl={bannerUrl}
 					label="Project Banner"
 					showHint={false}

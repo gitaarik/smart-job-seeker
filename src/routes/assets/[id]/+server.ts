@@ -3,6 +3,7 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { sql } from 'drizzle-orm';
 import { queryRawDirect } from '$lib/server/db';
+import { publicRendition } from '$lib/server/media/serve';
 import type { RequestHandler } from './$types';
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads', 'files');
@@ -27,10 +28,13 @@ const UPLOADS_DIR = join(process.cwd(), 'uploads', 'files');
  * notices; the failure of forgetting to exclude one is a private file served
  * for a year, which nobody does.
  *
- * Only resume template artwork is public now. Profile pictures and the two
- * entity logo columns were here too, from when images were `files` rows rather
- * than bytes under `uploads/`; those columns are gone and the clauses went with
- * them. Anything served from `uploads/` never reaches this route at all.
+ * Two kinds of id are served here. A file id, for template artwork. And,
+ * since 2026-11, a media library rendition id: the profile photo, the logos
+ * and banners of roles, schools and side projects, and a portfolio theme's
+ * images all point at renditions, and one is public only while such a slot
+ * points at it (`server/media/references.ts` keeps that list, an allowlist
+ * for the same reason as this one). An id that is not a file is tried as a
+ * rendition; both are random uuids, so the two cannot collide.
  *
  * The template check reads `presentation_template_assets`, which is an indexed
  * lookup. It used to be `config::text ILIKE '%<id>%'` over the jsonb, because
@@ -79,7 +83,11 @@ export const GET: RequestHandler = async ({ params }) => {
 	`);
 	const file = rows[0];
 
-	if (!file) throw error(404);
+	if (!file) {
+		const rendition = await publicRendition(params.id);
+		if (!rendition) throw error(404);
+		return image(rendition.bytes, rendition.type);
+	}
 	if (!file.is_public) {
 		// Either a private file someone is probing for, or a genuinely public
 		// kind that nothing above knows about yet. The second reads as an image
@@ -96,9 +104,13 @@ export const GET: RequestHandler = async ({ params }) => {
 		throw error(404);
 	}
 
+	return image(buffer, file.type || 'application/octet-stream');
+};
+
+function image(buffer: Buffer, type: string): Response {
 	return new Response(new Uint8Array(buffer), {
 		headers: {
-			'Content-Type': file.type || 'application/octet-stream',
+			'Content-Type': type,
 			// The allowlist decides which files are served; this decides they are
 			// served as what they claim to be. Sniffing is how a stored blob on the
 			// app origin turns into a document the browser will execute.
@@ -106,4 +118,4 @@ export const GET: RequestHandler = async ({ params }) => {
 			'Cache-Control': 'public, max-age=31536000, immutable'
 		}
 	});
-};
+}

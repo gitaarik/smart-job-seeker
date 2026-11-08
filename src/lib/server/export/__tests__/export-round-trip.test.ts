@@ -156,12 +156,16 @@ function profileWithEverything(): Row {
 	});
 }
 
-/** Carried, but not by the row's insert: a media path is set once its file is restored. */
+/**
+ * Carried, but not by the row's insert: a media path is set once its file is
+ * restored, and a slot's rendition once the media library is
+ * (export-media-library.test.ts covers that half).
+ */
 const SET_AFTER_INSERT: Record<string, string[]> = {
-	profiles: ['profile_photo_path'],
-	work_experiences: ['logo_path', 'banner_path'],
-	education: ['logo_path', 'banner_path'],
-	side_projects: ['image_path', 'banner_path']
+	profiles: ['profile_photo_path', 'profile_photo_id'],
+	work_experiences: ['logo_path', 'banner_path', 'logo_id', 'banner_id'],
+	education: ['logo_path', 'banner_path', 'logo_id', 'banner_id'],
+	side_projects: ['image_path', 'banner_path', 'image_id', 'banner_id']
 };
 
 /** Carried under another name in the payload. */

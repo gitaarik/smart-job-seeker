@@ -19,6 +19,13 @@ interface UploadFileOptions {
 	buffer: Buffer;
 	title?: string;
 	description?: string;
+	/**
+	 * The type to record, when the caller knows it better than the extension
+	 * table does. The media library stores SVG originals, which this table
+	 * leaves out on purpose: adding `.svg` here would also open the document
+	 * and MCP upload doors to it.
+	 */
+	mimeType?: string;
 }
 
 interface UploadedFile {
@@ -92,7 +99,7 @@ export async function uploadFile(options: UploadFileOptions): Promise<UploadedFi
 	const ext = extname(options.filename).toLowerCase();
 	const diskName = `${id}${ext}`;
 	const filePath = join(UPLOADS_DIR, diskName);
-	const mimeType = getMimeType(options.filename);
+	const mimeType = options.mimeType ?? getMimeType(options.filename);
 
 	await mkdir(UPLOADS_DIR, { recursive: true });
 	await writeFile(filePath, options.buffer);

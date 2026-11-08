@@ -207,7 +207,13 @@ export interface ExportedProfile {
  * archive does).
  */
 type RoleColumnLeftOut =
-	'profile_id' | 'date_created' | 'date_updated' | 'logo_path' | 'banner_path';
+	| 'profile_id'
+	| 'date_created'
+	| 'date_updated'
+	| 'logo_path'
+	| 'banner_path'
+	| 'logo_id'
+	| 'banner_id';
 
 /**
  * A role's columns as this export reads them, checked against the table: a

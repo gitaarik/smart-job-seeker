@@ -9,6 +9,7 @@ import {
 	work_experience_technologies,
 	work_experiences
 } from '$lib/server/db/schema';
+import { getWorkExperienceBannerUrl, getWorkExperienceLogoUrl } from '$lib/utils/entity-media-url';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
 	const layoutData = await parent();
@@ -48,14 +49,12 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		}
 	});
 
-	const logoUrl = experience?.logo_path ? `/uploads/${experience.logo_path}` : null;
-
-	// Get banner URL
-	const bannerUrl = experience?.banner_path ? `/uploads/${experience.banner_path}` : null;
-
 	if (!experience) {
 		redirect(302, '/profile/work-experience');
 	}
+
+	const logoUrl = getWorkExperienceLogoUrl(experience);
+	const bannerUrl = getWorkExperienceBannerUrl(experience);
 
 	return {
 		experience,

@@ -1,18 +1,31 @@
+<!--
+	One image slot on a profile row: the profile photo, a role's logo, a side
+	project's banner.
+
+	Dropping or choosing a file puts it in the profile's media library and shows
+	all of it here. "Choose from library" opens the picker: any picture already
+	in the library, cropped for this slot. Removing empties the slot; the picture
+	stays in the library (Profile > Media).
+-->
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTimes, faImage, faExpand, faCheck } from '@fortawesome/free-solid-svg-icons';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { portalToBody } from '$lib/actions/portal';
+	import MediaPicker from '$lib/components/media/MediaPicker.svelte';
+	import { entitySlotSpec, type Crop } from '$lib/media-library';
 
 	interface Props {
 		entityType: string;
 		entityId: number;
+		/** The slot's name: photo, logo, banner or image. */
 		field: string;
 		currentUrl?: string | null;
 		label?: string;
 		accept?: string;
 		showHint?: boolean;
+		/** The library to pick from; the selected profile when not given. */
+		profileId?: number | null;
 		onUpload?: (url: string) => void;
 		onDelete?: () => void;
 	}
@@ -23,8 +36,9 @@
 		field,
 		currentUrl = null,
 		label = 'Upload image',
-		accept = 'image/jpeg,image/png,image/webp,image/gif',
+		accept = 'image/jpeg,image/png,image/webp,image/gif,image/svg+xml,image/avif,image/tiff',
 		showHint = true,
+		profileId = null,
 		onUpload,
 		onDelete
 	}: Props = $props();
@@ -32,16 +46,21 @@
 	let isUploading = $state(false);
 	let isDragging = $state(false);
 	let error = $state<string | null>(null);
-	let previewUrl = $state<string | null>(untrack(() => currentUrl));
+	// Follows the prop, and takes the new URL locally after an upload or a pick.
+	let previewUrl = $derived<string | null>(currentUrl);
 	let showFullPreview = $state(false);
-	let markedForDeletion = $state(false);
+	let showPicker = $state(false);
 	let showSuccess = $state(false);
 
-	// Update preview when currentUrl prop changes
-	$effect(() => {
-		previewUrl = currentUrl;
-		markedForDeletion = false;
-	});
+	const endpoint = $derived(`/api/media/${entityType}/${entityId}/${field}`);
+	const spec = $derived(entitySlotSpec(entityType, field));
+
+	function shown(url: string) {
+		previewUrl = url;
+		showSuccess = true;
+		setTimeout(() => (showSuccess = false), 2000);
+		onUpload?.(url);
+	}
 
 	async function handleUpload(file: File) {
 		if (!file) return;
@@ -53,22 +72,12 @@
 			const formData = new FormData();
 			formData.append('file', file);
 
-			const response = await fetch(`/api/media/${entityType}/${entityId}/${field}`, {
-				method: 'POST',
-				body: formData
-			});
-
+			const response = await fetch(endpoint, { method: 'POST', body: formData });
 			const result = await response.json();
-
 			if (!response.ok) {
 				throw new Error(result.message || 'Upload failed');
 			}
-
-			previewUrl = result.url;
-			markedForDeletion = false;
-			showSuccess = true;
-			setTimeout(() => (showSuccess = false), 2000);
-			onUpload?.(result.url);
+			shown(result.url);
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Upload failed';
 		} finally {
@@ -76,13 +85,23 @@
 		}
 	}
 
+	async function handlePick(itemId: number, crop: Crop | null) {
+		const response = await fetch(endpoint, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ itemId, crop })
+		});
+		const result = await response.json();
+		if (!response.ok) throw new Error(result.message || 'Could not use that picture');
+		error = null;
+		shown(result.url);
+	}
+
 	async function handleDelete() {
-		if (!confirm('Delete this image?')) return;
+		if (!confirm('Remove this image? It stays in your media library.')) return;
 
 		try {
-			const response = await fetch(`/api/media/${entityType}/${entityId}/${field}`, {
-				method: 'DELETE'
-			});
+			const response = await fetch(endpoint, { method: 'DELETE' });
 
 			if (!response.ok) {
 				const result = await response.json();
@@ -90,7 +109,6 @@
 			}
 
 			previewUrl = null;
-			markedForDeletion = true;
 			onDelete?.();
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Delete failed';
@@ -123,13 +141,9 @@
 	}
 
 	const inputId = $derived(`media-upload-${entityType}-${entityId}-${field}`);
-	const deleteFieldName = $derived(`delete_${field}`);
 </script>
 
 <div class="space-y-2">
-	<!-- Hidden field to track deletion on form submit -->
-	<input type="hidden" name={deleteFieldName} value={markedForDeletion ? 'true' : ''} />
-
 	{#if label}
 		<label for={inputId} class="block text-sm font-medium text-[var(--dash-text)]">
 			{label}
@@ -181,6 +195,15 @@
 				<FontAwesomeIcon icon={faTimes} class="h-3 w-3" />
 			</button>
 		</div>
+		<div>
+			<button
+				type="button"
+				onclick={() => (showPicker = true)}
+				class="text-xs text-[var(--dash-primary)] hover:underline"
+			>
+				Change or crop
+			</button>
+		</div>
 	{:else}
 		<!-- Upload area -->
 		<div
@@ -217,12 +240,35 @@
 				class="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
 			/>
 		</div>
+		<div>
+			<button
+				type="button"
+				onclick={() => (showPicker = true)}
+				class="text-xs text-[var(--dash-primary)] hover:underline"
+			>
+				Choose from library
+			</button>
+		</div>
 	{/if}
 
 	{#if showHint}
-		<p class="text-xs text-[var(--dash-text-secondary)]">JPEG, PNG, WebP, or GIF. Max 5MB.</p>
+		<p class="text-xs text-[var(--dash-text-secondary)]">
+			JPEG, PNG, WebP, GIF, SVG, AVIF or TIFF, up to 25 MB. The original is kept in your media
+			library.
+		</p>
 	{/if}
 </div>
+
+{#if showPicker}
+	<MediaPicker
+		title={spec?.label ?? label ?? 'Choose a picture'}
+		kind={spec?.kind ?? 'other'}
+		aspect={spec?.aspect ?? null}
+		{profileId}
+		onpick={handlePick}
+		onclose={() => (showPicker = false)}
+	/>
+{/if}
 
 <!-- Full preview modal -->
 {#if showFullPreview && previewUrl}

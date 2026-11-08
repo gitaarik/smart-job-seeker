@@ -13,41 +13,42 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faBars,
+		faBinoculars,
 		faBookmark,
 		faBriefcase,
+		faBuilding,
 		faChartBar,
 		faChartLine,
 		faChevronDown,
-		faDiagramProject,
-		faBinoculars,
-		faBuilding,
 		faChevronRight,
 		faClipboardList,
 		faCog,
-		faCompass,
-		faCrosshairs,
 		faCommentDots,
 		faComments,
+		faCompass,
+		faCrosshairs,
+		faDiagramProject,
 		faEnvelope,
 		faExchangeAlt,
 		faFileAlt,
 		faGlobe,
 		faHistory,
-		faPlug,
-		faWrench,
 		faHome,
+		faImages,
 		faLink,
 		faListCheck,
 		faMoneyBillWave,
 		faPalette,
 		faPaperPlane,
+		faPlug,
 		faRobot,
 		faSearch,
 		faShieldAlt,
 		faTimes,
 		faUser,
 		faUsers,
-		faUserTie
+		faUserTie,
+		faWrench
 	} from '@fortawesome/free-solid-svg-icons';
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
@@ -158,6 +159,13 @@
 					label: 'Portfolio Site',
 					href: '/profile/portfolio',
 					icon: faGlobe
+				},
+				// Every picture the profile shows or a platform asks for, with its
+				// original: the slots on the profile pick from here.
+				{
+					label: 'Media',
+					href: '/profile/media',
+					icon: faImages
 				},
 				{
 					label: 'Share Links',

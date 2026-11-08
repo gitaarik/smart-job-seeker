@@ -57,6 +57,7 @@ export const PAGE_PROFILE_COLUMNS = [
 	'location_timezone',
 	'country_code',
 	'profile_photo_path',
+	'profile_photo_id',
 	'meta_image_url',
 	'dev_start_year',
 	'python_js_start_year',

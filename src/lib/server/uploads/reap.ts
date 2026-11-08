@@ -158,6 +158,16 @@ export async function collectProfileFileRefs(profileId: number): Promise<FileRef
 		  JOIN presentation_templates t ON t.id = a.template_id
 		 WHERE t.profile_id = ${profileId}
 		UNION ALL
+		-- The media library: every original, and every rendition's cached bytes.
+		-- Both are files rows with real foreign keys, so they die with the profile
+		-- by cascade and the reap below finds them unreferenced.
+		SELECT file_id, NULL FROM media_items WHERE profile_id = ${profileId}
+		UNION ALL
+		SELECT r.file_id, NULL
+		  FROM media_renditions r
+		  JOIN media_items i ON i.id = r.item_id
+		 WHERE i.profile_id = ${profileId}
+		UNION ALL
 		SELECT file_id::uuid, NULL
 		  FROM import_logs
 		 WHERE profile_id = ${profileId} AND file_id ~* ${sql.raw(`'^${UUID_PATTERN}$'`)}

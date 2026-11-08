@@ -4,6 +4,7 @@ import { dbDirect as db } from '$lib/server/db';
 import { eq, and, count, desc, isNotNull, or, sum } from 'drizzle-orm';
 import {
 	education,
+	media_items,
 	profile_document_projects,
 	profile_exports,
 	profiles,
@@ -27,50 +28,56 @@ import {
  * uploaded documents went unnoticed as a gap in the export for so long.
  */
 async function summarizeExportContents(profileId: number) {
-	const [profile, workLogos, educationLogos, sideProjectImages, documents] = await Promise.all([
-		db.query.profiles.findFirst({
-			where: eq(profiles.id, profileId),
-			columns: { profile_photo_path: true }
-		}),
-		db
-			.select({ value: count() })
-			.from(work_experiences)
-			.where(
-				and(
-					eq(work_experiences.profile_id, profileId),
-					or(isNotNull(work_experiences.logo_path), isNotNull(work_experiences.banner_path))
-				)
-			),
-		db
-			.select({ value: count() })
-			.from(education)
-			.where(
-				and(
-					eq(education.profile_id, profileId),
-					or(isNotNull(education.logo_path), isNotNull(education.banner_path))
-				)
-			),
-		db
-			.select({ value: count() })
-			.from(side_projects)
-			.where(
-				and(
-					eq(side_projects.profile_id, profileId),
-					or(isNotNull(side_projects.image_path), isNotNull(side_projects.banner_path))
-				)
-			),
-		db
-			.select({ value: count(), bytes: sum(profile_document_projects.total_bytes) })
-			.from(profile_document_projects)
-			.where(eq(profile_document_projects.profile_id, profileId))
-	]);
+	const [profile, workLogos, educationLogos, sideProjectImages, documents, library] =
+		await Promise.all([
+			db.query.profiles.findFirst({
+				where: eq(profiles.id, profileId),
+				columns: { profile_photo_path: true }
+			}),
+			db
+				.select({ value: count() })
+				.from(work_experiences)
+				.where(
+					and(
+						eq(work_experiences.profile_id, profileId),
+						or(isNotNull(work_experiences.logo_path), isNotNull(work_experiences.banner_path))
+					)
+				),
+			db
+				.select({ value: count() })
+				.from(education)
+				.where(
+					and(
+						eq(education.profile_id, profileId),
+						or(isNotNull(education.logo_path), isNotNull(education.banner_path))
+					)
+				),
+			db
+				.select({ value: count() })
+				.from(side_projects)
+				.where(
+					and(
+						eq(side_projects.profile_id, profileId),
+						or(isNotNull(side_projects.image_path), isNotNull(side_projects.banner_path))
+					)
+				),
+			db
+				.select({ value: count(), bytes: sum(profile_document_projects.total_bytes) })
+				.from(profile_document_projects)
+				.where(eq(profile_document_projects.profile_id, profileId)),
+			// The media library: every picture in it travels, original and all.
+			db.select({ value: count() }).from(media_items).where(eq(media_items.profile_id, profileId))
+		]);
 
 	return {
+		// The old path columns count only until migrate-media-library.ts has
+		// moved them into the library, which is where everything else is.
 		mediaCount:
 			(profile?.profile_photo_path ? 1 : 0) +
 			(workLogos[0]?.value ?? 0) +
 			(educationLogos[0]?.value ?? 0) +
-			(sideProjectImages[0]?.value ?? 0),
+			(sideProjectImages[0]?.value ?? 0) +
+			(library[0]?.value ?? 0),
 		documentCount: documents[0]?.value ?? 0,
 		// Extracted text bytes — the uncompressed size documents add to the ZIP.
 		documentBytes: Number(documents[0]?.bytes ?? 0)
@@ -133,7 +140,8 @@ export const actions: Actions = {
 				data: exportData,
 				mediaFiles,
 				documentFiles,
-				templateAssets
+				templateAssets,
+				libraryFiles
 			} = scope === 'full'
 				? await buildFullExport(profileId, options)
 				: await buildProfileExport(profileId, options);
@@ -145,7 +153,13 @@ export const actions: Actions = {
 			let fileType: 'zip' | 'json';
 
 			if (format === 'zip') {
-				buffer = await createExportZip(exportData, mediaFiles, documentFiles, templateAssets);
+				buffer = await createExportZip(
+					exportData,
+					mediaFiles,
+					documentFiles,
+					templateAssets,
+					libraryFiles
+				);
 				filename = `${profileName}-${scope}.zip`;
 				fileType = 'zip';
 			} else {

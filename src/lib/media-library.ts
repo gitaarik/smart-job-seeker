@@ -141,7 +141,10 @@ export interface RenditionWarning {
  * Enlarging is the one a person cannot see in the crop editor: the picture
  * looks fine at screen size and goes up soft.
  */
-export function cropWarnings(crop: Crop, preset: { width: number; height: number }): RenditionWarning[] {
+export function cropWarnings(
+	crop: Crop,
+	preset: { width: number; height: number }
+): RenditionWarning[] {
 	const warnings: RenditionWarning[] = [];
 	if (crop.w < preset.width || crop.h < preset.height) {
 		warnings.push({
@@ -152,8 +155,118 @@ export function cropWarnings(crop: Crop, preset: { width: number; height: number
 	return warnings;
 }
 
+/**
+ * A size in decimal units, the way platforms state their limits: LinkedIn's
+ * "8 MB" is 8,000,000 bytes here, not 7.6 binary megabytes.
+ */
 export function formatBytes(bytes: number): string {
-	if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-	if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+	if (bytes >= 1_000_000) return `${Number((bytes / 1_000_000).toFixed(1))} MB`;
+	if (bytes >= 1_000) return `${Math.round(bytes / 1_000)} KB`;
 	return `${bytes} B`;
+}
+
+/**
+ * An image slot on the profile: a place that shows one picture.
+ *
+ * `maxEdge` is the longest side the slot's rendition is drawn at, never
+ * enlarging. It was 800 for every slot when each kept its own copy; banners
+ * and a theme's hero are drawn larger now that the original is kept to draw
+ * them from. `aspect` is the shape the crop editor starts from, where the slot
+ * has one.
+ */
+export interface MediaSlotSpec {
+	label: string;
+	kind: MediaKind;
+	maxEdge: number;
+	aspect?: number;
+}
+
+/** The slots on profile rows, by entity type and slot name. */
+export const ENTITY_MEDIA_SLOTS = {
+	profile: {
+		photo: { label: 'Profile photo', kind: 'photo', maxEdge: 800 }
+	},
+	work_experience: {
+		logo: { label: 'Logo', kind: 'logo', maxEdge: 800 },
+		banner: { label: 'Banner', kind: 'banner', maxEdge: 1600 }
+	},
+	education: {
+		logo: { label: 'Logo', kind: 'logo', maxEdge: 800 },
+		banner: { label: 'Banner', kind: 'banner', maxEdge: 1600 }
+	},
+	side_project: {
+		image: { label: 'Image', kind: 'other', maxEdge: 800 },
+		banner: { label: 'Banner', kind: 'banner', maxEdge: 1600 }
+	}
+} as const satisfies Record<string, Record<string, MediaSlotSpec>>;
+
+export type MediaEntityType = keyof typeof ENTITY_MEDIA_SLOTS;
+
+export function entitySlotSpec(entityType: string, slot: string): MediaSlotSpec | null {
+	const slots = (ENTITY_MEDIA_SLOTS as Record<string, Record<string, MediaSlotSpec>>)[entityType];
+	return slots?.[slot] ?? null;
+}
+
+/** A portfolio theme's image slots. */
+export const THEME_MEDIA_SLOTS = {
+	logo: { label: 'Logo', kind: 'logo', maxEdge: 800 },
+	hero: { label: 'Hero', kind: 'banner', maxEdge: 2400 },
+	ogImage: { label: 'Link preview', kind: 'banner', maxEdge: 1200, aspect: 1200 / 630 },
+	favicon: { label: 'Favicon', kind: 'icon', maxEdge: 512, aspect: 1 },
+	photo: { label: 'Photo', kind: 'photo', maxEdge: 800 },
+	thumbnail: { label: 'Thumbnail', kind: 'other', maxEdge: 800 }
+} as const satisfies Record<string, MediaSlotSpec>;
+
+export type ThemeMediaSlot = keyof typeof THEME_MEDIA_SLOTS;
+
+export function isThemeMediaSlot(value: string): value is ThemeMediaSlot {
+	return Object.prototype.hasOwnProperty.call(THEME_MEDIA_SLOTS, value);
+}
+
+/** The size a slot draws a crop at: the crop itself, scaled down to fit `maxEdge`. */
+export function slotOutputSize(crop: Crop, maxEdge: number): { width: number; height: number } {
+	const scale = Math.min(1, maxEdge / Math.max(crop.w, crop.h));
+	return {
+		width: Math.max(1, Math.round(crop.w * scale)),
+		height: Math.max(1, Math.round(crop.h * scale))
+	};
+}
+
+/** Where a rendition is served: the same public route as template artwork. */
+export function renditionUrl(id: string | null | undefined): string | null {
+	return id ? `/assets/${id}` : null;
+}
+
+/** An item as the page and the slot picker read it. */
+export interface MediaItemView {
+	id: number;
+	kind: MediaKind;
+	label: string | null;
+	width: number;
+	height: number;
+	format: string;
+	hasAlpha: boolean;
+	/** Size of the stored original. */
+	bytes: number | null;
+	replacesId: number | null;
+	templateId: number | null;
+	dateCreated: string | null;
+	previewUrl: string;
+	originalUrl: string;
+}
+
+export function itemPreviewUrl(id: number, maxEdge = 480): string {
+	return `/api/media/items/${id}/preview?w=${maxEdge}`;
+}
+
+/** A banner template's picture slots. */
+export const BANNER_MEDIA_SLOTS = {
+	logo: { label: 'Logo', kind: 'logo', maxEdge: 800 },
+	background: { label: 'Background', kind: 'banner', maxEdge: 2400 }
+} as const satisfies Record<string, MediaSlotSpec>;
+
+export type BannerMediaSlot = keyof typeof BANNER_MEDIA_SLOTS;
+
+export function isBannerMediaSlot(value: string): value is BannerMediaSlot {
+	return Object.prototype.hasOwnProperty.call(BANNER_MEDIA_SLOTS, value);
 }

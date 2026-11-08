@@ -1,14 +1,22 @@
 /**
- * Import media files from export
+ * Import the media of an archive written before the media library.
+ *
+ * Those archives carry each slot's picture as a file at `media/<path>`, named
+ * by the slot's old `*_path` column. Each one now becomes a library item shown
+ * in its slot at full frame, the same as an upload through the slot, so an
+ * import never writes an old path column again. An archive written since
+ * carries the library itself (import-media-library.ts) and has no such files
+ * for a slot the library fills.
  */
 
-import { writeFile, mkdir } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { v4 as uuidv4 } from 'uuid';
+import { unlink } from 'node:fs/promises';
+import { join } from 'node:path';
 import { dbDirect } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { profiles, work_experiences, education, side_projects } from '$lib/server/db/schema';
-import { stripImageMetadata } from '$lib/server/uploads/public-image';
+import { createMediaItem } from '$lib/server/media/items';
+import { assignEntitySlot, resolveEntitySlot } from '$lib/server/media/slots';
+import { slotKey } from './import-media-library';
 import type { MediaFile } from './types';
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads');
@@ -26,12 +34,16 @@ interface MediaImportResult {
  * @param mediaManifest - Array of MediaFile from export data
  * @param profileId - The newly created profile ID
  * @param mediaPathMapping - Map from import-data with keys like "profile:123:profile_photo_path"
+ * @param librarySlots - Slots the same import already filled from the archive's
+ *   media library: those keep the library's copy. Any other slot, the profile
+ *   photo an overwrite import keeps included, takes the archive's file.
  */
 export async function importMediaFiles(
 	mediaFiles: Map<string, Buffer>,
 	mediaManifest: MediaFile[],
 	profileId: number,
-	mediaPathMapping: Map<string, string>
+	mediaPathMapping: Map<string, string>,
+	librarySlots: Set<string> = new Set()
 ): Promise<MediaImportResult> {
 	const result: MediaImportResult = {
 		imported: 0,
@@ -71,28 +83,23 @@ export async function importMediaFiles(
 				continue;
 			}
 
-			// Generate new file path with UUID
-			const ext = getExtension(manifest.path);
-			const subdir = getSubdirForEntityType(entityInfo.entityType);
-			const newFilename = `${uuidv4()}${ext}`;
-			const newRelativePath = `${subdir}/${newFilename}`;
-			const newAbsolutePath = join(UPLOADS_DIR, newRelativePath);
+			const slot = resolveEntitySlot(entityInfo.entityType, entityInfo.field);
+			if (!slot) {
+				result.failed++;
+				result.errors.push(`No slot for: ${entityInfo.entityType}.${entityInfo.field}`);
+				continue;
+			}
+			// Already filled from the archive's library: that copy is the newer one.
+			if (librarySlots.has(slotKey(slot.table, entityInfo.entityId, slot.column))) continue;
 
-			// Ensure directory exists
-			await mkdir(dirname(newAbsolutePath), { recursive: true });
-
-			// Write file. Everything under these directories is served publicly, and
-			// an archive written before 2026-11-08 carries its images' EXIF.
-			await writeFile(newAbsolutePath, await stripImageMetadata(buffer));
-
-			// Update database with new path
-			await updateEntityMediaPath(
-				entityInfo.entityType,
-				entityInfo.entityId,
-				entityInfo.field,
-				newRelativePath,
-				profileId
-			);
+			const item = await createMediaItem({
+				profileId,
+				kind: slot.spec.kind,
+				label: null,
+				filename: manifest.path.split('/').pop() ?? 'image',
+				bytes: buffer
+			});
+			await assignEntitySlot(slot, entityInfo.entityId, item.id);
 
 			result.imported++;
 		} catch (error) {
@@ -107,87 +114,9 @@ export async function importMediaFiles(
 }
 
 /**
- * Get file extension from path
- */
-function getExtension(path: string): string {
-	const lastDot = path.lastIndexOf('.');
-	if (lastDot === -1) return '';
-	return path.substring(lastDot);
-}
-
-/**
- * Get upload subdirectory for entity type
- */
-function getSubdirForEntityType(entityType: string): string {
-	switch (entityType) {
-		case 'profile':
-			return 'profiles';
-		case 'work_experience':
-			return 'work-experiences';
-		case 'education':
-			return 'education';
-		case 'side_project':
-			return 'side-projects';
-		default:
-			return 'misc';
-	}
-}
-
-/**
- * Update entity's media path in database
- */
-async function updateEntityMediaPath(
-	entityType: string,
-	entityId: number,
-	field: string,
-	newPath: string,
-	profileId: number
-): Promise<void> {
-	switch (entityType) {
-		case 'profile':
-			if (field === 'profile_photo_path') {
-				await dbDirect
-					.update(profiles)
-					.set({ profile_photo_path: newPath })
-					.where(eq(profiles.id, profileId));
-			}
-			break;
-
-		case 'work_experience':
-			if (field === 'logo_path' || field === 'banner_path') {
-				await dbDirect
-					.update(work_experiences)
-					.set({ [field]: newPath })
-					.where(eq(work_experiences.id, entityId));
-			}
-			break;
-
-		case 'education':
-			if (field === 'logo_path' || field === 'banner_path') {
-				await dbDirect
-					.update(education)
-					.set({ [field]: newPath })
-					.where(eq(education.id, entityId));
-			}
-			break;
-
-		case 'side_project':
-			if (field === 'image_path' || field === 'banner_path') {
-				await dbDirect
-					.update(side_projects)
-					.set({ [field]: newPath })
-					.where(eq(side_projects.id, entityId));
-			}
-			break;
-	}
-}
-
-/**
  * Delete old media files when overwriting a profile
  */
 export async function deleteProfileMediaFiles(profileId: number): Promise<void> {
-	const { unlink } = await import('node:fs/promises');
-
 	// Get profile photo
 	const profile = await dbDirect.query.profiles.findFirst({
 		where: eq(profiles.id, profileId),

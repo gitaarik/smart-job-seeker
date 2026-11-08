@@ -4,7 +4,13 @@
 
 import JSZip from 'jszip';
 import { readUpload } from '$lib/server/uploads';
-import type { DocumentFilePayload, ExportData, MediaFile, TemplateAssetPayload } from './types';
+import type {
+	ArchiveFilePayload,
+	DocumentFilePayload,
+	ExportData,
+	MediaFile,
+	TemplateAssetPayload
+} from './types';
 
 /**
  * Ceiling on decompressed document text accepted from an import ZIP.
@@ -23,7 +29,8 @@ export async function createExportZip(
 	data: ExportData,
 	mediaFiles: MediaFile[],
 	documentFiles: DocumentFilePayload[] = [],
-	templateAssets: TemplateAssetPayload[] = []
+	templateAssets: TemplateAssetPayload[] = [],
+	libraryFiles: ArchiveFilePayload[] = []
 ): Promise<Buffer> {
 	const zip = new JSZip();
 
@@ -53,6 +60,11 @@ export async function createExportZip(
 		zip.file(asset.archivePath, asset.buffer);
 	}
 
+	// Add the media library's originals and drawn renditions
+	for (const file of libraryFiles) {
+		zip.file(file.archivePath, file.buffer);
+	}
+
 	// Generate ZIP buffer
 	const buffer = await zip.generateAsync({
 		type: 'nodebuffer',
@@ -71,6 +83,7 @@ export async function parseExportZip(zipBuffer: Buffer): Promise<{
 	mediaFiles: Map<string, Buffer>;
 	documentTexts: Map<string, string>;
 	templateAssets: Map<string, Buffer>;
+	libraryFiles: Map<string, Buffer>;
 }> {
 	const zip = await JSZip.loadAsync(zipBuffer);
 
@@ -134,5 +147,19 @@ export async function parseExportZip(zipBuffer: Buffer): Promise<{
 		}
 	}
 
-	return { data, mediaFiles, documentTexts, templateAssets };
+	// Read the media library's files, by the archive paths its rows name.
+	const libraryFiles = new Map<string, Buffer>();
+	const library = data.media_library;
+	if (library) {
+		const paths = [
+			...(library.items ?? []).map((item) => item.archivePath),
+			...(library.renditions ?? []).map((r) => r.archivePath)
+		].filter((path): path is string => typeof path === 'string' && path.length > 0);
+		for (const path of paths) {
+			const file = zip.file(path);
+			if (file) libraryFiles.set(path, await file.async('nodebuffer'));
+		}
+	}
+
+	return { data, mediaFiles, documentTexts, templateAssets, libraryFiles };
 }

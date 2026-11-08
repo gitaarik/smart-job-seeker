@@ -21,10 +21,16 @@
 
 import { dbDirect } from '$lib/server/db';
 import { eq, inArray } from 'drizzle-orm';
-import { files, presentation_template_assets, presentation_templates } from '$lib/server/db/schema';
+import {
+	files,
+	media_renditions,
+	presentation_template_assets,
+	presentation_templates
+} from '$lib/server/db/schema';
 import { uploadFile } from '$lib/server/files';
 import { stripImageMetadata } from '$lib/server/uploads/public-image';
 import type { ExportedResumeTemplate } from './types';
+import { templateKey } from './import-media-library';
 import {
 	LEGACY_TEMPLATE_SECTIONS,
 	withSections,
@@ -91,11 +97,24 @@ export function rewriteConfigFileIds(config: unknown, idMap: Map<string, string>
 export async function importResumeTemplates(
 	profileId: number,
 	templates: ExportedResumeTemplate[],
-	assetBuffers: Map<string, Buffer>
-): Promise<{ imported: number; assetsRestored: number }> {
+	assetBuffers: Map<string, Buffer>,
+	/**
+	 * Source rendition id -> restored rendition id, when the archive carried the
+	 * media library: a theme slot that showed a rendition shows one again.
+	 */
+	renditionIds: Map<string, string> = new Map()
+): Promise<{
+	imported: number;
+	assetsRestored: number;
+	/** `templateKey(kind, slug as exported)` -> the template made for it. */
+	templateIds: Map<string, number>;
+}> {
 	const now = new Date();
 	let imported = 0;
 	let assetsRestored = 0;
+	const templateIds = new Map<string, number>();
+	// The new ids that name renditions rather than files, for the asset rows below.
+	const restoredRenditions = new Set<string>();
 
 	// (kind, slug) is unique per profile since migration 0044, and this import
 	// is not always preceded by a delete: only an overwrite clears the existing
@@ -125,6 +144,13 @@ export async function importResumeTemplates(
 		const idMap = new Map<string, string>();
 
 		for (const asset of template.assets ?? []) {
+			const rendition = asset.rendition ? renditionIds.get(asset.file_id) : undefined;
+			if (rendition) {
+				idMap.set(asset.file_id, rendition);
+				restoredRenditions.add(rendition);
+				assetsRestored++;
+				continue;
+			}
 			const buffer = assetBuffers.get(asset.archivePath);
 			if (!buffer) {
 				console.warn(`[Import] Template asset missing from archive: ${asset.archivePath}`);
@@ -188,6 +214,7 @@ export async function importResumeTemplates(
 				date_updated: now
 			})
 			.returning({ id: presentation_templates.id });
+		if (template.slug) templateIds.set(templateKey(kind, template.slug), row.id);
 
 		// `file_id` is a real foreign key, so an id the archive named but never
 		// restored (a missing asset, or an export from an instance whose file
@@ -206,12 +233,27 @@ export async function importResumeTemplates(
 					})
 				).map((f) => f.id)
 			);
+			const renditionAssets = assets.filter((a) => restoredRenditions.has(a.fileId));
+			const knownRenditions = new Set(
+				renditionAssets.length
+					? (
+							await dbDirect.query.media_renditions.findMany({
+								where: inArray(
+									media_renditions.id,
+									renditionAssets.map((a) => a.fileId)
+								),
+								columns: { id: true }
+							})
+						).map((r) => r.id)
+					: []
+			);
 			const rows = assets
-				.filter((a) => known.has(a.fileId))
+				.filter((a) => known.has(a.fileId) || knownRenditions.has(a.fileId))
 				.map((a) => ({
 					template_id: row.id,
 					key: a.key,
-					file_id: a.fileId,
+					file_id: knownRenditions.has(a.fileId) ? null : a.fileId,
+					rendition_id: knownRenditions.has(a.fileId) ? a.fileId : null,
 					date_created: now
 				}));
 			if (rows.length > 0) {
@@ -222,7 +264,7 @@ export async function importResumeTemplates(
 		imported++;
 	}
 
-	return { imported, assetsRestored };
+	return { imported, assetsRestored, templateIds };
 }
 
 /** Every presentation template the profile owns, of both kinds. */

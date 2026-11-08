@@ -29,6 +29,7 @@ import {
 	profile_version_extensions,
 	applications,
 	application_letters,
+	application_media,
 	application_questions,
 	application_records,
 	jobs
@@ -49,6 +50,14 @@ import {
 	type CreatedTranslationIds
 } from './import-translations';
 import { deleteProfilePresentationTemplates, importResumeTemplates } from './import-templates';
+import {
+	deleteProfileMediaLibrary,
+	emptyMediaLibraryIdMaps,
+	importMediaLibrary,
+	restoreItemTemplates,
+	restoreSlotRenditions,
+	type MediaLibraryIdMaps
+} from './import-media-library';
 import { legacyNoteEntries } from './legacy-notes';
 import { salaryFromExport, storedEmployed, storedFreelance } from '$lib/salary/settings';
 import type { ExportData, ExportedProfileData, FullExportData } from './types';
@@ -70,12 +79,16 @@ interface ImportOptions {
 	documentTexts?: Map<string, string>;
 	/** CV template asset bytes from the archive, keyed by archive path. */
 	templateAssets?: Map<string, Buffer>;
+	/** The media library's originals and renditions from the archive, keyed by archive path. */
+	libraryFiles?: Map<string, Buffer>;
 }
 
 interface ImportResult {
 	profileId: number;
 	profileName: string;
 	mediaPathMapping: Map<string, string>;
+	/** Slots this import filled from the archive's media library (`slotKey`). */
+	librarySlots: Set<string>;
 	documentsImported: number;
 	translationsImported: number;
 	templatesImported: number;
@@ -117,7 +130,10 @@ export async function importExportData(
 	userId: string,
 	options: ImportOptions = {}
 ): Promise<ImportResult> {
-	const { overwriteProfileId, documentTexts, templateAssets } = options;
+	const { overwriteProfileId, documentTexts, templateAssets, libraryFiles } = options;
+	// The library comes back only with its files: rows without originals are
+	// nothing to restore.
+	const library = data.media_library && libraryFiles ? data.media_library : null;
 	const p = data.profile;
 
 	let profileId: number;
@@ -142,6 +158,8 @@ export async function importExportData(
 		// Clear the child records this payload is able to replace
 		keptCertificateFiles = await certificateFilesByName(overwriteProfileId);
 		await deleteProfileChildren(overwriteProfileId, data.scope);
+		// The library only when the archive brings one to put back.
+		if (library) await deleteProfileMediaLibrary(overwriteProfileId);
 
 		// Generate unique name (excluding self)
 		const baseName = p.name || existingProfile.name || 'Imported Profile';
@@ -184,10 +202,27 @@ export async function importExportData(
 	);
 	if (keptCertificateFiles) await restoreCertificateFiles(profileId, keptCertificateFiles);
 
+	// The media library, and the slots that show its pictures. Before the
+	// applications, whose records name renditions, and the templates, whose
+	// theme slots may too.
+	let mediaMaps: MediaLibraryIdMaps = emptyMediaLibraryIdMaps();
+	let librarySlots = new Set<string>();
+	if (library && libraryFiles) {
+		mediaMaps = await importMediaLibrary(profileId, library, libraryFiles);
+		librarySlots = await restoreSlotRenditions(
+			mediaMaps,
+			slotSources(p, profileId, translationIds)
+		);
+	}
+
 	// Import full account data if scope is "full"
 	let applicationsImported = 0;
 	if (data.scope === 'full') {
-		applicationsImported = await importFullAccountEntities(profileId, data as FullExportData);
+		applicationsImported = await importFullAccountEntities(
+			profileId,
+			data as FullExportData,
+			mediaMaps
+		);
 	}
 
 	// Uploaded documents. Their text lives in the archive, so a JSON-only import
@@ -209,15 +244,18 @@ export async function importExportData(
 		const result = await importResumeTemplates(
 			profileId,
 			data.resume_templates,
-			templateAssets ?? new Map()
+			templateAssets ?? new Map(),
+			mediaMaps.renditions
 		);
 		templatesImported = result.imported;
+		await restoreItemTemplates(mediaMaps, result.templateIds);
 	}
 
 	return {
 		profileId,
 		profileName: finalName,
 		mediaPathMapping,
+		librarySlots,
 		documentsImported,
 		translationsImported,
 		templatesImported,
@@ -837,7 +875,47 @@ async function importProfileEntities(
 /**
  * Import full account entities (beyond profile data)
  */
-async function importFullAccountEntities(profileId: number, data: FullExportData): Promise<number> {
+/**
+ * Each slot on the restored rows with the rendition it showed in the source,
+ * by source id, for `restoreSlotRenditions` to map.
+ */
+function slotSources(
+	p: ExportedProfileData,
+	profileId: number,
+	ids: {
+		workExperienceIdByIndex: number[];
+		educationIdByIndex: number[];
+		sideProjectIdByIndex: number[];
+	}
+): { table: string; column: string; id: number; source: string | null | undefined }[] {
+	const slots: { table: string; column: string; id: number; source: string | null | undefined }[] =
+		[{ table: 'profiles', column: 'profile_photo_id', id: profileId, source: p.profile_photo_id }];
+	(p.work_experiences ?? []).forEach((w, i) => {
+		const id = ids.workExperienceIdByIndex[i];
+		if (!id) return;
+		slots.push({ table: 'work_experiences', column: 'logo_id', id, source: w.logo_id });
+		slots.push({ table: 'work_experiences', column: 'banner_id', id, source: w.banner_id });
+	});
+	(p.education ?? []).forEach((e, i) => {
+		const id = ids.educationIdByIndex[i];
+		if (!id) return;
+		slots.push({ table: 'education', column: 'logo_id', id, source: e.logo_id });
+		slots.push({ table: 'education', column: 'banner_id', id, source: e.banner_id });
+	});
+	(p.side_projects ?? []).forEach((sp, i) => {
+		const id = ids.sideProjectIdByIndex[i];
+		if (!id) return;
+		slots.push({ table: 'side_projects', column: 'image_id', id, source: sp.image_id });
+		slots.push({ table: 'side_projects', column: 'banner_id', id, source: sp.banner_id });
+	});
+	return slots;
+}
+
+async function importFullAccountEntities(
+	profileId: number,
+	data: FullExportData,
+	mediaMaps: MediaLibraryIdMaps
+): Promise<number> {
 	// Project stories
 	for (const ps of data.project_stories ?? []) {
 		await dbDirect.insert(project_stories).values({
@@ -945,6 +1023,19 @@ async function importFullAccountEntities(profileId: number, data: FullExportData
 				application_id: createdApp.id,
 				question: question.question || '',
 				answer: question.answer || null
+			});
+		}
+
+		// Which picture went up on this platform, where the library came along.
+		for (const record of app.media ?? []) {
+			const renditionId = mediaMaps.renditions.get(record.rendition);
+			const uploaded = toDateString(record.date_uploaded);
+			if (!renditionId || !uploaded) continue;
+			await dbDirect.insert(application_media).values({
+				application_id: createdApp.id,
+				rendition_id: renditionId,
+				date_uploaded: uploaded,
+				date_created: new Date()
 			});
 		}
 

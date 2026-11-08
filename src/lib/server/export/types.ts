@@ -142,6 +142,13 @@ export interface ExportedTemplateAsset {
 	file_id: string;
 	archivePath: string;
 	filename: string;
+	/**
+	 * Set when the slot showed a media library rendition (a portfolio theme's
+	 * images, since 2026-11). `file_id` then holds the rendition's id, the
+	 * bytes are its picture, and an archive that carries the library restores
+	 * the slot as a rendition again; one that does not gets a plain file.
+	 */
+	rendition?: boolean;
 }
 
 export interface ExportedResumeTemplate {
@@ -183,6 +190,86 @@ export interface ExportEnvelope {
 	translations?: ExportedTranslation[];
 	/** Custom CV templates; asset bytes live in the archive */
 	resume_templates?: ExportedResumeTemplate[];
+	/**
+	 * The media library (only with media): originals and the renditions cut
+	 * from them, which the slots on the profile and the theme images point at.
+	 * Absent from archives written before 2026-11.
+	 */
+	media_library?: ExportedMediaLibrary;
+}
+
+// --- Media library (planning/MEDIA-LIBRARY.md) ---
+//
+// Rows carry their source ids, because renditions name their item and slots
+// name their rendition by them; the importer maps each to the id it makes. A
+// shared preset is named by its key, since its id differs per database.
+
+export interface ExportedMediaItem {
+	/** Source id: what renditions and `replaces_id` refer to. */
+	id: number;
+	kind?: string;
+	label?: string | null;
+	width: number;
+	height: number;
+	format: string;
+	has_alpha?: boolean;
+	orientation?: number;
+	/** Source id of the item this one is a new version of. */
+	replaces_id?: number | null;
+	/** The banner template it was rendered from, by kind and slug. */
+	template?: { kind: string; slug: string } | null;
+	date_created?: string | null;
+	/** The original's bytes in the archive. */
+	archivePath: string;
+}
+
+export interface ExportedMediaPreset {
+	/** Source id: what an own preset's renditions refer to. */
+	id: number;
+	platform: string;
+	slot: string;
+	kind?: string;
+	width: number;
+	height: number;
+	formats?: string[];
+	max_bytes?: number | null;
+	mask?: string;
+	safe_zone?: unknown;
+	note?: string | null;
+	source_url?: string | null;
+	verified_on?: string | null;
+	sort?: number | null;
+}
+
+export interface ExportedMediaRendition {
+	/** Source id: what slots and application records refer to. */
+	id: string;
+	item_id: number;
+	/** A shared preset by key, a profile's own by its source id, or a free crop. */
+	preset?: { key: string } | { own: number } | null;
+	crop_x: number;
+	crop_y: number;
+	crop_w: number;
+	crop_h: number;
+	width: number;
+	height: number;
+	format: string;
+	quality?: number | null;
+	date_created?: string | null;
+	/** Its drawn bytes, when it had been drawn: a slot then shows the very same file. */
+	archivePath?: string;
+}
+
+export interface ExportedMediaLibrary {
+	items: ExportedMediaItem[];
+	presets: ExportedMediaPreset[];
+	renditions: ExportedMediaRendition[];
+}
+
+/** Bytes for the archive, at a path the payload names. */
+export interface ArchiveFilePayload {
+	archivePath: string;
+	buffer: Buffer;
 }
 
 // Profile data (resume/CV/portfolio)
@@ -237,6 +324,8 @@ export interface ExportedProfileData {
 
 	// Media paths
 	profile_photo_path?: string;
+	/** The profile photo's rendition, by its source id (see media_library). */
+	profile_photo_id?: string;
 
 	// Related data
 	profile_versions: ExportedProfileVersion[];
@@ -324,6 +413,9 @@ export interface ExportedWorkExperience {
 	tags?: unknown;
 	logo_path?: string;
 	banner_path?: string;
+	/** Renditions by source id (see media_library). */
+	logo_id?: string;
+	banner_id?: string;
 	achievements: ExportedWorkExperienceAchievement[];
 	technologies: ExportedWorkExperienceTechnology[];
 	projects: ExportedWorkExperienceProject[];
@@ -380,6 +472,9 @@ export interface ExportedSideProject {
 	repo_url?: string;
 	image_path?: string;
 	banner_path?: string;
+	/** Renditions by source id (see media_library). */
+	image_id?: string;
+	banner_id?: string;
 	tags?: unknown;
 	achievements: ExportedSideProjectAchievement[];
 	technologies: ExportedSideProjectTechnology[];
@@ -410,6 +505,9 @@ export interface ExportedEducation {
 	summary?: string;
 	logo_path?: string;
 	banner_path?: string;
+	/** Renditions by source id (see media_library). */
+	logo_id?: string;
+	banner_id?: string;
 	tags?: unknown;
 }
 
@@ -531,6 +629,8 @@ export interface ExportedApplication {
 	salary_period?: string;
 	letters?: ExportedApplicationLetter[];
 	questions?: ExportedApplicationQuestion[];
+	/** Which picture went up on this platform and when, by rendition source id. */
+	media?: { rendition: string; date_uploaded: string }[];
 }
 
 export interface ExportedApplicationLetter {
