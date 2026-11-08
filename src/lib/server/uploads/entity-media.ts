@@ -6,11 +6,11 @@
 import { writeFile, mkdir, unlink } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { v4 as uuidv4 } from 'uuid';
-import sharp from 'sharp';
 import { dbDirect } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 import { profiles, work_experiences, education, side_projects } from '$lib/server/db/schema';
 import { getErrorMessage } from '$lib/server/utils/errors';
+import { processEntityImage, type EntityImageOptions } from './public-image';
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads');
 
@@ -28,18 +28,6 @@ interface UploadResult {
 	url?: string;
 	error?: string;
 }
-
-interface UploadOptions {
-	maxWidth?: number;
-	maxHeight?: number;
-	quality?: number;
-}
-
-const DEFAULT_OPTIONS: UploadOptions = {
-	maxWidth: 800,
-	maxHeight: 800,
-	quality: 85
-};
 
 /**
  * Validate that user owns the entity via profile
@@ -114,10 +102,8 @@ export async function saveEntityMedia(
 	entityId: number,
 	field: string,
 	file: File,
-	options: UploadOptions = {}
+	options: EntityImageOptions = {}
 ): Promise<UploadResult> {
-	const opts = { ...DEFAULT_OPTIONS, ...options };
-
 	// Validate file type
 	const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 	if (!allowedTypes.includes(file.type)) {
@@ -133,41 +119,9 @@ export async function saveEntityMedia(
 	try {
 		const buffer = Buffer.from(await file.arrayBuffer());
 
-		// Process with Sharp
-		let processed = sharp(buffer).rotate(); // Auto-rotate based on EXIF
-
-		// Resize if needed
-		const metadata = await sharp(buffer).metadata();
-		if (
-			(metadata.width && metadata.width > opts.maxWidth!) ||
-			(metadata.height && metadata.height > opts.maxHeight!)
-		) {
-			processed = processed.resize(opts.maxWidth, opts.maxHeight, {
-				fit: 'inside',
-				withoutEnlargement: true
-			});
-		}
-
-		// Convert to JPEG for consistency (except for PNGs with transparency)
-		let ext = '.jpg';
-
-		if (file.type === 'image/png') {
-			// Check if PNG has transparency
-			const hasAlpha = metadata.hasAlpha;
-			if (hasAlpha) {
-				processed = processed.png({ quality: opts.quality });
-				ext = '.png';
-			} else {
-				processed = processed.jpeg({ quality: opts.quality });
-			}
-		} else {
-			processed = processed.jpeg({ quality: opts.quality });
-		}
-
-		// Strip EXIF data
-		processed = processed.withMetadata({ orientation: undefined });
-
-		const outputBuffer = await processed.toBuffer();
+		// Resized, converted, and without its EXIF: these are served to anyone,
+		// and a phone photo's EXIF says where it was taken (see public-image.ts).
+		const { bytes: outputBuffer, ext } = await processEntityImage(buffer, file.type, options);
 
 		// Generate filename and path
 		const subdir = entityType.replace('_', '-') + 's';

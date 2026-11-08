@@ -23,6 +23,7 @@ import { dbDirect } from '$lib/server/db';
 import { eq, inArray } from 'drizzle-orm';
 import { files, presentation_template_assets, presentation_templates } from '$lib/server/db/schema';
 import { uploadFile } from '$lib/server/files';
+import { stripImageMetadata } from '$lib/server/uploads/public-image';
 import type { ExportedResumeTemplate } from './types';
 import {
 	LEGACY_TEMPLATE_SECTIONS,
@@ -132,7 +133,9 @@ export async function importResumeTemplates(
 
 			try {
 				const uploaded = await uploadFile({
-					buffer,
+					// Template artwork is served publicly from `/assets/[id]`, so an
+					// image loses its EXIF on the way in (see public-image.ts).
+					buffer: await stripImageMetadata(buffer),
 					filename: asset.filename,
 					title: asset.filename
 				});

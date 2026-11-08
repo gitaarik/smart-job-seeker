@@ -33,6 +33,7 @@ import {
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import { Buffer } from 'buffer';
 import { uploadFile } from '$lib/server/files';
+import { stripImageMetadata } from '$lib/server/uploads/public-image';
 import { getSelectedProfileId } from '../utils';
 import { getPortfolioThemesForProfile } from '$lib/server/profile/portfolio-themes';
 import { applyShowcaseFields } from '$lib/server/profile/portfolio-theme-form';
@@ -331,9 +332,18 @@ export const actions: Actions = {
 			return fail(400, { error: `Images only (${IMAGE_EXTENSIONS.join(', ')}).` });
 		}
 
+		// `/assets/[id]` serves this to anyone, so it goes up without the EXIF a
+		// phone photo carries, location included (see public-image.ts).
+		let bytes: Buffer;
+		try {
+			bytes = await stripImageMetadata(Buffer.from(await file.arrayBuffer()));
+		} catch {
+			return fail(400, { error: 'That file could not be read as an image.' });
+		}
+
 		const stored = await uploadFile({
 			filename: file.name,
-			buffer: Buffer.from(await file.arrayBuffer()),
+			buffer: bytes,
 			title: `${theme.name} ${slot}`
 		});
 

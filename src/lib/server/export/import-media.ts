@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { dbDirect } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { profiles, work_experiences, education, side_projects } from '$lib/server/db/schema';
+import { stripImageMetadata } from '$lib/server/uploads/public-image';
 import type { MediaFile } from './types';
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads');
@@ -80,8 +81,9 @@ export async function importMediaFiles(
 			// Ensure directory exists
 			await mkdir(dirname(newAbsolutePath), { recursive: true });
 
-			// Write file
-			await writeFile(newAbsolutePath, buffer);
+			// Write file. Everything under these directories is served publicly, and
+			// an archive written before 2026-11-08 carries its images' EXIF.
+			await writeFile(newAbsolutePath, await stripImageMetadata(buffer));
 
 			// Update database with new path
 			await updateEntityMediaPath(
