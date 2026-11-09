@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { careerDetail, type PortfolioThemeConfig } from '$lib/portfolio-themes';
+import { careerDetail, type PortfolioPage, type PortfolioThemeConfig } from '$lib/portfolio-themes';
 import { careerView, isBriefRole, siteLists, splitAchievements, type Row } from './site-lists';
 
 /**
@@ -27,9 +27,9 @@ function project(id: number, over: Row = {}): Row {
 	return { id, name: `Project ${id}`, work_experience_project_technologies: [], ...over };
 }
 
-function view(profile: Row, config: PortfolioThemeConfig = {}) {
+function view(profile: Row, config: PortfolioThemeConfig = {}, page: PortfolioPage = 'site') {
 	const lists = siteLists({ profile_versions: [], side_projects: [], ...profile }, null);
-	return { lists, view: careerView(lists, config, TODAY) };
+	return { lists, view: careerView(lists, config, TODAY, page) };
 }
 
 const names = (rows: Row[]) => rows.map((r) => r.name);
@@ -137,5 +137,29 @@ describe('careerView', () => {
 	test('`never` prints every role in full', () => {
 		const { view: v } = view(profile, { briefRolesAfterYears: 'never' });
 		expect(v.briefRoles).toEqual([]);
+	});
+
+	describe('on the private CV page', () => {
+		test('prints each featured project in full in its own section, and no Selected work', () => {
+			const { view: v } = view(profile, {}, 'cv');
+
+			expect(v.selectedWork).toBe(false);
+			expect(names(v.fullProjects)).toEqual(['Project 10']);
+			expect(names(v.briefProjects)).toEqual(['Project 11', 'Project 20', 'Project 30']);
+			expect(names(v.fullSideProjects)).toEqual(['Side A']);
+			expect(names(v.briefSideProjects)).toEqual(['Side B']);
+		});
+
+		test('without anything featured, prints projects as the one-page site does', () => {
+			const unfeatured = {
+				work_experiences: [role(1, null, [project(10)]), role(3, '2014-08-08', [project(30)])]
+			};
+			expect(view(unfeatured, {}, 'cv').view).toEqual(view(unfeatured).view);
+		});
+
+		test('a theme that left Selected work out prints every project in full, as on one page', () => {
+			const sections: PortfolioThemeConfig['sections'] = ['header', 'work', 'projects'];
+			expect(view(profile, { sections }, 'cv').view).toEqual(view(profile, { sections }).view);
+		});
 	});
 });

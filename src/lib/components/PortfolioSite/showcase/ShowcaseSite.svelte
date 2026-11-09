@@ -18,12 +18,17 @@
 	 * Contact details are not in `profile` at all. The load strips them and the
 	 * "Get in touch" button fetches them past a Turnstile check; see
 	 * server/profile/portfolio-contact.ts.
+	 *
+	 * A theme with `privateCv` splits the site in two (`page`): the public
+	 * home page keeps the introduction, the quotes and Selected work, and the
+	 * career goes on a CV page a portfolio share link opens. Without it the
+	 * whole site is one page. A visitor who may open both gets a menu between
+	 * them; see $lib/portfolio-themes.ts and server/profile/portfolio-key.ts.
 	 */
 	import { onMount } from 'svelte';
-	import { page } from '$app/state';
+	import { page as appPage } from '$app/state';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
-		faAward,
 		faBook,
 		faBuilding,
 		faBullseye,
@@ -52,8 +57,9 @@
 	} from '@fortawesome/free-brands-svg-icons';
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 	import {
+		pageSections,
 		paletteStyle,
-		themeSections,
+		type PortfolioPage,
 		type PortfolioSection,
 		type PortfolioTheme
 	} from '$lib/portfolio-themes';
@@ -68,7 +74,9 @@
 	import Card from './Card.svelte';
 	import InfoBoxes from './InfoBoxes.svelte';
 	import TechTags from './TechTags.svelte';
-	import SelectedWork from './SelectedWork.svelte';
+	import SelectedWorkCarousel from './SelectedWorkCarousel.svelte';
+	import { workSlides } from './work-slides';
+	import PortfolioNav from './PortfolioNav.svelte';
 	import BriefList from './BriefList.svelte';
 	import ContactButton from './ContactButton.svelte';
 	import SchemeSwitcher from './SchemeSwitcher.svelte';
@@ -87,19 +95,34 @@
 		contact: PortfolioContactGate | null;
 		/** A share link's token, which the contact endpoint asks for. */
 		accessToken?: string | null;
+		/** The whole site, or one of its two pages when the theme has a private CV page. */
+		page?: PortfolioPage;
+		/** Both pages' links, for a visitor who may open both; null shows no menu. */
+		homeHref?: string | null;
+		cvHref?: string | null;
 	}
 
-	let { profile, theme, versionId = null, contact, accessToken = null }: Props = $props();
+	let {
+		profile,
+		theme,
+		versionId = null,
+		contact,
+		accessToken = null,
+		page = 'site',
+		homeHref = null,
+		cvHref = null
+	}: Props = $props();
 
 	const config = $derived(theme.config);
-	const sections = $derived(themeSections(config));
+	const sections = $derived(pageSections(config, page));
 	const headingFont = $derived(config.fonts?.heading ?? 'Noto Sans');
 	const bodyFont = $derived(config.fonts?.body ?? 'Noto Sans');
 
 	const lists = $derived(siteLists(profile, versionId));
 	const show = $derived(lists.show);
 	// What the career prints in full and what it lists briefly; see site-lists.ts.
-	const career = $derived(careerView(lists, config));
+	const career = $derived(careerView(lists, config, new Date(), page));
+	const slides = $derived(workSlides(lists.featured, show, lists.work, 'Side project'));
 
 	// One kind of row, three uses: `highlight` rows are the career card, and the
 	// two box lists beside the About me are their own types.
@@ -172,7 +195,12 @@
 	}
 
 	/** Full-width sections; everything else is a card in the column between them. */
-	const BANDS: ReadonlySet<PortfolioSection> = new Set(['header', 'about', 'references']);
+	const BANDS: ReadonlySet<PortfolioSection> = new Set([
+		'header',
+		'about',
+		'references',
+		'featured'
+	]);
 
 	type Block =
 		{ kind: 'band'; section: PortfolioSection } | { kind: 'cards'; sections: PortfolioSection[] };
@@ -290,7 +318,9 @@
 	);
 
 	const year = new Date().getFullYear();
-	const metaTitle = $derived([profile.name, profile.title].filter(Boolean).join(' - '));
+	const metaTitle = $derived(
+		[profile.name, page === 'cv' ? 'Full CV' : profile.title].filter(Boolean).join(' - ')
+	);
 	const metaDescription = $derived(profile.headline ?? profile.summary ?? '');
 
 	const aboutBoxes = $derived(
@@ -306,16 +336,21 @@
 
 <svelte:head>
 	<title>{metaTitle || 'Portfolio'}</title>
-	{#if metaDescription}
-		<meta name="description" content={metaDescription} />
-		<meta property="og:description" content={metaDescription} />
-	{/if}
-	<meta property="og:type" content="website" />
-	<meta property="og:url" content={page.url.href} />
-	<meta property="og:title" content={metaTitle} />
-	{#if ogImage}
-		<meta property="og:image" content={ogImage} />
-		<meta name="twitter:card" content="summary_large_image" />
+	{#if page === 'cv'}
+		<!-- The private page: the load sends X-Robots-Tag too, this is for crawlers that read only the HTML. -->
+		<meta name="robots" content="noindex, nofollow" />
+	{:else}
+		{#if metaDescription}
+			<meta name="description" content={metaDescription} />
+			<meta property="og:description" content={metaDescription} />
+		{/if}
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={appPage.url.href} />
+		<meta property="og:title" content={metaTitle} />
+		{#if ogImage}
+			<meta property="og:image" content={ogImage} />
+			<meta name="twitter:card" content="summary_large_image" />
+		{/if}
 	{/if}
 	{#if config.assets?.favicon}
 		<link rel="icon" href={assetUrl(config.assets.favicon)} />
@@ -332,9 +367,32 @@
 	{#if config.schemeSwitcher}
 		<SchemeSwitcher {preference} {system} onchange={setScheme} />
 	{/if}
+	{#if page !== 'site' && homeHref && cvHref}
+		<PortfolioNav {page} {homeHref} {cvHref} />
+	{/if}
 
 	<main class="flex h-full min-h-screen flex-col justify-between">
 		<article class="flex flex-col items-center">
+			{#if page === 'cv'}
+				<!-- The CV page's own header: who this is, without the home page's introduction. -->
+				<header class="cv-head transition-colors" aria-labelledby="pf-name">
+					<div class="w-full max-w-[885px]">
+						<p class="hero-kicker">Full CV</p>
+						<h1 id="pf-name" class="cv-name">{profile.name}</h1>
+						{#if profile.title}<p class="hero-lede">{profile.title}</p>{/if}
+						{#if contactState}
+							<div class="mt-9 flex">
+								<ContactButton
+									state={contactState}
+									intro={config.contactIntro}
+									panelClass="bg-(--pf-surface-raised)"
+									scheme={actual}
+								/>
+							</div>
+						{/if}
+					</div>
+				</header>
+			{/if}
 			{#each blocks as block, b (b)}
 				{#if block.kind === 'band' && block.section === 'header'}
 					<header
@@ -485,6 +543,13 @@
 							</div>
 						{/if}
 					</section>
+				{:else if block.kind === 'band' && block.section === 'featured'}
+					<SelectedWorkCarousel
+						{slides}
+						title={title('featured')}
+						{aos}
+						moreHref={page === 'home' ? cvHref : null}
+					/>
 				{:else if block.kind === 'band' && block.section === 'references'}
 					<section
 						class="w-full bg-(--pf-dark-band) text-(--pf-text-on-dark) transition-colors"
@@ -523,10 +588,6 @@
 								{#if section === 'summary'}
 									<Card title={title('summary')} icon={faCompass} {aos}>
 										<p class="mb-4 leading-relaxed whitespace-pre-line">{profile.summary}</p>
-									</Card>
-								{:else if section === 'featured'}
-									<Card title={title('featured')} icon={faAward} {aos}>
-										<SelectedWork items={lists.featured} {show} sideLabel="Side project" />
 									</Card>
 								{:else if section === 'highlights'}
 									<Card title={title('highlights')} icon={faStar} {aos}>
@@ -1148,6 +1209,42 @@
 
 	.showcase :global(strong) {
 		font-weight: 600;
+	}
+
+	/* The CV page's header: the hero's light, at the height of a heading. */
+	.cv-head {
+		display: flex;
+		justify-content: center;
+		width: 100%;
+		padding: 7.5rem 1.25rem 4rem;
+		background: linear-gradient(
+			90deg,
+			var(--pf-hero-edge, var(--pf-surface)) 0%,
+			var(--pf-surface) 55%,
+			color-mix(in srgb, var(--pf-surface) 94%, var(--pf-bright)) 100%
+		);
+	}
+
+	@media (min-width: 40rem) {
+		.cv-head {
+			padding-inline: 2.5rem;
+		}
+	}
+
+	@media (min-width: 50rem) {
+		.cv-head {
+			padding-top: 9rem;
+			padding-bottom: 5rem;
+		}
+	}
+
+	.cv-name {
+		font-size: clamp(3.25rem, 7vw, 6rem);
+		font-weight: 700;
+		font-stretch: 78%;
+		letter-spacing: -0.025em;
+		line-height: 0.92;
+		color: var(--pf-strong);
 	}
 
 	/* A one-colour logo painted in the scheme's own bright colour. */

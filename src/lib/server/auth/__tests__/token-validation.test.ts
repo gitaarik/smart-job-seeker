@@ -27,7 +27,7 @@ vi.mock('drizzle-orm', () => ({
 	sql: vi.fn()
 }));
 
-import { validateToken, incrementTokenVisit } from '../token-validation';
+import { validateToken, incrementTokenVisit, touchTokenVisit } from '../token-validation';
 
 describe('validateToken', () => {
 	beforeEach(() => {
@@ -107,15 +107,46 @@ describe('validateToken', () => {
 			profile_version: 10,
 			expires_at: null,
 			visit_limit: null,
-			visit_count: 0
+			visit_count: 0,
+			format: 'portfolio'
 		});
 		mockFindFirstVersion.mockResolvedValue({ profile_id: 1 });
 		const result = await validateToken('some-token', 1);
 		expect(result).toEqual({
 			valid: true,
 			profileVersionId: 10,
-			tokenId: 1
+			tokenId: 1,
+			format: 'portfolio',
+			expiresAt: null
 		});
+	});
+
+	it('lets a link past its visit limit through when asked to (the portfolio key)', async () => {
+		mockFindFirstToken.mockResolvedValue({
+			id: 1,
+			status: 'published',
+			profile_version: 10,
+			expires_at: null,
+			visit_limit: 1,
+			visit_count: 1,
+			format: 'portfolio'
+		});
+		mockFindFirstVersion.mockResolvedValue({ profile_id: 1 });
+		expect((await validateToken('some-token', 1, { visitLimit: false })).valid).toBe(true);
+		expect((await validateToken('some-token', 1)).valid).toBe(false);
+	});
+
+	it('still refuses an expired link without its visit limit', async () => {
+		mockFindFirstToken.mockResolvedValue({
+			id: 1,
+			status: 'published',
+			profile_version: 10,
+			expires_at: new Date('2020-01-01'),
+			visit_limit: null,
+			visit_count: 0
+		});
+		mockFindFirstVersion.mockResolvedValue({ profile_id: 1 });
+		expect((await validateToken('some-token', 1, { visitLimit: false })).valid).toBe(false);
 	});
 
 	it('returns valid when under visit limit', async () => {
@@ -160,5 +191,19 @@ describe('incrementTokenVisit', () => {
 				last_accessed_ip: '192.168.1.1'
 			})
 		);
+	});
+});
+
+describe('touchTokenVisit', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockUpdateWhere.mockResolvedValue({});
+	});
+
+	it('records when and from where, without counting a visit', async () => {
+		await touchTokenVisit(5, '192.168.1.1');
+		const set = mockUpdateSet.mock.calls[0][0];
+		expect(set).toEqual({ last_accessed_at: expect.any(Date), last_accessed_ip: '192.168.1.1' });
+		expect(set).not.toHaveProperty('visit_count');
 	});
 });

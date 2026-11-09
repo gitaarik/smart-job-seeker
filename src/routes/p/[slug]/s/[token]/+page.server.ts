@@ -14,7 +14,9 @@ import { BASE_LOCALE, isKnownLocale } from '$lib/resume-translations';
 import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
 import { applyFieldVariants, loadFieldVariants } from '$lib/server/profile/field-variants';
 import { pageProfile } from '$lib/server/profile/page-profile';
-import { gatesContact, withoutContact } from '$lib/server/profile/portfolio-contact';
+import { givePortfolioKey } from '$lib/server/profile/portfolio-key';
+import { portfolioHrefs } from '$lib/server/profile/portfolio-pages';
+import { hasPrivateCv } from '$lib/portfolio-themes';
 import {
 	applySkillWords,
 	loadDocumentSkillWords,
@@ -22,7 +24,7 @@ import {
 } from '$lib/server/profile/skill-words';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, url, locals, getClientAddress }) => {
+export const load: PageServerLoad = async ({ params, url, locals, cookies, getClientAddress }) => {
 	const { slug, token: tokenString } = params;
 
 	// Get profile by slug
@@ -85,10 +87,29 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	const langParam = url.searchParams.get('lang');
 	const locale = isKnownLocale(langParam) && langParam !== BASE_LOCALE ? langParam : null;
 
+	// A portfolio link opens a site, not a document, so it is not rendered
+	// here: it leaves its key in the visitor's browser and goes to the site,
+	// to the private CV page when the theme keeps the career on one, else to
+	// the site's one page. The key is what opens either from then on, so the
+	// visitor can come back without the link (server/profile/portfolio-key.ts).
+	// Its view mode does not matter: a site has no PDF.
+	//
+	// The theme as the site picks it: the published one, else the profile's
+	// first, because a link is how a site is shown to someone before it is
+	// published (see the portfolio route).
+	if (format === 'portfolio') {
+		await incrementTokenVisit(token.id, getClientAddress());
+		givePortfolioKey(cookies, url, profile.id, tokenString, token.expires_at);
+		const theme =
+			(profile.public_portfolio_theme_id
+				? await getPortfolioThemeById(profile.id, profile.public_portfolio_theme_id)
+				: null) ?? (await getPortfolioThemesForProfile(profile.id))[0];
+		const hrefs = portfolioHrefs(profile.slug ?? slug, url, false);
+		redirect(303, theme && hasPrivateCv(theme.config) ? hrefs.cv : hrefs.home);
+	}
+
 	// If view_mode is PDF, redirect to the appropriate PDF route with token.
-	// A portfolio has no PDF route — it is a site, not a document — so such a
-	// link renders the site rather than 404ing on a path that does not exist.
-	if (viewMode === 'pdf' && format !== 'portfolio') {
+	if (viewMode === 'pdf') {
 		const pdfPath = format === 'cv' ? 'cv.pdf' : 'resume.pdf';
 		const langQuery = locale ? `&lang=${locale}` : '';
 		redirect(302, `/p/${slug}/${pdfPath}?t=${tokenString}${langQuery}`);
@@ -124,40 +145,12 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 		shownVersionId
 	);
 
-	// A portfolio link needs a theme to render with, and the token names a
-	// version, not a theme.
-	//
-	// The published theme first, so a shared portfolio and the public site look
-	// the same and changing the theme changes both. Failing that, the profile's
-	// first portfolio theme: a private link is explicitly the way to show
-	// someone the site BEFORE publishing it, so "nothing published" is a normal
-	// state here, and falling all the way through to the renderer's defaults
-	// would show the recipient a page that looks nothing like the theme the
-	// applicant designed. Only a profile with no themes at all renders bare.
-	//
-	// Both lookups pin kind=portfolio, so neither can reach a CV template.
-	let theme = null;
-	if (format === 'portfolio') {
-		theme = profile.public_portfolio_theme_id
-			? await getPortfolioThemeById(profile.id, profile.public_portfolio_theme_id)
-			: null;
-		if (!theme) theme = (await getPortfolioThemesForProfile(profile.id))[0] ?? null;
-	}
-
 	// Only what the page renders: the tree is serialised into it, and the rest
-	// of it is private. See server/profile/page-profile.ts. A showcase keeps the
-	// contact details out as well; see server/profile/portfolio-contact.ts.
-	const shown = pageProfile(profile, shownVersionId, translator.locale);
-	const gated = format === 'portfolio' && gatesContact(theme) ? withoutContact(shown) : null;
-
+	// of it is private. See server/profile/page-profile.ts.
 	return {
-		profile: gated?.profile ?? shown,
-		contact: gated?.contact ?? null,
-		// The contact endpoint asks for the link's token, as the page did.
-		accessToken: gated ? tokenString : null,
+		profile: pageProfile(profile, shownVersionId, translator.locale),
 		locale: translator.locale,
 		versionId: token.profile_version,
-		format,
-		theme
+		format
 	};
 };

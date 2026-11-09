@@ -13,6 +13,7 @@ import {
 	careerDetail,
 	themeSections,
 	type CareerDetail,
+	type PortfolioPage,
 	type PortfolioThemeConfig
 } from '$lib/portfolio-themes';
 
@@ -151,11 +152,17 @@ export interface CareerView {
  * to highlight, so the rest step back. Without it, projects print in full as
  * they always did, except those of a role that is itself printed as a line,
  * which would otherwise outweigh their role.
+ *
+ * The private CV page (`page: 'cv'`) has no Selected work, because the public
+ * page shows it. A featured project prints in full in its own section there
+ * instead, the rest still briefly, so the CV is whole and keeps the same
+ * emphasis.
  */
 export function careerView(
 	lists: SiteLists,
 	config: PortfolioThemeConfig,
-	today: Date = new Date()
+	today: Date = new Date(),
+	page: PortfolioPage = 'site'
 ): CareerView {
 	const detail = careerDetail(config);
 	const brief = new Set(
@@ -163,7 +170,9 @@ export function careerView(
 			.filter((role) => isBriefRole(role, detail.briefRolesAfterYears, today))
 			.map((role) => role.id)
 	);
-	const selectedWork = themeSections(config).includes('featured') && lists.featured.length > 0;
+	const featuring = themeSections(config).includes('featured') && lists.featured.length > 0;
+	const selectedWork = featuring && page !== 'cv';
+	const inPlace = featuring && page === 'cv';
 	const notFeatured = (project: Row) => !isFeatured(project);
 
 	return {
@@ -171,11 +180,19 @@ export function careerView(
 		fullRoles: lists.work.filter((role) => !brief.has(role.id)),
 		briefRoles: lists.work.filter((role) => brief.has(role.id)),
 		selectedWork,
-		fullProjects: selectedWork ? [] : lists.roleProjects.filter((p) => !brief.has(p.roleId)),
-		briefProjects: selectedWork
+		fullProjects: selectedWork
+			? []
+			: inPlace
+				? lists.roleProjects.filter(isFeatured)
+				: lists.roleProjects.filter((p) => !brief.has(p.roleId)),
+		briefProjects: featuring
 			? lists.roleProjects.filter(notFeatured)
 			: lists.roleProjects.filter((p) => brief.has(p.roleId)),
-		fullSideProjects: selectedWork ? [] : lists.sideProjects,
-		briefSideProjects: selectedWork ? lists.sideProjects.filter(notFeatured) : []
+		fullSideProjects: selectedWork
+			? []
+			: inPlace
+				? lists.sideProjects.filter(isFeatured)
+				: lists.sideProjects,
+		briefSideProjects: featuring ? lists.sideProjects.filter(notFeatured) : []
 	};
 }

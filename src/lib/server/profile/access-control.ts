@@ -18,6 +18,10 @@ export interface AccessControlResult {
 	message: string;
 	versionId?: number;
 	tokenId?: number;
+	/** For token access: what the link was made to open (see $lib/profile-tokens). */
+	tokenFormat?: string;
+	/** For token access: when the link stops working, if it ever does. */
+	tokenExpiresAt?: Date | null;
 	accessType: 'public' | 'token' | 'owner';
 }
 
@@ -80,6 +84,8 @@ export async function checkProfileAccess(
 				message: 'Token access granted',
 				versionId: validationResult.profileVersionId,
 				tokenId: validationResult.tokenId,
+				tokenFormat: validationResult.format,
+				tokenExpiresAt: validationResult.expiresAt,
 				accessType: 'token'
 			};
 		}

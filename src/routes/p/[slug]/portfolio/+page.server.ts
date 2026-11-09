@@ -9,23 +9,41 @@
  *
  * Access goes through the same `checkProfileAccess` as the documents, which
  * means a `?t=` token works here too and a portfolio can be shown to one
- * person before the public URL is ever set.
+ * person before the public URL is ever set. So does the key a portfolio share
+ * link leaves in the visitor's browser (server/profile/portfolio-key.ts).
+ *
+ * A theme can keep the career on a private page of its own (`privateCv`, the
+ * `cv` route beside this one). This page is then the public half: the
+ * introduction and the featured projects, its data cut down to match
+ * (server/profile/portfolio-pages.ts), with a way to the CV page for a
+ * visitor who holds the key.
  */
 
 import { error } from '@sveltejs/kit';
 import { getProfileByIdentifier } from '$lib/server/profile/default';
-import { checkProfileAccess, getVersionIdBySlug } from '$lib/server/profile/access-control';
-import { incrementTokenVisit } from '$lib/server/auth/token-validation';
-import { getPortfolioThemeById, getPortfolioTheme } from '$lib/server/profile/portfolio-themes';
+import {
+	checkProfileAccess,
+	getVersionIdBySlug,
+	type AccessControlResult
+} from '$lib/server/profile/access-control';
+import { incrementTokenVisit, touchTokenVisit } from '$lib/server/auth/token-validation';
+import {
+	getPortfolioThemeById,
+	getPortfolioTheme,
+	getPortfolioThemesForProfile
+} from '$lib/server/profile/portfolio-themes';
 import { isKnownLocale } from '$lib/resume-translations';
 import { applyTranslations, loadTranslator } from '$lib/server/profile/translations';
 import { applyFieldVariants, loadFieldVariants } from '$lib/server/profile/field-variants';
 import { pageProfile } from '$lib/server/profile/page-profile';
 import { applySkillWords, loadDocumentSkillWords } from '$lib/server/profile/skill-words';
 import { gatesContact, withoutContact } from '$lib/server/profile/portfolio-contact';
+import { givePortfolioKey, readPortfolioKey } from '$lib/server/profile/portfolio-key';
+import { homePageProfile, portfolioHrefs } from '$lib/server/profile/portfolio-pages';
+import { hasPrivateCv, type PortfolioPage } from '$lib/portfolio-themes';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, url, locals, getClientAddress }) => {
+export const load: PageServerLoad = async ({ params, url, locals, cookies, getClientAddress }) => {
 	const { slug } = params;
 	const token = url.searchParams.get('t');
 
@@ -34,27 +52,49 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 		throw error(404, { message: `Profile not found: ${slug}` });
 	}
 
-	const accessResult = await checkProfileAccess({
+	let accessResult: AccessControlResult = await checkProfileAccess({
 		profile,
 		token,
 		userId: locals.user?.id,
 		clientIp: getClientAddress(),
 		routeType: 'portfolio'
 	});
+	const owner = accessResult.accessType === 'owner';
+
+	// The key a portfolio link left in this browser, if it still opens the site.
+	const key = owner ? null : await readPortfolioKey(cookies, url, profile.id);
 
 	if (!accessResult.allowed) {
-		throw error(accessResult.statusCode, { message: accessResult.message });
-	}
-
-	if (accessResult.accessType === 'token' && accessResult.tokenId) {
+		// A token in the URL that does not check out stays an error. Without one,
+		// a site that is not published yet is open to whoever holds its key, as
+		// it is to whoever holds the link.
+		if (token || !key) {
+			throw error(accessResult.statusCode, { message: accessResult.message });
+		}
+		accessResult = {
+			allowed: true,
+			statusCode: 200,
+			message: 'Key access granted',
+			versionId: key.versionId,
+			tokenId: key.tokenId,
+			accessType: 'token'
+		};
+		await touchTokenVisit(key.tokenId, getClientAddress());
+	} else if (accessResult.accessType === 'token' && accessResult.tokenId) {
 		await incrementTokenVisit(accessResult.tokenId, getClientAddress());
+		// A portfolio link in the URL leaves its key too, so the way to the
+		// private CV page works for this visitor as it does after s/[token].
+		if (token && accessResult.tokenFormat === 'portfolio') {
+			givePortfolioKey(cookies, url, profile.id, token, accessResult.tokenExpiresAt);
+		}
 	}
+	const holdsKey = owner || !!key || accessResult.tokenFormat === 'portfolio';
 
 	// Which version feeds the site. An owner may preview any of them with
 	// `?version=`; everyone else gets the published one, which access control
 	// has already read off the profile.
 	let versionId = accessResult.versionId;
-	if (!versionId && accessResult.accessType === 'owner') {
+	if (!versionId && owner) {
 		const versionSlug = url.searchParams.get('version');
 		versionId = versionSlug
 			? ((await getVersionIdBySlug(profile.id, versionSlug)) ?? undefined)
@@ -66,12 +106,17 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	// one. Either way the loader pins kind=portfolio, so a CV template slug
 	// resolves to nothing rather than rendering as a site.
 	const themeSlug = url.searchParams.get('theme');
-	const theme =
-		themeSlug && accessResult.accessType === 'owner'
+	let theme =
+		themeSlug && owner
 			? await getPortfolioTheme(profile.id, themeSlug)
 			: profile.public_portfolio_theme_id
 				? await getPortfolioThemeById(profile.id, profile.public_portfolio_theme_id)
 				: null;
+	// A link may show the site before it is published, as s/[token] always
+	// could: with the profile's first theme then. See that route for why.
+	if (!theme && accessResult.accessType === 'token') {
+		theme = (await getPortfolioThemesForProfile(profile.id))[0] ?? null;
+	}
 
 	// Published means BOTH pointers, so a site missing either is not published
 	// — not a blank page, and not an undressed one. The half state is reachable
@@ -80,10 +125,9 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 	// trusted from the access-control column alone.
 	if (!theme || !versionId) {
 		throw error(404, {
-			message:
-				accessResult.accessType === 'owner'
-					? 'This portfolio is not published yet. Publish a theme from Profile → Portfolio Site.'
-					: 'Not found'
+			message: owner
+				? 'This portfolio is not published yet. Publish a theme from Profile → Portfolio Site.'
+				: 'Not found'
 		});
 	}
 
@@ -101,20 +145,32 @@ export const load: PageServerLoad = async ({ params, url, locals, getClientAddre
 		versionId
 	);
 
+	// The whole site on this one page, or its public half.
+	const page: PortfolioPage = hasPrivateCv(theme.config) ? 'home' : 'site';
+
 	// Only what the page renders: the tree is serialised into it, and the rest
-	// of it is private. See server/profile/page-profile.ts. A showcase keeps the
-	// contact details out as well, behind its Turnstile gate; see
+	// of it is private. See server/profile/page-profile.ts. The public half of
+	// a site with a private CV page carries none of the career (see
+	// server/profile/portfolio-pages.ts). A showcase keeps the contact details
+	// out as well, behind its Turnstile gate; see
 	// server/profile/portfolio-contact.ts.
 	const shown = pageProfile(profile, versionId, translator.locale);
-	const gated = gatesContact(theme) ? withoutContact(shown) : null;
+	const visible = page === 'home' ? homePageProfile(shown, versionId) : shown;
+	const gated = gatesContact(theme) ? withoutContact(visible) : null;
+
+	const hrefs =
+		page === 'home' && holdsKey ? portfolioHrefs(profile.slug ?? slug, url, owner) : null;
 
 	return {
-		profile: gated?.profile ?? shown,
+		profile: gated?.profile ?? visible,
 		contact: gated?.contact ?? null,
 		accessToken: accessResult.accessType === 'token' ? token : null,
 		theme,
 		locale: translator.locale,
 		versionId: versionId ?? null,
-		accessType: accessResult.accessType
+		accessType: accessResult.accessType,
+		page,
+		homeHref: hrefs?.home ?? null,
+		cvHref: hrefs?.cv ?? null
 	};
 };

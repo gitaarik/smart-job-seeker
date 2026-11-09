@@ -83,15 +83,22 @@ function card(container: HTMLElement, title: string): HTMLElement | undefined {
 }
 
 describe('ShowcaseSite career', () => {
-	test('opens the career with Selected work, the featured project printed in full', () => {
+	test('opens the career with Selected work, a slide per featured project and its whole story', () => {
 		const c = site();
-		const titles = [...c.querySelectorAll('article > h2')].map((h) => h.textContent?.trim());
-		expect(titles.indexOf('Selected Work')).toBeLessThan(titles.indexOf('Professional Experience'));
+		const band = c.querySelector<HTMLElement>('.work-band');
+		expect(band?.querySelector('h2')?.textContent).toContain('Selected Work');
+		const work = card(c, 'Professional Experience');
+		expect(band!.compareDocumentPosition(work!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
-		const selected = card(c, 'Selected Work');
-		expect(selected?.textContent).toContain('Payments rewrite');
-		expect(selected?.textContent).toContain('Checkout got faster.');
-		expect(selected?.textContent).toContain('NowCorp');
+		const slide = band?.querySelector('[aria-roledescription="slide"]');
+		expect(slide?.textContent).toContain('Payments rewrite');
+		expect(slide?.textContent).toContain('NowCorp');
+
+		// The whole write-up is on the page, its story closed until asked for.
+		const story = band?.querySelector('.story');
+		expect(story?.hasAttribute('hidden')).toBe(true);
+		expect(story?.textContent).toContain('Rewrote the payments.');
+		expect(story?.textContent).toContain('Checkout got faster.');
 	});
 
 	test('lists the other projects by name, their write-up behind a click', () => {

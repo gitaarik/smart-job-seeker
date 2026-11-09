@@ -17,7 +17,8 @@ import { error, json } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { profile_versions, profiles } from '$lib/server/db/schema';
-import { checkProfileAccess } from '$lib/server/profile/access-control';
+import { checkProfileAccess, type AccessControlResult } from '$lib/server/profile/access-control';
+import { readPortfolioKey } from '$lib/server/profile/portfolio-key';
 import { isAnonymousChain } from '$lib/server/profile/anonymity';
 import {
 	getPortfolioThemeById,
@@ -27,7 +28,14 @@ import { gatesContact, type PortfolioContact } from '$lib/server/profile/portfol
 import { verifyTurnstileToken } from '$lib/server/auth/turnstile';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = async ({ params, request, locals, getClientAddress }) => {
+export const POST: RequestHandler = async ({
+	params,
+	request,
+	url,
+	locals,
+	cookies,
+	getClientAddress
+}) => {
 	const body = (await request.json().catch(() => null)) as {
 		turnstileToken?: unknown;
 		accessToken?: unknown;
@@ -41,13 +49,29 @@ export const POST: RequestHandler = async ({ params, request, locals, getClientA
 	});
 	if (!profile) throw error(404, 'Not found');
 
-	const access = await checkProfileAccess({
+	let access: AccessControlResult = await checkProfileAccess({
 		profile,
 		token: accessToken,
 		userId: locals.user?.id,
 		clientIp: getClientAddress(),
 		routeType: 'portfolio'
 	});
+	// A page opened by the key a portfolio link left (a site not published yet,
+	// or its private CV page) has no token to send: the key stands in for it,
+	// as it did for the page. See server/profile/portfolio-key.ts.
+	if (!access.allowed && !accessToken) {
+		const key = await readPortfolioKey(cookies, url, profile.id);
+		if (key) {
+			access = {
+				allowed: true,
+				statusCode: 200,
+				message: 'Key access granted',
+				versionId: key.versionId,
+				tokenId: key.tokenId,
+				accessType: 'token'
+			};
+		}
+	}
 	if (!access.allowed) throw error(404, 'Not found');
 
 	// An anonymous version prints no name, email or phone (anonymiseTree), so

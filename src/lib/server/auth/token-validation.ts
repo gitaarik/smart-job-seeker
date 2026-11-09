@@ -8,6 +8,21 @@ export interface TokenValidationResult {
 	profileVersionId?: number;
 	error?: string;
 	tokenId?: number;
+	/** What the link opens: `resume`, `cv` or `portfolio` (see $lib/profile-tokens). */
+	format?: string;
+	/** When the link stops working, if it ever does. */
+	expiresAt?: Date | null;
+}
+
+export interface TokenValidationOptions {
+	/**
+	 * Refuse a link that has been opened as often as its limit allows. On by
+	 * default. Off for the portfolio's key (server/profile/portfolio-key.ts):
+	 * the limit counts how often the link is opened, and a visitor who opened
+	 * it once holds the key from then on, so a link limited to one visit would
+	 * otherwise lock its visitor out on the page it had just let them into.
+	 */
+	visitLimit?: boolean;
 }
 
 /**
@@ -18,7 +33,8 @@ export interface TokenValidationResult {
  */
 export async function validateToken(
 	tokenString: string,
-	profileId: number
+	profileId: number,
+	{ visitLimit = true }: TokenValidationOptions = {}
 ): Promise<TokenValidationResult> {
 	const tokenHash = hashToken(tokenString);
 
@@ -60,7 +76,7 @@ export async function validateToken(
 		};
 	}
 
-	if (token.visit_limit !== null && token.visit_count >= token.visit_limit) {
+	if (visitLimit && token.visit_limit !== null && token.visit_count >= token.visit_limit) {
 		return {
 			valid: false,
 			error: 'Access token visit limit exceeded'
@@ -70,8 +86,22 @@ export async function validateToken(
 	return {
 		valid: true,
 		profileVersionId: token.profile_version,
-		tokenId: token.id
+		tokenId: token.id,
+		format: token.format,
+		expiresAt: token.expires_at
 	};
+}
+
+/**
+ * Record that a link's holder came back, without counting a visit: when and
+ * from where, as the share links page shows it. For the portfolio's key, whose
+ * visits are counted once, when the link itself is opened.
+ */
+export async function touchTokenVisit(tokenId: number, ipAddress?: string): Promise<void> {
+	await db
+		.update(profile_tokens)
+		.set({ last_accessed_at: new Date(), last_accessed_ip: ipAddress || null })
+		.where(eq(profile_tokens.id, tokenId));
 }
 
 /**

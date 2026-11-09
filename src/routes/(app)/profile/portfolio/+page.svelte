@@ -338,7 +338,8 @@
 	<p class="mb-6 text-sm text-[var(--dash-text-secondary)]">
 		Want to show it to one person instead of the world? Mint a
 		<a href={resolve('/profile/share')} class="text-[var(--dash-primary)] underline">share link</a>
-		with the format set to Portfolio — it renders the same theme behind a token.
+		with the format set to Portfolio — it renders the same theme behind a token. With a private CV page,
+		that link is also what opens the CV page.
 	</p>
 
 	{#if form && 'error' in form && form.error}
@@ -670,6 +671,30 @@
 
 							{#if layoutDraft[theme.id] === 'showcase'}
 								<input type="hidden" name="showcaseFields" value="1" />
+
+								<fieldset class="text-sm text-[var(--dash-text-secondary)]">
+									<legend class="mb-1 text-sm font-medium text-[var(--dash-text)]"
+										>Private CV page</legend
+									>
+									<label class="flex items-start gap-2">
+										<input
+											type="checkbox"
+											name="privateCv"
+											checked={!!theme.config.privateCv}
+											class="mt-1"
+										/>
+										<span>
+											<span class="text-[var(--dash-text)]">Keep the full CV on a private page</span
+											>
+											<span class="mt-0.5 block text-xs">
+												The public page then shows your introduction, the quotes and Selected work,
+												as a carousel. The rest of your career moves to a page search engines are
+												told to skip and only your portfolio share links open. A link leaves a
+												cookie, so whoever opened it finds the page again from a menu at the top.
+											</span>
+										</span>
+									</label>
+								</fieldset>
 
 								<fieldset>
 									<legend class="mb-1 text-sm font-medium text-[var(--dash-text)]">Palette</legend>

@@ -1,9 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import {
 	DEFAULT_PALETTE,
+	HOME_SECTIONS,
 	PALETTE_ROLES,
 	PORTFOLIO_SECTIONS,
 	SHOWCASE_SECTIONS,
+	hasPrivateCv,
+	pageSections,
 	paletteStyle,
 	resolvePalette,
 	themeLayout,
@@ -67,5 +70,37 @@ describe('palette', () => {
 		expect(
 			resolvePalette({ accent: '#ff8800', palette: { dark: { bright: '#000000' } } }, 'dark').bright
 		).toBe('#000000');
+	});
+});
+
+describe('the private CV page', () => {
+	const split: PortfolioThemeConfig = { layout: 'showcase', privateCv: true };
+
+	test('only a showcase that asks for it has one', () => {
+		expect(hasPrivateCv(split)).toBe(true);
+		expect(hasPrivateCv({ layout: 'showcase' })).toBe(false);
+		// The basic layout has no second page to put the career on.
+		expect(hasPrivateCv({ privateCv: true })).toBe(false);
+	});
+
+	test('the public page keeps the introduction, the quotes and Selected work', () => {
+		expect(pageSections(split, 'home')).toEqual(['header', 'about', 'references', 'featured']);
+	});
+
+	test('the CV page takes the rest, in the theme’s own order', () => {
+		const sections: PortfolioThemeConfig['sections'] = ['header', 'work', 'about', 'skills'];
+		expect(pageSections({ ...split, sections }, 'cv')).toEqual(['work', 'skills']);
+		expect(pageSections({ ...split, sections }, 'home')).toEqual(['header', 'about']);
+	});
+
+	test('every section lands on exactly one of the two pages', () => {
+		const home = pageSections(split, 'home');
+		const cv = pageSections(split, 'cv');
+		expect([...home, ...cv].sort()).toEqual([...SHOWCASE_SECTIONS].sort());
+		expect(home.every((s) => HOME_SECTIONS.has(s))).toBe(true);
+	});
+
+	test('one page shows every section', () => {
+		expect(pageSections(split, 'site')).toEqual([...SHOWCASE_SECTIONS]);
 	});
 });

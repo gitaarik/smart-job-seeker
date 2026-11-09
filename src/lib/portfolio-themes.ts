@@ -239,6 +239,12 @@ export interface PortfolioThemeConfig {
 	footerNoteUrl?: string;
 	/** A heading per section in place of the layout's own. Plain text; showcase only. */
 	titles?: Partial<Record<PortfolioSection, string>>;
+	/**
+	 * Give the career a page of its own that only a portfolio share link opens,
+	 * and keep the public page to the introduction and the featured projects.
+	 * Showcase only; see `hasPrivateCv`.
+	 */
+	privateCv?: boolean;
 }
 
 export interface PortfolioTheme {
@@ -280,6 +286,44 @@ export function themeSections(config: PortfolioThemeConfig): PortfolioSection[] 
 /** The default section order for a layout, which the editor stores as "absent". */
 export function defaultSections(layout: PortfolioLayout): readonly PortfolioSection[] {
 	return layout === 'showcase' ? SHOWCASE_SECTIONS : PORTFOLIO_SECTIONS;
+}
+
+/*
+ * The site's pages.
+ *
+ * A showcase can keep its career off the public page (`privateCv`). The
+ * public page is then the introduction and the projects the applicant
+ * featured, and the rest of the career is a page of its own, `/cv`, which
+ * only a portfolio share link opens (server/profile/portfolio-key.ts). The
+ * public page's data carries none of it either (`homePageProfile`), or the
+ * page source would publish what the page keeps back. Without `privateCv`
+ * the site is one page, as it always was.
+ */
+
+/** Which page a renderer draws: the whole site on one page, or one of the two halves. */
+export type PortfolioPage = 'site' | 'home' | 'cv';
+
+/** The sections the public page keeps when the career has a page of its own. */
+export const HOME_SECTIONS: ReadonlySet<PortfolioSection> = new Set<PortfolioSection>([
+	'header',
+	'about',
+	'references',
+	'featured'
+]);
+
+/** Whether this theme gives the career a private page of its own. */
+export function hasPrivateCv(config: PortfolioThemeConfig): boolean {
+	return themeLayout(config) === 'showcase' && config.privateCv === true;
+}
+
+/** The sections one page shows, in the theme's order. */
+export function pageSections(
+	config: PortfolioThemeConfig,
+	page: PortfolioPage
+): PortfolioSection[] {
+	const sections = themeSections(config);
+	if (page === 'site') return sections;
+	return sections.filter((section) => HOME_SECTIONS.has(section) === (page === 'home'));
 }
 
 /*

@@ -14,6 +14,9 @@
 		versionId={data.versionId}
 		contact={data.contact}
 		accessToken={data.accessToken}
+		page={data.page}
+		homeHref={data.homeHref}
+		cvHref={data.cvHref}
 	/>
 {:else}
 	<PortfolioSite profile={data.profile} theme={data.theme} versionId={data.versionId} />

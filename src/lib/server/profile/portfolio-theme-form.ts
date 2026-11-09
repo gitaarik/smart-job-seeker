@@ -44,7 +44,7 @@ export function applyShowcaseFields(next: PortfolioThemeConfig, form: FormData):
 	if (Object.keys(palette).length > 0) next.palette = palette;
 	else delete next.palette;
 
-	for (const flag of ['schemeSwitcher', 'animations', 'logoTint'] as const) {
+	for (const flag of ['schemeSwitcher', 'animations', 'logoTint', 'privateCv'] as const) {
 		if (form.get(flag)) next[flag] = true;
 		else delete next[flag];
 	}

@@ -14,6 +14,7 @@ const mockThemeById = vi.fn();
 const mockThemes = vi.fn();
 const mockVerify = vi.fn();
 const mockVersions = vi.fn();
+const mockKey = vi.fn();
 
 vi.mock('$lib/server/db', () => ({
 	db: {
@@ -41,6 +42,9 @@ vi.mock('$lib/server/profile/access-control', () => ({
 vi.mock('$lib/server/profile/portfolio-themes', () => ({
 	getPortfolioThemeById: () => mockThemeById(),
 	getPortfolioThemesForProfile: () => mockThemes()
+}));
+vi.mock('$lib/server/profile/portfolio-key', () => ({
+	readPortfolioKey: () => mockKey()
 }));
 vi.mock('$lib/server/auth/turnstile', () => ({
 	verifyTurnstileToken: (t: unknown) => mockVerify(t),
@@ -71,7 +75,9 @@ async function post(body: unknown, user: { id: string } | null = null) {
 				method: 'POST',
 				body: JSON.stringify(body)
 			}),
+			url: new URL('http://x/p/alex/portfolio/contact'),
 			locals: { user },
+			cookies: {},
 			getClientAddress: () => '127.0.0.1'
 		});
 		return { status: res.status, body: await res.json() };
@@ -88,6 +94,7 @@ beforeEach(() => {
 	mockThemeById.mockResolvedValue(SHOWCASE);
 	mockThemes.mockResolvedValue([SHOWCASE]);
 	mockVerify.mockResolvedValue({ success: true });
+	mockKey.mockResolvedValue(null);
 });
 
 describe('portfolio contact endpoint', () => {
@@ -117,6 +124,23 @@ describe('portfolio contact endpoint', () => {
 	it('refuses a caller access control turns away', async () => {
 		mockAccess.mockResolvedValue({ allowed: false, accessType: 'public' });
 		expect((await post({ turnstileToken: 'good' })).status).toBe(404);
+	});
+
+	it('lets the key a portfolio link left through, for a page that has no token to send', async () => {
+		mockProfile.mockResolvedValue({ ...PROFILE, public_portfolio_theme_id: null });
+		mockThemeById.mockResolvedValue(null);
+		mockAccess.mockResolvedValue({ allowed: false, accessType: 'public' });
+		mockKey.mockResolvedValue({ token: 'kept', tokenId: 3, versionId: 5 });
+		const res = await post({ turnstileToken: 'good' });
+		expect(res.status).toBe(200);
+		expect(res.body.email).toBe('alex@example.com');
+	});
+
+	it('does not let the key stand in for a token that was sent and refused', async () => {
+		mockAccess.mockResolvedValue({ allowed: false, accessType: 'token' });
+		mockKey.mockResolvedValue({ token: 'kept', tokenId: 3, versionId: 5 });
+		expect((await post({ turnstileToken: 'good', accessToken: 'revoked' })).status).toBe(404);
+		expect(mockKey).not.toHaveBeenCalled();
 	});
 
 	it('refuses a basic theme, which never hid the details behind the gate', async () => {
