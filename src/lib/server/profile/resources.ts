@@ -561,6 +561,9 @@ const NOTE_IN_LABEL = 40;
 const VERSION_SLUGS =
 	'Version slugs, which name documents by a string that nothing keeps in step: a slug matching no version silently drops the item from every document rather than erroring.';
 
+const SITE_PICK =
+	'Which projects the public site shows first, a choice the applicant makes with the Featured switch on the project page. It says nothing about the work, so it would only spend contract budget.';
+
 export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	work_experience: {
 		table: work_experiences,
@@ -676,7 +679,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 				note: 'what the project was and what the applicant did on it'
 			},
 			outcome: { kind: 'string', note: 'what it changed — the result, not the work' },
-			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS }
+			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS },
+			featured: { kind: 'boolean', notForAssistant: SITE_PICK }
 		},
 		required: ['name', 'work_experience'],
 		insertDefaults: {},
@@ -907,7 +911,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 			stars: { kind: 'int', note: 'GitHub stars — a count, not a rating' },
 			start_date: { kind: 'date' },
 			end_date: { kind: 'date' },
-			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS }
+			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS },
+			featured: { kind: 'boolean', notForAssistant: SITE_PICK }
 		},
 		required: ['name'],
 		insertDefaults: {},

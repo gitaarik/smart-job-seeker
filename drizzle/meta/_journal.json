@@ -610,6 +610,13 @@
       "when": 1794148417079,
       "tag": "0086_media_presets",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1794244717321,
+      "tag": "0087_featured_projects",
+      "breakpoints": true
     }
   ]
 }

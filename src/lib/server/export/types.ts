@@ -450,6 +450,8 @@ export interface ExportedWorkExperienceProject {
 	description?: string;
 	outcome?: string;
 	tags?: unknown;
+	/** On the site's Selected work. In no export before 2026-11-09. */
+	featured?: boolean;
 	technologies: ExportedWorkExperienceProjectTechnology[];
 }
 
@@ -476,6 +478,8 @@ export interface ExportedSideProject {
 	image_id?: string;
 	banner_id?: string;
 	tags?: unknown;
+	/** On the site's Selected work. In no export before 2026-11-09. */
+	featured?: boolean;
 	achievements: ExportedSideProjectAchievement[];
 	technologies: ExportedSideProjectTechnology[];
 }

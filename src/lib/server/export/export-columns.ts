@@ -256,7 +256,8 @@ export const ROLE_PROJECT_COLUMNS = {
 	end_date: true,
 	description: true,
 	outcome: true,
-	tags: true
+	tags: true,
+	featured: true
 } as const satisfies Decided<typeof work_experience_projects>;
 
 export const ROLE_PROJECT_TECHNOLOGY_COLUMNS = {
@@ -284,6 +285,7 @@ export const SIDE_PROJECT_COLUMNS = {
 	start_date: true,
 	end_date: true,
 	tags: true,
+	featured: true,
 	image_path: true,
 	banner_path: true,
 	// Renditions by source id, mapped on import like `profile_photo_id`.

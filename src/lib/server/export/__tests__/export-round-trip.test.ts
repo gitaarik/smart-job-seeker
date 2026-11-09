@@ -102,6 +102,7 @@ type Row = Record<string, unknown>;
 function sample(column: string): unknown {
 	if (column === 'id') return nextId++;
 	if (column === 'tags') return ['resume'];
+	if (column === 'featured') return true;
 	if (column === 'toggles') return { summary: true };
 	if (['sort', 'stars', 'years_experience'].includes(column)) return 2;
 	if (/(^|_)date$/.test(column)) return '2020-01-02';

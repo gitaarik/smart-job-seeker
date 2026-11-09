@@ -707,7 +707,8 @@ async function importProfileEntities(
 					end_date: toDateString(proj.end_date),
 					description: proj.description || null,
 					outcome: proj.outcome || null,
-					tags: proj.tags ?? null
+					tags: proj.tags ?? null,
+					featured: proj.featured === true
 				})
 				.returning();
 
@@ -774,7 +775,8 @@ async function importProfileEntities(
 				stars: sp.stars ?? null,
 				summary: sp.summary || null,
 				repo_url: sp.repo_url || null,
-				tags: toJsonValue(sp.tags)
+				tags: toJsonValue(sp.tags),
+				featured: sp.featured === true
 				// image_path will be set via media import
 			})
 			.returning();

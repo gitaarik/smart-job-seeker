@@ -439,6 +439,7 @@ export async function buildProfileExport(
 				description: p.description || undefined,
 				outcome: p.outcome || undefined,
 				tags: p.tags,
+				featured: p.featured || undefined,
 				technologies: p.work_experience_project_technologies.map((t) => ({
 					sort: t.sort,
 					name: t.name || undefined,
@@ -463,6 +464,7 @@ export async function buildProfileExport(
 			image_id: proj.image_id || undefined,
 			banner_id: proj.banner_id || undefined,
 			tags: proj.tags,
+			featured: proj.featured || undefined,
 			achievements: proj.side_project_achievements.map((a) => ({
 				description: a.description || undefined,
 				sort: a.sort

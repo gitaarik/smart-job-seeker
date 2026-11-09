@@ -432,7 +432,8 @@ export const workExperienceProjectBasicSchema = z.object({
 	end_date: z.string().optional().nullable(),
 	description: optionalTrimmedString(10000),
 	outcome: optionalTrimmedString(10000),
-	tags: z.array(z.string()).optional().nullable()
+	tags: z.array(z.string()).optional().nullable(),
+	featured: z.boolean().optional()
 });
 
 export const workExperienceAchievementBasicSchema = z.object({
@@ -477,7 +478,8 @@ export const sideProjectBasicSchema = z.object({
 	stars: optionalInt(),
 	start_date: z.string().optional().nullable(),
 	end_date: z.string().optional().nullable(),
-	tags: z.array(z.string()).optional().nullable()
+	tags: z.array(z.string()).optional().nullable(),
+	featured: z.boolean().optional()
 });
 
 /*

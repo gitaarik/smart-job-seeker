@@ -2225,7 +2225,12 @@ export const work_experience_projects = pgTable(
 		// the way a project's technologies do (migration 0078). The documents
 		// never print a project, so the `!resume` + `!cv` pair means nothing
 		// here and the section stays out of HIDEABLE_RESOURCES.
-		tags: json()
+		tags: json(),
+		// Shown in full under the site's Selected work, the applicant's pick of
+		// their best. A column rather than a tag: a tag that is not a base
+		// template is read as a version slug, which would take the project off
+		// every version not called "featured". See site-lists.ts.
+		featured: boolean().default(false).notNull()
 	},
 	(table) => [
 		foreignKey({
@@ -2350,6 +2355,8 @@ export const side_projects = pgTable(
 		stars: integer(),
 		summary: text(),
 		tags: json(),
+		/** Shown in full under the site's Selected work; see work_experience_projects.featured. */
+		featured: boolean().default(false).notNull(),
 		/** Superseded by `image_id`; read only until migrate-media-library.ts has run. */
 		image_path: varchar({ length: 255 }),
 		/** Superseded by `banner_id`; read only until migrate-media-library.ts has run. */
