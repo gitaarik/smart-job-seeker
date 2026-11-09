@@ -2732,6 +2732,13 @@ export const work_experiences = pgTable(
 		end_date: date(),
 		website: varchar({ length: 255 }),
 		tags: json(),
+		/**
+		 * Shown under the site's Selected work, beside the featured projects:
+		 * for work that is the role itself rather than a project in it. Unlike a
+		 * featured project it also stays in the career, which would otherwise
+		 * have a gap. See work_experience_projects.featured and site-lists.ts.
+		 */
+		featured: boolean().default(false).notNull(),
 		/** Superseded by `logo_id`; read only until migrate-media-library.ts has run. */
 		logo_path: varchar({ length: 255 }),
 		/** Superseded by `banner_id`; read only until migrate-media-library.ts has run. */

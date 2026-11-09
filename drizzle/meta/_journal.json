@@ -617,6 +617,13 @@
       "when": 1794244717321,
       "tag": "0087_featured_projects",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1794253509244,
+      "tag": "0088_featured_roles",
+      "breakpoints": true
     }
   ]
 }
