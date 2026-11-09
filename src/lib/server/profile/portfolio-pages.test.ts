@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { siteLists, type Row } from '$lib/components/PortfolioSite/site-lists';
+import { featuredKey, siteLists, type Row } from '$lib/components/PortfolioSite/site-lists';
 import { homePageProfile, portfolioHrefs } from './portfolio-pages';
 
 /**
@@ -102,12 +102,46 @@ describe('homePageProfile', () => {
 		expect(home.side_projects.map((p: Row) => p.name)).toEqual(['Side A']);
 	});
 
-	test('the page still finds the same featured projects in what is left', () => {
-		const before = siteLists(tree(), null).featured;
-		const after = siteLists(homePageProfile(tree(), null), null).featured;
-		expect(after.map((f) => [f.kind, f.project.id, f.project.company])).toEqual(
-			before.map((f) => [f.kind, f.project.id, f.project.company])
-		);
+	test('the page still finds the same featured work in what is left', () => {
+		const t = tree();
+		t.work_experiences[1].featured = true;
+		const before = siteLists(t, null).featured;
+		const after = siteLists(homePageProfile(t, null), null).featured;
+		expect(after.map(featuredKey)).toEqual(['role-11', 'experience-20', 'side-30']);
+		expect(after.map(featuredKey)).toEqual(before.map(featuredKey));
+		const companies = (featured: typeof before) =>
+			featured.flatMap((f) => (f.kind === 'role' ? [f.project.company] : []));
+		expect(companies(after)).toEqual(['NowCorp']);
+	});
+
+	test('a featured role keeps what its slide prints, and none of its other projects', () => {
+		const t = tree();
+		Object.assign(t.work_experiences[1], {
+			featured: true,
+			position: 'Engineer',
+			start_date: '2010-01-01',
+			end_date: '2014-08-08',
+			summary: 'Built the first version.',
+			location: 'Utrecht',
+			work_experience_technologies: [{ id: 201, name: 'Perl' }]
+		});
+		const home = homePageProfile(t, null);
+		const role = home.work_experiences.find((r: Row) => r.id === 20);
+
+		expect(role).toMatchObject({
+			featured: true,
+			position: 'Engineer',
+			start_date: '2010-01-01',
+			end_date: '2014-08-08',
+			summary: 'Built the first version.',
+			work_experience_achievements: [{ id: 200, description: 'Shipped v1' }],
+			work_experience_technologies: [{ id: 201, name: 'Perl' }],
+			work_experience_projects: []
+		});
+		const json = JSON.stringify(home);
+		for (const kept of ['Legacy port', 'Utrecht', 'Led the team.', 'Cut costs 40%', 'Celery']) {
+			expect(json, kept).not.toContain(kept);
+		}
 	});
 
 	test('a featured project switched off the site does not ride along', () => {

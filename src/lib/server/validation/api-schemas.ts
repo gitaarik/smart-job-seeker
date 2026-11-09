@@ -398,7 +398,8 @@ export const workExperienceBasicSchema = z.object({
 	summary: optionalTrimmedString(10000),
 	start_date: z.string().optional().nullable(),
 	end_date: z.string().optional().nullable(),
-	tags: z.array(z.string()).optional().nullable()
+	tags: z.array(z.string()).optional().nullable(),
+	featured: z.boolean().optional()
 });
 
 /**

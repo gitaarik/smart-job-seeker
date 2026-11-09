@@ -296,12 +296,13 @@ describe('PortfolioSite career detail', () => {
 	 * featured projects under Selected work, the rest a line each, an old role
 	 * a line under Earlier roles, and a role's achievements cut at four.
 	 */
-	function career() {
+	function career(roleOver: Record<string, unknown> = {}) {
 		const profile = {
 			name: 'Alex Morgan',
 			profile_versions: [],
 			work_experiences: [
 				{
+					...roleOver,
 					id: 1,
 					position: 'Lead',
 					name: 'NowCorp',
@@ -358,6 +359,26 @@ describe('PortfolioSite career detail', () => {
 		const projects = section(site, 'Projects');
 		expect(projects?.textContent).not.toContain('Payments rewrite');
 		expect(projects?.querySelector('details summary')?.textContent).toContain('Admin cleanup');
+	});
+
+	test('prints a featured role under Selected work as a teaser, and whole under Experience', () => {
+		const site = career({ featured: true, summary: 'Led the platform team.' });
+		const picked = section(site, 'Selected work');
+		const entries = [...(picked?.querySelectorAll('article.entry') ?? [])];
+		// Where the career has it: the role, then its own featured project.
+		expect(entries.map((a) => a.querySelector('h3')?.textContent?.trim())).toEqual([
+			'Lead · NowCorp',
+			'Payments rewrite'
+		]);
+		expect(entries[0].textContent).toContain('Led the platform team.');
+		expect([...entries[0].querySelectorAll('ul.bullets li')].map((li) => li.textContent)).toEqual([
+			'Achievement 1',
+			'Achievement 2'
+		]);
+
+		const work = section(site, 'Experience');
+		expect(work?.textContent).toContain('NowCorp');
+		expect(work?.textContent).toContain('Achievement 4');
 	});
 
 	test('holds back all but four achievements and prints an old role as a line', () => {

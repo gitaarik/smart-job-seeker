@@ -53,6 +53,49 @@ describe('workSlides', () => {
 		expect(slide.period).toContain('2024');
 	});
 
+	test('a featured role is titled by its position and told from its summary and achievements', () => {
+		const [slide] = slidesFor({
+			work_experiences: [
+				{
+					id: 3,
+					name: 'ReviewCo',
+					position: 'Code Reviewer',
+					featured: true,
+					logo_id: 'uuid-3',
+					start_date: '2026-10-06',
+					end_date: null,
+					summary: 'Reviews code.\n\nFor model training.',
+					work_experience_achievements: [
+						{ id: 1, description: 'Graded the changes.' },
+						{ id: 2, description: 'Kept off the site.', tags: ['!portfolio'] },
+						{ id: 3, description: '  ' }
+					],
+					work_experience_technologies: [
+						{ id: 1, name: 'Python' },
+						{ id: 2, name: 'Hidden', tags: ['!portfolio'] }
+					],
+					work_experience_projects: [{ id: 30, name: 'Not featured' }]
+				}
+			]
+		});
+
+		expect(slide).toMatchObject({
+			key: 'experience-3',
+			context: 'ReviewCo',
+			logo: '/assets/uuid-3',
+			name: 'Code Reviewer',
+			link: null,
+			role: null,
+			story: ['Reviews code.', 'For model training.'],
+			outcome: [],
+			// Read as the career reads them: what the site leaves out stays out.
+			points: ['Graded the changes.'],
+			technologies: ['Python']
+		});
+		expect(slide.period).toContain('2026');
+		expect(hasStory(slide)).toBe(true);
+	});
+
 	test('a side project says so, links its repository and lists its highlights', () => {
 		const [slide] = slidesFor({
 			work_experiences: [],

@@ -38,15 +38,24 @@ export interface SiteLists {
 	references: Row[];
 	highlights: Row[];
 	/**
-	 * The projects the applicant featured, from both lists: role projects in
-	 * role order, then side projects. Only those still on the site, so a
-	 * featured project switched off the site stays off it.
+	 * What the applicant featured, in the order the career reads: each role
+	 * that is featured itself, then its featured projects, role by role, and
+	 * the featured side projects after them. Only what is still on the site,
+	 * so a featured entry switched off the site stays off it.
 	 */
-	featured: FeaturedProject[];
+	featured: FeaturedWork[];
 }
 
-/** A featured project and which list it came from, since the two hold different fields. */
-export type FeaturedProject = { kind: 'role'; project: Row } | { kind: 'side'; project: Row };
+/**
+ * One featured entry and what it is, since each holds different fields: a
+ * role's project (`role`, with its employer's name as `company`), a side
+ * project (`side`), or a role itself (`experience`), for work that is the role
+ * rather than a project in it.
+ */
+export type FeaturedWork =
+	| { kind: 'role'; project: Row }
+	| { kind: 'side'; project: Row }
+	| { kind: 'experience'; role: Row };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the profile tree, see Row
 export function siteLists(profile: any, versionId: number | null): SiteLists {
@@ -83,13 +92,25 @@ export function siteLists(profile: any, versionId: number | null): SiteLists {
 		references: show(profile.references),
 		highlights: show(profile.highlights),
 		featured: [
-			...roleProjects.filter(isFeatured).map((project) => ({ kind: 'role' as const, project })),
+			...work.flatMap((role: Row): FeaturedWork[] => [
+				...(isFeatured(role) ? [{ kind: 'experience' as const, role }] : []),
+				...roleProjects
+					.filter((p) => p.roleId === role.id && isFeatured(p))
+					.map((project) => ({ kind: 'role' as const, project }))
+			]),
 			...sideProjects.filter(isFeatured).map((project) => ({ kind: 'side' as const, project }))
 		]
 	};
 }
 
-const isFeatured = (project: Row): boolean => project.featured === true;
+const isFeatured = (entry: Row): boolean => entry.featured === true;
+
+/** A featured entry's key, unique across the three kinds (`role-10`, `experience-3`). */
+export function featuredKey(item: FeaturedWork): string {
+	return item.kind === 'experience'
+		? `experience-${item.role.id}`
+		: `${item.kind}-${item.project.id}`;
+}
 
 /**
  * Whether a role prints as one line: it ended more than `years` years before
@@ -149,9 +170,12 @@ export interface CareerView {
  * a line. With Selected work on the page (the theme shows the section and
  * something is featured), every featured project is printed there and nowhere
  * else, and every other project is listed briefly: featuring is choosing what
- * to highlight, so the rest step back. Without it, projects print in full as
- * they always did, except those of a role that is itself printed as a line,
- * which would otherwise outweigh their role.
+ * to highlight, so the rest step back. A featured role is the exception that
+ * stays where it is as well, because the career without it would have a gap;
+ * Selected work only adds it up front, and it prints in full however long ago
+ * it ended. Without Selected work, featuring changes nothing: projects print in
+ * full as they always did, except those of a role that is itself printed as a
+ * line, which would otherwise outweigh their role.
  *
  * The private CV page (`page: 'cv'`) has no Selected work, because the public
  * page shows it. A featured project prints in full in its own section there
@@ -165,12 +189,13 @@ export function careerView(
 	page: PortfolioPage = 'site'
 ): CareerView {
 	const detail = careerDetail(config);
+	const featuring = themeSections(config).includes('featured') && lists.featured.length > 0;
 	const brief = new Set(
 		lists.work
+			.filter((role) => !(featuring && isFeatured(role)))
 			.filter((role) => isBriefRole(role, detail.briefRolesAfterYears, today))
 			.map((role) => role.id)
 	);
-	const featuring = themeSections(config).includes('featured') && lists.featured.length > 0;
 	const selectedWork = featuring && page !== 'cv';
 	const inPlace = featuring && page === 'cv';
 	const notFeatured = (project: Row) => !isFeatured(project);

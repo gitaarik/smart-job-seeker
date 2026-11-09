@@ -410,6 +410,7 @@ export async function buildProfileExport(
 			end_date: formatDate(work.end_date),
 			website: work.website || undefined,
 			tags: work.tags,
+			featured: work.featured || undefined,
 			logo_path: work.logo_path || undefined,
 			banner_path: work.banner_path || undefined,
 			logo_id: work.logo_id || undefined,

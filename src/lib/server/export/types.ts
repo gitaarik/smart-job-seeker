@@ -411,6 +411,8 @@ export interface ExportedWorkExperience {
 	end_date?: string | null;
 	website?: string;
 	tags?: unknown;
+	/** On the site's Selected work. In no export before 2026-11-09. */
+	featured?: boolean;
 	logo_path?: string;
 	banner_path?: string;
 	/** Renditions by source id (see media_library). */

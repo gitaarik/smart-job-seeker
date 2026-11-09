@@ -212,6 +212,7 @@ export const ROLE_COLUMNS = {
 	status: true,
 	sort: true,
 	tags: true,
+	featured: true,
 	logo_path: true,
 	banner_path: true,
 	// Renditions by source id, mapped on import like `profile_photo_id`.

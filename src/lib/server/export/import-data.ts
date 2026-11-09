@@ -643,7 +643,8 @@ async function importProfileEntities(
 				start_date: toDateString(w.start_date),
 				end_date: toDateString(w.end_date),
 				website: w.website || null,
-				tags: toJsonValue(w.tags)
+				tags: toJsonValue(w.tags),
+				featured: w.featured === true
 				// logo_path will be set via media import
 			})
 			.returning();

@@ -21,7 +21,7 @@
 	 * empty heading, which is what lets a theme list a section the data has not
 	 * caught up with yet.
 	 */
-	import { careerView, siteLists, splitAchievements } from './site-lists';
+	import { careerView, featuredKey, siteLists, splitAchievements } from './site-lists';
 	import {
 		briefRole,
 		briefRoleProject,
@@ -178,44 +178,83 @@
 				{:else if section === 'about'}
 					<p class="prose">{profile.about_me_text}</p>
 				{:else if section === 'featured'}
-					{#each lists.featured as { kind, project: p } (`${kind}-${p.id}`)}
-						{@const technologies = show(
-							kind === 'role' ? p.work_experience_project_technologies : p.side_project_technologies
-						)}
-						{@const meta = [
-							kind === 'role' ? p.company : 'Side project',
-							p.project_role,
-							formatDateRangeVerbose(p.start_date, p.end_date)
-						]
-							.filter(Boolean)
-							.join(' · ')}
-						{@const link = p.url || (kind === 'side' ? p.repo_url : null)}
-						<article class="entry featured">
-							<h3>
-								{#if link}<ExternalLink href={link}>{p.name}</ExternalLink>{:else}{p.name}{/if}
-							</h3>
-							{#if meta}<p class="meta">{meta}</p>{/if}
-							{#if kind === 'role'}
-								{#if p.description}<p class="prose">{p.description}</p>{/if}
-								{#if p.outcome}<p class="prose outcome">{p.outcome}</p>{/if}
-							{:else}
-								{#if p.summary}<p class="prose">{p.summary}</p>{/if}
-								{#if p.side_project_achievements?.length}
+					<!-- A featured role also prints in full under Work on this page, so
+					     here it gets the teaser the showcase's slide gives it: its
+					     summary and first two achievements. -->
+					{#each lists.featured as item (featuredKey(item))}
+						{#if item.kind === 'experience'}
+							{@const role = item.role}
+							{@const technologies = show(role.work_experience_technologies, 'technology')}
+							{@const achievements = show(role.work_experience_achievements, 'achievement')}
+							{@const place = rolePlace(role)}
+							<article class="entry featured">
+								<h3>
+									{role.position}{#if role.name}{` · ${role.name}`}{/if}
+								</h3>
+								<p class="meta">
+									{formatDateRangeVerbose(
+										role.start_date,
+										role.end_date
+									)}{#if place}{` · ${place}`}{/if}
+								</p>
+								{#if role.summary}<p class="prose">{role.summary}</p>{/if}
+								{#if achievements.length}
 									<ul class="bullets">
-										{#each p.side_project_achievements as a (a.id)}
+										{#each achievements.slice(0, 2) as a (a.id)}
 											<li>{a.description}</li>
 										{/each}
 									</ul>
 								{/if}
-							{/if}
-							{#if technologies.length}
-								<ul class="tags">
-									{#each technologies as t (t.id)}
-										<li>{t.name}</li>
-									{/each}
-								</ul>
-							{/if}
-						</article>
+								{#if technologies.length}
+									<ul class="tags">
+										{#each technologies as t (t.id)}
+											<li>{t.name}</li>
+										{/each}
+									</ul>
+								{/if}
+							</article>
+						{:else}
+							{@const { kind, project: p } = item}
+							{@const technologies = show(
+								kind === 'role'
+									? p.work_experience_project_technologies
+									: p.side_project_technologies
+							)}
+							{@const meta = [
+								kind === 'role' ? p.company : 'Side project',
+								p.project_role,
+								formatDateRangeVerbose(p.start_date, p.end_date)
+							]
+								.filter(Boolean)
+								.join(' · ')}
+							{@const link = p.url || (kind === 'side' ? p.repo_url : null)}
+							<article class="entry featured">
+								<h3>
+									{#if link}<ExternalLink href={link}>{p.name}</ExternalLink>{:else}{p.name}{/if}
+								</h3>
+								{#if meta}<p class="meta">{meta}</p>{/if}
+								{#if kind === 'role'}
+									{#if p.description}<p class="prose">{p.description}</p>{/if}
+									{#if p.outcome}<p class="prose outcome">{p.outcome}</p>{/if}
+								{:else}
+									{#if p.summary}<p class="prose">{p.summary}</p>{/if}
+									{#if p.side_project_achievements?.length}
+										<ul class="bullets">
+											{#each p.side_project_achievements as a (a.id)}
+												<li>{a.description}</li>
+											{/each}
+										</ul>
+									{/if}
+								{/if}
+								{#if technologies.length}
+									<ul class="tags">
+										{#each technologies as t (t.id)}
+											<li>{t.name}</li>
+										{/each}
+									</ul>
+								{/if}
+							</article>
+						{/if}
 					{/each}
 				{:else if section === 'highlights'}
 					<ul class="bullets">

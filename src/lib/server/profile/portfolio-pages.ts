@@ -19,31 +19,53 @@ const HOME_HIGHLIGHT_TYPES = new Set(['key_skill', 'contact_for']);
 const ROLE_COLUMNS = ['id', 'name', 'sort', 'tags', 'logo_id', 'logo_path'] as const;
 
 /**
+ * What a featured role adds to those for its own slide (work-slides.ts
+ * `roleSlide`): its title, dates and summary, and the achievements and
+ * technologies under it, which keep their own tags for the site's filter.
+ */
+const FEATURED_ROLE_COLUMNS = [
+	...ROLE_COLUMNS,
+	'featured',
+	'position',
+	'start_date',
+	'end_date',
+	'summary',
+	'work_experience_achievements',
+	'work_experience_technologies'
+] as const;
+
+/**
  * The page tree for the public page of a site whose career has a page of its
- * own: the introduction, the quotes and the featured projects, and nothing
- * else of the career.
+ * own: the introduction, the quotes and the featured work, and nothing else of
+ * the career.
  *
  * A featured project keeps its whole row, since the public page prints it in
  * full. Its role keeps only what that needs (its name and logo) and what the
  * site's filter reads (id and tags), so the page decides what shows exactly as
  * it would have from the whole tree; the role's achievements, technologies,
- * summary and other projects stay on the server. Takes the tree `pageProfile`
- * returned, after the overlays, and `versionId` is the version it renders.
+ * summary and other projects stay on the server. A featured role is printed
+ * itself, so it keeps what its slide prints as well, and still none of the
+ * projects nobody featured. Takes the tree `pageProfile` returned, after the
+ * overlays, and `versionId` is the version it renders.
  */
 export function homePageProfile<T extends Row>(page: T, versionId: number | null): T {
 	const { featured } = siteLists(page, versionId);
 	const roleProjects = new Set(featured.filter((f) => f.kind === 'role').map((f) => f.project.id));
 	const sideProjects = new Set(featured.filter((f) => f.kind === 'side').map((f) => f.project.id));
+	const featuredRoles = new Set(
+		featured.flatMap((f) => (f.kind === 'experience' ? [f.role.id] : []))
+	);
 
 	const roles = ((page.work_experiences ?? []) as Row[])
 		.map((role) => {
-			const kept: Row = Object.fromEntries(ROLE_COLUMNS.map((column) => [column, role[column]]));
+			const columns = featuredRoles.has(role.id) ? FEATURED_ROLE_COLUMNS : ROLE_COLUMNS;
+			const kept: Row = Object.fromEntries(columns.map((column) => [column, role[column]]));
 			kept.work_experience_projects = ((role.work_experience_projects ?? []) as Row[]).filter(
 				(project) => roleProjects.has(project.id)
 			);
 			return kept;
 		})
-		.filter((role) => role.work_experience_projects.length > 0);
+		.filter((role) => featuredRoles.has(role.id) || role.work_experience_projects.length > 0);
 
 	return {
 		...page,

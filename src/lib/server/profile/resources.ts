@@ -562,7 +562,7 @@ const VERSION_SLUGS =
 	'Version slugs, which name documents by a string that nothing keeps in step: a slug matching no version silently drops the item from every document rather than erroring.';
 
 const SITE_PICK =
-	'Which projects the public site shows first, a choice the applicant makes with the Featured switch on the project page. It says nothing about the work, so it would only spend contract budget.';
+	'Which roles and projects the public site shows first, a choice the applicant makes with the Featured switch on the role or project page. It says nothing about the work, so it would only spend contract budget.';
 
 export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 	work_experience: {
@@ -607,7 +607,8 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 			summary: { kind: 'string', note: 'what the applicant did in this role' },
 			start_date: { kind: 'date' },
 			end_date: { kind: 'date', note: 'empty means they are still there' },
-			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS }
+			tags: { kind: 'stringArray', notForAssistant: VERSION_SLUGS },
+			featured: { kind: 'boolean', notForAssistant: SITE_PICK }
 		},
 		required: ['name', 'position'],
 		insertDefaults: {},

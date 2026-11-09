@@ -1,6 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { careerDetail, type PortfolioPage, type PortfolioThemeConfig } from '$lib/portfolio-themes';
-import { careerView, isBriefRole, siteLists, splitAchievements, type Row } from './site-lists';
+import {
+	careerView,
+	isBriefRole,
+	siteLists,
+	splitAchievements,
+	type Row,
+	type SiteLists
+} from './site-lists';
 
 /**
  * What the career prints in full and what it lists briefly. The profile that
@@ -33,6 +40,10 @@ function view(profile: Row, config: PortfolioThemeConfig = {}, page: PortfolioPa
 }
 
 const names = (rows: Row[]) => rows.map((r) => r.name);
+
+/** Selected work as [kind, name] pairs, whichever kind each entry is. */
+const picks = (featured: SiteLists['featured']) =>
+	featured.map((f) => [f.kind, f.kind === 'experience' ? f.role.name : f.project.name]);
 
 describe('isBriefRole', () => {
 	test('a role that ended longer ago than the cutoff is a line, a current one never is', () => {
@@ -92,7 +103,7 @@ describe('careerView', () => {
 		const { lists, view: v } = view(profile);
 
 		expect(v.selectedWork).toBe(true);
-		expect(lists.featured.map((f) => [f.kind, f.project.name])).toEqual([
+		expect(picks(lists.featured)).toEqual([
 			['role', 'Project 10'],
 			['side', 'Side A']
 		]);
@@ -132,6 +143,60 @@ describe('careerView', () => {
 			work_experiences: [role(1, null, [project(10, { featured: true, tags: ['!portfolio'] })])]
 		});
 		expect(lists.featured).toEqual([]);
+	});
+
+	describe('a featured role', () => {
+		test('joins Selected work where the career has it, before its own projects', () => {
+			const { lists } = view({
+				work_experiences: [
+					{ ...role(1, null, [project(10, { featured: true })]), featured: true },
+					role(2, '2025-03-07', [project(20, { featured: true })])
+				],
+				side_projects: [{ id: 40, name: 'Side A', featured: true, side_project_technologies: [] }]
+			});
+			expect(picks(lists.featured)).toEqual([
+				['experience', 'Company 1'],
+				['role', 'Project 10'],
+				['role', 'Project 20'],
+				['side', 'Side A']
+			]);
+		});
+
+		test('stays in the career, and on its own is enough to list the projects briefly', () => {
+			const { view: v } = view({
+				work_experiences: [
+					{ ...role(1, null, [project(10)]), featured: true },
+					role(2, '2025-03-07', [project(20)])
+				]
+			});
+			expect(v.selectedWork).toBe(true);
+			expect(v.fullRoles.map((r) => r.id)).toEqual([1, 2]);
+			expect(v.fullProjects).toEqual([]);
+			expect(names(v.briefProjects)).toEqual(['Project 10', 'Project 20']);
+		});
+
+		test('prints in full however long ago it ended, unless the theme left Selected work out', () => {
+			const profile = {
+				work_experiences: [
+					role(1, null),
+					{ ...role(3, '2014-08-08'), featured: true },
+					role(4, '2012-01-01')
+				]
+			};
+			const { view: v } = view(profile);
+			expect(v.fullRoles.map((r) => r.id)).toEqual([1, 3]);
+			expect(v.briefRoles.map((r) => r.id)).toEqual([4]);
+
+			const { view: plain } = view(profile, { sections: ['header', 'work'] });
+			expect(plain.briefRoles.map((r) => r.id)).toEqual([3, 4]);
+		});
+
+		test('switched off the site is not featured on it', () => {
+			const { lists } = view({
+				work_experiences: [{ ...role(1, null), featured: true, tags: ['!portfolio'] }]
+			});
+			expect(lists.featured).toEqual([]);
+		});
 	});
 
 	test('`never` prints every role in full', () => {
