@@ -10,7 +10,7 @@
  * that page renders, and the career reaches only the page behind the key.
  */
 
-import { siteLists, type Row } from '$lib/components/PortfolioSite/site-lists';
+import { siteLists, type Row, type SiteLists } from '$lib/components/PortfolioSite/site-lists';
 
 /** Highlights the public page prints: the two lists beside the About me. */
 const HOME_HIGHLIGHT_TYPES = new Set(['key_skill', 'contact_for']);
@@ -20,8 +20,8 @@ const ROLE_COLUMNS = ['id', 'name', 'sort', 'tags', 'logo_id', 'logo_path'] as c
 
 /**
  * What a featured role adds to those for its own slide (work-slides.ts
- * `roleSlide`): its title, dates and summary, and the achievements and
- * technologies under it, which keep their own tags for the site's filter.
+ * `roleSlide`): its title, dates and summary. Its achievements and
+ * technologies come through `shownRows`.
  */
 const FEATURED_ROLE_COLUMNS = [
 	...ROLE_COLUMNS,
@@ -29,10 +29,27 @@ const FEATURED_ROLE_COLUMNS = [
 	'position',
 	'start_date',
 	'end_date',
-	'summary',
-	'work_experience_achievements',
-	'work_experience_technologies'
+	'summary'
 ] as const;
+
+const pick = (row: Row, columns: readonly string[]): Row =>
+	Object.fromEntries(columns.map((column) => [column, row[column]]));
+
+/**
+ * A list under a featured entry as the site shows it: only the rows its filter
+ * keeps, each cut to its text and what the filter reads (id and tags), so the
+ * page decides the same from what is left. The slide prints only what the
+ * filter keeps, but a row it drops would still be in the page's data, and a
+ * row is switched off the site precisely to keep it off the public page.
+ */
+function shownRows(
+	show: SiteLists['show'],
+	rows: Row[] | undefined,
+	entity: string | undefined,
+	text: 'description' | 'name'
+): Row[] {
+	return show(rows, entity).map((row) => ({ id: row.id, [text]: row[text], tags: row.tags }));
+}
 
 /**
  * The page tree for the public page of a site whose career has a page of its
@@ -45,11 +62,13 @@ const FEATURED_ROLE_COLUMNS = [
  * it would have from the whole tree; the role's achievements, technologies,
  * summary and other projects stay on the server. A featured role is printed
  * itself, so it keeps what its slide prints as well, and still none of the
- * projects nobody featured. Takes the tree `pageProfile` returned, after the
- * overlays, and `versionId` is the version it renders.
+ * projects nobody featured. Whatever a featured entry has switched off the
+ * site (an achievement, a technology) stays on the server too. Takes the tree
+ * `pageProfile` returned, after the overlays, and `versionId` is the version
+ * it renders.
  */
 export function homePageProfile<T extends Row>(page: T, versionId: number | null): T {
-	const { featured } = siteLists(page, versionId);
+	const { featured, show } = siteLists(page, versionId);
 	const roleProjects = new Set(featured.filter((f) => f.kind === 'role').map((f) => f.project.id));
 	const sideProjects = new Set(featured.filter((f) => f.kind === 'side').map((f) => f.project.id));
 	const featuredRoles = new Set(
@@ -58,11 +77,34 @@ export function homePageProfile<T extends Row>(page: T, versionId: number | null
 
 	const roles = ((page.work_experiences ?? []) as Row[])
 		.map((role) => {
-			const columns = featuredRoles.has(role.id) ? FEATURED_ROLE_COLUMNS : ROLE_COLUMNS;
-			const kept: Row = Object.fromEntries(columns.map((column) => [column, role[column]]));
-			kept.work_experience_projects = ((role.work_experience_projects ?? []) as Row[]).filter(
-				(project) => roleProjects.has(project.id)
-			);
+			const kept: Row = featuredRoles.has(role.id)
+				? {
+						...pick(role, FEATURED_ROLE_COLUMNS),
+						work_experience_achievements: shownRows(
+							show,
+							role.work_experience_achievements,
+							'achievement',
+							'description'
+						),
+						work_experience_technologies: shownRows(
+							show,
+							role.work_experience_technologies,
+							'technology',
+							'name'
+						)
+					}
+				: pick(role, ROLE_COLUMNS);
+			kept.work_experience_projects = ((role.work_experience_projects ?? []) as Row[])
+				.filter((project) => roleProjects.has(project.id))
+				.map((project) => ({
+					...project,
+					work_experience_project_technologies: shownRows(
+						show,
+						project.work_experience_project_technologies,
+						undefined,
+						'name'
+					)
+				}));
 			return kept;
 		})
 		.filter((role) => featuredRoles.has(role.id) || role.work_experience_projects.length > 0);
@@ -71,7 +113,12 @@ export function homePageProfile<T extends Row>(page: T, versionId: number | null
 		...page,
 		summary: null,
 		work_experiences: roles,
-		side_projects: ((page.side_projects ?? []) as Row[]).filter((p) => sideProjects.has(p.id)),
+		side_projects: ((page.side_projects ?? []) as Row[])
+			.filter((p) => sideProjects.has(p.id))
+			.map((p) => ({
+				...p,
+				side_project_technologies: shownRows(show, p.side_project_technologies, undefined, 'name')
+			})),
 		highlights: ((page.highlights ?? []) as Row[]).filter((h) => HOME_HIGHLIGHT_TYPES.has(h.type)),
 		tech_skill_categories: [],
 		educations: [],

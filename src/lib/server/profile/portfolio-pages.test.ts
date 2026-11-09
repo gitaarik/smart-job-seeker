@@ -144,6 +144,46 @@ describe('homePageProfile', () => {
 		}
 	});
 
+	test('what a featured entry switched off the site stays on the server', () => {
+		const t = tree();
+		Object.assign(t.work_experiences[1], {
+			featured: true,
+			work_experience_achievements: [
+				{ id: 200, description: 'Shipped v1', fa_icon: 'rocket' },
+				{ id: 201, description: 'A confidential detail', tags: ['!portfolio'] }
+			],
+			work_experience_technologies: [
+				{ id: 202, name: 'Perl' },
+				{ id: 203, name: 'InternalTool', tags: ['!portfolio'] }
+			]
+		});
+		t.work_experiences[0].work_experience_projects[0].work_experience_project_technologies.push({
+			id: 111,
+			name: 'SecretVendor',
+			tags: ['!portfolio']
+		});
+		t.side_projects[0].side_project_technologies = [
+			{ id: 300, name: 'Rust' },
+			{ id: 301, name: 'HiddenLib', tags: ['!portfolio'] }
+		];
+
+		const home = homePageProfile(t, null);
+		const json = JSON.stringify(home);
+		for (const kept of ['A confidential detail', 'InternalTool', 'SecretVendor', 'HiddenLib']) {
+			expect(json, kept).not.toContain(kept);
+		}
+		const role = home.work_experiences.find((r: Row) => r.id === 20);
+		expect(role.work_experience_achievements).toEqual([{ id: 200, description: 'Shipped v1' }]);
+		expect(role.work_experience_technologies).toEqual([{ id: 202, name: 'Perl' }]);
+		// And the page shows from that what it showed from the whole tree.
+		const slides = (tree: Row) =>
+			siteLists(tree, null).featured.map((f) => {
+				if (f.kind !== 'experience') return featuredKey(f);
+				return [featuredKey(f), f.role.work_experience_achievements.length];
+			});
+		expect(slides(home)).toEqual(['role-11', ['experience-20', 1], 'side-30']);
+	});
+
 	test('a featured project switched off the site does not ride along', () => {
 		const t = tree();
 		t.work_experiences[0].work_experience_projects[0].tags = ['!portfolio'];
