@@ -23,6 +23,7 @@
 	import { page } from '$app/state';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
+		faAward,
 		faBook,
 		faBuilding,
 		faBullseye,
@@ -61,11 +62,14 @@
 	import { getProfilePhotoUrl } from '$lib/utils/profile-photo-url';
 	import { getEducationLogoUrl, getWorkExperienceLogoUrl } from '$lib/utils/entity-media-url';
 	import type { PortfolioContactGate } from '$lib/server/profile/portfolio-contact';
-	import { siteLists, type Row } from '../site-lists';
+	import { careerView, siteLists, splitAchievements, type Row } from '../site-lists';
+	import { briefRole, briefRoleProject, briefSideProject } from '../brief-entries';
 	import { iconFor } from './icons';
 	import Card from './Card.svelte';
 	import InfoBoxes from './InfoBoxes.svelte';
 	import TechTags from './TechTags.svelte';
+	import SelectedWork from './SelectedWork.svelte';
+	import BriefList from './BriefList.svelte';
 	import ContactButton from './ContactButton.svelte';
 	import SchemeSwitcher from './SchemeSwitcher.svelte';
 	import { ContactState } from './contact-state.svelte';
@@ -94,6 +98,8 @@
 
 	const lists = $derived(siteLists(profile, versionId));
 	const show = $derived(lists.show);
+	// What the career prints in full and what it lists briefly; see site-lists.ts.
+	const career = $derived(careerView(lists, config));
 
 	// One kind of row, three uses: `highlight` rows are the career card, and the
 	// two box lists beside the About me are their own types.
@@ -115,6 +121,7 @@
 	const DEFAULT_TITLES: Record<PortfolioSection, string> = {
 		header: '',
 		summary: 'Summary',
+		featured: 'Selected Work',
 		highlights: 'Highlights',
 		work: 'Professional Experience',
 		projects: 'Projects',
@@ -143,12 +150,14 @@
 				return !!profile.summary;
 			case 'highlights':
 				return highlights.length > 0;
+			case 'featured':
+				return career.selectedWork;
 			case 'work':
 				return lists.work.length > 0;
 			case 'projects':
-				return lists.roleProjects.length > 0;
+				return career.fullProjects.length + career.briefProjects.length > 0;
 			case 'sideProjects':
-				return lists.sideProjects.length > 0;
+				return career.fullSideProjects.length + career.briefSideProjects.length > 0;
 			case 'skills':
 				return lists.skillCategories.length > 0;
 			case 'education':
@@ -243,6 +252,9 @@
 	});
 
 	// --- Small formatters -------------------------------------------------
+
+	const achievementBoxes = (achievements: Row[]) =>
+		achievements.map((a) => ({ key: a.id, description: a.description, icon: iconFor(a.fa_icon) }));
 
 	/**
 	 * A link the profile or theme holds, if it is a web link. These are typed
@@ -512,6 +524,10 @@
 									<Card title={title('summary')} icon={faCompass} {aos}>
 										<p class="mb-4 leading-relaxed whitespace-pre-line">{profile.summary}</p>
 									</Card>
+								{:else if section === 'featured'}
+									<Card title={title('featured')} icon={faAward} {aos}>
+										<SelectedWork items={lists.featured} {show} sideLabel="Side project" />
+									</Card>
 								{:else if section === 'highlights'}
 									<Card title={title('highlights')} icon={faStar} {aos}>
 										<ul class="ml-1 space-y-4 print:space-y-2">
@@ -539,7 +555,7 @@
 									</Card>
 								{:else if section === 'work'}
 									<Card title={title('work')} icon={faGlobe} {aos}>
-										{#each lists.work as role, i (role.id)}
+										{#each career.fullRoles as role, i (role.id)}
 											{@const achievements = show(role.work_experience_achievements, 'achievement')}
 											{@const technologies = show(role.work_experience_technologies, 'technology')}
 											{@const roleLogo = getWorkExperienceLogoUrl(role)}
@@ -636,31 +652,52 @@
 														</p>
 													{/if}
 													{#if achievements.length}
+														{@const split = splitAchievements(
+															achievements,
+															career.detail.achievementsPerRole
+														)}
 														<div>
 															<h4 class="mb-3 text-lg font-semibold print:mb-2 print:text-base">
 																Key Achievements:
 															</h4>
-															<InfoBoxes
-																items={achievements.map((a) => ({
-																	key: a.id,
-																	description: a.description,
-																	icon: iconFor(a.fa_icon)
-																}))}
-															/>
+															<InfoBoxes items={achievementBoxes(split.shown)} />
+															{#if split.more.length}
+																<details class="more-achievements group mt-4">
+																	<summary
+																		class="cursor-pointer list-none text-sm font-medium text-(--pf-accent-text) underline-offset-4 hover:underline [&::-webkit-details-marker]:hidden"
+																	>
+																		<span class="group-open:hidden"
+																			>Show {split.more.length} more</span
+																		>
+																		<span class="hidden group-open:inline">Show fewer</span>
+																	</summary>
+																	<div class="mt-4">
+																		<InfoBoxes items={achievementBoxes(split.more)} />
+																	</div>
+																</details>
+															{/if}
 														</div>
 													{/if}
 													<TechTags names={technologies.map((t) => t.name)} />
 												</div>
 											</section>
-											{#if i < lists.work.length - 1}
+											{#if i < career.fullRoles.length - 1}
 												<hr class="my-12 border-(--pf-line)" />
 											{/if}
 										{/each}
+										{#if career.briefRoles.length}
+											<div class:mt-12={career.fullRoles.length > 0}>
+												<BriefList
+													entries={career.briefRoles.map(briefRole)}
+													heading="Earlier roles"
+												/>
+											</div>
+										{/if}
 									</Card>
 								{:else if section === 'projects'}
 									<Card title={title('projects')} icon={faLaptopCode} {aos}>
 										<div class="space-y-6">
-											{#each lists.roleProjects as p (p.id)}
+											{#each career.fullProjects as p (p.id)}
 												{@const technologies = show(p.work_experience_project_technologies)}
 												{@const projectUrl = web(p.url)}
 												<div
@@ -743,6 +780,13 @@
 												</div>
 											{/each}
 										</div>
+										{#if career.briefProjects.length}
+											<div class:mt-8={career.fullProjects.length > 0}>
+												<BriefList
+													entries={career.briefProjects.map((p) => briefRoleProject(p, show))}
+												/>
+											</div>
+										{/if}
 									</Card>
 								{:else if section === 'education'}
 									<Card title={title('education')} icon={faGraduationCap} {aos}>
@@ -849,7 +893,7 @@
 									</Card>
 								{:else if section === 'sideProjects'}
 									<Card title={title('sideProjects')} icon={faCode} {aos}>
-										{#each lists.sideProjects as p, i (p.id)}
+										{#each career.fullSideProjects as p, i (p.id)}
 											{@const technologies = show(p.side_project_technologies)}
 											{@const link = web(p.url) ?? web(p.repo_url)}
 											<div class="break-inside-avoid" class:mt-10={i === 0}>
@@ -912,10 +956,17 @@
 													</div>
 												{/if}
 											</div>
-											{#if i < lists.sideProjects.length - 1}
+											{#if i < career.fullSideProjects.length - 1}
 												<hr class="my-12 border-(--pf-line)" />
 											{/if}
 										{/each}
+										{#if career.briefSideProjects.length}
+											<div class:mt-8={career.fullSideProjects.length > 0}>
+												<BriefList
+													entries={career.briefSideProjects.map((p) => briefSideProject(p, show))}
+												/>
+											</div>
+										{/if}
 									</Card>
 								{:else if section === 'certificates'}
 									<Card title={title('certificates')} icon={faCertificate} {aos}>

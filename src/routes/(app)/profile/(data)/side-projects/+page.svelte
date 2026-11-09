@@ -267,6 +267,12 @@
 					>
 						{#snippet title()}
 							{project.name}
+							{#if project.featured}
+								<span
+									class="ml-1.5 rounded-full bg-amber-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-amber-600"
+									>Featured</span
+								>
+							{/if}
 							{#if project.stars}
 								<span class="ml-2 text-sm text-amber-500">
 									<FontAwesomeIcon icon={faStar} class="h-3 w-3" />

@@ -303,6 +303,12 @@
 								{row.data.name.trim() || 'Untitled project'}
 								<!-- Off the site is the only "off" a project has; see its page. -->
 								<VisibilityMark tags={row.data.tags} templates={SITE_TEMPLATE_TAGS} />
+								{#if row.data.featured}
+									<span
+										class="ml-1.5 rounded-full bg-amber-500/15 px-1.5 py-0.5 align-middle text-[10px] font-medium text-amber-600"
+										>Featured</span
+									>
+								{/if}
 							</span>
 							{#if summaryLine(row)}
 								<span class="mt-0.5 block text-xs text-[var(--dash-text-muted)]">

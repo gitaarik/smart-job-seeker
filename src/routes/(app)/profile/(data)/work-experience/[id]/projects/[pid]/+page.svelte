@@ -19,12 +19,13 @@
 	import { projectDetailDep } from '$lib/project-detail';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import ShowOnSwitches from '$lib/components/ShowOnSwitches.svelte';
+	import FeaturedSwitch from '$lib/components/FeaturedSwitch.svelte';
 	import TranslatableField from '$lib/components/TranslatableField.svelte';
 	import ProjectRepoFetch from '$lib/components/ProjectRepoFetch.svelte';
 	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
 	import { remountOnAppliedChange } from '$lib/components/applied-change.svelte';
-	import { SITE_TEMPLATE_TAGS, setShownOn } from '$lib/profile-visibility';
+	import { SITE_TEMPLATE_TAGS, setShownOn, shownOnTemplate } from '$lib/profile-visibility';
 	import Card from '../../../../../../components/Card.svelte';
 	import TechnologyChips from '../../../../../components/TechnologyChips.svelte';
 	import ProjectSourcesPointer from '../../../../../components/ProjectSourcesPointer.svelte';
@@ -234,6 +235,14 @@
 					row.field.flush();
 				}}
 				templates={SITE_TEMPLATE_TAGS}
+			/>
+			<FeaturedSwitch
+				featured={row.data.featured}
+				onSite={shownOnTemplate(row.data.tags, 'portfolio')}
+				ontoggle={(featured) => {
+					set({ featured });
+					row.field.flush();
+				}}
 			/>
 		</div>
 

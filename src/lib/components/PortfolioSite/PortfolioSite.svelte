@@ -21,7 +21,15 @@
 	 * empty heading, which is what lets a theme list a section the data has not
 	 * caught up with yet.
 	 */
-	import { siteLists } from './site-lists';
+	import { careerView, siteLists, splitAchievements } from './site-lists';
+	import {
+		briefRole,
+		briefRoleProject,
+		briefSideProject,
+		hasDetails,
+		type BriefEntry
+	} from './brief-entries';
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import { themeSections, type PortfolioTheme } from '$lib/portfolio-themes';
 	import { assetUrl } from '$lib/presentation-templates';
 	import { formatDateRangeVerbose } from '$lib/tools/date-utils';
@@ -48,14 +56,14 @@
 	const lists = $derived(siteLists(profile, versionId));
 	const show = $derived(lists.show);
 	const work = $derived(lists.work);
-	const roleProjects = $derived(lists.roleProjects);
-	const sideProjects = $derived(lists.sideProjects);
 	const skillCategories = $derived(lists.skillCategories);
 	const educations = $derived(lists.educations);
 	const certificates = $derived(lists.certificates);
 	const languages = $derived(lists.languages);
 	const references = $derived(lists.references);
 	const highlights = $derived(lists.highlights);
+	// What the career prints in full and what it lists briefly; see site-lists.ts.
+	const career = $derived(careerView(lists, config));
 
 	/** Whether a section has anything to render, asked before its heading is. */
 	function hasContent(section: string): boolean {
@@ -66,12 +74,14 @@
 				return !!profile.summary;
 			case 'highlights':
 				return highlights.length > 0;
+			case 'featured':
+				return career.selectedWork;
 			case 'work':
 				return work.length > 0;
 			case 'projects':
-				return roleProjects.length > 0;
+				return career.fullProjects.length + career.briefProjects.length > 0;
 			case 'sideProjects':
-				return sideProjects.length > 0;
+				return career.fullSideProjects.length + career.briefSideProjects.length > 0;
 			case 'skills':
 				return skillCategories.length > 0;
 			case 'education':
@@ -91,6 +101,7 @@
 
 	const TITLES: Record<string, string> = {
 		summary: 'Summary',
+		featured: 'Selected work',
 		highlights: 'Highlights',
 		work: 'Experience',
 		projects: 'Projects',
@@ -166,6 +177,46 @@
 					<p class="prose">{profile.summary}</p>
 				{:else if section === 'about'}
 					<p class="prose">{profile.about_me_text}</p>
+				{:else if section === 'featured'}
+					{#each lists.featured as { kind, project: p } (`${kind}-${p.id}`)}
+						{@const technologies = show(
+							kind === 'role' ? p.work_experience_project_technologies : p.side_project_technologies
+						)}
+						{@const meta = [
+							kind === 'role' ? p.company : 'Side project',
+							p.project_role,
+							formatDateRangeVerbose(p.start_date, p.end_date)
+						]
+							.filter(Boolean)
+							.join(' · ')}
+						{@const link = p.url || (kind === 'side' ? p.repo_url : null)}
+						<article class="entry featured">
+							<h3>
+								{#if link}<ExternalLink href={link}>{p.name}</ExternalLink>{:else}{p.name}{/if}
+							</h3>
+							{#if meta}<p class="meta">{meta}</p>{/if}
+							{#if kind === 'role'}
+								{#if p.description}<p class="prose">{p.description}</p>{/if}
+								{#if p.outcome}<p class="prose outcome">{p.outcome}</p>{/if}
+							{:else}
+								{#if p.summary}<p class="prose">{p.summary}</p>{/if}
+								{#if p.side_project_achievements?.length}
+									<ul class="bullets">
+										{#each p.side_project_achievements as a (a.id)}
+											<li>{a.description}</li>
+										{/each}
+									</ul>
+								{/if}
+							{/if}
+							{#if technologies.length}
+								<ul class="tags">
+									{#each technologies as t (t.id)}
+										<li>{t.name}</li>
+									{/each}
+								</ul>
+							{/if}
+						</article>
+					{/each}
 				{:else if section === 'highlights'}
 					<ul class="bullets">
 						{#each highlights as h (h.id)}
@@ -173,9 +224,13 @@
 						{/each}
 					</ul>
 				{:else if section === 'work'}
-					{#each work as role (role.id)}
+					{#each career.fullRoles as role (role.id)}
 						{@const technologies = show(role.work_experience_technologies, 'technology')}
 						{@const place = rolePlace(role)}
+						{@const achievements = splitAchievements(
+							show(role.work_experience_achievements, 'achievement'),
+							career.detail.achievementsPerRole
+						)}
 						<article class="entry">
 							<!-- Each separator sits inside an expression: Svelte drops the
 							     whitespace a block starts with, so a literal " · " inside
@@ -190,12 +245,22 @@
 								)}{#if place}{` · ${place}`}{/if}
 							</p>
 							{#if role.summary}<p class="prose">{role.summary}</p>{/if}
-							{#if role.work_experience_achievements?.length}
+							{#if achievements.shown.length}
 								<ul class="bullets">
-									{#each show(role.work_experience_achievements, 'achievement') as a (a.id)}
+									{#each achievements.shown as a (a.id)}
 										<li>{a.description}</li>
 									{/each}
 								</ul>
+							{/if}
+							{#if achievements.more.length}
+								<details class="more">
+									<summary>Show {achievements.more.length} more</summary>
+									<ul class="bullets">
+										{#each achievements.more as a (a.id)}
+											<li>{a.description}</li>
+										{/each}
+									</ul>
+								</details>
 							{/if}
 							{#if technologies.length}
 								<ul class="tags">
@@ -206,8 +271,9 @@
 							{/if}
 						</article>
 					{/each}
+					{@render briefList(career.briefRoles.map(briefRole), 'Earlier roles')}
 				{:else if section === 'projects'}
-					{#each roleProjects as p (p.id)}
+					{#each career.fullProjects as p (p.id)}
 						{@const technologies = show(p.work_experience_project_technologies)}
 						<!-- A project's technologies print here and on no document, so
 						     the site is the one place their tags are read. -->
@@ -229,8 +295,9 @@
 							{/if}
 						</article>
 					{/each}
+					{@render briefList(career.briefProjects.map((p) => briefRoleProject(p, show)))}
 				{:else if section === 'sideProjects'}
-					{#each sideProjects as p (p.id)}
+					{#each career.fullSideProjects as p (p.id)}
 						{@const technologies = show(p.side_project_technologies)}
 						{@const meta = [p.project_role, formatDateRangeVerbose(p.start_date, p.end_date)]
 							.filter(Boolean)
@@ -261,6 +328,7 @@
 							{/if}
 						</article>
 					{/each}
+					{@render briefList(career.briefSideProjects.map((p) => briefSideProject(p, show)))}
 				{:else if section === 'skills'}
 					{#each skillCategories as cat (cat.id)}
 						<div class="entry">
@@ -319,6 +387,58 @@
 		{/if}
 	{/each}
 </div>
+
+<!--
+	An entry the career lists briefly (see brief-entries.ts): its line, and
+	behind a native disclosure whatever else it holds. The separator sits in an
+	expression because Svelte drops the whitespace a block starts with.
+-->
+{#snippet briefList(entries: BriefEntry[], heading?: string)}
+	{#if entries.length}
+		<div class="brief">
+			{#if heading}<h3 class="brief-heading">{heading}</h3>{/if}
+			<ul class="brief-list">
+				{#each entries as entry (entry.key)}
+					<li>
+						{#if hasDetails(entry)}
+							<details>
+								<summary>{@render briefLine(entry)}</summary>
+								{#each entry.paragraphs as text, i (i)}
+									<p class="prose">{text}</p>
+								{/each}
+								{#if entry.bullets.length}
+									<ul class="bullets">
+										{#each entry.bullets as bullet, i (i)}
+											<li>{bullet}</li>
+										{/each}
+									</ul>
+								{/if}
+								{#if entry.link}
+									<p class="meta"><ExternalLink href={entry.link}>{entry.link}</ExternalLink></p>
+								{/if}
+								{#if entry.technologies.length}
+									<ul class="tags">
+										{#each entry.technologies as name, i (i)}
+											<li>{name}</li>
+										{/each}
+									</ul>
+								{/if}
+							</details>
+						{:else}
+							{@render briefLine(entry)}
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
+{/snippet}
+
+{#snippet briefLine(entry: BriefEntry)}
+	<strong>{entry.name}</strong>{#if entry.meta.length}<span class="meta-inline"
+			>{` · ${entry.meta.join(' · ')}`}</span
+		>{/if}
+{/snippet}
 
 <style>
 	/*
@@ -493,6 +613,49 @@
 	blockquote {
 		border-left: 3px solid var(--accent);
 		padding-left: 1rem;
+	}
+
+	.featured {
+		border-left: 3px solid var(--accent);
+		padding-left: 1rem;
+	}
+
+	.more summary,
+	.brief-list summary {
+		cursor: pointer;
+	}
+
+	.more summary {
+		color: var(--accent);
+		font-size: 0.875rem;
+		margin-top: 0.5rem;
+	}
+
+	.entry + .brief {
+		margin-top: 1.75rem;
+	}
+
+	.brief-heading {
+		color: var(--muted);
+		font-size: 0.9rem;
+		margin: 0 0 0.5rem;
+	}
+
+	.brief-list {
+		border-top: 1px solid var(--line);
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.brief-list > li {
+		border-bottom: 1px solid var(--line);
+		padding: 0.55rem 0;
+	}
+
+	.meta-inline {
+		color: var(--muted);
+		font-size: 0.875rem;
 	}
 
 	a {

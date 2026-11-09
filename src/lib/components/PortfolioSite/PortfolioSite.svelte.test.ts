@@ -289,3 +289,81 @@ describe('PortfolioSite — where a role was done', () => {
 		expect(metaFor({ location: 'Utrecht, NL', work_mode: 'onsite' })).toMatch(/ · Utrecht, NL$/);
 	});
 });
+
+describe('PortfolioSite career detail', () => {
+	/**
+	 * The basic layout follows the same `careerView` as the showcase: the
+	 * featured projects under Selected work, the rest a line each, an old role
+	 * a line under Earlier roles, and a role's achievements cut at four.
+	 */
+	function career() {
+		const profile = {
+			name: 'Alex Morgan',
+			profile_versions: [],
+			work_experiences: [
+				{
+					id: 1,
+					position: 'Lead',
+					name: 'NowCorp',
+					start_date: '2024-01-01',
+					end_date: null,
+					work_experience_achievements: [1, 2, 3, 4, 5, 6].map((n) => ({
+						id: 100 + n,
+						description: `Achievement ${n}`
+					})),
+					work_experience_technologies: [],
+					work_experience_projects: [
+						{
+							id: 10,
+							name: 'Payments rewrite',
+							featured: true,
+							work_experience_project_technologies: []
+						},
+						{
+							id: 11,
+							name: 'Admin cleanup',
+							description: 'Tidied the admin.',
+							work_experience_project_technologies: []
+						}
+					]
+				},
+				{
+					id: 2,
+					position: 'Developer',
+					name: 'OldCorp',
+					start_date: '2008-01-01',
+					end_date: '2012-06-30',
+					work_experience_achievements: [],
+					work_experience_technologies: [],
+					work_experience_projects: []
+				}
+			],
+			side_projects: []
+		};
+		const { container } = render(PortfolioSite, { props: { profile, theme: null } });
+		return container;
+	}
+
+	/** A section by its heading. */
+	function section(container: HTMLElement, title: string) {
+		return [...container.querySelectorAll('section')].find(
+			(s) => s.querySelector('h2')?.textContent === title
+		);
+	}
+
+	test('prints the featured project under Selected work and the others as a line', () => {
+		const site = career();
+		expect(section(site, 'Selected work')?.textContent).toContain('Payments rewrite');
+
+		const projects = section(site, 'Projects');
+		expect(projects?.textContent).not.toContain('Payments rewrite');
+		expect(projects?.querySelector('details summary')?.textContent).toContain('Admin cleanup');
+	});
+
+	test('holds back all but four achievements and prints an old role as a line', () => {
+		const work = section(career(), 'Experience');
+		expect(work?.querySelector('details.more summary')?.textContent).toContain('Show 2 more');
+		expect(work?.querySelector('.brief-heading')?.textContent).toBe('Earlier roles');
+		expect(work?.querySelector('.brief-list')?.textContent).toContain('OldCorp');
+	});
+});

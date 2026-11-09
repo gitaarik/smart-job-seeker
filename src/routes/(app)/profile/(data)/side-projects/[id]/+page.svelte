@@ -14,7 +14,8 @@
 	import AchievementsList, { type AchievementItem } from '$lib/components/AchievementsList.svelte';
 	import { projectDetailDep } from '$lib/project-detail';
 	import { sectionRows } from '$lib/components/section-rows.svelte';
-	import { SITE_TEMPLATE_TAGS } from '$lib/profile-visibility';
+	import { SITE_TEMPLATE_TAGS, shownOnTemplate } from '$lib/profile-visibility';
+	import FeaturedSwitch from '$lib/components/FeaturedSwitch.svelte';
 	import ProjectRepoFetch from '$lib/components/ProjectRepoFetch.svelte';
 	import ProjectSuggestions from '$lib/components/ProjectSuggestions.svelte';
 	import VersionTags from '$lib/components/VersionTags.svelte';
@@ -74,6 +75,35 @@
 	);
 	let showDeleteConfirm = $state(false);
 	let childError = $state<string | null>(null);
+
+	// Saved the moment it flips, like the Site switch it pairs with, and put
+	// back if the write fails, so the switch never shows a state that is not
+	// stored.
+	let editFeatured = $state(loaded.project.featured === true);
+	let featuredError = $state<string | null>(null);
+
+	async function saveFeatured(featured: boolean) {
+		const before = editFeatured;
+		editFeatured = featured;
+		featuredError = null;
+		try {
+			const response = await fetch(`/api/side-project/${project.id}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				// `expected` is what this page last saw, which the endpoint checks so
+				// a stale tab cannot overwrite a newer value (see patchBody).
+				body: JSON.stringify({ section: 'basic', featured, expected: { featured: before } })
+			});
+			if (!response.ok) {
+				const failed = await response.json().catch(() => ({}));
+				throw new Error(failed.message || failed.error || `Save failed (${response.status})`);
+			}
+			refresh();
+		} catch (e) {
+			editFeatured = before;
+			featuredError = e instanceof Error ? e.message : 'Could not save that';
+		}
+	}
 
 	const achievementStore = sectionRows({
 		resource: 'side_project_achievement',
@@ -535,6 +565,21 @@
 			</div>
 		</div>
 		<p class="mt-3 text-xs text-[var(--dash-text-secondary)]">JPEG, PNG, WebP, or GIF. Max 5MB.</p>
+	</Card>
+
+	<!-- Featured on the site -->
+	<Card padding="lg">
+		<h2 class="mb-1 text-lg font-semibold text-[var(--dash-text)]">On your site</h2>
+		<div class="max-w-xs">
+			<FeaturedSwitch
+				featured={editFeatured}
+				onSite={shownOnTemplate(editTags, 'portfolio')}
+				ontoggle={saveFeatured}
+			/>
+			{#if featuredError}
+				<p class="mt-1 text-xs text-red-500">{featuredError}</p>
+			{/if}
+		</div>
 	</Card>
 
 	<!-- Version Tags -->

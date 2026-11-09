@@ -24,6 +24,9 @@
 	import MediaPicker from '$lib/components/media/MediaPicker.svelte';
 	import { THEME_MEDIA_SLOTS, type Crop, type ThemeMediaSlot } from '$lib/media-library';
 	import {
+		ACHIEVEMENTS_PER_ROLE_OPTIONS,
+		BRIEF_ROLES_AFTER_YEARS_OPTIONS,
+		careerDetail,
 		defaultSections,
 		PALETTE_ROLE_LABELS,
 		PALETTE_ROLES,
@@ -88,6 +91,7 @@
 	const SECTION_LABELS: Record<string, string> = {
 		header: 'Header',
 		summary: 'Summary',
+		featured: 'Selected work',
 		highlights: 'Highlights',
 		work: 'Work experience',
 		projects: 'Projects',
@@ -154,7 +158,11 @@
 	/** Load one theme's stored design into the editor's state. */
 	function seed(theme: (typeof themes)[number]) {
 		const order = themeSections(theme.config);
-		orderDraft[theme.id] = order;
+		// The theme's own sections first, then the layout's others unticked, so
+		// a section left out once (or added to the app since, as Selected work
+		// was) can be ticked back on. Saving stores only the ticked ones.
+		const rest = defaultSections(themeLayout(theme.config)).filter((s) => !order.includes(s));
+		orderDraft[theme.id] = [...order, ...rest];
 		// A theme that names its sections has opted the rest out; one that names
 		// none shows them all, which is what `themeSections` already returns.
 		enabledDraft[theme.id] = new SvelteSet(theme.config.sections ?? order);
@@ -613,6 +621,51 @@
 										</li>
 									{/each}
 								</ul>
+							</fieldset>
+
+							<fieldset>
+								<legend class="mb-1 text-sm font-medium text-[var(--dash-text)]">Career</legend>
+								<p class="mb-2 text-xs text-[var(--dash-text-secondary)]">
+									How much of your career the site prints in full. Projects you feature (the switch
+									on a project's page) open it under Selected work, and then every other project is
+									listed as one line, its write-up a click away.
+								</p>
+								<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+									<label>
+										<span class="mb-1 block text-sm text-[var(--dash-text)]">Older roles</span>
+										<select
+											name="briefRolesAfterYears"
+											value={String(careerDetail(theme.config).briefRolesAfterYears)}
+											class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)]"
+										>
+											{#each BRIEF_ROLES_AFTER_YEARS_OPTIONS as years (years)}
+												<option value={String(years)}>
+													{years === 'never'
+														? 'Every role in full'
+														: `One line each if they ended over ${years} years ago`}
+												</option>
+											{/each}
+										</select>
+									</label>
+									<label>
+										<span class="mb-1 block text-sm text-[var(--dash-text)]"
+											>Achievements per role</span
+										>
+										<select
+											name="achievementsPerRole"
+											value={String(careerDetail(theme.config).achievementsPerRole)}
+											class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)]"
+										>
+											{#each ACHIEVEMENTS_PER_ROLE_OPTIONS as count (count)}
+												<option value={String(count)}>
+													{count === 'all'
+														? 'All of them'
+														: `The first ${count}, the rest behind "Show more"`}
+												</option>
+											{/each}
+										</select>
+									</label>
+								</div>
 							</fieldset>
 
 							{#if layoutDraft[theme.id] === 'showcase'}

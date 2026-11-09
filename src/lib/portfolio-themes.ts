@@ -25,6 +25,7 @@ import type { TemplateFont } from './presentation-templates';
 export const PORTFOLIO_SECTIONS = [
 	'header',
 	'summary',
+	'featured',
 	'highlights',
 	'work',
 	'projects',
@@ -203,6 +204,18 @@ export interface PortfolioThemeConfig {
 	 * at render time either way.
 	 */
 	sections?: PortfolioSection[];
+	/**
+	 * Roles that ended more than this many years ago print as one line each,
+	 * under "Earlier roles". `never` prints every role in full. Absent is
+	 * `DEFAULT_BRIEF_ROLES_AFTER_YEARS`; read it through `careerDetail`.
+	 */
+	briefRolesAfterYears?: number | 'never';
+	/**
+	 * How many of a full role's achievements print before a "show more", taken
+	 * in the applicant's own order. `all` prints every one. Absent is
+	 * `DEFAULT_ACHIEVEMENTS_PER_ROLE`; read it through `careerDetail`.
+	 */
+	achievementsPerRole?: number | 'all';
 	/** Colour scheme the site renders in. Absent follows the visitor's system setting. */
 	colorScheme?: 'light' | 'dark';
 	/** File ref for the switcher thumbnail. */
@@ -238,12 +251,14 @@ export interface PortfolioTheme {
 /**
  * Every section, in the order the showcase shows them by default: the
  * introduction (header, about, quotes) first and the career after it, which is
- * how the site it was ported from reads.
+ * how the site it was ported from reads. Selected work opens the career, so
+ * the projects the applicant picked are the first thing after the quotes.
  */
 export const SHOWCASE_SECTIONS: readonly PortfolioSection[] = [
 	'header',
 	'about',
 	'references',
+	'featured',
 	'summary',
 	'highlights',
 	'skills',
@@ -265,4 +280,50 @@ export function themeSections(config: PortfolioThemeConfig): PortfolioSection[] 
 /** The default section order for a layout, which the editor stores as "absent". */
 export function defaultSections(layout: PortfolioLayout): readonly PortfolioSection[] {
 	return layout === 'showcase' ? SHOWCASE_SECTIONS : PORTFOLIO_SECTIONS;
+}
+
+/*
+ * How much of the career a site prints in full.
+ *
+ * A site that printed the whole profile read as a CV pasted into a web page:
+ * every role back to the first job with every achievement, and every project's
+ * full write-up, about 5,500 words on the profile that asked for this
+ * (2026-11-09). So by default the old roles shrink to a line, a recent role
+ * shows its first few achievements, and the projects the applicant features
+ * (`featured` on the project) open the career under Selected work while the
+ * rest are listed briefly. See site-lists.ts.
+ */
+
+/** Roles that ended longer ago than this print as one line, unless a theme says otherwise. */
+export const DEFAULT_BRIEF_ROLES_AFTER_YEARS = 10;
+/**
+ * A full role's achievements printed before "show more", unless a theme says
+ * otherwise. Four rather than three: the showcase sets them two to a row, and
+ * three left the third alone on its row under every role.
+ */
+export const DEFAULT_ACHIEVEMENTS_PER_ROLE = 4;
+
+/** The choices the editor offers. */
+export const BRIEF_ROLES_AFTER_YEARS_OPTIONS = [5, 10, 15, 20, 'never'] as const;
+export const ACHIEVEMENTS_PER_ROLE_OPTIONS = [1, 2, 3, 4, 5, 'all'] as const;
+
+export interface CareerDetail {
+	briefRolesAfterYears: number | 'never';
+	achievementsPerRole: number | 'all';
+}
+
+/** A theme's career settings, defaults filled in; a stored value that makes no sense reads as the default. */
+export function careerDetail(config: PortfolioThemeConfig): CareerDetail {
+	const years = config.briefRolesAfterYears;
+	const perRole = config.achievementsPerRole;
+	return {
+		briefRolesAfterYears:
+			years === 'never' || (Number.isInteger(years) && (years as number) > 0)
+				? (years as number | 'never')
+				: DEFAULT_BRIEF_ROLES_AFTER_YEARS,
+		achievementsPerRole:
+			perRole === 'all' || (Number.isInteger(perRole) && (perRole as number) >= 0)
+				? (perRole as number | 'all')
+				: DEFAULT_ACHIEVEMENTS_PER_ROLE
+	};
 }

@@ -34,6 +34,7 @@ import { THEME_MEDIA_SLOTS, type Crop } from '$lib/media-library';
 import { getSelectedProfileId } from '../utils';
 import { getPortfolioThemesForProfile } from '$lib/server/profile/portfolio-themes';
 import { applyShowcaseFields } from '$lib/server/profile/portfolio-theme-form';
+import { applyCareerFields } from '$lib/server/profile/portfolio-career-form';
 import {
 	defaultSections,
 	isPortfolioLayout,
@@ -295,6 +296,8 @@ export const actions: Actions = {
 		if (isOrder(defaultSections(layout)) || isOrder(defaultSections(themeLayout(stored)))) {
 			delete next.sections;
 		} else next.sections = sections;
+
+		applyCareerFields(next, form);
 
 		// The showcase's own fields arrive only when the editor drew them, which
 		// it does for that layout alone. A basic theme's save leaves them as
