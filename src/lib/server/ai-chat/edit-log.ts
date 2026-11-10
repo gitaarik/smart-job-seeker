@@ -16,11 +16,13 @@
  * the same write: an edit is `edit_work_experience` whether a person or a
  * proposal made it, and undoes identically either way.
  *
- * One thing only a person can do has no capability to name it — deleting. It is
- * resolved here through `UI_ACTIONS`, which is deliberately not part of the
- * registry: that list is what an agent is offered, and a `delete_*` in it is a
- * delete tool. Showing something hidden and reordering a section were the other
- * two until they became `show_*` and `reorder_*`.
+ * Deleting used to be the one thing only a person could do, resolved here
+ * through a list of its own so that no agent would be offered it. Since
+ * 2026-11-10 an agent over MCP may ask for a delete that the applicant confirms
+ * (`delete-capabilities.ts`), so a person's delete and an approved one both land
+ * as `delete_<section>` and read alike, as an edit does. Showing something
+ * hidden and reordering a section took the same route earlier, as `show_*` and
+ * `reorder_*`.
  *
  * ## Recording is not optional, and it is not the caller's job
  *
@@ -78,7 +80,7 @@ import { and, desc, eq, gt, inArray, isNull } from 'drizzle-orm';
 import { agent_message_proposals, capability_edits } from '$lib/server/db/schema';
 import { recordChange, type EditSource } from '$lib/server/profile/change-log';
 import { scoreProposalTurn } from '$lib/server/monitoring/product-scores';
-import { isUiAction, UI_ACTIONS, type UiAction } from '$lib/server/profile/ui-actions';
+import { deletedWithChange } from './delete-capabilities';
 import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
 import { translatableColumns } from '$lib/server/profile/section-translations';
 import { TRANSLATION_LOCALES } from '$lib/resume-translations';
@@ -93,8 +95,8 @@ import {
 
 export type { EditSource };
 
-/** Anything the history can hold: a capability, or one of the UI-only verbs. */
-export type LoggedAction = Capability | UiAction;
+/** Anything the history can hold: every write is a capability, a person's delete included. */
+export type LoggedAction = Capability;
 
 export interface EditLogEntry {
 	id: number;
@@ -188,7 +190,7 @@ export function supersedingChange<T extends LoggedChange>(
 /** Every action that could be about the same row as this one — the SQL filter. */
 function siblingActions(action: string): string[] {
 	const scope = rowScope(action);
-	const all = [...Object.keys(CAPABILITIES), ...Object.keys(UI_ACTIONS)];
+	const all = Object.keys(CAPABILITIES);
 	const siblings = all.filter((name) => rowScope(name) === scope);
 	// An action the registry no longer has still has to match itself, or its own
 	// history would stop blocking anything.
@@ -220,15 +222,12 @@ export async function recordEdit(opts: {
 /**
  * What an entry means: its title, and the undo if it has one.
  *
- * Two registries, because two things write here. A capability where the action
- * is something an agent could also have done, and `UI_ACTIONS` for the one
- * verb only a person has. Null for neither — a capability can be removed
- * from the registry while its history stays (`hide_language` was one for a day),
- * and the row still describes what happened; it just cannot be named or undone.
+ * Null for an action the registry does not have: a capability can be removed
+ * from it while its history stays (`hide_language` was one for a day), and the
+ * row still describes what happened; it just cannot be named or undone.
  */
 function definitionFor(action: string): { title: string; revert?: unknown } | null {
-	if (action in CAPABILITIES) return CAPABILITIES[action as Capability];
-	return isUiAction(action) ? UI_ACTIONS[action] : null;
+	return action in CAPABILITIES ? CAPABILITIES[action as Capability] : null;
 }
 
 function toEntry(row: typeof capability_edits.$inferSelect): EditLogEntry {
@@ -311,7 +310,7 @@ export function describeLoggedChange(entry: EditLogEntry): ProposedChange[] {
 	// `byColumn` gives them (`text.nl`), so a change that rewrote the English and
 	// the Dutch reads as the pair it was.
 	const translatable = translatableColumns(resource);
-	return describeFieldChanges(
+	const changes = describeFieldChanges(
 		Object.keys(PROFILE_RESOURCES[resource].fields).flatMap((column) =>
 			translatable.includes(column)
 				? [column, ...TRANSLATION_LOCALES.map((locale) => `${column}.${locale}`)]
@@ -320,6 +319,10 @@ export function describeLoggedChange(entry: EditLogEntry): ProposedChange[] {
 		byColumn(entry.fields),
 		byColumn(entry.previous)
 	);
+
+	// What the cascade took along, where the delete was a request that recorded
+	// it. An editor's delete records only the row, and adds nothing here.
+	return verb === 'delete' ? [...changes, ...deletedWithChange(entry.previous)] : changes;
 }
 
 /** The verb and section of a profile action, or null for anything else. */
@@ -424,7 +427,7 @@ export async function revertEdit(editId: number, actor: CapabilityActor): Promis
 
 	const action = row.capability as LoggedAction;
 	const capability = action in CAPABILITIES ? CAPABILITIES[action as Capability] : null;
-	const revert = capability?.revert ?? (isUiAction(action) ? UI_ACTIONS[action].revert : undefined);
+	const revert = capability?.revert;
 
 	if (!revert) {
 		return {

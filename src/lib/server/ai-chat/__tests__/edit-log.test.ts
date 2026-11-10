@@ -60,9 +60,9 @@ vi.mock('$lib/server/db', () => {
 	return { db: dbMock, dbDirect: dbMock };
 });
 
-// The real schema, not a stub: the log resolves UI-only actions through
-// `ui-actions.ts`, which reaches `PROFILE_RESOURCES` and so every table on it.
-// Only the database is mocked, which is the boundary that matters here.
+// The real schema, not a stub: the log describes a deletion through
+// `delete-capabilities.ts`, which reaches `PROFILE_RESOURCES` and so every table
+// on it. Only the database is mocked, which is the boundary that matters here.
 
 const mockAuthorize = vi.fn();
 const mockRevert = vi.fn();
@@ -74,8 +74,8 @@ vi.mock('../capabilities', () => ({
 			authorize: (...a: unknown[]) => mockAuthorize(...a),
 			revert: (...a: unknown[]) => mockRevert(...a)
 		},
-		// The verb with no undo, and the reason: the row is on its own page with a
-		// delete control, and the registry deliberately has no delete.
+		// A verb with no undo, and the reason: the row is on its own page with a
+		// delete control.
 		add_language: { title: 'Add a language', authorize: () => Promise.resolve(true) }
 	},
 	describeProposalChanges: () => [],

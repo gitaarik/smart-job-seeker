@@ -45,6 +45,10 @@ import {
 	REORDER_CAPABILITY_NAMES
 } from '$lib/server/ai-chat/reorder-capabilities';
 import {
+	DELETE_CAPABILITY_NAMES,
+	isDeleteCapability
+} from '$lib/server/ai-chat/delete-capabilities';
+import {
 	isTagCapability,
 	libraryVersions,
 	TAG_CAPABILITY_NAMES
@@ -183,9 +187,10 @@ const CREATE_CAPABILITY_NAMES: Capability[] = [
  * ones are hand-written and reach a job or an application through
  * `entities.ts`; the create ones make a row that did not exist. Nothing in the
  * registry is held back now — which is worth stating, because for one release
- * something was. The reorder and tag verbs go the other way: they are here and
- * in no chat scope, because a person in the app drags a list or clicks a tag on
- * the page (see `reorder-capabilities.ts` and `tag-capabilities.ts`).
+ * something was. The reorder, delete and tag verbs go the other way: they are
+ * here and in no chat scope, because a person in the app drags a list, clicks a
+ * tag or presses Delete on the page (see `reorder-capabilities.ts`,
+ * `delete-capabilities.ts` and `tag-capabilities.ts`).
  */
 export const MCP_CAPABILITIES: Capability[] = [
 	...PROFILE_CAPABILITY_NAMES,
@@ -195,6 +200,7 @@ export const MCP_CAPABILITIES: Capability[] = [
 	...BASIC_INFO_CAPABILITY_NAMES,
 	...DIRECTIVE_CAPABILITY_NAMES,
 	...REORDER_CAPABILITY_NAMES,
+	...DELETE_CAPABILITY_NAMES,
 	...TAG_CAPABILITY_NAMES,
 	// The other three version verbs name a version by id, so they are in
 	// ENTITY_CAPABILITY_NAMES with their targeting; making one names none.
@@ -461,14 +467,15 @@ export function writeTool(
 	const isSwitch = capability.startsWith('hide_') || capability.startsWith('show_');
 	// The verbs that are Tier 2 whatever the row holds: a hide or a show moves an
 	// entry off or back onto every document, a tag change does the same for one
-	// of them, a reorder rearranges a list the applicant ordered by hand, and a
-	// commit replaces a text they are going to send. Every other capability's tier
-	// depends on values nobody has read yet at `tools/list` time, so only these
-	// can promise it in a title.
+	// of them, a reorder rearranges a list the applicant ordered by hand, a delete
+	// removes an entry for good, and a commit replaces a text they are going to
+	// send. Every other capability's tier depends on values nobody has read yet at
+	// `tools/list` time, so only these can promise it in a title.
 	const alwaysAsks =
 		isSwitch ||
 		isTagCapability(capability) ||
 		isReorderCapability(capability) ||
+		isDeleteCapability(capability) ||
 		isTextCommitCapability(capability) ||
 		(isVersionCapability(capability) && capability !== 'add_resume_version');
 
@@ -982,15 +989,17 @@ export function instructionsFor(readScope: McpReadScope = 'documents'): string {
 			`Read what the question needs before answering it.`,
 
 		`Changes that overwrite something the applicant wrote, hide an entry, show a ` +
-			`hidden one, change where one prints or reorder a section are not applied by ` +
-			`you. They are recorded ` +
+			`hidden one, change where one prints, reorder a section or delete an entry are ` +
+			`not applied by you. They are recorded ` +
 			`and the applicant approves them in their own app. There is no tool that ` +
 			`approves one, and asking again will not help — say it is waiting, give ` +
 			`them the "review_at" URL that came back with it, and carry on. That link ` +
 			`is the whole of what they have to act on, and it is dropped most often ` +
 			`when several proposals are summarised at the end rather than reported as ` +
 			`they happen. An entry they want off their CVs from the start is not a ` +
-			`hide: add it with its "hidden" field, and it is written hidden.`,
+			`hide: add it with its "hidden" field, and it is written hidden. An entry ` +
+			`they want off their CVs later is a hide, which can be undone; a delete ` +
+			`cannot, so ask for one only when they want the entry gone.`,
 
 		`Do not invent history. Rewording what the applicant has said is in scope; ` +
 			`adding a role, a date or an employer they have not told you about is not.`,

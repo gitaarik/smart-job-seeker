@@ -18,6 +18,7 @@ import { isTextCapability } from '../text-version-capabilities';
 import { isTextCommitCapability } from '../text-commit-capabilities';
 import { isTextCreateCapability } from '../text-create-capabilities';
 import { isReorderCapability } from '../reorder-capabilities';
+import { isDeleteCapability } from '../delete-capabilities';
 import { isTagCapability } from '../tag-capabilities';
 import { isVersionCapability } from '../version-capabilities';
 import { isBasicInfoCapability } from '../basic-info-capability';
@@ -1519,8 +1520,8 @@ describe('the registry as a whole', () => {
 		//
 		// The reorder verbs are out for the same reason in a stronger form: no
 		// route grants one, so there is no page they could be live on at all. The
-		// tag and version verbs are out on exactly those terms (see
-		// tag-capabilities.ts and version-capabilities.ts).
+		// delete, tag and version verbs are out on exactly those terms (see
+		// delete-capabilities.ts, tag-capabilities.ts and version-capabilities.ts).
 		//
 		// So are the text creates (`add_<kind>`), which were in this union by
 		// oversight until 2026-11-03, when `add_question` took it from under the
@@ -1541,6 +1542,7 @@ describe('the registry as a whole', () => {
 					!isTextCommitCapability(capability) &&
 					!isTextCreateCapability(capability) &&
 					!isReorderCapability(capability) &&
+					!isDeleteCapability(capability) &&
 					!isTagCapability(capability) &&
 					!isVersionCapability(capability) &&
 					!isBasicInfoCapability(capability)

@@ -2,8 +2,15 @@
 	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faCheck, faHistory, faRotateLeft, faXmark } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faCheck,
+		faHistory,
+		faRotateLeft,
+		faTrash,
+		faXmark
+	} from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
+	import ConfirmModal from '../../profile/components/ConfirmModal.svelte';
 	import ChangeDiff from '$lib/components/ChangeDiff.svelte';
 	import DiffSegments from '$lib/components/DiffSegments.svelte';
 	import {
@@ -22,6 +29,14 @@
 		mcp: 'a connected app',
 		ui: 'you'
 	};
+
+	/**
+	 * The delete request being confirmed. Approving a delete takes two steps,
+	 * because nothing puts the entry back: Delete on the card, then this
+	 * confirmation, whose form is the only one that sends `confirm=delete`.
+	 */
+	let confirmingDelete = $state<{ id: number; label: string; with: string | null } | null>(null);
+	let confirmForm: HTMLFormElement | undefined = $state();
 
 	function when(date: Date | string): string {
 		return new Date(date).toLocaleString(undefined, {
@@ -179,8 +194,8 @@
 		<!--
 			Waiting on a decision, above the history. A connected app asked for
 			something it is not allowed to do on its own — overwriting text you
-			wrote, or taking an entry off your documents — and nothing happens
-			until you say so here.
+			wrote, taking an entry off your documents, or deleting one — and
+			nothing happens until you say so here.
 		-->
 		<section class="space-y-4">
 			<h2 class="text-lg font-semibold">Waiting for you</h2>
@@ -203,17 +218,36 @@
 							</div>
 
 							<div class="flex gap-2">
-								<form method="POST" action="?/approve" use:enhance>
-									<input type="hidden" name="id" value={request.id} />
+								{#if request.deletes}
+									{@const deletes = request.deletes}
+									<!-- Not a submit: the confirmation below sends the approval. -->
 									<button
-										type="submit"
+										type="button"
 										class="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-white"
-										style="background-color: var(--dash-primary);"
+										style="background-color: var(--dash-error);"
+										onclick={() =>
+											(confirmingDelete = {
+												id: request.id,
+												label: request.target.label,
+												with: deletes.with
+											})}
 									>
-										<FontAwesomeIcon icon={faCheck} class="h-3.5 w-3.5" />
-										Apply
+										<FontAwesomeIcon icon={faTrash} class="h-3.5 w-3.5" />
+										Delete
 									</button>
-								</form>
+								{:else}
+									<form method="POST" action="?/approve" use:enhance>
+										<input type="hidden" name="id" value={request.id} />
+										<button
+											type="submit"
+											class="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-white"
+											style="background-color: var(--dash-primary);"
+										>
+											<FontAwesomeIcon icon={faCheck} class="h-3.5 w-3.5" />
+											Apply
+										</button>
+									</form>
+								{/if}
 								<form method="POST" action="?/reject" use:enhance>
 									<input type="hidden" name="id" value={request.id} />
 									<button
@@ -370,3 +404,23 @@
 		</ul>
 	{/if}
 </div>
+
+<!-- The second step of approving a delete. Its id is set when the dialog opens. -->
+<form method="POST" action="?/approve" use:enhance bind:this={confirmForm} hidden>
+	<input type="hidden" name="id" value={confirmingDelete?.id ?? ''} />
+	<input type="hidden" name="confirm" value="delete" />
+</form>
+
+<ConfirmModal
+	isOpen={confirmingDelete !== null}
+	title="Delete for good?"
+	message={`Delete “${confirmingDelete?.label ?? ''}”${
+		confirmingDelete?.with ? `, and with it ${confirmingDelete.with}` : ''
+	}? This cannot be undone.`}
+	confirmLabel="Delete"
+	onCancel={() => (confirmingDelete = null)}
+	onConfirm={() => {
+		confirmForm?.requestSubmit();
+		confirmingDelete = null;
+	}}
+/>

@@ -65,7 +65,8 @@ const executeCapability = vi.fn();
 
 vi.mock('$lib/server/ai-chat/capabilities', () => ({
 	CAPABILITIES: {
-		edit_work_experience: { title: 'Correct this work experience' }
+		edit_work_experience: { title: 'Correct this work experience' },
+		delete_work_experience_project: { title: 'Delete this role project', irreversible: true }
 	},
 	executeCapability: (...args: unknown[]) => executeCapability(...args)
 }));
@@ -165,6 +166,49 @@ describe('approveRequest', () => {
 
 		expect(outcome).toMatchObject({ ok: false, reason: 'failed' });
 		expect(state.updates.some((u) => u.status === 'pending')).toBe(true);
+	});
+
+	describe('a delete', () => {
+		const deleteRow = () =>
+			pendingRow({
+				capability: 'delete_work_experience_project',
+				target: { id: 336, label: 'G2i - Code review for AI model training' },
+				fields: {},
+				previous: {}
+			});
+
+		it('is not approved in one click: without the confirmation nothing is deleted', async () => {
+			// The Apply of any other request is one click. Nothing puts a deleted
+			// entry back, so the page asks a second time, and this is the check that
+			// holds when a stale page or a hand-made form skips the asking.
+			state.claimed = [deleteRow()];
+
+			const outcome = await approveRequest(101, ACTOR);
+
+			expect(outcome).toMatchObject({ ok: false, reason: 'unconfirmed' });
+			expect(executeCapability).not.toHaveBeenCalled();
+			expect(state.updates.some((u) => u.status === 'pending')).toBe(true);
+		});
+
+		it('goes through once confirmed', async () => {
+			state.claimed = [deleteRow()];
+
+			const outcome = await approveRequest(101, ACTOR, { confirmedDelete: true });
+
+			expect(outcome).toEqual({ ok: true, editId: 55 });
+			expect(executeCapability).toHaveBeenCalledWith(
+				'delete_work_experience_project',
+				{ id: 336, label: 'G2i - Code review for AI model training' },
+				ACTOR,
+				{},
+				'mcp'
+			);
+		});
+	});
+
+	it('needs no confirmation for a change that can be undone', async () => {
+		const outcome = await approveRequest(101, ACTOR, { confirmedDelete: false });
+		expect(outcome).toEqual({ ok: true, editId: 55 });
 	});
 });
 

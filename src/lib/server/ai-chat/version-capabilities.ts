@@ -302,6 +302,7 @@ that record), and whether it is their public resume or CV.`,
 		}
 		return { ok: true };
 	},
+	irreversible: true,
 	tierFor: () => ({
 		tier: 2,
 		reason: 'Deleting a version changes what they send and cannot be undone.'

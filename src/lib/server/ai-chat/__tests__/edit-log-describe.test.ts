@@ -109,6 +109,39 @@ describe('describeLoggedChange', () => {
 		]);
 	});
 
+	it('shows a delete an agent asked for as the entry going, and what went with it', () => {
+		const changes = describeLoggedChange({
+			...entry(
+				{},
+				{
+					'language.name': 'Spanish',
+					'language.proficiency': 'Intermediate',
+					deleted_with: ['1 certificate skill']
+				}
+			),
+			capability: 'delete_language'
+		});
+
+		expect(changes).toContainEqual({ field: 'name', label: 'Name', from: 'Spanish', to: '—' });
+		expect(changes.at(-1)).toEqual({
+			field: 'deleted_with',
+			label: 'Deleted with it',
+			from: '1 certificate skill',
+			to: '—'
+		});
+	});
+
+	it('shows a delete made on the page as the row going, with nothing added', () => {
+		// `deleteRow` records the bare row, and knows nothing of what went with it.
+		const changes = describeLoggedChange({
+			...entry({}, { name: 'Spanish' }),
+			capability: 'delete_language',
+			source: 'ui'
+		});
+
+		expect(changes).toEqual([{ field: 'name', label: 'Name', from: 'Spanish', to: '—' }]);
+	});
+
 	it('shows nothing under a reorder made by dragging, which kept only ids', () => {
 		const changes = describeLoggedChange({
 			...entry({ order: [8, 7] }, { order: [7, 8] }),

@@ -159,6 +159,34 @@ describe('tierForWrite', () => {
 		).toBe(2);
 	});
 
+	it('asks before every delete, though it writes no field at all', () => {
+		// No fields means nothing overwritten, which the generic rule below reads
+		// as additive: without the irreversible rule a write key would delete an
+		// entry and everything under it with nobody asked.
+		for (const capability of ['delete_work_experience_project', 'delete_language'] as const) {
+			const decision = tierForWrite({ capability, current: {}, fields: {}, ...noBurst });
+			expect(decision, capability).toEqual({
+				tier: 2,
+				reason: 'Deleting an entry cannot be undone.'
+			});
+			expect(dispositionFor(decision.tier, 'write')).toBe('request');
+		}
+	});
+
+	it('keeps the reason a delete words for itself, and its tier', () => {
+		expect(
+			tierForWrite({
+				capability: 'delete_resume_version',
+				current: {},
+				fields: {},
+				...noBurst
+			})
+		).toEqual({
+			tier: 2,
+			reason: 'Deleting a version changes what they send and cannot be undone.'
+		});
+	});
+
 	describe('a capability that grades its own write', () => {
 		// `status` is notNull with a default, so the overwrite rule below would
 		// grade every move through the pipeline Tier 2 — putting "they invited me

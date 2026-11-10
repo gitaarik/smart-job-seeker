@@ -215,3 +215,37 @@ describe('where the changes feed links', () => {
 		expect((await links()).entries).toEqual(['/data/directives']);
 	});
 });
+
+describe('approving a delete', () => {
+	async function approve(form: Record<string, string>) {
+		const { actions } = await import('../+page.server');
+		const { getSelectedProfileId } = await import('../../../profile/utils');
+		const { approveRequest } = await import('$lib/server/mcp/requests');
+		vi.mocked(getSelectedProfileId).mockResolvedValue(12);
+		vi.mocked(approveRequest).mockResolvedValue({ ok: true, editId: 1 });
+
+		const body = new FormData();
+		for (const [key, value] of Object.entries(form)) body.set(key, value);
+		await actions.approve({
+			request: new Request('http://localhost/data/ai-changes?/approve', {
+				method: 'POST',
+				body
+			}),
+			cookies: {},
+			locals: { user: { id: 'user-1' } }
+		} as unknown as Parameters<typeof actions.approve>[0]);
+
+		return vi.mocked(approveRequest).mock.calls.at(-1);
+	}
+
+	it('passes on the confirmation only when the confirming form sent it', async () => {
+		// The card's own Apply never sends it, and `approveRequest` refuses a
+		// delete without it: that is what keeps a delete from being one click.
+		expect(await approve({ id: '7', confirm: 'delete' })).toEqual([
+			7,
+			{ profileId: 12, isStaff: false },
+			{ confirmedDelete: true }
+		]);
+		expect((await approve({ id: '7' }))?.[2]).toEqual({ confirmedDelete: false });
+	});
+});

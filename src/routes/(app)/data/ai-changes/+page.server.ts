@@ -14,6 +14,7 @@ import type { Capability, CapabilityActor } from '$lib/server/ai-chat/capabiliti
 import { PROFILE_RESOURCES, type ProfileResourceName } from '$lib/server/profile/resources';
 import { rowPagePath } from '$lib/server/profile/row-page';
 import { DIRECTIVES_PAGE } from '$lib/server/ai-chat/directive-capability';
+import { deletedWithChange } from '$lib/server/ai-chat/delete-capabilities';
 
 /**
  * Where an entry of a given kind can be put right by hand.
@@ -189,7 +190,12 @@ export const load: PageServerLoad = async ({ parent, locals }) => {
 			// reading a document a stranger wrote.
 			rationale: request.rationale,
 			changes: describeProposalChanges(request.capability, request.fields, request.previous),
-			whereInstead: pageFor(request.capability)
+			whereInstead: pageFor(request.capability),
+			// A delete is approved in two steps, the second saying it cannot be undone
+			// and what goes with the entry. `approveRequest` refuses one without it.
+			deletes: CAPABILITIES[request.capability]?.irreversible
+				? { with: deletedWithChange(request.previous)[0]?.from ?? null }
+				: null
 		})),
 		entries: entries.map((entry, i) => ({
 			id: entry.id,
@@ -275,10 +281,14 @@ export const actions: Actions = {
 		const actor = await actorFor(cookies, locals);
 		if ('error' in actor) return fail(actor.status, { error: actor.error });
 
-		const id = idFrom(await request.formData());
+		const form = await request.formData();
+		const id = idFrom(form);
 		if (id === null) return fail(400, { error: 'Invalid request.' });
 
-		const outcome = await approveRequest(id, actor);
+		// Sent only by the confirmation a delete asks for; see `approveRequest`.
+		const outcome = await approveRequest(id, actor, {
+			confirmedDelete: form.get('confirm') === 'delete'
+		});
 		if (!outcome.ok) {
 			return fail(outcome.reason === 'already_decided' ? 409 : 400, { error: outcome.error });
 		}

@@ -211,7 +211,7 @@ export async function countRequests(
 	return Number(row?.value ?? 0);
 }
 
-export type DecisionRefusal = 'not_found' | 'already_decided' | 'failed';
+export type DecisionRefusal = 'not_found' | 'already_decided' | 'failed' | 'unconfirmed';
 
 export type DecisionOutcome =
 	{ ok: true; editId: number | null } | { ok: false; reason: DecisionRefusal; error: string };
@@ -266,10 +266,16 @@ export async function rejectRequest(
  * The alternative is a change the applicant approved, that did not happen, and
  * that they can no longer approve — which reads from the feed as though it
  * went through.
+ *
+ * A delete (any `irreversible` capability) also needs `confirmedDelete`: the
+ * second step of approving one, the confirmation that says it cannot be undone.
+ * Checked here rather than only drawn on the page, so the rule that approving a
+ * delete is never one click holds for a stale page and a hand-made form alike.
  */
 export async function approveRequest(
 	requestId: number,
-	actor: CapabilityActor
+	actor: CapabilityActor,
+	options: { confirmedDelete?: boolean } = {}
 ): Promise<DecisionOutcome> {
 	const row = await claim(requestId, actor.profileId, 'approved');
 	if (!row) {
@@ -287,6 +293,15 @@ export async function approveRequest(
 			ok: false,
 			reason: 'failed',
 			error: 'That kind of change is no longer supported.'
+		};
+	}
+
+	if (CAPABILITIES[capability].irreversible && !options.confirmedDelete) {
+		await release(requestId);
+		return {
+			ok: false,
+			reason: 'unconfirmed',
+			error: 'Deleting cannot be undone, so it needs your confirmation first.'
 		};
 	}
 

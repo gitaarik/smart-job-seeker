@@ -409,10 +409,9 @@ export function resourceFor(name: ProfileResourceName): ProfileResource {
  * the change has happened by the time this runs, so a logging error is reported
  * to the server and swallowed here. See `change-log.ts`.
  *
- * `action` is a capability name where the same thing is something the assistant
- * can do — an edit through this layer and an edit through a proposal are the
- * same write and undo identically — and one of the three UI-only verbs where it
- * is not. See `ui-actions.ts`.
+ * `action` is a capability name: an edit through this layer and an edit through
+ * a proposal are the same write and undo identically, and a delete here is the
+ * same `delete_<section>` an approved request applies (`delete-capabilities.ts`).
  */
 async function logChange(
 	actor: ProfileActor,
@@ -1015,7 +1014,10 @@ export async function updateRow(
  * thing a person accepts in one click, and a delete is not recoverable from the
  * before-image: `previous` holds columns, and a work experience owns
  * achievements, technologies and projects across four tables that go with it.
- * An accepted mistake should cost a click to undo, not a retyping.
+ * An accepted mistake should cost a click to undo, not a retyping. An agent over
+ * MCP can ask for a delete as well, for an entry the applicant wants gone rather
+ * than hidden, and that request is built so it is not one click to accept: see
+ * `delete-capabilities.ts`.
  *
  * ## It used to write `status`, and that did nothing
  *
@@ -1132,8 +1134,9 @@ export async function setRowTags(
 /**
  * Remove a row for good.
  *
- * Hard delete, and it stays reachable only from the UI — the assistant gets
- * `setRowVisible` instead, for the reason recorded there.
+ * Hard delete. The chat gets `setRowVisible` instead, for the reason recorded
+ * there; an agent over MCP can only ask for this, and the applicant confirms it
+ * twice (`delete-capabilities.ts`).
  */
 export async function deleteRow(
 	name: ProfileResourceName,
@@ -1151,8 +1154,8 @@ export async function deleteRow(
 
 	// The whole row as the before-image, even though nothing here can put it
 	// back: what it buys is an answer to "where did that go", which is the
-	// question a history is asked about a deletion. See `ui-actions.ts` for why
-	// there is no undo.
+	// question a history is asked about a deletion. See `delete-capabilities.ts`
+	// for why there is no undo.
 	await logChange(
 		actor,
 		`delete_${name}`,

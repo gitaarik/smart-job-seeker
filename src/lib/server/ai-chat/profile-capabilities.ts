@@ -101,13 +101,15 @@ import type { ContextEntity } from './generation-context';
  * the assistant proposes `hide` — the `!resume` + `!cv` tag pair, which takes
  * an entry off every document while leaving the row and its children alone. It
  * is one click to accept and one to undo, on the same page the applicant would
- * have edited it from. Hard delete stays UI-only.
+ * have edited it from. In the chat, hard delete stays on the editors' own
+ * buttons. An agent over MCP may ask for one (`delete-capabilities.ts`), and
+ * that request is built so it is not one click to accept.
  *
  * Undoing an add is the one exception, and it is not that rule loosened. The
  * row it removes is one the registry made itself, whose whole content is in the
  * log, that the applicant has not touched since and that nothing else hangs
  * off — see `addCapability`'s `revert` for how each of those is checked and
- * what happens when one fails. There is still no verb that deletes anything of
+ * what happens when one fails. None of these four verbs deletes anything of
  * theirs; an agent can only unwind its own add.
  *
  * `hide` was originally `status: 'draft'`, on the belief that documents render
@@ -691,6 +693,35 @@ async function childrenUnder(
 	}
 
 	return found;
+}
+
+/**
+ * How many rows of each section hang off this one, at any depth: a role's
+ * achievements, technologies and projects, and those projects' technologies.
+ *
+ * For a request to delete the row, whose card has to say what the cascade takes
+ * along. `childrenUnder` answers a different question (is anything there at
+ * all) and stops at one level, which is enough for a refusal and not for a list.
+ */
+export async function descendantCounts(
+	name: ProfileResourceName,
+	id: number,
+	actor: CapabilityActor
+): Promise<Array<{ resource: ProfileResourceName; count: number }>> {
+	const counts: Array<{ resource: ProfileResourceName; count: number }> = [];
+
+	const walk = async (section: ProfileResourceName): Promise<void> => {
+		for (const child of childSectionsOf(section)) {
+			const under = await idsUnder(child, { resource: name, id }, actor);
+			if (under && under.size > 0) {
+				counts.push({ resource: child, count: under.size });
+				await walk(child);
+			}
+		}
+	};
+
+	await walk(name);
+	return counts;
 }
 
 /**

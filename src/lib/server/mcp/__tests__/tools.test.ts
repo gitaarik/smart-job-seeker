@@ -129,6 +129,32 @@ describe('how a write names its row', () => {
 		}
 	});
 
+	it('makes a delete name the entry, carry nothing else, and say it needs approving', () => {
+		// Every section has one, a role project included, which has no hide.
+		for (const capability of ['delete_work_experience_project', 'delete_skill']) {
+			const tool = byName.get(capability);
+			expect(tool, capability).toBeDefined();
+			expect(tool!.inputSchema.required).toEqual(['profile_id', 'entry_id', 'rationale']);
+			expect(Object.keys(tool!.inputSchema.properties ?? {})).toEqual([
+				'profile_id',
+				'entry_id',
+				'rationale'
+			]);
+			expect(tool!.annotations.title, capability).toContain('needs your approval');
+			expect(tool!.annotations.destructiveHint, capability).toBe(true);
+		}
+	});
+
+	it('tells an agent a delete cannot be undone, and points it at the hide where there is one', () => {
+		const project = byName.get('delete_work_experience_project')!.description;
+		expect(project).toContain('cannot be undone');
+		expect(project).toContain('files attached to it');
+		expect(project).toContain('no hide');
+
+		const skill = byName.get('delete_skill')!.description;
+		expect(skill).toContain('hide_skill');
+	});
+
 	it('makes a reorder name no entry, only the order, and say it needs approving', () => {
 		// The section is the target, so there is no row to name; the order is the
 		// whole call, as ids.
@@ -431,6 +457,12 @@ describe('what the client is told before it sees a tool', () => {
 		const instructions = instructionsFor('documents');
 		for (const area of APP_AREAS) {
 			expect(instructions, area.name).toContain(`${area.name} (${area.path})`);
+		}
+	});
+
+	it('names deleting among the changes that wait for the applicant', () => {
+		for (const scope of ['record', 'documents'] as const) {
+			expect(instructionsFor(scope), scope).toContain('delete an entry');
 		}
 	});
 

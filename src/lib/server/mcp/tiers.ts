@@ -10,8 +10,9 @@
  *   that was empty. Direct write for a `write`-scoped key, logged, and the undo
  *   handle comes back in the tool result.
  * - **Tier 2 — overwrites of authored prose, hides and shows, tag changes,
- *   reorders, anything bulk.** The tool does not write. It records a request and
- *   returns a deep link; a human approves in the app.
+ *   reorders, deletes, anything bulk.** The tool does not write. It records a
+ *   request and returns a deep link; a human approves in the app (a delete
+ *   twice: see `delete-capabilities.ts`).
  *
  * The grading below reads a call against what the row currently holds, which is
  * the right question for a column holding content and the wrong one for a column
@@ -121,6 +122,15 @@ export function tierForWrite(opts: {
 	recentDirectWrites: number;
 }): TierDecision {
 	const { capability, current, fields, recentDirectWrites } = opts;
+
+	// A write nothing can put back (a delete) is never direct, whatever the key
+	// may do, and its approval takes a second confirmation (`approveRequest`).
+	// Its own `tierFor` may word the reason, never lower the tier: decided first
+	// so that a capability that gets its tier wrong cannot make a delete direct.
+	const def = CAPABILITIES[capability];
+	if (def?.irreversible) {
+		return { tier: 2, reason: def.tierFor?.(fields, current)?.reason ?? 'It cannot be undone.' };
+	}
 
 	// A hide takes an entry off every CV and every export. Nothing about that is
 	// additive, whatever the row currently holds.
