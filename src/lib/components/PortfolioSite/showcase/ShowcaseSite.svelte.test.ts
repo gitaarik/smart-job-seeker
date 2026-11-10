@@ -86,9 +86,11 @@ describe('ShowcaseSite', () => {
 		const titled = (name: string) =>
 			[...c.querySelectorAll('h3')].find((h) => h.textContent?.trim() === name);
 
-		const scanCard = titled('Scan app')?.closest('div.rounded-lg');
+		const scanCard = titled('Scan app')?.closest('div.role-project');
 		expect(scanCard?.textContent).toContain('Architect');
-		expect(titled('Test suite')?.closest('div.rounded-lg')?.textContent).not.toContain('Architect');
+		expect(titled('Test suite')?.closest('div.role-project')?.textContent).not.toContain(
+			'Architect'
+		);
 		expect(titled('Django')?.closest('header')?.textContent).toContain('Contributor');
 	});
 
@@ -135,7 +137,7 @@ describe('ShowcaseSite', () => {
 
 	test('offers the contact button without printing any details', () => {
 		const c = site();
-		expect(c.textContent).toContain('Get in Touch');
+		expect(c.textContent).toContain('Get in touch');
 		expect(c.querySelector('a[href^="mailto:"]')).toBeNull();
 		expect(c.querySelector('a[href^="tel:"]')).toBeNull();
 	});

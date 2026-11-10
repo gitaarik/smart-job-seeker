@@ -20,22 +20,25 @@
 <div class="grid grid-cols-1 gap-3 min-[50rem]:grid-cols-2 print:grid-cols-2 print:gap-2">
 	{#each items as item (item.key)}
 		<div
-			class="rounded-md border border-(--pf-bright-hover) bg-(--pf-surface-raised) transition-colors duration-200 hover:bg-(--pf-line)/30"
+			class="rounded-sm border border-(--pf-line) bg-(--pf-shade) transition-colors duration-200"
 		>
 			{#if item.title}
 				<h5
-					class="mb-1 flex items-center rounded-t-md border-b border-(--pf-bright-hover) bg-(--pf-bright-hover)/13 px-2 py-2 text-sm font-semibold"
+					class="flex items-center px-4 pt-4 pb-1 font-semibold text-(--pf-accent-text) [font-stretch:90%]"
 				>
 					{#if item.icon}
-						<FontAwesomeIcon icon={item.icon} class="mr-2 h-3 w-3 flex-shrink-0" />
+						<FontAwesomeIcon icon={item.icon} class="mr-2 h-3.5 w-3.5 flex-shrink-0" />
 					{/if}
 					{item.title}
 				</h5>
-				<p class="px-2 pb-2 text-sm leading-relaxed">{item.description}</p>
+				<p class="px-4 pb-4 text-sm leading-relaxed">{item.description}</p>
 			{:else}
-				<p class="flex items-start p-2 text-sm leading-relaxed">
+				<p class="flex items-start p-4 text-sm leading-relaxed">
 					{#if item.icon}
-						<FontAwesomeIcon icon={item.icon} class="mt-1 mr-2 h-3 w-3 flex-shrink-0" />
+						<FontAwesomeIcon
+							icon={item.icon}
+							class="mt-1 mr-3 h-3 w-3 flex-shrink-0 text-(--pf-accent-text)"
+						/>
 					{/if}
 					<span>{item.description}</span>
 				</p>

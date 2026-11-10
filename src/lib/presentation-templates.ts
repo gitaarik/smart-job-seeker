@@ -29,7 +29,7 @@ export function isTemplateKind(value: string): value is TemplateKind {
 }
 
 /** Font families the generic renderer bundles (config picks by family name). */
-export type TemplateFont = 'Poppins' | 'Carlito' | 'Noto Sans';
+export type TemplateFont = 'Poppins' | 'Carlito' | 'Noto Sans' | 'Instrument Sans';
 
 /**
  * The columns every kind has. `config` is deliberately unknown here: what it

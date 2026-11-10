@@ -6,6 +6,7 @@
  */
 
 import {
+	isHeaderArt,
 	PALETTE_ROLES,
 	PORTFOLIO_SECTIONS,
 	resolvePalette,
@@ -48,6 +49,10 @@ export function applyShowcaseFields(next: PortfolioThemeConfig, form: FormData):
 		if (form.get(flag)) next[flag] = true;
 		else delete next[flag];
 	}
+
+	const art = form.get('headerArt');
+	if (isHeaderArt(art)) next.headerArt = art;
+	else delete next.headerArt;
 
 	for (const field of ['contactIntro', 'footerNote'] as const) {
 		const value = String(form.get(field) ?? '').trim();

@@ -69,6 +69,14 @@ export interface PortfolioThemeAssets {
  *   dark palette and a visitor-facing switch between them.
  */
 export const PORTFOLIO_LAYOUTS = ['basic', 'showcase'] as const;
+
+/** Pictures the showcase can draw beside its header; see `headerArt`. */
+export const HEADER_ARTS = ['trace', 'code'] as const;
+export type HeaderArt = (typeof HEADER_ARTS)[number];
+
+export function isHeaderArt(value: unknown): value is HeaderArt {
+	return HEADER_ARTS.includes(value as HeaderArt);
+}
 export type PortfolioLayout = (typeof PORTFOLIO_LAYOUTS)[number];
 
 export function isPortfolioLayout(value: string): value is PortfolioLayout {
@@ -95,7 +103,8 @@ export const PALETTE_ROLES = [
 	'bright',
 	'brightHover',
 	'darkBand',
-	'footer'
+	'footer',
+	'marker'
 ] as const;
 export type PaletteRole = (typeof PALETTE_ROLES)[number];
 export type PortfolioPalette = Partial<Record<PaletteRole, string>>;
@@ -112,7 +121,8 @@ export const PALETTE_ROLE_LABELS: Record<PaletteRole, string> = {
 	bright: 'Buttons and headings',
 	brightHover: 'Button hover, card borders',
 	darkBand: 'Quotes band',
-	footer: 'Footer'
+	footer: 'Footer',
+	marker: 'Flag in the header picture'
 };
 
 /**
@@ -131,7 +141,8 @@ export const DEFAULT_PALETTE: Record<PaletteScheme, Record<PaletteRole, string>>
 		bright: '#4f46e5',
 		brightHover: '#6366f1',
 		darkBand: '#3730a3',
-		footer: '#1e1b4b'
+		footer: '#1e1b4b',
+		marker: '#b45309'
 	},
 	dark: {
 		text: '#e5e7eb',
@@ -144,7 +155,8 @@ export const DEFAULT_PALETTE: Record<PaletteScheme, Record<PaletteRole, string>>
 		bright: '#6366f1',
 		brightHover: '#818cf8',
 		darkBand: '#0f0d2e',
-		footer: '#05040f'
+		footer: '#05040f',
+		marker: '#f59e0b'
 	}
 };
 
@@ -231,6 +243,12 @@ export interface PortfolioThemeConfig {
 	 * mask, so a one-colour logo follows the scheme. Showcase only.
 	 */
 	logoTint?: boolean;
+	/**
+	 * A quiet picture beside the header, drawn in the palette: an agent's runs
+	 * as an observability tool shows them (`trace`), or a code review as a
+	 * minimap (`code`). Absent draws nothing. Showcase only.
+	 */
+	headerArt?: HeaderArt;
 	/** Plain text above the contact details, once a visitor opens them. Showcase only. */
 	contactIntro?: string;
 	/** A line of plain text in the footer, such as a credit for the logo. Showcase only. */

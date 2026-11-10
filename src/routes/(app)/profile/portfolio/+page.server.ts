@@ -74,7 +74,7 @@ function parseCrop(raw: FormDataEntryValue | null): Crop | null {
 	return null;
 }
 
-const FONTS = ['Poppins', 'Carlito', 'Noto Sans'];
+const FONTS = ['Poppins', 'Carlito', 'Noto Sans', 'Instrument Sans'];
 
 /** A hex colour, the only form the renderer's CSS variable can take. */
 const HEX = /^#[0-9a-f]{6}$/i;

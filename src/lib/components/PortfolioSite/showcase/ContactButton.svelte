@@ -14,13 +14,7 @@
 	 * once opens every one of them.
 	 */
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import {
-		faCircleNotch,
-		faComments,
-		faEnvelope,
-		faPhone,
-		faTimes
-	} from '@fortawesome/free-solid-svg-icons';
+	import { faCircleNotch, faEnvelope, faPhone, faTimes } from '@fortawesome/free-solid-svg-icons';
 	import { fade, slide } from 'svelte/transition';
 	import type { ContactState } from './contact-state.svelte';
 
@@ -75,32 +69,29 @@
 
 <div
 	bind:this={container}
-	class="relative flex w-full flex-col items-center rounded-xl transition-all duration-250"
+	class="relative flex w-full flex-col items-center rounded-sm transition-all duration-250"
 	class:max-w-[523px]={expandButton}
-	class:max-w-[220px]={!expandButton}
+	class:max-w-[168px]={!expandButton}
 >
 	<div
-		class="inline-flex w-full scale-100 items-center gap-2 bg-(--pf-bright) text-xl font-semibold text-(--pf-text-on-dark) transition-all duration-250 {expandButton
-			? 'rounded-t-lg'
-			: 'cursor-pointer rounded-lg focus-within:scale-105 focus-within:bg-(--pf-bright-hover) hover:scale-105 hover:bg-(--pf-bright-hover)'}"
+		class="relative inline-flex w-full items-center bg-(--pf-bright) font-semibold text-(--pf-text-on-dark) transition-colors duration-200 {expandButton
+			? 'rounded-t-sm'
+			: 'cursor-pointer rounded-sm hover:bg-(--pf-bright-hover) has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-(--pf-bright)'}"
 	>
 		<button
 			type="button"
-			class="block w-full px-8 py-4"
+			class="block w-full px-6 py-3 text-center tracking-[0.005em] focus:outline-none"
 			class:cursor-pointer={!expandButton}
 			aria-expanded={expandContent}
 			onclick={open}
 		>
-			<span class="inline-flex">
-				<FontAwesomeIcon icon={faComments} class="mt-1 mr-3 h-5 w-6" />
-				<span class="text-nowrap">Get in Touch</span>
-			</span>
+			<span class="text-nowrap">Get in touch</span>
 		</button>
 
 		{#if expandContent}
 			<button
 				type="button"
-				class="absolute top-[14px] right-4 cursor-pointer text-2xl transition hover:rotate-90"
+				class="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-lg opacity-80 transition hover:opacity-100"
 				aria-label="Close"
 				onclick={close}
 				transition:fade
@@ -112,7 +103,7 @@
 
 	{#if expandContent}
 		<div
-			class="flex w-full flex-col overflow-hidden rounded-b-xl border-r-2 border-b-2 border-l-2 border-(--pf-bright) pb-4 {panelClass}"
+			class="flex w-full flex-col overflow-hidden rounded-b-sm border border-t-0 border-(--pf-line) pb-4 {panelClass}"
 			transition:slide={{ duration: SPEED }}
 		>
 			{#if intro}

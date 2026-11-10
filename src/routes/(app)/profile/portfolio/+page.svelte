@@ -744,6 +744,21 @@
 
 								<label>
 									<span class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+										>Beside the header</span
+									>
+									<select
+										name="headerArt"
+										value={theme.config.headerArt ?? ''}
+										class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)]"
+									>
+										<option value="">Nothing</option>
+										<option value="trace">An agent's runs, as a trace</option>
+										<option value="code">A code review</option>
+									</select>
+								</label>
+
+								<label>
+									<span class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
 										>Contact text</span
 									>
 									<span class="mb-1 block text-xs text-[var(--dash-text-secondary)]">

@@ -18,11 +18,11 @@
 <article
 	{id}
 	{...aos}
-	class="break-inside-avoid rounded-xl border-[1.2px] border-(--pf-bright) bg-(--pf-surface-raised) p-6 transition-colors print:border-0 print:bg-transparent print:p-0"
+	class="break-inside-avoid rounded-sm border border-(--pf-line) bg-(--pf-surface-raised) p-6 transition-colors min-[40rem]:p-9 print:border-0 print:bg-transparent print:p-0"
 >
-	<h2 class="relative mb-5 border-b-2 border-(--pf-bright) pb-1">
-		<span class="pr-12 text-xl font-semibold print:text-lg">{title}</span>
-		<span class="absolute top-1 right-1"><FontAwesomeIcon {icon} size="lg" /></span>
+	<h2 class="mb-7 flex items-baseline justify-between gap-4 border-b border-(--pf-line) pb-4">
+		<span class="pf-display text-[2.25rem] text-(--pf-strong) print:text-lg">{title}</span>
+		<span class="text-(--pf-accent-text)"><FontAwesomeIcon {icon} size="lg" /></span>
 	</h2>
 
 	{@render children()}

@@ -5,9 +5,11 @@
 	 *
 	 * Ported from that site's home page (a full-height header, the About me
 	 * with the photo beside it, a band of quotes, a dark footer) and its
-	 * `/portfolio` page (the career as cards), as one page. The markup and its
-	 * spacing are kept close to the original on purpose: visual parity with it
-	 * is the target, and a port that drifts cannot be compared against it. See
+	 * `/portfolio` page (the career as cards), as one page. Its structure is
+	 * still that site's; the look was redone on 2026-11-09 after a LinkedIn
+	 * banner: condensed display type for the name and the section headings,
+	 * flatter cards on thin rules, and optionally a code review drawn beside
+	 * the header (`headerArt`: an agent trace or a code review). See
 	 * planning/PORTFOLIO-SHOWCASE-LAYOUT.md in sjs-ops.
 	 *
 	 * No branding lives here. Colours come from the theme's palette as CSS
@@ -35,7 +37,7 @@
 		faCalendarAlt,
 		faCertificate,
 		faCircleCheck,
-		faCircleChevronDown,
+		faChevronDown,
 		faCode,
 		faCompass,
 		faExternalLinkAlt,
@@ -57,6 +59,7 @@
 	} from '@fortawesome/free-brands-svg-icons';
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 	import {
+		isHeaderArt,
 		pageSections,
 		paletteStyle,
 		type PortfolioPage,
@@ -72,6 +75,8 @@
 	import { briefRole, briefRoleProject, briefSideProject } from '../brief-entries';
 	import { iconFor } from './icons';
 	import Card from './Card.svelte';
+	import AgentTrace from './AgentTrace.svelte';
+	import CodeMinimap from './CodeMinimap.svelte';
 	import InfoBoxes from './InfoBoxes.svelte';
 	import TechTags from './TechTags.svelte';
 	import SelectedWorkCarousel from './SelectedWorkCarousel.svelte';
@@ -116,6 +121,7 @@
 	const config = $derived(theme.config);
 	const sections = $derived(pageSections(config, page));
 	const headingFont = $derived(config.fonts?.heading ?? 'Noto Sans');
+	const headerArt = $derived(isHeaderArt(config.headerArt) ? config.headerArt : null);
 	const bodyFont = $derived(config.fonts?.body ?? 'Noto Sans');
 
 	const lists = $derived(siteLists(profile, versionId));
@@ -396,95 +402,91 @@
 			{#each blocks as block, b (b)}
 				{#if block.kind === 'band' && block.section === 'header'}
 					<header
-						class="flex min-h-screen w-full flex-col items-center bg-(--pf-surface) pt-10 transition-colors min-[50rem]:pt-25"
+						class="hero transition-colors"
+						class:with-art={!!headerArt}
 						aria-labelledby="pf-name"
 					>
-						{#if logo}
-							<div {...aos} class="px-5 min-[40rem]:px-10">
-								{#if config.logoTint}
-									<div
-										class="logo-tint h-45 w-45"
-										style:--pf-logo="url({logo})"
-										role="img"
-										aria-label={profile.name}
-									></div>
-								{:else}
-									<img src={logo} alt={profile.name} class="h-45 w-45 object-contain" />
-								{/if}
-							</div>
+						{#if headerArt === 'trace'}
+							<div class="hero-art"><AgentTrace /></div>
+						{:else if headerArt === 'code'}
+							<div class="hero-art"><CodeMinimap /></div>
 						{/if}
 
-						<div class="mt-5 px-5 text-center min-[40rem]:px-10">
+						<div class="hero-body">
 							<div {...aos}>
-								<h1 id="pf-name" class="text-3xl font-medium">{profile.name}</h1>
-								{#if profile.title}<h2 class="mt-4 text-xl">{profile.title}</h2>{/if}
-								{#if profile.subtitle}<h3 class="mt-4">{profile.subtitle}</h3>{/if}
+								{#if profile.title}<p class="hero-kicker">{profile.title}</p>{/if}
+								<h1 id="pf-name" class="hero-name">{profile.name}</h1>
+								{#if profile.subtitle}<p class="hero-lede">{profile.subtitle}</p>{/if}
 							</div>
-							{#if profile.headline}
-								<h4 {...aos} class="mt-10 italic">{profile.headline}</h4>
+
+							{#if contactState}
+								<div {...aos} class="mt-10 flex w-full">
+									<ContactButton
+										state={contactState}
+										intro={config.contactIntro}
+										panelClass="bg-(--pf-surface-raised)"
+										scheme={actual}
+									/>
+								</div>
 							{/if}
 						</div>
 
-						{#if contactState}
-							<div {...aos} class="mt-15 flex w-full justify-center px-4 min-[50rem]:mt-20">
-								<ContactButton
-									state={contactState}
-									intro={config.contactIntro}
-									panelClass="bg-(--pf-surface-raised)"
-									scheme={actual}
-								/>
-							</div>
-						{/if}
-
-						<div class="flex-grow"></div>
-
 						{#if blocks.length > 1}
-							<div bind:this={moreInfo} class="mt-14 mb-15">
+							<div bind:this={moreInfo} class="hero-more">
 								<button
 									type="button"
-									class="flex scale-100 cursor-pointer items-center gap-2 p-2 transition hover:scale-110 hover:text-(--pf-highlight) focus:scale-110 focus:text-(--pf-highlight)"
+									class="group flex cursor-pointer items-center gap-2.5 py-2 text-[0.9375rem] font-medium text-(--pf-muted) transition-colors hover:text-(--pf-accent-text) focus-visible:text-(--pf-accent-text)"
 									onclick={scrollPastHeader}
 								>
-									<FontAwesomeIcon icon={faCircleChevronDown} class="w-4" />
-									<span class="text-md font-semibold">More Info</span>
+									<span>More about me</span>
+									<FontAwesomeIcon
+										icon={faChevronDown}
+										class="h-3 w-3 transition-transform group-hover:translate-y-0.5"
+									/>
 								</button>
 							</div>
 						{/if}
 					</header>
 					<div bind:this={afterHeader} class="w-full"></div>
 				{:else if block.kind === 'band' && block.section === 'about'}
-					<section
-						class="min-h-screen w-full bg-(--pf-shade) transition-colors"
-						aria-labelledby="pf-about"
-					>
+					<section class="w-full bg-(--pf-shade) transition-colors" aria-labelledby="pf-about">
 						<div class="flex flex-col items-center px-5 min-[40rem]:px-10">
-							<div class="max-w-[885px] overflow-hidden pt-10 min-[50rem]:pt-15">
-								<h3
+							<div class="w-full max-w-[885px] overflow-hidden pt-16 min-[50rem]:pt-24">
+								<h2
 									{...aos}
 									id="pf-about"
-									class="mb-8 text-center text-3xl font-semibold capitalize min-[50rem]:mb-10"
+									class="pf-display mb-8 text-[2.75rem] text-(--pf-strong) capitalize min-[50rem]:mb-12 min-[50rem]:text-[4rem]"
 								>
 									{title('about')}
-								</h3>
+								</h2>
 
 								{#if aboutParagraphs.length}
 									<div
 										{...aos}
-										class="mb-15 flex justify-center gap-10 max-[50rem]:flex-col max-[50rem]:items-center"
+										class="mb-16 flex gap-10 max-[50rem]:flex-col max-[50rem]:items-center"
 									>
-										<div class="text-base/7 tracking-[0.1px]">
+										<div class="text-[1.0625rem]/[1.75]">
 											{#if photo}
 												<div
-													class="float-right w-full max-w-[200px] pb-3 pl-3 max-[30rem]:hidden min-[60rem]:max-w-[265px] min-[60rem]:pb-4 min-[60rem]:pl-4"
+													class="float-right w-full max-w-[200px] pb-4 pl-6 max-[30rem]:hidden min-[60rem]:max-w-[280px] min-[60rem]:pl-10"
 												>
-													<img src={photo} alt={profile.name} class="w-full" />
+													<img
+														src={photo}
+														alt={profile.name}
+														class="w-full rounded-sm ring-1 ring-(--pf-line)"
+													/>
 												</div>
 											{/if}
 											{#each aboutParagraphs as paragraph, i (i)}
-												<p class:mt-4={i > 0} class="whitespace-pre-line">{paragraph}</p>
+												<p class:mt-5={i > 0} class="whitespace-pre-line">{paragraph}</p>
 												{#if i === 0 && photo}
-													<div class="mt-4 flex justify-center min-[30rem]:hidden">
-														<img src={photo} alt="" aria-hidden="true" class="w-[200px]" />
+													<div class="mt-5 flex justify-center min-[30rem]:hidden">
+														<img
+															src={photo}
+															alt=""
+															aria-hidden="true"
+															class="w-[220px] rounded-sm ring-1 ring-(--pf-line)"
+														/>
 													</div>
 												{/if}
 											{/each}
@@ -496,28 +498,28 @@
 
 						{#if keySkills.length || contactFor.length || contactState}
 							<div class="flex flex-col items-center px-5 min-[40rem]:px-10">
-								<div class="max-w-[885px] pb-15">
+								<div class="w-full max-w-[885px] pb-20">
 									{#if keySkills.length || contactFor.length}
 										<div
 											{...aos}
-											class="mb-15 flex w-full flex-col items-center justify-evenly gap-6 min-[50rem]:flex-row"
+											class="mb-16 grid w-full grid-cols-1 gap-6 min-[50rem]:grid-cols-2"
 										>
 											{#each aboutBoxes as { label, rows } (label)}
 												<div
-													class="w-full overflow-hidden rounded-lg border-2 border-(--pf-bright) bg-(--pf-surface) transition-colors min-[20rem]:max-w-[340px] min-[40rem]:min-w-[340px]"
+													class="w-full overflow-hidden rounded-sm border border-(--pf-line) bg-(--pf-surface-raised) transition-colors"
 												>
 													<h3
-														class="bg-(--pf-bright) px-4 py-2 font-medium text-(--pf-text-on-dark) transition-colors"
+														class="border-b border-(--pf-line) px-6 py-4 text-xl font-semibold text-(--pf-accent-text) [font-stretch:88%]"
 													>
 														{label}
 													</h3>
-													<ul class="space-y-4 p-4 font-bold min-[40rem]:space-y-5 min-[40rem]:p-5">
+													<ul class="space-y-4 px-6 py-5 font-semibold">
 														{#each boxItems(rows) as item (item.key)}
 															<li class="flex items-center gap-3">
 																{#if item.icon}
 																	<FontAwesomeIcon
 																		icon={item.icon}
-																		class="w-4 text-(--pf-highlight)"
+																		class="w-4 text-(--pf-accent-text)"
 																	/>
 																{/if}
 																{item.description}
@@ -530,7 +532,7 @@
 									{/if}
 
 									{#if contactState}
-										<div {...aos} class="flex justify-center">
+										<div {...aos} class="flex">
 											<ContactButton
 												state={contactState}
 												intro={config.contactIntro}
@@ -555,24 +557,27 @@
 						class="w-full bg-(--pf-dark-band) text-(--pf-text-on-dark) transition-colors"
 						aria-labelledby="pf-references"
 					>
-						<div class="flex justify-center px-5 pt-20 pb-10 min-[40rem]:px-10">
-							<div class="max-w-[600px]">
-								<h3
+						<div class="flex justify-center px-5 pt-20 pb-16 min-[40rem]:px-10 min-[50rem]:pt-28">
+							<div class="w-full max-w-[885px]">
+								<h2
 									{...aos}
 									id="pf-references"
-									class="mb-8 text-center text-3xl font-semibold capitalize min-[50rem]:mb-10"
+									class="pf-display mb-6 text-[2.75rem] capitalize min-[50rem]:text-[4rem]"
 								>
 									{title('references')}
-								</h3>
+								</h2>
 								{#each lists.references as r (r.id)}
 									<div {...aos}>
-										<blockquote class="py-15 min-[40rem]:text-lg">
-											<p class="leading-6 tracking-[0.5px] italic min-[40rem]:leading-8">
-												“{r.text}”
-											</p>
-											<p class="mt-4 text-right font-semibold">
-												{[r.author, r.author_position].filter(Boolean).join(' - ')}
-											</p>
+										<blockquote
+											class="quote border-t border-(--pf-text-on-dark)/15 py-10 min-[50rem]:grid min-[50rem]:grid-cols-[4rem_1fr] min-[50rem]:py-14"
+										>
+											<span class="quote-mark" aria-hidden="true">“</span>
+											<div>
+												<p class="text-lg/8 min-[50rem]:text-[1.375rem]/[1.6]">{r.text}</p>
+												<p class="mt-6 font-semibold text-(--pf-band-accent) [font-stretch:90%]">
+													{[r.author, r.author_position].filter(Boolean).join(', ')}
+												</p>
+											</div>
 										</blockquote>
 									</div>
 								{/each}
@@ -582,7 +587,7 @@
 				{:else if block.kind === 'cards'}
 					<div class="w-full bg-(--pf-shade) transition-colors print:bg-transparent">
 						<div
-							class="mx-auto flex max-w-[800px] flex-col gap-10 px-4 py-10 print:gap-7 print:p-0"
+							class="mx-auto flex max-w-[885px] flex-col gap-8 px-4 py-16 min-[40rem]:px-10 print:gap-7 print:p-0"
 						>
 							{#each block.sections as section (section)}
 								{#if section === 'summary'}
@@ -626,7 +631,7 @@
 												<header class="mb-6 print:mb-4">
 													<div class="flex items-start justify-between">
 														<div class="flex-1">
-															<h3 class="mb-2 text-2xl font-semibold text-(--pf-bright)">
+															<h3 class="pf-subhead mb-2 text-(--pf-accent-text)">
 																{role.name}
 															</h3>
 															<div
@@ -662,7 +667,7 @@
 																				href={roleSite}
 																				target="_blank"
 																				rel="noopener"
-																				class="text-(--pf-bright) hover:text-(--pf-highlight)"
+																				class="text-(--pf-accent-text) underline-offset-4 hover:underline"
 																				>{bare(roleSite)}</a
 																			>
 																			<!-- eslint-enable svelte/no-navigation-without-resolve -->
@@ -699,7 +704,7 @@
 																<img
 																	src={roleLogo}
 																	alt="{role.name} logo"
-																	class="h-22 w-auto rounded border border-(--pf-bright-hover)"
+																	class="h-20 w-auto rounded-sm border border-(--pf-line)"
 																/>
 															</div>
 														{/if}
@@ -762,7 +767,7 @@
 												{@const technologies = show(p.work_experience_project_technologies)}
 												{@const projectUrl = web(p.url)}
 												<div
-													class="rounded-lg border border-(--pf-bright)/20 bg-(--pf-surface) p-4 min-[40rem]:p-6"
+													class="role-project rounded-sm border border-(--pf-line) bg-(--pf-shade) p-5 min-[40rem]:p-7"
 												>
 													<div class="mb-6">
 														{#if p.company}
@@ -771,13 +776,13 @@
 																<span class="mx-2">›</span>
 																<span>{p.company}</span>
 																<span class="mx-2">›</span>
-																<span class="font-medium text-(--pf-highlight)">{p.name}</span>
+																<span class="font-medium text-(--pf-accent-text)">{p.name}</span>
 															</div>
 														{/if}
 														<div
 															class="mb-3 flex flex-col min-[40rem]:flex-row min-[40rem]:items-center min-[40rem]:justify-between"
 														>
-															<h3 class="text-xl font-bold">
+															<h3 class="pf-subhead text-[1.5rem]">
 																{#if projectUrl}
 																	<!-- eslint-disable svelte/no-navigation-without-resolve -- a link the applicant typed into their profile -->
 																	<a
@@ -793,7 +798,7 @@
 															</h3>
 															{#if p.start_date || p.end_date}
 																<div
-																	class="mt-1 flex items-center text-sm text-(--pf-highlight) min-[40rem]:mt-0"
+																	class="mt-1 flex items-center text-sm text-(--pf-muted) min-[40rem]:mt-0"
 																>
 																	<FontAwesomeIcon icon={faCalendarAlt} class="mr-1 h-3 w-3" />
 																	<span>{formatDateRangeVerbose(p.start_date, p.end_date)}</span>
@@ -817,7 +822,7 @@
 																<h4 class="mb-3 flex items-center text-lg font-semibold">
 																	<FontAwesomeIcon
 																		icon={faBullseye}
-																		class="mr-2 h-4 w-4 text-(--pf-bright)"
+																		class="mr-2 h-4 w-4 text-(--pf-accent-text)"
 																	/>
 																	Project Details
 																</h4>
@@ -858,7 +863,7 @@
 												<header class="mb-6 print:mb-4">
 													<div class="flex items-start justify-between">
 														<div class="flex-1">
-															<h3 class="mb-1 text-2xl font-semibold text-(--pf-bright)">
+															<h3 class="pf-subhead mb-1 text-(--pf-accent-text)">
 																{edu.institution}
 															</h3>
 															<ul
@@ -922,7 +927,7 @@
 																			href={eduUrl}
 																			target="_blank"
 																			rel="noopener"
-																			class="text-(--pf-bright) hover:text-(--pf-highlight)"
+																			class="text-(--pf-accent-text) underline-offset-4 hover:underline"
 																			>{bare(eduUrl)}</a
 																		>
 																		<!-- eslint-enable svelte/no-navigation-without-resolve -->
@@ -935,7 +940,7 @@
 																<img
 																	src={eduLogo}
 																	alt="{edu.institution} logo"
-																	class="h-22 w-auto rounded border border-(--pf-bright-hover)"
+																	class="h-20 w-auto rounded-sm border border-(--pf-line)"
 																/>
 															</div>
 														{/if}
@@ -959,7 +964,7 @@
 											{@const link = web(p.url) ?? web(p.repo_url)}
 											<div class="break-inside-avoid" class:mt-10={i === 0}>
 												<header class="mb-4">
-													<h3 class="text-2xl font-semibold text-(--pf-bright)">{p.name}</h3>
+													<h3 class="pf-subhead text-(--pf-accent-text)">{p.name}</h3>
 													{#if p.project_role}
 														<div class="mt-2 flex items-center text-sm">
 															<FontAwesomeIcon
@@ -983,7 +988,7 @@
 															href={link}
 															target="_blank"
 															rel="noopener"
-															class="inline-flex items-center gap-2 rounded-lg bg-(--pf-bright) px-5 py-3 text-white transition-all hover:bg-(--pf-bright)/85"
+															class="inline-flex items-center gap-2 rounded-sm bg-(--pf-bright) px-5 py-3 text-white transition-all hover:bg-(--pf-bright)/85"
 														>
 															<FontAwesomeIcon
 																icon={isGithub ? faGithub : faExternalLinkAlt}
@@ -1042,7 +1047,8 @@
 																href={certUrl}
 																target="_blank"
 																rel="noopener"
-																class="text-(--pf-bright) hover:text-(--pf-highlight)">{c.name}</a
+																class="text-(--pf-accent-text) underline-offset-4 hover:underline"
+																>{c.name}</a
 															>
 															<!-- eslint-enable svelte/no-navigation-without-resolve -->
 														{:else}
@@ -1073,11 +1079,24 @@
 		</article>
 
 		<footer
-			class="flex w-full flex-col items-center gap-2 bg-(--pf-footer) px-5 pt-15 text-(--pf-text-on-dark) transition-colors min-[40rem]:px-10"
+			class="flex w-full flex-col items-center gap-2 bg-(--pf-footer) px-5 pt-16 text-(--pf-text-on-dark) transition-colors min-[40rem]:px-10"
 			aria-labelledby="pf-footer"
 		>
 			<div {...aos} class="flex w-full max-w-[885px] flex-col">
-				<h4 class="mb-2 text-lg font-semibold" id="pf-footer">{profile.name}</h4>
+				<div class="mb-3 flex items-center gap-3">
+					{#if logo}
+						{#if config.logoTint}
+							<div
+								class="logo-tint on-band h-9 w-9 shrink-0"
+								style:--pf-logo="url({logo})"
+								aria-hidden="true"
+							></div>
+						{:else}
+							<img src={logo} alt="" aria-hidden="true" class="h-9 w-9 shrink-0 object-contain" />
+						{/if}
+					{/if}
+					<h4 class="pf-display text-[2rem]" id="pf-footer">{profile.name}</h4>
+				</div>
 				<div class="flex w-full justify-between max-[350px]:flex-col max-[350px]:gap-4">
 					<div class="text-sm/6">
 						{#if profile.title}<div>{profile.title}</div>{/if}
@@ -1093,7 +1112,7 @@
 										target="_blank"
 										rel="me noopener"
 										title={label}
-										class="flex items-center justify-end gap-2 text-nowrap transition hover:text-white hover:underline focus:text-(--pf-bright-hover)"
+										class="flex items-center justify-end gap-2 text-nowrap transition hover:text-(--pf-band-accent) hover:underline focus:text-(--pf-band-accent)"
 									>
 										<FontAwesomeIcon {icon} class="w-3" />
 										<span>{label}</span>
@@ -1148,6 +1167,12 @@
 		--pf-bright-hover: var(--pf-light-bright-hover);
 		--pf-dark-band: var(--pf-light-dark-band);
 		--pf-footer: var(--pf-light-footer);
+		--pf-marker: var(--pf-light-marker);
+		/* Text in the accent, and the strongest text: on light, the accent itself and the body colour. */
+		--pf-accent-text: var(--pf-bright);
+		--pf-strong: var(--pf-text);
+		--pf-hero-edge: color-mix(in srgb, var(--pf-surface) 93%, var(--pf-bright));
+		--pf-hero-glow: 6%;
 		--pf-error: #9a0909;
 		--pf-glass-light: rgba(255, 255, 255, 0.3);
 		--pf-glass: rgba(255, 255, 255, 0.5);
@@ -1171,6 +1196,12 @@
 		--pf-bright-hover: var(--pf-dark-bright-hover);
 		--pf-dark-band: var(--pf-dark-dark-band);
 		--pf-footer: var(--pf-dark-footer);
+		--pf-marker: var(--pf-dark-marker);
+		/* On dark, the button colour is too dim for text: the hover colour reads. */
+		--pf-accent-text: var(--pf-bright-hover);
+		--pf-strong: var(--pf-highlight);
+		--pf-hero-edge: color-mix(in srgb, var(--pf-surface) 62%, #000);
+		--pf-hero-glow: 14%;
 		--pf-error: #ff4d4d;
 		--pf-glass-light: rgba(255, 255, 255, 0.1);
 		--pf-glass: rgba(255, 255, 255, 0.2);
@@ -1191,12 +1222,33 @@
 			--pf-bright-hover: var(--pf-dark-bright-hover);
 			--pf-dark-band: var(--pf-dark-dark-band);
 			--pf-footer: var(--pf-dark-footer);
+			--pf-marker: var(--pf-dark-marker);
+			--pf-accent-text: var(--pf-bright-hover);
+			--pf-strong: var(--pf-highlight);
+			--pf-hero-edge: color-mix(in srgb, var(--pf-surface) 62%, #000);
+			--pf-hero-glow: 14%;
 			--pf-error: #ff4d4d;
 			--pf-glass-light: rgba(255, 255, 255, 0.1);
 			--pf-glass: rgba(255, 255, 255, 0.2);
 
 			color-scheme: dark;
 		}
+	}
+
+	/*
+	 * Derived once from whichever palette is active. A custom property resolves
+	 * on the element it is used on, so these follow the scheme blocks above.
+	 */
+	.showcase {
+		--pf-muted: color-mix(in srgb, var(--pf-text) 72%, var(--pf-surface));
+		--pf-band-accent: color-mix(in srgb, var(--pf-text-on-dark) 62%, var(--pf-bright-hover));
+		/* The picture beside the header: two of the accents, and three mixes toward the page. */
+		--pf-art-0: var(--pf-bright);
+		--pf-art-1: color-mix(in srgb, var(--pf-bright) 55%, var(--pf-surface));
+		--pf-art-2: var(--pf-bright-hover);
+		--pf-art-3: color-mix(in srgb, var(--pf-text) 35%, var(--pf-surface));
+		--pf-art-4: color-mix(in srgb, var(--pf-bright-hover) 55%, var(--pf-text));
+		--pf-art-rule: var(--pf-accent-text);
 	}
 
 	.showcase :global(h1),
@@ -1209,6 +1261,137 @@
 
 	.showcase :global(strong) {
 		font-weight: 600;
+	}
+
+	/*
+	 * Display type: bold and narrow where the heading font has a width axis
+	 * (Instrument Sans does), plain bold where it has not.
+	 */
+	.showcase :global(.pf-display) {
+		font-weight: 700;
+		font-stretch: 78%;
+		letter-spacing: -0.02em;
+		line-height: 0.95;
+	}
+
+	.showcase :global(.pf-subhead) {
+		font-size: 1.75rem;
+		font-weight: 650;
+		font-stretch: 86%;
+		letter-spacing: -0.01em;
+		line-height: 1.1;
+	}
+
+	/* The header: text over the page on a phone, beside the code from 60rem. */
+	.hero {
+		--hero-text-left: 1.5rem;
+
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		min-height: 100svh;
+		overflow: hidden;
+		background:
+			radial-gradient(
+				60rem 32rem at 74% 44%,
+				color-mix(in srgb, var(--pf-bright) var(--pf-hero-glow), transparent),
+				transparent 70%
+			),
+			linear-gradient(
+				90deg,
+				var(--pf-hero-edge) 0%,
+				var(--pf-surface) 55%,
+				color-mix(in srgb, var(--pf-surface) 94%, var(--pf-bright)) 100%
+			);
+	}
+
+	.hero-art {
+		position: absolute;
+		inset: 0 0 auto 0;
+		height: 11rem;
+		overflow: hidden;
+		mask-image: linear-gradient(180deg, #000 35%, transparent 100%);
+	}
+
+	/* On a phone, drawn at minimap size, so both panes and the comment fit. */
+	.hero-art :global(svg) {
+		transform: scale(0.55);
+		transform-origin: 0 0;
+	}
+
+	.hero-body {
+		position: relative;
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		justify-content: center;
+		padding: 5rem 1.5rem 7rem var(--hero-text-left);
+	}
+
+	.hero.with-art .hero-body {
+		justify-content: flex-start;
+		padding-top: 10rem;
+	}
+
+	.hero-kicker {
+		margin: 0 0 0.15em 0.05em;
+		font-family: var(--pf-heading-font), 'Noto Sans', sans-serif;
+		font-size: clamp(1.375rem, 2.6vw, 2.5rem);
+		font-weight: 500;
+		font-stretch: 90%;
+		line-height: 1.1;
+		color: var(--pf-accent-text);
+	}
+
+	.hero-name {
+		font-size: clamp(4rem, 9.5vw, 9.5rem);
+		font-weight: 700;
+		font-stretch: 78%;
+		letter-spacing: -0.025em;
+		line-height: 0.9;
+		color: var(--pf-strong);
+	}
+
+	.hero-lede {
+		max-width: 42ch;
+		text-wrap: pretty;
+		margin-top: 1.5rem;
+		font-size: clamp(1.125rem, 1.5vw, 1.375rem);
+		line-height: 1.45;
+		color: var(--pf-muted);
+	}
+
+	.hero-more {
+		position: absolute;
+		bottom: 1.5rem;
+		left: var(--hero-text-left);
+	}
+
+	@media (min-width: 60rem) {
+		.hero {
+			--hero-text-left: max(3rem, 8vw);
+		}
+
+		.hero.with-art {
+			--hero-text-left: 48%;
+		}
+
+		.hero-art {
+			inset: 0 auto 0 0;
+			width: 46%;
+			height: auto;
+			mask-image: linear-gradient(90deg, #000 62%, transparent 100%);
+		}
+
+		.hero-art :global(svg) {
+			transform: none;
+		}
+
+		.hero.with-art .hero-body {
+			justify-content: center;
+			padding-top: 5rem;
+		}
 	}
 
 	/* The CV page's header: the hero's light, at the height of a heading. */
@@ -1247,6 +1430,16 @@
 		color: var(--pf-strong);
 	}
 
+	.quote-mark {
+		display: block;
+		height: 3.25rem;
+		font-family: var(--pf-heading-font), 'Noto Sans', sans-serif;
+		font-size: 5rem;
+		font-weight: 700;
+		line-height: 1;
+		color: var(--pf-band-accent);
+	}
+
 	/* A one-colour logo painted in the scheme's own bright colour. */
 	.logo-tint {
 		background: var(--pf-bright);
@@ -1254,6 +1447,11 @@
 		transition:
 			transform 0.5s,
 			filter 0.5s;
+	}
+
+	/* On the footer's dark band, in the band's own accent. */
+	.logo-tint.on-band {
+		background: var(--pf-band-accent);
 	}
 
 	.logo-tint:hover {
