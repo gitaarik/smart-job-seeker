@@ -74,9 +74,9 @@ const headings = (c: HTMLElement) =>
 	[...c.querySelectorAll('h2')].map((h) => h.textContent?.trim());
 
 describe('ShowcaseSite pages', () => {
-	test('the public page: the introduction, the quotes and Selected work, and no career', () => {
+	test('the public page: the introduction, Selected work and the quotes, and no career', () => {
 		const c = site('home');
-		expect(headings(c)).toEqual(['About me', 'What People Say', 'Selected Work']);
+		expect(headings(c)).toEqual(['About me', 'Selected Work', 'What People Say']);
 		expect(c.querySelector('#pf-name')?.textContent).toBe('Alex Morgan');
 		expect(c.textContent).not.toContain('Cut costs 40%');
 		expect(c.textContent).not.toContain('Admin cleanup');

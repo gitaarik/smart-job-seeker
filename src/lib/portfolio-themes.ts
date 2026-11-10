@@ -256,15 +256,16 @@ export interface PortfolioTheme {
 
 /**
  * Every section, in the order the showcase shows them by default: the
- * introduction (header, about, quotes) first and the career after it, which is
- * how the site it was ported from reads. Selected work opens the career, so
- * the projects the applicant picked are the first thing after the quotes.
+ * introduction (header, about) first and the career after it. Selected work
+ * comes straight after About me and the quotes after it, so a visitor sees the
+ * work before the praise and the quotes read as backing for what they just
+ * saw. The site it was ported from had the quotes first (changed 2026-11-10).
  */
 export const SHOWCASE_SECTIONS: readonly PortfolioSection[] = [
 	'header',
 	'about',
-	'references',
 	'featured',
+	'references',
 	'summary',
 	'highlights',
 	'skills',

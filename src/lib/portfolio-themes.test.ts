@@ -83,8 +83,8 @@ describe('the private CV page', () => {
 		expect(hasPrivateCv({ privateCv: true })).toBe(false);
 	});
 
-	test('the public page keeps the introduction, the quotes and Selected work', () => {
-		expect(pageSections(split, 'home')).toEqual(['header', 'about', 'references', 'featured']);
+	test('the public page keeps the introduction, Selected work and the quotes', () => {
+		expect(pageSections(split, 'home')).toEqual(['header', 'about', 'featured', 'references']);
 	});
 
 	test('the CV page takes the rest, in the theme’s own order', () => {
