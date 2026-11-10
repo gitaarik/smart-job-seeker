@@ -5,6 +5,34 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.44.0] - 2026-11-10
+
+38 commits since v0.43.0.
+
+### Added
+
+- Media library with platform crops and banner templates, seeded with platform presets that link to their source pages
+- Portfolio site can feature roles and side projects, and side projects can have a logo on their Selected work slide
+- Portfolio keeps the full CV on a private page, with selected work shown as a carousel
+- MCP agents can ask to delete a profile entry, approved in two steps
+- Scraper logs in with a username-only login and waits for the emailed code
+
+### Changed
+
+- Portfolio opens with featured work, with the rest of the page shortened, and the showcase is restyled with a picture beside its header
+- Sign-in notes that the password is optional for code-only sign-ins
+- Media library originals have their own budget
+
+### Fixed
+
+- Images served publicly have their EXIF data stripped
+- MCP uploads are accepted on their signed link alone, without the API key, and `.eml` files are accepted
+- Entries hidden from the site are kept out of the public portfolio data
+- Media budget checks and version links use the storage location of each item, and archive restores run inside the budget lock
+- Media usage is read through the caller's transaction in billing
+- Scraper carries on when a job tab redirects while it reads the page
+- Scraper keeps password fields out of its logs
+
 ## [0.43.0] - 2026-11-07
 
 27 commits since v0.42.0.
