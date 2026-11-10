@@ -78,10 +78,11 @@
 			<span class="text-sm">All Side Projects</span>
 		</a>
 		<div class="mt-2 flex items-center gap-3">
-			{#if data.imageUrl}
+			<!-- The logo where there is one, as a role's page shows its employer's. -->
+			{#if data.logoUrl ?? data.imageUrl}
 				<img
-					src={data.imageUrl}
-					alt="{data.project.name} image"
+					src={data.logoUrl ?? data.imageUrl}
+					alt="{data.project.name} {data.logoUrl ? 'logo' : 'image'}"
 					class="h-10 w-10 rounded-lg object-cover"
 				/>
 			{:else}

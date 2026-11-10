@@ -1,6 +1,6 @@
 /**
  * One image slot on a profile row: the profile photo, a role's or a school's
- * logo and banner, a side project's image and banner.
+ * logo and banner, a side project's logo, image and banner.
  *
  * - POST a file: it goes into the profile's media library, and the slot shows
  *   all of it.

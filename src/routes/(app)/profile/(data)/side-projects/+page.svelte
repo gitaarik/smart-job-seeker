@@ -10,7 +10,7 @@
 	import ConfirmModal from '../../components/ConfirmModal.svelte';
 	import ItemCard from '../../components/ItemCard.svelte';
 	import ReorderableList from '../../components/ReorderableList.svelte';
-	import { getSideProjectImageUrl } from '$lib/utils/entity-media-url';
+	import { getSideProjectImageUrl, getSideProjectLogoUrl } from '$lib/utils/entity-media-url';
 	import { formatProjectUrl } from '$lib/tools/url-utils';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -262,8 +262,8 @@
 						{expandedId}
 						onToggle={toggleExpand}
 						icon={faLightbulb}
-						imageUrl={getSideProjectImageUrl(project)}
-						imageAlt="{project.name} image"
+						imageUrl={getSideProjectLogoUrl(project) ?? getSideProjectImageUrl(project)}
+						imageAlt="{project.name} {getSideProjectLogoUrl(project) ? 'logo' : 'image'}"
 					>
 						{#snippet title()}
 							{project.name}

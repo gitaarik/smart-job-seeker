@@ -166,7 +166,7 @@ const SET_AFTER_INSERT: Record<string, string[]> = {
 	profiles: ['profile_photo_path', 'profile_photo_id'],
 	work_experiences: ['logo_path', 'banner_path', 'logo_id', 'banner_id'],
 	education: ['logo_path', 'banner_path', 'logo_id', 'banner_id'],
-	side_projects: ['image_path', 'banner_path', 'image_id', 'banner_id']
+	side_projects: ['image_path', 'banner_path', 'image_id', 'banner_id', 'logo_id']
 };
 
 /** Carried under another name in the payload. */

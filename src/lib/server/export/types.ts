@@ -479,6 +479,8 @@ export interface ExportedSideProject {
 	/** Renditions by source id (see media_library). */
 	image_id?: string;
 	banner_id?: string;
+	/** In no export before 2026-11-10. */
+	logo_id?: string;
 	tags?: unknown;
 	/** On the site's Selected work. In no export before 2026-11-09. */
 	featured?: boolean;

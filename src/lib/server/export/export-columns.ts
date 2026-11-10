@@ -291,7 +291,8 @@ export const SIDE_PROJECT_COLUMNS = {
 	banner_path: true,
 	// Renditions by source id, mapped on import like `profile_photo_id`.
 	image_id: true,
-	banner_id: true
+	banner_id: true,
+	logo_id: true
 } as const satisfies Decided<typeof side_projects>;
 
 export const SIDE_PROJECT_ACHIEVEMENT_COLUMNS = {

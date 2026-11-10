@@ -9,7 +9,7 @@
  */
 
 import { formatDateRangeVerbose } from '$lib/tools/date-utils';
-import { getWorkExperienceLogoUrl } from '$lib/utils/entity-media-url';
+import { getSideProjectLogoUrl, getWorkExperienceLogoUrl } from '$lib/utils/entity-media-url';
 import { featuredKey, type FeaturedWork, type Row, type SiteLists } from '../site-lists';
 
 /** How many technologies a slide names before "+N"; the story names them all. */
@@ -19,7 +19,10 @@ export interface WorkSlide {
 	key: string;
 	/** Where the work was done: the employer, or the layout's word for a side project. */
 	context: string;
-	/** The employer's logo, for a role, or a role project whose role has one. */
+	/**
+	 * The employer's logo, for a role or a role project whose role has one; a
+	 * side project's own.
+	 */
 	logo: string | null;
 	name: string;
 	/** A link the applicant typed in, so render it through ExternalLink. */
@@ -112,7 +115,8 @@ export function workSlides(
 		return {
 			key: featuredKey(item),
 			context: kind === 'role' ? String(p.company ?? '') : sideLabel,
-			logo: role ? getWorkExperienceLogoUrl(role) : null,
+			logo:
+				kind === 'side' ? getSideProjectLogoUrl(p) : role ? getWorkExperienceLogoUrl(role) : null,
 			name: String(p.name ?? ''),
 			link: p.url || (kind === 'side' ? p.repo_url : null) || null,
 			role: p.project_role || null,

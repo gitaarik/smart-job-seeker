@@ -17,7 +17,11 @@ import {
 	side_project_technologies,
 	side_projects
 } from '$lib/server/db/schema';
-import { getSideProjectBannerUrl, getSideProjectImageUrl } from '$lib/utils/entity-media-url';
+import {
+	getSideProjectBannerUrl,
+	getSideProjectImageUrl,
+	getSideProjectLogoUrl
+} from '$lib/utils/entity-media-url';
 
 export const load: LayoutServerLoad = async ({ params, parent, depends }) => {
 	const layoutData = await parent();
@@ -64,6 +68,7 @@ export const load: LayoutServerLoad = async ({ params, parent, depends }) => {
 		.from(profile_document_projects)
 		.where(eq(profile_document_projects.side_project_id, project.id));
 
+	const logoUrl = getSideProjectLogoUrl(project);
 	const imageUrl = getSideProjectImageUrl(project);
 	const bannerUrl = getSideProjectBannerUrl(project);
 
@@ -71,6 +76,7 @@ export const load: LayoutServerLoad = async ({ params, parent, depends }) => {
 		project,
 		profileId: layoutData.selectedProfile.id,
 		sourceCount,
+		logoUrl,
 		imageUrl,
 		bannerUrl
 	};

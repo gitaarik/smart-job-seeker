@@ -464,6 +464,7 @@ export async function buildProfileExport(
 			banner_path: proj.banner_path || undefined,
 			image_id: proj.image_id || undefined,
 			banner_id: proj.banner_id || undefined,
+			logo_id: proj.logo_id || undefined,
 			tags: proj.tags,
 			featured: proj.featured || undefined,
 			achievements: proj.side_project_achievements.map((a) => ({

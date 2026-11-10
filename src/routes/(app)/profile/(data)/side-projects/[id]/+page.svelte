@@ -33,6 +33,7 @@
 	remountOnAppliedChange();
 	const loaded = untrack(() => data);
 
+	let logoUrl = $state(loaded.logoUrl);
 	let imageUrl = $state(loaded.imageUrl);
 	let bannerUrl = $state(loaded.bannerUrl);
 
@@ -529,9 +530,28 @@
 		<h2 class="mb-2 text-lg font-semibold text-[var(--dash-text)]">Portfolio Images</h2>
 		<p class="mb-4 text-sm text-[var(--dash-text-secondary)]">
 			These images are used for your portfolio display. They are not required for job search or
-			scoring.
+			scoring. The logo goes on the project's slide when it is featured on your site.
 		</p>
-		<div class="flex gap-6">
+		<div class="flex flex-wrap gap-6">
+			<div class="max-w-xs">
+				<MediaUpload
+					entityType="side_project"
+					entityId={project.id}
+					field="logo"
+					currentUrl={logoUrl}
+					label="Project Logo"
+					showHint={false}
+					onUpload={(url) => {
+						logoUrl = url;
+						// The header shows this too, from layout data.
+						void invalidateAll();
+					}}
+					onDelete={() => {
+						logoUrl = null;
+						void invalidateAll();
+					}}
+				/>
+			</div>
 			<div class="max-w-xs">
 				<MediaUpload
 					entityType="side_project"

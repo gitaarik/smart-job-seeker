@@ -61,6 +61,14 @@ export function getEducationBannerUrl(edu: {
 }
 
 /**
+ * Get side project logo URL. Added after the library, so there is no legacy
+ * path to fall back to.
+ */
+export function getSideProjectLogoUrl(project: { logo_id?: string | null }): string | null {
+	return getEntityMediaUrl(project.logo_id);
+}
+
+/**
  * Get side project image URL
  */
 export function getSideProjectImageUrl(project: {

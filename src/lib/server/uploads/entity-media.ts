@@ -1,6 +1,6 @@
 /**
  * The image slots on profile rows: a profile's photo, the logos and banners of
- * roles and education, a side project's image and banner.
+ * roles and education, a side project's logo, image and banner.
  *
  * Since 2026-11 a slot points at a media library rendition rather than holding
  * its own shrunk copy (see planning/MEDIA-LIBRARY.md and server/media/). An

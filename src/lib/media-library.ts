@@ -195,6 +195,7 @@ export const ENTITY_MEDIA_SLOTS = {
 		banner: { label: 'Banner', kind: 'banner', maxEdge: 1600 }
 	},
 	side_project: {
+		logo: { label: 'Logo', kind: 'logo', maxEdge: 800 },
 		image: { label: 'Image', kind: 'other', maxEdge: 800 },
 		banner: { label: 'Banner', kind: 'banner', maxEdge: 1600 }
 	}

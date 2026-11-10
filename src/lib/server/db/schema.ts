@@ -2363,11 +2363,18 @@ export const side_projects = pgTable(
 		banner_path: varchar({ length: 255 }),
 		/** Media library renditions (see `media_renditions`). */
 		image_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' }),
-		banner_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' })
+		banner_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' }),
+		/**
+		 * The project's mark, where a role has its employer's: the site's Selected
+		 * work prints it on the project's slide. Newer than the library, so it
+		 * has no `*_path` column to fall back to.
+		 */
+		logo_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' })
 	},
 	(table) => [
 		index('side_projects_image_idx').on(table.image_id),
 		index('side_projects_banner_idx').on(table.banner_id),
+		index('side_projects_logo_idx').on(table.logo_id),
 		foreignKey({
 			columns: [table.profile_id],
 			foreignColumns: [profiles.id],

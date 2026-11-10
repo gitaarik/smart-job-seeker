@@ -27,8 +27,14 @@ import {
 } from '$lib/media-library';
 import { deleteUnusedRenditions, ensureRendered, findOrCreateRendition } from './renditions';
 
-/** Where each entity slot lives, and the legacy column it replaces. */
-const ENTITY_SLOT_COLUMNS: Record<string, Record<string, { column: string; legacy: string }>> = {
+/**
+ * Where each entity slot lives, and the legacy column it replaces. A slot
+ * added after the library (a side project's logo) never had one.
+ */
+const ENTITY_SLOT_COLUMNS: Record<
+	string,
+	Record<string, { column: string; legacy: string | null }>
+> = {
 	profile: { photo: { column: 'profile_photo_id', legacy: 'profile_photo_path' } },
 	work_experience: {
 		logo: { column: 'logo_id', legacy: 'logo_path' },
@@ -39,6 +45,7 @@ const ENTITY_SLOT_COLUMNS: Record<string, Record<string, { column: string; legac
 		banner: { column: 'banner_id', legacy: 'banner_path' }
 	},
 	side_project: {
+		logo: { column: 'logo_id', legacy: null },
 		image: { column: 'image_id', legacy: 'image_path' },
 		banner: { column: 'banner_id', legacy: 'banner_path' }
 	}
@@ -67,7 +74,7 @@ export interface EntitySlot {
 	slot: string;
 	table: string;
 	column: string;
-	legacy: string;
+	legacy: string | null;
 	spec: MediaSlotSpec;
 }
 
@@ -95,6 +102,7 @@ interface SlotState {
 async function readSlot(slot: EntitySlot, entityId: number): Promise<SlotState | null> {
 	const profileColumn =
 		slot.table === 'profiles' ? sql.identifier('id') : sql.identifier('profile_id');
+	const legacy = slot.legacy ? sql.identifier(slot.legacy) : sql`NULL`;
 	const rows = await queryRawDirect<{
 		profile_id: number;
 		rendition_id: string | null;
@@ -102,7 +110,7 @@ async function readSlot(slot: EntitySlot, entityId: number): Promise<SlotState |
 	}>(sql`
 		SELECT ${profileColumn} AS profile_id,
 		       ${sql.identifier(slot.column)}::text AS rendition_id,
-		       ${sql.identifier(slot.legacy)} AS legacy_path
+		       ${legacy}::text AS legacy_path
 		  FROM ${sql.identifier(slot.table)}
 		 WHERE id = ${entityId}
 	`);
@@ -114,10 +122,10 @@ async function readSlot(slot: EntitySlot, entityId: number): Promise<SlotState |
 
 async function writeSlot(slot: EntitySlot, entityId: number, renditionId: string | null) {
 	const touched = slot.table === 'profiles' ? sql`, date_updated = now()` : sql``;
+	const legacy = slot.legacy ? sql`, ${sql.identifier(slot.legacy)} = NULL` : sql``;
 	await queryRawDirect(sql`
 		UPDATE ${sql.identifier(slot.table)}
-		   SET ${sql.identifier(slot.column)} = ${renditionId}::uuid,
-		       ${sql.identifier(slot.legacy)} = NULL${touched}
+		   SET ${sql.identifier(slot.column)} = ${renditionId}::uuid${legacy}${touched}
 		 WHERE id = ${entityId}
 	`);
 }

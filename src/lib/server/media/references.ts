@@ -37,6 +37,7 @@ export const PUBLIC_RENDITION_REFERENCES = [
 	'education.banner_id',
 	'side_projects.image_id',
 	'side_projects.banner_id',
+	'side_projects.logo_id',
 	'presentation_template_assets.rendition_id'
 ] as const;
 

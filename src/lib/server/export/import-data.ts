@@ -910,6 +910,7 @@ function slotSources(
 		if (!id) return;
 		slots.push({ table: 'side_projects', column: 'image_id', id, source: sp.image_id });
 		slots.push({ table: 'side_projects', column: 'banner_id', id, source: sp.banner_id });
+		slots.push({ table: 'side_projects', column: 'logo_id', id, source: sp.logo_id });
 	});
 	return slots;
 }

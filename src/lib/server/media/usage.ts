@@ -3,9 +3,10 @@
  * item, and which platforms an application records it as uploaded to.
  *
  * The page asks this before deleting an item, so the person sees what will go
- * blank, and to say "in use" on the grid. Every slot is listed by name here;
- * the test in __tests__/references.test.ts keeps that list in step with the
- * foreign keys, so a new slot cannot be shown nowhere.
+ * blank, and to say "in use" on the grid. Every slot is listed by name here,
+ * and nothing checks the list: the test in __tests__/references.test.ts holds
+ * the foreign keys to the public and private lists in references.ts, not to
+ * this query, so a new slot needs its own line below.
  */
 
 import { sql } from 'drizzle-orm';
@@ -74,6 +75,9 @@ export async function mediaUsage(profileId: number, itemIds?: number[]): Promise
 		UNION ALL
 		SELECT r.item_id, r.id::text, 'education', e.id, e.institution::text, 'banner', NULL
 		  FROM r JOIN education e ON e.banner_id = r.id
+		UNION ALL
+		SELECT r.item_id, r.id::text, 'side_project', s.id, s.name::text, 'logo', NULL
+		  FROM r JOIN side_projects s ON s.logo_id = r.id
 		UNION ALL
 		SELECT r.item_id, r.id::text, 'side_project', s.id, s.name::text, 'image', NULL
 		  FROM r JOIN side_projects s ON s.image_id = r.id

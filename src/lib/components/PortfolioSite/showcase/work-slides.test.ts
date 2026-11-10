@@ -122,6 +122,28 @@ describe('workSlides', () => {
 			points: ['200 stars']
 		});
 	});
+
+	test("a side project's slide shows its own logo, and never its image", () => {
+		const project = {
+			name: 'Side B',
+			featured: true,
+			// The image is a screenshot more often than not: no logo is better than that.
+			image_id: 'uuid-image',
+			side_project_achievements: [],
+			side_project_technologies: []
+		};
+		const [withLogo] = slidesFor({
+			work_experiences: [],
+			side_projects: [{ ...project, id: 41, logo_id: 'uuid-logo' }]
+		});
+		const [withImageOnly] = slidesFor({
+			work_experiences: [],
+			side_projects: [{ ...project, id: 42 }]
+		});
+
+		expect(withLogo.logo).toBe('/assets/uuid-logo');
+		expect(withImageOnly.logo).toBeNull();
+	});
 });
 
 describe('hasStory', () => {
