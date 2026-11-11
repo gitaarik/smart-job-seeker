@@ -148,7 +148,7 @@
 					</div>
 				{:else}
 					{#if contact.failed}
-						<div class="px-6 text-(--pf-error)">
+						<div class="mb-4 px-6 text-(--pf-error)">
 							<p>
 								Human verification failed. Please refresh the page and try again, or check your ad
 								blocker.
