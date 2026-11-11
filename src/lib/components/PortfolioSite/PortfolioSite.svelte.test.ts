@@ -55,6 +55,31 @@ function listedUnder(container: HTMLElement, heading: string): string[] | null {
 	return list ? [...list.querySelectorAll('li')].map((li) => li.textContent?.trim() ?? '') : null;
 }
 
+describe('PortfolioSite highlights', () => {
+	test('prints the highlights only, not the Contact for lines or an old key skill row', () => {
+		// This layout has no Contact for box, and used to print every row of the
+		// table as a highlight, the showcase's boxes in among the real ones.
+		const { container } = render(PortfolioSite, {
+			props: {
+				profile: {
+					name: 'Alex Morgan',
+					profile_versions: [],
+					highlights: [
+						{ id: 1, type: 'highlight', text: 'Shipped v1' },
+						{ id: 2, type: 'contact_for', text: 'Consulting' },
+						{ id: 3, type: 'key_skill', text: 'Python, Django' }
+					]
+				},
+				theme: null
+			}
+		});
+		const bullets = [...container.querySelectorAll('ul.bullets li')].map((li) =>
+			li.textContent?.trim()
+		);
+		expect(bullets).toEqual(['Shipped v1']);
+	});
+});
+
 describe('PortfolioSite technologies', () => {
 	test('leaves a technology switched off the site out of all three lists', () => {
 		const off = ['!portfolio'];

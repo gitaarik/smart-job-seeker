@@ -46,6 +46,25 @@ const names = (rows: Row[]) => rows.map((r) => r.name);
 const picks = (featured: SiteLists['featured']) =>
 	featured.map((f) => [f.kind, f.kind === 'experience' ? f.role.name : f.project.name]);
 
+describe('highlights', () => {
+	test('a row lands in the list its kind names, and an old key_skill row in neither', () => {
+		const { lists } = view({
+			highlights: [
+				{ id: 1, type: 'highlight', text: 'Shipped v1' },
+				{ id: 2, type: null, text: 'From before rows had a kind' },
+				{ id: 3, type: 'contact_for', text: 'Consulting' },
+				{ id: 4, type: 'key_skill', text: 'Python, Django' },
+				{ id: 5, type: 'contact_for', text: 'Off the site', tags: ['!portfolio'] }
+			]
+		});
+		expect(lists.highlights.map((h) => h.text)).toEqual([
+			'Shipped v1',
+			'From before rows had a kind'
+		]);
+		expect(lists.contactFor.map((h) => h.text)).toEqual(['Consulting']);
+	});
+});
+
 describe('isBriefRole', () => {
 	test('a role that ended longer ago than the cutoff is a line, a current one never is', () => {
 		expect(isBriefRole(role(1, '2015-06-26'), 10, TODAY)).toBe(true);

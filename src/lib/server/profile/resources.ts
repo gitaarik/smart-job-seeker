@@ -1149,11 +1149,20 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 				kind: 'string',
 				notForAssistant:
 					'A Font Awesome identifier such as faPython. A name that does not exist renders nothing, and the applicant sees a gap rather than an error.'
+			},
+			// The Highlights page has a list per kind and posts the kind of the
+			// list a row is added to. `key_skill` is not offered: the showcase
+			// builds its Key skills box from the Skills, and reads no such row.
+			type: {
+				kind: 'string',
+				allowed: ['highlight', 'contact_for'],
+				notForAssistant:
+					"Which list the row is in: the portfolio's Highlights card, or the Contact for box beside its About me. A wrong one moves a line between two boxes on a public page, and nothing says so."
 			}
 		},
 		required: ['text'],
-		// The table also holds other kinds of profile blurb; the highlights page
-		// writes and reads this one.
+		// A row added without a kind is a highlight, as every one the assistant
+		// adds is.
 		insertDefaults: { type: 'highlight' },
 		notNullColumns: [],
 		newRowPlacement: 'append',

@@ -137,6 +137,17 @@ describe('ShowcaseSite', () => {
 		expect(c.textContent).not.toContain('An old key skill row');
 	});
 
+	test('with both boxes, Key skills takes the wider column', () => {
+		const grid = (c: HTMLElement) => box(c, 'Contact for:')?.parentElement?.className ?? '';
+		const both = site({
+			tech_skill_categories: [{ id: 1, name: 'Backend', tech_skills: [{ id: 10, name: 'Go' }] }]
+		});
+		expect(grid(both)).toContain('grid-cols-[3fr_2fr]');
+		// One box alone keeps half the row, as both used to.
+		expect(grid(site())).toContain('min-[50rem]:grid-cols-2');
+		expect(grid(site())).not.toContain('3fr');
+	});
+
 	test('the About me is one paragraph per blank-line block', () => {
 		const ps = [...site().querySelectorAll('section p')].map((p) => p.textContent?.trim());
 		expect(ps).toContain('First paragraph.');

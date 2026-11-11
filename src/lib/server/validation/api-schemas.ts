@@ -525,7 +525,9 @@ export const certificateSkillBasicSchema = z.object({
 
 export const highlightBasicSchema = z.object({
 	text: requiredTrimmedString('Highlight text').optional(),
-	icon_name: optionalTrimmedString(100)
+	icon_name: optionalTrimmedString(100),
+	// Which list the row is in; the section's `allowed` names the kinds.
+	type: optionalTrimmedString(50)
 });
 
 /**

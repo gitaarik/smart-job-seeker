@@ -372,6 +372,20 @@ describe('createRow', () => {
 		expect(state.inserts[0].values).toMatchObject({ type: 'highlight' });
 	});
 
+	it('takes the kind the Highlights page posts for its Contact for list', async () => {
+		await createRow('highlight', ACTOR, { text: 'Consulting', type: 'contact_for' });
+		expect(state.inserts[0].values).toMatchObject({ text: 'Consulting', type: 'contact_for' });
+	});
+
+	it('refuses a highlight kind the page does not offer, and keeps the kind from the assistant', async () => {
+		// The showcase reads no `key_skill` row any more (its Key skills box is
+		// the Skills), so writing one would add a line nothing prints.
+		const result = await createRow('highlight', ACTOR, { text: 'Python', type: 'key_skill' });
+		expect(result).toMatchObject({ ok: false, reason: 'invalid' });
+		expect(state.inserts).toHaveLength(0);
+		expect(PROFILE_RESOURCES.highlight.fields.type.notForAssistant).toBeTruthy();
+	});
+
 	it('stores a date as the string its column holds', async () => {
 		await createRow('certificate', ACTOR, { name: 'AWS', date: '2020-05-15' });
 		expect(state.inserts[0].values.date).toBe('2020-05-15');

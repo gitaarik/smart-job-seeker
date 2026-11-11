@@ -131,12 +131,11 @@
 	const career = $derived(careerView(lists, config, new Date(), page));
 	const slides = $derived(workSlides(lists.featured, show, lists.work, 'Side project'));
 
-	// `highlight` rows are the career card and `contact_for` rows one of the two
-	// boxes beside the About me. The other box, Key skills, reads the Skills
-	// (key-skills.ts), so a `key_skill` row is not read at all.
-	const highlights = $derived(lists.highlights.filter((h) => !h.type || h.type === 'highlight'));
+	// The career card, and the two boxes beside the About me: Key skills from
+	// the Skills (key-skills.ts), Contact for from its own highlight rows.
+	const highlights = $derived(lists.highlights);
 	const keySkills = $derived(keySkillLines(lists.skillCategories));
-	const contactFor = $derived(lists.highlights.filter((h) => h.type === 'contact_for'));
+	const contactFor = $derived(lists.contactFor);
 
 	const aboutParagraphs = $derived(
 		String(profile.about_me_text ?? '')
@@ -354,7 +353,10 @@
 			// A box where only some entries have an icon keeps a gap where the
 			// others' would be, so its text still starts in one column. Key skills
 			// entries often wrap, so the markup keeps each icon level with the
-			// first row of its text.
+			// first row of its text. A Key skills line names four skills and a
+			// Contact for line a few words, so with both boxes Key skills takes the
+			// wider column: at half each, most of its lines wrapped and the boxes
+			// came out far apart in height.
 			.map((box) => ({ ...box, iconColumn: box.items.some((item) => item.icon) }))
 	);
 </script>
@@ -521,7 +523,12 @@
 									{#if keySkills.length || contactFor.length}
 										<div
 											{...aos}
-											class="mb-16 grid w-full grid-cols-1 gap-6 min-[50rem]:grid-cols-2"
+											class={[
+												'mb-16 grid w-full grid-cols-1 gap-6',
+												aboutBoxes.length > 1
+													? 'min-[50rem]:grid-cols-[3fr_2fr]'
+													: 'min-[50rem]:grid-cols-2'
+											]}
 										>
 											{#each aboutBoxes as { label, items, iconColumn } (label)}
 												<div

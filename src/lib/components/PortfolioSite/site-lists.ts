@@ -36,7 +36,19 @@ export interface SiteLists {
 	certificates: Row[];
 	languages: Row[];
 	references: Row[];
+	/**
+	 * The `highlights` rows of kind `highlight`, and any from before rows had a
+	 * kind: what a Highlights section prints.
+	 *
+	 * One table holds both lists the Highlights page keeps, and a row's `type`
+	 * says which. Both layouts used to print every row as a highlight, so a
+	 * classic site listed the showcase's Contact for lines, and the copy of an
+	 * old Key skills box, between the highlights. A `key_skill` row is in
+	 * neither list: the showcase builds that box from the Skills (key-skills.ts).
+	 */
 	highlights: Row[];
+	/** The `contact_for` rows: the showcase's Contact for box, beside its About me. */
+	contactFor: Row[];
 	/**
 	 * What the applicant featured. Only what is still on the site, so a
 	 * featured entry switched off the site stays off it.
@@ -84,6 +96,7 @@ export function siteLists(profile: any, versionId: number | null): SiteLists {
 		}))
 	);
 	const sideProjects = show(profile.side_projects, 'side_project');
+	const highlightRows = show(profile.highlights);
 	return {
 		show,
 		work,
@@ -96,7 +109,8 @@ export function siteLists(profile: any, versionId: number | null): SiteLists {
 		certificates: show(profile.certificates),
 		languages: show(profile.languages),
 		references: show(profile.references),
-		highlights: show(profile.highlights),
+		highlights: highlightRows.filter((h) => !h.type || h.type === 'highlight'),
+		contactFor: highlightRows.filter((h) => h.type === 'contact_for'),
 		featured: featuredWork(work, roleProjects, sideProjects)
 	};
 }
