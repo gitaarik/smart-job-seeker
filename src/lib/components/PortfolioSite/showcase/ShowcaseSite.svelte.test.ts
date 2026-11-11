@@ -183,4 +183,19 @@ describe('ShowcaseSite', () => {
 		expect(c.querySelector('a[href^="mailto:"]')).toBeNull();
 		expect(c.querySelector('a[href^="tel:"]')).toBeNull();
 	});
+
+	const buttons = (c: HTMLElement) =>
+		[...c.querySelectorAll('button')].filter((b) => b.textContent?.includes('Get in touch'));
+
+	test('ends on a contact button when something follows the About me', () => {
+		const c = site({ references: [{ id: 1, text: 'Great.', author: 'Sam' }] });
+		expect(c.querySelector('#pf-closing')).not.toBeNull();
+		expect(buttons(c)).toHaveLength(3);
+	});
+
+	test('adds no closing button when the About me, with its own, is last', () => {
+		const c = site({}, { sections: ['header', 'about'] });
+		expect(c.querySelector('#pf-closing')).toBeNull();
+		expect(buttons(c)).toHaveLength(2);
+	});
 });

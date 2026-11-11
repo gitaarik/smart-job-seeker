@@ -245,6 +245,13 @@
 			: null
 	);
 
+	// The work and the quotes come after the About me's button, so the page
+	// ends on one of its own, unless the About me is already the last thing.
+	const closingContact = $derived.by(() => {
+		const last = blocks[blocks.length - 1];
+		return !!contactState && !(last?.kind === 'band' && last.section === 'about');
+	});
+
 	// --- Animations and the "More info" button ---------------------------
 
 	const aos = $derived<Record<string, string>>(config.animations ? { 'data-aos': 'fade' } : {});
@@ -1104,6 +1111,31 @@
 					</div>
 				{/if}
 			{/each}
+
+			{#if closingContact && contactState}
+				<section
+					class="flex w-full justify-center bg-(--pf-surface) px-5 py-20 transition-colors min-[40rem]:px-10 min-[50rem]:py-28 print:hidden"
+					aria-labelledby="pf-closing"
+				>
+					<div class="w-full max-w-[885px]">
+						<h2
+							{...aos}
+							id="pf-closing"
+							class="pf-display mb-10 text-[2.25rem] text-(--pf-strong) min-[50rem]:text-[3rem]"
+						>
+							Want to work together?
+						</h2>
+						<div {...aos} class="flex">
+							<ContactButton
+								state={contactState}
+								intro={config.contactIntro}
+								panelClass="bg-(--pf-surface-raised)"
+								scheme={actual}
+							/>
+						</div>
+					</div>
+				</section>
+			{/if}
 		</article>
 
 		<footer
