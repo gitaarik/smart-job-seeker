@@ -2230,7 +2230,11 @@ export const work_experience_projects = pgTable(
 		// their best. A column rather than a tag: a tag that is not a base
 		// template is read as a version slug, which would take the project off
 		// every version not called "featured". See site-lists.ts.
-		featured: boolean().default(false).notNull()
+		featured: boolean().default(false).notNull(),
+		// Its place in Selected work when the applicant has ordered it by hand,
+		// shared with featured roles and side projects. Null everywhere is
+		// career order; see site-lists.ts.
+		featured_sort: integer()
 	},
 	(table) => [
 		foreignKey({
@@ -2357,6 +2361,8 @@ export const side_projects = pgTable(
 		tags: json(),
 		/** Shown in full under the site's Selected work; see work_experience_projects.featured. */
 		featured: boolean().default(false).notNull(),
+		/** Its place in Selected work; see work_experience_projects.featured_sort. */
+		featured_sort: integer(),
 		/** Superseded by `image_id`; read only until migrate-media-library.ts has run. */
 		image_path: varchar({ length: 255 }),
 		/** Superseded by `banner_id`; read only until migrate-media-library.ts has run. */
@@ -2746,6 +2752,8 @@ export const work_experiences = pgTable(
 		 * have a gap. See work_experience_projects.featured and site-lists.ts.
 		 */
 		featured: boolean().default(false).notNull(),
+		/** Its place in Selected work; see work_experience_projects.featured_sort. */
+		featured_sort: integer(),
 		/** Superseded by `logo_id`; read only until migrate-media-library.ts has run. */
 		logo_path: varchar({ length: 255 }),
 		/** Superseded by `banner_id`; read only until migrate-media-library.ts has run. */
