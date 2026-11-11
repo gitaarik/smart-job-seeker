@@ -45,7 +45,7 @@ function profile() {
 		github_profile: 'https://github.com/amorgan77',
 		stackoverflow_profile: 'https://stackoverflow.com/users/123456/amorgan77',
 		nationality: 'Dutch',
-		profile_photo_path: 'photo.jpg',
+		profile_photo_id: '7e1c2a9b-4d3f-4a8e-9b6c-1f2e3d4c5b6a',
 		summary: 'Engineer with ten years of experience.',
 		references: [{ author: 'Sam Lee', author_position: 'CTO', text: 'Alex rebuilt our platform.' }],
 		highlights: [{ text: 'Alex shipped it' }],
@@ -173,7 +173,7 @@ describe('anonymiseTree', () => {
 			'github_profile',
 			'stackoverflow_profile',
 			'nationality',
-			'profile_photo_path'
+			'profile_photo_id'
 		]) {
 			expect(page[field], field).toBeNull();
 		}

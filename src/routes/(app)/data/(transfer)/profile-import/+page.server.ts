@@ -9,7 +9,6 @@ import {
 	isLegacyFormat,
 	parseExportZip,
 	importMediaFiles,
-	deleteProfileMediaFiles,
 	type ExportData
 } from '$lib/server/export';
 import { importProfileFromJson } from '$lib/server/profile/import-profile-json';
@@ -147,11 +146,6 @@ export const actions: Actions = {
 				} catch (err) {
 					if (isHttpError(err)) return fail(err.status, { error: err.body.message });
 					throw err;
-				}
-
-				// Delete old media files if overwriting
-				if (overwriteProfileId) {
-					await deleteProfileMediaFiles(overwriteProfileId);
 				}
 
 				// Import data (document text comes from the archive, so it is passed in)

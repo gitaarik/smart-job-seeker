@@ -9,17 +9,10 @@
  * for a slot the library fills.
  */
 
-import { unlink } from 'node:fs/promises';
-import { join } from 'node:path';
-import { dbDirect } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
-import { profiles, work_experiences, education, side_projects } from '$lib/server/db/schema';
 import { createMediaItem } from '$lib/server/media/items';
 import { assignEntitySlot, resolveEntitySlot } from '$lib/server/media/slots';
 import { slotKey } from './import-media-library';
 import type { MediaFile } from './types';
-
-const UPLOADS_DIR = join(process.cwd(), 'uploads');
 
 interface MediaImportResult {
 	imported: number;
@@ -111,74 +104,4 @@ export async function importMediaFiles(
 	}
 
 	return result;
-}
-
-/**
- * Delete old media files when overwriting a profile
- */
-export async function deleteProfileMediaFiles(profileId: number): Promise<void> {
-	// Get profile photo
-	const profile = await dbDirect.query.profiles.findFirst({
-		where: eq(profiles.id, profileId),
-		columns: { profile_photo_path: true }
-	});
-
-	if (profile?.profile_photo_path) {
-		try {
-			await unlink(join(UPLOADS_DIR, profile.profile_photo_path));
-		} catch {
-			// File might not exist
-		}
-	}
-
-	// Get work experience media
-	const workExps = await dbDirect.query.work_experiences.findMany({
-		where: eq(work_experiences.profile_id, profileId),
-		columns: { logo_path: true, banner_path: true }
-	});
-
-	for (const we of workExps) {
-		for (const path of [we.logo_path, we.banner_path]) {
-			if (!path) continue;
-			try {
-				await unlink(join(UPLOADS_DIR, path));
-			} catch {
-				// File might not exist
-			}
-		}
-	}
-
-	// Get education media
-	const eduRecords = await dbDirect.query.education.findMany({
-		where: eq(education.profile_id, profileId),
-		columns: { logo_path: true, banner_path: true }
-	});
-
-	for (const edu of eduRecords) {
-		for (const path of [edu.logo_path, edu.banner_path]) {
-			if (!path) continue;
-			try {
-				await unlink(join(UPLOADS_DIR, path));
-			} catch {
-				// File might not exist
-			}
-		}
-	}
-
-	// Get side project media
-	const sideProjectRecords = await dbDirect.query.side_projects.findMany({
-		where: eq(side_projects.profile_id, profileId),
-		columns: { image_path: true, banner_path: true }
-	});
-
-	for (const sp of sideProjectRecords) {
-		for (const path of [sp.image_path, sp.banner_path]) {
-			if (!path) continue;
-			try {
-				await unlink(join(UPLOADS_DIR, path));
-			} catch {
-				// File might not exist
-			}
-		}
-	}
 }

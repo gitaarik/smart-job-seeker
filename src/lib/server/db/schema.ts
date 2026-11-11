@@ -815,10 +815,6 @@ export const education = pgTable(
 		profile_id: integer().notNull(),
 		summary: text(),
 		tags: json(),
-		/** Superseded by `logo_id`; read only until migrate-media-library.ts has run. */
-		logo_path: varchar({ length: 255 }),
-		/** Superseded by `banner_id`; read only until migrate-media-library.ts has run. */
-		banner_path: varchar({ length: 255 }),
 		/** Media library renditions (see `media_renditions`). */
 		logo_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' }),
 		banner_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' })
@@ -2363,10 +2359,6 @@ export const side_projects = pgTable(
 		featured: boolean().default(false).notNull(),
 		/** Its place in Selected work; see work_experience_projects.featured_sort. */
 		featured_sort: integer(),
-		/** Superseded by `image_id`; read only until migrate-media-library.ts has run. */
-		image_path: varchar({ length: 255 }),
-		/** Superseded by `banner_id`; read only until migrate-media-library.ts has run. */
-		banner_path: varchar({ length: 255 }),
 		/** Media library renditions (see `media_renditions`). */
 		image_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' }),
 		banner_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' }),
@@ -2754,10 +2746,6 @@ export const work_experiences = pgTable(
 		featured: boolean().default(false).notNull(),
 		/** Its place in Selected work; see work_experience_projects.featured_sort. */
 		featured_sort: integer(),
-		/** Superseded by `logo_id`; read only until migrate-media-library.ts has run. */
-		logo_path: varchar({ length: 255 }),
-		/** Superseded by `banner_id`; read only until migrate-media-library.ts has run. */
-		banner_path: varchar({ length: 255 }),
 		/** Media library renditions (see `media_renditions`). */
 		logo_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' }),
 		banner_id: uuid().references((): AnyPgColumn => media_renditions.id, { onDelete: 'set null' })
@@ -4188,8 +4176,6 @@ export const profiles = pgTable(
 		}),
 		source_cv: uuid(),
 		location: varchar({ length: 255 }),
-		/** Superseded by `profile_photo_id`; read only until migrate-media-library.ts has run. */
-		profile_photo_path: varchar({ length: 255 }),
 		/**
 		 * The profile photo, a rendition in the media library. Typed through
 		 * `AnyPgColumn` for the reason `public_portfolio_theme_id` gives:

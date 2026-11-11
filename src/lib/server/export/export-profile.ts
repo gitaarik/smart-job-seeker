@@ -37,7 +37,6 @@ import type {
 	ExportedFieldVariant,
 	ExportedProfileData,
 	ProfileExportData,
-	MediaFile,
 	TemplateAssetPayload
 } from './types';
 
@@ -49,7 +48,6 @@ export async function buildProfileExport(
 	options: ExportContentOptions = {}
 ): Promise<{
 	data: ProfileExportData;
-	mediaFiles: MediaFile[];
 	documentFiles: DocumentFilePayload[];
 	templateAssets: TemplateAssetPayload[];
 	/** The media library's originals and drawn renditions (only with media). */
@@ -165,67 +163,6 @@ export async function buildProfileExport(
 
 	if (!profile) {
 		throw new Error(`Profile with ID ${profileId} not found`);
-	}
-
-	// Collect media files
-	const mediaFiles: MediaFile[] = [];
-
-	if (includeMedia) {
-		// Profile photo
-		if (profile.profile_photo_path) {
-			mediaFiles.push({
-				path: profile.profile_photo_path,
-				archivePath: `media/${profile.profile_photo_path}`,
-				entityType: 'profile',
-				entityId: profileId,
-				field: 'profile_photo_path'
-			});
-		}
-
-		// Work experience media
-		for (const work of profile.work_experiences) {
-			for (const field of ['logo_path', 'banner_path'] as const) {
-				const path = work[field];
-				if (!path) continue;
-				mediaFiles.push({
-					path,
-					archivePath: `media/${path}`,
-					entityType: 'work_experience',
-					entityId: work.id,
-					field
-				});
-			}
-		}
-
-		// Education media
-		for (const edu of profile.educations) {
-			for (const field of ['logo_path', 'banner_path'] as const) {
-				const path = edu[field];
-				if (!path) continue;
-				mediaFiles.push({
-					path,
-					archivePath: `media/${path}`,
-					entityType: 'education',
-					entityId: edu.id,
-					field
-				});
-			}
-		}
-
-		// Side project media
-		for (const proj of profile.side_projects) {
-			for (const field of ['image_path', 'banner_path'] as const) {
-				const path = proj[field];
-				if (!path) continue;
-				mediaFiles.push({
-					path,
-					archivePath: `media/${path}`,
-					entityType: 'side_project',
-					entityId: proj.id,
-					field
-				});
-			}
-		}
 	}
 
 	// Collect uploaded documents. Their parent is referenced by position in the
@@ -357,7 +294,6 @@ export async function buildProfileExport(
 		vat_id: profile.vat_id || undefined,
 		kvk_number: profile.kvk_number || undefined,
 		business_activities: profile.business_activities || undefined,
-		profile_photo_path: profile.profile_photo_path || undefined,
 		profile_photo_id: profile.profile_photo_id || undefined,
 
 		profile_versions: profile.profile_versions.map((pv) => ({
@@ -412,8 +348,6 @@ export async function buildProfileExport(
 			tags: work.tags,
 			featured: work.featured || undefined,
 			featured_sort: work.featured_sort ?? undefined,
-			logo_path: work.logo_path || undefined,
-			banner_path: work.banner_path || undefined,
 			logo_id: work.logo_id || undefined,
 			banner_id: work.banner_id || undefined,
 			achievements: work.work_experience_achievements.map((a) => ({
@@ -462,8 +396,6 @@ export async function buildProfileExport(
 			stars: proj.stars,
 			summary: proj.summary || undefined,
 			repo_url: proj.repo_url || undefined,
-			image_path: proj.image_path || undefined,
-			banner_path: proj.banner_path || undefined,
 			image_id: proj.image_id || undefined,
 			banner_id: proj.banner_id || undefined,
 			logo_id: proj.logo_id || undefined,
@@ -493,8 +425,6 @@ export async function buildProfileExport(
 			start_date: formatDate(edu.start_date),
 			end_date: formatDate(edu.end_date),
 			summary: edu.summary || undefined,
-			logo_path: edu.logo_path || undefined,
-			banner_path: edu.banner_path || undefined,
 			logo_id: edu.logo_id || undefined,
 			banner_id: edu.banner_id || undefined,
 			tags: edu.tags
@@ -543,8 +473,7 @@ export async function buildProfileExport(
 		version: '2.0',
 		exported_at: new Date().toISOString(),
 		scope: 'profile',
-		has_media: includeMedia && (mediaFiles.length > 0 || hasLibrary),
-		media_files: includeMedia && mediaFiles.length > 0 ? mediaFiles : undefined,
+		has_media: hasLibrary,
 		has_documents: hasDocuments,
 		documents: hasDocuments ? documents : undefined,
 		translations: translations.length > 0 ? translations : undefined,
@@ -555,7 +484,6 @@ export async function buildProfileExport(
 
 	return {
 		data: exportData,
-		mediaFiles,
 		documentFiles,
 		templateAssets,
 		libraryFiles: hasLibrary ? (library?.files ?? []) : []

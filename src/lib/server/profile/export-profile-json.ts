@@ -211,8 +211,6 @@ type RoleColumnLeftOut =
 	| 'profile_id'
 	| 'date_created'
 	| 'date_updated'
-	| 'logo_path'
-	| 'banner_path'
 	| 'logo_id'
 	| 'banner_id'
 	| 'featured'

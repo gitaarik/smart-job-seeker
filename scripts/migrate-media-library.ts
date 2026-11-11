@@ -19,8 +19,12 @@
  * CV template artwork stays as it is: it travels with its template, and
  * `seeds/` owns Citrus's (the plan's open question 2).
  *
- * Until this has run, readers fall back to the old paths, so a database it has
- * not reached yet keeps working. Safe to re-run: it only touches slots that
+ * Readers fell back to the old paths until this had run. Migration 0091 drops
+ * the path columns, and refuses while any row still holds one, so a database
+ * upgraded from before the library runs this on a release before that one. On
+ * a database past 0091 the slot half has nothing left to do and says so; the
+ * theme half still converts theme images restored as plain files (a seed's
+ * restore.sh writes them that way). Safe to re-run: it only touches slots that
  * still hold an old path and no rendition, and theme slots that still hold a
  * plain file. A file that is missing on disk is reported and left alone.
  *
@@ -216,6 +220,16 @@ async function migrateEntitySlots() {
 	let failed = 0;
 	const unlink: string[] = [];
 	const byPath = new Map<string, Converted>();
+
+	const [columns] = await queryRawDirect<{ left: number }>(sql`
+		SELECT count(*)::int AS left FROM information_schema.columns
+		 WHERE table_schema = current_schema()
+		   AND table_name = 'profiles' AND column_name = 'profile_photo_path'
+	`);
+	if (!columns?.left) {
+		console.log('  none: the old path columns are gone (migration 0091)');
+		return { converted, missing, failed };
+	}
 
 	for (const job of ENTITY_JOBS) {
 		const name = job.nameColumn ? sql.identifier(job.nameColumn) : sql`NULL`;

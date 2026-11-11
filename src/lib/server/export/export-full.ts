@@ -18,7 +18,6 @@ import type {
 	ExportContentOptions,
 	TemplateAssetPayload,
 	FullExportData,
-	MediaFile,
 	ExportedProjectStory,
 	ExportedCheatSheet,
 	ExportedSalarySettings,
@@ -33,7 +32,6 @@ export async function buildFullExport(
 	options: ExportContentOptions = {}
 ): Promise<{
 	data: FullExportData;
-	mediaFiles: MediaFile[];
 	documentFiles: DocumentFilePayload[];
 	templateAssets: TemplateAssetPayload[];
 	libraryFiles: ArchiveFilePayload[];
@@ -41,7 +39,6 @@ export async function buildFullExport(
 	// Start with profile data
 	const {
 		data: profileExport,
-		mediaFiles,
 		documentFiles,
 		templateAssets,
 		libraryFiles
@@ -184,7 +181,6 @@ export async function buildFullExport(
 		exported_at: new Date().toISOString(),
 		scope: 'full',
 		has_media: profileExport.has_media,
-		media_files: profileExport.media_files,
 		has_documents: profileExport.has_documents,
 		documents: profileExport.documents,
 		translations: profileExport.translations,
@@ -197,5 +193,5 @@ export async function buildFullExport(
 		applications: exportedApplications
 	};
 
-	return { data: exportData, mediaFiles, documentFiles, templateAssets, libraryFiles };
+	return { data: exportData, documentFiles, templateAssets, libraryFiles };
 }

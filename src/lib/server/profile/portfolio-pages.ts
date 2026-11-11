@@ -20,7 +20,7 @@ import { lineSkills } from '$lib/components/PortfolioSite/key-skills';
 const HOME_HIGHLIGHT_TYPES = new Set(['contact_for']);
 
 /** Role columns a featured project needs from its role on the public page. */
-const ROLE_COLUMNS = ['id', 'name', 'sort', 'tags', 'logo_id', 'logo_path'] as const;
+const ROLE_COLUMNS = ['id', 'name', 'sort', 'tags', 'logo_id'] as const;
 
 /**
  * What a featured role adds to those for its own slide (work-slides.ts

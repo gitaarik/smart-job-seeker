@@ -19,13 +19,15 @@ export interface ExportOptions {
 
 // What a build function should put in the archive alongside the JSON
 export interface ExportContentOptions {
-	/** Photos, logos and images referenced by path columns */
+	/** The media library: every picture, original and drawn renditions */
 	includeMedia?: boolean;
 	/** Extracted text of documents uploaded to work/side projects */
 	includeDocuments?: boolean;
 }
 
-// Media file reference in export
+// A slot's picture in an archive from before the media library, filed under
+// `media/` by the old `*_path` column (import-media.ts). Read, never written:
+// the columns went in migration 0091.
 export interface MediaFile {
 	/** Original path in uploads directory */
 	path: string;
@@ -177,9 +179,9 @@ export interface ExportEnvelope {
 	exported_at: string;
 	/** What scope was exported */
 	scope: ExportScope;
-	/** Whether media files are included */
+	/** Whether pictures are included: the media library, or in an older archive `media_files` */
 	has_media: boolean;
-	/** Media file manifest (only if has_media) */
+	/** The old slots' pictures, in an archive from before the media library */
 	media_files?: MediaFile[];
 	/** Whether uploaded documents are included. Absent on exports made before
 	 *  documents were exportable. */
@@ -322,7 +324,7 @@ export interface ExportedProfileData {
 	kvk_number?: string;
 	business_activities?: string;
 
-	// Media paths
+	/** The photo's file under `media/`, in an archive from before the media library. */
 	profile_photo_path?: string;
 	/** The profile photo's rendition, by its source id (see media_library). */
 	profile_photo_id?: string;
@@ -415,6 +417,7 @@ export interface ExportedWorkExperience {
 	featured?: boolean;
 	/** Its place in Selected work when ordered by hand. In no export before 2026-11-11. */
 	featured_sort?: number | null;
+	/** Files under `media/`, in an archive from before the media library. */
 	logo_path?: string;
 	banner_path?: string;
 	/** Renditions by source id (see media_library). */
@@ -478,6 +481,7 @@ export interface ExportedSideProject {
 	stars?: number | null;
 	summary?: string;
 	repo_url?: string;
+	/** Files under `media/`, in an archive from before the media library. */
 	image_path?: string;
 	banner_path?: string;
 	/** Renditions by source id (see media_library). */
@@ -517,6 +521,7 @@ export interface ExportedEducation {
 	start_date?: string | null;
 	end_date?: string | null;
 	summary?: string;
+	/** Files under `media/`, in an archive from before the media library. */
 	logo_path?: string;
 	banner_path?: string;
 	/** Renditions by source id (see media_library). */

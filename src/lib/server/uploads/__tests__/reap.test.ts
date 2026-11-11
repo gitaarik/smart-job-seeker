@@ -337,31 +337,31 @@ describe('findOrphanedFiles', () => {
 });
 
 describe('collectProfileFileRefs', () => {
-	it('dedupes both shapes and drops the empty halves', async () => {
+	it('dedupes the file ids and drops the empty ones', async () => {
 		mockQuery.mockResolvedValueOnce([
-			{ file_id: 'id-a', media_path: 'profiles/photo.jpg' },
-			{ file_id: 'id-a', media_path: null },
-			{ file_id: null, media_path: 'profiles/photo.jpg' },
-			{ file_id: 'id-b', media_path: 'work/logo.png' },
-			{ file_id: null, media_path: null }
+			{ file_id: 'id-a' },
+			{ file_id: 'id-a' },
+			{ file_id: 'id-b' },
+			{ file_id: null }
 		]);
 
 		const refs = await collectProfileFileRefs(7);
 
 		expect(refs.fileIds).toEqual(['id-a', 'id-b']);
-		expect(refs.mediaPaths).toEqual(['profiles/photo.jpg', 'work/logo.png']);
+		// No table names a path under uploads/ since migration 0091.
+		expect(refs.mediaPaths).toEqual([]);
 	});
 
 	/**
 	 * A regression guard for a bug that made profile and account deletion
 	 * impossible, and that every test in this file was blind to.
 	 *
-	 * Postgres types a UNION column from the first branch that supplies a
-	 * value. Column 1 starts as a run of bare NULLs, so it resolved to `text`,
-	 * and the first real value (`cv_file_sent_id`) is a uuid: the statement
-	 * failed with 42804 for every profile. Because `collectProfileFileRefs` is
-	 * the first line of `deleteProfile`, both deletion paths threw before
-	 * touching anything.
+	 * Postgres types a UNION column from its first branch. Column 1 started
+	 * with a run of bare NULLs (the old `*_path` branches, gone with migration
+	 * 0091), so it resolved to `text`, and the first real value
+	 * (`cv_file_sent_id`) is a uuid: the statement failed with 42804 for every
+	 * profile. Because `collectProfileFileRefs` is the first line of
+	 * `deleteProfile`, both deletion paths threw before touching anything.
 	 *
 	 * The mock below is the reason it survived: it answers whatever the query
 	 * asks, so the SQL never met a server that could reject it. Asserting on
@@ -369,13 +369,13 @@ describe('collectProfileFileRefs', () => {
 	 * does that against a real database and is what found this — but it is the
 	 * cheap half, and it runs in CI where the real one does not.
 	 */
-	it('types the leading NULL so the UNION can carry uuids', async () => {
+	it('opens the UNION with a uuid, so it can carry uuids', async () => {
 		mockQuery.mockResolvedValueOnce([]);
 
 		await collectProfileFileRefs(7);
 
-		const { sql } = queryAt(0);
-		expect(sql).toContain('NULL::uuid AS file_id');
+		const first = queryAt(0).sql.match(/^\s*SELECT .*$/m)?.[0] ?? '';
+		expect(first).toContain('SELECT cv_file_sent_id AS file_id');
 	});
 
 	it('asks only about the profile it was given', async () => {
@@ -407,9 +407,8 @@ describe('collectProfileFileRefs', () => {
 		const { sql } = queryAt(0);
 		for (const table of [
 			'profiles',
-			'work_experiences',
-			'education',
-			'side_projects',
+			'media_items',
+			'media_renditions',
 			'applications',
 			'application_records',
 			'profile_exports',
@@ -430,7 +429,7 @@ describe('collectProfileFileRefs', () => {
 		await collectProfileFileRefs(7);
 
 		const { sql, params } = queryAt(0);
-		expect(sql).toContain('SELECT source_cv, NULL FROM profiles WHERE id = $');
+		expect(sql).toContain('SELECT source_cv FROM profiles WHERE id = $');
 		expect(sql).toContain('FROM import_logs');
 		// Template artwork is collected by an ordinary join now, not by fishing
 		// uuid-shaped strings out of the config with `regexp_matches`.
@@ -447,9 +446,9 @@ describe('collectUserFileRefs', () => {
 			// profiles of the user
 			.mockResolvedValueOnce([{ id: 1 }, { id: 2 }])
 			// profile 1
-			.mockResolvedValueOnce([{ file_id: 'id-a', media_path: 'profiles/one.jpg' }])
+			.mockResolvedValueOnce([{ file_id: 'id-a' }])
 			// profile 2 — sharing a blob with profile 1
-			.mockResolvedValueOnce([{ file_id: 'id-a', media_path: 'profiles/two.jpg' }])
+			.mockResolvedValueOnce([{ file_id: 'id-a' }, { file_id: 'id-b' }])
 			// user_feedback_files
 			.mockResolvedValueOnce([{ file_id: 'id-c' }, { file_id: null }])
 			// import_logs — the uploads kept for re-parsing hang off the user
@@ -457,8 +456,8 @@ describe('collectUserFileRefs', () => {
 
 		const refs = await collectUserFileRefs('user-1');
 
-		expect(refs.fileIds).toEqual(['id-a', 'id-c', 'id-d']);
-		expect(refs.mediaPaths).toEqual(['profiles/one.jpg', 'profiles/two.jpg']);
+		expect(refs.fileIds).toEqual(['id-a', 'id-b', 'id-c', 'id-d']);
+		expect(refs.mediaPaths).toEqual([]);
 	});
 
 	it('still collects the account-scoped files of a user with no profile', async () => {

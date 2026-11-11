@@ -40,7 +40,7 @@ export { createExportZip, parseExportZip } from './export-zip';
 
 // Import functions
 export { importExportData, validateExportData, isLegacyFormat } from './import-data';
-export { importMediaFiles, deleteProfileMediaFiles } from './import-media';
+export { importMediaFiles } from './import-media';
 export { deleteProfileDocuments } from './import-documents';
 export { deleteProfileTranslations } from './import-translations';
 export { deleteProfilePresentationTemplates } from './import-templates';

@@ -4,14 +4,13 @@
  * Filling a slot is choosing an item and a crop. The slot gets a free-crop
  * rendition of it (no preset), drawn at once so the public route only ever
  * reads, and the old pointer is let go: the rendition it named is deleted if
- * nothing else uses it, and a legacy `*_path` file is unlinked. The item stays
- * in the library either way, which is the point of having one.
+ * nothing else uses it. The item stays in the library either way, which is the
+ * point of having one.
  */
 
 import { and, eq, sql } from 'drizzle-orm';
 import { dbDirect as db, queryRawDirect } from '$lib/server/db';
 import { media_items, presentation_template_assets } from '$lib/server/db/schema';
-import { deleteUpload } from '$lib/server/uploads';
 import {
 	centredCrop,
 	clampCrop,
@@ -27,27 +26,21 @@ import {
 } from '$lib/media-library';
 import { deleteUnusedRenditions, ensureRendered, findOrCreateRendition } from './renditions';
 
-/**
- * Where each entity slot lives, and the legacy column it replaces. A slot
- * added after the library (a side project's logo) never had one.
- */
-const ENTITY_SLOT_COLUMNS: Record<
-	string,
-	Record<string, { column: string; legacy: string | null }>
-> = {
-	profile: { photo: { column: 'profile_photo_id', legacy: 'profile_photo_path' } },
+/** Where each entity slot lives: the column naming its rendition. */
+const ENTITY_SLOT_COLUMNS: Record<string, Record<string, { column: string }>> = {
+	profile: { photo: { column: 'profile_photo_id' } },
 	work_experience: {
-		logo: { column: 'logo_id', legacy: 'logo_path' },
-		banner: { column: 'banner_id', legacy: 'banner_path' }
+		logo: { column: 'logo_id' },
+		banner: { column: 'banner_id' }
 	},
 	education: {
-		logo: { column: 'logo_id', legacy: 'logo_path' },
-		banner: { column: 'banner_id', legacy: 'banner_path' }
+		logo: { column: 'logo_id' },
+		banner: { column: 'banner_id' }
 	},
 	side_project: {
-		logo: { column: 'logo_id', legacy: null },
-		image: { column: 'image_id', legacy: 'image_path' },
-		banner: { column: 'banner_id', legacy: 'banner_path' }
+		logo: { column: 'logo_id' },
+		image: { column: 'image_id' },
+		banner: { column: 'banner_id' }
 	}
 };
 
@@ -60,7 +53,9 @@ const ENTITY_TABLES: Record<string, string> = {
 
 /**
  * The slot names the upload route used to take, before slots were named for
- * what they show rather than the column they wrote.
+ * what they show rather than the column they wrote. An archive from before the
+ * library names its pictures the same way (import-media.ts). The columns
+ * themselves were dropped in migration 0091.
  */
 const LEGACY_FIELD_NAMES: Record<string, string> = {
 	profile_photo_path: 'photo',
@@ -74,7 +69,6 @@ export interface EntitySlot {
 	slot: string;
 	table: string;
 	column: string;
-	legacy: string | null;
 	spec: MediaSlotSpec;
 }
 
@@ -96,42 +90,34 @@ export function slotFormat(item: { has_alpha: boolean; format: string }): Output
 interface SlotState {
 	profileId: number;
 	renditionId: string | null;
-	legacyPath: string | null;
 }
 
 async function readSlot(slot: EntitySlot, entityId: number): Promise<SlotState | null> {
 	const profileColumn =
 		slot.table === 'profiles' ? sql.identifier('id') : sql.identifier('profile_id');
-	const legacy = slot.legacy ? sql.identifier(slot.legacy) : sql`NULL`;
 	const rows = await queryRawDirect<{
 		profile_id: number;
 		rendition_id: string | null;
-		legacy_path: string | null;
 	}>(sql`
 		SELECT ${profileColumn} AS profile_id,
-		       ${sql.identifier(slot.column)}::text AS rendition_id,
-		       ${legacy}::text AS legacy_path
+		       ${sql.identifier(slot.column)}::text AS rendition_id
 		  FROM ${sql.identifier(slot.table)}
 		 WHERE id = ${entityId}
 	`);
 	const row = rows[0];
-	return row
-		? { profileId: row.profile_id, renditionId: row.rendition_id, legacyPath: row.legacy_path }
-		: null;
+	return row ? { profileId: row.profile_id, renditionId: row.rendition_id } : null;
 }
 
 async function writeSlot(slot: EntitySlot, entityId: number, renditionId: string | null) {
 	const touched = slot.table === 'profiles' ? sql`, date_updated = now()` : sql``;
-	const legacy = slot.legacy ? sql`, ${sql.identifier(slot.legacy)} = NULL` : sql``;
 	await queryRawDirect(sql`
 		UPDATE ${sql.identifier(slot.table)}
-		   SET ${sql.identifier(slot.column)} = ${renditionId}::uuid${legacy}${touched}
+		   SET ${sql.identifier(slot.column)} = ${renditionId}::uuid${touched}
 		 WHERE id = ${entityId}
 	`);
 }
 
 async function letGo(before: SlotState, keep: string | null) {
-	if (before.legacyPath) await deleteUpload(before.legacyPath).catch(() => {});
 	if (before.renditionId && before.renditionId !== keep) {
 		await deleteUnusedRenditions([before.renditionId]);
 	}

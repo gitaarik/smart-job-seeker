@@ -1,7 +1,7 @@
 /**
  * Deleting rows does not delete bytes.
  *
- * Every upload in this product has two halves: a row (in `files`, or a
+ * Every upload in this product has two halves: a row (in `files`, or once a
  * `*_path` string on the owning entity) and the actual bytes under `uploads/`.
  * The FK graph cascades the rows and cannot reach the disk, so until this
  * module existed, deleting a profile left every CV, certificate, logo and
@@ -15,9 +15,11 @@
  *   from nine places. Reachability from a profile is the only ownership signal
  *   there is, and it is not exclusive: nothing stops two rows pointing at one
  *   file. So a file is only deleted once *nothing* references it any more.
- * - **`*_path` columns** — a plain string on the owning row (profile photo,
- *   work-experience and education logos/banners, side-project images). These
- *   are exclusive by construction: the path dies with its row.
+ * - **`*_path` strings** — a plain path under `uploads/`. The profile photo
+ *   and the logos, banners and images of roles, education and side projects
+ *   were stored that way until the media library, and the columns went in
+ *   migration 0091, so nothing collects one any more; `reapFileRefs` still
+ *   unlinks any a caller passes.
  *
  * The order matters and is the caller's job: collect the refs *before* the
  * delete (afterwards there is nothing left to read them from), then reap
@@ -32,7 +34,7 @@ import { deleteUpload } from './index';
 export interface FileRefs {
 	/** `files.id` values — bytes live at `uploads/files/<filename_disk>`. */
 	fileIds: string[];
-	/** `*_path` values — bytes live at `uploads/<path>`. */
+	/** Paths under `uploads/`. No table names one since migration 0091. */
 	mediaPaths: string[];
 }
 
@@ -97,55 +99,28 @@ const UUID_PATTERN = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
  * a profile. Reaping them here would delete another user's attachment.
  */
 export async function collectProfileFileRefs(profileId: number): Promise<FileRefs> {
-	const rows = await queryRawDirect<{ file_id: string | null; media_path: string | null }>(sql`
-		-- NULL::uuid, not a bare NULL, and the cast is the whole query.
-		--
-		-- Postgres resolves a UNION's column types left to right. The first
-		-- several branches select NULL into column 1, which resolves to text by
-		-- default; the first branch that puts a real value there
-		-- (cv_file_sent_id) is a uuid, and the whole statement fails with
-		-- "UNION types text and uuid cannot be matched" (42804). Not for some
-		-- profiles -- for every one of them.
-		--
-		-- This is the first statement of deleteProfile, so profile deletion and
-		-- account deletion both threw before deleting anything. It failed
-		-- closed, which is why nobody saw a half-deleted account, and why nobody
-		-- saw it at all.
-		--
-		-- The unit tests could not catch it: they mock queryRawDirect, so the
-		-- SQL never reached a server that could object. scripts/
-		-- verify-orphan-reap.ts found it, being the one harness that runs this
-		-- against a real database -- the gap its own header says it exists to
-		-- close.
-		SELECT NULL::uuid AS file_id, profile_photo_path AS media_path
-		  FROM profiles WHERE id = ${profileId}
+	const rows = await queryRawDirect<{ file_id: string | null }>(sql`
+		-- The first branch decides each column's type, so it names a uuid.
+		-- When it was a bare NULL (the old *_path branches came first), Postgres
+		-- resolved the column to text and the statement failed with "UNION types
+		-- text and uuid cannot be matched" (42804) for every profile. It is the
+		-- first statement of deleteProfile, so profile and account deletion threw
+		-- before deleting anything; scripts/verify-orphan-reap.ts found it, being
+		-- the one harness that runs this against a real database.
+		SELECT cv_file_sent_id AS file_id FROM applications WHERE profile_id = ${profileId}
 		UNION ALL
-		SELECT NULL, logo_path FROM work_experiences WHERE profile_id = ${profileId}
-		UNION ALL
-		SELECT NULL, banner_path FROM work_experiences WHERE profile_id = ${profileId}
-		UNION ALL
-		SELECT NULL, logo_path FROM education WHERE profile_id = ${profileId}
-		UNION ALL
-		SELECT NULL, banner_path FROM education WHERE profile_id = ${profileId}
-		UNION ALL
-		SELECT NULL, image_path FROM side_projects WHERE profile_id = ${profileId}
-		UNION ALL
-		SELECT NULL, banner_path FROM side_projects WHERE profile_id = ${profileId}
-		UNION ALL
-		SELECT cv_file_sent_id, NULL FROM applications WHERE profile_id = ${profileId}
-		UNION ALL
-		SELECT r.file_id, NULL
+		SELECT r.file_id
 		  FROM application_records r
 		  JOIN applications a ON a.id = r.application_id
 		 WHERE a.profile_id = ${profileId}
 		UNION ALL
-		SELECT file_id, NULL FROM profile_exports WHERE profile_id = ${profileId}
+		SELECT file_id FROM profile_exports WHERE profile_id = ${profileId}
 		UNION ALL
-		SELECT file_id, NULL FROM profile_document_projects WHERE profile_id = ${profileId}
+		SELECT file_id FROM profile_document_projects WHERE profile_id = ${profileId}
 		UNION ALL
-		SELECT file_id, NULL FROM certificates WHERE profile_id = ${profileId}
+		SELECT file_id FROM certificates WHERE profile_id = ${profileId}
 		UNION ALL
-		SELECT source_cv, NULL FROM profiles WHERE id = ${profileId}
+		SELECT source_cv FROM profiles WHERE id = ${profileId}
 		UNION ALL
 		-- Deliberately not filtered by template kind: a CV template's badge and
 		-- a portfolio theme's logo are both files this profile still uses, and
@@ -153,7 +128,7 @@ export async function collectProfileFileRefs(profileId: number): Promise<FileRef
 		-- kinds sharing one table is what keeps this a single join — a separate
 		-- table per kind would need a second one here, and forgetting it is
 		-- exactly how the Citrus assets were deleted on 2026-08-23.
-		SELECT a.file_id, NULL
+		SELECT a.file_id
 		  FROM presentation_template_assets a
 		  JOIN presentation_templates t ON t.id = a.template_id
 		 WHERE t.profile_id = ${profileId}
@@ -161,25 +136,21 @@ export async function collectProfileFileRefs(profileId: number): Promise<FileRef
 		-- The media library: every original, and every rendition's cached bytes.
 		-- Both are files rows with real foreign keys, so they die with the profile
 		-- by cascade and the reap below finds them unreferenced.
-		SELECT file_id, NULL FROM media_items WHERE profile_id = ${profileId}
+		SELECT file_id FROM media_items WHERE profile_id = ${profileId}
 		UNION ALL
-		SELECT r.file_id, NULL
+		SELECT r.file_id
 		  FROM media_renditions r
 		  JOIN media_items i ON i.id = r.item_id
 		 WHERE i.profile_id = ${profileId}
 		UNION ALL
-		SELECT file_id::uuid, NULL
+		SELECT file_id::uuid
 		  FROM import_logs
 		 WHERE profile_id = ${profileId} AND file_id ~* ${sql.raw(`'^${UUID_PATTERN}$'`)}
 	`);
 
 	const fileIds = new Set<string>();
-	const mediaPaths = new Set<string>();
-	for (const r of rows) {
-		if (r.file_id) fileIds.add(r.file_id);
-		if (r.media_path) mediaPaths.add(r.media_path);
-	}
-	return { fileIds: [...fileIds], mediaPaths: [...mediaPaths] };
+	for (const r of rows) if (r.file_id) fileIds.add(r.file_id);
+	return { fileIds: [...fileIds], mediaPaths: [] };
 }
 
 /**

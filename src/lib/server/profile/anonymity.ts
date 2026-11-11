@@ -197,7 +197,6 @@ const IDENTITY_COLUMNS = [
 	'location_url',
 	'location_timezone',
 	'country_code',
-	'profile_photo_path',
 	'profile_photo_id',
 	'meta_image_url',
 	'about_me_text'
@@ -247,8 +246,6 @@ export function anonymiseTree(page: Row, identity: Identity, locale: string | nu
 			name: ownBusiness,
 			location: null,
 			website: null,
-			logo_path: null,
-			banner_path: null,
 			logo_id: null,
 			banner_id: null,
 			work_experience_projects: projects

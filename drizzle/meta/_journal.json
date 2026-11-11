@@ -638,6 +638,13 @@
       "when": 1794380497431,
       "tag": "0090_featured_sort",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1794394822470,
+      "tag": "0091_drop_legacy_image_paths",
+      "breakpoints": true
     }
   ]
 }

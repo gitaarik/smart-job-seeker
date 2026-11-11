@@ -430,7 +430,8 @@ function buildProfileUpdateData(p: ExportedProfileData, name: string) {
 		vat_id: p.vat_id || null,
 		kvk_number: p.kvk_number || null,
 		business_activities: p.business_activities || null,
-		// Note: profile_photo_path is set later via media import
+		// The photo's slot is filled later, from the archive's media library or,
+		// in an older archive, its media files (import-media.ts).
 		date_updated: new Date()
 	};
 }
@@ -506,7 +507,7 @@ async function importProfileEntities(
 				end_date: toDateString(e.end_date),
 				summary: e.summary || null,
 				tags: toJsonValue(e.tags)
-				// logo_path will be set via media import
+				// Its logo and banner slots are filled later, like the profile photo.
 			})
 			.returning();
 		translated.educationIdByIndex[educationIndex] = createdEdu.id;
@@ -646,7 +647,7 @@ async function importProfileEntities(
 				tags: toJsonValue(w.tags),
 				featured: w.featured === true,
 				featured_sort: w.featured_sort ?? null
-				// logo_path will be set via media import
+				// Its logo and banner slots are filled later, like the profile photo.
 			})
 			.returning();
 
@@ -781,7 +782,7 @@ async function importProfileEntities(
 				tags: toJsonValue(sp.tags),
 				featured: sp.featured === true,
 				featured_sort: sp.featured_sort ?? null
-				// image_path will be set via media import
+				// Its image and banner slots are filled later, like the profile photo.
 			})
 			.returning();
 

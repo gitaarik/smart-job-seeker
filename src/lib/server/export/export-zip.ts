@@ -1,14 +1,12 @@
 /**
- * Create ZIP export with media files and uploaded documents
+ * Create ZIP export with the media library and uploaded documents
  */
 
 import JSZip from 'jszip';
-import { readUpload } from '$lib/server/uploads';
 import type {
 	ArchiveFilePayload,
 	DocumentFilePayload,
 	ExportData,
-	MediaFile,
 	TemplateAssetPayload
 } from './types';
 
@@ -27,7 +25,6 @@ const MAX_IMPORT_DOCUMENT_BYTES = 100 * 1024 * 1024;
  */
 export async function createExportZip(
 	data: ExportData,
-	mediaFiles: MediaFile[],
 	documentFiles: DocumentFilePayload[] = [],
 	templateAssets: TemplateAssetPayload[] = [],
 	libraryFiles: ArchiveFilePayload[] = []
@@ -36,19 +33,6 @@ export async function createExportZip(
 
 	// Add JSON data
 	zip.file('data.json', JSON.stringify(data, null, 2));
-
-	// Add media files
-	for (const mediaFile of mediaFiles) {
-		try {
-			const fileData = await readUpload(mediaFile.path);
-			if (fileData) {
-				zip.file(mediaFile.archivePath, fileData.buffer);
-			}
-		} catch (error) {
-			console.warn(`Failed to read media file ${mediaFile.path}:`, error);
-			// Continue with other files
-		}
-	}
 
 	// Add extracted document text. Already in memory — no I/O to fail on.
 	for (const documentFile of documentFiles) {

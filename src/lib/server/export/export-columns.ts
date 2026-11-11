@@ -90,7 +90,6 @@ export const PROFILE_COLUMNS = {
 	whatsapp_number: true,
 	telegram_username: true,
 	meta_image_url: true,
-	profile_photo_path: true,
 	// A media library rendition, by its source id: the import maps it to the
 	// rendition it makes from the archive's library (import-media-library.ts).
 	profile_photo_id: true,
@@ -214,8 +213,6 @@ export const ROLE_COLUMNS = {
 	tags: true,
 	featured: true,
 	featured_sort: true,
-	logo_path: true,
-	banner_path: true,
 	// Renditions by source id, mapped on import like `profile_photo_id`.
 	logo_id: true,
 	banner_id: true
@@ -290,8 +287,6 @@ export const SIDE_PROJECT_COLUMNS = {
 	tags: true,
 	featured: true,
 	featured_sort: true,
-	image_path: true,
-	banner_path: true,
 	// Renditions by source id, mapped on import like `profile_photo_id`.
 	image_id: true,
 	banner_id: true,
@@ -333,8 +328,6 @@ export const EDUCATION_COLUMNS = {
 	end_date: true,
 	summary: true,
 	tags: true,
-	logo_path: true,
-	banner_path: true,
 	// Renditions by source id, mapped on import like `profile_photo_id`.
 	logo_id: true,
 	banner_id: true

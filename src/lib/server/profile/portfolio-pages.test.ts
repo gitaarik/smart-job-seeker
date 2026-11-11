@@ -96,7 +96,6 @@ describe('homePageProfile', () => {
 				sort: undefined,
 				tags: null,
 				logo_id: 'logo-uuid',
-				logo_path: undefined,
 				work_experience_projects: [tree().work_experiences[0].work_experience_projects[0]]
 			}
 		]);
