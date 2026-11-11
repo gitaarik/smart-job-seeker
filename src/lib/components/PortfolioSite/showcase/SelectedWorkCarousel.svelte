@@ -70,6 +70,12 @@
 		// Scrolled to the end, the last slide is the one in view even where it
 		// could not reach the start.
 		if (scrolled + track.clientWidth >= track.scrollWidth - 2) nearest = els.length - 1;
+		// On the way to a slide an arrow chose, the slides it passes are not
+		// the one in view: the count would step back and forth on the way.
+		if (target !== null) {
+			if (nearest !== target) return;
+			target = null;
+		}
 		active = nearest;
 	}
 
@@ -79,10 +85,23 @@
 		frame = requestAnimationFrame(measure);
 	}
 
+	/** The slide a smooth scroll is on its way to, until it arrives or stops. */
+	let target: number | null = null;
+	let settle = 0;
+	function arrived() {
+		clearTimeout(settle);
+		target = null;
+		measure();
+	}
+
 	function go(i: number) {
 		const els = slideElements();
 		if (!track || !els[i]) return;
 		active = i;
+		target = i;
+		// For a browser without scrollend.
+		clearTimeout(settle);
+		settle = window.setTimeout(arrived, 1000);
 		track.scrollTo({
 			left: els[i].offsetLeft - els[0].offsetLeft,
 			behavior: reducedMotion() ? 'auto' : 'smooth'
@@ -165,6 +184,7 @@
 			aria-label="Projects"
 			tabindex="0"
 			onscroll={onScroll}
+			onscrollend={() => target !== null && arrived()}
 		>
 			{#each slides as s, i (s.key)}
 				{@const isActive = i === shown}
