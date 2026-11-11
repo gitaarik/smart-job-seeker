@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { crc32 } from 'node:zlib';
 import sharp from 'sharp';
 import { processEntityImage, stripImageMetadata } from '../public-image';
 
@@ -43,6 +44,17 @@ async function phonePhoto(
 	// The fixture has to carry what the code under test claims to remove.
 	expect((await sharp(bytes).metadata()).exif).toBeDefined();
 	return bytes;
+}
+
+/** `png` with one more chunk right after its header, the way an image editor adds one. */
+function withChunk(png: Buffer, type: string, data: Buffer): Buffer {
+	const head = Buffer.alloc(8);
+	head.writeUInt32BE(data.length, 0);
+	head.write(type, 4, 'latin1');
+	const crc = Buffer.alloc(4);
+	crc.writeUInt32BE(crc32(Buffer.concat([head.subarray(4), data])), 0);
+	const afterHeader = 8 + 25; // the signature, then IHDR: length, type, 13 bytes, CRC
+	return Buffer.concat([png.subarray(0, afterHeader), head, data, crc, png.subarray(afterHeader)]);
 }
 
 /** Pixel values as stored, read without colour management. */
@@ -165,6 +177,29 @@ describe('stripImageMetadata', () => {
 			.jpeg()
 			.toBuffer();
 		expect(await stripImageMetadata(clean)).toBe(clean);
+	});
+
+	it("cuts a PNG's tIME, which sharp does not report, and keeps the image data", async () => {
+		const png = await sharp({
+			create: { width: 8, height: 8, channels: 3, background: '#123456' }
+		})
+			.png()
+			.toBuffer();
+		expect(await stripImageMetadata(png)).toBe(png);
+
+		// Last edited 2025-08-18 14:31:16, as an image editor records it. The
+		// fixture has to carry it where sharp's metadata does not look.
+		const edited = withChunk(png, 'tIME', Buffer.from([0x07, 0xe9, 8, 18, 14, 31, 16]));
+		expect(edited.includes('tIME')).toBe(true);
+		const meta = await sharp(edited).metadata();
+		expect([meta.exif, meta.xmp, meta.iptc, meta.comments]).toEqual([
+			undefined,
+			undefined,
+			undefined,
+			undefined
+		]);
+
+		expect(await stripImageMetadata(edited)).toEqual(png);
 	});
 
 	it('leaves the frames of an animated GIF alone when it carries nothing', async () => {

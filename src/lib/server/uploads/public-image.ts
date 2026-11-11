@@ -4,8 +4,9 @@
  * Two routes serve images to anyone who asks. `/uploads/[...path]` serves
  * everything under `uploads/` except the private `files/` store, which is where
  * profile photos and the logos and banners of roles, education and side
- * projects live. `/assets/[id]` serves any blob a template or portfolio theme
- * points at. Both answer `immutable` for a year. A phone writes the place a
+ * projects lived before the media library. `/assets/[id]` serves any blob a
+ * template or portfolio theme points at, and the library's renditions. Both
+ * answer `immutable` for a year. A phone writes the place a
  * photo was taken into its EXIF, so an image that reaches either route with its
  * metadata intact publishes that place, to every cache that fetches it.
  *
@@ -23,6 +24,7 @@
  */
 
 import sharp from 'sharp';
+import { MetadataStripError, stripMetadataLossless } from '$lib/server/media/strip-metadata';
 
 export interface EntityImageOptions {
 	maxWidth?: number;
@@ -111,12 +113,34 @@ async function samePixels(out: Buffer, input: Buffer): Promise<boolean> {
 }
 
 /**
+ * A PNG without the chunks the media library's allowlist drops
+ * (`media/strip-metadata.ts`) that sharp does not report as metadata: `tIME`,
+ * the date and time the file was last edited, and any chunk a decoder does not
+ * need. The image data stays byte for byte. 12 of preview's 28 converted
+ * images still carried a `tIME` from 2025 when this was added (2026-11-11).
+ *
+ * The input itself comes back when there is nothing to cut, and when its
+ * chunks cannot be walked, as it did before this existed.
+ */
+function withoutPngChunks(bytes: Buffer): Buffer {
+	try {
+		const cut = stripMetadataLossless(bytes, 'png');
+		return cut.length < bytes.length ? cut : bytes;
+	} catch (err) {
+		if (err instanceof MetadataStripError) return bytes;
+		throw err;
+	}
+}
+
+/**
  * The same image without its metadata, for the paths that publish what they
  * were given rather than a resized copy: a portfolio theme's images, and the
  * photos, logos and template artwork an import brings in.
  *
  * - Nothing to remove, nothing done: the input comes back as it was, so a clean
  *   file is never re-encoded for nothing.
+ * - A PNG whose only metadata is chunks sharp does not report, such as `tIME`,
+ *   loses them without being re-encoded (`withoutPngChunks`).
  * - Not one of the four raster formats the upload routes take: also returned as
  *   it was. A template can carry other files, and a camera writes into none of
  *   them.
@@ -134,7 +158,9 @@ export async function stripImageMetadata(bytes: Buffer): Promise<Buffer> {
 	if (!format) return bytes;
 
 	const meta = await sharp(bytes, { animated: true }).metadata();
-	if (!meta.exif && !meta.xmp && !meta.iptc && !meta.comments?.length) return bytes;
+	if (!meta.exif && !meta.xmp && !meta.iptc && !meta.comments?.length) {
+		return format === 'png' ? withoutPngChunks(bytes) : bytes;
+	}
 
 	// An animated GIF or WebP keeps its frames. Auto-rotate is not available on
 	// one, and is not needed: only cameras write the orientation tag.

@@ -8,10 +8,18 @@
  * them are fixed (`src/lib/server/uploads/public-image.ts`); this cleans what
  * they wrote before.
  *
- * It reads the same two places the public routes serve:
+ * It reads the places the public routes serve:
  * - `uploads/` minus the private `files/` store (`/uploads/[...path]`);
- * - the blobs `presentation_template_assets` points at (`/assets/[id]`), whose
- *   `files.filesize` is updated to match.
+ * - the blobs `presentation_template_assets` points at (`/assets/[id]`);
+ * - the blobs behind the media library's renditions (`/assets/[id]` too). The
+ *   library conversion copied the old files into them byte for byte, so they
+ *   carry whatever those did. A rendition the library drew itself is clean.
+ * A blob's `files.filesize` is updated to match.
+ *
+ * "Metadata" is what sharp reports (EXIF, XMP, IPTC, a PNG's text chunks), and
+ * for a PNG also the chunks only the media library's allowlist names, such as
+ * `tIME` (see `stripImageMetadata`). 2026-11-11: 12 of preview's converted
+ * images carried nothing else.
  *
  * A file is rewritten in place, under its own name, so nothing that references
  * it has to change. The cost is that a browser which cached the old bytes keeps
@@ -34,7 +42,7 @@ import { join, relative } from 'node:path';
 import sharp from 'sharp';
 import { eq } from 'drizzle-orm';
 import { dbDirect as db } from '$lib/server/db';
-import { files, presentation_template_assets } from '$lib/server/db/schema';
+import { files, media_renditions, presentation_template_assets } from '$lib/server/db/schema';
 import { stripImageMetadata } from '$lib/server/uploads/public-image';
 
 const APPLY = process.argv.includes('--apply');
@@ -59,14 +67,29 @@ async function publicUploads(dir: string): Promise<Target[]> {
 	return out;
 }
 
-/** The blobs a template or portfolio theme points at, each once. */
-async function publicBlobs(): Promise<Target[]> {
-	const rows = await db
-		.selectDistinct({ id: files.id, disk: files.filename_disk })
-		.from(presentation_template_assets)
-		.innerJoin(files, eq(files.id, presentation_template_assets.file_id));
+function blobTargets(rows: { id: string; disk: string | null }[]): Target[] {
 	return rows.flatMap((r) =>
 		r.disk ? [{ path: join(UPLOADS_DIR, PRIVATE_SUBDIR, r.disk), fileId: r.id }] : []
+	);
+}
+
+/** The blobs a template or portfolio theme points at, each once. */
+async function publicBlobs(): Promise<Target[]> {
+	return blobTargets(
+		await db
+			.selectDistinct({ id: files.id, disk: files.filename_disk })
+			.from(presentation_template_assets)
+			.innerJoin(files, eq(files.id, presentation_template_assets.file_id))
+	);
+}
+
+/** The blobs behind the media library's renditions, each once. */
+async function renditionBlobs(): Promise<Target[]> {
+	return blobTargets(
+		await db
+			.selectDistinct({ id: files.id, disk: files.filename_disk })
+			.from(media_renditions)
+			.innerJoin(files, eq(files.id, media_renditions.file_id))
 	);
 }
 
@@ -111,8 +134,13 @@ async function readImage(path: string) {
 }
 
 async function main() {
-	const targets = [...(await publicUploads(UPLOADS_DIR)), ...(await publicBlobs())];
-	console.log(`${APPLY ? 'Applying' : 'Dry run'}: ${targets.length} public files\n`);
+	const found = [
+		...(await publicUploads(UPLOADS_DIR)),
+		...(await publicBlobs()),
+		...(await renditionBlobs())
+	];
+	const targets = [...new Map(found.map((t) => [t.path, t])).values()];
+	console.log(`${APPLY ? 'Applying' : 'Dry run'}: ${targets.length} files\n`);
 
 	let images = 0;
 	let carrying = 0;
@@ -127,7 +155,18 @@ async function main() {
 		if (!image) continue; // missing, or not an image: nothing for this to do
 		const { bytes, meta } = image;
 		images++;
-		if (!meta.exif && !meta.xmp && !meta.iptc && !meta.comments?.length) continue;
+		// The same buffer back means nothing to cut, or a format this does not
+		// rewrite: only what sharp reports counts then.
+		let clean: Buffer;
+		try {
+			clean = await stripImageMetadata(bytes);
+		} catch (err) {
+			failed++;
+			console.error(`  could not clean ${name}: ${err instanceof Error ? err.message : err}`);
+			continue;
+		}
+		const reported = !!(meta.exif || meta.xmp || meta.iptc || meta.comments?.length);
+		if (clean === bytes && !reported) continue;
 		carrying++;
 
 		const { gps, camera } = meta.exif ? readExif(meta.exif) : { gps: false, camera: '' };
@@ -138,14 +177,13 @@ async function main() {
 		}
 		if (!APPLY) continue;
 
+		if (clean === bytes) {
+			// It carries metadata, so the same bytes back means a format the
+			// upload routes never accepted and this does not rewrite.
+			console.log(`  ${name}: left as it is (${meta.format} is not rewritten)`);
+			continue;
+		}
 		try {
-			const clean = await stripImageMetadata(bytes);
-			if (clean === bytes) {
-				// It carries metadata, so the same bytes back means a format the
-				// upload routes never accepted and this does not rewrite.
-				console.log(`  ${name}: left as it is (${meta.format} is not rewritten)`);
-				continue;
-			}
 			// Written beside the original and renamed over it, so a reader never
 			// gets half a file.
 			const temp = `${target.path}.strip-tmp`;
@@ -166,7 +204,10 @@ async function main() {
 			` (${withGps} with GPS, ${withCamera} naming a camera)`
 	);
 	if (APPLY) console.log(`Rewrote ${rewritten}${failed ? `, ${failed} failed` : ''}.`);
-	else if (carrying) console.log('Re-run with --apply to rewrite them.');
+	else {
+		if (failed) console.log(`${failed} could not be cleaned, see above.`);
+		if (carrying) console.log('Re-run with --apply to rewrite them.');
+	}
 	if (failed) process.exitCode = 1;
 }
 
