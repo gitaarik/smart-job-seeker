@@ -80,7 +80,9 @@
 	>
 		<button
 			type="button"
-			class="block w-full px-6 py-3 text-center tracking-[0.005em] focus:outline-none"
+			class="block w-full px-6 py-3 tracking-[0.005em] focus:outline-none"
+			class:text-left={expandButton}
+			class:text-center={!expandButton}
 			class:cursor-pointer={!expandButton}
 			aria-expanded={expandContent}
 			onclick={open}
@@ -107,16 +109,14 @@
 			transition:slide={{ duration: SPEED }}
 		>
 			{#if intro}
-				<p class="max-w-[520px] self-center p-6 text-center whitespace-pre-line">{intro}</p>
+				<p class="max-w-[520px] p-6 whitespace-pre-line">{intro}</p>
 			{:else}
 				<div class="h-6"></div>
 			{/if}
 
-			<div class="flex h-full flex-col items-center">
+			<div class="flex h-full flex-col items-start">
 				{#if contact.details}
-					<div
-						class="flex w-full place-content-evenly gap-6 px-4 text-center max-[30rem]:flex-col min-[30rem]:gap-4"
-					>
+					<div class="flex w-full gap-6 px-6 max-[30rem]:flex-col min-[30rem]:gap-12">
 						{#if contact.details.phone}
 							<div>
 								<div class="mb-2 text-lg font-semibold">
@@ -148,23 +148,22 @@
 					</div>
 				{:else}
 					{#if contact.failed}
-						<div class="px-4 text-center text-(--pf-error) min-[50rem]:px-8">
+						<div class="px-6 text-(--pf-error)">
 							<p>
-								Human verification failed. Please refresh<br />
-								the page and try again, or check your ad blocker.
+								Human verification failed. Please refresh the page and try again, or check your ad
+								blocker.
 							</p>
 							<p class="mt-2">
-								Make sure external scripts from<br />
-								challenges.cloudflare.com are allowed.
+								Make sure external scripts from challenges.cloudflare.com are allowed.
 							</p>
 						</div>
 					{:else if contact.loading}
-						<div class="flex items-center">
+						<div class="flex items-center px-6">
 							<FontAwesomeIcon icon={faCircleNotch} spin class="mr-2" />
 							<span>Loading human verification</span>
 						</div>
 					{/if}
-					<div class="flex h-full w-full flex-col items-center justify-center">
+					<div class="flex h-full w-full flex-col items-start justify-center px-6">
 						<div bind:this={widget}></div>
 					</div>
 				{/if}
