@@ -11,9 +11,13 @@
  */
 
 import { siteLists, type Row, type SiteLists } from '$lib/components/PortfolioSite/site-lists';
+import { lineSkills } from '$lib/components/PortfolioSite/key-skills';
 
-/** Highlights the public page prints: the two lists beside the About me. */
-const HOME_HIGHLIGHT_TYPES = new Set(['key_skill', 'contact_for']);
+/**
+ * Highlights the public page prints: the Contact for box beside the About me.
+ * The Key skills box beside it reads the Skills (`keySkillGroups`).
+ */
+const HOME_HIGHLIGHT_TYPES = new Set(['contact_for']);
 
 /** Role columns a featured project needs from its role on the public page. */
 const ROLE_COLUMNS = ['id', 'name', 'sort', 'tags', 'logo_id', 'logo_path'] as const;
@@ -53,9 +57,28 @@ function shownRows(
 }
 
 /**
+ * The Skills as far as the Key skills box reads them (key-skills.ts): each
+ * group the site shows, with only the skills its line names. A group keeps its
+ * icon and what the filter reads, a skill its name as well, and the group's
+ * heading, the other skills and their levels stay on the server.
+ */
+function keySkillGroups(skillCategories: SiteLists['skillCategories']): Row[] {
+	return skillCategories.map((group) => ({
+		id: group.id,
+		tags: group.tags,
+		fa_icon: group.fa_icon,
+		tech_skills: lineSkills(group).map((skill) => ({
+			id: skill.id,
+			name: skill.name,
+			tags: skill.tags
+		}))
+	}));
+}
+
+/**
  * The page tree for the public page of a site whose career has a page of its
- * own: the introduction, the quotes and the featured work, and nothing else of
- * the career.
+ * own: the introduction, the quotes, the featured work and the skills the Key
+ * skills box names, and nothing else of the career.
  *
  * A featured project keeps its whole row, since the public page prints it in
  * full. Its role keeps only what that needs (its name and logo) and what the
@@ -69,7 +92,7 @@ function shownRows(
  * it renders.
  */
 export function homePageProfile<T extends Row>(page: T, versionId: number | null): T {
-	const { featured, show } = siteLists(page, versionId);
+	const { featured, show, skillCategories } = siteLists(page, versionId);
 	const roleProjects = new Set(featured.filter((f) => f.kind === 'role').map((f) => f.project.id));
 	const sideProjects = new Set(featured.filter((f) => f.kind === 'side').map((f) => f.project.id));
 	const featuredRoles = new Set(
@@ -121,7 +144,7 @@ export function homePageProfile<T extends Row>(page: T, versionId: number | null
 				side_project_technologies: shownRows(show, p.side_project_technologies, undefined, 'name')
 			})),
 		highlights: ((page.highlights ?? []) as Row[]).filter((h) => HOME_HIGHLIGHT_TYPES.has(h.type)),
-		tech_skill_categories: [],
+		tech_skill_categories: keySkillGroups(skillCategories),
 		educations: [],
 		certificates: [],
 		languages: []

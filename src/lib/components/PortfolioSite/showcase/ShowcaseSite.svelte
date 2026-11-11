@@ -72,6 +72,7 @@
 	import { getEducationLogoUrl, getWorkExperienceLogoUrl } from '$lib/utils/entity-media-url';
 	import type { PortfolioContactGate } from '$lib/server/profile/portfolio-contact';
 	import { careerView, siteLists, splitAchievements, type Row } from '../site-lists';
+	import { keySkillLines } from '../key-skills';
 	import { briefRole, briefRoleProject, briefSideProject } from '../brief-entries';
 	import { iconFor } from './icons';
 	import Card from './Card.svelte';
@@ -130,10 +131,11 @@
 	const career = $derived(careerView(lists, config, new Date(), page));
 	const slides = $derived(workSlides(lists.featured, show, lists.work, 'Side project'));
 
-	// One kind of row, three uses: `highlight` rows are the career card, and the
-	// two box lists beside the About me are their own types.
+	// `highlight` rows are the career card and `contact_for` rows one of the two
+	// boxes beside the About me. The other box, Key skills, reads the Skills
+	// (key-skills.ts), so a `key_skill` row is not read at all.
 	const highlights = $derived(lists.highlights.filter((h) => !h.type || h.type === 'highlight'));
-	const keySkills = $derived(lists.highlights.filter((h) => h.type === 'key_skill'));
+	const keySkills = $derived(keySkillLines(lists.skillCategories));
 	const contactFor = $derived(lists.highlights.filter((h) => h.type === 'contact_for'));
 
 	const aboutParagraphs = $derived(
@@ -331,13 +333,30 @@
 
 	const aboutBoxes = $derived(
 		[
-			{ label: 'Key skills:', rows: keySkills },
-			{ label: 'Contact for:', rows: contactFor }
-		].filter((box) => box.rows.length > 0)
+			{
+				label: 'Key skills:',
+				items: keySkills.map((line) => ({
+					key: line.key,
+					description: line.text,
+					icon: iconFor(line.icon)
+				}))
+			},
+			{
+				label: 'Contact for:',
+				items: contactFor.map((r) => ({
+					key: r.id,
+					description: r.text,
+					icon: iconFor(r.icon_name || r.fa_icon)
+				}))
+			}
+		]
+			.filter((box) => box.items.length > 0)
+			// A box where only some entries have an icon keeps a gap where the
+			// others' would be, so its text still starts in one column. Key skills
+			// entries often wrap, so the markup keeps each icon level with the
+			// first row of its text.
+			.map((box) => ({ ...box, iconColumn: box.items.some((item) => item.icon) }))
 	);
-
-	const boxItems = (rows: Row[]) =>
-		rows.map((r) => ({ key: r.id, description: r.text, icon: iconFor(r.icon_name || r.fa_icon) }));
 </script>
 
 <svelte:head>
@@ -504,7 +523,7 @@
 											{...aos}
 											class="mb-16 grid w-full grid-cols-1 gap-6 min-[50rem]:grid-cols-2"
 										>
-											{#each aboutBoxes as { label, rows } (label)}
+											{#each aboutBoxes as { label, items, iconColumn } (label)}
 												<div
 													class="w-full overflow-hidden rounded-sm border border-(--pf-line) bg-(--pf-surface-raised) transition-colors"
 												>
@@ -514,13 +533,15 @@
 														{label}
 													</h3>
 													<ul class="space-y-4 px-6 py-5 font-semibold">
-														{#each boxItems(rows) as item (item.key)}
-															<li class="flex items-center gap-3">
+														{#each items as item (item.key)}
+															<li class="flex items-start gap-3">
 																{#if item.icon}
 																	<FontAwesomeIcon
 																		icon={item.icon}
-																		class="w-4 text-(--pf-accent-text)"
+																		class="mt-1 w-4 shrink-0 text-(--pf-accent-text)"
 																	/>
+																{:else if iconColumn}
+																	<span class="w-4 shrink-0" aria-hidden="true"></span>
 																{/if}
 																{item.description}
 															</li>

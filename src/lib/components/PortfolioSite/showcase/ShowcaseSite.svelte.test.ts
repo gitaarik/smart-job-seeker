@@ -27,7 +27,7 @@ function site(over: Record<string, unknown> = {}, config: Record<string, unknown
 		profile_versions: [],
 		highlights: [
 			{ id: 1, type: 'highlight', text: 'Shipped things', fa_icon: 'rocket' },
-			{ id: 2, type: 'key_skill', text: 'Python, Django', icon_name: 'faPython' },
+			{ id: 2, type: 'key_skill', text: 'An old key skill row', icon_name: 'faPython' },
 			{ id: 3, type: 'contact_for', text: 'Consulting', icon_name: 'faUsers' }
 		],
 		work_experiences: [],
@@ -46,6 +46,10 @@ function site(over: Record<string, unknown> = {}, config: Record<string, unknown
 		props: { profile, theme, contact: { available: true, siteKey: 'k' } }
 	}).container;
 }
+
+/** One of the boxes beside the About me, by its heading. */
+const box = (c: HTMLElement, label: string) =>
+	[...c.querySelectorAll('h3')].find((h) => h.textContent?.trim() === label)?.parentElement;
 
 describe('ShowcaseSite', () => {
 	test("prints a project's own role under its name, and nothing for one without", () => {
@@ -94,16 +98,43 @@ describe('ShowcaseSite', () => {
 		expect(titled('Django')?.closest('header')?.textContent).toContain('Contributor');
 	});
 
-	test('splits highlights: key skills and contact-for beside the About me, the rest as a card', () => {
+	test('splits highlights: contact-for beside the About me, the rest as a card', () => {
 		const c = site();
-		const boxes = [...c.querySelectorAll('h3')].map((h) => h.textContent?.trim());
-		expect(boxes).toContain('Key skills:');
-		expect(boxes).toContain('Contact for:');
+		expect(box(c, 'Contact for:')?.textContent).toContain('Consulting');
 		const card = [...c.querySelectorAll('article')].find((a) =>
 			a.querySelector(':scope > h2')?.textContent?.includes('Highlights')
 		);
 		expect(card?.textContent).toContain('Shipped things');
 		expect(card?.textContent).not.toContain('Consulting');
+	});
+
+	test('the Key skills box is the Skills, a line per group, and never a key_skill row', () => {
+		const c = site({
+			tech_skill_categories: [
+				{
+					id: 1,
+					name: 'Backend',
+					fa_icon: 'python',
+					tech_skills: [
+						{ id: 10, name: 'Python' },
+						{ id: 11, name: 'Django' }
+					]
+				},
+				{ id: 2, name: 'AI', tech_skills: [{ id: 20, name: 'RAG' }] }
+			]
+		});
+		const lines = [...(box(c, 'Key skills:')?.querySelectorAll('li') ?? [])];
+		expect(lines.map((li) => li.textContent?.trim())).toEqual(['Python, Django', 'RAG']);
+		expect(lines[0].querySelector('svg')).not.toBeNull();
+		// The group with no icon keeps the gap, so both lines start in one column.
+		expect(lines[1].querySelector('span[aria-hidden="true"]')).not.toBeNull();
+		expect(c.textContent).not.toContain('An old key skill row');
+	});
+
+	test('a profile with no skills has no Key skills box', () => {
+		const c = site();
+		expect(box(c, 'Key skills:')).toBeUndefined();
+		expect(c.textContent).not.toContain('An old key skill row');
 	});
 
 	test('the About me is one paragraph per blank-line block', () => {

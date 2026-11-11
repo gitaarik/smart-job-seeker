@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { featuredKey, siteLists, type Row } from '$lib/components/PortfolioSite/site-lists';
+import { keySkillLines } from '$lib/components/PortfolioSite/key-skills';
 import { homePageProfile, portfolioHrefs } from './portfolio-pages';
 
 /**
@@ -87,7 +88,7 @@ describe('homePageProfile', () => {
 		const home = homePageProfile(tree(), null);
 		expect(home.about_me_text).toBe('About me.');
 		expect(home.references).toHaveLength(1);
-		expect(home.highlights.map((h: Row) => h.type)).toEqual(['key_skill', 'contact_for']);
+		expect(home.highlights.map((h: Row) => h.type)).toEqual(['contact_for']);
 		expect(home.work_experiences).toEqual([
 			{
 				id: 10,
@@ -200,6 +201,60 @@ describe('homePageProfile', () => {
 		const home = homePageProfile(t, null);
 		expect(home.work_experiences).toEqual([]);
 		expect(JSON.stringify(home)).not.toContain('Payments rewrite');
+	});
+
+	test('carries the skills the Key skills box names, and nothing else of the Skills', () => {
+		const t = tree();
+		t.tech_skill_categories = [
+			{
+				id: 9,
+				name: 'Backend',
+				note: 'A private hint',
+				fa_icon: 'python',
+				tech_skills: [
+					{ id: 90, name: 'Go', level: 'Expert', years_experience: 9 },
+					{ id: 91, name: 'Secret framework', tags: ['!portfolio'] },
+					{ id: 92, name: 'Rust' },
+					{ id: 93, name: 'Zig', tags: ['!resume', '!cv'] },
+					{ id: 94, name: 'Elixir' },
+					{ id: 95, name: 'Flask' }
+				]
+			},
+			{
+				id: 8,
+				name: 'Off the site',
+				tags: ['!portfolio'],
+				tech_skills: [{ id: 80, name: 'Cobol' }]
+			}
+		];
+		const home = homePageProfile(t, null);
+		expect(home.tech_skill_categories).toEqual([
+			{
+				id: 9,
+				fa_icon: 'python',
+				tech_skills: [
+					{ id: 90, name: 'Go' },
+					{ id: 92, name: 'Rust' },
+					{ id: 93, name: 'Zig', tags: ['!resume', '!cv'] },
+					{ id: 94, name: 'Elixir' }
+				]
+			}
+		]);
+		const json = JSON.stringify(home);
+		for (const kept of [
+			'Backend',
+			'A private hint',
+			'Expert',
+			'Secret framework',
+			'Flask',
+			'Cobol'
+		]) {
+			expect(json, kept).not.toContain(kept);
+		}
+		// And the box says from that what it said from the whole tree.
+		const box = (tree: Row) => keySkillLines(siteLists(tree, null).skillCategories);
+		expect(box(home)).toEqual([{ key: 9, text: 'Go, Rust, Zig, Elixir', icon: 'python' }]);
+		expect(box(home)).toEqual(box(t));
 	});
 });
 
