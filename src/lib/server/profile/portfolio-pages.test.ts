@@ -114,6 +114,16 @@ describe('homePageProfile', () => {
 		expect(companies(after)).toEqual(['NowCorp']);
 	});
 
+	test('the page keeps the order Selected work was given by hand', () => {
+		const t = tree();
+		t.work_experiences[1].featured = true;
+		t.work_experiences[1].featured_sort = 0;
+		t.side_projects[0].featured_sort = 1;
+		t.work_experiences[0].work_experience_projects[0].featured_sort = 2;
+		const after = siteLists(homePageProfile(t, null), null).featured;
+		expect(after.map(featuredKey)).toEqual(['experience-20', 'side-30', 'role-11']);
+	});
+
 	test('a featured role keeps what its slide prints, and none of its other projects', () => {
 		const t = tree();
 		Object.assign(t.work_experiences[1], {

@@ -33,6 +33,11 @@
 		itemKey?: (item: T) => string;
 		/** Renders the label for a single item inside a reorder row. */
 		row: Snippet<[T]>;
+		/** The page actions it posts to, for a page with more than one list. */
+		actions?: { reorder: string; reset: string };
+		/** The reset button, for a list whose automatic order is not by date. */
+		resetLabel?: string;
+		resetTitle?: string;
 	}
 
 	let {
@@ -43,7 +48,10 @@
 		reorderMode = $bindable(false),
 		disabled = false,
 		itemKey = (item: T) => String(item.id),
-		row
+		row,
+		actions = { reorder: 'reorder', reset: 'resetOrder' },
+		resetLabel = 'Sort by date',
+		resetTitle = 'Discard the manual order and sort by date again'
 	}: Props = $props();
 
 	interface DndItem {
@@ -85,7 +93,7 @@
 		reorderSaving = true;
 		const order = dndItems.map((d) => d.id);
 		try {
-			await postAction('reorder', { order: JSON.stringify(order) });
+			await postAction(actions.reorder, { order: JSON.stringify(order) });
 		} finally {
 			reorderSaving = false;
 			reorderMode = false;
@@ -99,7 +107,7 @@
 	async function resetToDate() {
 		resetting = true;
 		try {
-			await postAction('resetOrder', {});
+			await postAction(actions.reset, {});
 		} finally {
 			resetting = false;
 		}
@@ -163,14 +171,14 @@
 				onclick={resetToDate}
 				disabled={resetting}
 				class="inline-flex items-center gap-1.5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-1.5 text-xs font-medium text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)] disabled:opacity-70"
-				title="Discard the manual order and sort by date again"
+				title={resetTitle}
 			>
 				<FontAwesomeIcon
 					icon={resetting ? faCircleNotch : faCalendarDays}
 					spin={resetting}
 					class="h-3 w-3"
 				/>
-				Sort by date
+				{resetLabel}
 			</button>
 		{/if}
 		<button

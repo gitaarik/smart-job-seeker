@@ -213,6 +213,7 @@ export const ROLE_COLUMNS = {
 	sort: true,
 	tags: true,
 	featured: true,
+	featured_sort: true,
 	logo_path: true,
 	banner_path: true,
 	// Renditions by source id, mapped on import like `profile_photo_id`.
@@ -258,7 +259,8 @@ export const ROLE_PROJECT_COLUMNS = {
 	description: true,
 	outcome: true,
 	tags: true,
-	featured: true
+	featured: true,
+	featured_sort: true
 } as const satisfies Decided<typeof work_experience_projects>;
 
 export const ROLE_PROJECT_TECHNOLOGY_COLUMNS = {
@@ -287,6 +289,7 @@ export const SIDE_PROJECT_COLUMNS = {
 	end_date: true,
 	tags: true,
 	featured: true,
+	featured_sort: true,
 	image_path: true,
 	banner_path: true,
 	// Renditions by source id, mapped on import like `profile_photo_id`.

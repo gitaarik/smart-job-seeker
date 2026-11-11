@@ -644,7 +644,8 @@ async function importProfileEntities(
 				end_date: toDateString(w.end_date),
 				website: w.website || null,
 				tags: toJsonValue(w.tags),
-				featured: w.featured === true
+				featured: w.featured === true,
+				featured_sort: w.featured_sort ?? null
 				// logo_path will be set via media import
 			})
 			.returning();
@@ -709,7 +710,8 @@ async function importProfileEntities(
 					description: proj.description || null,
 					outcome: proj.outcome || null,
 					tags: proj.tags ?? null,
-					featured: proj.featured === true
+					featured: proj.featured === true,
+					featured_sort: proj.featured_sort ?? null
 				})
 				.returning();
 
@@ -777,7 +779,8 @@ async function importProfileEntities(
 				summary: sp.summary || null,
 				repo_url: sp.repo_url || null,
 				tags: toJsonValue(sp.tags),
-				featured: sp.featured === true
+				featured: sp.featured === true,
+				featured_sort: sp.featured_sort ?? null
 				// image_path will be set via media import
 			})
 			.returning();

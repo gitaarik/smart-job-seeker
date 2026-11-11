@@ -38,10 +38,16 @@ export interface SiteLists {
 	references: Row[];
 	highlights: Row[];
 	/**
-	 * What the applicant featured, in the order the career reads: each role
-	 * that is featured itself, then its featured projects, role by role, and
-	 * the featured side projects after them. Only what is still on the site,
-	 * so a featured entry switched off the site stays off it.
+	 * What the applicant featured. Only what is still on the site, so a
+	 * featured entry switched off the site stays off it.
+	 *
+	 * Ordered by hand once the applicant has (`featured_sort`, set by the
+	 * reorder on the portfolio settings page), and otherwise in the order the
+	 * career reads: each role that is featured itself, then its featured
+	 * projects, role by role, and the featured side projects after them. The
+	 * two mix the way the profile lists' date and drag orders do: entries with
+	 * a place come first by it, and one without (featured after the reorder)
+	 * follows them in career order. Null everywhere is career order.
 	 */
 	featured: FeaturedWork[];
 }
@@ -91,19 +97,58 @@ export function siteLists(profile: any, versionId: number | null): SiteLists {
 		languages: show(profile.languages),
 		references: show(profile.references),
 		highlights: show(profile.highlights),
-		featured: [
-			...work.flatMap((role: Row): FeaturedWork[] => [
-				...(isFeatured(role) ? [{ kind: 'experience' as const, role }] : []),
-				...roleProjects
-					.filter((p) => p.roleId === role.id && isFeatured(p))
-					.map((project) => ({ kind: 'role' as const, project }))
-			]),
-			...sideProjects.filter(isFeatured).map((project) => ({ kind: 'side' as const, project }))
-		]
+		featured: featuredWork(work, roleProjects, sideProjects)
 	};
 }
 
+/**
+ * The featured entries among these lists, in the order Selected work shows
+ * them (see `SiteLists.featured`). `roleProjects` carry their `roleId` and
+ * `company`, as `siteLists` builds them. The portfolio settings page passes
+ * the unfiltered lists, so its reorder lists every featured entry; the order
+ * of any two entries does not depend on what else is in the list, so the site
+ * shows the same order less whatever it filters out.
+ */
+export function featuredWork(
+	work: Row[],
+	roleProjects: Row[],
+	sideProjects: Row[]
+): FeaturedWork[] {
+	return handOrder([
+		...work.flatMap((role: Row): FeaturedWork[] => [
+			...(isFeatured(role) ? [{ kind: 'experience' as const, role }] : []),
+			...roleProjects
+				.filter((p) => p.roleId === role.id && isFeatured(p))
+				.map((project) => ({ kind: 'role' as const, project }))
+		]),
+		...sideProjects.filter(isFeatured).map((project) => ({ kind: 'side' as const, project }))
+	]);
+}
+
 const isFeatured = (entry: Row): boolean => entry.featured === true;
+
+/** A featured entry's hand-picked place in Selected work, or null for none. */
+export function featuredSort(item: FeaturedWork): number | null {
+	const row = item.kind === 'experience' ? item.role : item.project;
+	return typeof row.featured_sort === 'number' ? row.featured_sort : null;
+}
+
+/**
+ * Career-ordered featured work put in the applicant's order: entries with a
+ * place first, by it, then the rest as they came. The sort is stable, so ties
+ * and the unplaced keep career order.
+ */
+function handOrder(career: FeaturedWork[]): FeaturedWork[] {
+	return career
+		.map((item, index) => ({ item, index, place: featuredSort(item) }))
+		.sort((a, b) => {
+			if (a.place !== null && b.place !== null) return a.place - b.place || a.index - b.index;
+			if (a.place !== null) return -1;
+			if (b.place !== null) return 1;
+			return a.index - b.index;
+		})
+		.map(({ item }) => item);
+}
 
 /** A featured entry's key, unique across the three kinds (`role-10`, `experience-3`). */
 export function featuredKey(item: FeaturedWork): string {

@@ -6,7 +6,10 @@
 	import {
 		faArrowDown,
 		faArrowUp,
+		faBriefcase,
 		faGlobe,
+		faLightbulb,
+		faListOl,
 		faImage,
 		faPalette,
 		faPencil,
@@ -18,6 +21,7 @@
 	import EmptyState from '../components/EmptyState.svelte';
 	import ConfirmModal from '../components/ConfirmModal.svelte';
 	import Card from '../../components/Card.svelte';
+	import ReorderableList from '../components/ReorderableList.svelte';
 	import { resolve } from '$app/paths';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { assetUrl } from '$lib/presentation-templates';
@@ -44,6 +48,15 @@
 	let publishedTheme = $derived(data.themes.find((t) => t.id === data.publishedThemeId));
 	let publishedVersion = $derived(data.versions.find((v) => v.id === data.publishedVersionId));
 	let siteUrl = $derived(`/p/${data.profileSlug}/portfolio`);
+
+	let featuredOrder = $derived(data.featuredOrder);
+	let reorderingFeatured = $state(false);
+
+	const FEATURED_KIND_LABELS = {
+		experience: 'Role',
+		role: 'Project',
+		side: 'Side project'
+	} as const;
 
 	let showAddForm = $state(false);
 	let newName = $state('');
@@ -317,6 +330,67 @@
 			{/if}
 		</div>
 	</Card>
+
+	<!--
+		The order Selected work opens with. Career order until it is dragged;
+		the order lives on the entries (featured_sort), not in a theme, so every
+		theme shows the same one. Only drawn once something is featured.
+	-->
+	{#if featuredOrder.items.length > 0}
+		<Card class="mb-6">
+			<div class="p-4">
+				<h2 class="mb-1 flex items-center gap-2 font-medium text-[var(--dash-text)]">
+					<FontAwesomeIcon icon={faListOl} class="h-4 w-4" />
+					Selected work order
+				</h2>
+				<p class="mb-3 text-sm text-[var(--dash-text-secondary)]">
+					{featuredOrder.ordering === 'manual'
+						? 'In the order you chose. Anything you feature later goes after these, in career order.'
+						: 'In career order: newest role first, each with its projects, then side projects. Reorder to choose what opens the carousel.'}
+				</p>
+				<ReorderableList
+					bind:reorderMode={reorderingFeatured}
+					items={featuredOrder.items}
+					ordering={featuredOrder.ordering}
+					itemKey={(item) => item.key}
+					type="featured-order"
+					label="selected work"
+					actions={{ reorder: 'reorderFeatured', reset: 'resetFeaturedOrder' }}
+					resetLabel="Back to career order"
+					resetTitle="Discard the order you chose and show Selected work in career order again"
+				>
+					{#snippet row(item)}
+						{@render featuredRow(item)}
+					{/snippet}
+				</ReorderableList>
+				{#if !reorderingFeatured}
+					<ol class="mt-2 space-y-1.5">
+						{#each featuredOrder.items as item, i (item.key)}
+							<li class="flex items-center gap-3 text-sm">
+								<span class="w-5 shrink-0 text-right text-xs text-[var(--dash-text-muted)]"
+									>{i + 1}.</span
+								>
+								{@render featuredRow(item)}
+							</li>
+						{/each}
+					</ol>
+				{/if}
+			</div>
+		</Card>
+	{/if}
+
+	{#snippet featuredRow(item: (typeof featuredOrder.items)[number])}
+		<FontAwesomeIcon
+			icon={item.kind === 'side' ? faLightbulb : faBriefcase}
+			class="h-3.5 w-3.5 shrink-0 text-[var(--dash-primary)]"
+		/>
+		<span class="min-w-0 truncate">
+			<span class="font-medium text-[var(--dash-text)]">{item.title}</span>
+			<span class="text-[var(--dash-text-muted)]">
+				· {FEATURED_KIND_LABELS[item.kind]}{item.company ? ` at ${item.company}` : ''}
+			</span>
+		</span>
+	{/snippet}
 
 	<!--
 		Said once, where someone is about to publish: the site renders what the

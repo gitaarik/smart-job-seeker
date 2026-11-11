@@ -413,6 +413,8 @@ export interface ExportedWorkExperience {
 	tags?: unknown;
 	/** On the site's Selected work. In no export before 2026-11-09. */
 	featured?: boolean;
+	/** Its place in Selected work when ordered by hand. In no export before 2026-11-11. */
+	featured_sort?: number | null;
 	logo_path?: string;
 	banner_path?: string;
 	/** Renditions by source id (see media_library). */
@@ -454,6 +456,8 @@ export interface ExportedWorkExperienceProject {
 	tags?: unknown;
 	/** On the site's Selected work. In no export before 2026-11-09. */
 	featured?: boolean;
+	/** Its place in Selected work when ordered by hand. In no export before 2026-11-11. */
+	featured_sort?: number | null;
 	technologies: ExportedWorkExperienceProjectTechnology[];
 }
 
@@ -484,6 +488,8 @@ export interface ExportedSideProject {
 	tags?: unknown;
 	/** On the site's Selected work. In no export before 2026-11-09. */
 	featured?: boolean;
+	/** Its place in Selected work when ordered by hand. In no export before 2026-11-11. */
+	featured_sort?: number | null;
 	achievements: ExportedSideProjectAchievement[];
 	technologies: ExportedSideProjectTechnology[];
 }

@@ -204,8 +204,8 @@ export interface ExportedProfile {
 /**
  * What an imported role does without: what the import gives it, its logo and
  * banner, because this file carries no files (the full export's archive
- * does), and `featured`, the site's pick, which this file leaves out for
- * projects too.
+ * does), and `featured` with its `featured_sort`, the site's pick, which
+ * this file leaves out for projects too.
  */
 type RoleColumnLeftOut =
 	| 'profile_id'
@@ -215,7 +215,8 @@ type RoleColumnLeftOut =
 	| 'banner_path'
 	| 'logo_id'
 	| 'banner_id'
-	| 'featured';
+	| 'featured'
+	| 'featured_sort';
 
 /**
  * A role's columns as this export reads them, checked against the table: a

@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { careerDetail, type PortfolioPage, type PortfolioThemeConfig } from '$lib/portfolio-themes';
 import {
 	careerView,
+	featuredKey,
 	isBriefRole,
 	siteLists,
 	splitAchievements,
@@ -226,5 +227,61 @@ describe('careerView', () => {
 			const sections: PortfolioThemeConfig['sections'] = ['header', 'work', 'projects'];
 			expect(view(profile, { sections }, 'cv').view).toEqual(view(profile, { sections }).view);
 		});
+	});
+});
+
+describe('Selected work order', () => {
+	/** A featured role, two featured role projects and two featured side projects. */
+	function tree(sort: Record<string, number | null> = {}): Row {
+		const s = (key: string) => ({ featured: true, featured_sort: sort[key] ?? null });
+		return {
+			work_experiences: [
+				{
+					...role(1, null, [project(10, s('role-10')), project(11)]),
+					...s('experience-1')
+				},
+				role(2, '2025-03-07', [project(20, s('role-20'))])
+			],
+			side_projects: [
+				{ id: 40, name: 'Side A', side_project_technologies: [], ...s('side-40') },
+				{ id: 41, name: 'Side B', side_project_technologies: [], ...s('side-41') }
+			]
+		};
+	}
+	const order = (profile: Row) => view(profile).lists.featured.map(featuredKey);
+
+	test('without a hand order, reads in career order', () => {
+		expect(order(tree())).toEqual(['experience-1', 'role-10', 'role-20', 'side-40', 'side-41']);
+	});
+
+	test('a hand order decides it', () => {
+		expect(
+			order(tree({ 'side-41': 0, 'role-20': 1, 'experience-1': 2, 'side-40': 3, 'role-10': 4 }))
+		).toEqual(['side-41', 'role-20', 'experience-1', 'side-40', 'role-10']);
+	});
+
+	test('something featured after the reorder follows the ordered ones, in career order', () => {
+		expect(order(tree({ 'side-41': 0, 'role-10': 1, 'side-40': 2 }))).toEqual([
+			'side-41',
+			'role-10',
+			'side-40',
+			'experience-1',
+			'role-20'
+		]);
+	});
+
+	test('what the site filters out leaves the others in the same order', () => {
+		const sort = { 'side-41': 0, 'role-10': 1 };
+		const all = order(tree(sort));
+		const t = tree(sort);
+		t.side_projects[0].tags = ['!portfolio'];
+		t.work_experiences[0].work_experience_projects[0].tags = ['!portfolio'];
+		expect(order(t)).toEqual(all.filter((key) => key !== 'side-40' && key !== 'role-10'));
+	});
+
+	test('an entry no longer featured leaves its place behind', () => {
+		const t = tree({ 'role-10': 0, 'side-40': 1 });
+		t.work_experiences[0].work_experience_projects[0].featured = false;
+		expect(order(t)).toEqual(['side-40', 'experience-1', 'role-20', 'side-41']);
 	});
 });

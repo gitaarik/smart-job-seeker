@@ -26,6 +26,7 @@ const ROLE_COLUMNS = ['id', 'name', 'sort', 'tags', 'logo_id', 'logo_path'] as c
 const FEATURED_ROLE_COLUMNS = [
 	...ROLE_COLUMNS,
 	'featured',
+	'featured_sort',
 	'position',
 	'start_date',
 	'end_date',

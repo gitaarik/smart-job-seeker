@@ -411,6 +411,7 @@ export async function buildProfileExport(
 			website: work.website || undefined,
 			tags: work.tags,
 			featured: work.featured || undefined,
+			featured_sort: work.featured_sort ?? undefined,
 			logo_path: work.logo_path || undefined,
 			banner_path: work.banner_path || undefined,
 			logo_id: work.logo_id || undefined,
@@ -441,6 +442,7 @@ export async function buildProfileExport(
 				outcome: p.outcome || undefined,
 				tags: p.tags,
 				featured: p.featured || undefined,
+				featured_sort: p.featured_sort ?? undefined,
 				technologies: p.work_experience_project_technologies.map((t) => ({
 					sort: t.sort,
 					name: t.name || undefined,
@@ -467,6 +469,7 @@ export async function buildProfileExport(
 			logo_id: proj.logo_id || undefined,
 			tags: proj.tags,
 			featured: proj.featured || undefined,
+			featured_sort: proj.featured_sort ?? undefined,
 			achievements: proj.side_project_achievements.map((a) => ({
 				description: a.description || undefined,
 				sort: a.sort

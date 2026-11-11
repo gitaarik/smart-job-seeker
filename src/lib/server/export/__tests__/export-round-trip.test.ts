@@ -104,7 +104,7 @@ function sample(column: string): unknown {
 	if (column === 'tags') return ['resume'];
 	if (column === 'featured') return true;
 	if (column === 'toggles') return { summary: true };
-	if (['sort', 'stars', 'years_experience'].includes(column)) return 2;
+	if (['sort', 'stars', 'years_experience', 'featured_sort'].includes(column)) return 2;
 	if (/(^|_)date$/.test(column)) return '2020-01-02';
 	if (/_year$/.test(column)) return 2010;
 	return `${column} value`;

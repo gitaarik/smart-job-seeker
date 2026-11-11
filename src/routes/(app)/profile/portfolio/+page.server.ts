@@ -36,6 +36,12 @@ import { getPortfolioThemesForProfile } from '$lib/server/profile/portfolio-them
 import { applyShowcaseFields } from '$lib/server/profile/portfolio-theme-form';
 import { applyCareerFields } from '$lib/server/profile/portfolio-career-form';
 import {
+	loadFeaturedOrder,
+	planFeaturedOrder,
+	resetFeaturedOrder,
+	saveFeaturedOrder
+} from '$lib/server/profile/featured-order';
+import {
 	defaultSections,
 	isPortfolioLayout,
 	isPortfolioSection,
@@ -151,7 +157,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 
 	const profileId = layoutData.selectedProfile.id;
 
-	const [themes, versions, published] = await Promise.all([
+	const [themes, versions, published, featuredOrder] = await Promise.all([
 		getPortfolioThemesForProfile(profileId),
 		// Library versions only, as on Share Links: a version owned by an
 		// application is that application's working copy, not something to
@@ -167,7 +173,8 @@ export const load: PageServerLoad = async ({ parent }) => {
 		db.query.profiles.findFirst({
 			where: eq(profiles.id, profileId),
 			columns: { public_portfolio_version_id: true, public_portfolio_theme_id: true }
-		})
+		}),
+		loadFeaturedOrder(profileId)
 	]);
 
 	return {
@@ -178,7 +185,8 @@ export const load: PageServerLoad = async ({ parent }) => {
 		fonts: FONTS,
 		profileSlug: layoutData.selectedProfile.slug,
 		publishedVersionId: published?.public_portfolio_version_id ?? null,
-		publishedThemeId: published?.public_portfolio_theme_id ?? null
+		publishedThemeId: published?.public_portfolio_theme_id ?? null,
+		featuredOrder
 	};
 };
 
@@ -464,6 +472,37 @@ export const actions: Actions = {
 			.where(eq(profiles.id, profileId));
 
 		return { unpublished: true };
+	},
+
+	/**
+	 * Put Selected work in the order posted (`order`, a JSON list of
+	 * `featuredKey`s). Keys are checked against this profile's featured entries
+	 * before anything is written, and the write is held to them again in SQL
+	 * (featured-order.ts), so a key for someone else's row does nothing.
+	 */
+	reorderFeatured: async (event) => {
+		const profileId = await selectedProfile(event);
+		if (typeof profileId !== 'number') return profileId;
+		const form = await event.request.formData();
+		let raw: unknown;
+		try {
+			raw = JSON.parse(String(form.get('order') ?? ''));
+		} catch {
+			return fail(400, { error: 'Invalid order' });
+		}
+		const { items } = await loadFeaturedOrder(profileId);
+		const plan = planFeaturedOrder(raw, items);
+		if (!plan) return fail(400, { error: 'Invalid order' });
+		await saveFeaturedOrder(profileId, plan);
+		return { reordered: true };
+	},
+
+	/** Back to career order for Selected work. */
+	resetFeaturedOrder: async (event) => {
+		const profileId = await selectedProfile(event);
+		if (typeof profileId !== 'number') return profileId;
+		await resetFeaturedOrder(profileId);
+		return { reordered: true };
 	},
 
 	delete: async (event) => {
