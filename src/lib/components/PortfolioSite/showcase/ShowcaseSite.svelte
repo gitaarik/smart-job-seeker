@@ -71,6 +71,7 @@
 	import { getProfilePhotoUrl } from '$lib/utils/profile-photo-url';
 	import { getEducationLogoUrl, getWorkExperienceLogoUrl } from '$lib/utils/entity-media-url';
 	import type { PortfolioContactGate } from '$lib/server/profile/portfolio-contact';
+	import type { PortfolioBusiness } from '$lib/server/profile/portfolio-business';
 	import { careerView, siteLists, splitAchievements, type Row } from '../site-lists';
 	import { keySkillLines } from '../key-skills';
 	import { briefRole, briefRoleProject, briefSideProject } from '../brief-entries';
@@ -99,6 +100,8 @@
 		versionId?: number | null;
 		/** Null when the page carries the details itself, which a showcase never does. */
 		contact: PortfolioContactGate | null;
+		/** The company details the theme prints in its footer; null prints the name, title and place. */
+		business?: PortfolioBusiness | null;
 		/** A share link's token, which the contact endpoint asks for. */
 		accessToken?: string | null;
 		/** The whole site, or one of its two pages when the theme has a private CV page. */
@@ -113,6 +116,7 @@
 		theme,
 		versionId = null,
 		contact,
+		business = null,
 		accessToken = null,
 		page = 'site',
 		homeHref = null,
@@ -1155,12 +1159,26 @@
 							<img src={logo} alt="" aria-hidden="true" class="h-9 w-9 shrink-0 object-contain" />
 						{/if}
 					{/if}
-					<h4 class="pf-display text-[2rem]" id="pf-footer">{profile.name}</h4>
+					<h4 class="pf-display text-[2rem]" id="pf-footer">{business?.name ?? profile.name}</h4>
 				</div>
 				<div class="flex w-full justify-between max-[350px]:flex-col max-[350px]:gap-4">
 					<div class="text-sm/6">
-						{#if profile.title}<div>{profile.title}</div>{/if}
-						{#if profile.location}<div>{profile.location}</div>{/if}
+						{#if business}
+							{#if business.street}<div>{business.street}</div>{/if}
+							{#if business.place}<div>{business.place}</div>{/if}
+							{#if business.country}<div>{business.country}</div>{/if}
+							{#if business.vatId || business.registration}
+								<div class="mt-2">
+									{#if business.vatId}<div>VAT ID: {business.vatId}</div>{/if}
+									{#if business.registration}
+										<div>{business.registrationLabel}: {business.registration}</div>
+									{/if}
+								</div>
+							{/if}
+						{:else}
+							{#if profile.title}<div>{profile.title}</div>{/if}
+							{#if profile.location}<div>{profile.location}</div>{/if}
+						{/if}
 					</div>
 					{#if footerLinks.length}
 						<ul class="flex flex-col gap-2 text-right text-sm max-[350px]:self-end">

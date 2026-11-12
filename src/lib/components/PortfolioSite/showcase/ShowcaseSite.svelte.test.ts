@@ -4,6 +4,7 @@ import { render } from '@testing-library/svelte';
 vi.mock('$app/state', () => ({ page: { url: new URL('http://localhost/p/alex/portfolio') } }));
 
 import ShowcaseSite from './ShowcaseSite.svelte';
+import type { PortfolioBusiness } from '$lib/server/profile/portfolio-business';
 
 // jsdom has no matchMedia; the layout reads it on mount for the system scheme.
 vi.stubGlobal('matchMedia', () => ({
@@ -18,7 +19,11 @@ vi.stubGlobal('matchMedia', () => ({
  * which highlights go where, what a section with nothing renders, and that
  * an owner-typed link that is not a web link never becomes an href.
  */
-function site(over: Record<string, unknown> = {}, config: Record<string, unknown> = {}) {
+function site(
+	over: Record<string, unknown> = {},
+	config: Record<string, unknown> = {},
+	business: PortfolioBusiness | null = null
+) {
 	const profile = {
 		name: 'Alex Morgan',
 		slug: 'alex',
@@ -43,7 +48,7 @@ function site(over: Record<string, unknown> = {}, config: Record<string, unknown
 		config: { layout: 'showcase' as const, ...config }
 	};
 	return render(ShowcaseSite, {
-		props: { profile, theme, contact: { available: true, siteKey: 'k' } }
+		props: { profile, theme, contact: { available: true, siteKey: 'k' }, business }
 	}).container;
 }
 
@@ -52,6 +57,39 @@ const box = (c: HTMLElement, label: string) =>
 	[...c.querySelectorAll('h3')].find((h) => h.textContent?.trim() === label)?.parentElement;
 
 describe('ShowcaseSite', () => {
+	test('prints the business block in the footer in place of the name, title and place', () => {
+		const footer = (c: HTMLElement) => c.querySelector('footer')?.textContent ?? '';
+		const plain = footer(site({ location: 'Utrecht' }));
+		expect(plain).toContain('Alex Morgan');
+		expect(plain).toContain('Engineer');
+
+		const c = site(
+			{ location: 'Utrecht' },
+			{},
+			{
+				name: 'Morgan Software',
+				street: 'Keizersgracht 1',
+				place: '1015 AA Amsterdam',
+				country: 'Netherlands',
+				vatId: 'NL001234567B01',
+				registration: '12345678',
+				registrationLabel: 'KVK'
+			}
+		);
+		const text = footer(c);
+		expect(c.querySelector('#pf-footer')?.textContent).toBe('Morgan Software');
+		for (const part of [
+			'Keizersgracht 1',
+			'1015 AA Amsterdam',
+			'Netherlands',
+			'VAT ID: NL001234567B01',
+			'KVK: 12345678'
+		]) {
+			expect(text).toContain(part);
+		}
+		expect(text).not.toContain('Utrecht');
+	});
+
 	test("prints a project's own role under its name, and nothing for one without", () => {
 		const c = site({
 			work_experiences: [

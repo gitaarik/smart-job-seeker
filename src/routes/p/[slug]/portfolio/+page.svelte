@@ -13,6 +13,7 @@
 		theme={data.theme}
 		versionId={data.versionId}
 		contact={data.contact}
+		business={data.business}
 		accessToken={data.accessToken}
 		page={data.page}
 		homeHref={data.homeHref}

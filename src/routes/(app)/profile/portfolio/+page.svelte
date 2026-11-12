@@ -874,6 +874,25 @@
 										/>
 									</label>
 								</div>
+
+								<label class="flex items-start gap-2 text-sm text-[var(--dash-text-secondary)]">
+									<input
+										type="checkbox"
+										name="businessFooter"
+										checked={!!theme.config.businessFooter}
+										class="mt-1"
+									/>
+									<span>
+										<span class="text-[var(--dash-text)]"
+											>Show your business details in the footer</span
+										>
+										<span class="mt-0.5 block text-xs">
+											The company name, address, VAT ID and registration number from Profile →
+											Business, in place of your name, title and location. They are public on this
+											site once it is on.
+										</span>
+									</span>
+								</label>
 							{/if}
 
 							<div>

@@ -255,6 +255,12 @@ export interface PortfolioThemeConfig {
 	footerNote?: string;
 	/** Where `footerNote` links to; an http(s) URL or nothing. Showcase only. */
 	footerNoteUrl?: string;
+	/**
+	 * Print the Business tab's company name, address, VAT ID and registration
+	 * number in the footer, which nothing else public does. Showcase only; see
+	 * server/profile/portfolio-business.ts.
+	 */
+	businessFooter?: boolean;
 	/** A heading per section in place of the layout's own. Plain text; showcase only. */
 	titles?: Partial<Record<PortfolioSection, string>>;
 	/**

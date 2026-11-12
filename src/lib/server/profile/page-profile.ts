@@ -74,7 +74,9 @@ export const PAGE_PROFILE_COLUMNS = [
 /**
  * Profile columns no page carries: money, the address and registrations of
  * the applicant's business, the account and its device, notification
- * settings, and contact channels no document prints.
+ * settings, and contact channels no document prints. A showcase theme can
+ * print the business block in its footer, beside this tree rather than in it
+ * (server/profile/portfolio-business.ts).
  */
 export const PRIVATE_PROFILE_COLUMNS = [
 	'user_id',

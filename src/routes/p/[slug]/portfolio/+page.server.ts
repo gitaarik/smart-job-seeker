@@ -38,6 +38,7 @@ import { applyFieldVariants, loadFieldVariants } from '$lib/server/profile/field
 import { pageProfile } from '$lib/server/profile/page-profile';
 import { applySkillWords, loadDocumentSkillWords } from '$lib/server/profile/skill-words';
 import { gatesContact, withoutContact } from '$lib/server/profile/portfolio-contact';
+import { portfolioBusiness } from '$lib/server/profile/portfolio-business';
 import { givePortfolioKey, readPortfolioKey } from '$lib/server/profile/portfolio-key';
 import { homePageProfile, portfolioHrefs } from '$lib/server/profile/portfolio-pages';
 import { hasPrivateCv, type PortfolioPage } from '$lib/portfolio-themes';
@@ -164,6 +165,9 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
 	return {
 		profile: gated?.profile ?? visible,
 		contact: gated?.contact ?? null,
+		// Private columns the theme chose to print in its footer; read off the
+		// full row, since the page profile carries none of them.
+		business: portfolioBusiness(profile, theme),
 		accessToken: accessResult.accessType === 'token' ? token : null,
 		theme,
 		locale: translator.locale,

@@ -10,6 +10,7 @@
 	theme={data.theme}
 	versionId={data.versionId}
 	contact={data.contact}
+	business={data.business}
 	page={data.page}
 	homeHref={data.homeHref}
 	cvHref={data.cvHref}

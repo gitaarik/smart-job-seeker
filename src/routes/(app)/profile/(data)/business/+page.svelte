@@ -110,8 +110,9 @@
 		<FontAwesomeIcon icon={faLock} class="mt-0.5 h-4 w-4 shrink-0" />
 		<span>
 			For freelancers and anyone with their own company. None of this prints on a resume, CV or
-			public page. The assistant knows the company name, registration number and activities, so it
-			can help with things like a side-work notice to an employer.
+			public page, except in a portfolio site's footer when its theme says to. The assistant knows
+			the company name, registration number and activities, so it can help with things like a
+			side-work notice to an employer.
 		</span>
 	</p>
 

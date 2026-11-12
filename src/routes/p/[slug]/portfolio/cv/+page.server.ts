@@ -32,6 +32,7 @@ import { applyFieldVariants, loadFieldVariants } from '$lib/server/profile/field
 import { pageProfile } from '$lib/server/profile/page-profile';
 import { applySkillWords, loadDocumentSkillWords } from '$lib/server/profile/skill-words';
 import { withoutContact } from '$lib/server/profile/portfolio-contact';
+import { portfolioBusiness } from '$lib/server/profile/portfolio-business';
 import { givePortfolioKey, readPortfolioKey } from '$lib/server/profile/portfolio-key';
 import { portfolioHrefs } from '$lib/server/profile/portfolio-pages';
 import { hasPrivateCv } from '$lib/portfolio-themes';
@@ -133,6 +134,7 @@ export const load: PageServerLoad = async ({
 	return {
 		profile: gated.profile,
 		contact: gated.contact,
+		business: portfolioBusiness(profile, theme),
 		theme,
 		locale: translator.locale,
 		versionId,
