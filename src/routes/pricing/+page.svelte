@@ -108,6 +108,9 @@
 				</div>
 			{/each}
 		</div>
+		<p class="mt-3 text-xs text-[var(--dash-text-secondary)]">
+			Prices include VAT. Businesses with a VAT number pay the same amount without it.
+		</p>
 
 		{#if data.costExamples.length}
 			<section class="mt-16">
