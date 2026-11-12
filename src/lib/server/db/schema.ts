@@ -3,6 +3,7 @@ import {
 	bigint,
 	boolean,
 	check,
+	customType,
 	date,
 	doublePrecision,
 	foreignKey,
@@ -1313,7 +1314,15 @@ export const job_platforms = pgTable(
 		 *  `set null` rather than `cascade`: deleting the person who first
 		 *  pasted a URL must not delete a platform that other users' tasks and
 		 *  jobs may now reference. The row simply becomes unowned. */
-		created_by_user_id: text()
+		created_by_user_id: text(),
+		/** How jobs reach us from this platform. `browser` is the scraper: a
+		 *  search task opens the site in a browser and reads the results page.
+		 *  `feed` is an ATS whose public JSON boards the worker sweeps into
+		 *  `ats_postings`; a search task on a feed platform queries that corpus
+		 *  and promotes its hits into `jobs`, with no browser, device or login.
+		 *  The task form hides the sign-in and device sections for a feed
+		 *  platform. See planning/ATS-FEEDS.md. */
+		fetch_mode: varchar({ length: 16 }).default('browser').notNull()
 	},
 	(table) => [
 		unique('job_platforms_key_unique').on(table.key),
@@ -5796,6 +5805,141 @@ export const content_embeddings = pgTable(
 	]
 );
 
+/** Postgres `tsvector`, which drizzle has no column type for. Only used for
+ *  generated full-text columns; nothing reads it back as a value. */
+const tsvector = customType<{ data: string }>({
+	dataType() {
+		return 'tsvector';
+	}
+});
+
+/**
+ * One company's board on an applicant tracking system (ATS): Greenhouse, Lever,
+ * Ashby or Recruitee. Each exposes a public JSON endpoint per company (the one
+ * its embeddable careers page reads), and one GET returns every open posting
+ * with its full text. The worker sweeps live boards nightly into
+ * `ats_postings`. Seeded from the open-jobs slug list (CC0, 2026-09-09) and
+ * grown by boards users add; the sweep retires the ones that 404.
+ *
+ * `status`: `live` is fetched on every sweep; `gone` answered 404; `closed`
+ * answers 429 instantly and permanently (a closed feed, not throttling: the
+ * spike's Personio finding); `throttled` was rate-limited on the last sweep
+ * and is retried next time. See planning/ATS-FEEDS.md.
+ */
+export const ats_boards = pgTable(
+	'ats_boards',
+	{
+		id: serial().primaryKey().notNull(),
+		/** `greenhouse` | `lever` | `ashby` | `recruitee`; the key into the
+		 *  provider registry in cloud's `src/server/ats/`. */
+		provider: varchar({ length: 32 }).notNull(),
+		/** The company's slug in the provider's URL scheme
+		 *  (`boards.greenhouse.io/<slug>`, `<slug>.recruitee.com`). */
+		slug: varchar({ length: 255 }).notNull(),
+		company_name: varchar({ length: 255 }),
+		status: varchar({ length: 16 }).default('live').notNull(),
+		/** `seed` from the slug list, `user` when someone pasted a careers URL. */
+		source: varchar({ length: 16 }).default('seed').notNull(),
+		created_by_user_id: text(),
+		posting_count: integer().default(0).notNull(),
+		consecutive_failures: integer().default(0).notNull(),
+		last_fetched_at: timestamp({ withTimezone: true, mode: 'date' }),
+		last_ok_at: timestamp({ withTimezone: true, mode: 'date' }),
+		last_error: text(),
+		date_created: timestamp({ withTimezone: true, mode: 'date' }).defaultNow().notNull()
+	},
+	(table) => [
+		uniqueIndex('ats_boards_provider_slug_unique').on(table.provider, table.slug),
+		index('ats_boards_status_idx').on(table.status),
+		foreignKey({
+			columns: [table.created_by_user_id],
+			foreignColumns: [users.id],
+			name: 'ats_boards_created_by_user_fkey'
+		}).onDelete('set null')
+	]
+);
+
+/**
+ * One open posting on an ATS board: the corpus the sweep maintains. This is
+ * deliberately not `jobs`. A posting becomes a `jobs` row only when a feed
+ * search task asks for it, through `upsertJob`, which links it to the asking
+ * profile and triggers the match; `job_id` records that promotion. Keeping the
+ * hundreds of thousands of postings nobody asked for out of `jobs` keeps the
+ * matcher's own-imports scope and the per-job extraction cost intact.
+ *
+ * The typed columns use the search-filter vocabulary
+ * (`src/lib/job-platforms/search-filters.ts`): `work_location` remote | hybrid
+ * | onsite, `employment_type` permanent | contract | internship | temporary,
+ * `hours_commitment` fulltime | parttime, `experience_level` entry | mid |
+ * senior | lead | executive. Null where the provider has no such field.
+ *
+ * `first_seen_at` is our own clock, which a provider cannot re-stamp.
+ * `closed_at` is set when a complete fetch of the board no longer lists the
+ * posting. `raw` is the provider payload minus its text fields, which live in
+ * `content_html` / `content_text` once.
+ */
+export const ats_postings = pgTable(
+	'ats_postings',
+	{
+		id: serial().primaryKey().notNull(),
+		board_id: integer().notNull(),
+		/** The provider's stable id for the posting. */
+		external_id: varchar({ length: 255 }).notNull(),
+		title: varchar({ length: 512 }).notNull(),
+		company_name: varchar({ length: 255 }),
+		location_text: varchar({ length: 512 }),
+		city: varchar({ length: 255 }),
+		/** ISO 3166-1 alpha-2, upper case. */
+		country_code: varchar({ length: 2 }),
+		work_location: varchar({ length: 16 }),
+		employment_type: varchar({ length: 32 }),
+		hours_commitment: varchar({ length: 16 }),
+		experience_level: varchar({ length: 16 }),
+		hours_min: integer(),
+		hours_max: integer(),
+		salary_min: integer(),
+		salary_max: integer(),
+		salary_currency: varchar({ length: 8 }),
+		salary_period: varchar({ length: 16 }),
+		department: varchar({ length: 255 }),
+		content_html: text(),
+		content_text: text().notNull(),
+		apply_url: varchar({ length: 2048 }),
+		source_url: varchar({ length: 2048 }).notNull(),
+		published_at: timestamp({ withTimezone: true, mode: 'date' }),
+		provider_updated_at: timestamp({ withTimezone: true, mode: 'date' }),
+		first_seen_at: timestamp({ withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+		last_seen_at: timestamp({ withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+		closed_at: timestamp({ withTimezone: true, mode: 'date' }),
+		raw: jsonb().notNull(),
+		job_id: integer(),
+		/** `simple` on both sides, here and in the query: the corpus is
+		 *  multilingual and the terms people search are titles and technology
+		 *  names, which stemming would only distort. */
+		tsv: tsvector().generatedAlwaysAs(
+			sql`to_tsvector('simple', coalesce("title", '') || ' ' || coalesce("company_name", '') || ' ' || coalesce("content_text", ''))`
+		)
+	},
+	(table) => [
+		uniqueIndex('ats_postings_board_external_unique').on(table.board_id, table.external_id),
+		index('ats_postings_tsv_idx').using('gin', table.tsv),
+		index('ats_postings_published_at_idx').on(table.published_at),
+		index('ats_postings_country_code_idx').on(table.country_code),
+		index('ats_postings_closed_at_idx').on(table.closed_at),
+		index('ats_postings_job_id_idx').on(table.job_id),
+		foreignKey({
+			columns: [table.board_id],
+			foreignColumns: [ats_boards.id],
+			name: 'ats_postings_board_id_fkey'
+		}).onDelete('cascade'),
+		foreignKey({
+			columns: [table.job_id],
+			foreignColumns: [jobs.id],
+			name: 'ats_postings_job_id_fkey'
+		}).onDelete('set null')
+	]
+);
+
 export type ContentEmbeddings = typeof content_embeddings.$inferSelect;
 
 // Inferred select types for all application tables
@@ -5882,3 +6026,5 @@ export type UserFeedbackSubscribers = typeof user_feedback_subscribers.$inferSel
 export type Notifications = typeof notifications.$inferSelect;
 export type Files = typeof files.$inferSelect;
 export type SentEmails = typeof sent_emails.$inferSelect;
+export type AtsBoards = typeof ats_boards.$inferSelect;
+export type AtsPostings = typeof ats_postings.$inferSelect;

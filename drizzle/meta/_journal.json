@@ -645,6 +645,13 @@
       "when": 1794394822470,
       "tag": "0091_drop_legacy_image_paths",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1794490258001,
+      "tag": "0092_ats_feeds",
+      "breakpoints": true
     }
   ]
 }
