@@ -16,6 +16,7 @@ export const load: PageServerLoad = async () => {
 				status: job_platforms.status,
 				login_page_url: job_platforms.login_page_url,
 				search_page_url: job_platforms.search_page_url,
+				fetch_mode: job_platforms.fetch_mode,
 				success_count: job_platforms.success_count,
 				failure_count: job_platforms.failure_count,
 				last_success_at: job_platforms.last_success_at,

@@ -10,6 +10,7 @@
 		faExternalLinkAlt,
 		faPenToSquare,
 		faPlus,
+		faRss,
 		faTriangleExclamation
 	} from '@fortawesome/free-solid-svg-icons';
 
@@ -66,9 +67,16 @@
 		<div class="flex items-center gap-3">
 			<p class="text-sm text-[var(--dash-text-secondary)]">
 				{data.platforms.length} total · {data.platforms.filter(
-					(p) => p.status === 'published' && p.search_page_url !== null
+					(p) => p.status === 'published' && (p.search_page_url !== null || p.fetch_mode === 'feed')
 				).length} suggestable
 			</p>
+			<a
+				href={resolve('/(app)/admin/job-platforms/feeds')}
+				class="inline-flex items-center gap-1.5 rounded border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
+			>
+				<FontAwesomeIcon icon={faRss} class="h-3 w-3" />
+				Career-site feeds
+			</a>
 			{#if !showCreate}
 				<button
 					type="button"
@@ -83,9 +91,13 @@
 	</div>
 
 	<p class="text-sm text-[var(--dash-text-secondary)]">
-		Any published platform with a <code>search_page_url</code> shows up in the AI suggestion flow at
-		<code>/jobs/import/tasks</code>. Click a platform name to edit it, manage presets, see signals,
-		and review change history.
+		Any published platform with a <code>search_page_url</code>, and any career-site feed, shows up
+		in the AI suggestion flow at <code>/jobs/import/tasks</code>. Click a platform name to edit it,
+		manage presets, see signals, and review change history. The feeds' boards and sweeps are under
+		<a
+			href={resolve('/(app)/admin/job-platforms/feeds')}
+			class="text-[var(--dash-primary)] hover:underline">Career-site feeds</a
+		>.
 	</p>
 
 	{#if form?.error}
@@ -306,7 +318,13 @@
 							>
 						</td>
 						<td class="px-3 py-2 text-xs whitespace-nowrap tabular-nums">
-							{#if platform.search_page_url}
+							{#if platform.fetch_mode === 'feed'}
+								<a
+									href={resolve('/(app)/admin/job-platforms/feeds')}
+									class="text-[var(--dash-primary)] hover:underline"
+									title="A career-site feed: no search form, the worker sweeps the boards">feed</a
+								>
+							{:else if platform.search_page_url}
 								<span class="text-green-600 dark:text-green-400">configured</span>
 							{:else}
 								<span class="text-[var(--dash-text-muted)]">none</span>

@@ -274,13 +274,20 @@
 			formData.append('search_term', suggestion.keywords);
 		}
 		formData.append('search_filters', JSON.stringify(suggestion.filters ?? {}));
+		// A career-site feed runs on the worker, with no browser: no device, and
+		// the suggester's "where" (countries and "remote") in place of one, the
+		// field the add form shows for a feed platform.
+		const isFeed = suggestion.fetch_mode === 'feed';
+		if (isFeed && suggestion.search_location) {
+			formData.append('search_location', suggestion.search_location);
+		}
 		// Where the task runs: the same rule as the add form. A connected
 		// device, own or shared, wins; with none, an empty provider lets the
 		// create action apply the server's default rather than pinning the row
 		// to the cloud browser forever. This path kept a hardcoded "hosted"
 		// after the add form stopped doing that, so an accepted suggestion
 		// ignored the device the user had just connected.
-		if (preferredDevice) {
+		if (preferredDevice && !isFeed) {
 			formData.append('browser_provider', 'tunnel');
 			formData.append('sjsbrowser_api_key', String(preferredDevice.apiKeyId));
 		} else {

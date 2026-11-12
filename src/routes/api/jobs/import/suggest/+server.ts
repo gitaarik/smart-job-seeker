@@ -15,6 +15,12 @@
  * to strip already-known-unsupported pairs before they reach the prompt
  * and to surface the overlap so the LLM can downgrade relevance.
  *
+ * A career-site feed platform (`fetch_mode = 'feed'`, planning/ATS-FEEDS.md)
+ * has no search form: the worker runs the keywords as a full-text query over
+ * the ATS corpus. It is suggestable without a `search_page_url`, the prompt
+ * sees the size of its corpus instead of a form track record, and its draft
+ * carries a `search_location` built from the user's preferred locations.
+ *
  * Returns task drafts the client form can save: platform_id, platform name
  * (for display), keywords, note, relevance, filters. The user can edit any
  * field before saving.
@@ -22,7 +28,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { dbDirect as db } from '$lib/server/db';
-import { and, asc, eq, gt, isNotNull, lt, or } from 'drizzle-orm';
+import { and, asc, eq, gt, isNotNull, lt, or, sql } from 'drizzle-orm';
 import { job_platforms, match_config, search_tasks } from '$lib/server/db/schema';
 import { requireAuth } from '$lib/server/utils/api-helpers';
 import { getSelectedProfileId } from '../../../../(app)/profile/utils';
@@ -47,9 +53,13 @@ type SuggestablePlatform = {
 	url: string;
 	search_page_url: string | null;
 	login_page_url: string | null;
+	/** `browser` drives the site's search form; `feed` queries the ATS corpus the worker sweeps. */
+	fetch_mode: string;
 	success_count: number;
 	failure_count: number;
 	unsupported_filters: Record<string, string[]>;
+	/** For a feed platform: open postings published in the last 30 days behind it. */
+	corpus_30d: number | null;
 };
 
 /**
@@ -77,12 +87,14 @@ async function fetchSuggestablePlatforms(
 	scopeToPlatformId?: number
 ): Promise<SuggestablePlatform[]> {
 	// A platform is suggestable when it has a search_page_url configured —
-	// the scraper needs it to drive the form. Ordered by id for determinism.
-	// When scopeToPlatformId is set, restrict to just that one row so the
-	// LLM ranks a single platform (used by the "suggest one task for this
-	// specific platform" callsite).
+	// the scraper needs it to drive the form — or when it is a career-site feed
+	// (planning/ATS-FEEDS.md), which has no form: the worker queries the ATS
+	// corpus with the keywords. Ordered by id for determinism. When
+	// scopeToPlatformId is set, restrict to just that one row so the LLM ranks
+	// a single platform (used by the "suggest one task for this specific
+	// platform" callsite).
 	const conditions = [
-		isNotNull(job_platforms.search_page_url),
+		or(isNotNull(job_platforms.search_page_url), eq(job_platforms.fetch_mode, 'feed'))!,
 		eq(job_platforms.status, 'published')
 	];
 	// ...and when it has not already been proven not to work. `success_count`
@@ -107,7 +119,7 @@ async function fetchSuggestablePlatforms(
 	if (scopeToPlatformId !== undefined) {
 		conditions.push(eq(job_platforms.id, scopeToPlatformId));
 	}
-	return await db
+	const rows = await db
 		.select({
 			id: job_platforms.id,
 			key: job_platforms.key,
@@ -115,6 +127,7 @@ async function fetchSuggestablePlatforms(
 			url: job_platforms.url,
 			search_page_url: job_platforms.search_page_url,
 			login_page_url: job_platforms.login_page_url,
+			fetch_mode: job_platforms.fetch_mode,
 			success_count: job_platforms.success_count,
 			failure_count: job_platforms.failure_count,
 			unsupported_filters: job_platforms.unsupported_filters
@@ -122,6 +135,48 @@ async function fetchSuggestablePlatforms(
 		.from(job_platforms)
 		.where(and(...conditions))
 		.orderBy(asc(job_platforms.id));
+	const corpus = rows.some((r) => r.fetch_mode === 'feed') ? await fetchFeedCorpusSizes() : null;
+	return rows.map((r) => ({
+		...r,
+		corpus_30d: r.fetch_mode === 'feed' ? (corpus?.get(r.key) ?? 0) : null
+	}));
+}
+
+/**
+ * How much a feed has to search: open postings of the last 30 days per
+ * provider. A feed platform's `key` is its provider in `ats_boards`. The
+ * number goes into the prompt in place of a browser platform's track record,
+ * which a feed does not accumulate the same way: a feed run never fails on a
+ * form, it only finds more or fewer postings.
+ */
+async function fetchFeedCorpusSizes(): Promise<Map<string, number>> {
+	const result = await db.execute(
+		sql`SELECT b.provider, count(*)::int AS open_30d
+		    FROM ats_postings p JOIN ats_boards b ON b.id = p.board_id
+		    WHERE p.closed_at IS NULL AND p.published_at > now() - interval '30 days'
+		    GROUP BY b.provider`
+	);
+	return new Map(
+		(result.rows as { provider: string; open_30d: number }[]).map((r) => [r.provider, r.open_30d])
+	);
+}
+
+/**
+ * The "where" a feed task starts with: the user's preferred locations as the
+ * task form's free text, plus "remote" when their preferences say so, which
+ * admits remote postings from any country next to the countries listed. The
+ * feed run reads countries out of this text and says in its log what it
+ * could not read. No locations means every country, so no "remote" is needed
+ * either: the work_location filter already carries that.
+ */
+export function _feedSearchLocation(preferences: PreferenceConfig | null): string | null {
+	const locations = (preferences?.locations ?? []).map((l) => l.trim()).filter(Boolean);
+	if (!locations.length) return null;
+	const wantsRemote =
+		preferences?.remote_only === true ||
+		(preferences?.work_location ?? []).some((w) => w.toLowerCase() === 'remote');
+	const alreadyRemote = locations.some((l) => /^(remote|anywhere|worldwide|global)$/i.test(l));
+	return [...locations, ...(wantsRemote && !alreadyRemote ? ['remote'] : [])].join(', ');
 }
 
 type ExistingTask = {
@@ -244,6 +299,13 @@ function renderPlatformsForPrompt(plans: PlatformFilterPlan[]): string {
 	for (const plan of plans) {
 		const { platform } = plan;
 		lines.push(`- platform_id=${platform.id}: "${platform.name}" (key=${platform.key})`);
+		if (platform.fetch_mode === 'feed') {
+			lines.push(
+				`    Career-site feed, no browser: searches ${(platform.corpus_30d ?? 0).toLocaleString('en-US')} postings published in the last 30 days by companies hiring through ${platform.name}. Keywords are matched as whole words against title, company and posting text, so use concrete role and technology terms. Needs no sign-in or device. International; strongest for remote and English-speaking markets.`
+			);
+			lines.push(`    Filters applied by the feed query: ${renderFilters(plan.filters)}`);
+			continue;
+		}
 		lines.push(`    Track record: ${renderTrackRecord(platform)}`);
 		if (platform.login_page_url) {
 			lines.push(
@@ -310,6 +372,10 @@ export interface SuggestedTaskDraft {
 	filters: Record<string, SearchFilterValue>;
 	/** Whether the platform has a login page, so the card can say so up front. */
 	needs_login: boolean;
+	/** `feed` for a career-site feed: no browser, device or sign-in; the card says so. */
+	fetch_mode: 'browser' | 'feed';
+	/** A feed task's "where": countries and "remote", from the user's preferences; null for every country. */
+	search_location: string | null;
 	/** Runs that returned jobs, and runs attempted. Both zero = never tried. */
 	successes: number;
 	attempts: number;
@@ -348,7 +414,7 @@ export async function _runSuggester(
 			status: scopeToPlatformId !== undefined ? 404 : 503,
 			message:
 				scopeToPlatformId !== undefined
-					? `Platform ${scopeToPlatformId} is not suggestable (missing search_page_url or not published)`
+					? `Platform ${scopeToPlatformId} is not suggestable (not published, or a browser platform without a search_page_url)`
 					: 'No suggestable platforms configured'
 		};
 	}
@@ -414,6 +480,9 @@ export async function _runSuggester(
 			relevance: task.relevance,
 			filters: plan.filters,
 			needs_login: !!plan.platform.login_page_url,
+			fetch_mode: plan.platform.fetch_mode === 'feed' ? 'feed' : 'browser',
+			search_location:
+				plan.platform.fetch_mode === 'feed' ? _feedSearchLocation(preferences) : null,
 			successes: plan.platform.success_count,
 			attempts: plan.platform.success_count + plan.platform.failure_count
 		});

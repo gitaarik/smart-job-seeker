@@ -2303,6 +2303,8 @@ Each platform entry shows:
   - the filters the scraper will apply on that platform (translated from the user's preferences, minus anything the platform has previously failed to apply)
   - "Unsupported overlap" — (filter, value_key) pairs from the user's preferences that this platform's form can't honor. Treat this as a relevance penalty.
 
+Some entries are marked "Career-site feed, no browser". Those are not scraped: the keywords run as a full-text search over postings that companies publish through that applicant tracking system, and the entry says how many recent postings it holds. Every filter applies exactly, nothing needs a sign-in or a device, and the postings are direct employer listings, mostly international and remote-friendly. Rank a feed by how well the profile's market fits that population; for an internationally oriented or remote profile a feed with many recent postings deserves "high". Keywords for a feed should be the concrete terms a posting would contain (a role title and one or two technologies), since they are matched as whole words rather than interpreted by a site's search engine.
+
 ## Avoiding duplicates
 
 A near-duplicate means same platform_id AND keywords that cover roughly the same role — e.g. existing "react developer" vs proposed "react engineer" on the same platform IS a duplicate; existing "react developer" vs proposed "python backend" on the same platform is NOT (different role, both worth running).

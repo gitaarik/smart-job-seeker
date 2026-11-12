@@ -27,6 +27,10 @@
 		submitting?: boolean;
 		/** Whether the site needs a sign-in before it can be scraped. */
 		needs_login?: boolean;
+		/** `feed` for a career-site feed: no browser, device or sign-in. */
+		fetch_mode?: 'browser' | 'feed';
+		/** A feed task's "where": countries and "remote"; null for every country. */
+		search_location?: string | null;
 		/** Runs that returned jobs, and runs attempted, across all users. */
 		successes?: number;
 		attempts?: number;
@@ -139,6 +143,13 @@
 								>Generic</span
 							>
 						{/if}
+						{#if suggestion.fetch_mode === 'feed'}
+							<span
+								class="rounded-full bg-[var(--dash-bg)] px-2 py-0.5 text-xs text-[var(--dash-text-muted)]"
+								title="Searches the postings companies publish through this career-site system. No browser, device or sign-in."
+								>Career-site feed</span
+							>
+						{/if}
 						{#if suggestion.needs_login}
 							<span
 								class="rounded-full bg-[var(--dash-bg)] px-2 py-0.5 text-xs text-[var(--dash-text-muted)]"
@@ -162,6 +173,11 @@
 						{displayUrl(suggestion.platform_url)}
 					</ExternalLink>
 					<p class="text-sm text-[var(--dash-text-secondary)]">{suggestion.note}</p>
+					{#if suggestion.fetch_mode === 'feed'}
+						<p class="text-xs text-[var(--dash-text-muted)]">
+							Where: {suggestion.search_location || 'every country'}
+						</p>
+					{/if}
 				</div>
 
 				{#if suggestion.keywords !== null}
