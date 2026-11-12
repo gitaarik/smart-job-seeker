@@ -1363,7 +1363,8 @@
 		line-height: 1.1;
 	}
 
-	/* The header: text over the page on a phone, beside the code from 60rem. */
+	/* The header: text over the page on a phone, beside the code from 60rem.
+	   A full screen only from 60rem: on a phone the text fills half of one. */
 	.hero {
 		--hero-text-left: 1.5rem;
 
@@ -1371,7 +1372,6 @@
 		display: flex;
 		flex-direction: column;
 		width: 100%;
-		min-height: 100svh;
 		overflow: hidden;
 		background:
 			radial-gradient(
@@ -1452,6 +1452,7 @@
 	@media (min-width: 60rem) {
 		.hero {
 			--hero-text-left: max(3rem, 8vw);
+			min-height: 100svh;
 		}
 
 		.hero.with-art {
