@@ -116,9 +116,12 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 	// device or login credentials). This is the authoritative gate — the detail
 	// page and overview list surface the same blockers from the same function,
 	// but a task can only actually be launched once it has none.
+	// A feed platform's run queries the ATS corpus on the worker: no browser,
+	// so no device, no VNC, and nothing to sign in to (planning/ATS-FEEDS.md).
+	const isFeed = searchTask.job_platform?.fetch_mode === 'feed';
 	let deviceConnected = true;
 	let resolvedDevice: Awaited<ReturnType<typeof getDeviceById>> = null;
-	if (providerRequiresDevice(searchTask.browser_provider, config.browserProvider)) {
+	if (!isFeed && providerRequiresDevice(searchTask.browser_provider, config.browserProvider)) {
 		resolvedDevice = searchTask.sjsbrowser_api_key
 			? await getDeviceById(user.id, searchTask.sjsbrowser_api_key)
 			: await getPreferredDevice(user.id);
@@ -135,7 +138,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		hasCredential: searchTask.platform_profile_id != null,
 		browserProvider: searchTask.browser_provider,
 		serverBrowserProvider: config.browserProvider,
-		deviceConnected
+		deviceConnected,
+		fetchMode: searchTask.job_platform?.fetch_mode ?? null
 	});
 	if (blockers.length > 0) {
 		throw error(400, blockers.map((b) => b.detail).join(' '));
@@ -170,7 +174,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 				skip_first: searchTask.skip_first,
 				stop_after_duplicates:
 					((searchTask as Record<string, unknown>).stop_after_duplicates as number | null) ?? null,
-				browser_provider: searchTask.browser_provider
+				browser_provider: searchTask.browser_provider,
+				...(isFeed ? { fetch_mode: 'feed' } : {})
 			}
 		})
 		.returning();
@@ -202,6 +207,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		platformId: String(searchTask.platform_id),
 		triggeredBy: 'user',
 		browserProvider: effectiveProvider,
+		...(isFeed ? { fetchMode: 'feed' as const } : {}),
 		...(searchTask.search_term ? { searchTerm: searchTask.search_term } : {})
 	});
 
@@ -222,7 +228,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		status: 'queued',
 		runId: run.id,
 		jobId: job.id,
-		vncUrl: '/vnc/vnc.html?autoconnect=true'
+		vncUrl: isFeed ? null : '/vnc/vnc.html?autoconnect=true'
 	});
 };
 

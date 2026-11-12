@@ -680,6 +680,13 @@
       "when": 1794499814808,
       "tag": "0096_credit_purchases_period",
       "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1794500390009,
+      "tag": "0097_publish_feed_platforms",
+      "breakpoints": true
     }
   ]
 }

@@ -24,7 +24,7 @@ async function main() {
 
 	const searchTask = await db.query.search_tasks.findFirst({
 		where: eq(search_tasks.id, taskId),
-		with: { job_platform: { columns: { search_page_url: true } } }
+		with: { job_platform: { columns: { search_page_url: true, url: true, fetch_mode: true } } }
 	});
 	if (!searchTask) {
 		console.error(`Task ${taskId} not found`);
@@ -42,7 +42,13 @@ async function main() {
 	// seconds with "url: expected string, got object". That is every task on
 	// the current flow, i.e. this script was broken for exactly the tasks
 	// anyone would want to debug.
-	const effectiveSearchUrl = searchTask.search_url || searchTask.job_platform?.search_page_url;
+	// A feed platform's run never navigates (planning/ATS-FEEDS.md); the
+	// platform's base url is carried for the payload's sake only.
+	const isFeed = searchTask.job_platform?.fetch_mode === 'feed';
+	const effectiveSearchUrl =
+		searchTask.search_url ||
+		searchTask.job_platform?.search_page_url ||
+		(isFeed ? searchTask.job_platform?.url : null);
 	if (!effectiveSearchUrl) {
 		console.error(
 			`Task ${taskId} has no search_url, and its platform has no search_page_url — ` +
@@ -69,7 +75,8 @@ async function main() {
 				skip_first: searchTask.skip_first,
 				stop_after_duplicates:
 					((searchTask as Record<string, unknown>).stop_after_duplicates as number | null) ?? null,
-				browser_provider: searchTask.browser_provider
+				browser_provider: searchTask.browser_provider,
+				...(isFeed ? { fetch_mode: 'feed' } : {})
 			}
 		})
 		.returning();
@@ -96,6 +103,7 @@ async function main() {
 		platformId: String(searchTask.platform_id),
 		triggeredBy: 'user',
 		browserProvider: effectiveProvider,
+		...(isFeed ? { fetchMode: 'feed' as const } : {}),
 		...(searchTask.search_term ? { searchTerm: searchTask.search_term } : {})
 	});
 

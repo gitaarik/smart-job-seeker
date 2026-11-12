@@ -61,6 +61,8 @@
 		search_page_url: string | null;
 		/** Set when the site asks for a sign-in. Null means public. */
 		login_page_url: string | null;
+		/** `browser` is scraped in a browser; `feed` queries the ATS corpus on the worker. */
+		fetch_mode?: string | null;
 	};
 
 	/** The device a run would use, from `/api/tunnel/status/preferred`. */
@@ -188,7 +190,9 @@
 	 * answer is "we don't know" and the task starts without a login; the first
 	 * run is what finds out, and the task page is where it gets fixed.
 	 */
-	const hasSignInPage = $derived(!isCustom && !!selectedPlatform?.login_page_url);
+	const isFeed = $derived(!isCustom && selectedPlatform?.fetch_mode === 'feed');
+	const hasSignInPage = $derived(!isCustom && !isFeed && !!selectedPlatform?.login_page_url);
+	let countries = $state('');
 	const loginMode = $derived(defaultLoginMode(hasSignInPage));
 
 	const runsOnDevice = $derived(preferredDevice !== null);
@@ -366,10 +370,31 @@
 	{:else if selectedPlatform}
 		<input type="hidden" name="platform_id" value={selectedPlatform.id} />
 	{/if}
+	{#if isFeed}
+		<div>
+			<label
+				class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
+				for="add-countries"
+				>Where <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span></label
+			>
+			<input
+				id="add-countries"
+				type="text"
+				bind:value={countries}
+				placeholder="e.g. Netherlands, Germany, remote"
+				class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1.5 text-sm text-[var(--dash-text)]"
+			/>
+			<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+				Countries, comma-separated. Add "remote" to include remote postings from anywhere. Leave
+				empty for every country.
+			</p>
+		</div>
+	{/if}
 	<input type="hidden" name="search_term" value={keywordsApply ? keywords : ''} />
+	<input type="hidden" name="search_location" value={isFeed ? countries : ''} />
 	<input type="hidden" name="search_filters" value={JSON.stringify(filters)} />
 	<input type="hidden" name="note" value={note} />
-	{#if preferredDevice}
+	{#if preferredDevice && !isFeed}
 		<input type="hidden" name="browser_provider" value="tunnel" />
 		<input type="hidden" name="sjsbrowser_api_key" value={String(preferredDevice.apiKeyId)} />
 	{:else}
@@ -384,7 +409,9 @@
 	<div class="flex items-center justify-between pt-2">
 		<p class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)]">
 			<FontAwesomeIcon icon={runsOnDevice ? faLaptop : faCloud} class="h-3 w-3" />
-			{#if !deviceStatusChecked}
+			{#if isFeed}
+				Searches employer career sites directly. No browser or device needed.
+			{:else if !deviceStatusChecked}
 				Checking for a connected device…
 			{:else if runsOnDevice}
 				Runs on {deviceLabel}. Edit the task after creation for advanced options.

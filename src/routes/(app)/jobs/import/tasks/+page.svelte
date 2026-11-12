@@ -371,6 +371,7 @@
 		let deviceConnected = true;
 		if (
 			desktopStatusChecked &&
+			search.job_platform?.fetch_mode !== 'feed' &&
 			providerRequiresDevice(search.browser_provider, data.serverBrowserProvider)
 		) {
 			deviceConnected = search.sjsbrowser_api_key
@@ -388,7 +389,8 @@
 			hasCredential: search.platform_profile_id != null,
 			browserProvider: search.browser_provider,
 			serverBrowserProvider: data.serverBrowserProvider,
-			deviceConnected
+			deviceConnected,
+			fetchMode: search.job_platform?.fetch_mode ?? null
 		});
 	}
 

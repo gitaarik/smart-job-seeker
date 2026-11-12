@@ -465,15 +465,20 @@
 		setTimeout(() => (copiedVerifyEmail = false), 2000);
 	}
 
+	// A feed platform's run queries the ATS corpus on the worker: there is no
+	// browser to watch, open or connect (planning/ATS-FEEDS.md).
+	let isFeed = $derived(searchTask.job_platform?.fetch_mode === 'feed');
 	// Determine if this search uses a cloud browser (GoLogin) — either per-search override or server default
 	let expectsCloudBrowser = $derived(
-		searchTask.browser_provider === 'hosted' ||
-			(!searchTask.browser_provider && data.browserProvider === 'goLogin')
+		!isFeed &&
+			(searchTask.browser_provider === 'hosted' ||
+				(!searchTask.browser_provider && data.browserProvider === 'goLogin'))
 	);
 	// Tunnel mode: uses desktop app browser (no VNC, no live URL by default)
 	let isTunnelMode = $derived(
-		searchTask.browser_provider === 'tunnel' ||
-			(!searchTask.browser_provider && data.browserProvider === 'tunnel')
+		!isFeed &&
+			(searchTask.browser_provider === 'tunnel' ||
+				(!searchTask.browser_provider && data.browserProvider === 'tunnel'))
 	);
 	// Unmet requirements that stop this task from running (needs a connected
 	// device, login credentials, etc). Same computation the run endpoint enforces
@@ -492,18 +497,21 @@
 			hasCredential: searchTask.platform_credential_id != null,
 			browserProvider: searchTask.browser_provider ?? null,
 			serverBrowserProvider: data.browserProvider,
-			deviceConnected: !isTunnelMode ? true : desktopStatusChecked ? desktopConnected : true
+			deviceConnected: !isTunnelMode ? true : desktopStatusChecked ? desktopConnected : true,
+			fetchMode: searchTask.job_platform?.fetch_mode ?? null
 		})
 	);
 
 	// Only fall back to VNC when using local browser; show nothing while waiting for cloud live URL
 	let browserViewUrl = $derived(
-		liveUrl ||
-			(expectsCloudBrowser
-				? null
-				: isTunnelMode
-					? null
-					: '/vnc/vnc.html?autoconnect=true&resize=scale')
+		isFeed
+			? null
+			: liveUrl ||
+					(expectsCloudBrowser
+						? null
+						: isTunnelMode
+							? null
+							: '/vnc/vnc.html?autoconnect=true&resize=scale')
 	);
 
 	// Browser view mode for tunnel: "screenshot" (polling) or "vnc" (interactive)

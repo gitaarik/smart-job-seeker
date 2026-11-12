@@ -125,7 +125,10 @@ export const load: PageServerLoad = async ({ parent }) => {
 			// platform picked here to login_mode "none", which on a gated site
 			// produces a task that can never log in and never says so; it now
 			// derives the mode from this column instead.
-			login_page_url: job_platforms.login_page_url
+			login_page_url: job_platforms.login_page_url,
+			// `feed` platforms search the worker's ATS corpus: no browser, device
+			// or sign-in. The add form hides those parts for them.
+			fetch_mode: job_platforms.fetch_mode
 		})
 		.from(job_platforms)
 		.where(

@@ -44,6 +44,7 @@
 	 */
 	interface SearchTaskFieldsRow {
 		search_term?: string | null;
+		search_location?: string | null;
 		max_jobs?: number | null;
 		platform_id?: number | null;
 		platform_credential_id?: number | null;
@@ -62,6 +63,8 @@
 			name?: string | null;
 			url?: string | null;
 			login_page_url?: string | null;
+			/** `feed`: the run queries the ATS corpus; no browser, device or sign-in. */
+			fetch_mode?: string | null;
 		} | null;
 	}
 
@@ -250,13 +253,20 @@
 		}
 	}
 
+	// A feed platform's run has no browser, so the sign-in and browser sections
+	// do not apply; it filters by country instead (planning/ATS-FEEDS.md).
+	const isFeed = $derived(task?.job_platform?.fetch_mode === 'feed');
+
 	// Search term — free text, debounced.
 	let searchTermInput = $state<string>(task?.search_term ?? '');
+	// Where (feed tasks): countries and "remote", free text, debounced.
+	let searchLocationInput = $state<string>(task?.search_location ?? '');
 	// Arm every field on the first real interaction with the form, so a browser
 	// reload/autofill that repopulates a bound input does not trigger a save.
 	function armFields() {
 		for (const f of [
 			searchTermField,
+			searchLocationField,
 			maxJobsField,
 			skipExistingField,
 			stopAfterDuplicatesField,
@@ -286,6 +296,21 @@
 	$effect(() => {
 		const v = searchTermInput.trim() || null;
 		searchTermField.set(v);
+	});
+	const searchLocationField = autoSaveField<string | null>({
+		armOnInteraction: true,
+		initial: task?.search_location ?? null,
+		save: (v) => patchSearchTask({ search_location: v }),
+		onSaved: (v) => {
+			if (searchTask) searchTask.search_location = v;
+			searchLocationInput = v ?? '';
+		},
+		equal: (a, b) => (a ?? '') === (b ?? ''),
+		debounceMs: 700
+	});
+	$effect(() => {
+		const v = searchLocationInput.trim() || null;
+		searchLocationField.set(v);
 	});
 
 	let showAdvancedSearch = $state(false);
@@ -632,6 +657,7 @@
 	onMount(() => {
 		if (searchTask) {
 			searchTermInput = searchTask.search_term ?? '';
+			searchLocationInput = searchTask.search_location ?? '';
 			maxJobsEnabled = searchTask.max_jobs != null;
 			maxJobsInput = searchTask.max_jobs?.toString() ?? '';
 			skipFirstEnabled = searchTask.skip_first != null;
@@ -651,6 +677,7 @@
 			browserTimezone = browserFingerprint.timezone;
 
 			searchTermField.reset(searchTask.search_term ?? null);
+			searchLocationField.reset(searchTask.search_location ?? null);
 			maxJobsField.reset(searchTask.max_jobs ?? null);
 			skipExistingField.reset(searchTask.skip_existing ?? false);
 			stopAfterDuplicatesField.reset(searchTask.stop_after_duplicates ?? null);
@@ -736,6 +763,28 @@
 
 				{#if sectionOpen.search}
 					<div class="space-y-3">
+						{#if isFeed}
+							<div>
+								<h3 class="mb-1 text-xs font-medium text-[var(--dash-text-secondary)]">
+									Where <span class="font-normal">(optional)</span>
+								</h3>
+								<input
+									type="text"
+									bind:value={searchLocationInput}
+									onblur={searchLocationField.flush}
+									autocomplete="off"
+									placeholder="e.g. Netherlands, Germany, remote"
+									class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+								/>
+								<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+									Countries, comma-separated. Add "remote" to include remote postings from anywhere.
+									Empty means every country.
+								</p>
+								<div class="mt-2">
+									<AutoSaveIndicator field={searchLocationField} />
+								</div>
+							</div>
+						{/if}
 						<!-- Search URL -->
 
 						<!-- Search Term -->
@@ -780,299 +829,306 @@
 			{/if}
 
 			<!-- Signing in -->
-			<div class="space-y-3 border-t border-[var(--dash-border)] pt-4">
-				{@render sectionToggle('auth', 'Signing in')}
+			{#if !isFeed}
+				<div class="space-y-3 border-t border-[var(--dash-border)] pt-4">
+					{@render sectionToggle('auth', 'Signing in')}
 
-				{#if sectionOpen.auth}
-					<!-- Login URL (add mode only). The edit page renders
+					{#if sectionOpen.auth}
+						<!-- Login URL (add mode only). The edit page renders
                SignInPageField instead: the column is platform-level, but it
                is also the thing that decides whether a task ever signs in,
                so hiding it there left users with no way to fix a task that
                silently skipped the login. -->
 
-					<!-- Credentials -->
-					<!-- The platform's sign-in page, which decides whether any of
+						<!-- Credentials -->
+						<!-- The platform's sign-in page, which decides whether any of
 						     the settings below do anything at all. It used to be
 						     absent from this page entirely, so a task whose platform
 						     had no URL on file could be set to sign in and simply
 						     never would. -->
-					{#if searchTask?.platform_id}
-						<SignInPageField
-							platformId={searchTask.platform_id}
+						{#if searchTask?.platform_id}
+							<SignInPageField
+								platformId={searchTask.platform_id}
+								platformName={searchTask?.job_platform?.name}
+								value={signInPageUrl}
+								canEdit={canEditSignInPage}
+								promptForUrl={toLoginMode(editLoginMode) !== 'none'}
+								onSaved={(url) => {
+									signInPageUrl = url;
+									if (searchTask?.job_platform) {
+										searchTask.job_platform.login_page_url = url;
+									}
+								}}
+							/>
+						{/if}
+
+						<CredentialSelector
+							bind:credentials={editPlatformCredentials}
+							bind:selectedId={editSelectedCredentialId}
+							bind:loginMode={editLoginMode}
+							platformId={searchTask?.platform_id}
+							{profileId}
+							{hasSignInPage}
 							platformName={searchTask?.job_platform?.name}
-							value={signInPageUrl}
-							canEdit={canEditSignInPage}
-							promptForUrl={toLoginMode(editLoginMode) !== 'none'}
-							onSaved={(url) => {
-								signInPageUrl = url;
-								if (searchTask?.job_platform) {
-									searchTask.job_platform.login_page_url = url;
+							oncredentialadded={() => {
+								// Auto-save credential selection when a new one is added via "Add & Select"
+								saveCredential();
+							}}
+							oncredentialdeleted={(credId) => {
+								if (searchTask?.platform_credential_id === credId) {
+									searchTask.platform_credential_id = null;
+									editSavedCredentialId = 'none';
 								}
 							}}
 						/>
-					{/if}
 
-					<CredentialSelector
-						bind:credentials={editPlatformCredentials}
-						bind:selectedId={editSelectedCredentialId}
-						bind:loginMode={editLoginMode}
-						platformId={searchTask?.platform_id}
-						{profileId}
-						{hasSignInPage}
-						platformName={searchTask?.job_platform?.name}
-						oncredentialadded={() => {
-							// Auto-save credential selection when a new one is added via "Add & Select"
-							saveCredential();
-						}}
-						oncredentialdeleted={(credId) => {
-							if (searchTask?.platform_credential_id === credId) {
-								searchTask.platform_credential_id = null;
-								editSavedCredentialId = 'none';
-							}
-						}}
-					/>
+						{#if loginModeDirty || credentialDirty}
+							<div class="mt-3">
+								{@render saveCancel(
+									true,
+									isSavingLoginMode || isSavingCredential,
+									saveLoginAndCredential,
+									() => {
+										editLoginMode = editSavedLoginMode;
+										editSelectedCredentialId = editSavedCredentialId;
+										credentialSaveError = null;
+									}
+								)}
+							</div>
+						{/if}
 
-					{#if loginModeDirty || credentialDirty}
-						<div class="mt-3">
-							{@render saveCancel(
-								true,
-								isSavingLoginMode || isSavingCredential,
-								saveLoginAndCredential,
-								() => {
-									editLoginMode = editSavedLoginMode;
-									editSelectedCredentialId = editSavedCredentialId;
-									credentialSaveError = null;
-								}
-							)}
-						</div>
-					{/if}
+						{#if credentialSaveError}
+							<p class="mt-2 text-xs text-[var(--dash-error)]" role="alert">
+								{credentialSaveError}
+							</p>
+						{/if}
 
-					{#if credentialSaveError}
-						<p class="mt-2 text-xs text-[var(--dash-error)]" role="alert">
-							{credentialSaveError}
-						</p>
-					{/if}
-
-					<!-- Signing in by hand, without waiting for a run to ask.
+						<!-- Signing in by hand, without waiting for a run to ask.
 						     The same Chrome scrapes and browses, so the session the
 						     user creates here is the one the next run uses — which is
 						     the whole reason "I sign in myself" is not a worse option
 						     than storing a password, and nothing in the UI said it. -->
-					{#if toLoginMode(editLoginMode) === 'manual' && hasSignInPage}
-						<div class="border-t border-[var(--dash-border)] pt-3">
-							{#if onSignInNow}
-								<button
-									type="button"
-									onclick={onSignInNow}
-									disabled={signingInNow}
-									class="flex items-center gap-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-1.5 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)] disabled:opacity-50"
-								>
-									{#if signingInNow}
-										<Spinner size="w-3.5 h-3.5" />
-										Opening...
-									{:else}
-										<FontAwesomeIcon icon={faRightToBracket} class="h-3.5 w-3.5" />
-										Sign in now
-									{/if}
-								</button>
-								<p class="mt-1.5 text-xs text-[var(--dash-text-muted)]">
-									Opens the sign-in page in this task's browser so you can sign in before the next
-									run, instead of the run stopping to ask.
-								</p>
-							{:else}
-								<p class="text-xs text-[var(--dash-text-muted)]">
-									Start a run and it will stop at the sign-in page, where Browser View lets you sign
-									in. Connect a device to sign in ahead of time instead.
-								</p>
-							{/if}
-						</div>
-					{/if}
+						{#if toLoginMode(editLoginMode) === 'manual' && hasSignInPage}
+							<div class="border-t border-[var(--dash-border)] pt-3">
+								{#if onSignInNow}
+									<button
+										type="button"
+										onclick={onSignInNow}
+										disabled={signingInNow}
+										class="flex items-center gap-2 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-1.5 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)] disabled:opacity-50"
+									>
+										{#if signingInNow}
+											<Spinner size="w-3.5 h-3.5" />
+											Opening...
+										{:else}
+											<FontAwesomeIcon icon={faRightToBracket} class="h-3.5 w-3.5" />
+											Sign in now
+										{/if}
+									</button>
+									<p class="mt-1.5 text-xs text-[var(--dash-text-muted)]">
+										Opens the sign-in page in this task's browser so you can sign in before the next
+										run, instead of the run stopping to ask.
+									</p>
+								{:else}
+									<p class="text-xs text-[var(--dash-text-muted)]">
+										Start a run and it will stop at the sign-in page, where Browser View lets you
+										sign in. Connect a device to sign in ahead of time instead.
+									</p>
+								{/if}
+							</div>
+						{/if}
 
-					<!-- Email Verification Relay -->
-					{#if verificationEmailAddress}
-						<div class="border-t border-[var(--dash-border)] pt-3">
-							<div class="mb-1.5 flex items-center gap-2">
-								<FontAwesomeIcon
-									icon={faEnvelope}
-									class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
-								/>
-								<span class="text-sm text-[var(--dash-text-secondary)]"
-									>Email verification relay</span
-								>
+						<!-- Email Verification Relay -->
+						{#if verificationEmailAddress}
+							<div class="border-t border-[var(--dash-border)] pt-3">
+								<div class="mb-1.5 flex items-center gap-2">
+									<FontAwesomeIcon
+										icon={faEnvelope}
+										class="h-3.5 w-3.5 text-[var(--dash-text-muted)]"
+									/>
+									<span class="text-sm text-[var(--dash-text-secondary)]"
+										>Email verification relay</span
+									>
+								</div>
+								<div class="flex items-center gap-2">
+									<code
+										class="flex-1 truncate rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1.5 font-mono text-xs text-[var(--dash-text)] select-all"
+										>{verificationEmailAddress}</code
+									>
+									<button
+										type="button"
+										onclick={copyVerificationEmail}
+										class="shrink-0 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1.5 text-xs transition-colors hover:bg-[var(--dash-border)]"
+										title="Copy to clipboard"
+									>
+										{#if copiedVerifyEmail}
+											<FontAwesomeIcon
+												icon={faCheck}
+												class="h-3.5 w-3.5 text-[var(--dash-success)]"
+											/>
+										{:else}
+											<FontAwesomeIcon icon={faCopy} class="h-3.5 w-3.5" />
+										{/if}
+									</button>
+								</div>
+								<p class="mt-1.5 text-xs text-[var(--dash-text-muted)]">
+									Forward verification emails from job sites to this address for auto-login.
+								</p>
 							</div>
-							<div class="flex items-center gap-2">
-								<code
-									class="flex-1 truncate rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1.5 font-mono text-xs text-[var(--dash-text)] select-all"
-									>{verificationEmailAddress}</code
-								>
-								<button
-									type="button"
-									onclick={copyVerificationEmail}
-									class="shrink-0 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] px-2 py-1.5 text-xs transition-colors hover:bg-[var(--dash-border)]"
-									title="Copy to clipboard"
-								>
-									{#if copiedVerifyEmail}
-										<FontAwesomeIcon
-											icon={faCheck}
-											class="h-3.5 w-3.5 text-[var(--dash-success)]"
-										/>
-									{:else}
-										<FontAwesomeIcon icon={faCopy} class="h-3.5 w-3.5" />
-									{/if}
-								</button>
-							</div>
-							<p class="mt-1.5 text-xs text-[var(--dash-text-muted)]">
-								Forward verification emails from job sites to this address for auto-login.
-							</p>
-						</div>
+						{/if}
 					{/if}
-				{/if}
-			</div>
+				</div>
+			{/if}
 		{/if}
 
 		<!-- Browser Control -->
-		<hr class="mt-4 border-[var(--dash-border)]" />
-		{@render sectionToggle('browser', 'Browser Control')}
+		{#if !isFeed}
+			<hr class="mt-4 border-[var(--dash-border)]" />
+			{@render sectionToggle('browser', 'Browser Control')}
 
-		{#if sectionOpen.browser}
-			<div class="space-y-3">
-				<BrowserProviderToggle
-					bind:value={browserProvider}
-					bind:sjsBrowserApiKey
-					{localBrowserAllowed}
-					{devices}
-				/>
-				<div class="mt-1 min-h-[1rem]">
-					<AutoSaveIndicator field={browserConfigField} />
-				</div>
+			{#if sectionOpen.browser}
+				<div class="space-y-3">
+					<BrowserProviderToggle
+						bind:value={browserProvider}
+						bind:sjsBrowserApiKey
+						{localBrowserAllowed}
+						{devices}
+					/>
+					<div class="mt-1 min-h-[1rem]">
+						<AutoSaveIndicator field={browserConfigField} />
+					</div>
 
-				<!-- Desktop connection status -->
-				{#if isTunnelMode && desktopConnected !== null}
-					<div
-						class="
+					<!-- Desktop connection status -->
+					{#if isTunnelMode && desktopConnected !== null}
+						<div
+							class="
               flex items-center gap-2 text-xs {isTunnelMode && !desktopConnected
-							? 'text-amber-600'
-							: 'text-[var(--dash-text-secondary)]'}
+								? 'text-amber-600'
+								: 'text-[var(--dash-text-secondary)]'}
             "
-					>
-						<FontAwesomeIcon
-							icon={faDesktop}
-							class="h-3 w-3 {desktopConnected ? 'text-green-500' : ''}"
-						/>
-						{#if preferredDevice}
-							{preferredDevice.apiKeyName}
-							{#if preferredDevice.isShared && preferredDevice.ownerLabel}
-								<span class="text-[var(--dash-text-muted)]">
-									(shared by {preferredDevice.ownerLabel})
-								</span>
-							{/if}
-						{:else if desktopConnected}
-							Device connected
-						{:else}
-							No device connected — <a
-								href={resolve('/jobs/import/devices')}
-								class="underline hover:text-amber-700">Setup guide</a
-							>
-						{/if}
-					</div>
-				{/if}
-
-				<!-- Browser Location (hosted mode) -->
-				{#if isHostedMode}
-					<div class="mt-2 border-t border-[var(--dash-border)] pt-3">
-						<div class="mb-2 flex items-center gap-2">
-							<FontAwesomeIcon
-								icon={faGlobe}
-								class="h-3.5 w-3.5 text-[var(--dash-text-secondary)]"
-							/>
-							<h3 class="text-xs font-medium text-[var(--dash-text-secondary)]">
-								Browser Location
-							</h3>
-						</div>
-						<div class="flex items-center gap-2">
-							<div class="flex-1">
-								<CountrySelect bind:value={editBrowserCountryCode} fallback={defaultCountryCode} />
-							</div>
-							<AutoSaveIndicator field={browserCountryField} />
-						</div>
-						<p class="mt-2 text-xs text-[var(--dash-text-muted)]">
-							The country the scraper will appear to browse from. Set this to match your actual
-							location to avoid your account being flagged for logging in from unusual locations. If
-							empty, your profile's country is used.
-						</p>
-
-						<!-- Advanced: browser fingerprint -->
-						<button
-							type="button"
-							onclick={() => (showAdvancedBrowser = !showAdvancedBrowser)}
-							class="mt-3 flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
 						>
-							{#if showAdvancedBrowser}
-								<FontAwesomeIcon icon={faChevronDown} class="h-2.5 w-2.5" />
+							<FontAwesomeIcon
+								icon={faDesktop}
+								class="h-3 w-3 {desktopConnected ? 'text-green-500' : ''}"
+							/>
+							{#if preferredDevice}
+								{preferredDevice.apiKeyName}
+								{#if preferredDevice.isShared && preferredDevice.ownerLabel}
+									<span class="text-[var(--dash-text-muted)]">
+										(shared by {preferredDevice.ownerLabel})
+									</span>
+								{/if}
+							{:else if desktopConnected}
+								Device connected
 							{:else}
-								<FontAwesomeIcon icon={faChevronRight} class="h-2.5 w-2.5" />
+								No device connected — <a
+									href={resolve('/jobs/import/devices')}
+									class="underline hover:text-amber-700">Setup guide</a
+								>
 							{/if}
-							Advanced
-						</button>
+						</div>
+					{/if}
 
-						{#if showAdvancedBrowser}
-							<div class="mt-3 space-y-3 border-t border-[var(--dash-border)] pt-3">
-								<div>
-									<label
-										for="browser_language"
-										class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
-									>
-										Language
-									</label>
-									<input
-										type="text"
-										id="browser_language"
-										bind:value={browserLanguage}
-										onblur={fingerprintField.flush}
-										autocomplete="off"
-										placeholder={defaultBrowserLanguage}
-										class="w-full rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-									/>
-									{#if !browserLanguage}
-										<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
-											Defaults to <span class="font-mono">{defaultBrowserLanguage}</span> based on selected
-											country
-										</p>
-									{/if}
-								</div>
-
-								<div>
-									<label
-										for="browser_timezone"
-										class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
-									>
-										Timezone
-									</label>
-									<input
-										type="text"
-										id="browser_timezone"
-										bind:value={browserTimezone}
-										onblur={fingerprintField.flush}
-										autocomplete="off"
-										placeholder={defaultBrowserTimezone}
-										class="w-full rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-									/>
-									{#if !browserTimezone}
-										<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
-											Defaults to <span class="font-mono">{defaultBrowserTimezone}</span> based on selected
-											country
-										</p>
-									{/if}
-								</div>
-
-								<div class="pt-1">
-									<AutoSaveIndicator field={fingerprintField} />
-								</div>
+					<!-- Browser Location (hosted mode) -->
+					{#if isHostedMode}
+						<div class="mt-2 border-t border-[var(--dash-border)] pt-3">
+							<div class="mb-2 flex items-center gap-2">
+								<FontAwesomeIcon
+									icon={faGlobe}
+									class="h-3.5 w-3.5 text-[var(--dash-text-secondary)]"
+								/>
+								<h3 class="text-xs font-medium text-[var(--dash-text-secondary)]">
+									Browser Location
+								</h3>
 							</div>
-						{/if}
-					</div>
-				{/if}
-			</div>
+							<div class="flex items-center gap-2">
+								<div class="flex-1">
+									<CountrySelect
+										bind:value={editBrowserCountryCode}
+										fallback={defaultCountryCode}
+									/>
+								</div>
+								<AutoSaveIndicator field={browserCountryField} />
+							</div>
+							<p class="mt-2 text-xs text-[var(--dash-text-muted)]">
+								The country the scraper will appear to browse from. Set this to match your actual
+								location to avoid your account being flagged for logging in from unusual locations.
+								If empty, your profile's country is used.
+							</p>
+
+							<!-- Advanced: browser fingerprint -->
+							<button
+								type="button"
+								onclick={() => (showAdvancedBrowser = !showAdvancedBrowser)}
+								class="mt-3 flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
+							>
+								{#if showAdvancedBrowser}
+									<FontAwesomeIcon icon={faChevronDown} class="h-2.5 w-2.5" />
+								{:else}
+									<FontAwesomeIcon icon={faChevronRight} class="h-2.5 w-2.5" />
+								{/if}
+								Advanced
+							</button>
+
+							{#if showAdvancedBrowser}
+								<div class="mt-3 space-y-3 border-t border-[var(--dash-border)] pt-3">
+									<div>
+										<label
+											for="browser_language"
+											class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
+										>
+											Language
+										</label>
+										<input
+											type="text"
+											id="browser_language"
+											bind:value={browserLanguage}
+											onblur={fingerprintField.flush}
+											autocomplete="off"
+											placeholder={defaultBrowserLanguage}
+											class="w-full rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+										/>
+										{#if !browserLanguage}
+											<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
+												Defaults to <span class="font-mono">{defaultBrowserLanguage}</span> based on selected
+												country
+											</p>
+										{/if}
+									</div>
+
+									<div>
+										<label
+											for="browser_timezone"
+											class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
+										>
+											Timezone
+										</label>
+										<input
+											type="text"
+											id="browser_timezone"
+											bind:value={browserTimezone}
+											onblur={fingerprintField.flush}
+											autocomplete="off"
+											placeholder={defaultBrowserTimezone}
+											class="w-full rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
+										/>
+										{#if !browserTimezone}
+											<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
+												Defaults to <span class="font-mono">{defaultBrowserTimezone}</span> based on selected
+												country
+											</p>
+										{/if}
+									</div>
+
+									<div class="pt-1">
+										<AutoSaveIndicator field={fingerprintField} />
+									</div>
+								</div>
+							{/if}
+						</div>
+					{/if}
+				</div>
+			{/if}
 		{/if}
 	</div>
 

@@ -56,6 +56,12 @@ export interface ImportTaskReadinessInput {
 	 * live tunnel status (the task's pinned device, or the user's preferred one).
 	 */
 	deviceConnected: boolean;
+	/**
+	 * `job_platforms.fetch_mode`. A `feed` platform's run queries the ATS corpus
+	 * on the worker (planning/ATS-FEEDS.md): no browser, no device, no sign-in,
+	 * so none of those blockers apply to it.
+	 */
+	fetchMode?: string | null;
 }
 
 /**
@@ -106,6 +112,8 @@ export function computeImportTaskBlockers(input: ImportTaskReadinessInput): Impo
 	// Same precedence the worker and the run endpoint use to pick a starting
 	// page. Keep the three in step: a task the UI calls runnable but the worker
 	// then skips is worse than a task that never offered to run.
+	if (input.fetchMode === 'feed') return blockers;
+
 	const effectiveSearchUrl =
 		input.taskSearchUrl || input.platformSearchPageUrl || input.platformUrl;
 	if (!effectiveSearchUrl) {
