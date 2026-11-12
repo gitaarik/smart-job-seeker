@@ -4836,6 +4836,11 @@ export const credit_purchases = pgTable(
 	},
 	(table) => [
 		index('credit_purchases_user_id_idx').using('btree', table.user_id.asc().nullsLast()),
+		// One row per Stripe payment: the webhook inserts here before crediting,
+		// and a redelivered checkout.session.completed hits the conflict instead
+		// of crediting the pack twice (it did, measured on the dev sandbox
+		// 2026-11-12).
+		uniqueIndex('credit_purchases_stripe_payment_intent_id_key').on(table.stripe_payment_intent_id),
 		foreignKey({
 			columns: [table.user_id],
 			foreignColumns: [users.id],

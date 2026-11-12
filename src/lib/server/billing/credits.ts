@@ -77,6 +77,16 @@ export async function chargeCredits(
 }
 
 /** Add extra credits — no-op in OSS. */
+/** Cloud records the Stripe payment here; OSS has no payments. */
+export async function recordCreditPurchase(_params: {
+	userId: string;
+	stripePaymentIntentId: string;
+	packType: string;
+	amountCents: number;
+}): Promise<boolean> {
+	return true;
+}
+
 export async function addExtraCredits(
 	_userId: string,
 	_amount: number,

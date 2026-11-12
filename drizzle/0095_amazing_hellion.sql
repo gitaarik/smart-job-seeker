@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "credit_purchases_stripe_payment_intent_id_key" ON "credit_purchases" USING btree ("stripe_payment_intent_id");
