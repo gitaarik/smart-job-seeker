@@ -1407,7 +1407,7 @@
 		flex: 1;
 		flex-direction: column;
 		justify-content: center;
-		padding: 5rem 1.5rem 7rem var(--hero-text-left);
+		padding: 5rem 1.5rem 4rem var(--hero-text-left);
 	}
 
 	.hero.with-art .hero-body {
@@ -1443,7 +1443,9 @@
 		color: var(--pf-muted);
 	}
 
+	/* Only from 60rem: on a phone the next section already shows below. */
 	.hero-more {
+		display: none;
 		position: absolute;
 		bottom: 1.5rem;
 		left: var(--hero-text-left);
@@ -1453,6 +1455,14 @@
 		.hero {
 			--hero-text-left: max(3rem, 8vw);
 			min-height: 100svh;
+		}
+
+		.hero-body {
+			padding-bottom: 7rem;
+		}
+
+		.hero-more {
+			display: block;
 		}
 
 		.hero.with-art {
