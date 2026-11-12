@@ -244,6 +244,11 @@ export interface PortfolioThemeConfig {
 	 */
 	logoTint?: boolean;
 	/**
+	 * Put the quotes on the page's own shade, in the body colour with accent
+	 * marks, instead of a band in `darkBand`. Showcase only.
+	 */
+	plainQuotes?: boolean;
+	/**
 	 * A quiet picture beside the header, drawn in the palette: an agent's runs
 	 * as an observability tool shows them (`trace`), or a code review as a
 	 * minimap (`code`). Absent draws nothing. Showcase only.

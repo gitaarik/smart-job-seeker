@@ -596,7 +596,10 @@
 					/>
 				{:else if block.kind === 'band' && block.section === 'references'}
 					<section
-						class="w-full bg-(--pf-dark-band) text-(--pf-text-on-dark) transition-colors"
+						class={[
+							'w-full bg-(--pf-dark-band) text-(--pf-text-on-dark) transition-colors',
+							config.plainQuotes && 'plain-quotes'
+						]}
 						aria-labelledby="pf-references"
 					>
 						<div class="flex justify-center px-5 pt-20 pb-16 min-[40rem]:px-10 min-[50rem]:pt-28">
@@ -1505,6 +1508,16 @@
 		letter-spacing: -0.025em;
 		line-height: 0.92;
 		color: var(--pf-strong);
+	}
+
+	/*
+	 * Set on the band itself: `--pf-band-accent` was worked out on the root
+	 * from the on-dark colour, so it is given again rather than inherited.
+	 */
+	.plain-quotes {
+		--pf-dark-band: var(--pf-shade);
+		--pf-text-on-dark: var(--pf-text);
+		--pf-band-accent: var(--pf-accent-text);
 	}
 
 	.quote-mark {

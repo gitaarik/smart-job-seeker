@@ -227,6 +227,15 @@ describe('ShowcaseSite', () => {
 		expect(c.textContent).not.toContain('What People Say');
 	});
 
+	test('plainQuotes takes the quotes off the coloured band', () => {
+		const band = (config: Record<string, unknown>) =>
+			site({ references: [{ id: 1, text: 'Great.', author: 'Sam' }] }, config).querySelector(
+				'[aria-labelledby="pf-references"]'
+			);
+		expect(band({})?.classList.contains('plain-quotes')).toBe(false);
+		expect(band({ plainQuotes: true })?.classList.contains('plain-quotes')).toBe(true);
+	});
+
 	test('a link that is not a web link is not rendered as one', () => {
 		const c = site({
 			linkedin_profile: 'javascript:alert(1)',

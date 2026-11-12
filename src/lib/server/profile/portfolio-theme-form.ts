@@ -49,6 +49,7 @@ export function applyShowcaseFields(next: PortfolioThemeConfig, form: FormData):
 		'schemeSwitcher',
 		'animations',
 		'logoTint',
+		'plainQuotes',
 		'privateCv',
 		'businessFooter'
 	] as const) {

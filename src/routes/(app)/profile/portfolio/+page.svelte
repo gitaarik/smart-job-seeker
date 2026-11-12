@@ -814,6 +814,14 @@
 										<input type="checkbox" name="logoTint" checked={!!theme.config.logoTint} />
 										Paint the logo in the button colour (for a one-colour logo)
 									</label>
+									<label class="flex items-center gap-2">
+										<input
+											type="checkbox"
+											name="plainQuotes"
+											checked={!!theme.config.plainQuotes}
+										/>
+										Show the quotes on the page background, not a coloured band
+									</label>
 								</fieldset>
 
 								<label>
