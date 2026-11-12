@@ -57,6 +57,19 @@ const box = (c: HTMLElement, label: string) =>
 	[...c.querySelectorAll('h3')].find((h) => h.textContent?.trim() === label)?.parentElement;
 
 describe('ShowcaseSite', () => {
+	test('links only the bracketed words of the footer note', () => {
+		const c = site(
+			{},
+			{
+				footerNote: 'Logo Vector by [Vecteezy]',
+				footerNoteUrl: 'https://www.vecteezy.com/free-vector/logo'
+			}
+		);
+		const link = c.querySelector('footer a[href="https://www.vecteezy.com/free-vector/logo"]');
+		expect(link?.textContent).toBe('Vecteezy');
+		expect(link?.parentElement?.textContent?.trim()).toBe('Logo Vector by Vecteezy');
+	});
+
 	test('prints the business block in the footer in place of the name, title and place', () => {
 		const footer = (c: HTMLElement) => c.querySelector('footer')?.textContent ?? '';
 		const own = site({

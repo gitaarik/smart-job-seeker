@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
 	DEFAULT_PALETTE,
+	footerNoteParts,
 	HOME_SECTIONS,
 	PALETTE_ROLES,
 	PORTFOLIO_SECTIONS,
@@ -102,5 +103,29 @@ describe('the private CV page', () => {
 
 	test('one page shows every section', () => {
 		expect(pageSections(split, 'site')).toEqual([...SHOWCASE_SECTIONS]);
+	});
+});
+
+describe('footerNoteParts', () => {
+	test('links only the bracketed words, and drops the brackets', () => {
+		expect(footerNoteParts('Logo Vector by [Vecteezy]')).toEqual({
+			before: 'Logo Vector by ',
+			link: 'Vecteezy',
+			after: ''
+		});
+		expect(footerNoteParts('Photo [here], thanks')).toEqual({
+			before: 'Photo ',
+			link: 'here',
+			after: ', thanks'
+		});
+	});
+
+	test('links the whole note without brackets, as it always did', () => {
+		expect(footerNoteParts('Logo by Vecteezy')).toEqual({
+			before: '',
+			link: 'Logo by Vecteezy',
+			after: ''
+		});
+		expect(footerNoteParts('Empty [] brackets').link).toBe('Empty [] brackets');
 	});
 });

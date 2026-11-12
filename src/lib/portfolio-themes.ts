@@ -251,7 +251,11 @@ export interface PortfolioThemeConfig {
 	headerArt?: HeaderArt;
 	/** Plain text above the contact details, once a visitor opens them. Showcase only. */
 	contactIntro?: string;
-	/** A line of plain text in the footer, such as a credit for the logo. Showcase only. */
+	/**
+	 * A line of plain text in the footer, such as a credit for the logo. Square
+	 * brackets mark the words `footerNoteUrl` links ("Logo by [Vecteezy]");
+	 * without them the whole line is the link. Showcase only; see `footerNoteParts`.
+	 */
 	footerNote?: string;
 	/** Where `footerNote` links to; an http(s) URL or nothing. Showcase only. */
 	footerNoteUrl?: string;
@@ -395,4 +399,14 @@ export function careerDetail(config: PortfolioThemeConfig): CareerDetail {
 				? (perRole as number | 'all')
 				: DEFAULT_ACHIEVEMENTS_PER_ROLE
 	};
+}
+
+/**
+ * The footer note split around its linked words: the first `[...]` in it, or
+ * the whole note when it has none. The brackets themselves never print.
+ */
+export function footerNoteParts(note: string): { before: string; link: string; after: string } {
+	const marked = /^([^[]*)\[([^\]]+)\](.*)$/.exec(note);
+	if (!marked) return { before: '', link: note, after: '' };
+	return { before: marked[1], link: marked[2], after: marked[3] };
 }

@@ -59,6 +59,7 @@
 	} from '@fortawesome/free-brands-svg-icons';
 	import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 	import {
+		footerNoteParts,
 		isHeaderArt,
 		pageSections,
 		paletteStyle,
@@ -76,6 +77,7 @@
 	import { keySkillLines } from '../key-skills';
 	import { briefRole, briefRoleProject, briefSideProject } from '../brief-entries';
 	import { iconFor } from './icons';
+	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import Card from './Card.svelte';
 	import AgentTrace from './AgentTrace.svelte';
 	import CodeMinimap from './CodeMinimap.svelte';
@@ -1208,16 +1210,12 @@
 				>
 					<div>Copyright © {year} {business?.name ?? profile.name}</div>
 					{#if config.footerNote}
+						{@const note = footerNoteParts(config.footerNote)}
+						{@const href = web(config.footerNoteUrl)}
 						<div class="max-[420px]:mt-2">
-							{#if web(config.footerNoteUrl)}
-								<!-- eslint-disable svelte/no-navigation-without-resolve -- a URL the theme's owner typed in -->
-								<a class="underline" href={web(config.footerNoteUrl)} target="_blank" rel="noopener"
-									>{config.footerNote}</a
-								>
-								<!-- eslint-enable svelte/no-navigation-without-resolve -->
-							{:else}
-								{config.footerNote}
-							{/if}
+							{note.before}{#if href}<ExternalLink class="underline" {href} rel="noopener"
+									>{note.link}</ExternalLink
+								>{:else}{note.link}{/if}{note.after}
 						</div>
 					{/if}
 				</div>

@@ -853,11 +853,14 @@
 										<span class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
 											>Footer note</span
 										>
+										<span class="mb-1 block text-xs text-[var(--dash-text-secondary)]">
+											Put [brackets] around the words the link goes on, or the whole note links.
+										</span>
 										<input
 											name="footerNote"
 											maxlength="200"
 											value={theme.config.footerNote ?? ''}
-											placeholder="e.g. a credit for your logo"
+											placeholder="e.g. Logo by [Vecteezy]"
 											class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)]"
 										/>
 									</label>
