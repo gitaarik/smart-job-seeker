@@ -904,6 +904,22 @@
 										</span>
 									</span>
 								</label>
+
+								<label class="flex items-start gap-2 text-sm text-[var(--dash-text-secondary)]">
+									<input
+										type="checkbox"
+										name="businessCityOnly"
+										checked={!!theme.config.businessCityOnly}
+										class="mt-1"
+									/>
+									<span>
+										<span class="text-[var(--dash-text)]">Show the city only</span>
+										<span class="mt-0.5 block text-xs">
+											Leaves the street and postal code out of the footer, so a home address stays
+											off the site.
+										</span>
+									</span>
+								</label>
 							{/if}
 
 							<div>

@@ -51,7 +51,8 @@ export function applyShowcaseFields(next: PortfolioThemeConfig, form: FormData):
 		'logoTint',
 		'plainQuotes',
 		'privateCv',
-		'businessFooter'
+		'businessFooter',
+		'businessCityOnly'
 	] as const) {
 		if (form.get(flag)) next[flag] = true;
 		else delete next[flag];

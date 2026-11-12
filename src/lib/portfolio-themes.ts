@@ -270,6 +270,12 @@ export interface PortfolioThemeConfig {
 	 * server/profile/portfolio-business.ts.
 	 */
 	businessFooter?: boolean;
+	/**
+	 * Leave the street and postal code out of `businessFooter`'s address and print
+	 * the city and country only: the numbers an invoice needs, without a home
+	 * address on a public page. Most freelancers work from home.
+	 */
+	businessCityOnly?: boolean;
 	/** A heading per section in place of the layout's own. Plain text; showcase only. */
 	titles?: Partial<Record<PortfolioSection, string>>;
 	/**

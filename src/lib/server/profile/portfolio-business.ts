@@ -59,10 +59,11 @@ export function portfolioBusiness(
 	if (!theme || themeLayout(theme.config) !== 'showcase' || !theme.config.businessFooter) {
 		return null;
 	}
+	const cityOnly = !!theme.config.businessCityOnly;
 	const business: PortfolioBusiness = {
 		name: line(profile.company_name),
-		street: line(profile.street_address),
-		place: line(profile.postal_code, profile.city),
+		street: cityOnly ? null : line(profile.street_address),
+		place: cityOnly ? line(profile.city) : line(profile.postal_code, profile.city),
 		country: null,
 		vatId: line(profile.vat_id),
 		registration: line(profile.kvk_number),

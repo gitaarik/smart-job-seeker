@@ -38,6 +38,15 @@ describe('portfolioBusiness', () => {
 		});
 	});
 
+	test('prints the city and country only when the theme asks', () => {
+		const shown = portfolioBusiness(
+			row,
+			theme({ layout: 'showcase', businessFooter: true, businessCityOnly: true })
+		);
+		expect(shown).toMatchObject({ street: null, place: 'Amsterdam', country: 'Netherlands' });
+		expect(shown?.vatId).toBe('NL001234567B01');
+	});
+
 	test('names the registration generically outside the Netherlands', () => {
 		const shown = portfolioBusiness(
 			{ ...row, country_code: 'BE' },
