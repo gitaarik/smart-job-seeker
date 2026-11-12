@@ -320,6 +320,8 @@
 		return { isGithub, label };
 	}
 
+	// No `personal_website`: that column is how a CV points at the applicant's
+	// site, and this is the site.
 	const footerLinks = $derived(
 		(
 			[
@@ -327,8 +329,7 @@
 				[profile.github_profile, faGithub, 'GitHub'],
 				[profile.pypi_profile, faPython, 'PyPI'],
 				[profile.npm_profile, faNpm, 'npm'],
-				[profile.stackoverflow_profile, faStackOverflow, 'Stack Overflow'],
-				[profile.personal_website, faGlobe, 'Website']
+				[profile.stackoverflow_profile, faStackOverflow, 'Stack Overflow']
 			] as [string | null, IconDefinition, string][]
 		)
 			.map(([href, icon, label]) => [web(href), icon, label] as const)

@@ -59,7 +59,15 @@ const box = (c: HTMLElement, label: string) =>
 describe('ShowcaseSite', () => {
 	test('prints the business block in the footer in place of the name, title and place', () => {
 		const footer = (c: HTMLElement) => c.querySelector('footer')?.textContent ?? '';
-		const plain = footer(site({ location: 'Utrecht' }));
+		const own = site({
+			location: 'Utrecht',
+			personal_website: 'https://alex.example',
+			github_profile: 'https://github.com/alex'
+		});
+		const plain = footer(own);
+		// The site's own address is not a link out of it.
+		expect(own.querySelector('footer a[href="https://alex.example"]')).toBeNull();
+		expect(own.querySelector('footer a[href="https://github.com/alex"]')).not.toBeNull();
 		expect(plain).toContain('Alex Morgan');
 		expect(plain).toContain('Engineer');
 
