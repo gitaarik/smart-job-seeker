@@ -5875,9 +5875,23 @@ export const ats_boards = pgTable(
  *
  * `first_seen_at` is our own clock, which a provider cannot re-stamp.
  * `closed_at` is set when a complete fetch of the board no longer lists the
- * posting. `raw` is the provider payload minus its text fields, which live in
- * `content_html` / `content_text` once.
+ * posting. `raw` is the provider payload minus its text fields; the posting's
+ * text lives in `content_text` once, as plain text. The HTML was stored too at
+ * first and cost 2.1 GB of a 5.3 GB table for a copy nothing read (Phase 0).
+ *
+ * One row per opening, not per office: Greenhouse lists a posting once per
+ * office under its own id (Sezzle: six rows per title, 12% of the first
+ * sweep). The sweep merges copies with the same title and text within a
+ * board; `external_id` is the smallest id of the group, `locations` holds
+ * every office, `country_codes` every country, and `country_code` / `city`
+ * the first one.
  */
+export interface AtsLocation {
+	text: string | null;
+	city: string | null;
+	country_code: string | null;
+}
+
 export const ats_postings = pgTable(
 	'ats_postings',
 	{
@@ -5891,6 +5905,8 @@ export const ats_postings = pgTable(
 		city: varchar({ length: 255 }),
 		/** ISO 3166-1 alpha-2, upper case. */
 		country_code: varchar({ length: 2 }),
+		country_codes: text().array().default([]).notNull(),
+		locations: jsonb().$type<AtsLocation[]>().default([]).notNull(),
 		work_location: varchar({ length: 16 }),
 		employment_type: varchar({ length: 32 }),
 		hours_commitment: varchar({ length: 16 }),
@@ -5902,7 +5918,6 @@ export const ats_postings = pgTable(
 		salary_currency: varchar({ length: 8 }),
 		salary_period: varchar({ length: 16 }),
 		department: varchar({ length: 255 }),
-		content_html: text(),
 		content_text: text().notNull(),
 		apply_url: varchar({ length: 2048 }),
 		source_url: varchar({ length: 2048 }).notNull(),
@@ -5925,6 +5940,7 @@ export const ats_postings = pgTable(
 		index('ats_postings_tsv_idx').using('gin', table.tsv),
 		index('ats_postings_published_at_idx').on(table.published_at),
 		index('ats_postings_country_code_idx').on(table.country_code),
+		index('ats_postings_country_codes_idx').using('gin', table.country_codes),
 		index('ats_postings_closed_at_idx').on(table.closed_at),
 		index('ats_postings_job_id_idx').on(table.job_id),
 		foreignKey({

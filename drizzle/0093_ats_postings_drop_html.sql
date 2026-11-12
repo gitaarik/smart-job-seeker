@@ -1,0 +1,1 @@
+ALTER TABLE "ats_postings" DROP COLUMN "content_html";

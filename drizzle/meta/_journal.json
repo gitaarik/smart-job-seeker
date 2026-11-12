@@ -652,6 +652,20 @@
       "when": 1794490258001,
       "tag": "0092_ats_feeds",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1794499178824,
+      "tag": "0093_ats_postings_drop_html",
+      "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1794499184511,
+      "tag": "0094_ats_postings_locations",
+      "breakpoints": true
     }
   ]
 }
