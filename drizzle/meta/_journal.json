@@ -687,6 +687,13 @@
       "when": 1794500390009,
       "tag": "0097_publish_feed_platforms",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1794501582009,
+      "tag": "0098_ats_boards_lowercase_slugs",
+      "breakpoints": true
     }
   ]
 }
