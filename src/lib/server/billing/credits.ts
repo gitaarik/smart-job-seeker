@@ -87,6 +87,8 @@ export async function recordCreditPurchase(_params: {
 	return true;
 }
 
+export async function forgetCreditPurchase(_stripePaymentIntentId: string): Promise<void> {}
+
 export async function addExtraCredits(
 	_userId: string,
 	_amount: number,
