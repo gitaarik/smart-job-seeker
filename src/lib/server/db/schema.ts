@@ -4831,7 +4831,9 @@ export const credit_purchases = pgTable(
 		stripe_payment_intent_id: varchar({ length: 255 }),
 		pack_type: varchar({ length: 50 }).notNull(),
 		amount_cents: integer().notNull(),
-		period: varchar({ length: 7 }).notNull(),
+		// Same key as credit_balances.period: a date, since periods are anchored
+		// on the subscription start, not the calendar month this was sized for.
+		period: varchar({ length: 10 }).notNull(),
 		date_created: timestamp({ precision: 6, withTimezone: true, mode: 'date' }).defaultNow()
 	},
 	(table) => [

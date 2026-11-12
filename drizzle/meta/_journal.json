@@ -673,6 +673,13 @@
       "when": 1794499733963,
       "tag": "0095_amazing_hellion",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1794499814808,
+      "tag": "0096_credit_purchases_period",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "credit_purchases" ALTER COLUMN "period" SET DATA TYPE varchar(10);
