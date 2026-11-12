@@ -42,12 +42,12 @@ export interface SiteLists {
 	 *
 	 * One table holds both lists the Highlights page keeps, and a row's `type`
 	 * says which. Both layouts used to print every row as a highlight, so a
-	 * classic site listed the showcase's Contact for lines, and the copy of an
+	 * classic site listed the showcase's Services lines, and the copy of an
 	 * old Key skills box, between the highlights. A `key_skill` row is in
 	 * neither list: the showcase builds that box from the Skills (key-skills.ts).
 	 */
 	highlights: Row[];
-	/** The `contact_for` rows: the showcase's Contact for box, beside its About me. */
+	/** The `contact_for` rows: the showcase's Services box, beside its About me. */
 	contactFor: Row[];
 	/**
 	 * What the applicant featured. Only what is still on the site, so a

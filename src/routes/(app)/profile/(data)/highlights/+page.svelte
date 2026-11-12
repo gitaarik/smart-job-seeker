@@ -26,7 +26,7 @@
 
 	/**
 	 * The page keeps two lists in one table, each printed somewhere else on a
-	 * portfolio site: highlights on its Highlights section, and Contact for lines
+	 * portfolio site: highlights on its Highlights section, and Services lines
 	 * in the box beside a showcase's About me. A row's `type` says which, and the
 	 * add form posts the kind of the list it opened under. A row of any other
 	 * kind (the retired `key_skill`) is listed with the highlights, so it can
@@ -321,16 +321,16 @@
 		{@render rowList(highlights, faStar)}
 	{/if}
 
-	<!-- Contact For List -->
+	<!-- Services List -->
 	<section aria-labelledby="contact-for-heading" class="space-y-4 pt-6">
 		<div class="flex items-start justify-between gap-4">
 			<div>
 				<h2 id="contact-for-heading" class="text-xl font-semibold text-[var(--dash-text)]">
-					Contact for
+					Services
 				</h2>
 				<p class="mt-1 text-sm text-[var(--dash-text-secondary)]">
-					What visitors can get in touch with you about, a few words each. A portfolio site in the
-					Showcase layout prints them in a box beside your About me.
+					The work you offer, a few words each. A portfolio site in the Showcase layout prints them
+					in a box beside your About me.
 				</p>
 			</div>
 			{#if adding !== 'contact_for'}
@@ -353,7 +353,7 @@
 			{@render rowList(contactFor, faEnvelope)}
 		{:else if adding !== 'contact_for'}
 			<p class="text-sm text-[var(--dash-text-secondary)]">
-				None yet, so the site shows no Contact for box.
+				None yet, so the site shows no Services box.
 			</p>
 		{/if}
 	</section>

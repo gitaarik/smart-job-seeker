@@ -138,7 +138,7 @@
 	const slides = $derived(workSlides(lists.featured, show, lists.work, 'Side project'));
 
 	// The career card, and the two boxes beside the About me: Key skills from
-	// the Skills (key-skills.ts), Contact for from its own highlight rows.
+	// the Skills (key-skills.ts), Services from its own highlight rows.
 	const highlights = $derived(lists.highlights);
 	const keySkills = $derived(keySkillLines(lists.skillCategories));
 	const contactFor = $derived(lists.contactFor);
@@ -355,7 +355,7 @@
 				}))
 			},
 			{
-				label: 'Contact for:',
+				label: 'Services:',
 				items: contactFor.map((r) => ({
 					key: r.id,
 					description: r.text,
@@ -368,7 +368,7 @@
 			// others' would be, so its text still starts in one column. Key skills
 			// entries often wrap, so the markup keeps each icon level with the
 			// first row of its text. A Key skills line names four skills and a
-			// Contact for line a few words, so with both boxes Key skills takes the
+			// Services line a few words, so with both boxes Key skills takes the
 			// wider column: at half each, most of its lines wrapped and the boxes
 			// came out far apart in height.
 			.map((box) => ({ ...box, iconColumn: box.items.some((item) => item.icon) }))

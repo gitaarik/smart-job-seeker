@@ -372,7 +372,7 @@ describe('createRow', () => {
 		expect(state.inserts[0].values).toMatchObject({ type: 'highlight' });
 	});
 
-	it('takes the kind the Highlights page posts for its Contact for list', async () => {
+	it('takes the kind the Highlights page posts for its Services list', async () => {
 		await createRow('highlight', ACTOR, { text: 'Consulting', type: 'contact_for' });
 		expect(state.inserts[0].values).toMatchObject({ text: 'Consulting', type: 'contact_for' });
 	});

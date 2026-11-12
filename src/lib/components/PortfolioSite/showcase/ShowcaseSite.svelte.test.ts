@@ -160,7 +160,7 @@ describe('ShowcaseSite', () => {
 
 	test('splits highlights: contact-for beside the About me, the rest as a card', () => {
 		const c = site();
-		expect(box(c, 'Contact for:')?.textContent).toContain('Consulting');
+		expect(box(c, 'Services:')?.textContent).toContain('Consulting');
 		const card = [...c.querySelectorAll('article')].find((a) =>
 			a.querySelector(':scope > h2')?.textContent?.includes('Highlights')
 		);
@@ -198,7 +198,7 @@ describe('ShowcaseSite', () => {
 	});
 
 	test('with both boxes, Key skills takes the wider column', () => {
-		const grid = (c: HTMLElement) => box(c, 'Contact for:')?.parentElement?.className ?? '';
+		const grid = (c: HTMLElement) => box(c, 'Services:')?.parentElement?.className ?? '';
 		const both = site({
 			tech_skill_categories: [{ id: 1, name: 'Backend', tech_skills: [{ id: 10, name: 'Go' }] }]
 		});

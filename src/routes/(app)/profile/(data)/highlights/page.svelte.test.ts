@@ -3,9 +3,9 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/sve
 import HighlightsPage from './+page.svelte';
 
 /**
- * The page keeps two lists in one table: highlights, and the Contact for lines
+ * The page keeps two lists in one table: highlights, and the Services lines
  * a showcase portfolio prints beside its About me. Until it had a list for
- * each, every row it added was a highlight, so a Contact for line could only
+ * each, every row it added was a highlight, so a Services line could only
  * be written into the database by hand.
  */
 
@@ -53,10 +53,10 @@ function renderPage() {
 	});
 }
 
-const contactFor = () => screen.getByRole('region', { name: 'Contact for' });
+const contactFor = () => screen.getByRole('region', { name: 'Services' });
 
 describe('highlights page', () => {
-	test('lists the Contact for lines under their own heading, and every other row as a highlight', () => {
+	test('lists the Services lines under their own heading, and every other row as a highlight', () => {
 		renderPage();
 		const section = within(contactFor());
 		expect(section.getByText('Application development')).toBeTruthy();
@@ -67,7 +67,7 @@ describe('highlights page', () => {
 		expect(section.queryByText('Python, Django')).toBeNull();
 	});
 
-	test('adds a line to the Contact for list as a Contact for line', async () => {
+	test('adds a line to the Services list as a Services line', async () => {
 		renderPage();
 		await fireEvent.click(within(contactFor()).getByRole('button', { name: 'Add Line' }));
 		await fireEvent.input(screen.getByLabelText(/Line Text/), {

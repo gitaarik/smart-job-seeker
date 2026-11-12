@@ -1157,7 +1157,7 @@ export const PROFILE_RESOURCES: Record<ProfileResourceName, ProfileResource> = {
 				kind: 'string',
 				allowed: ['highlight', 'contact_for'],
 				notForAssistant:
-					"Which list the row is in: the portfolio's Highlights card, or the Contact for box beside its About me. A wrong one moves a line between two boxes on a public page, and nothing says so."
+					"Which list the row is in: the portfolio's Highlights card, or the Services box beside its About me. A wrong one moves a line between two boxes on a public page, and nothing says so."
 			}
 		},
 		required: ['text'],

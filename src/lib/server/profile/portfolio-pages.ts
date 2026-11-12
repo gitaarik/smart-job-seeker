@@ -14,7 +14,7 @@ import { siteLists, type Row, type SiteLists } from '$lib/components/PortfolioSi
 import { lineSkills } from '$lib/components/PortfolioSite/key-skills';
 
 /**
- * Highlights the public page prints: the Contact for box beside the About me.
+ * Highlights the public page prints: the Services box beside the About me.
  * The Key skills box beside it reads the Skills (`keySkillGroups`).
  */
 const HOME_HIGHLIGHT_TYPES = new Set(['contact_for']);

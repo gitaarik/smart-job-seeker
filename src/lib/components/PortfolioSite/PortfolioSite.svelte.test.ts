@@ -56,8 +56,8 @@ function listedUnder(container: HTMLElement, heading: string): string[] | null {
 }
 
 describe('PortfolioSite highlights', () => {
-	test('prints the highlights only, not the Contact for lines or an old key skill row', () => {
-		// This layout has no Contact for box, and used to print every row of the
+	test('prints the highlights only, not the Services lines or an old key skill row', () => {
+		// This layout has no Services box, and used to print every row of the
 		// table as a highlight, the showcase's boxes in among the real ones.
 		const { container } = render(PortfolioSite, {
 			props: {
