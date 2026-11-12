@@ -88,6 +88,7 @@ describe('ShowcaseSite', () => {
 			expect(text).toContain(part);
 		}
 		expect(text).not.toContain('Utrecht');
+		expect(text).toContain(`Copyright © ${new Date().getFullYear()} Morgan Software`);
 	});
 
 	test("prints a project's own role under its name, and nothing for one without", () => {

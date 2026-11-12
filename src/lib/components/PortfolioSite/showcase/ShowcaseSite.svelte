@@ -1205,7 +1205,7 @@
 				<div
 					class="mt-8 mb-4 flex w-full text-xs opacity-70 max-[420px]:flex-col min-[420px]:justify-between"
 				>
-					<div>Copyright © {year} {profile.name}</div>
+					<div>Copyright © {year} {business?.name ?? profile.name}</div>
 					{#if config.footerNote}
 						<div class="max-[420px]:mt-2">
 							{#if web(config.footerNoteUrl)}
