@@ -33,7 +33,7 @@ import { assignThemeSlot, clearThemeSlot, SlotError } from '$lib/server/media/sl
 import { THEME_MEDIA_SLOTS, type Crop } from '$lib/media-library';
 import { getSelectedProfileId } from '../utils';
 import { getPortfolioThemesForProfile } from '$lib/server/profile/portfolio-themes';
-import { applyShowcaseFields } from '$lib/server/profile/portfolio-theme-form';
+import { applyShowcaseFields, applySiteUrl } from '$lib/server/profile/portfolio-theme-form';
 import { applyCareerFields } from '$lib/server/profile/portfolio-career-form';
 import {
 	loadFeaturedOrder,
@@ -306,6 +306,8 @@ export const actions: Actions = {
 		} else next.sections = sections;
 
 		applyCareerFields(next, form);
+		const siteProblem = applySiteUrl(next, form);
+		if (siteProblem) return fail(400, { error: siteProblem });
 
 		// The showcase's own fields arrive only when the editor drew them, which
 		// it does for that layout alone. A basic theme's save leaves them as

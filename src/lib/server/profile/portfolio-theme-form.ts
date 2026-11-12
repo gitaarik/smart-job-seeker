@@ -5,6 +5,7 @@
  * what SvelteKit knows (`load`, `actions` and the page options).
  */
 
+import { isSiteUrl } from '$lib/portfolio-seo';
 import {
 	isHeaderArt,
 	PALETTE_ROLES,
@@ -91,5 +92,21 @@ export function applyShowcaseFields(next: PortfolioThemeConfig, form: FormData):
 	if (Object.keys(titles).length > 0) next.titles = titles;
 	else delete next.titles;
 
+	return null;
+}
+
+/**
+ * Read the site's own address, which both layouts have. Printed as the
+ * canonical link of a public page, so a web URL or nothing, as `footerNoteUrl`
+ * is. A form without the field leaves what is stored alone.
+ */
+export function applySiteUrl(next: PortfolioThemeConfig, form: FormData): string | null {
+	if (!form.has('siteUrl')) return null;
+	const siteUrl = String(form.get('siteUrl') ?? '').trim();
+	if (siteUrl && !isSiteUrl(siteUrl)) {
+		return 'The site address must start with http:// or https://.';
+	}
+	if (siteUrl) next.siteUrl = siteUrl;
+	else delete next.siteUrl;
 	return null;
 }

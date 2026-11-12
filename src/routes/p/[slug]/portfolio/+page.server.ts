@@ -42,6 +42,8 @@ import { portfolioBusiness } from '$lib/server/profile/portfolio-business';
 import { givePortfolioKey, readPortfolioKey } from '$lib/server/profile/portfolio-key';
 import { homePageProfile, portfolioHrefs } from '$lib/server/profile/portfolio-pages';
 import { hasPrivateCv, type PortfolioPage } from '$lib/portfolio-themes';
+import { portfolioSeoUrls } from '$lib/portfolio-seo';
+import { getBaseUrl } from '$lib/server/utils/export-url-builder';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals, cookies, getClientAddress }) => {
@@ -175,6 +177,7 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies, getCl
 		accessType: accessResult.accessType,
 		page,
 		homeHref: hrefs?.home ?? null,
-		cvHref: hrefs?.cv ?? null
+		cvHref: hrefs?.cv ?? null,
+		seo: portfolioSeoUrls(theme.config, getBaseUrl(), profile.slug ?? slug)
 	};
 };

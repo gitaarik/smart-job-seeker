@@ -28,7 +28,6 @@
 	 * them; see $lib/portfolio-themes.ts and server/profile/portfolio-key.ts.
 	 */
 	import { onMount } from 'svelte';
-	import { page as appPage } from '$app/state';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faBook,
@@ -86,6 +85,8 @@
 	import SelectedWorkCarousel from './SelectedWorkCarousel.svelte';
 	import { workSlides } from './work-slides';
 	import PortfolioNav from './PortfolioNav.svelte';
+	import PortfolioSeo from '../PortfolioSeo.svelte';
+	import type { PortfolioSeoUrls } from '$lib/portfolio-seo';
 	import BriefList from './BriefList.svelte';
 	import ContactButton from './ContactButton.svelte';
 	import SchemeSwitcher from './SchemeSwitcher.svelte';
@@ -111,6 +112,8 @@
 		/** Both pages' links, for a visitor who may open both; null shows no menu. */
 		homeHref?: string | null;
 		cvHref?: string | null;
+		/** The page's absolute addresses; null on the private CV page, which is noindex. */
+		seo?: PortfolioSeoUrls | null;
 	}
 
 	let {
@@ -122,7 +125,8 @@
 		accessToken = null,
 		page = 'site',
 		homeHref = null,
-		cvHref = null
+		cvHref = null,
+		seo = null
 	}: Props = $props();
 
 	const config = $derived(theme.config);
@@ -152,7 +156,6 @@
 
 	const photo = $derived(assetUrl(config.assets?.photo) ?? getProfilePhotoUrl(profile));
 	const logo = $derived(assetUrl(config.assets?.logo));
-	const ogImage = $derived(assetUrl(config.assets?.ogImage) ?? profile.meta_image_url ?? null);
 
 	const DEFAULT_TITLES: Record<PortfolioSection, string> = {
 		header: '',
@@ -386,17 +389,15 @@
 			<meta property="og:description" content={metaDescription} />
 		{/if}
 		<meta property="og:type" content="website" />
-		<meta property="og:url" content={appPage.url.href} />
 		<meta property="og:title" content={metaTitle} />
-		{#if ogImage}
-			<meta property="og:image" content={ogImage} />
-			<meta name="twitter:card" content="summary_large_image" />
-		{/if}
 	{/if}
 	{#if config.assets?.favicon}
 		<link rel="icon" href={assetUrl(config.assets.favicon)} />
 	{/if}
 </svelte:head>
+{#if seo && page !== 'cv'}
+	<PortfolioSeo {profile} {config} urls={seo} />
+{/if}
 
 <div
 	class="showcase"

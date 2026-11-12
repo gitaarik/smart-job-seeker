@@ -284,6 +284,12 @@ export interface PortfolioThemeConfig {
 	 * Showcase only; see `hasPrivateCv`.
 	 */
 	privateCv?: boolean;
+	/**
+	 * The address the site is published at, such as a domain of its own. The
+	 * canonical link and og:url point there; absent, they point at the app's
+	 * /p/<slug>/portfolio. An http(s) URL or nothing; see $lib/portfolio-seo.ts.
+	 */
+	siteUrl?: string;
 }
 
 export interface PortfolioTheme {

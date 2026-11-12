@@ -743,6 +743,23 @@
 								</div>
 							</fieldset>
 
+							<label class="block">
+								<span class="mb-1 block text-sm font-medium text-[var(--dash-text)]"
+									>Site address</span
+								>
+								<span class="mb-2 block text-xs text-[var(--dash-text-secondary)]">
+									Where the site lives when it has a domain of its own. Search engines and link
+									previews are pointed there. Leave it empty to use this app's address.
+								</span>
+								<input
+									name="siteUrl"
+									type="url"
+									value={theme.config.siteUrl ?? ''}
+									placeholder="https://"
+									class="w-full rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)]"
+								/>
+							</label>
+
 							{#if layoutDraft[theme.id] === 'showcase'}
 								<input type="hidden" name="showcaseFields" value="1" />
 

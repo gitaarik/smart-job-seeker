@@ -34,6 +34,8 @@
 	import { assetUrl } from '$lib/presentation-templates';
 	import { formatDateRangeVerbose } from '$lib/tools/date-utils';
 	import { rolePlace } from '$lib/work-mode';
+	import type { PortfolioSeoUrls } from '$lib/portfolio-seo';
+	import PortfolioSeo from './PortfolioSeo.svelte';
 
 	interface Props {
 		// The profile tree from PROFILE_INCLUDE. Typed loosely for the same
@@ -43,9 +45,11 @@
 		profile: any;
 		theme: PortfolioTheme | null;
 		versionId?: number | null;
+		/** The page's absolute addresses, for the head; see $lib/portfolio-seo.ts. */
+		seo?: PortfolioSeoUrls | null;
 	}
 
-	let { profile, theme, versionId = null }: Props = $props();
+	let { profile, theme, versionId = null, seo = null }: Props = $props();
 
 	const config = $derived(theme?.config ?? {});
 	const sections = $derived(themeSections(config));
@@ -129,13 +133,13 @@
 <svelte:head>
 	<title>{profile.name ?? 'Portfolio'}</title>
 	{#if profile.headline}<meta name="description" content={profile.headline} />{/if}
-	{#if config.assets?.ogImage}
-		<meta property="og:image" content={assetUrl(config.assets.ogImage)} />
-	{/if}
 	{#if config.assets?.favicon}
 		<link rel="icon" href={assetUrl(config.assets.favicon)} />
 	{/if}
 </svelte:head>
+{#if seo}
+	<PortfolioSeo {profile} {config} urls={seo} />
+{/if}
 
 <div
 	class="portfolio"

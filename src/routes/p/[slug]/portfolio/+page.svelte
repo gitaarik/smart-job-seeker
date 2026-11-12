@@ -18,7 +18,13 @@
 		page={data.page}
 		homeHref={data.homeHref}
 		cvHref={data.cvHref}
+		seo={data.seo}
 	/>
 {:else}
-	<PortfolioSite profile={data.profile} theme={data.theme} versionId={data.versionId} />
+	<PortfolioSite
+		profile={data.profile}
+		theme={data.theme}
+		versionId={data.versionId}
+		seo={data.seo}
+	/>
 {/if}
