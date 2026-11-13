@@ -893,6 +893,12 @@ export const match_config = pgTable(
 		corpus_picks_enabled: boolean().default(true).notNull(),
 		corpus_picks_per_day: integer().default(10).notNull(),
 		/**
+		 * Remote jobs fenced to other countries count as within reach ("Remote
+		 * (Canada)", "US only"): for a contractor who works for companies
+		 * abroad. Off, the picks rank such a job out of reach.
+		 */
+		remote_abroad: boolean().default(false).notNull(),
+		/**
 		 * What the picks read off the profile and these settings (titles, skill
 		 * phrases, levels, places, work mode, job types), hashed, as of the last
 		 * first batch or change re-run. A profile edit that changes it queues a

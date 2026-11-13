@@ -1,0 +1,1 @@
+ALTER TABLE "match_config" ADD COLUMN "remote_abroad" boolean DEFAULT false NOT NULL;
