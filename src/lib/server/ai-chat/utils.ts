@@ -639,9 +639,13 @@ export async function assembleGeneration(
  * check, and matching charges no credits anyway. Asked first, so a profile
  * whose owner is gone never reaches getBalance, which upserts into
  * credit_balances and throws on the missing FK. A profile with no owner is
- * never blocked.
+ * never blocked. A call the house pays for (`charge: false`) skips the budget
+ * question, which is about the owner's credits, and keeps the other.
  */
-export async function spendBlock(profileId: number): Promise<string | null> {
+export async function spendBlock(
+	profileId: number,
+	opts: { charge?: boolean } = {}
+): Promise<string | null> {
 	const profile = await db.query.profiles.findFirst({
 		where: eq(profiles.id, profileId),
 		columns: { user_id: true }
@@ -651,6 +655,7 @@ export async function spendBlock(profileId: number): Promise<string | null> {
 	if (!eligibility.allowed) {
 		return `AI operations are disabled for this account: ${describeSpendBlock(eligibility.reason)}.`;
 	}
+	if (opts.charge === false) return null;
 	const { getBalance } = await import('$lib/server/billing/credits');
 	const balance = await getBalance(profile.user_id);
 	if (balance.available <= 0) {
@@ -974,7 +979,7 @@ async function generateAiChat(
 		// (planning/LANGFUSE.md, change 6).
 		const reservedAiChatId = options?.aiChatId ?? (await reserveAiChatId());
 
-		const blocked = await spendBlock(profileId);
+		const blocked = await spendBlock(profileId, { charge: options?.charge });
 		if (blocked) return { success: false, message: blocked };
 
 		const assembled = await assembleGeneration(profileId, promptKey, customVariables, options);

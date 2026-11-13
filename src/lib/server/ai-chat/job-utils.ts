@@ -258,6 +258,8 @@ async function recordDecision<T>(decision: {
 	/** What the trace shows as the generation's input. */
 	traceInput: unknown;
 	read: (response: SystemOneResponse) => { value: T; recorded: unknown };
+	/** False when the house pays: the row records the tokens, no credits are charged. */
+	charge?: boolean;
 }): Promise<{ value: T; aiChatId: number }> {
 	const { profileId, promptKey, model, requests } = decision;
 	const template = promptTemplates[promptKey];
@@ -324,7 +326,7 @@ async function recordDecision<T>(decision: {
 	const inputTokens = response.usage.input_tokens;
 	const outputTokens = response.usage.output_tokens;
 	const totalTokens = inputTokens + outputTokens;
-	const credits = tokensToCost(totalTokens);
+	const credits = decision.charge === false ? 0 : tokensToCost(totalTokens);
 	await db
 		.update(ai_chats)
 		.set({
@@ -372,7 +374,8 @@ async function recordDecision<T>(decision: {
  */
 export async function decideMatchedSkills(
 	profileId: number,
-	skills: readonly string[]
+	skills: readonly string[],
+	opts: { charge?: boolean } = {}
 ): Promise<string[]> {
 	const profile = await loadProfileData(profileId, undefined, { exclude: NON_SKILL_FIELDS });
 	const { value } = await recordDecision({
@@ -383,6 +386,7 @@ export async function decideMatchedSkills(
 		context: { data: profile.data, 'job.skills': skills.join('\n') },
 		requests: [skillDecisionRequest(renderProfileData(profile.data), skills)],
 		traceInput: { skills },
+		charge: opts.charge,
 		read: (response) => {
 			const probabilities = skillProbabilities(response, skills);
 			const matched = matchedByProbability(skills, probabilities);
@@ -413,7 +417,8 @@ export async function decideMatchedSkills(
  */
 export async function decideMatchScore(
 	profileId: number,
-	variables: Record<string, unknown>
+	variables: Record<string, unknown>,
+	opts: { charge?: boolean } = {}
 ): Promise<{ score: number; factors: ScoreFactors; aiChatId: number }> {
 	const profile = await loadProfileData(profileId, undefined, {
 		exclude: [...NON_FIT_FIELDS, ...MATCH_PROFILE_LEAVES_OUT]
@@ -430,6 +435,7 @@ export async function decideMatchScore(
 		context: { ...variables, data: profile.data },
 		requests: [matchDecisionRequest(values), matchDecisionRequest(values, true)],
 		traceInput: { job: values['job.title'] ?? null },
+		charge: opts.charge,
 		read: (response) => {
 			const decided = matchScoreFrom(response);
 			return { value: decided, recorded: { score: decided.score, ...decided.factors } };
