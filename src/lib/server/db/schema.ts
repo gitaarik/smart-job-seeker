@@ -3959,6 +3959,35 @@ export const mcp_keys = pgTable(
 );
 
 /**
+ * MCP tool calls per user per credit period: the counter behind the free
+ * plan's allowance (planning/MCP-FREE-ALLOWANCE.md in sjs-ops).
+ *
+ * Per user, not per key, so a second key is not a second allowance. `period`
+ * is the billing layer's period key: the credit period's start date in cloud,
+ * the calendar month in oss. Only a `tools/call` that did not come back
+ * `isError` counts.
+ */
+export const mcp_usage = pgTable(
+	'mcp_usage',
+	{
+		id: serial().primaryKey().notNull(),
+		user_id: text().notNull(),
+		period: varchar({ length: 10 }).notNull(),
+		calls: integer().default(0).notNull()
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.user_id],
+			foreignColumns: [users.id],
+			name: 'mcp_usage_user_id_fkey'
+		})
+			.onUpdate('cascade')
+			.onDelete('cascade'),
+		unique('mcp_usage_user_id_period_key').on(table.user_id, table.period)
+	]
+);
+
+/**
  * A write that was asked for by something that may not approve it.
  *
  * The counterpart to `capability_edits`: that table records writes that
