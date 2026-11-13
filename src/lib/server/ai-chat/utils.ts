@@ -659,7 +659,7 @@ export async function spendBlock(
 	const { getBalance } = await import('$lib/server/billing/credits');
 	const balance = await getBalance(profile.user_id);
 	if (balance.available <= 0) {
-		return 'Out of credits. Please upgrade your plan or buy extra credits.';
+		return "You've used up your plan for this month. Add extra usage or upgrade on the Plan & Usage page.";
 	}
 	return null;
 }

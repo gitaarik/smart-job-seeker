@@ -45,12 +45,13 @@ The scraping runs on **your** device (or the device shared with you), using that
 device's own IP — not a shared cloud pool. The device client is open source and
 its releases are signed; you can read exactly what runs on your hardware.
 
-## What costs credits?
+## What uses my plan?
 
-Running a job search and asking the AI to write something. Both are metered by
-what they actually did rather than charged as a flat fee, and everything else —
-browsing, matching, editing your profile, tracking applications, exporting your
-data — is free. The breakdown is in **[Credits](/guide/credits)**.
+Running a job search, matching the jobs it finds, and asking the AI to write
+something. They are metered by what they actually did rather than charged as a
+flat fee, and everything else (browsing, editing your profile, tracking
+applications, exporting your data) is free. When your plan runs out you can add
+extra usage. The breakdown is in **[Usage & costs](/guide/usage)**.
 
 ## Can I delete my account?
 

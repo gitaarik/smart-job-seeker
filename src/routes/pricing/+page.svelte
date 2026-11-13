@@ -67,13 +67,12 @@
 					</p>
 
 					<ul class="mt-6 space-y-2 text-sm text-[var(--dash-text-secondary)]">
-						<li>{limit(plan.limits.creditsPerMonth, 'credits per month')}</li>
 						<li>{limit(plan.limits.profiles, 'profiles')}</li>
 						<li>{limit(plan.limits.resumeVersions, 'CV versions')}</li>
 						<li>{limit(plan.limits.maxDocumentProjects, 'document projects')}</li>
 						<li>{bytes(plan.limits.maxDocumentBytes)}</li>
 						{#if plan.limits.extraCredits}
-							<li>Top up with extra credits any time</li>
+							<li>Add extra usage any time</li>
 						{/if}
 					</ul>
 
@@ -114,27 +113,28 @@
 
 		{#if data.costExamples.length}
 			<section class="mt-16">
-				<h2 class="text-xl font-semibold">What a credit buys</h2>
+				<h2 class="text-xl font-semibold">What things cost</h2>
 				<p class="mt-2 text-sm text-[var(--dash-text-secondary)]">
-					Credits are spent on the work that costs us money to run — importing and scoring jobs, and
-					generating or revising text. Tracking applications, editing your profile and exporting a
-					CV you have already made are free. These are averages, not prices.
+					Your plan's monthly allowance goes on the work that costs us money to run: importing and
+					scoring jobs, and generating or revising text. Tracking applications, editing your profile
+					and exporting a CV you have already made are free. Past the allowance, the same work comes
+					out of extra usage at about these amounts. They are averages, not prices.
 				</p>
 				<div class="mt-6 overflow-x-auto">
 					<table class="w-full min-w-md text-left text-sm">
 						<thead class="text-[var(--dash-text-secondary)]">
 							<tr class="border-b" style="border-color: var(--dash-border);">
 								<th class="py-2 pr-4 font-medium">Task</th>
-								<th class="py-2 pr-4 font-medium">Credits</th>
-								<th class="py-2 font-medium">Notes</th>
+								<th class="py-2 font-medium">From extra usage</th>
 							</tr>
 						</thead>
 						<tbody>
 							{#each data.costExamples as example (example.label)}
 								<tr class="border-b last:border-0" style="border-color: var(--dash-border);">
 									<td class="py-2 pr-4">{example.label}</td>
-									<td class="py-2 pr-4 tabular-nums">{example.avgCredits.toLocaleString()}</td>
-									<td class="py-2 text-[var(--dash-text-secondary)]">{example.note}</td>
+									<td class="py-2 tabular-nums">
+										{example.euros === 0 ? 'Free' : `about €${example.euros.toFixed(2)}`}
+									</td>
 								</tr>
 							{/each}
 						</tbody>

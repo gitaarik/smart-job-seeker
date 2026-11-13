@@ -68,9 +68,9 @@ have to invent them: on the [Job Import](/jobs/import) page, **Suggest searches
 for me** reads your experience and match preferences and proposes a set of
 searches, each on a board that has actually produced jobs before. Accept the
 ones you want and each becomes a task — nothing is created until you do. The
-suggestion itself is a model call, so it costs a credit like any other AI
-feature (see [Credits](/guide/credits)); the tasks it proposes are free until
-you run them.
+suggestion itself is a model call, so it uses a little of your plan like any
+other AI feature (see [Usage & costs](/guide/usage)); the tasks it proposes are
+free until you run them.
 
 Two things decide whether a task runs well:
 
@@ -89,7 +89,7 @@ You're not limited to the suggestions — **refine** them (tighten filters,
 rename) or **add your own**: pick the site, or paste a search URL from a board
 we don't have yet, and a tight search beats a broad one every time. Put the
 tasks you rely on **on a schedule** so fresh jobs arrive without you lifting a
-finger. Only runs spend credits.
+finger. Only runs use your plan.
 
 ## 3. Let matching do the triage
 

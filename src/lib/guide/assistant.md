@@ -52,8 +52,8 @@ any time: **[Connecting your own AI](/guide/connected-apps)**.
 
 ## Costs
 
-Each message costs a few credits, the same as generating a cover letter, because
+Each message costs about as much as generating a cover letter, because
 it runs the same model over the same material — charged by how much the model
 actually read and wrote, so a short question costs less than a long one. Reading
 this guide, opening the panel, and applying a suggestion are all free. See
-**[Credits](/guide/credits)**.
+**[Usage & costs](/guide/usage)**.

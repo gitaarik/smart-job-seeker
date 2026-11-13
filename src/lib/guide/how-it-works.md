@@ -42,5 +42,5 @@ never want to deal with the setup.
 - Got an interview? **[Interview prep](/guide/interview-prep)** and
   **[Salary prep](/guide/salary-prep)**.
 - Deciding which jobs count? **[Matching & alerts](/guide/matching)**.
-- Wondering what things cost? **[Credits](/guide/credits)**.
+- Wondering what things cost? **[Usage & costs](/guide/usage)**.
 - Stuck? Check the **[FAQ](/guide/faq)**.

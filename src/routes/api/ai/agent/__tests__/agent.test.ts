@@ -924,11 +924,11 @@ describe('with the agent on', () => {
 
 	it('refuses before any turn when the account may not spend', async () => {
 		mockSpendBlock.mockResolvedValue(
-			'Out of credits. Please upgrade your plan or buy extra credits.'
+			"You've used up your plan for this month. Add extra usage or upgrade on the Plan & Usage page."
 		);
 		const res = await POST(event());
 		expect(res.status).toBe(422);
-		expect((await res.json()).message).toContain('Out of credits');
+		expect((await res.json()).message).toContain('used up your plan');
 		expect(mockRunTurn).not.toHaveBeenCalled();
 	});
 

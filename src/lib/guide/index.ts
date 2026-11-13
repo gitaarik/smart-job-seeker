@@ -16,7 +16,7 @@ import interviewPrep from './interview-prep.md?raw';
 import salaryPrep from './salary-prep.md?raw';
 import assistant from './assistant.md?raw';
 import connectedApps from './connected-apps.md?raw';
-import credits from './credits.md?raw';
+import usage from './usage.md?raw';
 import yourData from './your-data.md?raw';
 import faq from './faq.md?raw';
 
@@ -45,7 +45,7 @@ export const guideSections: GuideSection[] = [
 		title: 'Connecting your own AI',
 		markdown: connectedApps
 	},
-	{ slug: 'credits', title: 'Credits', markdown: credits },
+	{ slug: 'usage', title: 'Usage & costs', markdown: usage },
 	{ slug: 'your-data', title: 'Your data', markdown: yourData },
 	{ slug: 'faq', title: 'FAQ & troubleshooting', markdown: faq }
 ];
