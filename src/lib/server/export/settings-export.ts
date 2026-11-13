@@ -90,7 +90,8 @@ export async function buildSettingsExport(
 				hide_below_ask: mc.hide_below_ask,
 				below_ask_tolerance_pct: mc.below_ask_tolerance_pct,
 				corpus_picks_enabled: mc.corpus_picks_enabled,
-				corpus_picks_per_day: mc.corpus_picks_per_day
+				corpus_picks_per_day: mc.corpus_picks_per_day,
+				remote_abroad: mc.remote_abroad
 			} satisfies ExportedMatchConfig;
 		}
 	}

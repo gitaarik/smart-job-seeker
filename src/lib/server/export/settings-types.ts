@@ -54,6 +54,8 @@ export interface ExportedMatchConfig {
 	/** Absent in files exported before corpus picks existed. */
 	corpus_picks_enabled?: boolean;
 	corpus_picks_per_day?: number;
+	/** Absent in files exported before it existed. */
+	remote_abroad?: boolean;
 }
 
 export interface ExportedEmailDigest {

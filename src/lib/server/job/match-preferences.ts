@@ -46,6 +46,7 @@ export interface MatchPreferenceValues {
 	below_ask_tolerance_pct?: number;
 	corpus_picks_enabled?: boolean;
 	corpus_picks_per_day?: number;
+	remote_abroad?: boolean;
 }
 
 /** What a read gives back: every column, with the list ones never null. */
@@ -62,6 +63,7 @@ export interface MatchPreferences {
 	below_ask_tolerance_pct: number;
 	corpus_picks_enabled: boolean;
 	corpus_picks_per_day: number;
+	remote_abroad: boolean;
 }
 
 function shape(row: typeof match_config.$inferSelect): MatchPreferences {
@@ -77,7 +79,8 @@ function shape(row: typeof match_config.$inferSelect): MatchPreferences {
 		hide_below_ask: row.hide_below_ask,
 		below_ask_tolerance_pct: row.below_ask_tolerance_pct,
 		corpus_picks_enabled: row.corpus_picks_enabled,
-		corpus_picks_per_day: row.corpus_picks_per_day
+		corpus_picks_per_day: row.corpus_picks_per_day,
+		remote_abroad: row.remote_abroad
 	};
 }
 
@@ -133,7 +136,8 @@ export async function writeMatchPreferences(
 		'hide_below_ask',
 		'below_ask_tolerance_pct',
 		'corpus_picks_enabled',
-		'corpus_picks_per_day'
+		'corpus_picks_per_day',
+		'remote_abroad'
 	] as const) {
 		if (values[key] === undefined) continue;
 		data[key] = values[key];

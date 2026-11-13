@@ -88,6 +88,16 @@
 		workLocationField.set([...workLocation]);
 	});
 
+	// Remote jobs limited to other countries: only asked when Remote is picked.
+	let remoteAbroad = $state<boolean>(loaded.config.remote_abroad);
+	const remoteAbroadField = autoSaveField<boolean>({
+		armOnInteraction: true,
+		initial: loaded.config.remote_abroad,
+		save: (v) => patchConfig({ remote_abroad: v }),
+		onSaved: (v) => (remoteAbroad = v)
+	});
+	$effect(() => remoteAbroadField.set(remoteAbroad));
+
 	const loadedExperienceLevels = normalizeToOptions(
 		loaded.config.experience_levels || [],
 		loaded.options.experienceLevels
@@ -424,6 +434,20 @@
 		{:else if workLocationField.status !== 'idle'}
 			<div class="mt-3">
 				<AutoSaveIndicator field={workLocationField} />
+			</div>
+		{/if}
+		{#if workLocation.includes('Remote')}
+			<div class="mt-4 border-t border-[var(--dash-border)] pt-4">
+				<ToggleSwitch
+					bind:checked={remoteAbroad}
+					label="Include remote jobs limited to other countries"
+					description="Many remote jobs are only open to people in one country or region, like “Remote (Canada)” or “US only”. Off, the jobs found for you leave those out. Turn it on if you work as a contractor for companies abroad."
+				/>
+				{#if remoteAbroadField.status !== 'idle'}
+					<div class="mt-3">
+						<AutoSaveIndicator field={remoteAbroadField} />
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</Card>

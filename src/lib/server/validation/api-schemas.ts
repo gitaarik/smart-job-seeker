@@ -185,7 +185,8 @@ export const jobPreferencesSchema = z.object({
 	hide_below_ask: z.boolean().optional(),
 	below_ask_tolerance_pct: z.number().int().min(0).max(MAX_BELOW_ASK_TOLERANCE_PCT).optional(),
 	corpus_picks_enabled: z.boolean().optional(),
-	corpus_picks_per_day: z.number().int().min(1).max(MAX_CORPUS_PICKS_PER_DAY).optional()
+	corpus_picks_per_day: z.number().int().min(1).max(MAX_CORPUS_PICKS_PER_DAY).optional(),
+	remote_abroad: z.boolean().optional()
 });
 
 export const jobPreferencesPatchSchema = z.object({
@@ -203,7 +204,8 @@ export const jobPreferencesPatchSchema = z.object({
 	hide_below_ask: z.boolean().optional(),
 	below_ask_tolerance_pct: z.number().int().min(0).max(MAX_BELOW_ASK_TOLERANCE_PCT).optional(),
 	corpus_picks_enabled: z.boolean().optional(),
-	corpus_picks_per_day: z.number().int().min(1).max(MAX_CORPUS_PICKS_PER_DAY).optional()
+	corpus_picks_per_day: z.number().int().min(1).max(MAX_CORPUS_PICKS_PER_DAY).optional(),
+	remote_abroad: z.boolean().optional()
 });
 
 // Platform create

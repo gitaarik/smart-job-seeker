@@ -233,7 +233,8 @@ export async function importSettings(
 				mc.corpus_picks_per_day! >= 1 &&
 				mc.corpus_picks_per_day! <= MAX_CORPUS_PICKS_PER_DAY
 					? { corpus_picks_per_day: mc.corpus_picks_per_day }
-					: {})
+					: {}),
+				...(typeof mc.remote_abroad === 'boolean' ? { remote_abroad: mc.remote_abroad } : {})
 			};
 			if (existing) {
 				await tx
