@@ -18,6 +18,12 @@
  * fails open: a Redis that cannot answer reads as nothing spent and drops the
  * write, because a Redis outage must not take every AI feature down with it.
  *
+ * The check and the tally are separate steps, so calls already in flight when
+ * the limit is reached still finish and count: the day can end a few calls
+ * over. That is bounded by concurrency (a handful of workers, most queues one
+ * job at a time) times a call's cost (cents), which is noise against the
+ * limit, so nothing reserves ahead of the call.
+ *
  * `SJS_LLM_DAILY_LIMIT_USD` sets the limit (default 25, 0 turns it off).
  * Measured 2026-11-13: dev's busiest day in 180 was $2.78 and preview's p95
  * $2.27; preview's one $28 day was a demo mint re-scoring the whole corpus, the

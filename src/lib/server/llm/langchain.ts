@@ -1489,15 +1489,26 @@ async function completeTracked(
 				prompt: promptRef(options.promptKey, options.promptFingerprint)
 			},
 			async () => {
-				const result = await generateWithLangChain(
-					messages,
-					activeModel,
-					maxTokens,
-					temperature,
-					structuredOutput,
-					activeProvider,
-					tools
-				);
+				// Tallied per attempt, failures included: a provider bills a generation
+				// that failed validation, and the retry pays again (llm/spend-limit.ts).
+				const ranOn = activeProvider || config.llmProvider;
+				let result: CompletionResult;
+				try {
+					result = await generateWithLangChain(
+						messages,
+						activeModel,
+						maxTokens,
+						temperature,
+						structuredOutput,
+						activeProvider,
+						tools
+					);
+				} catch (error) {
+					const usage = (error as { usage?: TokenUsage | null })?.usage;
+					if (usage) await recordSpend(ranOn, activeModel, usage);
+					throw error;
+				}
+				if (result.usage) await recordSpend(ranOn, activeModel, result.usage);
 				if (structuredOutput) {
 					refuseSchemaEcho(
 						result,
@@ -1569,14 +1580,6 @@ async function completeTracked(
 			);
 			throw primaryError;
 		}
-	}
-
-	if (result.usage) {
-		await recordSpend(
-			result.fallbackUsed?.provider ?? (provider || config.llmProvider),
-			result.fallbackUsed?.model ?? model,
-			result.usage
-		);
 	}
 
 	// Cache the raw content. Keyed on the model that was ASKED for, including
