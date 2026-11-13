@@ -45,6 +45,7 @@
 		faSearch,
 		faShieldAlt,
 		faTimes,
+		faTriangleExclamation,
 		faUser,
 		faUsers,
 		faUserTie,
@@ -60,8 +61,12 @@
 	};
 
 	import type { CreditBalance } from '$lib/server/billing/credits';
+	import type { PaymentIssue } from '$lib/server/billing/subscription';
 
-	let { creditBalance }: { creditBalance?: CreditBalance } = $props();
+	let {
+		creditBalance,
+		paymentIssue = null
+	}: { creditBalance?: CreditBalance; paymentIssue?: PaymentIssue | null } = $props();
 
 	let planIcon = $derived(planIcons[creditBalance?.plan ?? 'explorer'] ?? planIcons.explorer);
 	let planLabel = $derived((creditBalance?.plan ?? 'Free').replace(/^./, (c) => c.toUpperCase()));
@@ -561,6 +566,17 @@
 				/>
 				<span class="font-medium">{planLabel} Plan</span>
 			</a>
+			{#if paymentIssue}
+				<a
+					href={resolve('/billing')}
+					onclick={closeMobileMenu}
+					class="mx-2.5 mt-1 flex items-center gap-1.5 text-xs font-medium text-red-600 hover:underline"
+					title="Your last payment failed. Update your card on the billing page."
+				>
+					<FontAwesomeIcon icon={faTriangleExclamation} class="h-3 w-3" />
+					Payment failed
+				</a>
+			{/if}
 			{#if creditBalance}
 				{@const total = creditBalance.allowance + creditBalance.extra}
 				{@const usedPct =

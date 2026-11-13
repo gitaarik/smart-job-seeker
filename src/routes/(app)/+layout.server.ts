@@ -3,6 +3,7 @@ import { requireAuth } from '$lib/server/auth/guards';
 import { redirect } from '@sveltejs/kit';
 import { getProfilesByUserId } from '$lib/server/profile/user-profiles';
 import { getBalance } from '$lib/server/billing/credits';
+import { getPaymentIssue } from '$lib/server/billing/subscription';
 import { getUnreadCount } from '$lib/server/notifications';
 import { dbDirect as db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
@@ -36,6 +37,7 @@ export const load: LayoutServerLoad = async (event) => {
 			selectedProfile: null,
 			adminUser,
 			creditBalance: undefined,
+			paymentIssue: null,
 			unreadNotifications: 0,
 			userTimezone: userRecord?.timezone ?? null,
 			timeFormat: resolveTimeFormat(userRecord?.time_format ?? null, userRecord?.timezone ?? null)
@@ -86,8 +88,9 @@ export const load: LayoutServerLoad = async (event) => {
 	const selectedProfile = profiles.find((p) => p.id === selectedProfileId)!;
 
 	// Start remaining queries in parallel
-	const [creditBalance, unreadNotifications, userRecord] = await Promise.all([
+	const [creditBalance, paymentIssue, unreadNotifications, userRecord] = await Promise.all([
 		getBalance(user.id),
+		getPaymentIssue(user.id),
 		getUnreadCount(user.id),
 		db.query.users.findFirst({
 			where: eq(users.id, user.id),
@@ -101,6 +104,7 @@ export const load: LayoutServerLoad = async (event) => {
 		selectedProfile,
 		adminUser,
 		creditBalance,
+		paymentIssue,
 		unreadNotifications,
 		userTimezone: userRecord?.timezone ?? null,
 		timeFormat: resolveTimeFormat(userRecord?.time_format ?? null, userRecord?.timezone ?? null)

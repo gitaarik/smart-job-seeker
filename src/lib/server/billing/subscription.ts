@@ -28,6 +28,16 @@ export async function getActiveSubscription(_userId: string): Promise<ActiveSubs
 	};
 }
 
+export interface PaymentIssue {
+	plan: PlanId;
+	accessEndsAt: Date;
+}
+
+/** A failed renewal waiting on the user; OSS has no payments to fail. */
+export async function getPaymentIssue(_userId: string): Promise<PaymentIssue | null> {
+	return null;
+}
+
 /**
  * Stripe customer management is not available in the OSS version.
  */

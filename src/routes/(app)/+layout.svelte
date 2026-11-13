@@ -107,7 +107,7 @@
 		</button>
 	{/if}
 
-	<Sidebar creditBalance={data.creditBalance} />
+	<Sidebar creditBalance={data.creditBalance} paymentIssue={data.paymentIssue} />
 
 	<main class="overflow-x-clip px-4 py-5 pb-24 text-sm lg:pb-20 lg:pl-60">
 		<div class="mx-auto max-w-5xl">
