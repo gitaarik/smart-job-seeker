@@ -14,6 +14,7 @@ import { getEnv } from '$lib/tools/get-env';
 import { sendEmail } from '$lib/server/email';
 import { verificationMail } from '$lib/server/auth/verification-email';
 import { guardSignup } from '$lib/server/auth/signup-gate';
+import { userAdditionalFields } from '$lib/server/auth/user-fields';
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, { provider: 'pg' }),
@@ -104,31 +105,7 @@ export const auth = betterAuth({
 		changeEmail: {
 			enabled: true
 		},
-		additionalFields: {
-			is_admin: {
-				type: 'boolean',
-				defaultValue: false
-			},
-			is_staff: {
-				type: 'boolean',
-				defaultValue: false
-			},
-			is_approved: {
-				type: 'boolean',
-				defaultValue: false
-			},
-			is_demo: {
-				type: 'boolean',
-				defaultValue: false
-			},
-			// Exposed on the session so the auth gates can refuse an account that
-			// has asked to be erased without a second query on every request. See
-			// $lib/server/account/delete.
-			deletion_requested_at: {
-				type: 'date',
-				required: false
-			}
-		}
+		additionalFields: userAdditionalFields
 	},
 	account: { modelName: 'accounts' },
 	verification: { modelName: 'verifications' },
