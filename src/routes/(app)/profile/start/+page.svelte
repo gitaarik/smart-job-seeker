@@ -8,6 +8,8 @@
 	import Card from '../../components/Card.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import SectionHeader from '../components/SectionHeader.svelte';
+	import PlacePicker from '$lib/components/PlacePicker.svelte';
+	import type { Place, PreferredPlace } from '$lib/data/places';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -20,10 +22,20 @@
 	let workLocation = $state<string[]>([...loaded.config.work_location]);
 	let jobTypes = $state<string[]>([...loaded.config.job_types]);
 	let levels = $state<string[]>([...loaded.config.experience_levels]);
+	// Where they live, picked; `location` is the printed text, filled from the
+	// pick unless they wrote their own earlier (a text that is not the last
+	// pick's label).
+	let place = $state<Place | null>(loaded.place);
+	let pickedLabel = loaded.place?.label ?? '';
+	function onPlacePicked(picked: Place | null) {
+		if (picked && (!location.trim() || location === pickedLabel)) location = picked.label;
+		pickedLabel = picked?.label ?? '';
+	}
+	let places = $state<PreferredPlace[]>([...loaded.config.places]);
+	// Texts typed before the picker that are not a place: kept until removed.
 	let locations = $state<string[]>([...loaded.config.locations]);
 	let newSkills = $state<string[]>([]);
 	let skillInput = $state('');
-	let locationInput = $state('');
 	let saving = $state(false);
 
 	const existing = new Set(loaded.skills.map((s) => s.toLowerCase()));
@@ -52,12 +64,6 @@
 			e.preventDefault();
 			addSkills(skillInput);
 		}
-	}
-
-	function addLocation() {
-		const place = locationInput.trim();
-		if (place && !locations.includes(place)) locations = [...locations, place];
-		locationInput = '';
 	}
 
 	const inputClass =
@@ -125,9 +131,12 @@
 	{#each levels as l (l)}
 		<input type="hidden" name="experience_levels" value={l} />
 	{/each}
-	{#each locations as place (place)}
-		<input type="hidden" name="locations" value={place} />
+	{#each locations as text (text)}
+		<input type="hidden" name="locations" value={text} />
 	{/each}
+	<input type="hidden" name="location" value={location} />
+	<input type="hidden" name="place" value={place ? JSON.stringify(place) : ''} />
+	<input type="hidden" name="places" value={JSON.stringify(places)} />
 
 	<Card padding="responsive">
 		<label class="block">
@@ -241,35 +250,28 @@
 	</Card>
 
 	<Card padding="responsive">
-		<label class="block">
-			<span class="font-medium text-[var(--dash-text)]">Where do you live?</span>
-			<span class="mt-1 block text-sm text-[var(--dash-text-secondary)]">
-				City and country. Remote jobs are matched to the country.
-			</span>
-			<input
-				name="location"
-				bind:value={location}
-				maxlength="200"
-				placeholder="e.g. Haarlem, Netherlands"
-				class="mt-2 {inputClass}"
-			/>
-		</label>
+		<span class="font-medium text-[var(--dash-text)]">Where do you live?</span>
+		<span class="mt-1 mb-2 block text-sm text-[var(--dash-text-secondary)]">
+			Your city. Remote jobs are matched to its country.
+		</span>
+		<PlacePicker bind:value={place} onpick={onPlacePicked} placeholder="e.g. Haarlem" />
 
 		{#if placeOnSite}
 			<span class="mt-4 block font-medium text-[var(--dash-text)]">Other places to work</span>
-			<span class="mt-1 block text-sm text-[var(--dash-text-secondary)]">
-				Optional, for hybrid and on-site jobs outside where you live.
+			<span class="mt-1 mb-2 block text-sm text-[var(--dash-text-secondary)]">
+				Optional, for hybrid and on-site jobs outside where you live: a city, a country or a region
+				such as Europe.
 			</span>
 			{#if locations.length}
-				<div class="mt-2 flex flex-wrap gap-2">
-					{#each locations as place (place)}
+				<div class="mb-2 flex flex-wrap gap-2">
+					{#each locations as text (text)}
 						<span class={chipClass}>
-							{place}
+							{text}
 							<button
 								type="button"
-								onclick={() => (locations = locations.filter((l) => l !== place))}
+								onclick={() => (locations = locations.filter((l) => l !== text))}
 								class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)]"
-								aria-label="Remove {place}"
+								aria-label="Remove {text}"
 							>
 								<FontAwesomeIcon icon={faTimes} class="h-3 w-3" />
 							</button>
@@ -277,19 +279,7 @@
 					{/each}
 				</div>
 			{/if}
-			<input
-				bind:value={locationInput}
-				onkeydown={(e) => {
-					if (e.key === 'Enter') {
-						e.preventDefault();
-						addLocation();
-					}
-				}}
-				onblur={addLocation}
-				placeholder="Add a city, region or country"
-				aria-label="Add a place"
-				class="mt-2 {inputClass}"
-			/>
+			<PlacePicker multiple bind:places placeholder="Add a city, country or region" />
 		{/if}
 	</Card>
 

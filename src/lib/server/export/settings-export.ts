@@ -84,6 +84,7 @@ export async function buildSettingsExport(
 				experience_levels: mc.experience_levels,
 				work_location: mc.work_location,
 				locations: mc.locations,
+				places: mc.places,
 				match_community_jobs: mc.match_community_jobs,
 				remote_only: mc.remote_only,
 				community_max_age_days: mc.community_max_age_days,

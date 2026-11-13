@@ -13,6 +13,20 @@
  *    already belong to `edit_job_details` and the wire schema is flat.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Place, PreferredPlace } from '$lib/data/places';
+
+const place = (id: number, label: string, country: string | null, countries: string[]): Place => ({
+	id,
+	kind: country ? 'city' : 'region',
+	name: label.split(', ')[0],
+	label,
+	country,
+	countries,
+	lat: null,
+	lon: null
+});
+const HAARLEM = place(2755003, 'Haarlem, North Holland, Netherlands', 'NL', ['NL']);
+const EUROPE = place(-1, 'Europe', null, ['NL', 'DE']);
 
 const written: unknown[] = [];
 const stored = {
@@ -21,6 +35,7 @@ const stored = {
 	experience_levels: ['Senior'],
 	work_location: ['Remote', 'Hybrid'],
 	locations: [] as string[],
+	places: [] as PreferredPlace[],
 	remote_only: false,
 	match_community_jobs: true,
 	community_max_age_days: null as number | null,
@@ -40,6 +55,14 @@ vi.mock('$lib/server/job/match-preferences', async (importOriginal) => {
 	};
 });
 
+// The gazetteer, as far as these names go.
+vi.mock('$lib/server/places', () => ({
+	resolvePlaceText: vi.fn(async (text: string) => ({
+		place: /^haarlem/i.test(text) ? HAARLEM : /^europe$/i.test(text) ? EUROPE : null,
+		candidates: []
+	}))
+}));
+
 let ownedRow: unknown = { id: 7 };
 vi.mock('$lib/server/db', () => ({
 	db: { query: { match_config: { findFirst: () => Promise.resolve(ownedRow) } } },
@@ -55,6 +78,8 @@ const TARGET = { id: 7, label: 'your Match Config' };
 beforeEach(() => {
 	written.length = 0;
 	ownedRow = { id: 7 };
+	stored.places = [];
+	stored.locations = [];
 });
 
 describe('targeting', () => {
@@ -160,7 +185,38 @@ describe('apply', () => {
 
 	it('clears a list sent empty', async () => {
 		await def.apply(TARGET, { 'match.locations': [] }, {}, ACTOR);
-		expect(written[0]).toEqual({ profileId: 3, values: { locations: [] } });
+		expect(written[0]).toEqual({ profileId: 3, values: { places: [], locations: [] } });
+	});
+
+	it('stores a location name as the place it names, and keeps one that names none as text', async () => {
+		await def.apply(
+			TARGET,
+			{ 'match.locations': ['Haarlem, Netherlands', 'Europe', 'Bay Area hybrid'] },
+			{},
+			ACTOR
+		);
+		expect(written[0]).toEqual({
+			profileId: 3,
+			values: { places: [HAARLEM, EUROPE], locations: ['Bay Area hybrid'] }
+		});
+	});
+
+	it('keeps a stored place, radius and all, when its label comes back', async () => {
+		stored.places = [{ ...HAARLEM, radius_km: 30 }];
+		await def.apply(TARGET, { 'match.locations': [HAARLEM.label, 'Europe'] }, {}, ACTOR);
+		expect(written[0]).toEqual({
+			profileId: 3,
+			values: { places: [{ ...HAARLEM, radius_km: 30 }, EUROPE], locations: [] }
+		});
+	});
+});
+
+describe('current', () => {
+	it('shows the places by their label, then the texts not read as a place', async () => {
+		stored.places = [HAARLEM];
+		stored.locations = ['Bay Area hybrid'];
+		const current = await def.current(TARGET, ACTOR);
+		expect(current['match.locations']).toEqual([HAARLEM.label, 'Bay Area hybrid']);
 	});
 });
 

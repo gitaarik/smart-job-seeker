@@ -2,6 +2,7 @@
 	import CategoryPill from '$lib/components/CategoryPill.svelte';
 	import { resolve } from '$app/paths';
 	import Card from './Card.svelte';
+	import { type Place, preferredLocationTexts } from '$lib/data/places';
 
 	interface MatchConfig {
 		id: number;
@@ -9,6 +10,7 @@
 		experience_levels: unknown;
 		work_location: unknown;
 		locations: unknown;
+		places: Place[] | null;
 	}
 
 	interface Props {
@@ -24,7 +26,9 @@
 	const jobTypes = $derived(asStringArray(matchConfig?.job_types));
 	const experienceLevels = $derived(asStringArray(matchConfig?.experience_levels));
 	const workLocations = $derived(asStringArray(matchConfig?.work_location));
-	const locations = $derived(asStringArray(matchConfig?.locations));
+	const locations = $derived(
+		preferredLocationTexts(matchConfig?.places, asStringArray(matchConfig?.locations))
+	);
 	const isConfigured = $derived(jobTypes.length > 0 && workLocations.length > 0);
 </script>
 

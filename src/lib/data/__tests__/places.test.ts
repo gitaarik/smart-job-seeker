@@ -10,6 +10,7 @@ import {
 	type PlaceCandidate,
 	type PlaceKind,
 	placeTsQuery,
+	preferredLocationTexts,
 	rankPlaces
 } from '../places';
 
@@ -127,5 +128,26 @@ describe('rankPlaces', () => {
 				candidate('country', 'X Country', 100)
 			])
 		).toEqual(['X Country', 'X Region', 'X City']);
+	});
+});
+
+describe('preferredLocationTexts', () => {
+	const portugal = candidate('country', 'Portugal', 10_000_000).place;
+	const europe = candidate('region', 'Europe', 700_000_000).place;
+
+	it('gives each place by its label, then the texts not read as a place', () => {
+		expect(preferredLocationTexts([portugal, europe], ['Bay Area hybrid'])).toEqual([
+			'Portugal',
+			'Europe',
+			'Bay Area hybrid'
+		]);
+	});
+
+	it('reads the texts alone before anything was picked, and nothing as nothing', () => {
+		expect(preferredLocationTexts(null, ['portugal', ' ', 'europe'])).toEqual([
+			'portugal',
+			'europe'
+		]);
+		expect(preferredLocationTexts(undefined, null)).toEqual([]);
 	});
 });

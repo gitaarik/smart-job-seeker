@@ -23,6 +23,7 @@
 import { dbDirect as db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { match_config } from '$lib/server/db/schema';
+import type { PreferredPlace } from '$lib/data/places';
 
 export const JOB_TYPE_OPTIONS = ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship'];
 
@@ -38,7 +39,9 @@ export interface MatchPreferenceValues {
 	job_types?: string[] | null;
 	experience_levels?: string[] | null;
 	work_location?: string[] | null;
+	/** Texts not read as a place yet; nothing adds to them (see the column). */
 	locations?: string[] | null;
+	places?: PreferredPlace[] | null;
 	remote_only?: boolean;
 	match_community_jobs?: boolean;
 	community_max_age_days?: number | null;
@@ -56,6 +59,7 @@ export interface MatchPreferences {
 	experience_levels: string[];
 	work_location: string[];
 	locations: string[];
+	places: PreferredPlace[];
 	remote_only: boolean;
 	match_community_jobs: boolean;
 	community_max_age_days: number | null;
@@ -73,6 +77,7 @@ function shape(row: typeof match_config.$inferSelect): MatchPreferences {
 		experience_levels: (row.experience_levels as string[] | null) ?? [],
 		work_location: (row.work_location as string[] | null) ?? [],
 		locations: (row.locations as string[] | null) ?? [],
+		places: row.places ?? [],
 		remote_only: row.remote_only,
 		match_community_jobs: row.match_community_jobs,
 		community_max_age_days: row.community_max_age_days ?? null,
@@ -110,7 +115,7 @@ export async function readMatchPreferences(profileId: number): Promise<MatchPref
  * Patch the config, creating the row if there is none.
  *
  * Partial by construction: a key that is absent leaves its column alone, and
- * only a key that is present is written. An empty array on one of the four list
+ * only a key that is present is written. An empty array on one of the list
  * columns is stored as NULL, because that is what "no preference" has always
  * meant to `eligibility.ts` and an empty JSON array would read as "a preference
  * satisfied by nothing".
@@ -124,7 +129,13 @@ export async function writeMatchPreferences(
 ): Promise<MatchPreferences> {
 	const data: Record<string, unknown> = { date_updated: new Date() };
 
-	for (const key of ['job_types', 'experience_levels', 'work_location', 'locations'] as const) {
+	for (const key of [
+		'job_types',
+		'experience_levels',
+		'work_location',
+		'locations',
+		'places'
+	] as const) {
 		if (values[key] === undefined) continue;
 		const list = values[key];
 		data[key] = list && list.length > 0 ? list : null;

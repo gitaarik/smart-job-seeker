@@ -45,6 +45,7 @@ import {
 	stripUnsupportedFilters,
 	unsupportedOverlap
 } from '$lib/job-platforms/preferences-to-filters';
+import type { Place } from '$lib/data/places';
 
 type SuggestablePlatform = {
 	id: number;
@@ -73,7 +74,9 @@ type PreferenceConfig = {
 	job_types: string[];
 	experience_levels: string[];
 	work_location: string[];
+	/** Texts typed before the picker that are not a place yet. */
 	locations: string[];
+	places: Place[];
 	remote_only: boolean | null;
 };
 
@@ -162,6 +165,15 @@ async function fetchFeedCorpusSizes(): Promise<Map<string, number>> {
 }
 
 /**
+ * A preferred place as the feed run reads it (`parseWhere`, by country): a
+ * region by its name, anything else by its country, the last part of its
+ * label ("Netherlands" of "Haarlem, North Holland, Netherlands").
+ */
+function feedWhere(place: Place): string {
+	return place.kind === 'region' ? place.name : (place.label.split(',').pop() ?? '').trim();
+}
+
+/**
  * The "where" a feed task starts with: the user's preferred locations as the
  * task form's free text, plus "remote" when their preferences say so, which
  * admits remote postings from any country next to the countries listed. The
@@ -170,7 +182,11 @@ async function fetchFeedCorpusSizes(): Promise<Map<string, number>> {
  * either: the work_location filter already carries that.
  */
 export function _feedSearchLocation(preferences: PreferenceConfig | null): string | null {
-	const locations = (preferences?.locations ?? []).map((l) => l.trim()).filter(Boolean);
+	const locations = [
+		...new Set([...(preferences?.places ?? []).map(feedWhere), ...(preferences?.locations ?? [])])
+	]
+		.map((l) => l.trim())
+		.filter(Boolean);
 	if (!locations.length) return null;
 	const wantsRemote =
 		preferences?.remote_only === true ||
@@ -234,6 +250,7 @@ async function fetchPreferences(profileId: number): Promise<PreferenceConfig | n
 			experience_levels: true,
 			work_location: true,
 			locations: true,
+			places: true,
 			remote_only: true
 		}
 	});
@@ -243,6 +260,7 @@ async function fetchPreferences(profileId: number): Promise<PreferenceConfig | n
 		experience_levels: (row.experience_levels as string[] | null) ?? [],
 		work_location: (row.work_location as string[] | null) ?? [],
 		locations: (row.locations as string[] | null) ?? [],
+		places: row.places ?? [],
 		remote_only: row.remote_only ?? null
 	};
 }

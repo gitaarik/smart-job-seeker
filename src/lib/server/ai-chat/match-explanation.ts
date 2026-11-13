@@ -65,7 +65,8 @@ const NO_PREFERENCES: MatchPreferences = {
 	job_types: null,
 	experience_levels: null,
 	work_location: null,
-	locations: null
+	locations: null,
+	places: null
 };
 
 /** Explanations being written in this process, so two requests for one match make one call. */
@@ -105,7 +106,13 @@ async function explain(profileId: number, jobId: number): Promise<MatchExplanati
 		db.query.jobs.findFirst({ where: eq(jobs.id, jobId) }),
 		db.query.match_config.findFirst({
 			where: eq(match_config.profile_id, profileId),
-			columns: { job_types: true, experience_levels: true, work_location: true, locations: true }
+			columns: {
+				job_types: true,
+				experience_levels: true,
+				work_location: true,
+				locations: true,
+				places: true
+			}
 		})
 	]);
 	if (!job) return null;

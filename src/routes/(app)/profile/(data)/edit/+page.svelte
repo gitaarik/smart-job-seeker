@@ -30,6 +30,8 @@
 	import FieldVariants from '$lib/components/FieldVariants.svelte';
 	import { variantsForTarget, type FieldVariant } from '$lib/field-variants';
 	import CountrySelect from '../../../jobs/components/CountrySelect.svelte';
+	import PlacePicker from '$lib/components/PlacePicker.svelte';
+	import type { Place } from '$lib/data/places';
 	import { getProfilePhotoUrl } from '$lib/utils/profile-photo-url';
 
 	let { data }: { data: PageData } = $props();
@@ -186,6 +188,39 @@
 			personal_website
 		})
 	);
+
+	// Where the applicant lives, picked from the gazetteer: what the job picks and
+	// the matcher read. A pick fills the printed Location and the Country unless
+	// the user wrote a Location of their own (their text wins, as with every
+	// printed field): one that is empty, or still the last pick's label.
+	let place = $state<Place | null>(untrack(() => (loaded?.place as Place | null) ?? null));
+	const placeField = autoSaveField<Place | null>({
+		armOnInteraction: true,
+		initial: untrack(() => place),
+		save: async (v) => {
+			const response = await fetch(`/api/profile/${profile.id}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ place: v })
+			});
+			if (!response.ok) {
+				const error = await response.json().catch(() => ({}));
+				throw new Error(error.message || error.error || `Save failed (${response.status})`);
+			}
+		},
+		onSaved: (v) => (place = v),
+		equal: (a, b) => (a?.id ?? null) === (b?.id ?? null)
+	});
+	$effect(() => placeField.set(place));
+	let pickedLabel = untrack(() => place?.label ?? '');
+
+	function onPlacePicked(picked: Place | null) {
+		if (picked) {
+			if (!location.trim() || location === pickedLabel) location = picked.label;
+			if (picked.country) country_code = picked.country;
+		}
+		pickedLabel = picked?.label ?? '';
+	}
 
 	const socialField = autoSaveField<Record<string, string>>({
 		armOnInteraction: true,
@@ -413,7 +448,13 @@
 			Contact Information
 		</h2>
 
-		<div class="grid grid-cols-1 gap-4 md:grid-cols-2" use:armOn={contactField.arm}>
+		<div
+			class="grid grid-cols-1 gap-4 md:grid-cols-2"
+			use:armOn={() => {
+				contactField.arm();
+				placeField.arm();
+			}}
+		>
 			<div>
 				<label for="email_address" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
 					<FontAwesomeIcon
@@ -457,6 +498,29 @@
 					bind:value={location}
 					placeholder="Amsterdam, Netherlands"
 				/>
+			</div>
+
+			<div>
+				<label for="place" class="mb-1 block text-sm font-medium text-[var(--dash-text)]">
+					<FontAwesomeIcon
+						icon={faMapMarkerAlt}
+						class="mr-1 h-4 w-4 text-[var(--dash-text-secondary)]"
+					/>
+					Where you live
+				</label>
+				<PlacePicker
+					id="place"
+					bind:value={place}
+					onpick={onPlacePicked}
+					placeholder="Search your city..."
+				/>
+				<p class="mt-1 text-xs text-[var(--dash-text-secondary)]">
+					What job matching reads. Picking one fills Location and Country; your resume prints
+					Location, so you can still word it your own way.
+				</p>
+				{#if placeField.status !== 'idle'}
+					<div class="mt-1"><AutoSaveIndicator field={placeField} /></div>
+				{/if}
 			</div>
 
 			<div>

@@ -44,7 +44,10 @@ export interface ExportedMatchConfig {
 	job_types: unknown;
 	experience_levels: unknown;
 	work_location: unknown;
+	/** Texts typed before the picker that are not a place yet. */
 	locations: unknown;
+	/** Preferred Locations as picked. Absent in files exported before 2026-11-13. */
+	places?: unknown;
 	match_community_jobs: boolean;
 	remote_only: boolean;
 	community_max_age_days: number | null;

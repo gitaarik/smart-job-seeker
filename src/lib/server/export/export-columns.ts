@@ -78,6 +78,7 @@ export const PROFILE_COLUMNS = {
 	location_url: true,
 	location_timezone: true,
 	country_code: true,
+	place: true,
 	phone_number: true,
 	email_address: true,
 	personal_website: true,

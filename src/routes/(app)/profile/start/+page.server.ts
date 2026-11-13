@@ -31,6 +31,7 @@ import {
 } from '$lib/server/job/match-preferences';
 import { touchProfile } from '../utils';
 import { isThinProfile } from '$lib/server/profile/thin-profile';
+import { placeSchema, preferredPlaceSchema } from '$lib/server/validation/api-schemas';
 
 /** Category for skills added here when the profile has none to put them in. */
 const NEW_CATEGORY_NAME = 'Skills';
@@ -47,8 +48,20 @@ const schema = z.object({
 	work_location: z.array(oneOf(WORK_LOCATION_OPTIONS)).min(1, 'Pick at least one work arrangement'),
 	job_types: z.array(oneOf(JOB_TYPE_OPTIONS)).min(1, 'Pick at least one job type'),
 	experience_levels: z.array(oneOf(EXPERIENCE_LEVEL_OPTIONS)),
-	locations: z.array(z.string().trim().min(1).max(100)).max(20)
+	locations: z.array(z.string().trim().min(1).max(100)).max(20),
+	place: placeSchema.nullable(),
+	places: z.array(preferredPlaceSchema).max(20)
 });
+
+/** A hidden input's JSON, or `fallback` when it holds none or no JSON. */
+function jsonField(value: FormDataEntryValue | null, fallback: unknown): unknown {
+	if (typeof value !== 'string' || !value) return fallback;
+	try {
+		return JSON.parse(value);
+	} catch {
+		return fallback;
+	}
+}
 
 async function profileSkillNames(profileId: number): Promise<string[]> {
 	const rows = await db
@@ -67,7 +80,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	const [profile, skills, config, thin] = await Promise.all([
 		db.query.profiles.findFirst({
 			where: eq(profiles.id, profileId),
-			columns: { title: true, location: true }
+			columns: { title: true, location: true, place: true }
 		}),
 		profileSkillNames(profileId),
 		readMatchPreferences(profileId),
@@ -78,6 +91,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		profileId,
 		title: profile?.title ?? '',
 		location: profile?.location ?? '',
+		place: profile?.place ?? null,
 		skills,
 		// No roles: the CV import is offered first, since roles are what the
 		// match scores read and this form cannot give them.
@@ -86,7 +100,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 			work_location: config.work_location,
 			job_types: config.job_types,
 			experience_levels: config.experience_levels,
-			locations: config.locations
+			locations: config.locations,
+			places: config.places
 		},
 		// The picks run on the worker; the app reads the same env file, so the
 		// promise below is only made where something will keep it.
@@ -117,7 +132,9 @@ export const actions: Actions = {
 			work_location: form.getAll('work_location'),
 			job_types: form.getAll('job_types'),
 			experience_levels: form.getAll('experience_levels'),
-			locations: form.getAll('locations')
+			locations: form.getAll('locations'),
+			place: jsonField(form.get('place'), null),
+			places: jsonField(form.get('places'), [])
 		});
 		if (!parsed.success) {
 			return fail(400, { error: parsed.error.issues[0]?.message ?? 'Check the form' });
@@ -132,7 +149,12 @@ export const actions: Actions = {
 
 		await db
 			.update(profiles)
-			.set({ title: values.title, location: values.location || null, date_updated: new Date() })
+			.set({
+				title: values.title,
+				location: values.location || null,
+				place: values.place,
+				date_updated: new Date()
+			})
 			.where(eq(profiles.id, profileId));
 
 		await addSkills(profileId, values.skills);
@@ -141,7 +163,8 @@ export const actions: Actions = {
 			work_location: values.work_location,
 			job_types: values.job_types,
 			experience_levels: values.experience_levels,
-			locations: values.locations
+			locations: values.locations,
+			places: values.places
 		});
 		await touchProfile(profileId);
 

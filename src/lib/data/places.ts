@@ -100,3 +100,16 @@ export function rankPlaces(q: string, candidates: PlaceCandidate[], limit: numbe
 		.slice(0, limit)
 		.map(({ c }) => c.place);
 }
+
+/**
+ * Preferred Locations as words, for a prompt or a summary: each place's label,
+ * then the texts typed before the picker that are not a place yet
+ * (`match_config.locations`).
+ */
+export function preferredLocationTexts(
+	places: readonly Place[] | null | undefined,
+	texts: unknown
+): string[] {
+	const typed = Array.isArray(texts) ? texts.map(String).filter((t) => t.trim()) : [];
+	return [...(places ?? []).map((p) => p.label), ...typed];
+}

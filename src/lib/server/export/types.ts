@@ -3,6 +3,7 @@
  */
 
 import type { EmployedSettings, FreelanceSettings, SalaryAdjustments } from '$lib/salary/settings';
+import type { Place } from '$lib/data/places';
 
 // Export scope options
 export type ExportScope = 'profile' | 'full';
@@ -283,6 +284,8 @@ export interface ExportedProfileData {
 	location?: string;
 	/** In no export before 2026-11-03. */
 	country_code?: string;
+	/** Where they live, picked from the gazetteer. In no export before 2026-11-13. */
+	place?: Place;
 
 	// Contact
 	phone_number?: string;

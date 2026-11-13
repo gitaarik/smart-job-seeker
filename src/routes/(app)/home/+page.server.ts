@@ -63,6 +63,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 			experience_levels: true,
 			work_location: true,
 			locations: true,
+			places: true,
 			match_community_jobs: true,
 			hide_below_ask: true,
 			below_ask_tolerance_pct: true

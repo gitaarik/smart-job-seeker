@@ -6,6 +6,7 @@ import { profiles } from '$lib/server/db/schema';
 import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
 import { coerceFields, type FieldKind } from '$lib/server/utils/field-kinds';
 import { parseBody, profileUpdateSchema } from '$lib/server/validation/api-schemas';
+import type { Place } from '$lib/data/places';
 
 /**
  * The profile row's own editable columns.
@@ -92,14 +93,20 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 		data.slug = slug;
 	}
 
-	const coerced = coerceFields(PROFILE_FIELDS, data);
+	// The picked place is an object, which no field kind is: the schema checked it.
+	const { place, ...fields } = data;
+	const coerced = coerceFields(PROFILE_FIELDS, fields);
 	if (!coerced.ok) {
 		error(400, coerced.error);
 	}
 
 	await db
 		.update(profiles)
-		.set({ ...coerced.values, date_updated: new Date() })
+		.set({
+			...coerced.values,
+			...(place !== undefined ? { place: place as Place | null } : {}),
+			date_updated: new Date()
+		})
 		.where(eq(profiles.id, profileId));
 
 	return json({ success: true });

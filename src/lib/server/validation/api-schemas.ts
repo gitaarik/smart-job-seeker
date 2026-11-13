@@ -174,12 +174,33 @@ export const techSkillUpdateSchema = z.object({
 
 // Job preferences
 
+/** A place as the picker hands it over (`Place`, `$lib/data/places`). */
+export const placeSchema = z.object({
+	id: z.number().int(),
+	kind: z.enum(['city', 'admin', 'country', 'region']),
+	name: z.string().min(1).max(200),
+	label: z.string().min(1).max(400),
+	country: z
+		.string()
+		.regex(/^[A-Z]{2}$/)
+		.nullable(),
+	countries: z.array(z.string().regex(/^[A-Z]{2}$/)).max(300),
+	lat: z.number().min(-90).max(90).nullable(),
+	lon: z.number().min(-180).max(180).nullable()
+});
+
+/** A preferred place: a place and how far from it a job may be (stored; read in Phase 4). */
+export const preferredPlaceSchema = placeSchema.extend({
+	radius_km: z.number().int().min(1).max(500).nullable().optional()
+});
+
 export const jobPreferencesSchema = z.object({
 	profile_id: positiveInt(),
 	job_types: z.array(z.string()).min(1, 'Please select at least one job type'),
 	experience_levels: z.array(z.string()).optional().nullable(),
 	work_location: z.array(z.string()).min(1, 'Please select at least one work location option'),
 	locations: z.array(z.string()).optional().nullable(),
+	places: z.array(preferredPlaceSchema).max(20).optional().nullable(),
 	remote_only: z.boolean().optional(),
 	match_community_jobs: z.boolean().optional(),
 	community_max_age_days: z.number().int().positive().nullable().optional(),
@@ -199,6 +220,7 @@ export const jobPreferencesPatchSchema = z.object({
 		.min(1, 'Please select at least one work location option')
 		.optional(),
 	locations: z.array(z.string()).optional().nullable(),
+	places: z.array(preferredPlaceSchema).max(20).optional().nullable(),
 	remote_only: z.boolean().optional(),
 	match_community_jobs: z.boolean().optional(),
 	community_max_age_days: z.number().int().positive().nullable().optional(),
@@ -339,6 +361,8 @@ export const profileUpdateSchema = z.object({
 	phone_number: optionalTrimmedString(),
 	personal_website: optionalTrimmedString(),
 	location: optionalTrimmedString(),
+	// Picked from the gazetteer; null clears it.
+	place: placeSchema.nullable().optional(),
 	location_url: optionalTrimmedString(),
 	location_timezone: optionalTrimmedString(),
 	linkedin_profile: optionalTrimmedString(),

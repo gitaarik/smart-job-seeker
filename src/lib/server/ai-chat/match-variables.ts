@@ -12,13 +12,16 @@
  * paying twice in order to send the worse one.
  */
 import type { Jobs } from '$lib/server/db/schema';
+import { type Place, preferredLocationTexts } from '$lib/data/places';
 
 /** The match settings a profile chose (`match_config`), as far as the prompts show them. */
 export interface MatchPreferences {
 	job_types: string[] | null;
 	experience_levels: string[] | null;
 	work_location: string[] | null;
+	/** Texts typed before the picker that are not a place yet. */
 	locations: string[] | null;
+	places?: Place[] | null;
 }
 
 export type MatchedJob = Pick<
@@ -48,7 +51,11 @@ export function matchPromptVariables(
 		'preferences.job_types': listed(preferences.job_types, 'Any'),
 		'preferences.experience_levels': listed(preferences.experience_levels, 'Any'),
 		'preferences.work_location': listed(preferences.work_location, 'Any'),
-		'preferences.locations': listed(preferences.locations, 'Any'),
+		// Each place by its label, then the texts not read as a place. With
+		// neither, as it always was.
+		'preferences.locations': preferences.places?.length
+			? JSON.stringify(preferredLocationTexts(preferences.places, preferences.locations))
+			: listed(preferences.locations, 'Any'),
 
 		'job.title': job.title || 'Unknown',
 		// The employer. This used to be `job_poster`, under the prompts' "Company"
