@@ -143,14 +143,12 @@
 			</section>
 		{/if}
 
-		{#if data.creditPacks.length}
+		{#if data.extraUsageFromEuro}
 			<section class="mt-12">
 				<h2 class="text-xl font-semibold">Running out?</h2>
 				<p class="mt-2 text-sm text-[var(--dash-text-secondary)]">
-					{#each data.creditPacks as pack (pack.name)}
-						{pack.credits.toLocaleString()} extra credits for €{(pack.priceCents / 100).toFixed(2)},
-						on any paid plan. They don't expire at the end of the month.
-					{/each}
+					Add extra usage from €{data.extraUsageFromEuro}, on any plan. It is used only once your
+					plan runs out, and it doesn't expire at the end of the month.
 				</p>
 			</section>
 		{/if}

@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { getPlans, CREDIT_COST_EXAMPLES, getCreditPacks } from '$lib/server/billing/plans';
+import { getPlans, CREDIT_COST_EXAMPLES, getExtraUsage } from '$lib/server/billing/plans';
 import { registrationOpen } from '$lib/server/auth/registration';
 
 /**
@@ -41,12 +41,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			limits: p.limits,
 			usageExample: p.usageExample
 		})),
-		creditPacks: getCreditPacks().map((c) => ({
-			name: c.name,
-			description: c.description,
-			priceCents: c.priceCents,
-			credits: c.credits
-		})),
+		extraUsageFromEuro: getExtraUsage()?.amountsEuro[0] ?? null,
 		costExamples: Object.values(CREDIT_COST_EXAMPLES as Record<string, CostExample>),
 		signedIn: !!locals.user,
 		registrationOpen: registrationOpen()

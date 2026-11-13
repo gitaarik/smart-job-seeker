@@ -578,9 +578,12 @@
 				</a>
 			{/if}
 			{#if creditBalance}
-				{@const total = creditBalance.allowance + creditBalance.extra}
+				<!-- The plan's allowance only; extra usage is spent after it (see /billing). -->
 				{@const usedPct =
-					total > 0 ? Math.min(100, Math.round((creditBalance.used / total) * 100)) : 0}
+					creditBalance.allowance > 0
+						? Math.min(100, Math.round((creditBalance.used / creditBalance.allowance) * 100))
+						: 0}
+				{@const onExtra = usedPct >= 100 && creditBalance.extra > 0}
 				{@const daysLeft = creditBalance.periodEnd
 					? Math.max(
 							0,
@@ -591,21 +594,26 @@
 					href={resolve('/billing')}
 					onclick={closeMobileMenu}
 					class="group mx-2.5 mt-1.5 block"
-					title="{usedPct}% used{daysLeft != null ? ` · resets in ${daysLeft}d` : ''}"
+					title="{onExtra ? 'Plan used up, now using extra usage' : `${usedPct}% used`}{daysLeft !=
+					null
+						? ` · resets in ${daysLeft}d`
+						: ''}"
 				>
 					<div
 						class="mb-1 flex items-center justify-between text-[10px] text-[var(--dash-text-secondary)]"
 					>
-						<span>{usedPct}% used</span>
+						<span>{onExtra ? 'On extra usage' : `${usedPct}% used`}</span>
 						{#if daysLeft != null}<span>resets in {daysLeft}d</span>{/if}
 					</div>
 					<div class="h-1 overflow-hidden rounded-full bg-[var(--dash-border)]">
 						<div
-							class="h-full rounded-full transition-all {usedPct >= 90
-								? 'bg-red-500'
-								: usedPct >= 75
-									? 'bg-amber-500'
-									: 'bg-[var(--dash-primary)]'}"
+							class="h-full rounded-full transition-all {onExtra
+								? 'bg-[var(--dash-primary)]'
+								: usedPct >= 90
+									? 'bg-red-500'
+									: usedPct >= 75
+										? 'bg-amber-500'
+										: 'bg-[var(--dash-primary)]'}"
 							style="width: {usedPct}%"
 						></div>
 					</div>

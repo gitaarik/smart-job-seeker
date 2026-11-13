@@ -22,7 +22,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		subscription,
 		plans: getPlans(),
 		creditBalance,
-		creditPacks: [],
 		stripePublishableKey: ''
 	};
 };

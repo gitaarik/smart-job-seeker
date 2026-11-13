@@ -80,16 +80,15 @@ export function getPlans(): PlanDefinition[] {
 	];
 }
 
-export interface CreditPack {
-	name: string;
-	description: string;
-	priceCents: number;
-	credits: number;
+/** Money on top of the plan; cloud sells it, self-hosted has no billing. */
+export interface ExtraUsage {
+	creditsPerEuro: number;
+	amountsEuro: number[];
 	stripePriceId: string;
 }
 
-export function getCreditPacks(): CreditPack[] {
-	return [];
+export function getExtraUsage(): ExtraUsage | null {
+	return null;
 }
 
 export function planFromPriceId(_priceId: string): PlanId | null {
