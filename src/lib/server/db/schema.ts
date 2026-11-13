@@ -3265,11 +3265,19 @@ export const search_tasks = pgTable(
 		}),
 		sjsbrowser_api_key: integer(),
 		login_mode: varchar({ length: 10 }).default('auto').notNull(),
-		// Plain location string the user picked when creating the task. Kept
-		// around for tasks created under the legacy URL-template flow; new
-		// tasks under the dynamic form-fill flow don't populate it. Will be
-		// resurrected when a proper structured location picker lands.
+		// Where to search, as the user typed it when no place fits ("Bay Area
+		// hybrid"), or a feed task's countries from before the picker. With
+		// `search_places` set, a feed run reads its countries from those and
+		// this text only for the word "remote" (planning/STRUCTURED-LOCATIONS.md).
 		search_location: text(),
+		// Where to search, as the user picked it from the gazetteer: a browser
+		// task one place (its board has one location box), a feed task any
+		// number. Null until picked or backfilled.
+		search_places: jsonb().$type<PreferredPlace[]>(),
+		// A feed task's "remote postings from any country too", next to its
+		// places. Replaces the word "remote" in `search_location`, which the
+		// feed run still reads for older tasks and imported settings.
+		search_remote_anywhere: boolean().default(false).notNull(),
 		// User-selected canonical filter values. Single-select filters: a value_key
 		// string (e.g. { sort_by: "newest" }). Multi-select filters: an array
 		// (e.g. { work_location: ["remote", "hybrid"] }). Consumed at scrape time
