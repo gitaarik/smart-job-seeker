@@ -1093,7 +1093,6 @@ export const search_task_runs = pgTable(
 		failure_kind: varchar({ length: 32 }),
 		triggered_by: varchar({ length: 20 }).notNull(),
 		bullmq_job_id: varchar({ length: 100 }),
-		live_url: varchar({ length: 500 }),
 		user_response: varchar({ length: 20 }),
 		settings: jsonb(),
 		verification_data: jsonb(),
@@ -1461,7 +1460,6 @@ export const jobs = pgTable(
 		soft_skills: jsonb(),
 		rescrape_status: varchar({ length: 50 }),
 		rescrape_message: text(),
-		rescrape_live_url: text(),
 		region: varchar({ length: 50 }),
 		salary_duration_weeks: doublePrecision(),
 		/**
@@ -1726,7 +1724,6 @@ export const search_form_probe_runs = pgTable(
 		 *  routes the session through the tunnel to the user's local browser. */
 		sjsbrowser_api_key_id: integer(),
 		bullmq_job_id: varchar({ length: 100 }),
-		live_url: varchar({ length: 500 }),
 		/** Draft output from the worker. Shape:
 		 *   { platform_name, platform_key, search_page_url, search_url_template,
 		 *     applicable_hint, params, notes[] }
@@ -3233,7 +3230,6 @@ export const search_tasks = pgTable(
 		navigation_type: varchar({ length: 255 }),
 		stripped_html: text(),
 		last_run_jobs_found: integer(),
-		live_url: varchar({ length: 500 }),
 		is_active: boolean().default(true).notNull(),
 		status_message: varchar({ length: 255 }),
 		platform_profile_id: integer(),
@@ -4270,7 +4266,6 @@ export const profiles = pgTable(
 		browser_timezone: varchar({ length: 100 }),
 		ui_preferences: jsonb().default({}),
 		browser_country_code: varchar({ length: 10 }),
-		browser_profile_id: varchar({ length: 100 }),
 		/**
 		 * What they ask to be paid, one ask per kind of work: a salary per month
 		 * or year with what the job pays besides (`EmployedSettings`), and a rate

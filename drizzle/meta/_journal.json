@@ -743,6 +743,13 @@
       "when": 1794587515554,
       "tag": "0105_legal_acceptances",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1794588050183,
+      "tag": "0106_drop_cloud_browser",
+      "breakpoints": true
     }
   ]
 }
