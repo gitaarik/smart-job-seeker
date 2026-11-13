@@ -51,7 +51,8 @@
 	const hasMatches = $derived((matchStats?.total ?? 0) > 0);
 
 	const setupComplete = $derived(
-		!!completeness && isSetupComplete(completeness, (searchTasks?.totalCount ?? 0) > 0, hasMatches)
+		!!completeness &&
+			isSetupComplete(completeness, data.hasDevice, (searchTasks?.totalCount ?? 0) > 0, hasMatches)
 	);
 </script>
 
@@ -116,13 +117,14 @@
 		seven skills and a top match of 30 had been told, permanently, that they
 		were set up correctly.
 
-		Step 4 is "Get matched!" and is done when `hasMatches`, so a fully set-up
+		Step 5 is "Get matched!" and is done when `hasMatches`, so a fully set-up
 		user still sees the card disappear — just for having finished, rather than
 		for having started.
 	-->
 	{#if completeness && !setupComplete}
 		<GettingStartedFlow
 			{completeness}
+			hasDevice={data.hasDevice}
 			hasSearchTasks={(searchTasks?.totalCount ?? 0) > 0}
 			{hasMatches}
 		/>

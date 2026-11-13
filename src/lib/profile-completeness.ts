@@ -43,18 +43,21 @@ export function isProfileReadyForMatching(c: ProfileCompleteness): boolean {
 }
 
 /**
- * All four Getting Started steps done.
+ * All five Getting Started steps done.
  *
- * `hasMatches` is step 4, so a fully set-up user does stop seeing the card —
+ * `hasMatches` is step 5, so a fully set-up user does stop seeing the card —
  * for having finished, which is the opposite of the old rule that hid it for
  * having started. See the comment at the call site.
  */
 export function isSetupComplete(
 	c: ProfileCompleteness,
+	hasDevice: boolean,
 	hasSearchTasks: boolean,
 	hasMatches: boolean
 ): boolean {
-	return isProfileReadyForMatching(c) && c.hasMatchConfig && hasSearchTasks && hasMatches;
+	return (
+		isProfileReadyForMatching(c) && c.hasMatchConfig && hasDevice && hasSearchTasks && hasMatches
+	);
 }
 
 /**

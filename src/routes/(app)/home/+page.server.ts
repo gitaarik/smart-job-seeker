@@ -47,7 +47,8 @@ export const load: PageServerLoad = async ({ parent }) => {
 			matchStats: null,
 			topMatches: null,
 			profileSkillLevels: {},
-			activeApplications: []
+			activeApplications: [],
+			hasDevice: false
 		};
 	}
 
@@ -82,7 +83,8 @@ export const load: PageServerLoad = async ({ parent }) => {
 		[sharedMatchCounts, curationStatsRaw],
 		topMatchesRaw,
 		profileSkillLevels,
-		activeApplicationRows
+		activeApplicationRows,
+		[deviceRow]
 	] = await Promise.all([
 		// Lightweight profile fields for completeness check
 		db.query.profiles.findFirst({
@@ -218,7 +220,24 @@ export const load: PageServerLoad = async ({ parent }) => {
 			// be the order, which put whichever application was last *edited* on
 			// top — a cover letter draft outranking an interview tomorrow.
 			orderBy: desc(applications.date_created)
-		})
+		}),
+
+		// Getting Started's device step. Scraping runs on the user's own machine
+		// (or one shared with them), so without one a search task can never run.
+		// An own key counts once it has connected: the tunnel stamps `last_used`
+		// on every handshake, so a key that was made and never pasted anywhere
+		// does not tick the step. A shared device counts as soon as it is shared;
+		// its owner already connected it.
+		queryRaw<{ has_device: boolean }>(sql`
+			SELECT EXISTS (
+				SELECT 1 FROM api_keys
+				WHERE user_id = ${layoutData.user.id} AND NOT revoked AND last_used IS NOT NULL
+			) OR EXISTS (
+				SELECT 1 FROM device_shares ds
+				JOIN api_keys k ON k.id = ds.api_key_id
+				WHERE ds.shared_with = ${layoutData.user.id} AND NOT k.revoked
+			) AS has_device
+		`)
 	]);
 
 	// The same rule the pipeline list uses, so the dashboard's shortlist is the
@@ -292,6 +311,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 		topMatches,
 		profileSkillLevels,
 		activeApplications,
+		hasDevice: deviceRow?.has_device ?? false,
 		// The server's day, so the nudge a card draws and the ranking that placed
 		// it there cannot disagree because the browser sits in another timezone.
 		today: today()
