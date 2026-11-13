@@ -64,8 +64,6 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 
 		const durationMs = Math.round(performance.now() - callStarted);
 		const usage = completionResult.usage;
-		const creditsCost = usage ? tokensToCost(usage.totalTokens) : 0;
-
 		// Which pair actually answered — the fallback when the primary failed over.
 		// Written back to the row for the same reason as in createAndGenerateAiChat:
 		// the stamp predates the call, and the cost page prices by these columns.
@@ -73,6 +71,7 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 			provider: writingProvider,
 			model: writingModel
 		};
+		const creditsCost = usage ? tokensToCost(usage.totalTokens, ranOn.provider, ranOn.model) : 0;
 
 		// Update the response field + token usage
 		await db

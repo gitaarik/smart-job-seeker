@@ -326,7 +326,7 @@ async function recordDecision<T>(decision: {
 	const inputTokens = response.usage.input_tokens;
 	const outputTokens = response.usage.output_tokens;
 	const totalTokens = inputTokens + outputTokens;
-	const credits = decision.charge === false ? 0 : tokensToCost(totalTokens);
+	const credits = decision.charge === false ? 0 : tokensToCost(totalTokens, 'typesafe', model);
 	await db
 		.update(ai_chats)
 		.set({

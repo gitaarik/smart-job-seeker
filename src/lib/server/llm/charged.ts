@@ -65,14 +65,13 @@ async function chargeCompletion(
 ): Promise<void> {
 	const usage = result.usage;
 	if (!usage) return;
-	const creditsCost = tokensToCost(usage.totalTokens);
-	if (creditsCost <= 0) return;
-
 	// Priced as the model that answered: the fallback's, when it ran.
 	const ranOn = result.fallbackUsed ?? {
 		provider: options.provider || config.llmProvider,
 		model: options.model ?? config.llmModel
 	};
+	const creditsCost = tokensToCost(usage.totalTokens, ranOn.provider, ranOn.model);
+	if (creditsCost <= 0) return;
 	const promptKey = options.promptKey ?? 'unknown';
 	try {
 		await chargeCredits(

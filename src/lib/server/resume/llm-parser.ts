@@ -265,12 +265,12 @@ export async function parseResumeWithLLM(resumeText: string, userId?: string): P
 	// Charge credits for AI resume parsing
 	const usage = result.usage;
 	if (userId && usage) {
-		const creditsCost = tokensToCost(usage.totalTokens);
+		// Priced as the model that ran, not the app default: the two differ
+		// whenever SJS_LLM_MODEL is set to anything else, and a price for the
+		// wrong model is worse than none because nothing flags it.
+		const ranOn = result.fallbackUsed ?? { provider: config.llmProvider, model: RESUME_MODEL };
+		const creditsCost = tokensToCost(usage.totalTokens, ranOn.provider, ranOn.model);
 		if (creditsCost > 0) {
-			// Priced as the model that ran, not the app default: the two differ
-			// whenever SJS_LLM_MODEL is set to anything else, and a price for the
-			// wrong model is worse than none because nothing flags it.
-			const ranOn = result.fallbackUsed ?? { provider: config.llmProvider, model: RESUME_MODEL };
 			const providerCostUsd = estimateProviderCostUsd(
 				ranOn.provider,
 				ranOn.model,

@@ -797,8 +797,6 @@ export async function recordCall(opts: RecordCallOptions): Promise<RecordedCall>
 		? opts.storeResponse(completionResult.content)
 		: completionResult.content;
 	const usage = completionResult.usage;
-	const creditsCost = usage && opts.charge !== false ? tokensToCost(usage.totalTokens) : 0;
-
 	/**
 	 * What actually generated this, which is not always what the row was
 	 * stamped with at insert time: the stamp is written before the call, and a
@@ -814,6 +812,10 @@ export async function recordCall(opts: RecordCallOptions): Promise<RecordedCall>
 		provider: activeProvider,
 		model: activeModel
 	};
+	const creditsCost =
+		usage && opts.charge !== false
+			? tokensToCost(usage.totalTokens, ranOn.provider, ranOn.model)
+			: 0;
 
 	await db
 		.update(ai_chats)

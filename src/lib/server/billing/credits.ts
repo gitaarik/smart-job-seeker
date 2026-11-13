@@ -10,8 +10,11 @@
 // Cost calculations (pure math — kept in OSS for shared use)
 // ---------------------------------------------------------------------------
 
-/** Convert LLM token count to credit cost (1 credit per 10k tokens) */
-export function tokensToCost(totalTokens: number): number {
+/**
+ * Convert LLM token count to credit cost (1 credit per 10k tokens). Cloud
+ * weighs the costlier models more; the stub charges nothing anyway.
+ */
+export function tokensToCost(totalTokens: number, _provider?: string, _model?: string): number {
 	return Math.ceil(totalTokens / 10000);
 }
 
