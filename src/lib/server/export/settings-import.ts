@@ -1,3 +1,4 @@
+import { MAX_CORPUS_PICKS_PER_DAY } from '$lib/server/job/match-preferences';
 import { dbDirect as db } from '$lib/server/db';
 import { eq, and, inArray, asc } from 'drizzle-orm';
 import {
@@ -226,7 +227,11 @@ export async function importSettings(
 				...(typeof mc.corpus_picks_enabled === 'boolean'
 					? { corpus_picks_enabled: mc.corpus_picks_enabled }
 					: {}),
-				...(typeof mc.corpus_picks_per_day === 'number'
+				// Held to the form's range: every pick is paid for by the house, so a
+				// file cannot ask for more than the settings page allows.
+				...(Number.isInteger(mc.corpus_picks_per_day) &&
+				mc.corpus_picks_per_day! >= 1 &&
+				mc.corpus_picks_per_day! <= MAX_CORPUS_PICKS_PER_DAY
 					? { corpus_picks_per_day: mc.corpus_picks_per_day }
 					: {})
 			};
