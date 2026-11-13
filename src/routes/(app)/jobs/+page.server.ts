@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { asc, eq, sql } from 'drizzle-orm';
+import { asc, eq, or, sql } from 'drizzle-orm';
 import { dbDirect as db, queryRaw, sqlJoin } from '$lib/server/db';
 import { job_platforms } from '$lib/server/db/schema';
 import { getProfileSkillLevels } from '$lib/server/job/match-utils';
@@ -36,9 +36,11 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		jobs.map((j: { id: number }) => j.id)
 	).catch((err) => console.warn('[jobs] could not stamp shown_at:', err));
 
-	// Get all platforms for filter dropdown
+	// Get all platforms for filter dropdown. The feed platforms are drafts (out
+	// of the picker since corpus picks) but every pick carries one, so the
+	// filter keeps them.
 	const platforms = await db.query.job_platforms.findMany({
-		where: eq(job_platforms.status, 'published'),
+		where: or(eq(job_platforms.status, 'published'), eq(job_platforms.fetch_mode, 'feed')),
 		columns: { id: true, name: true },
 		orderBy: asc(job_platforms.name)
 	});
