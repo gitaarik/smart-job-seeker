@@ -87,6 +87,9 @@ export interface ExtraUsage {
 	stripePriceId: string;
 }
 
+/** The unit price of extra usage, in cents. Checkout sells a quantity of it. */
+export const EXTRA_USAGE_UNIT_CENTS = 100;
+
 export function getExtraUsage(): ExtraUsage | null {
 	return null;
 }

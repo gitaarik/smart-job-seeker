@@ -18,7 +18,8 @@ export type EmailType =
 	| 'email_change'
 	| 'welcome'
 	| 'admin_notification'
-	| 'invite';
+	| 'invite'
+	| 'purchase_confirmation';
 
 export async function sendEmail(options: {
 	to: string;
