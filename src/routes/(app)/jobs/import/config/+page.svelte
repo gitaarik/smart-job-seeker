@@ -316,10 +316,12 @@
 	use:armOn={() => {
 		jobTypesField.arm();
 		workLocationField.arm();
+		remoteAbroadField.arm();
 		experienceLevelsField.arm();
 		locationsField.arm();
 		communityField.arm();
 		payField.arm();
+		picksField.arm();
 	}}
 >
 	<p class="text-sm text-[var(--dash-text-secondary)]">
