@@ -4972,9 +4972,7 @@ export const credit_wallets = pgTable(
 	{
 		user_id: text().primaryKey().notNull(),
 		balance: integer().default(0).notNull(),
-		updated_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
-			.defaultNow()
-			.notNull()
+		updated_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }).defaultNow().notNull()
 	},
 	(table) => [
 		foreignKey({

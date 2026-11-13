@@ -419,7 +419,7 @@ export const actions: Actions = {
 			})
 			.where(eq(usage_counters.user_id, params.id));
 
-		// Zero credits used; keep allowance and purchased extra_credits untouched.
+		// Zero credits used; keep the allowance and the purchased-credit wallet untouched.
 		await db
 			.update(credit_balances)
 			.set({ credits_used: 0 })

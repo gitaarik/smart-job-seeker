@@ -76,26 +76,17 @@ export async function chargeCredits(
 	// No-op: no credit tracking in OSS
 }
 
-/** Add extra credits — no-op in OSS. */
-/** Cloud records the Stripe payment here; OSS has no payments. */
-export async function recordCreditPurchase(_params: {
+/** Cloud records the Stripe payment and fills the wallet here; OSS has no payments. */
+export async function grantCreditPurchase(_params: {
 	userId: string;
 	stripePaymentIntentId: string;
 	packType: string;
 	amountCents: number;
+	credits: number;
+	description?: string;
+	metadata?: Record<string, unknown>;
 }): Promise<boolean> {
 	return true;
-}
-
-export async function forgetCreditPurchase(_stripePaymentIntentId: string): Promise<void> {}
-
-export async function addExtraCredits(
-	_userId: string,
-	_amount: number,
-	_description?: string,
-	_metadata?: Record<string, unknown>
-): Promise<void> {
-	// No-op: no credit tracking in OSS
 }
 
 /** Row shape of a credit-transaction record (matches `credit_transactions` schema). */
