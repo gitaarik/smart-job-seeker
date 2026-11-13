@@ -220,7 +220,11 @@
 					<FontAwesomeIcon icon={faArrowRight} class="h-3 w-3" />
 				</a>
 			</div>
-			<JobCardList items={topMatches} {profileSkillLevels} />
+			<JobCardList
+				items={topMatches}
+				{profileSkillLevels}
+				earlyScore={!!completeness && !completeness.hasWorkExperience}
+			/>
 		</div>
 	{/if}
 

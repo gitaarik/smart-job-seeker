@@ -14,6 +14,7 @@ import {
 	markJobsShown,
 	parseJobListFilters
 } from '$lib/server/job/list-jobs';
+import { isThinProfile } from '$lib/server/profile/thin-profile';
 
 export const load: PageServerLoad = async ({ parent, url }) => {
 	const layoutData = await parent();
@@ -49,6 +50,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
 	// Load user's skill proficiency levels for highlighting
 	const profileSkillLevels = await getProfileSkillLevels(profileId);
+	// A profile with no roles gets early scores, not verdicts (thin-profile.ts).
+	const thinProfile = await isThinProfile(profileId);
 
 	return {
 		jobs,
@@ -61,6 +64,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		foundForYouJobIds,
 		matchesByJobId,
 		profileSkillLevels,
+		thinProfile,
 		pay,
 		filters: {
 			status: filters.status,

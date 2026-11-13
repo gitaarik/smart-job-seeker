@@ -1126,6 +1126,32 @@
 		{/if}
 	</div>
 
+	<!--
+		A profile with no roles: its scores are early ones, shown in neutral, and
+		this says why once rather than leaving fifty low numbers to say it.
+	-->
+	{#if data.thinProfile && jobs.length > 0}
+		<div
+			class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] p-4 text-sm text-[var(--dash-text-secondary)]"
+		>
+			<p class="font-medium text-[var(--dash-text)]">These scores are early ones</p>
+			<p class="mt-1">
+				A match score says how well your profile shows you fit a job, and yours has no work history
+				yet. The jobs are picked for your title, skills and preferences; the scores rise once the
+				matcher can see what you have done.
+				<a
+					href={resolve('/(app)/data/(transfer)/profile-import')}
+					class="text-[var(--dash-primary)] hover:underline">Add your CV</a
+				>
+				or
+				<a
+					href={resolve('/(app)/profile/(data)/work-experience')}
+					class="text-[var(--dash-primary)] hover:underline">your work history</a
+				>.
+			</p>
+		</div>
+	{/if}
+
 	<!-- Jobs List -->
 	{#if jobs.length === 0}
 		<EmptyState icon={pageIcon} title={emptyTitle} description={emptyDescription} />
@@ -1140,6 +1166,7 @@
 					isSaved={isSaved(job.id)}
 					isRejected={isRejected(job.id)}
 					foundForYou={foundForYouJobIds[job.id] === true}
+					earlyScore={data.thinProfile}
 					isExpanded={expandedId === job.id}
 					onToggleExpand={() => toggleExpand(job.id)}
 					onToggleSaved={(saved) => toggleSaved(job.id, saved)}

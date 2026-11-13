@@ -536,7 +536,7 @@
 		<ToggleSwitch
 			bind:checked={corpusPicks}
 			label="Find jobs for me from company career sites"
-			description="Each night SJS looks through the openings on company career sites for ones that fit your profile and these settings, adds the best to your jobs as Found for you, and scores them. No search task needed, and it costs you no credits. Turning it off keeps the jobs found so far."
+			description="Each night SJS looks through the openings on company career sites for ones that fit your profile and these settings, adds the best to your jobs marked “Fits your search”, and scores them. No search task needed, and it costs you no credits. Turning it off keeps the jobs found so far."
 		/>
 		{#if corpusPicks}
 			<div class="mt-4 border-t border-[var(--dash-border)] pt-4">

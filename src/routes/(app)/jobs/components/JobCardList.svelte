@@ -53,6 +53,8 @@
 	interface Props {
 		items: MatchItem[];
 		profileSkillLevels?: Record<string, 'strong' | 'weak'>;
+		/** The profile is thin (`isThinProfile`): scores show as early ones. */
+		earlyScore?: boolean;
 		saveAction?: string;
 		unsaveAction?: string;
 		rejectAction?: string;
@@ -62,6 +64,7 @@
 	let {
 		items,
 		profileSkillLevels = {},
+		earlyScore = false,
 		saveAction = '?/saveJob',
 		unsaveAction = '?/unsaveJob',
 		rejectAction = '?/rejectJob',
@@ -129,6 +132,7 @@
 			match={getMatch(item)}
 			matched={true}
 			{profileSkillLevels}
+			{earlyScore}
 			isSaved={savedJobIds[item.job.id] === true}
 			isRejected={rejectedJobIds[item.job.id] === true}
 			isExpanded={expandedId === item.job.id}

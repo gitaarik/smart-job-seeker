@@ -97,6 +97,20 @@
 		You can change all of this later.
 	</p>
 
+	{#if data.thin}
+		<p
+			class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-card)] p-4 text-sm text-[var(--dash-text-secondary)]"
+		>
+			<span class="font-medium text-[var(--dash-text)]">Have a CV?</span>
+			<a
+				href={resolve('/(app)/data/(transfer)/profile-import')}
+				class="text-[var(--dash-primary)] hover:underline">Add it to your profile</a
+			>
+			too. These answers are enough to find jobs; your work history is what makes their match scores mean
+			something.
+		</p>
+	{/if}
+
 	<input type="hidden" name="profile_id" value={data.profileId} />
 	{#if data.created}<input type="hidden" name="created" value="true" />{/if}
 	{#each newSkills as skill (skill)}

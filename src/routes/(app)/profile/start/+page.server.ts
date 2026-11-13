@@ -30,6 +30,7 @@ import {
 	writeMatchPreferences
 } from '$lib/server/job/match-preferences';
 import { touchProfile } from '../utils';
+import { isThinProfile } from '$lib/server/profile/thin-profile';
 
 /** Category for skills added here when the profile has none to put them in. */
 const NEW_CATEGORY_NAME = 'Skills';
@@ -63,13 +64,14 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	if (!selectedProfile) redirect(303, '/profile/create');
 
 	const profileId = selectedProfile.id;
-	const [profile, skills, config] = await Promise.all([
+	const [profile, skills, config, thin] = await Promise.all([
 		db.query.profiles.findFirst({
 			where: eq(profiles.id, profileId),
 			columns: { title: true, location: true }
 		}),
 		profileSkillNames(profileId),
-		readMatchPreferences(profileId)
+		readMatchPreferences(profileId),
+		isThinProfile(profileId)
 	]);
 
 	return {
@@ -77,6 +79,9 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		title: profile?.title ?? '',
 		location: profile?.location ?? '',
 		skills,
+		// No roles: the CV import is offered first, since roles are what the
+		// match scores read and this form cannot give them.
+		thin,
 		config: {
 			work_location: config.work_location,
 			job_types: config.job_types,

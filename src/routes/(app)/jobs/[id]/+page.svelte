@@ -351,7 +351,12 @@
 			<Card padding="lg">
 				<!-- Score badge (floated) -->
 				<div class="float-right mb-2 ml-4">
-					<ScoreBadge score={match?.score ?? null} matched={!!match} size="xl" />
+					<ScoreBadge
+						score={match?.score ?? null}
+						matched={!!match}
+						size="xl"
+						early={data.thinProfile}
+					/>
 				</div>
 
 				<!-- Header fields: view, or the whole block as one form -->
@@ -1300,6 +1305,16 @@
 									</dd>
 								</div>
 							</dl>
+							{#if data.thinProfile}
+								<p class="mt-2 text-xs text-[var(--dash-text-muted)]">
+									An early score: your profile has no work history yet, so the matcher has little to
+									go on.
+									<a
+										href={resolve('/(app)/data/(transfer)/profile-import')}
+										class="text-[var(--dash-primary)] hover:underline">Add your CV</a
+									> to sharpen it.
+								</p>
+							{/if}
 						</div>
 					{/if}
 

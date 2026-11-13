@@ -39,6 +39,7 @@ import {
 	normalizeWorkLocation
 } from '$lib/data/job-normalize';
 import { normalizeSalaryPeriod } from '$lib/salary/conversion';
+import { isThinProfile } from '$lib/server/profile/thin-profile';
 
 /**
  * How long the inline re-score may block the form action. Shorter than
@@ -419,9 +420,13 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
 		label: `Job: ${job.title ?? 'Untitled'}${job.company ? ` at ${job.company}` : ''}`
 	};
 
+	// A profile with no roles gets an early score, not a verdict (thin-profile.ts).
+	const thinProfile = match ? await isThinProfile(profileId) : false;
+
 	return {
 		job,
 		match,
+		thinProfile,
 		jobStatus: jobStatus?.status ?? 'new',
 		profileId,
 		jobCategory,

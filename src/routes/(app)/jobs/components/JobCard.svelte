@@ -63,6 +63,8 @@
 		isRejected?: boolean;
 		/** A nightly corpus pick (`job_importers.source = 'corpus'`), not an import the user ran. */
 		foundForYou?: boolean;
+		/** The profile is thin (`isThinProfile`): the score shows as an early one. */
+		earlyScore?: boolean;
 		isExpanded?: boolean;
 		onToggleExpand?: () => void;
 		onToggleSaved?: (saved: boolean) => void;
@@ -84,6 +86,7 @@
 		isSaved = false,
 		isRejected = false,
 		foundForYou = false,
+		earlyScore = false,
 		isExpanded = false,
 		onToggleExpand,
 		onToggleSaved,
@@ -192,7 +195,7 @@
 		<div class="flex items-start gap-3">
 			<!-- Desktop: Score Badge on the left -->
 			<div class="hidden flex-shrink-0 md:flex">
-				<ScoreBadge score={match?.score ?? null} {matched} size="lg" />
+				<ScoreBadge score={match?.score ?? null} {matched} size="lg" early={earlyScore} />
 			</div>
 
 			<!-- Clickable area for expand/collapse -->
@@ -234,9 +237,9 @@
 						{#if foundForYou}
 							<span
 								class="rounded-full bg-[var(--dash-primary)]/10 px-2 py-0.5 text-[var(--dash-primary)]"
-								title="Picked for you from company career sites"
+								title="Picked from company career sites because it fits your title, skills and preferences. The match score says how well your profile shows you fit it."
 							>
-								Found for you
+								Fits your search
 							</span>
 						{/if}
 					</div>
@@ -293,7 +296,7 @@
 				onclick={() => onToggleExpand?.()}
 				class="flex-shrink-0 self-end md:hidden"
 			>
-				<ScoreBadge score={match?.score ?? null} {matched} size="lg" />
+				<ScoreBadge score={match?.score ?? null} {matched} size="lg" early={earlyScore} />
 			</button>
 		</div>
 	</div>
