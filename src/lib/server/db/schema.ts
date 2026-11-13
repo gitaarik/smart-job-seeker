@@ -30,6 +30,7 @@ import type { InterviewRound } from '../../application-status';
 import type { SkipReason } from '../../match-recommendation';
 import type { SalaryMode } from '../../salary/settings';
 import type { SafeZone } from '../../media-library';
+import type { Place, PreferredPlace } from '../../data/places';
 
 /** `job_importers.source`: how a job reached a profile. */
 export type ImportSource = 'task' | 'manual' | 'corpus';
@@ -869,7 +870,19 @@ export const match_config = pgTable(
 		job_types: json(),
 		experience_levels: json(),
 		work_location: json(),
+		/**
+		 * Preferred Locations typed before the picker, kept only for the texts
+		 * that are not a place (yet): the backfill (cloud
+		 * `scripts/backfill-places.ts`) moves every text it is sure of into
+		 * `places` and leaves the rest here, and every reader reads both.
+		 * Nothing writes a new text here.
+		 */
 		locations: json(),
+		/**
+		 * Preferred Locations, as the user picked them from the gazetteer
+		 * (planning/STRUCTURED-LOCATIONS.md). Null until picked or backfilled.
+		 */
+		places: jsonb().$type<PreferredPlace[]>(),
 		profile_id: integer().notNull(),
 		name: varchar({ length: 255 }),
 		match_community_jobs: boolean().default(false).notNull(),
@@ -4253,6 +4266,12 @@ export const profiles = pgTable(
 		}),
 		source_cv: uuid(),
 		location: varchar({ length: 255 }),
+		/**
+		 * Where the applicant lives, as picked from the gazetteer: what the
+		 * picks and the matcher read. `location` above stays the printed text,
+		 * filled from `place.label` on a pick unless the user wrote their own.
+		 */
+		place: jsonb().$type<Place>(),
 		/**
 		 * The profile photo, a rendition in the media library. Typed through
 		 * `AnyPgColumn` for the reason `public_portfolio_theme_id` gives:

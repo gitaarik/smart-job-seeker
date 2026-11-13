@@ -28,6 +28,16 @@ export interface Place {
 }
 
 /**
+ * A place in the match settings' Preferred Locations (`match_config.places`).
+ * `radius_km` is how far from it a hybrid or on-site job may be; stored, not
+ * read yet (distance is Phase 4), and absent means the place itself: its
+ * country for a city, as before.
+ */
+export interface PreferredPlace extends Place {
+	radius_km?: number | null;
+}
+
+/**
  * A name as the search compares it: lower case, accents dropped, anything
  * that is not a letter or a digit a single space. "'s-Gravenhage" becomes
  * "s gravenhage", "Zürich" "zurich".

@@ -757,6 +757,13 @@
       "when": 1794595828330,
       "tag": "0107_places",
       "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1794598146961,
+      "tag": "0108_structured_places",
+      "breakpoints": true
     }
   ]
 }
