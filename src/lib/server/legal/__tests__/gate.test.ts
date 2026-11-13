@@ -39,6 +39,8 @@ describe('safeReturnPath', () => {
 	it('keeps a path on this site and drops anything else', () => {
 		expect(safeReturnPath('/jobs?x=1')).toBe('/jobs?x=1');
 		expect(safeReturnPath('//evil.example')).toBe('/home');
+		expect(safeReturnPath('/\\evil.example')).toBe('/home');
+		expect(safeReturnPath('/\tevil')).toBe('/home');
 		expect(safeReturnPath('https://evil.example')).toBe('/home');
 		expect(safeReturnPath(null)).toBe('/home');
 	});

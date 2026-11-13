@@ -26,7 +26,14 @@ export function mustAcceptTerms(user: GateUser, impersonating: boolean): boolean
 	return user.terms_version !== current;
 }
 
-/** A redirect target from the query string, kept on this site. */
+/**
+ * A redirect target from the query string, kept on this site. Parsed rather
+ * than prefix-checked: browsers read `/\\evil.example` as `//evil.example`.
+ */
 export function safeReturnPath(raw: string | null): string {
-	return raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/home';
+	if (!raw || !raw.startsWith('/')) return '/home';
+	if ([...raw].some((c) => c === '\\' || c.charCodeAt(0) < 0x20)) return '/home';
+	const base = 'http://localhost';
+	const url = new URL(raw, base);
+	return url.origin === base ? url.pathname + url.search + url.hash : '/home';
 }
