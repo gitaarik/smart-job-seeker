@@ -73,7 +73,13 @@ export const FAILURE_KINDS = [
 	 *  Says nothing about the task, so policies must ignore rather than count it. */
 	'infrastructure',
 	/** Terminal failure with no recognised cause. */
-	'unknown'
+	'unknown',
+	/** The device was connected but could not start Chrome when the run asked
+	 *  it to (a missing library, no display, a broken Chrome download). Not
+	 *  `device_unavailable`: the device answered, and bringing it online again
+	 *  fixes nothing. Before this kind it fell through to `unknown`, and a user
+	 *  whose own machine was the cause read "An unexpected error occurred". */
+	'device_browser_failed'
 ] as const;
 
 export type FailureKind = (typeof FAILURE_KINDS)[number];
