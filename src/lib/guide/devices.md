@@ -12,10 +12,12 @@ was shared with you.
 
 To use it:
 
-1. Create an **Import Task** (a saved job search).
-2. Choose **"My device"** as the browser and pick the **shared device** from the
-   list.
-3. Run it.
+1. Create an **Import Task** (a saved job search). If you have no device of
+   your own, it runs on the shared one; the form says which device it will use.
+2. Run it.
+
+To switch a task to another device later, open the task and pick one under
+**Browser Control**.
 
 You can only scrape while their device is online — the **Devices** page shows
 its live status. If it's offline, ask the person who invited you.
@@ -24,16 +26,17 @@ its live status. If it's offline, ask the person who invited you.
 
 Two ways, you only need one:
 
-- **Desktop app** — quickest. Download it, paste a device key, done. Good for
-  scraping while your computer is on.
+- **Desktop app** — quickest. Download it, pick the server, paste a device
+  key, done. Good for scraping while your computer is on.
 - **Docker on a NAS / home server** — always-on, and the right choice if you
   want to **share with others** (they can only use it while it's running).
 
 To connect one:
 
 1. Go to **[Job Import → Devices](/jobs/import/devices)** and click **New Key**.
-2. Follow the **connect wizard** — for Docker it gives you a ready-to-run
-   command with your key already filled in, and a live indicator that turns
+2. Follow the **connect wizard**. For the desktop app it names the server to
+   pick and shows the key to paste; for Docker it gives you a ready-to-run
+   command with your key already filled in. Either way a live indicator turns
    green the moment your device connects.
 
 > The full host setup — Docker Compose, auto-updates, the trust model — is in

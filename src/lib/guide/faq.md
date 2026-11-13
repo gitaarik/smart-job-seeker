@@ -17,8 +17,11 @@ can log in once. See
 ## Why isn't my device connecting?
 
 - Check the container or desktop app is actually **running**.
-- Make sure the **server URL** matches the one shown on the Devices page, and
-  the **device key** is correct.
+- Make sure the device points at the right server: in the desktop app, the
+  server the Devices page names (usually **Smart Job Seeker**); for Docker,
+  the `SJS_SERVER_URL` in the command the Devices page gives you.
+- Make sure the **device key** is correct. It starts with `sjs_` and comes
+  from **My Devices**, not from Connected apps.
 - The Devices page shows **live status** — it turns green within a few seconds
   of the device coming online.
 

@@ -162,12 +162,26 @@
 	let sjsBrowserStatus = $state<string>('checking');
 	let statusPollInterval: ReturnType<typeof setInterval> | null = null;
 
-	// Derive tunnel URL from current host
+	// Derive tunnel URL from current host. The server-side fallback is only
+	// what renders before hydration; www is the host the tunnel is served on.
 	let sjsBrowserUrl = $derived(
 		typeof window !== 'undefined'
 			? `wss://${window.location.host}/tunnel`
-			: 'wss://app.smartjobseeker.com/tunnel'
+			: 'wss://www.smartjobseeker.com/tunnel'
 	);
+
+	// Which choice in the desktop app's server picker is this instance. The app
+	// lists "Smart Job Seeker" (production), Preview, Dev and Custom; anything
+	// else, a self-hosted instance included, is Custom with this page's URL.
+	let desktopServer = $derived.by(() => {
+		const host = typeof window !== 'undefined' ? window.location.host : 'www.smartjobseeker.com';
+		if (host === 'smartjobseeker.com' || host === 'www.smartjobseeker.com') {
+			return 'Smart Job Seeker';
+		}
+		if (host === 'preview.smartjobseeker.com') return 'Preview';
+		if (host === 'dev.smartjobseeker.com') return 'Dev';
+		return null;
+	});
 
 	// Live wiring for the just-created device key: the tunnel poll surfaces the
 	// device the instant it connects, so the setup wizard can confirm it.
@@ -863,14 +877,14 @@ volumes:
 						<p class="text-[var(--dash-text)]">Connect the device</p>
 						{#if installTab === 'desktop'}
 							<p>
-								In the desktop app, select the <strong
-									>{typeof window !== 'undefined' &&
-										(window.location.host.startsWith('app.')
-											? 'Production'
-											: window.location.host.startsWith('preview.')
-												? 'Preview'
-												: 'Dev')}</strong
-								> server and enter your device key.
+								{#if desktopServer}
+									In the desktop app, select the <strong>{desktopServer}</strong> server and paste your
+									device key.
+								{:else}
+									In the desktop app, select <strong>Custom</strong>, enter
+									<code class="rounded bg-[var(--dash-bg)] px-1 text-xs">{sjsBrowserUrl}</code>
+									as the server URL, and paste your device key.
+								{/if}
 							</p>
 						{:else}
 							<p>
@@ -891,8 +905,8 @@ volumes:
 					<div>
 						<p class="text-[var(--dash-text)]">Start importing</p>
 						<p>
-							Once connected (shown above), start an import from the Import Tasks page. Select "My
-							device" as the browser and choose which device to use.
+							Once connected (shown above), add a search on the Import Tasks page. It runs on your
+							connected device; with more than one, pick another under the task's Browser Control.
 						</p>
 					</div>
 				</li>
@@ -909,8 +923,19 @@ volumes:
 						Connect "{newlyCreatedKeyName || 'your device'}"
 					</h2>
 					<p class="text-sm text-[var(--dash-text-secondary)]">
-						Run the container below on your NAS or server — the key is already filled in. Or paste
-						the key into the desktop app.
+						<strong>Desktop app:</strong>
+						{#if desktopServer}
+							choose the <strong>{desktopServer}</strong> server, paste the device key below and click
+							Connect.
+						{:else}
+							choose <strong>Custom</strong>, enter
+							<code class="rounded bg-[var(--dash-bg)] px-1 text-xs">{sjsBrowserUrl}</code>, paste
+							the device key below and click Connect.
+						{/if}
+					</p>
+					<p class="mt-1 text-sm text-[var(--dash-text-secondary)]">
+						<strong>Docker:</strong> run the container below on your NAS or server; the key is already
+						filled in.
 					</p>
 				</div>
 				<button
