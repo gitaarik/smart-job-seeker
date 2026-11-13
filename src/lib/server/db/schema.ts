@@ -891,7 +891,18 @@ export const match_config = pgTable(
 		 * run and leaves the jobs found so far.
 		 */
 		corpus_picks_enabled: boolean().default(true).notNull(),
-		corpus_picks_per_day: integer().default(10).notNull()
+		corpus_picks_per_day: integer().default(10).notNull(),
+		/**
+		 * What the picks read off the profile and these settings (titles, skill
+		 * phrases, levels, places, work mode, job types), hashed, as of the last
+		 * first batch or change re-run. A profile edit that changes it queues a
+		 * re-run, at most once an hour (`corpus_rerun_at`); one that does not (a
+		 * story, a cheat sheet) costs nothing. `corpus_checked_at` is when the
+		 * worker last compared it, so an unchanged profile is not loaded again.
+		 */
+		corpus_fingerprint: text(),
+		corpus_checked_at: timestamp({ withTimezone: true, mode: 'date' }),
+		corpus_rerun_at: timestamp({ withTimezone: true, mode: 'date' })
 	},
 	(table) => [
 		index('match_config_profile_id_idx').on(table.profile_id),
