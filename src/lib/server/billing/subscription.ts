@@ -38,3 +38,26 @@ export async function getOrCreateStripeCustomer(
 ): Promise<string> {
 	throw new Error('Billing is not configured. Stripe is only available in the cloud version.');
 }
+
+/** Cloud re-reads a Stripe subscription; OSS has none. */
+export async function syncSubscriptionFromStripe(_subscriptionId: string): Promise<void> {}
+
+export type PlanChangeResult =
+	| { kind: 'changed'; plan: PlanId; pending: boolean }
+	| { kind: 'same_plan' }
+	| { kind: 'no_stripe_subscription' };
+
+export async function changeSubscriptionPlan(
+	_userId: string,
+	_newPriceId: string
+): Promise<PlanChangeResult> {
+	return { kind: 'no_stripe_subscription' };
+}
+
+export async function reconcileStaleSubscriptions(_options: { graceHours?: number } = {}): Promise<{
+	checked: number;
+	failed: number;
+}> {
+	return { checked: 0, failed: 0 };
+}
+
