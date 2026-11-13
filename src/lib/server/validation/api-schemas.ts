@@ -269,6 +269,8 @@ export const searchTaskUpdateSchema = z.object({
 	search_url: httpUrl('search_url').optional().nullable(),
 	search_term: z.string().max(500).optional().nullable(),
 	search_location: z.string().max(500).optional().nullable(),
+	search_places: z.array(preferredPlaceSchema).max(20).optional().nullable(),
+	search_remote_anywhere: z.boolean().optional(),
 	search_filters: z.record(z.string(), z.union([z.string(), z.array(z.string())])).optional(),
 	is_active: z.boolean().optional(),
 	platform_id: z.union([z.null(), z.number().int()]).optional(),

@@ -24,6 +24,9 @@ import {
 	resolveCustomSiteSearchUrl
 } from '$lib/import-tasks/custom-site';
 import { toLoginMode } from '$lib/import-tasks/sign-in';
+import { z } from 'zod';
+import { preferredPlaceSchema } from '$lib/server/validation/api-schemas';
+import type { PreferredPlace } from '$lib/data/places';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();
@@ -433,6 +436,22 @@ export const actions: Actions = {
 				// valid JSON; bad input here means a client bug or tampering.
 			}
 		}
+		// Picked places, as JSON from the picker; anything that is not a list of
+		// places is dropped like malformed filters above.
+		let search_places: PreferredPlace[] | null = null;
+		const search_places_raw = formData.get('search_places') as string;
+		if (search_places_raw) {
+			try {
+				const parsed = z
+					.array(preferredPlaceSchema)
+					.max(20)
+					.safeParse(JSON.parse(search_places_raw));
+				if (parsed.success && parsed.data.length) search_places = parsed.data;
+			} catch {
+				// Malformed JSON: no places.
+			}
+		}
+		const search_remote_anywhere = formData.get('search_remote_anywhere') === 'true';
 		const is_active = formData.get('is_active') !== 'false';
 
 		// Platform data
@@ -633,6 +652,8 @@ export const actions: Actions = {
 				search_url: resolvedSearchUrl,
 				search_term: search_term?.trim() || null,
 				search_location: search_location?.trim() || null,
+				search_places,
+				search_remote_anywhere,
 				search_filters,
 				platform_id: resolvedPlatformId,
 				platform_profile_id: resolvedCredentialId,

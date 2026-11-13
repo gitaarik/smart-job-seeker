@@ -64,6 +64,8 @@ export async function buildSettingsExport(
 			schedule_preferred_hour: task.schedule_preferred_hour,
 			login_mode: task.login_mode,
 			search_location: task.search_location,
+			search_places: task.search_places,
+			search_remote_anywhere: task.search_remote_anywhere,
 			search_filters: task.search_filters,
 			// Not carried: import refuses it, so emitting it would promise a
 			// round-trip that does not happen. It is per-debugging-session state

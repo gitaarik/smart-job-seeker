@@ -35,6 +35,9 @@ export interface ExportedSearchTask {
 	schedule_preferred_hour: number | null;
 	login_mode: string;
 	search_location: string | null;
+	/** Added with the place picker; a file from before it has none. */
+	search_places?: unknown;
+	search_remote_anywhere?: boolean;
 	search_filters: Record<string, string | string[]>;
 	debug_screenshots: boolean;
 }

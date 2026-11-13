@@ -197,6 +197,12 @@ export async function importSettings(
 				schedule_preferred_hour: t.schedule_preferred_hour,
 				login_mode: t.login_mode,
 				search_location: t.search_location,
+				// Places as the match config's are taken: a list that is not
+				// places is left out, and the text beside them still reads.
+				search_places: PLACES.safeParse(t.search_places).success
+					? PLACES.parse(t.search_places)
+					: null,
+				search_remote_anywhere: t.search_remote_anywhere === true,
 				search_filters: t.search_filters,
 				// `debug_screenshots` is deliberately NOT taken from the file.
 				//

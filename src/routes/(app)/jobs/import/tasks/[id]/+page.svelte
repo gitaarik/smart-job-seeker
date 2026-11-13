@@ -21,6 +21,7 @@
 	import { adjacentFor, provenanceFor } from '$lib/match-provenance';
 	import SearchTaskFields from '../../../components/SearchTaskFields.svelte';
 	import SourceEditor from '../../components/SourceEditor.svelte';
+	import TaskWhereEditor from '../../components/TaskWhereEditor.svelte';
 	import FilterEditor from '../../components/FilterEditor.svelte';
 	import { formatSalaryRange, searchTaskDisplayName, timeAgo } from '$lib/format';
 	import { page } from '$app/stores';
@@ -2696,6 +2697,27 @@
 						searchTask.search_filters = saved.search_filters;
 					}}
 				/>
+
+				<!-- A browser task's location goes into the site's search form, which
+				     the scraper drives only with no Jobs URL of the task's own. -->
+				{#if isFeed || (searchTask.job_platform?.search_page_url && !searchTask.search_url)}
+					<div class="mt-4">
+						<TaskWhereEditor
+							taskId={searchTask.id}
+							feed={isFeed}
+							initial={{
+								search_places: searchTask.search_places ?? null,
+								search_location: searchTask.search_location ?? null,
+								search_remote_anywhere: searchTask.search_remote_anywhere ?? false
+							}}
+							onSaved={(saved) => {
+								searchTask.search_places = saved.search_places;
+								searchTask.search_location = saved.search_location;
+								searchTask.search_remote_anywhere = saved.search_remote_anywhere;
+							}}
+						/>
+					</div>
+				{/if}
 			</div>
 
 			<div class="mt-6 border-t border-[var(--dash-border)] pt-4">

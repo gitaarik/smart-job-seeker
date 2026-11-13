@@ -16,6 +16,7 @@ import { hasCredentialAccess } from '$lib/server/credential-shares';
 import { encryptCredential } from '$lib/server/auth/crypto';
 import { checkPublicHttpUrl } from '$lib/server/net/public-url';
 import { config } from '$lib/server/config';
+import type { PreferredPlace } from '$lib/data/places';
 
 /**
  * Calculate next scheduled run at the preferred hour in the user's timezone.
@@ -114,6 +115,8 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 		search_url?: string | null;
 		search_term?: string | null;
 		search_location?: string | null;
+		search_places?: PreferredPlace[] | null;
+		search_remote_anywhere?: boolean;
 		search_filters?: Record<string, string | string[]>;
 		is_active?: boolean;
 		date_updated?: Date;
@@ -146,6 +149,12 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 	}
 	if (body.search_location !== undefined) {
 		data.search_location = body.search_location?.trim() || null;
+	}
+	if (body.search_places !== undefined) {
+		data.search_places = body.search_places?.length ? body.search_places : null;
+	}
+	if (body.search_remote_anywhere !== undefined) {
+		data.search_remote_anywhere = body.search_remote_anywhere;
 	}
 	if (body.search_filters !== undefined) {
 		data.search_filters = body.search_filters;

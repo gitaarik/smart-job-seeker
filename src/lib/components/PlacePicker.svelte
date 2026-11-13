@@ -4,7 +4,9 @@
 	 * STRUCTURED-LOCATIONS.md): a city, a province, a country or a region,
 	 * stored whole as a `Place`. One place (`value`), or a list shown as chips
 	 * (`multiple`, `places`). GeoNames is CC BY 4.0, so the list of suggestions
-	 * credits it.
+	 * credits it. With `allowText`, one place or a text the user keeps as typed
+	 * when no place fits ("Bay Area hybrid"), in `text`; the two exclude each
+	 * other.
 	 */
 	import { onMount } from 'svelte';
 	import type { Place, PlaceKind, PreferredPlace } from '$lib/data/places';
@@ -13,16 +15,23 @@
 	let {
 		value = $bindable(null),
 		places = $bindable([]),
+		text = $bindable(null),
+		allowText = false,
 		multiple = false,
 		placeholder = 'Search a city, country or region...',
 		disabled = false,
 		id,
-		onpick
+		onpick,
+		ontext
 	}: {
 		/** The one place, when not `multiple`. */
 		value?: Place | null;
 		/** The list, when `multiple`. A kept place keeps its `radius_km`. */
 		places?: PreferredPlace[];
+		/** The text kept as typed, when not `multiple` and `allowText`. */
+		text?: string | null;
+		/** Offer to keep what was typed when no place fits. */
+		allowText?: boolean;
 		multiple?: boolean;
 		placeholder?: string;
 		disabled?: boolean;
@@ -30,6 +39,8 @@
 		id?: string;
 		/** After a pick (or a clear, with null), once `value` or `places` holds it. */
 		onpick?: (place: Place | null) => void;
+		/** After the typed text is kept (or cleared, with null). */
+		ontext?: (text: string | null) => void;
 	} = $props();
 
 	const uid = $props.id();
@@ -55,6 +66,10 @@
 	const shown = $derived(
 		multiple ? results.filter((r) => !places.some((p) => p.id === r.id)) : results
 	);
+	/** The typed text on offer after the suggestions, when `allowText`. */
+	const typed = $derived(allowText && !multiple ? query.trim() : '');
+	/** The options the keyboard moves over: the suggestions, then the typed text. */
+	const optionCount = $derived(shown.length + (typed ? 1 : 0));
 
 	function search(q: string) {
 		clearTimeout(timer);
@@ -87,11 +102,30 @@
 	function pick(place: Place) {
 		if (multiple) places = [...places, place];
 		else value = place;
+		if (text != null) {
+			text = null;
+			ontext?.(null);
+		}
 		query = '';
 		results = [];
 		open = false;
 		highlight = -1;
 		onpick?.(place);
+	}
+
+	function keepTyped() {
+		const kept = query.trim();
+		if (!kept) return;
+		if (value) {
+			value = null;
+			onpick?.(null);
+		}
+		text = kept;
+		query = '';
+		results = [];
+		open = false;
+		highlight = -1;
+		ontext?.(kept);
 	}
 
 	function remove(place: Place) {
@@ -100,8 +134,14 @@
 	}
 
 	function clear() {
-		value = null;
-		onpick?.(null);
+		if (value) {
+			value = null;
+			onpick?.(null);
+		}
+		if (text != null) {
+			text = null;
+			ontext?.(null);
+		}
 	}
 
 	function onkeydown(e: KeyboardEvent) {
@@ -109,14 +149,19 @@
 			open = false;
 			return;
 		}
-		if (!open || !shown.length) return;
+		if (!open || !optionCount) return;
 		if (e.key === 'ArrowDown') {
 			e.preventDefault();
-			highlight = Math.min(highlight + 1, shown.length - 1);
+			highlight = Math.min(highlight + 1, optionCount - 1);
 		} else if (e.key === 'ArrowUp') {
 			e.preventDefault();
 			highlight = Math.max(highlight - 1, 0);
 		} else if (e.key === 'Enter') {
+			if (typed && highlight === shown.length) {
+				e.preventDefault();
+				keepTyped();
+				return;
+			}
 			const choice = shown[highlight];
 			if (!choice) return;
 			e.preventDefault();
@@ -160,7 +205,7 @@
 		</div>
 	{/if}
 
-	{#if !multiple && value && !open}
+	{#if !multiple && (value || text) && !open}
 		<div
 			class="flex w-full items-center gap-2 rounded-md border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-sm text-[var(--dash-text)]"
 		>
@@ -170,9 +215,11 @@
 				{disabled}
 				onclick={() => (open = true)}
 				class="flex-1 truncate text-left"
-				title="Change the place">{value.label}</button
+				title="Change the place">{value ? value.label : text}</button
 			>
-			<span class="text-xs text-[var(--dash-text-muted)]">{KIND_LABEL[value.kind]}</span>
+			<span class="text-xs text-[var(--dash-text-muted)]"
+				>{value ? KIND_LABEL[value.kind] : 'As typed'}</span
+			>
 			<button
 				type="button"
 				onclick={clear}
@@ -233,6 +280,20 @@
 					<div class="px-3 py-2 text-sm text-[var(--dash-text-muted)]">
 						{loading ? 'Searching...' : 'No place found'}
 					</div>
+				{/if}
+				{#if typed}
+					<button
+						type="button"
+						role="option"
+						aria-selected={highlight === shown.length}
+						onclick={keepTyped}
+						onmouseenter={() => (highlight = shown.length)}
+						class="flex w-full items-center gap-2 border-t border-[var(--dash-border)] px-3 py-1.5 text-left text-sm text-[var(--dash-text-secondary)] transition-colors
+							{highlight === shown.length ? 'bg-[var(--dash-primary)]/10' : 'hover:bg-[var(--dash-bg)]'}"
+					>
+						<span class="flex-1 truncate">Use “{typed}” as typed</span>
+						<span class="text-xs text-[var(--dash-text-muted)]">Not a place</span>
+					</button>
 				{/if}
 			</div>
 			<div

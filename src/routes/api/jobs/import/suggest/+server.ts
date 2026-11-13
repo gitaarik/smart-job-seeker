@@ -19,7 +19,7 @@
  * has no search form: the worker runs the keywords as a full-text query over
  * the ATS corpus. It is suggestable without a `search_page_url`, the prompt
  * sees the size of its corpus instead of a form track record, and its draft
- * carries a `search_location` built from the user's preferred locations.
+ * carries the user's preferred places (`_feedWhere`).
  *
  * Returns task drafts the client form can save: platform_id, platform name
  * (for display), keywords, note, relevance, filters. The user can edit any
@@ -165,34 +165,35 @@ async function fetchFeedCorpusSizes(): Promise<Map<string, number>> {
 }
 
 /**
- * A preferred place as the feed run reads it (`parseWhere`, by country): a
- * region by its name, anything else by its country, the last part of its
- * label ("Netherlands" of "Haarlem, North Holland, Netherlands").
+ * The "where" a feed task starts with: the user's preferred places as they
+ * are, the texts typed before the picker that are no place yet (the feed run
+ * still reads countries out of them), and remote postings from any country
+ * when the preferences say remote. No places and no texts means every
+ * country, so no remote flag is needed either: the work_location filter
+ * already carries that.
  */
-function feedWhere(place: Place): string {
-	return place.kind === 'region' ? place.name : (place.label.split(',').pop() ?? '').trim();
-}
-
-/**
- * The "where" a feed task starts with: the user's preferred locations as the
- * task form's free text, plus "remote" when their preferences say so, which
- * admits remote postings from any country next to the countries listed. The
- * feed run reads countries out of this text and says in its log what it
- * could not read. No locations means every country, so no "remote" is needed
- * either: the work_location filter already carries that.
- */
-export function _feedSearchLocation(preferences: PreferenceConfig | null): string | null {
-	const locations = [
-		...new Set([...(preferences?.places ?? []).map(feedWhere), ...(preferences?.locations ?? [])])
-	]
-		.map((l) => l.trim())
-		.filter(Boolean);
-	if (!locations.length) return null;
+export function _feedWhere(preferences: PreferenceConfig | null): {
+	search_places: Place[] | null;
+	search_location: string | null;
+	search_remote_anywhere: boolean;
+} {
+	const places = preferences?.places ?? [];
+	const REMOTE = /^(remote|anywhere|worldwide|global)$/i;
+	const texts = [...new Set((preferences?.locations ?? []).map((l) => l.trim()))].filter(Boolean);
+	const statesRemote = texts.some((t) => REMOTE.test(t));
+	const named = texts.filter((t) => !REMOTE.test(t));
+	if (!places.length && !named.length) {
+		return { search_places: null, search_location: null, search_remote_anywhere: false };
+	}
 	const wantsRemote =
+		statesRemote ||
 		preferences?.remote_only === true ||
 		(preferences?.work_location ?? []).some((w) => w.toLowerCase() === 'remote');
-	const alreadyRemote = locations.some((l) => /^(remote|anywhere|worldwide|global)$/i.test(l));
-	return [...locations, ...(wantsRemote && !alreadyRemote ? ['remote'] : [])].join(', ');
+	return {
+		search_places: places.length ? places : null,
+		search_location: named.join(', ') || null,
+		search_remote_anywhere: wantsRemote
+	};
 }
 
 type ExistingTask = {
@@ -392,8 +393,12 @@ export interface SuggestedTaskDraft {
 	needs_login: boolean;
 	/** `feed` for a career-site feed: no browser, device or sign-in; the card says so. */
 	fetch_mode: 'browser' | 'feed';
-	/** A feed task's "where": countries and "remote", from the user's preferences; null for every country. */
+	/** A feed task's places, from the user's preferred places; null for every country. */
+	search_places: Place[] | null;
+	/** A feed task's preferred texts that are no place yet; the feed run reads their countries. */
 	search_location: string | null;
+	/** A feed task's "remote postings from any country too". */
+	search_remote_anywhere: boolean;
 	/** Runs that returned jobs, and runs attempted. Both zero = never tried. */
 	successes: number;
 	attempts: number;
@@ -499,8 +504,9 @@ export async function _runSuggester(
 			filters: plan.filters,
 			needs_login: !!plan.platform.login_page_url,
 			fetch_mode: plan.platform.fetch_mode === 'feed' ? 'feed' : 'browser',
-			search_location:
-				plan.platform.fetch_mode === 'feed' ? _feedSearchLocation(preferences) : null,
+			...(plan.platform.fetch_mode === 'feed'
+				? _feedWhere(preferences)
+				: { search_places: null, search_location: null, search_remote_anywhere: false }),
 			successes: plan.platform.success_count,
 			attempts: plan.platform.success_count + plan.platform.failure_count
 		});

@@ -275,11 +275,15 @@
 		}
 		formData.append('search_filters', JSON.stringify(suggestion.filters ?? {}));
 		// A career-site feed runs on the worker, with no browser: no device, and
-		// the suggester's "where" (countries and "remote") in place of one, the
-		// field the add form shows for a feed platform.
+		// the suggester's "where" (the preferred places, texts that are no place
+		// yet, remote from anywhere), the fields the add form shows for a feed.
 		const isFeed = suggestion.fetch_mode === 'feed';
-		if (isFeed && suggestion.search_location) {
-			formData.append('search_location', suggestion.search_location);
+		if (isFeed) {
+			if (suggestion.search_location)
+				formData.append('search_location', suggestion.search_location);
+			if (suggestion.search_places?.length)
+				formData.append('search_places', JSON.stringify(suggestion.search_places));
+			if (suggestion.search_remote_anywhere) formData.append('search_remote_anywhere', 'true');
 		}
 		// Where the task runs: the same rule as the add form. A connected
 		// device, own or shared, is pinned to the task; with none, an empty
