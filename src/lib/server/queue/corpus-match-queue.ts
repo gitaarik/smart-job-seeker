@@ -7,9 +7,11 @@
  * the nightly ATS sweep has finished and processes it one profile at a time.
  * See sjs-ops planning/CORPUS-MATCHING.md.
  *
- * The job carries the night's skill rarity counts for the profile's phrases:
+ * A night's job carries the skill rarity counts for the profile's phrases:
  * they are counted once a night over one sample of the corpus for every
- * profile together, not once per profile.
+ * profile together, not once per profile. A re-run (a profile's first batch
+ * once its settings are saved, or a change to what the picks read) is queued
+ * on its own and counts them itself.
  */
 
 import { Queue } from 'bullmq';
@@ -19,10 +21,16 @@ export interface CorpusMatchJobData {
 	profileId: number;
 	/** The UTC date of the night, `2026-11-13`; part of the job id. */
 	night: string;
-	/** Postings in the night's rarity sample that name each of this profile's phrases. */
-	df: Record<string, number>;
+	/** Postings in the night's rarity sample that name each of this profile's phrases; counted by the processor when absent. */
+	df?: Record<string, number>;
 	/** Postings in the sample. */
-	total: number;
+	total?: number;
+	/**
+	 * Queued by a profile change, not the night: up to 10 picks from the whole
+	 * window, outside the daily cap (or the first batch, for a profile with
+	 * none yet).
+	 */
+	rerun?: boolean;
 }
 
 export interface CorpusMatchJobResult {
@@ -72,4 +80,13 @@ export async function enqueueCorpusMatches(jobs: CorpusMatchJobData[]) {
 		}))
 	);
 	return jobs.length;
+}
+
+/** A profile's re-run, its own job beside the night's. */
+export async function enqueueCorpusRerun(profileId: number, night: string) {
+	await getCorpusMatchQueue().add(
+		'rerun',
+		{ profileId, night, rerun: true },
+		{ jobId: `corpus-${profileId}-rerun-${Date.now()}` }
+	);
 }
