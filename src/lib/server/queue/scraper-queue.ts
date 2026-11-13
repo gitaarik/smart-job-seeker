@@ -138,10 +138,19 @@ export async function getActiveJobForSearch(searchTaskId: number) {
 }
 
 /**
- * Get waiting job for a job search (if any) — searches both queues
+ * The states a job can wait in. `delayed` is not only a scheduled job: the
+ * desktop worker parks a run there while another run holds its device
+ * (cloud `device-lease.ts`), and such a run is still queued, not lost.
+ */
+const PENDING_STATES = ['waiting', 'delayed', 'prioritized'] as const;
+
+/**
+ * Get the pending job for a job search (if any) — searches every queue
  */
 export async function getWaitingJobForSearch(searchTaskId: number) {
-	const waitingJobArrays = await Promise.all(allQueues().map((q) => q.getWaiting()));
+	const waitingJobArrays = await Promise.all(
+		allQueues().map((q) => q.getJobs([...PENDING_STATES]))
+	);
 	return waitingJobArrays.flat().find((j) => j.data.searchTaskId === searchTaskId);
 }
 
@@ -194,7 +203,7 @@ export async function listQueueJobs(): Promise<QueuedScrapeJob[]> {
 	];
 	const result: QueuedScrapeJob[] = [];
 	for (const [name, q] of queues) {
-		const [active, waiting] = await Promise.all([q.getActive(), q.getWaiting()]);
+		const [active, waiting] = await Promise.all([q.getActive(), q.getJobs([...PENDING_STATES])]);
 		for (const [state, jobs] of [
 			['active', active],
 			['waiting', waiting]
@@ -250,11 +259,11 @@ export async function getQueueStats() {
 		desktopCompleted,
 		desktopFailed
 	] = await Promise.all([
-		hosted.getWaitingCount(),
+		hosted.getJobCountByTypes(...PENDING_STATES),
 		hosted.getActiveCount(),
 		hosted.getCompletedCount(),
 		hosted.getFailedCount(),
-		desktop.getWaitingCount(),
+		desktop.getJobCountByTypes(...PENDING_STATES),
 		desktop.getActiveCount(),
 		desktop.getCompletedCount(),
 		desktop.getFailedCount()

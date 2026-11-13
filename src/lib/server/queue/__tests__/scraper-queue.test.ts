@@ -9,9 +9,9 @@ const { hostedMocks, desktopMocks } = vi.hoisted(() => {
 	const makeMocks = () => ({
 		add: vi.fn(),
 		getActive: vi.fn().mockResolvedValue([]),
-		getWaiting: vi.fn().mockResolvedValue([]),
+		getJobs: vi.fn().mockResolvedValue([]),
 		getJob: vi.fn().mockResolvedValue(null),
-		getWaitingCount: vi.fn().mockResolvedValue(0),
+		getJobCountByTypes: vi.fn().mockResolvedValue(0),
 		getActiveCount: vi.fn().mockResolvedValue(0),
 		getCompletedCount: vi.fn().mockResolvedValue(0),
 		getFailedCount: vi.fn().mockResolvedValue(0)
@@ -56,9 +56,9 @@ describe('addScrapeJob', () => {
 		vi.clearAllMocks();
 		// Reset default resolved values
 		hostedMocks.getActive.mockResolvedValue([]);
-		hostedMocks.getWaiting.mockResolvedValue([]);
+		hostedMocks.getJobs.mockResolvedValue([]);
 		desktopMocks.getActive.mockResolvedValue([]);
-		desktopMocks.getWaiting.mockResolvedValue([]);
+		desktopMocks.getJobs.mockResolvedValue([]);
 	});
 
 	it('routes hosted provider to hosted queue', async () => {
@@ -103,9 +103,9 @@ describe('getActiveJobForSearch', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		hostedMocks.getActive.mockResolvedValue([]);
-		hostedMocks.getWaiting.mockResolvedValue([]);
+		hostedMocks.getJobs.mockResolvedValue([]);
 		desktopMocks.getActive.mockResolvedValue([]);
-		desktopMocks.getWaiting.mockResolvedValue([]);
+		desktopMocks.getJobs.mockResolvedValue([]);
 	});
 
 	it('finds active job in hosted queue', async () => {
@@ -143,22 +143,27 @@ describe('getWaitingJobForSearch', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		hostedMocks.getActive.mockResolvedValue([]);
-		hostedMocks.getWaiting.mockResolvedValue([]);
+		hostedMocks.getJobs.mockResolvedValue([]);
 		desktopMocks.getActive.mockResolvedValue([]);
-		desktopMocks.getWaiting.mockResolvedValue([]);
+		desktopMocks.getJobs.mockResolvedValue([]);
 	});
 
 	it('finds waiting job in desktop queue', async () => {
 		const job = { data: { searchTaskId: 42 } };
-		hostedMocks.getWaiting.mockResolvedValueOnce([]);
-		desktopMocks.getWaiting.mockResolvedValueOnce([job]);
+		hostedMocks.getJobs.mockResolvedValueOnce([]);
+		desktopMocks.getJobs.mockResolvedValueOnce([job]);
 		const result = await getWaitingJobForSearch(42);
 		expect(result).toBe(job);
 	});
 
+	it('counts a delayed job as waiting: a run parked while its device is busy', async () => {
+		await getWaitingJobForSearch(42);
+		expect(desktopMocks.getJobs).toHaveBeenCalledWith(['waiting', 'delayed', 'prioritized']);
+	});
+
 	it('returns undefined when no match', async () => {
-		hostedMocks.getWaiting.mockResolvedValueOnce([]);
-		desktopMocks.getWaiting.mockResolvedValueOnce([]);
+		hostedMocks.getJobs.mockResolvedValueOnce([]);
+		desktopMocks.getJobs.mockResolvedValueOnce([]);
 		const result = await getWaitingJobForSearch(42);
 		expect(result).toBeUndefined();
 	});
@@ -168,15 +173,15 @@ describe('removeWaitingJob', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		hostedMocks.getActive.mockResolvedValue([]);
-		hostedMocks.getWaiting.mockResolvedValue([]);
+		hostedMocks.getJobs.mockResolvedValue([]);
 		desktopMocks.getActive.mockResolvedValue([]);
-		desktopMocks.getWaiting.mockResolvedValue([]);
+		desktopMocks.getJobs.mockResolvedValue([]);
 	});
 
 	it('removes waiting job and returns true', async () => {
 		const mockRemove = vi.fn().mockResolvedValueOnce(undefined);
-		hostedMocks.getWaiting.mockResolvedValueOnce([]);
-		desktopMocks.getWaiting.mockResolvedValueOnce([
+		hostedMocks.getJobs.mockResolvedValueOnce([]);
+		desktopMocks.getJobs.mockResolvedValueOnce([
 			{ data: { searchTaskId: 42 }, remove: mockRemove }
 		]);
 		const result = await removeWaitingJob(42);
@@ -185,8 +190,8 @@ describe('removeWaitingJob', () => {
 	});
 
 	it('returns false when no waiting job found', async () => {
-		hostedMocks.getWaiting.mockResolvedValueOnce([]);
-		desktopMocks.getWaiting.mockResolvedValueOnce([]);
+		hostedMocks.getJobs.mockResolvedValueOnce([]);
+		desktopMocks.getJobs.mockResolvedValueOnce([]);
 		const result = await removeWaitingJob(42);
 		expect(result).toBe(false);
 	});
@@ -196,9 +201,9 @@ describe('removeActiveJob', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		hostedMocks.getActive.mockResolvedValue([]);
-		hostedMocks.getWaiting.mockResolvedValue([]);
+		hostedMocks.getJobs.mockResolvedValue([]);
 		desktopMocks.getActive.mockResolvedValue([]);
-		desktopMocks.getWaiting.mockResolvedValue([]);
+		desktopMocks.getJobs.mockResolvedValue([]);
 	});
 
 	it('moves active job to failed and returns true', async () => {
@@ -225,16 +230,16 @@ describe('listQueueJobs', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		hostedMocks.getActive.mockResolvedValue([]);
-		hostedMocks.getWaiting.mockResolvedValue([]);
+		hostedMocks.getJobs.mockResolvedValue([]);
 		desktopMocks.getActive.mockResolvedValue([]);
-		desktopMocks.getWaiting.mockResolvedValue([]);
+		desktopMocks.getJobs.mockResolvedValue([]);
 	});
 
 	it('collects active and waiting jobs from both queues with state + ids', async () => {
 		hostedMocks.getActive.mockResolvedValueOnce([
 			{ id: 'scrape-1-100', data: { searchTaskId: 1, runId: 100 } }
 		]);
-		desktopMocks.getWaiting.mockResolvedValueOnce([
+		desktopMocks.getJobs.mockResolvedValueOnce([
 			{ id: 'scrape-2-200', data: { searchTaskId: 2, runId: 200 } }
 		]);
 
@@ -303,11 +308,11 @@ describe('getQueueStats', () => {
 	});
 
 	it('returns aggregated counts from both queues', async () => {
-		hostedMocks.getWaitingCount.mockResolvedValueOnce(2);
+		hostedMocks.getJobCountByTypes.mockResolvedValueOnce(2);
 		hostedMocks.getActiveCount.mockResolvedValueOnce(1);
 		hostedMocks.getCompletedCount.mockResolvedValueOnce(30);
 		hostedMocks.getFailedCount.mockResolvedValueOnce(1);
-		desktopMocks.getWaitingCount.mockResolvedValueOnce(1);
+		desktopMocks.getJobCountByTypes.mockResolvedValueOnce(1);
 		desktopMocks.getActiveCount.mockResolvedValueOnce(0);
 		desktopMocks.getCompletedCount.mockResolvedValueOnce(20);
 		desktopMocks.getFailedCount.mockResolvedValueOnce(1);
@@ -324,11 +329,11 @@ describe('getQueueStats', () => {
 	});
 
 	it('returns zeros when both queues are empty', async () => {
-		hostedMocks.getWaitingCount.mockResolvedValueOnce(0);
+		hostedMocks.getJobCountByTypes.mockResolvedValueOnce(0);
 		hostedMocks.getActiveCount.mockResolvedValueOnce(0);
 		hostedMocks.getCompletedCount.mockResolvedValueOnce(0);
 		hostedMocks.getFailedCount.mockResolvedValueOnce(0);
-		desktopMocks.getWaitingCount.mockResolvedValueOnce(0);
+		desktopMocks.getJobCountByTypes.mockResolvedValueOnce(0);
 		desktopMocks.getActiveCount.mockResolvedValueOnce(0);
 		desktopMocks.getCompletedCount.mockResolvedValueOnce(0);
 		desktopMocks.getFailedCount.mockResolvedValueOnce(0);
