@@ -9,11 +9,20 @@ import { dbDirect as db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { users } from '$lib/server/db/schema';
 import { resolveTimeFormat } from '$lib/format-date';
+import { mustAcceptTerms } from '$lib/server/legal/gate';
 
 export const load: LayoutServerLoad = async (event) => {
 	// Require authentication - redirects to /login?redirect=<current-path>
 	const user = requireAuth(event);
 	const adminUser = event.locals.adminUser ?? null;
+
+	// Terms this account has not accepted yet (it predates them, or they
+	// changed). Deleting the account stays open: refusing the terms should
+	// not take away the way out.
+	if (mustAcceptTerms(user, !!adminUser) && !event.url.pathname.startsWith('/data/delete')) {
+		const redirectTo = encodeURIComponent(event.url.pathname + event.url.search);
+		redirect(302, `/accept-terms?redirect=${redirectTo}`);
+	}
 
 	const profiles = await getProfilesByUserId(user.id);
 
