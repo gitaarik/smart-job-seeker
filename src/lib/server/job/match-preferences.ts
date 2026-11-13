@@ -30,6 +30,9 @@ export const EXPERIENCE_LEVEL_OPTIONS = ['Entry-level', 'Mid-level', 'Senior', '
 
 export const WORK_LOCATION_OPTIONS = ['Remote', 'Hybrid', 'On-site'];
 
+/** The most corpus picks a profile may ask for in a day: each costs an extraction and a score. */
+export const MAX_CORPUS_PICKS_PER_DAY = 50;
+
 /** The columns a caller may patch. `date_updated` is this module's, not theirs. */
 export interface MatchPreferenceValues {
 	job_types?: string[] | null;
@@ -41,6 +44,8 @@ export interface MatchPreferenceValues {
 	community_max_age_days?: number | null;
 	hide_below_ask?: boolean;
 	below_ask_tolerance_pct?: number;
+	corpus_picks_enabled?: boolean;
+	corpus_picks_per_day?: number;
 }
 
 /** What a read gives back: every column, with the list ones never null. */
@@ -55,6 +60,8 @@ export interface MatchPreferences {
 	community_max_age_days: number | null;
 	hide_below_ask: boolean;
 	below_ask_tolerance_pct: number;
+	corpus_picks_enabled: boolean;
+	corpus_picks_per_day: number;
 }
 
 function shape(row: typeof match_config.$inferSelect): MatchPreferences {
@@ -68,7 +75,9 @@ function shape(row: typeof match_config.$inferSelect): MatchPreferences {
 		match_community_jobs: row.match_community_jobs,
 		community_max_age_days: row.community_max_age_days ?? null,
 		hide_below_ask: row.hide_below_ask,
-		below_ask_tolerance_pct: row.below_ask_tolerance_pct
+		below_ask_tolerance_pct: row.below_ask_tolerance_pct,
+		corpus_picks_enabled: row.corpus_picks_enabled,
+		corpus_picks_per_day: row.corpus_picks_per_day
 	};
 }
 
@@ -122,7 +131,9 @@ export async function writeMatchPreferences(
 		'match_community_jobs',
 		'community_max_age_days',
 		'hide_below_ask',
-		'below_ask_tolerance_pct'
+		'below_ask_tolerance_pct',
+		'corpus_picks_enabled',
+		'corpus_picks_per_day'
 	] as const) {
 		if (values[key] === undefined) continue;
 		data[key] = values[key];

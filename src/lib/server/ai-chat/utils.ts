@@ -692,6 +692,12 @@ export interface RecordCallOptions {
 	call: () => Promise<CompletionResult>;
 	/** What of the answer the row keeps; the content as it came unless said otherwise. */
 	storeResponse?: (content: string) => string;
+	/**
+	 * False when the house pays: the row records the tokens and their cost, and
+	 * no credits are charged. The nightly corpus picks extract their postings
+	 * this way (sjs-ops planning/CORPUS-MATCHING.md, Billing).
+	 */
+	charge?: boolean;
 }
 
 export interface RecordedCall {
@@ -786,7 +792,7 @@ export async function recordCall(opts: RecordCallOptions): Promise<RecordedCall>
 		? opts.storeResponse(completionResult.content)
 		: completionResult.content;
 	const usage = completionResult.usage;
-	const creditsCost = usage ? tokensToCost(usage.totalTokens) : 0;
+	const creditsCost = usage && opts.charge !== false ? tokensToCost(usage.totalTokens) : 0;
 
 	/**
 	 * What actually generated this, which is not always what the row was
@@ -927,6 +933,8 @@ export interface GenerationOptions {
 	 * (aiChatTraceSeed). Reserved here otherwise.
 	 */
 	aiChatId?: number;
+	/** False when the house pays for the call (`RecordCallOptions.charge`). */
+	charge?: boolean;
 	/**
 	 * The trace's session, `application_letter:12`: the thing the generation
 	 * writes, which is narrower than the entity its context is about (the
@@ -998,6 +1006,7 @@ async function generateAiChat(
 			followupTo,
 			capabilityRecord: options?.capabilityRecord ?? null,
 			historyMessages,
+			charge: options?.charge,
 			call: () =>
 				generateChatCompletionTracked(
 					[

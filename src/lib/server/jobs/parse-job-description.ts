@@ -173,6 +173,8 @@ interface JobParseOptions {
 	sourceUrl?: string | null;
 	searchContext?: JobSearchContext;
 	recoverHeader?: boolean;
+	/** False when the house pays for the extraction: the corpus picks. */
+	charge?: boolean;
 }
 
 /**
@@ -219,7 +221,8 @@ async function extractJob(text: string, opts: JobParseOptions): Promise<JobParse
 	const aiResult = await runProfileAiChat<ExtractJobDataResponse>(
 		opts.profileId,
 		'extract_job_data',
-		{ html: preparedText, searchContextHint }
+		{ html: preparedText, searchContextHint },
+		{ charge: opts.charge }
 	);
 
 	if (!aiResult.success || !aiResult.response) {

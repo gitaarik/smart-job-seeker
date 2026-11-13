@@ -46,11 +46,19 @@ describe('parseJobDescription — what the model is given', () => {
 		respond({ title: 'Senior FS for supplier intelligence products' });
 		await parseJobDescription(PASTE, { profileId: 1 });
 
-		expect(mockRunProfileAiChat).toHaveBeenCalledWith(1, 'extract_job_data', {
-			html: PASTE,
-			searchContextHint: ''
-		});
+		expect(mockRunProfileAiChat).toHaveBeenCalledWith(
+			1,
+			'extract_job_data',
+			{ html: PASTE, searchContextHint: '' },
+			{ charge: undefined }
+		);
 		expect(promptText()).not.toContain('<body>');
+	});
+
+	it('passes a house-paid extraction on as uncharged', async () => {
+		respond({ title: 'AI Engineer' });
+		await parseJobDescription(PASTE, { profileId: 1, charge: false });
+		expect(mockRunProfileAiChat.mock.calls.at(-1)?.[3]).toEqual({ charge: false });
 	});
 
 	it('strips a captured page, including its newlines', async () => {

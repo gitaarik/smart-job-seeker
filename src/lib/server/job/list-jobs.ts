@@ -11,7 +11,13 @@
 
 import { and, eq, inArray, type SQL, sql } from 'drizzle-orm';
 import { dbDirect as db, queryRaw, sqlJoin } from '$lib/server/db';
-import { job_matches, job_statuses, jobs as jobsTable, match_config } from '$lib/server/db/schema';
+import {
+	job_importers,
+	job_matches,
+	job_statuses,
+	jobs as jobsTable,
+	match_config
+} from '$lib/server/db/schema';
 import { buildVisibilityScope } from '$lib/server/job/match-counts';
 import {
 	effectivePayMode,
@@ -54,6 +60,8 @@ export interface JobListResult {
 	matchesByJobId: Record<number, any>;
 	savedJobIds: number[];
 	rejectedJobIds: number[];
+	/** The page's jobs that are corpus picks, shown as "Found for you". */
+	foundForYouJobIds: number[];
 	totalCount: number;
 	pay: JobListPay;
 }
@@ -473,5 +481,48 @@ export async function listJobs(
 		}
 	}
 
-	return { jobs, matchesByJobId, savedJobIds, rejectedJobIds, totalCount, pay };
+	// Corpus picks (sjs-ops planning/CORPUS-MATCHING.md) say "Found for you".
+	const pageJobIds: number[] = jobs.map((j: { id: number }) => j.id);
+	const foundForYouJobIds = pageJobIds.length
+		? (
+				await db.query.job_importers.findMany({
+					where: and(
+						eq(job_importers.profile_id, profileId),
+						eq(job_importers.source, 'corpus'),
+						inArray(job_importers.job_id, pageJobIds)
+					),
+					columns: { job_id: true }
+				})
+			).map((r) => r.job_id)
+		: [];
+
+	return {
+		jobs,
+		matchesByJobId,
+		savedJobIds,
+		rejectedJobIds,
+		foundForYouJobIds,
+		totalCount,
+		pay
+	};
+}
+
+/**
+ * Stamp the jobs the list just showed as seen, once: `job_importers.shown_at`
+ * keeps the first time and is never moved. Only the profile's own imports
+ * have a row to stamp. A re-ranker trained on what people open needs what
+ * they were shown and passed over, and that cannot be backfilled.
+ */
+export async function markJobsShown(profileId: number, jobIds: number[]): Promise<void> {
+	if (!jobIds.length) return;
+	await db
+		.update(job_importers)
+		.set({ shown_at: new Date() })
+		.where(
+			and(
+				eq(job_importers.profile_id, profileId),
+				inArray(job_importers.job_id, jobIds),
+				sql`${job_importers.shown_at} IS NULL`
+			)
+		);
 }

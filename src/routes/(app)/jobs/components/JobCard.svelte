@@ -61,6 +61,8 @@
 		profileSkillLevels?: Record<string, 'strong' | 'weak'>;
 		isSaved?: boolean;
 		isRejected?: boolean;
+		/** A nightly corpus pick (`job_importers.source = 'corpus'`), not an import the user ran. */
+		foundForYou?: boolean;
 		isExpanded?: boolean;
 		onToggleExpand?: () => void;
 		onToggleSaved?: (saved: boolean) => void;
@@ -81,6 +83,7 @@
 		profileSkillLevels = {},
 		isSaved = false,
 		isRejected = false,
+		foundForYou = false,
 		isExpanded = false,
 		onToggleExpand,
 		onToggleSaved,
@@ -226,6 +229,14 @@
 							<span class="flex items-center gap-1">
 								<FontAwesomeIcon icon={faGlobe} class="h-3.5 w-3.5 text-[var(--dash-text-muted)]" />
 								{job.job_platform.name}
+							</span>
+						{/if}
+						{#if foundForYou}
+							<span
+								class="rounded-full bg-[var(--dash-primary)]/10 px-2 py-0.5 text-[var(--dash-primary)]"
+								title="Picked for you from company career sites"
+							>
+								Found for you
 							</span>
 						{/if}
 					</div>

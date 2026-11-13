@@ -97,7 +97,11 @@ describe('createApplication', () => {
 			created_manually: true
 		});
 		// Both, or the row belongs to nobody and never scores.
-		expect(insertedInto(job_importers)).toEqual({ job_id: result.jobId, profile_id: 7 });
+		expect(insertedInto(job_importers)).toEqual({
+			job_id: result.jobId,
+			profile_id: 7,
+			source: 'manual'
+		});
 		expect(mockTriggerMatch).toHaveBeenCalledWith(7, result.jobId);
 		expect(insertedInto(applications)).toMatchObject({ job_id: result.jobId });
 	});

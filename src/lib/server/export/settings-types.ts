@@ -51,6 +51,9 @@ export interface ExportedMatchConfig {
 	/** Absent in files exported before the pay setting existed. */
 	hide_below_ask?: boolean;
 	below_ask_tolerance_pct?: number;
+	/** Absent in files exported before corpus picks existed. */
+	corpus_picks_enabled?: boolean;
+	corpus_picks_per_day?: number;
 }
 
 export interface ExportedEmailDigest {

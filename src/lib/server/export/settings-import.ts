@@ -221,6 +221,13 @@ export async function importSettings(
 				...(typeof mc.hide_below_ask === 'boolean' ? { hide_below_ask: mc.hide_below_ask } : {}),
 				...(typeof mc.below_ask_tolerance_pct === 'number'
 					? { below_ask_tolerance_pct: mc.below_ask_tolerance_pct }
+					: {}),
+				// Likewise for corpus picks, added later still.
+				...(typeof mc.corpus_picks_enabled === 'boolean'
+					? { corpus_picks_enabled: mc.corpus_picks_enabled }
+					: {}),
+				...(typeof mc.corpus_picks_per_day === 'number'
+					? { corpus_picks_per_day: mc.corpus_picks_per_day }
 					: {})
 			};
 			if (existing) {

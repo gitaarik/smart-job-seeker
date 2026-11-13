@@ -11,6 +11,7 @@ import {
 	buildScoreFilter,
 	JOB_LIST_PAGE_SIZE,
 	listJobs,
+	markJobsShown,
 	parseJobListFilters
 } from '$lib/server/job/list-jobs';
 
@@ -27,12 +28,13 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
 	const limit = JOB_LIST_PAGE_SIZE;
 
-	const { jobs, matchesByJobId, savedJobIds, rejectedJobIds, totalCount, pay } = await listJobs(
+	const { jobs, matchesByJobId, savedJobIds, rejectedJobIds, foundForYouJobIds, totalCount, pay } =
+		await listJobs(profileId, filters, page, limit);
+	// The page is what shows them; a failed stamp must not cost the page.
+	await markJobsShown(
 		profileId,
-		filters,
-		page,
-		limit
-	);
+		jobs.map((j: { id: number }) => j.id)
+	).catch((err) => console.warn('[jobs] could not stamp shown_at:', err));
 
 	// Get all platforms for filter dropdown
 	const platforms = await db.query.job_platforms.findMany({
@@ -54,6 +56,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		totalPages,
 		savedJobIds,
 		rejectedJobIds,
+		foundForYouJobIds,
 		matchesByJobId,
 		profileSkillLevels,
 		pay,

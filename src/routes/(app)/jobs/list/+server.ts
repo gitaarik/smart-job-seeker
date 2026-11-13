@@ -1,7 +1,12 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getSelectedProfileId } from '../../profile/utils';
-import { JOB_LIST_PAGE_SIZE, listJobs, parseJobListFilters } from '$lib/server/job/list-jobs';
+import {
+	JOB_LIST_PAGE_SIZE,
+	listJobs,
+	markJobsShown,
+	parseJobListFilters
+} from '$lib/server/job/list-jobs';
 
 /**
  * GET /jobs/list — JSON page of jobs for infinite scroll on /jobs.
@@ -21,18 +26,19 @@ export const GET: RequestHandler = async ({ url, locals, cookies }) => {
 	const page = parseInt(url.searchParams.get('page') || '1');
 	const limit = JOB_LIST_PAGE_SIZE;
 
-	const { jobs, matchesByJobId, savedJobIds, rejectedJobIds, totalCount } = await listJobs(
+	const { jobs, matchesByJobId, savedJobIds, rejectedJobIds, foundForYouJobIds, totalCount } =
+		await listJobs(profileId, filters, page, limit);
+	await markJobsShown(
 		profileId,
-		filters,
-		page,
-		limit
-	);
+		jobs.map((j: { id: number }) => j.id)
+	).catch((err) => console.warn('[jobs] could not stamp shown_at:', err));
 
 	return json({
 		jobs,
 		matchesByJobId,
 		savedJobIds,
 		rejectedJobIds,
+		foundForYouJobIds,
 		totalCount,
 		currentPage: page,
 		totalPages: Math.ceil(totalCount / limit)

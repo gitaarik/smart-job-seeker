@@ -60,6 +60,7 @@
 	let matchesByJobId = $state<typeof data.matchesByJobId>({});
 	let savedJobIds = $state<Record<number, boolean>>({});
 	let rejectedJobIds = $state<Record<number, boolean>>({});
+	let foundForYouJobIds = $state<Record<number, boolean>>({});
 	let currentPage = $state(1);
 	let loadingMore = $state(false);
 
@@ -70,6 +71,7 @@
 		matchesByJobId = { ...data.matchesByJobId };
 		savedJobIds = Object.fromEntries(data.savedJobIds.map((id: number) => [id, true]));
 		rejectedJobIds = Object.fromEntries(data.rejectedJobIds.map((id: number) => [id, true]));
+		foundForYouJobIds = Object.fromEntries(data.foundForYouJobIds.map((id: number) => [id, true]));
 		currentPage = data.currentPage;
 	});
 
@@ -89,6 +91,7 @@
 			for (const id of more.rejectedJobIds as number[]) {
 				rejectedJobIds[id] = true;
 			}
+			for (const id of (more.foundForYouJobIds ?? []) as number[]) foundForYouJobIds[id] = true;
 			currentPage = nextPage;
 		} catch {
 			// swallow — scrolling again retries
@@ -1136,6 +1139,7 @@
 					{profileSkillLevels}
 					isSaved={isSaved(job.id)}
 					isRejected={isRejected(job.id)}
+					foundForYou={foundForYouJobIds[job.id] === true}
 					isExpanded={expandedId === job.id}
 					onToggleExpand={() => toggleExpand(job.id)}
 					onToggleSaved={(saved) => toggleSaved(job.id, saved)}

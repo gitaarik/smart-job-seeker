@@ -179,6 +179,33 @@
 	});
 	$effect(() => payField.set({ enabled: hideBelowAsk, tolerancePct: belowAskTolerance }));
 
+	// Corpus picks: the switch and the daily number save as one PATCH.
+	type PicksConfig = { enabled: boolean; perDay: number };
+	const PICKS_PER_DAY = [5, 10, 25, 50];
+	let corpusPicks = $state<boolean>(loaded.config.corpus_picks_enabled);
+	let picksPerDay = $state<number>(loaded.config.corpus_picks_per_day);
+	const picksField = autoSaveField<PicksConfig>({
+		armOnInteraction: true,
+		initial: {
+			enabled: loaded.config.corpus_picks_enabled,
+			perDay: loaded.config.corpus_picks_per_day
+		},
+		save: (v, prev) => {
+			const changed = diffPayload(
+				{ corpus_picks_enabled: v.enabled, corpus_picks_per_day: v.perDay },
+				{ corpus_picks_enabled: prev.enabled, corpus_picks_per_day: prev.perDay }
+			);
+			if (Object.keys(changed).length === 0) return Promise.resolve();
+			return patchConfig(changed);
+		},
+		onSaved: (v) => {
+			corpusPicks = v.enabled;
+			picksPerDay = v.perDay;
+		},
+		equal: recordsEqual
+	});
+	$effect(() => picksField.set({ enabled: corpusPicks, perDay: picksPerDay }));
+
 	const PER: Record<string, string> = {
 		hour: 'an hour',
 		day: 'a day',
@@ -500,6 +527,53 @@
 		{#if experienceLevelsField.status !== 'idle'}
 			<div class="mt-3">
 				<AutoSaveIndicator field={experienceLevelsField} />
+			</div>
+		{/if}
+	</Card>
+
+	<!-- Corpus picks -->
+	<Card padding="responsive">
+		<ToggleSwitch
+			bind:checked={corpusPicks}
+			label="Find jobs for me from company career sites"
+			description="Each night SJS looks through the openings on company career sites for ones that fit your profile and these settings, adds the best to your jobs as Found for you, and scores them. No search task needed, and it costs you no credits. Turning it off keeps the jobs found so far."
+		/>
+		{#if corpusPicks}
+			<div class="mt-4 border-t border-[var(--dash-border)] pt-4">
+				<p class="mb-2 text-xs text-[var(--dash-text-muted)]">At most this many a day:</p>
+				<div class="flex flex-wrap gap-2">
+					{#each PICKS_PER_DAY as n (n)}
+						<button
+							type="button"
+							onclick={() => (picksPerDay = n)}
+							class="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors {picksPerDay ===
+							n
+								? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
+								: 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-text-muted)]'}"
+						>
+							<span
+								class="flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full border {picksPerDay ===
+								n
+									? 'border-[var(--dash-primary)]'
+									: 'border-[var(--dash-border)]'}"
+							>
+								{#if picksPerDay === n}
+									<span class="h-2 w-2 rounded-full bg-[var(--dash-primary)]"></span>
+								{/if}
+							</span>
+							{n}
+						</button>
+					{/each}
+				</div>
+				<p class="mt-2 text-xs text-[var(--dash-text-muted)]">
+					The first night brings up to 50, from the openings of the last four months; after that
+					only openings new since the night before.
+				</p>
+			</div>
+		{/if}
+		{#if picksField.status !== 'idle'}
+			<div class="mt-3">
+				<AutoSaveIndicator field={picksField} />
 			</div>
 		{/if}
 	</Card>
