@@ -5,6 +5,54 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.45.0] - 2026-11-13
+
+110 commits since v0.44.0.
+
+### Added
+
+- Signups are approved automatically, and disposable email addresses are refused.
+- Accounts can be suspended without being deleted, with a stored reason.
+- Contractors can include remote jobs limited to other countries.
+- Profiles with no roles show early match scores instead of verdicts.
+- A new profile is asked what it is looking for before the dashboard.
+- Nightly corpus picks for each profile, capped at three per employer, marked "found for you" on the jobs list.
+- Job boards from Greenhouse, Lever, Ashby and Recruitee are swept nightly, and feed platforms support search tasks.
+- A daily spend ceiling for the whole instance.
+- A failed subscription renewal is flagged in the sidebar plan badge.
+- Desktop scrapes run in parallel, one at a time per device.
+- Portfolio showcase: a Services box, a Selected work order you can set, a Key skills box built from your Skills, business details and a get-in-touch section in the footer, and a plain-quotes option.
+
+### Changed
+
+- Credits are no longer shown to users. Running out prompts you to add extra usage.
+- Extra usage is sold in euros, with prices shown as including VAT.
+- Usage is charged by the model that answered, and writing-model calls weigh five times as much.
+- Purchased credits move to a per-user wallet that carries over to the next period.
+- Plan changes apply to the existing subscription, and subscriptions reconcile daily.
+- Import failures say when Chrome fails on the user's device.
+
+### Fixed
+
+- The desktop app's server name is correct on every host.
+- Delayed scrape jobs count as pending.
+- Region-fenced remote postings are scored as out of reach, and fenced jobs are counted in corpus replays.
+- Settings imports cannot raise the corpus pick cap above 50.
+- Stripe credit packs are granted only once paid, with one purchase record per payment.
+- Every billed LLM attempt counts toward the daily spend limit.
+- Account flags can no longer be set through signup input.
+- Feed posting dates read correctly, and null typed columns no longer block a feed filter.
+- Duplicate ATS boards that differ only in slug case are merged.
+- Portfolio pages give absolute URLs to link previews and search engines.
+- On phones, the showcase hero fits its content and hides the more-about-me link.
+- The Selected work count stays steady while an arrow scrolls.
+- PNG time metadata is removed from images served publicly.
+
+### Removed
+
+- Credit counts and credit packs, replaced by extra usage.
+- Legacy image path columns on media.
+
 ## [0.44.0] - 2026-11-10
 
 38 commits since v0.43.0.
