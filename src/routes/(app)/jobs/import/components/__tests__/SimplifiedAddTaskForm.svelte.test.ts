@@ -62,10 +62,8 @@ function hiddenValue(container: HTMLElement, name: string): string | null {
 }
 
 describe('SimplifiedAddTaskForm — where the task runs', () => {
-	// The form used to hardcode browser_provider="hosted", so a user with a
-	// device connected still had every manually-added task sent to the cloud
-	// browser. These lock in the rule instead: a connected device wins, and the
-	// server default applies only when there is none.
+	// A connected device is pinned to the task, and the server default applies
+	// only when there is none.
 	test('pins the task to a connected device', () => {
 		const container = renderForm(ownDevice());
 
@@ -76,8 +74,8 @@ describe('SimplifiedAddTaskForm — where the task runs', () => {
 	test('defers to the server default when no device is connected', () => {
 		const container = renderForm(null);
 
-		// Empty rather than "hosted": the create action resolves its own default,
-		// so the row is not pinned to a provider the operator may later change.
+		// Empty: the create action resolves its own default, so the row is not
+		// pinned to a provider the operator may later change.
 		expect(hiddenValue(container, 'browser_provider')).toBe('');
 		expect(hiddenValue(container, 'sjsbrowser_api_key')).toBeNull();
 	});
@@ -97,16 +95,16 @@ describe('SimplifiedAddTaskForm — where the task runs', () => {
 		expect(screen.getByText(/Runs on NAS/)).toBeDefined();
 	});
 
-	test('says it will use the cloud browser when there is no device', () => {
+	test('asks for a device when there is none', () => {
 		renderForm(null);
-		expect(screen.getByText(/Runs on our cloud browser/)).toBeDefined();
+		expect(screen.getByText(/Connect one before the first run/)).toBeDefined();
 	});
 
 	test('does not claim a destination before the status check resolves', () => {
 		renderForm(null, false);
 
 		expect(screen.getByText(/Checking for a connected device/)).toBeDefined();
-		expect(screen.queryByText(/Runs on our cloud browser/)).toBeNull();
+		expect(screen.queryByText(/Connect one before the first run/)).toBeNull();
 	});
 });
 

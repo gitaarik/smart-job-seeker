@@ -15,6 +15,7 @@ import { hasDeviceAccess } from '$lib/server/device-shares';
 import { hasCredentialAccess } from '$lib/server/credential-shares';
 import { encryptCredential } from '$lib/server/auth/crypto';
 import { checkPublicHttpUrl } from '$lib/server/net/public-url';
+import { config } from '$lib/server/config';
 
 /**
  * Calculate next scheduled run at the preferred hour in the user's timezone.
@@ -179,12 +180,13 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 	if (body.skip_first !== undefined) data.skip_first = body.skip_first;
 	if (body.login_mode !== undefined) data.login_mode = body.login_mode;
 	if (body.browser_provider !== undefined) {
-		// No check here on purpose: searchTaskUpdateSchema types this field as
-		// z.enum(['hosted', 'tunnel']).optional().nullable(), so parseBody has
-		// already rejected anything else — "local" included — before this line.
-		// Re-checking below the schema only adds a weaker rule under a stricter
-		// one. The create action has no such schema and does validate; see
-		// TASK_BROWSER_PROVIDERS in $lib/import-tasks/readiness.
+		// searchTaskUpdateSchema has already limited this to
+		// TASK_BROWSER_PROVIDERS (or null). "local" is the dev Docker Chrome,
+		// which the picker only offers where SJS_LOCAL_BROWSER_ALLOWED is set,
+		// so hold the endpoint to the same rule; the create action does too.
+		if (body.browser_provider === 'local' && !config.localBrowserAllowed) {
+			throw error(400, 'The local browser is not available on this server.');
+		}
 		data.browser_provider = body.browser_provider;
 	}
 	if (body.keep_minimized !== undefined) {

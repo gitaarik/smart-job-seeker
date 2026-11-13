@@ -63,7 +63,7 @@ export const FAILURE_KINDS = [
 	'interaction_failed',
 	/** Something took too long. */
 	'timeout',
-	/** The local/hosted browser went away mid-run. */
+	/** The browser went away mid-run. */
 	'browser_disconnected',
 	/** The platform actively refused us (403 / access denied). */
 	'access_denied',

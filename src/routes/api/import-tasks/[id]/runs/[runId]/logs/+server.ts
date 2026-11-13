@@ -80,7 +80,6 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 		runStartedAt: run.started_at,
 		runFinishedAt: run.finished_at,
 		jobsFound: run.jobs_found,
-		errorMessage: run.error_message,
-		liveUrl: run.live_url
+		errorMessage: run.error_message
 	});
 };

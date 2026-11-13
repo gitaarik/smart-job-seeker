@@ -9,11 +9,11 @@ import { submitPendingAction } from '$lib/server/scraper/pending-action';
 /**
  * POST /api/import-tasks/[id]/runs/[runId]/type-text
  *
- * Type text into the live browser's currently focused input field. Works
- * for both hosted (GoLogin) and tunnel (local Chrome) modes by routing
- * through the scraper itself: writes a pending action to the DB, the
- * scraper picks it up during its intervention wait, executes against the
- * live page, and writes the result back.
+ * Type text into the live browser's currently focused input field. Routed
+ * through the scraper itself, which owns the browser connection (the user's
+ * own Chrome over the tunnel, or the local dev Chrome): writes a pending
+ * action to the DB, the scraper picks it up during its intervention wait,
+ * executes against the live page, and writes the result back.
  *
  * Body: { text?: string, submit?: boolean, clear?: boolean }
  *

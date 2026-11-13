@@ -90,19 +90,13 @@ async function main() {
 		})
 		.where(eq(search_tasks.id, taskId));
 
-	let effectiveProvider = searchTask.browser_provider;
-	if (!effectiveProvider) {
-		const serverDefault = process.env.SJS_BROWSER_PROVIDER || 'local';
-		if (serverDefault === 'goLogin') effectiveProvider = 'hosted';
-	}
-
 	const job = await addScrapeJob({
 		searchTaskId: taskId,
 		runId: run.id,
 		searchUrl: effectiveSearchUrl,
 		platformId: String(searchTask.platform_id),
 		triggeredBy: 'user',
-		browserProvider: effectiveProvider,
+		browserProvider: searchTask.browser_provider,
 		...(isFeed ? { fetchMode: 'feed' as const } : {}),
 		...(searchTask.search_term ? { searchTerm: searchTask.search_term } : {})
 	});
@@ -113,7 +107,7 @@ async function main() {
 		.where(eq(search_task_runs.id, run.id));
 
 	console.log(
-		`Queued run ${run.id} for task ${taskId} (BullMQ job ${job.id}, provider=${effectiveProvider || 'default'})`
+		`Queued run ${run.id} for task ${taskId} (BullMQ job ${job.id}, provider=${searchTask.browser_provider || 'default'})`
 	);
 	process.exit(0);
 }

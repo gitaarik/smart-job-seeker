@@ -18,7 +18,7 @@ import type { Job } from 'bullmq';
 import { dbDirect as db } from '$lib/server/db';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { jobs, scraper_logs, search_task_run_items, search_task_runs } from '$lib/server/db/schema';
-import { getDesktopQueue, getHostedQueue, getQueueStats } from '$lib/server/queue/scraper-queue';
+import { getDesktopQueue, getFeedQueue, getQueueStats } from '$lib/server/queue/scraper-queue';
 import { getRedisClient } from '$lib/server/queue/redis';
 import { getAllMatcherStates, isMatcherAlive } from '$lib/server/job/matcher-state';
 
@@ -71,15 +71,15 @@ async function pingRedis() {
 export const GET: RequestHandler = async ({ request }) => {
 	requireDebugAuth(request);
 
-	const hostedQ = getHostedQueue();
 	const desktopQ = getDesktopQueue();
+	const feedQ = getFeedQueue();
 
 	const [
 		queueStats,
-		hostedActive,
-		hostedWaiting,
 		desktopActive,
 		desktopWaiting,
+		feedActive,
+		feedWaiting,
 		matcherAlive,
 		matcherStates,
 		activeRuns,
@@ -89,10 +89,10 @@ export const GET: RequestHandler = async ({ request }) => {
 		redisInfo
 	] = await Promise.all([
 		getQueueStats(),
-		hostedQ.getActive(),
-		hostedQ.getWaiting(),
 		desktopQ.getActive(),
 		desktopQ.getWaiting(),
+		feedQ.getActive(),
+		feedQ.getWaiting(),
 		isMatcherAlive(),
 		getAllMatcherStates(),
 		db.query.search_task_runs.findMany({
@@ -156,7 +156,7 @@ export const GET: RequestHandler = async ({ request }) => {
 
 	const now = Date.now();
 
-	const allActive = [...hostedActive, ...desktopActive];
+	const allActive = [...desktopActive, ...feedActive];
 	const activeBullIds = new Set(allActive.map((j) => j.id).filter(Boolean) as string[]);
 	const activeBullSearchIds = new Set(
 		allActive.map((j) => j.data?.searchTaskId).filter((v) => v != null)
@@ -196,13 +196,13 @@ export const GET: RequestHandler = async ({ request }) => {
 		timestamp: new Date().toISOString(),
 		queues: {
 			stats: queueStats,
-			hosted: {
-				active: hostedActive.map((j) => summarizeJob(j, now)),
-				waiting: hostedWaiting.map((j) => summarizeJob(j, now))
-			},
 			desktop: {
 				active: desktopActive.map((j) => summarizeJob(j, now)),
 				waiting: desktopWaiting.map((j) => summarizeJob(j, now))
+			},
+			feed: {
+				active: feedActive.map((j) => summarizeJob(j, now)),
+				waiting: feedWaiting.map((j) => summarizeJob(j, now))
 			}
 		},
 		matcher: {

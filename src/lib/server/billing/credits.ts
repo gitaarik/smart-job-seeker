@@ -22,7 +22,6 @@ export function tokensToCost(totalTokens: number, _provider?: string, _model?: s
 export interface ScrapeCostParams {
 	jobCount: number;
 	browserTimeSeconds: number;
-	isCloudBrowser: boolean;
 	usedAutoLogin: boolean;
 }
 
@@ -30,7 +29,7 @@ export function calculateScrapeCost(params: ScrapeCostParams): number {
 	let cost = 2;
 	cost += params.jobCount;
 	const timeUnits = Math.ceil(params.browserTimeSeconds / 30);
-	cost += timeUnits * (params.isCloudBrowser ? 2 : 1);
+	cost += timeUnits;
 	if (params.usedAutoLogin) cost += 3;
 	return cost;
 }

@@ -120,7 +120,6 @@ export const PROFILE_COLUMNS = {
 	browser_language: false,
 	browser_timezone: false,
 	browser_country_code: false,
-	browser_profile_id: false,
 	ui_preferences: false,
 	// Salary Prep: the full export carries these (export-full.ts).
 	salary_employed: false,

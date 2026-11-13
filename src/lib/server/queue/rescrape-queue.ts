@@ -18,9 +18,6 @@ export interface RescrapeJobData {
 	platformId: number;
 	triggeredBy: 'user';
 	/** Browser session overrides (same fields as normal scraper) */
-	countryCode?: string;
-	browserLanguage?: string;
-	browserTimezone?: string;
 	credentialId?: number;
 	browserProvider?: string;
 	keepMinimized?: boolean;

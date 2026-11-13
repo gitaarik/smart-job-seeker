@@ -29,7 +29,6 @@ describe('providerRequiresDevice', () => {
 	it('only the tunnel provider needs a user device', () => {
 		expect(providerRequiresDevice('tunnel', 'local')).toBe(true);
 		expect(providerRequiresDevice('local', 'local')).toBe(false);
-		expect(providerRequiresDevice('hosted', 'local')).toBe(false);
 	});
 
 	it('falls back to the server default when the task has no provider', () => {
@@ -39,13 +38,14 @@ describe('providerRequiresDevice', () => {
 });
 
 describe('isTaskBrowserProvider', () => {
-	it('accepts the three providers a task may name', () => {
-		for (const p of ['local', 'hosted', 'tunnel']) {
+	it('accepts the two providers a task may name', () => {
+		for (const p of ['local', 'tunnel']) {
 			expect(isTaskBrowserProvider(p), p).toBe(true);
 		}
 	});
 
-	it('rejects goLogin, which is a server-config value rather than a task one', () => {
+	it('rejects the retired cloud providers', () => {
+		expect(isTaskBrowserProvider('hosted')).toBe(false);
 		expect(isTaskBrowserProvider('goLogin')).toBe(false);
 	});
 

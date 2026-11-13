@@ -190,23 +190,14 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		})
 		.where(eq(search_tasks.id, searchTaskId));
 
-	// Resolve effective browser provider for queue routing.
-	// When the search task has no explicit provider, check the server default
-	// so GoLogin-default servers route to the hosted queue.
-	let effectiveProvider = searchTask.browser_provider;
-	if (!effectiveProvider) {
-		const serverDefault = process.env.SJS_BROWSER_PROVIDER || 'local';
-		if (serverDefault === 'goLogin') effectiveProvider = 'hosted';
-	}
-
-	// Add to BullMQ queue (routed to hosted or desktop based on provider)
+	// Add to BullMQ queue (routed to the desktop or feed queue)
 	const job = await addScrapeJob({
 		searchTaskId,
 		runId: run.id,
 		searchUrl: effectiveSearchUrl,
 		platformId: String(searchTask.platform_id),
 		triggeredBy: 'user',
-		browserProvider: effectiveProvider,
+		browserProvider: searchTask.browser_provider,
 		...(isFeed ? { fetchMode: 'feed' as const } : {}),
 		...(searchTask.search_term ? { searchTerm: searchTask.search_term } : {})
 	});
@@ -218,7 +209,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		.where(eq(search_task_runs.id, run.id));
 
 	// Note: actual credit charging happens in the worker after scrape completion
-	// based on dynamic factors (job count, time, cloud browser, etc.)
+	// based on dynamic factors (job count, browser time, etc.)
 
 	console.log(
 		`[API] Queued scrape for job search ${searchTaskId}, run ${run.id}, BullMQ job ${job.id}`
@@ -236,7 +227,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
  * DELETE /api/import-tasks/[id]/run
  *
  * Cancel a running or queued scrape.
- * GoLogin session cleanup is handled by the worker's failed event handler.
+ * Browser session cleanup is handled by the worker's failed event handler.
  */
 export const DELETE: RequestHandler = async ({ params, locals, url }) => {
 	const user = requireAuth(locals);
@@ -276,8 +267,7 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
 				.set({
 					status: 'cancelled',
 					error_message: 'Force stopped by user',
-					finished_at: new Date(),
-					live_url: null
+					finished_at: new Date()
 				})
 				.where(eq(search_task_runs.id, stoppingRun.id));
 
@@ -299,8 +289,7 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
 			.set({
 				status: 'idle',
 				status_message: 'Force stopped by user',
-				date_updated: new Date(),
-				live_url: null
+				date_updated: new Date()
 			})
 			.where(eq(search_tasks.id, searchTaskId));
 
@@ -423,7 +412,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 		statusMessage: searchTask.status_message,
 		lastRun: searchTask.last_run,
 		jobsFound: searchTask.last_run_jobs_found,
-		liveUrl: latestRun?.live_url || searchTask.live_url,
 		currentRunId: latestRun?.id,
 		currentRunStatus: latestRun?.status,
 		nextScheduledRun: (searchTask as Record<string, unknown>).next_scheduled_run ?? null

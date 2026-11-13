@@ -45,7 +45,7 @@
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faCloud, faLaptop } from '@fortawesome/free-solid-svg-icons';
+	import { faLaptop } from '@fortawesome/free-solid-svg-icons';
 	import { track } from '$lib/tools/analytics';
 	import type { SearchFilterValue } from '$lib/job-platforms/search-filters';
 	import FilterPicker from './FilterPicker.svelte';
@@ -172,11 +172,8 @@
 	const canSubmit = $derived(!submitting && (isCustom ? !!customOrigin : platformId !== null));
 
 	/**
-	 * Where the task will run. A connected device wins over the server-side
-	 * browser: it scrapes from the user's own IP, which is the difference
-	 * between working and being blocked on the boards that reject datacenter
-	 * ranges. The add form used to hardcode "hosted", so a user with a device
-	 * connected still got the cloud browser.
+	 * Where the task will run. Scraping happens on the user's own device, from
+	 * their own IP, so a connected device is pinned to the task here.
 	 *
 	 * With no device we send an empty provider rather than naming one, letting
 	 * the create action apply the server's own default. That defers to operator
@@ -408,7 +405,7 @@
 
 	<div class="flex items-center justify-between pt-2">
 		<p class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)]">
-			<FontAwesomeIcon icon={runsOnDevice ? faLaptop : faCloud} class="h-3 w-3" />
+			<FontAwesomeIcon icon={faLaptop} class="h-3 w-3" />
 			{#if isFeed}
 				Searches employer career sites directly. No browser or device needed.
 			{:else if !deviceStatusChecked}
@@ -416,7 +413,7 @@
 			{:else if runsOnDevice}
 				Runs on {deviceLabel}. Edit the task after creation for advanced options.
 			{:else}
-				Runs on our cloud browser. Connect a device for sites that block datacenter IPs.
+				Runs on your own device. Connect one before the first run.
 			{/if}
 		</p>
 		<div class="flex gap-2">

@@ -35,7 +35,6 @@
 		faChevronDown,
 		faChevronRight,
 		faClock,
-		faCloud,
 		faCog,
 		faCopy,
 		faDesktop,
@@ -250,7 +249,6 @@
 	let showBrowser = $state(false);
 	let showBrowserLogs = $state(false);
 	let browserLogRef = $state<HTMLElement | null>(null);
-	let liveUrl = $state<string | null>(null);
 	let pollInterval: ReturnType<typeof setInterval> | null = null;
 	let currentRunId = $state<number | null>(null);
 
@@ -290,7 +288,6 @@
 		jobs_found: number | null;
 		error_message: string | null;
 		triggered_by: string;
-		live_url: string | null;
 		settings: RunSettings | null;
 	}
 
@@ -419,7 +416,6 @@
 		errorMessage = null;
 
 		showBrowser = false;
-		liveUrl = null;
 		currentRunId = null;
 		runs = [];
 		expandedRunId = null;
@@ -448,7 +444,6 @@
 		prevIsBlocked = isBlocked;
 	});
 	let hasOtherRunning = $derived(data.hasOtherRunning);
-	let isCloudMode = $derived(!!liveUrl);
 	let isMagicLink = $derived(isBlocked && searchTask.status_message?.includes('login link'));
 	let isVerification = $derived(
 		isBlocked &&
@@ -468,12 +463,6 @@
 	// A feed platform's run queries the ATS corpus on the worker: there is no
 	// browser to watch, open or connect (planning/ATS-FEEDS.md).
 	let isFeed = $derived(searchTask.job_platform?.fetch_mode === 'feed');
-	// Determine if this search uses a cloud browser (GoLogin) — either per-search override or server default
-	let expectsCloudBrowser = $derived(
-		!isFeed &&
-			(searchTask.browser_provider === 'hosted' ||
-				(!searchTask.browser_provider && data.browserProvider === 'goLogin'))
-	);
 	// Tunnel mode: uses desktop app browser (no VNC, no live URL by default)
 	let isTunnelMode = $derived(
 		!isFeed &&
@@ -502,16 +491,10 @@
 		})
 	);
 
-	// Only fall back to VNC when using local browser; show nothing while waiting for cloud live URL
+	// The local browser is watched over the container's VNC; a tunnel run has
+	// its own screenshot / VNC views below, and a feed run has no browser.
 	let browserViewUrl = $derived(
-		isFeed
-			? null
-			: liveUrl ||
-					(expectsCloudBrowser
-						? null
-						: isTunnelMode
-							? null
-							: '/vnc/vnc.html?autoconnect=true&resize=scale')
+		isFeed || isTunnelMode ? null : '/vnc/vnc.html?autoconnect=true&resize=scale'
 	);
 
 	// Browser view mode for tunnel: "screenshot" (polling) or "vnc" (interactive)
@@ -1245,7 +1228,6 @@
 				if (result.nextScheduledRun !== undefined) {
 					searchTask.next_scheduled_run = result.nextScheduledRun;
 				}
-				liveUrl = result.liveUrl || null;
 				currentRunId = result.currentRunId || null;
 
 				// Update runs list
@@ -1255,7 +1237,6 @@
 				if (!['running', 'blocked', 'queued', 'stopping'].includes(result.status)) {
 					stopPolling();
 					showBrowser = false;
-					liveUrl = null;
 					// Invalidate so overview page shows fresh status on navigation
 					invalidateAll();
 				}
@@ -1298,7 +1279,6 @@
 				searchTask.status_message = 'Cancelled by user';
 				stopPolling();
 				showBrowser = false;
-				liveUrl = null;
 				await loadRuns();
 				await invalidateAll();
 			} else if (result.status === 'cancellation_requested') {
@@ -1356,7 +1336,6 @@
 			searchTask.status_message = 'Force stopped by user';
 			stopPolling();
 			showBrowser = false;
-			liveUrl = null;
 			await loadRuns();
 			await invalidateAll();
 		} catch (err) {
@@ -1394,7 +1373,6 @@
 				searchTask.status_message = 'Cancelled by user';
 				stopPolling();
 				showBrowser = false;
-				liveUrl = null;
 				await loadRuns();
 			}
 			// For continue/skip, keep feedbackSent=true so buttons stay disabled
@@ -2747,10 +2725,6 @@
 				searchTaskId={searchTask.id}
 				profileId={data.profileId}
 				platformCredentials={data.platformCredentials}
-				browserCountryCode={data.browserCountryCode}
-				defaultCountryCode={data.defaultCountryCode}
-				browserFingerprint={data.browserFingerprint}
-				browserFingerprintDefaults={data.browserFingerprintDefaults}
 				uiPreferences={data.uiPreferences as Record<string, unknown>}
 				desktopConnected={desktopStatusChecked ? desktopConnected : null}
 				{preferredDevice}
@@ -2795,20 +2769,10 @@
 					class="flex shrink-0 items-center justify-between border-b border-[var(--dash-border)] px-3 py-2 sm:p-4"
 				>
 					<div class="flex items-center gap-2">
-						<FontAwesomeIcon
-							icon={isCloudMode ? faCloud : faDesktop}
-							class="h-4 w-4 text-[var(--dash-text-secondary)]"
-						/>
+						<FontAwesomeIcon icon={faDesktop} class="h-4 w-4 text-[var(--dash-text-secondary)]" />
 						<h2 class="hidden text-sm font-medium text-[var(--dash-text)] sm:block sm:text-base">
 							Browser View
 						</h2>
-						{#if isCloudMode}
-							<span
-								class="rounded bg-[var(--dash-bg)] px-2 py-0.5 text-xs text-[var(--dash-text-muted)]"
-							>
-								Cloud
-							</span>
-						{/if}
 						{#if isTunnelMode}
 							<span
 								class="rounded bg-[var(--dash-bg)] px-2 py-0.5 text-xs text-[var(--dash-text-muted)]"
@@ -2872,17 +2836,6 @@
 								</button>
 							{/if}
 						{/if}
-						{#if isCloudMode && liveUrl}
-							<ExternalLink
-								href={liveUrl}
-								target="_blank"
-								rel="noopener"
-								class="hidden p-1 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)] sm:inline-flex"
-								title="Open in new tab"
-							>
-								<FontAwesomeIcon icon={faExternalLinkAlt} class="h-4 w-4" />
-							</ExternalLink>
-						{/if}
 						<button
 							onclick={() => {
 								showBrowserLogs = !showBrowserLogs;
@@ -2901,7 +2854,7 @@
 							Logs
 						</button>
 						<!-- Kebab menu for situational buttons on small screens -->
-						{#if (isTunnelMode && browserViewMode === 'screenshot') || (isCloudMode && liveUrl)}
+						{#if isTunnelMode && browserViewMode === 'screenshot'}
 							<div class="relative sm:hidden">
 								<button
 									onclick={() => {
@@ -2952,20 +2905,6 @@
 												Refresh screenshot
 											</button>
 										{/if}
-										{#if isCloudMode && liveUrl}
-											<ExternalLink
-												href={liveUrl}
-												target="_blank"
-												rel="noopener"
-												onclick={() => {
-													headerMenuOpen = false;
-												}}
-												class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-bg)]"
-											>
-												<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3.5 w-3.5" />
-												Open in new tab
-											</ExternalLink>
-										{/if}
 									</div>
 								{/if}
 							</div>
@@ -3007,20 +2946,7 @@
 				{/if}
 				<!-- Browser view: flex-fills on mobile, 16:9 aspect on desktop -->
 				<div class="relative min-h-0 w-full flex-1 sm:aspect-video sm:flex-initial">
-					{#if expectsCloudBrowser && browserViewUrl}
-						<iframe
-							src={browserViewUrl}
-							class="absolute inset-0 h-full w-full border-0"
-							title="Cloud browser view"
-						></iframe>
-					{:else if expectsCloudBrowser}
-						<div class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]">
-							<div class="text-center">
-								<Spinner size="w-6 h-6" color="var(--dash-text-muted)" class="mb-2" />
-								<p class="text-sm text-[var(--dash-text-muted)]">Starting cloud browser...</p>
-							</div>
-						</div>
-					{:else if browserViewMode === 'screenshot'}
+					{#if browserViewMode === 'screenshot'}
 						{#if screenshotSrc}
 							<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 							<div
@@ -3113,7 +3039,7 @@
 						<div class="absolute inset-0 flex items-center justify-center bg-[var(--dash-bg)]">
 							<div class="text-center">
 								<Spinner size="w-6 h-6" color="var(--dash-text-muted)" class="mb-2" />
-								<p class="text-sm text-[var(--dash-text-muted)]">Starting cloud browser...</p>
+								<p class="text-sm text-[var(--dash-text-muted)]">Starting browser...</p>
 							</div>
 						</div>
 					{/if}
@@ -3523,9 +3449,7 @@
 											<span
 												class="inline-flex items-center rounded bg-[var(--dash-bg)] px-1.5 py-0 text-xs text-[var(--dash-text-muted)]"
 											>
-												{run.settings.browser_provider === 'hosted'
-													? 'cloud'
-													: run.settings.browser_provider}
+												{run.settings.browser_provider}
 											</span>
 										{/if}
 									</div>

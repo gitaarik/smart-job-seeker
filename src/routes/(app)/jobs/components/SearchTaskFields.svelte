@@ -20,11 +20,9 @@
 		faCopy,
 		faDesktop,
 		faEnvelope,
-		faGlobe,
 		faPenToSquare,
 		faRightToBracket
 	} from '@fortawesome/free-solid-svg-icons';
-	import CountrySelect from './CountrySelect.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import CredentialSelector from './CredentialSelector.svelte';
 	import SignInPageField from './SignInPageField.svelte';
@@ -81,13 +79,6 @@
 			owner_user_id?: string | null;
 			owner_label?: string | null;
 		}>;
-		browserCountryCode?: string;
-		defaultCountryCode?: string;
-		browserFingerprint?: {
-			language: string;
-			timezone: string;
-		};
-		browserFingerprintDefaults?: { language: string; timezone: string };
 		uiPreferences?: Record<string, unknown>;
 		desktopConnected?: boolean | null;
 		preferredDevice?: {
@@ -117,10 +108,9 @@
 		canEditSignInPage?: boolean;
 		/**
 		 * Open the site in the task's own browser so the user can sign in by
-		 * hand. Only the tunnel provider can do this outside a run (the cloud
-		 * browser has no session to open), so the parent passes null when the
-		 * button would not work and the section explains the alternative
-		 * instead of offering a dead control.
+		 * hand. Only the tunnel provider can do this outside a run, so the
+		 * parent passes null when the button would not work and the section
+		 * explains the alternative instead of offering a dead control.
 		 */
 		onSignInNow?: (() => void) | null;
 		/** True while that request is in flight. */
@@ -136,10 +126,6 @@
 		searchTaskId = 0,
 		profileId = 0,
 		platformCredentials: initialPlatformCredentials = [],
-		browserCountryCode: initialBrowserCountryCode = '',
-		defaultCountryCode = '',
-		browserFingerprint = { language: '', timezone: '' },
-		browserFingerprintDefaults = { language: '', timezone: '' },
 		uiPreferences = {},
 		desktopConnected = null,
 		preferredDevice = null,
@@ -241,18 +227,6 @@
 		}
 	}
 
-	async function patchProfile(body: Record<string, unknown>) {
-		const res = await fetch(`/api/profile/${profileId}`, {
-			method: 'PATCH',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(body)
-		});
-		if (!res.ok) {
-			const data = await res.json().catch(() => ({}));
-			throw new Error(data.message || data.error || `Save failed (${res.status})`);
-		}
-	}
-
 	// A feed platform's run has no browser, so the sign-in and browser sections
 	// do not apply; it filters by country instead (planning/ATS-FEEDS.md).
 	const isFeed = $derived(task?.job_platform?.fetch_mode === 'feed');
@@ -274,9 +248,7 @@
 			browserConfigField,
 			keepMinimizedField,
 			debugScreenshotsField,
-			scheduleField,
-			browserCountryField,
-			fingerprintField
+			scheduleField
 		]) {
 			f.arm();
 		}
@@ -492,54 +464,6 @@
 		});
 	});
 
-	// Browser country (edit) — patches the profile, not the task. Seeded at
-	// mount like the task's own fields above.
-	const initialCountryCode = untrack(() => initialBrowserCountryCode);
-	let editBrowserCountryCode = $state(initialCountryCode);
-	const browserCountryField = autoSaveField<string>({
-		armOnInteraction: true,
-		initial: initialCountryCode,
-		save: (v) => patchProfile({ browser_country_code: v.trim().toUpperCase() || null }),
-		onSaved: (v) => {
-			editBrowserCountryCode = v;
-		},
-		equal: (a, b) => a.trim().toUpperCase() === b.trim().toUpperCase()
-	});
-	$effect(() => {
-		browserCountryField.set(editBrowserCountryCode);
-	});
-
-	// Browser fingerprint (edit) — language + timezone, patches the profile.
-	type Fingerprint = { language: string; timezone: string };
-	let showAdvancedBrowser = $state(false);
-	const initialFingerprint = untrack(() => ({ ...browserFingerprint }));
-	let browserLanguage = $state(initialFingerprint.language);
-	let browserTimezone = $state(initialFingerprint.timezone);
-	let defaultBrowserLanguage = $derived(browserFingerprintDefaults.language);
-	let defaultBrowserTimezone = $derived(browserFingerprintDefaults.timezone);
-	const fingerprintField = autoSaveField<Fingerprint>({
-		armOnInteraction: true,
-		initial: { ...initialFingerprint },
-		save: (v) =>
-			patchProfile({
-				browser_language: v.language.trim() || null,
-				browser_timezone: v.timezone.trim() || null
-			}),
-		onSaved: (v) => {
-			browserLanguage = v.language;
-			browserTimezone = v.timezone;
-		},
-		equal: (a, b) =>
-			a.language.trim() === b.language.trim() && a.timezone.trim() === b.timezone.trim(),
-		debounceMs: 700
-	});
-	$effect(() => {
-		fingerprintField.set({
-			language: browserLanguage,
-			timezone: browserTimezone
-		});
-	});
-
 	// Credentials (edit) — kept on manual save because picking a shared
 	// credential can cascade a device change that we want to confirm
 	// explicitly, and the combined PATCH surfaces a custom error.
@@ -562,13 +486,9 @@
 	let loginModeDirty = $derived(editLoginMode !== editSavedLoginMode);
 	let isSavingLoginMode = $state(false);
 
-	// Computed: tunnel mode / hosted mode for conditional sections. Tracks the
-	// *saved* provider (what's actually live) rather than the in-flight pick.
+	// Computed: tunnel mode for conditional sections. Tracks the *saved*
+	// provider (what's actually live) rather than the in-flight pick.
 	let effectiveBrowserProvider = $derived(browserConfigField.saved.provider);
-	let isHostedMode = $derived(
-		effectiveBrowserProvider === 'hosted' ||
-			(!effectiveBrowserProvider && serverBrowserProvider === 'goLogin')
-	);
 	let isTunnelMode = $derived(
 		effectiveBrowserProvider === 'tunnel' ||
 			(!effectiveBrowserProvider && serverBrowserProvider === 'tunnel')
@@ -672,9 +592,6 @@
 			scheduleEnabled = searchTask.schedule_interval_hours != null;
 			scheduleIntervalInput = searchTask.schedule_interval_hours?.toString() ?? '24';
 			schedulePreferredHour = searchTask.schedule_preferred_hour ?? 9;
-			editBrowserCountryCode = initialBrowserCountryCode;
-			browserLanguage = browserFingerprint.language;
-			browserTimezone = browserFingerprint.timezone;
 
 			searchTermField.reset(searchTask.search_term ?? null);
 			searchLocationField.reset(searchTask.search_location ?? null);
@@ -691,11 +608,6 @@
 			scheduleField.reset({
 				intervalHours: searchTask.schedule_interval_hours ?? null,
 				preferredHour: searchTask.schedule_preferred_hour ?? 9
-			});
-			browserCountryField.reset(initialBrowserCountryCode);
-			fingerprintField.reset({
-				language: browserFingerprint.language,
-				timezone: browserFingerprint.timezone
 			});
 
 			const credId = searchTask.platform_credential_id?.toString() ?? 'none';
@@ -1025,105 +937,6 @@
 									href={resolve('/jobs/import/devices')}
 									class="underline hover:text-amber-700">Setup guide</a
 								>
-							{/if}
-						</div>
-					{/if}
-
-					<!-- Browser Location (hosted mode) -->
-					{#if isHostedMode}
-						<div class="mt-2 border-t border-[var(--dash-border)] pt-3">
-							<div class="mb-2 flex items-center gap-2">
-								<FontAwesomeIcon
-									icon={faGlobe}
-									class="h-3.5 w-3.5 text-[var(--dash-text-secondary)]"
-								/>
-								<h3 class="text-xs font-medium text-[var(--dash-text-secondary)]">
-									Browser Location
-								</h3>
-							</div>
-							<div class="flex items-center gap-2">
-								<div class="flex-1">
-									<CountrySelect
-										bind:value={editBrowserCountryCode}
-										fallback={defaultCountryCode}
-									/>
-								</div>
-								<AutoSaveIndicator field={browserCountryField} />
-							</div>
-							<p class="mt-2 text-xs text-[var(--dash-text-muted)]">
-								The country the scraper will appear to browse from. Set this to match your actual
-								location to avoid your account being flagged for logging in from unusual locations.
-								If empty, your profile's country is used.
-							</p>
-
-							<!-- Advanced: browser fingerprint -->
-							<button
-								type="button"
-								onclick={() => (showAdvancedBrowser = !showAdvancedBrowser)}
-								class="mt-3 flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
-							>
-								{#if showAdvancedBrowser}
-									<FontAwesomeIcon icon={faChevronDown} class="h-2.5 w-2.5" />
-								{:else}
-									<FontAwesomeIcon icon={faChevronRight} class="h-2.5 w-2.5" />
-								{/if}
-								Advanced
-							</button>
-
-							{#if showAdvancedBrowser}
-								<div class="mt-3 space-y-3 border-t border-[var(--dash-border)] pt-3">
-									<div>
-										<label
-											for="browser_language"
-											class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
-										>
-											Language
-										</label>
-										<input
-											type="text"
-											id="browser_language"
-											bind:value={browserLanguage}
-											onblur={fingerprintField.flush}
-											autocomplete="off"
-											placeholder={defaultBrowserLanguage}
-											class="w-full rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-										/>
-										{#if !browserLanguage}
-											<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
-												Defaults to <span class="font-mono">{defaultBrowserLanguage}</span> based on selected
-												country
-											</p>
-										{/if}
-									</div>
-
-									<div>
-										<label
-											for="browser_timezone"
-											class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
-										>
-											Timezone
-										</label>
-										<input
-											type="text"
-											id="browser_timezone"
-											bind:value={browserTimezone}
-											onblur={fingerprintField.flush}
-											autocomplete="off"
-											placeholder={defaultBrowserTimezone}
-											class="w-full rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-										/>
-										{#if !browserTimezone}
-											<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
-												Defaults to <span class="font-mono">{defaultBrowserTimezone}</span> based on selected
-												country
-											</p>
-										{/if}
-									</div>
-
-									<div class="pt-1">
-										<AutoSaveIndicator field={fingerprintField} />
-									</div>
-								</div>
 							{/if}
 						</div>
 					{/if}

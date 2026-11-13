@@ -1,16 +1,15 @@
 /**
  * Scraper Job Queues
  *
- * Three separate BullMQ queues for parallel scraping:
- * - "scraper-hosted" — cloud/GoLogin browser sessions
- * - "scraper-desktop" — desktop app tunnel (user's local Chrome)
+ * Two separate BullMQ queues:
+ * - "scraper-desktop" — browser scrapes: the user's own device over the
+ *   tunnel, or on dev the local Docker Chrome
  * - "feed-import" — no browser: a search task on a feed platform
  *   (`job_platforms.fetch_mode = 'feed'`) queries the ATS corpus the worker
  *   sweeps (planning/ATS-FEEDS.md) and promotes its hits into jobs
  *
- * Each queue has concurrency:1 (one browser at a time per provider),
- * but they run independently so a hosted and desktop scrape can
- * execute simultaneously.
+ * They run independently, so a feed import never waits behind a browser
+ * scrape.
  */
 
 import { Queue, QueueEvents } from 'bullmq';
@@ -28,7 +27,7 @@ export interface ScrapeJobData {
 	useVision?: boolean;
 	searchTerm?: string;
 	triggeredBy: 'user' | 'scheduler' | 'scraper-agent';
-	/** Which queue to route to. Null/undefined uses server default. */
+	/** The task's browser provider. Null/undefined uses the server default. */
 	browserProvider?: string | null;
 	/** The platform's `fetch_mode`; `feed` routes to the feed-import queue, no browser. */
 	fetchMode?: 'browser' | 'feed' | null;
@@ -49,18 +48,10 @@ const defaultJobOptions = {
 };
 
 // Lazy singletons — avoids Redis connection at import/build time
-let _hostedQ: Queue<ScrapeJobData, ScrapeJobResult> | null = null;
 let _desktopQ: Queue<ScrapeJobData, ScrapeJobResult> | null = null;
 let _feedQ: Queue<ScrapeJobData, ScrapeJobResult> | null = null;
-let _hostedQE: QueueEvents | null = null;
 let _desktopQE: QueueEvents | null = null;
 
-function getHostedQueue() {
-	return (_hostedQ ??= new Queue('scraper-hosted', {
-		connection: redisConnection,
-		defaultJobOptions
-	}));
-}
 function getDesktopQueue() {
 	return (_desktopQ ??= new Queue('scraper-desktop', {
 		connection: redisConnection,
@@ -73,25 +64,16 @@ function getFeedQueue() {
 		defaultJobOptions
 	}));
 }
-function getHostedQueueEvents() {
-	return (_hostedQE ??= new QueueEvents('scraper-hosted', { connection: redisConnection }));
-}
 function getDesktopQueueEvents() {
 	return (_desktopQE ??= new QueueEvents('scraper-desktop', { connection: redisConnection }));
 }
 
 // Re-export getters for the barrel export (cloud worker uses these)
-export {
-	getHostedQueue,
-	getDesktopQueue,
-	getFeedQueue,
-	getHostedQueueEvents,
-	getDesktopQueueEvents
-};
+export { getDesktopQueue, getFeedQueue, getDesktopQueueEvents };
 
 /** Every scrape queue, for the lookups that must not care which one a job is on. */
 function allQueues() {
-	return [getHostedQueue(), getDesktopQueue(), getFeedQueue()];
+	return [getDesktopQueue(), getFeedQueue()];
 }
 
 // ============================================================================
@@ -99,17 +81,12 @@ function allQueues() {
 // ============================================================================
 
 /**
- * Resolve which queue a job should go to based on the browser provider.
- *
- * "hosted" → hosted queue (GoLogin cloud browser)
- * Everything else (null, "tunnel") → desktop queue
+ * Resolve which queue a job should go to. A feed platform's run needs no
+ * browser and goes to the feed queue; every browser run (null, "tunnel",
+ * "local") goes to the desktop queue.
  */
-function resolveQueue(
-	browserProvider?: string | null,
-	fetchMode?: string | null
-): Queue<ScrapeJobData, ScrapeJobResult> {
+function resolveQueue(fetchMode?: string | null): Queue<ScrapeJobData, ScrapeJobResult> {
 	if (fetchMode === 'feed') return getFeedQueue();
-	if (browserProvider === 'hosted') return getHostedQueue();
 	return getDesktopQueue();
 }
 
@@ -118,10 +95,10 @@ function resolveQueue(
 // ============================================================================
 
 /**
- * Add a scrape job to the appropriate queue based on browserProvider
+ * Add a scrape job to the appropriate queue based on the platform's fetch mode
  */
 export async function addScrapeJob(data: ScrapeJobData, options?: { priority?: number }) {
-	const queue = resolveQueue(data.browserProvider, data.fetchMode);
+	const queue = resolveQueue(data.fetchMode);
 	const jobId = `scrape-${data.searchTaskId}-${data.runId}`;
 	return queue.add('scrape', data, {
 		jobId,
@@ -130,7 +107,7 @@ export async function addScrapeJob(data: ScrapeJobData, options?: { priority?: n
 }
 
 /**
- * Get the active job for a job search (if any) — searches both queues
+ * Get the active job for a job search (if any) — searches every queue
  */
 export async function getActiveJobForSearch(searchTaskId: number) {
 	const activeJobArrays = await Promise.all(allQueues().map((q) => q.getActive()));
@@ -185,19 +162,18 @@ export async function removeActiveJob(searchTaskId: number): Promise<boolean> {
  */
 export interface QueuedScrapeJob {
 	jobId: string;
-	queue: 'hosted' | 'desktop' | 'feed';
+	queue: 'desktop' | 'feed';
 	state: 'active' | 'waiting';
 	searchTaskId: number;
 	runId: number;
 }
 
 /**
- * List all active + waiting scrape jobs across both queues. Used by the admin
+ * List all active + waiting scrape jobs across every queue. Used by the admin
  * reconcile action to detect drift between the queues and the DB.
  */
 export async function listQueueJobs(): Promise<QueuedScrapeJob[]> {
-	const queues: Array<['hosted' | 'desktop' | 'feed', Queue<ScrapeJobData, ScrapeJobResult>]> = [
-		['hosted', getHostedQueue()],
+	const queues: Array<['desktop' | 'feed', Queue<ScrapeJobData, ScrapeJobResult>]> = [
 		['desktop', getDesktopQueue()],
 		['feed', getFeedQueue()]
 	];
@@ -244,25 +220,11 @@ export async function removeJobById(jobId: string): Promise<boolean> {
 }
 
 /**
- * Get aggregate queue stats across both queues
+ * Get queue stats for the browser scrape queue
  */
 export async function getQueueStats() {
-	const hosted = getHostedQueue();
 	const desktop = getDesktopQueue();
-	const [
-		hostedWaiting,
-		hostedActive,
-		hostedCompleted,
-		hostedFailed,
-		desktopWaiting,
-		desktopActive,
-		desktopCompleted,
-		desktopFailed
-	] = await Promise.all([
-		hosted.getJobCountByTypes(...PENDING_STATES),
-		hosted.getActiveCount(),
-		hosted.getCompletedCount(),
-		hosted.getFailedCount(),
+	const [waiting, active, completed, failed] = await Promise.all([
 		desktop.getJobCountByTypes(...PENDING_STATES),
 		desktop.getActiveCount(),
 		desktop.getCompletedCount(),
@@ -270,21 +232,10 @@ export async function getQueueStats() {
 	]);
 
 	return {
-		waiting: hostedWaiting + desktopWaiting,
-		active: hostedActive + desktopActive,
-		completed: hostedCompleted + desktopCompleted,
-		failed: hostedFailed + desktopFailed,
-		hosted: {
-			waiting: hostedWaiting,
-			active: hostedActive,
-			completed: hostedCompleted,
-			failed: hostedFailed
-		},
-		desktop: {
-			waiting: desktopWaiting,
-			active: desktopActive,
-			completed: desktopCompleted,
-			failed: desktopFailed
-		}
+		waiting,
+		active,
+		completed,
+		failed,
+		desktop: { waiting, active, completed, failed }
 	};
 }

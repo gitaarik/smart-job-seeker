@@ -67,12 +67,12 @@ export interface ImportTaskReadinessInput {
 /**
  * Browser providers a *task* may name. `null` means "use the server default".
  *
- * "goLogin" is deliberately absent: it is a server-config value that
- * getBrowserProvider() maps "hosted" onto, not something a task should set.
  * Keeping the task-level vocabulary to what the UI offers means an unknown
  * string is a bug or tampering, and either way should not reach the column.
+ * "local" is the dev Docker Chrome and is further gated by
+ * SJS_LOCAL_BROWSER_ALLOWED wherever a task is written.
  */
-export const TASK_BROWSER_PROVIDERS = ['local', 'hosted', 'tunnel'] as const;
+export const TASK_BROWSER_PROVIDERS = ['local', 'tunnel'] as const;
 export type TaskBrowserProvider = (typeof TASK_BROWSER_PROVIDERS)[number];
 
 export function isTaskBrowserProvider(value: unknown): value is TaskBrowserProvider {
@@ -82,7 +82,7 @@ export function isTaskBrowserProvider(value: unknown): value is TaskBrowserProvi
 /**
  * Does the effective browser provider require the user to supply their own
  * connected device? Only the tunnel (desktop / self-hosted) provider does;
- * "local" and the cloud providers ("hosted"/"goLogin") run server-side.
+ * "local" runs server-side.
  */
 export function providerRequiresDevice(
 	browserProvider: string | null,

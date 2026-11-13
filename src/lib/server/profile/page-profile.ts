@@ -98,7 +98,6 @@ export const PRIVATE_PROFILE_COLUMNS = [
 	'browser_language',
 	'browser_timezone',
 	'browser_country_code',
-	'browser_profile_id',
 	'ui_preferences',
 	'email_digest_enabled',
 	'email_digest_frequency_days',

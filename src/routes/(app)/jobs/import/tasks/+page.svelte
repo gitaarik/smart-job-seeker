@@ -282,11 +282,9 @@
 			formData.append('search_location', suggestion.search_location);
 		}
 		// Where the task runs: the same rule as the add form. A connected
-		// device, own or shared, wins; with none, an empty provider lets the
-		// create action apply the server's default rather than pinning the row
-		// to the cloud browser forever. This path kept a hardcoded "hosted"
-		// after the add form stopped doing that, so an accepted suggestion
-		// ignored the device the user had just connected.
+		// device, own or shared, is pinned to the task; with none, an empty
+		// provider lets the create action apply the server's default rather
+		// than pinning the row to a provider forever.
 		if (preferredDevice && !isFeed) {
 			formData.append('browser_provider', 'tunnel');
 			formData.append('sjsbrowser_api_key', String(preferredDevice.apiKeyId));

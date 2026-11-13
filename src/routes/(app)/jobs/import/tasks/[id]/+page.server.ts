@@ -3,7 +3,6 @@ import { error, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { and, asc, eq, inArray, ne } from 'drizzle-orm';
 import { platform_credentials, profiles, search_tasks } from '$lib/server/db/schema';
-import { getGeoConfig } from '$lib/server/browser/geo-utils';
 import { config } from '$lib/server/config';
 import { getActiveSubscription } from '$lib/server/billing/subscription';
 import { getOrCreateVerificationAddress } from '$lib/server/email/verification-relay';
@@ -130,22 +129,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	// the (shared, logged-in) browser.
 	const isDemo = (user as { is_demo?: boolean })?.is_demo || false;
 
-	// Load profile data (country code + browser fingerprint fields)
-	const profileData = await db.query.profiles.findFirst({
-		where: eq(profiles.id, layoutData.selectedProfile.id),
-		columns: {
-			country_code: true,
-			browser_country_code: true,
-			browser_language: true,
-			browser_timezone: true
-		}
-	});
-
-	// Compute geo-derived defaults from the effective country code
-	const effectiveCountryCode =
-		profileData?.browser_country_code || profileData?.country_code || 'US';
-	const geoDefaults = getGeoConfig(effectiveCountryCode);
-
 	// Check if any other search task for this profile is currently running/queued/blocked
 	const otherRunning = await db.query.search_tasks.findFirst({
 		where: and(
@@ -237,19 +220,8 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		hasOtherRunning: !!otherRunning,
 		canEditSignInPage,
 		subscriptionRenewDate: subscription?.currentPeriodEnd ?? null,
-		browserCountryCode: profileData?.browser_country_code || '',
-		defaultCountryCode: profileData?.country_code || '',
 		browserProvider: config.browserProvider,
 		localBrowserAllowed: config.localBrowserAllowed,
-		// Browser fingerprint: saved values + geo-derived defaults
-		browserFingerprint: {
-			language: profileData?.browser_language || '',
-			timezone: profileData?.browser_timezone || ''
-		},
-		browserFingerprintDefaults: {
-			language: geoDefaults.language,
-			timezone: geoDefaults.timezone
-		},
 		uiPreferences: (searchTask.ui_preferences ?? {}) as Record<string, unknown>,
 		verificationEmailAddress: verificationAddress.fullAddress,
 		apiKeyDevices

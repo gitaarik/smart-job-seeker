@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { LOGIN_MODES } from '$lib/import-tasks/sign-in';
+import { TASK_BROWSER_PROVIDERS } from '$lib/import-tasks/readiness';
 import { MAX_BELOW_ASK_TOLERANCE_PCT } from '$lib/salary/pay-fit';
 import { MAX_CORPUS_PICKS_PER_DAY } from '$lib/server/job/match-preferences';
 import { WORK_MODES } from '$lib/work-mode';
@@ -291,7 +292,7 @@ export const searchTaskUpdateSchema = z.object({
 		.union([z.null(), z.number().int(), z.string().regex(/^\d+$/).transform(Number)])
 		.optional(),
 	login_mode: z.enum(LOGIN_MODES).optional(),
-	browser_provider: z.enum(['hosted', 'tunnel']).optional().nullable(),
+	browser_provider: z.enum(TASK_BROWSER_PROVIDERS).optional().nullable(),
 	sjsbrowser_api_key: z.union([z.null(), z.number().int()]).optional(),
 	keep_minimized: z.boolean().optional(),
 	schedule_interval_hours: z

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
@@ -8,9 +7,7 @@
 		faSearch,
 		faStop,
 		faPlay,
-		faExternalLinkAlt,
 		faDesktop,
-		faCloud,
 		faExclamationTriangle
 	} from '@fortawesome/free-solid-svg-icons';
 	import SectionHeader from '../../profile/components/SectionHeader.svelte';
@@ -25,7 +22,6 @@
 		jobsFound: number | null;
 		errorMessage: string | null;
 		triggeredBy: string;
-		liveUrl: string | null;
 		searchTask: {
 			id: number;
 			name: string;
@@ -50,7 +46,6 @@
 		active: number;
 		completed: number;
 		failed: number;
-		hosted: { waiting: number; active: number; completed: number; failed: number };
 		desktop: { waiting: number; active: number; completed: number; failed: number };
 	}
 
@@ -268,10 +263,6 @@
 							<FontAwesomeIcon icon={faDesktop} class="h-3 w-3" />
 							{queueStats.desktop.active}a / {queueStats.desktop.waiting}w
 						</span>
-						<span>
-							<FontAwesomeIcon icon={faCloud} class="h-3 w-3" />
-							{queueStats.hosted.active}a / {queueStats.hosted.waiting}w
-						</span>
 					</div>
 				</div>
 			</Card>
@@ -410,11 +401,7 @@
 										<span>{run.searchTask.platform}</span>
 									{/if}
 									<span>
-										{#if run.searchTask.browserProvider === 'hosted'}
-											<FontAwesomeIcon icon={faCloud} class="h-3 w-3" /> Cloud
-										{:else}
-											<FontAwesomeIcon icon={faDesktop} class="h-3 w-3" /> Desktop
-										{/if}
+										<FontAwesomeIcon icon={faDesktop} class="h-3 w-3" /> Desktop
 									</span>
 									<span>via {run.triggeredBy}</span>
 								</div>
@@ -447,18 +434,6 @@
 
 							<!-- Right: Actions -->
 							<div class="flex flex-shrink-0 items-center gap-2">
-								{#if run.liveUrl}
-									<ExternalLink
-										href={run.liveUrl}
-										target="_blank"
-										rel="noopener"
-										class="rounded p-1.5 text-[var(--dash-text-muted)] transition-colors hover:bg-[var(--dash-bg)] hover:text-[var(--dash-primary)]"
-										title="Open live view"
-									>
-										<FontAwesomeIcon icon={faExternalLinkAlt} class="h-3.5 w-3.5" />
-									</ExternalLink>
-								{/if}
-
 								{#if isActive(run.status)}
 									<button
 										onclick={() => performAction('stop', run)}

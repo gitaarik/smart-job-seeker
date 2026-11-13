@@ -1347,15 +1347,6 @@
 		loginUrl={data.rescrapeConfig?.loginUrl ?? null}
 		defaultBrowserProvider={data.rescrapeConfig?.browserProvider ?? null}
 		defaultKeepMinimized={data.rescrapeConfig?.keepMinimized ?? true}
-		defaultCountryCode={data.rescrapeConfig?.defaultCountryCode ?? ''}
-		browserFingerprint={data.rescrapeConfig?.browserFingerprint ?? {
-			language: '',
-			timezone: ''
-		}}
-		browserFingerprintDefaults={data.rescrapeConfig?.browserFingerprintDefaults ?? {
-			language: 'en-US,en',
-			timezone: 'America/New_York'
-		}}
 		initialStatus={job.rescrape_status ?? undefined}
 		onclose={() => (showRescrapeMonitor = false)}
 		oncomplete={() => window.location.reload()}

@@ -10,9 +10,9 @@ import { submitPendingAction } from '$lib/server/scraper/pending-action';
  * POST /api/import-tasks/[id]/runs/[runId]/navigate-url
  *
  * Navigate the live browser to a URL. Used for magic-link login: the user
- * receives a login link via email and pastes it here. Works for both hosted
- * (GoLogin) and tunnel (local Chrome) modes by routing through the scraper
- * itself.
+ * receives a login link via email and pastes it here. Routed through the
+ * scraper itself, which owns the browser connection, so it works the same for
+ * the user's own Chrome over the tunnel as for the local dev Chrome.
  *
  * Body: { url: string }
  */

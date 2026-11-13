@@ -74,9 +74,9 @@ free until you run them.
 
 Two things decide whether a task runs well:
 
-- **Where it runs.** With a device connected — your own, or one shared with
-  you — new tasks run there. Without one they use the cloud browser, which is
-  metered at double rate. (See [Devices & sharing](/guide/devices).)
+- **Where it runs.** Tasks run on a device: your own, or one shared with you.
+  Without one connected a task can't run yet. (See
+  [Devices & sharing](/guide/devices).)
 - **Signing in.** Many boards only show good results when you're signed in. A
   task on such a board starts as **I sign in myself**: its first run stops at
   the sign-in page and you log in through Browser View. With a device connected

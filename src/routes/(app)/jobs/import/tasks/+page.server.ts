@@ -48,9 +48,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 			const p = await db.query.profiles.findFirst({
 				where: eq(profiles.id, profileId),
 				columns: {
-					ui_preferences: true,
-					browser_country_code: true,
-					country_code: true
+					ui_preferences: true
 				}
 			});
 			if (!p) throw new Error('Record not found');
@@ -148,8 +146,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 		serverBrowserProvider: config.browserProvider,
 		defaultBrowserProvider: config.defaultBrowserProvider,
 		defaultMaxJobs: config.defaultMaxJobs,
-		browserCountryCode: profile.browser_country_code ?? '',
-		defaultCountryCode: profile.country_code ?? '',
 		apiKeyDevices,
 		importablePlatforms
 	};
@@ -614,25 +610,13 @@ export const actions: Actions = {
 			}
 		}
 
-		// Browser location
-		const browserCountryCode = formData.get('browser_country_code') as string;
-		if (browserCountryCode) {
-			await db
-				.update(profiles)
-				.set({
-					browser_country_code: browserCountryCode.trim().toUpperCase() || null
-				})
-				.where(eq(profiles.id, profileId));
-		}
-
 		// The configured default is operator input rather than user input, so it
 		// is not rejected the way the form field is — but a server that forbids
 		// the local browser should not have its own default write "local" either,
 		// which is the shape the two settings disagreed in: the create action
 		// refused a user asking for local while still defaulting to it. Null is
 		// the honest answer, deferring to whatever the server resolves at run
-		// time (worker.ts / the run endpoint), which is also what the UI's
-		// "Local" button sends.
+		// time (worker.ts / the run endpoint).
 		const defaultBrowserProvider =
 			config.defaultBrowserProvider === 'local' && !config.localBrowserAllowed
 				? null

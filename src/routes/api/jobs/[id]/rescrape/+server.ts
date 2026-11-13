@@ -41,18 +41,12 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 
 	// Parse optional overrides from request body
 	const overrides: {
-		countryCode?: string;
-		browserLanguage?: string;
-		browserTimezone?: string;
 		credentialId?: number;
 		browserProvider?: string;
 		keepMinimized?: boolean;
 	} = {};
 	try {
 		const body = await request.json();
-		if (body.countryCode) overrides.countryCode = body.countryCode;
-		if (body.browserLanguage) overrides.browserLanguage = body.browserLanguage;
-		if (body.browserTimezone) overrides.browserTimezone = body.browserTimezone;
 		if (body.credentialId) overrides.credentialId = Number(body.credentialId);
 		if (body.browserProvider) overrides.browserProvider = body.browserProvider;
 		if (body.keepMinimized !== undefined) {
@@ -159,7 +153,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 			id: true,
 			rescrape_status: true,
 			rescrape_message: true,
-			rescrape_live_url: true,
 			date_updated: true
 		}
 	});
@@ -206,7 +199,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 	return json({
 		status: job.rescrape_status || 'idle',
 		message: job.rescrape_message || null,
-		liveUrl: job.rescrape_live_url || null,
 		lastUpdated: job.date_updated,
 		history
 	});
@@ -246,8 +238,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 			.update(jobs)
 			.set({
 				rescrape_status: 'idle',
-				rescrape_message: null,
-				rescrape_live_url: null
+				rescrape_message: null
 			})
 			.where(eq(jobs.id, jobId));
 
@@ -270,8 +261,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 		.update(jobs)
 		.set({
 			rescrape_status: 'cancelled',
-			rescrape_message: 'Cancelled by user',
-			rescrape_live_url: null
+			rescrape_message: 'Cancelled by user'
 		})
 		.where(eq(jobs.id, jobId));
 

@@ -20,7 +20,6 @@ import { getProfileSkillIndex } from '$lib/server/profile/skill-visibility';
 import { addMatchJob } from '$lib/server/queue/match-queue';
 import { getSelectedProfileId } from '../../profile/utils';
 import { isStaffViewer } from '$lib/server/auth/guards';
-import { getGeoConfig } from '$lib/server/browser/geo-utils';
 import { parseJobDescription } from '$lib/server/jobs/parse-job-description';
 import { parseIntOrNull, strArrayOrNull, strOrNull } from '$lib/server/jobs/job-fields';
 import {
@@ -325,7 +324,7 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
 		});
 	}
 
-	// Load rescrape config data: credentials, country, browser fingerprint, browser provider, etc.
+	// Load rescrape config data: credentials, browser provider, etc.
 	let rescrapeConfig: {
 		platformCredentials: { id: number; username: string | null }[];
 		platformId: number;
@@ -333,12 +332,6 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
 		loginUrl: string | null;
 		browserProvider: string | null;
 		keepMinimized: boolean;
-		defaultCountryCode: string;
-		browserFingerprint: {
-			language: string;
-			timezone: string;
-		};
-		browserFingerprintDefaults: { language: string; timezone: string };
 	} | null = null;
 	if (isStaff && job.job_platform_id) {
 		// Resolve the user owning this profile, then list their user-wide
@@ -376,18 +369,6 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
 			}
 		});
 
-		const profile = await db.query.profiles.findFirst({
-			where: eq(profiles.id, profileId),
-			columns: {
-				country_code: true,
-				browser_language: true,
-				browser_timezone: true
-			}
-		});
-
-		const defaultCountryCode = profile?.country_code || '';
-		const geoDefaults = getGeoConfig(defaultCountryCode || 'US');
-
 		rescrapeConfig = {
 			platformCredentials,
 			platformId: job.job_platform_id,
@@ -395,16 +376,7 @@ export const load: PageServerLoad = async ({ parent, params, locals }) => {
 				searchTask?.platform_profile?.platform_credential_id?.toString() ?? 'none',
 			loginUrl: searchTask?.job_platform?.login_page_url ?? null,
 			browserProvider: searchTask?.browser_provider ?? null,
-			keepMinimized: searchTask?.keep_minimized ?? true,
-			defaultCountryCode,
-			browserFingerprint: {
-				language: profile?.browser_language || '',
-				timezone: profile?.browser_timezone || ''
-			},
-			browserFingerprintDefaults: {
-				language: geoDefaults.language,
-				timezone: geoDefaults.timezone
-			}
+			keepMinimized: searchTask?.keep_minimized ?? true
 		};
 	}
 

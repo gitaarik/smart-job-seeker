@@ -11,7 +11,6 @@
 		faChevronDown,
 		faChevronRight,
 		faClock,
-		faCloud,
 		faDesktop,
 		faPlay,
 		faStop,
@@ -86,9 +85,7 @@
 		Boolean(data.platform.login_page_url) && Boolean(selectedCredentialId) && !isActive && !starting
 	);
 	const canViewBrowser = $derived(
-		featuredRun !== null &&
-			isActive &&
-			(Boolean(featuredRun.live_url) || Boolean(featuredRun.sjsbrowser_api_key_id))
+		featuredRun !== null && isActive && Boolean(featuredRun.sjsbrowser_api_key_id)
 	);
 
 	async function pollFeaturedRun() {
@@ -348,10 +345,7 @@
 						onclick={() => (browserViewOpen = true)}
 						class="inline-flex items-center gap-1.5 rounded border border-[var(--dash-border)] px-3 py-1.5 text-sm hover:bg-[var(--dash-bg)]"
 					>
-						<FontAwesomeIcon
-							icon={featuredRun.live_url ? faCloud : faDesktop}
-							class="h-3.5 w-3.5"
-						/>
+						<FontAwesomeIcon icon={faDesktop} class="h-3.5 w-3.5" />
 						Browser view
 					</button>
 				{/if}
@@ -431,7 +425,7 @@
 					{/each}
 				</select>
 				<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
-					Routes the session through your desktop tunnel instead of the hosted browser provider.
+					Routes the session through this desktop tunnel instead of the server's default browser.
 				</p>
 			</div>
 		</div>
@@ -525,7 +519,6 @@
 
 <BrowserViewModal
 	bind:open={browserViewOpen}
-	liveUrl={featuredRun?.live_url ?? null}
 	apiKeyId={featuredRun?.sjsbrowser_api_key_id ?? null}
 	deviceName={featuredRun ? deviceLabel(featuredRun.sjsbrowser_api_key_id) : null}
 />

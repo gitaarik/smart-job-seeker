@@ -9,11 +9,8 @@
 		faBan,
 		faCheck,
 		faCheckCircle,
-		faChevronDown,
-		faChevronRight,
 		faClock,
 		faExternalLinkAlt,
-		faGlobe,
 		faHistory,
 		faLink,
 		faPlay,
@@ -25,7 +22,6 @@
 	import Spinner from '$lib/components/Spinner.svelte';
 	import LogViewer from './LogViewer.svelte';
 	import { portalToBody } from '$lib/actions/portal';
-	import CountrySelect from '../jobs/components/CountrySelect.svelte';
 	import CredentialSelector from '../jobs/components/CredentialSelector.svelte';
 	import BrowserProviderToggle from '../jobs/components/BrowserProviderToggle.svelte';
 
@@ -40,12 +36,6 @@
 		loginUrl: string | null;
 		defaultBrowserProvider: string | null;
 		defaultKeepMinimized: boolean;
-		defaultCountryCode: string;
-		browserFingerprint: {
-			language: string;
-			timezone: string;
-		};
-		browserFingerprintDefaults: { language: string; timezone: string };
 		/** If the job already has an active rescrape, pass "queued" or "scraping" to resume monitoring */
 		initialStatus?: string;
 		onclose: () => void;
@@ -63,15 +53,10 @@
 		loginUrl,
 		defaultBrowserProvider,
 		defaultKeepMinimized,
-		defaultCountryCode,
-		browserFingerprint,
-		browserFingerprintDefaults,
 		initialStatus,
 		onclose,
 		oncomplete
 	}: Props = $props();
-	// Links labels to their fields; unique per open monitor.
-	const uid = $props.id();
 
 	interface LogEntry {
 		id: number | string;
@@ -96,8 +81,7 @@
 		credentials: platformCredentials,
 		credentialId: initialCredentialId,
 		browserProvider: defaultBrowserProvider,
-		keepMinimized: defaultKeepMinimized,
-		fingerprint: { ...browserFingerprint }
+		keepMinimized: defaultKeepMinimized
 	}));
 
 	// If resuming an active rescrape, skip config and go straight to polling
@@ -108,16 +92,11 @@
 	let credentialId = $state(opened.credentialId);
 	let browserProvider = $state<string | null>(opened.browserProvider);
 	let keepMinimized = $state(opened.keepMinimized);
-	let countryCode = $state('');
-	let browserLanguage = $state(opened.fingerprint.language);
-	let browserTimezone = $state(opened.fingerprint.timezone);
-	let showAdvanced = $state(false);
 	let started = $state(resuming);
 
 	// Scraping state
 	let status = $state<string>(resuming ? opened.status! : 'idle');
 	let message = $state<string>(resuming ? 'Resuming...' : '');
-	let liveUrl = $state<string | null>(null);
 	let logs = $state<LogEntry[]>([]);
 	let pollInterval: ReturnType<typeof setInterval> | null = null;
 	let lastMessage = '';
@@ -153,9 +132,6 @@
 
 		try {
 			const body: Record<string, unknown> = {};
-			if (countryCode) body.countryCode = countryCode;
-			if (browserLanguage) body.browserLanguage = browserLanguage;
-			if (browserTimezone) body.browserTimezone = browserTimezone;
 			if (credentialId !== 'none') {
 				body.credentialId = parseInt(credentialId);
 			}
@@ -211,7 +187,6 @@
 			const result = await response.json();
 			status = result.status;
 			message = result.message || '';
-			liveUrl = result.liveUrl || null;
 
 			// Add progress messages as log entries
 			if (
@@ -278,7 +253,6 @@
 				started = false;
 				status = 'idle';
 				message = '';
-				liveUrl = null;
 				logs = [];
 				lastMessage = '';
 				loadHistory();
@@ -425,99 +399,6 @@
 						<BrowserProviderToggle bind:value={browserProvider} disabled={started} />
 					</div>
 
-					<!-- Browser Location (hosted mode only) -->
-					{#if browserProvider === 'hosted'}
-						<div>
-							<div class="mb-1 flex items-center gap-1.5">
-								<FontAwesomeIcon icon={faGlobe} class="h-3 w-3 text-[var(--dash-text-secondary)]" />
-								<label
-									for="{uid}-browser-location"
-									class="text-xs font-medium text-[var(--dash-text-secondary)]"
-									>Browser Location</label
-								>
-							</div>
-							<div class="max-w-xs">
-								<CountrySelect
-									id="{uid}-browser-location"
-									bind:value={countryCode}
-									fallback={defaultCountryCode}
-									disabled={started}
-								/>
-							</div>
-							{#if !started}
-								<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
-									The country the browser will appear to browse from. If empty, your profile's
-									country is used.
-								</p>
-							{/if}
-						</div>
-
-						<!-- Advanced: browser fingerprint toggle -->
-						<button
-							type="button"
-							onclick={() => (showAdvanced = !showAdvanced)}
-							class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
-						>
-							<FontAwesomeIcon
-								icon={showAdvanced ? faChevronDown : faChevronRight}
-								class="h-2.5 w-2.5"
-							/>
-							Advanced
-						</button>
-
-						{#if showAdvanced}
-							<div class="space-y-3 border-t border-[var(--dash-border)] pt-2">
-								<div>
-									<label
-										for="rescrape_language"
-										class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
-									>
-										Language
-									</label>
-									<input
-										type="text"
-										id="rescrape_language"
-										bind:value={browserLanguage}
-										placeholder={browserFingerprintDefaults.language}
-										disabled={started}
-										class="w-full rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none disabled:opacity-50"
-									/>
-									{#if !browserLanguage}
-										<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
-											Defaults to <span class="font-mono"
-												>{browserFingerprintDefaults.language}</span
-											> based on country
-										</p>
-									{/if}
-								</div>
-
-								<div>
-									<label
-										for="rescrape_timezone"
-										class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
-									>
-										Timezone
-									</label>
-									<input
-										type="text"
-										id="rescrape_timezone"
-										bind:value={browserTimezone}
-										placeholder={browserFingerprintDefaults.timezone}
-										disabled={started}
-										class="w-full rounded-md border border-[var(--dash-border)] px-2.5 py-1.5 text-sm focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none disabled:opacity-50"
-									/>
-									{#if !browserTimezone}
-										<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
-											Defaults to <span class="font-mono"
-												>{browserFingerprintDefaults.timezone}</span
-											> based on country
-										</p>
-									{/if}
-								</div>
-							</div>
-						{/if}
-					{/if}
-
 					<!-- Keep Minimized (desktop/local mode only) -->
 					{#if browserProvider === 'local'}
 						<label class="flex items-center gap-2 text-sm text-[var(--dash-text)]">
@@ -552,9 +433,8 @@
 					</div>
 
 					<!-- Browser View -->
-					{#if isActive || liveUrl}
+					{#if isActive}
 						<BrowserView
-							{liveUrl}
 							statusMessage={isActive
 								? 'Watch the rescrape progress. You may need to intervene if a CAPTCHA or login is required.'
 								: ''}
