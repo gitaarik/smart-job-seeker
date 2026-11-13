@@ -729,6 +729,13 @@
       "when": 1794579864322,
       "tag": "0103_match_config_remote_abroad",
       "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1794581678694,
+      "tag": "0104_user_suspension",
+      "breakpoints": true
     }
   ]
 }

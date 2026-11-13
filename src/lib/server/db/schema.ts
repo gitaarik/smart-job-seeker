@@ -2330,6 +2330,12 @@ export const users = pgTable('users', {
 	// removes the row. Null means no pending deletion — an account that was
 	// restored is indistinguishable from one that never asked, deliberately.
 	deletion_requested_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
+	// An admin has shut the account out without deleting it (abuse, a payment
+	// dispute, a compromised login). Set and cleared by
+	// $lib/server/account/suspend; the auth gates refuse it the way they refuse
+	// a pending deletion, and the reason is what the account holder is shown.
+	suspended_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
+	suspended_reason: text(),
 	// When the person last used SJS: a signed-in request or an MCP call, stamped
 	// at most once an hour by $lib/server/account/last-seen. Matching and
 	// scheduled searches stop for an account nobody has used for a month and
