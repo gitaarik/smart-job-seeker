@@ -67,7 +67,9 @@
 			description:
 				"Tell us what you're looking for: job types, work arrangements, locations, and experience levels.",
 			done: completeness.hasMatchConfig,
-			href: '/jobs/import/config',
+			// The short form until it is answered: it asks the title and skills
+			// with it, which is everything the first picks need.
+			href: completeness.hasMatchConfig ? '/jobs/import/config' : '/profile/start',
 			actionLabel: 'Set Preferences'
 		},
 		{

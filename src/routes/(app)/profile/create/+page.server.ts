@@ -172,7 +172,7 @@ export const actions: Actions = {
 			console.warn('[create] import warnings:', result.errors);
 		}
 
-		redirect(303, `/home?profile=${result.profileId}&created=true`);
+		redirect(303, `/profile/start?profile=${result.profileId}&created=true`);
 	},
 
 	/**
@@ -238,7 +238,7 @@ export const actions: Actions = {
 		// the lazy backfill in createAndGenerateAiChat fires on first use.
 		await exportProfile(profile.id);
 
-		redirect(303, `/home?profile=${profile.id}&created=true`);
+		redirect(303, `/profile/start?profile=${profile.id}&created=true`);
 	},
 
 	/**
@@ -291,6 +291,6 @@ export const actions: Actions = {
 			return fail(500, { error: message });
 		}
 
-		redirect(303, `/home?profile=${result.profileId}&created=true`);
+		redirect(303, `/profile/start?profile=${result.profileId}&created=true`);
 	}
 };
