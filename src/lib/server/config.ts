@@ -154,6 +154,9 @@ export interface AppConfig {
 	// LLM Configuration
 	llmCacheTTL: number; // milliseconds
 
+	/** Instance-wide model spend per UTC day, in USD; 0 turns it off (llm/spend-limit.ts). */
+	llmDailyLimitUsd: number;
+
 	// Retry Configuration
 	retryMaxAttempts: number;
 	retryInitialDelay: number;
@@ -538,6 +541,9 @@ function loadConfig(): AppConfig {
 
 		// Caching (1 hour default)
 		llmCacheTTL: parseInt(getEnv('SJS_LLM_CACHE_TTL', String(1000 * 60 * 60)), 10),
+
+		// Daily model spend ceiling for the whole instance (llm/spend-limit.ts)
+		llmDailyLimitUsd: Number(getEnv('SJS_LLM_DAILY_LIMIT_USD', '25')),
 
 		// LLM Retry
 		retryMaxAttempts: parseInt(getEnv('SJS_LLM_RETRY_MAX_ATTEMPTS', '3'), 10),

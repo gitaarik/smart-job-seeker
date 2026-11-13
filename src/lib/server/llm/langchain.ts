@@ -19,6 +19,7 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { getEnv } from '$lib/tools/get-env';
 import { llmCache } from './cache.js';
+import { assertUnderDailyLimit, DailySpendLimitReached, recordSpend } from './spend-limit.js';
 import { callName, recordSentMessages, traceAttempt, traceLlmCall } from './trace';
 import { DEFAULT_TEMPERATURE } from '$lib/server/ai-chat/prompt-templates';
 import { promptRef } from '$lib/server/ai-chat/prompt-registry';
@@ -1466,6 +1467,14 @@ async function completeTracked(
 		}
 	}
 
+	// After the cache, since a cached answer costs nothing (llm/spend-limit.ts).
+	try {
+		await assertUnderDailyLimit();
+	} catch (error) {
+		if (!(error instanceof DailySpendLimitReached)) throw error;
+		throw new LLMQuotaExceededError(error.message, provider || config.llmProvider, model);
+	}
+
 	const attempt = (activeProvider: string | undefined, activeModel: string) =>
 		traceAttempt(
 			{
@@ -1560,6 +1569,14 @@ async function completeTracked(
 			);
 			throw primaryError;
 		}
+	}
+
+	if (result.usage) {
+		await recordSpend(
+			result.fallbackUsed?.provider ?? (provider || config.llmProvider),
+			result.fallbackUsed?.model ?? model,
+			result.usage
+		);
 	}
 
 	// Cache the raw content. Keyed on the model that was ASKED for, including

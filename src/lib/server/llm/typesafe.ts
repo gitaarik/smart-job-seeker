@@ -9,6 +9,7 @@
  * no JSON to parse, no response cache), so this is a plain HTTP call.
  */
 import { config } from '$lib/server/config';
+import { assertUnderDailyLimit, recordSpend } from './spend-limit.js';
 
 const ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
 
@@ -102,6 +103,7 @@ export async function systemOne(
 	apiKey: string = config.typesafeApiKey
 ): Promise<SystemOneResponse> {
 	if (!apiKey) throw new Error('TypeSafe: SJS_LLM_API_KEY_TYPESAFE is not set');
+	await assertUnderDailyLimit();
 	const body = JSON.stringify(request);
 	for (let attempt = 0; ; attempt++) {
 		let status = 0;
@@ -114,7 +116,14 @@ export async function systemOne(
 				signal: AbortSignal.timeout(30_000)
 			});
 			status = res.status;
-			if (res.ok) return (await res.json()) as SystemOneResponse;
+			if (res.ok) {
+				const answer = (await res.json()) as SystemOneResponse;
+				await recordSpend('typesafe', answer.model, {
+					inputTokens: answer.usage.input_tokens,
+					outputTokens: answer.usage.output_tokens
+				});
+				return answer;
+			}
 			detail = (await res.text()).slice(0, 300);
 		} catch (error) {
 			detail = error instanceof Error ? error.message : String(error);

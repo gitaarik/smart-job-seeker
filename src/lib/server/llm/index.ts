@@ -6,6 +6,7 @@
 // Explicit import for local use in isFatalLLMError (re-exports don't create
 // local bindings in ESM, which causes ReferenceError at runtime with tsx/esbuild)
 import { LLMAuthenticationError, LLMQuotaExceededError, LLMRateLimitError } from './langchain.js';
+import { DailySpendLimitReached } from './spend-limit.js';
 
 export {
 	type ChatCompletionOptions,
@@ -47,6 +48,7 @@ export function isFatalLLMError(error: unknown): boolean {
 	return (
 		error instanceof LLMRateLimitError ||
 		error instanceof LLMQuotaExceededError ||
-		error instanceof LLMAuthenticationError
+		error instanceof LLMAuthenticationError ||
+		error instanceof DailySpendLimitReached
 	);
 }
