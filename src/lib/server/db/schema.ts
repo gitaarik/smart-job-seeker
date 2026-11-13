@@ -4949,8 +4949,7 @@ export const credit_balances = pgTable(
 		user_id: text().notNull(),
 		period: varchar({ length: 10 }).notNull(),
 		credits_used: integer().default(0).notNull(),
-		credits_allowance: integer().default(0).notNull(),
-		extra_credits: integer().default(0).notNull()
+		credits_allowance: integer().default(0).notNull()
 	},
 	(table) => [
 		foreignKey({
@@ -4961,6 +4960,31 @@ export const credit_balances = pgTable(
 			.onUpdate('cascade')
 			.onDelete('cascade'),
 		unique('credit_balances_user_id_period_key').on(table.user_id, table.period)
+	]
+);
+
+// Purchased credits, one balance per user. They used to sit on the period's
+// credit_balances row (`extra_credits`), so the next period, a renewal or a
+// plan start, hid what the user had paid for. The period allowance is spent
+// first and this only after it; credit_purchases stays the payment record.
+export const credit_wallets = pgTable(
+	'credit_wallets',
+	{
+		user_id: text().primaryKey().notNull(),
+		balance: integer().default(0).notNull(),
+		updated_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
+			.defaultNow()
+			.notNull()
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.user_id],
+			foreignColumns: [users.id],
+			name: 'credit_wallets_user_id_fkey'
+		})
+			.onUpdate('cascade')
+			.onDelete('cascade'),
+		check('credit_wallets_balance_check', sql`${table.balance} >= 0`)
 	]
 );
 
@@ -6066,6 +6090,7 @@ export type CreditPurchases = typeof credit_purchases.$inferSelect;
 export type UsageCounters = typeof usage_counters.$inferSelect;
 export type VerificationEmailAddresses = typeof verification_email_addresses.$inferSelect;
 export type CreditBalances = typeof credit_balances.$inferSelect;
+export type CreditWallets = typeof credit_wallets.$inferSelect;
 export type CreditTransactions = typeof credit_transactions.$inferSelect;
 export type Certificates = typeof certificates.$inferSelect;
 export type InboundEmails = typeof inbound_emails.$inferSelect;
