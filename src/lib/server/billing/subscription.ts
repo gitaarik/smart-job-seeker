@@ -57,6 +57,7 @@ export async function changeSubscriptionPlan(
 export async function reconcileStaleSubscriptions(_options: { graceHours?: number } = {}): Promise<{
 	checked: number;
 	failed: number;
+	expired: number;
 }> {
-	return { checked: 0, failed: 0 };
+	return { checked: 0, failed: 0, expired: 0 };
 }
