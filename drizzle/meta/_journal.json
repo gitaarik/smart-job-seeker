@@ -750,6 +750,13 @@
       "when": 1794588050183,
       "tag": "0106_drop_cloud_browser",
       "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1794595828330,
+      "tag": "0107_places",
+      "breakpoints": true
     }
   ]
 }

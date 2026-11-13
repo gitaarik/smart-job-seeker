@@ -6072,6 +6072,46 @@ export const ats_postings = pgTable(
 
 export type ContentEmbeddings = typeof content_embeddings.$inferSelect;
 
+/**
+ * The gazetteer a user picks a place from (planning/STRUCTURED-LOCATIONS.md):
+ * GeoNames cities over 5,000 people, first-level divisions and countries, plus
+ * our own regions (`src/lib/data/regions.ts`). Loaded by
+ * `scripts/load-places.ts`, never written by the app. A GeoNames row keeps its
+ * geonameid as `id`, so a reload keeps every id; a region has a fixed negative
+ * one. A user's pick is stored whole (`Place` in `src/lib/data/places.ts`), so
+ * nothing reads this table back except the search.
+ */
+export const places = pgTable(
+	'places',
+	{
+		id: integer().primaryKey().notNull(),
+		/** `city` | `admin` | `country` | `region` */
+		kind: varchar({ length: 16 }).notNull(),
+		name: varchar({ length: 200 }).notNull(),
+		/** "Haarlem, North Holland, Netherlands", as shown and printed. */
+		label: varchar({ length: 400 }).notNull(),
+		/** Null for a region. */
+		country_code: varchar({ length: 2 }),
+		/** GeoNames admin1 code ("07"), for a city or an admin area. */
+		admin1: varchar({ length: 20 }),
+		/** The country codes a pick stands for: the own one, or a region's members. */
+		countries: text().array().notNull(),
+		lat: doublePrecision(),
+		lon: doublePrecision(),
+		/** A city's own; an admin area's is its cities' sum, a region's its countries'. */
+		population: bigint({ mode: 'number' }).default(0).notNull(),
+		/** Every name the place answers to, folded by `foldPlaceName`, the own name first. */
+		names: text().array().notNull(),
+		/** `to_tsvector('simple', …)` over `names`, written by the loader:
+		 *  `array_to_string` is not immutable, so it cannot be a generated column. */
+		tsv: tsvector().notNull()
+	},
+	(table) => [
+		index('places_tsv_idx').using('gin', table.tsv),
+		index('places_country_code_idx').on(table.country_code)
+	]
+);
+
 // Inferred select types for all application tables
 export type ProfileDocumentProjects = typeof profile_document_projects.$inferSelect;
 export type ProfileDocumentFiles = typeof profile_document_files.$inferSelect;
@@ -6159,3 +6199,4 @@ export type Files = typeof files.$inferSelect;
 export type SentEmails = typeof sent_emails.$inferSelect;
 export type AtsBoards = typeof ats_boards.$inferSelect;
 export type AtsPostings = typeof ats_postings.$inferSelect;
+export type Places = typeof places.$inferSelect;
