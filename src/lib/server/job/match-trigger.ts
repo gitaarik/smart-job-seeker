@@ -12,7 +12,11 @@ import { db } from '$lib/server/db';
 import { job_matches, match_config } from '$lib/server/db/schema';
 import { enqueueMatchJob } from '$lib/server/queue/match-queue';
 
-export async function triggerMatchForImport(profileId: number, jobId: number): Promise<void> {
+export async function triggerMatchForImport(
+	profileId: number,
+	jobId: number,
+	opts: { houseCharge?: boolean } = {}
+): Promise<void> {
 	try {
 		const [existingMatch, hasConfig] = await Promise.all([
 			db.query.job_matches.findFirst({
@@ -25,7 +29,7 @@ export async function triggerMatchForImport(profileId: number, jobId: number): P
 			})
 		]);
 		if (existingMatch || !hasConfig) return;
-		await enqueueMatchJob({ profileId, jobId, triggeredBy: 'system' });
+		await enqueueMatchJob({ profileId, jobId, triggeredBy: 'system', ...opts });
 	} catch (err) {
 		console.warn(`[match-trigger] failed for profile=${profileId} job=${jobId}:`, err);
 	}

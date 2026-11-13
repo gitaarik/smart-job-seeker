@@ -18,6 +18,12 @@ export interface MatchJobData {
 	profileId: number;
 	jobId: number;
 	triggeredBy: 'user' | 'system';
+	/**
+	 * The house pays for this scoring, set only where a corpus pick is promoted
+	 * (planning/CORPUS-MATCHING.md, Billing). A rescore the user asks for later
+	 * is charged as any other.
+	 */
+	houseCharge?: boolean;
 }
 
 export interface MatchJobResult {
