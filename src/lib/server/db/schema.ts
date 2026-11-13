@@ -2336,6 +2336,12 @@ export const users = pgTable('users', {
 	// a pending deletion, and the reason is what the account holder is shown.
 	suspended_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
 	suspended_reason: text(),
+	// The terms the account holder last agreed to, and when. Set at signup by
+	// the user-create hook in auth/better-auth.ts; `legal_acceptances` keeps
+	// every acceptance, this is only the latest. Null on accounts that predate
+	// it and on in-process ones (invites, demo users). See $lib/legal.
+	terms_accepted_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
+	terms_version: varchar({ length: 32 }),
 	// When the person last used SJS: a signed-in request or an MCP call, stamped
 	// at most once an hour by $lib/server/account/last-seen. Matching and
 	// scheduled searches stop for an account nobody has used for a month and
@@ -2375,6 +2381,38 @@ export const account_deletions = pgTable(
 		unlink_failures: integer().default(0).notNull()
 	},
 	(table) => [uniqueIndex('account_deletions_ref_unique').on(table.account_ref)]
+);
+
+/**
+ * Every time someone agreed to a legal text: the terms at signup, and the
+ * waiver of the 14-day withdrawal right before a purchase starts the service.
+ *
+ * Append-only. "Which version did they agree to, and when" is the question a
+ * dispute asks, so a later acceptance adds a row rather than overwriting one.
+ * `detail` holds what the acceptance was for (the price, the plan change)
+ * where the document alone does not say. Goes with the account on erasure.
+ */
+export const legal_acceptances = pgTable(
+	'legal_acceptances',
+	{
+		id: serial().primaryKey().notNull(),
+		user_id: text().notNull(),
+		// `terms` | `withdrawal_waiver`; see $lib/legal.
+		document: varchar({ length: 32 }).notNull(),
+		version: varchar({ length: 32 }).notNull(),
+		accepted_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
+			.defaultNow()
+			.notNull(),
+		detail: jsonb()
+	},
+	(table) => [
+		index('legal_acceptances_user_idx').on(table.user_id),
+		foreignKey({
+			columns: [table.user_id],
+			foreignColumns: [users.id],
+			name: 'legal_acceptances_user_foreign'
+		}).onDelete('cascade')
+	]
 );
 
 export const side_projects = pgTable(
