@@ -227,7 +227,9 @@ async function createManualJob(
 		})
 		.returning({ id: jobs.id });
 
-	await db.insert(job_importers).values({ job_id: created.id, profile_id: profileId });
+	await db
+		.insert(job_importers)
+		.values({ job_id: created.id, profile_id: profileId, source: 'manual' });
 	await triggerMatchForImport(profileId, created.id);
 
 	return created.id;

@@ -31,6 +31,9 @@ import type { SkipReason } from '../../match-recommendation';
 import type { SalaryMode } from '../../salary/settings';
 import type { SafeZone } from '../../media-library';
 
+/** `job_importers.source`: how a job reached a profile. */
+export type ImportSource = 'task' | 'manual' | 'corpus';
+
 export const Role = pgEnum('Role', ['USER', 'ADMIN', 'SUPER_ADMIN']);
 
 export const ai_chats_id_seq = pgSequence('ai_chats_id_seq', {
@@ -880,7 +883,15 @@ export const match_config = pgTable(
 		 * See `job_matches.pay_ratio`.
 		 */
 		hide_below_ask: boolean().default(false).notNull(),
-		below_ask_tolerance_pct: integer().default(10).notNull()
+		below_ask_tolerance_pct: integer().default(10).notNull(),
+		/**
+		 * Corpus picks (planning/CORPUS-MATCHING.md): each night the worker picks
+		 * up to `corpus_picks_per_day` career-site postings for this profile and
+		 * imports them as `job_importers.source = 'corpus'`. Off stops the nightly
+		 * run and leaves the jobs found so far.
+		 */
+		corpus_picks_enabled: boolean().default(true).notNull(),
+		corpus_picks_per_day: integer().default(10).notNull()
 	},
 	(table) => [
 		index('match_config_profile_id_idx').on(table.profile_id),
@@ -4667,10 +4678,28 @@ export const job_importers = pgTable(
 		id: serial().primaryKey().notNull(),
 		date_created: timestamp({ withTimezone: true, mode: 'date' }).default(sql`CURRENT_TIMESTAMP`),
 		job_id: integer().notNull(),
-		profile_id: integer().notNull()
+		profile_id: integer().notNull(),
+		/**
+		 * How the job reached the profile: a search task's run (or a scrape), an
+		 * applicant adding it by hand, or the nightly corpus pick
+		 * (planning/CORPUS-MATCHING.md). The jobs list says "Found for you" for
+		 * `corpus`, and the daily pick cap counts only those.
+		 */
+		source: varchar({ length: 16 }).$type<ImportSource>().default('task').notNull(),
+		/**
+		 * When the jobs list first showed the job to the profile. Set once, never
+		 * moved: a re-ranker trained on behaviour needs what was shown and
+		 * ignored, and that cannot be backfilled.
+		 */
+		shown_at: timestamp({ withTimezone: true, mode: 'date' })
 	},
 	(table) => [
 		index('job_importers_profile_job_idx').on(table.profile_id, table.job_id),
+		index('job_importers_profile_source_idx').on(
+			table.profile_id,
+			table.source,
+			table.date_created
+		),
 		uniqueIndex('job_importers_job_profile_unique').using(
 			'btree',
 			table.job_id.asc().nullsLast(),
