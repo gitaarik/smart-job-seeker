@@ -29,6 +29,14 @@ export function requireAuth(event: RequestEvent) {
 	) {
 		redirect(302, '/deletion-pending');
 	}
+	// Same shape for a suspension: signing in still works, so the person can
+	// read why, and nothing else does.
+	if (
+		(event.locals.user as { suspended_at?: Date | null }).suspended_at &&
+		!event.locals.adminUser
+	) {
+		redirect(302, '/suspended');
+	}
 	return event.locals.user;
 }
 

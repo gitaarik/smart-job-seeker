@@ -89,6 +89,28 @@ export async function requestAccountDeletion(
 
 	await db.update(users).set({ deletion_requested_at: requestedAt }).where(eq(users.id, userId));
 
+	await revokeAccess(userId, requestedAt);
+
+	const scheduledFor = new Date(requestedAt);
+	scheduledFor.setDate(scheduledFor.getDate() + DELETION_GRACE_DAYS);
+
+	console.log(
+		`[account-delete] ${accountRef(userId).slice(0, 12)} requested by ${opts.by ?? 'user'}; reap at ${scheduledFor.toISOString()}`
+	);
+
+	return { requestedAt, scheduledFor };
+}
+
+/**
+ * Shut an account out without touching its data: sessions, the bearer keys
+ * that never reach the session gate, the access other people granted it, its
+ * demo links and its scheduled searches. Shared by an erasure request and by
+ * a suspension (`suspend.ts`), which revoke access the same way.
+ *
+ * The flag that stops a fresh sign-in (`deletion_requested_at`,
+ * `suspended_at`) is the caller's to set first.
+ */
+export async function revokeAccess(userId: string, at: Date): Promise<void> {
 	// Force sign-out everywhere. The gate in hooks.server.ts is what stops a
 	// fresh sign-in from simply minting another one.
 	await db.delete(sessions).where(eq(sessions.userId, userId));
@@ -107,23 +129,14 @@ export async function requestAccountDeletion(
 		.where(and(eq(demo_links.created_by, userId), eq(demo_links.status, 'active')));
 
 	// Nothing should keep scraping on behalf of an account that has asked to be
-	// gone. `user_paused_at` is the column that means "hands off" to the
-	// auto-import reconciler, which is exactly the intent here.
+	// gone, or been shut out. `user_paused_at` is the column that means "hands
+	// off" to the auto-import reconciler, which is exactly the intent here.
 	await db
 		.update(search_tasks)
-		.set({ is_active: false, user_paused_at: requestedAt })
+		.set({ is_active: false, user_paused_at: at })
 		.where(
 			sql`${search_tasks.profile_id} IN (SELECT id FROM ${profiles} WHERE user_id = ${userId})`
 		);
-
-	const scheduledFor = new Date(requestedAt);
-	scheduledFor.setDate(scheduledFor.getDate() + DELETION_GRACE_DAYS);
-
-	console.log(
-		`[account-delete] ${accountRef(userId).slice(0, 12)} requested by ${opts.by ?? 'user'}; reap at ${scheduledFor.toISOString()}`
-	);
-
-	return { requestedAt, scheduledFor };
 }
 
 /**

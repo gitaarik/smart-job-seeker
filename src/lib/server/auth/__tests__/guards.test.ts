@@ -41,6 +41,18 @@ describe('requireAuth', () => {
 			expect(redirect.location).toBe('/login?redirect=%2Fjobs%3Fpage%3D2');
 		}
 	});
+
+	it('sends a suspended account to /suspended', () => {
+		const user = { id: 'user-1', is_approved: true, suspended_at: new Date('2026-11-13') };
+		expect.assertions(2);
+		try {
+			requireAuth(createMockEvent(user));
+		} catch (e) {
+			const redirect = e as Redirect;
+			expect(redirect.status).toBe(302);
+			expect(redirect.location).toBe('/suspended');
+		}
+	});
 });
 
 describe('redirectIfAuthenticated', () => {

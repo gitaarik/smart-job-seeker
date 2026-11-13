@@ -177,6 +177,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 		) {
 			return json({ error: 'Account scheduled for deletion' }, { status: 403 });
 		}
+		if (
+			(event.locals.user as { suspended_at?: Date | null }).suspended_at &&
+			!event.locals.adminUser
+		) {
+			return json({ error: 'Account suspended' }, { status: 403 });
+		}
 
 		// Throttle AI writes, for the same reason the auth gate above is central:
 		// a new /api/ai route should be covered by default rather than by

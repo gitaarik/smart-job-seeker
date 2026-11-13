@@ -12,6 +12,7 @@ import {
 	verifications
 } from '$lib/server/db/schema';
 import { cancelAccountDeletion, requestAccountDeletion } from '$lib/server/account/delete';
+import { suspendAccount, unsuspendAccount } from '$lib/server/account/suspend';
 import { sendEmail } from '$lib/server/email';
 import { getEnv } from '$lib/tools/get-env';
 import { getActiveSubscription } from '$lib/server/billing/subscription';
@@ -189,6 +190,34 @@ export const actions: Actions = {
 			success: true,
 			message: `Deletion scheduled for ${scheduledFor.toISOString().slice(0, 10)}.`
 		};
+	},
+
+	/**
+	 * Shut an account out and keep its data (abuse, a payment dispute, a login
+	 * that looks taken over). The reason is shown to the account holder.
+	 */
+	suspend_account: async ({ request, locals, params }) => {
+		if (!locals.user?.is_admin) {
+			return fail(403, { error: 'Admin access required' });
+		}
+		if (params.id === locals.user.id) {
+			return fail(400, { error: 'You cannot suspend your own account' });
+		}
+		const reason = String((await request.formData()).get('reason') ?? '');
+		if (!(await suspendAccount(params.id, reason))) {
+			return fail(400, { error: 'Not found, or already suspended' });
+		}
+		return { success: true };
+	},
+
+	unsuspend_account: async ({ locals, params }) => {
+		if (!locals.user?.is_admin) {
+			return fail(403, { error: 'Admin access required' });
+		}
+		if (!(await unsuspendAccount(params.id))) {
+			return fail(400, { error: 'This account is not suspended' });
+		}
+		return { success: true };
 	},
 
 	set_subscription: async ({ request, locals, params }) => {

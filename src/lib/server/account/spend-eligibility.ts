@@ -12,12 +12,13 @@
  * about accounts and is reached only after the expensive context assembly has
  * already been paid for.
  *
- * The predicate is one row and covers three cases with one rule, because all
- * three revoke access the same way:
+ * The predicate is one row and covers four cases with one rule, because all
+ * four revoke access the same way:
  *   - an expired or revoked demo (the sweep sets `is_approved = false`),
  *   - an account an admin has not approved, or has un-approved,
  *   - an account with a pending erasure, whose access is revoked the moment
- *     `deletion_requested_at` is stamped (see `requireAuth`).
+ *     `deletion_requested_at` is stamped (see `requireAuth`),
+ *   - a suspended account (`suspended_at`, see `account/suspend`).
  *
  * The demo TEMPLATE is the one exemption and it is load-bearing. It is never a
  * login, so it is never approved, but `copyJobMatches` seeds every demo clone
@@ -43,7 +44,8 @@ import { and, eq } from 'drizzle-orm';
 import { dbDirect as db } from '$lib/server/db';
 import { profiles, users } from '$lib/server/db/schema';
 
-export type SpendBlockReason = 'user_missing' | 'not_approved' | 'deletion_pending' | 'idle';
+export type SpendBlockReason =
+	'user_missing' | 'not_approved' | 'deletion_pending' | 'suspended' | 'idle';
 
 /** How long an account can go unused before background work stops for it. */
 export const IDLE_AFTER_DAYS = 30;
@@ -57,6 +59,7 @@ const REASON_TEXT: Record<SpendBlockReason, string> = {
 	user_missing: 'owner account no longer exists',
 	not_approved: 'account is not approved (expired demo, or awaiting approval)',
 	deletion_pending: 'account has a pending erasure',
+	suspended: 'account is suspended',
 	idle: `nobody has used the account for ${IDLE_AFTER_DAYS} days`
 };
 
@@ -92,6 +95,7 @@ export async function getSpendEligibility(
 			is_approved: true,
 			is_demo_template: true,
 			deletion_requested_at: true,
+			suspended_at: true,
 			last_seen_at: true,
 			createdAt: true
 		}
@@ -103,6 +107,7 @@ export async function getSpendEligibility(
 	if (user.is_demo_template) return { allowed: true };
 	if (!user.is_approved) return { allowed: false, reason: 'not_approved' };
 	if (user.deletion_requested_at) return { allowed: false, reason: 'deletion_pending' };
+	if (user.suspended_at) return { allowed: false, reason: 'suspended' };
 	if (options.background && isIdle(user) && !(await hasDigestEnabled(userId))) {
 		return { allowed: false, reason: 'idle' };
 	}

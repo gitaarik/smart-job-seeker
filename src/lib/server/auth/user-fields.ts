@@ -41,5 +41,12 @@ export const userAdditionalFields = {
 		type: 'date',
 		required: false,
 		input: false
+	},
+	// The same, for an account an admin has suspended. See
+	// $lib/server/account/suspend.
+	suspended_at: {
+		type: 'date',
+		required: false,
+		input: false
 	}
 } as const;

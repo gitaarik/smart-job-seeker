@@ -140,6 +140,12 @@
 					>Deletion pending</span
 				>
 			{/if}
+			{#if user.suspended_at}
+				<span
+					class="rounded-full bg-red-500/15 px-1.5 py-0.5 text-xs text-red-600 dark:text-red-400"
+					>Suspended</span
+				>
+			{/if}
 			{#if user.hasInvite}
 				<span
 					class="rounded-full bg-orange-500/15 px-1.5 py-0.5 text-xs text-orange-600 dark:text-orange-400"
@@ -223,6 +229,45 @@
 								class="rounded-md border px-3 py-1.5 text-sm font-medium"
 								style="border-color: var(--dash-error); color: var(--dash-error);"
 								>Schedule deletion</button
+							>
+						</form>
+					{/if}
+
+					{#if user.suspended_at}
+						<form method="POST" action="?/unsuspend_account" use:enhance>
+							<button
+								type="submit"
+								class="rounded-md px-3 py-1.5 text-sm font-medium text-white"
+								style="background-color: var(--dash-primary);"
+								title={user.suspended_reason ?? undefined}>Lift suspension</button
+							>
+						</form>
+					{:else}
+						<form
+							method="POST"
+							action="?/suspend_account"
+							use:enhance
+							class="flex items-center gap-2"
+							onsubmit={(e) => {
+								if (
+									!confirm(
+										'Suspend this account? It signs everyone out and revokes its device and MCP keys.'
+									)
+								)
+									e.preventDefault();
+							}}
+						>
+							<input
+								name="reason"
+								placeholder="Reason, shown to the user"
+								aria-label="Suspension reason"
+								class="rounded-md border px-2 py-1.5 text-sm"
+								style="border-color: var(--dash-border); background: var(--dash-bg); color: var(--dash-text);"
+							/>
+							<button
+								type="submit"
+								class="rounded-md border px-3 py-1.5 text-sm font-medium"
+								style="border-color: var(--dash-error); color: var(--dash-error);">Suspend</button
 							>
 						</form>
 					{/if}

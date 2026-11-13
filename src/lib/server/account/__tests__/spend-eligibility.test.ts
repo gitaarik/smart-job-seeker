@@ -95,6 +95,14 @@ describe('getSpendEligibility', () => {
 		});
 	});
 
+	it('blocks a suspended account', async () => {
+		findFirst.mockResolvedValue({ ...APPROVED, suspended_at: new Date('2026-11-13') });
+		expect(await getSpendEligibility('u1')).toEqual({
+			allowed: false,
+			reason: 'suspended'
+		});
+	});
+
 	it('blocks a profile whose owner no longer exists', async () => {
 		findFirst.mockResolvedValue(undefined);
 		expect(await getSpendEligibility('gone')).toEqual({
@@ -121,6 +129,7 @@ describe('getSpendEligibility', () => {
 			is_approved: true,
 			is_demo_template: true,
 			deletion_requested_at: true,
+			suspended_at: true,
 			last_seen_at: true,
 			createdAt: true
 		});
