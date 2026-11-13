@@ -3,6 +3,7 @@ import { redirect } from '@sveltejs/kit';
 import { redirectIfAuthenticated } from '$lib/server/auth/guards';
 import { turnstileConfigured, turnstileSiteKey } from '$lib/server/auth/turnstile';
 import { registrationOpen } from '$lib/server/auth/registration';
+import { termsVersion } from '$lib/server/legal/texts';
 
 /**
  * Registration is open.
@@ -25,6 +26,7 @@ export const load: PageServerLoad = async (event) => {
 
 	return {
 		turnstileSiteKey: turnstileSiteKey(),
-		turnstileEnabled: turnstileConfigured()
+		turnstileEnabled: turnstileConfigured(),
+		termsVersion: termsVersion()
 	};
 };

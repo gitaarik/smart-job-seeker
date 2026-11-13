@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { track } from '$lib/tools/analytics';
+	import TermsCheckbox from '$lib/components/legal/TermsCheckbox.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -13,6 +14,9 @@
 	let email = $state('');
 	let password = $state('');
 	let confirmPassword = $state('');
+	let acceptedTerms = $state(false);
+	// An instance that publishes no terms shows no box and asks for nothing.
+	const mustAccept = $derived(data.termsVersion !== null);
 	let error = $state('');
 	let loading = $state(false);
 
@@ -82,7 +86,14 @@
 				// Sent as a header rather than a body field: better-auth validates
 				// the signup body against the user model, and a captcha nonce has no
 				// business being on it.
-				{ headers: { 'x-turnstile-token': turnstileToken } }
+				// The terms version travels the same way, and the endpoint refuses a
+				// signup without the current one (auth/signup-gate.ts).
+				{
+					headers: {
+						'x-turnstile-token': turnstileToken,
+						...(acceptedTerms && data.termsVersion ? { 'x-terms-version': data.termsVersion } : {})
+					}
+				}
 			);
 
 			if (result.error) {
@@ -197,6 +208,10 @@
 				</div>
 			</div>
 
+			{#if data.termsVersion}
+				<TermsCheckbox version={data.termsVersion} bind:checked={acceptedTerms} />
+			{/if}
+
 			{#if data.turnstileEnabled}
 				<div class="flex justify-center" bind:this={turnstileContainer}></div>
 			{/if}
@@ -204,7 +219,9 @@
 			<div>
 				<button
 					type="submit"
-					disabled={loading || (data.turnstileEnabled && !turnstileToken)}
+					disabled={loading ||
+						(mustAccept && !acceptedTerms) ||
+						(data.turnstileEnabled && !turnstileToken)}
 					class="flex w-full justify-center rounded-md border border-transparent bg-[var(--dash-primary)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--dash-primary-hover)] focus:ring-2 focus:ring-[var(--dash-primary)] focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{#if loading}
