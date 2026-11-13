@@ -13,18 +13,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { APIError } from 'better-auth/api';
 
 const registrationOpen = vi.hoisted(() => vi.fn());
+const autoApproveSignups = vi.hoisted(() => vi.fn());
 const verifyTurnstileToken = vi.hoisted(() => vi.fn());
 
-vi.mock('$lib/server/auth/registration', () => ({ registrationOpen }));
+vi.mock('$lib/server/auth/registration', () => ({ autoApproveSignups, registrationOpen }));
 vi.mock('$lib/server/auth/turnstile', () => ({ verifyTurnstileToken }));
 
-const { guardSignup } = await import('../signup-gate');
+const { approvesOnSignup, guardEmailChange, guardSignup } = await import('../signup-gate');
 
 /** A request-bearing context, as the router builds one. */
-function fromHttp(headers: Record<string, string> = {}) {
+function fromHttp(headers: Record<string, string> = {}, body: { email?: string } = {}) {
 	return {
 		request: new Request('https://example.test/api/auth/sign-up/email', { method: 'POST' }),
-		headers: new Headers(headers)
+		headers: new Headers(headers),
+		body
 	};
 }
 
@@ -99,5 +101,60 @@ describe('guardSignup', () => {
 			await guardSignup(fromHttp({ 'x-turnstile-token': 'tok', 'x-real-ip': '2.2.2.2' }));
 			expect(verifyTurnstileToken).toHaveBeenCalledWith('tok', '2.2.2.2');
 		});
+	});
+
+	describe('disposable addresses', () => {
+		it('refuses one before spending a Turnstile call', async () => {
+			await expect(guardSignup(fromHttp({}, { email: 'x@mailinator.com' }))).rejects.toThrow(
+				'disposable email addresses'
+			);
+			expect(verifyTurnstileToken).not.toHaveBeenCalled();
+		});
+
+		it('refuses a subdomain of a listed service, in any case', async () => {
+			await expect(guardSignup(fromHttp({}, { email: 'x@Inbox.MAILINATOR.com' }))).rejects.toThrow(
+				APIError
+			);
+		});
+
+		it('lets an ordinary address through', async () => {
+			await expect(
+				guardSignup(fromHttp({}, { email: 'someone@posteo.net' }))
+			).resolves.toBeUndefined();
+		});
+
+		it('leaves in-process callers alone', async () => {
+			await expect(guardSignup({ body: { email: 'x@mailinator.com' } })).resolves.toBeUndefined();
+		});
+
+		it('refuses an email change to one', () => {
+			expect(() => guardEmailChange({ body: { newEmail: 'x@mailinator.com' } })).toThrow(APIError);
+			expect(() => guardEmailChange({ body: { newEmail: 'x@posteo.net' } })).not.toThrow();
+		});
+	});
+});
+
+describe('approvesOnSignup', () => {
+	const signup = { path: '/sign-up/email', request: new Request('https://example.test') };
+
+	it('approves a signup over HTTP when the setting is auto', () => {
+		autoApproveSignups.mockReturnValue(true);
+		expect(approvesOnSignup(signup)).toBe(true);
+	});
+
+	it('leaves it waiting when the setting is manual', () => {
+		autoApproveSignups.mockReturnValue(false);
+		expect(approvesOnSignup(signup)).toBe(false);
+	});
+
+	it('never approves an in-process create (invites, demo accounts)', () => {
+		autoApproveSignups.mockReturnValue(true);
+		expect(approvesOnSignup({ path: '/sign-up/email' })).toBe(false);
+		expect(approvesOnSignup(null)).toBe(false);
+	});
+
+	it('never approves a user created by another endpoint', () => {
+		autoApproveSignups.mockReturnValue(true);
+		expect(approvesOnSignup({ ...signup, path: '/sign-in/social' })).toBe(false);
 	});
 });

@@ -13,7 +13,7 @@ import { users, verifications } from '$lib/server/db/schema';
 import { getEnv } from '$lib/tools/get-env';
 import { sendEmail } from '$lib/server/email';
 import { verificationMail } from '$lib/server/auth/verification-email';
-import { guardSignup } from '$lib/server/auth/signup-gate';
+import { approvesOnSignup, guardEmailChange, guardSignup } from '$lib/server/auth/signup-gate';
 import { userAdditionalFields } from '$lib/server/auth/user-fields';
 
 export const auth = betterAuth({
@@ -72,8 +72,8 @@ export const auth = betterAuth({
 	 */
 	hooks: {
 		before: createAuthMiddleware(async (ctx) => {
-			if (ctx.path !== '/sign-up/email') return;
-			await guardSignup(ctx);
+			if (ctx.path === '/sign-up/email') await guardSignup(ctx);
+			else if (ctx.path === '/change-email') guardEmailChange(ctx);
 		})
 	},
 
@@ -163,6 +163,12 @@ export const auth = betterAuth({
 	databaseHooks: {
 		user: {
 			create: {
+				// Where `SJS_REGISTRATION_APPROVAL=auto`, a stranger's signup starts
+				// approved; the email verification still stands in front of it.
+				before: async (user, ctx) => {
+					if (!approvesOnSignup(ctx)) return;
+					return { data: { ...user, is_approved: true } };
+				},
 				after: async (user) => {
 					// Demo users get a synthetic, non-routable address — no welcome or
 					// admin-notification emails (see lib/server/demo).
@@ -177,11 +183,20 @@ export const auth = betterAuth({
 					const adminEmail = getEnv('SJS_ADMIN_EMAIL', '');
 					const appName = 'Smart Job Seeker';
 
+					const approved = user.is_approved === true;
+
 					// Notify the new user
 					await sendEmail({
 						to: user.email,
 						subject: `Welcome to ${appName}`,
-						html: `
+						html: approved
+							? `
+              <h2>Thanks for joining ${appName}!</h2>
+              <p>One thing before you're in: <strong>confirm your email address</strong>.
+                 We've sent a separate message with the link, and you can sign in
+                 once you've clicked it.</p>
+            `
+							: `
               <h2>Thanks for joining ${appName}!</h2>
               <p>Two things before you're in:</p>
               <ol>
@@ -205,7 +220,7 @@ export const auth = betterAuth({
                 <h2>New user signup</h2>
                 <p><strong>Name:</strong> ${user.name || '(not provided)'}</p>
                 <p><strong>Email:</strong> ${user.email}</p>
-                <p>Log in to the admin panel to approve this user.</p>
+                <p>${approved ? 'Approved automatically (SJS_REGISTRATION_APPROVAL=auto).' : 'Log in to the admin panel to approve this user.'}</p>
               `,
 							type: 'admin_notification'
 						}).catch((err) => console.error('[auth] Failed to send admin notification:', err));

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+
+	let { data } = $props();
 </script>
 
 <svelte:head>
@@ -54,14 +56,24 @@
 					arrived in a few minutes.
 				</p>
 			</div>
-			<div class="flex gap-3">
-				<span class="font-semibold text-[var(--dash-primary)]">2.</span>
+			{#if data.awaitsApproval}
+				<div class="flex gap-3">
+					<span class="font-semibold text-[var(--dash-primary)]">2.</span>
+					<p class="text-[var(--dash-text-secondary)]">
+						<strong class="text-[var(--dash-text)]">Wait for your place.</strong> We're letting people
+						in gradually while we get the platform ready. You'll get an email the moment your account
+						is activated — there's nothing else you need to do.
+					</p>
+				</div>
+			{:else}
 				<p class="text-[var(--dash-text-secondary)]">
-					<strong class="text-[var(--dash-text)]">Wait for your place.</strong> We're letting people in
-					gradually while we get the platform ready. You'll get an email the moment your account is activated
-					— there's nothing else you need to do.
+					Once you've clicked it, <a
+						href={resolve('/login')}
+						class="font-medium text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
+						>sign in</a
+					> and you're in.
 				</p>
-			</div>
+			{/if}
 		</div>
 
 		<a

@@ -12,7 +12,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const getEnv = vi.hoisted(() => vi.fn());
 vi.mock('$lib/tools/get-env', () => ({ getEnv }));
 
-const { registrationOpen } = await import('../registration');
+const { autoApproveSignups, registrationOpen } = await import('../registration');
 
 /** Stand in for the env, honouring the caller's default like the real one. */
 function envIs(value: string | undefined) {
@@ -41,5 +41,28 @@ describe('registrationOpen', () => {
 		envIs('true');
 		registrationOpen();
 		expect(getEnv).toHaveBeenCalledWith('SJS_REGISTRATION_OPEN', 'false');
+	});
+});
+
+describe('autoApproveSignups', () => {
+	it('is manual when nothing is set', () => {
+		envIs(undefined);
+		expect(autoApproveSignups()).toBe(false);
+	});
+
+	it.each(['auto', 'AUTO', ' auto '])('approves automatically on %j', (value) => {
+		envIs(value);
+		expect(autoApproveSignups()).toBe(true);
+	});
+
+	it.each(['manual', 'true', '1', 'yes', '', 'automatic'])('stays manual on %j', (value) => {
+		envIs(value);
+		expect(autoApproveSignups()).toBe(false);
+	});
+
+	it('reads the setting by its documented name', () => {
+		envIs('auto');
+		autoApproveSignups();
+		expect(getEnv).toHaveBeenCalledWith('SJS_REGISTRATION_APPROVAL', 'manual');
 	});
 });

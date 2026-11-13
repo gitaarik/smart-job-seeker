@@ -13,11 +13,15 @@
 
 import { APIError } from 'better-auth/api';
 import { verifyTurnstileToken } from '$lib/server/auth/turnstile';
-import { registrationOpen } from '$lib/server/auth/registration';
+import { autoApproveSignups, registrationOpen } from '$lib/server/auth/registration';
+import { isDisposableEmail } from '$lib/server/auth/disposable-email';
+
+const DISPOSABLE_MESSAGE =
+	"Please use an address you'll keep: disposable email addresses can't be used here.";
 
 /**
  * The slice of better-call's endpoint context this needs. Structural on
- * purpose — the real context carries ~20 more fields, and naming the two that
+ * purpose — the real context carries ~20 more fields, and naming the few that
  * matter is what lets a test construct one honestly.
  */
 export interface SignupGateContext {
@@ -27,6 +31,8 @@ export interface SignupGateContext {
 	 */
 	request?: Request;
 	headers?: Headers | null;
+	/** The parsed JSON body; `email` on a signup, `newEmail` on a change. */
+	body?: { email?: unknown; newEmail?: unknown } | null;
 }
 
 /**
@@ -64,6 +70,10 @@ export async function guardSignup(ctx: SignupGateContext): Promise<void> {
 		});
 	}
 
+	// Before Turnstile, since it costs nothing and Turnstile costs a call.
+	if (typeof ctx.body?.email === 'string' && isDisposableEmail(ctx.body.email)) {
+		throw new APIError('BAD_REQUEST', { message: DISPOSABLE_MESSAGE });
+	}
 	// The token travels as a header rather than a body field — better-auth
 	// validates the signup body against the user model and an unknown property
 	// is a 400, and a CAPTCHA nonce has no business being on the user model.
@@ -82,4 +92,28 @@ export async function guardSignup(ctx: SignupGateContext): Promise<void> {
 			message: 'Captcha verification failed. Please reload the page and try again.'
 		});
 	}
+}
+
+/**
+ * Refuse moving an account to a disposable address. Called from `hooks.before`
+ * for `/change-email`, so the signup check cannot be stepped around by signing
+ * up with a real address and switching afterwards.
+ */
+export function guardEmailChange(ctx: SignupGateContext): void {
+	if (typeof ctx.body?.newEmail === 'string' && isDisposableEmail(ctx.body.newEmail)) {
+		throw new APIError('BAD_REQUEST', { message: DISPOSABLE_MESSAGE });
+	}
+}
+
+/**
+ * Whether the account this signup creates starts approved.
+ *
+ * Only a stranger's signup, over HTTP, and only where the environment says so
+ * (`autoApproveSignups`). In-process callers (invites, demo accounts) set
+ * `is_approved` themselves straight after creating the user, so they are left
+ * as they were. Called from the user-create database hook.
+ */
+export function approvesOnSignup(ctx: { path?: string; request?: Request } | null): boolean {
+	if (!ctx?.request || ctx.path !== '/sign-up/email') return false;
+	return autoApproveSignups();
 }

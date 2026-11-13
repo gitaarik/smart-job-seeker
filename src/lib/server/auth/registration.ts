@@ -22,3 +22,21 @@ export function registrationOpen(): boolean {
 	const raw = String(getEnv('SJS_REGISTRATION_OPEN', 'false')).trim().toLowerCase();
 	return raw === 'true' || raw === '1' || raw === 'yes';
 }
+
+/**
+ * Whether a public signup is approved when it is created, instead of waiting
+ * for an admin. `SJS_REGISTRATION_APPROVAL=auto`; anything else is manual.
+ *
+ * Approving at creation is approving at verification in practice: with
+ * `requireEmailVerification` nobody signs in before following the link, so an
+ * address nobody receives at never gets in. It applies only to signups over
+ * HTTP (`approvesOnSignup` in `signup-gate.ts`); invites and demo accounts set
+ * `is_approved` themselves, and an admin can still un-approve or suspend.
+ *
+ * **Defaults to manual**, for the same reason the flag above defaults to
+ * closed: a mistyped value should leave people waiting, not let them in.
+ */
+export function autoApproveSignups(): boolean {
+	const raw = String(getEnv('SJS_REGISTRATION_APPROVAL', 'manual')).trim().toLowerCase();
+	return raw === 'auto';
+}
