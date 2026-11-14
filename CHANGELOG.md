@@ -5,6 +5,38 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.46.0] - 2026-11-14
+
+48 commits since v0.45.0.
+
+### Added
+
+- Feeds: Remote OK and We Work Remotely are now job sources you can sweep.
+- Job platforms can be paused, which stops their tasks and defers any that would run.
+- Places: pick places on your profile and in match settings, and on import tasks.
+- Places: search for jobs by place, including a "remote anywhere" option, in search tasks.
+- Terms: sign-up asks you to accept the current terms, and `/terms` and `/privacy` pages are published.
+- Billing: each purchase sends a confirmation email, and the withdrawal waiver is asked for before any purchase.
+- Getting Started: a "Connect a device" step.
+
+### Changed
+
+- Job-site passwords are no longer stored; you sign in on the site and your browser remembers it.
+- Scraper runs that search without a location are flagged and skip their scrape fee.
+- MCP tool calls count against a per-user billing allowance.
+- Telemetry sends sizes instead of text outside development.
+
+### Fixed
+
+- Match settings: the remote-abroad and corpus-picks fields now save.
+- Scraper: location is searched after it is filled, the bare place name wins over a district, and the scrape fee is waived only when our own location fill failed.
+- Places: a lone location suggestion in another country is refused.
+- Search form: pressing Enter in the keywords box after a name change, and a lost location pick, are handled correctly.
+
+### Removed
+
+- The GoLogin cloud browser and its leftover Browser-Use code are removed from the scraper.
+
 ## [0.45.0] - 2026-11-13
 
 110 commits since v0.44.0.
