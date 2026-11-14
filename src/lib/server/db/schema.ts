@@ -6004,7 +6004,7 @@ export const ats_boards = pgTable(
 	'ats_boards',
 	{
 		id: serial().primaryKey().notNull(),
-		/** `greenhouse` | `lever` | `ashby` | `recruitee`; the key into the
+		/** `greenhouse` | `lever` | `ashby` | `recruitee` | `remoteok`; the key into the
 		 *  provider registry in cloud's `src/server/ats/`. */
 		provider: varchar({ length: 32 }).notNull(),
 		/** The company's slug in the provider's URL scheme
