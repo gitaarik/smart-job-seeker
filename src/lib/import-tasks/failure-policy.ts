@@ -352,8 +352,8 @@ export function explainAuthBlock(kind: FailureKind, ctx: ExplainContext): Explan
 
 	// Deliberately vague about the remedy — each kind's own paragraph names it,
 	// and an opening that says "until someone confirms the login" would
-	// contradict the credentials case, where the fix is a password and no
-	// manual run at all.
+	// contradict the credentials case, where the fix may be the account's
+	// email address on the task page and no manual run at all.
 	const opening = ctx.disabled
 		? `Switched off ${ctx.taskLabel ? what : `your ${ctx.platform} import`}. It has been ` +
 			`unable to log in for weeks, so it has stopped retrying — switch it back on once ` +
@@ -422,13 +422,13 @@ export function explainAuthBlock(kind: FailureKind, ctx: ExplainContext): Explan
 		}
 		case 'auth_credentials':
 			return {
-				title: `${subject} can't log in — password rejected`,
+				title: `${subject} can't log in — account rejected`,
 				message:
 					`${opening}\n\n` +
-					`${ctx.platform} rejected the saved password. Update the stored credentials for ` +
-					`this platform — no manual run needed for this one, the next scheduled run will ` +
-					`pick up the new password.`,
-				statusMessage: short('saved password was rejected')
+					`${ctx.platform} did not accept the account this task signs in with. Check the ` +
+					`email address on the task page, or sign in once yourself in the browser; the ` +
+					`next scheduled run picks the session up from there.`,
+				statusMessage: short('sign-in account was rejected')
 			};
 		case 'auth_captcha':
 			return {
@@ -459,10 +459,9 @@ export function explainAuthBlock(kind: FailureKind, ctx: ExplainContext): Explan
 					`${opening}\n\n` +
 					`${ctx.platform} offers passkey sign-in, and the browser answers by opening ` +
 					`its own passkey/security-key dialog over the login form. That dialog belongs ` +
-					`to the browser rather than to the page, so it takes the keyboard and the ` +
-					`saved password never reaches the form. ${ctx.platform} then refuses the ` +
-					`empty form, which looks exactly like a wrong password — the stored one is ` +
-					`fine, leave it alone.\n\n` +
+					`to the browser rather than to the page, so it takes the keyboard and ` +
+					`nothing typed reaches the form. ${ctx.platform} then refuses the ` +
+					`empty form, which looks exactly like a wrong password.\n\n` +
 					`Open the task and hit Run now: dismiss the passkey dialog in the browser ` +
 					`window and sign in with the password. ${ctx.platform} remembers the device ` +
 					`afterwards, so the scheduled runs go back to working on their own. To stop ` +

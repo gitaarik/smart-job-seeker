@@ -4,7 +4,7 @@
  *
  * Auto-import generates tasks the moment a profile is created, but a freshly
  * generated task often can't run yet: it may need a connected browser device,
- * login credentials for a gated platform, or the right login mode. This module
+ * or a platform and a search page to run against. This module
  * computes the unmet requirements ("blockers") from plain task + platform data
  * so the run endpoint can refuse to start, and the UI can tell the user exactly
  * what to fix.
@@ -15,7 +15,7 @@
  * the server enforces.
  */
 
-export type ImportTaskBlockerKey = 'platform' | 'search_url' | 'device' | 'credentials';
+export type ImportTaskBlockerKey = 'platform' | 'search_url' | 'device';
 
 export interface ImportTaskBlocker {
 	key: ImportTaskBlockerKey;
@@ -27,7 +27,7 @@ export interface ImportTaskBlocker {
 
 export interface ImportTaskReadinessInput {
 	platformId: number | null;
-	/** Platform display name, for a friendlier credentials message. */
+	/** Platform display name, for friendlier messages. */
 	platformName?: string | null;
 	/** The task's own pre-built search URL, if any (`search_tasks.search_url`). */
 	taskSearchUrl: string | null;
@@ -40,12 +40,13 @@ export interface ImportTaskReadinessInput {
 	 * Optional so existing callers that predate the fallback still type-check.
 	 */
 	platformUrl?: string | null;
-	/** The platform's login page (`job_platforms.login_page_url`); null ⇒ public. */
+	/**
+	 * The platform's login page (`job_platforms.login_page_url`); null ⇒ public.
+	 * Not a blocker on its own: a gated platform is signed in to by the user,
+	 * in the browser, and the run stops to ask when the session has lapsed.
+	 * Kept on the input because the UI's sign-in section reads it.
+	 */
 	platformLoginPageUrl: string | null;
-	/** `search_tasks.login_mode`: "auto" | "manual" | "none". */
-	loginMode: string | null;
-	/** Whether a credential is linked (`platform_profile_id` / credential id set). */
-	hasCredential: boolean;
 	/** `search_tasks.browser_provider`; null ⇒ use the server default. */
 	browserProvider: string | null;
 	/** Server default provider (`config.browserProvider`), for the null case. */
@@ -137,26 +138,18 @@ export function computeImportTaskBlockers(input: ImportTaskReadinessInput): Impo
 		});
 	}
 
-	// A gated platform (has a login page) needs credentials only when the task
-	// signs in automatically. "manual" lets the user sign in live during the
-	// run, and "none" skips login entirely — neither needs stored credentials.
+	// Signing in is never a blocker. A gated platform used to need a saved
+	// login when the task signed in automatically; the server holds no
+	// platform passwords any more (2026-11-14), so the user signs in once in
+	// the browser and a run whose session has lapsed stops to ask (attended)
+	// or fails with an auth tag that the auth-block policy notifies on.
 	//
-	// Note what is deliberately *not* a blocker: a task set to sign in on a
-	// platform with no `login_page_url`. That combination does nothing at run
-	// time (`handleLoginPhase` returns immediately), but `login_mode` defaults
-	// to "auto" at the column level, so every task ever created on a public
-	// board carries it. Refusing to start those would break tasks that work
-	// today. The sign-in section says so where the setting is edited instead —
-	// see `explainMissingSignInPage` in `sign-in.ts`.
-	const needsLogin = !!input.platformLoginPageUrl;
-	if (needsLogin && input.loginMode === 'auto' && !input.hasCredential) {
-		const name = input.platformName?.trim() || 'This platform';
-		blockers.push({
-			key: 'credentials',
-			title: 'Login credentials required',
-			detail: `${name} asks you to sign in, but this task has no saved login. Add one, or switch it to "I sign in myself" to sign in during the run.`
-		});
-	}
+	// Also deliberately *not* a blocker: a task set to sign in on a platform
+	// with no `login_page_url`. That combination does nothing at run time
+	// (`handleLoginPhase` returns immediately), but `login_mode` defaults to
+	// signing in at the column level, so every task ever created on a public
+	// board carries it. The sign-in section says so where the setting is
+	// edited instead — see `explainMissingSignInPage` in `sign-in.ts`.
 
 	return blockers;
 }

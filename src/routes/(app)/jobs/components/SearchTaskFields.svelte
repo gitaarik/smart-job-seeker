@@ -481,8 +481,8 @@
 	let hasSignInPage = $derived(!!signInPageUrl);
 
 	// Login mode (edit)
-	let editLoginMode = $state<string>(task?.login_mode ?? 'auto');
-	let editSavedLoginMode = $state<string>(task?.login_mode ?? 'auto');
+	let editLoginMode = $state<string>(task?.login_mode ?? 'manual');
+	let editSavedLoginMode = $state<string>(task?.login_mode ?? 'manual');
 	let loginModeDirty = $derived(editLoginMode !== editSavedLoginMode);
 	let isSavingLoginMode = $state(false);
 
@@ -613,8 +613,8 @@
 			const credId = searchTask.platform_credential_id?.toString() ?? 'none';
 			editSavedCredentialId = credId;
 			editSelectedCredentialId = credId;
-			editLoginMode = searchTask.login_mode ?? 'auto';
-			editSavedLoginMode = searchTask.login_mode ?? 'auto';
+			editLoginMode = searchTask.login_mode ?? 'manual';
+			editSavedLoginMode = searchTask.login_mode ?? 'manual';
 			signInPageUrl = searchTask.job_platform?.login_page_url ?? null;
 		}
 	});
@@ -818,8 +818,8 @@
 						<!-- Signing in by hand, without waiting for a run to ask.
 						     The same Chrome scrapes and browses, so the session the
 						     user creates here is the one the next run uses — which is
-						     the whole reason "I sign in myself" is not a worse option
-						     than storing a password, and nothing in the UI said it. -->
+						     what makes signing in once enough, now that no password
+						     is stored anywhere. -->
 						{#if toLoginMode(editLoginMode) === 'manual' && hasSignInPage}
 							<div class="border-t border-[var(--dash-border)] pt-3">
 								{#if onSignInNow}

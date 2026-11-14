@@ -134,8 +134,6 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		platformSearchPageUrl: searchTask.job_platform?.search_page_url ?? null,
 		platformUrl: searchTask.job_platform?.url ?? null,
 		platformLoginPageUrl: searchTask.job_platform?.login_page_url ?? null,
-		loginMode: searchTask.login_mode,
-		hasCredential: searchTask.platform_profile_id != null,
 		browserProvider: searchTask.browser_provider,
 		serverBrowserProvider: config.browserProvider,
 		deviceConnected,

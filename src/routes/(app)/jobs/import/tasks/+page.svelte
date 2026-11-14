@@ -394,8 +394,6 @@
 			platformSearchPageUrl: search.job_platform?.search_page_url ?? null,
 			platformUrl: search.job_platform?.url ?? null,
 			platformLoginPageUrl: search.job_platform?.login_page_url ?? null,
-			loginMode: search.login_mode,
-			hasCredential: search.platform_profile_id != null,
 			browserProvider: search.browser_provider,
 			serverBrowserProvider: data.serverBrowserProvider,
 			deviceConnected,

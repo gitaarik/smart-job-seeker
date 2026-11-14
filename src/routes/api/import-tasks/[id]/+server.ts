@@ -13,7 +13,6 @@ import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
 import { parseBody, searchTaskUpdateSchema } from '$lib/server/validation/api-schemas';
 import { hasDeviceAccess } from '$lib/server/device-shares';
 import { hasCredentialAccess } from '$lib/server/credential-shares';
-import { encryptCredential } from '$lib/server/auth/crypto';
 import { checkPublicHttpUrl } from '$lib/server/net/public-url';
 import { config } from '$lib/server/config';
 import type { PreferredPlace } from '$lib/data/places';
@@ -304,7 +303,6 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 				user_id: user.id,
 				platform_id: searchTask.platform_id,
 				username: body.new_credential.username,
-				password: encryptCredential(body.new_credential.password || null),
 				date_created: new Date(),
 				date_updated: new Date()
 			})

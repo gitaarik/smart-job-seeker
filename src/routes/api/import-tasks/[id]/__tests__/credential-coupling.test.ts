@@ -94,10 +94,6 @@ vi.mock('$lib/server/credential-shares', () => ({
 	hasCredentialAccess: (...a: unknown[]) => mockHasCredentialAccess(...a)
 }));
 
-vi.mock('$lib/server/auth/crypto', () => ({
-	encryptCredential: (v: unknown) => v
-}));
-
 import { PATCH } from '../+server';
 
 // ── Helpers ────────────────────────────────────────────────────────────────

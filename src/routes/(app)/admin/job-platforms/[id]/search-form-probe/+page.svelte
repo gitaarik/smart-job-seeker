@@ -43,7 +43,7 @@
 				? String(loaded.credentials[0].id)
 				: ''
 	);
-	let loginMode = $state('auto');
+	let loginMode = $state('manual');
 	let selectedDeviceId = $state<string>(
 		initialMostRecentRun?.sjsbrowser_api_key_id != null
 			? String(initialMostRecentRun.sjsbrowser_api_key_id)

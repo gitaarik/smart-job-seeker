@@ -27,9 +27,8 @@
 	 *
 	 * This form used to ask for a login page URL, and that was the wrong
 	 * question at the wrong time. At add time the user usually cannot say
-	 * whether a board is gated; a URL on its own does nothing without either
-	 * stored credentials (which this form does not collect) or a person
-	 * watching the run; and the field only ever appeared for custom sites,
+	 * whether a board is gated; a URL on its own does nothing without a person
+	 * signing in in the browser; and the field only ever appeared for custom sites,
 	 * where we have the least chance of knowing. Meanwhile every platform
 	 * picked from the dropdown was pinned to `login_mode: "none"`, so the 14
 	 * of 24 published platforms that *do* have a sign-in page produced tasks

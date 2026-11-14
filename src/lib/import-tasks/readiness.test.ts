@@ -14,8 +14,6 @@ const ready: ImportTaskReadinessInput = {
 	taskSearchUrl: null,
 	platformSearchPageUrl: 'https://sveltejobs.com/jobs',
 	platformLoginPageUrl: null,
-	loginMode: 'none',
-	hasCredential: false,
 	browserProvider: 'local',
 	serverBrowserProvider: 'local',
 	deviceConnected: false
@@ -107,37 +105,21 @@ describe('computeImportTaskBlockers', () => {
 		expect(keys({ ...tunnel, deviceConnected: true })).toEqual([]);
 	});
 
-	it('requires credentials for a gated platform on auto login', () => {
+	// The server holds no platform passwords (2026-11-14): the user signs in
+	// once in the browser, and a lapsed session is a run-time stop, not a
+	// reason to refuse the start.
+	it('never blocks a gated platform on a saved login', () => {
 		const gated = {
 			...ready,
-			platformLoginPageUrl: 'https://linkedin.com/login',
-			loginMode: 'auto',
-			hasCredential: false
+			platformLoginPageUrl: 'https://linkedin.com/login'
 		};
-		expect(keys(gated)).toEqual(['credentials']);
-		expect(keys({ ...gated, hasCredential: true })).toEqual([]);
-	});
-
-	it('does not require credentials for manual or none login modes', () => {
-		const gated = {
-			...ready,
-			platformLoginPageUrl: 'https://linkedin.com/login',
-			hasCredential: false
-		};
-		expect(keys({ ...gated, loginMode: 'manual' })).toEqual([]);
-		expect(keys({ ...gated, loginMode: 'none' })).toEqual([]);
-	});
-
-	it('reports device and credential blockers together', () => {
+		expect(keys(gated)).toEqual([]);
 		expect(
 			keys({
-				...ready,
+				...gated,
 				browserProvider: 'tunnel',
-				deviceConnected: false,
-				platformLoginPageUrl: 'https://linkedin.com/login',
-				loginMode: 'auto',
-				hasCredential: false
+				deviceConnected: false
 			})
-		).toEqual(['device', 'credentials']);
+		).toEqual(['device']);
 	});
 });

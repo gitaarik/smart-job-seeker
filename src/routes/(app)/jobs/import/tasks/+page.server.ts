@@ -11,7 +11,6 @@ import {
 	search_tasks
 } from '$lib/server/db/schema';
 import { config } from '$lib/server/config';
-import { encryptCredential } from '$lib/server/auth/crypto';
 import { hasCredentialAccess } from '$lib/server/credential-shares';
 import { listApiKeys } from '$lib/server/auth/api-key';
 import { hasDeviceAccess, listSharedWithMe } from '$lib/server/device-shares';
@@ -331,9 +330,7 @@ async function getOrCreateCredentials(
 	platformId: number,
 	userId: string,
 	credentialId: string | null,
-	newUsername: string | null,
-	newPassword: string | null,
-	newSecurityAnswer: string | null = null
+	newUsername: string | null
 ): Promise<number | null> {
 	let credId: number | null = null;
 
@@ -361,8 +358,6 @@ async function getOrCreateCredentials(
 				user_id: userId,
 				platform_id: platformId,
 				username: newUsername,
-				password: encryptCredential(newPassword || null),
-				security_answer: encryptCredential(newSecurityAnswer || null),
 				date_created: new Date(),
 				date_updated: new Date()
 			})
@@ -461,11 +456,9 @@ export const actions: Actions = {
 		const platformIsNew = formData.get('platform_is_new') === 'true';
 		const loginPageUrl = formData.get('login_page_url') as string;
 
-		// Credentials data
+		// Account on the platform (a username, never a password)
 		const credentialId = formData.get('credential_id') as string;
 		const newCredUsername = formData.get('new_credential_username') as string;
-		const newCredPassword = formData.get('new_credential_password') as string;
-		const newCredSecurityAnswer = formData.get('new_credential_security_answer') as string;
 
 		// search_term is OPTIONAL — listing-only platforms (SvelteJobs, X-Team)
 		// have no search input to fill, so we just navigate and extract. The
@@ -560,9 +553,7 @@ export const actions: Actions = {
 				resolvedPlatformId,
 				user.id,
 				credentialId,
-				newCredUsername,
-				newCredPassword,
-				newCredSecurityAnswer
+				newCredUsername
 			);
 		}
 
@@ -706,11 +697,9 @@ export const actions: Actions = {
 		const platformIsNew = formData.get('platform_is_new') === 'true';
 		const loginPageUrl = formData.get('login_page_url') as string;
 
-		// Credentials data
+		// Account on the platform (a username, never a password)
 		const credentialId = formData.get('credential_id') as string;
 		const newCredUsername = formData.get('new_credential_username') as string;
-		const newCredPassword = formData.get('new_credential_password') as string;
-		const newCredSecurityAnswer = formData.get('new_credential_security_answer') as string;
 
 		if (isNaN(id)) {
 			return fail(400, { error: 'Invalid search ID' });
@@ -772,9 +761,7 @@ export const actions: Actions = {
 				resolvedPlatformId,
 				user.id,
 				credentialId,
-				newCredUsername,
-				newCredPassword,
-				newCredSecurityAnswer
+				newCredUsername
 			);
 		}
 

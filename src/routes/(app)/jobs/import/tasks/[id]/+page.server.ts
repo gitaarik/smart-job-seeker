@@ -7,7 +7,6 @@ import { config } from '$lib/server/config';
 import { getActiveSubscription } from '$lib/server/billing/subscription';
 import { getOrCreateVerificationAddress } from '$lib/server/email/verification-relay';
 import { listApiKeys } from '$lib/server/auth/api-key';
-import { decryptCredential } from '$lib/server/auth/crypto';
 import { listSharedWithMe } from '$lib/server/device-shares';
 import { listSharedCredentialsWithMe } from '$lib/server/credential-shares';
 import { getProfileSkillLevels } from '$lib/server/job/match-utils';
@@ -58,16 +57,14 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
 	const user = layoutData.user;
 
-	// Load credentials the user can pick on this task. Credentials are
-	// user-wide: any of the user's profiles surfaces all of their logins for
-	// this platform. Plus credentials shared with them by contacts. Shared
-	// credentials never expose the password — that stays server-side and is
-	// only resolved by the scraper at run time.
+	// Load the accounts the user can pick on this task. They are user-wide:
+	// any of the user's profiles surfaces all of their accounts for this
+	// platform. Plus accounts shared with them by contacts. An account is a
+	// username only; the server holds no platform passwords.
 	interface CredentialOption {
 		/** platform_credentials.id */
 		id: number;
 		username: string | null;
-		security_answer: string | null;
 		shared: boolean;
 		owner_user_id: string | null;
 		owner_label: string | null;
@@ -79,12 +76,11 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 				eq(platform_credentials.user_id, user.id),
 				eq(platform_credentials.platform_id, searchTask.platform_id)
 			),
-			columns: { id: true, username: true, security_answer: true },
+			columns: { id: true, username: true },
 			orderBy: asc(platform_credentials.date_created)
 		});
 		platformCredentials = rawCredentials.map((c) => ({
 			...c,
-			security_answer: decryptCredential(c.security_answer),
 			shared: false,
 			owner_user_id: null,
 			owner_label: null
@@ -100,8 +96,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 			platformCredentials.push({
 				id: s.platform_credential.id,
 				username: s.platform_credential.username,
-				// Shared credentials never reveal the security_answer either.
-				security_answer: null,
 				shared: true,
 				owner_user_id: s.platform_credential.owner_user_id,
 				owner_label: ownerLabel
@@ -182,8 +176,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	// Mirrors the rule in `PATCH /api/platforms/[id]` exactly: staff always,
 	// and a normal user only for a site they added themselves that no *other*
 	// account has a task on. The row is global, and `login_page_url` is where
-	// "auto" mode types other people's stored passwords, so the curated
-	// platforms (no owner) are admin-only whatever their usage. Computed here
+	// every user's browser is sent to sign in (and where a run types the
+	// account's email), so the curated platforms (no owner) are admin-only
+	// whatever their usage. Computed here
 	// rather than guessed in the component, because a field that renders and
 	// then 403s on save is the failure this page has already had once (see the
 	// isStaff note above).

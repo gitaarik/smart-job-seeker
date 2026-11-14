@@ -12,7 +12,7 @@
  * Every combination that fails does so silently: the run starts, walks into a
  * login wall, and reports finding no jobs. That is the whole reason this file
  * exists rather than each form spelling the rules out again. The add form, the
- * task page and the credential picker all read their words from here, so the
+ * task page and the account picker all read their words from here, so the
  * three cannot drift into describing different behaviour.
  *
  * Pure and dependency-free, like its neighbours `readiness.ts` and
@@ -20,7 +20,16 @@
  * (the create action's default).
  */
 
-export const LOGIN_MODES = ['auto', 'manual', 'none'] as const;
+/**
+ * "manual" is the run signing in as the user would: it opens the sign-in page,
+ * and either the user signs in through Browser View or, when the task carries
+ * the email address the user signs in with, the run types that address and
+ * the verification relay answers the emailed code. There is no mode that
+ * types a stored password: the server stopped holding platform passwords on
+ * 2026-11-14 (sjs-ops planning/PLATFORM-PASSWORDS-REMOVED.md). Tasks saved
+ * with the old "auto" value were moved to "manual" by migration 0111.
+ */
+export const LOGIN_MODES = ['manual', 'none'] as const;
 export type LoginMode = (typeof LOGIN_MODES)[number];
 
 export function isLoginMode(value: unknown): value is LoginMode {
@@ -28,13 +37,13 @@ export function isLoginMode(value: unknown): value is LoginMode {
 }
 
 /**
- * Read a task's stored mode. The column defaults to "auto" and is `notNull`,
- * but rows predate the constraint and callers hand us `any`-typed task rows,
- * so anything unrecognised falls back rather than rendering a chooser with
- * nothing selected.
+ * Read a task's stored mode. The column defaults to "manual" and is `notNull`,
+ * but callers hand us `any`-typed task rows and old API clients may still send
+ * "auto", so anything unrecognised falls back to signing in rather than
+ * rendering a chooser with nothing selected.
  */
 export function toLoginMode(value: unknown): LoginMode {
-	return isLoginMode(value) ? value : 'auto';
+	return isLoginMode(value) ? value : 'manual';
 }
 
 /**
@@ -49,8 +58,7 @@ export function toLoginMode(value: unknown): LoginMode {
  * "manual" costs nothing when the browser is already signed in — the login
  * phase checks that first and walks straight past — and when it is not, the
  * first run stops and asks, which is the only moment the user can actually be
- * taught what this site needs. "auto" is not a default because it needs a
- * stored password the add form deliberately does not collect.
+ * taught what this site needs.
  */
 export function defaultLoginMode(hasSignInPage: boolean): LoginMode {
 	return hasSignInPage ? 'manual' : 'none';
@@ -74,26 +82,20 @@ export interface LoginModeCopy {
 }
 
 /**
- * The three options, in the order they are offered.
+ * The two options, in the order they are offered.
  *
- * The help text is where the security trade-off gets stated, because this is
- * the only screen where the choice is made: "auto" is the mode that puts a
- * password in our database, "manual" is the mode that does not. Users were
- * left to infer that from a login URL field, and mostly inferred that storing
- * credentials was mandatory.
+ * The help text says where the password goes, because this is the only screen
+ * where someone could wonder: nowhere. Users of the old three-way chooser
+ * mostly inferred from a login URL field that storing credentials was
+ * mandatory, so the words stay explicit.
  */
 export function loginModeOptions(platformName?: string | null): LoginModeCopy[] {
 	const site = platformName?.trim() || 'this site';
 	return [
 		{
 			key: 'manual',
-			label: 'I sign in myself',
-			help: `The run opens ${site}'s sign-in page and waits while you sign in through Browser View. The browser keeps the session, so later runs go straight to the jobs. No password is stored here.`
-		},
-		{
-			key: 'auto',
-			label: 'Sign in automatically',
-			help: `We store a username and password for ${site}, encrypted, and fill them in on every run. Use this for scheduled runs, when nobody is there to sign in.`
+			label: 'Sign in',
+			help: `The run opens ${site}'s sign-in page. Sign in once through Browser View and the browser stays signed in for later runs. Your password never leaves your browser.`
 		},
 		{
 			key: 'none',
@@ -113,7 +115,7 @@ export function describeLoginMode(mode: LoginMode, platformName?: string | null)
  * sign-in page on file. Returns null when there is nothing to warn about.
  *
  * Deliberately *not* a blocker in `readiness.ts`. `login_mode` defaults to
- * "auto" at the column level, so every task ever created on a public board
+ * signing in at the column level, so every task ever created on a public board
  * carries a mode it does not need; gating Start on that would refuse runs that
  * work perfectly well today. Saying it where the setting is edited is the
  * honest fix.
@@ -135,5 +137,5 @@ export function explainMissingSignInPage(
  */
 export function signInNoticeForNewTask(platformName?: string | null): string {
 	const site = platformName?.trim() || 'This site';
-	return `${site} asks you to sign in. The first run stops at the sign-in page so you can sign in yourself, and the browser stays signed in after that. You can switch to stored credentials on the task page.`;
+	return `${site} asks you to sign in. The first run stops at the sign-in page so you can sign in yourself, and the browser stays signed in after that.`;
 }

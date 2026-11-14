@@ -26,7 +26,7 @@ export const FAILURE_KINDS = [
 	/** Credentials accepted, the site wants more proof: emailed code, 2FA app,
 	 *  SMS, "is this you?" device confirmation, security question. */
 	'auth_verification',
-	/** The stored password was rejected outright. */
+	/** The platform rejected the account the run signed in with (unknown address). */
 	'auth_credentials',
 	/** A CAPTCHA / "prove you're human" wall stood in front of the login. */
 	'auth_captcha',
@@ -87,7 +87,7 @@ export type FailureKind = (typeof FAILURE_KINDS)[number];
 /**
  * The failures a human can fix, but only by interacting with the platform
  * once — logging in by hand, completing a device check, answering a security
- * question, accepting terms, updating a saved password.
+ * question, accepting terms, correcting the account's email address.
  *
  * What unites them is not severity, it's futility: no amount of retrying
  * unattended will clear one. That is exactly the condition under which
@@ -177,7 +177,7 @@ export const CREDENTIAL_REASON_PHRASES: readonly string[] = [
 	'credentials may be incorrect'
 ];
 
-/** True if a login reason means the stored password was rejected. */
+/** True if a login reason means the platform rejected the account itself. */
 export function isCredentialReason(reason: string): boolean {
 	const lower = reason.toLowerCase();
 	return CREDENTIAL_REASON_PHRASES.some((p) => lower.includes(p));

@@ -2,13 +2,7 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { resolve } from '$app/paths';
 	import {
-		faCheck,
-		faChevronDown,
-		faChevronRight,
-		faEye,
-		faEyeSlash,
-		faKey,
-		faPen,
+		faAt,
 		faPlus,
 		faShareAlt,
 		faTimes,
@@ -20,10 +14,15 @@
 	import LoginModeChooser from './LoginModeChooser.svelte';
 	import { toLoginMode } from '$lib/import-tasks/sign-in';
 
+	/**
+	 * An account on the platform: the email address or username the user signs
+	 * in with, and nothing else. The server holds no platform passwords
+	 * (since 2026-11-14); the user signs in in the browser, and the address is
+	 * only typed by a run on a site that signs in with an emailed code.
+	 */
 	interface CredentialEntry {
 		id: number;
 		username: string | null;
-		security_answer?: string | null;
 		/** True when the credential is owned by another user and shared with the current user */
 		shared?: boolean;
 		owner_user_id?: string | null;
@@ -48,9 +47,9 @@
 		profileId: number;
 		platformName?: string | null;
 		disabled?: boolean;
-		/** When true, the login-mode toggle is hidden and the credential list is
+		/** When true, the login-mode toggle is hidden and the account list is
 		 *  always rendered (caller is responsible for pinning loginMode to
-		 *  "auto"). Used by flows where login is mandatory — e.g. admin
+		 *  "manual"). Used by flows where login is mandatory — e.g. admin
 		 *  discovery, which can't proceed without logging in. */
 		hideLoginMode?: boolean;
 		/**
@@ -88,20 +87,7 @@
 	let isSaving = $state(false);
 	let showAddForm = $state(false);
 	let newUsername = $state('');
-	let newPassword = $state('');
-	let newSecurityAnswer = $state('');
-	let showPassword = $state(false);
-	let showAdvanced = $state(false);
 	let isDeletingId = $state<number | null>(null);
-
-	// Inline edit for an existing credential (password + security answer).
-	// Password isn't returned from the server, so it stays blank unless the
-	// user is changing it.
-	let editingCredId = $state<number | null>(null);
-	let editPassword = $state('');
-	let editSecurityAnswer = $state('');
-	let editShowPassword = $state(false);
-	let isSavingEdit = $state(false);
 
 	// Share-config modal state
 	let sharingCredentialId = $state<number | null>(null);
@@ -205,9 +191,7 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					profileId,
-					username: newUsername.trim(),
-					password: newPassword,
-					security_answer: newSecurityAnswer || undefined
+					username: newUsername.trim()
 				})
 			});
 			if (response.ok) {
@@ -234,14 +218,11 @@
 			isSaving = false;
 			showAddForm = false;
 			newUsername = '';
-			newPassword = '';
-			newSecurityAnswer = '';
-			showAdvanced = false;
 		}
 	}
 
 	async function deleteCredential(credId: number) {
-		if (!confirm('Delete this credential? Any search tasks using it will be unlinked.')) return;
+		if (!confirm('Remove this account? Any import tasks using it will be unlinked.')) return;
 		isDeletingId = credId;
 		try {
 			const response = await fetch(
@@ -265,66 +246,6 @@
 			isDeletingId = null;
 		}
 	}
-
-	function startEditCredential(credId: number) {
-		const cred = credentials.find((c) => c.id === credId);
-		editingCredId = credId;
-		editPassword = '';
-		editSecurityAnswer = cred?.security_answer || '';
-		editShowPassword = false;
-	}
-
-	function cancelEditCredential() {
-		editingCredId = null;
-		editPassword = '';
-		editSecurityAnswer = '';
-		editShowPassword = false;
-	}
-
-	async function saveCredentialEdits() {
-		if (editingCredId === null) return;
-		const cred = credentials.find((c) => c.id === editingCredId);
-		if (!cred) return;
-
-		const body: Record<string, unknown> = {
-			profileId,
-			credentialId: cred.id,
-			username: cred.username || ''
-		};
-		const passwordChanged = editPassword.length > 0;
-		const answerChanged = editSecurityAnswer !== (cred.security_answer || '');
-		if (passwordChanged) body.password = editPassword;
-		if (answerChanged) body.security_answer = editSecurityAnswer || undefined;
-		if (!passwordChanged && !answerChanged) {
-			cancelEditCredential();
-			return;
-		}
-
-		isSavingEdit = true;
-		try {
-			const response = await fetch(`/api/platforms/${platformId}/credentials`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(body)
-			});
-			if (response.ok) {
-				if (answerChanged) {
-					const idx = credentials.findIndex((c) => c.id === editingCredId);
-					if (idx >= 0) {
-						credentials[idx] = {
-							...credentials[idx],
-							security_answer: editSecurityAnswer || null
-						};
-					}
-				}
-				cancelEditCredential();
-			}
-		} catch (err) {
-			console.error('Failed to save credential:', err);
-		} finally {
-			isSavingEdit = false;
-		}
-	}
 </script>
 
 <div>
@@ -343,12 +264,17 @@
 		</div>
 	{/if}
 
-	<!-- Saved logins, which only the automatic mode uses -->
-	{#if loginMode === 'auto'}
+	<!-- The user's accounts on this site. Optional: a run signed in through
+	     Browser View needs none. The one thing an address buys is a site that
+	     signs in with an emailed code, which the run can then sign in to
+	     without the user (the verification relay supplies the code). -->
+	{#if loginMode !== 'none'}
 		<div class="mt-3 mb-2 flex items-center justify-between">
 			<div class="flex items-center gap-2">
-				<FontAwesomeIcon icon={faKey} class="h-4 w-4 text-[var(--dash-text-secondary)]" />
-				<h2 class="text-sm font-medium text-[var(--dash-text)]">Saved logins</h2>
+				<FontAwesomeIcon icon={faAt} class="h-4 w-4 text-[var(--dash-text-secondary)]" />
+				<h2 class="text-sm font-medium text-[var(--dash-text)]">
+					Your account on {platformName || 'this site'}
+				</h2>
 			</div>
 			<div class="flex items-center gap-2">
 				{#if isSaving}
@@ -366,6 +292,11 @@
 				{/if}
 			</div>
 		</div>
+		<p class="mb-2 text-xs text-[var(--dash-text-muted)]">
+			Optional. The email address you sign in with. On a site that signs you in with an emailed
+			code, the run types it and reads the code from your verification relay, so it can sign in
+			without you. No password is ever stored.
+		</p>
 		<div class="space-y-1.5">
 			{#each credentials as cred, i (i)}
 				<div
@@ -408,22 +339,6 @@
 						{#if !disabled && !cred.shared}
 							<button
 								type="button"
-								onclick={() => {
-									if (editingCredId === cred.id) {
-										cancelEditCredential();
-									} else {
-										startEditCredential(cred.id);
-									}
-								}}
-								class="p-1 transition-colors {editingCredId === cred.id
-									? 'text-[var(--dash-primary)]'
-									: 'text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)]'}"
-								title="Edit credential"
-							>
-								<FontAwesomeIcon icon={faPen} class="h-3 w-3" />
-							</button>
-							<button
-								type="button"
 								onclick={() => openShareModal(cred.id)}
 								class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-primary)]"
 								title="Share with a contact"
@@ -435,7 +350,7 @@
 								onclick={() => deleteCredential(cred.id)}
 								disabled={isDeletingId === cred.id}
 								class="p-1 text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-error)]"
-								title="Delete credential"
+								title="Remove account"
 							>
 								{#if isDeletingId === cred.id}
 									<Spinner size="w-3 h-3" />
@@ -445,98 +360,25 @@
 							</button>
 						{/if}
 					</div>
-
-					{#if editingCredId === cred.id && !cred.shared}
-						<div class="space-y-2 border-t border-[var(--dash-border)]/50 px-3 pt-1 pb-3">
-							<div>
-								<label
-									for="edit-password-{cred.id}"
-									class="mb-1 block text-xs text-[var(--dash-text-secondary)]"
-								>
-									Password
-								</label>
-								<div class="relative">
-									<input
-										type={editShowPassword ? 'text' : 'password'}
-										id="edit-password-{cred.id}"
-										bind:value={editPassword}
-										placeholder="Leave blank to keep current password"
-										class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 pr-8 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-									/>
-									<button
-										type="button"
-										onclick={() => (editShowPassword = !editShowPassword)}
-										class="absolute top-1/2 right-1.5 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
-									>
-										<FontAwesomeIcon
-											icon={editShowPassword ? faEyeSlash : faEye}
-											class="h-3.5 w-3.5"
-										/>
-									</button>
-								</div>
-							</div>
-							<div>
-								<label
-									for="edit-security-answer-{cred.id}"
-									class="mb-1 block text-xs text-[var(--dash-text-secondary)]"
-								>
-									Security Question Answer
-								</label>
-								<input
-									type="text"
-									id="edit-security-answer-{cred.id}"
-									bind:value={editSecurityAnswer}
-									placeholder="e.g., your mother's maiden name"
-									class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-								/>
-								<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
-									Auto-filled when a site asks a security question after login.
-								</p>
-							</div>
-							<div class="flex justify-end gap-2">
-								<button
-									type="button"
-									onclick={cancelEditCredential}
-									class="rounded border border-[var(--dash-border)] px-2 py-1 text-xs text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-card)]"
-								>
-									Cancel
-								</button>
-								<button
-									type="button"
-									onclick={saveCredentialEdits}
-									disabled={isSavingEdit ||
-										(editPassword.length === 0 &&
-											editSecurityAnswer === (cred.security_answer || ''))}
-									class="flex items-center gap-1 rounded bg-[var(--dash-primary)] px-2 py-1 text-xs text-white transition-colors hover:bg-[var(--dash-primary-hover)] disabled:opacity-50"
-								>
-									{#if isSavingEdit}
-										<Spinner size="w-3 h-3" />
-									{:else}
-										<FontAwesomeIcon icon={faCheck} class="h-3 w-3" />
-									{/if}
-									Save
-								</button>
-							</div>
-						</div>
-					{/if}
 				</div>
 			{/each}
 		</div>
 
 		{#if credentials.length === 0 && !showAddForm}
 			<p class="mt-2 text-xs text-[var(--dash-text-muted)]">
-				No credentials configured{platformName ? ` for ${platformName}` : ''}.
+				No account on file{platformName ? ` for ${platformName}` : ''}. Runs sign in through Browser
+				View.
 			</p>
 		{/if}
 
-		{#if !showAddForm && !disabled && loginMode === 'auto'}
+		{#if !showAddForm && !disabled && loginMode !== 'none'}
 			<button
 				type="button"
 				onclick={() => (showAddForm = true)}
 				class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-[var(--dash-border)] px-3 py-1.5 text-xs font-medium text-[var(--dash-primary)] transition-colors hover:bg-[var(--dash-bg)]"
 			>
 				<FontAwesomeIcon icon={faPlus} class="h-3 w-3" />
-				Add credentials
+				Add the email you sign in with
 			</button>
 		{/if}
 
@@ -544,7 +386,7 @@
 			<div class="mt-3 space-y-3 rounded-lg bg-[var(--dash-bg)] p-3">
 				<div>
 					<label for="new-cred-username" class="mb-1 block text-sm text-[var(--dash-text)]">
-						Username / Email
+						Email or username you sign in with
 					</label>
 					<input
 						type="text"
@@ -554,74 +396,12 @@
 						class="w-full rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-2 text-sm text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
 					/>
 				</div>
-				<div>
-					<label for="new-cred-password" class="mb-1 block text-sm text-[var(--dash-text)]">
-						Password <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span>
-					</label>
-					<div class="relative">
-						<input
-							type={showPassword ? 'text' : 'password'}
-							id="new-cred-password"
-							bind:value={newPassword}
-							placeholder="Enter password"
-							class="w-full rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-2 pr-10 text-sm text-[var(--dash-text)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-						/>
-						<button
-							type="button"
-							onclick={() => (showPassword = !showPassword)}
-							class="absolute top-1/2 right-2 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
-						>
-							<FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} class="h-4 w-4" />
-						</button>
-					</div>
-					<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
-						Leave it empty for sites that sign you in with a code sent to your email.
-					</p>
-				</div>
-				<!-- Advanced: security answer -->
-				<button
-					type="button"
-					onclick={() => (showAdvanced = !showAdvanced)}
-					class="flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] transition-colors hover:text-[var(--dash-text-secondary)]"
-				>
-					{#if showAdvanced}
-						<FontAwesomeIcon icon={faChevronDown} class="h-2.5 w-2.5" />
-					{:else}
-						<FontAwesomeIcon icon={faChevronRight} class="h-2.5 w-2.5" />
-					{/if}
-					Advanced
-				</button>
-				{#if showAdvanced}
-					<div>
-						<label
-							for="new-cred-security-answer"
-							class="mb-1 block text-xs text-[var(--dash-text-secondary)]"
-						>
-							Security Question Answer <span class="font-normal text-[var(--dash-text-muted)]"
-								>(optional)</span
-							>
-						</label>
-						<input
-							type="text"
-							id="new-cred-security-answer"
-							bind:value={newSecurityAnswer}
-							placeholder="e.g., your mother's maiden name"
-							class="w-full rounded-md border border-[var(--dash-border)] bg-[var(--dash-card)] px-3 py-2 text-sm text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-						/>
-						<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
-							Auto-filled when a site asks a security question after login.
-						</p>
-					</div>
-				{/if}
 				<div class="flex justify-end gap-2">
 					<button
 						type="button"
 						onclick={() => {
 							showAddForm = false;
 							newUsername = '';
-							newPassword = '';
-							newSecurityAnswer = '';
-							showAdvanced = false;
 						}}
 						class="rounded-lg border border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-card)]"
 					>
@@ -663,9 +443,9 @@
 		>
 			<div class="flex items-center justify-between border-b border-[var(--dash-border)] p-4">
 				<div>
-					<h3 class="font-medium text-[var(--dash-text)]">Share login</h3>
+					<h3 class="font-medium text-[var(--dash-text)]">Share account</h3>
 					<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
-						{sharingCred?.username ?? 'credential'}
+						{sharingCred?.username ?? 'account'}
 						{platformName ? `· ${platformName}` : ''}
 					</p>
 				</div>
@@ -683,8 +463,9 @@
 
 			<div class="overflow-y-auto p-4">
 				<p class="mb-3 text-xs text-[var(--dash-text-muted)]">
-					Contacts you share this login with can use it on their import tasks but never see the
-					password. They can only run it on devices you've also shared with them.
+					Contacts you share this account with can pick it on their import tasks. They can only run
+					it on devices you've also shared with them, where your browser is signed in. No password
+					is involved.
 				</p>
 
 				{#if sharingError}
@@ -705,7 +486,7 @@
 							No contacts yet. <a
 								href={resolve('/contacts')}
 								class="text-[var(--dash-primary)] hover:underline">Add contacts</a
-							> to share logins.
+							> to share accounts.
 						</p>
 					</div>
 				{:else}

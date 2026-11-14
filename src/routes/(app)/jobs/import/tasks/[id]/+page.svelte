@@ -483,8 +483,6 @@
 			platformSearchPageUrl: searchTask.job_platform?.search_page_url ?? null,
 			platformUrl: searchTask.job_platform?.url ?? null,
 			platformLoginPageUrl: searchTask.job_platform?.login_page_url ?? null,
-			loginMode: searchTask.login_mode ?? null,
-			hasCredential: searchTask.platform_credential_id != null,
 			browserProvider: searchTask.browser_provider ?? null,
 			serverBrowserProvider: data.browserProvider,
 			deviceConnected: !isTunnelMode ? true : desktopStatusChecked ? desktopConnected : true,

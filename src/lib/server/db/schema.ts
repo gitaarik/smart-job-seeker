@@ -1143,18 +1143,6 @@ export const search_task_runs = pgTable(
 );
 
 /**
- * Per-user credential for a job platform. Owned by the human, not by any
- * one profile — multiple profiles of the same user share these by default.
- * Cross-user sharing goes through `credential_shares`.
- *
- * UNIQUE (user_id, platform_id, username) lets one user maintain multiple
- * accounts on the same platform (different angles, throwaway accounts) by
- * disambiguating on username.
- *
- * Password and security_answer are stored as dotenvx-style ciphertext;
- * see lib/server/auth/crypto.ts.
- */
-/**
  * One GitHub App installation a user has granted us.
  *
  * The row holds an installation *id*, not a credential: on its own it opens
@@ -1195,6 +1183,23 @@ export const github_app_installations = pgTable(
 	]
 );
 
+/**
+ * The account a user has on a job platform: the email address or username
+ * they sign in with, and nothing else. Owned by the human, not by any one
+ * profile — multiple profiles of the same user share these by default.
+ * Cross-user sharing goes through `credential_shares`.
+ *
+ * No secret lives here. The table held an encrypted password and security
+ * answer until migration 0111 (2026-11-14) dropped them: the user signs in
+ * in the browser on their own device, which keeps the session, and the
+ * server never holds a platform password. The username stays because sites
+ * that sign in with an emailed code need it typed before the verification
+ * relay can answer, so such a site can be signed in to without the user.
+ *
+ * UNIQUE (user_id, platform_id, username) lets one user maintain multiple
+ * accounts on the same platform (different angles, throwaway accounts) by
+ * disambiguating on username.
+ */
 export const platform_credentials = pgTable(
 	'platform_credentials',
 	{
@@ -1202,10 +1207,6 @@ export const platform_credentials = pgTable(
 		user_id: text().notNull(),
 		platform_id: integer().notNull(),
 		username: varchar({ length: 255 }),
-		password: text(),
-		api_token: text(),
-		provider_profile_id: varchar({ length: 255 }),
-		security_answer: text(),
 		date_created: timestamp({ withTimezone: true, mode: 'date' }).defaultNow(),
 		date_updated: timestamp({ withTimezone: true, mode: 'date' }).defaultNow()
 	},
@@ -3264,7 +3265,10 @@ export const search_tasks = pgTable(
 			mode: 'date'
 		}),
 		sjsbrowser_api_key: integer(),
-		login_mode: varchar({ length: 10 }).default('auto').notNull(),
+		// "manual" (sign in: the user in the browser, or the run typing the
+		// account's email for a site that sends a code) or "none". "auto", which
+		// typed a server-held password, retired in migration 0111.
+		login_mode: varchar({ length: 10 }).default('manual').notNull(),
 		// Where to search, as the user typed it when no place fits ("Bay Area
 		// hybrid"), or a feed task's countries from before the picker. With
 		// `search_places` set, a feed run reads its countries from those and

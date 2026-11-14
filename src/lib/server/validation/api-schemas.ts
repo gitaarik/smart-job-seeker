@@ -241,12 +241,13 @@ export const platformCreateSchema = z.object({
 
 // Platform credentials
 
+// Only the username: the server stopped storing platform passwords and
+// security answers on 2026-11-14 (migration 0111). A client still sending
+// them gets them stripped, never stored.
 export const platformCredentialsSchema = z.object({
 	profileId: z.union([positiveInt(), z.string().regex(/^\d+$/).transform(Number)]),
 	credentialId: z.union([positiveInt(), z.string().regex(/^\d+$/).transform(Number)]).optional(),
-	username: optionalTrimmedString(),
-	password: optionalTrimmedString(1000),
-	security_answer: optionalTrimmedString(500)
+	username: optionalTrimmedString()
 });
 
 // Browser info
@@ -260,8 +261,7 @@ export const browserInfoSchema = z.object({
 // Job search update
 
 const newCredentialSchema = z.object({
-	username: requiredTrimmedString('Username'),
-	password: optionalTrimmedString(1000)
+	username: requiredTrimmedString('Username')
 });
 
 export const searchTaskUpdateSchema = z.object({
