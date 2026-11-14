@@ -6004,8 +6004,9 @@ export const ats_boards = pgTable(
 	'ats_boards',
 	{
 		id: serial().primaryKey().notNull(),
-		/** `greenhouse` | `lever` | `ashby` | `recruitee` | `remoteok`; the key into the
-		 *  provider registry in cloud's `src/server/ats/`. */
+		/** `greenhouse` | `lever` | `ashby` | `recruitee` | `remoteok` |
+		 *  `we-work-remotely`; the key into the provider registry in cloud's
+		 *  `src/server/ats/`, and for a job board its `job_platforms.key`. */
 		provider: varchar({ length: 32 }).notNull(),
 		/** The company's slug in the provider's URL scheme
 		 *  (`boards.greenhouse.io/<slug>`, `<slug>.recruitee.com`). */
