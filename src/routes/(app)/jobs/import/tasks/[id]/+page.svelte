@@ -486,7 +486,8 @@
 			browserProvider: searchTask.browser_provider ?? null,
 			serverBrowserProvider: data.browserProvider,
 			deviceConnected: !isTunnelMode ? true : desktopStatusChecked ? desktopConnected : true,
-			fetchMode: searchTask.job_platform?.fetch_mode ?? null
+			fetchMode: searchTask.job_platform?.fetch_mode ?? null,
+			platformStatus: searchTask.job_platform?.status ?? null
 		})
 	);
 

@@ -15,7 +15,9 @@
  * the server enforces.
  */
 
-export type ImportTaskBlockerKey = 'platform' | 'search_url' | 'device';
+import { PLATFORM_PAUSED } from '../job-platforms/taxonomy';
+
+export type ImportTaskBlockerKey = 'platform' | 'paused' | 'search_url' | 'device';
 
 export interface ImportTaskBlocker {
 	key: ImportTaskBlockerKey;
@@ -63,6 +65,11 @@ export interface ImportTaskReadinessInput {
 	 * so none of those blockers apply to it.
 	 */
 	fetchMode?: string | null;
+	/**
+	 * `job_platforms.status`. `paused` is a board we have stopped reading, so
+	 * none of its tasks run (`$lib/job-platforms/taxonomy`).
+	 */
+	platformStatus?: string | null;
 }
 
 /**
@@ -107,6 +114,16 @@ export function computeImportTaskBlockers(input: ImportTaskReadinessInput): Impo
 			detail: 'Choose the job platform this import should scrape.'
 		});
 		// Without a platform the other checks have nothing to reason about.
+		return blockers;
+	}
+
+	if (input.platformStatus === PLATFORM_PAUSED) {
+		blockers.push({
+			key: 'paused',
+			title: 'Platform paused',
+			detail: `${input.platformName || 'This platform'} is paused: Smart Job Seeker no longer searches it. Choose another platform for this import.`
+		});
+		// Nothing else about the task matters while the platform is off.
 		return blockers;
 	}
 

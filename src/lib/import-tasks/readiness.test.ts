@@ -64,6 +64,20 @@ describe('computeImportTaskBlockers', () => {
 		expect(keys({ ...ready, platformId: null })).toEqual(['platform']);
 	});
 
+	it('blocks every task on a paused platform, feeds included, and says which', () => {
+		const paused = { ...ready, platformStatus: 'paused' };
+		expect(keys(paused)).toEqual(['paused']);
+		expect(keys({ ...paused, fetchMode: 'feed' })).toEqual(['paused']);
+		expect(keys({ ...paused, platformSearchPageUrl: null, browserProvider: 'tunnel' })).toEqual([
+			'paused'
+		]);
+		expect(computeImportTaskBlockers(paused)[0].detail).toContain('SvelteJobs is paused');
+	});
+
+	it('runs on a draft platform: user-added sites are drafts', () => {
+		expect(keys({ ...ready, platformStatus: 'draft' })).toEqual([]);
+	});
+
 	it('flags a missing search URL when neither task nor platform has one', () => {
 		expect(keys({ ...ready, platformSearchPageUrl: null })).toEqual(['search_url']);
 		// A task-level search URL satisfies the requirement on its own.

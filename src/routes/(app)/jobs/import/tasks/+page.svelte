@@ -397,7 +397,8 @@
 			browserProvider: search.browser_provider,
 			serverBrowserProvider: data.serverBrowserProvider,
 			deviceConnected,
-			fetchMode: search.job_platform?.fetch_mode ?? null
+			fetchMode: search.job_platform?.fetch_mode ?? null,
+			platformStatus: search.job_platform?.status ?? null
 		});
 	}
 

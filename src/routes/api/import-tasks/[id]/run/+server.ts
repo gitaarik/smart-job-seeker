@@ -137,7 +137,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 		browserProvider: searchTask.browser_provider,
 		serverBrowserProvider: config.browserProvider,
 		deviceConnected,
-		fetchMode: searchTask.job_platform?.fetch_mode ?? null
+		fetchMode: searchTask.job_platform?.fetch_mode ?? null,
+		platformStatus: searchTask.job_platform?.status ?? null
 	});
 	if (blockers.length > 0) {
 		throw error(400, blockers.map((b) => b.detail).join(' '));
