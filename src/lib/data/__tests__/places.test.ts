@@ -5,7 +5,10 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
+	DEFAULT_RADIUS_KM,
+	distanceKm,
 	foldPlaceName,
+	hasRadius,
 	type Place,
 	type PlaceCandidate,
 	type PlaceKind,
@@ -149,5 +152,31 @@ describe('preferredLocationTexts', () => {
 			'europe'
 		]);
 		expect(preferredLocationTexts(undefined, null)).toEqual([]);
+	});
+});
+
+describe('distanceKm and hasRadius (Phase 4)', () => {
+	it('measures Haarlem to Rotterdam and Apeldoorn as the radius sees them', () => {
+		const haarlem = [52.38084, 4.63683] as const;
+		expect(Math.round(distanceKm(haarlem, [51.9225, 4.47917]))).toBe(52);
+		expect(Math.round(distanceKm(haarlem, [52.21, 5.96944]))).toBe(93);
+		expect(distanceKm(haarlem, haarlem)).toBe(0);
+	});
+
+	it('draws a radius around a city with coordinates only', () => {
+		const city = {
+			id: 1,
+			kind: 'city',
+			name: 'Haarlem',
+			label: 'Haarlem',
+			country: 'NL',
+			countries: ['NL'],
+			lat: 52.4,
+			lon: 4.6
+		} as const;
+		expect(hasRadius({ ...city, countries: ['NL'] })).toBe(true);
+		expect(hasRadius({ ...city, countries: ['NL'], lat: null })).toBe(false);
+		expect(hasRadius({ ...city, countries: ['NL'], kind: 'country' })).toBe(false);
+		expect(DEFAULT_RADIUS_KM).toBe(75);
 	});
 });

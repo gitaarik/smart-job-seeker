@@ -6065,6 +6065,9 @@ export interface AtsLocation {
 	text: string | null;
 	city: string | null;
 	country_code: string | null;
+	/** The city's position in `places`, when the sweep could place it (cloud `ats/coords.ts`). */
+	lat?: number;
+	lon?: number;
 }
 
 export const ats_postings = pgTable(

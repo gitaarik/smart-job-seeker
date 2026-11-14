@@ -29,12 +29,35 @@ export interface Place {
 
 /**
  * A place in the match settings' Preferred Locations (`match_config.places`).
- * `radius_km` is how far from it a hybrid or on-site job may be; stored, not
- * read yet (distance is Phase 4), and absent means the place itself: its
- * country for a city, as before.
+ * `radius_km` is how far from a city a hybrid or on-site job may be; absent
+ * means `DEFAULT_RADIUS_KM`. A province, a country or a region has no radius:
+ * it counts as its countries.
  */
 export interface PreferredPlace extends Place {
 	radius_km?: number | null;
+}
+
+/**
+ * How far from a picked city (or from home, when no place is picked) a hybrid
+ * or on-site job may be. Rik's call, 2026-11-14, from Phase 4's measurement:
+ * from Haarlem it keeps Rotterdam (52 km), Amersfoort and Driebergen (57) and
+ * leaves out Apeldoorn (93) and Eindhoven (119).
+ */
+export const DEFAULT_RADIUS_KM = 75;
+
+/** Whether a place is a point a radius can be drawn around: a city with coordinates. */
+export function hasRadius(place: Place): boolean {
+	return place.kind === 'city' && place.lat != null && place.lon != null;
+}
+
+/** Great-circle distance in km between two [lat, lon] points. */
+export function distanceKm(a: readonly [number, number], b: readonly [number, number]): number {
+	const rad = Math.PI / 180;
+	const dLat = (b[0] - a[0]) * rad;
+	const dLon = (b[1] - a[1]) * rad;
+	const h =
+		Math.sin(dLat / 2) ** 2 + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dLon / 2) ** 2;
+	return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
 /**

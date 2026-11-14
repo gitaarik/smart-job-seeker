@@ -6,10 +6,17 @@
 	 * (`multiple`, `places`). GeoNames is CC BY 4.0, so the list of suggestions
 	 * credits it. With `allowText`, one place or a text the user keeps as typed
 	 * when no place fits ("Bay Area hybrid"), in `text`; the two exclude each
-	 * other.
+	 * other. With `radius`, each city in the list carries a distance
+	 * (`radius_km`, null for `DEFAULT_RADIUS_KM`), for the match settings.
 	 */
 	import { onMount } from 'svelte';
-	import type { Place, PlaceKind, PreferredPlace } from '$lib/data/places';
+	import {
+		DEFAULT_RADIUS_KM,
+		hasRadius,
+		type Place,
+		type PlaceKind,
+		type PreferredPlace
+	} from '$lib/data/places';
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 
 	let {
@@ -18,6 +25,7 @@
 		text = $bindable(null),
 		allowText = false,
 		multiple = false,
+		radius = false,
 		placeholder = 'Search a city, country or region...',
 		disabled = false,
 		id,
@@ -33,6 +41,8 @@
 		/** Offer to keep what was typed when no place fits. */
 		allowText?: boolean;
 		multiple?: boolean;
+		/** A distance per city in the list, when `multiple`. */
+		radius?: boolean;
 		placeholder?: string;
 		disabled?: boolean;
 		/** On the text input, for a `<label for>` outside the component. */
@@ -45,6 +55,15 @@
 
 	const uid = $props.id();
 	const listId = `${uid}-places`;
+
+	/** The distances on offer; the default is among them. */
+	const RADII = [10, 25, 50, 75, 100, 150, 250];
+
+	function setRadius(place: Place, km: number) {
+		places = places.map((p) =>
+			p.id === place.id ? { ...p, radius_km: km === DEFAULT_RADIUS_KM ? null : km } : p
+		);
+	}
 
 	const KIND_LABEL: Record<PlaceKind, string> = {
 		city: 'City',
@@ -191,6 +210,19 @@
 					title={place.kind === 'region' ? `${place.countries.length} countries` : undefined}
 				>
 					{place.label}
+					{#if radius && hasRadius(place)}
+						<select
+							value={place.radius_km ?? DEFAULT_RADIUS_KM}
+							onchange={(e) => setRadius(place, Number(e.currentTarget.value))}
+							{disabled}
+							class="rounded border border-[var(--dash-border)] bg-[var(--dash-card)] py-0 pr-6 pl-1.5 text-xs text-[var(--dash-text)]"
+							aria-label="Distance from {place.label}"
+						>
+							{#each RADII as km (km)}
+								<option value={km}>within {km} km</option>
+							{/each}
+						</select>
+					{/if}
 					<button
 						type="button"
 						onclick={() => remove(place)}

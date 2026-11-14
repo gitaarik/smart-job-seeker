@@ -12,7 +12,7 @@
 	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import PlacePicker from '$lib/components/PlacePicker.svelte';
-	import type { PreferredPlace } from '$lib/data/places';
+	import { DEFAULT_RADIUS_KM, type PreferredPlace } from '$lib/data/places';
 	import { formatCurrency } from '$lib/salary/conversion';
 
 	let { data }: { data: PageData } = $props();
@@ -129,9 +129,10 @@
 			unplacedTexts = [...v.texts];
 		},
 		equal: (a, b) =>
+			// The radius is part of a place's value: changing it alone saves.
 			setsEqual(
-				a.places.map((p) => String(p.id)),
-				b.places.map((p) => String(p.id))
+				a.places.map((p) => `${p.id}:${p.radius_km ?? ''}`),
+				b.places.map((p) => `${p.id}:${p.radius_km ?? ''}`)
 			) && setsEqual(a.texts, b.texts)
 	});
 	$effect(() => placesField.set({ places: [...places], texts: [...unplacedTexts] }));
@@ -452,10 +453,11 @@
 				<div>
 					<h3 class="font-medium text-[var(--dash-text)]">Preferred Locations</h3>
 					<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
-						Where you can work hybrid or on-site. A city or a province counts as its country, a
-						region as all of its countries; distance from a city is planned for a future update.
-						Empty means the country on your profile. Remote jobs limited to certain countries are
-						held to these too.
+						Where you can work hybrid or on-site. A job counts within the distance you set from a
+						city ({DEFAULT_RADIUS_KM} km unless you change it), a province or a country anywhere in that
+						country, a region in all of its countries. A job whose town is unknown counts by its country.
+						Empty means {DEFAULT_RADIUS_KM} km from where you live on your profile, or its country when
+						it names no town. Remote jobs limited to certain countries are held to these too.
 					</p>
 				</div>
 			</div>
@@ -486,7 +488,7 @@
 				</div>
 			{/if}
 
-			<PlacePicker multiple bind:places placeholder="Add a city, country or region..." />
+			<PlacePicker multiple radius bind:places placeholder="Add a city, country or region..." />
 
 			{#if placesField.status !== 'idle'}
 				<div class="mt-3">
