@@ -91,6 +91,31 @@ export async function grantCreditPurchase(_params: {
 	return true;
 }
 
+/** Pure math, shared with the cloud version. */
+export function creditsForCents(
+	purchase: { amount_cents: number; credits: number },
+	cents: number
+): number {
+	if (purchase.amount_cents <= 0) return 0;
+	const part = Math.min(Math.max(cents, 0), purchase.amount_cents);
+	return Math.round((purchase.credits * part) / purchase.amount_cents);
+}
+
+export type PurchaseReversal =
+	| { status: 'unknown' }
+	| { status: 'unchanged' }
+	| { status: 'reversed'; credits: number; shortfall: number }
+	| { status: 'restored'; credits: number };
+
+/** Cloud takes refunded credits back out of the wallet here; OSS has no payments. */
+export async function reverseCreditPurchase(_params: {
+	stripePaymentIntentId: string;
+	reversedCents: number;
+	reason: 'refund' | 'dispute';
+}): Promise<PurchaseReversal> {
+	return { status: 'unknown' };
+}
+
 /** Row shape of a credit-transaction record (matches `credit_transactions` schema). */
 export interface CreditTransaction {
 	id: number;
