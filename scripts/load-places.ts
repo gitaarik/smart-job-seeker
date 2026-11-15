@@ -89,9 +89,17 @@ const TOWN_COUNTRIES = ['NL'];
  * or work mode there. Countries, admin areas and regions are added in build().
  */
 const NOT_TOWN_NAMES = new Set(
-	['remote', 'hybrid', 'onsite', 'on-site', 'office', 'home', 'anywhere', 'worldwide', 'global'].map(
-		foldPlaceName
-	)
+	[
+		'remote',
+		'hybrid',
+		'onsite',
+		'on-site',
+		'office',
+		'home',
+		'anywhere',
+		'worldwide',
+		'global'
+	].map(foldPlaceName)
 );
 
 /** Alternate-name "languages" that are codes or links, not names. */
