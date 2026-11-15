@@ -37,6 +37,14 @@ const APP_ID = 16;
  * model call, a toggle spends nothing, and both end at the same place — a
  * version owned by this application, recorded as what goes out.
  */
+/**
+ * The button that reopens the version picker. The sections further down each
+ * have a "Change" of their own for a wording, so the name alone is five
+ * buttons; this one is the card's, the only one that expands nothing.
+ */
+const changeVersionButton = (page: Page) =>
+	page.locator('button:not([aria-expanded])').filter({ hasText: /^\s*Change\s*$/ });
+
 async function ensureTailored(page: Page) {
 	// Exact: the send record's own button is "Regenerate the PDF".
 	if (await page.getByRole('button', { name: 'Regenerate', exact: true }).count()) return;
@@ -99,7 +107,7 @@ describe('resume page', () => {
 	});
 
 	it('keeps the library one click away, and quiet', async () => {
-		await b.page.getByRole('button', { name: /^Change$/ }).click();
+		await changeVersionButton(b.page).click();
 		const picker = b.page.getByLabel('Version to send');
 		await picker.waitFor({ state: 'visible' });
 		// The tailored version is selectable here too, so "Change" is never a
@@ -115,7 +123,7 @@ describe('resume page', () => {
 	// library version while one exists used to say nothing about that, so a
 	// toggle read as an edit to the document you were sending.
 	it('says when the version it edits is not the one you are sending', async () => {
-		await b.page.getByRole('button', { name: /^Change$/ }).click();
+		await changeVersionButton(b.page).click();
 		await b.page.getByLabel('Version to send').selectOption({ index: 1 });
 		await commitPickedVersion(b.page);
 

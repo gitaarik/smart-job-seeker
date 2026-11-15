@@ -108,6 +108,10 @@ export async function loginViaUI(
 	const ATTEMPTS = 3;
 	for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
 		await page.goto('/login');
+		// Already signed in: /login sends a session on to the app, so there is
+		// no form to fill. A second test in one browser used to wait 30 seconds
+		// here for an #email field that was never coming.
+		if (new URL(page.url()).pathname !== '/login') return;
 		await page.locator('#email').fill(email);
 		await page.locator('#password').fill(password);
 		await page.getByRole('button', { name: 'Sign in' }).click();
