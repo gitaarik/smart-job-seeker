@@ -6155,7 +6155,8 @@ export const places = pgTable(
 	'places',
 	{
 		id: integer().primaryKey().notNull(),
-		/** `city` | `admin` | `country` | `region` */
+		/** `city` | `admin` | `country` | `region`, or `town`: a smaller place
+		 *  loaded only to place postings, with an empty `tsv` so no search finds it. */
 		kind: varchar({ length: 16 }).notNull(),
 		name: varchar({ length: 200 }).notNull(),
 		/** "Haarlem, North Holland, Netherlands", as shown and printed. */

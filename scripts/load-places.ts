@@ -10,6 +10,10 @@
  * - `countryInfo`: the countries, named in English and found under their
  *   names in the languages the boards write in.
  * - `REGIONS` (`src/lib/data/regions.ts`): Europe, EMEA, DACH, ...
+ * - Towns (`TOWN_COUNTRIES`, the country's own file): every other populated
+ *   place there, as kind `town`, only to place postings (cloud
+ *   `ats/coords.ts`). The picker never offers one: a town's `tsv` is empty,
+ *   and both picker queries match on it.
  *
  * GeoNames is CC BY 4.0 (https://www.geonames.org): the picker credits it
  * (Phase 2). The files are downloaded, not committed: into --dir (default
@@ -70,12 +74,33 @@ const COUNTRY_ALIASES: Record<string, string[]> = {
  */
 const LOCAL_ADMIN_NAMES = REGIONS.find((r) => r.name === 'Europe')!.countries;
 
+/**
+ * Countries whose towns under 5,000 people are loaded too, for placing
+ * postings: GeoNames lists many with population 0 (Rosmalen, Leidschendam),
+ * which `cities5000` leaves out. The Netherlands only for now (Rik,
+ * 2026-11-15): it placed 983 of 2,399 unplaced Dutch posting locations on dev;
+ * add a country when users there need its radius.
+ */
+const TOWN_COUNTRIES = ['NL'];
+
+/**
+ * Names a town does not answer to: a hamlet called "Nederland", "Remote"
+ * (Oregon) or "Texas" would place every posting that names its country, state
+ * or work mode there. Countries, admin areas and regions are added in build().
+ */
+const NOT_TOWN_NAMES = new Set(
+	['remote', 'hybrid', 'onsite', 'on-site', 'office', 'home', 'anywhere', 'worldwide', 'global'].map(
+		foldPlaceName
+	)
+);
+
 /** Alternate-name "languages" that are codes or links, not names. */
 const NOT_NAMES = new Set(['link', 'post', 'iata', 'icao', 'faac', 'abbr', 'wkdt', 'unlc']);
 
 interface Row {
 	id: number;
-	kind: PlaceKind;
+	/** `town` is a positions-only row: see TOWN_COUNTRIES. */
+	kind: PlaceKind | 'town';
 	name: string;
 	label: string;
 	country_code: string | null;
@@ -212,6 +237,45 @@ async function build(): Promise<Row[]> {
 		});
 	}
 
+	// Towns: after the cities, the countries, the admin areas and with the
+	// regions' names, so none of those names can be a town's.
+	const taken = new Set(rows.map((r) => r.id));
+	const notTown = new Set([
+		...NOT_TOWN_NAMES,
+		...rows.filter((r) => r.kind !== 'city').flatMap((r) => r.names),
+		...REGIONS.flatMap((r) => folded(r.name, r.aliases))
+	]);
+	for (const code of TOWN_COUNTRIES) {
+		const country = countryNames.get(code);
+		if (!country) continue;
+		for (const c of lines(await file(`${code}.zip`))) {
+			const [id, name, asciiName, alternates, lat, lon, featureClass, feature, , , admin1] = c;
+			// A section of a city stays in (Schiphol, Amsterdam-Zuidoost): it only places.
+			if (featureClass !== 'P' || taken.has(Number(id))) continue;
+			if (SKIPPED_FEATURES.has(feature) && feature !== 'PPLX') continue;
+			const names = folded(name, [asciiName, ...(alternates ? alternates.split(',') : [])]).filter(
+				(n) => !notTown.has(n)
+			);
+			if (!names.length) continue;
+			const admin = admins.get(`${code}.${admin1}`);
+			rows.push({
+				id: Number(id),
+				kind: 'town',
+				name,
+				label: [name, admin && admin.name !== name ? admin.name : null, country]
+					.filter(Boolean)
+					.join(', '),
+				country_code: code,
+				admin1: admin1 || null,
+				countries: [code],
+				lat: Number(lat),
+				lon: Number(lon),
+				population: Number(c[14]) || 0,
+				names
+			});
+		}
+	}
+
 	for (const r of REGIONS) {
 		rows.push({
 			id: r.id,
@@ -240,7 +304,7 @@ async function main() {
 		if (r) console.log(`  ${r.id} ${r.kind} ${r.label} (${r.population}) ${r.names.slice(0, 6)}`);
 	}
 	// Europe's alternate names are most of the download (250 MB unzipped) and
-	// only read once; the three small files stay for a re-run.
+	// only read once; the small files stay for a re-run.
 	fs.rmSync(path.join(DIR, 'alternatenames'), { recursive: true, force: true });
 	if (!APPLY) {
 		console.log('\nDry run. Re-run with --apply to write.');
@@ -251,7 +315,8 @@ async function main() {
 		for (let i = 0; i < rows.length; i += 1000) {
 			const batch = rows.slice(i, i + 1000).map((r) => ({
 				...r,
-				tsv: sql`to_tsvector('simple', ${r.names.join(' ')})`
+				// A town is never searched: an empty vector matches no query.
+				tsv: sql`to_tsvector('simple', ${r.kind === 'town' ? '' : r.names.join(' ')})`
 			}));
 			await tx
 				.insert(places)
