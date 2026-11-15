@@ -4976,6 +4976,15 @@ export const credit_purchases = pgTable(
 		stripe_payment_intent_id: varchar({ length: 255 }),
 		pack_type: varchar({ length: 50 }).notNull(),
 		amount_cents: integer().notNull(),
+		// The credits this payment put in the wallet. Null on the few rows from
+		// before 0115 whose grant left no trace to backfill from.
+		credits: integer(),
+		// How much of the payment Stripe has since taken back (refunds plus
+		// disputes that are open or lost), as last read from Stripe, and the
+		// credits removed from the wallet for it. The second can be less than
+		// the first is worth: credits already spent are not chased.
+		refunded_cents: integer().default(0).notNull(),
+		credits_reversed: integer().default(0).notNull(),
 		// Same key as credit_balances.period: a date, since periods are anchored
 		// on the subscription start, not the calendar month this was sized for.
 		period: varchar({ length: 10 }).notNull(),
