@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "analytics_consented_at" timestamp (6) with time zone;

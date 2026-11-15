@@ -2358,7 +2358,14 @@ export const users = pgTable('users', {
 	// scheduled searches stop for an account nobody has used for a month and
 	// start again on the next visit (the idle rule in account/spend-eligibility).
 	// Null means never stamped; the rule then measures from `createdAt`.
-	last_seen_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
+	last_seen_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
+	// When the person agreed to have their visits linked to their account in
+	// our own analytics (Umami's identify call in the root layout). Null means
+	// no consent, which is the default: without it the visits are anonymous
+	// statistics and nothing ties them to a person. Set and cleared from
+	// /data/privacy; the link itself is removed from Umami after 30 days
+	// (sjs-ops umami/prune.sh), so withdrawing is also forgetting.
+	analytics_consented_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
 });
 
 /**
