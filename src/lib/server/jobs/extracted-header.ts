@@ -220,6 +220,16 @@ export interface GroundedHeaderResponse {
 export const MIN_POSTING_CHARS_FOR_SUGGESTION = 300;
 
 /**
+ * A level word leading a suggestion. The prompt asks for none, and
+ * gpt-oss-120b adds one anyway when the posting mentions a level: "a
+ * senior-level engineer (7+ years)" came back as "Senior LLM Engineer" on
+ * every run (llm:smoke, 2026-11-15). The suggestion names the kind of work for
+ * the applicant's own list; a level is a claim the posting made about the
+ * candidate, not the role. Only these words: "Lead" and "Staff" also name roles.
+ */
+const LEADING_LEVEL = /^(?:(?:senior|sr\.?|junior|jr\.?|medior|mid-level)(?:-level)?\s+)+/i;
+
+/**
  * The model's suggested title, cleaned like an extracted one and gated on the
  * posting being substantial enough to describe. Unlike the four header fields
  * this is a synthesis, so there is no quote to ground it against; what keeps
@@ -230,7 +240,11 @@ export function suggestedTitle(
 	posting: string
 ): string | null {
 	if (posting.trim().length < MIN_POSTING_CHARS_FOR_SUGGESTION) return null;
-	return sanitizeExtractedHeader({ title: response?.suggested_title }).title;
+	const title = sanitizeExtractedHeader({ title: response?.suggested_title }).title;
+	if (!title) return null;
+	const rest = title.replace(LEADING_LEVEL, '');
+	if (!rest) return null;
+	return rest.charAt(0).toUpperCase() + rest.slice(1);
 }
 
 /** Letters and digits with single spaces, one case: how a quote is matched. */
