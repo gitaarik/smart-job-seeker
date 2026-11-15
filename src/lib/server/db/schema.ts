@@ -5084,7 +5084,7 @@ export const credit_balances = pgTable(
 		// The plan `credits_allowance` was last worked out for. A different plan
 		// in the same period is a plan change, and an upgrade then adds only the
 		// share of the difference that the days left pay for. Null on rows from
-		// before 0116, which take the plan's full allowance once.
+		// before 0116, whose allowance is read as their plan's.
 		allowance_plan: varchar({ length: 50 })
 	},
 	(table) => [

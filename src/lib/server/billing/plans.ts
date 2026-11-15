@@ -94,6 +94,15 @@ export function getExtraUsage(): ExtraUsage | null {
 	return null;
 }
 
+/** Cloud prorates a mid-period upgrade's allowance; OSS has one plan. */
+export function allowanceAfterPlanChange(
+	_stored: number,
+	planAllowance: number,
+	_remaining: number
+): number {
+	return planAllowance;
+}
+
 export function planFromPriceId(_priceId: string): PlanId | null {
 	return null;
 }
