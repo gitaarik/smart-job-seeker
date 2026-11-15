@@ -5,6 +5,24 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.47.0] - 2026-11-15
+
+10 commits since v0.46.0.
+
+### Added
+
+- Preferred cities have a distance radius, 75 km by default, and hybrid and on-site job picks are held to it.
+- Job postings are placed in towns, preferring the province named in the posting text.
+- Dutch towns are available as places for matching.
+
+### Changed
+
+- ATS postings record the countries of their region, and the sweep, feed filter and matching use that record.
+
+### Fixed
+
+- A location written past the postcode is now placed in front of it.
+
 ## [0.46.0] - 2026-11-14
 
 48 commits since v0.45.0.
