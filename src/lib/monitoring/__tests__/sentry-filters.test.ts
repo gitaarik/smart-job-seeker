@@ -16,6 +16,10 @@ describe('isFrameworkClientError', () => {
 		).toBe(true);
 	});
 
+	it('drops paths with broken percent-encoding', () => {
+		expect(isFrameworkClientError('Failed to decode URI: /fonts/NotoSans/.%FA')).toBe(true);
+	});
+
 	it('keeps real application errors', () => {
 		expect(isFrameworkClientError('cannot cast type record to integer[]')).toBe(false);
 		expect(isFrameworkClientError('Failed query: SELECT ...')).toBe(false);
