@@ -8,6 +8,8 @@ import {
 	requestAccountDeletion,
 	SubscriptionCancelError
 } from '$lib/server/account/delete';
+import { getBalance } from '$lib/server/billing/credits';
+import { getExtraUsage } from '$lib/server/billing/plans';
 import { getActiveSubscription } from '$lib/server/billing/subscription';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -27,10 +29,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 		? subscription.currentPeriodEnd
 		: null;
 
+	// Extra usage that was bought and not spent goes with the account too.
+	// Shown in euros, the way it was sold; the user never sees a credit.
+	const extraUsage = getExtraUsage();
+	const { extra } = await getBalance(user.id);
+	const extraUsageLeft =
+		extraUsage && extra > 0 ? `€${(extra / extraUsage.creditsPerEuro).toFixed(2)}` : null;
+
 	return {
 		email: user.email,
 		profileCount,
 		paidUntil,
+		extraUsageLeft,
 		graceDays: DELETION_GRACE_DAYS,
 		// Demo accounts are reaped by their link's TTL and have no password to
 		// re-authenticate with; deleting one by hand would leave the link pointing
