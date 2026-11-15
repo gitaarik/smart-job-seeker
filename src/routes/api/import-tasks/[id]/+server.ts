@@ -16,69 +16,7 @@ import { hasCredentialAccess } from '$lib/server/credential-shares';
 import { checkPublicHttpUrl } from '$lib/server/net/public-url';
 import { config } from '$lib/server/config';
 import type { PreferredPlace } from '$lib/data/places';
-
-/**
- * Calculate next scheduled run at the preferred hour in the user's timezone.
- * For any interval, the next run is the soonest future occurrence of preferredHour
- * in the given timezone (today if still upcoming, otherwise tomorrow).
- */
-function calculateNextScheduledRun(
-	_intervalHours: number,
-	preferredHour: number,
-	timezone: string
-): Date {
-	const now = new Date();
-
-	// Get current date parts in the user's timezone
-	const formatter = new Intl.DateTimeFormat('en-US', {
-		timeZone: timezone,
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-		hour: '2-digit',
-		hour12: false
-	});
-	const parts = formatter.formatToParts(now);
-	const get = (type: string) => parseInt(parts.find((p) => p.type === type)?.value ?? '0', 10);
-
-	const tzYear = get('year');
-	const tzMonth = get('month');
-	const tzDay = get('day');
-
-	// Build "today at preferred hour" in the user's timezone using a temp date trick:
-	// Create an ISO-like string and resolve via the timezone offset
-	const buildDateInTz = (year: number, month: number, day: number, hour: number): Date => {
-		// Use Intl to find the UTC offset for this specific date/time in the timezone
-		const probe = new Date(Date.UTC(year, month - 1, day, hour));
-		const utcStr = probe.toLocaleString('en-US', {
-			timeZone: 'UTC',
-			hour12: false
-		});
-		const tzStr = probe.toLocaleString('en-US', {
-			timeZone: timezone,
-			hour12: false
-		});
-		const utcDate = new Date(utcStr);
-		const tzDate = new Date(tzStr);
-		const offsetMs = utcDate.getTime() - tzDate.getTime();
-		return new Date(Date.UTC(year, month - 1, day, hour) + offsetMs);
-	};
-
-	let nextRun = buildDateInTz(tzYear, tzMonth, tzDay, preferredHour);
-
-	// If preferred hour already passed today, schedule for tomorrow
-	if (nextRun.getTime() <= now.getTime()) {
-		const tomorrow = new Date(Date.UTC(tzYear, tzMonth - 1, tzDay + 1));
-		nextRun = buildDateInTz(
-			tomorrow.getUTCFullYear(),
-			tomorrow.getUTCMonth() + 1,
-			tomorrow.getUTCDate(),
-			preferredHour
-		);
-	}
-
-	return nextRun;
-}
+import { nextSlotAtHour } from '$lib/server/utils/zoned-hour';
 
 /**
  * PATCH /api/import-tasks/[id]
@@ -244,11 +182,9 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 				columns: { timezone: true }
 			});
 			const tz = userRecord?.timezone || 'UTC';
-			data.next_scheduled_run = calculateNextScheduledRun(
-				body.schedule_interval_hours,
-				preferredHour,
-				tz
-			);
+			// A schedule that was just set first runs at the next preferred hour,
+			// whatever the interval; the worker spaces the runs after that.
+			data.next_scheduled_run = nextSlotAtHour(preferredHour, tz);
 		}
 	} else if (body.schedule_preferred_hour !== undefined && searchTask.schedule_interval_hours) {
 		// Only preferred hour changed, recalculate next run
@@ -257,11 +193,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 			columns: { timezone: true }
 		});
 		const tz = userRecord?.timezone || 'UTC';
-		data.next_scheduled_run = calculateNextScheduledRun(
-			searchTask.schedule_interval_hours,
-			body.schedule_preferred_hour,
-			tz
-		);
+		data.next_scheduled_run = nextSlotAtHour(body.schedule_preferred_hour, tz);
 	}
 
 	// Aliased past the `if (!searchTask) return` guard above: TS doesn't carry
