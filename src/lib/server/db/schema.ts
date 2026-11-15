@@ -6084,6 +6084,11 @@ export const ats_postings = pgTable(
 		/** ISO 3166-1 alpha-2, upper case. */
 		country_code: varchar({ length: 2 }),
 		country_codes: text().array().default([]).notNull(),
+		/** The countries of a region a location text names ("Remote - EMEA"),
+		 *  kept apart from `country_codes` so an office and a fence stay apart:
+		 *  the feed filter and stage 1 count it for remote and unstated postings
+		 *  only (Rik, 2026-11-15; planning/STRUCTURED-LOCATIONS.md). */
+		region_countries: text().array().default([]).notNull(),
 		locations: jsonb().$type<AtsLocation[]>().default([]).notNull(),
 		work_location: varchar({ length: 16 }),
 		employment_type: varchar({ length: 32 }),
@@ -6119,6 +6124,7 @@ export const ats_postings = pgTable(
 		index('ats_postings_published_at_idx').on(table.published_at),
 		index('ats_postings_country_code_idx').on(table.country_code),
 		index('ats_postings_country_codes_idx').using('gin', table.country_codes),
+		index('ats_postings_region_countries_idx').using('gin', table.region_countries),
 		index('ats_postings_closed_at_idx').on(table.closed_at),
 		index('ats_postings_job_id_idx').on(table.job_id),
 		foreignKey({
