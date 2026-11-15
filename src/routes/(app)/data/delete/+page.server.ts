@@ -8,6 +8,7 @@ import {
 	requestAccountDeletion,
 	SubscriptionCancelError
 } from '$lib/server/account/delete';
+import { getActiveSubscription } from '$lib/server/billing/subscription';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user;
@@ -18,9 +19,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.from(profiles)
 		.where(eq(profiles.user_id, user.id));
 
+	// Deleting ends a paid subscription on the spot with nothing refunded, so
+	// the page says so before the button. Grants have no `sub_` id and cost
+	// nothing to lose.
+	const subscription = await getActiveSubscription(user.id);
+	const paidUntil = subscription.stripeSubscriptionId?.startsWith('sub_')
+		? subscription.currentPeriodEnd
+		: null;
+
 	return {
 		email: user.email,
 		profileCount,
+		paidUntil,
 		graceDays: DELETION_GRACE_DAYS,
 		// Demo accounts are reaped by their link's TTL and have no password to
 		// re-authenticate with; deleting one by hand would leave the link pointing
