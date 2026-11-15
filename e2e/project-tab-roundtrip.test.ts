@@ -25,7 +25,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loginViaUI, useBrowser } from './browser';
 
-const DESCRIPTION = 'What was the project and your role in it?';
+const DESCRIPTION = 'What was the project, and what did you do on it?';
 
 describe('a project detail tab round trip', () => {
 	const b = useBrowser();
