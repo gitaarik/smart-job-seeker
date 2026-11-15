@@ -139,5 +139,11 @@
 		<p class="text-center text-sm text-[var(--dash-text-muted)]">
 			Smart Job Seeker is currently in invite-only beta.
 		</p>
+
+		<p class="text-center text-xs text-[var(--dash-text-muted)]">
+			<a class="underline" href={resolve('/privacy')}>Privacy</a>
+			&middot;
+			<a class="underline" href={resolve('/terms')}>Terms</a>
+		</p>
 	</div>
 </div>

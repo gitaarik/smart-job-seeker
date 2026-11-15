@@ -60,5 +60,12 @@ export const userAdditionalFields = {
 		type: 'date',
 		required: false,
 		input: false
+	},
+	// On the session so the root layout can decide, without a query, whether
+	// to hand Umami the user id. Set and cleared by /data/privacy.
+	analytics_consented_at: {
+		type: 'date',
+		required: false,
+		input: false
 	}
 } as const;

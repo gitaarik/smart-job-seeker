@@ -25,7 +25,11 @@
 		updateDOM(themeState.actual);
 	});
 
-	// Inject Umami analytics script if configured
+	// Inject Umami analytics script if configured. The script itself is
+	// anonymous statistics on our own server: no cookie, no storage, a visitor
+	// hash that rotates. Linking a visit to the account is a different thing
+	// and only happens for people who turned it on at /data/privacy; see
+	// users.analytics_consented_at in the schema for why.
 	onMount(() => {
 		if (data.umamiUrl && data.umamiWebsiteId) {
 			const script = document.createElement('script');
@@ -33,7 +37,9 @@
 			script.src = `${data.umamiUrl}/script.js`;
 			script.dataset.websiteId = data.umamiWebsiteId;
 			script.onload = () => {
-				if (data.user) {
+				const consented = (data.user as { analytics_consented_at?: Date | null } | null)
+					?.analytics_consented_at;
+				if (data.user && consented) {
 					identify({ id: data.user.id });
 				}
 			};

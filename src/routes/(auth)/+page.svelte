@@ -85,8 +85,13 @@
 		<a class="underline" href={resolve('/guide')}>How it works</a>
 	</p>
 
-	<!-- Footer -->
+	<!-- Footer. The legal links live on every public page, because our own
+	     analytics run here without a banner and the rule for that is telling
+	     people where to read about it. -->
 	<p class="absolute bottom-8 text-xs text-[var(--dash-text-muted)]">
-		&copy; {new Date().getFullYear()} Smart Job Seeker
+		&copy; {new Date().getFullYear()} Smart Job Seeker &middot;
+		<a class="underline" href={resolve('/privacy')}>Privacy</a>
+		&middot;
+		<a class="underline" href={resolve('/terms')}>Terms</a>
 	</p>
 </main>

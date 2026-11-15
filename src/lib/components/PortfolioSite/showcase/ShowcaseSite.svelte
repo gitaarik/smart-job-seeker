@@ -28,6 +28,7 @@
 	 * them; see $lib/portfolio-themes.ts and server/profile/portfolio-key.ts.
 	 */
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faBook,
@@ -1212,7 +1213,15 @@
 				<div
 					class="mt-8 mb-4 flex w-full text-xs opacity-70 max-[420px]:flex-col min-[420px]:justify-between"
 				>
-					<div>Copyright © {year} {business?.name ?? profile.name}</div>
+					<!-- Visitors here are counted by the host's own anonymous analytics, and
+					     the rule for doing that without a banner is a link to where it is
+					     explained. The site is the applicant's; the policy is the host's. -->
+					<div>
+						<span>Copyright © {year} {business?.name ?? profile.name}</span>
+						·
+						<a href={resolve('/privacy')} class="underline hover:text-(--pf-band-accent)">Privacy</a
+						>
+					</div>
 					{#if config.footerNote}
 						{@const note = footerNoteParts(config.footerNote)}
 						{@const href = web(config.footerNoteUrl)}

@@ -41,6 +41,7 @@
 		faPalette,
 		faPaperPlane,
 		faPlug,
+		faUserShield,
 		faRobot,
 		faSearch,
 		faShieldAlt,
@@ -215,6 +216,11 @@
 					label: 'Connected Apps',
 					href: '/data/connected-apps',
 					icon: faPlug
+				},
+				{
+					label: 'Privacy',
+					href: '/data/privacy',
+					icon: faUserShield
 				}
 			]
 		}
