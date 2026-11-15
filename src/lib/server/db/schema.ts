@@ -4946,6 +4946,12 @@ export const subscriptions = pgTable(
 			mode: 'date'
 		}).notNull(),
 		cancel_at_period_end: boolean().default(false).notNull(),
+		// A downgrade takes effect at the next renewal: Stripe gets the lower
+		// price at once (so that is what it bills next), and these keep the plan
+		// the current period was paid for until that period ends. Stripe knows
+		// nothing of them, so the sync from Stripe never writes them.
+		kept_plan: varchar({ length: 50 }),
+		kept_plan_until: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
 		date_created: timestamp({ precision: 6, withTimezone: true, mode: 'date' }).defaultNow(),
 		date_updated: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
 	},
@@ -5074,7 +5080,12 @@ export const credit_balances = pgTable(
 		user_id: text().notNull(),
 		period: varchar({ length: 10 }).notNull(),
 		credits_used: integer().default(0).notNull(),
-		credits_allowance: integer().default(0).notNull()
+		credits_allowance: integer().default(0).notNull(),
+		// The plan `credits_allowance` was last worked out for. A different plan
+		// in the same period is a plan change, and an upgrade then adds only the
+		// share of the difference that the days left pay for. Null on rows from
+		// before 0116, which take the plan's full allowance once.
+		allowance_plan: varchar({ length: 50 })
 	},
 	(table) => [
 		foreignKey({
