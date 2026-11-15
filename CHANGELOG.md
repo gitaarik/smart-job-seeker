@@ -5,6 +5,41 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.48.0] - 2026-11-15
+
+39 commits since v0.47.0.
+
+### Added
+
+- Refunding or disputing a credit top-up takes its credits back from the wallet, and the account records what was taken back.
+- The account delete page says that the subscription ends unrefunded and that unspent extra usage is lost.
+
+### Changed
+
+- A downgrade now waits for the renewal before it takes effect, and an upgrade prorates the extra-usage allowance.
+- Scrape charges cover the run's own time, not the time it waited in the queue.
+
+### Fixed
+
+- Deleting an account ends its paid Stripe subscription.
+- A top-up paid in another currency is credited, and a webhook that cannot be credited fails instead of being dropped.
+- A stale Stripe read can no longer overwrite a newer subscription state.
+- A user with a lapsed past-due subscription is sent to pay rather than to a second subscription.
+- A plan change uses Stripe's price as the paid plan unless a downgrade is pending.
+- Runs resume after a worker restart when their queue job is still there.
+- A queued run is cancelled only when its queue has been idle twice.
+- A stop request during a scraper retry backoff is honoured.
+- A scraper run clears its previous failure kind when it starts again.
+- Startup no longer registers jobs after a shutdown has begun.
+- Tasks set to repeat every N days run every N days rather than N-1.
+- Tasks scheduled for a preferred hour keep that hour on the day the clocks change.
+- Greenhouse work mode is read from metadata values only, so prose and negations no longer set it.
+- A merged job opening keeps its row, and a throttled sweep is counted once.
+- Matching waits on a profile that has no work location or job type.
+- Profile countries are passed to the corpus stage as codes.
+- Suggested job titles drop a leading level word.
+- Malformed-path 400 responses are no longer reported to the error tracker.
+
 ## [0.47.0] - 2026-11-15
 
 10 commits since v0.46.0.
