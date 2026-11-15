@@ -1,4 +1,6 @@
 import { MAX_CORPUS_PICKS_PER_DAY } from '$lib/server/job/match-preferences';
+import { preferredPlaceSchema } from '$lib/server/validation/api-schemas';
+import { z } from 'zod';
 import { dbDirect as db } from '$lib/server/db';
 import { eq, and, inArray, asc } from 'drizzle-orm';
 import {
@@ -17,6 +19,9 @@ import {
 	writeDirectives
 } from '$lib/server/ai-chat/directives';
 import { refreshPayFitQuietly } from '$lib/server/salary/pay-fit-store';
+
+/** A file's `match_config.places`, held to what the settings page could have saved. */
+const PLACES = z.array(preferredPlaceSchema).max(20);
 
 export interface SettingsImportOptions {
 	replaceExistingTasks: boolean;
@@ -192,6 +197,12 @@ export async function importSettings(
 				schedule_preferred_hour: t.schedule_preferred_hour,
 				login_mode: t.login_mode,
 				search_location: t.search_location,
+				// Places as the match config's are taken: a list that is not
+				// places is left out, and the text beside them still reads.
+				search_places: PLACES.safeParse(t.search_places).success
+					? PLACES.parse(t.search_places)
+					: null,
+				search_remote_anywhere: t.search_remote_anywhere === true,
 				search_filters: t.search_filters,
 				// `debug_screenshots` is deliberately NOT taken from the file.
 				//
@@ -234,7 +245,14 @@ export async function importSettings(
 				mc.corpus_picks_per_day! <= MAX_CORPUS_PICKS_PER_DAY
 					? { corpus_picks_per_day: mc.corpus_picks_per_day }
 					: {}),
-				...(typeof mc.remote_abroad === 'boolean' ? { remote_abroad: mc.remote_abroad } : {})
+				...(typeof mc.remote_abroad === 'boolean' ? { remote_abroad: mc.remote_abroad } : {}),
+				// Places, added later again. A list that is not places is left out
+				// rather than stored for every reader to trip on.
+				...(PLACES.safeParse(mc.places).success
+					? { places: PLACES.parse(mc.places) }
+					: mc.places === null
+						? { places: null }
+						: {})
 			};
 			if (existing) {
 				await tx

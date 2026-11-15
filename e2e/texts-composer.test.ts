@@ -247,12 +247,12 @@ describe('texts composer — editing a version inline', () => {
 		await b.page.getByRole('button', { name: /Save my version/i }).click();
 		await b.page.waitForLoadState('networkidle');
 
-		expect(
-			await b.page
-				.getByText(/Version 1/)
-				.first()
-				.isVisible()
-		).toBe(true);
+		// Waited for, not snapshotted: `isVisible()` does not retry, and the
+		// network goes idle a beat before the saved version is rendered.
+		await b.page
+			.getByText(/Version 1/)
+			.first()
+			.waitFor({ state: 'visible' });
 	});
 
 	it('says which version the edit will be saved as', async () => {
@@ -281,9 +281,10 @@ describe('texts composer — editing a version inline', () => {
 		await b.page.waitForLoadState('networkidle');
 
 		// Version 1 survived the edit; it is behind the collapse bar, not gone.
-		expect(await b.page.getByRole('button', { name: /Show full conversation/ }).isVisible()).toBe(
-			true
-		);
+		// Waited for, for the same reason as the first version above.
+		await b.page
+			.getByRole('button', { name: /Show full conversation/ })
+			.waitFor({ state: 'visible' });
 
 		// Nothing opened the diff, and "Show changes" does.
 		expect(await b.page.getByRole('button', { name: /Hide changes/i }).count()).toBe(0);

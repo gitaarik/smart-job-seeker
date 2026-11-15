@@ -14,6 +14,7 @@ import { dbDirect as db } from '$lib/server/db';
 import { profiles, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
 import { importProfileFromJson } from '$lib/server/profile/import-profile-json';
+import { recordTermsAcceptance } from '$lib/server/legal/record';
 import type { ExportedProfile } from '$lib/server/profile/export-profile-json';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
@@ -73,6 +74,9 @@ async function seedTestUser() {
 
 		console.log(`Test user created: ${ctx.user.email}`);
 		userId = ctx.user.id;
+		// Seeded, not signed up through the form, so nothing ticked the box; on
+		// an instance with terms the app would stop at /accept-terms first.
+		await recordTermsAcceptance(userId);
 	}
 
 	// This used to shell out to `npx vite-node scripts/import-profile.ts`, a

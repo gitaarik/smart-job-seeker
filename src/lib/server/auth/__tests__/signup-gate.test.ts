@@ -15,17 +15,24 @@ import { APIError } from 'better-auth/api';
 const registrationOpen = vi.hoisted(() => vi.fn());
 const autoApproveSignups = vi.hoisted(() => vi.fn());
 const verifyTurnstileToken = vi.hoisted(() => vi.fn());
+const termsVersion = vi.hoisted(() => vi.fn());
+const TERMS_VERSION = '2026-11-13';
 
 vi.mock('$lib/server/auth/registration', () => ({ autoApproveSignups, registrationOpen }));
 vi.mock('$lib/server/auth/turnstile', () => ({ verifyTurnstileToken }));
+vi.mock('$lib/server/legal/texts', () => ({ termsVersion }));
 
-const { approvesOnSignup, guardEmailChange, guardSignup } = await import('../signup-gate');
+const { approvesOnSignup, guardEmailChange, guardSignup, signupTermsFields } =
+	await import('../signup-gate');
 
-/** A request-bearing context, as the router builds one. */
+/**
+ * A request-bearing context, as the router builds one. It carries the
+ * current terms version unless a test says otherwise, as the form does.
+ */
 function fromHttp(headers: Record<string, string> = {}, body: { email?: string } = {}) {
 	return {
 		request: new Request('https://example.test/api/auth/sign-up/email', { method: 'POST' }),
-		headers: new Headers(headers),
+		headers: new Headers({ 'x-terms-version': TERMS_VERSION, ...headers }),
 		body
 	};
 }
@@ -33,6 +40,7 @@ function fromHttp(headers: Record<string, string> = {}, body: { email?: string }
 beforeEach(() => {
 	registrationOpen.mockReturnValue(true);
 	verifyTurnstileToken.mockResolvedValue({ success: true });
+	termsVersion.mockReturnValue(TERMS_VERSION);
 });
 
 afterEach(() => vi.clearAllMocks());
@@ -103,6 +111,32 @@ describe('guardSignup', () => {
 		});
 	});
 
+	describe('terms', () => {
+		it('refuses a signup that did not accept them, before spending a Turnstile call', async () => {
+			const ctx = fromHttp();
+			ctx.headers.delete('x-terms-version');
+			await expect(guardSignup(ctx)).rejects.toThrow('accept the terms of service');
+			expect(verifyTurnstileToken).not.toHaveBeenCalled();
+		});
+
+		it('refuses an acceptance of an older version', async () => {
+			await expect(guardSignup(fromHttp({ 'x-terms-version': '2000-01-01' }))).rejects.toThrow(
+				APIError
+			);
+		});
+
+		it('does not ask in-process callers', async () => {
+			await expect(guardSignup({ headers: new Headers() })).resolves.toBeUndefined();
+		});
+
+		it('asks nothing on an instance that publishes no terms', async () => {
+			termsVersion.mockReturnValue(null);
+			const ctx = fromHttp();
+			ctx.headers.delete('x-terms-version');
+			await expect(guardSignup(ctx)).resolves.toBeUndefined();
+		});
+	});
+
 	describe('disposable addresses', () => {
 		it('refuses one before spending a Turnstile call', async () => {
 			await expect(guardSignup(fromHttp({}, { email: 'x@mailinator.com' }))).rejects.toThrow(
@@ -156,5 +190,36 @@ describe('approvesOnSignup', () => {
 	it('never approves a user created by another endpoint', () => {
 		autoApproveSignups.mockReturnValue(true);
 		expect(approvesOnSignup({ ...signup, path: '/sign-in/social' })).toBe(false);
+	});
+});
+
+describe('signupTermsFields', () => {
+	const signup = (version?: string) => ({
+		path: '/sign-up/email',
+		request: new Request('https://example.test'),
+		headers: new Headers(version ? { 'x-terms-version': version } : {})
+	});
+
+	it('records the current version on a signup over HTTP', () => {
+		const fields = signupTermsFields(signup(TERMS_VERSION));
+		expect(fields).toMatchObject({ terms_version: TERMS_VERSION });
+		expect('terms_accepted_at' in fields && fields.terms_accepted_at).toBeInstanceOf(Date);
+	});
+
+	it('records nothing for an in-process create (invites, demo accounts)', () => {
+		expect(
+			signupTermsFields({ path: '/sign-up/email', headers: signup(TERMS_VERSION).headers })
+		).toEqual({});
+		expect(signupTermsFields(null)).toEqual({});
+	});
+
+	it('records nothing on an instance that publishes no terms', () => {
+		termsVersion.mockReturnValue(null);
+		expect(signupTermsFields(signup(TERMS_VERSION))).toEqual({});
+	});
+
+	it('records nothing for a version the gate would have refused', () => {
+		expect(signupTermsFields(signup('2000-01-01'))).toEqual({});
+		expect(signupTermsFields(signup())).toEqual({});
 	});
 });

@@ -5,6 +5,8 @@ import { and, gt, like } from 'drizzle-orm';
 import { eq } from 'drizzle-orm';
 import { verifications } from '$lib/server/db/schema';
 import { createOrLinkAccount } from '$lib/server/auth/invite-account';
+import { acceptedTermsField, recordTermsAcceptance } from '$lib/server/legal/record';
+import { termsVersion } from '$lib/server/legal/texts';
 import { applyInviteGrants, grantsFromInvitePayload } from '$lib/server/auth/invite-grants';
 
 function findInviteByToken(
@@ -49,6 +51,7 @@ export const load: PageServerLoad = async (event) => {
 
 	return {
 		valid: true as const,
+		termsVersion: termsVersion(),
 		email,
 		name: data.name || '',
 		token
@@ -72,6 +75,10 @@ export const actions: Actions = {
 
 		if (password !== confirmPassword) {
 			return fail(400, { error: 'Passwords do not match' });
+		}
+
+		if (!acceptedTermsField(formData)) {
+			return fail(400, { error: 'Please accept the terms of service and privacy policy.' });
 		}
 
 		// Find and validate invite
@@ -109,6 +116,8 @@ export const actions: Actions = {
 			const message = e instanceof Error ? e.message : 'Failed to set up account';
 			return fail(400, { error: message });
 		}
+
+		await recordTermsAcceptance(userId);
 
 		// Plan / shared devices the inviting admin attached. Best-effort by
 		// design: the account is already created, so a device revoked since the

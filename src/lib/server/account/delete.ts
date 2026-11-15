@@ -47,6 +47,7 @@ import {
 	user_feedback,
 	users
 } from '$lib/server/db/schema';
+import { cancelSubscriptionsForAccount } from '$lib/server/billing/subscription';
 import { deleteProfile } from '$lib/server/profile/delete';
 import { collectUserFileRefs, reapFileRefs } from '$lib/server/uploads/reap';
 
@@ -65,6 +66,14 @@ export function accountRef(userId: string): string {
 	return createHash('sha256').update(userId).digest('hex');
 }
 
+/** The subscription could not be ended, so the deletion was not started. */
+export class SubscriptionCancelError extends Error {
+	constructor(cause: unknown) {
+		super('Could not cancel the subscription', { cause });
+		this.name = 'SubscriptionCancelError';
+	}
+}
+
 export interface DeletionRequest {
 	requestedAt: Date;
 	/** When the reaper will remove the row, absent an admin restore. */
@@ -80,12 +89,25 @@ export interface DeletionRequest {
  * back to life on a restore, and re-issuing one is a button. Sessions,
  * schedules and shares are the things a restored account needs back, and none
  * of them survive a revoke either — they are re-established by signing in.
+ *
+ * The paid subscription ends here too, and first: access goes with the
+ * request, so a subscription left running bills for an account nobody can
+ * sign in to. If the payment provider cannot be reached this throws
+ * `SubscriptionCancelError` with nothing changed, so the request can simply be
+ * made again. A restore does not bring the subscription back; subscribing
+ * again is a button, like the keys.
  */
 export async function requestAccountDeletion(
 	userId: string,
 	opts: { by?: 'user' | 'admin' } = {}
 ): Promise<DeletionRequest> {
 	const requestedAt = new Date();
+
+	try {
+		await cancelSubscriptionsForAccount(userId);
+	} catch (cause) {
+		throw new SubscriptionCancelError(cause);
+	}
 
 	await db.update(users).set({ deletion_requested_at: requestedAt }).where(eq(users.id, userId));
 
@@ -171,7 +193,9 @@ export interface ErasureResult {
  * Order is load-bearing throughout:
  *
  * 1. Read the file references while the rows that name them still exist.
- * 2. Stamp the billing carve-out **before** the delete, because the FK sets
+ * 2. End any subscription still running (the request did this, but accounts
+ *    whose request predates that, or whose subscription Stripe revived, have
+ *    not had it), then stamp the billing carve-out **before** the delete, because the FK sets
  *    `user_id` to null on the way out and the link would otherwise be gone.
  * 3. Clear the six tables that carry a `user_id` with no foreign key behind it
  *    — `DELETE FROM users` does not touch those, and nothing would say so.
@@ -194,7 +218,11 @@ export async function eraseAccount(
 
 	const refs = await collectUserFileRefs(userId);
 
-	// 2 — the payment carve-out (D1). Statutory retention outlives the right to
+	// 2 — nothing may keep charging once the row that links to it is gone. A
+	// failure throws and leaves the account whole; the daily sweep tries again.
+	await cancelSubscriptionsForAccount(userId);
+
+	// The payment carve-out (D1). Statutory retention outlives the right to
 	// erasure, so these rows stay; the FK nulls `user_id` and this is what keeps
 	// them reconcilable afterwards.
 	await db

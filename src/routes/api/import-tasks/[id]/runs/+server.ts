@@ -49,7 +49,6 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 				jobs_found: true,
 				error_message: true,
 				triggered_by: true,
-				live_url: true,
 				user_response: true,
 				settings: true
 			}

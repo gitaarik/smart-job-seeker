@@ -11,15 +11,22 @@ import {
 } from '$lib/server/db/schema';
 import { parseIntParam, requireAuth } from '$lib/server/utils/api-helpers';
 import { parseBody, platformCredentialsSchema } from '$lib/server/validation/api-schemas';
-import { decryptCredential, encryptCredential } from '$lib/server/auth/crypto';
+
+/**
+ * The accounts a user has on a job platform: a username (usually the email
+ * address they sign in with) per row, and no secret. The server stopped
+ * storing platform passwords and security answers on 2026-11-14 (migration
+ * 0111); the user signs in in the browser on their own device, and the
+ * username only lets a run type the address on a site that sends a code.
+ */
 
 /**
  * GET /api/platforms/[id]/credentials?profileId=X
  *
- * List all credentials the logged-in user has for this platform. Returns
- * user-wide credentials (a credential is shared across every profile the
- * user owns); the `profileId` query param is retained only for ownership
- * validation — any of the user's profiles surfaces the same list.
+ * List all accounts the logged-in user has for this platform. Returns
+ * user-wide rows (an account is shared across every profile the user owns);
+ * the `profileId` query param is retained only for ownership validation — any
+ * of the user's profiles surfaces the same list.
  */
 export const GET: RequestHandler = async ({ params, locals, url }) => {
 	const user = requireAuth(locals);
@@ -47,16 +54,11 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
 			eq(platform_credentials.user_id, user.id),
 			eq(platform_credentials.platform_id, platformId)
 		),
-		columns: { id: true, username: true, security_answer: true },
+		columns: { id: true, username: true },
 		orderBy: desc(platform_credentials.date_created)
 	});
 
-	return json(
-		credentials.map((c) => ({
-			...c,
-			security_answer: decryptCredential(c.security_answer)
-		}))
-	);
+	return json(credentials);
 };
 
 /**
@@ -71,7 +73,7 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
 	const user = requireAuth(locals);
 	const platformId = parseIntParam(params.id, 'platform');
 
-	const { profileId, credentialId, username, password, security_answer } = parseBody(
+	const { profileId, credentialId, username } = parseBody(
 		platformCredentialsSchema,
 		await request.json()
 	);
@@ -111,18 +113,12 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
 			date_updated: new Date()
 		};
 		if (username !== undefined) update.username = username || null;
-		if (password !== undefined) {
-			update.password = encryptCredential(password || null);
-		}
-		if (security_answer !== undefined) {
-			update.security_answer = encryptCredential(security_answer || null);
-		}
 		await db
 			.update(platform_credentials)
 			.set(update)
 			.where(eq(platform_credentials.id, existing.id));
 		// Clear any login error on this profile's runtime row — the user just
-		// updated the secret, so the old error is stale.
+		// changed the account, so the old error is stale.
 		await db
 			.update(platform_profiles)
 			.set({ login_error: null })
@@ -141,8 +137,6 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
 			user_id: user.id,
 			platform_id: platformId,
 			username: username || null,
-			password: encryptCredential(password || null),
-			security_answer: encryptCredential(security_answer || null),
 			date_created: new Date(),
 			date_updated: new Date()
 		})

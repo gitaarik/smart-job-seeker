@@ -71,6 +71,24 @@
 						can still restore the account; after it, nobody can.
 					</p>
 
+					{#if data.paidUntil}
+						<p class="mt-3 text-[var(--dash-text-secondary)]">
+							<strong>Your subscription is cancelled at the same moment.</strong> It is paid until
+							{data.paidUntil.toLocaleDateString('en-GB', {
+								day: 'numeric',
+								month: 'long',
+								year: 'numeric'
+							})}, and the days left are not refunded.
+						</p>
+					{/if}
+
+					{#if data.extraUsageLeft}
+						<p class="mt-3 text-[var(--dash-text-secondary)]">
+							<strong>You have {data.extraUsageLeft} of extra usage left.</strong> It goes with the account
+							and is not refunded.
+						</p>
+					{/if}
+
 					<p class="mt-3 text-sm text-[var(--dash-text-secondary)]">
 						One thing is kept: records of payments you have made. Invoicing law requires us to
 						retain those, and they are kept with your account reference removed so they can no

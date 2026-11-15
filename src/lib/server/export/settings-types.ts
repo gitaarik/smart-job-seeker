@@ -35,6 +35,9 @@ export interface ExportedSearchTask {
 	schedule_preferred_hour: number | null;
 	login_mode: string;
 	search_location: string | null;
+	/** Added with the place picker; a file from before it has none. */
+	search_places?: unknown;
+	search_remote_anywhere?: boolean;
 	search_filters: Record<string, string | string[]>;
 	debug_screenshots: boolean;
 }
@@ -44,7 +47,10 @@ export interface ExportedMatchConfig {
 	job_types: unknown;
 	experience_levels: unknown;
 	work_location: unknown;
+	/** Texts typed before the picker that are not a place yet. */
 	locations: unknown;
+	/** Preferred Locations as picked. Absent in files exported before 2026-11-13. */
+	places?: unknown;
 	match_community_jobs: boolean;
 	remote_only: boolean;
 	community_max_age_days: number | null;

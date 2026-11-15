@@ -2,38 +2,28 @@
 	/**
 	 * Modal that renders a live view of the discovery worker's browser
 	 * session — used by both the per-platform discovery page's status box
-	 * and the SearchFormProbeRunCard. Renders an iframe of `liveUrl` for hosted
-	 * sessions, or polls `/api/tunnel/screencast` when the run was routed
-	 * through a desktop device.
+	 * and the SearchFormProbeRunCard. Polls `/api/tunnel/screencast` for the
+	 * desktop device the run was routed through.
 	 *
 	 * Polling starts on open and stops on close/unmount. The blob URL for
 	 * the latest screenshot is revoked between frames so we don't leak.
 	 */
-	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import { onDestroy } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import {
-		faCloud,
-		faDesktop,
-		faExternalLinkAlt,
-		faSync,
-		faTimes
-	} from '@fortawesome/free-solid-svg-icons';
+	import { faDesktop, faSync, faTimes } from '@fortawesome/free-solid-svg-icons';
 	import Spinner from '$lib/components/Spinner.svelte';
 	import { portalToBody } from '$lib/actions/portal';
 
 	interface Props {
 		open: boolean;
-		liveUrl: string | null;
 		apiKeyId: number | null;
 		deviceName?: string | null;
 		onClose?: () => void;
 	}
 
-	let { open = $bindable(), liveUrl, apiKeyId, deviceName = null, onClose }: Props = $props();
+	let { open = $bindable(), apiKeyId, deviceName = null, onClose }: Props = $props();
 
-	const isCloudMode = $derived(Boolean(liveUrl));
-	const isTunnelMode = $derived(!isCloudMode && Boolean(apiKeyId));
+	const isTunnelMode = $derived(Boolean(apiKeyId));
 
 	let screenshotSrc = $state<string | null>(null);
 	let screenshotLoading = $state(false);
@@ -88,7 +78,7 @@
 	});
 </script>
 
-{#if open && (isCloudMode || isTunnelMode)}
+{#if open && isTunnelMode}
 	<div
 		use:portalToBody={{ onClose: close }}
 		class="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -106,14 +96,14 @@
 			>
 				<div class="flex min-w-0 items-center gap-2">
 					<FontAwesomeIcon
-						icon={isCloudMode ? faCloud : faDesktop}
+						icon={faDesktop}
 						class="h-4 w-4 shrink-0 text-[var(--dash-text-secondary)]"
 					/>
 					<span class="text-sm font-medium text-[var(--dash-text)]">Browser view</span>
 					<span
 						class="shrink-0 rounded bg-[var(--dash-bg)] px-2 py-0.5 text-xs text-[var(--dash-text-muted)]"
 					>
-						{isCloudMode ? 'Cloud' : (deviceName ?? 'Tunnel')}
+						{deviceName ?? 'Tunnel'}
 					</span>
 				</div>
 				<div class="flex items-center gap-2">
@@ -128,18 +118,6 @@
 							<FontAwesomeIcon icon={faSync} class="h-3.5 w-3.5" />
 						</button>
 					{/if}
-					{#if isCloudMode && liveUrl}
-						<ExternalLink
-							href={liveUrl}
-							target="_blank"
-							rel="noopener noreferrer"
-							class="p-1 text-[var(--dash-text-secondary)] transition-colors hover:text-[var(--dash-primary)]"
-							title="Open in new tab"
-							aria-label="Open in new tab"
-						>
-							<FontAwesomeIcon icon={faExternalLinkAlt} class="h-4 w-4" />
-						</ExternalLink>
-					{/if}
 					<button
 						type="button"
 						onclick={close}
@@ -151,10 +129,7 @@
 				</div>
 			</div>
 			<div class="relative w-full flex-1 bg-black">
-				{#if isCloudMode && liveUrl}
-					<iframe src={liveUrl} title="Browser view" class="absolute inset-0 h-full w-full border-0"
-					></iframe>
-				{:else if isTunnelMode}
+				{#if isTunnelMode}
 					{#if screenshotSrc}
 						<img
 							src={screenshotSrc}

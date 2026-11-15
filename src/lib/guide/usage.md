@@ -28,8 +28,7 @@ fee:
 
 - 2 cents to start
 - 1 cent for every job it brings in
-- 1 cent for every 30 seconds of browser time, doubled if you're using a cloud
-  browser rather than your own device
+- 1 cent for every 30 seconds of browser time
 - 3 cents more if it had to log in for you
 
 A run needs at least 15 cents of usage left before it starts, because a run that
@@ -69,8 +68,6 @@ browser.
 - **Tighten your Import Task filters.** A search that returns 200 jobs costs €2
   in job charges alone, and you will read maybe five of them. A narrow search is
   cheaper _and_ better.
-- **Use your own device rather than a cloud browser**: browser time costs half
-  as much.
 - **Turn on community jobs** in [Match Config](/jobs/import/config). Scoring a
   job somebody else already imported costs a fraction of importing it yourself.
 - **Give the AI a good profile.** The expensive part of a bad cover letter is

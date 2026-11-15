@@ -1,12 +1,12 @@
 /**
- * Credential sharing service — share platform_credentials (login username +
- * encrypted password for a job platform) with contacts.
+ * Credential sharing service — share platform_credentials (the username of
+ * an account on a job platform; the server holds no platform passwords since
+ * 2026-11-14) with contacts.
  *
  * Constraint: a contact who has a credential shared with them can use it on
  * an import task ONLY in combination with one of the credential owner's
- * devices that has also been shared with them. The password never crosses
- * to the contact's session — the scraper resolves it server-side at run
- * time via `decryptCredential()`.
+ * devices that has also been shared with them. That device's browser is
+ * where the owner signed in, so the shared row is only useful there.
  *
  * Credentials are user-wide (owned via `platform_credentials.user_id`), so
  * intra-user "sharing" doesn't exist as a row in this table — every profile

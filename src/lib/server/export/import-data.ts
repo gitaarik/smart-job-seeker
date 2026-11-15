@@ -400,6 +400,7 @@ function buildProfileUpdateData(p: ExportedProfileData, name: string) {
 		title: p.title || null,
 		location: p.location || null,
 		country_code: p.country_code || null,
+		place: p.place ?? null,
 		phone_number: p.phone_number || null,
 		email_address: p.email_address || null,
 		personal_website: p.personal_website || null,

@@ -12,6 +12,8 @@ export interface ActiveSubscription {
 	currentPeriodEnd: Date | null;
 	cancelAtPeriodEnd: boolean;
 	stripeSubscriptionId: string | null;
+	/** Cloud: the lower plan a downgrade moves to when the period ends. */
+	pendingPlan: PlanId | null;
 }
 
 /**
@@ -24,7 +26,8 @@ export async function getActiveSubscription(_userId: string): Promise<ActiveSubs
 		currentPeriodStart: null,
 		currentPeriodEnd: null,
 		cancelAtPeriodEnd: false,
-		stripeSubscriptionId: null
+		stripeSubscriptionId: null,
+		pendingPlan: null
 	};
 }
 
@@ -52,8 +55,20 @@ export async function getOrCreateStripeCustomer(
 /** Cloud re-reads a Stripe subscription; OSS has none. */
 export async function syncSubscriptionFromStripe(_subscriptionId: string): Promise<void> {}
 
+/**
+ * Cloud ends the account's Stripe subscriptions before it is deleted, and
+ * throws when it cannot; OSS has none to end.
+ */
+export async function cancelSubscriptionsForAccount(
+	_userId: string
+): Promise<{ canceled: number }> {
+	return { canceled: 0 };
+}
+
 export type PlanChangeResult =
 	| { kind: 'changed'; plan: PlanId; pending: boolean }
+	| { kind: 'scheduled'; plan: PlanId; effectiveAt: Date }
+	| { kind: 'kept'; plan: PlanId }
 	| { kind: 'same_plan' }
 	| { kind: 'no_stripe_subscription' };
 

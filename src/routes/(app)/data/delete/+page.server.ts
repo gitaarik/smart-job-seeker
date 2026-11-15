@@ -3,7 +3,14 @@ import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { count, eq } from 'drizzle-orm';
 import { profiles } from '$lib/server/db/schema';
-import { DELETION_GRACE_DAYS, requestAccountDeletion } from '$lib/server/account/delete';
+import {
+	DELETION_GRACE_DAYS,
+	requestAccountDeletion,
+	SubscriptionCancelError
+} from '$lib/server/account/delete';
+import { getBalance } from '$lib/server/billing/credits';
+import { getExtraUsage } from '$lib/server/billing/plans';
+import { getActiveSubscription } from '$lib/server/billing/subscription';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user;
@@ -14,9 +21,26 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.from(profiles)
 		.where(eq(profiles.user_id, user.id));
 
+	// Deleting ends a paid subscription on the spot with nothing refunded, so
+	// the page says so before the button. Grants have no `sub_` id and cost
+	// nothing to lose.
+	const subscription = await getActiveSubscription(user.id);
+	const paidUntil = subscription.stripeSubscriptionId?.startsWith('sub_')
+		? subscription.currentPeriodEnd
+		: null;
+
+	// Extra usage that was bought and not spent goes with the account too.
+	// Shown in euros, the way it was sold; the user never sees a credit.
+	const extraUsage = getExtraUsage();
+	const { extra } = await getBalance(user.id);
+	const extraUsageLeft =
+		extraUsage && extra > 0 ? `€${(extra / extraUsage.creditsPerEuro).toFixed(2)}` : null;
+
 	return {
 		email: user.email,
 		profileCount,
+		paidUntil,
+		extraUsageLeft,
 		graceDays: DELETION_GRACE_DAYS,
 		// Demo accounts are reaped by their link's TTL and have no password to
 		// re-authenticate with; deleting one by hand would leave the link pointing
@@ -40,7 +64,16 @@ export const actions: Actions = {
 			return fail(400, { error: 'Email address does not match' });
 		}
 
-		await requestAccountDeletion(user.id, { by: 'user' });
+		try {
+			await requestAccountDeletion(user.id, { by: 'user' });
+		} catch (err) {
+			if (!(err instanceof SubscriptionCancelError)) throw err;
+			console.error('[account-delete] subscription cancel failed', err.cause);
+			return fail(503, {
+				error:
+					'We could not cancel your subscription just now, so your account has not been deleted. Please try again in a few minutes.'
+			});
+		}
 
 		// The request revoked every session, this one included, so there is
 		// nothing to redirect back into.

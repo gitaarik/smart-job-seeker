@@ -42,6 +42,8 @@ import {
 	writeMatchPreferences,
 	type MatchPreferenceValues
 } from '$lib/server/job/match-preferences';
+import { type PreferredPlace, preferredLocationTexts } from '$lib/data/places';
+import { resolvePlaceText } from '$lib/server/places';
 
 export type MatchConfigCapability = 'edit_match_config';
 
@@ -129,7 +131,7 @@ const editMatchConfig: CapabilityDef = {
 			[FIELD.jobTypes]: config.job_types,
 			[FIELD.experienceLevels]: config.experience_levels,
 			[FIELD.workLocation]: config.work_location,
-			[FIELD.locations]: config.locations,
+			[FIELD.locations]: preferredLocationTexts(config.places, config.locations),
 			[FIELD.remoteOnly]: config.remote_only,
 			[FIELD.communityJobs]: config.match_community_jobs,
 			[FIELD.communityMaxAge]: config.community_max_age_days,
@@ -166,8 +168,12 @@ about one posting.
 - "${FIELD.jobTypes}" — any of: ${quoted(JOB_TYPE_OPTIONS)}.
 - "${FIELD.experienceLevels}" — any of: ${quoted(EXPERIENCE_LEVEL_OPTIONS)}.
 - "${FIELD.workLocation}" — any of: ${quoted(WORK_LOCATION_OPTIONS)}.
-- "${FIELD.locations}" — free text place names they will work in or from
-  (countries, regions, cities). Empty means anywhere.
+- "${FIELD.locations}" — places they will work hybrid or on-site in: cities,
+  provinces, countries or regions ("Europe", "DACH", "Benelux", "Nordics",
+  "EMEA", "Latin America", "North America", "Asia Pacific"). Write a city as
+  "City, Country" ("Haarlem, Netherlands"), and keep the names already there as
+  they are. Each is looked up as a real place; one that is not found is kept as
+  text and shown to them to pick again. Empty means the country they live in.
 - "${FIELD.remoteOnly}" — true keeps only fully remote postings.
 - "${FIELD.communityJobs}" — true also matches jobs other users imported, not
   just the ones their own searches found.
@@ -228,7 +234,10 @@ somewhere — there is nowhere.`,
 	},
 
 	apply: async (_target, fields, _current, actor) => {
-		await writeMatchPreferences(actor.profileId, patchFrom(fields));
+		await writeMatchPreferences(actor.profileId, {
+			...patchFrom(fields),
+			...(await placesFrom(fields, actor.profileId))
+		});
 	},
 
 	/**
@@ -242,9 +251,38 @@ somewhere — there is nowhere.`,
 		if (Object.keys(previous).length === 0) {
 			throw new Error('edit_match_config recorded no fields this can put back');
 		}
-		await writeMatchPreferences(actor.profileId, patchFrom(previous));
+		await writeMatchPreferences(actor.profileId, {
+			...patchFrom(previous),
+			...(await placesFrom(previous, actor.profileId))
+		});
 	}
 };
+
+/**
+ * The location names sent, as places. A name that is already there (by its
+ * label, as `current` shows it) keeps its stored place, radius included, which
+ * is also how a revert puts back the very places it replaced; a new one is
+ * looked up (`resolvePlaceText`), and one that is no single place stays a text
+ * in `locations`, read as before and shown on the page to pick again.
+ */
+async function placesFrom(
+	fields: Record<string, unknown>,
+	profileId: number
+): Promise<Pick<MatchPreferenceValues, 'places' | 'locations'>> {
+	if (!(FIELD.locations in fields)) return {};
+	const { places: stored } = await readMatchPreferences(profileId);
+	const byLabel = new Map(stored.map((p) => [p.label.toLowerCase(), p]));
+	const places: PreferredPlace[] = [];
+	const texts: string[] = [];
+	for (const raw of listOf(fields[FIELD.locations])) {
+		const name = String(raw).trim();
+		if (!name) continue;
+		const place = byLabel.get(name.toLowerCase()) ?? (await resolvePlaceText(name)).place;
+		if (place && !places.some((p) => p.id === place.id)) places.push(place);
+		else if (!place && !texts.includes(name)) texts.push(name);
+	}
+	return { places, locations: texts };
+}
 
 /** Wire names back to column names, keeping "absent" and "null" apart. */
 function patchFrom(fields: Record<string, unknown>): MatchPreferenceValues {
@@ -254,7 +292,6 @@ function patchFrom(fields: Record<string, unknown>): MatchPreferenceValues {
 		patch.experience_levels = listOf(fields[FIELD.experienceLevels]);
 	}
 	if (FIELD.workLocation in fields) patch.work_location = listOf(fields[FIELD.workLocation]);
-	if (FIELD.locations in fields) patch.locations = listOf(fields[FIELD.locations]);
 	// The booleans are notNull columns: a coerced null means the model sent
 	// something unreadable, which is "no opinion", not "turn it off".
 	if (typeof fields[FIELD.remoteOnly] === 'boolean') {

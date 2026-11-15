@@ -27,9 +27,8 @@
 	 *
 	 * This form used to ask for a login page URL, and that was the wrong
 	 * question at the wrong time. At add time the user usually cannot say
-	 * whether a board is gated; a URL on its own does nothing without either
-	 * stored credentials (which this form does not collect) or a person
-	 * watching the run; and the field only ever appeared for custom sites,
+	 * whether a board is gated; a URL on its own does nothing without a person
+	 * signing in in the browser; and the field only ever appeared for custom sites,
 	 * where we have the least chance of knowing. Meanwhile every platform
 	 * picked from the dropdown was pinned to `login_mode: "none"`, so the 14
 	 * of 24 published platforms that *do* have a sign-in page produced tasks
@@ -45,13 +44,15 @@
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faCloud, faLaptop } from '@fortawesome/free-solid-svg-icons';
+	import { faLaptop } from '@fortawesome/free-solid-svg-icons';
 	import { track } from '$lib/tools/analytics';
 	import type { SearchFilterValue } from '$lib/job-platforms/search-filters';
 	import FilterPicker from './FilterPicker.svelte';
 	import PlatformCombobox from './PlatformCombobox.svelte';
 	import { CUSTOM_PLATFORM_ID } from '$lib/import-tasks/custom-site';
 	import { defaultLoginMode, signInNoticeForNewTask } from '$lib/import-tasks/sign-in';
+	import PlacePicker from '$lib/components/PlacePicker.svelte';
+	import type { Place, PreferredPlace } from '$lib/data/places';
 
 	export type ImportablePlatform = {
 		id: number;
@@ -172,11 +173,8 @@
 	const canSubmit = $derived(!submitting && (isCustom ? !!customOrigin : platformId !== null));
 
 	/**
-	 * Where the task will run. A connected device wins over the server-side
-	 * browser: it scrapes from the user's own IP, which is the difference
-	 * between working and being blocked on the boards that reject datacenter
-	 * ranges. The add form used to hardcode "hosted", so a user with a device
-	 * connected still got the cloud browser.
+	 * Where the task will run. Scraping happens on the user's own device, from
+	 * their own IP, so a connected device is pinned to the task here.
 	 *
 	 * With no device we send an empty provider rather than naming one, letting
 	 * the create action apply the server's own default. That defers to operator
@@ -192,7 +190,14 @@
 	 */
 	const isFeed = $derived(!isCustom && selectedPlatform?.fetch_mode === 'feed');
 	const hasSignInPage = $derived(!isCustom && !isFeed && !!selectedPlatform?.login_page_url);
-	let countries = $state('');
+	// Where (planning/STRUCTURED-LOCATIONS.md, Phase 3): a feed task's places
+	// and "remote from anywhere"; a browser task's one place, or a text kept as
+	// typed, for the site's own location box.
+	let feedPlaces = $state<PreferredPlace[]>([]);
+	let feedRemote = $state(false);
+	let browserPlace = $state<Place | null>(null);
+	let browserText = $state<string | null>(null);
+	const searchPlaces = $derived(isFeed ? feedPlaces : browserPlace ? [browserPlace] : []);
 	const loginMode = $derived(defaultLoginMode(hasSignInPage));
 
 	const runsOnDevice = $derived(preferredDevice !== null);
@@ -321,6 +326,25 @@
 				Typed into the site's search input. Leave empty to import everything it lists.
 			</p>
 		</div>
+		{#if !isFeed}
+			<div>
+				<label
+					class="mb-1 block text-xs font-medium text-[var(--dash-text-secondary)]"
+					for="add-where"
+					>Where <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span></label
+				>
+				<PlacePicker
+					id="add-where"
+					allowText
+					bind:value={browserPlace}
+					bind:text={browserText}
+					placeholder="Search a city, country or region..."
+				/>
+				<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
+					Typed into the site's own location box, on sites that have one.
+				</p>
+			</div>
+		{/if}
 	{:else}
 		<p class="text-xs text-[var(--dash-text-muted)]">
 			{selectedPlatform?.name ?? 'This site'} has no search form, so we import its listing page as-is.
@@ -377,21 +401,40 @@
 				for="add-countries"
 				>Where <span class="font-normal text-[var(--dash-text-muted)]">(optional)</span></label
 			>
-			<input
+			<PlacePicker
 				id="add-countries"
-				type="text"
-				bind:value={countries}
-				placeholder="e.g. Netherlands, Germany, remote"
-				class="w-full rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] px-2 py-1.5 text-sm text-[var(--dash-text)]"
+				multiple
+				bind:places={feedPlaces}
+				placeholder="Add a city, country or region..."
 			/>
+			<label class="mt-2 flex cursor-pointer items-center gap-2">
+				<input
+					type="checkbox"
+					bind:checked={feedRemote}
+					class="h-4 w-4 rounded border-[var(--dash-border)] text-[var(--dash-primary)] focus:ring-[var(--dash-primary)]"
+				/>
+				<span class="text-sm text-[var(--dash-text-secondary)]"
+					>Also remote postings from any country</span
+				>
+			</label>
 			<p class="mt-1 text-xs text-[var(--dash-text-muted)]">
-				Countries, comma-separated. Add "remote" to include remote postings from anywhere. Leave
-				empty for every country.
+				A city or a province counts as its country, a region as all of its countries. Leave empty
+				for every country.
 			</p>
 		</div>
 	{/if}
 	<input type="hidden" name="search_term" value={keywordsApply ? keywords : ''} />
-	<input type="hidden" name="search_location" value={isFeed ? countries : ''} />
+	<input
+		type="hidden"
+		name="search_location"
+		value={!isFeed && keywordsApply ? (browserText ?? '') : ''}
+	/>
+	<input
+		type="hidden"
+		name="search_places"
+		value={isFeed || keywordsApply ? JSON.stringify(searchPlaces) : '[]'}
+	/>
+	<input type="hidden" name="search_remote_anywhere" value={isFeed && feedRemote ? 'true' : ''} />
 	<input type="hidden" name="search_filters" value={JSON.stringify(filters)} />
 	<input type="hidden" name="note" value={note} />
 	{#if preferredDevice && !isFeed}
@@ -408,7 +451,7 @@
 
 	<div class="flex items-center justify-between pt-2">
 		<p class="inline-flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)]">
-			<FontAwesomeIcon icon={runsOnDevice ? faLaptop : faCloud} class="h-3 w-3" />
+			<FontAwesomeIcon icon={faLaptop} class="h-3 w-3" />
 			{#if isFeed}
 				Searches employer career sites directly. No browser or device needed.
 			{:else if !deviceStatusChecked}
@@ -416,7 +459,7 @@
 			{:else if runsOnDevice}
 				Runs on {deviceLabel}. Edit the task after creation for advanced options.
 			{:else}
-				Runs on our cloud browser. Connect a device for sites that block datacenter IPs.
+				Runs on your own device. Connect one before the first run.
 			{/if}
 		</p>
 		<div class="flex gap-2">

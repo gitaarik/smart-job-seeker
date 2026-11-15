@@ -5,6 +5,8 @@ import { eq } from 'drizzle-orm';
 import { users } from '$lib/server/db/schema';
 import { acceptDeviceInvite, getDeviceInvite } from '$lib/server/device-shares';
 import { createOrLinkAccount } from '$lib/server/auth/invite-account';
+import { acceptedTermsField, recordTermsAcceptance } from '$lib/server/legal/record';
+import { termsVersion } from '$lib/server/legal/texts';
 
 export const load: PageServerLoad = async (event) => {
 	const token = event.params.token;
@@ -19,6 +21,7 @@ export const load: PageServerLoad = async (event) => {
 
 	return {
 		valid: true as const,
+		termsVersion: termsVersion(),
 		inviterName: invite.inviterName,
 		deviceName: invite.deviceName,
 		loggedIn: !!event.locals.user
@@ -52,6 +55,9 @@ export const actions: Actions = {
 		}
 		if (password !== confirmPassword) {
 			return fail(400, { error: 'Passwords do not match' });
+		}
+		if (!acceptedTermsField(formData)) {
+			return fail(400, { error: 'Please accept the terms of service and privacy policy.' });
 		}
 
 		// Validate the invite up front so we don't create an account for a dead link.
@@ -89,6 +95,8 @@ export const actions: Actions = {
 			const message = e instanceof Error ? e.message : 'Failed to create account';
 			return fail(400, { error: message });
 		}
+
+		await recordTermsAcceptance(userId);
 
 		const result = await acceptDeviceInvite(token, userId);
 		if (!result.success) {

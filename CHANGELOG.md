@@ -5,6 +5,139 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.48.0] - 2026-11-15
+
+39 commits since v0.47.0.
+
+### Added
+
+- Refunding or disputing a credit top-up takes its credits back from the wallet, and the account records what was taken back.
+- The account delete page says that the subscription ends unrefunded and that unspent extra usage is lost.
+
+### Changed
+
+- A downgrade now waits for the renewal before it takes effect, and an upgrade prorates the extra-usage allowance.
+- Scrape charges cover the run's own time, not the time it waited in the queue.
+
+### Fixed
+
+- Deleting an account ends its paid Stripe subscription.
+- A top-up paid in another currency is credited, and a webhook that cannot be credited fails instead of being dropped.
+- A stale Stripe read can no longer overwrite a newer subscription state.
+- A user with a lapsed past-due subscription is sent to pay rather than to a second subscription.
+- A plan change uses Stripe's price as the paid plan unless a downgrade is pending.
+- Runs resume after a worker restart when their queue job is still there.
+- A queued run is cancelled only when its queue has been idle twice.
+- A stop request during a scraper retry backoff is honoured.
+- A scraper run clears its previous failure kind when it starts again.
+- Startup no longer registers jobs after a shutdown has begun.
+- Tasks set to repeat every N days run every N days rather than N-1.
+- Tasks scheduled for a preferred hour keep that hour on the day the clocks change.
+- Greenhouse work mode is read from metadata values only, so prose and negations no longer set it.
+- A merged job opening keeps its row, and a throttled sweep is counted once.
+- Matching waits on a profile that has no work location or job type.
+- Profile countries are passed to the corpus stage as codes.
+- Suggested job titles drop a leading level word.
+- Malformed-path 400 responses are no longer reported to the error tracker.
+
+## [0.47.0] - 2026-11-15
+
+10 commits since v0.46.0.
+
+### Added
+
+- Preferred cities have a distance radius, 75 km by default, and hybrid and on-site job picks are held to it.
+- Job postings are placed in towns, preferring the province named in the posting text.
+- Dutch towns are available as places for matching.
+
+### Changed
+
+- ATS postings record the countries of their region, and the sweep, feed filter and matching use that record.
+
+### Fixed
+
+- A location written past the postcode is now placed in front of it.
+
+## [0.46.0] - 2026-11-14
+
+48 commits since v0.45.0.
+
+### Added
+
+- Feeds: Remote OK and We Work Remotely are now job sources you can sweep.
+- Job platforms can be paused, which stops their tasks and defers any that would run.
+- Places: pick places on your profile and in match settings, and on import tasks.
+- Places: search for jobs by place, including a "remote anywhere" option, in search tasks.
+- Terms: sign-up asks you to accept the current terms, and `/terms` and `/privacy` pages are published.
+- Billing: each purchase sends a confirmation email, and the withdrawal waiver is asked for before any purchase.
+- Getting Started: a "Connect a device" step.
+
+### Changed
+
+- Job-site passwords are no longer stored; you sign in on the site and your browser remembers it.
+- Scraper runs that search without a location are flagged and skip their scrape fee.
+- MCP tool calls count against a per-user billing allowance.
+- Telemetry sends sizes instead of text outside development.
+
+### Fixed
+
+- Match settings: the remote-abroad and corpus-picks fields now save.
+- Scraper: location is searched after it is filled, the bare place name wins over a district, and the scrape fee is waived only when our own location fill failed.
+- Places: a lone location suggestion in another country is refused.
+- Search form: pressing Enter in the keywords box after a name change, and a lost location pick, are handled correctly.
+
+### Removed
+
+- The GoLogin cloud browser and its leftover Browser-Use code are removed from the scraper.
+
+## [0.45.0] - 2026-11-13
+
+110 commits since v0.44.0.
+
+### Added
+
+- Signups are approved automatically, and disposable email addresses are refused.
+- Accounts can be suspended without being deleted, with a stored reason.
+- Contractors can include remote jobs limited to other countries.
+- Profiles with no roles show early match scores instead of verdicts.
+- A new profile is asked what it is looking for before the dashboard.
+- Nightly corpus picks for each profile, capped at three per employer, marked "found for you" on the jobs list.
+- Job boards from Greenhouse, Lever, Ashby and Recruitee are swept nightly, and feed platforms support search tasks.
+- A daily spend ceiling for the whole instance.
+- A failed subscription renewal is flagged in the sidebar plan badge.
+- Desktop scrapes run in parallel, one at a time per device.
+- Portfolio showcase: a Services box, a Selected work order you can set, a Key skills box built from your Skills, business details and a get-in-touch section in the footer, and a plain-quotes option.
+
+### Changed
+
+- Credits are no longer shown to users. Running out prompts you to add extra usage.
+- Extra usage is sold in euros, with prices shown as including VAT.
+- Usage is charged by the model that answered, and writing-model calls weigh five times as much.
+- Purchased credits move to a per-user wallet that carries over to the next period.
+- Plan changes apply to the existing subscription, and subscriptions reconcile daily.
+- Import failures say when Chrome fails on the user's device.
+
+### Fixed
+
+- The desktop app's server name is correct on every host.
+- Delayed scrape jobs count as pending.
+- Region-fenced remote postings are scored as out of reach, and fenced jobs are counted in corpus replays.
+- Settings imports cannot raise the corpus pick cap above 50.
+- Stripe credit packs are granted only once paid, with one purchase record per payment.
+- Every billed LLM attempt counts toward the daily spend limit.
+- Account flags can no longer be set through signup input.
+- Feed posting dates read correctly, and null typed columns no longer block a feed filter.
+- Duplicate ATS boards that differ only in slug case are merged.
+- Portfolio pages give absolute URLs to link previews and search engines.
+- On phones, the showcase hero fits its content and hides the more-about-me link.
+- The Selected work count stays steady while an arrow scrolls.
+- PNG time metadata is removed from images served publicly.
+
+### Removed
+
+- Credit counts and credit packs, replaced by extra usage.
+- Legacy image path columns on media.
+
 ## [0.44.0] - 2026-11-10
 
 38 commits since v0.43.0.

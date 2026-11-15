@@ -4,8 +4,8 @@
  * during its intervention wait loop, runs it against the live page, and
  * writes the result back into the same JSONB field.
  *
- * Works for both hosted (GoLogin) and tunnel (local Chrome via relay)
- * since the scraper itself owns the CDP connection.
+ * Works for the tunnel (the user's own Chrome via the relay) since the
+ * scraper itself owns the CDP connection.
  */
 
 import { dbDirect as db } from '$lib/server/db';

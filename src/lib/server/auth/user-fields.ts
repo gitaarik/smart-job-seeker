@@ -48,5 +48,17 @@ export const userAdditionalFields = {
 		type: 'date',
 		required: false,
 		input: false
+	},
+	// Set by the user-create hook from the signup's terms header, never from
+	// the body. See signupTermsFields in signup-gate.ts.
+	terms_version: {
+		type: 'string',
+		required: false,
+		input: false
+	},
+	terms_accepted_at: {
+		type: 'date',
+		required: false,
+		input: false
 	}
 } as const;

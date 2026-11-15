@@ -15,6 +15,7 @@
  */
 
 import { auth } from '$lib/server/auth/better-auth';
+import { recordTermsAcceptance } from '$lib/server/legal/record';
 import { dbDirect as db } from '$lib/server/db';
 import { profiles, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
@@ -79,6 +80,8 @@ async function seedDevUsers() {
 
 			userId = ctx.user.id;
 			console.log(`  Created with ID: ${userId}`);
+			// Nothing ticked the terms box for a seeded account.
+			await recordTermsAcceptance(userId);
 		}
 
 		await db.update(profiles).set({ user_id: userId }).where(eq(profiles.id, user.profileId));

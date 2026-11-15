@@ -310,6 +310,25 @@ describe('suggestedTitle', () => {
 		expect(suggestedTitle({ suggested_title: 'Title: Developer BZB' }, LONG)).toBe('Developer BZB');
 	});
 
+	// The prompt asks for no seniority; the model adds it when the posting
+	// mentions a level (llm:smoke, 2026-11-15).
+	it('drops a leading level word', () => {
+		expect(suggestedTitle({ suggested_title: 'Senior LLM Engineer' }, LONG)).toBe('LLM Engineer');
+		expect(suggestedTitle({ suggested_title: 'Sr. Senior-level Data Engineer' }, LONG)).toBe(
+			'Data Engineer'
+		);
+		expect(suggestedTitle({ suggested_title: 'medior ontwikkelaar AI' }, LONG)).toBe(
+			'Ontwikkelaar AI'
+		);
+		expect(suggestedTitle({ suggested_title: 'Lead Developer (BZB)' }, LONG)).toBe(
+			'Lead Developer (BZB)'
+		);
+		expect(suggestedTitle({ suggested_title: 'Seniority Analyst' }, LONG)).toBe(
+			'Seniority Analyst'
+		);
+		expect(suggestedTitle({ suggested_title: 'Senior' }, LONG)).toBe('Senior');
+	});
+
 	it('is null when the model offered none', () => {
 		expect(suggestedTitle({ suggested_title: null }, LONG)).toBeNull();
 		expect(suggestedTitle({}, LONG)).toBeNull();

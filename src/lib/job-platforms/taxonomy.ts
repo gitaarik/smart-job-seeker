@@ -7,14 +7,20 @@
  *
  * `status` is the one that does something: the suggestion flow, the jobs page
  * and the add-task query all filter on `published`, and everything else reads
- * as "not published". `type` is descriptive only; nothing in the app branches
- * on it.
+ * as "not published". `paused` goes further: its tasks stop running, scheduled
+ * or by hand, and the task page says why (`computeImportTaskBlockers`). It is
+ * for a board we have stopped reading, such as Dribbble, whose terms forbid
+ * scraping (2026-11-14). `type` is descriptive only; nothing in the app
+ * branches on it.
  *
  * A row carrying a value that is not here keeps it — see `withCurrent`. The
  * alternative is a select that silently rewrites data it did not understand.
  */
 
-export const PLATFORM_STATUSES = ['draft', 'published'] as const;
+export const PLATFORM_STATUSES = ['draft', 'published', 'paused'] as const;
+
+/** A platform whose tasks no longer run; see the note above. */
+export const PLATFORM_PAUSED = 'paused';
 
 export const PLATFORM_TYPES = [
 	'agencies',

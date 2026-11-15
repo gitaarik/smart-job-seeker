@@ -68,7 +68,6 @@ vi.mock('$lib/server/job/match-utils', () => ({ getProfileSkillLevels: vi.fn() }
 vi.mock('$lib/server/queue/match-queue', () => ({
 	addMatchJob: (...a: unknown[]) => mockAddMatchJob(...a)
 }));
-vi.mock('$lib/server/browser/geo-utils', () => ({ getGeoConfig: vi.fn() }));
 vi.mock('../../../profile/utils', () => ({
 	getSelectedProfileId: (...a: unknown[]) => mockGetSelectedProfileId(...a)
 }));

@@ -11,7 +11,6 @@ import {
 	search_tasks
 } from '$lib/server/db/schema';
 import { config } from '$lib/server/config';
-import { encryptCredential } from '$lib/server/auth/crypto';
 import { hasCredentialAccess } from '$lib/server/credential-shares';
 import { listApiKeys } from '$lib/server/auth/api-key';
 import { hasDeviceAccess, listSharedWithMe } from '$lib/server/device-shares';
@@ -24,6 +23,9 @@ import {
 	resolveCustomSiteSearchUrl
 } from '$lib/import-tasks/custom-site';
 import { toLoginMode } from '$lib/import-tasks/sign-in';
+import { z } from 'zod';
+import { preferredPlaceSchema } from '$lib/server/validation/api-schemas';
+import type { PreferredPlace } from '$lib/data/places';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const layoutData = await parent();
@@ -48,9 +50,7 @@ export const load: PageServerLoad = async ({ parent }) => {
 			const p = await db.query.profiles.findFirst({
 				where: eq(profiles.id, profileId),
 				columns: {
-					ui_preferences: true,
-					browser_country_code: true,
-					country_code: true
+					ui_preferences: true
 				}
 			});
 			if (!p) throw new Error('Record not found');
@@ -148,8 +148,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 		serverBrowserProvider: config.browserProvider,
 		defaultBrowserProvider: config.defaultBrowserProvider,
 		defaultMaxJobs: config.defaultMaxJobs,
-		browserCountryCode: profile.browser_country_code ?? '',
-		defaultCountryCode: profile.country_code ?? '',
 		apiKeyDevices,
 		importablePlatforms
 	};
@@ -332,9 +330,7 @@ async function getOrCreateCredentials(
 	platformId: number,
 	userId: string,
 	credentialId: string | null,
-	newUsername: string | null,
-	newPassword: string | null,
-	newSecurityAnswer: string | null = null
+	newUsername: string | null
 ): Promise<number | null> {
 	let credId: number | null = null;
 
@@ -362,8 +358,6 @@ async function getOrCreateCredentials(
 				user_id: userId,
 				platform_id: platformId,
 				username: newUsername,
-				password: encryptCredential(newPassword || null),
-				security_answer: encryptCredential(newSecurityAnswer || null),
 				date_created: new Date(),
 				date_updated: new Date()
 			})
@@ -437,6 +431,22 @@ export const actions: Actions = {
 				// valid JSON; bad input here means a client bug or tampering.
 			}
 		}
+		// Picked places, as JSON from the picker; anything that is not a list of
+		// places is dropped like malformed filters above.
+		let search_places: PreferredPlace[] | null = null;
+		const search_places_raw = formData.get('search_places') as string;
+		if (search_places_raw) {
+			try {
+				const parsed = z
+					.array(preferredPlaceSchema)
+					.max(20)
+					.safeParse(JSON.parse(search_places_raw));
+				if (parsed.success && parsed.data.length) search_places = parsed.data;
+			} catch {
+				// Malformed JSON: no places.
+			}
+		}
+		const search_remote_anywhere = formData.get('search_remote_anywhere') === 'true';
 		const is_active = formData.get('is_active') !== 'false';
 
 		// Platform data
@@ -446,11 +456,9 @@ export const actions: Actions = {
 		const platformIsNew = formData.get('platform_is_new') === 'true';
 		const loginPageUrl = formData.get('login_page_url') as string;
 
-		// Credentials data
+		// Account on the platform (a username, never a password)
 		const credentialId = formData.get('credential_id') as string;
 		const newCredUsername = formData.get('new_credential_username') as string;
-		const newCredPassword = formData.get('new_credential_password') as string;
-		const newCredSecurityAnswer = formData.get('new_credential_security_answer') as string;
 
 		// search_term is OPTIONAL — listing-only platforms (SvelteJobs, X-Team)
 		// have no search input to fill, so we just navigate and extract. The
@@ -545,9 +553,7 @@ export const actions: Actions = {
 				resolvedPlatformId,
 				user.id,
 				credentialId,
-				newCredUsername,
-				newCredPassword,
-				newCredSecurityAnswer
+				newCredUsername
 			);
 		}
 
@@ -614,25 +620,13 @@ export const actions: Actions = {
 			}
 		}
 
-		// Browser location
-		const browserCountryCode = formData.get('browser_country_code') as string;
-		if (browserCountryCode) {
-			await db
-				.update(profiles)
-				.set({
-					browser_country_code: browserCountryCode.trim().toUpperCase() || null
-				})
-				.where(eq(profiles.id, profileId));
-		}
-
 		// The configured default is operator input rather than user input, so it
 		// is not rejected the way the form field is — but a server that forbids
 		// the local browser should not have its own default write "local" either,
 		// which is the shape the two settings disagreed in: the create action
 		// refused a user asking for local while still defaulting to it. Null is
 		// the honest answer, deferring to whatever the server resolves at run
-		// time (worker.ts / the run endpoint), which is also what the UI's
-		// "Local" button sends.
+		// time (worker.ts / the run endpoint).
 		const defaultBrowserProvider =
 			config.defaultBrowserProvider === 'local' && !config.localBrowserAllowed
 				? null
@@ -649,6 +643,8 @@ export const actions: Actions = {
 				search_url: resolvedSearchUrl,
 				search_term: search_term?.trim() || null,
 				search_location: search_location?.trim() || null,
+				search_places,
+				search_remote_anywhere,
 				search_filters,
 				platform_id: resolvedPlatformId,
 				platform_profile_id: resolvedCredentialId,
@@ -701,11 +697,9 @@ export const actions: Actions = {
 		const platformIsNew = formData.get('platform_is_new') === 'true';
 		const loginPageUrl = formData.get('login_page_url') as string;
 
-		// Credentials data
+		// Account on the platform (a username, never a password)
 		const credentialId = formData.get('credential_id') as string;
 		const newCredUsername = formData.get('new_credential_username') as string;
-		const newCredPassword = formData.get('new_credential_password') as string;
-		const newCredSecurityAnswer = formData.get('new_credential_security_answer') as string;
 
 		if (isNaN(id)) {
 			return fail(400, { error: 'Invalid search ID' });
@@ -767,9 +761,7 @@ export const actions: Actions = {
 				resolvedPlatformId,
 				user.id,
 				credentialId,
-				newCredUsername,
-				newCredPassword,
-				newCredSecurityAnswer
+				newCredUsername
 			);
 		}
 

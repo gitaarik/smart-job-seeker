@@ -14,8 +14,9 @@
 	 * added the site while no other account has a task on it — and had no
 	 * caller anywhere in the UI. This is it. The curated platforms have no
 	 * owner, so for those the field is read-only and points at an admin: the
-	 * column is where "auto" mode types every account's stored password, and
-	 * it must not be rewritable by whoever happens to use the site first.
+	 * column is where every user's browser is sent to sign in (and where a run
+	 * types the account's email address), and it must not be rewritable by
+	 * whoever happens to use the site first.
 	 */
 	import { untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';

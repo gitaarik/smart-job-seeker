@@ -12,7 +12,8 @@
 
 import type { RequestHandler } from './$types';
 import { createRateLimitResponse, mcpRateLimiter } from '$lib/server/middleware/rate-limit';
-import { callTool } from '$lib/server/mcp/call';
+import { checkMcpAllowance, recordMcpCall } from '$lib/server/billing/require-mcp-allowance';
+import { callTool, type ToolResult } from '$lib/server/mcp/call';
 import { recordMcpClient, verifyMcpKey, type VerifiedMcpKey } from '$lib/server/mcp/keys';
 import {
 	isNotification,
@@ -61,9 +62,47 @@ function unauthorized(): Response {
 	});
 }
 
+/**
+ * Run a tool call inside the user's allowance, and count it if it worked.
+ *
+ * The allowance is billing's (planning/MCP-FREE-ALLOWANCE.md in sjs-ops) and
+ * stays out of `tiers.ts`, which grades a write by what it can damage and must
+ * never depend on a plan. Over the allowance is a tool result, not an RPC
+ * error, so the agent reads the message and passes it on instead of the client
+ * swallowing or retrying it. A refusal of the agent's own making does not
+ * count: an agent retrying a mistake would burn the allowance.
+ */
+async function callWithinAllowance(
+	name: string,
+	args: Record<string, unknown>,
+	key: VerifiedMcpKey,
+	origin: string
+): Promise<ToolResult> {
+	const allowance = await checkMcpAllowance(key.userId, origin);
+	if (!allowance.allowed) {
+		return { content: [{ type: 'text', text: allowance.message }], isError: true };
+	}
+
+	const result = await callTool(name, args, key);
+	if (result.isError) return result;
+
+	// The call already happened, so a counter that fails to write must not turn
+	// it into an error the agent would retry.
+	try {
+		await recordMcpCall(key.userId);
+		console.log(`[mcp] call ${name} user=${key.userId} key=${key.keyId}`);
+	} catch (e) {
+		console.error(`[mcp] could not count ${name} for user=${key.userId}`, e);
+	}
+
+	if (!allowance.note) return result;
+	return { ...result, content: [...result.content, { type: 'text', text: allowance.note }] };
+}
+
 async function handleMessage(
 	message: RpcRequest,
-	key: VerifiedMcpKey
+	key: VerifiedMcpKey,
+	origin: string
 ): Promise<RpcResponse | null> {
 	const id = message.id ?? null;
 
@@ -109,7 +148,7 @@ async function handleMessage(
 					: {};
 
 			try {
-				return rpcResult(id, await callTool(name, args, key));
+				return rpcResult(id, await callWithinAllowance(name, args, key, origin));
 			} catch (e) {
 				// A thrown error here is ours, not the caller's: every refusal the agent
 				// could act on is already returned as an `isError` tool result. So this
@@ -129,7 +168,7 @@ async function handleMessage(
 	}
 }
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, url }) => {
 	const token = bearer(request);
 	if (!token) return unauthorized();
 
@@ -172,7 +211,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Sequentially, not in parallel: two writes in one batch against the same
 		// row would otherwise each read the current values before the other wrote,
 		// and both would record a before-image of the same original.
-		const response = await handleMessage(message, key);
+		const response = await handleMessage(message, key, url.origin);
 		if (response) responses.push(response);
 	}
 

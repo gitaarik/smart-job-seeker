@@ -30,6 +30,7 @@ import type { InterviewRound } from '../../application-status';
 import type { SkipReason } from '../../match-recommendation';
 import type { SalaryMode } from '../../salary/settings';
 import type { SafeZone } from '../../media-library';
+import type { Place, PreferredPlace } from '../../data/places';
 
 /** `job_importers.source`: how a job reached a profile. */
 export type ImportSource = 'task' | 'manual' | 'corpus';
@@ -869,7 +870,19 @@ export const match_config = pgTable(
 		job_types: json(),
 		experience_levels: json(),
 		work_location: json(),
+		/**
+		 * Preferred Locations typed before the picker, kept only for the texts
+		 * that are not a place (yet): the backfill (cloud
+		 * `scripts/backfill-places.ts`) moves every text it is sure of into
+		 * `places` and leaves the rest here, and every reader reads both.
+		 * Nothing writes a new text here.
+		 */
 		locations: json(),
+		/**
+		 * Preferred Locations, as the user picked them from the gazetteer
+		 * (planning/STRUCTURED-LOCATIONS.md). Null until picked or backfilled.
+		 */
+		places: jsonb().$type<PreferredPlace[]>(),
 		profile_id: integer().notNull(),
 		name: varchar({ length: 255 }),
 		match_community_jobs: boolean().default(false).notNull(),
@@ -1093,7 +1106,6 @@ export const search_task_runs = pgTable(
 		failure_kind: varchar({ length: 32 }),
 		triggered_by: varchar({ length: 20 }).notNull(),
 		bullmq_job_id: varchar({ length: 100 }),
-		live_url: varchar({ length: 500 }),
 		user_response: varchar({ length: 20 }),
 		settings: jsonb(),
 		verification_data: jsonb(),
@@ -1130,18 +1142,6 @@ export const search_task_runs = pgTable(
 	]
 );
 
-/**
- * Per-user credential for a job platform. Owned by the human, not by any
- * one profile — multiple profiles of the same user share these by default.
- * Cross-user sharing goes through `credential_shares`.
- *
- * UNIQUE (user_id, platform_id, username) lets one user maintain multiple
- * accounts on the same platform (different angles, throwaway accounts) by
- * disambiguating on username.
- *
- * Password and security_answer are stored as dotenvx-style ciphertext;
- * see lib/server/auth/crypto.ts.
- */
 /**
  * One GitHub App installation a user has granted us.
  *
@@ -1183,6 +1183,23 @@ export const github_app_installations = pgTable(
 	]
 );
 
+/**
+ * The account a user has on a job platform: the email address or username
+ * they sign in with, and nothing else. Owned by the human, not by any one
+ * profile — multiple profiles of the same user share these by default.
+ * Cross-user sharing goes through `credential_shares`.
+ *
+ * No secret lives here. The table held an encrypted password and security
+ * answer until migration 0111 (2026-11-14) dropped them: the user signs in
+ * in the browser on their own device, which keeps the session, and the
+ * server never holds a platform password. The username stays because sites
+ * that sign in with an emailed code need it typed before the verification
+ * relay can answer, so such a site can be signed in to without the user.
+ *
+ * UNIQUE (user_id, platform_id, username) lets one user maintain multiple
+ * accounts on the same platform (different angles, throwaway accounts) by
+ * disambiguating on username.
+ */
 export const platform_credentials = pgTable(
 	'platform_credentials',
 	{
@@ -1190,10 +1207,6 @@ export const platform_credentials = pgTable(
 		user_id: text().notNull(),
 		platform_id: integer().notNull(),
 		username: varchar({ length: 255 }),
-		password: text(),
-		api_token: text(),
-		provider_profile_id: varchar({ length: 255 }),
-		security_answer: text(),
 		date_created: timestamp({ withTimezone: true, mode: 'date' }).defaultNow(),
 		date_updated: timestamp({ withTimezone: true, mode: 'date' }).defaultNow()
 	},
@@ -1461,7 +1474,6 @@ export const jobs = pgTable(
 		soft_skills: jsonb(),
 		rescrape_status: varchar({ length: 50 }),
 		rescrape_message: text(),
-		rescrape_live_url: text(),
 		region: varchar({ length: 50 }),
 		salary_duration_weeks: doublePrecision(),
 		/**
@@ -1726,7 +1738,6 @@ export const search_form_probe_runs = pgTable(
 		 *  routes the session through the tunnel to the user's local browser. */
 		sjsbrowser_api_key_id: integer(),
 		bullmq_job_id: varchar({ length: 100 }),
-		live_url: varchar({ length: 500 }),
 		/** Draft output from the worker. Shape:
 		 *   { platform_name, platform_key, search_page_url, search_url_template,
 		 *     applicable_hint, params, notes[] }
@@ -2336,6 +2347,12 @@ export const users = pgTable('users', {
 	// a pending deletion, and the reason is what the account holder is shown.
 	suspended_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
 	suspended_reason: text(),
+	// The terms the account holder last agreed to, and when. Set at signup by
+	// the user-create hook in auth/better-auth.ts; `legal_acceptances` keeps
+	// every acceptance, this is only the latest. Null on accounts that predate
+	// it and on in-process ones (invites, demo users). See $lib/legal.
+	terms_accepted_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
+	terms_version: varchar({ length: 32 }),
 	// When the person last used SJS: a signed-in request or an MCP call, stamped
 	// at most once an hour by $lib/server/account/last-seen. Matching and
 	// scheduled searches stop for an account nobody has used for a month and
@@ -2375,6 +2392,38 @@ export const account_deletions = pgTable(
 		unlink_failures: integer().default(0).notNull()
 	},
 	(table) => [uniqueIndex('account_deletions_ref_unique').on(table.account_ref)]
+);
+
+/**
+ * Every time someone agreed to a legal text: the terms at signup, and the
+ * waiver of the 14-day withdrawal right before a purchase starts the service.
+ *
+ * Append-only. "Which version did they agree to, and when" is the question a
+ * dispute asks, so a later acceptance adds a row rather than overwriting one.
+ * `detail` holds what the acceptance was for (the price, the plan change)
+ * where the document alone does not say. Goes with the account on erasure.
+ */
+export const legal_acceptances = pgTable(
+	'legal_acceptances',
+	{
+		id: serial().primaryKey().notNull(),
+		user_id: text().notNull(),
+		// `terms` | `withdrawal_waiver`; see $lib/legal.
+		document: varchar({ length: 32 }).notNull(),
+		version: varchar({ length: 32 }).notNull(),
+		accepted_at: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
+			.defaultNow()
+			.notNull(),
+		detail: jsonb()
+	},
+	(table) => [
+		index('legal_acceptances_user_idx').on(table.user_id),
+		foreignKey({
+			columns: [table.user_id],
+			foreignColumns: [users.id],
+			name: 'legal_acceptances_user_foreign'
+		}).onDelete('cascade')
+	]
 );
 
 export const side_projects = pgTable(
@@ -3195,7 +3244,6 @@ export const search_tasks = pgTable(
 		navigation_type: varchar({ length: 255 }),
 		stripped_html: text(),
 		last_run_jobs_found: integer(),
-		live_url: varchar({ length: 500 }),
 		is_active: boolean().default(true).notNull(),
 		status_message: varchar({ length: 255 }),
 		platform_profile_id: integer(),
@@ -3217,12 +3265,23 @@ export const search_tasks = pgTable(
 			mode: 'date'
 		}),
 		sjsbrowser_api_key: integer(),
-		login_mode: varchar({ length: 10 }).default('auto').notNull(),
-		// Plain location string the user picked when creating the task. Kept
-		// around for tasks created under the legacy URL-template flow; new
-		// tasks under the dynamic form-fill flow don't populate it. Will be
-		// resurrected when a proper structured location picker lands.
+		// "manual" (sign in: the user in the browser, or the run typing the
+		// account's email for a site that sends a code) or "none". "auto", which
+		// typed a server-held password, retired in migration 0111.
+		login_mode: varchar({ length: 10 }).default('manual').notNull(),
+		// Where to search, as the user typed it when no place fits ("Bay Area
+		// hybrid"), or a feed task's countries from before the picker. With
+		// `search_places` set, a feed run reads its countries from those and
+		// this text only for the word "remote" (planning/STRUCTURED-LOCATIONS.md).
 		search_location: text(),
+		// Where to search, as the user picked it from the gazetteer: a browser
+		// task one place (its board has one location box), a feed task any
+		// number. Null until picked or backfilled.
+		search_places: jsonb().$type<PreferredPlace[]>(),
+		// A feed task's "remote postings from any country too", next to its
+		// places. Replaces the word "remote" in `search_location`, which the
+		// feed run still reads for older tasks and imported settings.
+		search_remote_anywhere: boolean().default(false).notNull(),
 		// User-selected canonical filter values. Single-select filters: a value_key
 		// string (e.g. { sort_by: "newest" }). Multi-select filters: an array
 		// (e.g. { work_location: ["remote", "hybrid"] }). Consumed at scrape time
@@ -3912,6 +3971,35 @@ export const mcp_keys = pgTable(
 );
 
 /**
+ * MCP tool calls per user per credit period: the counter behind the free
+ * plan's allowance (planning/MCP-FREE-ALLOWANCE.md in sjs-ops).
+ *
+ * Per user, not per key, so a second key is not a second allowance. `period`
+ * is the billing layer's period key: the credit period's start date in cloud,
+ * the calendar month in oss. Only a `tools/call` that did not come back
+ * `isError` counts.
+ */
+export const mcp_usage = pgTable(
+	'mcp_usage',
+	{
+		id: serial().primaryKey().notNull(),
+		user_id: text().notNull(),
+		period: varchar({ length: 10 }).notNull(),
+		calls: integer().default(0).notNull()
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.user_id],
+			foreignColumns: [users.id],
+			name: 'mcp_usage_user_id_fkey'
+		})
+			.onUpdate('cascade')
+			.onDelete('cascade'),
+		unique('mcp_usage_user_id_period_key').on(table.user_id, table.period)
+	]
+);
+
+/**
  * A write that was asked for by something that may not approve it.
  *
  * The counterpart to `capability_edits`: that table records writes that
@@ -4220,6 +4308,12 @@ export const profiles = pgTable(
 		source_cv: uuid(),
 		location: varchar({ length: 255 }),
 		/**
+		 * Where the applicant lives, as picked from the gazetteer: what the
+		 * picks and the matcher read. `location` above stays the printed text,
+		 * filled from `place.label` on a pick unless the user wrote their own.
+		 */
+		place: jsonb().$type<Place>(),
+		/**
 		 * The profile photo, a rendition in the media library. Typed through
 		 * `AnyPgColumn` for the reason `public_portfolio_theme_id` gives:
 		 * `media_items` points back at `profiles`, so this edge closes a cycle.
@@ -4232,7 +4326,6 @@ export const profiles = pgTable(
 		browser_timezone: varchar({ length: 100 }),
 		ui_preferences: jsonb().default({}),
 		browser_country_code: varchar({ length: 10 }),
-		browser_profile_id: varchar({ length: 100 }),
 		/**
 		 * What they ask to be paid, one ask per kind of work: a salary per month
 		 * or year with what the job pays besides (`EmployedSettings`), and a rate
@@ -4853,6 +4946,12 @@ export const subscriptions = pgTable(
 			mode: 'date'
 		}).notNull(),
 		cancel_at_period_end: boolean().default(false).notNull(),
+		// A downgrade takes effect at the next renewal: Stripe gets the lower
+		// price at once (so that is what it bills next), and these keep the plan
+		// the current period was paid for until that period ends. Stripe knows
+		// nothing of them, so the sync from Stripe never writes them.
+		kept_plan: varchar({ length: 50 }),
+		kept_plan_until: timestamp({ precision: 6, withTimezone: true, mode: 'date' }),
 		date_created: timestamp({ precision: 6, withTimezone: true, mode: 'date' }).defaultNow(),
 		date_updated: timestamp({ precision: 6, withTimezone: true, mode: 'date' })
 	},
@@ -4883,6 +4982,15 @@ export const credit_purchases = pgTable(
 		stripe_payment_intent_id: varchar({ length: 255 }),
 		pack_type: varchar({ length: 50 }).notNull(),
 		amount_cents: integer().notNull(),
+		// The credits this payment put in the wallet. Null on the few rows from
+		// before 0115 whose grant left no trace to backfill from.
+		credits: integer(),
+		// How much of the payment Stripe has since taken back (refunds plus
+		// disputes that are open or lost), as last read from Stripe, and the
+		// credits removed from the wallet for it. The second can be less than
+		// the first is worth: credits already spent are not chased.
+		refunded_cents: integer().default(0).notNull(),
+		credits_reversed: integer().default(0).notNull(),
 		// Same key as credit_balances.period: a date, since periods are anchored
 		// on the subscription start, not the calendar month this was sized for.
 		period: varchar({ length: 10 }).notNull(),
@@ -4972,7 +5080,12 @@ export const credit_balances = pgTable(
 		user_id: text().notNull(),
 		period: varchar({ length: 10 }).notNull(),
 		credits_used: integer().default(0).notNull(),
-		credits_allowance: integer().default(0).notNull()
+		credits_allowance: integer().default(0).notNull(),
+		// The plan `credits_allowance` was last worked out for. A different plan
+		// in the same period is a plan change, and an upgrade then adds only the
+		// share of the difference that the days left pay for. Null on rows from
+		// before 0116, whose allowance is read as their plan's.
+		allowance_plan: varchar({ length: 50 })
 	},
 	(table) => [
 		foreignKey({
@@ -5911,8 +6024,9 @@ export const ats_boards = pgTable(
 	'ats_boards',
 	{
 		id: serial().primaryKey().notNull(),
-		/** `greenhouse` | `lever` | `ashby` | `recruitee`; the key into the
-		 *  provider registry in cloud's `src/server/ats/`. */
+		/** `greenhouse` | `lever` | `ashby` | `recruitee` | `remoteok` |
+		 *  `we-work-remotely`; the key into the provider registry in cloud's
+		 *  `src/server/ats/`, and for a job board its `job_platforms.key`. */
 		provider: varchar({ length: 32 }).notNull(),
 		/** The company's slug in the provider's URL scheme
 		 *  (`boards.greenhouse.io/<slug>`, `<slug>.recruitee.com`). */
@@ -5971,6 +6085,9 @@ export interface AtsLocation {
 	text: string | null;
 	city: string | null;
 	country_code: string | null;
+	/** The city's position in `places`, when the sweep could place it (cloud `ats/coords.ts`). */
+	lat?: number;
+	lon?: number;
 }
 
 export const ats_postings = pgTable(
@@ -5987,6 +6104,11 @@ export const ats_postings = pgTable(
 		/** ISO 3166-1 alpha-2, upper case. */
 		country_code: varchar({ length: 2 }),
 		country_codes: text().array().default([]).notNull(),
+		/** The countries of a region a location text names ("Remote - EMEA"),
+		 *  kept apart from `country_codes` so an office and a fence stay apart:
+		 *  the feed filter and stage 1 count it for remote and unstated postings
+		 *  only (Rik, 2026-11-15; planning/STRUCTURED-LOCATIONS.md). */
+		region_countries: text().array().default([]).notNull(),
 		locations: jsonb().$type<AtsLocation[]>().default([]).notNull(),
 		work_location: varchar({ length: 16 }),
 		employment_type: varchar({ length: 32 }),
@@ -6022,6 +6144,7 @@ export const ats_postings = pgTable(
 		index('ats_postings_published_at_idx').on(table.published_at),
 		index('ats_postings_country_code_idx').on(table.country_code),
 		index('ats_postings_country_codes_idx').using('gin', table.country_codes),
+		index('ats_postings_region_countries_idx').using('gin', table.region_countries),
 		index('ats_postings_closed_at_idx').on(table.closed_at),
 		index('ats_postings_job_id_idx').on(table.job_id),
 		foreignKey({
@@ -6038,6 +6161,47 @@ export const ats_postings = pgTable(
 );
 
 export type ContentEmbeddings = typeof content_embeddings.$inferSelect;
+
+/**
+ * The gazetteer a user picks a place from (planning/STRUCTURED-LOCATIONS.md):
+ * GeoNames cities over 5,000 people, first-level divisions and countries, plus
+ * our own regions (`src/lib/data/regions.ts`). Loaded by
+ * `scripts/load-places.ts`, never written by the app. A GeoNames row keeps its
+ * geonameid as `id`, so a reload keeps every id; a region has a fixed negative
+ * one. A user's pick is stored whole (`Place` in `src/lib/data/places.ts`), so
+ * nothing reads this table back except the search.
+ */
+export const places = pgTable(
+	'places',
+	{
+		id: integer().primaryKey().notNull(),
+		/** `city` | `admin` | `country` | `region`, or `town`: a smaller place
+		 *  loaded only to place postings, with an empty `tsv` so no search finds it. */
+		kind: varchar({ length: 16 }).notNull(),
+		name: varchar({ length: 200 }).notNull(),
+		/** "Haarlem, North Holland, Netherlands", as shown and printed. */
+		label: varchar({ length: 400 }).notNull(),
+		/** Null for a region. */
+		country_code: varchar({ length: 2 }),
+		/** GeoNames admin1 code ("07"), for a city or an admin area. */
+		admin1: varchar({ length: 20 }),
+		/** The country codes a pick stands for: the own one, or a region's members. */
+		countries: text().array().notNull(),
+		lat: doublePrecision(),
+		lon: doublePrecision(),
+		/** A city's own; an admin area's is its cities' sum, a region's its countries'. */
+		population: bigint({ mode: 'number' }).default(0).notNull(),
+		/** Every name the place answers to, folded by `foldPlaceName`, the own name first. */
+		names: text().array().notNull(),
+		/** `to_tsvector('simple', …)` over `names`, written by the loader:
+		 *  `array_to_string` is not immutable, so it cannot be a generated column. */
+		tsv: tsvector().notNull()
+	},
+	(table) => [
+		index('places_tsv_idx').using('gin', table.tsv),
+		index('places_country_code_idx').on(table.country_code)
+	]
+);
 
 // Inferred select types for all application tables
 export type ProfileDocumentProjects = typeof profile_document_projects.$inferSelect;
@@ -6126,3 +6290,4 @@ export type Files = typeof files.$inferSelect;
 export type SentEmails = typeof sent_emails.$inferSelect;
 export type AtsBoards = typeof ats_boards.$inferSelect;
 export type AtsPostings = typeof ats_postings.$inferSelect;
+export type Places = typeof places.$inferSelect;

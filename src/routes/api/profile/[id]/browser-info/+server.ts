@@ -35,7 +35,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 
 	const updateData: Record<string, string> = {};
 
-	// browser_user_agent is intentionally not stored — GoLogin manages its own UA
+	// browser_user_agent is intentionally not stored: the scraping browser sends its own UA
 	if (body.browser_language && (force || !profile.browser_language)) {
 		updateData.browser_language = String(body.browser_language).substring(0, 50);
 	}

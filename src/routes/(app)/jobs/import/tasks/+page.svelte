@@ -275,18 +275,20 @@
 		}
 		formData.append('search_filters', JSON.stringify(suggestion.filters ?? {}));
 		// A career-site feed runs on the worker, with no browser: no device, and
-		// the suggester's "where" (countries and "remote") in place of one, the
-		// field the add form shows for a feed platform.
+		// the suggester's "where" (the preferred places, texts that are no place
+		// yet, remote from anywhere), the fields the add form shows for a feed.
 		const isFeed = suggestion.fetch_mode === 'feed';
-		if (isFeed && suggestion.search_location) {
-			formData.append('search_location', suggestion.search_location);
+		if (isFeed) {
+			if (suggestion.search_location)
+				formData.append('search_location', suggestion.search_location);
+			if (suggestion.search_places?.length)
+				formData.append('search_places', JSON.stringify(suggestion.search_places));
+			if (suggestion.search_remote_anywhere) formData.append('search_remote_anywhere', 'true');
 		}
 		// Where the task runs: the same rule as the add form. A connected
-		// device, own or shared, wins; with none, an empty provider lets the
-		// create action apply the server's default rather than pinning the row
-		// to the cloud browser forever. This path kept a hardcoded "hosted"
-		// after the add form stopped doing that, so an accepted suggestion
-		// ignored the device the user had just connected.
+		// device, own or shared, is pinned to the task; with none, an empty
+		// provider lets the create action apply the server's default rather
+		// than pinning the row to a provider forever.
 		if (preferredDevice && !isFeed) {
 			formData.append('browser_provider', 'tunnel');
 			formData.append('sjsbrowser_api_key', String(preferredDevice.apiKeyId));
@@ -392,12 +394,11 @@
 			platformSearchPageUrl: search.job_platform?.search_page_url ?? null,
 			platformUrl: search.job_platform?.url ?? null,
 			platformLoginPageUrl: search.job_platform?.login_page_url ?? null,
-			loginMode: search.login_mode,
-			hasCredential: search.platform_profile_id != null,
 			browserProvider: search.browser_provider,
 			serverBrowserProvider: data.serverBrowserProvider,
 			deviceConnected,
-			fetchMode: search.job_platform?.fetch_mode ?? null
+			fetchMode: search.job_platform?.fetch_mode ?? null,
+			platformStatus: search.job_platform?.status ?? null
 		});
 	}
 

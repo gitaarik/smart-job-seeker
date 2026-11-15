@@ -71,7 +71,6 @@ vi.mock('$lib/server/db/schema', () => ({
 vi.mock('$lib/server/config', () => ({
 	config: { localBrowserAllowed: true, defaultBrowserProvider: null }
 }));
-vi.mock('$lib/server/auth/crypto', () => ({ encryptCredential: (v: unknown) => v }));
 vi.mock('$lib/server/auth/api-key', () => ({ listApiKeys: vi.fn() }));
 vi.mock('$lib/server/credential-shares', () => ({
 	hasCredentialAccess: () => Promise.resolve(true)

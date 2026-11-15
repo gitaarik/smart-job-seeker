@@ -736,6 +736,90 @@
       "when": 1794581678694,
       "tag": "0104_user_suspension",
       "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1794587515554,
+      "tag": "0105_legal_acceptances",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1794588050183,
+      "tag": "0106_drop_cloud_browser",
+      "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1794595828330,
+      "tag": "0107_places",
+      "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1794598146961,
+      "tag": "0108_structured_places",
+      "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1794599439697,
+      "tag": "0109_mcp_usage",
+      "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1794605990359,
+      "tag": "0110_task_places",
+      "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1794654142147,
+      "tag": "0111_platform_passwords_removed",
+      "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1794662773376,
+      "tag": "0112_remoteok_feed",
+      "breakpoints": true
+    },
+    {
+      "idx": 113,
+      "version": "7",
+      "when": 1794665332963,
+      "tag": "0113_wwr_feed",
+      "breakpoints": true
+    },
+    {
+      "idx": 114,
+      "version": "7",
+      "when": 1794727838920,
+      "tag": "0114_ats_region_countries",
+      "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1794740133084,
+      "tag": "0115_credit_purchase_reversals",
+      "breakpoints": true
+    },
+    {
+      "idx": 116,
+      "version": "7",
+      "when": 1794744821230,
+      "tag": "0116_plan_change_proration",
+      "breakpoints": true
     }
   ]
 }

@@ -37,7 +37,7 @@ function post(body: unknown) {
 		headers: { authorization: 'Bearer sjsmcp_abc', 'content-type': 'application/json' },
 		body: JSON.stringify(body)
 	});
-	return POST({ request } as unknown as Parameters<typeof POST>[0]);
+	return POST({ request, url: new URL(request.url) } as unknown as Parameters<typeof POST>[0]);
 }
 
 const clientInfo = { name: 'Claude Code', version: '2.1.282' };

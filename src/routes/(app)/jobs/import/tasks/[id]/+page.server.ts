@@ -3,12 +3,10 @@ import { error, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { and, asc, eq, inArray, ne } from 'drizzle-orm';
 import { platform_credentials, profiles, search_tasks } from '$lib/server/db/schema';
-import { getGeoConfig } from '$lib/server/browser/geo-utils';
 import { config } from '$lib/server/config';
 import { getActiveSubscription } from '$lib/server/billing/subscription';
 import { getOrCreateVerificationAddress } from '$lib/server/email/verification-relay';
 import { listApiKeys } from '$lib/server/auth/api-key';
-import { decryptCredential } from '$lib/server/auth/crypto';
 import { listSharedWithMe } from '$lib/server/device-shares';
 import { listSharedCredentialsWithMe } from '$lib/server/credential-shares';
 import { getProfileSkillLevels } from '$lib/server/job/match-utils';
@@ -59,16 +57,14 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
 	const user = layoutData.user;
 
-	// Load credentials the user can pick on this task. Credentials are
-	// user-wide: any of the user's profiles surfaces all of their logins for
-	// this platform. Plus credentials shared with them by contacts. Shared
-	// credentials never expose the password — that stays server-side and is
-	// only resolved by the scraper at run time.
+	// Load the accounts the user can pick on this task. They are user-wide:
+	// any of the user's profiles surfaces all of their accounts for this
+	// platform. Plus accounts shared with them by contacts. An account is a
+	// username only; the server holds no platform passwords.
 	interface CredentialOption {
 		/** platform_credentials.id */
 		id: number;
 		username: string | null;
-		security_answer: string | null;
 		shared: boolean;
 		owner_user_id: string | null;
 		owner_label: string | null;
@@ -80,12 +76,11 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 				eq(platform_credentials.user_id, user.id),
 				eq(platform_credentials.platform_id, searchTask.platform_id)
 			),
-			columns: { id: true, username: true, security_answer: true },
+			columns: { id: true, username: true },
 			orderBy: asc(platform_credentials.date_created)
 		});
 		platformCredentials = rawCredentials.map((c) => ({
 			...c,
-			security_answer: decryptCredential(c.security_answer),
 			shared: false,
 			owner_user_id: null,
 			owner_label: null
@@ -101,8 +96,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 			platformCredentials.push({
 				id: s.platform_credential.id,
 				username: s.platform_credential.username,
-				// Shared credentials never reveal the security_answer either.
-				security_answer: null,
 				shared: true,
 				owner_user_id: s.platform_credential.owner_user_id,
 				owner_label: ownerLabel
@@ -129,22 +122,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	// Demo users get a read-only browser view — no interactive/VNC control over
 	// the (shared, logged-in) browser.
 	const isDemo = (user as { is_demo?: boolean })?.is_demo || false;
-
-	// Load profile data (country code + browser fingerprint fields)
-	const profileData = await db.query.profiles.findFirst({
-		where: eq(profiles.id, layoutData.selectedProfile.id),
-		columns: {
-			country_code: true,
-			browser_country_code: true,
-			browser_language: true,
-			browser_timezone: true
-		}
-	});
-
-	// Compute geo-derived defaults from the effective country code
-	const effectiveCountryCode =
-		profileData?.browser_country_code || profileData?.country_code || 'US';
-	const geoDefaults = getGeoConfig(effectiveCountryCode);
 
 	// Check if any other search task for this profile is currently running/queued/blocked
 	const otherRunning = await db.query.search_tasks.findFirst({
@@ -199,8 +176,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	// Mirrors the rule in `PATCH /api/platforms/[id]` exactly: staff always,
 	// and a normal user only for a site they added themselves that no *other*
 	// account has a task on. The row is global, and `login_page_url` is where
-	// "auto" mode types other people's stored passwords, so the curated
-	// platforms (no owner) are admin-only whatever their usage. Computed here
+	// every user's browser is sent to sign in (and where a run types the
+	// account's email), so the curated platforms (no owner) are admin-only
+	// whatever their usage. Computed here
 	// rather than guessed in the component, because a field that renders and
 	// then 403s on save is the failure this page has already had once (see the
 	// isStaff note above).
@@ -237,19 +215,8 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		hasOtherRunning: !!otherRunning,
 		canEditSignInPage,
 		subscriptionRenewDate: subscription?.currentPeriodEnd ?? null,
-		browserCountryCode: profileData?.browser_country_code || '',
-		defaultCountryCode: profileData?.country_code || '',
 		browserProvider: config.browserProvider,
 		localBrowserAllowed: config.localBrowserAllowed,
-		// Browser fingerprint: saved values + geo-derived defaults
-		browserFingerprint: {
-			language: profileData?.browser_language || '',
-			timezone: profileData?.browser_timezone || ''
-		},
-		browserFingerprintDefaults: {
-			language: geoDefaults.language,
-			timezone: geoDefaults.timezone
-		},
 		uiPreferences: (searchTask.ui_preferences ?? {}) as Record<string, unknown>,
 		verificationEmailAddress: verificationAddress.fullAddress,
 		apiKeyDevices

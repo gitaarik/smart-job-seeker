@@ -1,8 +1,9 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
-import { asc, eq, or, sql } from 'drizzle-orm';
+import { asc, eq, inArray, or, sql } from 'drizzle-orm';
 import { dbDirect as db, queryRaw, sqlJoin } from '$lib/server/db';
 import { job_platforms } from '$lib/server/db/schema';
+import { PLATFORM_PAUSED } from '$lib/job-platforms/taxonomy';
 import { getProfileSkillLevels } from '$lib/server/job/match-utils';
 import { getSelectedProfileId } from '../profile/utils';
 import { rejectJob, saveJob, unrejectJob, unsaveJob } from '$lib/server/job/job-actions';
@@ -39,9 +40,12 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
 	// Get all platforms for filter dropdown. The feed platforms are drafts (out
 	// of the picker since corpus picks) but every pick carries one, so the
-	// filter keeps them.
+	// filter keeps them, as it keeps a paused board's jobs from before.
 	const platforms = await db.query.job_platforms.findMany({
-		where: or(eq(job_platforms.status, 'published'), eq(job_platforms.fetch_mode, 'feed')),
+		where: or(
+			inArray(job_platforms.status, ['published', PLATFORM_PAUSED]),
+			eq(job_platforms.fetch_mode, 'feed')
+		),
 		columns: { id: true, name: true },
 		orderBy: asc(job_platforms.name)
 	});

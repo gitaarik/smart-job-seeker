@@ -27,6 +27,11 @@ export function atsCareersUrl(provider: string, slug: string): string | null {
 			return `https://jobs.ashbyhq.com/${s}`;
 		case 'recruitee':
 			return `https://${s}.recruitee.com/`;
+		case 'remoteok':
+			// A whole job board with a feed, not a company's careers page.
+			return 'https://remoteok.com/';
+		case 'we-work-remotely':
+			return 'https://weworkremotely.com/';
 		default:
 			return null;
 	}

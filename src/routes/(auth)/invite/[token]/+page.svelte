@@ -3,12 +3,14 @@
 	import { resolve } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import TermsCheckbox from '$lib/components/legal/TermsCheckbox.svelte';
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let email = $state('');
 	let password = $state('');
 	let confirmPassword = $state('');
 	let loading = $state(false);
+	let acceptedTerms = $state(false);
 
 	function handleSubmit() {
 		return async ({ update }: { update: () => Promise<void> }) => {
@@ -126,12 +128,16 @@
 							/>
 						</div>
 					</div>
+
+					{#if data.termsVersion}
+						<TermsCheckbox version={data.termsVersion} bind:checked={acceptedTerms} />
+					{/if}
 				{/if}
 
 				<div>
 					<button
 						type="submit"
-						disabled={loading}
+						disabled={loading || (!data.loggedIn && data.termsVersion !== null && !acceptedTerms)}
 						class="flex w-full justify-center rounded-md border border-transparent bg-[var(--dash-primary)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--dash-primary-hover)] focus:ring-2 focus:ring-[var(--dash-primary)] focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						{#if loading}

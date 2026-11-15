@@ -104,7 +104,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 				jobsFound: r.jobs_found,
 				errorMessage: r.error_message,
 				triggeredBy: r.triggered_by,
-				liveUrl: r.live_url,
 				searchTask: {
 					id: r.search_task.id,
 					name: searchTaskDisplayName(r.search_task.job_platform?.name, r.search_task.note),
@@ -368,7 +367,6 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 				.set({
 					status: 'idle',
 					status_message: 'Reset by admin',
-					live_url: null,
 					date_updated: new Date()
 				})
 				.where(eq(search_tasks.id, run.search_task_id));
@@ -381,8 +379,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 				.set({
 					status: 'error',
 					error_message: 'Timed out (cleaned up by admin)',
-					finished_at: new Date(),
-					live_url: null
+					finished_at: new Date()
 				})
 				.where(inArray(search_task_runs.id, directResolveIds));
 			await db
@@ -429,8 +426,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 				.set({
 					status: 'idle',
 					status_message: 'Reset by admin',
-					date_updated: new Date(),
-					live_url: null
+					date_updated: new Date()
 				})
 				.where(
 					inArray(
@@ -553,19 +549,13 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			})
 			.where(eq(search_tasks.id, searchTaskId));
 
-		let effectiveProvider = searchTask.browser_provider;
-		if (!effectiveProvider) {
-			const serverDefault = process.env.SJS_BROWSER_PROVIDER || 'local';
-			if (serverDefault === 'goLogin') effectiveProvider = 'hosted';
-		}
-
 		const job = await addScrapeJob({
 			searchTaskId,
 			runId: run.id,
 			searchUrl: searchTask.search_url,
 			platformId: String(searchTask.platform_id),
 			triggeredBy: 'user',
-			browserProvider: effectiveProvider,
+			browserProvider: searchTask.browser_provider,
 			...(searchTask.search_term ? { searchTerm: searchTask.search_term } : {})
 		});
 

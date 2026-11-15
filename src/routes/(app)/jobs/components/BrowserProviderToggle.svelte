@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faCloud, faCog, faHouseSignal } from '@fortawesome/free-solid-svg-icons';
+	import { faCog, faHouseSignal } from '@fortawesome/free-solid-svg-icons';
 
 	interface Device {
 		apiKeyId: number;
@@ -61,25 +61,13 @@
 					></span>
 				{/if}
 			</button>
-			<button
-				type="button"
-				{disabled}
-				onclick={() => select('hosted')}
-				class="flex items-center gap-1.5 border-l border-[var(--dash-border)] px-3 py-1.5 text-xs transition-colors disabled:opacity-60 {value ===
-				'hosted'
-					? 'bg-[var(--dash-primary)] text-white'
-					: 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
-			>
-				<FontAwesomeIcon icon={faCloud} class="h-3 w-3" />
-				Cloud
-			</button>
 			{#if localBrowserAllowed}
 				<button
 					type="button"
 					{disabled}
-					onclick={() => select(null)}
+					onclick={() => select('local')}
 					class="flex items-center gap-1.5 border-l border-[var(--dash-border)] px-3 py-1.5 text-xs transition-colors disabled:opacity-60 {value ===
-					null
+					'local'
 						? 'bg-[var(--dash-primary)] text-white'
 						: 'bg-[var(--dash-bg)] text-[var(--dash-text)] hover:bg-[var(--dash-bg-hover)]'}"
 				>
@@ -112,9 +100,8 @@
 		{#if value === 'tunnel'}
 			Uses your own device's browser via the tunnel (residential IP). Less likely to be detected,
 			but requires a connected device.
-		{:else if value === 'hosted'}
-			Uses a cloud-hosted anti-detect browser (datacenter IP). Fast and reliable, but may trigger
-			bot detection on some platforms.
+		{:else if value === 'local'}
+			Uses the server's own Chrome container. For development only.
 		{:else}
 			Uses the server's default browser.
 		{/if}

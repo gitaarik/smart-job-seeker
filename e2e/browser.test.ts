@@ -138,14 +138,17 @@ describe('profile creation flow', () => {
 		// Fill optional: Professional Title (second text input)
 		await b.page.locator('input[type="text"]').nth(1).fill('Senior QA Engineer');
 
-		// Submit and wait for redirect to /home?profile=<id>
+		// Submit and wait for the redirect to the new profile's start page
 		await b.page.getByRole('button', { name: /create profile/i }).click();
-		await b.page.waitForURL(/\/home\?profile=\d+/, { timeout: 15000 });
+		await b.page.waitForURL(/\/profile\/start\?profile=\d+/, { timeout: 15000 });
 
 		// Extract profile ID from redirect URL
 		const match = b.page.url().match(/profile=(\d+)/);
 		profileId = match?.[1] ?? null;
 		expect(profileId).toBeTruthy();
+
+		await b.page.goto(`/home?profile=${profileId}`);
+		await b.page.waitForLoadState('networkidle');
 
 		const heading = await b.page.locator('h1').first().textContent();
 		expect(heading?.trim()).toBe('Dashboard');

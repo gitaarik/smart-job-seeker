@@ -14,8 +14,6 @@ const ready: ImportTaskReadinessInput = {
 	taskSearchUrl: null,
 	platformSearchPageUrl: 'https://sveltejobs.com/jobs',
 	platformLoginPageUrl: null,
-	loginMode: 'none',
-	hasCredential: false,
 	browserProvider: 'local',
 	serverBrowserProvider: 'local',
 	deviceConnected: false
@@ -29,7 +27,6 @@ describe('providerRequiresDevice', () => {
 	it('only the tunnel provider needs a user device', () => {
 		expect(providerRequiresDevice('tunnel', 'local')).toBe(true);
 		expect(providerRequiresDevice('local', 'local')).toBe(false);
-		expect(providerRequiresDevice('hosted', 'local')).toBe(false);
 	});
 
 	it('falls back to the server default when the task has no provider', () => {
@@ -39,13 +36,14 @@ describe('providerRequiresDevice', () => {
 });
 
 describe('isTaskBrowserProvider', () => {
-	it('accepts the three providers a task may name', () => {
-		for (const p of ['local', 'hosted', 'tunnel']) {
+	it('accepts the two providers a task may name', () => {
+		for (const p of ['local', 'tunnel']) {
 			expect(isTaskBrowserProvider(p), p).toBe(true);
 		}
 	});
 
-	it('rejects goLogin, which is a server-config value rather than a task one', () => {
+	it('rejects the retired cloud providers', () => {
+		expect(isTaskBrowserProvider('hosted')).toBe(false);
 		expect(isTaskBrowserProvider('goLogin')).toBe(false);
 	});
 
@@ -64,6 +62,20 @@ describe('computeImportTaskBlockers', () => {
 
 	it('flags a missing platform and stops there', () => {
 		expect(keys({ ...ready, platformId: null })).toEqual(['platform']);
+	});
+
+	it('blocks every task on a paused platform, feeds included, and says which', () => {
+		const paused = { ...ready, platformStatus: 'paused' };
+		expect(keys(paused)).toEqual(['paused']);
+		expect(keys({ ...paused, fetchMode: 'feed' })).toEqual(['paused']);
+		expect(keys({ ...paused, platformSearchPageUrl: null, browserProvider: 'tunnel' })).toEqual([
+			'paused'
+		]);
+		expect(computeImportTaskBlockers(paused)[0].detail).toContain('SvelteJobs is paused');
+	});
+
+	it('runs on a draft platform: user-added sites are drafts', () => {
+		expect(keys({ ...ready, platformStatus: 'draft' })).toEqual([]);
 	});
 
 	it('flags a missing search URL when neither task nor platform has one', () => {
@@ -107,37 +119,21 @@ describe('computeImportTaskBlockers', () => {
 		expect(keys({ ...tunnel, deviceConnected: true })).toEqual([]);
 	});
 
-	it('requires credentials for a gated platform on auto login', () => {
+	// The server holds no platform passwords (2026-11-14): the user signs in
+	// once in the browser, and a lapsed session is a run-time stop, not a
+	// reason to refuse the start.
+	it('never blocks a gated platform on a saved login', () => {
 		const gated = {
 			...ready,
-			platformLoginPageUrl: 'https://linkedin.com/login',
-			loginMode: 'auto',
-			hasCredential: false
+			platformLoginPageUrl: 'https://linkedin.com/login'
 		};
-		expect(keys(gated)).toEqual(['credentials']);
-		expect(keys({ ...gated, hasCredential: true })).toEqual([]);
-	});
-
-	it('does not require credentials for manual or none login modes', () => {
-		const gated = {
-			...ready,
-			platformLoginPageUrl: 'https://linkedin.com/login',
-			hasCredential: false
-		};
-		expect(keys({ ...gated, loginMode: 'manual' })).toEqual([]);
-		expect(keys({ ...gated, loginMode: 'none' })).toEqual([]);
-	});
-
-	it('reports device and credential blockers together', () => {
+		expect(keys(gated)).toEqual([]);
 		expect(
 			keys({
-				...ready,
+				...gated,
 				browserProvider: 'tunnel',
-				deviceConnected: false,
-				platformLoginPageUrl: 'https://linkedin.com/login',
-				loginMode: 'auto',
-				hasCredential: false
+				deviceConnected: false
 			})
-		).toEqual(['device', 'credentials']);
+		).toEqual(['device']);
 	});
 });

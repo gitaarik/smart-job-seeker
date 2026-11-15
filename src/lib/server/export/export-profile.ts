@@ -264,6 +264,7 @@ export async function buildProfileExport(
 		slug: profile.slug || undefined,
 		location: profile.location || undefined,
 		country_code: profile.country_code || undefined,
+		place: profile.place ?? undefined,
 		phone_number: profile.phone_number || undefined,
 		email_address: profile.email_address || undefined,
 		personal_website: profile.personal_website || undefined,

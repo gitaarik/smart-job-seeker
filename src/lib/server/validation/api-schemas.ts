@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { LOGIN_MODES } from '$lib/import-tasks/sign-in';
+import { TASK_BROWSER_PROVIDERS } from '$lib/import-tasks/readiness';
 import { MAX_BELOW_ASK_TOLERANCE_PCT } from '$lib/salary/pay-fit';
 import { MAX_CORPUS_PICKS_PER_DAY } from '$lib/server/job/match-preferences';
 import { WORK_MODES } from '$lib/work-mode';
@@ -173,12 +174,33 @@ export const techSkillUpdateSchema = z.object({
 
 // Job preferences
 
+/** A place as the picker hands it over (`Place`, `$lib/data/places`). */
+export const placeSchema = z.object({
+	id: z.number().int(),
+	kind: z.enum(['city', 'admin', 'country', 'region']),
+	name: z.string().min(1).max(200),
+	label: z.string().min(1).max(400),
+	country: z
+		.string()
+		.regex(/^[A-Z]{2}$/)
+		.nullable(),
+	countries: z.array(z.string().regex(/^[A-Z]{2}$/)).max(300),
+	lat: z.number().min(-90).max(90).nullable(),
+	lon: z.number().min(-180).max(180).nullable()
+});
+
+/** A preferred place: a place and how far from it a job may be (stored; read in Phase 4). */
+export const preferredPlaceSchema = placeSchema.extend({
+	radius_km: z.number().int().min(1).max(500).nullable().optional()
+});
+
 export const jobPreferencesSchema = z.object({
 	profile_id: positiveInt(),
 	job_types: z.array(z.string()).min(1, 'Please select at least one job type'),
 	experience_levels: z.array(z.string()).optional().nullable(),
 	work_location: z.array(z.string()).min(1, 'Please select at least one work location option'),
 	locations: z.array(z.string()).optional().nullable(),
+	places: z.array(preferredPlaceSchema).max(20).optional().nullable(),
 	remote_only: z.boolean().optional(),
 	match_community_jobs: z.boolean().optional(),
 	community_max_age_days: z.number().int().positive().nullable().optional(),
@@ -198,6 +220,7 @@ export const jobPreferencesPatchSchema = z.object({
 		.min(1, 'Please select at least one work location option')
 		.optional(),
 	locations: z.array(z.string()).optional().nullable(),
+	places: z.array(preferredPlaceSchema).max(20).optional().nullable(),
 	remote_only: z.boolean().optional(),
 	match_community_jobs: z.boolean().optional(),
 	community_max_age_days: z.number().int().positive().nullable().optional(),
@@ -218,12 +241,13 @@ export const platformCreateSchema = z.object({
 
 // Platform credentials
 
+// Only the username: the server stopped storing platform passwords and
+// security answers on 2026-11-14 (migration 0111). A client still sending
+// them gets them stripped, never stored.
 export const platformCredentialsSchema = z.object({
 	profileId: z.union([positiveInt(), z.string().regex(/^\d+$/).transform(Number)]),
 	credentialId: z.union([positiveInt(), z.string().regex(/^\d+$/).transform(Number)]).optional(),
-	username: optionalTrimmedString(),
-	password: optionalTrimmedString(1000),
-	security_answer: optionalTrimmedString(500)
+	username: optionalTrimmedString()
 });
 
 // Browser info
@@ -237,8 +261,7 @@ export const browserInfoSchema = z.object({
 // Job search update
 
 const newCredentialSchema = z.object({
-	username: requiredTrimmedString('Username'),
-	password: optionalTrimmedString(1000)
+	username: requiredTrimmedString('Username')
 });
 
 export const searchTaskUpdateSchema = z.object({
@@ -246,6 +269,8 @@ export const searchTaskUpdateSchema = z.object({
 	search_url: httpUrl('search_url').optional().nullable(),
 	search_term: z.string().max(500).optional().nullable(),
 	search_location: z.string().max(500).optional().nullable(),
+	search_places: z.array(preferredPlaceSchema).max(20).optional().nullable(),
+	search_remote_anywhere: z.boolean().optional(),
 	search_filters: z.record(z.string(), z.union([z.string(), z.array(z.string())])).optional(),
 	is_active: z.boolean().optional(),
 	platform_id: z.union([z.null(), z.number().int()]).optional(),
@@ -291,7 +316,7 @@ export const searchTaskUpdateSchema = z.object({
 		.union([z.null(), z.number().int(), z.string().regex(/^\d+$/).transform(Number)])
 		.optional(),
 	login_mode: z.enum(LOGIN_MODES).optional(),
-	browser_provider: z.enum(['hosted', 'tunnel']).optional().nullable(),
+	browser_provider: z.enum(TASK_BROWSER_PROVIDERS).optional().nullable(),
 	sjsbrowser_api_key: z.union([z.null(), z.number().int()]).optional(),
 	keep_minimized: z.boolean().optional(),
 	schedule_interval_hours: z
@@ -338,6 +363,8 @@ export const profileUpdateSchema = z.object({
 	phone_number: optionalTrimmedString(),
 	personal_website: optionalTrimmedString(),
 	location: optionalTrimmedString(),
+	// Picked from the gazetteer; null clears it.
+	place: placeSchema.nullable().optional(),
 	location_url: optionalTrimmedString(),
 	location_timezone: optionalTrimmedString(),
 	linkedin_profile: optionalTrimmedString(),

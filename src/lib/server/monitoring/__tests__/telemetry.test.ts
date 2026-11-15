@@ -11,9 +11,11 @@
  * producing no traces.
  */
 
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { context, trace, TraceFlags } from '@opentelemetry/api';
 import { InMemorySpanExporter, type ReadableSpan } from '@opentelemetry/sdk-trace-base';
+import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
+import { SpanStatusCode } from '@opentelemetry/api';
 import { LangfuseSpanProcessor } from '@langfuse/otel';
 import { createTraceId, startActiveObservation } from '@langfuse/tracing';
 import { Sentry } from '../sentry';
@@ -22,7 +24,11 @@ import {
 	inOpenTrace,
 	isInTrace,
 	maskTraceData,
+	payloadMode,
+	payloadProcessor,
 	recordedTraceId,
+	scrubStatus,
+	sizeTraceData,
 	startTrace,
 	traceGeneration,
 	traceStep,
@@ -138,6 +144,161 @@ describe('maskTraceData', () => {
 	it('leaves dates, years, counts and ids alone', () => {
 		const text = 'From 2019-03-01 to 2026-09-25, 10,000 monthly users, order 1234567890.';
 		expect(maskTraceData(text)).toBe(text);
+	});
+});
+
+describe('payload modes', () => {
+	const set = (value: string | undefined, host?: string) => {
+		if (value === undefined) delete process.env.SJS_TRACE_PAYLOADS;
+		else process.env.SJS_TRACE_PAYLOADS = value;
+		if (host !== undefined) process.env.SJS_APP_URL_HOST = host;
+	};
+	const host = process.env.SJS_APP_URL_HOST;
+	afterEach(() => {
+		delete process.env.SJS_TRACE_PAYLOADS;
+		if (host === undefined) delete process.env.SJS_APP_URL_HOST;
+		else process.env.SJS_APP_URL_HOST = host;
+	});
+
+	it('sends text from development only, unless the box says otherwise', () => {
+		set(undefined, 'dev.smartjobseeker.com');
+		expect(payloadMode()).toBe('full');
+		set(undefined, 'preview.smartjobseeker.com');
+		expect(payloadMode()).toBe('sizes');
+		set(undefined, 'www.smartjobseeker.com');
+		expect(payloadMode()).toBe('sizes');
+		set('full');
+		expect(payloadMode()).toBe('full');
+		set('sizes', 'dev.smartjobseeker.com');
+		expect(payloadMode()).toBe('sizes');
+		// A value that is neither leaves the box's own answer.
+		set('everything', 'preview.smartjobseeker.com');
+		expect(payloadMode()).toBe('sizes');
+	});
+
+	it('files a trace under nobody when it sends sizes', async () => {
+		set('sizes');
+		await startTrace({ name: 'sized', userId: 'user-1', sessionId: 'session-1' }, async () => {});
+		await withTraceAttributes({ userId: 'user-2', sessionId: 'session-2' }, () =>
+			startTrace({ name: 'sized inside' }, async () => {})
+		);
+		await telemetry.flush();
+		const spans = exporter.getFinishedSpans();
+		expect(spans).toHaveLength(2);
+		for (const span of spans) expect(span.attributes['user.id']).toBeUndefined();
+		expect(spans.map((s) => s.attributes['session.id']).sort()).toEqual(['session-1', 'session-2']);
+	});
+});
+
+describe('sizeTraceData', () => {
+	it('keeps the shape, the roles and the tool names, and no text', () => {
+		const messages = [
+			{ role: 'system', content: 'You match jobs.' },
+			{ role: 'user', content: 'My CV: ten years at Acme, diabetic, Dutch.' },
+			{
+				role: 'assistant',
+				content: '',
+				toolCalls: [{ id: 'call_1', name: 'edit_profile', args: { name: 'Rik', years: 10 } }]
+			},
+			{ role: 'tool', content: 'Saved.', toolCallId: 'call_1', name: 'edit_profile' }
+		];
+		expect(sizeTraceData(messages)).toEqual([
+			{ role: 'system', content: '[15 chars]' },
+			{ role: 'user', content: '[42 chars]' },
+			{
+				role: 'assistant',
+				content: '[0 chars]',
+				toolCalls: [
+					{ id: '[6 chars]', name: 'edit_profile', args: { name: '[3 chars]', years: 10 } }
+				]
+			},
+			{ role: 'tool', content: '[6 chars]', toolCallId: '[6 chars]', name: '[12 chars]' }
+		]);
+	});
+
+	it('keeps what a step counted and replaces a role that is not one', () => {
+		expect(sizeTraceData({ chars: 1200, cut: true, fromMemo: null })).toEqual({
+			chars: 1200,
+			cut: true,
+			fromMemo: null
+		});
+		expect(sizeTraceData({ role: 'Senior nurse' })).toEqual({ role: '[12 chars]' });
+	});
+});
+
+describe('scrubStatus', () => {
+	const groq =
+		'400 {"error":{"message":"Failed to validate JSON.","code":"json_validate_failed",' +
+		'"failed_generation":"{\\"summary\\": \\"Rik, rik@example.com, diabetic\\"}"}}';
+
+	it('takes the quoted answer out of an error and cuts a long one, when sending sizes', () => {
+		const said = scrubStatus(groq, 'sizes');
+		expect(said).toContain('json_validate_failed');
+		expect(said).not.toContain('diabetic');
+		expect(scrubStatus('x'.repeat(1000), 'sizes')).toBe(`${'x'.repeat(300)} … (1000 characters)`);
+		expect(scrubStatus('429 rate limit reached', 'sizes')).toBe('429 rate limit reached');
+	});
+
+	it('only masks addresses and numbers when sending text', () => {
+		const said = scrubStatus(groq, 'full');
+		expect(said).toContain('diabetic');
+		expect(said).toContain('[email]');
+		expect(said).not.toContain('rik@example.com');
+	});
+});
+
+describe('what the processor sends', () => {
+	/** One span with Langfuse's own attributes, through a processor of the mode. */
+	async function sent(mode: 'full' | 'sizes') {
+		const out = new InMemorySpanExporter();
+		const own = new NodeTracerProvider({
+			spanProcessors: [
+				payloadProcessor(mode, {
+					exporter: out,
+					exportMode: 'immediate',
+					publicKey: 'pk-lf-test',
+					secretKey: 'sk-lf-test'
+				})
+			]
+		});
+		const span = own.getTracer('langfuse-sdk').startSpan('write_letter');
+		span.setAttribute(
+			'langfuse.observation.input',
+			JSON.stringify([{ role: 'user', content: 'Write to rik@example.com about my burnout.' }])
+		);
+		span.setAttribute('langfuse.observation.output', 'Dear Rik, about your burnout.');
+		span.setAttribute('langfuse.observation.metadata.cache', 'miss');
+		span.setAttribute(
+			'langfuse.observation.status_message',
+			'refused: "my burnout" at rik@example.com'
+		);
+		span.setStatus({ code: SpanStatusCode.ERROR, message: 'mail rik@example.com' });
+		span.end();
+		await own.forceFlush();
+		const [exported] = out.getFinishedSpans();
+		await own.shutdown();
+		return exported;
+	}
+
+	it('sends sizes: no text in the input or the output, metadata as it was', async () => {
+		const span = await sent('sizes');
+		expect(span.attributes['langfuse.observation.input']).toBe(
+			JSON.stringify([{ role: 'user', content: '[42 chars]' }])
+		);
+		expect(span.attributes['langfuse.observation.output']).toBe('[29 chars]');
+		expect(span.attributes['langfuse.observation.metadata.cache']).toBe('miss');
+		expect(span.attributes['langfuse.observation.status_message']).toBe(
+			'refused: "my burnout" at [email]'
+		);
+		expect(span.status.message).toBe('mail [email]');
+	});
+
+	it('sends text: the same span with only the address replaced', async () => {
+		const span = await sent('full');
+		expect(span.attributes['langfuse.observation.input']).toBe(
+			JSON.stringify([{ role: 'user', content: 'Write to [email] about my burnout.' }])
+		);
+		expect(span.attributes['langfuse.observation.output']).toBe('Dear Rik, about your burnout.');
 	});
 });
 

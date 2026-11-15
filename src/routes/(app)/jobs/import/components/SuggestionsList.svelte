@@ -1,6 +1,7 @@
 <script lang="ts" module>
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { SearchFilterValue } from '$lib/job-platforms/search-filters';
+	import type { Place } from '$lib/data/places';
 
 	export type Suggestion = {
 		platform_id: number;
@@ -29,12 +30,26 @@
 		needs_login?: boolean;
 		/** `feed` for a career-site feed: no browser, device or sign-in. */
 		fetch_mode?: 'browser' | 'feed';
-		/** A feed task's "where": countries and "remote"; null for every country. */
+		/** A feed task's places, from the user's preferred places; null for every country. */
+		search_places?: Place[] | null;
+		/** A feed task's preferred texts that are no place yet. */
 		search_location?: string | null;
+		/** A feed task's "remote postings from any country too". */
+		search_remote_anywhere?: boolean;
 		/** Runs that returned jobs, and runs attempted, across all users. */
 		successes?: number;
 		attempts?: number;
 	};
+
+	/** A feed suggestion's "where" in one line: its places, its texts, remote. */
+	function feedWhereLabel(s: Suggestion): string {
+		const names = [
+			...(s.search_places ?? []).map((p) => p.label),
+			...(s.search_location ? [s.search_location] : [])
+		];
+		if (!names.length) return 'every country';
+		return names.join('; ') + (s.search_remote_anywhere ? ', or remote from anywhere' : '');
+	}
 </script>
 
 <script lang="ts">
@@ -175,7 +190,7 @@
 					<p class="text-sm text-[var(--dash-text-secondary)]">{suggestion.note}</p>
 					{#if suggestion.fetch_mode === 'feed'}
 						<p class="text-xs text-[var(--dash-text-muted)]">
-							Where: {suggestion.search_location || 'every country'}
+							Where: {feedWhereLabel(suggestion)}
 						</p>
 					{/if}
 				</div>

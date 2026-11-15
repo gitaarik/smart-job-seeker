@@ -34,7 +34,12 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
-import { type Sampler, SamplingDecision, type SpanProcessor } from '@opentelemetry/sdk-trace-base';
+import {
+	type ReadableSpan,
+	type Sampler,
+	SamplingDecision,
+	type SpanProcessor
+} from '@opentelemetry/sdk-trace-base';
 import { LangfuseSpanProcessor } from '@langfuse/otel';
 import {
 	createTraceId,
@@ -42,7 +47,7 @@ import {
 	setLangfuseTracerProvider,
 	startActiveObservation
 } from '@langfuse/tracing';
-import { propagateAttributes } from '@langfuse/core';
+import { LangfuseOtelSpanAttributes, propagateAttributes } from '@langfuse/core';
 import { getEnvironmentName, initSentry, type ProcessComponent } from './sentry';
 
 export type { ProcessComponent } from './sentry';
@@ -100,10 +105,29 @@ const EMAIL = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 const PHONE = /(?:\+|\b00)\d[\d\s().-]{7,}\d|\b06[\s-]?(?:\d[\s-]?){7}\d\b/g;
 
 /**
- * What leaves the process: every string with email addresses and phone numbers
- * replaced, at any depth. A profile reaches a prompt as rendered text, so the
- * patterns are what catch it there. The CV itself stays, since it is what a
- * trace is read for.
+ * How much of a call's text leaves the process. `full` sends the prompts and
+ * answers, less email addresses and phone numbers. `sizes` sends their shape
+ * and length and no text, and no user id: the trace still shows what ran, how
+ * long it took, what it cost and where it failed, and the text stays in the
+ * box's own `ai_chats` row, which links to the trace (`trace_id`).
+ *
+ * A box other people's CVs pass through sends sizes, so only development sends
+ * text unless SJS_TRACE_PAYLOADS says otherwise. Someone running the app with
+ * a Langfuse of their own sets it to `full`.
+ */
+export type PayloadMode = 'full' | 'sizes';
+
+export function payloadMode(): PayloadMode {
+	const set = process.env.SJS_TRACE_PAYLOADS;
+	if (set === 'full' || set === 'sizes') return set;
+	return getEnvironmentName() === 'development' ? 'full' : 'sizes';
+}
+
+/**
+ * What leaves the process in `full` mode: every string with email addresses and
+ * phone numbers replaced, at any depth. A profile reaches a prompt as rendered
+ * text, so the patterns are what catch it there. The CV itself stays, since it
+ * is what a trace is read for.
  */
 export function maskTraceData(data: unknown): unknown {
 	if (typeof data === 'string') {
@@ -114,6 +138,108 @@ export function maskTraceData(data: unknown): unknown {
 		return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, maskTraceData(v)]));
 	}
 	return data;
+}
+
+const ROLES = new Set(['system', 'user', 'assistant', 'tool']);
+/** The keys a list of tool calls goes by, in the app's messages and in LangChain's. */
+const TOOL_CALL_KEYS = new Set(['toolCalls', 'tool_calls']);
+
+/**
+ * What leaves the process in `sizes` mode: the same structure with every string
+ * replaced by its length. Keys, numbers and booleans stay, since the code wrote
+ * the keys and a count or a flag is what a step reports about itself. Two
+ * strings stay because they say what happened and come from the code, not from
+ * a person: a message's role and the name of a tool a model called.
+ */
+export function sizeTraceData(data: unknown, key?: string): unknown {
+	if (typeof data === 'string') {
+		if (key === 'role' && ROLES.has(data)) return data;
+		return `[${data.length} chars]`;
+	}
+	if (Array.isArray(data)) {
+		if (key && TOOL_CALL_KEYS.has(key)) return data.map(sizeToolCall);
+		return data.map((item) => sizeTraceData(item));
+	}
+	if (data && typeof data === 'object') {
+		return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, sizeTraceData(v, k)]));
+	}
+	return data;
+}
+
+function sizeToolCall(call: unknown): unknown {
+	if (!call || typeof call !== 'object' || Array.isArray(call)) return sizeTraceData(call);
+	return Object.fromEntries(
+		Object.entries(call).map(([k, v]) => [
+			k,
+			k === 'name' && typeof v === 'string' ? v : sizeTraceData(v, k)
+		])
+	);
+}
+
+/**
+ * The processor's mask for a mode. Langfuse hands it an input or an output the
+ * way the span holds it, which is JSON text for anything but a plain string, so
+ * sizes are taken of what the text holds and not of the text.
+ */
+export function traceMask(mode: PayloadMode): (data: unknown) => unknown {
+	if (mode === 'full') return maskTraceData;
+	return (data) => {
+		if (typeof data !== 'string') return sizeTraceData(data);
+		let parsed: unknown;
+		try {
+			parsed = JSON.parse(data);
+		} catch {
+			return sizeTraceData(data);
+		}
+		return typeof parsed === 'string'
+			? sizeTraceData(parsed)
+			: JSON.stringify(sizeTraceData(parsed));
+	};
+}
+
+/** How much of a status message leaves the process in `sizes` mode. */
+const STATUS_MAX = 300;
+/** Where Groq's validation error starts quoting the answer it refused. */
+const QUOTED_ANSWER = /"failed_generation"/;
+
+/**
+ * A status message as it leaves the process. The mask never sees one, and an
+ * error's message can quote the model: Groq's JSON validation error carries the
+ * whole refused answer. Email addresses and phone numbers go in both modes; in
+ * `sizes` the quoted answer goes too and the rest is cut to its start, which is
+ * where an error says what it is.
+ */
+export function scrubStatus(message: string, mode: PayloadMode): string {
+	const masked = maskTraceData(message) as string;
+	if (mode === 'full') return masked;
+	const quoted = masked.search(QUOTED_ANSWER);
+	const said = quoted === -1 ? masked : `${masked.slice(0, quoted)}…`;
+	return said.length <= STATUS_MAX
+		? said
+		: `${said.slice(0, STATUS_MAX)} … (${said.length} characters)`;
+}
+
+/**
+ * Langfuse's processor, with status messages scrubbed as a span ends: the one
+ * its observation set, and the span's own, which the SDK sets from whatever was
+ * thrown.
+ */
+class ScrubbingLangfuseProcessor extends LangfuseSpanProcessor {
+	private readonly mode: PayloadMode;
+
+	constructor(mode: PayloadMode, params: ConstructorParameters<typeof LangfuseSpanProcessor>[0]) {
+		super(params);
+		this.mode = mode;
+	}
+
+	override onEnd(span: ReadableSpan) {
+		const attributes = span.attributes as Record<string, unknown>;
+		const key = LangfuseOtelSpanAttributes.OBSERVATION_STATUS_MESSAGE;
+		const set = attributes[key];
+		if (typeof set === 'string') attributes[key] = scrubStatus(set, this.mode);
+		if (span.status.message) span.status.message = scrubStatus(span.status.message, this.mode);
+		return super.onEnd(span);
+	}
 }
 
 let provider: NodeTracerProvider | null = null;
@@ -193,16 +319,25 @@ function langfuseProcessors(): SpanProcessor[] {
 	const publicKey = process.env.LANGFUSE_PUBLIC_KEY;
 	const secretKey = process.env.LANGFUSE_SECRET_KEY;
 	if (!publicKey || !secretKey) return [];
-	return [
-		new LangfuseSpanProcessor({
-			publicKey,
-			secretKey,
-			baseUrl: process.env.LANGFUSE_BASE_URL || undefined,
-			environment: getEnvironmentName(),
-			release: runningVersion(),
-			mask: ({ data }) => maskTraceData(data)
-		})
-	];
+	return [payloadProcessor(payloadMode(), { publicKey, secretKey })];
+}
+
+/**
+ * Langfuse's processor for a payload mode: its mask and its status scrub. Tests
+ * pass an exporter of their own, to read what would have been sent.
+ */
+export function payloadProcessor(
+	mode: PayloadMode,
+	params: ConstructorParameters<typeof LangfuseSpanProcessor>[0]
+): SpanProcessor {
+	const mask = traceMask(mode);
+	return new ScrubbingLangfuseProcessor(mode, {
+		baseUrl: process.env.LANGFUSE_BASE_URL || undefined,
+		environment: getEnvironmentName(),
+		release: runningVersion(),
+		...params,
+		mask: ({ data }) => mask(data)
+	});
 }
 
 /**
@@ -268,6 +403,14 @@ export function glance(text: string, max = 2000): string {
 	return text.length <= max ? text : `${text.slice(0, max)} … (${text.length} characters)`;
 }
 
+/**
+ * The user a trace is filed under: nobody in `sizes` mode. Who it was is on the
+ * box, in the row that links to the trace.
+ */
+function tracedUserId(userId: string | undefined): string | undefined {
+	return payloadMode() === 'full' ? userId : undefined;
+}
+
 /** Whether the code is running inside a trace `startTrace` opened. */
 export function isInTrace(): boolean {
 	return context.active().getValue(SJS_ROOT) === true;
@@ -295,7 +438,7 @@ export async function startTrace<T>(
 	return propagateAttributes(
 		{
 			traceName: options.name,
-			userId: options.userId,
+			userId: tracedUserId(options.userId),
 			sessionId: options.sessionId,
 			tags: options.tags,
 			environment: options.environment,
@@ -356,7 +499,7 @@ export function withTraceAttributes<T>(
 	work: () => Promise<T>
 ): Promise<T> {
 	if (!provider) return work();
-	return propagateAttributes(attributes, work);
+	return propagateAttributes({ ...attributes, userId: tracedUserId(attributes.userId) }, work);
 }
 
 export interface StepRecord {

@@ -11,6 +11,8 @@
 	import { resolve } from '$app/paths';
 	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
+	import PlacePicker from '$lib/components/PlacePicker.svelte';
+	import { DEFAULT_RADIUS_KM, type PreferredPlace } from '$lib/data/places';
 	import { formatCurrency } from '$lib/salary/conversion';
 
 	let { data }: { data: PageData } = $props();
@@ -112,16 +114,28 @@
 	});
 	$effect(() => experienceLevelsField.set([...experienceLevels]));
 
-	const loadedLocations = loaded.config.locations || [];
-	let locations = $state<string[]>([...loadedLocations]);
-	const locationsField = autoSaveField<string[]>({
+	// Preferred Locations: the places picked, and the texts typed before the
+	// picker that are not a place (yet), which can only be removed. One field,
+	// one PATCH, so undo puts back both.
+	type Preferred = { places: PreferredPlace[]; texts: string[] };
+	let places = $state<PreferredPlace[]>([...loaded.config.places]);
+	let unplacedTexts = $state<string[]>([...loaded.config.locations]);
+	const placesField = autoSaveField<Preferred>({
 		armOnInteraction: true,
-		initial: [...loadedLocations],
-		save: (v) => patchConfig({ locations: v }),
-		onSaved: (v) => (locations = [...v]),
-		equal: setsEqual
+		initial: { places: [...loaded.config.places], texts: [...loaded.config.locations] },
+		save: (v) => patchConfig({ places: v.places, locations: v.texts }),
+		onSaved: (v) => {
+			places = [...v.places];
+			unplacedTexts = [...v.texts];
+		},
+		equal: (a, b) =>
+			// The radius is part of a place's value: changing it alone saves.
+			setsEqual(
+				a.places.map((p) => `${p.id}:${p.radius_km ?? ''}`),
+				b.places.map((p) => `${p.id}:${p.radius_km ?? ''}`)
+			) && setsEqual(a.texts, b.texts)
 	});
-	$effect(() => locationsField.set([...locations]));
+	$effect(() => placesField.set({ places: [...places], texts: [...unplacedTexts] }));
 
 	// Toggle + time window travel together: turning the toggle off clears the
 	// window server-side, so they have to be one PATCH.
@@ -280,30 +294,8 @@
 		}
 	});
 
-	// Location input
-	let locationInput = $state('');
-
 	function toggleArrayValue(arr: string[], value: string): string[] {
 		return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
-	}
-
-	function addLocation() {
-		const trimmed = locationInput.trim();
-		if (trimmed && !locations.includes(trimmed)) {
-			locations = [...locations, trimmed];
-			locationInput = '';
-		}
-	}
-
-	function removeLocation(loc: string) {
-		locations = locations.filter((l) => l !== loc);
-	}
-
-	function handleLocationKeydown(e: KeyboardEvent) {
-		if (e.key === 'Enter') {
-			e.preventDefault();
-			addLocation();
-		}
 	}
 </script>
 
@@ -316,10 +308,12 @@
 	use:armOn={() => {
 		jobTypesField.arm();
 		workLocationField.arm();
+		remoteAbroadField.arm();
 		experienceLevelsField.arm();
-		locationsField.arm();
+		placesField.arm();
 		communityField.arm();
 		payField.arm();
+		picksField.arm();
 	}}
 >
 	<p class="text-sm text-[var(--dash-text-secondary)]">
@@ -459,54 +453,46 @@
 				<div>
 					<h3 class="font-medium text-[var(--dash-text)]">Preferred Locations</h3>
 					<p class="mt-0.5 text-xs text-[var(--dash-text-muted)]">
-						Location is compared as text, not geolocation. Only relevant for hybrid and on-site
-						jobs. Geo-based location filtering is planned for a future update.
+						Where you can work hybrid or on-site. A job counts within the distance you set from a
+						city ({DEFAULT_RADIUS_KM} km unless you change it), a province or a country anywhere in that
+						country, a region in all of its countries. A job whose town is unknown counts by its country.
+						Empty means {DEFAULT_RADIUS_KM} km from where you live on your profile, or its country when
+						it names no town. Remote jobs limited to certain countries are held to these too.
 					</p>
 				</div>
 			</div>
 
-			<!-- Location tags -->
-			{#if locations.length > 0}
-				<div class="mb-3 flex flex-wrap gap-2">
-					{#each locations as loc, i (i)}
-						<span
-							class="flex items-center gap-2 rounded-lg bg-[var(--dash-primary-light)] px-3 py-1.5 text-sm text-[var(--dash-primary)]"
-						>
-							{loc}
-							<button
-								type="button"
-								onclick={() => removeLocation(loc)}
-								class="transition-colors hover:text-[var(--dash-error)]"
-								aria-label="Remove {loc}"
+			{#if unplacedTexts.length > 0}
+				<div class="mb-3">
+					<p class="mb-1.5 text-xs text-[var(--dash-text-secondary)]">
+						Typed before places could be picked, and not found as a place. They are still read as
+						text: pick the place below and remove these.
+					</p>
+					<div class="flex flex-wrap gap-2">
+						{#each unplacedTexts as text (text)}
+							<span
+								class="flex items-center gap-2 rounded-lg border border-dashed border-[var(--dash-border)] px-3 py-1.5 text-sm text-[var(--dash-text-secondary)]"
 							>
-								&times;
-							</button>
-						</span>
-					{/each}
+								{text}
+								<button
+									type="button"
+									onclick={() => (unplacedTexts = unplacedTexts.filter((t) => t !== text))}
+									class="transition-colors hover:text-[var(--dash-error)]"
+									aria-label="Remove {text}"
+								>
+									&times;
+								</button>
+							</span>
+						{/each}
+					</div>
 				</div>
 			{/if}
 
-			<!-- Location input -->
-			<div class="flex gap-2">
-				<input
-					type="text"
-					bind:value={locationInput}
-					onkeydown={handleLocationKeydown}
-					placeholder="Add a city or region..."
-					class="flex-1 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-3 py-2 text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:border-transparent focus:ring-2 focus:ring-[var(--dash-primary)] focus:outline-none"
-				/>
-				<button
-					type="button"
-					onclick={addLocation}
-					class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg)] px-4 py-2 text-[var(--dash-text)] transition-colors hover:bg-[var(--dash-border)]"
-				>
-					Add
-				</button>
-			</div>
+			<PlacePicker multiple radius bind:places placeholder="Add a city, country or region..." />
 
-			{#if locationsField.status !== 'idle'}
+			{#if placesField.status !== 'idle'}
 				<div class="mt-3">
-					<AutoSaveIndicator field={locationsField} />
+					<AutoSaveIndicator field={placesField} />
 				</div>
 			{/if}
 		</Card>

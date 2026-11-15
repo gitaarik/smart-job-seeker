@@ -9,11 +9,16 @@ import { createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { users, verifications } from '$lib/server/db/schema';
+import { legal_acceptances, users, verifications } from '$lib/server/db/schema';
 import { getEnv } from '$lib/tools/get-env';
 import { sendEmail } from '$lib/server/email';
 import { verificationMail } from '$lib/server/auth/verification-email';
-import { approvesOnSignup, guardEmailChange, guardSignup } from '$lib/server/auth/signup-gate';
+import {
+	approvesOnSignup,
+	guardEmailChange,
+	guardSignup,
+	signupTermsFields
+} from '$lib/server/auth/signup-gate';
 import { userAdditionalFields } from '$lib/server/auth/user-fields';
 
 export const auth = betterAuth({
@@ -165,11 +170,32 @@ export const auth = betterAuth({
 			create: {
 				// Where `SJS_REGISTRATION_APPROVAL=auto`, a stranger's signup starts
 				// approved; the email verification still stands in front of it.
+				// A stranger's signup also records the terms it agreed to.
 				before: async (user, ctx) => {
-					if (!approvesOnSignup(ctx)) return;
-					return { data: { ...user, is_approved: true } };
+					return {
+						data: {
+							...user,
+							...signupTermsFields(ctx),
+							...(approvesOnSignup(ctx) ? { is_approved: true } : {})
+						}
+					};
 				},
 				after: async (user) => {
+					// The log row beside the column, so a later re-acceptance adds to
+					// the history instead of replacing it.
+					const { terms_version, terms_accepted_at } = user as {
+						terms_version?: string | null;
+						terms_accepted_at?: Date | null;
+					};
+					if (terms_version) {
+						await db.insert(legal_acceptances).values({
+							user_id: user.id,
+							document: 'terms',
+							version: terms_version,
+							accepted_at: terms_accepted_at ?? new Date()
+						});
+					}
+
 					// Demo users get a synthetic, non-routable address — no welcome or
 					// admin-notification emails (see lib/server/demo).
 					if (user.email.endsWith('@demo.smartjobseeker.local')) return;

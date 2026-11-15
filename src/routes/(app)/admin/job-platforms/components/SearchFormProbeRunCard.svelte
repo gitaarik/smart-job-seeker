@@ -19,7 +19,7 @@
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import { onMount, onDestroy, untrack } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faCheck, faCloud, faCopy, faDesktop } from '@fortawesome/free-solid-svg-icons';
+	import { faCheck, faCopy, faDesktop } from '@fortawesome/free-solid-svg-icons';
 	import BrowserViewModal from './BrowserViewModal.svelte';
 
 	type DiscoveryRun = {
@@ -34,7 +34,6 @@
 		platform_credential_id: number | null;
 		sjsbrowser_api_key_id: number | null;
 		bullmq_job_id: string | null;
-		live_url: string | null;
 		findings: {
 			platform_name?: string;
 			platform_key?: string;
@@ -88,7 +87,7 @@
 	let cancelling = $state(false);
 	let cancelError = $state<string | null>(null);
 
-	const canViewBrowser = $derived(Boolean(run.live_url) || Boolean(run.sjsbrowser_api_key_id));
+	const canViewBrowser = $derived(Boolean(run.sjsbrowser_api_key_id));
 
 	function isTerminal(status: string) {
 		return ['success', 'error', 'cancelled'].includes(status);
@@ -212,7 +211,7 @@
 				onclick={() => (showBrowser = true)}
 				class="inline-flex items-center gap-1.5 rounded border border-[var(--dash-border)] px-3 py-1.5 text-xs hover:bg-[var(--dash-bg)]"
 			>
-				<FontAwesomeIcon icon={run.live_url ? faCloud : faDesktop} class="h-3 w-3" />
+				<FontAwesomeIcon icon={faDesktop} class="h-3 w-3" />
 				Open browser view
 			</button>
 		{/if}
@@ -340,7 +339,6 @@
 {#if !hideBrowserView}
 	<BrowserViewModal
 		bind:open={showBrowser}
-		liveUrl={run.live_url}
 		apiKeyId={run.sjsbrowser_api_key_id}
 		deviceName={deviceLabel(run.sjsbrowser_api_key_id)}
 	/>

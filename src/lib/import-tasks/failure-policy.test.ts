@@ -387,20 +387,21 @@ describe('explainAuthBlock', () => {
 		);
 	});
 
-	it('tells the credentials case to change a password, not to run anything', () => {
+	it('tells the credentials case to check the account, never to update a password', () => {
+		// The server stores no platform password (2026-11-14), so the only
+		// thing to correct is the email address the task signs in with.
 		const e = explainAuthBlock('auth_credentials', ctx);
-		expect(e.message).toContain('password');
-		expect(e.message).toContain('no manual run needed');
+		expect(e.message).toContain('email address on the task page');
+		expect(e.message).not.toMatch(/stored|saved/i);
 	});
 
-	it('tells the passkey case the fix is on the platform, and that the password is fine', () => {
+	it('tells the passkey case the fix is on the platform', () => {
 		// The failure looks exactly like a rejected password from the platform's
 		// side — the form submits empty because the browser's own passkey dialog
-		// took the keystrokes — so this has to say outright that the stored
-		// password is not the problem, or the user changes a working one.
+		// took the keystrokes — so this has to name the dialog as the cause.
 		const e = explainAuthBlock('auth_passkey', ctx);
 		expect(e.message).toContain('passkey');
-		expect(e.message).toContain('the stored one is fine, leave it alone');
+		expect(e.message).toContain('nothing typed reaches the form');
 		expect(e.message).toContain('remove the passkeys registered on your LinkedIn account');
 		// The shared "complete the check" instruction belongs to the challenge
 		// kinds; there is no challenge here, only a dialog to dismiss.

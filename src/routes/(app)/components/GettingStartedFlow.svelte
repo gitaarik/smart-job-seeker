@@ -15,11 +15,12 @@
 
 	interface Props {
 		completeness: ProfileCompleteness;
+		hasDevice: boolean;
 		hasSearchTasks: boolean;
 		hasMatches: boolean;
 	}
 
-	let { completeness, hasSearchTasks, hasMatches }: Props = $props();
+	let { completeness, hasDevice, hasSearchTasks, hasMatches }: Props = $props();
 
 	const enoughSkills = $derived(completeness.skillCount >= MIN_SKILLS_FOR_MATCHING);
 	const profileComplete = $derived(isProfileReadyForMatching(completeness));
@@ -74,15 +75,28 @@
 		},
 		{
 			number: 3,
+			title: 'Connect a device',
+			// Searches run in a browser on the user's own computer, not on our
+			// servers. Without a device step a new account reached "Set up job
+			// searches", saved a task and waited for a run that could never start
+			// (GO-LIVE.md, the 2026-11-13 stranger walk).
+			description:
+				'Job searches run in a browser on your own computer. Install the desktop app (or the browser container) and connect it with a device key.',
+			done: hasDevice,
+			href: '/jobs/import/devices',
+			actionLabel: 'Connect Device'
+		},
+		{
+			number: 4,
 			title: 'Set up job searches',
 			description:
-				'Add search tasks that automatically scrape job boards for new listings matching your criteria.',
+				'Add search tasks that look for new listings on job boards, through your device, matching your criteria.',
 			done: hasSearchTasks,
 			href: '/jobs/import/tasks',
 			actionLabel: 'Add Search'
 		},
 		{
-			number: 4,
+			number: 5,
 			title: 'Get matched!',
 			description:
 				'Once jobs are found, the AI matcher will score them against your profile. Best matches appear here.',

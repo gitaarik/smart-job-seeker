@@ -90,6 +90,8 @@ export const PRIVATE_PROFILE_COLUMNS = [
 	'vat_id',
 	'kvk_number',
 	'business_activities',
+	// What the picks and the matcher read; a page prints `location`.
+	'place',
 	'whatsapp_number',
 	'signal_profile',
 	'telegram_username',
@@ -98,7 +100,6 @@ export const PRIVATE_PROFILE_COLUMNS = [
 	'browser_language',
 	'browser_timezone',
 	'browser_country_code',
-	'browser_profile_id',
 	'ui_preferences',
 	'email_digest_enabled',
 	'email_digest_frequency_days',

@@ -16,13 +16,11 @@ import { platform_credentials } from '$lib/server/db/schema';
 import { listApiKeys } from '$lib/server/auth/api-key';
 import { listSharedWithMe } from '$lib/server/device-shares';
 import { listSharedCredentialsWithMe } from '$lib/server/credential-shares';
-import { decryptCredential } from '$lib/server/auth/crypto';
 
 export interface DiscoveryCredentialOption {
 	/** platform_credentials.id */
 	id: number;
 	username: string | null;
-	security_answer: string | null;
 	shared: boolean;
 	owner_user_id: string | null;
 	owner_label: string | null;
@@ -56,14 +54,13 @@ export async function loadSearchFormProbeFormData(
 			eq(platform_credentials.platform_id, platformId),
 			isNotNull(platform_credentials.username)
 		),
-		columns: { id: true, username: true, security_answer: true },
+		columns: { id: true, username: true },
 		orderBy: asc(platform_credentials.id)
 	});
 	for (const c of raw) {
 		credentials.push({
 			id: c.id,
 			username: c.username,
-			security_answer: decryptCredential(c.security_answer),
 			shared: false,
 			owner_user_id: null,
 			owner_label: null
@@ -77,7 +74,6 @@ export async function loadSearchFormProbeFormData(
 		credentials.push({
 			id: s.platform_credential.id,
 			username: s.platform_credential.username,
-			security_answer: null,
 			shared: true,
 			owner_user_id: s.platform_credential.owner?.id ?? null,
 			owner_label: ownerLabel

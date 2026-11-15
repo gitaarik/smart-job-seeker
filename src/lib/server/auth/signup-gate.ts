@@ -15,6 +15,10 @@ import { APIError } from 'better-auth/api';
 import { verifyTurnstileToken } from '$lib/server/auth/turnstile';
 import { autoApproveSignups, registrationOpen } from '$lib/server/auth/registration';
 import { isDisposableEmail } from '$lib/server/auth/disposable-email';
+import { termsVersion } from '$lib/server/legal/texts';
+
+const TERMS_MESSAGE =
+	'Please accept the terms of service and privacy policy. If you already did, reload the page: they have changed since it loaded.';
 
 const DISPOSABLE_MESSAGE =
 	"Please use an address you'll keep: disposable email addresses can't be used here.";
@@ -70,6 +74,16 @@ export async function guardSignup(ctx: SignupGateContext): Promise<void> {
 		});
 	}
 
+	// The form sends the terms version it showed, as a header for the same
+	// reason as the Turnstile token below. Anything but the current one is
+	// refused, so an account cannot start without having agreed to the terms
+	// that apply, and `signupTermsFields` can record exactly what was agreed
+	// to. An instance that publishes no terms asks for none (legal/texts.ts).
+	const terms = termsVersion();
+	if (terms && ctx.headers?.get('x-terms-version') !== terms) {
+		throw new APIError('BAD_REQUEST', { message: TERMS_MESSAGE });
+	}
+
 	// Before Turnstile, since it costs nothing and Turnstile costs a call.
 	if (typeof ctx.body?.email === 'string' && isDisposableEmail(ctx.body.email)) {
 		throw new APIError('BAD_REQUEST', { message: DISPOSABLE_MESSAGE });
@@ -116,4 +130,20 @@ export function guardEmailChange(ctx: SignupGateContext): void {
 export function approvesOnSignup(ctx: { path?: string; request?: Request } | null): boolean {
 	if (!ctx?.request || ctx.path !== '/sign-up/email') return false;
 	return autoApproveSignups();
+}
+
+/**
+ * The terms columns a new account starts with: the version `guardSignup`
+ * already held to the current one, stamped now. Empty for in-process
+ * callers, which never saw a form; an invite or a demo account records
+ * nothing rather than an acceptance nobody gave. Called from the user-create
+ * database hook.
+ */
+export function signupTermsFields(
+	ctx: { path?: string; request?: Request; headers?: Headers | null } | null
+): { terms_version: string; terms_accepted_at: Date } | Record<string, never> {
+	if (!ctx?.request || ctx.path !== '/sign-up/email') return {};
+	const terms = termsVersion();
+	if (!terms || ctx.headers?.get('x-terms-version') !== terms) return {};
+	return { terms_version: terms, terms_accepted_at: new Date() };
 }

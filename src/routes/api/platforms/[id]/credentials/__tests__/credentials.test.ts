@@ -73,11 +73,6 @@ vi.mock('$lib/server/db/schema', () => ({
 	}
 }));
 
-vi.mock('$lib/server/auth/crypto', () => ({
-	encryptCredential: (v: unknown) => v,
-	decryptCredential: (v: unknown) => v
-}));
-
 import { DELETE, PUT } from '../+server';
 
 function createPutEvent(body: unknown, user?: App.Locals['user']) {
@@ -147,7 +142,7 @@ describe('PUT /api/platforms/[id]/credentials', () => {
 		});
 	});
 
-	it('creates new credentials when none exist', async () => {
+	it('creates a new account row when none exists', async () => {
 		mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
 		mockPlatformsFindFirst.mockResolvedValueOnce({ id: 5 });
 		mockPlatformCredentialsFindFirst.mockResolvedValueOnce(null);
@@ -155,8 +150,7 @@ describe('PUT /api/platforms/[id]/credentials', () => {
 		const response = await PUT(
 			createPutEvent({
 				profileId: 1,
-				username: 'user@test.com',
-				password: 'pass123'
+				username: 'user@test.com'
 			})
 		);
 		const data = await response.json();
@@ -166,13 +160,34 @@ describe('PUT /api/platforms/[id]/credentials', () => {
 			expect.objectContaining({
 				user_id: 'user-1',
 				platform_id: 5,
-				username: 'user@test.com',
-				password: 'pass123'
+				username: 'user@test.com'
 			})
 		);
 	});
 
-	it('updates existing credentials when credentialId given', async () => {
+	// The server stopped storing platform passwords on 2026-11-14. An old
+	// client (or a hostile one) that still sends a password or security answer
+	// must find neither in the row that gets written.
+	it('never stores a password or security answer, even when sent', async () => {
+		mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
+		mockPlatformsFindFirst.mockResolvedValueOnce({ id: 5 });
+		mockPlatformCredentialsFindFirst.mockResolvedValueOnce(null);
+
+		await PUT(
+			createPutEvent({
+				profileId: 1,
+				username: 'user@test.com',
+				password: 'pass123',
+				security_answer: 'maiden name'
+			})
+		);
+		expect(mockInsertValues).toHaveBeenCalledTimes(1);
+		const written = mockInsertValues.mock.calls[0][0];
+		expect(written).not.toHaveProperty('password');
+		expect(written).not.toHaveProperty('security_answer');
+	});
+
+	it('updates the username when credentialId given', async () => {
 		mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
 		mockPlatformsFindFirst.mockResolvedValueOnce({ id: 5 });
 		mockPlatformCredentialsFindFirst.mockResolvedValueOnce({ id: 10 });
@@ -181,19 +196,17 @@ describe('PUT /api/platforms/[id]/credentials', () => {
 			createPutEvent({
 				profileId: 1,
 				credentialId: 10,
-				username: 'new@test.com',
-				password: 'newpass'
+				username: 'new@test.com'
 			})
 		);
 		const data = await response.json();
 		expect(data.success).toBe(true);
 		expect(mockUpdateFn).toHaveBeenCalled();
-		// Credential update sets fields and bumps date_updated; the stale
+		// The update sets the username and bumps date_updated; the stale
 		// login_error is cleared via a separate platform_profiles update.
 		expect(mockUpdateSet).toHaveBeenCalledWith(
 			expect.objectContaining({
-				username: 'new@test.com',
-				password: 'newpass'
+				username: 'new@test.com'
 			})
 		);
 		expect(mockUpdateSet).toHaveBeenCalledWith(expect.objectContaining({ login_error: null }));
@@ -209,7 +222,7 @@ describe('PUT /api/platforms/[id]/credentials', () => {
 				createPutEvent({
 					profileId: 1,
 					credentialId: 999,
-					password: 'x'
+					username: 'x'
 				})
 			)
 		).rejects.toMatchObject({ status: 404 });

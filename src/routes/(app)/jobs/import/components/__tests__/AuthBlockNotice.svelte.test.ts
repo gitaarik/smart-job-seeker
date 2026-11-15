@@ -34,11 +34,13 @@ describe('AuthBlockNotice', () => {
 	});
 
 	test('gives the credentials case its own advice', () => {
-		// A rejected password is fixed by editing stored credentials, not by
-		// running the task and completing a check in a browser. Sending someone
-		// to the wrong remedy is worse than saying nothing.
+		// A rejected account is fixed by checking the email address on the task
+		// (or signing in once), not by running the task and completing a check.
+		// No password is stored (2026-11-14), so the advice must not point at
+		// one. Sending someone to the wrong remedy is worse than saying nothing.
 		render(AuthBlockNotice, { ...BASE, kind: 'auth_credentials' });
-		expect(screen.getByText(/stored credentials/)).toBeTruthy();
+		expect(screen.getByText(/email address on the task page/)).toBeTruthy();
+		expect(screen.queryByText(/stored/)).toBeNull();
 		expect(screen.queryByText(/Run now/)).toBeNull();
 	});
 

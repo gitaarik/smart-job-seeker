@@ -1,0 +1,2 @@
+ALTER TABLE "ats_postings" ADD COLUMN "region_countries" text[] DEFAULT '{}' NOT NULL;--> statement-breakpoint
+CREATE INDEX "ats_postings_region_countries_idx" ON "ats_postings" USING gin ("region_countries");
