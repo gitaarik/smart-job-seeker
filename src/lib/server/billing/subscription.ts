@@ -52,6 +52,16 @@ export async function getOrCreateStripeCustomer(
 /** Cloud re-reads a Stripe subscription; OSS has none. */
 export async function syncSubscriptionFromStripe(_subscriptionId: string): Promise<void> {}
 
+/**
+ * Cloud ends the account's Stripe subscriptions before it is deleted, and
+ * throws when it cannot; OSS has none to end.
+ */
+export async function cancelSubscriptionsForAccount(
+	_userId: string
+): Promise<{ canceled: number }> {
+	return { canceled: 0 };
+}
+
 export type PlanChangeResult =
 	| { kind: 'changed'; plan: PlanId; pending: boolean }
 	| { kind: 'same_plan' }

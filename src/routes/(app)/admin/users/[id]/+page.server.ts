@@ -11,7 +11,11 @@ import {
 	users as usersTable,
 	verifications
 } from '$lib/server/db/schema';
-import { cancelAccountDeletion, requestAccountDeletion } from '$lib/server/account/delete';
+import {
+	cancelAccountDeletion,
+	requestAccountDeletion,
+	SubscriptionCancelError
+} from '$lib/server/account/delete';
 import { suspendAccount, unsuspendAccount } from '$lib/server/account/suspend';
 import { sendEmail } from '$lib/server/email';
 import { getEnv } from '$lib/tools/get-env';
@@ -185,7 +189,16 @@ export const actions: Actions = {
 		if (target.deletion_requested_at) {
 			return fail(400, { error: 'Deletion already pending for this account' });
 		}
-		const { scheduledFor } = await requestAccountDeletion(params.id, { by: 'admin' });
+		let scheduledFor: Date;
+		try {
+			({ scheduledFor } = await requestAccountDeletion(params.id, { by: 'admin' }));
+		} catch (err) {
+			if (!(err instanceof SubscriptionCancelError)) throw err;
+			console.error('[account-delete] subscription cancel failed', err.cause);
+			return fail(503, {
+				error: 'Could not cancel the Stripe subscription, so nothing was scheduled. Try again.'
+			});
+		}
 		return {
 			success: true,
 			message: `Deletion scheduled for ${scheduledFor.toISOString().slice(0, 10)}.`

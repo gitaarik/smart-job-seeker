@@ -3,7 +3,11 @@ import { fail, redirect } from '@sveltejs/kit';
 import { dbDirect as db } from '$lib/server/db';
 import { count, eq } from 'drizzle-orm';
 import { profiles } from '$lib/server/db/schema';
-import { DELETION_GRACE_DAYS, requestAccountDeletion } from '$lib/server/account/delete';
+import {
+	DELETION_GRACE_DAYS,
+	requestAccountDeletion,
+	SubscriptionCancelError
+} from '$lib/server/account/delete';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user;
@@ -40,7 +44,16 @@ export const actions: Actions = {
 			return fail(400, { error: 'Email address does not match' });
 		}
 
-		await requestAccountDeletion(user.id, { by: 'user' });
+		try {
+			await requestAccountDeletion(user.id, { by: 'user' });
+		} catch (err) {
+			if (!(err instanceof SubscriptionCancelError)) throw err;
+			console.error('[account-delete] subscription cancel failed', err.cause);
+			return fail(503, {
+				error:
+					'We could not cancel your subscription just now, so your account has not been deleted. Please try again in a few minutes.'
+			});
+		}
 
 		// The request revoked every session, this one included, so there is
 		// nothing to redirect back into.

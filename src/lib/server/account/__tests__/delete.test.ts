@@ -14,6 +14,11 @@
  * 3. **The billing carve-out is stamped before the delete**, because the FK
  *    nulls `user_id` on the way out and the link is unrecoverable after.
  *
+ * A fourth was missing altogether until 2026-11-15: **the paid subscription is
+ * ended before anything else**, at the request and again at the erasure, and a
+ * failure to end it stops both. Otherwise the card of a deleted account keeps
+ * being charged, with the row that linked the two gone.
+ *
  * The DB is mocked, so this proves the code *issues* the right operations in
  * the right order. It cannot prove Postgres cascades as declared.
  */
@@ -104,6 +109,16 @@ vi.mock('$lib/server/db', () => {
 	};
 });
 
+let cancelFails = false;
+vi.mock('$lib/server/billing/subscription', () => ({
+	cancelSubscriptionsForAccount: (userId: string) => {
+		marks.push(`cancelSubscriptions:${userId}`);
+		return cancelFails
+			? Promise.reject(new Error('stripe is down'))
+			: Promise.resolve({ canceled: 1 });
+	}
+}));
+
 vi.mock('$lib/server/profile/delete', () => ({
 	deleteProfile: (id: number) => {
 		marks.push(`deleteProfile:${id}`);
@@ -128,12 +143,19 @@ vi.mock('$lib/server/uploads/reap', () => ({
 	}
 }));
 
-const { accountRef, eraseAccount, reapDeletedAccounts, DELETION_GRACE_DAYS } =
-	await import('../delete');
+const {
+	accountRef,
+	eraseAccount,
+	reapDeletedAccounts,
+	requestAccountDeletion,
+	SubscriptionCancelError,
+	DELETION_GRACE_DAYS
+} = await import('../delete');
 
 beforeEach(() => {
 	ops.length = 0;
 	marks.length = 0;
+	cancelFails = false;
 	usersRow = { id: 'u1', deletion_requested_at: new Date('2026-07-01T00:00:00Z') };
 	ownedProfiles = [{ id: 11 }, { id: 12 }];
 	dueUsers = [];
@@ -143,7 +165,34 @@ const tablesTouched = (kind: Op['kind']) => ops.filter((o) => o.kind === kind).m
 const indexOfOp = (kind: Op['kind'], table: string) =>
 	ops.findIndex((o) => o.kind === kind && o.table === table);
 
+describe('requestAccountDeletion', () => {
+	it('ends the subscription before it revokes anything', async () => {
+		await requestAccountDeletion('u1');
+		expect(marks).toEqual(['cancelSubscriptions:u1']);
+		expect(ops[0]).toMatchObject({ kind: 'update', table: 'users' });
+	});
+
+	it('changes nothing when the subscription cannot be ended', async () => {
+		cancelFails = true;
+		await expect(requestAccountDeletion('u1')).rejects.toBeInstanceOf(SubscriptionCancelError);
+		expect(ops).toEqual([]);
+	});
+});
+
 describe('eraseAccount', () => {
+	it('ends the subscription before any write', async () => {
+		await eraseAccount('u1');
+		expect(marks.indexOf('cancelSubscriptions:u1')).toBeGreaterThan(-1);
+		expect(marks.indexOf('cancelSubscriptions:u1')).toBeLessThan(marks.indexOf('deleteProfile:11'));
+	});
+
+	it('erases nothing when the subscription cannot be ended', async () => {
+		cancelFails = true;
+		await expect(eraseAccount('u1')).rejects.toThrow(/stripe is down/);
+		expect(ops).toEqual([]);
+		expect(marks).not.toContain('deleteProfile:11');
+	});
+
 	it('reads the file references before deleting anything', async () => {
 		await eraseAccount('u1');
 		// `collect` is the first thing that happens; every write follows it.
