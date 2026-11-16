@@ -5,6 +5,32 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.49.0] - 2026-11-16
+
+28 commits since v0.48.0.
+
+### Added
+
+- The AI assistant and the analyses it writes now say they were produced by AI.
+- Desktop installer links for each OS, with a first-launch walkthrough and a guide note on the first-launch warning.
+- Terms and privacy policy linked from Account Settings and every public page, with a drafted cookie section.
+- Optional analytics consent: analytics is linked to your account only if you opt in.
+- Match history is now kept.
+- Health endpoint and a worker watchdog that alerts when the worker stops responding.
+
+### Changed
+
+- The withdrawal notice appears under the buy buttons instead of as a checkbox.
+- Scraped job postings expire automatically each day, and expired sessions are pruned.
+- Auth and API rate limits are kept in Redis.
+- Dependency updates, including Stripe 23, Langfuse 6, SvelteKit 2.70, and routine minor bumps.
+
+### Fixed
+
+- The assistant retries a tool call when the round forbids tool calls.
+- Accepting terms refuses an admin who is impersonating another user.
+- The terms link in the withdrawal notice resolves correctly.
+
 ## [0.48.0] - 2026-11-15
 
 39 commits since v0.47.0.
