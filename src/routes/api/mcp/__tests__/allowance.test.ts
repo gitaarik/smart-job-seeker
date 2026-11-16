@@ -39,7 +39,7 @@ vi.mock('$lib/server/mcp/tools', () => ({
 }));
 
 vi.mock('$lib/server/middleware/rate-limit', () => ({
-	mcpRateLimiter: { tryConsumeKey: () => true, retryAfterSeconds: () => 1 },
+	mcpRateLimiter: { consumeKey: async () => true, retryAfterSeconds: () => 1 },
 	createRateLimitResponse: vi.fn()
 }));
 

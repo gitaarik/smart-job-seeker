@@ -1,7 +1,15 @@
 /**
  * Rate Limiting Middleware
  * Token bucket algorithm for API rate limiting
+ *
+ * Buckets live in Redis (`consumeTokenBucket`), so a limit survives a deploy
+ * and holds across app processes. When Redis cannot answer, the same bucket is
+ * kept in this process's memory instead, which is what this file always did.
+ * Call `consume` / `consumeKey`; the `tryConsume*` methods are that in-memory
+ * fallback on its own.
  */
+
+import { consumeTokenBucket } from './redis-rate-limit';
 
 interface TokenBucket {
 	tokens: number;
@@ -9,6 +17,8 @@ interface TokenBucket {
 }
 
 interface RateLimitOptions {
+	/** Redis key namespace: `ratelimit:<name>:<key>`. */
+	name: string;
 	maxTokens?: number;
 	refillRate?: number; // tokens per second
 	identifier?: (request: Request) => string;
@@ -27,11 +37,13 @@ const SWEEP_THRESHOLD = 5000;
 
 class RateLimiter {
 	private buckets = new Map<string, TokenBucket>();
+	private name: string;
 	private maxTokens: number;
 	private refillRate: number;
 	private identifier: (request: Request) => string;
 
-	constructor(options: RateLimitOptions = {}) {
+	constructor(options: RateLimitOptions) {
+		this.name = options.name;
 		this.maxTokens = options.maxTokens || 10;
 		this.refillRate = options.refillRate || 1; // 1 token per second
 		this.identifier = options.identifier || ((req) => this.getClientIP(req) || 'unknown');
@@ -67,8 +79,27 @@ class RateLimiter {
 		bucket.lastRefill = now;
 	}
 
+	/** Take a token for this request's client, in Redis when it can answer. */
+	consume(request: Request, tokens: number = 1): Promise<boolean> {
+		return this.consumeKey(this.identifier(request), tokens);
+	}
+
 	/**
-	 * Try to consume a token from the bucket
+	 * Take a token for an explicit key (see `tryConsumeKey` on why a resolved
+	 * user or key id beats the request's IP), in Redis when it can answer.
+	 */
+	async consumeKey(key: string, tokens: number = 1): Promise<boolean> {
+		const shared = await consumeTokenBucket(
+			`${this.name}:${key}`,
+			this.maxTokens,
+			this.refillRate,
+			tokens
+		);
+		return shared ?? this.tryConsumeKey(key, tokens);
+	}
+
+	/**
+	 * Try to consume a token from the in-memory bucket
 	 */
 	tryConsume(request: Request, tokens: number = 1): boolean {
 		return this.tryConsumeKey(this.identifier(request), tokens);
@@ -158,11 +189,13 @@ class RateLimiter {
 
 // Create rate limiter instances for different endpoints
 export const webhookRateLimiter = new RateLimiter({
+	name: 'webhook',
 	maxTokens: 20, // 20 requests
 	refillRate: 0.5 // 1 request every 2 seconds
 });
 
 export const apiRateLimiter = new RateLimiter({
+	name: 'api',
 	maxTokens: 60, // 60 requests
 	refillRate: 1 // 1 request per second
 });
@@ -185,6 +218,7 @@ export const apiRateLimiter = new RateLimiter({
  * anyone can read the output".
  */
 export const aiRateLimiter = new RateLimiter({
+	name: 'ai',
 	maxTokens: 15, // burst
 	refillRate: 0.2 // 1 every 5s → 12/min sustained
 });
@@ -202,6 +236,7 @@ export const aiRateLimiter = new RateLimiter({
  * refusing them.
  */
 export const mcpRateLimiter = new RateLimiter({
+	name: 'mcp',
 	maxTokens: 30, // burst — an agent reading every section at once
 	refillRate: 1 // 60/min sustained
 });

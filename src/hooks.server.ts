@@ -189,7 +189,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		// remembering. Reads are exempt — opening the assistant fetches a
 		// transcript, and that must not spend from the bucket its next turn needs.
 		if (pathname.startsWith('/api/ai/') && event.request.method !== 'GET') {
-			if (!aiRateLimiter.tryConsumeKey(event.locals.user.id)) {
+			if (!(await aiRateLimiter.consumeKey(event.locals.user.id))) {
 				return createRateLimitResponse(aiRateLimiter.retryAfterSeconds());
 			}
 		}

@@ -177,7 +177,7 @@ export const POST: RequestHandler = async ({ request, url }) => {
 
 	// Keyed on the credential rather than the address: an agent and its user
 	// share an IP, and one runaway client must not starve the others on it.
-	if (!mcpRateLimiter.tryConsumeKey(`mcp:${key.keyId}`)) {
+	if (!(await mcpRateLimiter.consumeKey(`mcp:${key.keyId}`))) {
 		return createRateLimitResponse(mcpRateLimiter.retryAfterSeconds());
 	}
 

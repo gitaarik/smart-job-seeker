@@ -72,7 +72,7 @@ export const POST: RequestHandler = async (event) => {
 		}
 
 		// Rate limiting
-		if (!webhookRateLimiter.tryConsume(event.request)) {
+		if (!(await webhookRateLimiter.consume(event.request))) {
 			console.warn('[email/inbound] Rate limit exceeded');
 			return createRateLimitResponse();
 		}

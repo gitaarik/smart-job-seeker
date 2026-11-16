@@ -22,7 +22,7 @@ vi.mock('$lib/server/applications/record-files', () => ({
 }));
 
 vi.mock('$lib/server/middleware/rate-limit', () => ({
-	mcpRateLimiter: { tryConsumeKey: () => true, retryAfterSeconds: () => 1 },
+	mcpRateLimiter: { consumeKey: async () => true, retryAfterSeconds: () => 1 },
 	createRateLimitResponse: vi.fn()
 }));
 

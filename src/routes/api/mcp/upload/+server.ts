@@ -45,7 +45,7 @@ export const PUT: RequestHandler = async ({ request, url }) => {
 	}
 
 	// Before the lookup, so a link replayed in a loop costs a counter, not a query.
-	if (!mcpRateLimiter.tryConsumeKey(`mcp:${grant.keyId}`)) {
+	if (!(await mcpRateLimiter.consumeKey(`mcp:${grant.keyId}`))) {
 		return createRateLimitResponse(mcpRateLimiter.retryAfterSeconds());
 	}
 

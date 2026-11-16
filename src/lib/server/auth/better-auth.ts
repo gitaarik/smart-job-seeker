@@ -5,6 +5,7 @@
  */
 
 import { betterAuth } from 'better-auth';
+import { redisAuthRateLimitStorage } from '$lib/server/middleware/redis-rate-limit';
 import { createAuthMiddleware } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '$lib/server/db';
@@ -65,10 +66,10 @@ export const auth = betterAuth({
 	 * 10s is fine for session/token traffic but far too loose for the endpoints
 	 * that accept a password or send mail, so those get their own buckets.
 	 *
-	 * Storage is in-process memory, so counters reset on deploy and are not
-	 * shared between app instances — acceptable while production runs a single
-	 * app node, and a thing to revisit alongside the other in-memory state when
-	 * it does not.
+	 * Counters live in Redis (`redisAuthRateLimitStorage`), so they survive a
+	 * deploy and are shared between app processes. A Redis that cannot answer
+	 * falls back to a per-process window, never to no limit and never to a
+	 * refused sign-in.
 	 */
 	/**
 	 * Signup is gated on the endpoint, not the page, and in-process callers are
@@ -83,6 +84,7 @@ export const auth = betterAuth({
 	},
 
 	rateLimit: {
+		customStorage: redisAuthRateLimitStorage,
 		customRules: {
 			'/sign-in/email': { window: 60, max: 10 },
 			'/sign-up/email': { window: 60, max: 5 },
