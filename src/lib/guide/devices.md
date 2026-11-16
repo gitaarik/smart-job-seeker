@@ -27,7 +27,9 @@ its live status. If it's offline, ask the person who invited you.
 Two ways, you only need one:
 
 - **Desktop app** — quickest. Download it, pick the server, paste a device
-  key, done. Good for scraping while your computer is on.
+  key, done. Good for scraping while your computer is on. The app is not
+  code-signed yet, so Windows and macOS warn the first time you open it; the
+  Devices page shows how to get past that for your system.
 - **Docker on a NAS / home server** — always-on, and the right choice if you
   want to **share with others** (they can only use it while it's running).
 

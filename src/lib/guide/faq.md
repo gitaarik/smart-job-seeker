@@ -14,6 +14,14 @@ for boards that need signing in, the first run stops at the sign-in page so you
 can log in once. See
 [Getting the best results](/guide/getting-the-best-results).
 
+## Windows or macOS won't open the desktop app
+
+The app is not code-signed yet, so both warn the first time. On Windows, at
+**"Windows protected your PC"** click **More info**, then **Run anyway**. On a
+Mac, open the app once and click **Done**, then go to **System Settings →
+Privacy & Security**, scroll down and click **Open Anyway**. The
+[Devices page](/jobs/import/devices) shows the same steps for your system.
+
 ## Why isn't my device connecting?
 
 - Check the container or desktop app is actually **running**.

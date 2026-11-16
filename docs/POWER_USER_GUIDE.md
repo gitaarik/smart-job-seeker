@@ -38,10 +38,13 @@ app.
 
 ### A. Desktop app — easiest, good for "while my laptop is on"
 
-Download the installer for your OS from
+The Devices page (**Job Import → My Devices**) offers the installer for your
+OS, or take it from
 [sjs-desktop releases](https://github.com/gitaarik/sjs-desktop/releases/latest)
-(`.dmg` / `.exe` / `.deb` / `.AppImage`). A compatible browser is downloaded
-automatically on first launch. You'll paste a device key (next section) and pick
+(`.dmg` / `.exe` / `.deb` / `.AppImage`). The installers are not code-signed
+yet: Windows SmartScreen wants **More info → Run anyway**, and macOS wants
+**System Settings → Privacy & Security → Open Anyway** on the first launch. A
+compatible browser is downloaded automatically on first launch. You'll paste a device key (next section) and pick
 your server.
 
 Best when: you just want to scrape for yourself and don't need 24/7 uptime.
