@@ -167,7 +167,8 @@
 	/** The stored document, through the route that checks who is asking. */
 	function fileHref(certificateId: number, inline: boolean): ResolvedPathname {
 		const base = resolve('/api/certificates/[id]/file', { id: String(certificateId) });
-		return (inline ? `${base}?inline=1` : base) as ResolvedPathname;
+		// String(base): see CertificateFile.svelte on the union this would build.
+		return (inline ? `${String(base)}?inline=1` : base) as ResolvedPathname;
 	}
 
 	function pickNewFile(event: Event) {

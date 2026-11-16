@@ -210,7 +210,8 @@
 			id: String(profileId),
 			docId: String(docId)
 		});
-		return (inline ? `${base}?inline=1` : base) as ResolvedPathname;
+		// String(base): see CertificateFile.svelte on the union this would build.
+		return (inline ? `${String(base)}?inline=1` : base) as ResolvedPathname;
 	}
 
 	function formatSize(bytes: number): string {

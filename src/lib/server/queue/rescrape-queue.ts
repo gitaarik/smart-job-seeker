@@ -36,7 +36,7 @@ export interface RescrapeJobResult {
 // Lazy singleton — avoids Redis connection at import/build time
 let _rescrapeQueue: Queue<RescrapeJobData, RescrapeJobResult> | null = null;
 
-function getRescrapeQueue() {
+export function getRescrapeQueue() {
 	return (_rescrapeQueue ??= new Queue('rescrape', {
 		connection: redisConnection,
 		defaultJobOptions: {

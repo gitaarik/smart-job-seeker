@@ -36,7 +36,10 @@ export const PUBLIC_API_ROUTES = [
 	// A Bearer DEBUG_API_KEY; 503 when none is configured.
 	'/api/debug',
 	// Stripe's signature, checked by cloud's billing overlay; the OSS stub is a 404.
-	'/api/webhooks/stripe'
+	'/api/webhooks/stripe',
+	// Uptime monitors. No caller to authenticate: it answers three booleans
+	// (database, redis, worker) and nothing else, see its handler.
+	'/api/health'
 ] as const;
 
 export function isPublicApiRoute(pathname: string): boolean {

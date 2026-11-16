@@ -10,7 +10,8 @@ describe('isPublicApiRoute', () => {
 		'/api/webhooks/stripe',
 		'/api/mcp',
 		'/api/mcp/upload',
-		'/api/auth/sign-in/email'
+		'/api/auth/sign-in/email',
+		'/api/health'
 	])('lets %s through to its own check', (pathname) => {
 		expect(isPublicApiRoute(pathname)).toBe(true);
 	});
@@ -23,7 +24,8 @@ describe('isPublicApiRoute', () => {
 		'/api/debugger',
 		'/api/webhooks/other',
 		'/api/jobs/import/suggest',
-		'/api/authorize'
+		'/api/authorize',
+		'/api/healthz'
 	])('gates %s, which only shares a prefix with a public route', (pathname) => {
 		expect(isPublicApiRoute(pathname)).toBe(false);
 	});

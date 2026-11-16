@@ -42,7 +42,10 @@
 	const base = $derived(resolve('/api/certificates/[id]/file', { id: String(certificateId) }));
 	// Images open in a tab; a PDF downloads, which is all the route serves it as.
 	const isImage = $derived(!!file?.type?.startsWith('image/'));
-	const href = $derived((isImage ? `${base}?inline=1` : base) as ResolvedPathname);
+	// String(base): a template literal over the ResolvedPathname union expands
+	// to one member per route, which tipped past TypeScript's union limit the
+	// day /api/health was added.
+	const href = $derived((isImage ? `${String(base)}?inline=1` : base) as ResolvedPathname);
 
 	/** The server's own words for a refusal, where it gave some. */
 	async function failure(response: Response, fallback: string): Promise<string> {
