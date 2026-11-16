@@ -1,4 +1,5 @@
 <script lang="ts">
+	import AiLabel from '$lib/components/AiLabel.svelte';
 	import ExternalLink from '$lib/components/ExternalLink.svelte';
 	import type { ActionData, PageData } from './$types';
 	import { untrack } from 'svelte';
@@ -951,7 +952,10 @@
 		<div class="space-y-6">
 			<!-- Match Analysis Card -->
 			<Card padding="lg">
-				<h2 class="mb-4 text-lg font-semibold text-[var(--dash-text)]">Match Analysis</h2>
+				<h2 class="mb-4 flex items-center gap-2 text-lg font-semibold text-[var(--dash-text)]">
+					Match Analysis
+					{#if match && match.skip_reason !== 'filtered_out'}<AiLabel />{/if}
+				</h2>
 
 				{#if match && match.skip_reason === 'filtered_out'}
 					<!-- Filtered out - didn't pass eligibility -->

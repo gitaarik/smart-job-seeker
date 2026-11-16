@@ -109,7 +109,7 @@
 		<p class="flex flex-wrap items-center gap-1.5 pt-1 text-xs text-[var(--dash-text-muted)]">
 			<FontAwesomeIcon icon={faWandMagicSparkles} class="h-3 w-3" />
 			<span>
-				Read from your
+				Read by AI from your
 				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a href={activityHref} class="underline transition-colors hover:text-[var(--dash-primary)]"
 					>activity entries</a

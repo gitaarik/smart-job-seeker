@@ -168,7 +168,7 @@
 			<p class="flex flex-wrap items-center gap-1.5 text-xs text-[var(--dash-text-muted)]">
 				<FontAwesomeIcon icon={faWandMagicSparkles} class="h-3 w-3" />
 				<span>
-					Picked out of your
+					Picked out by AI from your
 					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
 						href={activityHref}

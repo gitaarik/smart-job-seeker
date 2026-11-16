@@ -535,7 +535,7 @@
 					<h3 class="text-sm font-semibold text-[var(--dash-text)]">History</h3>
 				{:else}
 					<FontAwesomeIcon icon={faComments} class="h-4 w-4 text-[var(--dash-primary)]" />
-					<h3 class="text-sm font-semibold text-[var(--dash-text)]">Your assistant</h3>
+					<h3 class="text-sm font-semibold text-[var(--dash-text)]">Your AI assistant</h3>
 				{/if}
 			</div>
 			<div class="flex shrink-0 items-center gap-1">
@@ -720,8 +720,11 @@
 				</p>
 			{/if}
 
-			<!-- Input -->
-			<div class="flex shrink-0 items-end gap-2 border-t border-[var(--dash-border)] px-3 py-3">
+			<!-- Input. The note under it is the AI Act Art. 50 disclosure: the
+			     person is told, every time, that the other side is an AI. -->
+			<div
+				class="flex shrink-0 items-end gap-2 border-t border-[var(--dash-border)] px-3 pt-3 pb-1"
+			>
 				<AutoGrowTextarea
 					bind:value={input}
 					onkeydown={onKeydown}
@@ -743,6 +746,9 @@
 					<FontAwesomeIcon icon={faPaperPlane} class="h-3.5 w-3.5" />
 				</button>
 			</div>
+			<p class="shrink-0 px-4 pb-2 text-[11px] text-[var(--dash-text-muted)]">
+				You are talking to an AI. Its answers can be wrong, so check them before you rely on them.
+			</p>
 		{/if}
 	</div>
 {/if}
