@@ -110,6 +110,11 @@ async function exported(): Promise<ReadableSpan[]> {
 const typeOf = (span: ReadableSpan) => span.attributes['langfuse.observation.type'];
 const generations = (spans: ReadableSpan[]) => spans.filter((s) => typeOf(s) === 'generation');
 
+/** A metadata value as Langfuse 6 writes it on the span: JSON-encoded, strings included. */
+function metadata(span: { attributes: Record<string, unknown> }, key: string): unknown {
+	return JSON.parse(String(span.attributes[`langfuse.observation.metadata.${key}`]));
+}
+
 describe('the LLM call', () => {
 	it('shows a forced fallback as two generations, the failed one at ERROR', async () => {
 		mockGeminiInvoke.mockRejectedValueOnce(new Error('[503] The model is overloaded.'));
@@ -125,7 +130,7 @@ describe('the LLM call', () => {
 		const spans = await exported();
 		const call = spans.find((s) => s.name === 'write_cover_letter' && typeOf(s) === 'span');
 		expect(call, 'the call is a span named by its prompt key').toBeDefined();
-		expect(call!.attributes['langfuse.observation.metadata.cache']).toBe('miss');
+		expect(metadata(call!, 'cache')).toBe('miss');
 		// Called outside any trace, so the call is the root, showing what it was
 		// asked and what came back.
 		expect(call!.attributes['langfuse.observation.input']).toBe('a letter');
@@ -163,7 +168,7 @@ describe('the LLM call', () => {
 		const spans = await exported();
 		expect(spans).toHaveLength(1);
 		expect(spans[0].name).toBe('verification_email');
-		expect(spans[0].attributes['langfuse.observation.metadata.cache']).toBe('hit');
+		expect(metadata(spans[0], 'cache')).toBe('hit');
 		expect(mockGroqInvoke).toHaveBeenCalledTimes(1);
 	});
 
@@ -183,7 +188,7 @@ describe('the LLM call', () => {
 
 		const spans = await exported();
 		const call = spans.find((s) => typeOf(s) === 'span');
-		expect(call!.attributes['langfuse.observation.metadata.cache']).toBe('off');
+		expect(metadata(call!, 'cache')).toBe('off');
 		expect(generations(spans)).toHaveLength(1);
 		expect(mockGroqInvoke).toHaveBeenCalledTimes(2);
 	});
@@ -258,7 +263,7 @@ describe('a generation with tools', () => {
 		const spans = await exported();
 		const call = spans.find((s) => typeOf(s) === 'span');
 		// Never consulted: a round's answer depends on what the tools returned.
-		expect(call!.attributes['langfuse.observation.metadata.cache']).toBe('off');
+		expect(metadata(call!, 'cache')).toBe('off');
 
 		const [generation] = generations(spans);
 		expect(generation.attributes['langfuse.observation.metadata.tools']).toBe(
@@ -300,9 +305,7 @@ describe("a generation's prompt version", () => {
 		expect(mockResolvePrompt).toHaveBeenCalledWith(letter());
 		expect(generation.attributes['langfuse.observation.prompt.name']).toBe('write_cover_letter');
 		expect(generation.attributes['langfuse.observation.prompt.version']).toBe(3);
-		expect(generation.attributes['langfuse.observation.metadata.prompt_fingerprint']).toBe(
-			letter().fingerprint
-		);
+		expect(metadata(generation, 'prompt_fingerprint')).toBe(letter().fingerprint);
 	});
 
 	it('ends unlinked, with its fingerprint, when the version is not known in time', async () => {
@@ -313,9 +316,7 @@ describe("a generation's prompt version", () => {
 
 		const [generation] = generations(await exported());
 		expect(generation.attributes['langfuse.observation.prompt.name']).toBeUndefined();
-		expect(generation.attributes['langfuse.observation.metadata.prompt_fingerprint']).toBe(
-			letter().fingerprint
-		);
+		expect(metadata(generation, 'prompt_fingerprint')).toBe(letter().fingerprint);
 	});
 
 	it('looks up the version a replayed row ran, not the template as it is now', async () => {
