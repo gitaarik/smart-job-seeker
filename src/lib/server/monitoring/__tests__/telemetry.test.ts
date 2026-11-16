@@ -363,8 +363,11 @@ describe('steps and what a row keeps', () => {
 		// Recorded as each started, so a step that never returned still has them.
 		expect(find('session')!.attributes['langfuse.observation.input']).toBe('{"goal":"most items"}');
 		expect(find('ask')!.attributes['langfuse.observation.input']).toBe('the question');
-		expect(find('ask')!.attributes['langfuse.observation.metadata.langgraph_node']).toBe('ask');
-		expect(find('ask')!.attributes['langfuse.observation.metadata.langgraph_step']).toBe('4');
+		// Metadata values are JSON-encoded on the span since @langfuse/otel 6.
+		const metadata = (key: string) =>
+			JSON.parse(String(find('ask')!.attributes[`langfuse.observation.metadata.${key}`]));
+		expect(metadata('langgraph_node')).toBe('ask');
+		expect(metadata('langgraph_step')).toBe(4);
 	});
 
 	it('still records any other throw at ERROR when a step knows its stops', async () => {

@@ -39,5 +39,6 @@ it('traces, nests and names its process, and leaves Sentry off despite a DSN', a
 	expect(root, 'the root was exported').toBeDefined();
 	expect(child?.parentSpanContext?.spanId).toBe(root!.spanContext().spanId);
 	expect(root!.attributes['session.id']).toBe('scrape-run:7');
-	expect(root!.attributes['langfuse.trace.metadata.process']).toBe('scraper');
+	// JSON-encoded on the span since @langfuse/otel 6, strings included.
+	expect(JSON.parse(String(root!.attributes['langfuse.trace.metadata.process']))).toBe('scraper');
 });

@@ -220,20 +220,49 @@ export function scrubStatus(message: string, mode: PayloadMode): string {
 }
 
 /**
- * Langfuse's processor, with status messages scrubbed as a span ends: the one
- * its observation set, and the span's own, which the SDK sets from whatever was
- * thrown.
+ * What the mask applies to: inputs and outputs, and the trace's metadata.
+ * Observation metadata is left out on purpose. It is the step's counts and
+ * labels (cache, process, sampleGroup), which filters and dashboards select
+ * by, and in `sizes` mode the mask would turn each into "[4 chars]".
+ */
+const MASKED = [
+	LangfuseOtelSpanAttributes.OBSERVATION_INPUT,
+	LangfuseOtelSpanAttributes.TRACE_INPUT,
+	LangfuseOtelSpanAttributes.OBSERVATION_OUTPUT,
+	LangfuseOtelSpanAttributes.TRACE_OUTPUT,
+	LangfuseOtelSpanAttributes.TRACE_METADATA
+];
+
+/**
+ * Langfuse's processor, with the mask applied and status messages scrubbed
+ * as a span ends: the one its observation set, and the span's own, which the
+ * SDK sets from whatever was thrown.
+ *
+ * The mask is applied here rather than handed to the SDK, so what it covers is
+ * decided in this file: @langfuse/otel 6 started masking every observation
+ * metadata value as well, which v5 never did.
  */
 class ScrubbingLangfuseProcessor extends LangfuseSpanProcessor {
 	private readonly mode: PayloadMode;
+	private readonly payloadMask: (data: unknown) => unknown;
 
 	constructor(mode: PayloadMode, params: ConstructorParameters<typeof LangfuseSpanProcessor>[0]) {
 		super(params);
 		this.mode = mode;
+		this.payloadMask = traceMask(mode);
 	}
 
 	override onEnd(span: ReadableSpan) {
 		const attributes = span.attributes as Record<string, unknown>;
+		for (const masked of MASKED) {
+			if (!(masked in attributes)) continue;
+			try {
+				attributes[masked] = this.payloadMask(attributes[masked]);
+			} catch {
+				// What the SDK sends when its own mask throws.
+				attributes[masked] = '<fully masked due to failed mask function>';
+			}
+		}
 		const key = LangfuseOtelSpanAttributes.OBSERVATION_STATUS_MESSAGE;
 		const set = attributes[key];
 		if (typeof set === 'string') attributes[key] = scrubStatus(set, this.mode);
@@ -330,13 +359,11 @@ export function payloadProcessor(
 	mode: PayloadMode,
 	params: ConstructorParameters<typeof LangfuseSpanProcessor>[0]
 ): SpanProcessor {
-	const mask = traceMask(mode);
 	return new ScrubbingLangfuseProcessor(mode, {
 		baseUrl: process.env.LANGFUSE_BASE_URL || undefined,
 		environment: getEnvironmentName(),
 		release: runningVersion(),
-		...params,
-		mask: ({ data }) => mask(data)
+		...params
 	});
 }
 
