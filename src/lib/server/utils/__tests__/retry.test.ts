@@ -71,6 +71,16 @@ describe('isRetryableError — structured generation cut short', () => {
 	});
 });
 
+describe('isRetryableError — a tool call where none was allowed', () => {
+	it('retries it, as the bad draw it is', () => {
+		expect(
+			isRetryableError(
+				new Error('gemini called a tool on a round that allowed none, and wrote no reply: read_job')
+			)
+		).toBe(true);
+	});
+});
+
 describe('withRetry — honors provider retry-after', () => {
 	it('waits the retry-after window, then succeeds on the next attempt', async () => {
 		vi.useFakeTimers();

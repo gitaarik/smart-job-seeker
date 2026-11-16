@@ -281,6 +281,42 @@ describe('a call with tools', () => {
 		expect(groq.bind.mock.calls[0][1]).toEqual({ tool_choice: 'none' });
 	});
 
+	it('keeps the text and drops the calls of a reply that called on that round', async () => {
+		groq.invoke.mockResolvedValueOnce(callingReply());
+
+		const result = await generateChatCompletionTracked([{ role: 'user', content: 'wrap up' }], {
+			tools: [readJob],
+			toolChoice: 'none'
+		});
+
+		expect(result.content).toBe('Let me read it.');
+		expect(result.toolCalls).toBeUndefined();
+	});
+
+	it('fails a reply that only called on that round, so it is drawn again', async () => {
+		gemini.invoke.mockResolvedValueOnce(
+			new AIMessage({
+				content: '',
+				tool_calls: [{ id: 'call_1', name: 'read_job', args: { job_id: 7 }, type: 'tool_call' }],
+				usage_metadata: usage
+			})
+		);
+		groq.invoke.mockResolvedValueOnce(
+			new AIMessage({ content: 'Done reading.', usage_metadata: usage })
+		);
+
+		const result = await generateChatCompletionTracked([{ role: 'user', content: 'wrap up' }], {
+			provider: 'gemini',
+			model: 'gemini-3.8-flash',
+			tools: [readJob],
+			toolChoice: 'none',
+			fallback: { provider: 'groq', model: 'openai/gpt-oss-120b' }
+		});
+
+		expect(result.content).toBe('Done reading.');
+		expect(result.fallbackUsed).toEqual({ provider: 'groq', model: 'openai/gpt-oss-120b' });
+	});
+
 	it('gives the fallback the same tools', async () => {
 		gemini.invoke.mockRejectedValueOnce(new Error('[503] The model is overloaded.'));
 		groq.invoke.mockResolvedValueOnce(callingReply());

@@ -192,5 +192,12 @@ export function isRetryableError(error: Error): boolean {
 		return true;
 	}
 
+	// A tool call on the round that forbade them, with no text beside it
+	// (generateWithTools). Gemini's, with mode NONE sent: the same request
+	// answers with text on most draws.
+	if (message.includes('called a tool on a round that allowed none')) {
+		return true;
+	}
+
 	return false;
 }

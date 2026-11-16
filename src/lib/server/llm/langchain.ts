@@ -1365,6 +1365,22 @@ async function generateWithTools(
 	if (toolCalls.length === 0 && !content) {
 		throw new Error(`No content returned from ${provider}`);
 	}
+	// A round with calls forbidden is the reply, yet Gemini calls anyway now
+	// and then, with mode NONE in the request (smoke case "a person the index
+	// names", 2 in 3 on 2026-11-15; the request is byte-identical across the
+	// langchain versions, so it is the model). Text beside the calls is still
+	// the reply. Calls alone are a bad draw, retried like one, and not an
+	// empty reply handed to the user.
+	if (tools.choice === 'none' && toolCalls.length > 0) {
+		if (content) return { content, usage };
+		const failure = new LLMOutputValidationError(
+			`${provider} called a tool on a round that allowed none, and wrote no reply: ` +
+				toolCalls.map((call) => call.name).join(', '),
+			provider,
+			model
+		);
+		throw Object.assign(failure, { usage });
+	}
 	return {
 		content,
 		usage,
