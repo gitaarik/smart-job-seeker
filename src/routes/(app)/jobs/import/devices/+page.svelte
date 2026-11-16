@@ -28,6 +28,7 @@
 	import Card from '../../../components/Card.svelte';
 	import CopyButton from '../../../components/CopyButton.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import DesktopDownloads from './DesktopDownloads.svelte';
 	import { portalToBody } from '$lib/actions/portal';
 
 	let { data }: { data: PageData } = $props();
@@ -641,53 +642,7 @@
 
 						{#if installTab === 'desktop'}
 							<!-- Desktop App instructions -->
-							<p>
-								Download the installer for your platform from <a
-									href="https://github.com/gitaarik/sjs-desktop/releases/latest"
-									target="_blank"
-									rel="noopener"
-									class="text-[var(--dash-primary)] hover:underline">GitHub Releases</a
-								>:
-							</p>
-							<div class="mt-2 space-y-1.5 text-xs">
-								<div class="flex items-center gap-2">
-									<span class="w-16 text-[var(--dash-text-secondary)]">macOS</span>
-									<a
-										href="https://github.com/gitaarik/sjs-desktop/releases/latest"
-										target="_blank"
-										rel="noopener"
-										class="font-mono text-[var(--dash-primary)] hover:underline">.dmg</a
-									>
-								</div>
-								<div class="flex items-center gap-2">
-									<span class="w-16 text-[var(--dash-text-secondary)]">Windows</span>
-									<a
-										href="https://github.com/gitaarik/sjs-desktop/releases/latest"
-										target="_blank"
-										rel="noopener"
-										class="font-mono text-[var(--dash-primary)] hover:underline">.exe installer</a
-									>
-								</div>
-								<div class="flex items-center gap-2">
-									<span class="w-16 text-[var(--dash-text-secondary)]">Linux</span>
-									<a
-										href="https://github.com/gitaarik/sjs-desktop/releases/latest"
-										target="_blank"
-										rel="noopener"
-										class="font-mono text-[var(--dash-primary)] hover:underline">.deb</a
-									>
-									<span class="text-[var(--dash-text-secondary)]">or</span>
-									<a
-										href="https://github.com/gitaarik/sjs-desktop/releases/latest"
-										target="_blank"
-										rel="noopener"
-										class="font-mono text-[var(--dash-primary)] hover:underline">.AppImage</a
-									>
-								</div>
-							</div>
-							<p class="mt-2 text-xs text-[var(--dash-text-secondary)]">
-								A compatible browser will be downloaded automatically on first launch.
-							</p>
+							<DesktopDownloads downloads={data.desktopDownloads} />
 
 							<!-- Manual install toggle -->
 							<button

@@ -81,7 +81,7 @@
 			// searches", saved a task and waited for a run that could never start
 			// (GO-LIVE.md, the 2026-11-13 stranger walk).
 			description:
-				'Job searches run in a browser on your own computer. Install the desktop app (or the browser container) and connect it with a device key.',
+				'Job searches run in a browser on your own computer. Install the desktop app (or the browser container) and connect it with a device key. The app is not code-signed yet, so Windows and macOS warn on first launch; the Devices page shows how to get past that.',
 			done: hasDevice,
 			href: '/jobs/import/devices',
 			actionLabel: 'Connect Device'

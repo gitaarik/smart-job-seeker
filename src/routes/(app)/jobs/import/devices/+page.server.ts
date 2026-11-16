@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import { redirect } from '@sveltejs/kit';
 import { listApiKeys } from '$lib/server/auth/api-key';
 import { listSharedWithMe } from '$lib/server/device-shares';
+import { getDesktopDownloads } from '$lib/server/desktop-release';
 
 export const load: PageServerLoad = async ({ parent, cookies }) => {
 	const layoutData = await parent();
@@ -26,6 +27,9 @@ export const load: PageServerLoad = async ({ parent, cookies }) => {
 	return {
 		apiKeys,
 		sharedDevices,
-		setupExpanded
+		setupExpanded,
+		// Not awaited: SvelteKit streams it, so a slow GitHub never holds up
+		// the page. The links fall back to the release page until it lands.
+		desktopDownloads: getDesktopDownloads()
 	};
 };
