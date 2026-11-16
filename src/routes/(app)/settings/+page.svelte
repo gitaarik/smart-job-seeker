@@ -4,7 +4,15 @@
 	import { armOn } from '$lib/actions/arm-on';
 	import { page } from '$app/stores';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faCheck, faCog, faEye, faEyeSlash, faPencil } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faCheck,
+		faCog,
+		faEye,
+		faEyeSlash,
+		faFileContract,
+		faPencil
+	} from '@fortawesome/free-solid-svg-icons';
+	import { resolve } from '$app/paths';
 	import { authClient } from '$lib/auth-client';
 	import Card from '../components/Card.svelte';
 	import SectionHeader from '../profile/components/SectionHeader.svelte';
@@ -12,7 +20,7 @@
 	import { autoSaveField, diffPayload, recordsEqual } from '$lib/components/auto-save.svelte';
 	import AutoSaveIndicator from '$lib/components/AutoSaveIndicator.svelte';
 	import { formatTzLabel, TIMEZONE_OPTIONS } from '$lib/timezone';
-	import { defaultTimeFormat, isHour12, resolveTimeFormat } from '$lib/format-date';
+	import { defaultTimeFormat, formatDate, isHour12, resolveTimeFormat } from '$lib/format-date';
 
 	let { data }: { data: PageData } = $props();
 
@@ -519,4 +527,45 @@
 			</div>
 		</Card>
 	</div>
+
+	<!-- Legal: the only place after signup that links the terms. The privacy
+	     policy is also linked from Data & Settings → Privacy, next to the one
+	     choice it governs; the terms belong to the account, so they live here. -->
+	{#if data.legal}
+		<Card padding="lg">
+			<div class="flex items-start gap-3">
+				<FontAwesomeIcon
+					icon={faFileContract}
+					class="mt-0.5 h-5 w-5 flex-shrink-0 text-[var(--dash-text-muted)]"
+				/>
+				<div class="space-y-1">
+					<p class="text-sm font-medium text-[var(--dash-text)]">
+						<a
+							href={resolve('/terms')}
+							target="_blank"
+							rel="noopener"
+							class="text-[var(--dash-primary)] hover:underline">Terms of service</a
+						>
+						<span class="text-[var(--dash-text-muted)]"> · </span>
+						<a
+							href={resolve('/privacy')}
+							target="_blank"
+							rel="noopener"
+							class="text-[var(--dash-primary)] hover:underline">Privacy policy</a
+						>
+					</p>
+					{#if data.legal.acceptedAt}
+						<p class="text-xs text-[var(--dash-text-muted)]">
+							You accepted the terms on {formatDate(data.legal.acceptedAt, {
+								timezone: timezone || null
+							})} (version {data.legal.acceptedVersion ?? data.legal.currentVersion}).
+							{#if data.legal.acceptedVersion && data.legal.acceptedVersion !== data.legal.currentVersion}
+								They have changed since; the current version is {data.legal.currentVersion}.
+							{/if}
+						</p>
+					{/if}
+				</div>
+			</div>
+		</Card>
+	{/if}
 </div>
