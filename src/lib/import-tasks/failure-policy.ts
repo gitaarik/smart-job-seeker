@@ -300,7 +300,7 @@ export interface ExplainContext {
 	/** Name of the device a run was waiting for, when that is the problem.
 	 *  Someone with two machines registered needs to know which one to go and
 	 *  wake up; the run log already resolves it ("pinning to user's oldest
-	 *  registered key: Lightpunks NAS"). */
+	 *  registered key: Home NAS"). */
 	deviceLabel?: string | null;
 	/** Hours between retries while it stays blocked. */
 	retryInHours?: number;

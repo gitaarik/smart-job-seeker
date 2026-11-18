@@ -313,9 +313,9 @@ describe('explainAuthBlock', () => {
 		it('names the device when one is known, and stays useful when not', () => {
 			const named = explainAuthBlock('device_unavailable', {
 				...ctx,
-				deviceLabel: 'Lightpunks NAS'
+				deviceLabel: 'Home NAS'
 			});
-			expect(named.message).toContain('Lightpunks NAS');
+			expect(named.message).toContain('Home NAS');
 
 			const unnamed = explainAuthBlock('device_unavailable', ctx);
 			expect(unnamed.message).toContain('the device it scrapes with');

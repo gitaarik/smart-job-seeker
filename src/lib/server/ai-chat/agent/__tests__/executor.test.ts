@@ -234,7 +234,11 @@ describe('candidateFromCall', () => {
 });
 
 describe('an anonymous application', () => {
-	const identity = { name: 'Rik Wanders', companyName: 'Lightpunks', linkMarks: ['gitaarik'] };
+	const identity = {
+		name: 'Alex Morgan',
+		companyName: 'Morgan Digital',
+		linkMarks: ['alexmorgan']
+	};
 
 	it('refuses read_profile_section without calling it', async () => {
 		const done = await new TurnExecutor({ actor, live: [], identity }).execute(
@@ -248,7 +252,7 @@ describe('an anonymous application', () => {
 	it('scrubs the identity out of every other read', async () => {
 		mockReadTool.mockResolvedValueOnce(
 			answer(
-				'Contact Rik Wanders (Lightpunks) at https://github.com/gitaarik or https://example.com'
+				'Contact Alex Morgan (Morgan Digital) at https://github.com/alexmorgan or https://example.com'
 			)
 		);
 		const done = await new TurnExecutor({ actor, live: [], identity }).execute(
