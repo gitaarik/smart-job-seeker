@@ -16,6 +16,26 @@ See `package.json` for container-related scripts.
 - When removing files, use `rm -f`.
 - Drizzle schema: `src/lib/server/db/schema.ts`. Generate a migration and apply it — dev runs the same files deploy does (`npx tsx scripts/migrate-deploy.ts`). `scripts/check-migrations.ts` proves the files build what the schema describes, and CI runs it. See `drizzle/README.md` and meta-repo CLAUDE.md.
 
+## Nothing personal here
+
+This repo is public, and so is its history: a pushed line stays readable after a
+later commit removes it. Code, comments, tests, fixtures, scripts and docs
+describe a case in general terms ("an application", "a client", "a freelance
+platform", "the user's profile"), and a test that needs a name uses an invented
+one: Alex Morgan, Acme Corp, "Home NAS". None of these belong here:
+
+- the owner's job hunt: employers, application ids, rates, contracts,
+  interviews, recruiters;
+- real profile data, and the output of an eval run on it;
+- other people: users' names, emails and profile ids, referees, contacts;
+- where anyone lives, and the names of real machines and networks;
+- secrets: keys, tokens, passwords, connection strings.
+
+The real case behind a fix goes in the maintainers' private notes, not in a
+comment. Test data built from a real profile stays in the private cloud repo,
+which is why the golden sets live there. Some older comments still name real
+cases: don't copy them, and reword one when you edit near it.
+
 ## AI features and `collected_data`
 
 Every AI prompt (in `src/lib/server/ai-chat/prompt-templates.ts`) is interpolated with `${data}` and `${schema}` from the `collected_data` table. That row is built by `exportProfile()` in `src/lib/server/profile/export.ts` from profile + tech_skills + work_experiences + languages.
