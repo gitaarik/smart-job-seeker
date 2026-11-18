@@ -5,7 +5,7 @@
 # 1. FULL (db-dumps/full.sql) - Complete database dump, git-ignored
 #    Use this for full local restores
 #
-# 2. SMART (db-dumps/smart.sql) - Optimized for git
+# 2. SMART (db-dumps/smart.sql) - Smaller, for quick local restores; not committed
 #    Excludes large tables that can be regenerated:
 #    - ai_chats: LLM conversation logs (keeps last 25)
 #    - jobs: Job postings (keeps last 25)
@@ -181,5 +181,5 @@ echo ""
 echo "═══════════════════════════════════════════════════════"
 echo "  Backup complete!"
 echo "  • Full:  db-dumps/full.sql ($FULL_SIZE) - git-ignored"
-echo "  • Smart: db-dumps/smart.sql ($SMART_SIZE) - git-tracked"
+echo "  • Smart: db-dumps/smart.sql ($SMART_SIZE) - git-ignored"
 echo "═══════════════════════════════════════════════════════"
