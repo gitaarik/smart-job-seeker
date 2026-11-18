@@ -9,12 +9,12 @@
  *
  * A question set names real applications, real companies and real people, which
  * is exactly what this repository must not carry. So the harness is generic and
- * public; the questions live wherever their subject does (for the knowledge
- * graph work: `planning/evidence/*.json` in the private sjs-ops repo) and
+ * public; the questions live wherever their subject does (the knowledge graph
+ * work's sets are in the owner's private notes, outside every repo) and
  * arrive on stdin. `docker compose exec -T` forwards stdin, which is what makes
  * this work without mounting anything new.
  *
- *   cat ../../planning/evidence/graph-questions.json | \
+ *   cat questions.json | \
  *     npx dotenvx run -f .env -- sh -c 'docker compose exec -T \
  *       -e SJS_LLM_API_KEY_GEMINI="$SJS_LLM_API_KEY_GEMINI" \
  *       -e SJS_LLM_API_KEY_GROQ="$SJS_LLM_API_KEY_GROQ" \
