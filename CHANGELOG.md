@@ -5,6 +5,19 @@ All notable changes to the Smart Job Seeker OSS project will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.50.0] - 2026-11-20
+
+13 commits since v0.49.0.
+
+### Changed
+
+- Upgraded the app, billing overlay and worker to SvelteKit 3
+
+### Fixed
+
+- Worker writes its health heartbeat as soon as its queues start
+- Chrome reads the VNC password from `SJS_VNC_PASSWORD`
+
 ## [0.49.0] - 2026-11-16
 
 28 commits since v0.48.0.
